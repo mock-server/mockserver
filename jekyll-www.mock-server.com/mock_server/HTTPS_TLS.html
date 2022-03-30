@@ -38,7 +38,7 @@ sitemap:
 <ul>
     <li>How dynamic certificate are created including, hostname (i.e. <a href="#button_configuration_ssl_certificate_domain_name">CN</a> & <a href="#button_configuration_ssl_subject_alternative_name_domains">SAN</a>) and ip address (i.e. <a href="#button_configuration_ssl_subject_alternative_name_ips">SAN</a>)</li>
     <li>The Certificate Authority <a href="#button_configuration_tls_certificate_authority_certificate">X.509 Certificate</a> and <a href="#button_configuration_tls_certificate_authority_private_key">Private Key</a> used to sign all generated X.509</li>
-    <li>Dynamic creation of a <a href="#button_configuration_dynamically_create_ca_certificate">unique (i.e. local) Certificate Authority X509 Certificate and Private Key</a> instead of using the fixed Certificate Authority X509 Certificate and Private Key in the <a href="https://github.com/mock-server/mockserver/blob/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem">git repo</a>.</li>
+    <li>Dynamic creation of a <a href="#button_configuration_dynamically_create_ca_certificate">unique (i.e. local) Certificate Authority X509 Certificate and Private Key</a> instead of using the fixed Certificate Authority X509 Certificate and Private Key in the <a target="_blank"href="https://github.com/mock-server/mockserver/blob/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem">git repo</a>.</li>
     <li>Require <a href="#button_configuration_require_mtls_for_all_tls_connections">mTLS (also called client authentication or two-way TLS)</a> for all TLS connections / HTTPS requests to MockServer</li>
     <li>Configure <a href="#button_configuration_trusted_tls_certs_group_for_proxied_reqs">trust store</a> and <a href="#button_configuration_forward_proxy_certificate_chain">client X.509</a> used during forwarded and proxied requests to endpoints requiring mTLS</li>
 </ul>
@@ -49,19 +49,19 @@ sitemap:
 
 <p>The MockServer CA X.509 must be considered a valid trust root to ensure MockServer's dynamically generate X.509 certificates are trusted by an HTTP Client.  This means the CA X.509 needs to be added into the JVM, HTTP Client or operating system as appropriate.</p>
 
-<p>The MockServer CA X.509 can be found (in PEM format) in the <a href="https://github.com/mock-server/mockserver/blob/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem">MockServer github repo</a> or can be loaded from the classpath location <span class="constant">/org/mockserver/socket/CertificateAuthorityCertificate.pem</span></p>
+<p>The MockServer CA X.509 can be found (in PEM format) in the <a target="_blank"href="https://github.com/mock-server/mockserver/blob/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem">MockServer github repo</a> or can be loaded from the classpath location <span class="constant">/org/mockserver/socket/CertificateAuthorityCertificate.pem</span></p>
 
 <h3>Operating System</h3>
 
 <p>It is possible to add the MockServer CA X.509 as a trusted root CA to your operating system, this will make most clients applications running on your OS (such as browsers) trust dynamically generated certificates from MockServer.</p>
 <p>This is only an acceptable risk if it is done for a short period and the configuration setting <a href="#button_configuration_dynamically_create_ca_certificate">dynamicallyCreateCertificateAuthorityCertificate</a> is enabled to generate a local unique CA X.509 and Private Key that is saved to your local disk in the folder configured using <a href="#button_configuration_directory_to_save_dynamic_ssl_certificates">directoryToSaveDynamicSSLCertificate</a>.</p>
-<p>If the configuration setting <a href="#button_configuration_dynamically_create_ca_certificate">dynamicallyCreateCertificateAuthorityCertificate</a> is not enabled, and your OS trusts the MockServer CA X.509, then this would leave your machine open to man-in-the-middle attacks because the corresponding Private Key is in the <a href="https://github.com/mock-server/mockserver/blob/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityPrivateKey.pem">MockServer github repository</a>.  This would allow hackers to compromise all sensitive communicates such as to your bank or other sensitive sites.</p>
+<p>If the configuration setting <a href="#button_configuration_dynamically_create_ca_certificate">dynamicallyCreateCertificateAuthorityCertificate</a> is not enabled, and your OS trusts the MockServer CA X.509, then this would leave your machine open to man-in-the-middle attacks because the corresponding Private Key is in the <a target="_blank"href="https://github.com/mock-server/mockserver/blob/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityPrivateKey.pem">MockServer github repository</a>.  This would allow hackers to compromise all sensitive communicates such as to your bank or other sensitive sites.</p>
 
 <h5>Web Browsers</h5>
 
-<p>Browsers (such as Chrome, Firefox or IE) may not always trust dynamically generated certificates from MockServer because of <a href="https://tools.ietf.org/html/rfc6962">Certificate Transparency</a> and <a href="https://tools.ietf.org/html/rfc7469">Public Key Pinning</a> both of which make it hard to dynamically generate certificates that are trusted.</p>
+<p>Browsers (such as Chrome, Firefox or IE) may not always trust dynamically generated certificates from MockServer because of <a target="_blank" href="https://tools.ietf.org/html/rfc6962">Certificate Transparency</a> and <a target="_blank" href="https://tools.ietf.org/html/rfc7469">Public Key Pinning</a> both of which make it hard to dynamically generate certificates that are trusted.</p>
 <p>Some sites will work but others (such as google sites) won't work due to certificate pinning.</p>
-<p>Browser that rely on <a href="https://tools.ietf.org/html/rfc6962">Certificate Transparency</a> will likely not trust dynamically generated certificates from MockServer</p>
+<p>Browser that rely on <a target="_blank" href="https://tools.ietf.org/html/rfc6962">Certificate Transparency</a> will likely not trust dynamically generated certificates from MockServer</p>
 
 <h3>Java via Classpath</h3>
 
@@ -168,7 +168,7 @@ public class ExampleTestClass {
 
 <pre class="prettyprint lang-java code"><code class="code">keytool -import -v -keystore /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/security/cacerts -alias mockserver-ca -file CertificateAuthorityCertificate.pem -storepass changeit -trustcacerts -noprompt</code></pre>
 
-<p>An example bash script showing how this can be done can be found in the <a href="https://github.com/mock-server/mockserver/blob/master/scripts/install_ca_certificate.sh">MockServer github repo</a></p>
+<p>An example bash script showing how this can be done can be found in the <a target="_blank"href="https://github.com/mock-server/mockserver/blob/master/scripts/install_ca_certificate.sh">MockServer github repo</a></p>
 
 <a id="hostname_validation" class="anchor" href="#hostname_validation">&nbsp;</a>
 

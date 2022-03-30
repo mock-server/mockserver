@@ -18,6 +18,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause.API;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -30,7 +31,7 @@ public class ExpectationFileSystemPersistenceTest {
     @Before
     public void createMockServerMatcher() {
         mockServerLogger = new MockServerLogger();
-        requestMatchers = new RequestMatchers(mockServerLogger, new Scheduler(mockServerLogger), new WebSocketClientRegistry(mockServerLogger));
+        requestMatchers = new RequestMatchers(configuration(), mockServerLogger, new Scheduler(configuration(), mockServerLogger), new WebSocketClientRegistry(configuration(), mockServerLogger));
     }
 
     @Test
@@ -44,7 +45,7 @@ public class ExpectationFileSystemPersistenceTest {
             ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
 
             // when
-            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, requestMatchers);
+            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(configuration(), mockServerLogger, requestMatchers);
             requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleFirst")
@@ -142,7 +143,7 @@ public class ExpectationFileSystemPersistenceTest {
             ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
 
             // when
-            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, requestMatchers);
+            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(configuration(), mockServerLogger, requestMatchers);
             requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleFirst")
@@ -229,7 +230,7 @@ public class ExpectationFileSystemPersistenceTest {
             ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
 
             // when
-            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, requestMatchers);
+            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(configuration(), mockServerLogger, requestMatchers);
             requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleFirst")
@@ -336,7 +337,7 @@ public class ExpectationFileSystemPersistenceTest {
             ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
 
             // when
-            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, requestMatchers);
+            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(configuration(), mockServerLogger, requestMatchers);
             requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleFirst")
@@ -466,7 +467,7 @@ public class ExpectationFileSystemPersistenceTest {
             ConfigurationProperties.initializationJsonPath(persistedExpectations.getAbsolutePath());
 
             // when
-            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, requestMatchers);
+            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(configuration(), mockServerLogger, requestMatchers);
             requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleFirst")
@@ -523,7 +524,7 @@ public class ExpectationFileSystemPersistenceTest {
                     response()
                         .withBody("some fourth response")
                 )
-            }, MockServerMatcherNotifier.Cause.FILE_WATCHER);
+            }, new MockServerMatcherNotifier.Cause(persistedExpectations.getAbsolutePath(), MockServerMatcherNotifier.Cause.Type.FILE_INITIALISER));
             MILLISECONDS.sleep(1500);
 
             // then

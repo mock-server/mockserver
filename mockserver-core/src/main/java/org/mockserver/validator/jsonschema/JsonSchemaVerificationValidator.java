@@ -1,6 +1,7 @@
 package org.mockserver.validator.jsonschema;
 
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.verify.Verification;
 
 /**
  * @author jamesdbloom
@@ -10,6 +11,7 @@ public class JsonSchemaVerificationValidator extends JsonSchemaValidator {
     private JsonSchemaVerificationValidator(MockServerLogger mockServerLogger) {
         super(
             mockServerLogger,
+            Verification.class,
             "org/mockserver/model/schema/",
             "verification",
             "expectationId",
@@ -21,7 +23,8 @@ public class JsonSchemaVerificationValidator extends JsonSchemaValidator {
             "keyToMultiValue",
             "keyToValue",
             "verificationTimes",
-            "socketAddress"
+            "socketAddress",
+            "draft-07"
         );
     }
 

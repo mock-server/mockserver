@@ -1,22 +1,22 @@
 package org.mockserver.logging;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.mockserver.Version;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.mock.HttpState;
+import org.mockserver.version.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
 import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
+import java.util.Arrays;
 import java.util.logging.LogManager;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.configuration.ConfigurationProperties.*;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.slf4j.event.Level.ERROR;
 
@@ -31,15 +31,24 @@ public class MockServerLogger {
 
     public static void configureLogger() {
         try {
-            if (isNotBlank(javaLoggerLogLevel()) && System.getProperty("java.util.logging.config.file") == null && System.getProperty("java.util.logging.config.class") == null) {
-                String loggingConfiguration = "" +
-                    (!disableSystemOut() ? "handlers=org.mockserver.logging.StandardOutConsoleHandler" + NEW_LINE : "") +
+            if (System.getProperty("java.util.logging.config.file") == null && System.getProperty("java.util.logging.config.class") == null) {
+                LogManager.getLogManager().readConfiguration(new ByteArrayInputStream(("" +
+                    "handlers=org.mockserver.logging.StandardOutConsoleHandler" + NEW_LINE +
                     "org.mockserver.logging.StandardOutConsoleHandler.level=ALL" + NEW_LINE +
                     "org.mockserver.logging.StandardOutConsoleHandler.formatter=java.util.logging.SimpleFormatter" + NEW_LINE +
                     "java.util.logging.SimpleFormatter.format=%1$tF %1$tT " + Version.getVersion() + " %4$s %5$s %6$s%n" + NEW_LINE +
-                    "org.mockserver.level=" + javaLoggerLogLevel() + NEW_LINE +
-                    "io.netty.handler.ssl.SslHandler.level=WARNING";
-                LogManager.getLogManager().readConfiguration(new ByteArrayInputStream(loggingConfiguration.getBytes(UTF_8)));
+                    "org.mockserver.level=INFO" + NEW_LINE +
+                    "io.netty.level=WARNING").getBytes(UTF_8)));
+                if (isNotBlank(ConfigurationProperties.javaLoggerLogLevel())) {
+                    String loggingConfiguration = "" +
+                        (!ConfigurationProperties.disableSystemOut() ? "handlers=org.mockserver.logging.StandardOutConsoleHandler" + NEW_LINE +
+                            "org.mockserver.logging.StandardOutConsoleHandler.level=ALL" + NEW_LINE +
+                            "org.mockserver.logging.StandardOutConsoleHandler.formatter=java.util.logging.SimpleFormatter" + NEW_LINE : "") +
+                        "java.util.logging.SimpleFormatter.format=%1$tF %1$tT " + Version.getVersion() + " %4$s %5$s %6$s%n" + NEW_LINE +
+                        "org.mockserver.level=" + ConfigurationProperties.javaLoggerLogLevel() + NEW_LINE +
+                        "io.netty.level=" + (Arrays.asList("TRACE", "FINEST").contains(ConfigurationProperties.javaLoggerLogLevel()) ? "FINE" : "WARNING");
+                    LogManager.getLogManager().readConfiguration(new ByteArrayInputStream(loggingConfiguration.getBytes(UTF_8)));
+                }
             }
         } catch (Throwable throwable) {
             new MockServerLogger().logEvent(
@@ -84,6 +93,7 @@ public class MockServerLogger {
     public void logEvent(LogEntry logEntry) {
         if (logEntry.getType() == RECEIVED_REQUEST
             || logEntry.getType() == FORWARDED_REQUEST
+            || logEntry.isAlwaysLog()
             || isEnabled(logEntry.getLogLevel())) {
             if (httpStateHandler != null) {
                 httpStateHandler.log(logEntry);
@@ -94,8 +104,8 @@ public class MockServerLogger {
     }
 
     public static void writeToSystemOut(Logger logger, LogEntry logEntry) {
-        if (!ConfigurationProperties.disableSystemOut()) {
-            if (isEnabled(logEntry.getLogLevel()) &&
+        if (!ConfigurationProperties.disableLogging()) {
+            if ((logEntry.isAlwaysLog() || isEnabled(logEntry.getLogLevel())) &&
                 isNotBlank(logEntry.getMessage())) {
                 switch (logEntry.getLogLevel()) {
                     case ERROR:
@@ -128,6 +138,10 @@ public class MockServerLogger {
     }
 
     public static boolean isEnabled(final Level level) {
-        return logLevel() != null && level.toInt() >= logLevel().toInt();
+        return isEnabled(level, ConfigurationProperties.logLevel());
+    }
+
+    public static boolean isEnabled(final Level level, final Level configuredLevel) {
+        return configuredLevel != null && level.toInt() >= configuredLevel.toInt();
     }
 }

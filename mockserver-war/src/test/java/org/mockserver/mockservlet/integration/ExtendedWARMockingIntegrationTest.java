@@ -15,6 +15,7 @@ import org.mockserver.socket.tls.KeyStoreFactory;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
@@ -27,6 +28,7 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
     private static Tomcat tomcat;
 
     @BeforeClass
+    @SuppressWarnings("deprecation")
     public static void startServer() throws Exception {
         servletContext = "";
 
@@ -39,7 +41,7 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
         defaultConnector.setRedirectPort(SERVER_HTTPS_PORT);
 
         // add https connector
-        KeyStoreFactory keyStoreFactory = new KeyStoreFactory(new MockServerLogger());
+        KeyStoreFactory keyStoreFactory = new KeyStoreFactory(configuration(), new MockServerLogger());
         keyStoreFactory.loadOrCreateKeyStore();
         Connector httpsConnector = new Connector();
         httpsConnector.setPort(SERVER_HTTPS_PORT);

@@ -21,7 +21,7 @@ public class RegexStringMatcherControlPlaneTest {
 
     @Test
     public void shouldMatchUnMatchingNottedString() {
-        assertTrue(new RegexStringMatcher(new MockServerLogger(), string("some_value"), true).matches(null, NottableString.not("not_value")));
+        assertTrue(new RegexStringMatcher(new MockServerLogger(), string("some_value"), true).matches((MatchDifference) null, NottableString.not("not_value")));
     }
 
     @Test
@@ -31,12 +31,12 @@ public class RegexStringMatcherControlPlaneTest {
 
     @Test
     public void shouldMatchUnMatchingNottedMatcherAndNottedString() {
-        assertFalse(new RegexStringMatcher(new MockServerLogger(), NottableString.not("not_matcher"), true).matches(null, NottableString.not("not_value")));
+        assertFalse(new RegexStringMatcher(new MockServerLogger(), NottableString.not("not_matcher"), true).matches((MatchDifference) null, NottableString.not("not_value")));
     }
 
     @Test
     public void shouldNotMatchMatchingNottedString() {
-        assertFalse(new RegexStringMatcher(new MockServerLogger(), string("some_value"), true).matches(null, NottableString.not("some_value")));
+        assertFalse(new RegexStringMatcher(new MockServerLogger(), string("some_value"), true).matches((MatchDifference) null, NottableString.not("some_value")));
     }
 
     @Test
@@ -46,7 +46,7 @@ public class RegexStringMatcherControlPlaneTest {
 
     @Test
     public void shouldNotMatchMatchingNottedMatcherAndNottedString() {
-        assertTrue(new RegexStringMatcher(new MockServerLogger(), NottableString.not("some_value"), true).matches(null, NottableString.not("some_value")));
+        assertTrue(new RegexStringMatcher(new MockServerLogger(), NottableString.not("some_value"), true).matches((MatchDifference) null, NottableString.not("some_value")));
     }
 
     @Test
@@ -101,12 +101,12 @@ public class RegexStringMatcherControlPlaneTest {
 
     @Test
     public void shouldNotMatchNullTestForControlPlane() {
-        assertFalse(new RegexStringMatcher(new MockServerLogger(), string("some_value"), true).matches(null, string(null)));
+        assertFalse(new RegexStringMatcher(new MockServerLogger(), string("some_value"), true).matches((MatchDifference) null, string(null)));
     }
 
     @Test
     public void shouldNotMatchNullTest() {
-        assertFalse(new RegexStringMatcher(new MockServerLogger(), string("some_value"), false).matches(null, string(null)));
+        assertFalse(new RegexStringMatcher(new MockServerLogger(), string("some_value"), false).matches((MatchDifference) null, string(null)));
     }
 
     @Test

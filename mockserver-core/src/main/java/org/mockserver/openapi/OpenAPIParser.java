@@ -4,13 +4,11 @@ import com.google.common.base.Joiner;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
-import io.swagger.v3.parser.OpenAPIResolver;
 import io.swagger.v3.parser.OpenAPIV3Parser;
 import io.swagger.v3.parser.core.extensions.SwaggerParserExtension;
 import io.swagger.v3.parser.core.models.AuthorizationValue;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
-import io.swagger.v3.parser.util.ResolverFully;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mockserver.cache.LRUCache;
@@ -32,7 +30,7 @@ public class OpenAPIParser {
 
     public static final String OPEN_API_LOAD_ERROR = "Unable to load API spec";
 
-    public static OpenAPI buildOpenAPI(String specUrlOrPayload) {
+    public static OpenAPI buildOpenAPI(String specUrlOrPayload, MockServerLogger mockServerLogger) {
         OpenAPI openAPI = openAPILRUCache.get(specUrlOrPayload);
         if (openAPI == null) {
             SwaggerParseResult swaggerParseResult = null;
@@ -41,8 +39,9 @@ public class OpenAPIParser {
             parseOptions.setResolve(true);
             parseOptions.setResolveFully(true);
             parseOptions.setResolveCombinators(true);
-            parseOptions.setFlatten(true);
-            parseOptions.setFlattenComposedSchemas(true);
+            parseOptions.setSkipMatches(true);
+            parseOptions.setAllowEmptyString(true);
+            parseOptions.setCamelCaseFlattenNaming(true);
 
             List<String> errorMessage = new ArrayList<>();
             try {
@@ -68,13 +67,7 @@ public class OpenAPIParser {
             } catch (Throwable throwable) {
                 throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + (errorMessage.isEmpty() ? ", " + throwable.getMessage() : ", " + Joiner.on(", ").skipNulls().join(errorMessage)), throwable);
             }
-            if (openAPI != null) {
-                try {
-                    openAPI = resolve(openAPI, auths, specUrlOrPayload);
-                } catch (Throwable throwable) {
-                    throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + (errorMessage.isEmpty() ? ", " + throwable.getMessage() : ", " + Joiner.on(", ").skipNulls().join(errorMessage)), throwable);
-                }
-            } else {
+            if (openAPI == null) {
                 if (swaggerParseResult != null) {
                     String message = errorMessage.stream().filter(Objects::nonNull).collect(Collectors.joining(" and ")).trim();
                     throw new IllegalArgumentException((OPEN_API_LOAD_ERROR + (isNotBlank(message) ? ", " + message : "")));
@@ -84,16 +77,6 @@ public class OpenAPIParser {
             }
             addMissingOperationIds(openAPI);
             openAPILRUCache.put(specUrlOrPayload, openAPI);
-        }
-        return openAPI;
-    }
-
-    private static OpenAPI resolve(OpenAPI openAPI, List<AuthorizationValue> auths, String specUrlOrPayload) {
-        if (openAPI != null) {
-            OpenAPIResolver.Settings settings = new OpenAPIResolver.Settings();
-            settings.addParametersToEachOperation(true);
-            openAPI = new OpenAPIResolver(openAPI, auths, specUrlOrPayload, settings).resolve();
-            new ResolverFully().resolveFully(openAPI);
         }
         return openAPI;
     }

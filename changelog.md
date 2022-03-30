@@ -6,6 +6,118 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- simplified JSON format accepted for headers and other multi-value maps by allowing single values to be used value list
+- added warning message when content-length in expectation is shorter than the body length
+
+### Changed
+- improved error messages from main method
+- always serialise default fields for StringBody and JsonBody when retrieving recorded expectations for consistency even when the charset changes
+- allow (and ignore) additional timestamp field for expectation JSON to support record request and responses to be submitted as JSON expectations
+- upgraded JVM version in docker (and helm) to 17
+- reduced memory footprint from log and simplified calculation of maximum log size
+- use JVM trust store in addition to MockServer CA for MockServerClient to allow control plane requests to go via proxies or load balancers that terminate TLS
+
+### Fixed
+- allow callback which is nested inside initializer class for maven plugin initializer
+- fixed HttpClassCallback static builder signature
+- improved parsing of media type parameters to handle parameter values with equal symbol
+- fixed serialising certificate chain to dashboard UI
+- used absolute URI form for requests to an HTTP proxy as per [rfc2068 section 5.1.2](https://www.rfc-editor.org/rfc/rfc2068#section-5.1.2)
+- removed content-length and other hop by hop response headers for forward actions
+- fixed handling of headers and parameters specified without any values
+- fixed logLevel in MockServer instance Configuration, so it now sets the SystemProperty read by the logging configuration
+- fixed parallel execution of MockServerExtension to prevent port bind errors
+- fixed error parsing body parameters containing '/'
+- removed external references to schema specification to remove required network connectivity
+- fixed docker latest tag by worked around bug in sonatype not updating the LATEST metadata for snapshots
+- fixed partial deletion of expectations from watched file initialiser
+
+## [5.13.0] - 2022-03-17
+
+### Added
+- added support for configuring log level via properties file
+- allow proactively initialisation of TLS so dynamic TLS CA key pair is created at start up
+- added control plane authorisation using mTLS
+- added control plane authorisation using JWT
+- added support for control plane JWTs supplier to client
+- added support for control plane JWT authorisation to specify required audience, matching claims and required claims
+- added control plane authorisation using both JWT and mTLS
+- added property to control maximum number of requests to return in verification failure, defaults to 10
+- added field to verifications to control maximum number of requests to return in verification failure, defaults to configuration property - item above
+- added remote address field to http requests that can be used by class or method callbacks
+- exposed remote address (i.e. client address) to method and class callbacks, logs and dashboard
+- exposed client certificate chain to method and class callbacks, logs and dashboard
+- added simpler mustache style response templates (in addition to existing javascript and velocity support)
+- added response template variables and functions for date, uuid, random, xPath and jsonPath for mustache
+- added response template variables for date, uuid and random for velocity
+- added response template variables for date, uuid and random for javascript
+- added path parameters, remote address and client certificate chain to response template model
+- added support for EMCAScript 6 in JavaScript response templates for Java versions between 9 and 15
+- added support for numerous velocity tools for example for JSON and XML parsing to velocity response templates
+
+### Changed
+- included Bouncy Castle now used by default to resolve issues with modules in Java 16+ and backwards compatibility for Java 8
+- improved configuration for dynamically creating CA so the directory is defaulted if not set and log output is clearer
+- improved UI handling of match failures with a because section and more complex log events
+- improved log configuration during startup when loading of properties file
+- simplified support for multiline regex by allow . to match newlines
+- improved regex matching by support Unicode (instead of US-ASCII) and native case-insensitive matching
+- improved performance of negative matches by reducing the number of regex matches when not matching
+- disabled privilege escalation in helm chart
+- added setting of command line flags (i.e. serverPort) via system properties and properties file in addition to environment variables
+- improved log output for command line flags, environment variables and system properties
+- removed deprecated configuration properties for forward proxying
+- changed docker distroless base image to distroless image for nonroot user
+- changed docker distroless base image for snapshot to distroless image for debugging
+- changed client to launch dashboard in HTTP (not HTTPS) to avoid issues with self-signed certificates
+- simplified the body field for response template model
+- improved XML matching by ignoring element order
+- improved security by change CORS defaults to more secure values that prevent cross-site requests by default
+
+### Fixed
+- worked around JDK error 'flip()Ljava/nio/ByteBuffer; does not exist in class java.nio.ByteBuffer'
+- null pointer exception when serialising string bodies with non string content types (i.e. image/png)
+- disabled native TLS for netty to improve TLS resilience 
+- fixed handling of circular references in OpenAPI specifications to be as gracefully as possible
+
+## [5.12.0] - 2022-02-12
+
+### Added
+- index.yaml to www.mock-server.com so it can be used as a helm chart repository
+- command line flags can now be set as environment variables simplifying some container deployment scenarios
+- glob support for initialisation files to allow multiple files to be specified
+- request and response modifiers to dynamically update path, query parameters, headers, and cookies
+- custom factory for key and certificates to provide more flexibility
+- support for Open API expectations in json initialisation file
+- improved @MockServerTest to support inheritance
+- more flexibility over semicolon parsing for query parameters
+- shaded jar for mockserver-netty and mockserver-client-java to reduce impact of dependency version mismatches with projects including these dependencies
+
+### Changed
+- ensured that TCP connections are closed immediately when shutting down to improved time before operating system frees the port
+- reduce noise from Netty INFO logs that were not correct or misleading
+- retrieveRecordedRequests now returns HttpRequest[]
+- made it easier to set priority and id both in Java and Node clients in multiple places
+- changed default charset for JSON and XML to UTF-8 from ISO 8859-1
+- error handling for Open API so only single operation is skipped on failure not the entire file
+- reduced over resolution of OpenAPI that triggered bugs in Swagger Parser V3 library
+- replaces JDK FileWatcher with custom solution for watch file changes to work around multiple JDK bugs
+- improved helm chart by supporting more configuration options
+- remove explicit calls to System.gc()
+
+### Fixed
+- resolved multiple issues with clearing by expectation id
+- resolved multiple issues with verifying by expectation id
+- resolved multiple NullPointerExceptions in backend for UI
+- ensure exact query parameter string is proxied allowing for empty values, leading `!` or or other special scenarios
+- improved expectation updates from FileWatcher so only expecation from matching source are updated resolving multiple bugs
+- ensured socket protocol of HTTPS is honoured resulting in forwarded requests using TLS
+- fixed logging of exceptions such as port already bound at startup
+- fixed retrieval of active exceptions where expectations were no longer active but not yet removed from expectations list
+- no longer treat ndjson as json
+- accessing UI via a reverse proxy or load balancer
+
 ## [5.11.2] - 2020-10-08
 
 ### Added

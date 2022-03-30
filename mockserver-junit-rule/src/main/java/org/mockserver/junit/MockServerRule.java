@@ -104,10 +104,12 @@ public class MockServerRule implements TestRule {
             @Override
             public void evaluate() throws Throwable {
                 if (perTestSuite) {
-                    if (perTestSuiteClientAndServer == null) {
-                        perTestSuiteClientAndServer = clientAndServerFactory.newClientAndServer();
-                    } else {
-                        perTestSuiteClientAndServer.reset();
+                    synchronized (MockServerRule.class) {
+                        if (perTestSuiteClientAndServer == null) {
+                            perTestSuiteClientAndServer = clientAndServerFactory.newClientAndServer();
+                        } else {
+                            perTestSuiteClientAndServer.reset();
+                        }
                     }
                     clientAndServer = perTestSuiteClientAndServer;
                     setMockServerClient(target, perTestSuiteClientAndServer);

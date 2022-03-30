@@ -5,7 +5,7 @@ import org.mockserver.model.BinaryBody;
 import org.mockserver.model.Body;
 import org.mockserver.model.JsonBody;
 
-import javax.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.DatatypeConverter;
 
 import java.nio.charset.StandardCharsets;
 

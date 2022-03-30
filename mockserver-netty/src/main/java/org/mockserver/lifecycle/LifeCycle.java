@@ -1,12 +1,9 @@
 package org.mockserver.lifecycle;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.util.concurrent.GlobalEventExecutor;
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -19,13 +16,16 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.mockserver.mock.HttpState.setPort;
 import static org.slf4j.event.Level.*;
@@ -36,22 +36,26 @@ import static org.slf4j.event.Level.*;
 public abstract class LifeCycle implements Stoppable {
 
     protected final MockServerLogger mockServerLogger;
-    protected final EventLoopGroup bossGroup = new NioEventLoopGroup(5, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-bossEventLoop"));
-    protected final EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-workerEventLoop"));
+    protected final EventLoopGroup bossGroup;
+    protected final EventLoopGroup workerGroup;
     protected final HttpState httpState;
+    private final Configuration configuration;
     protected ServerBootstrap serverServerBootstrap;
     private final List<Future<Channel>> serverChannelFutures = new ArrayList<>();
     private final CompletableFuture<String> stopFuture = new CompletableFuture<>();
     private final AtomicBoolean stopping = new AtomicBoolean(false);
     private final Scheduler scheduler;
 
-    protected LifeCycle() {
+    protected LifeCycle(Configuration configuration) {
+        this.configuration = configuration != null ? configuration : configuration();
         this.mockServerLogger = new MockServerLogger(MockServerEventLog.class);
-        this.scheduler = new Scheduler(this.mockServerLogger);
-        this.httpState = new HttpState(this.mockServerLogger, this.scheduler);
+        this.bossGroup = new NioEventLoopGroup(5, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-bossEventLoop"));
+        this.workerGroup = new NioEventLoopGroup(this.configuration.nioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-workerEventLoop"));
+        this.scheduler = new Scheduler(this.configuration, this.mockServerLogger);
+        this.httpState = new HttpState(this.configuration, this.mockServerLogger, this.scheduler);
     }
 
-    public Future<String> stopAsync() {
+    public CompletableFuture<String> stopAsync() {
         if (!stopFuture.isDone() && stopping.compareAndSet(false, true)) {
             final String message = "stopped for port" + (getLocalPorts().size() == 1 ? ": " + getLocalPorts().get(0) : "s: " + getLocalPorts());
             if (MockServerLogger.isEnabled(INFO)) {
@@ -63,6 +67,28 @@ public abstract class LifeCycle implements Stoppable {
                 );
             }
             new Scheduler.SchedulerThreadFactory("Stop").newThread(() -> {
+                List<ChannelFuture> collect = serverChannelFutures
+                    .stream()
+                    .flatMap(channelFuture -> {
+                        try {
+                            return Stream.of(channelFuture.get());
+                        } catch (Throwable throwable) {
+                            // ignore
+                            throwable.printStackTrace();
+                            return Stream.empty();
+                        }
+                    })
+                    .map(ChannelOutboundInvoker::disconnect)
+                    .collect(Collectors.toList());
+                try {
+                    for (ChannelFuture channelFuture : collect) {
+                        channelFuture.get();
+                    }
+                } catch (Throwable throwable) {
+                    // ignore
+                    throwable.printStackTrace();
+                }
+
                 httpState.stop();
                 scheduler.shutdown();
 
@@ -74,14 +100,7 @@ public abstract class LifeCycle implements Stoppable {
                 bossGroup.terminationFuture().syncUninterruptibly();
                 workerGroup.terminationFuture().syncUninterruptibly();
 
-                stopFuture.complete("done");
-
-                // then commented out code below would wait for all tasks to stop however it is static and so performs badly with multiple parallel (or rapidly created serial) instances of MockServer
-                // try {
-                //     GlobalEventExecutor.INSTANCE.awaitInactivity(2, SECONDS);
-                // } catch (InterruptedException ignore) {
-                //     // ignore interruption
-                // }
+                stopFuture.complete(message);
             }).start();
         }
         return stopFuture;
@@ -178,7 +197,7 @@ public abstract class LifeCycle implements Stoppable {
 
     private List<Integer> bindPorts(final ServerBootstrap serverBootstrap, List<Integer> requestedPortBindings, List<Future<Channel>> channelFutures) {
         List<Integer> actualPortBindings = new ArrayList<>();
-        final String localBoundIP = ConfigurationProperties.localBoundIP();
+        final String localBoundIP = configuration.localBoundIP();
         for (final Integer portToBind : requestedPortBindings) {
             try {
                 final CompletableFuture<Channel> channelOpened = new CompletableFuture<>();
@@ -207,9 +226,9 @@ public abstract class LifeCycle implements Stoppable {
                     }
                 }).start();
 
-                actualPortBindings.add(((InetSocketAddress) channelOpened.get(maxFutureTimeout(), MILLISECONDS).localAddress()).getPort());
+                actualPortBindings.add(((InetSocketAddress) channelOpened.get(configuration.maxFutureTimeoutInMillis(), MILLISECONDS).localAddress()).getPort());
             } catch (Exception e) {
-                throw new RuntimeException("Exception while binding MockServer to port " + portToBind, e.getCause());
+                throw new RuntimeException("Exception while binding MockServer to port " + portToBind, e instanceof ExecutionException ? e.getCause() : e);
             }
         }
         return actualPortBindings;

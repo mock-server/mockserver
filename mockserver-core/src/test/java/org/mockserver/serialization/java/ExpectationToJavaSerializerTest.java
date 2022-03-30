@@ -1,5 +1,6 @@
 package org.mockserver.serialization.java;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Test;
 import org.mockserver.matchers.TimeToLive;
@@ -17,13 +18,18 @@ import static org.mockserver.matchers.TimeToLive.unlimited;
 import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.matchers.Times.once;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
+import static org.mockserver.model.Cookie.cookie;
+import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpError.error;
 import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverriddenRequest;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpRequestModifier.requestModifier;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.HttpResponseModifier.responseModifier;
 import static org.mockserver.model.HttpTemplate.template;
+import static org.mockserver.model.Parameter.param;
 
 /**
  * @author jamesdbloom
@@ -556,7 +562,7 @@ public class ExpectationToJavaSerializerTest {
                 "        )" + NEW_LINE +
                 "        .forward(" + NEW_LINE +
                 "                forwardOverriddenRequest()" + NEW_LINE +
-                "                        .withRequest(" + NEW_LINE +
+                "                        .withRequestOverride(" + NEW_LINE +
                 "                                request()" + NEW_LINE +
                 "                                        .withMethod(\"GET\")" + NEW_LINE +
                 "                                        .withPath(\"somePath\")" + NEW_LINE +
@@ -573,6 +579,74 @@ public class ExpectationToJavaSerializerTest {
                 "                                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
                 "                                        )" + NEW_LINE +
                 "                                        .withBody(new StringBody(\"somebody\"))" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withRequestModifier(" + NEW_LINE +
+                "                                requestModifier()" + NEW_LINE +
+                "                                        .withPath(\"someRegex\",\"someSubstitution\")" + NEW_LINE +
+                "                                        .withQueryStringParameters(" + NEW_LINE +
+                "                                                parameters(" + NEW_LINE +
+                "                                                        new Parameter(\"addNameOne\", \"addValueOne\")," + NEW_LINE +
+                "                                                        new Parameter(\"addNameTwo\", \"addValueTwo\")" + NEW_LINE +
+                "                                                )," + NEW_LINE +
+                "                                                parameters(" + NEW_LINE +
+                "                                                        new Parameter(\"replaceNameOne\", \"replaceValueOne\")," + NEW_LINE +
+                "                                                        new Parameter(\"replaceNameTwo\", \"replaceValueTwo\")" + NEW_LINE +
+                "                                                )," + NEW_LINE +
+                "                                                ImmutableList.of(\"removeNameOne\",\"removeNameTwo\",\"removeNameThree\")" + NEW_LINE +
+                "                                        )" + NEW_LINE +
+                "                                        .withHeaders(" + NEW_LINE +
+                "                                                headers(" + NEW_LINE +
+                "                                                        new Header(\"addNameOne\", \"addValueOne\")," + NEW_LINE +
+                "                                                        new Header(\"addNameTwo\", \"addValueTwo\")" + NEW_LINE +
+                "                                                )," + NEW_LINE +
+                "                                                headers(" + NEW_LINE +
+                "                                                        new Header(\"replaceName\", \"replaceValue\")" + NEW_LINE +
+                "                                                )," + NEW_LINE +
+                "                                                ImmutableList.of(\"removeNameOne\",\"removeNameOne\")" + NEW_LINE +
+                "                                        )" + NEW_LINE +
+                "                                        .withCookies(" + NEW_LINE +
+                "                                                cookies(" + NEW_LINE +
+                "                                                        new Cookie(\"addName\", \"addValue\")" + NEW_LINE +
+                "                                                )," + NEW_LINE +
+                "                                                cookies(" + NEW_LINE +
+                "                                                        new Cookie(\"replaceNameOne\", \"replaceValueOne\")," + NEW_LINE +
+                "                                                        new Cookie(\"replaceNameTwo\", \"replaceValueTwo\")" + NEW_LINE +
+                "                                                )," + NEW_LINE +
+                "                                                ImmutableList.of(\"removeName\")" + NEW_LINE +
+                "                                        )" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withResponseOverride(" + NEW_LINE +
+                "                                response()" + NEW_LINE +
+                "                                        .withHeaders(" + NEW_LINE +
+                "                                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + NEW_LINE +
+                "                                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + NEW_LINE +
+                "                                        )" + NEW_LINE +
+                "                                        .withCookies(" + NEW_LINE +
+                "                                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + NEW_LINE +
+                "                                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + NEW_LINE +
+                "                                        )" + NEW_LINE +
+                "                                        .withBody(\"somebody\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withResponseModifier(" + NEW_LINE +
+                "                                responseModifier()" + NEW_LINE +
+                "                                        .withHeaders(" + NEW_LINE +
+                "                                                headers(" + NEW_LINE +
+                "                                                        new Header(\"addName\", \"addValue\")" + NEW_LINE +
+                "                                                )," + NEW_LINE +
+                "                                                headers(" + NEW_LINE +
+                "                                                        new Header(\"replaceName\", \"replaceValue\")" + NEW_LINE +
+                "                                                )," + NEW_LINE +
+                "                                                ImmutableList.of(\"removeName\")" + NEW_LINE +
+                "                                        )" + NEW_LINE +
+                "                                        .withCookies(" + NEW_LINE +
+                "                                                cookies(" + NEW_LINE +
+                "                                                        new Cookie(\"addName\", \"addValue\")" + NEW_LINE +
+                "                                                )," + NEW_LINE +
+                "                                                cookies(" + NEW_LINE +
+                "                                                        new Cookie(\"replaceName\", \"replaceValue\")" + NEW_LINE +
+                "                                                )," + NEW_LINE +
+                "                                                ImmutableList.of(\"removeName\")" + NEW_LINE +
+                "                                        )" + NEW_LINE +
                 "                        )" + NEW_LINE +
                 "                        .withDelay(new Delay(TimeUnit.MILLISECONDS, 100))" + NEW_LINE +
                 "        );",
@@ -599,7 +673,7 @@ public class ExpectationToJavaSerializerTest {
                     0)
                     .thenForward(
                         forwardOverriddenRequest()
-                            .withHttpRequest(
+                            .withRequestOverride(
                                 request()
                                     .withMethod("GET")
                                     .withPath("somePath")
@@ -616,6 +690,62 @@ public class ExpectationToJavaSerializerTest {
                                         new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
                                     )
                                     .withBody(new StringBody("somebody"))
+                            )
+                            .withRequestModifier(
+                                requestModifier()
+                                    .withPath("someRegex", "someSubstitution")
+                                    .withHeaders(
+                                        ImmutableList.of(
+                                            header("addNameOne", "addValueOne"),
+                                            header("addNameTwo", "addValueTwo")
+                                        ),
+                                        ImmutableList.of(header("replaceName", "replaceValue")),
+                                        ImmutableList.of("removeNameOne", "removeNameOne")
+                                    )
+                                    .withCookies(
+                                        ImmutableList.of(cookie("addName", "addValue")),
+                                        ImmutableList.of(
+                                            cookie("replaceNameOne", "replaceValueOne"),
+                                            cookie("replaceNameTwo", "replaceValueTwo")
+                                        ),
+                                        ImmutableList.of("removeName")
+                                    )
+                                    .withQueryStringParameters(
+                                        ImmutableList.of(
+                                            param("addNameOne", "addValueOne"),
+                                            param("addNameTwo", "addValueTwo")
+                                        ),
+                                        ImmutableList.of(
+                                            param("replaceNameOne", "replaceValueOne"),
+                                            param("replaceNameTwo", "replaceValueTwo")
+                                        ),
+                                        ImmutableList.of("removeNameOne", "removeNameTwo", "removeNameThree")
+                                    )
+                            )
+                            .withResponseOverride(
+                                response()
+                                    .withHeaders(
+                                        new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
+                                        new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                                    )
+                                    .withCookies(
+                                        new Cookie("requestCookieNameOne", "requestCookieValueOne"),
+                                        new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                                    )
+                                    .withBody(new StringBody("somebody"))
+                            )
+                            .withResponseModifier(
+                                responseModifier()
+                                    .withHeaders(
+                                        ImmutableList.of(header("addName", "addValue")),
+                                        ImmutableList.of(header("replaceName", "replaceValue")),
+                                        ImmutableList.of("removeName")
+                                    )
+                                    .withCookies(
+                                        ImmutableList.of(cookie("addName", "addValue")),
+                                        ImmutableList.of(cookie("replaceName", "replaceValue")),
+                                        ImmutableList.of("removeName")
+                                    )
                             )
                             .withDelay(TimeUnit.MILLISECONDS, 100)
                     )

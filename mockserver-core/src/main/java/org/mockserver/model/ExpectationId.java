@@ -7,6 +7,10 @@ public class ExpectationId extends ObjectWithJsonToString {
     private int hashCode;
     private String id;
 
+    public static ExpectationId expectationId(String id) {
+        return new ExpectationId().withId(id);
+    }
+
     public String getId() {
         return id;
     }

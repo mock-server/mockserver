@@ -68,10 +68,12 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     }
 
     public K withEntry(final T entry) {
-        if (entry.getValues().isEmpty()) {
-            multimap.put(entry.getName(), null);
-        } else {
-            multimap.putAll(entry.getName(), entry.getValues());
+        if (entry != null) {
+            if (entry.getValues().isEmpty()) {
+                multimap.put(entry.getName(), null);
+            } else {
+                multimap.putAll(entry.getName(), entry.getValues());
+            }
         }
         return k;
     }
@@ -108,22 +110,30 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
         return k;
     }
 
-    public K remove(final String name) {
-        for (NottableString key : multimap.keySet().toArray(new NottableString[0])) {
-            if (key.equalsIgnoreCase(name)) {
-                multimap.removeAll(key);
+    public boolean remove(final String name) {
+        boolean exists = false;
+        if (name != null) {
+            for (NottableString key : multimap.keySet().toArray(new NottableString[0])) {
+                if (key.equalsIgnoreCase(name)) {
+                    multimap.removeAll(key);
+                    exists = true;
+                }
             }
         }
-        return k;
+        return exists;
     }
 
-    public K remove(final NottableString name) {
-        for (NottableString key : multimap.keySet().toArray(new NottableString[0])) {
-            if (key.equalsIgnoreCase(name)) {
-                multimap.removeAll(key);
+    public boolean remove(final NottableString name) {
+        boolean exists = false;
+        if (name != null) {
+            for (NottableString key : multimap.keySet().toArray(new NottableString[0])) {
+                if (key.equalsIgnoreCase(name)) {
+                    multimap.removeAll(key);
+                    exists = true;
+                }
             }
         }
-        return k;
+        return exists;
     }
 
     @SuppressWarnings("UnusedReturnValue")
@@ -131,6 +141,16 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
         if (entry != null) {
             remove(entry.getName());
             multimap.putAll(entry.getName(), entry.getValues());
+        }
+        return k;
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
+    public K replaceEntryIfExists(final T entry) {
+        if (entry != null) {
+            if (remove(entry.getName())) {
+                multimap.putAll(entry.getName(), entry.getValues());
+            }
         }
         return k;
     }
@@ -235,6 +255,8 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     public boolean isEmpty() {
         return multimap.isEmpty();
     }
+
+    public abstract K clone();
 
     @Override
     public boolean equals(final Object o) {

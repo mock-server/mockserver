@@ -11,9 +11,11 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.util.AttributeKey;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.stop.Stoppable;
@@ -22,21 +24,26 @@ import org.slf4j.event.Level;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
+import static org.mockserver.configuration.Configuration.configuration;
 
 
 public class EchoServer implements Stoppable {
 
     static final AttributeKey<MockServerEventLog> LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
     static final AttributeKey<NextResponse> NEXT_RESPONSE = AttributeKey.valueOf("NEXT_RESPONSE");
+    static final AttributeKey<LastRequest> LAST_REQUEST = AttributeKey.valueOf("LAST_REQUEST");
     private static final MockServerLogger mockServerLogger = new MockServerLogger(EchoServer.class);
 
-    private final Scheduler scheduler = new Scheduler(mockServerLogger);
-    private final MockServerEventLog mockServerEventLog = new MockServerEventLog(mockServerLogger, scheduler, true);
+    private final Configuration configuration = configuration();
+    private final Scheduler scheduler = new Scheduler(configuration, mockServerLogger);
+    private final MockServerEventLog mockServerEventLog = new MockServerEventLog(configuration, mockServerLogger, scheduler, true);
     private final NextResponse nextResponse = new NextResponse();
+    private final LastRequest lastRequest = new LastRequest();
     private final CompletableFuture<Integer> boundPort = new CompletableFuture<>();
     private final List<String> registeredClients;
     private final List<Channel> websocketChannels;
@@ -67,9 +74,10 @@ public class EchoServer implements Stoppable {
                 .channel(NioServerSocketChannel.class)
                 .option(ChannelOption.SO_BACKLOG, 100)
                 .handler(new LoggingHandler(EchoServer.class))
-                .childHandler(new EchoServerInitializer(mockServerLogger, secure, sslContext, error, registeredClients, websocketChannels, textWebSocketFrames))
+                .childHandler(new EchoServerInitializer(configuration, mockServerLogger, secure, sslContext, error, registeredClients, websocketChannels, textWebSocketFrames))
                 .childAttr(LOG_FILTER, mockServerEventLog)
                 .childAttr(NEXT_RESPONSE, nextResponse)
+                .childAttr(LAST_REQUEST, lastRequest)
                 .bind(0)
                 .addListener((ChannelFutureListener) future -> {
                     if (future.isSuccess()) {
@@ -82,7 +90,7 @@ public class EchoServer implements Stoppable {
 
         try {
             // wait for proxy to start all channels
-            boundPort.get(maxFutureTimeout(), MILLISECONDS);
+            boundPort.get(configuration.maxFutureTimeoutInMillis(), MILLISECONDS);
             TimeUnit.MILLISECONDS.sleep(5);
         } catch (Exception e) {
             mockServerLogger.logEvent(
@@ -107,7 +115,7 @@ public class EchoServer implements Stoppable {
 
     public Integer getPort() {
         try {
-            return boundPort.get(maxFutureTimeout(), MILLISECONDS);
+            return boundPort.get(configuration.maxFutureTimeoutInMillis(), MILLISECONDS);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
@@ -122,9 +130,26 @@ public class EchoServer implements Stoppable {
         nextResponse.httpResponse.addAll(Arrays.asList(httpResponses));
     }
 
-    public void clearNextResponse() {
+    public void clear() {
         // WARNING: this logic is only for unit tests that run in series and is NOT thread safe!!!
         nextResponse.httpResponse.clear();
+        lastRequest.httpRequest.set(new CompletableFuture<>());
+    }
+
+    public HttpRequest getLastRequest() {
+        try {
+            HttpRequest httpRequest = lastRequest.httpRequest.get().get();
+            lastRequest.httpRequest.set(new CompletableFuture<>());
+            return httpRequest;
+        } catch (InterruptedException | ExecutionException e) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("exception while waiting to receive request - " + e.getMessage())
+                    .setThrowable(e)
+            );
+            return null;
+        }
     }
 
     public List<String> getRegisteredClients() {
@@ -147,6 +172,10 @@ public class EchoServer implements Stoppable {
     }
 
     public static class NextResponse {
-        public final Queue<HttpResponse> httpResponse = new LinkedList<HttpResponse>();
+        public final Queue<HttpResponse> httpResponse = new LinkedList<>();
+    }
+
+    public static class LastRequest {
+        public final AtomicReference<CompletableFuture<org.mockserver.model.HttpRequest>> httpRequest = new AtomicReference<>(new CompletableFuture<>());
     }
 }

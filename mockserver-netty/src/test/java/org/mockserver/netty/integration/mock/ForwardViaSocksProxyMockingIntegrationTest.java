@@ -99,7 +99,7 @@ public class ForwardViaSocksProxyMockingIntegrationTest extends AbstractMockingI
                 .withBody("an_example_body_http"),
             makeRequest(
                 httpRequest,
-                headersToIgnore)
+                    HEADERS_TO_IGNORE)
         );
         proxyClient.verify(httpRequest.withSecure(true));
     }
@@ -139,7 +139,7 @@ public class ForwardViaSocksProxyMockingIntegrationTest extends AbstractMockingI
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                headersToIgnore
+                    HEADERS_TO_IGNORE
 
             )
         );
@@ -177,7 +177,7 @@ public class ForwardViaSocksProxyMockingIntegrationTest extends AbstractMockingI
                         header("x-echo-server-port", secureEchoServer.getPort())
                     )
                     .withBody("an_example_body_http"),
-                headersToIgnore
+                    HEADERS_TO_IGNORE
             )
         );
     }
@@ -225,7 +225,7 @@ public class ForwardViaSocksProxyMockingIntegrationTest extends AbstractMockingI
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                headersToIgnore
+                    HEADERS_TO_IGNORE
             )
         );
     }
@@ -275,7 +275,7 @@ public class ForwardViaSocksProxyMockingIntegrationTest extends AbstractMockingI
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body"),
-                headersToIgnore)
+                    HEADERS_TO_IGNORE)
         );
         // - respond
         assertEquals(
@@ -287,7 +287,7 @@ public class ForwardViaSocksProxyMockingIntegrationTest extends AbstractMockingI
                 request()
                     .withSecure(true)
                     .withPath(calculatePath("test_headers_and_body")),
-                headersToIgnore)
+                    HEADERS_TO_IGNORE)
         );
         // - no response or forward
         assertEquals(
@@ -298,7 +298,7 @@ public class ForwardViaSocksProxyMockingIntegrationTest extends AbstractMockingI
                 request()
                     .withSecure(true)
                     .withPath(calculatePath("test_headers_and_body")),
-                headersToIgnore)
+                    HEADERS_TO_IGNORE)
         );
     }
 }

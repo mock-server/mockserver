@@ -7,27 +7,29 @@ import org.apache.catalina.startup.Tomcat;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.testing.integration.mock.AbstractBasicMockingIntegrationTest;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mockservlet.MockServerServlet;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.tls.KeyStoreFactory;
+import org.mockserver.testing.integration.mock.AbstractBasicMockingSameJVMIntegrationTest;
 
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
  * @author jamesdbloom
  */
-public class ClientServerWarWithContextPathIntegrationTest extends AbstractBasicMockingIntegrationTest {
+public class ClientServerWarWithContextPathIntegrationTest extends AbstractBasicMockingSameJVMIntegrationTest {
 
     private static final int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private static final int SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private static Tomcat tomcat;
 
     @BeforeClass
+    @SuppressWarnings("deprecation")
     public static void startServer() throws Exception {
         servletContext = "mockserver";
 
@@ -40,7 +42,7 @@ public class ClientServerWarWithContextPathIntegrationTest extends AbstractBasic
         defaultConnector.setRedirectPort(SERVER_HTTPS_PORT);
 
         // add https connector
-        KeyStoreFactory keyStoreFactory = new KeyStoreFactory(new MockServerLogger());
+        KeyStoreFactory keyStoreFactory = new KeyStoreFactory(configuration(), new MockServerLogger());
         keyStoreFactory.loadOrCreateKeyStore();
         Connector httpsConnector = new Connector();
         httpsConnector.setPort(SERVER_HTTPS_PORT);

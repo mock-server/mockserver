@@ -1,6 +1,7 @@
 package org.mockserver.validator.jsonschema;
 
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.HttpRequest;
 
 /**
  * @author jamesdbloom
@@ -10,13 +11,15 @@ public class JsonSchemaHttpRequestValidator extends JsonSchemaValidator {
     private JsonSchemaHttpRequestValidator(MockServerLogger mockServerLogger) {
         super(
             mockServerLogger,
+            HttpRequest.class,
             "org/mockserver/model/schema/",
             "httpRequest",
             "stringOrJsonSchema",
             "body",
             "keyToMultiValue",
             "keyToValue",
-            "socketAddress"
+            "socketAddress",
+            "draft-07"
         );
     }
 

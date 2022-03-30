@@ -1,5 +1,6 @@
 package org.mockserver.dashboard;
 
+import com.google.common.base.Joiner;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
@@ -19,12 +20,15 @@ import org.mockserver.uuid.UUIDService;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.log.model.LogEntry.LogMessageType.FORWARDED_REQUEST;
 import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
 import static org.mockserver.model.HttpRequest.request;
@@ -653,6 +657,7 @@ public class DashboardWebSocketHandlerTest {
     @Test
     public void shouldSerialiseEventsWithoutFields() throws InterruptedException {
         // given
+        RuntimeException throwable = new RuntimeException();
         List<LogEntry> logEntries = Arrays.asList(
             new LogEntry()
                 .setHttpRequest(request("one").withLogCorrelationId(UUIDService.getUUID())),
@@ -662,7 +667,7 @@ public class DashboardWebSocketHandlerTest {
                 .setMessageFormat("messageFormatTwo"),
             new LogEntry(),
             new LogEntry()
-                .setThrowable(new RuntimeException())
+                .setThrowable(throwable)
         );
         String renderedList = "{" + NEW_LINE +
             "  \"logMessages\" : [ {" + NEW_LINE +
@@ -676,7 +681,19 @@ public class DashboardWebSocketHandlerTest {
             "        \"overflow\" : \"auto\"," + NEW_LINE +
             "        \"color\" : \"rgb(59,122,87)\"," + NEW_LINE +
             "        \"paddingTop\" : \"4px\"" + NEW_LINE +
-            "      }" + NEW_LINE +
+            "      }," + NEW_LINE +
+            "      \"messageParts\" : [ {" + NEW_LINE +
+            "        \"key\" : \"" + logEntries.get(4).id() + "_0msg\"," + NEW_LINE +
+            "        \"value\" : \"RuntimeException\"" + NEW_LINE +
+            "      }, {" + NEW_LINE +
+            "        \"key\" : \"" + logEntries.get(4).id() + "_throwable_msg\"," + NEW_LINE +
+            "        \"value\" : \"exception:\"" + NEW_LINE +
+            "      }, {" + NEW_LINE +
+            "        \"key\" : \"" + logEntries.get(4).id() + "_throwable_value\"," + NEW_LINE +
+            "        \"multiline\" : true," + NEW_LINE +
+            "        \"argument\" : true," + NEW_LINE +
+            "        \"value\" : [ " + Joiner.on(", ").join(Arrays.stream(getStackTrace(throwable).split(System.lineSeparator())).map(line -> "\"" + line.replaceAll("\\t", "\\\\t") + "\"").collect(Collectors.toList())) + " ]" + NEW_LINE +
+            "      } ]" + NEW_LINE +
             "    }" + NEW_LINE +
             "  }, {" + NEW_LINE +
             "    \"key\" : \"" + logEntries.get(3).id() + "_log\"," + NEW_LINE +
@@ -1263,8 +1280,8 @@ public class DashboardWebSocketHandlerTest {
     private void shouldRenderFilteredLogEntriesCorrectly(boolean contains, RequestDefinition requestFilter, List<LogEntry> logEntries, List<Expectation> expectations, String... renderListSections) throws InterruptedException {
         // given
         MockServerLogger mockServerLogger = new MockServerLogger(DashboardWebSocketHandlerTest.class);
-        Scheduler scheduler = new Scheduler(mockServerLogger, true);
-        HttpState httpState = new HttpState(mockServerLogger, scheduler);
+        Scheduler scheduler = new Scheduler(configuration(), mockServerLogger, true);
+        HttpState httpState = new HttpState(configuration(), mockServerLogger, scheduler);
         new Scheduler.SchedulerThreadFactory("MockServer Test " + this.getClass().getSimpleName()).newThread(() -> {
             MockServerEventLog mockServerEventLog = httpState.getMockServerLog();
             for (LogEntry logEntry : logEntries) {

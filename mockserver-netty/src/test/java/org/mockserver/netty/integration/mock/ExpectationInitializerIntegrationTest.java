@@ -5,7 +5,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockserver.client.NettyHttpClient;
+import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.logging.MockServerLogger;
@@ -22,6 +22,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.mock.Expectation.when;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -39,7 +40,7 @@ public class ExpectationInitializerIntegrationTest {
     @BeforeClass
     public static void createClientAndEventLoopGroup() {
         clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(ExpectationInitializerIntegrationTest.class.getSimpleName() + "-eventLoop"));
-        httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false);
+        httpClient = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false);
     }
 
     @AfterClass
@@ -91,7 +92,7 @@ public class ExpectationInitializerIntegrationTest {
 
         try {
             // when
-            String specUrlOrPayload = "org/mockserver/mock/openapi_petstore_example.json";
+            String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example.json";
             ConfigurationProperties.initializationJsonPath("org/mockserver/netty/integration/mock/initializer/openAPIExpectionInitializerJson.json");
             mockServer = new ClientAndServer();
 

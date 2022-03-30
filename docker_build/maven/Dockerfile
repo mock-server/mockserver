@@ -6,18 +6,21 @@
 #
 
 # pull base image.
-FROM ubuntu:bionic
+FROM ubuntu:focal
 
 # maintainer details
 MAINTAINER James Bloom "jamesdbloom@gmail.com"
 
 # update packages
+ENV DEBIAN_FRONTEND=noninteractive
 RUN export DEBIAN_FRONTEND=noninteractive
 RUN sed -i 's/# \(.*multiverse$\)/\1/g' /etc/apt/sources.list
 RUN apt-get update
 RUN apt-get -y upgrade
 
 # install basic build tools
+ENV TZ=Europe/London
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN apt-get install -y build-essential
 RUN apt-get install -y software-properties-common
 RUN apt-get install -y curl git htop man unzip vim wget pkg-config python2.7

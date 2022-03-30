@@ -7,8 +7,8 @@ import org.mockserver.model.*;
 import org.mockserver.serialization.model.*;
 
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
-import static org.hamcrest.core.Is.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
@@ -44,12 +44,11 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                     .setCookies(new Cookies().withEntries(
                         cookie("someCookieName", "someCookieValue")
                     ))
-                    .setSocketAddress(new SocketAddressDTO(
-                        new SocketAddress()
-                            .withHost("someHost")
-                            .withPort(1234)
-                            .withScheme(SocketAddress.Scheme.HTTPS)
-                    ))
+                    .setSocketAddress(new SocketAddress()
+                        .withHost("someHost")
+                        .withPort(1234)
+                        .withScheme(SocketAddress.Scheme.HTTPS)
+                    )
             )
             .setHttpResponse(
                 new HttpResponseDTO()

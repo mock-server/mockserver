@@ -8,7 +8,7 @@ import org.mockserver.model.*;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.*;
 
-import javax.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
@@ -1803,6 +1803,28 @@ public class BodyDTODeserializerTest {
             ), expectationDTO);
     }
 
+    @Test
+    public void shouldParseJsonWithXPathBodyWithNamespacePrefixes() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"body\" : {" + NEW_LINE +
+            "            \"namespacePrefixes\" : {\"foo\":\"http://foo\"}," + NEW_LINE +
+            "            \"xpath\" : \"\\\\some\\\\xpath\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setBody(new XPathBodyDTO(new XPathBody("\\some\\xpath", ImmutableMap.of("foo", "http://foo"))))
+            ), expectationDTO);
+    }
     @Test
     public void shouldParseJsonWithXPathBodyWithOptional() throws IOException {
         // given

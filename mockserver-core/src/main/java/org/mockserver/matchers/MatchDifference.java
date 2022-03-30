@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.configuration.ConfigurationProperties.detailedMatchFailures;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.slf4j.event.Level.TRACE;
 
@@ -40,11 +39,13 @@ public class MatchDifference {
         }
     }
 
+    private final boolean detailedMatchFailures;
     private final RequestDefinition httpRequest;
     private final Map<Field, List<String>> differences = new ConcurrentHashMap<>();
     private Field fieldName;
 
-    public MatchDifference(RequestDefinition httpRequest) {
+    public MatchDifference(boolean detailedMatchFailures, RequestDefinition httpRequest) {
+        this.detailedMatchFailures = detailedMatchFailures;
         this.httpRequest = httpRequest;
     }
 
@@ -70,7 +71,7 @@ public class MatchDifference {
     }
 
     public MatchDifference addDifference(Field fieldName, String messageFormat, Object... arguments) {
-        if (detailedMatchFailures()) {
+        if (detailedMatchFailures) {
             if (isNotBlank(messageFormat) && arguments != null && fieldName != null) {
                 this.differences
                     .computeIfAbsent(fieldName, key -> new ArrayList<>())

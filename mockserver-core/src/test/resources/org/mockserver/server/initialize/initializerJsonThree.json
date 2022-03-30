@@ -1,0 +1,18 @@
+[
+  {
+    "httpRequest": {
+      "path": "/pathThreeFirst"
+    },
+    "httpResponse": {
+      "body": "three first response"
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/pathThreeSecond"
+    },
+    "httpResponse": {
+      "body": "three second response"
+    }
+  }
+]

@@ -17,6 +17,13 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
  * @author jamesdbloom
  */
 public class HttpResponseClassCallbackActionHandler {
+
+    private static ClassLoader contextClassLoader = ClassLoader.getSystemClassLoader();
+
+    public static void setContextClassLoader(ClassLoader contextClassLoader) {
+        HttpResponseClassCallbackActionHandler.contextClassLoader = contextClassLoader;
+    }
+
     private final MockServerLogger mockServerLogger;
 
     public HttpResponseClassCallbackActionHandler(MockServerLogger mockServerLogger) {
@@ -30,7 +37,7 @@ public class HttpResponseClassCallbackActionHandler {
     @SuppressWarnings({"rawtypes", "unchecked"})
     private ExpectationResponseCallback instantiateCallback(HttpClassCallback httpClassCallback) {
         try {
-            Class expectationResponseCallbackClass = Class.forName(httpClassCallback.getCallbackClass());
+            Class expectationResponseCallbackClass = contextClassLoader.loadClass(httpClassCallback.getCallbackClass());
             if (ExpectationResponseCallback.class.isAssignableFrom(expectationResponseCallbackClass)) {
                 Constructor<? extends ExpectationResponseCallback> constructor = expectationResponseCallbackClass.getConstructor();
                 return constructor.newInstance();

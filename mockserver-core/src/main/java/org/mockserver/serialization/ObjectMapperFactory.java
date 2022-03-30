@@ -15,6 +15,7 @@ import org.mockserver.serialization.deserializers.expectation.OpenAPIExpectation
 import org.mockserver.serialization.deserializers.request.RequestDefinitionDTODeserializer;
 import org.mockserver.serialization.deserializers.string.NottableStringDeserializer;
 import org.mockserver.serialization.serializers.body.*;
+import org.mockserver.serialization.serializers.certificate.CertificateSerializer;
 import org.mockserver.serialization.serializers.collections.CookiesSerializer;
 import org.mockserver.serialization.serializers.collections.HeadersSerializer;
 import org.mockserver.serialization.serializers.collections.ParametersSerializer;
@@ -27,6 +28,7 @@ import org.mockserver.serialization.serializers.matcher.HttpRequestsPropertiesMa
 import org.mockserver.serialization.serializers.request.HttpRequestDTOSerializer;
 import org.mockserver.serialization.serializers.request.OpenAPIDefinitionDTOSerializer;
 import org.mockserver.serialization.serializers.request.OpenAPIDefinitionSerializer;
+import org.mockserver.serialization.serializers.certificate.X509CertificateSerializer;
 import org.mockserver.serialization.serializers.response.HttpResponseSerializer;
 import org.mockserver.serialization.serializers.response.*;
 import org.mockserver.serialization.serializers.schema.*;
@@ -42,13 +44,14 @@ import static org.mockserver.exception.ExceptionHandling.swallowThrowable;
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class ObjectMapperFactory {
 
-    private static ObjectMapper objectMapper = buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Collections.emptyList());
-    private static final ObjectWriter prettyPrintWriter = buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Collections.emptyList()).writerWithDefaultPrettyPrinter();
-    private static final ObjectWriter writer = buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Collections.emptyList()).writer();
+    private static ObjectMapper objectMapper = buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Collections.emptyList(), false);
+    private static final ObjectWriter prettyPrintWriter = buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Collections.emptyList(), false).writerWithDefaultPrettyPrinter();
+    private static final ObjectWriter prettyPrintWriterThatSerialisesDefaultFields = buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Collections.emptyList(), true).writerWithDefaultPrettyPrinter();
+    private static final ObjectWriter writer = buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Collections.emptyList(), false).writer();
 
     public static ObjectMapper createObjectMapper() {
         if (objectMapper == null) {
-            objectMapper = buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Collections.emptyList());
+            objectMapper = buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Collections.emptyList(), false);
         }
         return objectMapper;
     }
@@ -56,41 +59,44 @@ public class ObjectMapperFactory {
     public static ObjectMapper createObjectMapper(JsonSerializer... additionJsonSerializers) {
         if (additionJsonSerializers == null || additionJsonSerializers.length == 0) {
             if (objectMapper == null) {
-                objectMapper = buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Collections.emptyList());
+                objectMapper = buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Collections.emptyList(), false);
             }
             return objectMapper;
         } else {
-            return buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Arrays.asList(additionJsonSerializers));
+            return buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Arrays.asList(additionJsonSerializers), false);
         }
     }
 
     public static ObjectMapper createObjectMapper(JsonDeserializer... replacementJsonDeserializers) {
         if (replacementJsonDeserializers == null || replacementJsonDeserializers.length == 0) {
             if (objectMapper == null) {
-                objectMapper = buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Collections.emptyList());
+                objectMapper = buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Collections.emptyList(), false);
             }
             return objectMapper;
         } else {
-            return buildObjectMapperWithDeserializerAndSerializers(Arrays.asList(replacementJsonDeserializers), Collections.emptyList());
+            return buildObjectMapperWithDeserializerAndSerializers(Arrays.asList(replacementJsonDeserializers), Collections.emptyList(), false);
         }
     }
 
-    public static ObjectWriter createObjectMapper(boolean pretty, JsonSerializer... additionJsonSerializers) {
+    public static ObjectWriter createObjectMapper(boolean pretty, boolean serialiseDefaultValues, JsonSerializer... additionJsonSerializers) {
         if (additionJsonSerializers == null || additionJsonSerializers.length == 0) {
-            if (pretty) {
+            if (pretty && serialiseDefaultValues) {
+                return prettyPrintWriterThatSerialisesDefaultFields;
+            } else if (pretty) {
                 return prettyPrintWriter;
             } else {
                 return writer;
             }
         } else {
             if (pretty) {
-                return buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Arrays.asList(additionJsonSerializers)).writerWithDefaultPrettyPrinter();
+                return buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Arrays.asList(additionJsonSerializers), serialiseDefaultValues).writerWithDefaultPrettyPrinter();
             } else {
-                return buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Arrays.asList(additionJsonSerializers)).writer();
+                return buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Arrays.asList(additionJsonSerializers), serialiseDefaultValues).writer();
             }
         }
     }
 
+    @SuppressWarnings("deprecation")
     public static ObjectMapper buildObjectMapperWithoutRemovingEmptyValues() {
         ObjectMapper objectMapper = new ObjectMapper();
 
@@ -144,13 +150,13 @@ public class ObjectMapperFactory {
         return objectMapper;
     }
 
-    private static ObjectMapper buildObjectMapperWithDeserializerAndSerializers(List<JsonDeserializer> replacementJsonDeserializers, List<JsonSerializer> replacementJsonSerializers) {
+    private static ObjectMapper buildObjectMapperWithDeserializerAndSerializers(List<JsonDeserializer> replacementJsonDeserializers, List<JsonSerializer> replacementJsonSerializers, boolean serialiseDefaultValues) {
         ObjectMapper objectMapper = buildObjectMapperWithOnlyConfigurationDefaults();
 
         // register our own module with our serializers and deserializers
         SimpleModule module = new SimpleModule();
         addDeserializers(module, replacementJsonDeserializers.toArray(new JsonDeserializer[0]));
-        addSerializers(module, replacementJsonSerializers.toArray(new JsonSerializer[0]));
+        addSerializers(module, replacementJsonSerializers.toArray(new JsonSerializer[0]), serialiseDefaultValues);
         objectMapper.registerModule(module);
         return objectMapper;
     }
@@ -188,7 +194,7 @@ public class ObjectMapperFactory {
         }
     }
 
-    private static void addSerializers(SimpleModule module, JsonSerializer[] replacementJsonSerializers) {
+    private static void addSerializers(SimpleModule module, JsonSerializer[] replacementJsonSerializers, boolean serialiseDefaultValues) {
         List<JsonSerializer> jsonSerializers = Arrays.asList(
             // expectation
             new OpenAPIExpectationSerializer(),
@@ -206,8 +212,8 @@ public class ObjectMapperFactory {
             // request body
             new BinaryBodySerializer(),
             new BinaryBodyDTOSerializer(),
-            new JsonBodySerializer(),
-            new JsonBodyDTOSerializer(),
+            new JsonBodySerializer(serialiseDefaultValues),
+            new JsonBodyDTOSerializer(serialiseDefaultValues),
             new JsonSchemaBodySerializer(),
             new JsonSchemaBodyDTOSerializer(),
             new JsonPathBodySerializer(),
@@ -216,8 +222,8 @@ public class ObjectMapperFactory {
             new ParameterBodyDTOSerializer(),
             new RegexBodySerializer(),
             new RegexBodyDTOSerializer(),
-            new StringBodySerializer(),
-            new StringBodyDTOSerializer(),
+            new StringBodySerializer(serialiseDefaultValues),
+            new StringBodyDTOSerializer(serialiseDefaultValues),
             new XmlBodySerializer(),
             new XmlBodyDTOSerializer(),
             new XmlSchemaBodySerializer(),
@@ -238,6 +244,9 @@ public class ObjectMapperFactory {
             new HeadersSerializer(),
             new ParametersSerializer(),
             new CookiesSerializer(),
+            // certifcates
+            new X509CertificateSerializer(),
+            new CertificateSerializer(),
             // log
             new org.mockserver.serialization.serializers.log.LogEntrySerializer(),
             // matcher

@@ -1,21 +1,58 @@
 <h2>Deploying MockServer Helm Chart</h2>
 
-<p>To run MockServer in Kubernetes the easiest way is to use the existing <a href="https://www.mock-server.com/mockserver-5.11.2.tgz">MockServer helm chart</a>.</p>
+<p>There are three ways to deploy the MockServer helm chart:</p>
+
+<ol>
+    <li><a href="#deploy_via_chart_repository">via chart repository</a></li>
+    <li><a href="#deploy_via_package">via package</a></li>
+    <li><a href="#deploy_via_local_source">via local source</a></li>
+</ol>
+
+<a id="deploy_via_chart_repository" class="anchor" href="#helm_extend_classpath">&nbsp</a>
+
+<h3>Deploy Via Chart Repository</h3>
+
+<p>You can add the MockServer chart repository as follows:</p>
+
+<pre class="prettyprint code"><code class="code">helm repo add mockserver https://www.mock-server.com
+helm repo update</code></pre>
+
+<p>Then the helm chart can be installed as follows:</p>
+
+<pre class="prettyprint code"><code class="code">helm upgrade --install --kube-context &lt;your kube context&gt; --namespace mockserver --create-namespace --version 5.13.0 mockserver mockserver/mockserver</code></pre>
+
+<p>If using get the following error:</p>
+
+<pre class="prettyprint code"><code class="code">Error: failed to download "mockserver/mockserver" at version "5.13.0"</code></pre>
+
+<p>Then update local cache of helm charts:</p>
+
+<pre class="prettyprint code"><code class="code">helm repo update</code></pre>
+
+<a id="deploy_via_package" class="anchor" href="#helm_extend_classpath">&nbsp</a>
+
+<h3>Deploy Via Package</h3>
+
+<p>To run MockServer in Kubernetes the easiest way is to use the existing <a target="_blank" href="https://www.mock-server.com/mockserver-5.13.0.tgz">MockServer helm chart</a>.</p>
 
 <p>This is available by using <strong>www.mock-server.com</strong> as a chart repo, with the following command:</p>
 
-<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver mockserver http://www.mock-server.com/mockserver-5.11.2.tgz</code></pre>
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver mockserver http://www.mock-server.com/mockserver-5.13.0.tgz</code></pre>
 
-<p><strong>OR</strong></p>
+<a id="deploy_via_local_source" class="anchor" href="#helm_extend_classpath">&nbsp</a>
+
+<h3>Deploy Via Local Source</h3>
 
 <p>If you have helm chart source folder (i.e. you have the repository cloned):</p>
 
 <pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver mockserver helm/mockserver</code></pre>
 
-<p>The two commands above will install MockServer into a <strong>namespace</strong> called <span class="keyword">mockserver</span> with default configuration (as per the embedded <a href="https://github.com/mock-server/mockserver/blob/master/helm/mockserver/values.yaml">values.yaml</a>).</p>
+<p>The commands above will install MockServer into a <strong>namespace</strong> called <span class="keyword">mockserver</span> with default configuration (as per the embedded <a target="_blank"href="https://github.com/mock-server/mockserver/blob/master/helm/mockserver/values.yaml">values.yaml</a>).</p>
 <p>MockServer will then be available on domain name <span class="keyword">mockserver.mockserver.svc.cluster.local</span>, as long as the namespace you are calling from isn't prevented (by network policy) to call the <span class="keyword">mockserver</span> namespace.</p>
 
 <a id="logs" class="anchor" href="#logs">&nbsp</a>
+
+<h3>Chart Deployment Status</h3>
 
 <p>To view the logs:</p>
 
@@ -31,13 +68,17 @@
 
 <pre class="prettyprint code"><code class="code">kubectl -n mockserver get po -l release=mockserver</code></pre>
 
+<p>To undeploy the helm chart:</p>
+
+<pre class="prettyprint code"><code class="code">helm delete -n mockserver mockserver</code></pre>
+
 <a id="basic_mockserver_configuration" class="anchor" href="#basic_mockserver_configuration">&nbsp</a>
 
 <h2>Basic MockServer Configuration</h2>
 
 <p>Modify the arguments used to start the docker container by setting values explicitly using <span class="keyword">--set</span>, as follows:</p>
 
-<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.serverPort=1080 --set app.logLevel=INFO mockserver http://www.mock-server.com/mockserver-5.11.2.tgz</code></pre>
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.serverPort=1080 --set app.logLevel=INFO mockserver http://www.mock-server.com/mockserver-5.13.0.tgz</code></pre>
 
 <p>The following values are supported:</p>
 <ul>
@@ -51,7 +92,7 @@
 
 <p>For example configure a proxyRemoteHost and proxyRemotePort, as follows:</p>
 
-<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.serverPort=1080 --set app.proxyRemoteHost=www.mock-server.com --set app.proxyRemotePort=443 mockserver http://www.mock-server.com/mockserver-5.11.2.tgz</code></pre>
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.serverPort=1080 --set app.proxyRemoteHost=www.mock-server.com --set app.proxyRemotePort=443 mockserver http://www.mock-server.com/mockserver-5.13.0.tgz</code></pre>
 
 <p>Double check the correct arguments have been passed to the pod, as follows:</p>
 
@@ -80,7 +121,7 @@ For example:
 
 <pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.mountedConfigMapName=other-mockserver-config --set app.propertiesFileNamem=other-mockserver.properties mockserver helm/mockserver</code></pre>
 
-An example of a helm chart to configure MockServer is <a href="https://github.com/mock-server/mockserver/tree/master/helm/mockserver-config">helm/mockserver-config</a>
+An example of a helm chart to configure MockServer is <a target="_blank"href="https://github.com/mock-server/mockserver/tree/master/helm/mockserver-config">helm/mockserver-config</a>
 
 <a id="helm_extend_classpath" class="anchor" href="#helm_extend_classpath">&nbsp</a>
 
@@ -102,7 +143,7 @@ For example:
 
 <h2>MockServer URL</h2>
 
-<h3>Local Kubernetes Cluster (i.e. <a href="https://github.com/kubernetes/minikube">minikube</a>, <a href="https://microk8s.io">microk8s</a>)</h3>
+<h3>Local Kubernetes Cluster (i.e. <a target="_blank"href="https://github.com/kubernetes/minikube">minikube</a>, <a target="_blank" href="https://microk8s.io">microk8s</a>)</h3>
 
 <p>If the <span class="keyword">service</span> type hasn't been modified the following will provide the MockServer URL from outside the cluster.</p>
 
@@ -117,13 +158,13 @@ echo http://$MOCKSERVER_HOST</code></pre>
 
 <h3>Docker for Desktop</h3>
 
-<p><a href="https://www.docker.com/products/docker-desktop">Docker for Desktop</a> automatically exposes <strong>LoadBalancer</strong> services.</p>
+<p><a target="_blank" href="https://www.docker.com/products/docker-desktop">Docker for Desktop</a> automatically exposes <strong>LoadBalancer</strong> services.</p>
 
-<p>On MacOS Docker for Desktop runs inside <a href="https://github.com/moby/hyperkit">Hyperkit</a> so the node IP address is not reachable, therefore the only way to call services is via the exposed <strong>LoadBalancer</strong> service added by Docker for Desktop.</p>
+<p>On MacOS Docker for Desktop runs inside <a target="_blank"href="https://github.com/moby/hyperkit">Hyperkit</a> so the node IP address is not reachable, therefore the only way to call services is via the exposed <strong>LoadBalancer</strong> service added by Docker for Desktop.</p>
 
 <p>To ensure that Docker for Desktop exposes MockServer update the service type to <strong>LoadBalancer</strong> using <strong>--set service.type=LoadBalancer</strong> and set the exposed port using <strong>--set service.port=1080</strong>, as follows:</p>
 
-<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set service.type=LoadBalancer --set service.port=1080 mockserver http://www.mock-server.com/mockserver-5.11.2.tgz</code></pre>
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set service.type=LoadBalancer --set service.port=1080 mockserver http://www.mock-server.com/mockserver-5.13.0.tgz</code></pre>
 
 <p>MockServer will then be reachable on <strong>http://localhost:1080</strong></p>
 
@@ -141,7 +182,7 @@ echo http://$MOCKSERVER_HOST</code></pre>
 
 <h3>Inside Kubernetes Cluster</h3>
 
-<p>If a <a href="https://kubernetes.io/docs/concepts/services-networking/service/#dns">DNS server</a> has been installed in the Kubernetes cluster the following DNS name should be available <span class="keyword">mockserver.&lt;namespace&gt;.svc.cluster.local</span>, i.e. <span class="keyword">mockserver.mockserver.svc.cluster.local</span></p>
+<p>If a <a target="_blank" href="https://kubernetes.io/docs/concepts/services-networking/service/#dns">DNS server</a> has been installed in the Kubernetes cluster the following DNS name should be available <span class="keyword">mockserver.&lt;namespace&gt;.svc.cluster.local</span>, i.e. <span class="keyword">mockserver.mockserver.svc.cluster.local</span></p>
 
 <a id="helm_delete" class="anchor" href="#helm_delete">&nbsp</a>
 

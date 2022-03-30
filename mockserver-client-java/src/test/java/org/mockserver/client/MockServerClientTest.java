@@ -10,7 +10,8 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.internal.verification.AtLeast;
-import org.mockserver.Version;
+import org.mockserver.httpclient.NettyHttpClient;
+import org.mockserver.httpclient.SocketConnectionException;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
@@ -20,6 +21,7 @@ import org.mockserver.serialization.model.*;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
+import org.mockserver.version.Version;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -33,8 +35,10 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static junit.framework.TestCase.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.collection.IsArrayWithSize.arrayWithSize;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.matchers.Times.unlimited;
@@ -95,7 +99,7 @@ public class MockServerClientTest {
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage(containsString("Request with default properties can not be null"));
 
-        mockServerClient.setRequestOverride(null);
+        mockServerClient.withRequestOverride(null);
     }
 
     @Test
@@ -108,7 +112,7 @@ public class MockServerClientTest {
 
         // when
         mockServerClient
-            .setRequestOverride(defaultRequestProperties)
+            .withRequestOverride(defaultRequestProperties)
             .reset();
 
         // then
@@ -397,7 +401,7 @@ public class MockServerClientTest {
         assertTrue(expectation.isActive());
         assertThat(expectation.getHttpForwardTemplate(), nullValue());
         assertThat(expectation.getHttpOverrideForwardedRequest(), is(new HttpOverrideForwardedRequest()
-            .withHttpRequest(request().withBody("some_overridden_body"))
+            .withRequestOverride(request().withBody("some_overridden_body"))
         ));
         assertEquals(Times.unlimited(), expectation.getTimes());
     }
@@ -642,7 +646,7 @@ public class MockServerClientTest {
                 .setHttpOverrideForwardedRequest(
                     new HttpOverrideForwardedRequestDTO(
                         new HttpOverrideForwardedRequest()
-                            .withHttpRequest(
+                            .withRequestOverride(
                                 request()
                                     .withBody("some_replaced_body")
                             )
@@ -901,7 +905,9 @@ public class MockServerClientTest {
         when(mockRequestDefinitionSerializer.deserializeArray("body")).thenReturn(httpRequests);
 
         // when
-        assertSame(httpRequests, mockServerClient.retrieveRecordedRequests(someRequestMatcher));
+        HttpRequest[] recordedRequests = mockServerClient.retrieveRecordedRequests(someRequestMatcher);
+        assertThat(recordedRequests, instanceOf(HttpRequest[].class));
+        assertThat(recordedRequests, arrayWithSize(0));
 
         // then
         verify(mockHttpClient).sendRequest(
@@ -927,7 +933,9 @@ public class MockServerClientTest {
         when(mockRequestDefinitionSerializer.deserializeArray("body")).thenReturn(httpRequests);
 
         // when
-        assertSame(httpRequests, mockServerClient.retrieveRecordedRequests(null));
+        HttpRequest[] recordedRequests = mockServerClient.retrieveRecordedRequests(null);
+        assertThat(recordedRequests, instanceOf(HttpRequest[].class));
+        assertThat(recordedRequests, arrayWithSize(0));
 
         // then
         verify(mockHttpClient).sendRequest(

@@ -56,6 +56,15 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 );</code></pre>
 </div>
 
+<p>To use the Java client add the <strong>org.mock-server:mockserver-netty:5.13.0</strong> dependency.  The <strong>shaded</strong> classifier can be used to reduce any conflicts with MockServer dependencies, for example in maven:</p>
+
+<pre><code class="code xml">&lt;<span class="element">dependency</span>&gt;
+	&lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
+	&lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-client-java</span>&lt;/<span class="element">artifactId</span>&gt;
+	&lt;<span class="element">version</span>&gt;<span class="element_value">RELEASE</span>&lt;/<span class="element">version</span>&gt;
+	&lt;<span class="element">classifier</span>&gt;<span class="element_value">shaded</span>&lt;/<span class="element">classifier</span>&gt;
+&lt;/<span class="element">dependency</span>&gt;</code></pre>
+
 <p>A <strong>request matcher expectation</strong> may contain:</p>
 <ul>
     <li><strong><a href="#request_matchers">request matcher</a></strong> - used to match which requests this expectation should be applied to</li>
@@ -66,7 +75,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <li><strong><a href="#button_match_request_update_by_id">id</a></strong> <em>(optional)</em> - used for updating an existing expectation (i.e. when the id matches)</li>
 </ul>
 
-<p><strong><a href="/mock_server/using_openapi.html#generate_expectation_from_openapi">open api expectations</a></strong> are also supported using an <a href="https://swagger.io/docs/specification/basic-structure/"><strong>OpenAPI
+<p><strong><a href="/mock_server/using_openapi.html#generate_expectation_from_openapi">open api expectations</a></strong> are also supported using an <a target="_blank" href="https://swagger.io/docs/specification/basic-structure/"><strong>OpenAPI
     v3</strong></a> specifications to generate <strong>request matcher expectations</strong> for each operation, see the section on <strong><a href="/mock_server/using_openapi.html#generate_expectation_from_openapi">open api
     expectations</a></strong> for details.</p>
 
@@ -97,7 +106,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 <p>The are two types of <strong>request matcher</strong>:</p>
 <ul>
     <li><strong><a href="#request_properties_matchers">request properties matcher</a></strong> - that match requests using HTTP properties such as <strong>method</strong>, <strong>path</strong> or <strong>body</strong></li>
-    <li><strong><a href="#request_openapi_matchers">open api request matcher</a></strong> - that match requests using an <a href="https://swagger.io/docs/specification/about/"><strong>OpenAPI</strong></a> definition</li>
+    <li><strong><a href="#request_openapi_matchers">open api request matcher</a></strong> - that match requests using an <a target="_blank" href="https://swagger.io/docs/specification/about/"><strong>OpenAPI</strong></a> definition</li>
 </ul>
 
 <a id="request_properties_matchers" class="anchor" href="#request_properties_matchers">&nbsp;</a>
@@ -132,7 +141,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
             <li><strong>use for:</strong> method, path, path parameter keys, path parameters values, query parameter keys, query parameters values, header keys, header values, cookie keys, cookie values or bodies</li>
             <li><strong>examples:</strong> <a href="#button_match_request_by_method_regex">method</a>, <a href="#button_match_request_by_regex_path">path</a>, <a href="#button_match_request_by_path_parameter_regex_value">path parameters</a>, <a
                     href="#button_match_request_by_query_parameter_name_regex">query parameters</a>, <a href="#button_match_request_by_header_name_regex">headers</a></li>
-            <li>for syntax see <a href="https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html">Java regex syntax</a></li>
+            <li>for syntax see <a target="_blank" href="https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html">Java regex syntax</a></li>
         </ul>
     </li>
     <li><strong>json schema</strong>
@@ -140,7 +149,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
             <li><strong>use for:</strong> method, path, path parameters values, query parameters values, header values, cookie values or bodies</li>
             <li><strong>not supported for:</strong> path parameter keys, query parameter keys, header keys or cookie keys</li>
             <li><strong>examples:</strong> <a href="#button_match_request_by_path_parameter_json_schema_value">path parameters</a>, <a href="#button_match_request_by_query_parameter_value_json_schema">query parameters</a>, <a href="#button_match_request_by_header_value_json_schema">headers</a> , <a href="#button_match_request_by_cookies_value_json_schema">cookies</a></li>
-            <li>for syntax see <a href="https://json-schema.org">JSON Schema documentation</a></li>
+            <li>for syntax see <a target="_blank" href="https://json-schema.org">JSON Schema documentation</a></li>
         </ul>
     </li>
     <li><strong>optional value</strong>
@@ -193,7 +202,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 
 <ul>
     <li><strong><a href="#button_match_request_by_body_in_utf16">plain text</a></strong> (i.e. exact match)</li>
-    <li><strong><a href="#button_match_request_by_regex_body">regular expression</a></strong> - see <a href="https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html">Java regex syntax</a></li>
+    <li><strong><a href="#button_match_request_by_regex_body">regular expression</a></strong> - see <a target="_blank" href="https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html">Java regex syntax</a></li>
     <li><strong><a href="#button_match_request_by_body_with_json_exactly">JSON</a></strong> - supports:
         <ul>
             <li><strong>matchType</strong> to control which fields get matched:
@@ -207,12 +216,12 @@ mockServerClient("localhost", 1080).mockAnyResponse({
                     <li><strong>${json-unit.ignore-element}</strong> ignore a field</li>
                     <li><strong>${json-unit.any-boolean}</strong> match a field as any boolean</li>
                 </ul>
-                see <a href="https://github.com/lukas-krecan/JsonUnit">JSONUnit documentation</a> for full details
+                see <a target="_blank"href="https://github.com/lukas-krecan/JsonUnit">JSONUnit documentation</a> for full details
             </li>
         </ul>
     </li>
-    <li><strong><a href="#button_match_request_by_body_with_json_schema">JSON Schema</a></strong> - see <a href="https://json-schema.org/">JSON Schema documentation</a></li>
-    <li><strong><a href="#button_match_request_by_body_with_json_path">JsonPath</a></strong> - matches if at least one value is returned by the expression, see <a href="https://github.com/json-path/JsonPath">JsonPath documentation</a></li>
+    <li><strong><a href="#button_match_request_by_body_with_json_schema">JSON Schema</a></strong> - see <a target="_blank" href="https://json-schema.org/">JSON Schema documentation</a></li>
+    <li><strong><a href="#button_match_request_by_body_with_json_path">JsonPath</a></strong> - matches if at least one value is returned by the expression, see <a target="_blank"href="https://github.com/json-path/JsonPath">JsonPath documentation</a></li>
     <li><strong><a href="#button_match_request_by_body_with_xml">XML</a></strong> - supports:
         <ul>
             <li><strong><a href="#button_match_request_by_body_with_xml_placeholders">XMLUnit placeholders</a></strong> to allow fields or elements to be ignored or matched by type for example:
@@ -220,12 +229,12 @@ mockServerClient("localhost", 1080).mockAnyResponse({
                     <li><strong>${xmlunit.ignore}</strong> ignore an element</li>
                     <li><strong>${xmlunit.isNumber}</strong> match an element or attribute as a number</li>
                 </ul>
-                see <a href="https://github.com/xmlunit/user-guide/wiki/Placeholders">XMLUnit documentation</a> for full details
+                see <a target="_blank"href="https://github.com/xmlunit/user-guide/wiki/Placeholders">XMLUnit documentation</a> for full details
             </li>
         </ul>
     </li>
-    <li><strong><a href="#button_match_request_by_body_with_xml_schema">XML Schema</a></strong> - see <a href="https://www.w3.org/standards/xml/schema.html">XML Schema documentation</a></li>
-    <li><strong><a href="#button_match_request_by_body_with_xpath">XPath</a></strong> - matches if at least one value returned by expression, see <a href="https://www.w3.org/TR/2017/REC-xpath-31-20170321/">XPath specification</a></li>
+    <li><strong><a href="#button_match_request_by_body_with_xml_schema">XML Schema</a></strong> - see <a target="_blank" href="https://www.w3.org/standards/xml/schema.html">XML Schema documentation</a></li>
+    <li><strong><a href="#button_match_request_by_body_with_xpath">XPath</a></strong> - matches if at least one value returned by expression, see <a target="_blank" href="https://www.w3.org/TR/2017/REC-xpath-31-20170321/">XPath specification</a></li>
     <li><strong><a href="#button_match_request_by_form_submission_body">form fields</a></strong> (i.e. body parameters)</li>
     <li><strong><a href="#button_match_request_by_binary_body">binary</a></strong></li>
     <li><strong><a href="#button_match_request_by_not_matching_body_with_xpath">negated matcher</a></strong></li>
@@ -241,7 +250,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 <p>An <strong>open api request matcher</strong> can contain any of the following fields:</p>
 
 <ul>
-    <li><strong>specUrlOrPayload</strong> - mandatory value containing an <a href="https://swagger.io/docs/specification/basic-structure/"><strong>OpenAPI v3</strong></a> specifications in either JSON or YAML format as an:
+    <li><strong>specUrlOrPayload</strong> - mandatory value containing an <a target="_blank" href="https://swagger.io/docs/specification/basic-structure/"><strong>OpenAPI v3</strong></a> specifications in either JSON or YAML format as an:
         <ul>
             <li><strong><a href="#button_match_by_openapi_url">HTTP/HTTPS URL</a></strong></li>
             <li><strong><a href="#button_match_by_openapi_filepath">File URL</a></strong></li>
@@ -282,7 +291,8 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <li><strong><a href="#forward_action">forward</a></strong> - forwards modified requests and returns modified response by using
         <ul>
             <li>the <strong><a href="#button_forward_exactly">exact request and response received</a></strong></li>
-            <li>an <strong><a href="#button_forward_overridden">static overridden for request and / or response</a></strong></li>
+            <li>an <strong><a href="#button_forward_overridden">static overridden request and / or response</a></strong></li>
+            <li>a <strong><a href="#button_forward_overridden_and_modified_req">dynamically modified request and / or response</a></strong></li>
             <li>a <strong><a href="#button_javascript_templated_forward">javascript template (request only)</a></strong></li>
             <li>a <strong><a href="#button_javascript_velocity_templated_forward">velocity template (request only)</a></strong></li>
             <li>a <strong><a href="#button_forward_class_callback">class callback for request and / or response</a></strong> (must be present in classpath)</li>
@@ -354,8 +364,8 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         </ul>
     </li>
     <li>
-        <p>or an <a href="#button_forward_overridden">overridden request</a> (or overridden response), with a <strong><a href="#button_forward_overridden_with_delay">delay</a></strong>, that allows any part of a request to be overridden
-            before it is forwarded and allows any part of it's response to be overridden</p>
+        <p>or an <a href="#button_forward_overridden">overridden request</a> (or overridden response), with a <strong><a href="#button_forward_overridden_with_delay">delay</a></strong>, that allows any part of a forwarded request or
+            response to be replaced or certain fields (path, headers, cookies or query parameters) to be modified</p>
     </li>
     <li>
         <p>or a templated forwarder using <strong><a href="#button_javascript_templated_forward">javascript</a></strong> or <strong><a href="#button_javascript_velocity_templated_forward">velocity</a></strong>, with a <strong><a

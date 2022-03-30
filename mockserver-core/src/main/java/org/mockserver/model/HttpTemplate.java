@@ -60,7 +60,8 @@ public class HttpTemplate extends Action<HttpTemplate> {
 
     public enum TemplateType {
         JAVASCRIPT,
-        VELOCITY
+        VELOCITY,
+        MUSTACHE
     }
 
     @Override

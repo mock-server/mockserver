@@ -51,7 +51,6 @@ public class VerificationSerializationErrorsTest {
         // given
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("Exception while serializing verification to JSON with value {" + NEW_LINE +
-            "  \"httpRequest\" : { }," + NEW_LINE +
             "  \"times\" : {" + NEW_LINE +
             "    \"atLeast\" : 1" + NEW_LINE +
             "  }" + NEW_LINE +
@@ -116,7 +115,7 @@ public class VerificationSerializationErrorsTest {
                 " schema validation errors:" + NEW_LINE +
                 "" + NEW_LINE +
                 "  1 error:" + NEW_LINE +
-                "   - $: should be valid to one and only one of the schemas but more than one schemas {{\"required\":[\"expectationId\"]}{\"required\":[\"httpRequest\"]}} are valid " + NEW_LINE +
+                "   - $: should be valid to one and only one of schema, but more than one are valid: {\"required\":[\"expectationId\"]}{\"required\":[\"httpRequest\"]}" + NEW_LINE +
                 "  " + NEW_LINE +
                 "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  " )));
         }

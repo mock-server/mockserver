@@ -80,7 +80,7 @@ public class VerificationDTOTest {
         VerificationDTO verificationDTO = new VerificationDTO(new Verification());
 
         // then
-        assertThat(verificationDTO.getHttpRequest(), is(new HttpRequestDTO(request())));
+        assertThat(verificationDTO.getHttpRequest(), nullValue());
         assertThat(verificationDTO.getTimes(), is(new VerificationTimesDTO(VerificationTimes.atLeast(1))));
     }
 

@@ -7,7 +7,7 @@
 
 <p>To create a MockServer cluster all instances need to:</p>
 <ul>
-    <li>share a read-write file system i.e. same physical / virtual machine, <a href="https://en.wikipedia.org/wiki/Network_File_System">NFS</a>, <a href="https://aws.amazon.com/efs/">AWS EFS</a>, <a href="https://docs.microsoft.com/en-us/azure/storage/files/">Azure Files</a>, etc</li>
+    <li>share a read-write file system i.e. same physical / virtual machine, <a target="_blank" href="https://en.wikipedia.org/wiki/Network_File_System">NFS</a>, <a target="_blank" href="https://aws.amazon.com/efs/">AWS EFS</a>, <a target="_blank" href="https://docs.microsoft.com/en-us/azure/storage/files/">Azure Files</a>, etc</li>
     <li>configure identical <a href="/mock_server/initializing_expectations.html#expectation_initializer_json">expectation initialiser</a> and <a href="/mock_server/persisting_expectations.html">expectation persistence</a></li>
     <li>bind to a free port i.e. separate ports if on same physical / virtual machine</li>
 </ul>
@@ -18,7 +18,7 @@
 MOCKSERVER_INITIALIZATION_JSON_PATH=mockserverInitialization.json \
 MOCKSERVER_PERSIST_EXPECTATIONS=true \
 MOCKSERVER_PERSISTED_EXPECTATIONS_PATH=mockserverInitialization.json \
-java -jar ~/Downloads/mockserver-netty-5.11.2-jar-with-dependencies.jar -serverPort 1080 -logLevel INFO</code></pre>
+java -jar ~/Downloads/mockserver-netty-5.13.0-shaded.jar -serverPort 1080 -logLevel INFO</code></pre>
 
 <p>or</p>
 
@@ -27,4 +27,4 @@ java -jar ~/Downloads/mockserver-netty-5.11.2-jar-with-dependencies.jar -serverP
 -Dmockserver.initializationJsonPath=mockserverInitialization.json \
 -Dmockserver.persistExpectations=true \
 -Dmockserver.persistedExpectationsPath=mockserverInitialization.json \
--jar ~/Downloads/mockserver-netty-5.11.2-jar-with-dependencies.jar -serverPort 1080 -logLevel INFO</code></pre>
+-jar ~/Downloads/mockserver-netty-5.13.0-shaded.jar -serverPort 1080 -logLevel INFO</code></pre>

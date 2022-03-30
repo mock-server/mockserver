@@ -7,7 +7,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockserver.client.NettyHttpClient;
+import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
@@ -19,6 +19,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.HttpRequest.request;
@@ -35,12 +36,17 @@ public class HttpProxyContentLengthIntegrationTest {
     private static ClientAndServer targetClientAndServer;
     private static ClientAndServer proxyClientAndServer;
 
-    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(HttpProxyContentLengthIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    private static EventLoopGroup clientEventLoopGroup;
 
     @BeforeClass
     public static void startServer() {
         targetClientAndServer = startClientAndServer();
         proxyClientAndServer = startClientAndServer();
+    }
+
+    @BeforeClass
+    public static void startEventLoopGroup() {
+        clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(HttpProxyContentLengthIntegrationTest.class.getSimpleName() + "-eventLoop"));
     }
 
     @AfterClass
@@ -89,6 +95,7 @@ public class HttpProxyContentLengthIntegrationTest {
 
         // when
         HttpResponse httpResponse = new NettyHttpClient(
+            configuration(),
             new MockServerLogger(),
             clientEventLoopGroup,
             ImmutableList.of(proxyConfiguration(

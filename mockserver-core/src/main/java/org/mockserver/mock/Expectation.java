@@ -47,10 +47,10 @@ public class Expectation extends ObjectWithJsonToString {
      *   when("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml", "showPetById")
      *
      *   // Create from a file on the local filesystem (json or yaml)
-     *   when("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/mock/openapi_petstore_example.json", "showPetById");
+     *   when("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/openapi/openapi_petstore_example.json", "showPetById");
      *
      *   // Create from a classpath resource in the /api package (json or yaml)
-     *   when("org/mockserver/mock/openapi_petstore_example.json", "showPetById");
+     *   when("org/mockserver/openapi/openapi_petstore_example.json", "showPetById");
      *
      *   // Create from an OpenAPI payload (json or yaml)
      *   when("{\"openapi\": \"3.0.0\", \"info\": { ...", "showPetById")
@@ -71,10 +71,10 @@ public class Expectation extends ObjectWithJsonToString {
      *   when("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml", "showPetById", 10)
      *
      *   // Create from a file on the local filesystem (json or yaml)
-     *   when("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/mock/openapi_petstore_example.json", "showPetById", 10);
+     *   when("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/openapi/openapi_petstore_example.json", "showPetById", 10);
      *
      *   // Create from a classpath resource in the /api package (json or yaml)
-     *   when("org/mockserver/mock/openapi_petstore_example.json", "showPetById", 10);
+     *   when("org/mockserver/openapi/openapi_petstore_example.json", "showPetById", 10);
      *
      *   // Create from an OpenAPI payload (json or yaml)
      *   when("{\"openapi\": \"3.0.0\", \"info\": { ...", "showPetById", 10)
@@ -96,10 +96,10 @@ public class Expectation extends ObjectWithJsonToString {
      *   when("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml", "showPetById", 5, exactly(TimeUnit.SECONDS, 90))
      *
      *   // Create from a file on the local filesystem (json or yaml)
-     *   when("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/mock/openapi_petstore_example.json", "showPetById", 5, exactly(TimeUnit.SECONDS, 90));
+     *   when("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/openapi/openapi_petstore_example.json", "showPetById", 5, exactly(TimeUnit.SECONDS, 90));
      *
      *   // Create from a classpath resource in the /api package (json or yaml)
-     *   when("org/mockserver/mock/openapi_petstore_example.json", "showPetById", 5, exactly(TimeUnit.SECONDS, 90));
+     *   when("org/mockserver/openapi/openapi_petstore_example.json", "showPetById", 5, exactly(TimeUnit.SECONDS, 90));
      *
      *   // Create from an OpenAPI payload (json or yaml)
      *   when("{\"openapi\": \"3.0.0\", \"info\": { ...", "showPetById", 5, exactly(TimeUnit.SECONDS, 90))
@@ -122,10 +122,10 @@ public class Expectation extends ObjectWithJsonToString {
      *   when("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml", "showPetById", 5, exactly(TimeUnit.SECONDS, 90))
      *
      *   // Create from a file on the local filesystem (json or yaml)
-     *   when("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/mock/openapi_petstore_example.json", "showPetById", 5, exactly(TimeUnit.SECONDS, 90));
+     *   when("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/openapi/openapi_petstore_example.json", "showPetById", 5, exactly(TimeUnit.SECONDS, 90));
      *
      *   // Create from a classpath resource in the /api package (json or yaml)
-     *   when("org/mockserver/mock/openapi_petstore_example.json", "showPetById", 5, exactly(TimeUnit.SECONDS, 90));
+     *   when("org/mockserver/openapi/openapi_petstore_example.json", "showPetById", 5, exactly(TimeUnit.SECONDS, 90));
      *
      *   // Create from an OpenAPI payload (json or yaml)
      *   when("{\"openapi\": \"3.0.0\", \"info\": { ...", "showPetById", 5, exactly(TimeUnit.SECONDS, 90))
@@ -252,9 +252,28 @@ public class Expectation extends ObjectWithJsonToString {
         this.priority = priority;
     }
 
-    public Expectation withId(String key) {
-        this.id = key;
+    /**
+     * <p>
+     * Set id of this expectation which can be used to update this expectation
+     * later or for clearing or verifying by expectation id.
+     * </p>
+     * <p>
+     * Note: Each unique expectation must have a unique id otherwise this
+     * expectation will update a existing expectation with the same id.
+     * </p>
+     * @param id unique string for expectation's id
+     */
+    public Expectation withId(String id) {
+        this.id = id;
         this.sortableExpectationId = null;
+        return this;
+    }
+
+    public Expectation withIdIfNull(String id) {
+        if (this.id == null) {
+            this.id = id;
+            this.sortableExpectationId = null;
+        }
         return this;
     }
 
@@ -265,6 +284,16 @@ public class Expectation extends ObjectWithJsonToString {
         return id;
     }
 
+    /**
+     * <p>
+     * Set priority of this expectation which is used to determin the matching
+     * order of expectations when a request is received.
+     * </p>
+     * <p>
+     * Matching is ordered by priority (highest first) then creation (earliest first).
+     * </p>
+     * @param priority expectation's priority
+     */
     public Expectation withPriority(int priority) {
         this.priority = priority;
         this.sortableExpectationId = null;
@@ -278,6 +307,7 @@ public class Expectation extends ObjectWithJsonToString {
     public Expectation withCreated(long created) {
         this.created = created;
         this.sortableExpectationId = null;
+        this.hashCode = 0;
         return this;
     }
 

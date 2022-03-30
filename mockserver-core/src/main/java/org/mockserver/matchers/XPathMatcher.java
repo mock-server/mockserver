@@ -4,40 +4,53 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.xml.StringToXmlDocumentParser;
+import org.mockserver.xml.XPathEvaluator;
+import org.xml.sax.SAXException;
 
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.Map;
+import javax.xml.XMLConstants;
+import javax.xml.namespace.NamespaceContext;
+import javax.xml.namespace.QName;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.matchers.StringToXmlDocumentParser.ErrorLevel.prettyPrint;
+import static org.mockserver.xml.StringToXmlDocumentParser.ErrorLevel.prettyPrint;
 import static org.slf4j.event.Level.DEBUG;
 
 /**
  * @author jamesdbloom
  */
 public class XPathMatcher extends BodyMatcher<String> {
-    private static final String[] EXCLUDED_FIELDS = {"mockServerLogger", "stringToXmlDocumentParser", "xpathExpression"};
+    private static final String[] EXCLUDED_FIELDS = {"mockServerLogger", "xPathEvaluator"};
     private final MockServerLogger mockServerLogger;
     private final String matcher;
-    private final StringToXmlDocumentParser stringToXmlDocumentParser = new StringToXmlDocumentParser();
-    private XPathExpression xpathExpression = null;
-
+    private XPathEvaluator xPathEvaluator = null;
     XPathMatcher(MockServerLogger mockServerLogger, String matcher) {
+        this(mockServerLogger, matcher, null);
+    }
+
+    XPathMatcher(MockServerLogger mockServerLogger, String matcher, Map<String, String> namespacePrefixes) {
         this.mockServerLogger = mockServerLogger;
         this.matcher = matcher;
         if (isNotBlank(matcher)) {
             try {
-                xpathExpression = XPathFactory.newInstance().newXPath().compile(matcher);
-            } catch (XPathExpressionException xpee) {
+                xPathEvaluator = new XPathEvaluator(matcher, namespacePrefixes);
+            } catch (Throwable throwable) {
                 if (MockServerLogger.isEnabled(DEBUG)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(DEBUG)
                             .setMessageFormat("error while creating xpath expression for{}assuming matcher not xpath{}")
-                            .setArguments(matcher, xpee.getMessage())
-                            .setThrowable(xpee)
+                            .setArguments(matcher, throwable.getMessage())
+                            .setThrowable(throwable)
                     );
                 }
             }
@@ -48,7 +61,7 @@ public class XPathMatcher extends BodyMatcher<String> {
         boolean result = false;
         boolean alreadyLoggedMatchFailure = false;
 
-        if (xpathExpression == null) {
+        if (xPathEvaluator == null) {
             if (context != null) {
                 context.addDifference(mockServerLogger, "xpath match failed expected:{}found:{}failed because:{}", "null", matched, "xpath matcher was null");
                 alreadyLoggedMatchFailure = true;
@@ -57,11 +70,11 @@ public class XPathMatcher extends BodyMatcher<String> {
             result = true;
         } else if (matched != null) {
             try {
-                result = (Boolean) xpathExpression.evaluate(stringToXmlDocumentParser.buildDocument(matched, (matchedInException, throwable, level) -> {
+                result = (Boolean) xPathEvaluator.evaluateXPathExpression(matched, (matchedInException, throwable, level) -> {
                     if (context != null) {
                         context.addDifference(mockServerLogger, throwable, "xpath match failed expected:{}found:{}failed because " + prettyPrint(level) + ":{}", matcher, matched, throwable.getMessage());
                     }
-                }), XPathConstants.BOOLEAN);
+                }, XPathConstants.BOOLEAN);
             } catch (Throwable throwable) {
                 if (context != null) {
                     context.addDifference(mockServerLogger, throwable, "xpath match failed expected:{}found:{}failed because:{}", matcher, matched, throwable.getMessage());

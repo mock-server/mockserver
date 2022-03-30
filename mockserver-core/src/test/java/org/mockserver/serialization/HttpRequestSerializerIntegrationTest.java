@@ -5,7 +5,10 @@ import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
-import org.mockserver.serialization.model.*;
+import org.mockserver.serialization.model.BodyDTO;
+import org.mockserver.serialization.model.BodyWithContentTypeDTO;
+import org.mockserver.serialization.model.HttpRequestDTO;
+import org.mockserver.serialization.model.StringBodyDTO;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -38,64 +41,6 @@ import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_S
  * @author jamesdbloom
  */
 public class HttpRequestSerializerIntegrationTest {
-
-    @Test
-    public void shouldValidateHeaderValueIsList() {
-        // given
-        String requestBytes = "{" + NEW_LINE +
-            "    \"headers\" : {" + NEW_LINE +
-            "        \"someHeaderName\" : \"someHeaderValue\"" + NEW_LINE +
-            "    }" + NEW_LINE +
-            "}";
-
-        // then
-        throwCorrectError(requestBytes, "incorrect request json format for:" + NEW_LINE +
-            "" + NEW_LINE +
-            "  {" + NEW_LINE +
-            "      \"headers\" : {" + NEW_LINE +
-            "          \"someHeaderName\" : \"someHeaderValue\"" + NEW_LINE +
-            "      }" + NEW_LINE +
-            "  }" + NEW_LINE +
-            "" + NEW_LINE +
-            " schema validation errors:" + NEW_LINE +
-            "" + NEW_LINE +
-            "  3 errors:" + NEW_LINE +
-            "   - $.headers.someHeaderName: string found, array expected" + NEW_LINE +
-            "   - $.headers.someHeaderName: string found, object expected" + NEW_LINE +
-            "   - $.headers: invalid header format, the following are valid examples: " + NEW_LINE +
-            "    " + NEW_LINE +
-            "       {" + NEW_LINE +
-            "           \"exampleRegexHeader\": [" + NEW_LINE +
-            "               \"^some +regex$\"" + NEW_LINE +
-            "           ], " + NEW_LINE +
-            "           \"exampleNottedAndSimpleStringHeader\": [" + NEW_LINE +
-            "               \"!notThisValue\", " + NEW_LINE +
-            "               \"simpleStringMatch\"" + NEW_LINE +
-            "           ]" + NEW_LINE +
-            "       }" + NEW_LINE +
-            "    " + NEW_LINE +
-            "    or:" + NEW_LINE +
-            "    " + NEW_LINE +
-            "       {" + NEW_LINE +
-            "           \"exampleSchemaHeader\": [" + NEW_LINE +
-            "               {" + NEW_LINE +
-            "                   \"type\": \"number\"" + NEW_LINE +
-            "               }" + NEW_LINE +
-            "           ], " + NEW_LINE +
-            "           \"exampleMultiSchemaHeader\": [" + NEW_LINE +
-            "               {" + NEW_LINE +
-            "                   \"type\": \"string\", " + NEW_LINE +
-            "                   \"pattern\": \"^some +regex$\"" + NEW_LINE +
-            "               }, " + NEW_LINE +
-            "               {" + NEW_LINE +
-            "                   \"type\": \"string\", " + NEW_LINE +
-            "                   \"format\": \"ipv4\"" + NEW_LINE +
-            "               }" + NEW_LINE +
-            "           ]" + NEW_LINE +
-            "       }" + NEW_LINE +
-            "  " + NEW_LINE +
-            "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  "));
-    }
 
     @Test
     public void shouldValidateHeaderNameValid() {
@@ -154,64 +99,6 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldValidatePathParameterValueIsList() {
-        // given
-        String requestBytes = "{" + NEW_LINE +
-            "    \"pathParameters\" : {" + NEW_LINE +
-            "        \"path_someParameterName\" : \"path_someParameterValue\"" + NEW_LINE +
-            "    }" + NEW_LINE +
-            "}";
-
-        // then
-        throwCorrectError(requestBytes, "incorrect request json format for:" + NEW_LINE +
-            "" + NEW_LINE +
-            "  {" + NEW_LINE +
-            "      \"pathParameters\" : {" + NEW_LINE +
-            "          \"path_someParameterName\" : \"path_someParameterValue\"" + NEW_LINE +
-            "      }" + NEW_LINE +
-            "  }" + NEW_LINE +
-            "" + NEW_LINE +
-            " schema validation errors:" + NEW_LINE +
-            "" + NEW_LINE +
-            "  3 errors:" + NEW_LINE +
-            "   - $.pathParameters.path_someParameterName: string found, array expected" + NEW_LINE +
-            "   - $.pathParameters.path_someParameterName: string found, object expected" + NEW_LINE +
-            "   - $.pathParameters: invalid parameter format, the following are valid examples: " + NEW_LINE +
-            "    " + NEW_LINE +
-            "       {" + NEW_LINE +
-            "           \"exampleRegexParameter\": [" + NEW_LINE +
-            "               \"^some +regex$\"" + NEW_LINE +
-            "           ], " + NEW_LINE +
-            "           \"exampleNottedAndSimpleStringParameter\": [" + NEW_LINE +
-            "               \"!notThisValue\", " + NEW_LINE +
-            "               \"simpleStringMatch\"" + NEW_LINE +
-            "           ]" + NEW_LINE +
-            "       }" + NEW_LINE +
-            "    " + NEW_LINE +
-            "    or:" + NEW_LINE +
-            "    " + NEW_LINE +
-            "       {" + NEW_LINE +
-            "           \"exampleSchemaParameter\": [" + NEW_LINE +
-            "               {" + NEW_LINE +
-            "                   \"type\": \"number\"" + NEW_LINE +
-            "               }" + NEW_LINE +
-            "           ], " + NEW_LINE +
-            "           \"exampleMultiSchemaParameter\": [" + NEW_LINE +
-            "               {" + NEW_LINE +
-            "                   \"type\": \"string\", " + NEW_LINE +
-            "                   \"pattern\": \"^some +regex$\"" + NEW_LINE +
-            "               }, " + NEW_LINE +
-            "               {" + NEW_LINE +
-            "                   \"type\": \"string\", " + NEW_LINE +
-            "                   \"format\": \"ipv4\"" + NEW_LINE +
-            "               }" + NEW_LINE +
-            "           ]" + NEW_LINE +
-            "       }" + NEW_LINE +
-            "  " + NEW_LINE +
-            "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  "));
-    }
-
-    @Test
     public void shouldValidatePathParameterNameValid() {
         // given
         String requestBytes = "{" + NEW_LINE +
@@ -233,64 +120,6 @@ public class HttpRequestSerializerIntegrationTest {
             "" + NEW_LINE +
             "  1 error:" + NEW_LINE +
             "   - $.pathParameters: invalid parameter format, the following are valid examples: " + NEW_LINE +
-            "    " + NEW_LINE +
-            "       {" + NEW_LINE +
-            "           \"exampleRegexParameter\": [" + NEW_LINE +
-            "               \"^some +regex$\"" + NEW_LINE +
-            "           ], " + NEW_LINE +
-            "           \"exampleNottedAndSimpleStringParameter\": [" + NEW_LINE +
-            "               \"!notThisValue\", " + NEW_LINE +
-            "               \"simpleStringMatch\"" + NEW_LINE +
-            "           ]" + NEW_LINE +
-            "       }" + NEW_LINE +
-            "    " + NEW_LINE +
-            "    or:" + NEW_LINE +
-            "    " + NEW_LINE +
-            "       {" + NEW_LINE +
-            "           \"exampleSchemaParameter\": [" + NEW_LINE +
-            "               {" + NEW_LINE +
-            "                   \"type\": \"number\"" + NEW_LINE +
-            "               }" + NEW_LINE +
-            "           ], " + NEW_LINE +
-            "           \"exampleMultiSchemaParameter\": [" + NEW_LINE +
-            "               {" + NEW_LINE +
-            "                   \"type\": \"string\", " + NEW_LINE +
-            "                   \"pattern\": \"^some +regex$\"" + NEW_LINE +
-            "               }, " + NEW_LINE +
-            "               {" + NEW_LINE +
-            "                   \"type\": \"string\", " + NEW_LINE +
-            "                   \"format\": \"ipv4\"" + NEW_LINE +
-            "               }" + NEW_LINE +
-            "           ]" + NEW_LINE +
-            "       }" + NEW_LINE +
-            "  " + NEW_LINE +
-            "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  "));
-    }
-
-    @Test
-    public void shouldValidateQueryStringParameterValueIsList() {
-        // given
-        String requestBytes = "{" + NEW_LINE +
-            "    \"queryStringParameters\" : {" + NEW_LINE +
-            "        \"someParameterName\" : \"someParameterValue\"" + NEW_LINE +
-            "    }" + NEW_LINE +
-            "}";
-
-        // then
-        throwCorrectError(requestBytes, "incorrect request json format for:" + NEW_LINE +
-            "" + NEW_LINE +
-            "  {" + NEW_LINE +
-            "      \"queryStringParameters\" : {" + NEW_LINE +
-            "          \"someParameterName\" : \"someParameterValue\"" + NEW_LINE +
-            "      }" + NEW_LINE +
-            "  }" + NEW_LINE +
-            "" + NEW_LINE +
-            " schema validation errors:" + NEW_LINE +
-            "" + NEW_LINE +
-            "  3 errors:" + NEW_LINE +
-            "   - $.queryStringParameters.someParameterName: string found, array expected" + NEW_LINE +
-            "   - $.queryStringParameters.someParameterName: string found, object expected" + NEW_LINE +
-            "   - $.queryStringParameters: invalid parameter format, the following are valid examples: " + NEW_LINE +
             "    " + NEW_LINE +
             "       {" + NEW_LINE +
             "           \"exampleRegexParameter\": [" + NEW_LINE +
@@ -510,13 +339,63 @@ public class HttpRequestSerializerIntegrationTest {
             ))
             .setSecure(true)
             .setKeepAlive(false)
-            .setSocketAddress(new SocketAddressDTO(
-                new SocketAddress()
-                    .withHost("someHost")
-                    .withPort(1234)
-                    .withScheme(SocketAddress.Scheme.HTTPS)
-            ))
+            .setSocketAddress(new SocketAddress()
+                .withHost("someHost")
+                .withPort(1234)
+                .withScheme(SocketAddress.Scheme.HTTPS)
+            )
             .buildObject(), httpRequest);
+    }
+
+    @Test
+    public void shouldDeserializeHeaderValueWithSingleValue() {
+        // given
+        String requestBytes = "{" + NEW_LINE +
+            "    \"headers\" : {" + NEW_LINE +
+            "        \"someHeaderName\" : \"someHeaderValue\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}";
+
+        // when
+        HttpRequest httpRequest = new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
+
+        // then
+        assertEquals(new HttpRequest()
+            .withHeader("someHeaderName", "someHeaderValue"), httpRequest);
+    }
+
+    @Test
+    public void shouldDeserializeQueryStringParameterValueWithSingleValue() {
+        // given
+        String requestBytes = "{" + NEW_LINE +
+            "    \"queryStringParameters\" : {" + NEW_LINE +
+            "        \"someParameterName\" : \"someParameterValue\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}";
+
+        // when
+        HttpRequest httpRequest = new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
+
+        // then
+        assertEquals(new HttpRequest()
+            .withQueryStringParameter("someParameterName", "someParameterValue"), httpRequest);
+    }
+
+    @Test
+    public void shouldDeserializePathParameterValueWithSingleValue() {
+        // given
+        String requestBytes = "{" + NEW_LINE +
+            "    \"pathParameters\" : {" + NEW_LINE +
+            "        \"path_someParameterName\" : \"path_someParameterValue\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}";
+
+        // when
+        HttpRequest httpRequest = new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
+
+        // then
+        assertEquals(new HttpRequest()
+            .withPathParameter("path_someParameterName", "path_someParameterValue"), httpRequest);
     }
 
     @Test

@@ -3,9 +3,15 @@ package org.mockserver.client;
 import com.google.common.collect.ImmutableList;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import org.mockserver.Version;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import org.mockserver.authentication.AuthenticationException;
 import org.mockserver.client.MockServerEventBus.EventType;
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.closurecallback.websocketregistry.LocalCallbackRegistry;
+import org.mockserver.configuration.ClientConfiguration;
+import org.mockserver.configuration.Configuration;
+import org.mockserver.httpclient.NettyHttpClient;
+import org.mockserver.httpclient.SocketConnectionException;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
@@ -21,28 +27,38 @@ import org.mockserver.stop.Stoppable;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
+import org.mockserver.version.Version;
 
+import javax.net.ssl.SSLException;
 import java.awt.*;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
-import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
+import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.UNAUTHORIZED;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
+import static org.apache.commons.lang3.StringUtils.*;
+import static org.mockserver.configuration.ClientConfiguration.clientConfiguration;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.mock.HttpState.LOG_SEPARATOR;
+import static org.mockserver.model.ExpectationId.expectationId;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.MediaType.APPLICATION_JSON_UTF_8;
 import static org.mockserver.model.PortBinding.portBinding;
+import static org.mockserver.socket.tls.PEMToFile.privateKeyFromPEMFile;
+import static org.mockserver.socket.tls.PEMToFile.x509ChainFromPEMFile;
 import static org.mockserver.verify.Verification.verification;
 import static org.mockserver.verify.VerificationTimes.exactly;
 import static org.slf4j.event.Level.*;
@@ -50,12 +66,12 @@ import static org.slf4j.event.Level.*;
 /**
  * @author jamesdbloom
  */
-@SuppressWarnings("UnusedReturnValue")
+@SuppressWarnings({"UnusedReturnValue", "FieldMayBeFinal"})
 public class MockServerClient implements Stoppable {
 
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(MockServerClient.class);
     private static final Map<Integer, MockServerEventBus> EVENT_BUS_MAP = new ConcurrentHashMap<>();
-    private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup(5, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-eventLoop"));
+    private final EventLoopGroup eventLoopGroup;
     private final String host;
     private final String contextPath;
     private final Class<MockServerClient> clientClass;
@@ -63,23 +79,17 @@ public class MockServerClient implements Stoppable {
     private Boolean secure;
     private Integer port;
     private HttpRequest requestOverride;
-    @SuppressWarnings("FieldMayBeFinal")
-    private NettyHttpClient nettyHttpClient = new NettyHttpClient(MOCK_SERVER_LOGGER, eventLoopGroup, null, false, new NettySslContextFactory(MOCK_SERVER_LOGGER));
-    @SuppressWarnings("FieldMayBeFinal")
+    private ClientConfiguration configuration;
+    private ProxyConfiguration proxyConfiguration;
+    private Supplier<String> controlPlaneJWTSupplier;
+    private NettyHttpClient nettyHttpClient;
     private RequestDefinitionSerializer requestDefinitionSerializer = new RequestDefinitionSerializer(MOCK_SERVER_LOGGER);
-    @SuppressWarnings("FieldMayBeFinal")
     private ExpectationIdSerializer expectationIdSerializer = new ExpectationIdSerializer(MOCK_SERVER_LOGGER);
-    @SuppressWarnings("FieldMayBeFinal")
     private LogEventRequestAndResponseSerializer httpRequestResponseSerializer = new LogEventRequestAndResponseSerializer(MOCK_SERVER_LOGGER);
-    @SuppressWarnings("FieldMayBeFinal")
     private PortBindingSerializer portBindingSerializer = new PortBindingSerializer(MOCK_SERVER_LOGGER);
-    @SuppressWarnings("FieldMayBeFinal")
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer(MOCK_SERVER_LOGGER);
-    @SuppressWarnings("FieldMayBeFinal")
     private OpenAPIExpectationSerializer openAPIExpectationSerializer = new OpenAPIExpectationSerializer(MOCK_SERVER_LOGGER);
-    @SuppressWarnings("FieldMayBeFinal")
     private VerificationSerializer verificationSerializer = new VerificationSerializer(MOCK_SERVER_LOGGER);
-    @SuppressWarnings("FieldMayBeFinal")
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer(MOCK_SERVER_LOGGER);
     private final CompletableFuture<MockServerClient> stopFuture = new CompletableFuture<>();
 
@@ -89,11 +99,27 @@ public class MockServerClient implements Stoppable {
      *
      * @param portFuture the port for the MockServer to communicate with
      */
-    public MockServerClient(CompletableFuture<Integer> portFuture) {
+    public MockServerClient(Configuration configuration, CompletableFuture<Integer> portFuture) {
+        this(clientConfiguration(configuration), portFuture);
+    }
+
+    /**
+     * Start the client communicating to a MockServer on localhost at the port
+     * specified with the Future
+     *
+     * @param portFuture the port for the MockServer to communicate with
+     */
+    public MockServerClient(ClientConfiguration configuration, CompletableFuture<Integer> portFuture) {
+        if (configuration == null) {
+            configuration = clientConfiguration();
+        }
         this.clientClass = MockServerClient.class;
         this.host = "127.0.0.1";
         this.portFuture = portFuture;
         this.contextPath = "";
+        this.configuration = configuration;
+        this.eventLoopGroup = eventLoopGroup();
+        LocalCallbackRegistry.setMaxWebSocketExpectations(configuration.maxWebSocketExpectations());
     }
 
     /**
@@ -107,6 +133,32 @@ public class MockServerClient implements Stoppable {
      */
     public MockServerClient(String host, int port) {
         this(host, port, "");
+    }
+
+    /**
+     * Start the client communicating to a MockServer at the specified host and port
+     * for example:
+     * <p>
+     * MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
+     *
+     * @param host the host for the MockServer to communicate with
+     * @param port the port for the MockServer to communicate with
+     */
+    public MockServerClient(Configuration configuration, String host, int port) {
+        this(configuration, host, port, "");
+    }
+
+    /**
+     * Start the client communicating to a MockServer at the specified host and port
+     * for example:
+     * <p>
+     * MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
+     *
+     * @param host the host for the MockServer to communicate with
+     * @param port the port for the MockServer to communicate with
+     */
+    public MockServerClient(ClientConfiguration configuration, String host, int port) {
+        this(configuration, host, port, "");
     }
 
     /**
@@ -130,17 +182,97 @@ public class MockServerClient implements Stoppable {
         this.host = host;
         this.port = port;
         this.contextPath = contextPath;
+        this.configuration = clientConfiguration();
+        this.eventLoopGroup = eventLoopGroup();
+        LocalCallbackRegistry.setMaxWebSocketExpectations(configuration.maxWebSocketExpectations());
+    }
+
+    /**
+     * Start the client communicating to a MockServer at the specified host and port
+     * and contextPath for example:
+     * <p>
+     * MockServerClient mockServerClient = new MockServerClient("localhost", 1080, "/mockserver");
+     *
+     * @param host        the host for the MockServer to communicate with
+     * @param port        the port for the MockServer to communicate with
+     * @param contextPath the context path that the MockServer war is deployed to
+     */
+    public MockServerClient(Configuration configuration, String host, int port, String contextPath) {
+        this(clientConfiguration(configuration), host, port, contextPath);
+    }
+
+    /**
+     * Start the client communicating to a MockServer at the specified host and port
+     * and contextPath for example:
+     * <p>
+     * MockServerClient mockServerClient = new MockServerClient("localhost", 1080, "/mockserver");
+     *
+     * @param host        the host for the MockServer to communicate with
+     * @param port        the port for the MockServer to communicate with
+     * @param contextPath the context path that the MockServer war is deployed to
+     */
+    public MockServerClient(ClientConfiguration configuration, String host, int port, String contextPath) {
+        this.clientClass = MockServerClient.class;
+        if (isEmpty(host)) {
+            throw new IllegalArgumentException("Host can not be null or empty");
+        }
+        if (contextPath == null) {
+            throw new IllegalArgumentException("ContextPath can not be null");
+        }
+        if (configuration == null) {
+            configuration = clientConfiguration();
+        }
+        this.configuration = configuration;
+        this.host = host;
+        this.port = port;
+        this.contextPath = contextPath;
+        this.eventLoopGroup = eventLoopGroup();
+    }
+
+    private NioEventLoopGroup eventLoopGroup() {
+        return new NioEventLoopGroup(configuration.clientNioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-eventLoop"));
+    }
+
+    /**
+     * @deprecated use withProxyConfiguration which is more consistent with MockServer API style
+     */
+    @Deprecated
+    public MockServerClient setProxyConfiguration(ProxyConfiguration proxyConfiguration) {
+        return withProxyConfiguration(proxyConfiguration);
     }
 
     /**
      * Configure communication to MockServer to go via a proxy
      */
-    public MockServerClient setProxyConfiguration(ProxyConfiguration proxyConfiguration) {
-        this.nettyHttpClient = new NettyHttpClient(MOCK_SERVER_LOGGER, eventLoopGroup, ImmutableList.of(proxyConfiguration), false, new NettySslContextFactory(MOCK_SERVER_LOGGER));
+    public MockServerClient withProxyConfiguration(ProxyConfiguration proxyConfiguration) {
+        this.proxyConfiguration = proxyConfiguration;
         return this;
     }
 
+    /**
+     * Specify JWT to use for control plane authorisation
+     */
+    public MockServerClient withControlPlaneJWT(String controlPlaneJWT) {
+        return withControlPlaneJWT(() -> controlPlaneJWT);
+    }
+
+    /**
+     * Specify JWT supplier to use for control plane authorisation
+     */
+    public MockServerClient withControlPlaneJWT(Supplier<String> controlPlaneJWTSupplier) {
+        this.controlPlaneJWTSupplier = controlPlaneJWTSupplier;
+        return this;
+    }
+
+    /**
+     * @deprecated use withRequestOverride which is more consistent with MockServer API style
+     */
+    @Deprecated
     public MockServerClient setRequestOverride(HttpRequest requestOverride) {
+        return withRequestOverride(requestOverride);
+    }
+
+    public MockServerClient withRequestOverride(HttpRequest requestOverride) {
         if (requestOverride == null) {
             throw new IllegalArgumentException("Request with default properties can not be null");
         } else {
@@ -172,7 +304,7 @@ public class MockServerClient implements Stoppable {
     private int port() {
         if (this.port == null) {
             try {
-                port = portFuture.get(maxFutureTimeout(), MILLISECONDS);
+                port = portFuture.get(configuration.maxFutureTimeoutInMillis(), MILLISECONDS);
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
@@ -205,6 +337,37 @@ public class MockServerClient implements Stoppable {
         return (!cleanedPath.startsWith("/") ? "/" : "") + cleanedPath;
     }
 
+    private NettyHttpClient getNettyHttpClient() {
+        if (nettyHttpClient == null) {
+            NettySslContextFactory nettySslContextFactory = new NettySslContextFactory(configuration.toServerConfiguration(), MOCK_SERVER_LOGGER);
+            Function<SslContextBuilder, SslContext> clientSslContextBuilderFunction = NettySslContextFactory.clientSslContextBuilderFunction;
+            if (configuration.controlPlaneTLSMutualAuthenticationRequired()) {
+                if (isBlank(configuration.controlPlanePrivateKeyPath()) || isBlank(configuration.controlPlaneX509CertificatePath()) || isBlank(configuration.controlPlaneTLSMutualAuthenticationCAChain())) {
+                    throw new IllegalArgumentException("when 'controlPlaneTLSMutualAuthenticationRequired' is enabled 'controlPlanePrivateKeyPath', 'controlPlaneX509CertificatePath' and 'controlPlaneTLSMutualAuthenticationCAChain' must all be specified,\n\tfound controlPlanePrivateKeyPath: \"" + configuration.controlPlanePrivateKeyPath() + "\"\n\tand controlPlaneX509CertificatePath: \"" + configuration.controlPlaneX509CertificatePath() + "\"\n\tand controlPlaneTLSMutualAuthenticationCAChain: \"" + configuration.controlPlaneTLSMutualAuthenticationCAChain() + "\"");
+                }
+                clientSslContextBuilderFunction =
+                    sslContextBuilder -> {
+                        try {
+                            RSAPrivateKey key = privateKeyFromPEMFile(configuration.controlPlanePrivateKeyPath());
+                            X509Certificate[] keyCertChain = x509ChainFromPEMFile(configuration.controlPlaneX509CertificatePath()).toArray(new X509Certificate[0]);
+                            X509Certificate[] trustCertCollection = nettySslContextFactory.trustCertificateChain(configuration.controlPlaneTLSMutualAuthenticationCAChain());
+                            sslContextBuilder
+                                .keyManager(
+                                    key,
+                                    keyCertChain
+                                )
+                                .trustManager(trustCertCollection);
+                            return sslContextBuilder.build();
+                        } catch (SSLException e) {
+                            throw new RuntimeException(e);
+                        }
+                    };
+            }
+            this.nettyHttpClient = new NettyHttpClient(configuration(), MOCK_SERVER_LOGGER, eventLoopGroup, proxyConfiguration != null ? ImmutableList.of(proxyConfiguration) : null, false, nettySslContextFactory.withClientSslContextBuilderFunction(clientSslContextBuilderFunction));
+        }
+        return nettyHttpClient;
+    }
+
     private HttpResponse sendRequest(HttpRequest request, boolean ignoreErrors) {
         if (!stopFuture.isDone()) {
             try {
@@ -217,19 +380,30 @@ public class MockServerClient implements Stoppable {
                     request.withSecure(secure);
                 }
                 if (requestOverride != null) {
-                    request = request.update(requestOverride);
+                    request = request.update(requestOverride, null);
                 }
-                HttpResponse response = nettyHttpClient.sendRequest(
+                if (controlPlaneJWTSupplier != null) {
+                    String jwt = controlPlaneJWTSupplier.get();
+                    if (isNotBlank(jwt)) {
+                        request.withHeader(AUTHORIZATION.toString(), "Bearer " + jwt);
+                    } else {
+                        throw new IllegalArgumentException("Control plane jwt supplier returned invalid JWT \"" + jwt + "\"");
+                    }
+                }
+                HttpResponse response = getNettyHttpClient().sendRequest(
                     request.withHeader(HOST.toString(), this.host + ":" + port()),
-                    ConfigurationProperties.maxSocketTimeout(),
+                    configuration.maxSocketTimeoutInMillis(),
                     TimeUnit.MILLISECONDS,
                     ignoreErrors
                 );
 
                 if (response != null) {
-                    if (response.getStatusCode() != null &&
-                        response.getStatusCode() == BAD_REQUEST.code()) {
-                        throw new IllegalArgumentException(response.getBodyAsString());
+                    if (response.getStatusCode() != null) {
+                        if (response.getStatusCode() == BAD_REQUEST.code()) {
+                            throw new IllegalArgumentException(response.getBodyAsString());
+                        } else if (response.getStatusCode() == UNAUTHORIZED.code()) {
+                            throw new AuthenticationException(response.getBodyAsString());
+                        }
                     }
                     String serverVersion = response.getFirstHeader("version");
                     String clientVersion = Version.getVersion();
@@ -277,7 +451,7 @@ public class MockServerClient implements Stoppable {
             Desktop desktop = Desktop.getDesktop();
             if (desktop != null) {
                 if (desktop.isSupported(Desktop.Action.BROWSE)) {
-                    desktop.browse(new URI("http" + (Boolean.TRUE.equals(secure) ? "s" : "") + "://" + host + ":" + port() + "/mockserver/dashboard"));
+                    desktop.browse(new URI("http://" + host + ":" + port() + "/mockserver/dashboard"));
                     timeUnit.sleep(pause);
                 } else {
                     if (MockServerLogger.isEnabled(WARN)) {
@@ -483,7 +657,7 @@ public class MockServerClient implements Stoppable {
     /**
      * Stop MockServer gracefully (only support for Netty version, not supported for WAR version)
      */
-    public Future<MockServerClient> stop(boolean ignoreFailure) {
+    public CompletableFuture<MockServerClient> stop(boolean ignoreFailure) {
         if (!stopFuture.isDone()) {
             getMockServerEventBus().publish(EventType.STOP);
             removeMockServerEventBus();
@@ -541,7 +715,7 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
-     * Clear all expectations and logs that match the http
+     * Clear all expectations and logs that match the request matcher
      *
      * @param requestDefinition the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
      */
@@ -557,9 +731,18 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
-     * Clear all expectations and logs that match the http
+     * Clear all expectations and logs that match the expectation id
      *
-     * @param expectationId the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
+     * @param expectationId the expectation id that is used to clear expectations and logs
+     */
+    public MockServerClient clear(String expectationId) {
+        return clear(expectationId(expectationId));
+    }
+
+    /**
+     * Clear all expectations and logs that match the expectation id
+     *
+     * @param expectationId the expectation id that is used to clear expectations and logs
      */
     public MockServerClient clear(ExpectationId expectationId) {
         sendRequest(
@@ -573,7 +756,7 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
-     * Clear expectations, logs or both that match the http
+     * Clear expectations, logs or both that match the request matcher
      *
      * @param requestDefinition the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
      * @param type              the type to clear, EXPECTATION, LOG or BOTH
@@ -591,10 +774,20 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
-     * Clear expectations, logs or both that match the http
+     * Clear expectations, logs or both that match the expectation id
      *
-     * @param expectationId the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
-     * @param type              the type to clear, EXPECTATION, LOG or BOTH
+     * @param expectationId the expectation id that is used to clear expectations and logs
+     * @param type          the type to clear, EXPECTATION, LOG or BOTH
+     */
+    public MockServerClient clear(String expectationId, ClearType type) {
+        return clear(expectationId(expectationId), type);
+    }
+
+    /**
+     * Clear expectations, logs or both that match the expectation id
+     *
+     * @param expectationId the expectation id that is used to clear expectations and logs
+     * @param type          the type to clear, EXPECTATION, LOG or BOTH
      */
     public MockServerClient clear(ExpectationId expectationId, ClearType type) {
         sendRequest(
@@ -626,21 +819,49 @@ public class MockServerClient implements Stoppable {
      * @throws AssertionError if the request has not been found
      */
     public MockServerClient verify(RequestDefinition... requestDefinitions) throws AssertionError {
+        return verify(null, requestDefinitions);
+    }
+
+    /**
+     * Verify a list of requests have been sent in the order specified for example:
+     * <pre>
+     * mockServerClient
+     *  .verify(
+     *      request()
+     *          .withPath("/first_request")
+     *          .withBody("some_request_body"),
+     *      request()
+     *          .withPath("/second_request")
+     *          .withBody("some_request_body")
+     *  );
+     * </pre>
+     *
+     * @param maximumNumberOfRequestToReturnInVerificationFailure the maximum number requests return in the error response when the verification fails
+     * @param requestDefinitions                                  the http requests that must be matched for this verification to pass
+     * @throws AssertionError if the request has not been found
+     */
+    public MockServerClient verify(Integer maximumNumberOfRequestToReturnInVerificationFailure, RequestDefinition... requestDefinitions) throws AssertionError {
         if (requestDefinitions == null || requestDefinitions.length == 0 || requestDefinitions[0] == null) {
             throw new IllegalArgumentException("verify(RequestDefinition...) requires a non-null non-empty array of RequestDefinition objects");
         }
 
-        VerificationSequence verificationSequence = new VerificationSequence().withRequests(requestDefinitions);
-        String result = sendRequest(
-            request()
-                .withMethod("PUT")
-                .withContentType(APPLICATION_JSON_UTF_8)
-                .withPath(calculatePath("verifySequence"))
-                .withBody(verificationSequenceSerializer.serialize(verificationSequence), StandardCharsets.UTF_8)
-        ).getBodyAsString();
+        try {
+            VerificationSequence verificationSequence = new VerificationSequence().withRequests(requestDefinitions).withMaximumNumberOfRequestToReturnInVerificationFailure(maximumNumberOfRequestToReturnInVerificationFailure);
+            String result = sendRequest(
+                request()
+                    .withMethod("PUT")
+                    .withContentType(APPLICATION_JSON_UTF_8)
+                    .withPath(calculatePath("verifySequence"))
+                    .withBody(verificationSequenceSerializer.serialize(verificationSequence), StandardCharsets.UTF_8)
+            ).getBodyAsString();
 
-        if (result != null && !result.isEmpty()) {
-            throw new AssertionError(result);
+            if (result != null && !result.isEmpty()) {
+                throw new AssertionError(result);
+            }
+        } catch (AuthenticationException authenticationException) {
+            throw authenticationException;
+        } catch (Throwable throwable) {
+            throw new AssertionError(throwable.getMessage());
         }
         return clientClass.cast(this);
     }
@@ -662,22 +883,71 @@ public class MockServerClient implements Stoppable {
      * @param expectationIds the http requests that must be matched for this verification to pass
      * @throws AssertionError if the request has not been found
      */
+    public MockServerClient verify(String... expectationIds) throws AssertionError {
+        return verify(Arrays.stream(expectationIds).map(ExpectationId::expectationId).toArray(ExpectationId[]::new));
+    }
+
+    /**
+     * Verify a list of requests have been sent in the order specified for example:
+     * <pre>
+     * mockServerClient
+     *  .verify(
+     *      request()
+     *          .withPath("/first_request")
+     *          .withBody("some_request_body"),
+     *      request()
+     *          .withPath("/second_request")
+     *          .withBody("some_request_body")
+     *  );
+     * </pre>
+     *
+     * @param expectationIds the http requests that must be matched for this verification to pass
+     * @throws AssertionError if the request has not been found
+     */
     public MockServerClient verify(ExpectationId... expectationIds) throws AssertionError {
+        return verify(null, expectationIds);
+    }
+
+    /**
+     * Verify a list of requests have been sent in the order specified for example:
+     * <pre>
+     * mockServerClient
+     *  .verify(
+     *      request()
+     *          .withPath("/first_request")
+     *          .withBody("some_request_body"),
+     *      request()
+     *          .withPath("/second_request")
+     *          .withBody("some_request_body")
+     *  );
+     * </pre>
+     *
+     * @param maximumNumberOfRequestToReturnInVerificationFailure the maximum number requests return in the error response when the verification fails
+     * @param expectationIds                                      the http requests that must be matched for this verification to pass
+     * @throws AssertionError if the request has not been found
+     */
+    public MockServerClient verify(Integer maximumNumberOfRequestToReturnInVerificationFailure, ExpectationId... expectationIds) throws AssertionError {
         if (expectationIds == null || expectationIds.length == 0 || expectationIds[0] == null) {
             throw new IllegalArgumentException("verify(RequestDefinition...) requires a non-null non-empty array of RequestDefinition objects");
         }
 
-        VerificationSequence verificationSequence = new VerificationSequence().withExpectationIds(expectationIds);
-        String result = sendRequest(
-            request()
-                .withMethod("PUT")
-                .withContentType(APPLICATION_JSON_UTF_8)
-                .withPath(calculatePath("verifySequence"))
-                .withBody(verificationSequenceSerializer.serialize(verificationSequence), StandardCharsets.UTF_8)
-        ).getBodyAsString();
+        try {
+            VerificationSequence verificationSequence = new VerificationSequence().withExpectationIds(expectationIds).withMaximumNumberOfRequestToReturnInVerificationFailure(maximumNumberOfRequestToReturnInVerificationFailure);
+            String result = sendRequest(
+                request()
+                    .withMethod("PUT")
+                    .withContentType(APPLICATION_JSON_UTF_8)
+                    .withPath(calculatePath("verifySequence"))
+                    .withBody(verificationSequenceSerializer.serialize(verificationSequence), StandardCharsets.UTF_8)
+            ).getBodyAsString();
 
-        if (result != null && !result.isEmpty()) {
-            throw new AssertionError(result);
+            if (result != null && !result.isEmpty()) {
+                throw new AssertionError(result);
+            }
+        } catch (AuthenticationException authenticationException) {
+            throw authenticationException;
+        } catch (Throwable throwable) {
+            throw new AssertionError(throwable.getMessage());
         }
         return clientClass.cast(this);
     }
@@ -705,6 +975,33 @@ public class MockServerClient implements Stoppable {
      */
     @SuppressWarnings("DuplicatedCode")
     public MockServerClient verify(RequestDefinition requestDefinition, VerificationTimes times) throws AssertionError {
+        return verify(requestDefinition, times, null);
+    }
+
+    /**
+     * Verify a request has been sent for example:
+     * <pre>
+     * mockServerClient
+     *  .verify(
+     *      request()
+     *          .withPath("/some_path")
+     *          .withBody("some_request_body"),
+     *      VerificationTimes.exactly(3)
+     *  );
+     * </pre>
+     * VerificationTimes supports multiple static factory methods:
+     * <p>
+     * once()      - verify the request was only received once
+     * exactly(n)  - verify the request was only received exactly n times
+     * atLeast(n)  - verify the request was only received at least n times
+     *
+     * @param requestDefinition                                   the http request that must be matched for this verification to pass
+     * @param times                                               the number of times this request must be matched
+     * @param maximumNumberOfRequestToReturnInVerificationFailure the maximum number requests return in the error response when the verification fails
+     * @throws AssertionError if the request has not been found
+     */
+    @SuppressWarnings("DuplicatedCode")
+    public MockServerClient verify(RequestDefinition requestDefinition, VerificationTimes times, Integer maximumNumberOfRequestToReturnInVerificationFailure) throws AssertionError {
         if (requestDefinition == null) {
             throw new IllegalArgumentException("verify(RequestDefinition, VerificationTimes) requires a non null RequestDefinition object");
         }
@@ -712,17 +1009,26 @@ public class MockServerClient implements Stoppable {
             throw new IllegalArgumentException("verify(RequestDefinition, VerificationTimes) requires a non null VerificationTimes object");
         }
 
-        Verification verification = verification().withRequest(requestDefinition).withTimes(times);
-        String result = sendRequest(
-            request()
-                .withMethod("PUT")
-                .withContentType(APPLICATION_JSON_UTF_8)
-                .withPath(calculatePath("verify"))
-                .withBody(verificationSerializer.serialize(verification), StandardCharsets.UTF_8)
-        ).getBodyAsString();
+        try {
+            Verification verification = verification()
+                .withRequest(requestDefinition)
+                .withTimes(times)
+                .withMaximumNumberOfRequestToReturnInVerificationFailure(maximumNumberOfRequestToReturnInVerificationFailure);
+            String result = sendRequest(
+                request()
+                    .withMethod("PUT")
+                    .withContentType(APPLICATION_JSON_UTF_8)
+                    .withPath(calculatePath("verify"))
+                    .withBody(verificationSerializer.serialize(verification), StandardCharsets.UTF_8)
+            ).getBodyAsString();
 
-        if (result != null && !result.isEmpty()) {
-            throw new AssertionError(result);
+            if (result != null && !result.isEmpty()) {
+                throw new AssertionError(result);
+            }
+        } catch (AuthenticationException authenticationException) {
+            throw authenticationException;
+        } catch (Throwable throwable) {
+            throw new AssertionError(throwable.getMessage());
         }
         return clientClass.cast(this);
     }
@@ -745,11 +1051,64 @@ public class MockServerClient implements Stoppable {
      * atLeast(n)  - verify the request was only received at least n times
      *
      * @param expectationId the http request that must be matched for this verification to pass
-     * @param times             the number of times this request must be matched
+     * @param times         the number of times this request must be matched
+     * @throws AssertionError if the request has not been found
+     */
+    @SuppressWarnings("DuplicatedCode")
+    public MockServerClient verify(String expectationId, VerificationTimes times) throws AssertionError {
+        return verify(expectationId(expectationId), times);
+    }
+
+    /**
+     * Verify a request has been sent for example:
+     * <pre>
+     * mockServerClient
+     *  .verify(
+     *      request()
+     *          .withPath("/some_path")
+     *          .withBody("some_request_body"),
+     *      VerificationTimes.exactly(3)
+     *  );
+     * </pre>
+     * VerificationTimes supports multiple static factory methods:
+     * <p>
+     * once()      - verify the request was only received once
+     * exactly(n)  - verify the request was only received exactly n times
+     * atLeast(n)  - verify the request was only received at least n times
+     *
+     * @param expectationId the http request that must be matched for this verification to pass
+     * @param times         the number of times this request must be matched
      * @throws AssertionError if the request has not been found
      */
     @SuppressWarnings("DuplicatedCode")
     public MockServerClient verify(ExpectationId expectationId, VerificationTimes times) throws AssertionError {
+        return verify(expectationId, times, null);
+    }
+
+    /**
+     * Verify a request has been sent for example:
+     * <pre>
+     * mockServerClient
+     *  .verify(
+     *      request()
+     *          .withPath("/some_path")
+     *          .withBody("some_request_body"),
+     *      VerificationTimes.exactly(3)
+     *  );
+     * </pre>
+     * VerificationTimes supports multiple static factory methods:
+     * <p>
+     * once()      - verify the request was only received once
+     * exactly(n)  - verify the request was only received exactly n times
+     * atLeast(n)  - verify the request was only received at least n times
+     *
+     * @param expectationId                                       the http request that must be matched for this verification to pass
+     * @param times                                               the number of times this request must be matched
+     * @param maximumNumberOfRequestToReturnInVerificationFailure the maximum number requests return in the error response when the verification fails
+     * @throws AssertionError if the request has not been found
+     */
+    @SuppressWarnings("DuplicatedCode")
+    public MockServerClient verify(ExpectationId expectationId, VerificationTimes times, Integer maximumNumberOfRequestToReturnInVerificationFailure) throws AssertionError {
         if (expectationId == null) {
             throw new IllegalArgumentException("verify(RequestDefinition, VerificationTimes) requires a non null RequestDefinition object");
         }
@@ -757,17 +1116,26 @@ public class MockServerClient implements Stoppable {
             throw new IllegalArgumentException("verify(RequestDefinition, VerificationTimes) requires a non null VerificationTimes object");
         }
 
-        Verification verification = verification().withExpectationId(expectationId).withTimes(times);
-        String result = sendRequest(
-            request()
-                .withMethod("PUT")
-                .withContentType(APPLICATION_JSON_UTF_8)
-                .withPath(calculatePath("verify"))
-                .withBody(verificationSerializer.serialize(verification), StandardCharsets.UTF_8)
-        ).getBodyAsString();
+        try {
+            Verification verification = verification()
+                .withExpectationId(expectationId)
+                .withTimes(times)
+                .withMaximumNumberOfRequestToReturnInVerificationFailure(maximumNumberOfRequestToReturnInVerificationFailure);
+            String result = sendRequest(
+                request()
+                    .withMethod("PUT")
+                    .withContentType(APPLICATION_JSON_UTF_8)
+                    .withPath(calculatePath("verify"))
+                    .withBody(verificationSerializer.serialize(verification), StandardCharsets.UTF_8)
+            ).getBodyAsString();
 
-        if (result != null && !result.isEmpty()) {
-            throw new AssertionError(result);
+            if (result != null && !result.isEmpty()) {
+                throw new AssertionError(result);
+            }
+        } catch (AuthenticationException authenticationException) {
+            throw authenticationException;
+        } catch (Throwable throwable) {
+            throw new AssertionError(throwable.getMessage());
         }
         return clientClass.cast(this);
     }
@@ -779,17 +1147,23 @@ public class MockServerClient implements Stoppable {
      */
     @SuppressWarnings({"DuplicatedCode", "UnusedReturnValue"})
     public MockServerClient verifyZeroInteractions() throws AssertionError {
-        Verification verification = verification().withRequest(request()).withTimes(exactly(0));
-        String result = sendRequest(
-            request()
-                .withMethod("PUT")
-                .withContentType(APPLICATION_JSON_UTF_8)
-                .withPath(calculatePath("verify"))
-                .withBody(verificationSerializer.serialize(verification), StandardCharsets.UTF_8)
-        ).getBodyAsString();
+        try {
+            Verification verification = verification().withRequest(request()).withTimes(exactly(0));
+            String result = sendRequest(
+                request()
+                    .withMethod("PUT")
+                    .withContentType(APPLICATION_JSON_UTF_8)
+                    .withPath(calculatePath("verify"))
+                    .withBody(verificationSerializer.serialize(verification), StandardCharsets.UTF_8)
+            ).getBodyAsString();
 
-        if (result != null && !result.isEmpty()) {
-            throw new AssertionError(result);
+            if (result != null && !result.isEmpty()) {
+                throw new AssertionError(result);
+            }
+        } catch (AuthenticationException authenticationException) {
+            throw authenticationException;
+        } catch (Throwable throwable) {
+            throw new AssertionError(throwable.getMessage());
         }
         return clientClass.cast(this);
     }
@@ -800,13 +1174,13 @@ public class MockServerClient implements Stoppable {
      * @param requestDefinition the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
      * @return an array of all requests that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
      */
-    public RequestDefinition[] retrieveRecordedRequests(RequestDefinition requestDefinition) {
+    public HttpRequest[] retrieveRecordedRequests(RequestDefinition requestDefinition) {
+        RequestDefinition[] requestDefinitions = new RequestDefinition[0];
         String recordedRequests = retrieveRecordedRequests(requestDefinition, Format.JSON);
         if (isNotBlank(recordedRequests) && !recordedRequests.equals("[]")) {
-            return requestDefinitionSerializer.deserializeArray(recordedRequests);
-        } else {
-            return new RequestDefinition[0];
+            requestDefinitions = requestDefinitionSerializer.deserializeArray(recordedRequests);
         }
+        return Arrays.stream(requestDefinitions).map(HttpRequest.class::cast).toArray(HttpRequest[]::new);
     }
 
     /**
@@ -975,7 +1349,7 @@ public class MockServerClient implements Stoppable {
      * @return an Expectation object that can be used to specify the response
      */
     public ForwardChainExpectation when(RequestDefinition requestDefinition, Times times) {
-        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(requestDefinition, times, TimeToLive.unlimited(), 0));
+        return new ForwardChainExpectation(configuration, MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(requestDefinition, times, TimeToLive.unlimited(), 0));
     }
 
     /**
@@ -1004,7 +1378,7 @@ public class MockServerClient implements Stoppable {
      * @return an Expectation object that can be used to specify the response
      */
     public ForwardChainExpectation when(RequestDefinition requestDefinition, Times times, TimeToLive timeToLive) {
-        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(requestDefinition, times, timeToLive, 0));
+        return new ForwardChainExpectation(configuration, MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(requestDefinition, times, timeToLive, 0));
     }
 
     /**
@@ -1039,7 +1413,7 @@ public class MockServerClient implements Stoppable {
      * @return an Expectation object that can be used to specify the response
      */
     public ForwardChainExpectation when(RequestDefinition requestDefinition, Times times, TimeToLive timeToLive, Integer priority) {
-        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(requestDefinition, times, timeToLive, priority));
+        return new ForwardChainExpectation(configuration, MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(requestDefinition, times, timeToLive, priority));
     }
 
     /**

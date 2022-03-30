@@ -11,7 +11,7 @@ import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.ssl.SslHandler;
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.LoggingHandler;
@@ -32,12 +32,14 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
     public static final String PROXIED = "PROXIED_";
     public static final String PROXIED_SECURE = PROXIED + "SECURE_";
     public static final String PROXIED_RESPONSE = "PROXIED_RESPONSE_";
+    private final Configuration configuration;
     private final LifeCycle server;
     private final MockServerLogger mockServerLogger;
     protected final String host;
     protected final int port;
 
-    public RelayConnectHandler(LifeCycle server, MockServerLogger mockServerLogger, String host, int port) {
+    public RelayConnectHandler(Configuration configuration, LifeCycle server, MockServerLogger mockServerLogger, String host, int port) {
+        this.configuration = configuration;
         this.server = server;
         this.mockServerLogger = mockServerLogger;
         this.host = host;
@@ -77,10 +79,10 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                                     }
 
                                     if (MockServerLogger.isEnabled(Level.TRACE)) {
-                                        pipelineToMockServer.addLast(new LoggingHandler("downstream                -->"));
+                                        pipelineToMockServer.addLast(new LoggingHandler(RelayConnectHandler.class.getName() + "-downstream -->"));
                                     }
 
-                                    pipelineToMockServer.addLast(new HttpClientCodec(ConfigurationProperties.maxInitialLineLength(), ConfigurationProperties.maxHeaderSize(), ConfigurationProperties.maxChunkSize()));
+                                    pipelineToMockServer.addLast(new HttpClientCodec(configuration.maxInitialLineLength(), configuration.maxHeaderSize(), configuration.maxChunkSize()));
 
                                     pipelineToMockServer.addLast(new HttpContentDecompressor());
 
@@ -96,10 +98,10 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                                     }
 
                                     if (MockServerLogger.isEnabled(Level.TRACE)) {
-                                        pipelineToProxyClient.addLast(new LoggingHandler("upstream <-- "));
+                                        pipelineToProxyClient.addLast(new LoggingHandler(RelayConnectHandler.class.getName() + "-upstream <-- "));
                                     }
 
-                                    pipelineToProxyClient.addLast(new HttpServerCodec(ConfigurationProperties.maxInitialLineLength(), ConfigurationProperties.maxHeaderSize(), ConfigurationProperties.maxChunkSize()));
+                                    pipelineToProxyClient.addLast(new HttpServerCodec(configuration.maxInitialLineLength(), configuration.maxHeaderSize(), configuration.maxChunkSize()));
 
                                     pipelineToProxyClient.addLast(new HttpContentDecompressor());
 
@@ -116,16 +118,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
 
         final InetSocketAddress remoteSocket = getDownstreamSocket(proxyClientCtx);
         bootstrap.connect(remoteSocket).addListener((ChannelFutureListener) future -> {
-            if (future.isSuccess()) {
-                if (MockServerLogger.isEnabled(DEBUG)) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setLogLevel(DEBUG)
-                            .setMessageFormat("connected to{}")
-                            .setArguments(remoteSocket)
-                    );
-                }
-            } else {
+            if (!future.isSuccess()) {
                 failure("Connection failed to " + remoteSocket, future.cause(), proxyClientCtx, failureResponse(request));
             }
         });

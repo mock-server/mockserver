@@ -263,7 +263,7 @@ public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter impl
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat("exception will serialising UI data " + jpe.getMessage())
+                            .setMessageFormat("exception with serialising UI data " + jpe.getMessage())
                             .setThrowable(jpe)
                     );
                 }
@@ -385,7 +385,7 @@ public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter impl
                                         if (request != null) {
                                             Map<String, Object> entry = new HashMap<>();
                                             entry.put("key", logEntryDTO.getId() + "_request");
-                                            Description description = recordedRequestsDescriptionProcessor.description(logEntryDTO.getHttpRequest());
+                                            Description description = recordedRequestsDescriptionProcessor.description(request);
                                             if (description != null) {
                                                 entry.put("description", description);
                                             }

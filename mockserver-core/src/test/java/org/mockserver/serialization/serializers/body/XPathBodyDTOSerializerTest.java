@@ -1,6 +1,8 @@
 package org.mockserver.serialization.serializers.body;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.collect.ImmutableMap;
+
 import org.junit.Test;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.XPathBodyDTO;
@@ -29,4 +31,10 @@ public class XPathBodyDTOSerializerTest {
                 is("{\"optional\":true,\"type\":\"XPATH\",\"xpath\":\"\\\\some\\\\xpath\"}"));
     }
 
+
+    @Test
+    public void shouldSerializeXPathBodyDTOWithOptionalAndNamespacePrefixes() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new XPathBodyDTO(new XPathBody("\\some\\xpath", ImmutableMap.of("foo", "http://foo"))).withOptional(true)),
+                is("{\"optional\":true,\"type\":\"XPATH\",\"xpath\":\"\\\\some\\\\xpath\",\"namespacePrefixes\":{\"foo\":\"http://foo\"}}"));
+    }
 }

@@ -18,6 +18,7 @@ import org.mockserver.testing.integration.proxy.AbstractProxyIntegrationTest;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
@@ -32,6 +33,7 @@ public class ServletProxyIntegrationTest extends AbstractProxyIntegrationTest {
     private static MockServerClient mockServerClient;
 
     @BeforeClass
+    @SuppressWarnings("deprecation")
     public static void startServer() throws Exception {
         servletContext = "";
 
@@ -51,7 +53,7 @@ public class ServletProxyIntegrationTest extends AbstractProxyIntegrationTest {
         defaultConnector.setRedirectPort(PROXY_HTTPS_PORT);
 
         // add https connector
-        KeyStoreFactory keyStoreFactory = new KeyStoreFactory(new MockServerLogger());
+        KeyStoreFactory keyStoreFactory = new KeyStoreFactory(configuration(), new MockServerLogger());
         keyStoreFactory.loadOrCreateKeyStore();
         Connector httpsConnector = new Connector();
         httpsConnector.setPort(PROXY_HTTPS_PORT);
@@ -108,11 +110,6 @@ public class ServletProxyIntegrationTest extends AbstractProxyIntegrationTest {
     }
 
     @Override
-    public int getSecureProxyPort() {
-        return PROXY_PORT;
-    }
-
-    @Override
     public MockServerClient getMockServerClient() {
         return mockServerClient;
     }
@@ -120,5 +117,10 @@ public class ServletProxyIntegrationTest extends AbstractProxyIntegrationTest {
     @Override
     public int getServerPort() {
         return echoServer.getPort();
+    }
+
+    @Override
+    public EchoServer getEchoServer() {
+        return echoServer;
     }
 }

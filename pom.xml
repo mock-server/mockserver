@@ -4,7 +4,7 @@
 
     <groupId>org.mock-server</groupId>
     <artifactId>mockserver</artifactId>
-    <version>5.11.3-SNAPSHOT</version>
+    <version>5.13.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>MockServer</name>
@@ -54,20 +54,21 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF8</project.build.sourceEncoding>
-        <jetty.version>9.4.44.v20210927</jetty.version>
-        <slf4j.version>1.7.35</slf4j.version>
-        <jackson.version>2.13.1</jackson.version>
+        <slf4j.version>1.7.36</slf4j.version>
+        <jackson.version>2.13.2</jackson.version>
         <velocity.version>2.3</velocity.version>
-        <netty.version>4.1.73.Final</netty.version>
+        <netty.version>4.1.75.Final</netty.version>
         <httpcomponents.version>4.4.1</httpcomponents.version>
         <boucycastle.verion>1.70</boucycastle.verion>
-        <spring.version>5.3.15</spring.version>
-        <mockito.version>4.3.1</mockito.version>
+        <spring.version>5.3.17</spring.version>
+        <mockito.version>4.4.0</mockito.version>
+        <hamcrest.version>2.2</hamcrest.version>
         <xmlunit.version>2.9.0</xmlunit.version>
         <skipTests>false</skipTests>
         <skipAssembly>false</skipAssembly>
-        <release.arguments/>
-        <javadoc.additional.parameters/>
+        <release.arguments />
+        <javadoc.additional.parameters />
+        <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
     </properties>
 
     <modules>
@@ -75,13 +76,13 @@
         <module>mockserver-client-java</module>
         <module>mockserver-core</module>
         <module>mockserver-integration-testing</module>
-        <module>mockserver-netty</module>
         <module>mockserver-war</module>
         <module>mockserver-proxy-war</module>
-        <module>mockserver-examples</module>
+        <module>mockserver-netty</module>
         <module>mockserver-junit-rule</module>
         <module>mockserver-junit-jupiter</module>
         <module>mockserver-spring-test-listener</module>
+        <module>mockserver-examples</module>
     </modules>
 
     <dependencyManagement>
@@ -107,12 +108,6 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>mockserver-netty</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>mockserver-netty</artifactId>
-                <classifier>jar-with-dependencies</classifier>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -147,23 +142,12 @@
                 <version>4.0.1</version>
             </dependency>
 
-            <!-- Jetty Server -->
-            <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-http</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-server</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-
             <!-- Tomcat Server -->
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-core</artifactId>
-                <version>9.0.56</version>
+                <!-- highest version for Servlet 4 is 9.x, highest version for Java 1.8 is 10.x -->
+                <version>9.0.60</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
@@ -225,6 +209,12 @@
                 <groupId>io.netty</groupId>
                 <artifactId>netty-handler</artifactId>
                 <version>${netty.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>io.netty</groupId>
+                        <artifactId>netty-tcnative-classes</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>io.netty</groupId>
@@ -234,6 +224,17 @@
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-transport</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <!-- when upgrading this dependency make sure to also update Dockerfiles -->
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-tcnative-boringssl-static</artifactId>
+                <version>2.0.51.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-resolver</artifactId>
                 <version>${netty.version}</version>
             </dependency>
 
@@ -263,6 +264,13 @@
                 <version>${boucycastle.verion}</version>
             </dependency>
 
+            <!-- JWT -->
+            <dependency>
+                <groupId>com.nimbusds</groupId>
+                <artifactId>nimbus-jose-jwt</artifactId>
+                <version>9.21</version>
+            </dependency>
+
             <!-- templating -->
             <dependency>
                 <groupId>org.apache.velocity</groupId>
@@ -273,6 +281,16 @@
                 <groupId>org.apache.velocity</groupId>
                 <artifactId>velocity-engine-core</artifactId>
                 <version>${velocity.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.velocity.tools</groupId>
+                <artifactId>velocity-tools-generic</artifactId>
+                <version>3.1</version>
+            </dependency>
+            <dependency>
+                <groupId>com.samskivert</groupId>
+                <artifactId>jmustache</artifactId>
+                <version>1.15</version>
             </dependency>
 
             <!-- javascript (only Java 11+) -->
@@ -296,44 +314,59 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
-                <version>${jackson.version}</version>
+                <version>2.13.2.2</version>
             </dependency>
             <dependency>
                 <groupId>net.javacrumbs.json-unit</groupId>
                 <artifactId>json-unit-core</artifactId>
-                <version>2.28.0</version>
+                <version>2.32.0</version>
             </dependency>
 
             <!-- json validation -->
             <dependency>
                 <groupId>com.networknt</groupId>
                 <artifactId>json-schema-validator</artifactId>
-                <version>1.0.66</version>
+                <version>1.0.68</version>
             </dependency>
             <dependency>
                 <groupId>com.jayway.jsonpath</groupId>
                 <artifactId>json-path</artifactId>
-                <version>2.6.0</version>
+                <version>2.7.0</version>
             </dependency>
 
             <!-- open api -->
             <dependency>
                 <groupId>io.swagger.parser.v3</groupId>
                 <artifactId>swagger-parser</artifactId>
-                <version>2.0.29</version>
+                <version>2.0.31</version>
                 <exclusions>
                     <exclusion>
                         <groupId>com.github.fge</groupId>
                         <artifactId>json-patch</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>javax.validation</groupId>
+                        <artifactId>validation-api</artifactId>
+                    </exclusion>
                 </exclusions>
+            </dependency>
+            <!-- used by swagger-parser force version due to CVEs -->
+            <dependency>
+                <groupId>org.mozilla</groupId>
+                <artifactId>rhino</artifactId>
+                <version>1.7.14</version>
             </dependency>
 
             <!-- xml -->
             <dependency>
-                <groupId>javax.xml.bind</groupId>
-                <artifactId>jaxb-api</artifactId>
-                <version>2.4.0-b180830.0359</version>
+                <groupId>jakarta.xml.bind</groupId>
+                <artifactId>jakarta.xml.bind-api</artifactId>
+                <version>3.0.1</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sun.xml.bind</groupId>
+                <artifactId>jaxb-impl</artifactId>
+                <version>3.0.2</version>
             </dependency>
             <dependency>
                 <groupId>org.xmlunit</groupId>
@@ -370,7 +403,14 @@
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
-                <version>31.0.1-android</version>
+                <version>31.1-jre</version>
+            </dependency>
+
+            <!-- classpath scanning -->
+            <dependency>
+                <groupId>io.github.classgraph</groupId>
+                <artifactId>classgraph</artifactId>
+                <version>4.8.143</version>
             </dependency>
 
             <!-- logging -->
@@ -433,12 +473,50 @@
             <dependency>
                 <groupId>org.hamcrest</groupId>
                 <artifactId>hamcrest</artifactId>
-                <version>2.2</version>
+                <version>${hamcrest.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.skyscreamer</groupId>
                 <artifactId>jsonassert</artifactId>
                 <version>1.5.0</version>
+            </dependency>
+
+            <!-- Fixes for conflicting transitive dependencies -->
+            <dependency>
+                <!-- Conflicting versions in json-unit-core and junit -->
+                <groupId>org.hamcrest</groupId>
+                <artifactId>hamcrest-core</artifactId>
+                <version>${hamcrest.version}</version>
+            </dependency>
+            <dependency>
+                <!-- Conflicting versions in json-schema-validator and guava -->
+                <groupId>com.google.code.findbugs</groupId>
+                <artifactId>jsr305</artifactId>
+                <version>3.0.2</version>
+            </dependency>
+            <dependency>
+                <!-- Conflicting versions in jakarta.xml.bind-api and jaxb-core -->
+                <groupId>com.sun.activation</groupId>
+                <artifactId>jakarta.activation</artifactId>
+                <version>2.0.1</version>
+            </dependency>
+            <dependency>
+                <!-- Conflicting versions in swagger-parser and swagger-core -->
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-yaml</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <!-- Conflicting versions in velocity-tools-generic and commons-digester3 -->
+                <groupId>commons-beanutils</groupId>
+                <artifactId>commons-beanutils</artifactId>
+                <version>1.9.4</version>
+            </dependency>
+            <dependency>
+                <!-- Conflicting versions in commons-beanutils and commons-digester3 and swagger-parser -->
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+                <version>1.2</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -511,7 +589,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.3.1</version>
+                        <version>3.3.2</version>
                         <configuration>
                             <failOnError>false</failOnError>
                             <doclint>none</doclint>
@@ -580,17 +658,17 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.9.0</version>
+                <version>3.10.1</version>
                 <configuration>
                     <fork>false</fork>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
                     <compilerArgs>
                         <arg>-XDignore.symbol.file</arg>
                         <arg>-Xlint:all</arg>
                         <!-- lines below should be uncommented if switching to java 9+ -->
-<!--                        <arg>&#45;&#45;add-exports=java.base/sun.security.x509=ALL-UNNAMED</arg>-->
-<!--                        <arg>&#45;&#45;add-exports=java.base/sun.security.util=ALL-UNNAMED</arg>-->
+                        <!-- <arg>&#45;&#45;add-exports=java.base/sun.security.x509=ALL-UNNAMED</arg>-->
+                        <!-- <arg>&#45;&#45;add-exports=java.base/sun.security.util=ALL-UNNAMED</arg>-->
                     </compilerArgs>
                 </configuration>
                 <executions>
@@ -640,13 +718,14 @@
                 <artifactId>maven-clean-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <verbose>true</verbose>
+                    <verbose>false</verbose>
                     <filesets>
                         <fileset>
                             <directory>${basedir}</directory>
                             <includes>
                                 <include>**/*.log</include>
                                 <include>**/keystore.jks</include>
+                                <include>**/mockserver_keystore_*_jks</include>
                                 <include>**/keystore.p12</include>
                             </includes>
                         </fileset>
@@ -675,7 +754,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.22.2</version>
+                <version>${maven-surefire-plugin.version}</version>
                 <configuration>
                     <!-- allow debugging tests -->
                     <!--<forkCount>0</forkCount>-->
@@ -687,8 +766,6 @@
                     </excludes>
                     <systemProperties>
                         <mockserver.logLevel>ERROR</mockserver.logLevel>
-                        <mockserver.disableSystemOut>true</mockserver.disableSystemOut>
-                        <mockserver.nioEventLoopThreadCount>1</mockserver.nioEventLoopThreadCount>
                     </systemProperties>
                     <argLine>-Duser.language=en -Duser.country=GB</argLine>
                     <disableXmlReport>true</disableXmlReport>
@@ -703,7 +780,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <version>2.22.2</version>
+                <version>${maven-surefire-plugin.version}</version>
                 <configuration>
                     <!-- allow debugging tests -->
                     <!--<forkCount>0</forkCount>-->
@@ -712,10 +789,8 @@
                     </includes>
                     <systemProperties>
                         <mockserver.logLevel>ERROR</mockserver.logLevel>
-                        <mockserver.disableSystemOut>true</mockserver.disableSystemOut>
-                        <mockserver.nioEventLoopThreadCount>20</mockserver.nioEventLoopThreadCount>
-                        <mockserver.webSocketClientEventLoopThreadCount>5
-                        </mockserver.webSocketClientEventLoopThreadCount>
+                        <project.version>${project.version}</project.version>
+                        <project.basedir>${project.basedir}</project.basedir>
                     </systemProperties>
                     <argLine>-Duser.language=en -Duser.country=GB</argLine>
                     <disableXmlReport>true</disableXmlReport>
@@ -744,7 +819,7 @@
                     <dependency>
                         <groupId>com.puppycrawl.tools</groupId>
                         <artifactId>checkstyle</artifactId>
-                        <version>9.2.1</version>
+                        <version>9.3</version>
                     </dependency>
                 </dependencies>
                 <configuration>
@@ -761,6 +836,25 @@
                         <phase>validate</phase>
                         <goals>
                             <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- ensure no implicit transitive dependencies not at the same version -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.0.0</version>
+                <configuration>
+                    <rules>
+                        <dependencyConvergence />
+                    </rules>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>enforce</id>
+                        <goals>
+                            <goal>enforce</goal>
                         </goals>
                     </execution>
                 </executions>

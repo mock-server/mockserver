@@ -1,0 +1,1189 @@
+---
+title: Response Templates
+layout: page
+pageOrder: 4
+section: 'Mock Server'
+subsection: true
+sitemap:
+priority: 0.8
+changefreq: 'monthly'
+lastmod: 2019-11-10T08:00:00+01:00
+---
+
+<a id="response_templates" class="anchor" href="#response_templates">&nbsp;</a>
+
+<h2>Response Templates</h2>
+
+<p>MockServer supports the following response template formats:</p>
+<ul>
+    <li><strong><a href="#mustache_templates">mustache templates</a></strong>
+        <ul>
+            <li>uses mustache syntax</li>
+            <li>simple and easy to use</li>
+            <li>simple conditional logic</li>
+            <li>works on all JVM versions</li>
+        </ul>
+    </li>
+    <li><strong><a href="#velocity_templates">velocity templates</a></strong>
+        <ul>
+            <li>uses <a target="_blank" href="https://velocity.apache.org/">Apache Velocity</a></li>
+            <li>more complex to use</li>
+            <li>supports more complex logic</li>
+            <li>works on all JVM versions</li>
+        </ul>
+    </li>
+    <li><strong><a href="#javascript_templates">javascript templates</a></strong>
+        <ul>
+            <li>use Nashorn JavaScript engine</li>
+            <li>more complex to use</li>
+            <li>supports more complex logic</li>
+            <li>requires Nashorn deprecated in Java 11 and removed from 15 onwards</li>
+        </ul>
+    </li>
+</ul>
+
+<a id="response_template_testing" class="anchor" href="#response_template_testing">&nbsp;</a>
+
+<h2>Response Template Testing</h2>
+
+<p>To test response templates locally is it possible to use the <strong>org.mockserver.templates.ResponseTemplateTester</strong> for fast feedback and iteration</p>
+
+<p><a href="#mustache_templates">mustache templates</a> can be tested locally as follows:</p>
+
+<pre class="prettyprint code"><code class="code">// inputs
+String template = "{\n" +
+    "    'statusCode': 200,\n" +
+    "    'body': \"{'method': '&lbrace;&lbrace; request.method &rbrace;&rbrace;', 'path': '&lbrace;&lbrace; request.path &rbrace;&rbrace;', 'headers': '&lbrace;&lbrace; request.headers.host.0 &rbrace;&rbrace;'}\"\n" +
+    "}";
+HttpRequest request = request()
+    .withPath("/somePath")
+    .withMethod("POST")
+    .withHeader(HOST.toString(), "mock-server.com")
+    .withBody("some_body");
+
+// execute
+HttpResponse httpResponse = ResponseTemplateTester.testVelocityTemplate(template, request);
+
+// result
+System.out.println("httpResponse = " + httpResponse);</code></pre>
+
+<p><a href="#velocity_templates">velocity templates</a> can be tested locally as follows:</p>
+
+<pre class="prettyprint code"><code class="code">// inputs
+String template = "{\n" +
+    "    'statusCode': 200,\n" +
+    "    'body': \"{'method': '$request.method', 'path': '$request.path', 'headers': '$request.headers.host[0]'}\"\n" +
+    "}";
+HttpRequest request = request()
+    .withPath("/somePath")
+    .withMethod("POST")
+    .withHeader(HOST.toString(), "mock-server.com")
+    .withBody("some_body");
+
+// execute
+HttpResponse httpResponse = ResponseTemplateTester.testVelocityTemplate(template, request);
+
+// result
+System.out.println("httpResponse = " + httpResponse);</code></pre>
+
+<p><a href="#javascript_templates">javascript templates</a> can be tested locally as follows:</p>
+
+<pre class="prettyprint code"><code class="code">// inputs
+String template = "return {\n" +
+    "    'statusCode': 200,\n" +
+    "    'body': '{\\'method\\': \\'' + request.method + '\\', \\'path\\': \\'' + request.path + '\\', \\'headers\\': \\'' + request.headers.host[0] + '\\'}'\n" +
+    "};";
+HttpRequest request = request()
+    .withPath("/somePath")
+    .withMethod("POST")
+    .withHeader(HOST.toString(), "mock-server.com")
+    .withBody("some_body");
+
+// execute
+HttpResponse httpResponse = ResponseTemplateTester.testVelocityTemplate(template, request);
+
+// result
+System.out.println("httpResponse = " + httpResponse);</code></pre>
+
+<a id="request_model_variables" class="anchor" href="#request_model_variables">&nbsp;</a>
+
+<h2>Request Model Variables</h2>
+
+<p>All templates formats have access to the following request fields</p>
+
+<ul>
+    <li><strong>method</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.method &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.method</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.method</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>path</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.path &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.path</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.path</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>path parameters</strong>&nbsp;&nbsp;<span>(see below for multi-value map access patterns)</span>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.pathParameters.&lt;key&ft;.&lt;index&ft; &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.pathParameters[&lt;key&ft;][&lt;index&ft;]</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.pathParameters[&lt;key&ft;][&lt;index&ft;]</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>query string parameters</strong>&nbsp;&nbsp;<span>(see below for multi-value map access patterns)</span>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.queryStringParameters.&lt;key&ft;.&lt;index&ft; &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.queryStringParameters[&lt;key&ft;][&lt;index&ft;]</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.queryStringParameters[&lt;key&ft;][&lt;index&ft;]</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>headers</strong>&nbsp;&nbsp;<span>(see below for multi-value map access patterns)</span>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.headers.&lt;key&ft;.&lt;index&ft; &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.headers[&lt;key&ft;][&lt;index&ft;]</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.headers[&lt;key&ft;][&lt;index&ft;]</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>cookies</strong>&nbsp;&nbsp;<span>(see below for single-value map access patterns)</span>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.cookies.&lt;key&ft; &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.cookies[&lt;key&ft;]</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.cookies[&lt;key&ft;]</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>body</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.body &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.body</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.body</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>secure</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.secure &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.secure</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.secure</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>client certificate chain</strong>
+        <p>During TLS connections MockServer requests clients to optionally present certificates i.e. optional mTLS.<br/>If the client presents certificates this field is populated with a list of the clients certificates.<br/>Each item in the list contains the following fields:</p>
+        <ul>
+            <li><strong>issuerDistinguishedName</strong> as a <code class="inline_code">string</code></li>
+            <li><strong>subjectDistinguishedName</strong> as a <code class="inline_code">string</code></li>
+            <li><strong>serialNumber</strong> as a <code class="inline_code">string</code></li>
+            <li><strong>signatureAlgorithmName</strong> as a <code class="inline_code">string</code></li>
+            <li><strong>certificate</strong> as a <code class="inline_code">java.security.cert.X509Certificate</code></li>
+        </ul>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.clientCertificateChain &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.clientCertificateChain</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.clientCertificateChain</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>remote address</strong>
+        <p>The address of the TCP connection to MockServer; typically the client's address, unless there is a NAT device or load balancer between the client and MockServer.</p>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.remoteAddress &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.remoteAddress</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.remoteAddress</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>keep alive</strong>
+        <p>True is the client requested HTTP keep alive.</p>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.keepAlive &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.keepAlive</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.keepAlive</code></td>
+            </tr>
+        </table>
+    </li>
+</ul>
+
+<a id="request_multi_value_maps" class="anchor" href="#request_multi_value_maps">&nbsp;</a>
+
+<h2>Request Multi-Value And Single Value Maps</h2>
+
+<p>The <code class="inline_code">request</code> variable contains the follow multi-value maps fields:</p>
+<ul>
+    <li><code class="inline_code">request.headers</code></li>
+    <li><code class="inline_code">request.pathParameters</code></li>
+    <li><code class="inline_code">request.queryStringParameters</code></li>
+</ul>
+<p>The <code class="inline_code">request</code> variable contains the follow single-value maps fields:</p>
+<ul>
+    <li><code class="inline_code">request.cookies</code></li>
+</ul>
+<p>These multi-value or single-value maps can be accessed in the following ways:</p>
+
+<ul>
+    <li><strong>values by key</strong>
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.headers.&lt;key&ft;.&lt;index&ft; &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.queryStringParameters.&lt;key&ft;.&lt;index&ft; &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.headers.&lt;key&ft;.&lt;index&ft; &rbrace;&rbrace;</code></td>
+            </tr>
+        </table></div>
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.pathParameters[&lt;key&ft;][&lt;index&ft;]</code><br/><code class="inline code">$!request.queryStringParameters[&lt;key&ft;][&lt;index&ft;]</code><br/><code class="inline code">$!request.headers[&lt;key&ft;][&lt;index&ft;]</code><br/></td>
+            </tr>
+        </table></div>
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.pathParameters[&lt;key&ft;][&lt;index&ft;]</code><br/><code class="inline code">request.queryStringParameters[&lt;key&ft;][&lt;index&ft;]</code><br/><code class="inline code">request.headers[&lt;key&ft;][&lt;index&ft;]</code><br/></td>
+            </tr>
+        </table></div>
+    </li>
+    <li><strong>entries as set</strong>
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px"></td>
+                <td>each entry has a <code class="inline code">key</code> and a <code class="inline code">value</code> field<br/>for multi-value maps the <code class="inline code">value</code> is a list<br/>for single-value maps the <code class="inline code">value</code> is a string</td>
+            </tr>
+        </table></div>
+
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.pathParameters.entrySet &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.queryStringParameters.entrySet &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.headers.entrySet &rbrace;&rbrace;</code><br/></td>
+            </tr>
+        </table></div>
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.pathParameters.entrySet</code><br/><code class="inline code">$!request.queryStringParameters.entrySet</code><br/><code class="inline code">$!request.headers.entrySet</code><br/></td>
+            </tr>
+        </table></div>
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><strong>not available</strong></td>
+            </tr>
+        </table></div>
+    </li>
+    <li><strong>values as list</strong>
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.pathParameters.values &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.queryStringParameters.values &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.headers.values &rbrace;&rbrace;</code><br/></td>
+            </tr>
+        </table></div>
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.pathParameters.values</code><br/><code class="inline code">$!request.queryStringParameters.values</code><br/><code class="inline code">$!request.headers.values</code><br/></td>
+            </tr>
+        </table></div>
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="code" style="width: 80%;">for (pathParameterKey in request.pathParameters) {
+    var values = request.pathParameters[pathParameterKey];
+}</code><br/><code class="code">for (queryStringParameterKey in request.queryStringParameters) {
+    var values = request.queryStringParameters[queryStringParameterKey];
+}</code><br/><code class="code" style="width: 62%;">for (headerKey in request.headers) {
+    var values = request.headers[headerKey];
+}</code><br/></td>
+            </tr>
+        </table></div>
+    </li>
+    <li><strong>keys as set</strong>
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.pathParameters.keySet &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.queryStringParameters.keySet &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.headers.keySet &rbrace;&rbrace;</code><br/></td>
+            </tr>
+        </table></div>
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.pathParameters.keySet</code><br/><code class="inline code">$!request.queryStringParameters.keySet</code><br/><code class="inline code">$!request.headers.keySet</code><br/></td>
+            </tr>
+        </table></div>
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="code" style="width: 80%;">for (pathParameterKey in request.pathParameters) {
+    // ...
+}</code><br/><code class="code">for (queryStringParameterKey in request.queryStringParameters) {
+    // ...
+}</code><br/><code class="code" style="width: 62%;">for (headerKey in request.headers) {
+    // ...
+}</code><br/></td>
+            </tr>
+        </table></div>
+    </li>
+</ul>
+
+<a id="dynamic_model_variables" class="anchor" href="#dynamic_model_variables">&nbsp;</a>
+
+<h2>Dynamic Model Variables</h2>
+
+<p>All templates formats also have access to the following built-in dynamic variables. They return unique values each time they are used.</p>
+
+<ul>
+    <li><strong>date & time in ISO-8601 i.e. 2011-12-03T10:15:30Z</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; now_iso_8601 &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!now_iso_8601</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">now_iso_8601</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>unix epoch, the number of seconds that have elapsed since January 1, 1970</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; now_epoch &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!now_epoch</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">now_epoch</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>date & time in RFC 1123 i.e. Tue, 3 Jun 2008 11:05:30 GMT</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; now_rfc_1123 &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!now_rfc_1123</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">now_rfc_1123</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>uuid as string</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; uuid &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!uuid</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">uuid</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>random integer between 0 and 9 inclusive</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; rand_int_10 &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!rand_int_10</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">rand_int_10</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>random integer between 0 and 99 inclusive</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; rand_int_100 &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!rand_int_100</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">rand_int_100</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>random data 16 bytes long</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; rand_bytes_16 &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!rand_bytes_16</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">rand_bytes_16</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>random data 32 bytes long</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; rand_bytes_32 &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!rand_bytes_32</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">rand_bytes_32</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>random data 64 bytes long</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; rand_bytes_64 &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!rand_bytes_64</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">rand_bytes_64</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>random data 128 bytes long</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; rand_bytes_128 &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!rand_bytes_128</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">rand_bytes_128</code></td>
+            </tr>
+        </table>
+    </li>
+</ul>
+
+<a id="mustache_templates" class="anchor" href="#mustache_templates">&nbsp;</a>
+
+<h2>Mustache Response Templates</h2>
+
+<p>The following shows a basic example for a mustache format response template</p>
+
+<pre class="prettyprint code"><code class="code">new ClientAndServer(1080)
+    .when(request().withPath("/some/path"))
+    .respond(
+        template(
+            HttpTemplate.TemplateType.MUSTACHE,
+            "{\n" +
+                "     'statusCode': 200,\n" +
+                "     'cookies': {\n" +
+                "          'session': '&lbrace;&lbrace; request.headers.Session-Id.0 &rbrace;&rbrace;'\n" +
+                "     },\n" +
+                "     'headers': {\n" +
+                "          'Client-User-Agent': [ '&lbrace;&lbrace; request.headers.User-Agent.0 &rbrace;&rbrace;' ]\n" +
+                "     },\n" +
+                "     'body': '&lbrace;&lbrace; request.body &rbrace;&rbrace;'\n" +
+                "}"
+        )
+    );</code></pre>
+
+<h3>Mustache Syntax</h3>
+
+<h4>Variables</h4>
+
+<p>In mustache a variable is referenced using double braces, for example, <code class="inline code">&lbrace;&lbrace; request.method &rbrace;&rbrace;</code> will print the <strong>method</strong> field of the <strong>request</strong>
+    variable.</p>
+<p><code class="inline code">&lbrace;&lbrace; name &rbrace;&rbrace;</code> will try to find the <strong>name</strong> key in the current model context; which can be changed, using sections, as described below.</p>
+<p>If no matching field is found an empty string will be returned.</p>
+
+<p>The following basic template example demonstrates using multiple variables:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  'statusCode': 200,
+  'body': {
+    'method': '&lbrace;&lbrace; request.method &rbrace;&rbrace;',
+    'path': '&lbrace;&lbrace; request.path &rbrace;&rbrace;',
+    'headers': '&lbrace;&lbrace; request.headers.host.0 &rbrace;&rbrace;'
+  }
+}</code></pre>
+
+<h4>Sections</h4>
+
+<p>Sections have the following uses:</p>
+<ul>
+    <li>to change the model context</li>
+    <li>as an if-else-statement</li>
+    <li>to loop over arrays or iterables</li>
+</ul>
+
+<p>A section begins with a tag starting with a pound and ends with a matching tag starting with a slash.</p>
+<p>For example <code class="inline code">&lbrace;&lbrace;#request.cookies&rbrace;&rbrace;</code> starts a <strong>request.cookies</strong> section and <code class="inline code">&lbrace;&lbrace;/request.cookies&rbrace;&rbrace;</code> closes the section.</p>
+
+<p>How a section behaves depends on the section's model variable as follows</p>
+<ul>
+    <li>boolean values enable or disable the section like an if-statement; with unresolvable variables, null variables or empty strings all being treated as false</li>
+    <li>arrays, iterators, and iterable variables cause the section to loop over each item; with empty collections never executing the section</li>
+    <li>other objects result in a single execution of the section using the section's model variable as the context</li>
+</ul>
+
+<p>The following example template demonstrates using a section to iterate the <strong>entrySet</strong> in the <strong>header</strong> map:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  'statusCode': 200,
+  'body': "{'headers': '&lbrace;&lbrace;#request.headers.entrySet&rbrace;&rbrace;&lbrace;&lbrace; key &rbrace;&rbrace;=&lbrace;&lbrace; value.0 &rbrace;&rbrace; &lbrace;&lbrace;/request.headers.entrySet&rbrace;&rbrace;'}"
+}</code></pre>
+
+<p>And produces the following example output:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  "statusCode" : 200,
+  "body" : "{'headers': 'host=mock-server.com content-type=plain/text '}"
+}</code></pre>
+
+<h4>Inverted Sections</h4>
+
+<p>An inverted section begins with a tag starting with a caret and ends with a matching tag starting with a slash.</p>
+<p>For example <code class="inline code">&lbrace;&lbrace;^-first&rbrace;&rbrace;</code> starts a <strong>-first</strong> section and <code class="inline code">&lbrace;&lbrace;/-first&rbrace;&rbrace;</code> closes the section.</p>
+
+<p>Inverted sections render once based on the inverse value of the key, they will be rendered if the key doesn't exist, is false, is an empty string, or is an empty list.</p>
+
+<p>The following example template demonstrates using a section to iterate the <strong>entrySet</strong> in the <strong>header</strong> map using an inverted section and the special variable <strong>-first</strong> to add commas before all headers except the first:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  'statusCode': 200,
+  'body': "{'headers': [&lbrace;&lbrace;#request.headers.entrySet&rbrace;&rbrace;&lbrace;&lbrace;^-first&rbrace;&rbrace;, &lbrace;&lbrace;/-first&rbrace;&rbrace;'&lbrace;&lbrace; key &rbrace;&rbrace;=&lbrace;&lbrace; value.0 &rbrace;&rbrace;'&lbrace;&lbrace;/request.headers.entrySet&rbrace;&rbrace;]}"
+}</code></pre>
+
+<p>And produces the following example output:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  "statusCode" : 200,
+  "body" : "{'headers': ['host=mock-server.com', 'content-type=plain/text']}"
+}</code></pre>
+
+<h4>Special Variables</h4>
+
+<h4>this</h4>
+
+<p><code class="inline code">this</code> refers to the context object itself such as the current item when iterating over a collection</p>
+
+<h4>-first and -last</h4>
+
+<p>You can use the special variables <code class="inline code">-first</code> and <code class="inline code">-last</code> when using collections.</p>
+<p><code class="inline code">-first</code> resolves to true when inside a section on the first iteration, it resolves to false at all other times. It resolves to false for sections with a singleton value rather a collection.</p>
+<p><code class="inline code">-last</code> resolves to true when inside a section on the last iteration, it resolves to false at all other times.</p>
+
+<h4>-index</h4>
+
+<p>The <code class="inline code">-index</code> special variable resolves to 1 for the first iteration, 2 for the second so on. It resolves to 0 at all other times including sections with a singleton value rather a collection.</p>
+
+<p>The following example template demonstrates using <strong>this</strong> and <strong>-first</strong> to list header values</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+    'statusCode': 200,
+    'body': "{'headers': [&lbrace;&lbrace;#request.headers.values&rbrace;&rbrace;&lbrace;&lbrace;^-first&rbrace;&rbrace;, &lbrace;&lbrace;/-first&rbrace;&rbrace;'&lbrace;&lbrace; this.0 &rbrace;&rbrace;'&lbrace;&lbrace;/request.headers.values&rbrace;&rbrace;]}"
+}</code></pre>
+
+<p>And produces the following example output:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  "statusCode" : 200,
+  "body" : "{'headers': ['mock-server.com', 'plain/text']}"
+}</code></pre>
+
+<p>The following example template demonstrates using <strong>this</strong>, <strong>-first</strong> and <strong>-index</strong> to list header keys</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+    'statusCode': 200,
+    'body': "{'headers': [&lbrace;&lbrace;#request.headers.keySet&rbrace;&rbrace;&lbrace;&lbrace;^-first&rbrace;&rbrace;, &lbrace;&lbrace;/-first&rbrace;&rbrace;'&lbrace;&lbrace; -index &rbrace;&rbrace;:&lbrace;&lbrace; this &rbrace;&rbrace;'&lbrace;&lbrace;/request.headers.keySet&rbrace;&rbrace;]}"
+}</code></pre>
+
+<p>And produces the following example output:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  "statusCode" : 200,
+  "body" : "{'headers': ['1:host', '2:content-type']}"
+}</code></pre>
+
+<h4>JsonPath</h4>
+
+<p>It is possible to use JsonPath expressions to extract values from request bodies containing JSON with a <code class="inline code">&lbrace;&lbrace;#jsonPath&rbrace;&rbrace;</code> section, follow by a <code class="inline code">&lbrace;&lbrace;#jsonPathResult&rbrace;&rbrace;</code> section</p>
+
+<p>For details of the full JsonPath syntax please see <a target="_blank" href="https://github.com/json-path/JsonPath">github.com/json-path</a></p>
+
+<p>The following example template demonstrates using <code class="inline code">&lbrace;&lbrace;#jsonPath&rbrace;&rbrace;</code> follow by <code class="inline code">&lbrace;&lbrace;#jsonPathResult&rbrace;&rbrace;</code> to extract a list and single value from a request body:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+    'statusCode': 200,
+    'body': "{'titles': &lbrace;&lbrace;#jsonPath&rbrace;&rbrace;$.store.book&lbrace;&lbrace;/jsonPath&rbrace;&rbrace;[&lbrace;&lbrace;#jsonPathResult&rbrace;&rbrace;&lbrace;&lbrace;^-first&rbrace;&rbrace;, &lbrace;&lbrace;/-first&rbrace;&rbrace;'&lbrace;&lbrace;title&rbrace;&rbrace;'&lbrace;&lbrace;/jsonPathResult&rbrace;&rbrace;], 'bikeColor': '&lbrace;&lbrace;#jsonPath&rbrace;&rbrace;$.store.bicycle.color&lbrace;&lbrace;/jsonPath&rbrace;&rbrace;&lbrace;&lbrace;jsonPathResult&rbrace;&rbrace;'}"
+}</code></pre>
+
+<p>In this example the first JsonPath expression <code class="inline code">$.store.book</code> returns a list of objects which is iterated over in the section <code class="inline code">&lbrace;&lbrace;#jsonPathResult&rbrace;&rbrace;</code>.</p>
+<p>The second JsonPath expression <code class="inline code">$.store.bicycle.color</code> returns a single value which is returned using the variable tag <code class="inline code">&lbrace;&lbrace;jsonPathResult&rbrace;&rbrace;</code>.</p>
+
+<p>Given the following request:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  "path" : "/somePath",
+  "body" : {
+    "store" : {
+      "book" : [ {
+        "category" : "reference",
+        "author" : "Nigel Rees",
+        "title" : "Sayings of the Century",
+        "price" : 18.95
+      }, {
+        "category" : "fiction",
+        "author" : "Herman Melville",
+        "title" : "Moby Dick",
+        "isbn" : "0-553-21311-3",
+        "price" : 8.99
+      } ],
+      "bicycle" : {
+        "color" : "red",
+        "price" : 19.95
+      }
+    },
+    "expensive" : 10
+  }
+}</code></pre>
+
+<p>The example produces:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  "statusCode" : 200,
+  "body" : "{'titles': ['Sayings of the Century', 'Moby Dick'], 'bikeColor': 'red'}"
+}</code></pre>
+
+<h4>XPath</h4>
+
+<p>It is possible to use XPath expressions to extract values from request bodies containing XML with a <code class="inline code">&lbrace;&lbrace;#xPath&rbrace;&rbrace;</code> section.</p>
+<p>The <code class="inline code">&lbrace;&lbrace;#xPath&rbrace;&rbrace;</code> section only supports outputting the result of the XPath expression as a string, if an XML fragment is matched the string content of all the elements is printed.</p>
+
+<p>For a quick summary the XPath syntax please see <a target="_blank" href="https://www.w3schools.com/xml/xpath_syntax.asp">w3schools</a>, for details of the full XPath syntax please see <a target="_blank" href="https://www.w3.org/TR/1999/REC-xpath-19991116/#path-abbrev">www.w3.org</a></p>
+
+<p>The following example template demonstrates using <code class="inline code">&lbrace;&lbrace;#xPath&rbrace;&rbrace;</code> to multiple items from a request body:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+    'statusCode': 200,
+    'body': "{'titles': ['&lbrace;&lbrace;#xPath&rbrace;&rbrace;/store/book/title&lbrace;&lbrace;/xPath&rbrace;&rbrace;', '&lbrace;&lbrace;#xPath&rbrace;&rbrace;//book[2]/title&lbrace;&lbrace;/xPath&rbrace;&rbrace;'], 'bikeColor': '&lbrace;&lbrace;#xPath&rbrace;&rbrace;//bicycle/color&lbrace;&lbrace;/xPath&rbrace;&rbrace;'}"
+}</code></pre>
+
+<p>Given a request with the following xml body:</p>
+
+<pre class="prettyprint lang-xml code"><code class="code">&lt;?xml version="1.0" encoding="UTF-8" ?&ft;
+&lt;store&ft;
+  &lt;book&ft;
+    &lt;category&ft;reference&lt;/category&ft;
+    &lt;author&ft;Nigel Rees&lt;/author&ft;
+    &lt;title&ft;Sayings of the Century&lt;/title&ft;
+    &lt;price&ft;18.95&lt;/price&ft;
+  &lt;/book&ft;
+  &lt;book&ft;
+    &lt;category&ft;fiction&lt;/category&ft;
+    &lt;author&ft;Herman Melville&lt;/author&ft;
+    &lt;title&ft;Moby Dick&lt;/title&ft;
+    &lt;isbn&ft;0-553-21311-3&lt;/isbn&ft;
+    &lt;price&ft;8.99&lt;/price&ft;
+  &lt;/book&ft;
+  &lt;bicycle&ft;
+    &lt;color&ft;red&lt;/color&ft;
+    &lt;price&ft;19.95&lt;/price&ft;
+  &lt;/bicycle&ft;
+  &lt;expensive&ft;10&lt;/expensive&ft;
+&lt;/store&ft;</code></pre>
+
+<p>The example produces:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  "statusCode" : 200,
+  "body" : "{'titles': ['Sayings of the Century', 'Moby Dick'], 'bikeColor': 'red'}"
+}</code></pre>
+
+<a id="velocity_templates" class="anchor" href="#velocity_templates">&nbsp;</a>
+
+<h2>Velocity Response Templates</h2>
+
+<p>The following shows a basic example for a Velocity format response template</p>
+
+<pre class="prettyprint code"><code class="code">new ClientAndServer(1080)
+    .when(request().withPath("/some/path"))
+    .respond(
+        template(
+            HttpTemplate.TemplateType.VELOCITY,
+            "{\n" +
+                "     'statusCode': 200,\n" +
+                "     'cookies': { \n" +
+                "          'session': '$!request.headers['Session-Id'][0]'\n" +
+                "     },\n" +
+                "     'headers': {\n" +
+                "          'Client-User-Agent': [ '$!request.headers['User-Agent'][0]' ]\n" +
+                "     },\n" +
+                "     'body': '$!request.body'\n" +
+                "}"
+        )
+    );</code></pre>
+
+<h3>Velocity Syntax</h3>
+
+<p>For full Velocity syntax see: <a target="_blank" href="https://velocity.apache.org/engine/1.7/user-guide.html#velocity-template-language-vtl-an-introduction">Velocity User Guide</a> the following section provide a basic summary and examples of Velocity syntax.</p>
+
+<h4>Variables</h4>
+
+<p>In velocity a variable is referenced using a dollar, for example, <code class="inline code">$request.method</code> will print the <strong>method</strong> field of the <strong>request</strong> variable.</p>
+<p><code class="inline code">$name</code> will try to find the <strong>name</strong> variable in the current model.</p>
+<p>If no matching variable is found for the variable expression the expression is printed, unless a quiet expression notation is used as follows <code class="inline code">$!name</code></p>
+
+<p>The following basic template example demonstrates using multiple variables:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  'statusCode': 200,
+  'body': {
+    'method': '#!request.method',
+    'path': '#!request.path',
+    'headers': '#!request.headers.host.0'
+  }
+}</code></pre>
+
+<p>Methods can also be called on variables, for example, <code class="inline code">$request.getMethod()</code> will call the <strong>getMethod()</strong> method of the <strong>request</strong> variable.</p>
+
+<p>New variables can be defined using a <code class="inline code">#set</code> directive, for example, <code class="inline code">#set ($message="Hello World")</code> will create a new variables call <strong>message</strong>.</p>
+
+<h4>Conditionals</h4>
+
+<p>Conditional expressions are possible using <code class="inline code">#if</code>, <code class="inline code">#elseif</code> and <code class="inline code">#else</code> directives, as folows:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">#if($request.method == 'POST' && $request.path == '/somePath')
+    {
+        'statusCode': 200,
+        'body': "{'name': 'value'}"
+    }
+#else
+    {
+        'statusCode': 406,
+        'body': "$!request.body"
+    }
+#end</code></pre>
+
+<h4>Loops</h4>
+
+<p>Loops are possible using the <code class="inline code">#foreach</code> directives, as follows:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+    'statusCode': 200,
+    'body': "{'headers': [#foreach( $value in $request.headers.values() )'$value[0]'#if( $foreach.hasNext ), #end#end]}"
+}</code></pre>
+
+<p>The example produces:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  "statusCode" : 200,
+  "body" : "{'headers': ['mock-server.com', 'plain/text']}"
+}</code></pre>
+
+<h4>Mathematical</h4>
+
+<p>In addition to the <a href="#dynamic_model_variables">dynamic model variables</a> it is possible to perform basic mathematical operations, as follows:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">#set($percent = $number / 100)
+#set($remainder = $dividend % $divisor)</code></pre>
+
+<p>A range operator is also supported which can be useful in conjunction with <code class="inline code">#set</code> and <code class="inline code">#foreach</code></p>
+
+<pre class="prettyprint lang-java code"><code class="code">#set($array = [0..10])
+#foreach($item in $arr)
+    $item
+#end</code></pre>
+
+<p>For additional mathematical functionality it is also possible to use the <a target="_blank" href="https://velocity.apache.org/tools/3.1/tools-summary.html#MathTool">MathTool</a> or <a target="_blank" href="https://velocity.apache.org/tools/3.1/tools-summary.html#NumberTool">NumberTool</a> in velocity response templates.</p>
+
+<pre class="prettyprint lang-java code"><code class="code">#set($power = $math.pow($number, 2))
+#set($max = $math.max($number, 10))</code></pre>
+
+<h4>Json Bodies</h4>
+
+<p>The <a target="_blank" href="https://velocity.apache.org/tools/3.1/tools-summary.html#JsonTool">JsonTool</a> can be used to help parse JSON bodies, as follows:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">#set($jsonBody = $json.parse($!request.body))
+
+{
+    'statusCode': 200,
+    'body': "{'titles': [#foreach( $book in $jsonBody.store.book )'$book.title'#if( $foreach.hasNext ), #end#end], 'bikeColor': '$jsonBody.store.bicycle.color'}"
+}</code></pre>
+
+<p>Given the following request:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  "path" : "/somePath",
+  "body" : {
+    "type" : "JSON",
+    "json" : {
+      "store" : {
+        "book" : [ {
+          "category" : "reference",
+          "author" : "Nigel Rees",
+          "title" : "Sayings of the Century",
+          "price" : 18.95
+        }, {
+          "category" : "fiction",
+          "author" : "Herman Melville",
+          "title" : "Moby Dick",
+          "isbn" : "0-553-21311-3",
+          "price" : 8.99
+        } ],
+        "bicycle" : {
+          "color" : "red",
+          "price" : 19.95
+        }
+      },
+      "expensive" : 10
+    }
+  }
+}</code></pre>
+
+<p>The example produces:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  "statusCode" : 200,
+  "body" : "{'titles': ['Sayings of the Century', 'Moby Dick'], 'bikeColor': 'red'}"
+}</code></pre>
+
+<h4>XML Bodies</h4>
+
+<p>The <a target="_blank" href="https://velocity.apache.org/tools/3.1/tools-summary.html#XmlTool">XmlTool</a> can be used to help parse XML bodies, execute XPath and XML traversal.</p>
+
+<p>The following example shows how to use <a target="_blank" href="https://velocity.apache.org/tools/3.1/tools-summary.html#XmlTool">XmlTool</a> for XPath:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">#set($xmlBody = $xml.parse($!request.body))
+
+{
+    'statusCode': 200,
+    'body': "{'key': '$xml.find('/element/key/text()')', 'value': '$xml.find('/element/value/text()')'}"
+}</code></pre>
+
+<p>Given the following request:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  "path" : "/somePath",
+  "body" : "&lt;element&gt;&lt;key&gt;some_key&lt;/key&gt;&lt;value&gt;some_value&lt;/value&gt;&lt;/element&gt;"
+}</code></pre>
+
+<p>The example produces:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  "statusCode" : 200,
+  "body" : "{'key': 'some_key', 'value': 'some_value'}"
+}</code></pre>
+
+<h4>Velocity Tools</h4>
+
+<p>The following velocity tools are available for velocity response templates:</p>
+<ul>
+    <li><a target="_blank" href="https://velocity.apache.org/tools/3.1/tools-summary.html#CollectionTool">CollectionTool</a></li>
+    <li><a target="_blank" href="https://velocity.apache.org/tools/3.1/tools-summary.html#ComparisonDateTool">ComparisonDateTool</a></li>
+    <li><a target="_blank" href="https://velocity.apache.org/tools/3.1/tools-summary.html#DisplayTool">DisplayTool</a></li>
+    <li><a target="_blank" href="https://velocity.apache.org/tools/3.1/tools-summary.html#EscapeTool">EscapeTool</a></li>
+    <li><a target="_blank" href="https://velocity.apache.org/tools/3.1/tools-summary.html#MathTool">MathTool</a></li>
+    <li><a target="_blank" href="https://velocity.apache.org/tools/3.1/tools-summary.html#NumberTool">NumberTool</a></li>
+    <li><a target="_blank" href="https://velocity.apache.org/tools/3.1/tools-summary.html#JsonTool">JsonTool</a></li>
+    <li><a target="_blank" href="https://velocity.apache.org/tools/3.1/tools-summary.html#XmlTool">XmlTool</a></li>
+</ul>
+
+<a id="javascript_templates" class="anchor" href="#javascript_templates">&nbsp;</a>
+
+<h2>JavaScript Response Templates</h2>
+
+<p>The following shows a basic example for a Javaacript format response template</p>
+
+<pre class="prettyprint code"><code class="code">new ClientAndServer(1080)
+    .when(request().withPath("/some/path"))
+    .respond(
+        template(
+            HttpTemplate.TemplateType.JAVASCRIPT,
+            "return {\n" +
+                "     'statusCode': 200,\n" +
+                "     'cookies': {\n" +
+                "          'session' : request.headers['session-id'][0]\n" +
+                "     },\n" +
+                "     'headers': {\n" +
+                "          'Client-User-Agent': request.headers['User-Agent']\n" +
+                "     },\n" +
+                "     'body': request.body\n" +
+                "};"
+        )
+    );</code></pre>
+
+<h3>JavaScript Syntax</h3>
+
+<p>All javascript response templates should return the response as an object as shown in the example above.</p>
+
+<p>Javascript response templates support ES6 syntax for Java 9 to 14, for a summary of ES6 syntax see <a target="_blank" href="https://www.w3schools.com/js/js_es6.asp">w3schools</a>.</p>
+
+<p>Javascript response templates support ES5 syntax for Java 8, for a summary of ES5 syntax see <a target="_blank" href="https://www.w3schools.com/js/js_es5.asp">w3schools</a>.</p>
+
+<h4>Java Version Support</h4>
+
+<p>Javascript templates rely on Nashorn which has the following limitations for Java versions:</p>
+<ul>
+    <li>Java 8 - ES5 only</li>
+    <li>Java 9 or 10 - ES5 & ES6</li>
+    <li>Java 11 to 14 - ES5 & ES6 but prints deprecated warning</li>
+    <li>Java 15+ - not supported</li>
+</ul>
+
+<p>From Java 15 Nashorn is no longer part of the JDK but it is available as a separate library that requires Java 11+.  Once MockServer minimum Java version is 11 then this separate library will be used.</p>
+
+<h4>Variables</h4>
+
+<p>In javascript a variable is referenced directly, for example, <code class="inline code">request.method</code> will return the <strong>method</strong> field of the <strong>request</strong> variable.</p>
+
+<p>The following basic template example demonstrates using multiple variables:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">return {
+    'statusCode': 200,
+    'body': '{\'method\': \'' + request.method + '\', \'path\': \'' + request.path + '\', \'header\': \'' + request.headers.host[0] + '\'}'
+};</code></pre>
+
+<h4>Conditionals</h4>
+
+<p>Conditional expressions are possible, as follows:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">if (request.method === 'POST' && request.path === '/somePath') {
+    return {
+        'statusCode': 200,
+        'body': JSON.stringify({name: 'value'})
+    };
+} else {
+    return {
+        'statusCode': 406,
+        'body': request.body
+    };
+}</code></pre>
+
+<h4>Loops</h4>
+
+<p>Looping is possible, as follows:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">var headers = '';
+for (header in request.headers) {
+  headers += '\'' + request.headers[header] + '\', ';
+}
+return {
+    'statusCode': 200,
+    'body': '{\'headers\': [' + headers.slice(0, -2) + ']}'
+};</code></pre>
+
+<p>The example produces:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  "statusCode" : 200,
+  "body" : "{'headers': ['mock-server.com', 'plain/text']}"
+}</code></pre>

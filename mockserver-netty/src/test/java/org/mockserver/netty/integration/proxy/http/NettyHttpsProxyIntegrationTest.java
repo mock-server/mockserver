@@ -19,7 +19,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.client.NettyHttpClient;
+import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.log.model.LogEntry;
@@ -46,6 +46,7 @@ import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.proxyconfiguration.ProxyConfiguration.proxyConfiguration;
 import static org.mockserver.stop.Stop.stopQuietly;
@@ -90,7 +91,12 @@ public class NettyHttpsProxyIntegrationTest {
         secureEchoServer.mockServerEventLog().reset();
     }
 
-    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(NettyHttpsProxyIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    private static EventLoopGroup clientEventLoopGroup;
+
+    @BeforeClass
+    public static void startEventLoopGroup() {
+        clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(NettyHttpsProxyIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    }
 
     @AfterClass
     public static void stopEventLoopGroup() {
@@ -397,7 +403,7 @@ public class NettyHttpsProxyIntegrationTest {
         // given
         HttpClient httpClient = HttpClients
             .custom()
-            .setSSLSocketFactory(new SSLConnectionSocketFactory(new KeyStoreFactory(new MockServerLogger()).sslContext(), NoopHostnameVerifier.INSTANCE))
+            .setSSLSocketFactory(new SSLConnectionSocketFactory(new KeyStoreFactory(configuration(), new MockServerLogger()).sslContext(), NoopHostnameVerifier.INSTANCE))
             .setRoutePlanner(
                 new DefaultProxyRoutePlanner(
                     new HttpHost(
@@ -488,6 +494,7 @@ public class NettyHttpsProxyIntegrationTest {
 
             try {
                 new NettyHttpClient(
+                    configuration(),
                     new MockServerLogger(),
                     clientEventLoopGroup,
                     ImmutableList.of(proxyConfiguration(
@@ -525,11 +532,11 @@ public class NettyHttpsProxyIntegrationTest {
             String password = UUIDService.getUUID();
             ConfigurationProperties.proxyAuthenticationUsername(username);
             ConfigurationProperties.proxyAuthenticationPassword(password);
-            ConfigurationProperties.logLevel("DEBUG");
-//            ConfigurationProperties.forwardProxyAuthenticationUsername(username);
-//            ConfigurationProperties.forwardProxyAuthenticationPassword(password);
+            ConfigurationProperties.forwardProxyAuthenticationUsername(username);
+            ConfigurationProperties.forwardProxyAuthenticationPassword(password);
 
             org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(
+                configuration(),
                 new MockServerLogger(),
                 clientEventLoopGroup,
                 ImmutableList.of(proxyConfiguration(

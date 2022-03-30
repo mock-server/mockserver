@@ -6,8 +6,12 @@ import org.junit.Test;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.collection.IsMapContaining.hasEntry;
 import static org.hamcrest.core.Is.is;
 
 public class MediaTypeTest {
@@ -163,6 +167,17 @@ public class MediaTypeTest {
     }
 
     @Test
+    public void shouldSupportAdditionParametersWithEqualsInTheValue() {
+        MediaType parse = MediaType.parse("multipart/form-data; boundary=\"===1597684222645===\"; charset=utf-8");
+        assertThat(parse.toString(), is("multipart/form-data; boundary====1597684222645===; charset=utf-8"));
+        Map<String, String> parameters = parse.getParameters();
+        assertThat(parameters, allOf(
+            hasEntry("boundary", "===1597684222645==="),
+            hasEntry("charset", "utf-8")
+        ));
+    }
+
+    @Test
     public void shouldSerialiseToStringWithAdditionParameters() {
         assertThat(new MediaType("application", "soap+xml", ImmutableMap.of(
             "action", "somerandomstuff"
@@ -194,8 +209,28 @@ public class MediaTypeTest {
 
     @Test
     public void shouldReturnDefaultCharset() {
-        List<String> binaryContentTypes = Arrays.asList(
+        List<String> textContentTypes = Arrays.asList(
+            "text/plain",
+            "text/html"
+        );
+        for (String contentType : textContentTypes) {
+            MediaType parse = MediaType.parse(contentType);
+            assertThat("\"" + contentType + "\" should be default charset CharsetUtil.ISO_8859_1", parse.getCharsetOrDefault(), is(StandardCharsets.ISO_8859_1));
+        }
+        List<String> jsonAndXmlContentTypes = Arrays.asList(
             "",
+            "application/json",
+            "application/xml",
+            "text/xml",
+            "text/json",
+            "application/atom+xml",
+            "application/atom+json"
+        );
+        for (String contentType : jsonAndXmlContentTypes) {
+            MediaType parse = MediaType.parse(contentType);
+            assertThat("\"" + contentType + "\" should be default charset CharsetUtil.ISO_8859_1", parse.getCharsetOrDefault(), is(StandardCharsets.UTF_8));
+        }
+        List<String> binaryContentTypes = Arrays.asList(
             "application/applixware",
             "application/font-tdpfr",
             "application/java-archive",
@@ -249,7 +284,7 @@ public class MediaTypeTest {
         );
         for (String contentType : binaryContentTypes) {
             MediaType parse = MediaType.parse(contentType);
-            assertThat("\"" + contentType + "\" should be default charset CharsetUtil.ISO_8859_1", parse.getCharsetOrDefault(), is(StandardCharsets.ISO_8859_1));
+            assertThat("\"" + contentType + "\" should be no default charset", parse.getCharsetOrDefault(), nullValue());
         }
     }
 

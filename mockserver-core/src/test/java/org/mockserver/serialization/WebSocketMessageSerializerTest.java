@@ -150,12 +150,11 @@ public class WebSocketMessageSerializerTest {
             ))
             .setSecure(true)
             .setKeepAlive(false)
-            .setSocketAddress(new SocketAddressDTO(
-                new SocketAddress()
-                    .withHost("someHost")
-                    .withPort(1234)
-                    .withScheme(SocketAddress.Scheme.HTTPS)
-            ))
+            .setSocketAddress(new SocketAddress()
+                .withHost("someHost")
+                .withPort(1234)
+                .withScheme(SocketAddress.Scheme.HTTPS)
+            )
             .buildObject(), httpRequest);
     }
 
@@ -178,12 +177,11 @@ public class WebSocketMessageSerializerTest {
                 ))
                 .setSecure(true)
                 .setKeepAlive(false)
-                .setSocketAddress(new SocketAddressDTO(
-                    new SocketAddress()
-                        .withHost("someHost")
-                        .withPort(1234)
-                        .withScheme(SocketAddress.Scheme.HTTPS)
-                ))
+                .setSocketAddress(new SocketAddress()
+                    .withHost("someHost")
+                    .withPort(1234)
+                    .withScheme(SocketAddress.Scheme.HTTPS)
+                )
                 .buildObject()
         );
 

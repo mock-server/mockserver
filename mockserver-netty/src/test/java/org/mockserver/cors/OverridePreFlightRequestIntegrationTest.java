@@ -6,10 +6,12 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockserver.client.NettyHttpClient;
+import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.netty.integration.proxy.http.HttpProxyChainedIntegrationTest;
 import org.mockserver.scheduler.Scheduler;
 
 import java.net.InetSocketAddress;
@@ -21,6 +23,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -33,18 +36,53 @@ public class OverridePreFlightRequestIntegrationTest {
 
     private static ClientAndServer clientAndServer;
 
-    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(OverridePreFlightRequestIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    private static EventLoopGroup clientEventLoopGroup;
 
-    private static final NettyHttpClient httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false);
+    private static NettyHttpClient httpClient;
+
+    private static boolean originalEnableCORSForAllResponses;
+    private static String originalCorsAllowMethods;
+    private static String originalCorsAllowHeaders;
+    private static boolean originalCorsAllowCredentials;
+    private static int originalCorsMaxAgeInSeconds;
+
+    @BeforeClass
+    public static void startEventLoopGroup() {
+        clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(OverridePreFlightRequestIntegrationTest.class.getSimpleName() + "-eventLoop"));
+        httpClient = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false);
+    }
+
+    @AfterClass
+    public static void stopEventLoopGroup() {
+        clientEventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
+    }
 
     @BeforeClass
     public static void startServer() {
         clientAndServer = startClientAndServer();
     }
 
+    @BeforeClass
+    public static void configurationCORS() {
+        originalEnableCORSForAllResponses = ConfigurationProperties.enableCORSForAllResponses();
+        originalCorsAllowMethods = ConfigurationProperties.corsAllowMethods();
+        originalCorsAllowHeaders = ConfigurationProperties.corsAllowHeaders();
+        originalCorsAllowCredentials = ConfigurationProperties.corsAllowCredentials();
+        originalCorsMaxAgeInSeconds = ConfigurationProperties.corsMaxAgeInSeconds();
+        ConfigurationProperties.enableCORSForAllResponses(true);
+        ConfigurationProperties.corsAllowMethods("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE");
+        ConfigurationProperties.corsAllowHeaders("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization");
+        ConfigurationProperties.corsAllowCredentials(true);
+        ConfigurationProperties.corsMaxAgeInSeconds(300);
+    }
+
     @AfterClass
-    public static void stopEventLoopGroup() {
-        clientEventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
+    public static void resetCORSConfiguration() {
+        ConfigurationProperties.enableCORSForAllResponses(originalEnableCORSForAllResponses);
+        ConfigurationProperties.corsAllowMethods(originalCorsAllowMethods);
+        ConfigurationProperties.corsAllowHeaders(originalCorsAllowHeaders);
+        ConfigurationProperties.corsAllowCredentials(originalCorsAllowCredentials);
+        ConfigurationProperties.corsMaxAgeInSeconds(originalCorsMaxAgeInSeconds);
     }
 
     @AfterClass

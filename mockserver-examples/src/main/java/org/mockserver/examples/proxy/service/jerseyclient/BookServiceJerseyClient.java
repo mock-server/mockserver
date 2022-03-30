@@ -1,8 +1,10 @@
 package org.mockserver.examples.proxy.service.jerseyclient;
 
+import jakarta.ws.rs.client.Client;
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.client.JerseyClientBuilder;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.mockserver.examples.proxy.model.Book;
 import org.mockserver.examples.proxy.service.BookService;
@@ -11,8 +13,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.MediaType;
 
 /**
@@ -35,10 +35,15 @@ public class BookServiceJerseyClient implements BookService {
     }
 
     private Client createHttpClient() {
-        return ClientBuilder.newClient(new ClientConfig()
-            .register(new JacksonFeature())
-            .connectorProvider(new ApacheConnectorProvider())
-            .property(ClientProperties.PROXY_URI, "http://" + System.getProperty("http.proxyHost") + ":" + System.getProperty("http.proxyPort")));
+        return JerseyClientBuilder
+            .newBuilder()
+            .withConfig(
+                new ClientConfig()
+                    .register(new JacksonFeature())
+                    .connectorProvider(new ApacheConnectorProvider())
+                    .property(ClientProperties.PROXY_URI, "http://" + System.getProperty("http.proxyHost") + ":" + System.getProperty("http.proxyPort"))
+            )
+            .build();
     }
 
     @Override

@@ -9,10 +9,12 @@ import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.NottableString;
 import org.mockserver.model.Parameter;
+import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.slf4j.event.Level;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
@@ -26,10 +28,12 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 public class MockServerHttpRequestToFullHttpRequest {
 
     private final MockServerLogger mockServerLogger;
+    private final Map<ProxyConfiguration.Type, ProxyConfiguration> proxyConfigurations;
     private final BodyDecoderEncoder bodyDecoderEncoder;
 
-    public MockServerHttpRequestToFullHttpRequest(MockServerLogger mockServerLogger) {
+    public MockServerHttpRequestToFullHttpRequest(MockServerLogger mockServerLogger, Map<ProxyConfiguration.Type, ProxyConfiguration> proxyConfigurations) {
         this.mockServerLogger = mockServerLogger;
+        this.proxyConfigurations = proxyConfigurations;
         this.bodyDecoderEncoder = new BodyDecoderEncoder();
     }
 
@@ -38,7 +42,7 @@ public class MockServerHttpRequestToFullHttpRequest {
         HttpMethod httpMethod = HttpMethod.valueOf(httpRequest.getMethod("GET"));
         try {
             // the request
-            FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, httpMethod, getURI(httpRequest), getBody(httpRequest));
+            FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, httpMethod, getURI(httpRequest, proxyConfigurations), getBody(httpRequest));
 
             // headers
             setHeader(httpRequest, request);
@@ -55,22 +59,34 @@ public class MockServerHttpRequestToFullHttpRequest {
                     .setArguments(httpRequest)
                     .setThrowable(throwable)
             );
-            return new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, httpMethod, getURI(httpRequest));
+            return new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, httpMethod, getURI(httpRequest, proxyConfigurations));
         }
     }
 
-    public String getURI(HttpRequest httpRequest) {
+    @SuppressWarnings("HttpUrlsUsage")
+    public String getURI(HttpRequest httpRequest, Map<ProxyConfiguration.Type, ProxyConfiguration> proxyConfigurations) {
+        String uri = "";
         if (httpRequest.getPath() != null) {
-            QueryStringEncoder queryStringEncoder = new QueryStringEncoder(httpRequest.getPath().getValue());
-            for (Parameter parameter : httpRequest.getQueryStringParameterList()) {
-                for (NottableString value : parameter.getValues()) {
-                    queryStringEncoder.addParam(parameter.getName().getValue(), value.getValue());
+            if (httpRequest.getQueryStringParameters() != null && isNotBlank(httpRequest.getQueryStringParameters().getRawParameterString())) {
+                uri = httpRequest.getPath().getValue() + "?" + httpRequest.getQueryStringParameters().getRawParameterString();
+            } else {
+                QueryStringEncoder queryStringEncoder = new QueryStringEncoder(httpRequest.getPath().getValue());
+                for (Parameter parameter : httpRequest.getQueryStringParameterList()) {
+                    for (NottableString value : parameter.getValues()) {
+                        queryStringEncoder.addParam(parameter.getName().getValue(), value.getValue());
+                    }
                 }
+                uri = queryStringEncoder.toString();
             }
-            return queryStringEncoder.toString();
-        } else {
-            return "";
         }
+        if (proxyConfigurations != null && proxyConfigurations.get(ProxyConfiguration.Type.HTTP) != null && !Boolean.TRUE.equals(httpRequest.isSecure())) {
+            if (isNotBlank(httpRequest.getFirstHeader(HOST.toString()))) {
+                uri = "http://" + httpRequest.getFirstHeader(HOST.toString()) + uri;
+            } else if (httpRequest.getRemoteAddress() != null) {
+                uri = "http://" + httpRequest.getRemoteAddress() + uri;
+            }
+        }
+        return uri;
     }
 
     private ByteBuf getBody(HttpRequest httpRequest) {
@@ -78,15 +94,12 @@ public class MockServerHttpRequestToFullHttpRequest {
     }
 
     private void setCookies(HttpRequest httpRequest, FullHttpRequest request) {
-        List<io.netty.handler.codec.http.cookie.Cookie> cookies = new ArrayList<>();
-        for (org.mockserver.model.Cookie cookie : httpRequest.getCookieList()) {
-            cookies.add(new io.netty.handler.codec.http.cookie.DefaultCookie(cookie.getName().getValue(), cookie.getValue().getValue()));
-        }
-        if (cookies.size() > 0) {
-            request.headers().set(
-                COOKIE.toString(),
-                io.netty.handler.codec.http.cookie.ClientCookieEncoder.LAX.encode(cookies)
-            );
+        if (!httpRequest.getCookieList().isEmpty()) {
+            List<io.netty.handler.codec.http.cookie.Cookie> cookies = new ArrayList<>();
+            for (org.mockserver.model.Cookie cookie : httpRequest.getCookieList()) {
+                cookies.add(new io.netty.handler.codec.http.cookie.DefaultCookie(cookie.getName().getValue(), cookie.getValue().getValue()));
+            }
+            request.headers().set(COOKIE.toString(), io.netty.handler.codec.http.cookie.ClientCookieEncoder.LAX.encode(cookies));
         }
     }
 

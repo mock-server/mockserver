@@ -111,7 +111,7 @@ public class JsonSchemaMatcherTest {
             when(mockJsonSchemaValidator.isValid(json, false)).thenReturn("validator_error");
 
             // when
-            assertFalse(jsonSchemaMatcher.matches(new MatchDifference(request()), json));
+            assertFalse(jsonSchemaMatcher.matches(new MatchDifference(false, request()), json));
 
             // then
             verify(logger).trace("json schema match failed expected:" + NEW_LINE +
@@ -178,7 +178,7 @@ public class JsonSchemaMatcherTest {
             when(mockJsonSchemaValidator.isValid(json, false)).thenThrow(test_exception);
 
             // when
-            assertFalse(jsonSchemaMatcher.matches(new MatchDifference(request()), json));
+            assertFalse(jsonSchemaMatcher.matches(new MatchDifference(false, request()), json));
 
             // then
             verify(logger).trace("json schema match failed expected:" + NEW_LINE +

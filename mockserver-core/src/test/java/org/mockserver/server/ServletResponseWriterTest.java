@@ -14,6 +14,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.openMocks;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
@@ -34,7 +35,7 @@ public class ServletResponseWriterTest {
     @Before
     public void setupTestFixture() {
         httpServletResponse = new MockHttpServletResponse();
-        servletResponseWriter = new ServletResponseWriter(new MockServerLogger(), httpServletResponse);
+        servletResponseWriter = new ServletResponseWriter(configuration(), new MockServerLogger(), httpServletResponse);
         openMocks(this);
     }
 
@@ -122,11 +123,12 @@ public class ServletResponseWriterTest {
             // then
             verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(
                 response("some_response")
-                    .withHeader("access-control-allow-origin", "*")
-                    .withHeader("access-control-allow-methods", "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE")
-                    .withHeader("access-control-allow-headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization")
-                    .withHeader("access-control-expose-headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization")
-                    .withHeader("access-control-max-age", "300")
+                    .withHeader("access-control-allow-origin", "")
+                    .withHeader("access-control-allow-methods", "")
+                    .withHeader("access-control-allow-headers", "")
+                    .withHeader("access-control-expose-headers", "")
+                    .withHeader("access-control-max-age", "0")
+                    .withHeader("access-control-allow-credentials", "false")
                     .withHeader("connection", "close"),
                 httpServletResponse
             );

@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.hasItemInArray;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.HttpRequest.request;
@@ -61,7 +62,7 @@ public class NettyResponseWriterTest {
         HttpResponse response = response("some_response");
 
         // when
-        new NettyResponseWriter(new MockServerLogger(), mockChannelHandlerContext, scheduler).writeResponse(request.clone(), response.clone(), false);
+        new NettyResponseWriter(configuration(), new MockServerLogger(), mockChannelHandlerContext, scheduler).writeResponse(request.clone(), response.clone(), false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(
@@ -77,7 +78,7 @@ public class NettyResponseWriterTest {
         HttpRequest request = request("some_request");
 
         // when
-        new NettyResponseWriter(new MockServerLogger(), mockChannelHandlerContext, scheduler).writeResponse(request.clone(), null, false);
+        new NettyResponseWriter(configuration(), new MockServerLogger(), mockChannelHandlerContext, scheduler).writeResponse(request.clone(), null, false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(
@@ -97,17 +98,18 @@ public class NettyResponseWriterTest {
             HttpResponse response = response("some_response");
 
             // when
-            new NettyResponseWriter(new MockServerLogger(), mockChannelHandlerContext, scheduler).writeResponse(request.clone(), response.clone(), false);
+            new NettyResponseWriter(configuration(), new MockServerLogger(), mockChannelHandlerContext, scheduler).writeResponse(request.clone(), response.clone(), false);
 
             // then
             verify(mockChannelHandlerContext).writeAndFlush(
                 response
+                    .withHeader("access-control-allow-origin", "")
+                    .withHeader("access-control-allow-methods", "")
+                    .withHeader("access-control-allow-headers", "")
+                    .withHeader("access-control-expose-headers", "")
+                    .withHeader("access-control-max-age", "0")
+                    .withHeader("access-control-allow-credentials", "false")
                     .withHeader("connection", "close")
-                    .withHeader("access-control-allow-origin", "*")
-                    .withHeader("access-control-allow-methods", "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE")
-                    .withHeader("access-control-allow-headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization")
-                    .withHeader("access-control-expose-headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization")
-                    .withHeader("access-control-max-age", "300")
             );
             verify(mockChannelFuture).addListener(any(GenericFutureListener.class));
         } finally {
@@ -123,7 +125,7 @@ public class NettyResponseWriterTest {
         HttpResponse response = response("some_response");
 
         // when
-        new NettyResponseWriter(new MockServerLogger(), mockChannelHandlerContext, scheduler).writeResponse(request.clone(), response.clone(), false);
+        new NettyResponseWriter(configuration(), new MockServerLogger(), mockChannelHandlerContext, scheduler).writeResponse(request.clone(), response.clone(), false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(
@@ -144,7 +146,7 @@ public class NettyResponseWriterTest {
             );
 
         // when
-        new NettyResponseWriter(new MockServerLogger(), mockChannelHandlerContext, scheduler).writeResponse(request.clone(), response.clone(), false);
+        new NettyResponseWriter(configuration(), new MockServerLogger(), mockChannelHandlerContext, scheduler).writeResponse(request.clone(), response.clone(), false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(
@@ -169,7 +171,7 @@ public class NettyResponseWriterTest {
             );
 
         // when
-        new NettyResponseWriter(new MockServerLogger(), mockChannelHandlerContext, scheduler).writeResponse(request.clone(), response.clone(), false);
+        new NettyResponseWriter(configuration(), new MockServerLogger(), mockChannelHandlerContext, scheduler).writeResponse(request.clone(), response.clone(), false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(
@@ -193,7 +195,7 @@ public class NettyResponseWriterTest {
             );
 
         // when
-        new NettyResponseWriter(new MockServerLogger(), mockChannelHandlerContext, scheduler).writeResponse(request.clone(), response.clone(), false);
+        new NettyResponseWriter(configuration(), new MockServerLogger(), mockChannelHandlerContext, scheduler).writeResponse(request.clone(), response.clone(), false);
         genericFutureListenerArgumentCaptor.getValue().operationComplete(mockChannelFuture);
         genericFutureListenerArgumentCaptor.getValue().operationComplete(mockChannelFuture);
 
@@ -222,7 +224,7 @@ public class NettyResponseWriterTest {
             );
 
         // when
-        new NettyResponseWriter(new MockServerLogger(), mockChannelHandlerContext, scheduler).writeResponse(request.clone(), response.clone(), false);
+        new NettyResponseWriter(configuration(), new MockServerLogger(), mockChannelHandlerContext, scheduler).writeResponse(request.clone(), response.clone(), false);
         genericFutureListenerArgumentCaptor.getValue().operationComplete(mockChannelFuture);
 
         // then

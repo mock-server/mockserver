@@ -77,6 +77,10 @@ pre.prettyprint {
     font-size: 1em;
 }
 
+td .code, p .code {
+    padding: 10px;
+}
+
 .inline {
     display: inline;
     white-space: pre;
@@ -157,6 +161,10 @@ li.L1, li.L3, li.L5, li.L7, li.L9 {
     }
     .code {
         padding: 2%;
+    }
+
+    td .code, p .code {
+        padding: 10px;
     }
 }
 

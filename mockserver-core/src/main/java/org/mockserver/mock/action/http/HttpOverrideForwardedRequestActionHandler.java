@@ -1,6 +1,6 @@
 package org.mockserver.mock.action.http;
 
-import org.mockserver.client.NettyHttpClient;
+import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpOverrideForwardedRequest;
 import org.mockserver.model.HttpRequest;
@@ -15,15 +15,18 @@ public class HttpOverrideForwardedRequestActionHandler extends HttpForwardAction
     }
 
     public HttpForwardActionResult handle(final HttpOverrideForwardedRequest httpOverrideForwardedRequest, final HttpRequest request) {
-        return sendRequest(request.clone().update(httpOverrideForwardedRequest.getHttpRequest()), null, httpResponse -> {
-            if (httpResponse == null) {
-                return httpOverrideForwardedRequest.getHttpResponse();
-            } else if (httpOverrideForwardedRequest.getHttpResponse() == null) {
-                return httpResponse;
-            } else {
-                return httpResponse.update(httpOverrideForwardedRequest.getHttpResponse());
-            }
-        });
+        if (httpOverrideForwardedRequest != null) {
+            HttpRequest requestToSend = request.clone().update(httpOverrideForwardedRequest.getRequestOverride(), httpOverrideForwardedRequest.getRequestModifier());
+            return sendRequest(requestToSend, null, httpResponse -> {
+                if (httpResponse == null) {
+                    return httpOverrideForwardedRequest.getResponseOverride();
+                } else {
+                    return httpResponse.update(httpOverrideForwardedRequest.getResponseOverride(), httpOverrideForwardedRequest.getResponseModifier());
+                }
+            });
+        } else {
+            return sendRequest(request, null, httpResponse -> httpResponse);
+        }
     }
 
 }

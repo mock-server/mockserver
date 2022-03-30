@@ -11,6 +11,9 @@
     },
     "times": {
       "$ref": "#/definitions/verificationTimes"
+    },
+    "maximumNumberOfRequestToReturnInVerificationFailure": {
+      "type": "integer"
     }
   },
   "oneOf": [

@@ -10,6 +10,8 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 import org.slf4j.event.Level;
 
+import java.util.Set;
+
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 
 /**
@@ -61,11 +63,12 @@ public class FullHttpResponseToMockServerHttpResponse {
     }
 
     private void setHeaders(HttpResponse httpResponse, FullHttpResponse fullHttpResponse) {
-        Headers headers = new Headers();
-        for (String headerName : fullHttpResponse.headers().names()) {
-            headers.withEntry(headerName, fullHttpResponse.headers().getAll(headerName));
-        }
-        if (!headers.isEmpty()) {
+        Set<String> headerNames = fullHttpResponse.headers().names();
+        if (!headerNames.isEmpty()) {
+            Headers headers = new Headers();
+            for (String headerName : headerNames) {
+                headers.withEntry(headerName, fullHttpResponse.headers().getAll(headerName));
+            }
             httpResponse.withHeaders(headers);
         }
     }

@@ -1,7 +1,9 @@
 package org.mockserver.matchers;
 
+import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
+import org.mockserver.mock.listeners.MockServerMatcherNotifier;
 import org.mockserver.model.RequestDefinition;
 
 import java.util.Objects;
@@ -20,17 +22,20 @@ public abstract class AbstractHttpRequestMatcher extends NotMatcher<RequestDefin
     protected static final String MATCHED = " matched";
     protected static final String COLON_NEW_LINES = ": " + NEW_LINE + NEW_LINE;
 
+    protected final Configuration configuration;
     protected final MockServerLogger mockServerLogger;
     private int hashCode;
     private boolean isBlank = false;
     private boolean responseInProgress = false;
+    private MockServerMatcherNotifier.Cause source;
     protected boolean controlPlaneMatcher;
     protected Expectation expectation;
     protected String didNotMatchRequestBecause = REQUEST_DID_NOT_MATCH + REQUEST_MATCHER + BECAUSE;
     protected String didNotMatchExpectationBecause = REQUEST_DID_NOT_MATCH + EXPECTATION + BECAUSE;
     protected String didNotMatchExpectationWithoutBecause = REQUEST_DID_NOT_MATCH + EXPECTATION;
 
-    protected AbstractHttpRequestMatcher(MockServerLogger mockServerLogger) {
+    protected AbstractHttpRequestMatcher(Configuration configuration, MockServerLogger mockServerLogger) {
+        this.configuration = configuration;
         this.mockServerLogger = mockServerLogger;
     }
 
@@ -89,6 +94,15 @@ public abstract class AbstractHttpRequestMatcher extends NotMatcher<RequestDefin
 
     public HttpRequestMatcher setResponseInProgress(boolean responseInProgress) {
         this.responseInProgress = responseInProgress;
+        return this;
+    }
+
+    public MockServerMatcherNotifier.Cause getSource() {
+        return source;
+    }
+
+    public AbstractHttpRequestMatcher withSource(MockServerMatcherNotifier.Cause source) {
+        this.source = source;
         return this;
     }
 

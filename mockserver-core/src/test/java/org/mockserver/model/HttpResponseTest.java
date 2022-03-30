@@ -256,7 +256,7 @@ public class HttpResponseTest {
             );
 
         // when
-        responseOne.update(responseTwo);
+        responseOne.update(responseTwo, null);
 
         // then
         assertThat(responseOne, is(
@@ -295,7 +295,7 @@ public class HttpResponseTest {
             );
 
         // when
-        responseOne.update(responseTwo);
+        responseOne.update(responseTwo, null);
 
         // then
         assertThat(responseOne, is(

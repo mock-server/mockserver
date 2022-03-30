@@ -64,14 +64,6 @@ public class LRUCache<K, V> {
             }
             queue.add(key);
             map.put(key, new Entry<>(ttl, expiryInMillis(ttl), value));
-            if (MockServerLogger.isEnabled(TRACE)) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(TRACE)
-                        .setMessageFormat("added entry into the cache{}for key{}")
-                        .setArguments(value, key)
-                );
-            }
         }
     }
 

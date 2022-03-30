@@ -14,6 +14,7 @@ import org.mockserver.scheduler.Scheduler;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause.API;
 
 /**
@@ -25,7 +26,7 @@ public class MockServerMatcherOverlappingRequestsTest {
 
     private HttpResponse[] httpResponse;
 
-    private static final Scheduler scheduler = new Scheduler(new MockServerLogger());
+    private static final Scheduler scheduler = new Scheduler(configuration(), new MockServerLogger());
 
     @Before
     public void prepareTestFixture() {
@@ -35,7 +36,7 @@ public class MockServerMatcherOverlappingRequestsTest {
         };
         MockServerLogger mockLogFormatter = mock(MockServerLogger.class);
         WebSocketClientRegistry webSocketClientRegistry = mock(WebSocketClientRegistry.class);
-        requestMatchers = new RequestMatchers(mockLogFormatter, scheduler, webSocketClientRegistry);
+        requestMatchers = new RequestMatchers(configuration(), mockLogFormatter, scheduler, webSocketClientRegistry);
     }
 
 

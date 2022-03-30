@@ -1,18 +1,34 @@
 # install and run jekyll
-1. `brew install rbenv`
-1. `rbenv install -l`
-1. `rbenv install 2.6.3`
-1. `rbenv local 2.6.3`
-1. `` `rbenv which gem` install bundler ``
-1. `` `rbenv which bundle` install --path vendor/bundle``
-1. `` `rbenv which bundle` exec jekyll serve``
+```bash
+# 1.
+brew install rbenv
+# 2.
+rbenv install -l
+# 3.
+rbenv install 2.6.3
+# 4.
+rbenv local 2.6.3
+# 5.
+`rbenv which gem` install bundler
+# 6.
+`rbenv which bundle` install --path vendor/bundle
+# 7.
+`rbenv which bundle` exec jekyll serve
+```
 
 # deploy
-1. `` cd jekyll-www.mock-server.com``
-1. `` rm -rf _site``
-1. `` `rbenv which bundle` exec jekyll build``
-1. `` open _site``
-1. `` copy to https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq/?region=us-east-1``
+```bash
+# 1.
+cd jekyll-www.mock-server.com
+# 2.
+rm -rf _site
+# 3.
+`rbenv which bundle` exec jekyll build
+# 4.
+open _site
+# 5.
+copy to https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq/?region=us-east-1
+```
 
 # slack
 - Heroku Signup Application: https://dashboard.heroku.com/apps/join-mock-server-slack/settings

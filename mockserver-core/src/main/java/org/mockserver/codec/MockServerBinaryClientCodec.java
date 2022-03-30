@@ -7,4 +7,5 @@ public class MockServerBinaryClientCodec extends CombinedChannelDuplexHandler<Ne
     public MockServerBinaryClientCodec() {
         init(new NettyBinaryToMockServerBinaryResponseDecoder(), new MockServerBinaryToNettyBinaryRequestEncoder());
     }
+
 }

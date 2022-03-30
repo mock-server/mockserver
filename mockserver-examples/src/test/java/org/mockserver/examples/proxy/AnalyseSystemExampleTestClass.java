@@ -11,6 +11,8 @@ import org.mockserver.socket.tls.KeyStoreFactory;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import static org.mockserver.configuration.Configuration.configuration;
+
 public class AnalyseSystemExampleTestClass {
 
     private static ClientAndServer proxy;
@@ -19,7 +21,7 @@ public class AnalyseSystemExampleTestClass {
     public static void startProxyAndServer() {
         // ensure all connection using HTTPS will use the SSL context defined by
         // MockServer to allow dynamically generated certificates to be accepted
-        HttpsURLConnection.setDefaultSSLSocketFactory(new KeyStoreFactory(new MockServerLogger()).sslContext().getSocketFactory());
+        HttpsURLConnection.setDefaultSSLSocketFactory(new KeyStoreFactory(configuration(), new MockServerLogger()).sslContext().getSocketFactory());
         proxy = ClientAndServer.startClientAndServer(PortFactory.findFreePort());
     }
 

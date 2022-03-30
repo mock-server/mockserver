@@ -2,6 +2,7 @@ package org.mockserver.serialization.deserializers.body;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -70,6 +71,7 @@ public class StrictBodyDTODeserializer extends StdDeserializer<BodyDTO> {
         boolean subString = false;
         MatchType matchType = JsonBody.DEFAULT_MATCH_TYPE;
         Parameters parameters = null;
+        Map<String, String> namespacePrefixes = null;
         if (currentToken == JsonToken.START_OBJECT) {
             @SuppressWarnings("unchecked") Map<Object, Object> body = (Map<Object, Object>) ctxt.readValue(jsonParser, Map.class);
             for (Map.Entry<Object, Object> entry : body.entrySet()) {
@@ -206,6 +208,16 @@ public class StrictBodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         }
                         parameters = objectMapper.readValue(objectWriter.writeValueAsString(entry.getValue()), Parameters.class);
                     }
+                    if (key.equalsIgnoreCase("namespacePrefixes")) {
+                        if (objectMapper == null) {
+                            objectMapper = ObjectMapperFactory.createObjectMapper();
+                        }
+                        if (objectWriter == null) {
+                            objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
+                        }
+                        namespacePrefixes = objectMapper.readValue(objectWriter.writeValueAsString(entry.getValue()), new TypeReference<Map<String, String>>(){});
+                    }
+                  
                 }
             }
             if (type != null) {
@@ -267,7 +279,7 @@ public class StrictBodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         result = new XmlSchemaBodyDTO(new XmlSchemaBody(valueJsonValue), not);
                         break;
                     case XPATH:
-                        result = new XPathBodyDTO(new XPathBody(valueJsonValue), not);
+                        result = new XPathBodyDTO(new XPathBody(valueJsonValue, namespacePrefixes), not);
                         break;
                 }
             }

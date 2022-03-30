@@ -312,7 +312,8 @@ public class JsonSchemaVerificationSequenceValidatorIntegrationTest {
                 "  }" + NEW_LINE +
                 "]}"),
             is(
-                "1 error:" + NEW_LINE +
+                "2 errors:" + NEW_LINE +
+                    " - $.httpRequests[0].invalidField: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
                     " - $.httpRequests[0].specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL

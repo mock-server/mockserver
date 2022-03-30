@@ -29,6 +29,21 @@ public class XmlStringMatcherTest {
     }
 
     @Test
+    public void shouldMatchMatchingXMLIgnoringOrder() {
+        String matched = "" +
+            "<element>" +
+            "   <key>some_key</key>" +
+            "   <value>some_value</value>" +
+            "</element>";
+        assertTrue(new XmlStringMatcher(new MockServerLogger(), "<element><value>some_value</value><key>some_key</key></element>").matches(matched));
+        assertTrue(new XmlStringMatcher(new MockServerLogger(), "" +
+            "<element>" +
+            "   <value>some_value</value>" +
+            "   <key>some_key</key>" +
+            "</element>").matches(matched));
+    }
+
+    @Test
     public void shouldMatchMatchingXMLWithIsNumberPlaceholder() {
         String matched = "" +
             "<message>" + NEW_LINE +
@@ -98,6 +113,13 @@ public class XmlStringMatcherTest {
             "  </m:GetStockPriceResponse>" + NEW_LINE +
             "</soap:Body>" + NEW_LINE +
             "</soap:Envelope>").matches(matched));
+    }
+
+    @Test
+    public void shouldMatchMatchingXMLWithDifferentNamespacePrefixes() {
+        String matcher = "<a:element xmlns:a=\"the_namespace\"><a:key>some_key</a:key><a:value>some_value</a:value></a:element>";
+        String matched = "<b:element xmlns:b=\"the_namespace\"><b:key>some_key</b:key><b:value>some_value</b:value></b:element>";
+        assertTrue(new XmlStringMatcher(new MockServerLogger(), matcher).matches(matched));
     }
 
     @Test

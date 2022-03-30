@@ -6,6 +6,7 @@ import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import org.mockserver.codec.BodyDecoderEncoder;
 import org.mockserver.codec.ExpandedParameterDecoder;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Cookies;
@@ -14,6 +15,10 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.url.URLParser;
 import org.slf4j.event.Level;
 
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.security.cert.Certificate;
+import java.util.List;
 import java.util.Set;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
@@ -29,17 +34,21 @@ public class FullHttpRequestToMockServerHttpRequest {
     private final BodyDecoderEncoder bodyDecoderEncoder;
     private final ExpandedParameterDecoder formParameterParser;
     private final boolean isSecure;
+    private final Certificate[] clientCertificates;
     private final Integer port;
+    private final JDKCertificateToMockServerX509Certificate jdkCertificateToMockServerX509Certificate;
 
-    public FullHttpRequestToMockServerHttpRequest(MockServerLogger mockServerLogger, boolean isSecure, Integer port) {
+    public FullHttpRequestToMockServerHttpRequest(Configuration configuration, MockServerLogger mockServerLogger, boolean isSecure, Certificate[] clientCertificates, Integer port) {
         this.mockServerLogger = mockServerLogger;
         this.bodyDecoderEncoder = new BodyDecoderEncoder();
-        formParameterParser = new ExpandedParameterDecoder(mockServerLogger);
+        this.formParameterParser = new ExpandedParameterDecoder(configuration, mockServerLogger);
         this.isSecure = isSecure;
+        this.clientCertificates = clientCertificates;
         this.port = port;
+        this.jdkCertificateToMockServerX509Certificate = new JDKCertificateToMockServerX509Certificate(mockServerLogger);
     }
 
-    public HttpRequest mapFullHttpRequestToMockServerRequest(FullHttpRequest fullHttpRequest) {
+    public HttpRequest mapFullHttpRequestToMockServerRequest(FullHttpRequest fullHttpRequest, SocketAddress remoteAddress) {
         HttpRequest httpRequest = new HttpRequest();
         try {
             if (fullHttpRequest != null) {
@@ -58,7 +67,8 @@ public class FullHttpRequestToMockServerHttpRequest {
                 setHeaders(httpRequest, fullHttpRequest);
                 setCookies(httpRequest, fullHttpRequest);
                 setBody(httpRequest, fullHttpRequest);
-                setSocketAddress(httpRequest, isSecure, port, fullHttpRequest);
+                setSocketAddress(httpRequest, fullHttpRequest, isSecure, port, remoteAddress);
+                jdkCertificateToMockServerX509Certificate.setClientCertificates(httpRequest, clientCertificates);
 
                 httpRequest.withKeepAlive(isKeepAlive(fullHttpRequest));
                 httpRequest.withSecure(isSecure);
@@ -75,8 +85,11 @@ public class FullHttpRequestToMockServerHttpRequest {
         return httpRequest;
     }
 
-    private void setSocketAddress(HttpRequest httpRequest, boolean isSecure, Integer port, FullHttpRequest fullHttpRequest) {
+    private void setSocketAddress(HttpRequest httpRequest, FullHttpRequest fullHttpRequest, boolean isSecure, Integer port, SocketAddress remoteAddress) {
         httpRequest.withSocketAddress(isSecure, fullHttpRequest.headers().get("host"), port);
+        if (remoteAddress instanceof InetSocketAddress) {
+            httpRequest.withRemoteAddress(((InetSocketAddress) remoteAddress).getHostString());
+        }
     }
 
     private void setMethod(HttpRequest httpRequest, FullHttpRequest fullHttpResponse) {
@@ -94,27 +107,32 @@ public class FullHttpRequestToMockServerHttpRequest {
     }
 
     private void setHeaders(HttpRequest httpRequest, FullHttpRequest fullHttpResponse) {
-        Headers headers = new Headers();
         HttpHeaders httpHeaders = fullHttpResponse.headers();
-        for (String headerName : httpHeaders.names()) {
-            headers.withEntry(headerName, httpHeaders.getAll(headerName));
+        if (!httpHeaders.isEmpty()) {
+            Headers headers = new Headers();
+            for (String headerName : httpHeaders.names()) {
+                headers.withEntry(headerName, httpHeaders.getAll(headerName));
+            }
+            httpRequest.withHeaders(headers);
         }
-        httpRequest.withHeaders(headers);
     }
 
     private void setCookies(HttpRequest httpRequest, FullHttpRequest fullHttpResponse) {
-        Cookies cookies = new Cookies();
-        for (String cookieHeader : fullHttpResponse.headers().getAll(COOKIE)) {
-            Set<Cookie> decodedCookies =
-                ServerCookieDecoder.LAX.decode(cookieHeader);
-            for (io.netty.handler.codec.http.cookie.Cookie decodedCookie : decodedCookies) {
-                cookies.withEntry(
-                    decodedCookie.name(),
-                    decodedCookie.value()
-                );
+        List<String> cookieHeaders = fullHttpResponse.headers().getAll(COOKIE);
+        if (!cookieHeaders.isEmpty()) {
+            Cookies cookies = new Cookies();
+            for (String cookieHeader : cookieHeaders) {
+                Set<Cookie> decodedCookies =
+                    ServerCookieDecoder.LAX.decode(cookieHeader);
+                for (io.netty.handler.codec.http.cookie.Cookie decodedCookie : decodedCookies) {
+                    cookies.withEntry(
+                        decodedCookie.name(),
+                        decodedCookie.value()
+                    );
+                }
             }
+            httpRequest.withCookies(cookies);
         }
-        httpRequest.withCookies(cookies);
     }
 
     private void setBody(HttpRequest httpRequest, FullHttpRequest fullHttpRequest) {

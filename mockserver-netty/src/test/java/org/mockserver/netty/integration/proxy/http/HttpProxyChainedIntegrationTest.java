@@ -8,12 +8,12 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockserver.client.NettyHttpClient;
+import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.HttpResponse;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.test.IsDebug;
 import org.mockserver.uuid.UUIDService;
 
 import java.net.InetSocketAddress;
@@ -23,9 +23,11 @@ import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpHeaderNames.PROXY_AUTHORIZATION;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.stop.Stop.stopQuietly;
+import static org.mockserver.test.IsDebug.timeoutUnits;
 import static org.mockserver.verify.VerificationTimes.exactly;
 
 /**
@@ -33,13 +35,18 @@ import static org.mockserver.verify.VerificationTimes.exactly;
  */
 public class HttpProxyChainedIntegrationTest {
 
-    private static ClientAndServer targetClientAndServer;
+    private static EventLoopGroup clientEventLoopGroup;
 
-    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(HttpProxyChainedIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    private static ClientAndServer targetClientAndServer;
 
     @BeforeClass
     public static void startServer() {
         targetClientAndServer = startClientAndServer();
+    }
+
+    @BeforeClass
+    public static void startEventLoopGroup() {
+        clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(HttpProxyChainedIntegrationTest.class.getSimpleName() + "-eventLoop"));
     }
 
     @AfterClass
@@ -60,12 +67,11 @@ public class HttpProxyChainedIntegrationTest {
 
     @Test
     public void shouldAuthenticateForwardHTTPConnect() throws Exception {
-        String existingUsername = ConfigurationProperties.proxyAuthenticationUsername();
-        String existingPassword = ConfigurationProperties.proxyAuthenticationPassword();
-        String existingForwardUsername = ConfigurationProperties.forwardProxyAuthenticationUsername();
-        String existingForwardPassword = ConfigurationProperties.forwardProxyAuthenticationPassword();
-
-        String forwardHttpsProxy = System.getProperty("mockserver.forwardHttpsProxy");
+        String originalProxyAuthenticationUsername = ConfigurationProperties.proxyAuthenticationUsername();
+        String originalProxyAuthenticationPassword = ConfigurationProperties.proxyAuthenticationPassword();
+        String originalForwardProxyAuthenticationUsername = ConfigurationProperties.forwardProxyAuthenticationUsername();
+        String originalForwardProxyAuthenticationPassword = ConfigurationProperties.forwardProxyAuthenticationPassword();
+        InetSocketAddress originalForwardHttpsProxy = ConfigurationProperties.forwardHttpsProxy();
         ClientAndServer proxyClientAndServer = null;
         try {
 
@@ -78,7 +84,7 @@ public class HttpProxyChainedIntegrationTest {
             ConfigurationProperties.forwardProxyAuthenticationPassword(password);
             proxyClientAndServer = startClientAndServer();
 
-            HttpResponse httpResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false)
+            new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false)
                 .sendRequest(
                     request()
                         .withPath("/target")
@@ -87,7 +93,7 @@ public class HttpProxyChainedIntegrationTest {
                         .withHeader(PROXY_AUTHORIZATION.toString(), "Basic " + Base64.encode(Unpooled.copiedBuffer(username + ':' + password, StandardCharsets.UTF_8), false).toString(StandardCharsets.US_ASCII)),
                     new InetSocketAddress(proxyClientAndServer.getLocalPort())
                 )
-                .get(10, SECONDS);
+                .get(10, timeoutUnits());
 
             // and - both proxy and target verify request received
             proxyClientAndServer.verify(request().withPath("/target"));
@@ -98,28 +104,24 @@ public class HttpProxyChainedIntegrationTest {
                 stopQuietly(proxyClientAndServer);
             }
 
-            ConfigurationProperties.proxyAuthenticationUsername(existingUsername);
-            ConfigurationProperties.proxyAuthenticationPassword(existingPassword);
-            ConfigurationProperties.forwardProxyAuthenticationUsername(existingForwardUsername);
-            ConfigurationProperties.forwardProxyAuthenticationPassword(existingForwardPassword);
-            if (forwardHttpsProxy != null) {
-                System.setProperty("mockserver.forwardHttpsProxy", forwardHttpsProxy);
-            } else {
-                System.clearProperty("mockserver.forwardHttpsProxy");
-            }
+            ConfigurationProperties.proxyAuthenticationUsername(originalProxyAuthenticationUsername);
+            ConfigurationProperties.proxyAuthenticationPassword(originalProxyAuthenticationPassword);
+            ConfigurationProperties.forwardProxyAuthenticationUsername(originalForwardProxyAuthenticationUsername);
+            ConfigurationProperties.forwardProxyAuthenticationPassword(originalForwardProxyAuthenticationPassword);
+            ConfigurationProperties.forwardHttpsProxy(originalForwardHttpsProxy != null ? originalForwardHttpsProxy.toString() : null);
         }
     }
 
     @Test
     public void shouldForwardHTTPConnect() throws Exception {
-        String forwardHttpsProxy = System.getProperty("mockserver.forwardHttpsProxy");
+        InetSocketAddress originalForwardHttpsProxy = ConfigurationProperties.forwardHttpsProxy();
         ClientAndServer proxyClientAndServer = null;
         try {
 
             ConfigurationProperties.forwardHttpsProxy("localhost:" + targetClientAndServer.getLocalPort());
             proxyClientAndServer = startClientAndServer();
 
-            HttpResponse httpResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false)
+            new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false)
                 .sendRequest(
                     request()
                         .withPath("/target")
@@ -127,7 +129,7 @@ public class HttpProxyChainedIntegrationTest {
                         .withHeader(HOST.toString(), "www.mock-server.com"),
                     new InetSocketAddress(proxyClientAndServer.getLocalPort())
                 )
-                .get(10, SECONDS);
+                .get(10, timeoutUnits());
 
             // and - both proxy and target verify request received
             proxyClientAndServer.verify(request().withPath("/target"));
@@ -138,31 +140,27 @@ public class HttpProxyChainedIntegrationTest {
                 stopQuietly(proxyClientAndServer);
             }
 
-            if (forwardHttpsProxy != null) {
-                System.setProperty("mockserver.forwardHttpsProxy", forwardHttpsProxy);
-            } else {
-                System.clearProperty("mockserver.forwardHttpsProxy");
-            }
+            ConfigurationProperties.forwardHttpsProxy(originalForwardHttpsProxy != null ? originalForwardHttpsProxy.toString() : null);
         }
     }
 
     @Test
     public void shouldNotForwardHTTPConnectIfNotSecure() throws Exception {
-        String forwardHttpsProxy = System.getProperty("mockserver.forwardHttpsProxy");
+        InetSocketAddress originalForwardHttpsProxy = ConfigurationProperties.forwardHttpsProxy();
         ClientAndServer proxyClientAndServer = null;
         try {
 
             ConfigurationProperties.forwardHttpsProxy("localhost:" + targetClientAndServer.getLocalPort());
             proxyClientAndServer = startClientAndServer();
 
-            HttpResponse httpResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false)
+            new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false)
                 .sendRequest(
                     request()
                         .withPath("/target")
                         .withHeader(HOST.toString(), "www.mock-server.com"),
                     new InetSocketAddress(proxyClientAndServer.getLocalPort())
                 )
-                .get(10, SECONDS);
+                .get(10, timeoutUnits());
 
             // and - both proxy and target verify request received
             proxyClientAndServer.verify(request().withPath("/target"));
@@ -173,11 +171,7 @@ public class HttpProxyChainedIntegrationTest {
                 stopQuietly(proxyClientAndServer);
             }
 
-            if (forwardHttpsProxy != null) {
-                System.setProperty("mockserver.forwardHttpsProxy", forwardHttpsProxy);
-            } else {
-                System.clearProperty("mockserver.forwardHttpsProxy");
-            }
+            ConfigurationProperties.forwardHttpsProxy(originalForwardHttpsProxy != null ? originalForwardHttpsProxy.toString() : null);
         }
     }
 

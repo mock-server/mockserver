@@ -1,6 +1,7 @@
 package org.mockserver.matchers;
 
 import org.mockserver.mock.Expectation;
+import org.mockserver.mock.listeners.MockServerMatcherNotifier;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.RequestDefinition;
 
@@ -24,6 +25,11 @@ public interface HttpRequestMatcher extends Matcher<RequestDefinition> {
     HttpRequestMatcher setResponseInProgress(boolean responseInProgress);
 
     boolean isResponseInProgress();
+
+    MockServerMatcherNotifier.Cause getSource();
+
+    @SuppressWarnings("UnusedReturnValue")
+    HttpRequestMatcher withSource(MockServerMatcherNotifier.Cause source);
 
     boolean isActive();
 

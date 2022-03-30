@@ -1,7 +1,7 @@
 ---
 title: Expectation Initializers
 layout: page
-pageOrder: 5
+pageOrder: 6
 section: 'Mock Server'
 subsection: true
 sitemap:
@@ -59,9 +59,16 @@ int mockServerPort = new ClientAndServer().getLocalPort();</code></pre>
 <h2>Expectation Initializer JSON</h2>
 
 <p>MockServer expectations can be initialized when the MockServer starts, using a JSON file, by specified the <strong>initializationJsonPath</strong> configuration property as described in the <a href="/mock_server/configuration_properties.html#button_configuration_initialization_json_path">Configuration Properties</a> page, for example:</p>
-<pre><code class="code">java -Dmockserver.initializationJsonPath=<span class="string_literal">"org/mockserver/server/initialize/initializerJson.json"</span> -jar ~/Downloads/mockserver-netty-5.11.2-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -logLevel INFO</code></pre>
+<pre><code class="code">java -Dmockserver.initializationJsonPath=<span class="string_literal">"org/mockserver/server/initialize/initializerJson.json"</span> -jar ~/Downloads/mockserver-netty-5.13.0-shaded.jar -serverPort <span class="numeric_literal">1080</span> -logLevel INFO</code></pre>
 
-<p>The JSON file can be loaded using a related or absolute path or can be loaded from the classpath.</p>
+<p><strong>initializationJsonPath</strong> supports:</p>
+
+<ul>
+    <li>related or absolute paths</li>
+    <li>both filesystem and classpath locations</li>
+    <li>multiple files by using glob patterns that can expand a wildcard pattern into a list of paths that match the given pattern using characters such as *, **, ?, [] and {}, for more details see <a href="#expectation_initializer_json_glob_patterns">glob patterns</a></li>
+</ul>
+
 <p>The JSON file should contain an array of serialised expectations, for example:</p>
 
 <pre class="prettyprint lang-java code"><code class="code">[
@@ -83,26 +90,40 @@ int mockServerPort = new ClientAndServer().getLocalPort();</code></pre>
   }
 ]</code></pre>
 
+<a id="expectation_initializer_json_glob_patterns" class="anchor" href="#expectation_initializer_json_glob_patterns">&nbsp;</a>
+
+<h3>Multiple Files (Glob Patterns)</h3>
+
+<ul>
+    <li>The * character matches zero or more characters of a name component without crossing directory boundaries.</li>
+    <li>The ** characters matches zero or more characters crossing directory boundaries.</li>
+    <li>The ? character matches exactly one character of a name component.</li>
+    <li>The backslash character (\) is used to escape characters that would otherwise be interpreted as special characters. The expression \\ matches a single backslash and "\{" matches a left brace for example.</li>
+    <li>The [ ] characters are a bracket expression that match a single character of a name component out of a set of characters. For example, [abc] matches "a", "b", or "c". The hyphen (-) may be used to specify a range so [a-z] specifies a range that matches from "a" to "z" (inclusive). These forms can be mixed so [abce-g] matches "a", "b", "c", "e", "f" or "g". If the character after the [ is a ! then it is used for negation so [!a-c] matches any character except "a", "b", or "c".</li>
+    <li>Within a bracket expression the *, ? and \ characters match themselves. The (-) character matches itself if it is the first character within the brackets, or the first character after the ! if negating.</li>
+    <li>The { } characters are a group of subpatterns, where the group matches if any subpattern in the group matches. The "," character is used to separate the subpatterns. Groups cannot be nested.</li>
+</ul>
+
 
 <a id="expectation_initializer_json_file_watcher" class="anchor" href="#expectation_initializer_json_file_watcher">&nbsp;</a>
 
 <h2>Expectation Initializer JSON File Watcher</h2>
 
-<p>If a JSON expectation initializer is specified a file watcher can be enabled that watches for changes in the expectation initializer and updates the expectations when the file is modified.</p>
+<p>If a JSON expectation initializer is specified a file watcher can be enabled that watches for changes in the expectation initializer and updates the expectations when the file is modified.  Changes are detected at most after 5 seconds if the file contents has changed.</p>
 <p>If enabled the initialization json file will be watched for changes, any changes found will result in expectations being created, remove or updated by matching against their key.</p>
-<p>If duplicate keys exist only the last duplicate key in the file will be processed and all duplicates except the last duplicate will be removed.</p>
+<p>If duplicate keys exist only the first duplicate key in the file will be processed and all duplicates except the first duplicate will be ignored.</p>
 <p>The order of expectations in the file is the order in which they are created if they are new, however, re-ordering existing expectations does not change the order they are matched against incoming requests.</p>
 
 <pre class="prettyprint lang-javascript code"><code class="code">MOCKSERVER_WATCH_INITIALIZATION_JSON=true \
 MOCKSERVER_INITIALIZATION_JSON_PATH=mockserverInitialization.json \
-java -jar ~/Downloads/mockserver-netty-5.11.2-jar-with-dependencies.jar -serverPort 1080,1081 -logLevel INFO</code></pre>
+java -jar ~/Downloads/mockserver-netty-5.13.0-shaded.jar -serverPort 1080,1081 -logLevel INFO</code></pre>
 
 <p>or</p>
 
 <pre class="prettyprint lang-javascript code"><code class="code">java \
 -Dmockserver.watchInitializationJson=true \
 -Dmockserver.initializationJsonPath=mockserverInitialization.json \
--jar ~/Downloads/mockserver-netty-5.11.2-jar-with-dependencies.jar -serverPort 1080,1081 -logLevel INFO</code></pre>
+-jar ~/Downloads/mockserver-netty-5.13.0-shaded.jar -serverPort 1080,1081 -logLevel INFO</code></pre>
 
 {% include_subpage _includes/clustering.html %}
 
@@ -118,7 +139,7 @@ java -jar ~/Downloads/mockserver-netty-5.11.2-jar-with-dependencies.jar -serverP
 <pre><code class="code xml">&lt;<span class="element">plugin</span>&gt;
     &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
     &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
-    &lt;<span class="element">version</span>&gt;<span class="element_value">5.11.2</span>&lt;/<span class="element">version</span>&gt;
+    &lt;<span class="element">version</span>&gt;<span class="element_value">5.13.0</span>&lt;/<span class="element">version</span>&gt;
     &lt;<span class="element">configuration</span>&gt;
         &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
         &lt;<span class="element">logLevel</span>&gt;<span class="element_value">DEBUG</span>&lt;/<span class="element">logLevel</span>&gt;

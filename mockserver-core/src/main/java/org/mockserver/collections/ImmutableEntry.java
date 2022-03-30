@@ -74,10 +74,10 @@ public class ImmutableEntry extends Pair<NottableString, NottableString> impleme
             return false;
         }
         ImmutableEntry that = (ImmutableEntry) o;
-        return regexStringMatcher.matches(key, that.key, true) &&
-            regexStringMatcher.matches(value, that.value, true) ||
+        return regexStringMatcher.matches(key, that.key) &&
+            regexStringMatcher.matches(value, that.value) ||
             (
-                !regexStringMatcher.matches(key, that.key, true) &&
+                !regexStringMatcher.matches(key, that.key) &&
                     (
                         key.isOptional() || that.key.isOptional()
                     )
@@ -142,7 +142,7 @@ public class ImmutableEntry extends Pair<NottableString, NottableString> impleme
     private static boolean contains(RegexStringMatcher regexStringMatcher, Set<NottableString> matchedKeys, NottableString matcherItem) {
         boolean result = false;
         for (NottableString matchedKey : matchedKeys) {
-            if (regexStringMatcher.matches(matchedKey, matcherItem, true)) {
+            if (regexStringMatcher.matches(matchedKey, matcherItem)) {
                 return true;
             }
         }

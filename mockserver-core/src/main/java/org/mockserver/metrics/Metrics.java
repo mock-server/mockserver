@@ -1,6 +1,6 @@
 package org.mockserver.metrics;
 
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.model.Action;
 
 import java.util.Map;
@@ -9,16 +9,21 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * @author jamesdbloom
  */
-@SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
+@SuppressWarnings({"SynchronizationOnLocalVariableOrMethodParameter", "FieldMayBeFinal"})
 public class Metrics {
 
     private static Map<Name, Integer> metrics = new ConcurrentHashMap<>();
+    private final Configuration configuration;
+
+    public Metrics(Configuration configuration) {
+        this.configuration = configuration;
+    }
 
     public static void clear() {
         metrics.clear();
     }
 
-    public static void set(Name name, Integer value) {
+    public void set(Name name, Integer value) {
         metrics.put(name, value);
     }
 
@@ -27,16 +32,16 @@ public class Metrics {
         return value != null ? value : 0;
     }
 
-    public static void increment(Name name) {
-        if (ConfigurationProperties.metricsEnabled()) {
+    public void increment(Name name) {
+        if (configuration.metricsEnabled()) {
             synchronized (name) {
                 metrics.merge(name, 1, Integer::sum);
             }
         }
     }
 
-    public static void decrement(Name name) {
-        if (ConfigurationProperties.metricsEnabled()) {
+    public void decrement(Name name) {
+        if (configuration.metricsEnabled()) {
             synchronized (name) {
                 final Integer currentValue = metrics.get(name);
                 if (currentValue != null) {
@@ -48,8 +53,8 @@ public class Metrics {
         }
     }
 
-    public static void increment(Action.Type type) {
-        if (ConfigurationProperties.metricsEnabled()) {
+    public void increment(Action.Type type) {
+        if (configuration.metricsEnabled()) {
             Name name = Name.valueOf("ACTION_" + type.name() + "_COUNT");
             synchronized (name) {
                 metrics.merge(name, 1, Integer::sum);
@@ -57,8 +62,8 @@ public class Metrics {
         }
     }
 
-    public static void decrement(Action.Type type) {
-        if (ConfigurationProperties.metricsEnabled()) {
+    public void decrement(Action.Type type) {
+        if (configuration.metricsEnabled()) {
             Name name = Name.valueOf("ACTION_" + type.name() + "_COUNT");
             synchronized (name) {
                 final Integer currentValue = metrics.get(name);

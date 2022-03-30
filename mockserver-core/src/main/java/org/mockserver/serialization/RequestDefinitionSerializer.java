@@ -11,9 +11,9 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.OpenAPIDefinition;
 import org.mockserver.model.RequestDefinition;
 import org.mockserver.serialization.model.HttpRequestDTO;
+import org.mockserver.serialization.model.HttpRequestPrettyPrintedDTO;
 import org.mockserver.serialization.model.OpenAPIDefinitionDTO;
 import org.mockserver.serialization.model.RequestDefinitionDTO;
-import org.mockserver.templates.engine.model.HttpRequestTemplateObject;
 import org.mockserver.validator.jsonschema.JsonSchemaRequestDefinitionValidator;
 import org.slf4j.event.Level;
 
@@ -33,7 +33,7 @@ import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_S
 @SuppressWarnings("FieldMayBeFinal")
 public class RequestDefinitionSerializer implements Serializer<RequestDefinition> {
     private final MockServerLogger mockServerLogger;
-    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
+    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true, false);
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private JsonArraySerializer jsonArraySerializer = new JsonArraySerializer();
     private JsonSchemaRequestDefinitionValidator requestDefinitionValidator;
@@ -56,7 +56,7 @@ public class RequestDefinitionSerializer implements Serializer<RequestDefinition
     public String serialize(boolean prettyPrint, RequestDefinition requestDefinition) {
         try {
             if (requestDefinition instanceof HttpRequest) {
-                return objectWriter.writeValueAsString(prettyPrint ? new HttpRequestTemplateObject((HttpRequest) requestDefinition) : new HttpRequestDTO((HttpRequest) requestDefinition));
+                return objectWriter.writeValueAsString(prettyPrint ? new HttpRequestPrettyPrintedDTO((HttpRequest) requestDefinition) : new HttpRequestDTO((HttpRequest) requestDefinition));
             } else if (requestDefinition instanceof OpenAPIDefinition) {
                 return objectWriter.writeValueAsString(new OpenAPIDefinitionDTO((OpenAPIDefinition) requestDefinition));
             } else {
@@ -91,7 +91,7 @@ public class RequestDefinitionSerializer implements Serializer<RequestDefinition
                 Object[] requestDefinitionDTOs = new Object[requestDefinitions.length];
                 for (int i = 0; i < requestDefinitions.length; i++) {
                     if (requestDefinitions[i] instanceof HttpRequest) {
-                        requestDefinitionDTOs[i] = prettyPrint ? new HttpRequestTemplateObject((HttpRequest) requestDefinitions[i]) : new HttpRequestDTO((HttpRequest) requestDefinitions[i]);
+                        requestDefinitionDTOs[i] = prettyPrint ? new HttpRequestPrettyPrintedDTO((HttpRequest) requestDefinitions[i]) : new HttpRequestDTO((HttpRequest) requestDefinitions[i]);
                     } else if (requestDefinitions[i] instanceof OpenAPIDefinition) {
                         requestDefinitionDTOs[i] = new OpenAPIDefinitionDTO((OpenAPIDefinition) requestDefinitions[i]);
                     }

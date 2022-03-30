@@ -49,7 +49,8 @@ public class HttpClassCallback extends Action<HttpClassCallback> {
      *
      * @param callbackClass class to callback as a fully qualified class name, i.e. "com.foo.MyExpectationResponseCallback"
      */
-    public static HttpClassCallback callback(Class<? extends ExpectationCallback<HttpRequest>> callbackClass) {
+    @SuppressWarnings("rawtypes")
+    public static HttpClassCallback callback(Class<? extends ExpectationCallback<? extends HttpMessage>> callbackClass) {
         return new HttpClassCallback().withCallbackClass(callbackClass);
     }
 

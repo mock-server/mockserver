@@ -33,6 +33,7 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.slf4j.event.Level.TRACE;
 
 public class HttpProxyUnificationInitializerSOCKSErrorTest {
@@ -43,7 +44,7 @@ public class HttpProxyUnificationInitializerSOCKSErrorTest {
         short localPort = 1234;
         final LifeCycle lifeCycle = mock(LifeCycle.class);
         when(lifeCycle.getScheduler()).thenReturn(mock(Scheduler.class));
-        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new MockServerUnificationInitializer(lifeCycle, new HttpState(new MockServerLogger(), mock(Scheduler.class)), mock(HttpActionHandler.class), null));
+        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new MockServerUnificationInitializer(configuration(), lifeCycle, new HttpState(configuration(), new MockServerLogger(), mock(Scheduler.class)), mock(HttpActionHandler.class), null));
 
         // and - no SOCKS handlers
         assertThat(embeddedChannel.pipeline().get(Socks5ProxyHandler.class), is(nullValue()));
@@ -121,7 +122,7 @@ public class HttpProxyUnificationInitializerSOCKSErrorTest {
     public void shouldSwitchToHttp() {
         // given
         EmbeddedChannel embeddedChannel = new EmbeddedChannel();
-        embeddedChannel.pipeline().addLast(new MockServerUnificationInitializer(mock(LifeCycle.class), new HttpState(new MockServerLogger(), mock(Scheduler.class)), mock(HttpActionHandler.class), null));
+        embeddedChannel.pipeline().addLast(new MockServerUnificationInitializer(configuration(), mock(LifeCycle.class), new HttpState(configuration(), new MockServerLogger(), mock(Scheduler.class)), mock(HttpActionHandler.class), null));
 
         // and - no HTTP handlers
         assertThat(embeddedChannel.pipeline().get(HttpServerCodec.class), is(nullValue()));
@@ -163,7 +164,7 @@ public class HttpProxyUnificationInitializerSOCKSErrorTest {
     @Test
     public void shouldSupportUnknownProtocol() {
         // given
-        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new MockServerUnificationInitializer(mock(LifeCycle.class), new HttpState(new MockServerLogger(), mock(Scheduler.class)), mock(HttpActionHandler.class), null));
+        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new MockServerUnificationInitializer(configuration(), mock(LifeCycle.class), new HttpState(configuration(), new MockServerLogger(), mock(Scheduler.class)), mock(HttpActionHandler.class), null));
 
         // and - channel open
         assertThat(embeddedChannel.isOpen(), is(true));

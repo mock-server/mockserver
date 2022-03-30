@@ -1,18 +1,159 @@
 {
   "title": "override forwarded request",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "delay": {
-      "$ref": "#/definitions/delay"
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "delay": {
+          "$ref": "#/definitions/delay"
+        },
+        "requestOverride": {
+          "$ref": "#/definitions/httpRequest"
+        },
+        "requestModifier": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "regex": {
+                  "type": "string"
+                },
+                "substitution": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "regex"
+              ]
+            },
+            "queryStringParameters": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "add": {
+                  "$ref": "#/definitions/keyToMultiValue"
+                },
+                "replace": {
+                  "$ref": "#/definitions/keyToMultiValue"
+                },
+                "remove": {
+                  "type": "array",
+                  "additionalProperties": false,
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "add": {
+                  "$ref": "#/definitions/keyToMultiValue"
+                },
+                "replace": {
+                  "$ref": "#/definitions/keyToMultiValue"
+                },
+                "remove": {
+                  "type": "array",
+                  "additionalProperties": false,
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "cookies": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "add": {
+                  "$ref": "#/definitions/keyToValue"
+                },
+                "replace": {
+                  "$ref": "#/definitions/keyToValue"
+                },
+                "remove": {
+                  "type": "array",
+                  "additionalProperties": false,
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responseOverride": {
+          "$ref": "#/definitions/httpResponse"
+        },
+        "responseModifier": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "headers": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "add": {
+                  "$ref": "#/definitions/keyToMultiValue"
+                },
+                "replace": {
+                  "$ref": "#/definitions/keyToMultiValue"
+                },
+                "remove": {
+                  "type": "array",
+                  "additionalProperties": false,
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "cookies": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "add": {
+                  "$ref": "#/definitions/keyToValue"
+                },
+                "replace": {
+                  "$ref": "#/definitions/keyToValue"
+                },
+                "remove": {
+                  "type": "array",
+                  "additionalProperties": false,
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     },
-    "httpRequest": {
-      "$ref": "#/definitions/httpRequest"
-    },
-    "httpResponse": {
-      "$ref": "#/definitions/httpResponse"
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "delay": {
+          "$ref": "#/definitions/delay"
+        },
+        "httpRequest": {
+          "$ref": "#/definitions/httpRequest"
+        },
+        "httpResponse": {
+          "$ref": "#/definitions/httpResponse"
+        }
+      }
     }
-  },
+  ],
   "definitions": {
   }
 }

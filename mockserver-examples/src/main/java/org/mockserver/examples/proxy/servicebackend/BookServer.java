@@ -1,5 +1,6 @@
 package org.mockserver.examples.proxy.servicebackend;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.Unpooled;
@@ -9,9 +10,9 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.*;
 import org.mockserver.examples.proxy.model.Book;
+import org.mockserver.examples.proxy.service.ExampleNettySslContextFactory;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.scheduler.Scheduler;
-import org.mockserver.socket.tls.NettySslContextFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -25,6 +26,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+import static org.mockserver.configuration.Configuration.configuration;
 
 /**
  * @author jamesdbloom
@@ -33,15 +35,15 @@ public class BookServer {
 
     private static ServerBootstrap serverBootstrap;
     private final Map<String, Book> booksDB = createBookData();
-    private final ObjectWriter objectWriter = org.mockserver.serialization.ObjectMapperFactory.createObjectMapper(true);
+    private final ObjectWriter objectWriter = new ObjectMapper().writerWithDefaultPrettyPrinter();
     private final int httpPort;
     private final boolean secure;
-    private final NettySslContextFactory nettySslContextFactory;
+    private final ExampleNettySslContextFactory exampleNettySslContextFactory;
 
     BookServer(int httpPort, boolean secure) {
         this.httpPort = httpPort;
         this.secure = secure;
-        this.nettySslContextFactory = new NettySslContextFactory(new MockServerLogger());
+        this.exampleNettySslContextFactory = new ExampleNettySslContextFactory(configuration(), new MockServerLogger());
     }
 
     @PostConstruct
@@ -58,7 +60,7 @@ public class BookServer {
 
                             // add HTTPS support
                             if (secure) {
-                                pipeline.addLast(nettySslContextFactory.createServerSslContext().newHandler(ch.alloc()));
+                                pipeline.addLast(exampleNettySslContextFactory.createServerSslContext().newHandler(ch.alloc()));
                             }
 
                             pipeline.addLast(new HttpServerCodec());

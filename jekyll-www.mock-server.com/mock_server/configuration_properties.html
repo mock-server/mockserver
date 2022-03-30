@@ -1,7 +1,7 @@
 ---
 title: Configuration
 layout: page
-pageOrder: 9
+pageOrder: 10
 section: 'General'
 subsection: true
 sitemap:
@@ -17,11 +17,34 @@ lastmod: 2019-11-10T08:00:00+01:00
     <li>java code (highest precedence)</li>
     <li>system property</li>
     <li>property file</li>
-    <li>environment property (lowest precedence)</li>
+    <li>environment variable (lowest precedence)</li>
 </ol>
 <p>The order of precedence means that properties set by java code overrides those set by system properties which overrides property file properties which overrides environment variables.</p>
 <p>Some properties need to be set before MockServer starts because they are only read at start-up, for example, <a href="#button_configuration_nio_event_loop_thread_count">nioEventLoopThreadCount</a>.</p>
 <p>Other values are read continuously and so can be changed at any time, for example, <a href="#button_configuration_log_level">logLevel</a>.</p>
+
+<a id="programmatic_properties" class="anchor" href="#programmatic_properties">&nbsp;</a>
+
+<h2>Programmatic Properties</h2>
+
+<p>There are two ways to set properties programmatically, as follows:</p>
+<ul>
+    <li><strong>org.mockserver.configuration.ConfigurationProperties</strong>
+        <ul>
+            <li>is JVM global</li>
+            <li>exposes static methods</li>
+            <li>stores property values in system properties</li>
+        </ul>
+    </li>
+    <li><strong>org.mockserver.configuration.Configuration</strong>
+        <ul>
+            <li>is unique to each MockServer instance</li>
+            <li>can be passed to <strong>ClientAndServer</strong>, <strong>MockServer</strong> and <strong>MockServerClient</strong> classes</li>
+            <li>only supports instance methods</li>
+            <li>defaults to <strong>ConfigurationProperties</strong> for unset values</li>
+        </ul>
+    </li>
+</ul>
 
 <a id="property_file" class="anchor" href="#property_file">&nbsp;</a>
 
@@ -32,7 +55,9 @@ lastmod: 2019-11-10T08:00:00+01:00
 
 <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.propertyFile=/config/mockserver.properties</code></pre>
 
-<p>An example properties file can be found in <a href="https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver.example.properties">github</a>, as follows:</p>
+<p>A full example / template properties file can be found in <a target="_blank" href="https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver.example.properties">github</a></p>
+
+<p>An limited properties file example is, as follows:</p>
 <pre class="prettyprint code"><code class="code">###############################
 # MockServer & Proxy Settings #
 ###############################
@@ -67,27 +92,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 
 <h2>Configuration Properties</h2>
 
-<a id="liveness_configuration" class="anchor" href="#liveness_configuration">&nbsp;</a>
-
-<h2>Liveness Configuration:</h2>
-
-<button id="button_configuration_liveness_get_path" class="accordion title"><strong>Path for HTTP GET liveness / healthcheck probes</strong></button>
-<div class="panel title">
-    <p>Path to support HTTP GET requests for status response (also available on PUT /mockserver/status).</p>
-    <p>If this value is not modified then only PUT /mockserver/status but is a none blank value is provided for this value then GET requests to this path will return the 200 Ok status response showing the MockServer version and bound ports.</p>
-    <p>A GET request to this path will be matched before any expectation matching or proxying of requests.</p>
-    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
-    <p>Java Code:</p>
-    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.livenessHttpGetPath(String livenessPath)</code></pre>
-    <p>System Property:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.livenessHttpGetPath=...</code></pre>
-    <p>Environment Variable:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_LIVENESS_HTTP_GET_PATH=...</code></pre>
-    <p>Property File:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">mockserver.livenessHttpGetPath=...</code></pre>
-    <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.livenessHttpGetPath="/liveness/probe"</code></pre>
-</div>
+{% include_subpage _includes/logging_configuration.html %}
 
 <a id="memory_configuration" class="anchor" href="#memory_configuration">&nbsp;</a>
 
@@ -127,7 +132,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 
 <button id="button_configuration_max_web_socket_expectations" class="accordion title"><strong>Maximum WebSockets For Object Callback Expectations</strong></button>
 <div class="panel title">
-    <p>Maximum number of WebSockets held in the in-memory ring buffer</p>
+    <p>Maximum number of remote (not the same JVM) method callbacks (i.e. web sockets) registered for expectations.  The web socket client registry entries are stored in a circular queue so once this limit is reach the oldest are overwritten.</p>
     <p>Type: <span class="keyword">int</span> Default: <span class="this_value">1500</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxWebSocketExpectations(int count)</code></pre>
@@ -157,56 +162,20 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.outputMemoryUsageCsv="true"</code></pre>
 </div>
 
-<a id="http_request_size_configuration" class="anchor" href="#http_request_size_configuration">&nbsp;</a>
-
-<h2>Http Request Size Configuration:</h2>
-
-<button id="button_configuration_max_initial_line_length" class="accordion title"><strong>Maximum HTTP Request Initial Line Length</strong></button>
+<button id="button_configuration_memory_statistics_directory" class="accordion title"><strong>Directory For Outputting JVM Memory Usage</strong></button>
 <div class="panel title">
-    <p>Maximum size the first line of an HTTP request</p>
-    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">4096</span></p>
+    <p>Directory to output JVM memory usage metrics CSV files to when outputMemoryUsageCsv enabled</p>
+    <p>Type: <span class="keyword">String</span> Default: <span class="this_value">"."</span></p>
     <p>Java Code:</p>
-    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxInitialLineLength(int length)</code></pre>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.memoryUsageCsvDirectory(String directory)</code></pre>
     <p>System Property:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxInitialLineLength=...</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.memoryUsageCsvDirectory=...</code></pre>
     <p>Environment Variable:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_MAX_INITIAL_LINE_LENGTH=...</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_MEMORY_USAGE_CSV_DIRECTORY=...</code></pre>
     <p>Property File:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">mockserver.maxInitialLineLength=...</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.memoryUsageCsvDirectory=...</code></pre>
     <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxInitialLineLength="8192"</code></pre>
-</div>
-
-<button id="button_configuration_max_header_size" class="accordion title"><strong>Maximum HTTP Request Header Size</strong></button>
-<div class="panel title">
-    <p>Maximum size HTTP request headers</p>
-    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">8192</span></p>
-    <p>Java Code:</p>
-    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxHeaderSize(int size)</code></pre>
-    <p>System Property:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxHeaderSize=...</code></pre>
-    <p>Environment Variable:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_MAX_HEADER_SIZE=...</code></pre>
-    <p>Property File:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">mockserver.maxHeaderSize=...</code></pre>
-    <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxHeaderSize="16384"</code></pre>
-</div>
-
-<button id="button_configuration_max_chunk_size" class="accordion title"><strong>Maximum HTTP Request Chunk Size</strong></button>
-<div class="panel title">
-    <p>Maximum size of HTTP chunks in request or responses</p>
-    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">8192</span></p>
-    <p>Java Code:</p>
-    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxChunkSize(int size)</code></pre>
-    <p>System Property:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxChunkSize=...</code></pre>
-    <p>Environment Variable:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_MAX_CHUNK_SIZE=...</code></pre>
-    <p>Property File:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">mockserver.maxChunkSize=...</code></pre>
-    <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxChunkSize="16384"</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.memoryUsageCsvDirectory="."</code></pre>
 </div>
 
 {% include_subpage _includes/performance_configuration.html %}
@@ -215,9 +184,9 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 
 <h2>Socket Configuration:</h2>
 
-<button id="button_configuration_max_socket_timeout" class="accordion title"><strong>Maximum Socket Timeout</strong></button>
+<button id="button_configuration_max_socket_timeout" class="accordion title"><strong>Maximum Socket Timeout In Millis</strong></button>
 <div class="panel title">
-    <p>Maximum time allowed for a response from a socket</p>
+    <p>Maximum time in milliseconds allowed for a response from a socket</p>
     <p>Type: <span class="keyword">long</span> Default: <span class="this_value">20000</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxSocketTimeout(long milliseconds)</code></pre>
@@ -231,9 +200,9 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxSocketTimeout="10000"</code></pre>
 </div>
 
-<button id="button_configuration_socket_connection_timeout" class="accordion title"><strong>Maximum Socket Connection Timeout</strong></button>
+<button id="button_configuration_socket_connection_timeout" class="accordion title"><strong>Maximum Socket Connection Timeout In Millis</strong></button>
 <div class="panel title">
-    <p>Maximum time allowed to connect to a socket</p>
+    <p>Maximum time in milliseconds allowed to connect to a socket</p>
     <p>Type: <span class="keyword">int</span> Default: <span class="this_value">20000</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.socketConnectionTimeout(int milliseconds)</code></pre>
@@ -247,53 +216,20 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.socketConnectionTimeout="10000"</code></pre>
 </div>
 
-<button id="button_configuration_matchers_fail_fast" class="accordion title"><strong>Request Matchers Fail Fast</strong></button>
+<button id="button_configuration_aways_close_socket_connection" class="accordion title"><strong>Always Close Socket Connection After Response</strong></button>
 <div class="panel title">
-    <p>If true (the default) request matchers will fail on the first non-matching field, if false request matchers will compare all fields.</p>
-    <p>This is useful to see all mismatching fields in the log event recording that a request matcher did not match.</p>
-    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">true</span></p>
+    <p>If true socket connections will always be closed after a response is returned, if false connection is only closed if request header indicate connection should be closed.</p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">false</span></p>
     <p>Java Code:</p>
-    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.matchersFailFast(boolean enable)</code></pre>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.alwaysCloseSocketConnections(boolean alwaysClose)</code></pre>
     <p>System Property:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.matchersFailFast=...</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.alwaysCloseSocketConnections=...</code></pre>
     <p>Environment Variable:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_MATCHERS_FAIL_FAST=...</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS=...</code></pre>
     <p>Property File:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">mockserver.matchersFailFast=...</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.alwaysCloseSocketConnections=...</code></pre>
     <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.matchersFailFast="false"</code></pre>
-</div>
-
-<button id="button_configuration_detailed_match_failures" class="accordion title"><strong>Detailed Match Failures</strong></button>
-<div class="panel title">
-    <p>If true (the default) the log event recording that a request matcher did not match will include a detailed reason why each non matching field did not match.</p>
-    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">true</span></p>
-    <p>Java Code:</p>
-    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.detailedMatchFailures(boolean enable)</code></pre>
-    <p>System Property:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.detailedMatchFailures=...</code></pre>
-    <p>Environment Variable:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_DETAILED_MATCH_FAILURES=...</code></pre>
-    <p>Property File:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">mockserver.detailedMatchFailures=...</code></pre>
-    <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.detailedMatchFailures="false"</code></pre>
-</div>
-
-<button id="button_configuration_launch_ui__debug" class="accordion title"><strong>ClientAndServer launches UI for DEBUG logLevel</strong></button>
-<div class="panel title">
-    <p>If true (the default) the ClientAndServer constructor or static factor methods will open the UI in the default browser when the log level is set to DEBUG.</p>
-    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">false</span></p>
-    <p>Java Code:</p>
-    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.launchUIForLogLevelDebug(boolean enable)</code></pre>
-    <p>System Property:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.launchUIForLogLevelDebug=...</code></pre>
-    <p>Environment Variable:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_LAUNCH_UI_FOR_LOG_LEVEL_DEBUG=...</code></pre>
-    <p>Property File:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">mockserver.launchUIForLogLevelDebug=...</code></pre>
-    <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.launchUIForLogLevelDebug="false"</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.alwaysCloseSocketConnections="true"</code></pre>
 </div>
 
 <button id="button_configuration_local_bound_ip" class="accordion title"><strong>Local Bound IP For Accepting Socket Connection</strong></button>
@@ -312,9 +248,77 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.localBoundIP="0.0.0.0"</code></pre>
 </div>
 
-{% include_subpage _includes/tls_configuration.html %}
+<a id="http_request_size_configuration" class="anchor" href="#http_request_size_configuration">&nbsp;</a>
 
-{% include_subpage _includes/logging_configuration.html %}
+<h2>Http Request Parsing Configuration:</h2>
+
+<button id="button_configuration_max_initial_line_length" class="accordion title"><strong>Maximum HTTP Request Initial Line Length</strong></button>
+<div class="panel title">
+    <p>Maximum size the first line of an HTTP request</p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">Integer.MAX_VALUE</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxInitialLineLength(int length)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxInitialLineLength=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_MAX_INITIAL_LINE_LENGTH=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.maxInitialLineLength=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxInitialLineLength="8192"</code></pre>
+</div>
+
+<button id="button_configuration_max_header_size" class="accordion title"><strong>Maximum HTTP Request Header Size</strong></button>
+<div class="panel title">
+    <p>Maximum size HTTP request headers</p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">Integer.MAX_VALUE</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxHeaderSize(int size)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxHeaderSize=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_MAX_HEADER_SIZE=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.maxHeaderSize=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxHeaderSize="16384"</code></pre>
+</div>
+
+<button id="button_configuration_max_chunk_size" class="accordion title"><strong>Maximum HTTP Request Chunk Size</strong></button>
+<div class="panel title">
+    <p>Maximum size of HTTP chunks in request or responses</p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">Integer.MAX_VALUE</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxChunkSize(int size)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxChunkSize=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_MAX_CHUNK_SIZE=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.maxChunkSize=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxChunkSize="16384"</code></pre>
+</div>
+
+<button id="button_configuration_treat_semicolon_as_query_parameter_separator" class="accordion title"><strong>Treat Semicolon As Query Parameter Separator</strong></button>
+<div class="panel title">
+    <p>If true semicolons are treated as a separator for a query parameter string, if false the semicolon is treated as a normal character that is part of a query parameter value.</p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">true</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.useSemicolonAsQueryParameterSeparator(boolean useAsQueryParameterSeparator)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.useSemicolonAsQueryParameterSeparator=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.useSemicolonAsQueryParameterSeparator=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.useSemicolonAsQueryParameterSeparator="true"</code></pre>
+</div>
+
+{% include_subpage _includes/cors_configuration.html %}
+
+{% include_subpage _includes/initializer_persistence_configuration.html %}
 
 <a id="proxy_configuration" class="anchor" href="#proxy_configuration">&nbsp;</a>
 
@@ -439,7 +443,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 <div class="panel title">
     <p>The required username for proxy authentication to MockServer</p>
     <p><strong>Note:</strong> <a target="_blank" href="https://www.oracle.com/java/technologies/javase/8u111-relnotes.html">8u111 Update Release Notes</a> state that the Basic authentication scheme has been deactivated when setting up an HTTPS tunnel.  To resolve this clear or set to an empty string the following system properties: <code class="inline code">jdk.http.auth.tunneling.disabledSchemes</code> and <code class="inline code">jdk.http.auth.proxying.disabledSchemes</code>.</p>
-    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">john.doe</span></p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value"></span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.proxyAuthenticationUsername(String proxyAuthenticationUsername)</code></pre>
     <p>System Property:</p>
@@ -456,7 +460,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 <div class="panel title">
     <p>The required password for proxy authentication to MockServer</p>
     <p><strong>Note:</strong> <a target="_blank" href="https://www.oracle.com/java/technologies/javase/8u111-relnotes.html">8u111 Update Release Notes</a> state that the Basic authentication scheme has been deactivated when setting up an HTTPS tunnel.  To resolve this clear or set to an empty string the following system properties: <code class="inline code">jdk.http.auth.tunneling.disabledSchemes</code> and <code class="inline code">jdk.http.auth.proxying.disabledSchemes</code>.</p>
-    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">p@ssw0rd</span></p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value"></span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.proxyAuthenticationPassword(String proxyAuthenticationPassword)</code></pre>
     <p>System Property:</p>
@@ -469,6 +473,28 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.proxyAuthenticationPassword="p@ssw0rd"</code></pre>
 </div>
 
-{% include_subpage _includes/initializer_persistence_configuration.html %}
+<a id="liveness_configuration" class="anchor" href="#liveness_configuration">&nbsp;</a>
 
-{% include_subpage _includes/cors_configuration.html %}
+<h2>Liveness Configuration:</h2>
+
+<button id="button_configuration_liveness_get_path" class="accordion title"><strong>Path for HTTP GET liveness / healthcheck probes</strong></button>
+<div class="panel title">
+    <p>Path to support HTTP GET requests for status response (also available on PUT /mockserver/status).</p>
+    <p>If this value is not modified then only PUT /mockserver/status but is a none blank value is provided for this value then GET requests to this path will return the 200 Ok status response showing the MockServer version and bound ports.</p>
+    <p>A GET request to this path will be matched before any expectation matching or proxying of requests.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.livenessHttpGetPath(String livenessPath)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.livenessHttpGetPath=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_LIVENESS_HTTP_GET_PATH=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.livenessHttpGetPath=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.livenessHttpGetPath="/liveness/probe"</code></pre>
+</div>
+
+{% include_subpage _includes/control_plane_authentication_configuration.html %}
+
+{% include_subpage _includes/tls_configuration.html %}

@@ -82,12 +82,11 @@ public class HttpRequestAndHttpResponseSerializerTest {
                         cookie("cookieName", "cookieValue")
                     ))
                     .setSecure(true)
-                    .setSocketAddress(new SocketAddressDTO(
-                        new SocketAddress()
-                            .withHost("someHost")
-                            .withPort(1234)
-                            .withScheme(SocketAddress.Scheme.HTTPS)
-                    ))
+                    .setSocketAddress(new SocketAddress()
+                        .withHost("someHost")
+                        .withPort(1234)
+                        .withScheme(SocketAddress.Scheme.HTTPS)
+                    )
                     .setKeepAlive(true)
             )
             .setHttpResponse(

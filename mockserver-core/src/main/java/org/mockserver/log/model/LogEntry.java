@@ -3,7 +3,7 @@ package org.mockserver.log.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lmax.disruptor.EventTranslator;
-import org.mockserver.log.TimeService;
+import org.mockserver.time.EpochService;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatchDifference;
 import org.mockserver.matchers.TimeToLive;
@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.model.HttpRequest.request;
@@ -32,13 +33,14 @@ public class LogEntry implements EventTranslator<LogEntry> {
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
     private static final RequestDefinition[] EMPTY_REQUEST_DEFINITIONS = new RequestDefinition[0];
     private static final RequestDefinition[] DEFAULT_REQUESTS_DEFINITIONS = {request()};
+    public static final DateFormat LOG_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
     private int hashCode;
     private String id;
     private String correlationId;
     private Integer port;
     private Level logLevel = Level.INFO;
-    public static final DateFormat LOG_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-    private long epochTime = TimeService.currentTimeMillis();
+    private boolean alwaysLog = false;
+    private long epochTime = EpochService.currentTimeMillis();
     private String timestamp;
     private LogMessageType type;
     private RequestDefinition[] httpRequests;
@@ -76,6 +78,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
     public void clear() {
         id = null;
         logLevel = Level.INFO;
+        alwaysLog = false;
         correlationId = null;
         port = null;
         epochTime = -1;
@@ -103,6 +106,15 @@ public class LogEntry implements EventTranslator<LogEntry> {
         if (type == null) {
             type = LogMessageType.valueOf(logLevel.name());
         }
+        return this;
+    }
+
+    public boolean isAlwaysLog() {
+        return alwaysLog;
+    }
+
+    public LogEntry setAlwaysLog(boolean alwaysLog) {
+        this.alwaysLog = alwaysLog;
         return this;
     }
 
@@ -184,7 +196,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
         }
         for (RequestDefinition httpRequest : httpRequests) {
             RequestDefinition request = httpRequest.cloneWithLogCorrelationId();
-            if (matcher.matches(type == LogMessageType.RECEIVED_REQUEST ? new MatchDifference(request) : null, request)) {
+            if (matcher.matches(type == LogMessageType.RECEIVED_REQUEST ? new MatchDifference(false, request) : null, request)) {
                 return true;
             }
         }
@@ -265,6 +277,9 @@ public class LogEntry implements EventTranslator<LogEntry> {
 
     public LogEntry setThrowable(Throwable throwable) {
         this.throwable = throwable;
+        if (isBlank(messageFormat) && throwable != null) {
+            messageFormat = throwable.getClass().getSimpleName();
+        }
         return this;
     }
 
@@ -291,7 +306,11 @@ public class LogEntry implements EventTranslator<LogEntry> {
     }
 
     public LogEntry setMessageFormat(String messageFormat) {
-        this.messageFormat = messageFormat;
+        if (isBlank(messageFormat) && throwable != null) {
+            this.messageFormat = throwable.getClass().getSimpleName();
+        } else {
+            this.messageFormat = messageFormat;
+        }
         return this;
     }
 
@@ -423,6 +442,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
             .setId(id())
             .setType(getType())
             .setLogLevel(getLogLevel())
+            .setAlwaysLog(isAlwaysLog())
             .setEpochTime(getEpochTime())
             .setCorrelationId(getCorrelationId())
             .setPort(getPort())
@@ -444,6 +464,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
             .setId(id())
             .setType(getType())
             .setLogLevel(getLogLevel())
+            .setAlwaysLog(isAlwaysLog())
             .setEpochTime(getEpochTime())
             .setCorrelationId(getCorrelationId())
             .setPort(getPort())
@@ -476,6 +497,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
             deleted == logEntry.deleted &&
             type == logEntry.type &&
             logLevel == logEntry.logLevel &&
+            alwaysLog == logEntry.alwaysLog &&
             Objects.equals(messageFormat, logEntry.messageFormat) &&
             Objects.equals(httpResponse, logEntry.httpResponse) &&
             Objects.equals(httpError, logEntry.httpError) &&
@@ -488,7 +510,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            int result = Objects.hash(epochTime, deleted, type, logLevel, messageFormat, httpResponse, httpError, expectation, consumer);
+            int result = Objects.hash(epochTime, deleted, type, logLevel, alwaysLog, messageFormat, httpResponse, httpError, expectation, consumer);
             result = 31 * result + Arrays.hashCode(arguments);
             result = 31 * result + Arrays.hashCode(httpRequests);
             hashCode = result;
@@ -500,7 +522,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
     public String toString() {
         try {
             return ObjectMapperFactory
-                .createObjectMapper(true)
+                .createObjectMapper(true, false)
                 .writeValueAsString(this);
         } catch (Exception e) {
             return super.toString();

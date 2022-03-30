@@ -23,7 +23,7 @@ import static org.mockserver.model.OpenAPIDefinition.openAPI;
 public class DescriptionProcessorTest {
 
     final ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true,
-        new DashboardLogEntryDTOSerializer(),
+            false, new DashboardLogEntryDTOSerializer(),
         new DescriptionSerializer(),
         new ThrowableSerializer()
     );
@@ -78,11 +78,11 @@ public class DescriptionProcessorTest {
             ),
             descriptionProcessor.description(
                 openAPI()
-                    .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+                    .withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json")
             ),
             descriptionProcessor.description(
                 openAPI()
-                    .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+                    .withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json")
                     .withOperationId("someOtherOperationId")
             ),
             descriptionProcessor.description(
@@ -104,7 +104,6 @@ public class DescriptionProcessorTest {
             "{" + NEW_LINE +
             "  \"json\" : true," + NEW_LINE +
             "  \"object\" : {" + NEW_LINE +
-            "    \"components\" : { }," + NEW_LINE +
             "    \"openapi\" : \"3.0.0\"," + NEW_LINE +
             "    \"paths\" : {" + NEW_LINE +
             "      \"/somePath\" : {" + NEW_LINE +
@@ -123,7 +122,6 @@ public class DescriptionProcessorTest {
             "{" + NEW_LINE +
             "  \"json\" : true," + NEW_LINE +
             "  \"object\" : {" + NEW_LINE +
-            "    \"components\" : { }," + NEW_LINE +
             "    \"openapi\" : \"3.0.0\"," + NEW_LINE +
             "    \"paths\" : {" + NEW_LINE +
             "      \"/somePath\" : {" + NEW_LINE +
@@ -222,11 +220,11 @@ public class DescriptionProcessorTest {
             ),
             descriptionProcessor.description(
                 openAPI()
-                    .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+                    .withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json")
             ),
             descriptionProcessor.description(
                 openAPI()
-                    .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+                    .withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json")
                     .withOperationId("someOtherOperationId")
             )
         );
@@ -244,7 +242,6 @@ public class DescriptionProcessorTest {
             "{" + NEW_LINE +
             "  \"json\" : true," + NEW_LINE +
             "  \"object\" : {" + NEW_LINE +
-            "    \"components\" : { }," + NEW_LINE +
             "    \"openapi\" : \"3.0.0\"," + NEW_LINE +
             "    \"paths\" : {" + NEW_LINE +
             "      \"/somePath\" : {" + NEW_LINE +

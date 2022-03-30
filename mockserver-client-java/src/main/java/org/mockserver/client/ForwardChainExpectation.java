@@ -6,7 +6,7 @@ import org.mockserver.client.MockServerEventBus.EventType;
 import org.mockserver.closurecallback.websocketclient.WebSocketClient;
 import org.mockserver.closurecallback.websocketclient.WebSocketException;
 import org.mockserver.closurecallback.websocketregistry.LocalCallbackRegistry;
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.configuration.ClientConfiguration;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.action.ExpectationCallback;
@@ -20,23 +20,57 @@ import org.mockserver.uuid.UUIDService;
 import java.util.concurrent.Future;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 
 /**
  * @author jamesdbloom
  */
 public class ForwardChainExpectation {
 
+    private final ClientConfiguration configuration;
     private final MockServerLogger mockServerLogger;
     private final MockServerClient mockServerClient;
     private final Expectation expectation;
     private final MockServerEventBus mockServerEventBus;
 
-    ForwardChainExpectation(MockServerLogger mockServerLogger, MockServerEventBus mockServerEventBus, MockServerClient mockServerClient, Expectation expectation) {
+    ForwardChainExpectation(ClientConfiguration configuration, MockServerLogger mockServerLogger, MockServerEventBus mockServerEventBus, MockServerClient mockServerClient, Expectation expectation) {
+        this.configuration = configuration;
         this.mockServerLogger = mockServerLogger;
         this.mockServerEventBus = mockServerEventBus;
         this.mockServerClient = mockServerClient;
         this.expectation = expectation;
+    }
+
+    /**
+     * <p>
+     * Set id of this expectation which can be used to update this expectation
+     * later or for clearing or verifying by expectation id.
+     * </p>
+     * <p>
+     * Note: Each unique expectation must have a unique id otherwise this
+     * expectation will update a existing expectation with the same id.
+     * </p>
+     *
+     * @param id unique string for expectation's id
+     */
+    public ForwardChainExpectation withId(String id) {
+        expectation.withId(id);
+        return this;
+    }
+
+    /**
+     * <p>
+     * Set priority of this expectation which is used to determin the matching
+     * order of expectations when a request is received.
+     * </p>
+     * <p>
+     * Matching is ordered by priority (highest first) then creation (earliest first).
+     * </p>
+     *
+     * @param priority expectation's priority
+     */
+    public ForwardChainExpectation withPriority(int priority) {
+        expectation.withPriority(priority);
+        return this;
     }
 
     /**
@@ -247,7 +281,7 @@ public class ForwardChainExpectation {
             LocalCallbackRegistry.registerCallback(clientId, expectationCallback);
             LocalCallbackRegistry.registerCallback(clientId, expectationForwardResponseCallback);
             final WebSocketClient<T> webSocketClient = new WebSocketClient<>(
-                new NioEventLoopGroup(ConfigurationProperties.webSocketClientEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(WebSocketClient.class.getSimpleName() + "-eventLoop")),
+                new NioEventLoopGroup(configuration.webSocketClientEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(WebSocketClient.class.getSimpleName() + "-eventLoop")),
                 clientId,
                 mockServerLogger
             );
@@ -259,7 +293,7 @@ public class ForwardChainExpectation {
                 mockServerClient.isSecure()
             );
             mockServerEventBus.subscribe(webSocketClient::stopClient, EventType.STOP, EventType.RESET);
-            return register.get(maxFutureTimeout(), MILLISECONDS);
+            return register.get(configuration.maxFutureTimeoutInMillis(), MILLISECONDS);
         } catch (Exception e) {
             if (e.getCause() instanceof WebSocketException) {
                 throw new ClientException(e.getCause().getMessage(), e);

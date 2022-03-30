@@ -21,7 +21,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 public class DashboardLogEntryDTOGroupSerializerTest {
 
     final ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true,
-        new DashboardLogEntryDTOSerializer(),
+            false, new DashboardLogEntryDTOSerializer(),
         new DashboardLogEntryDTOGroupSerializer(),
         new DescriptionSerializer(),
         new ThrowableSerializer()

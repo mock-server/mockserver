@@ -4,6 +4,9 @@ import org.hamcrest.core.Is;
 import org.junit.Test;
 import org.mockserver.model.*;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
@@ -13,6 +16,7 @@ import static org.mockserver.model.Header.header;
 import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.StringBody.exact;
+import static org.mockserver.model.X509Certificate.x509Certificate;
 
 /**
  * @author jamesdbloom
@@ -29,16 +33,32 @@ public class HttpRequestDTOTest {
         String path = "path";
         Parameters pathParameters = new Parameters().withEntries(param("path_name", "path_value"));
         Parameters queryStringParameters = new Parameters().withEntries(param("name", "value"));
+        List<X509Certificate> clientCertificateChain = Arrays.asList(
+            x509Certificate()
+                .withSubjectDistinguishedName("someSubject")
+                .withIssuerDistinguishedName("someIssuerSubject")
+                .withSerialNumber("someSubjectSerialNumber"),
+            x509Certificate()
+                .withSubjectDistinguishedName("someIssuerSubject")
+                .withIssuerDistinguishedName("someIssuerSubject")
+                .withSerialNumber("someIssuerSerialNumber")
+        );
+        SocketAddress socketAddress = new SocketAddress()
+            .withHost("someHost")
+            .withPort(1234)
+            .withScheme(SocketAddress.Scheme.HTTPS);
         HttpRequest httpRequest = new HttpRequest()
-                .withBody("body")
-                .withCookies(new Cookie("name", "value"))
-                .withHeaders(new Header("name", "value"))
-                .withMethod(method)
-                .withPath(path)
-                .withPathParameter(new Parameter("path_name", "path_value"))
-                .withQueryStringParameter(new Parameter("name", "value"))
-                .withKeepAlive(true)
-                .withSecure(true);
+            .withBody("body")
+            .withCookies(new Cookie("name", "value"))
+            .withHeaders(new Header("name", "value"))
+            .withMethod(method)
+            .withPath(path)
+            .withPathParameter(new Parameter("path_name", "path_value"))
+            .withQueryStringParameter(new Parameter("name", "value"))
+            .withKeepAlive(true)
+            .withSecure(true)
+            .withClientCertificateChain(clientCertificateChain)
+            .withSocketAddress(socketAddress);
 
         // when
         HttpRequestDTO httpRequestDTO = new HttpRequestDTO(httpRequest);
@@ -53,6 +73,8 @@ public class HttpRequestDTOTest {
         assertThat(httpRequestDTO.getQueryStringParameters(), is(queryStringParameters));
         assertThat(httpRequestDTO.getKeepAlive(), is(Boolean.TRUE));
         assertThat(httpRequestDTO.getSecure(), is(Boolean.TRUE));
+        assertThat(httpRequestDTO.getClientCertificateChain(), is(clientCertificateChain));
+        assertThat(httpRequestDTO.getSocketAddress(), is(socketAddress));
     }
 
     @Test
@@ -65,16 +87,32 @@ public class HttpRequestDTOTest {
         String path = "path";
         Parameter pathParameter = new Parameter("path_name", "path_value");
         Parameter queryStringParameter = new Parameter("name", "value");
+        List<X509Certificate> clientCertificateChain = Arrays.asList(
+            x509Certificate()
+                .withSubjectDistinguishedName("someSubject")
+                .withIssuerDistinguishedName("someIssuerSubject")
+                .withSerialNumber("someSubjectSerialNumber"),
+            x509Certificate()
+                .withSubjectDistinguishedName("someIssuerSubject")
+                .withIssuerDistinguishedName("someIssuerSubject")
+                .withSerialNumber("someIssuerSerialNumber")
+        );
+        SocketAddress socketAddress = new SocketAddress()
+            .withHost("someHost")
+            .withPort(1234)
+            .withScheme(SocketAddress.Scheme.HTTPS);
         HttpRequest httpRequest = new HttpRequest()
-                .withBody(body)
-                .withCookies(cookie)
-                .withHeaders(header)
-                .withMethod(method)
-                .withPath(path)
-                .withPathParameter(pathParameter)
-                .withQueryStringParameter(queryStringParameter)
-                .withKeepAlive(true)
-                .withSecure(true);
+            .withBody(body)
+            .withCookies(cookie)
+            .withHeaders(header)
+            .withMethod(method)
+            .withPath(path)
+            .withPathParameter(pathParameter)
+            .withQueryStringParameter(queryStringParameter)
+            .withKeepAlive(true)
+            .withSecure(true)
+            .withClientCertificateChain(clientCertificateChain)
+            .withSocketAddress(socketAddress);
 
         // when
         HttpRequest builtHttpRequest = new HttpRequestDTO(httpRequest).buildObject();
@@ -89,11 +127,14 @@ public class HttpRequestDTOTest {
         assertThat(builtHttpRequest.getQueryStringParameterList(), containsInAnyOrder(queryStringParameter));
         assertThat(builtHttpRequest.isKeepAlive(), is(Boolean.TRUE));
         assertThat(builtHttpRequest.isSecure(), is(Boolean.TRUE));
+        assertThat(builtHttpRequest.getClientCertificateChain(), is(clientCertificateChain));
+        assertThat(builtHttpRequest.getSocketAddress(), is(socketAddress));
     }
 
     @Test
     public void shouldReturnValuesSetInSetter() {
         // given
+        HttpRequest httpRequest = new HttpRequest();
         BodyDTO body = BodyDTO.createDTO(exact("body"));
         Cookies cookies = new Cookies().withEntries(cookie("name", "value"));
         Headers headers = new Headers().withEntries(header("name", "value"));
@@ -101,13 +142,20 @@ public class HttpRequestDTOTest {
         String path = "path";
         Parameters pathParameters = new Parameters().withEntries(param("path_name", "path_value"));
         Parameters queryStringParameters = new Parameters().withEntries(param("name", "value"));
-        HttpRequest httpRequest = new HttpRequest();
-        SocketAddressDTO socketAddress = new SocketAddressDTO(
-            new SocketAddress()
-                .withHost("someHost")
-                .withPort(1234)
-                .withScheme(SocketAddress.Scheme.HTTPS)
+        List<X509Certificate> clientCertificateChain = Arrays.asList(
+            x509Certificate()
+                .withSubjectDistinguishedName("someSubject")
+                .withIssuerDistinguishedName("someIssuerSubject")
+                .withSerialNumber("someSubjectSerialNumber"),
+            x509Certificate()
+                .withSubjectDistinguishedName("someIssuerSubject")
+                .withIssuerDistinguishedName("someIssuerSubject")
+                .withSerialNumber("someIssuerSerialNumber")
         );
+        SocketAddress socketAddress = new SocketAddress()
+            .withHost("someHost")
+            .withPort(1234)
+            .withScheme(SocketAddress.Scheme.HTTPS);
 
         // when
         HttpRequestDTO httpRequestDTO = new HttpRequestDTO(httpRequest);
@@ -120,6 +168,7 @@ public class HttpRequestDTOTest {
         httpRequestDTO.setQueryStringParameters(queryStringParameters);
         httpRequestDTO.setKeepAlive(Boolean.TRUE);
         httpRequestDTO.setSecure(Boolean.TRUE);
+        httpRequestDTO.setClientCertificateChain(clientCertificateChain);
         httpRequestDTO.setSocketAddress(socketAddress);
 
         // then
@@ -132,6 +181,7 @@ public class HttpRequestDTOTest {
         assertThat(httpRequestDTO.getQueryStringParameters(), is(queryStringParameters));
         assertThat(httpRequestDTO.getKeepAlive(), is(Boolean.TRUE));
         assertThat(httpRequestDTO.getSecure(), is(Boolean.TRUE));
+        assertThat(httpRequestDTO.getClientCertificateChain(), is(clientCertificateChain));
         assertThat(httpRequestDTO.getSocketAddress(), is(socketAddress));
     }
 
@@ -151,6 +201,8 @@ public class HttpRequestDTOTest {
         assertThat(httpRequestDTO.getQueryStringParameters(), is(nullValue()));
         assertThat(httpRequestDTO.getKeepAlive(), is(nullValue()));
         assertThat(httpRequestDTO.getSecure(), is(nullValue()));
+        assertThat(httpRequestDTO.getClientCertificateChain(), is(nullValue()));
+        assertThat(httpRequestDTO.getSocketAddress(), is(nullValue()));
     }
 
     @Test
@@ -168,5 +220,7 @@ public class HttpRequestDTOTest {
         assertThat(httpRequestDTO.getQueryStringParameters(), is(nullValue()));
         assertThat(httpRequestDTO.getKeepAlive(), is(nullValue()));
         assertThat(httpRequestDTO.getSecure(), is(nullValue()));
+        assertThat(httpRequestDTO.getClientCertificateChain(), is(nullValue()));
+        assertThat(httpRequestDTO.getSocketAddress(), is(nullValue()));
     }
 }

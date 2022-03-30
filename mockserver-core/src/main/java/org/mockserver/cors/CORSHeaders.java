@@ -1,13 +1,13 @@
 package org.mockserver.cors;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.model.Headers;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
 import static io.netty.handler.codec.http.HttpMethod.OPTIONS;
-import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
+import static org.mockserver.configuration.Configuration.configuration;
 
 /**
  * @author jamesdbloom
@@ -17,34 +17,38 @@ public class CORSHeaders {
     private static final String ANY_ORIGIN = "*";
     private static final String NULL_ORIGIN = "null";
 
+    private final String corsAllowOrigin;
     private final String corsAllowHeaders;
     private final String corsAllowMethods;
     private final boolean corsAllowCredentials;
     private final String corsMaxAge;
 
-    public CORSHeaders(String corsAllowHeaders, String corsAllowMethods, boolean corsAllowCredentials, int corsMaxAge) {
-        this.corsAllowHeaders = corsAllowHeaders;
-        this.corsAllowMethods = corsAllowMethods;
-        this.corsAllowCredentials = corsAllowCredentials;
-        this.corsMaxAge = "" + corsMaxAge;
+    public CORSHeaders(String corsAllowOrigin, String corsAllowHeaders, String corsAllowMethods, boolean corsAllowCredentials, int corsMaxAge) {
+        this(
+            configuration()
+                .corsAllowOrigin(corsAllowOrigin)
+                .corsAllowHeaders(corsAllowHeaders)
+                .corsAllowMethods(corsAllowMethods)
+                .corsAllowCredentials(corsAllowCredentials)
+                .corsMaxAgeInSeconds(corsMaxAge)
+        );
     }
 
-
-    public CORSHeaders() {
-        // Default constuctor builds from the ConfigurationProperties
-        this(ConfigurationProperties.corsAllowHeaders(),
-                ConfigurationProperties.corsAllowMethods(),
-                ConfigurationProperties.corsAllowCredentials(),
-                ConfigurationProperties.corsMaxAgeInSeconds());
+    public CORSHeaders(Configuration configuration) {
+        this.corsAllowOrigin = configuration.corsAllowOrigin();
+        this.corsAllowHeaders = configuration.corsAllowHeaders();
+        this.corsAllowMethods = configuration.corsAllowMethods();
+        this.corsAllowCredentials = configuration.corsAllowCredentials();
+        this.corsMaxAge = "" + configuration.corsMaxAgeInSeconds();
     }
 
-    public static boolean isPreflightRequest(HttpRequest request) {
+    public static boolean isPreflightRequest(Configuration configuration, HttpRequest request) {
         final Headers headers = request.getHeaders();
         boolean isPreflightRequest = request.getMethod().getValue().equals(OPTIONS.name()) &&
             headers.containsEntry(HttpHeaderNames.ORIGIN.toString()) &&
             headers.containsEntry(HttpHeaderNames.ACCESS_CONTROL_REQUEST_METHOD.toString());
         if (isPreflightRequest) {
-            enableCORSForAPI(true);
+            configuration.enableCORSForAPI(true);
         }
         return isPreflightRequest;
     }
@@ -57,7 +61,8 @@ public class CORSHeaders {
             setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN.toString(), origin);
             setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS.toString(), "true");
         } else {
-            setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN.toString(), ANY_ORIGIN);
+            setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN.toString(), corsAllowOrigin);
+            setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS.toString(), "" + corsAllowCredentials);
         }
         setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS.toString(), corsAllowMethods);
         String allowHeaders = corsAllowHeaders;

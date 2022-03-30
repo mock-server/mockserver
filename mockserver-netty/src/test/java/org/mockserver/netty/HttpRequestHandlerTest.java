@@ -11,7 +11,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.lifecycle.LifeCycle;
-import org.mockserver.log.TimeService;
+import org.mockserver.time.EpochService;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
@@ -44,6 +44,7 @@ import static org.hamcrest.core.IsNull.nullValue;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.log.model.LogEntry.LOG_DATE_FORMAT;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.mock.action.http.HttpActionHandler.REMOTE_SOCKET;
@@ -68,11 +69,12 @@ public class HttpRequestHandlerTest {
     private HttpRequestHandler mockServerHandler;
     private final HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(new MockServerLogger());
     private final ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
+    private final ExpectationSerializer expectationSerializerWithDefaultFields = new ExpectationSerializer(new MockServerLogger(), true);
     private final PortBindingSerializer portBindingSerializer = new PortBindingSerializer(new MockServerLogger());
 
     @BeforeClass
     public static void fixTime() {
-        TimeService.fixedTime = true;
+        EpochService.fixedTime = true;
     }
 
     @Before
@@ -81,8 +83,8 @@ public class HttpRequestHandlerTest {
         when(server.getScheduler()).thenReturn(mock(Scheduler.class));
         mockActionHandler = mock(HttpActionHandler.class);
 
-        httpStateHandler = new HttpState(new MockServerLogger(), mock(Scheduler.class));
-        mockServerHandler = new HttpRequestHandler(server, httpStateHandler, null);
+        httpStateHandler = new HttpState(configuration(), new MockServerLogger(), mock(Scheduler.class));
+        mockServerHandler = new HttpRequestHandler(configuration(), server, httpStateHandler, null);
 
         openMocks(this);
 
@@ -246,7 +248,7 @@ public class HttpRequestHandlerTest {
         // then
         HttpResponse httpResponse = embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(200));
-        assertThat(httpResponse.getBodyAsString(), is(expectationSerializer.serialize(Collections.singletonList(
+        assertThat(httpResponse.getBodyAsString(), is(expectationSerializerWithDefaultFields.serialize(Collections.singletonList(
             new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited(), 0).withId("key_one").thenRespond(response("response_one"))
         ))));
     }
@@ -273,7 +275,7 @@ public class HttpRequestHandlerTest {
             assertThat(response.getStatusCode(), is(200));
             assertThat(
                 response.getBodyAsString(),
-                is(endsWith(LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
+                is(endsWith(LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"httpRequest\" : {" + NEW_LINE +

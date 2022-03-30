@@ -38,7 +38,7 @@ mockServerClient("localhost", 1080)
       console.log(error);
     }
   );</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -50,7 +50,7 @@ mockServerClient("localhost", 1080)
         "atLeast": 2
     }
 }'</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 <button id="button_verify_req_at_most_twice" class="accordion">verify requests received at most twice</button>
@@ -80,7 +80,7 @@ function (error) {
   console.log(error);
 }
 );</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -92,7 +92,7 @@ function (error) {
         "atMost": 2
     }
 }'</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 <button id="button_verify_req_exactly_twice" class="accordion">verify requests received exactly twice</button>
@@ -122,7 +122,7 @@ mockServerClient("localhost", 1080)
       console.log(error);
     }
   );</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -135,7 +135,7 @@ mockServerClient("localhost", 1080)
         "atMost": 2
     }
 }'</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 <button id="button_verify_req_at_least_twice_by_openapi" class="accordion">verify requests received at least twice by openapi</button>
@@ -145,7 +145,7 @@ mockServerClient("localhost", 1080)
     <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
     .verify(
         openAPI(
-            "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json"
+            "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
         ),
         VerificationTimes.atLeast(2)
     );</code></pre>
@@ -156,7 +156,7 @@ mockServerClient("localhost", 1080)
 mockServerClient("localhost", 1080)
     .verify(
         {
-            'specUrlOrPayload': 'https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json'
+            'specUrlOrPayload': 'https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json'
         }, 2)
     .then(
         function () {
@@ -166,19 +166,19 @@ mockServerClient("localhost", 1080)
             console.log(error);
         }
     );</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/verify" -d '{
     "httpRequest": {
-        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json"
+        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
     },
     "times": {
         "atLeast": 2
     }
 }'</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 <button id="button_verify_req_exactly_once_by_openapi" class="accordion">verify requests received at exactly once by openapi and operation</button>
@@ -188,7 +188,7 @@ mockServerClient("localhost", 1080)
     <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
     .verify(
         openAPI(
-            "org/mockserver/mock/openapi_petstore_example.json",
+            "org/mockserver/openapi/openapi_petstore_example.json",
             "showPetById"
         ),
         VerificationTimes.once()
@@ -200,7 +200,7 @@ mockServerClient("localhost", 1080)
 mockServerClient("localhost", 1080)
     .verify(
         {
-            'specUrlOrPayload': 'org/mockserver/mock/openapi_petstore_example.json',
+            'specUrlOrPayload': 'org/mockserver/openapi/openapi_petstore_example.json',
             'operationId': 'showPetById'
         }, 1, 1)
     .then(
@@ -211,13 +211,13 @@ mockServerClient("localhost", 1080)
             console.log(error);
         }
     );</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/verify" -d '{
     "httpRequest": {
-        "specUrlOrPayload": "org/mockserver/mock/openapi_petstore_example.json",
+        "specUrlOrPayload": "org/mockserver/openapi/openapi_petstore_example.json",
         "operationId": "showPetById"
     },
     "times": {
@@ -225,7 +225,43 @@ mockServerClient("localhost", 1080)
         "atMost": 1
     }
 }'</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+<button id="button_verify_req_exactly_once_by_expectation_id" class="accordion">verify requests received at exactly once by expectation id</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+    <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .verify(
+        "31e4ca35-66c6-4645-afeb-6e66c4ca0559",
+        VerificationTimes.once()
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+    .verifyById(
+        {
+            'id': '31e4ca35-66c6-4645-afeb-6e66c4ca0559'
+        }, 1, 1)
+    .then(
+        function () {
+            console.log("request found exactly 2 times");
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/verify" -d '{
+            "id": "31e4ca35-66c6-4645-afeb-6e66c4ca0559"
+        }'</code></pre>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 <button id="button_verify_req_never_received" class="accordion">verify requests never received</button>
@@ -255,7 +291,7 @@ mockServerClient("localhost", 1080)
       console.log(error);
     }
   );</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -267,7 +303,7 @@ mockServerClient("localhost", 1080)
         "atMost": 0
     }
 }'</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 </div>
@@ -317,7 +353,7 @@ mockServerClient("localhost", 1080)
       console.log(error);
     }
   );</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/verify/put_verifySequence" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x#/verify/put_verifySequence" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -334,7 +370,7 @@ mockServerClient("localhost", 1080)
       }
    ]
 }'</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/verify/put_verifySequence" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x#/verify/put_verifySequence" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 <button id="button_verify_sequence_of_reqs_using_openapi" class="accordion">verify request sequence received using openapi</button>
@@ -346,11 +382,11 @@ mockServerClient("localhost", 1080)
         request()
             .withPath("/status"),
         openAPI(
-            "org/mockserver/mock/openapi_petstore_example.json",
+            "org/mockserver/openapi/openapi_petstore_example.json",
             "listPets"
         ),
         openAPI(
-            "org/mockserver/mock/openapi_petstore_example.json",
+            "org/mockserver/openapi/openapi_petstore_example.json",
             "showPetById"
         )
     );</code></pre>
@@ -364,11 +400,11 @@ mockServerClient("localhost", 1080)
             'path': '/status'
         },
         {
-            'specUrlOrPayload': 'org/mockserver/mock/openapi_petstore_example.json',
+            'specUrlOrPayload': 'org/mockserver/openapi/openapi_petstore_example.json',
             'operationId': 'listPets'
         },
         {
-            'specUrlOrPayload': 'org/mockserver/mock/openapi_petstore_example.json',
+            'specUrlOrPayload': 'org/mockserver/openapi/openapi_petstore_example.json',
             'operationId': 'showPetById'
         }
     )
@@ -380,7 +416,7 @@ mockServerClient("localhost", 1080)
             console.log(error);
         }
     );</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/verify/put_verifySequence" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x#/verify/put_verifySequence" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -390,16 +426,66 @@ mockServerClient("localhost", 1080)
          "path": "/status"
       },
       {
-         "specUrlOrPayload": "org/mockserver/mock/openapi_petstore_example.json",
+         "specUrlOrPayload": "org/mockserver/openapi/openapi_petstore_example.json",
          "operationId": "listPets"
       },
       {
-         "specUrlOrPayload": "org/mockserver/mock/openapi_petstore_example.json",
+         "specUrlOrPayload": "org/mockserver/openapi/openapi_petstore_example.json",
          "operationId": "showPetById"
       }
    ]
 }'</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/verify/put_verifySequence" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x#/verify/put_verifySequence" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+<button id="button_verify_sequence_of_reqs_using_expectation_ids" class="accordion">verify request sequence received using expectation ids</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .verify(
+        "31e4ca35-66c6-4645-afeb-6e66c4ca0559",
+        "66c6ca35-ca35-66f5-8feb-5e6ac7ca0559",
+        "ca3531e4-23c8-ff45-88f5-4ca0c7ca0559"
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+    .verifySequenceById(
+        {
+            'id': '31e4ca35-66c6-4645-afeb-6e66c4ca0559'
+        },
+        {
+            'id': '66c6ca35-ca35-66f5-8feb-5e6ac7ca0559'
+        },
+        {
+            'id': 'ca3531e4-23c8-ff45-88f5-4ca0c7ca0559'
+        }
+    )
+    .then(
+        function () {
+            console.log("request sequence found in the order specified");
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x#/verify/put_verifySequence" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/verifySequence" -d '{
+            "id": "31e4ca35-66c6-4645-afeb-6e66c4ca0559"
+        },
+        {
+            "id": "66c6ca35-ca35-66f5-8feb-5e6ac7ca0559"
+        },
+        {
+            "id": "ca3531e4-23c8-ff45-88f5-4ca0c7ca0559"
+        }'</code></pre>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x#/verify/put_verifySequence" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 </div>

@@ -23,7 +23,7 @@ import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
-import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
+import static org.mockserver.model.MediaType.DEFAULT_TEXT_HTTP_CHARACTER_SET;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.RegexBody.regex;
@@ -52,11 +52,11 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
         httpRequest.withHeader(new Header(CONTENT_TYPE.toString(), MediaType.create("text", "plain").toString()));
 
         // when
-        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
-        assertThat(fullHttpRequest.content().toString(DEFAULT_HTTP_CHARACTER_SET), is("A normal string with ASCII characters"));
+        assertThat(fullHttpRequest.content().toString(DEFAULT_TEXT_HTTP_CHARACTER_SET), is("A normal string with ASCII characters"));
     }
 
     @Test
@@ -65,25 +65,25 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
         httpRequest.withBody("A normal string with ASCII characters");
 
         // when
-        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
-        assertThat(fullHttpRequest.content().toString(DEFAULT_HTTP_CHARACTER_SET), is("A normal string with ASCII characters"));
+        assertThat(fullHttpRequest.content().toString(DEFAULT_TEXT_HTTP_CHARACTER_SET), is("A normal string with ASCII characters"));
     }
 
     @Test
     public void shouldTransmitUnencodableCharacters() {
         // given
-        httpRequest.withBody("Euro sign: \u20AC", DEFAULT_HTTP_CHARACTER_SET);
+        httpRequest.withBody("Euro sign: \u20AC", DEFAULT_TEXT_HTTP_CHARACTER_SET);
         httpRequest.withHeader(new Header(CONTENT_TYPE.toString(), MediaType.create("text", "plain").toString()));
 
         // when
-        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
-        assertThat(fullHttpRequest.content().toString(DEFAULT_HTTP_CHARACTER_SET), is(new String("Euro sign: \u20AC".getBytes(DEFAULT_HTTP_CHARACTER_SET), DEFAULT_HTTP_CHARACTER_SET)));
+        assertThat(fullHttpRequest.content().toString(DEFAULT_TEXT_HTTP_CHARACTER_SET), is(new String("Euro sign: \u20AC".getBytes(DEFAULT_TEXT_HTTP_CHARACTER_SET), DEFAULT_TEXT_HTTP_CHARACTER_SET)));
     }
 
     @Test
@@ -93,11 +93,11 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
         httpRequest.withHeader(new Header(CONTENT_TYPE.toString(), "text/plain; charset=invalid-charset"));
 
         // when
-        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
-        assertThat(fullHttpRequest.content().toString(DEFAULT_HTTP_CHARACTER_SET), is("A normal string with ASCII characters"));
+        assertThat(fullHttpRequest.content().toString(DEFAULT_TEXT_HTTP_CHARACTER_SET), is("A normal string with ASCII characters"));
     }
 
     @Test
@@ -107,7 +107,7 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
         httpRequest.withHeader(new Header(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_8).toString()));
 
         // when
-        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
@@ -121,7 +121,7 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
         httpRequest.withHeader(new Header(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_16).toString()));
 
         // when
-        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
@@ -134,7 +134,7 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
         httpRequest.withBody("我说中国话", StandardCharsets.UTF_16);
 
         // when
-        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
@@ -148,7 +148,7 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
         httpRequest.withBody("{ \"some_field\": \"我说中国话\" }").withHeader(CONTENT_TYPE.toString(), MediaType.JSON_UTF_8.toString());
 
         // when
-        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpResponse = (FullHttpRequest) output.get(0);
@@ -162,7 +162,7 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
         httpRequest.withBody(json("{ \"some_field\": \"我说中国话\" }", StandardCharsets.UTF_8));
 
         // when
-        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpResponse = (FullHttpRequest) output.get(0);
@@ -177,7 +177,7 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
         httpRequest.withHeader(new Header(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.US_ASCII).toString()));
 
         // when
-        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
@@ -187,7 +187,7 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
     @Test
     public void shouldReturnNoDefaultContentTypeWhenNoBodySpecified() {
         // when
-        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpResponse = (FullHttpRequest) output.get(0);
@@ -200,7 +200,7 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
         httpRequest.withBody("somebody");
 
         // when
-        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpResponse = (FullHttpRequest) output.get(0);
@@ -213,7 +213,7 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
         httpRequest.withBody(exact("somebody", MediaType.PLAIN_TEXT_UTF_8));
 
         // when
-        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpResponse = (FullHttpRequest) output.get(0);
@@ -226,7 +226,7 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
         httpRequest.withBody(exact("somebody", StandardCharsets.UTF_16));
 
         // when
-        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpResponse = (FullHttpRequest) output.get(0);
@@ -239,7 +239,7 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
         httpRequest.withBody(json("somebody"));
 
         // when
-        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpResponse = (FullHttpRequest) output.get(0);
@@ -252,7 +252,7 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
         httpRequest.withBody(json("somebody", MediaType.JSON_UTF_8));
 
         // when
-        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpResponse = (FullHttpRequest) output.get(0);
@@ -265,7 +265,7 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
         httpRequest.withBody(binary("somebody".getBytes(UTF_8)));
 
         // when
-        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpResponse = (FullHttpRequest) output.get(0);
@@ -278,7 +278,7 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
         httpRequest.withBody(binary("somebody".getBytes(UTF_8), MediaType.QUICKTIME));
 
         // when
-        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpResponse = (FullHttpRequest) output.get(0);
@@ -291,7 +291,7 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
         httpRequest.withBody(xml("somebody"));
 
         // when
-        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpResponse = (FullHttpRequest) output.get(0);
@@ -304,7 +304,7 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
         httpRequest.withBody(xml("somebody", MediaType.XML_UTF_8));
 
         // when
-        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpResponse = (FullHttpRequest) output.get(0);
@@ -317,7 +317,7 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
         httpRequest.withBody(jsonSchema("somebody"));
 
         // when
-        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpResponse = (FullHttpRequest) output.get(0);
@@ -330,7 +330,7 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
         httpRequest.withBody(regex("some_value"));
 
         // when
-        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpResponse = (FullHttpRequest) output.get(0);
@@ -345,7 +345,7 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
             .withHeaders(new Header("Content-Type", "some/value"));
 
         // when
-        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpResponse = (FullHttpRequest) output.get(0);

@@ -2,19 +2,17 @@ package org.mockserver.proxyconfiguration;
 
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.base64.Base64;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.ObjectWithJsonToString;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.PROXY_AUTHORIZATION;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.configuration.ConfigurationProperties.*;
 
 /**
  * @author jamesdbloom
@@ -33,32 +31,22 @@ public class ProxyConfiguration extends ObjectWithJsonToString {
         this.password = password;
     }
 
-    @SuppressWarnings("deprecation")
-    public static List<ProxyConfiguration> proxyConfiguration() {
+    public static List<ProxyConfiguration> proxyConfiguration(Configuration configuration) {
         List<ProxyConfiguration> proxyConfigurations = new ArrayList<>();
-        String username = forwardProxyAuthenticationUsername();
-        String password = forwardProxyAuthenticationPassword();
+        String username = configuration.forwardProxyAuthenticationUsername();
+        String password = configuration.forwardProxyAuthenticationPassword();
 
-        InetSocketAddress httpProxySocketAddress = forwardHttpProxy();
-        if (httpProxySocketAddress == null) {
-            httpProxySocketAddress = httpProxy();
-        }
+        InetSocketAddress httpProxySocketAddress = configuration.forwardHttpProxy();
         if (httpProxySocketAddress != null) {
             proxyConfigurations.add(proxyConfiguration(Type.HTTP, httpProxySocketAddress, username, password));
         }
 
-        InetSocketAddress httpsProxySocketAddress = forwardHttpsProxy();
-        if (httpsProxySocketAddress == null) {
-            httpsProxySocketAddress = httpsProxy();
-        }
+        InetSocketAddress httpsProxySocketAddress = configuration.forwardHttpsProxy();
         if (httpsProxySocketAddress != null) {
             proxyConfigurations.add(proxyConfiguration(Type.HTTPS, httpsProxySocketAddress, username, password));
         }
 
-        InetSocketAddress socksProxySocketAddress = forwardSocksProxy();
-        if (socksProxySocketAddress == null) {
-            socksProxySocketAddress = socksProxy();
-        }
+        InetSocketAddress socksProxySocketAddress = configuration.forwardSocksProxy();
         if (socksProxySocketAddress != null) {
             if (proxyConfigurations.isEmpty()) {
                 proxyConfigurations.add(proxyConfiguration(Type.SOCKS5, socksProxySocketAddress, username, password));
@@ -115,8 +103,8 @@ public class ProxyConfiguration extends ObjectWithJsonToString {
     public ProxyConfiguration addProxyAuthenticationHeader(HttpRequest httpRequest) {
         if (isNotBlank(username) && isNotBlank(password)) {
             httpRequest.withHeader(
-                    PROXY_AUTHORIZATION.toString(),
-                    "Basic " + Base64.encode(Unpooled.copiedBuffer(username + ':' + password, StandardCharsets.UTF_8), false).toString(StandardCharsets.US_ASCII)
+                PROXY_AUTHORIZATION.toString(),
+                "Basic " + Base64.encode(Unpooled.copiedBuffer(username + ':' + password, StandardCharsets.UTF_8), false).toString(StandardCharsets.US_ASCII)
             );
         }
         return this;

@@ -3,7 +3,7 @@ package org.mockserver.log;
 import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 import org.mockserver.collections.CircularConcurrentLinkedDeque;
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
@@ -42,10 +42,12 @@ import static org.mockserver.log.model.LogEntryMessages.VERIFICATION_REQUEST_SEQ
 import static org.mockserver.logging.MockServerLogger.writeToSystemOut;
 import static org.mockserver.mock.HttpState.getPort;
 import static org.mockserver.model.HttpRequest.request;
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("FieldMayBeFinal")
 public class MockServerEventLog extends MockServerEventLogNotifier {
 
     private static final Logger logger = LoggerFactory.getLogger(MockServerEventLog.class);
@@ -71,19 +73,22 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             .withHttpResponse(logEntry.getHttpResponse())
             .withTimestamp(logEntry.getTimestamp());
     private static final String[] EXCLUDED_FIELDS = {"id", "disruptor"};
+    private final Configuration configuration;
     private MockServerLogger mockServerLogger;
-    private CircularConcurrentLinkedDeque<LogEntry> eventLog = new CircularConcurrentLinkedDeque<>(ConfigurationProperties.maxLogEntries(), LogEntry::clear);
+    private CircularConcurrentLinkedDeque<LogEntry> eventLog;
     private MatcherBuilder matcherBuilder;
     private RequestDefinitionSerializer requestDefinitionSerializer;
     private final boolean asynchronousEventProcessing;
     private Disruptor<LogEntry> disruptor;
 
-    public MockServerEventLog(MockServerLogger mockServerLogger, Scheduler scheduler, boolean asynchronousEventProcessing) {
+    public MockServerEventLog(Configuration configuration, MockServerLogger mockServerLogger, Scheduler scheduler, boolean asynchronousEventProcessing) {
         super(scheduler);
+        this.configuration = configuration;
         this.mockServerLogger = mockServerLogger;
-        this.matcherBuilder = new MatcherBuilder(mockServerLogger);
+        this.matcherBuilder = new MatcherBuilder(configuration, mockServerLogger);
         this.requestDefinitionSerializer = new RequestDefinitionSerializer(mockServerLogger);
         this.asynchronousEventProcessing = asynchronousEventProcessing;
+        this.eventLog = new CircularConcurrentLinkedDeque<>(configuration.maxLogEntries(), LogEntry::clear);
         startRingBuffer();
     }
 
@@ -105,12 +110,8 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         return eventLog.size();
     }
 
-    public void setMaxSize(int maxSize) {
-        eventLog.setMaxSize(maxSize);
-    }
-
     private void startRingBuffer() {
-        disruptor = new Disruptor<>(LogEntry::new, ConfigurationProperties.ringBufferSize(), new Scheduler.SchedulerThreadFactory("EventLog"));
+        disruptor = new Disruptor<>(LogEntry::new, configuration.ringBufferSize(), new Scheduler.SchedulerThreadFactory("EventLog"));
 
         final ExceptionHandler<LogEntry> errorHandler = new ExceptionHandler<LogEntry>() {
             @Override
@@ -135,6 +136,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                 processLogEntry(logEntry);
             } else {
                 logEntry.getConsumer().run();
+                logEntry.clear();
             }
         });
 
@@ -376,8 +378,13 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                         retrieveRequests(null, allRequests -> {
                             String failureMessage;
                             String serializedRequestToBeVerified = requestDefinitionSerializer.serialize(true, verification.getHttpRequest());
-                            String serializedAllRequestInLog = allRequests.size() == 1 ? requestDefinitionSerializer.serialize(true, allRequests.get(0)) : requestDefinitionSerializer.serialize(true, allRequests);
-                            failureMessage = "Request not found " + verification.getTimes() + ", expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
+                            Integer maximumNumberOfRequestToReturnInVerificationFailure = verification.getMaximumNumberOfRequestToReturnInVerificationFailure() != null ? verification.getMaximumNumberOfRequestToReturnInVerificationFailure() : configuration.maximumNumberOfRequestToReturnInVerificationFailure();
+                            if (allRequests.size() < maximumNumberOfRequestToReturnInVerificationFailure) {
+                                String serializedAllRequestInLog = allRequests.size() == 1 ? requestDefinitionSerializer.serialize(true, allRequests.get(0)) : requestDefinitionSerializer.serialize(true, allRequests);
+                                failureMessage = "Request not found " + verification.getTimes() + ", expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
+                            } else {
+                                failureMessage = "Request not found " + verification.getTimes() + ", expected:<" + serializedRequestToBeVerified + "> but was not found, found " + allRequests.size() + " other requests";
+                            }
                             final Object[] arguments = new Object[]{verification.getHttpRequest(), allRequests.size() == 1 ? allRequests.get(0) : allRequests};
                             if (MockServerLogger.isEnabled(Level.INFO)) {
                                 mockServerLogger.logEvent(
@@ -460,8 +467,13 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                             }
                             if (!foundRequest) {
                                 String serializedRequestToBeVerified = requestDefinitionSerializer.serialize(true, verificationSequence.getHttpRequests());
-                                String serializedAllRequestInLog = allRequests.size() == 1 ? requestDefinitionSerializer.serialize(true, allRequests.get(0)) : requestDefinitionSerializer.serialize(true, allRequests);
-                                failureMessage = "Request sequence not found, expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
+                                Integer maximumNumberOfRequestToReturnInVerificationFailure = verificationSequence.getMaximumNumberOfRequestToReturnInVerificationFailure() != null ? verificationSequence.getMaximumNumberOfRequestToReturnInVerificationFailure() : configuration.maximumNumberOfRequestToReturnInVerificationFailure();
+                                if (allRequests.size() < maximumNumberOfRequestToReturnInVerificationFailure) {
+                                    String serializedAllRequestInLog = allRequests.size() == 1 ? requestDefinitionSerializer.serialize(true, allRequests.get(0)) : requestDefinitionSerializer.serialize(true, allRequests);
+                                    failureMessage = "Request sequence not found, expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
+                                } else {
+                                    failureMessage = "Request sequence not found, expected:<" + serializedRequestToBeVerified + "> but was not found, found " + allRequests.size() + " other requests";
+                                }
                                 final Object[] arguments = new Object[]{verificationSequence.getHttpRequests(), allRequests.size() == 1 ? allRequests.get(0) : allRequests};
                                 if (MockServerLogger.isEnabled(Level.INFO)) {
                                     mockServerLogger.logEvent(

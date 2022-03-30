@@ -7,7 +7,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.base64.Base64;
 import io.netty.util.AttributeKey;
 import org.apache.commons.text.StringEscapeUtils;
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.dashboard.DashboardHandler;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.log.model.LogEntry;
@@ -34,7 +34,6 @@ import java.util.Set;
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.configuration.ConfigurationProperties.addSubjectAlternativeName;
 import static org.mockserver.exception.ExceptionHandling.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
 import static org.mockserver.log.model.LogEntry.LogMessageType.AUTHENTICATION_FAILED;
@@ -56,12 +55,14 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
     private MockServerLogger mockServerLogger;
     private HttpState httpState;
     private PortBindingSerializer portBindingSerializer;
+    private final Configuration configuration;
     private LifeCycle server;
     private HttpActionHandler httpActionHandler;
     private DashboardHandler dashboardHandler = new DashboardHandler();
 
-    public HttpRequestHandler(LifeCycle server, HttpState httpState, HttpActionHandler httpActionHandler) {
+    public HttpRequestHandler(Configuration configuration, LifeCycle server, HttpState httpState, HttpActionHandler httpActionHandler) {
         super(false);
+        this.configuration = configuration;
         this.server = server;
         this.httpState = httpState;
         this.mockServerLogger = httpState.getMockServerLogger();
@@ -88,14 +89,14 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
     @Override
     protected void channelRead0(final ChannelHandlerContext ctx, final HttpRequest request) {
 
-        ResponseWriter responseWriter = new NettyResponseWriter(mockServerLogger, ctx, httpState.getScheduler());
+        ResponseWriter responseWriter = new NettyResponseWriter(configuration, mockServerLogger, ctx, httpState.getScheduler());
         try {
-            addSubjectAlternativeName(request.getFirstHeader(HOST.toString()));
+            configuration.addSubjectAlternativeName(request.getFirstHeader(HOST.toString()));
 
             if (!httpState.handle(request, responseWriter, false)) {
 
                 if (request.matches("PUT", PATH_PREFIX + "/status", "/status") ||
-                    isNotBlank(ConfigurationProperties.livenessHttpGetPath()) && request.matches("GET", ConfigurationProperties.livenessHttpGetPath())) {
+                    isNotBlank(configuration.livenessHttpGetPath()) && request.matches("GET", configuration.livenessHttpGetPath())) {
 
                     responseWriter.writeResponse(request, OK, portBindingSerializer.serialize(portBinding(server.getLocalPorts())), "application/json");
 
@@ -126,13 +127,13 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
 
                 } else if (request.getMethod().getValue().equals("CONNECT")) {
 
-                    String username = ConfigurationProperties.proxyAuthenticationUsername();
-                    String password = ConfigurationProperties.proxyAuthenticationPassword();
+                    String username = configuration.proxyAuthenticationUsername();
+                    String password = configuration.proxyAuthenticationPassword();
                     if (isNotBlank(username) && isNotBlank(password) &&
                         !request.containsHeader(PROXY_AUTHORIZATION.toString(), "Basic " + Base64.encode(Unpooled.copiedBuffer(username + ':' + password, StandardCharsets.UTF_8), false).toString(StandardCharsets.US_ASCII))) {
                         HttpResponse response = response()
                             .withStatusCode(PROXY_AUTHENTICATION_REQUIRED.code())
-                            .withHeader(PROXY_AUTHENTICATE.toString(), "Basic realm=\"" + StringEscapeUtils.escapeJava(ConfigurationProperties.proxyAuthenticationRealm()) + "\", charset=\"UTF-8\"");
+                            .withHeader(PROXY_AUTHENTICATE.toString(), "Basic realm=\"" + StringEscapeUtils.escapeJava(configuration.proxyAuthenticationRealm()) + "\", charset=\"UTF-8\"");
                         ctx.writeAndFlush(response);
                         mockServerLogger.logEvent(
                             new LogEntry()
@@ -151,11 +152,11 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
                         enableSslUpstreamAndDownstream(ctx.channel());
                         // add Subject Alternative Name for SSL certificate
                         if (isNotBlank(request.getPath().getValue())) {
-                            server.getScheduler().submit(() -> addSubjectAlternativeName(request.getPath().getValue()));
+                            server.getScheduler().submit(() -> configuration.addSubjectAlternativeName(request.getPath().getValue()));
                         }
                         String[] hostParts = request.getPath().getValue().split(":");
                         int port = hostParts.length > 1 ? Integer.parseInt(hostParts[1]) : isSslEnabledUpstream(ctx.channel()) ? 443 : 80;
-                        ctx.pipeline().addLast(new HttpConnectHandler(server, mockServerLogger, hostParts[0], port));
+                        ctx.pipeline().addLast(new HttpConnectHandler(configuration, server, mockServerLogger, hostParts[0], port));
                         ctx.pipeline().remove(this);
                         ctx.fireChannelRead(request);
                     }

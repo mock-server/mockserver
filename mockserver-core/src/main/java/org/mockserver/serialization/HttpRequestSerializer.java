@@ -9,7 +9,7 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.serialization.model.HttpRequestDTO;
-import org.mockserver.templates.engine.model.HttpRequestTemplateObject;
+import org.mockserver.serialization.model.HttpRequestPrettyPrintedDTO;
 import org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator;
 import org.slf4j.event.Level;
 
@@ -29,7 +29,7 @@ import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_S
 @SuppressWarnings("FieldMayBeFinal")
 public class HttpRequestSerializer implements Serializer<HttpRequest> {
     private final MockServerLogger mockServerLogger;
-    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
+    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true, false);
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private JsonArraySerializer jsonArraySerializer = new JsonArraySerializer();
     private JsonSchemaHttpRequestValidator httpRequestValidator;
@@ -52,7 +52,7 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
     public String serialize(boolean prettyPrint, HttpRequest httpRequest) {
         try {
             if (prettyPrint) {
-                return objectWriter.writeValueAsString(new HttpRequestTemplateObject(httpRequest));
+                return objectWriter.writeValueAsString(new HttpRequestPrettyPrintedDTO(httpRequest));
             } else {
                 return objectWriter.writeValueAsString(new HttpRequestDTO(httpRequest));
             }
@@ -83,9 +83,9 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
         try {
             if (httpRequests != null && httpRequests.length > 0) {
                 if (prettyPrint) {
-                    HttpRequestTemplateObject[] httpRequestTemplateObjects = new HttpRequestTemplateObject[httpRequests.length];
+                    HttpRequestPrettyPrintedDTO[] httpRequestTemplateObjects = new HttpRequestPrettyPrintedDTO[httpRequests.length];
                     for (int i = 0; i < httpRequests.length; i++) {
-                        httpRequestTemplateObjects[i] = new HttpRequestTemplateObject(httpRequests[i]);
+                        httpRequestTemplateObjects[i] = new HttpRequestPrettyPrintedDTO(httpRequests[i]);
                     }
                     return objectWriter.writeValueAsString(httpRequestTemplateObjects);
                 } else {

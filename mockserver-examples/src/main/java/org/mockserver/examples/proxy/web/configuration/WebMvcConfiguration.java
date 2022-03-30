@@ -21,6 +21,7 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver;
  */
 @Configuration
 @EnableWebMvc
+@SuppressWarnings("deprecation")
 @ComponentScan(basePackages = {"org.mockserver.examples.proxy.web"})
 public class WebMvcConfiguration extends WebMvcConfigurerAdapter {
 

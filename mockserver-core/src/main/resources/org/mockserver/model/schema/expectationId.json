@@ -1,10 +1,13 @@
 {
-  "title": "expectation id",
+  "title": "pointer to existing expectation",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "id": {
       "type": "string"
     }
-  }
+  },
+  "required": [
+    "id"
+  ]
 }

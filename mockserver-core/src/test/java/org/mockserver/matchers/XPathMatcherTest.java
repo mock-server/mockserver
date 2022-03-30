@@ -2,9 +2,11 @@ package org.mockserver.matchers;
 
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
+import com.google.common.collect.ImmutableMap;
 
 import static junit.framework.TestCase.*;
 import static org.mockserver.matchers.NotMatcher.notMatcher;
+
 
 /**
  * @author jamesdbloom
@@ -94,4 +96,21 @@ public class XPathMatcherTest {
         MockServerLogger mockServerLogger = new MockServerLogger();
         assertEquals(new XPathMatcher(mockServerLogger, "some_value"), new XPathMatcher(mockServerLogger, "some_value"));
     }
+
+    @Test
+    public void shouldMatchMatchingXPathWithNamespaces() {
+        String matched = "" +
+                "<foo:root xmlns:foo='http://foo.example.com' xmlns:bar='http://bar.example.com'>" +
+                "   <bar:content>some_key</bar:content>" +
+                "</foo:root>";
+        assertFalse(new XPathMatcher(new MockServerLogger(),"//content").matches(null, matched));
+        assertTrue(new XPathMatcher(new MockServerLogger(),"//*[local-name()='content']").matches(null, matched));
+
+        // xml is not parsed namespac aware, so this should fail
+        assertFalse(new XPathMatcher(new MockServerLogger(),"//*[local-name()='content' and namespace-uri()='http://bar.example.com']").matches(null, matched));
+        
+        // when using namespace prefixes, xml is parsed as namespace aware
+        assertTrue(new XPathMatcher(new MockServerLogger(),"//bar:content", ImmutableMap.of("bar","http://bar.example.com")).matches(null, matched));      
+    }
+
 }

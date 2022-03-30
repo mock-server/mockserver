@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
+import static org.mockserver.model.MediaType.DEFAULT_TEXT_HTTP_CHARACTER_SET;
 
 /**
  * @author jamesdbloom
@@ -37,7 +37,7 @@ public class StringBody extends BodyWithContentType<String> {
         this.subString = subString;
 
         if (rawBytes == null && value != null) {
-            this.rawBytes = value.getBytes(determineCharacterSet(contentType, DEFAULT_HTTP_CHARACTER_SET));
+            this.rawBytes = value.getBytes(determineCharacterSet(contentType, DEFAULT_TEXT_HTTP_CHARACTER_SET));
         } else {
             this.rawBytes = rawBytes;
         }

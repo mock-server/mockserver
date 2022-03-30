@@ -12,6 +12,7 @@ import java.util.List;
 public class VerificationSequenceDTO extends ObjectWithReflectiveEqualsHashCodeToString implements DTO<VerificationSequence> {
     private List<RequestDefinitionDTO> httpRequests = new ArrayList<>();
     private List<ExpectationId> expectationIds = new ArrayList<>();
+    private Integer maximumNumberOfRequestToReturnInVerificationFailure;
 
     public VerificationSequenceDTO(VerificationSequence verification) {
         if (verification != null) {
@@ -23,6 +24,7 @@ public class VerificationSequenceDTO extends ObjectWithReflectiveEqualsHashCodeT
                 }
             }
             expectationIds.addAll(verification.getExpectationIds());
+            maximumNumberOfRequestToReturnInVerificationFailure = verification.getMaximumNumberOfRequestToReturnInVerificationFailure();
         }
     }
 
@@ -36,7 +38,8 @@ public class VerificationSequenceDTO extends ObjectWithReflectiveEqualsHashCodeT
         }
         return new VerificationSequence()
             .withRequests(httpRequests)
-            .withExpectationIds(expectationIds);
+            .withExpectationIds(expectationIds)
+            .withMaximumNumberOfRequestToReturnInVerificationFailure(maximumNumberOfRequestToReturnInVerificationFailure);
     }
 
     public List<RequestDefinitionDTO> getHttpRequests() {
@@ -54,6 +57,15 @@ public class VerificationSequenceDTO extends ObjectWithReflectiveEqualsHashCodeT
 
     public VerificationSequenceDTO setExpectationIds(List<ExpectationId> expectationIds) {
         this.expectationIds = expectationIds;
+        return this;
+    }
+
+    public Integer getMaximumNumberOfRequestToReturnInVerificationFailure() {
+        return maximumNumberOfRequestToReturnInVerificationFailure;
+    }
+
+    public VerificationSequenceDTO setMaximumNumberOfRequestToReturnInVerificationFailure(Integer maximumNumberOfRequestToReturnInVerificationFailure) {
+        this.maximumNumberOfRequestToReturnInVerificationFailure = maximumNumberOfRequestToReturnInVerificationFailure;
         return this;
     }
 }

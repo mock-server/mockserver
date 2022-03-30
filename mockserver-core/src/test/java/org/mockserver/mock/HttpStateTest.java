@@ -10,9 +10,10 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.file.FilePath;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.MockServerEventLog;
-import org.mockserver.log.TimeService;
+import org.mockserver.time.EpochService;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
@@ -25,7 +26,6 @@ import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.*;
 import org.mockserver.serialization.java.ExpectationToJavaSerializer;
-import org.mockserver.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.event.Level;
@@ -42,18 +42,19 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.log.model.LogEntry.LOG_DATE_FORMAT;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.log.model.LogEntryMessages.RECEIVED_REQUEST_MESSAGE_FORMAT;
 import static org.mockserver.mock.Expectation.when;
 import static org.mockserver.mock.OpenAPIExpectation.openAPIExpectation;
+import static org.mockserver.model.ExpectationId.expectationId;
 import static org.mockserver.model.Format.LOG_ENTRIES;
 import static org.mockserver.model.HttpError.error;
 import static org.mockserver.model.HttpRequest.request;
@@ -71,9 +72,10 @@ public class HttpStateTest {
 
     @Rule
     public final ExpectedException exception = ExpectedException.none();
-    private final HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(new MockServerLogger());
-    private final HttpRequestToJavaSerializer httpRequestToJavaSerializer = new HttpRequestToJavaSerializer();
+    private final RequestDefinitionSerializer requestDefinitionSerializer = new RequestDefinitionSerializer(new MockServerLogger());
+    private final ExpectationIdSerializer expectationIdSerializer = new ExpectationIdSerializer(new MockServerLogger());
     private final ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
+    private final ExpectationSerializer expectationSerializerWithDefaultFields = new ExpectationSerializer(new MockServerLogger(), true);
     private final OpenAPIExpectationSerializer openAPIExpectationSerializer = new OpenAPIExpectationSerializer(new MockServerLogger());
     private final ExpectationToJavaSerializer expectationToJavaSerializer = new ExpectationToJavaSerializer();
     private final PortBindingSerializer portBindingSerializer = new PortBindingSerializer(new MockServerLogger());
@@ -85,18 +87,22 @@ public class HttpStateTest {
 
     @BeforeClass
     public static void fixTime() {
-        TimeService.fixedTime = true;
+        EpochService.fixedTime = true;
     }
 
     @Before
     public void prepareTestFixture() {
         Scheduler scheduler = mock(Scheduler.class);
-        httpState = new HttpState(new MockServerLogger(), scheduler);
+        httpState = new HttpState(configuration(), new MockServerLogger(), scheduler);
         openMocks(this);
     }
 
     private static class FakeResponseWriter extends ResponseWriter {
         public HttpResponse response;
+
+        protected FakeResponseWriter() {
+            super(configuration(), new MockServerLogger());
+        }
 
         @Override
         public void sendResponse(HttpRequest request, HttpResponse response) {
@@ -118,14 +124,14 @@ public class HttpStateTest {
         HttpRequest expectationRetrieveRequestsRequest = request("/mockserver/retrieve")
             .withMethod("PUT")
             .withBody(
-                httpRequestSerializer.serialize(request("request_one"))
+                requestDefinitionSerializer.serialize(request("request_one"))
             );
         boolean handle = httpState.handle(expectationRetrieveRequestsRequest, responseWriter, false);
 
         // then
         assertThat(handle, is(true));
         assertThat(responseWriter.response.getStatusCode(), is(200));
-        assertThat(responseWriter.response.getBodyAsString(), is(httpRequestSerializer.serialize(true, Collections.singletonList(
+        assertThat(responseWriter.response.getBodyAsString(), is(requestDefinitionSerializer.serialize(true, Collections.singletonList(
             request("request_one")
         ))));
     }
@@ -142,7 +148,7 @@ public class HttpStateTest {
         HttpRequest clearRequest = request("/mockserver/clear")
             .withMethod("PUT")
             .withBody(
-                httpRequestSerializer.serialize(request("request_one"))
+                requestDefinitionSerializer.serialize(request("request_one"))
             );
         FakeResponseWriter responseWriter = new FakeResponseWriter();
 
@@ -157,7 +163,7 @@ public class HttpStateTest {
         assertThat(httpState.retrieve(request("/mockserver/retrieve")
             .withMethod("PUT")
             .withBody(
-                httpRequestSerializer.serialize(request("request_one"))
+                requestDefinitionSerializer.serialize(request("request_one"))
             )), is(response().withBody("[]", MediaType.JSON_UTF_8).withStatusCode(200)));
     }
 
@@ -225,14 +231,14 @@ public class HttpStateTest {
             .withMethod("PUT")
             .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
             .withBody(
-                httpRequestSerializer.serialize(request("request_one"))
+                requestDefinitionSerializer.serialize(request("request_one"))
             );
         boolean handle = httpState.handle(expectationRetrieveExpectationsRequest, responseWriter, false);
 
         // then
         assertThat(handle, is(true));
         assertThat(responseWriter.response.getStatusCode(), is(200));
-        assertThat(responseWriter.response.getBodyAsString(), is(expectationSerializer.serialize(Collections.singletonList(
+        assertThat(responseWriter.response.getBodyAsString(), is(expectationSerializerWithDefaultFields.serialize(Collections.singletonList(
             new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited(), 0).withId("key_one").thenRespond(response("response_one"))
         ))));
     }
@@ -251,7 +257,7 @@ public class HttpStateTest {
                 .withMethod("PUT")
                 .withQueryStringParameter("type", RetrieveType.LOGS.name())
                 .withBody(
-                    httpRequestSerializer.serialize(request("request_one"))
+                    requestDefinitionSerializer.serialize(request("request_one"))
                 );
             boolean handle = httpState.handle(retrieveLogRequest, responseWriter, false);
 
@@ -260,7 +266,7 @@ public class HttpStateTest {
             assertThat(responseWriter.response.getStatusCode(), is(200));
             assertThat(
                 responseWriter.response.getBodyAsString(),
-                is(endsWith(LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
+                is(endsWith(LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"httpRequest\" : {" + NEW_LINE +
@@ -333,7 +339,7 @@ public class HttpStateTest {
         // given
         HttpRequest request = request("/mockserver/openapi").withMethod("PUT").withBody(
             openAPIExpectationSerializer.serialize(openAPIExpectation(
-                FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json")
+                FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json")
             ))
         );
         FakeResponseWriter responseWriter = new FakeResponseWriter();
@@ -345,7 +351,7 @@ public class HttpStateTest {
         assertThat(handle, is(true));
         assertThat(responseWriter.response.getStatusCode(), is(201));
         List<Expectation> actualExpectations = Arrays.asList(expectationSerializer.deserializeArray(responseWriter.response.getBodyAsString(), true));
-        shouldBuildPetStoreExpectations(ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json")).toPrettyString(), actualExpectations);
+        shouldBuildPetStoreExpectations(ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json")).toPrettyString(), actualExpectations);
     }
 
     @Test
@@ -353,7 +359,7 @@ public class HttpStateTest {
         // given
         HttpRequest request = request("/mockserver/openapi").withMethod("PUT").withBody(
             openAPIExpectationSerializer.serialize(openAPIExpectation(
-                FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json"), ImmutableMap.of(
+                FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json"), ImmutableMap.of(
                     "listPets", "500",
                     "createPets", "default",
                     "showPetById", "200"
@@ -369,7 +375,7 @@ public class HttpStateTest {
         assertThat(handle, is(true));
         assertThat(responseWriter.response.getStatusCode(), is(201));
         List<Expectation> actualExpectations = Arrays.asList(expectationSerializer.deserializeArray(responseWriter.response.getBodyAsString(), true));
-        shouldBuildPetStoreExpectationsWithSpecificResponses(ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json")).toPrettyString(), actualExpectations);
+        shouldBuildPetStoreExpectationsWithSpecificResponses(ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json")).toPrettyString(), actualExpectations);
     }
 
     @Test
@@ -406,7 +412,7 @@ public class HttpStateTest {
         // given
         HttpRequest request = request("/mockserver/openapi").withMethod("PUT").withBody(
             openAPIExpectationSerializer.serialize(openAPIExpectation(
-                FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.yaml")
+                FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.yaml")
             ))
         );
         FakeResponseWriter responseWriter = new FakeResponseWriter();
@@ -418,7 +424,7 @@ public class HttpStateTest {
         assertThat(handle, is(true));
         assertThat(responseWriter.response.getStatusCode(), is(201));
         List<Expectation> actualExpectations = Arrays.asList(expectationSerializer.deserializeArray(responseWriter.response.getBodyAsString(), true));
-        shouldBuildPetStoreExpectations(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.yaml"), actualExpectations);
+        shouldBuildPetStoreExpectations(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.yaml"), actualExpectations);
     }
 
     @Test
@@ -426,7 +432,7 @@ public class HttpStateTest {
         // given
         HttpRequest request = request("/mockserver/openapi").withMethod("PUT").withBody(
             openAPIExpectationSerializer.serialize(openAPIExpectation(
-                FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.yaml"), ImmutableMap.of(
+                FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.yaml"), ImmutableMap.of(
                     "listPets", "500",
                     "createPets", "default",
                     "showPetById", "200"
@@ -442,7 +448,7 @@ public class HttpStateTest {
         assertThat(handle, is(true));
         assertThat(responseWriter.response.getStatusCode(), is(201));
         List<Expectation> actualExpectations = Arrays.asList(expectationSerializer.deserializeArray(responseWriter.response.getBodyAsString(), true));
-        shouldBuildPetStoreExpectationsWithSpecificResponses(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.yaml"), actualExpectations);
+        shouldBuildPetStoreExpectationsWithSpecificResponses(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.yaml"), actualExpectations);
     }
 
     @Test
@@ -450,7 +456,7 @@ public class HttpStateTest {
         // given
         HttpRequest request = request("/mockserver/openapi").withMethod("PUT").withBody(
             openAPIExpectationSerializer.serialize(openAPIExpectation(
-                FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.yaml").substring(0, 100)
+                FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.yaml").substring(0, 100)
             ))
         );
         FakeResponseWriter responseWriter = new FakeResponseWriter();
@@ -480,7 +486,7 @@ public class HttpStateTest {
             .withMethod("PUT")
             .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
             .withBody(
-                httpRequestSerializer.serialize(request("request_one"))
+                requestDefinitionSerializer.serialize(request("request_one"))
             );
         FakeResponseWriter responseWriter = new FakeResponseWriter();
 
@@ -679,16 +685,16 @@ public class HttpStateTest {
     @Test
     public void shouldAddExceptionViaOpenApiClasspath() {
         // when
-        List<Expectation> actualExpectations = httpState.add(openAPIExpectation("org/mockserver/mock/openapi_petstore_example.json"));
+        List<Expectation> actualExpectations = httpState.add(openAPIExpectation("org/mockserver/openapi/openapi_petstore_example.json"));
 
         // then
-        shouldBuildPetStoreExpectations("org/mockserver/mock/openapi_petstore_example.json", actualExpectations);
+        shouldBuildPetStoreExpectations("org/mockserver/openapi/openapi_petstore_example.json", actualExpectations);
     }
 
     @Test
     public void shouldAddExceptionViaOpenApiUrl() {
         // given
-        URL schemaUrl = FileReader.getURL("org/mockserver/mock/openapi_petstore_example.json");
+        URL schemaUrl = FilePath.getURL("org/mockserver/openapi/openapi_petstore_example.json");
 
         // when
         List<Expectation> actualExpectations = httpState.add(openAPIExpectation(String.valueOf(schemaUrl)));
@@ -700,7 +706,7 @@ public class HttpStateTest {
     @Test
     public void shouldAddExceptionViaOpenApiSpec() {
         // given
-        String schema = FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json");
+        String schema = FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json");
 
         // when
         List<Expectation> actualExpectations = httpState.add(openAPIExpectation(schema));
@@ -763,20 +769,20 @@ public class HttpStateTest {
     @Test
     public void shouldAddExceptionViaOpenApiClasspathWithSpecificResponses() {
         // when
-        List<Expectation> actualExpectations = httpState.add(openAPIExpectation("org/mockserver/mock/openapi_petstore_example.json", ImmutableMap.of(
+        List<Expectation> actualExpectations = httpState.add(openAPIExpectation("org/mockserver/openapi/openapi_petstore_example.json", ImmutableMap.of(
             "listPets", "500",
             "createPets", "default",
             "showPetById", "200"
         )));
 
         // then
-        shouldBuildPetStoreExpectationsWithSpecificResponses("org/mockserver/mock/openapi_petstore_example.json", actualExpectations);
+        shouldBuildPetStoreExpectationsWithSpecificResponses("org/mockserver/openapi/openapi_petstore_example.json", actualExpectations);
     }
 
     @Test
     public void shouldAddExceptionViaOpenApiUrlWithSpecificResponses() {
         // given
-        URL schemaUrl = FileReader.getURL("org/mockserver/mock/openapi_petstore_example.json");
+        URL schemaUrl = FilePath.getURL("org/mockserver/openapi/openapi_petstore_example.json");
 
         // when
         List<Expectation> actualExpectations = httpState.add(openAPIExpectation(String.valueOf(schemaUrl), ImmutableMap.of(
@@ -792,7 +798,7 @@ public class HttpStateTest {
     @Test
     public void shouldAddExceptionViaOpenApiSpecWithSpecificResponses() {
         // given
-        String schema = FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json");
+        String schema = FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json");
 
         // when
         List<Expectation> actualExpectations = httpState.add(openAPIExpectation(schema, ImmutableMap.of(
@@ -881,12 +887,12 @@ public class HttpStateTest {
                             .withQueryStringParameter("type", "logs")
                     ),
                 is(response().withBody("" +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - cleared logs that match:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - cleared logs that match:" + NEW_LINE +
                         "" + NEW_LINE +
                         "  {}" + NEW_LINE +
                         "" + NEW_LINE +
                         "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - removed expectation:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - removed expectation:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"httpRequest\" : {" + NEW_LINE +
@@ -966,7 +972,7 @@ public class HttpStateTest {
                 .clear(
                     request()
                         .withQueryStringParameter("type", "all")
-                        .withBody(httpRequestSerializer.serialize(request("request_four")))
+                        .withBody(requestDefinitionSerializer.serialize(request("request_four")))
                 );
 
             // then - retrieves correct state
@@ -977,7 +983,7 @@ public class HttpStateTest {
                             .withQueryStringParameter("type", "logs")
                     ),
                 is(response().withBody("" +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"httpRequest\" : {" + NEW_LINE +
@@ -1003,20 +1009,20 @@ public class HttpStateTest {
                         "  key_one" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - some random" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - some random" + NEW_LINE +
                         NEW_LINE +
                         "  argument_one" + NEW_LINE +
                         NEW_LINE +
                         " message" + NEW_LINE +
                         "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - cleared logs that match:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - cleared logs that match:" + NEW_LINE +
                         "" + NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"path\" : \"request_four\"" + NEW_LINE +
                         "  }" + NEW_LINE +
                         "" + NEW_LINE +
                         "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - removed expectation:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - removed expectation:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"httpRequest\" : {" + NEW_LINE +
@@ -1042,7 +1048,7 @@ public class HttpStateTest {
                         "  key_four" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - cleared expectations that match:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - cleared expectations that match:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"path\" : \"request_four\"" + NEW_LINE +
@@ -1129,7 +1135,7 @@ public class HttpStateTest {
                             .withQueryStringParameter("type", "logs")
                     ),
                 is(response().withBody("" +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - cleared logs that match:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - cleared logs that match:" + NEW_LINE +
                         NEW_LINE +
                         "  {}" + NEW_LINE +
                         NEW_LINE,
@@ -1197,16 +1203,16 @@ public class HttpStateTest {
             .clear(
                 request()
                     .withQueryStringParameter("type", "expectations")
-                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+                    .withBody(requestDefinitionSerializer.serialize(request("request_one")))
             );
 
-        // then - correct log entries removed
+        // then - correct log entries not removed
         HttpResponse retrieve = httpState
             .retrieve(
                 request()
                     .withQueryStringParameter("type", REQUEST_RESPONSES.name())
                     .withQueryStringParameter("format", LOG_ENTRIES.name())
-                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+                    .withBody(requestDefinitionSerializer.serialize(request("request_one")))
             );
         assertThat(
             retrieve.getBodyAsString(),
@@ -1220,6 +1226,114 @@ public class HttpStateTest {
         // then - correct expectations removed
         assertThat(httpState.firstMatchingExpectation(request("request_one")), nullValue());
         assertThat(httpState.firstMatchingExpectation(request("request_two")), is(new Expectation(request("request_two")).thenRespond(response("response_two"))));
+    }
+
+    @Test
+    public void shouldClearExpectationsById() {
+        // given
+        httpState.add(new Expectation(request("request.*")).withId("one").thenRespond(response("response_one")));
+        httpState.add(new Expectation(request("request.*")).withId("two").thenRespond(response("response_two")));
+        httpState.log(
+            new LogEntry()
+                .setHttpRequest(request("request_one"))
+                .setHttpResponse(response("response_one"))
+                .setType(EXPECTATION_RESPONSE)
+        );
+        httpState.log(
+            new LogEntry()
+                .setHttpRequest(request("request_two"))
+                .setHttpError(error().withResponseBytes("response_two".getBytes(UTF_8)))
+                .setType(EXPECTATION_RESPONSE)
+        );
+
+        // then
+        assertThat(httpState.allMatchingExpectation(request()), containsInAnyOrder(
+            new Expectation(request("request.*")).thenRespond(response("response_one")),
+            new Expectation(request("request.*")).withId("two").thenRespond(response("response_two"))
+        ));
+
+        // when
+        httpState
+            .clear(
+                request()
+                    .withQueryStringParameter("type", "expectations")
+                    .withBody(expectationIdSerializer.serialize(expectationId("one")))
+            );
+
+        // then - correct log entries not removed
+        HttpResponse retrieve = httpState
+            .retrieve(
+                request()
+                    .withQueryStringParameter("type", REQUEST_RESPONSES.name())
+                    .withQueryStringParameter("format", LOG_ENTRIES.name())
+                    .withBody(requestDefinitionSerializer.serialize(request("request_one")))
+            );
+        assertThat(
+            retrieve.getBodyAsString(),
+            is(new LogEntrySerializer(new MockServerLogger()).serialize(Collections.singletonList(
+                new LogEntry()
+                    .setHttpRequest(request("request_one"))
+                    .setHttpResponse(response("response_one"))
+                    .setType(EXPECTATION_RESPONSE)
+            )))
+        );
+        // then - correct expectations removed
+        assertThat(httpState.allMatchingExpectation(request()), containsInAnyOrder(
+            new Expectation(request("request.*")).withId("two").thenRespond(response("response_two"))
+        ));
+    }
+
+    @Test
+    public void shouldClearAllExpectationsByRequestMatcher() {
+        // given
+        httpState.add(new Expectation(request("request.*")).withId("one").thenRespond(response("response_one")));
+        httpState.add(new Expectation(request("request.*")).withId("two").thenRespond(response("response_two")));
+        httpState.log(
+            new LogEntry()
+                .setHttpRequest(request("request_one"))
+                .setHttpResponse(response("response_one"))
+                .setType(EXPECTATION_RESPONSE)
+        );
+        httpState.log(
+            new LogEntry()
+                .setHttpRequest(request("request_two"))
+                .setHttpError(error().withResponseBytes("response_two".getBytes(UTF_8)))
+                .setType(EXPECTATION_RESPONSE)
+        );
+
+        // then
+        assertThat(httpState.allMatchingExpectation(request()), containsInAnyOrder(
+            new Expectation(request("request.*")).thenRespond(response("response_one")),
+            new Expectation(request("request.*")).withId("two").thenRespond(response("response_two"))
+        ));
+
+        // when
+        httpState
+            .clear(
+                request()
+                    .withQueryStringParameter("type", "expectations")
+                    .withBody(requestDefinitionSerializer.serialize(request("request.*")))
+            );
+
+        // then - correct log entries not removed
+        HttpResponse retrieve = httpState
+            .retrieve(
+                request()
+                    .withQueryStringParameter("type", REQUEST_RESPONSES.name())
+                    .withQueryStringParameter("format", LOG_ENTRIES.name())
+                    .withBody(requestDefinitionSerializer.serialize(request("request_one")))
+            );
+        assertThat(
+            retrieve.getBodyAsString(),
+            is(new LogEntrySerializer(new MockServerLogger()).serialize(Collections.singletonList(
+                new LogEntry()
+                    .setHttpRequest(request("request_one"))
+                    .setHttpResponse(response("response_one"))
+                    .setType(EXPECTATION_RESPONSE)
+            )))
+        );
+        // then - correct expectations removed
+        assertThat(httpState.allMatchingExpectation(request()), emptyIterable());
     }
 
     @Test
@@ -1255,12 +1369,12 @@ public class HttpStateTest {
         HttpResponse response = httpState
             .retrieve(
                 request()
-                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+                    .withBody(requestDefinitionSerializer.serialize(request("request_one")))
             );
 
         // then
         assertThat(response,
-            is(response().withBody(httpRequestSerializer.serialize(Arrays.asList(
+            is(response().withBody(requestDefinitionSerializer.serialize(Arrays.asList(
                 request("request_one"),
                 request("request_one")
             )), MediaType.JSON_UTF_8).withStatusCode(200))
@@ -1303,7 +1417,7 @@ public class HttpStateTest {
             .retrieve(
                 request()
                     .withQueryStringParameter("format", "log_entries")
-                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+                    .withBody(requestDefinitionSerializer.serialize(request("request_one")))
             );
 
         // then
@@ -1349,12 +1463,12 @@ public class HttpStateTest {
             .retrieve(
                 request()
                     .withQueryStringParameter("format", "java")
-                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+                    .withBody(requestDefinitionSerializer.serialize(request("request_one")))
             );
 
         // then
         assertThat(response,
-            is(response().withBody(httpRequestSerializer.serialize(Arrays.asList(
+            is(response().withBody(requestDefinitionSerializer.serialize(Arrays.asList(
                 request("request_one"),
                 request("request_one")
             )), MediaType.create("application", "java").withCharset(UTF_8)).withStatusCode(200))
@@ -1388,7 +1502,7 @@ public class HttpStateTest {
             .retrieve(
                 request()
                     .withQueryStringParameter("type", "request_responses")
-                    .withBody(httpRequestSerializer.serialize(request("request_.*")))
+                    .withBody(requestDefinitionSerializer.serialize(request("request_.*")))
             );
 
         // then
@@ -1397,7 +1511,7 @@ public class HttpStateTest {
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"request_one\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\"" + NEW_LINE +
+                "  \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + "\"" + NEW_LINE +
                 "}, {" + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"request_two\"" + NEW_LINE +
@@ -1407,7 +1521,7 @@ public class HttpStateTest {
                 "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
                 "    \"body\" : \"response_two\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\"" + NEW_LINE +
+                "  \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + "\"" + NEW_LINE +
                 "} ]", MediaType.JSON_UTF_8).withStatusCode(200))
         );
     }
@@ -1440,7 +1554,7 @@ public class HttpStateTest {
                 request()
                     .withQueryStringParameter("type", "request_responses")
                     .withQueryStringParameter("format", "log_entries")
-                    .withBody(httpRequestSerializer.serialize(request("request_.*")))
+                    .withBody(requestDefinitionSerializer.serialize(request("request_.*")))
             );
 
         // then
@@ -1448,7 +1562,7 @@ public class HttpStateTest {
             is(response().withBody("[" + NEW_LINE +
                 "  {" + NEW_LINE +
                 "    \"logLevel\" : \"INFO\"," + NEW_LINE +
-                "    \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\"," + NEW_LINE +
+                "    \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + "\"," + NEW_LINE +
                 "    \"type\" : \"NO_MATCH_RESPONSE\"," + NEW_LINE +
                 "    \"httpRequest\" : {" + NEW_LINE +
                 "      \"path\" : \"request_one\"" + NEW_LINE +
@@ -1488,7 +1602,7 @@ public class HttpStateTest {
                 "  }," + NEW_LINE +
                 "  {" + NEW_LINE +
                 "    \"logLevel\" : \"INFO\"," + NEW_LINE +
-                "    \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\"," + NEW_LINE +
+                "    \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + "\"," + NEW_LINE +
                 "    \"type\" : \"EXPECTATION_RESPONSE\"," + NEW_LINE +
                 "    \"httpRequest\" : {" + NEW_LINE +
                 "      \"path\" : \"request_two\"" + NEW_LINE +
@@ -1534,7 +1648,7 @@ public class HttpStateTest {
                 request()
                     .withQueryStringParameter("format", "java")
                     .withQueryStringParameter("type", "request_responses")
-                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+                    .withBody(requestDefinitionSerializer.serialize(request("request_one")))
             );
 
         // then
@@ -1571,7 +1685,7 @@ public class HttpStateTest {
 
         // then
         assertThat(response,
-            is(response().withBody(expectationSerializer.serialize(Arrays.asList(
+            is(response().withBody(expectationSerializerWithDefaultFields.serialize(Arrays.asList(
                 new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited(), 0).withId("key_one").thenRespond(response("response_one")),
                 new Expectation(request("request_two"), Times.once(), TimeToLive.unlimited(), 0).withId("key_two").thenRespond(response("response_two"))
             )), MediaType.JSON_UTF_8).withStatusCode(200))
@@ -1641,7 +1755,7 @@ public class HttpStateTest {
                 request()
                     .withQueryStringParameter("type", "recorded_expectations")
                     .withQueryStringParameter("format", "java")
-                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+                    .withBody(requestDefinitionSerializer.serialize(request("request_one")))
             );
 
         // then
@@ -1667,7 +1781,7 @@ public class HttpStateTest {
             .retrieve(
                 request()
                     .withQueryStringParameter("type", "active_expectations")
-                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+                    .withBody(requestDefinitionSerializer.serialize(request("request_one")))
             );
 
         // then
@@ -1695,7 +1809,7 @@ public class HttpStateTest {
                 request()
                     .withQueryStringParameter("type", "active_expectations")
                     .withQueryStringParameter("format", "java")
-                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+                    .withBody(requestDefinitionSerializer.serialize(request("request_one")))
             );
 
         // then
@@ -1769,7 +1883,7 @@ public class HttpStateTest {
             // then
             assertThat(response,
                 is(response().withBody("" +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - no expectation for:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - no expectation for:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"path\" : \"request_one\"" + NEW_LINE +
@@ -1783,7 +1897,7 @@ public class HttpStateTest {
                         "  }" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - returning error:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - returning error:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"path\" : \"request_two\"" + NEW_LINE +
@@ -1806,7 +1920,7 @@ public class HttpStateTest {
                         "  }" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"path\" : \"request_one\"" + NEW_LINE +
@@ -1834,7 +1948,7 @@ public class HttpStateTest {
                         "  }" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"path\" : \"request_two\"" + NEW_LINE +
@@ -1862,7 +1976,7 @@ public class HttpStateTest {
                         "  }" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - some random" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - some random" + NEW_LINE +
                         NEW_LINE +
                         "  argument_one" + NEW_LINE +
                         NEW_LINE +
@@ -1930,13 +2044,13 @@ public class HttpStateTest {
                 .retrieve(
                     request()
                         .withQueryStringParameter("type", "logs")
-                        .withBody(httpRequestSerializer.serialize(request("request_one")))
+                        .withBody(requestDefinitionSerializer.serialize(request("request_one")))
                 );
 
             // then
             assertThat(response,
                 is(response().withBody("" +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - no expectation for:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - no expectation for:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"path\" : \"request_one\"" + NEW_LINE +
@@ -1950,7 +2064,7 @@ public class HttpStateTest {
                         "  }" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"path\" : \"request_one\"" + NEW_LINE +
@@ -2041,7 +2155,7 @@ public class HttpStateTest {
                             .withQueryStringParameter("type", "logs")
                     ),
                 is(response().withBody("" +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - resetting all expectations and request logs" + NEW_LINE,
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - resetting all expectations and request logs" + NEW_LINE,
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
             );
             assertThat(

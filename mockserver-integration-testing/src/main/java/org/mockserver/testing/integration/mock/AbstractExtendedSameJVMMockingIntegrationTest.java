@@ -64,7 +64,7 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
                         header("X-Test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                headersToIgnore)
+                    HEADERS_TO_IGNORE)
         );
         assertEquals(StaticTestExpectationResponseCallback.httpRequests.get(0).getBody().getValue(), "an_example_body_http");
         assertEquals(StaticTestExpectationResponseCallback.httpRequests.get(0).getPath().getValue(), calculatePath("callback"));
@@ -87,7 +87,7 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
                         header("X-Test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_https"),
-                headersToIgnore
+                    HEADERS_TO_IGNORE
             )
         );
         assertEquals(StaticTestExpectationResponseCallback.httpRequests.get(1).getBody().getValue(), "an_example_body_https");
@@ -135,7 +135,7 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
                         .withPath(calculatePath("some_path"))
                         .withCookie("name", "value")
                         .withBody("some_request_body"),
-                    headersToIgnore)
+                        HEADERS_TO_IGNORE)
             );
             // - in https
             assertEquals(
@@ -151,7 +151,7 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
                         .withPath(calculatePath("some_path"))
                         .withCookie("name", "value")
                         .withBody("some_request_body"),
-                    headersToIgnore)
+                        HEADERS_TO_IGNORE)
             );
 
         } else {
@@ -165,7 +165,7 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
                         .withPath(calculatePath("some_path"))
                         .withCookie("name", "value")
                         .withBody("some_request_body"),
-                    headersToIgnore)
+                        HEADERS_TO_IGNORE)
             );
             // - in https
             assertEquals(
@@ -176,7 +176,7 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
                         .withPath(calculatePath("some_path"))
                         .withCookie("name", "value")
                         .withBody("some_request_body"),
-                    headersToIgnore)
+                        HEADERS_TO_IGNORE)
             );
 
         }
@@ -226,7 +226,7 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
                             header("x-test", "test_headers_and_body")
                         )
                         .withBody("an_example_body_http"),
-                    headersToIgnore)
+                        HEADERS_TO_IGNORE)
             );
             // - in https
             assertEquals(
@@ -246,7 +246,7 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
                             header("x-test", "test_headers_and_body")
                         )
                         .withBody("an_example_body_https"),
-                    headersToIgnore)
+                        HEADERS_TO_IGNORE)
             );
 
         } else {
@@ -260,7 +260,7 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
                         .withPath(calculatePath("some_path"))
                         .withCookie("name", "value")
                         .withBody("some_request_body"),
-                    headersToIgnore)
+                        HEADERS_TO_IGNORE)
             );
             // - in https
             assertEquals(
@@ -271,7 +271,7 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
                         .withPath(calculatePath("some_path"))
                         .withCookie("name", "value")
                         .withBody("some_request_body"),
-                    headersToIgnore)
+                        HEADERS_TO_IGNORE)
             );
 
         }

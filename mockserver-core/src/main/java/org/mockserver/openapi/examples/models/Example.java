@@ -16,7 +16,7 @@
 
 package org.mockserver.openapi.examples.models;
 
-import javax.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlAttribute;
 
 /**
  * See: https://github.com/swagger-api/swagger-inflector

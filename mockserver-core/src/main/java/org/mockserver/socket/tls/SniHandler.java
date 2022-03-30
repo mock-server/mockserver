@@ -5,28 +5,43 @@ import io.netty.handler.codec.DecoderException;
 import io.netty.handler.ssl.AbstractSniHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslHandler;
+import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.Future;
 import io.netty.util.internal.PlatformDependent;
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.configuration.Configuration;
+import org.mockserver.log.model.LogEntry;
+import org.mockserver.logging.MockServerLogger;
+import org.slf4j.event.Level;
+
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLPeerUnverifiedException;
+import javax.net.ssl.SSLSession;
+import java.security.cert.Certificate;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
  */
 public class SniHandler extends AbstractSniHandler<SslContext> {
 
+    private static final AttributeKey<SSLEngine> UPSTREAM_SSL_ENGINE = AttributeKey.valueOf("UPSTREAM_SSL_ENGINE");
+    private static final AttributeKey<Certificate[]> UPSTREAM_CLIENT_CERTIFICATES = AttributeKey.valueOf("UPSTREAM_CLIENT_CERTIFICATES");
+
+    private final Configuration configuration;
     private final NettySslContextFactory nettySslContextFactory;
 
-    public SniHandler(NettySslContextFactory nettySslContextFactory) {
+    public SniHandler(Configuration configuration, NettySslContextFactory nettySslContextFactory) {
+        this.configuration = configuration;
         this.nettySslContextFactory = nettySslContextFactory;
     }
 
     @Override
     protected Future<SslContext> lookup(ChannelHandlerContext ctx, String hostname) {
         if (isNotBlank(hostname)) {
-            ConfigurationProperties.addSslSubjectAlternativeNameDomains(hostname);
+            configuration.addSubjectAlternativeName(hostname);
         }
         return ctx.executor().newSucceededFuture(nettySslContextFactory.createServerSslContext());
     }
@@ -52,7 +67,8 @@ public class SniHandler extends AbstractSniHandler<SslContext> {
         SslHandler sslHandler = null;
         try {
             sslHandler = sslContext.getNow().newHandler(ctx.alloc());
-            ctx.pipeline().replace(this, SslHandler.class.getName(), sslHandler);
+            ctx.channel().attr(UPSTREAM_SSL_ENGINE).set(sslHandler.engine());
+            ctx.pipeline().replace(this, "SslHandler#0", sslHandler);
             sslHandler = null;
         } finally {
             // Since the SslHandler was not inserted into the pipeline the ownership of the SSLEngine was not
@@ -62,5 +78,33 @@ public class SniHandler extends AbstractSniHandler<SslContext> {
                 ReferenceCountUtil.safeRelease(sslHandler.engine());
             }
         }
+    }
+
+    public static Certificate[] retrieveClientCertificates(MockServerLogger mockServerLogger, ChannelHandlerContext ctx) {
+        Certificate[] clientCertificates = null;
+        if (ctx.channel().attr(UPSTREAM_CLIENT_CERTIFICATES).get() != null) {
+            clientCertificates = ctx.channel().attr(UPSTREAM_CLIENT_CERTIFICATES).get();
+        } else if (ctx.channel().attr(UPSTREAM_SSL_ENGINE).get() != null) {
+            SSLEngine sslEngine = ctx.channel().attr(UPSTREAM_SSL_ENGINE).get();
+            if (sslEngine != null) {
+                SSLSession sslSession = sslEngine.getSession();
+                if (sslSession != null) {
+                    try {
+                        Certificate[] peerCertificates = sslSession.getPeerCertificates();
+                        ctx.channel().attr(UPSTREAM_CLIENT_CERTIFICATES).set(peerCertificates);
+                        return peerCertificates;
+                    } catch (SSLPeerUnverifiedException ignore) {
+                        if (MockServerLogger.isEnabled(TRACE)) {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setLogLevel(Level.TRACE)
+                                    .setMessageFormat("no client certificate chain as client did not complete mTLS")
+                            );
+                        }
+                    }
+                }
+            }
+        }
+        return clientCertificates;
     }
 }

@@ -9,7 +9,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.MediaType;
 import org.mockserver.serialization.PortBindingSerializer;
 import org.mockserver.socket.PortFactory;
-import org.mockserver.testing.integration.mock.AbstractBasicMockingIntegrationTest;
+import org.mockserver.testing.integration.mock.AbstractBasicMockingSameJVMIntegrationTest;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,7 +30,7 @@ import static org.mockserver.stop.Stop.stopQuietly;
 /**
  * @author jamesdbloom
  */
-public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingIntegrationTest {
+public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingSameJVMIntegrationTest {
 
     private static Integer[] severHttpPort;
     private final Random random = new Random();
@@ -71,7 +71,7 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                 request()
                     .withPath(calculatePath("mockserver/status"))
                     .withMethod("PUT"),
-                headersToIgnore)
+                HEADERS_TO_IGNORE)
         );
         // - in https
         assertEquals(
@@ -87,7 +87,7 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                     .withSecure(true)
                     .withPath(calculatePath("mockserver/status"))
                     .withMethod("PUT"),
-                headersToIgnore)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -112,7 +112,7 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                     request()
                         .withPath(calculatePath("livenessProbe"))
                         .withMethod("GET"),
-                    headersToIgnore)
+                    HEADERS_TO_IGNORE)
             );
             // - in https
             assertEquals(
@@ -128,7 +128,7 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                         .withSecure(true)
                         .withPath(calculatePath("livenessProbe"))
                         .withMethod("GET"),
-                    headersToIgnore)
+                    HEADERS_TO_IGNORE)
             );
         } finally {
             ConfigurationProperties.livenessHttpGetPath(originalStatusPath);
@@ -159,7 +159,7 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                     .withBody("{" + NEW_LINE +
                         "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
                         "}"),
-                headersToIgnore)
+                HEADERS_TO_IGNORE)
         );
         ArrayList<Integer> ports = new ArrayList<>(Arrays.asList(severHttpPort));
         ports.add(firstNewPort);
@@ -175,7 +175,7 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                 request()
                     .withPath(calculatePath("mockserver/status"))
                     .withMethod("PUT"),
-                headersToIgnore)
+                HEADERS_TO_IGNORE)
         );
         // - in https
         assertEquals(
@@ -194,7 +194,7 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                     .withBody("{" + NEW_LINE +
                         "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +
                         "}"),
-                headersToIgnore)
+                HEADERS_TO_IGNORE)
         );
         ports.add(secondNewPort);
         assertEquals(
@@ -213,7 +213,7 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                     .withBody("{" + NEW_LINE +
                         "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
                         "}"),
-                headersToIgnore)
+                HEADERS_TO_IGNORE)
         );
     }
 }

@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.mockserver.codec.ExpandedParameterDecoder;
 import org.mockserver.codec.JsonSchemaBodyDecoder;
 import org.mockserver.codec.PathParametersDecoder;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
@@ -22,7 +23,6 @@ import java.util.Objects;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.configuration.ConfigurationProperties.matchersFailFast;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_MATCHED;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED;
 import static org.mockserver.matchers.MatchDifference.Field.*;
@@ -40,7 +40,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
     private static final String EXPECTATION_REQUEST_NOT_OPERATOR_IS_ENABLED = COMMA + NEW_LINE + "expectation's request 'not' operator is enabled";
     private static final String EXPECTATION_REQUEST_MATCHER_NOT_OPERATOR_IS_ENABLED = COMMA + NEW_LINE + "expectation's request matcher 'not' operator is enabled";
     private static final PathParametersDecoder pathParametersParser = new PathParametersDecoder();
-    private static final ObjectWriter TO_STRING_OBJECT_WRITER = ObjectMapperFactory.createObjectMapper(true);
+    private static final ObjectWriter TO_STRING_OBJECT_WRITER = ObjectMapperFactory.createObjectMapper(true, false);
     private final ExpandedParameterDecoder expandedParameterDecoder;
     private int hashCode;
     private HttpRequest httpRequest;
@@ -58,9 +58,9 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
     private JsonSchemaBodyDecoder jsonSchemaBodyParser;
     private MatcherBuilder matcherBuilder;
 
-    public HttpRequestPropertiesMatcher(MockServerLogger mockServerLogger) {
-        super(mockServerLogger);
-        expandedParameterDecoder = new ExpandedParameterDecoder(mockServerLogger);
+    public HttpRequestPropertiesMatcher(Configuration configuration, MockServerLogger mockServerLogger) {
+        super(configuration, mockServerLogger);
+        this.expandedParameterDecoder = new ExpandedParameterDecoder(configuration, mockServerLogger);
     }
 
     public HttpRequest getHttpRequest() {
@@ -89,7 +89,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                 withCookies(httpRequest.getCookies());
                 withKeepAlive(httpRequest.isKeepAlive());
                 withSsl(httpRequest.isSecure());
-                this.jsonSchemaBodyParser = new JsonSchemaBodyDecoder(mockServerLogger, expectation, httpRequest);
+                this.jsonSchemaBodyParser = new JsonSchemaBodyDecoder(configuration, mockServerLogger, expectation, httpRequest);
             }
             return true;
         } else {
@@ -140,11 +140,11 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                     break;
                 case PARAMETERS:
                     ParameterBody parameterBody = (ParameterBody) body;
-                    bodyMatcher = new ParameterStringMatcher(mockServerLogger, parameterBody.getValue(), controlPlaneMatcher);
+                    bodyMatcher = new ParameterStringMatcher(configuration, mockServerLogger, parameterBody.getValue(), controlPlaneMatcher);
                     break;
                 case XPATH:
                     XPathBody xPathBody = (XPathBody) body;
-                    bodyMatcher = new XPathMatcher(mockServerLogger, xPathBody.getValue());
+                    bodyMatcher = new XPathMatcher(mockServerLogger, xPathBody.getValue(), xPathBody.getNamespacePrefixes());
                     break;
                 case XML:
                     XmlBody xmlBody = (XmlBody) body;
@@ -235,7 +235,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
             return overallMatch;
         } else if (requestDefinition instanceof OpenAPIDefinition) {
             if (matcherBuilder == null) {
-                matcherBuilder = new MatcherBuilder(mockServerLogger);
+                matcherBuilder = new MatcherBuilder(configuration, mockServerLogger);
             }
             boolean overallMatch = false;
             for (HttpRequest request : matcherBuilder.transformsToMatcher(requestDefinition).getHttpRequests()) {
@@ -367,7 +367,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
         if (!fieldMatches) {
             matchDifferenceCount.incrementFailures();
         }
-        if (matcher != null && !matcher.isBlank() && matchersFailFast()) {
+        if (matcher != null && !matcher.isBlank() && configuration.matchersFailFast()) {
             return combinedResultAreTrue(matchDifferenceCount.getFailures() != 0, matchDifferenceCount.getHttpRequest().isNot(), this.httpRequest.isNot(), not);
         }
         return false;

@@ -107,3 +107,9 @@ persistedExpectations.json
 mockserverInitialization.json
 /*.pem
 _test*.java
+go_client
+
+# soft links #
+##############
+kube_config.yaml
+/shaded/

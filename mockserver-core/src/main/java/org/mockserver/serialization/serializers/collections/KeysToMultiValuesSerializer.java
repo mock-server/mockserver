@@ -49,7 +49,7 @@ public abstract class KeysToMultiValuesSerializer<T extends KeysToMultiValues<? 
 
     private void writeValuesArray(T collection, JsonGenerator jgen, NottableString key) throws IOException {
         Collection<NottableString> values = collection.getValues(key);
-        jgen.writeStartArray(values.size());
+        jgen.writeStartArray(values, values.size());
         for (NottableString nottableString : values) {
             jgen.writeObject(nottableString);
         }

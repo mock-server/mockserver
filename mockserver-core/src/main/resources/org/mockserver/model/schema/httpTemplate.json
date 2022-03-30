@@ -8,8 +8,9 @@
     },
     "templateType": {
       "enum": [
+        "VELOCITY",
         "JAVASCRIPT",
-        "VELOCITY"
+        "MUSTACHE"
       ]
     },
     "template": {

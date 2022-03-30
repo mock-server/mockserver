@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.*;
@@ -30,7 +31,12 @@ public class MediaType extends ObjectWithJsonToString {
      *     "ISO-8859-1" or its subsets MUST be labeled with an appropriate charset value.
      * </pre>
      */
-    public static final Charset DEFAULT_HTTP_CHARACTER_SET = StandardCharsets.ISO_8859_1;
+    public static final Charset DEFAULT_TEXT_HTTP_CHARACTER_SET = StandardCharsets.ISO_8859_1;
+    /**
+     * JSON text exchanged between systems that are not part of a closed ecosystem MUST be encoded using UTF-8 [RFC3629].
+     * (https://datatracker.ietf.org/doc/html/rfc8259#section-8.1)
+     */
+    public static final Charset DEFAULT_JSON_HTTP_CHARACTER_SET = StandardCharsets.UTF_8;
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(ObjectMapperFactory.class);
     private static final char TYPE_SEPARATOR = '/';
     private static final char PARAMETER_START = ';';
@@ -76,7 +82,6 @@ public class MediaType extends ObjectWithJsonToString {
     public static final MediaType JPEG = new MediaType("image", "jpeg");
     public static final MediaType PNG = new MediaType("image", "png");
 
-    @SuppressWarnings("UnstableApiUsage")
     public static MediaType parse(String mediaTypeHeader) {
         if (isNotBlank(mediaTypeHeader)) {
             int typeSeparator = mediaTypeHeader.indexOf(TYPE_SEPARATOR);
@@ -96,10 +101,20 @@ public class MediaType extends ObjectWithJsonToString {
                 }
             }
             String parameters = mediaTypeHeader.substring(typeEndIndex).trim().toLowerCase().replaceAll("\"", "");
-            Map<String, String> parameterMap = null;
+            Map<String, String> parameterMap = new ConcurrentHashMap<>();
             if (isNotBlank(parameters)) {
                 try {
-                    parameterMap = Splitter.on(';').trimResults().omitEmptyStrings().withKeyValueSeparator('=').split(parameters);
+                    for (String parameter : Splitter.on(';').split(parameters)) {
+                        String parameterTrimmed = parameter.trim();
+                        String key = substringBefore(parameterTrimmed, "=").trim();
+                        String value = substringAfter(parameterTrimmed, "=").trim();
+                        if (isNotBlank(key) && isNotBlank(value)) {
+                            parameterMap.put(
+                                key,
+                                value
+                            );
+                        }
+                    }
                     if (parameterMap.size() > 1) {
                         // sort if multiple entries to ensure equals and hashcode is consistent
                         parameterMap = parameterMap.entrySet()
@@ -233,8 +248,12 @@ public class MediaType extends ObjectWithJsonToString {
     public Charset getCharsetOrDefault() {
         if (charset != null) {
             return charset;
+        } else if (isBlank || isJson() || isXml()) {
+            return DEFAULT_JSON_HTTP_CHARACTER_SET;
+        } else if (isString()) {
+            return DEFAULT_TEXT_HTTP_CHARACTER_SET;
         } else {
-            return DEFAULT_HTTP_CHARACTER_SET;
+            return null;
         }
     }
 

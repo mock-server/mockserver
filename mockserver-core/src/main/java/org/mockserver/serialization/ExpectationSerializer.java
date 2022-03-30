@@ -15,7 +15,9 @@ import org.slf4j.event.Level;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.BiFunction;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -31,16 +33,22 @@ import static org.slf4j.event.Level.INFO;
 @SuppressWarnings("FieldMayBeFinal")
 public class ExpectationSerializer implements Serializer<Expectation> {
     private final MockServerLogger mockServerLogger;
-    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
-    private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+    private ObjectWriter objectWriter;
+    private ObjectMapper objectMapper;
     private JsonArraySerializer jsonArraySerializer = new JsonArraySerializer();
     private JsonSchemaExpectationValidator expectationValidator;
     private OpenAPIExpectationSerializer openAPIExpectationSerializer;
     private static boolean printedECMA262Warning = false;
 
     public ExpectationSerializer(MockServerLogger mockServerLogger) {
+        this(mockServerLogger, false);
+    }
+
+    public ExpectationSerializer(MockServerLogger mockServerLogger, boolean serialiseDefaultValues) {
         this.mockServerLogger = mockServerLogger;
         this.openAPIExpectationSerializer = new OpenAPIExpectationSerializer(mockServerLogger);
+        this.objectWriter = ObjectMapperFactory.createObjectMapper(true, serialiseDefaultValues);
+        this.objectMapper = ObjectMapperFactory.createObjectMapper();
     }
 
     private JsonSchemaExpectationValidator getValidator() {
@@ -147,11 +155,15 @@ public class ExpectationSerializer implements Serializer<Expectation> {
     }
 
     public Expectation[] deserializeArray(String jsonExpectations, boolean allowEmpty) {
+        return deserializeArray(jsonExpectations, allowEmpty, (s, expectation) -> expectation);
+    }
+
+    public Expectation[] deserializeArray(String jsonExpectations, boolean allowEmpty, BiFunction<String, List<Expectation>, List<Expectation>> expectationModifier) {
         List<Expectation> expectations = new ArrayList<>();
         if (isBlank(jsonExpectations)) {
             throw new IllegalArgumentException("1 error:" + NEW_LINE + " - an expectation or expectation array is required but value was \"" + jsonExpectations + "\"");
         } else {
-            List<String> validationErrorsList = new ArrayList<String>();
+            List<String> validationErrorsList = new ArrayList<>();
             List<JsonNode> jsonExpectationList = jsonArraySerializer.splitJSONArrayToJSONNodes(jsonExpectations);
             if (!jsonExpectationList.isEmpty()) {
                 for (int i = 0; i < jsonExpectationList.size(); i++) {
@@ -174,13 +186,13 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                     }
                     if (jsonExpectationList.get(i).has("specUrlOrPayload")) {
                         try {
-                            expectations.addAll(openAPIExpectationSerializer.deserializeToExpectations(jsonExpectation));
+                            expectations.addAll(expectationModifier.apply(jsonExpectation, openAPIExpectationSerializer.deserializeToExpectations(jsonExpectation)));
                         } catch (IllegalArgumentException iae) {
                             validationErrorsList.add(iae.getMessage());
                         }
                     } else {
                         try {
-                            expectations.add(deserialize(jsonExpectation));
+                            expectations.addAll(expectationModifier.apply(jsonExpectation, Collections.singletonList(deserialize(jsonExpectation))));
                         } catch (IllegalArgumentException iae) {
                             validationErrorsList.add(iae.getMessage());
                         }

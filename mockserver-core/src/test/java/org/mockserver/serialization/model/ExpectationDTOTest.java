@@ -30,7 +30,7 @@ public class ExpectationDTOTest {
         HttpTemplate httpForwardTemplate = new HttpTemplate(HttpTemplate.TemplateType.VELOCITY).withTemplate("some_forward_template");
         HttpClassCallback httpForwardClassCallback = new HttpClassCallback().withCallbackClass("some_forward_class");
         HttpObjectCallback httpForwardObjectCallback = new HttpObjectCallback().withClientId("some_forward_client_id");
-        HttpOverrideForwardedRequest httpOverrideForwardedRequest = new HttpOverrideForwardedRequest().withHttpRequest(httpRequest);
+        HttpOverrideForwardedRequest httpOverrideForwardedRequest = new HttpOverrideForwardedRequest().withRequestOverride(httpRequest);
         HttpError httpError = new HttpError().withResponseBytes("some_bytes".getBytes(UTF_8));
         Times times = Times.exactly(3);
         TimeToLive timeToLive = TimeToLive.unlimited();
@@ -240,7 +240,7 @@ public class ExpectationDTOTest {
         HttpError httpError = new HttpError().withResponseBytes("some_bytes".getBytes(UTF_8));
         HttpClassCallback httpClassCallback = new HttpClassCallback().withCallbackClass("some_class");
         HttpObjectCallback httpObjectCallback = new HttpObjectCallback().withClientId("some_client_id");
-        HttpOverrideForwardedRequest httpOverrideForwardedRequest = new HttpOverrideForwardedRequest().withHttpRequest(httpRequest);
+        HttpOverrideForwardedRequest httpOverrideForwardedRequest = new HttpOverrideForwardedRequest().withRequestOverride(httpRequest);
         Times times = Times.exactly(3);
         TimeToLive timeToLive = TimeToLive.unlimited();
         int priority = 0;
@@ -470,7 +470,7 @@ public class ExpectationDTOTest {
         HttpTemplateDTO httpForwardTemplate = new HttpTemplateDTO(new HttpTemplate(HttpTemplate.TemplateType.VELOCITY).withTemplate("some_forward_template"));
         HttpClassCallbackDTO httpForwardClassCallback = new HttpClassCallbackDTO(new HttpClassCallback().withCallbackClass("some_forward_class"));
         HttpObjectCallbackDTO httpForwardObjectCallback = new HttpObjectCallbackDTO(new HttpObjectCallback().withClientId("some_forward_client_id"));
-        HttpOverrideForwardedRequestDTO httpOverrideForwardedRequest = new HttpOverrideForwardedRequestDTO(new HttpOverrideForwardedRequest().withHttpRequest(request("some_path")));
+        HttpOverrideForwardedRequestDTO httpOverrideForwardedRequest = new HttpOverrideForwardedRequestDTO(new HttpOverrideForwardedRequest().withRequestOverride(request("some_path")));
         HttpErrorDTO httpError = new HttpErrorDTO(new HttpError().withResponseBytes("some_bytes".getBytes(UTF_8)));
         TimesDTO times = new TimesDTO(Times.exactly(3));
         TimeToLiveDTO timeToLive = new TimeToLiveDTO(TimeToLive.unlimited());

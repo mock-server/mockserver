@@ -5,6 +5,7 @@ import io.netty.buffer.Unpooled;
 import org.mockserver.model.*;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.model.JsonBody.DEFAULT_MATCH_TYPE;
@@ -60,7 +61,7 @@ public class BodyDecoderEncoder {
             } else if (body.getValue() instanceof String) {
                 Charset contentTypeCharset = MediaType.parse(contentTypeHeader).getCharsetOrDefault();
                 Charset bodyCharset = body.getCharset(contentTypeCharset);
-                return ((String) body.getValue()).getBytes(bodyCharset);
+                return ((String) body.getValue()).getBytes(bodyCharset != null ? bodyCharset : MediaType.DEFAULT_TEXT_HTTP_CHARACTER_SET);
             } else {
                 return body.getRawBytes();
             }

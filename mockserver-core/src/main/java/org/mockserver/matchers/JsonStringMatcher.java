@@ -25,7 +25,7 @@ import static org.mockserver.character.Character.NEW_LINE;
  */
 public class JsonStringMatcher extends BodyMatcher<String> {
     private static final String[] EXCLUDED_FIELDS = {"mockServerLogger"};
-    private static final ObjectWriter PRETTY_PRINTER = ObjectMapperFactory.createObjectMapper(true);
+    private static final ObjectWriter PRETTY_PRINTER = ObjectMapperFactory.createObjectMapper(true, false);
     private final MockServerLogger mockServerLogger;
     private final String matcher;
     private JsonNode matcherJsonNode;

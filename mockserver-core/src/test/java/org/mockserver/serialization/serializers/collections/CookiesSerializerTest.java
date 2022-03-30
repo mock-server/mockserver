@@ -19,7 +19,7 @@ import static org.mockserver.model.NottableString.string;
  */
 public class CookiesSerializerTest {
 
-    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
+    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true, false);
 
     @Test
     public void shouldSerializeCompleteObject() throws IOException {

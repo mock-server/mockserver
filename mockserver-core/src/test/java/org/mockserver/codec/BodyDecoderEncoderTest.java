@@ -16,7 +16,8 @@ import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.JsonBody.json;
-import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
+import static org.mockserver.model.MediaType.DEFAULT_JSON_HTTP_CHARACTER_SET;
+import static org.mockserver.model.MediaType.DEFAULT_TEXT_HTTP_CHARACTER_SET;
 import static org.mockserver.model.StringBody.exact;
 
 @SuppressWarnings("rawtypes")
@@ -33,7 +34,22 @@ public class BodyDecoderEncoderTest {
         // then
         byte[] bodyBytes = new byte[result.readableBytes()];
         result.readBytes(bodyBytes);
-        assertThat(bodyBytes, is("şarəs".getBytes(DEFAULT_HTTP_CHARACTER_SET)));
+        assertThat(bodyBytes, is("şarəs".getBytes(DEFAULT_JSON_HTTP_CHARACTER_SET)));
+    }
+
+    @Test
+    public void shouldSerialiseBodyToByteBufWithIvalidContentType() {
+        // given
+        String bodyValue = new String(new byte[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9});
+        Body body = new StringBody(bodyValue);
+
+        // when
+        ByteBuf result = new BodyDecoderEncoder().bodyToByteBuf(body, "image/png");
+
+        // then
+        byte[] bodyBytes = new byte[result.readableBytes()];
+        result.readBytes(bodyBytes);
+        assertThat(bodyBytes, is(bodyValue.getBytes(DEFAULT_TEXT_HTTP_CHARACTER_SET)));
     }
 
     @Test
@@ -48,13 +64,13 @@ public class BodyDecoderEncoderTest {
         assertThat(result.length, is(3));
         byte[] bodyBytes = new byte[result[0].readableBytes()];
         result[0].readBytes(bodyBytes);
-        assertThat(bodyBytes, is("by".getBytes(DEFAULT_HTTP_CHARACTER_SET)));
+        assertThat(bodyBytes, is("by".getBytes(DEFAULT_TEXT_HTTP_CHARACTER_SET)));
         bodyBytes = new byte[result[1].readableBytes()];
         result[1].readBytes(bodyBytes);
-        assertThat(bodyBytes, is("te".getBytes(DEFAULT_HTTP_CHARACTER_SET)));
+        assertThat(bodyBytes, is("te".getBytes(DEFAULT_TEXT_HTTP_CHARACTER_SET)));
         bodyBytes = new byte[result[2].readableBytes()];
         result[2].readBytes(bodyBytes);
-        assertThat(bodyBytes, is("s".getBytes(DEFAULT_HTTP_CHARACTER_SET)));
+        assertThat(bodyBytes, is("s".getBytes(DEFAULT_TEXT_HTTP_CHARACTER_SET)));
     }
 
     @Test
@@ -68,7 +84,7 @@ public class BodyDecoderEncoderTest {
         // then
         byte[] bodyBytes = new byte[result.readableBytes()];
         result.readBytes(bodyBytes);
-        assertThat(bodyBytes, is(not("şarəs".getBytes(DEFAULT_HTTP_CHARACTER_SET))));
+        assertThat(bodyBytes, is(not("şarəs".getBytes(DEFAULT_TEXT_HTTP_CHARACTER_SET))));
         assertThat(bodyBytes, is("şarəs".getBytes(UTF_8)));
     }
 
@@ -100,7 +116,7 @@ public class BodyDecoderEncoderTest {
     @Test
     public void shouldReadByteBufToStringBodyWithNoContentType() {
         // given
-        ByteBuf byteBuf = Unpooled.copiedBuffer("bytes".getBytes(DEFAULT_HTTP_CHARACTER_SET));
+        ByteBuf byteBuf = Unpooled.copiedBuffer("bytes".getBytes(DEFAULT_TEXT_HTTP_CHARACTER_SET));
 
         // when
         BodyWithContentType result = new BodyDecoderEncoder().byteBufToBody(byteBuf, null);
@@ -112,7 +128,7 @@ public class BodyDecoderEncoderTest {
     @Test
     public void shouldReadByteBufToStringBodyWithStringContentType() {
         // given
-        ByteBuf byteBuf = Unpooled.copiedBuffer("bytes".getBytes(DEFAULT_HTTP_CHARACTER_SET));
+        ByteBuf byteBuf = Unpooled.copiedBuffer("bytes".getBytes(DEFAULT_TEXT_HTTP_CHARACTER_SET));
 
         // when
         BodyWithContentType result = new BodyDecoderEncoder().byteBufToBody(byteBuf, MediaType.TEXT_PLAIN.toString());
@@ -124,7 +140,7 @@ public class BodyDecoderEncoderTest {
     @Test
     public void shouldReadByteBufToStringBodyWithStringContentTypeAndCharset() {
         // given
-        ByteBuf byteBuf = Unpooled.copiedBuffer("bytes".getBytes(DEFAULT_HTTP_CHARACTER_SET));
+        ByteBuf byteBuf = Unpooled.copiedBuffer("bytes".getBytes(DEFAULT_TEXT_HTTP_CHARACTER_SET));
 
         // when
         BodyWithContentType result = new BodyDecoderEncoder().byteBufToBody(byteBuf, MediaType.TEXT_HTML_UTF_8.toString());
@@ -148,7 +164,7 @@ public class BodyDecoderEncoderTest {
     @Test
     public void shouldReadByteBufToJsonBodyWithJsonContentTypeAndCharset() {
         // given
-        ByteBuf byteBuf = Unpooled.copiedBuffer("şarəs".getBytes(DEFAULT_HTTP_CHARACTER_SET));
+        ByteBuf byteBuf = Unpooled.copiedBuffer("şarəs".getBytes(DEFAULT_TEXT_HTTP_CHARACTER_SET));
 
         // when
         BodyWithContentType result = new BodyDecoderEncoder().byteBufToBody(byteBuf, MediaType.APPLICATION_JSON.toString());
@@ -160,19 +176,19 @@ public class BodyDecoderEncoderTest {
     @Test
     public void shouldReadByteBufToBinaryBodyWithBinaryContentType() {
         // given
-        ByteBuf byteBuf = Unpooled.copiedBuffer("bytes".getBytes(DEFAULT_HTTP_CHARACTER_SET));
+        ByteBuf byteBuf = Unpooled.copiedBuffer("bytes".getBytes(DEFAULT_TEXT_HTTP_CHARACTER_SET));
 
         // when
         BodyWithContentType result = new BodyDecoderEncoder().byteBufToBody(byteBuf, MediaType.ANY_VIDEO_TYPE.toString());
 
         // then
-        assertThat(result, is(binary("bytes".getBytes(DEFAULT_HTTP_CHARACTER_SET), MediaType.ANY_VIDEO_TYPE)));
+        assertThat(result, is(binary("bytes".getBytes(DEFAULT_TEXT_HTTP_CHARACTER_SET), MediaType.ANY_VIDEO_TYPE)));
     }
 
     @Test
     public void shouldReadByteBufToBinaryBodyWithBinaryContentTypeAndCharset() {
         // given
-        ByteBuf byteBuf = Unpooled.copiedBuffer("bytes".getBytes(DEFAULT_HTTP_CHARACTER_SET));
+        ByteBuf byteBuf = Unpooled.copiedBuffer("bytes".getBytes(DEFAULT_TEXT_HTTP_CHARACTER_SET));
 
         // when
         BodyWithContentType result = new BodyDecoderEncoder().byteBufToBody(byteBuf, MediaType.ANY_VIDEO_TYPE.withCharset(UTF_8).toString());

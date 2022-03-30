@@ -32,6 +32,30 @@
     },
     "socketAddress": {
       "$ref": "#/definitions/socketAddress"
+    },
+    "remoteAddress": {
+      "type": "string"
+    },
+    "clientCertificateChain": {
+      "additionalProperties": false,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "issuerDistinguishedName": {
+            "type": "string"
+          },
+          "subjectDistinguishedName": {
+            "type": "string"
+          },
+          "serialNumber": {
+            "type": "string"
+          },
+          "signatureAlgorithmName": {
+            "type": "string"
+          }
+        }
+      }
     }
   },
   "definitions": {

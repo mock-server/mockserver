@@ -1,6 +1,7 @@
 package org.mockserver.validator.jsonschema;
 
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.mock.Expectation;
 
 /**
  * @author jamesdbloom
@@ -10,6 +11,7 @@ public class JsonSchemaExpectationValidator extends JsonSchemaValidator {
     private JsonSchemaExpectationValidator(MockServerLogger mockServerLogger) {
         super(
             mockServerLogger,
+            Expectation.class,
             "org/mockserver/model/schema/",
             "expectation",
             "requestDefinition",
@@ -31,7 +33,8 @@ public class JsonSchemaExpectationValidator extends JsonSchemaValidator {
             "connectionOptions",
             "keyToMultiValue",
             "keyToValue",
-            "socketAddress"
+            "socketAddress",
+            "draft-07"
         );
     }
 

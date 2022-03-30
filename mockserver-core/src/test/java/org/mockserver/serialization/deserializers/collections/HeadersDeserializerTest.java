@@ -21,7 +21,7 @@ import static org.mockserver.model.NottableString.string;
  */
 public class HeadersDeserializerTest {
 
-    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
+    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true, false);
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
     @Test

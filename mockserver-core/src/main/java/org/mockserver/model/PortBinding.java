@@ -1,6 +1,6 @@
 package org.mockserver.model;
 
-import org.mockserver.Version;
+import org.mockserver.version.Version;
 
 import java.util.ArrayList;
 import java.util.Arrays;

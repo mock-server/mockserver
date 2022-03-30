@@ -6,7 +6,8 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import org.mockserver.client.NettyHttpClient;
+import org.mockserver.configuration.Configuration;
+import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -20,7 +21,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 import static org.mockserver.exception.ExceptionHandling.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
 import static org.mockserver.formatting.StringFormatter.formatBytes;
@@ -36,12 +36,14 @@ import static org.mockserver.netty.unification.PortUnificationHandler.isSslEnabl
 @ChannelHandler.Sharable
 public class BinaryHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
-    private MockServerLogger mockServerLogger;
+    private final Configuration configuration;
+    private final MockServerLogger mockServerLogger;
     private final Scheduler scheduler;
     private final NettyHttpClient httpClient;
 
-    public BinaryHandler(final MockServerLogger mockServerLogger, final Scheduler scheduler, final NettyHttpClient httpClient) {
+    public BinaryHandler(final Configuration configuration, final MockServerLogger mockServerLogger, final Scheduler scheduler, final NettyHttpClient httpClient) {
         super(true);
+        this.configuration = configuration;
         this.mockServerLogger = mockServerLogger;
         this.scheduler = scheduler;
         this.httpClient = httpClient;
@@ -62,10 +64,10 @@ public class BinaryHandler extends SimpleChannelInboundHandler<ByteBuf> {
         final InetSocketAddress remoteAddress = getRemoteAddress(ctx);
         if (remoteAddress != null) {
             boolean synchronous = true;
-            CompletableFuture<BinaryMessage> binaryResponseFuture = httpClient.sendRequest(binaryRequest, isSslEnabledUpstream(ctx.channel()), remoteAddress, ConfigurationProperties.socketConnectionTimeout());
+            CompletableFuture<BinaryMessage> binaryResponseFuture = httpClient.sendRequest(binaryRequest, isSslEnabledUpstream(ctx.channel()), remoteAddress, configuration.socketConnectionTimeoutInMillis().intValue());
             scheduler.submit(binaryResponseFuture, () -> {
                 try {
-                    BinaryMessage binaryResponse = binaryResponseFuture.get(maxFutureTimeout(), MILLISECONDS);
+                    BinaryMessage binaryResponse = binaryResponseFuture.get(configuration.maxFutureTimeoutInMillis(), MILLISECONDS);
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setType(FORWARDED_REQUEST)

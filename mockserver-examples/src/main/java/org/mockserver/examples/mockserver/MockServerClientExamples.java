@@ -106,7 +106,7 @@ public class MockServerClientExamples {
         new MockServerClient("localhost", 1080)
             .verify(
                 openAPI(
-                    "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json"
+                    "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
                 ),
                 VerificationTimes.atLeast(2)
             );
@@ -116,11 +116,19 @@ public class MockServerClientExamples {
         new MockServerClient("localhost", 1080)
             .verify(
                 openAPI(
-                    "org/mockserver/mock/openapi_petstore_example.json",
+                    "org/mockserver/openapi/openapi_petstore_example.json",
                     "showPetById"
                 ),
                 VerificationTimes.once()
 
+            );
+    }
+
+    public void verifyRequestsReceiveExactlyOnceByExpectationIds() {
+        new MockServerClient("localhost", 1080)
+            .verify(
+                "31e4ca35-66c6-4645-afeb-6e66c4ca0559",
+                VerificationTimes.once()
             );
     }
 
@@ -142,13 +150,22 @@ public class MockServerClientExamples {
                 request()
                     .withPath("/status"),
                 openAPI(
-                    "org/mockserver/mock/openapi_petstore_example.json",
+                    "org/mockserver/openapi/openapi_petstore_example.json",
                     "listPets"
                 ),
                 openAPI(
-                    "org/mockserver/mock/openapi_petstore_example.json",
+                    "org/mockserver/openapi/openapi_petstore_example.json",
                     "showPetById"
                 )
+            );
+    }
+
+    public void verifyRequestSequenceUsingExpectationIds() {
+        new MockServerClient("localhost", 1080)
+            .verify(
+                "31e4ca35-66c6-4645-afeb-6e66c4ca0559",
+                "66c6ca35-ca35-66f5-8feb-5e6ac7ca0559",
+                "ca3531e4-23c8-ff45-88f5-4ca0c7ca0559"
             );
     }
 
@@ -189,10 +206,15 @@ public class MockServerClientExamples {
     public void clearWithOpenAPIRequestMatcher() {
         new MockServerClient("localhost", 1080).clear(
             openAPI(
-                "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
+                "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
                 "showPetById"
             )
         );
+    }
+
+    public void clearWithExpectation() {
+        new MockServerClient("localhost", 1080)
+            .clear("31e4ca35-66c6-4645-afeb-6e66c4ca0559");
     }
 
     public void clearRequestAndLogsWithRequestPropertiesMatcher() {
@@ -206,7 +228,7 @@ public class MockServerClientExamples {
     public void clearRequestAndLogsWithOpenAPIRequestMatcher() {
         new MockServerClient("localhost", 1080).clear(
             openAPI(
-                "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
+                "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
                 "showPetById"
             ),
             ClearType.LOG

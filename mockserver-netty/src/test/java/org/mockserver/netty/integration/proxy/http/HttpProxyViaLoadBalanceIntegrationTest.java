@@ -1,16 +1,18 @@
 package org.mockserver.netty.integration.proxy.http;
 
+import com.google.common.collect.ImmutableList;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockserver.client.NettyHttpClient;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.scheduler.Scheduler;
 import org.slf4j.event.Level;
 
@@ -24,6 +26,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -38,14 +41,20 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
     private static ClientAndServer targetClientAndServer;
     private static ClientAndServer loadBalancerClientAndServer;
 
-    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(HttpProxyViaLoadBalanceIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    private static EventLoopGroup clientEventLoopGroup;
 
-    private static final NettyHttpClient httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false);
+    private static NettyHttpClient httpClient;
 
     @BeforeClass
     public static void startServer() {
         targetClientAndServer = startClientAndServer();
         loadBalancerClientAndServer = startClientAndServer();
+    }
+
+    @BeforeClass
+    public static void startEventLoopGroup() {
+        clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(HttpProxyViaLoadBalanceIntegrationTest.class.getSimpleName() + "-eventLoop"));
+        httpClient = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false);
     }
 
     @AfterClass
@@ -120,7 +129,9 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
                 "    \"reasonPhrase\" : \"Not Found\"")
             );
         } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
+            if (originalLevel != null) {
+                ConfigurationProperties.logLevel(originalLevel.name());
+            }
         }
     }
 
@@ -182,7 +193,158 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
                 "    \"method\" : \"GET\"," + NEW_LINE +
                 "    \"path\" : \"/target\"," + NEW_LINE));
         } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
+            if (originalLevel != null) {
+                ConfigurationProperties.logLevel(originalLevel.name());
+            }
+        }
+    }
+
+    @Test
+    public void shouldReturnExpectationForTargetMockServerUsingLoadBalancerAsHTTPProxy() throws Exception {
+        NettyHttpClient httpClient = new NettyHttpClient(
+            configuration(),
+            new MockServerLogger(),
+            clientEventLoopGroup,
+            ImmutableList.of(ProxyConfiguration.proxyConfiguration(ProxyConfiguration.Type.HTTP, "localhost:" + loadBalancerClientAndServer.getPort())),
+            false
+        );
+        Level originalLevel = ConfigurationProperties.logLevel();
+        try {
+            // given
+            ConfigurationProperties.logLevel("INFO");
+            targetClientAndServer.reset();
+            loadBalancerClientAndServer.reset();
+            targetClientAndServer
+                .when(
+                    request()
+                        .withPath("/target")
+                )
+                .respond(
+                    response()
+                        .withBody("target_response")
+                );
+
+            // when
+            Future<HttpResponse> responseFuture =
+                httpClient.sendRequest(
+                    request()
+                        .withPath("/target")
+                        .withHeader(HOST.toString(), "localhost:" + targetClientAndServer.getPort()),
+                    new InetSocketAddress(targetClientAndServer.getPort())
+                );
+
+            // then - does not return a 404
+            HttpResponse httpResponse = responseFuture.get(10, TimeUnit.MINUTES);
+            assertThat(httpResponse.getStatusCode(), is(200));
+            assertThat(httpResponse.getBodyAsString(), is("target_response"));
+
+            // and - both proxy and target verify request received
+            loadBalancerClientAndServer.verify(request().withPath("/target"));
+            targetClientAndServer.verify(request().withPath("/target"));
+        } finally {
+            if (originalLevel != null) {
+                ConfigurationProperties.logLevel(originalLevel.name());
+            }
+        }
+    }
+
+    @Test
+    public void shouldReturnExpectationForTargetMockServerUsingLoadBalancerAsHTTPSProxy() throws Exception {
+        NettyHttpClient httpClient = new NettyHttpClient(
+            configuration(),
+            new MockServerLogger(),
+            clientEventLoopGroup,
+            ImmutableList.of(ProxyConfiguration.proxyConfiguration(ProxyConfiguration.Type.HTTPS, "localhost:" + loadBalancerClientAndServer.getPort())),
+            false
+        );
+        Level originalLevel = ConfigurationProperties.logLevel();
+        try {
+            // given
+            ConfigurationProperties.logLevel("INFO");
+            targetClientAndServer.reset();
+            loadBalancerClientAndServer.reset();
+            targetClientAndServer
+                .when(
+                    request()
+                        .withPath("/target")
+                )
+                .respond(
+                    response()
+                        .withBody("target_response")
+                );
+
+            // when
+            Future<HttpResponse> responseFuture =
+                httpClient.sendRequest(
+                    request()
+                        .withPath("/target")
+                        .withHeader(HOST.toString(), "localhost:" + targetClientAndServer.getPort())
+                        .withSecure(true),
+                    new InetSocketAddress(targetClientAndServer.getPort())
+                );
+
+            // then - does not return a 404
+            HttpResponse httpResponse = responseFuture.get(10, TimeUnit.MINUTES);
+            assertThat(httpResponse.getStatusCode(), is(200));
+            assertThat(httpResponse.getBodyAsString(), is("target_response"));
+
+            // and - both proxy and target verify request received
+            targetClientAndServer.verify(request().withPath("/target"));
+            loadBalancerClientAndServer.verify(request().withPath("/target"));
+        } finally {
+            if (originalLevel != null) {
+                ConfigurationProperties.logLevel(originalLevel.name());
+            }
+        }
+    }
+
+    @Test
+    public void shouldReturnExpectationForTargetMockServerUsingLoadBalancerAsSOCKS5Proxy() throws Exception {
+        NettyHttpClient httpClient = new NettyHttpClient(
+            configuration(),
+            new MockServerLogger(),
+            clientEventLoopGroup,
+            ImmutableList.of(ProxyConfiguration.proxyConfiguration(ProxyConfiguration.Type.SOCKS5, "localhost:" + loadBalancerClientAndServer.getPort())),
+            false
+        );
+        Level originalLevel = ConfigurationProperties.logLevel();
+        try {
+            // given
+            ConfigurationProperties.logLevel("INFO");
+            targetClientAndServer.reset();
+            loadBalancerClientAndServer.reset();
+            targetClientAndServer
+                .when(
+                    request()
+                        .withPath("/target")
+                )
+                .respond(
+                    response()
+                        .withBody("target_response")
+                );
+
+            // when
+            Future<HttpResponse> responseFuture =
+                httpClient.sendRequest(
+                    request()
+                        .withPath("/target")
+                        .withHeader(HOST.toString(), "localhost:" + targetClientAndServer.getPort())
+                        .withSecure(true),
+                    new InetSocketAddress(targetClientAndServer.getPort())
+                );
+
+            // then - does not return a 404
+            HttpResponse httpResponse = responseFuture.get(10, TimeUnit.MINUTES);
+            assertThat(httpResponse.getStatusCode(), is(200));
+            assertThat(httpResponse.getBodyAsString(), is("target_response"));
+
+            // and - both proxy and target verify request received
+            targetClientAndServer.verify(request().withPath("/target"));
+            loadBalancerClientAndServer.verify(request().withPath("/target"));
+        } finally {
+            if (originalLevel != null) {
+                ConfigurationProperties.logLevel(originalLevel.name());
+            }
         }
     }
 
@@ -219,7 +381,9 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
             HttpResponse httpResponse = responseFuture.get(10, TimeUnit.MINUTES);
             assertThat(httpResponse.getStatusCode(), is(404));
         } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
+            if (originalLevel != null) {
+                ConfigurationProperties.logLevel(originalLevel.name());
+            }
             ConfigurationProperties.attemptToProxyIfNoMatchingExpectation(originalAttemptToProxyIfNoMatchingExpectation);
         }
     }
@@ -284,7 +448,9 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
                 "    \"method\" : \"GET\"," + NEW_LINE +
                 "    \"path\" : \"/target\"," + NEW_LINE));
         } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
+            if (originalLevel != null) {
+                ConfigurationProperties.logLevel(originalLevel.name());
+            }
             ConfigurationProperties.attemptToProxyIfNoMatchingExpectation(originalAttemptToProxyIfNoMatchingExpectation);
         }
     }

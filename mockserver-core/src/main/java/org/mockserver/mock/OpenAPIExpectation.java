@@ -31,14 +31,14 @@ public class OpenAPIExpectation extends ObjectWithJsonToString {
      * ));
      *
      * // Create from a file on the local filesystem (json or yaml)
-     * openAPIExpectation("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/mock/openapi_petstore_example.json", ImmutableMap.of(
+     * openAPIExpectation("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/openapi/openapi_petstore_example.json", ImmutableMap.of(
      *     "listPets", "500",
      *     "createPets", "default",
      *     "showPetById", "200"
      * ));
      *
      * // Create from a classpath resource in the /api package (json or yaml)
-     * openAPIExpectation("org/mockserver/mock/openapi_petstore_example.json", ImmutableMap.of(
+     * openAPIExpectation("org/mockserver/openapi/openapi_petstore_example.json", ImmutableMap.of(
      *     "listPets", "500",
      *     "createPets", "default",
      *     "showPetById", "200"
@@ -75,14 +75,14 @@ public class OpenAPIExpectation extends ObjectWithJsonToString {
      * ));
      *
      * // Create from a file on the local filesystem (json or yaml)
-     * openAPIExpectation("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/mock/openapi_petstore_example.json", ImmutableMap.of(
+     * openAPIExpectation("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/openapi/openapi_petstore_example.json", ImmutableMap.of(
      *     "listPets", "500",
      *     "createPets", "default",
      *     "showPetById", "200"
      * ));
      *
      * // Create from a classpath resource in the /api package (json or yaml)
-     * openAPIExpectation("org/mockserver/mock/openapi_petstore_example.json", ImmutableMap.of(
+     * openAPIExpectation("org/mockserver/openapi/openapi_petstore_example.json", ImmutableMap.of(
      *     "listPets", "500",
      *     "createPets", "default",
      *     "showPetById", "200"
@@ -117,10 +117,10 @@ public class OpenAPIExpectation extends ObjectWithJsonToString {
      * withSpecUrlOrPayload("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml");
      *
      * // Create from a file on the local filesystem (json or yaml)
-     * withSpecUrlOrPayload("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/mock/openapi_petstore_example.json");
+     * withSpecUrlOrPayload("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/openapi/openapi_petstore_example.json");
      *
      * // Create from a classpath resource in the /api package (json or yaml)
-     * withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json");
+     * withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json");
      *
      * // Create from an OpenAPI payload (json or yaml)
      * withSpecUrlOrPayload("{\"openapi\": \"3.0.0\", \"info\": { ...");

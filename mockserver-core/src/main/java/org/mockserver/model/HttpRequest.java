@@ -34,7 +34,9 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     private Cookies cookies;
     private Boolean keepAlive = null;
     private Boolean secure = null;
+    private List<X509Certificate> clientCertificateChain;
     private SocketAddress socketAddress;
+    private String remoteAddress;
 
     public static HttpRequest request() {
         return new HttpRequest();
@@ -60,6 +62,12 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     public Boolean isSecure() {
+        if (socketAddress != null && socketAddress.getScheme() != null) {
+            if (socketAddress.getScheme() == SocketAddress.Scheme.HTTPS) {
+                secure = true;
+                this.hashCode = 0;
+            }
+        }
         return secure;
     }
 
@@ -70,6 +78,21 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      */
     public HttpRequest withSecure(Boolean isSecure) {
         this.secure = isSecure;
+        if (socketAddress != null && socketAddress.getScheme() != null) {
+            if (socketAddress.getScheme() == SocketAddress.Scheme.HTTPS) {
+                secure = true;
+            }
+        }
+        this.hashCode = 0;
+        return this;
+    }
+
+    public List<X509Certificate> getClientCertificateChain() {
+        return clientCertificateChain;
+    }
+
+    public HttpRequest withClientCertificateChain(List<X509Certificate> clientCertificateChain) {
+        this.clientCertificateChain = clientCertificateChain;
         this.hashCode = 0;
         return this;
     }
@@ -86,6 +109,11 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      */
     public HttpRequest withSocketAddress(SocketAddress socketAddress) {
         this.socketAddress = socketAddress;
+        if (socketAddress != null && socketAddress.getScheme() != null) {
+            if (socketAddress.getScheme() == SocketAddress.Scheme.HTTPS) {
+                secure = true;
+            }
+        }
         this.hashCode = 0;
         return this;
     }
@@ -149,6 +177,15 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
         }
         this.hashCode = 0;
         return this;
+    }
+
+    public HttpRequest withRemoteAddress(String remoteAddress) {
+        this.remoteAddress = remoteAddress;
+        return this;
+    }
+
+    public String getRemoteAddress() {
+        return remoteAddress;
     }
 
     /**
@@ -219,7 +256,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * The path to match on such as "/some_mocked_path" any servlet context path is ignored for matching and should not be specified here
-     * regex values are also supported such as ".*_path", see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html
+     * regex values are also supported such as ".*_path", see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html
      * for full details of the supported regex syntax
      *
      * @param path the path such as "/some_mocked_path" or a regex
@@ -232,7 +269,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     /**
      * The path to not match on for example not("/some_mocked_path") with match any path not equal to "/some_mocked_path",
      * the servlet context path is ignored for matching and should not be specified hereregex values are also supported
-     * such as not(".*_path"), see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html for full details
+     * such as not(".*_path"), see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html for full details
      * of the supported regex syntax
      *
      * @param path the path to not match on such as not("/some_mocked_path") or not(".*_path")
@@ -319,7 +356,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * The path parameter to match on as a list of Parameter objects where the values or keys of each parameter can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameters the list of Parameter objects where the values or keys of each parameter can be either a string or a regex
      */
@@ -331,7 +368,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * The path parameter to match on as a varags Parameter objects where the values or keys of each parameter can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameters the varags Parameter objects where the values or keys of each parameter can be either a string or a regex
      */
@@ -342,10 +379,10 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     /**
-     * The path parameter to match on as a Map<String, List<String>> where the values or keys of each parameter can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * The path parameter to match on as a Map&lt;String, List&lt;String&gt;&gt; where the values or keys of each parameter can be either a string or a regex
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
-     * @param parameters the Map<String, List<String>> object where the values or keys of each parameter can be either a string or a regex
+     * @param parameters the Map&lt;String, List&lt;String&gt;&gt; object where the values or keys of each parameter can be either a string or a regex
      */
     public HttpRequest withPathParameters(Map<String, List<String>> parameters) {
         getOrCreatePathParameters().withEntries(parameters);
@@ -355,7 +392,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * Adds one path parameter to match on as a Parameter object where the parameter values list can be a list of strings or regular expressions
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameter the Parameter object which can have a values list of strings or regular expressions
      */
@@ -367,12 +404,15 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * Adds one path parameter to match which can specified using plain strings or regular expressions
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param name   the parameter name
      * @param values the parameter values which can be a varags of strings or regular expressions
      */
     public HttpRequest withPathParameter(String name, String... values) {
+        if (values.length == 0) {
+            values = new String[]{".*"};
+        }
         getOrCreatePathParameters().withEntry(name, values);
         this.hashCode = 0;
         return this;
@@ -386,6 +426,9 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      * @param values the parameter values which can be a varags of JSON schemas
      */
     public HttpRequest withSchemaPathParameter(String name, String... values) {
+        if (values.length == 0) {
+            values = new String[]{".*"};
+        }
         getOrCreatePathParameters().withEntry(string(name), Arrays.stream(values).map(NottableSchemaString::schemaString).toArray(NottableString[]::new));
         this.hashCode = 0;
         return this;
@@ -395,12 +438,15 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      * Adds one path parameter to match on or to not match on using the NottableString, each NottableString can either be a positive matching
      * value, such as string("match"), or a value to not match on, such as not("do not match"), the string values passed to the NottableString
      * can also be a plain string or a regex (for more details of the supported regex syntax
-     * see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param name   the parameter name as a NottableString
      * @param values the parameter values which can be a varags of NottableStrings
      */
     public HttpRequest withPathParameter(NottableString name, NottableString... values) {
+        if (values.length == 0) {
+            values = new NottableString[]{string(".*")};
+        }
         getOrCreatePathParameters().withEntry(name, values);
         this.hashCode = 0;
         return this;
@@ -464,7 +510,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * The query string parameters to match on as a list of Parameter objects where the values or keys of each parameter can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameters the list of Parameter objects where the values or keys of each parameter can be either a string or a regex
      */
@@ -476,7 +522,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * The query string parameters to match on as a varags Parameter objects where the values or keys of each parameter can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameters the varags Parameter objects where the values or keys of each parameter can be either a string or a regex
      */
@@ -487,10 +533,10 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     /**
-     * The query string parameters to match on as a Map<String, List<String>> where the values or keys of each parameter can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * The query string parameters to match on as a Map&lt;String, List&lt;String&gt;&gt; where the values or keys of each parameter can be either a string or a regex
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
-     * @param parameters the Map<String, List<String>> object where the values or keys of each parameter can be either a string or a regex
+     * @param parameters the Map&lt;String, List&lt;String&gt;&gt; object where the values or keys of each parameter can be either a string or a regex
      */
     public HttpRequest withQueryStringParameters(Map<String, List<String>> parameters) {
         getOrCreateQueryStringParameters().withEntries(parameters);
@@ -500,7 +546,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * Adds one query string parameter to match on as a Parameter object where the parameter values list can be a list of strings or regular expressions
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameter the Parameter object which can have a values list of strings or regular expressions
      */
@@ -512,7 +558,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * Adds one query string parameter to match which the values are plain strings or regular expressions
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param name   the parameter name
      * @param values the parameter values which can be a varags of strings or regular expressions
@@ -531,6 +577,9 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      * @param values the parameter values which can be a varags of JSON schemas
      */
     public HttpRequest withSchemaQueryStringParameter(String name, String... values) {
+        if (values.length == 0) {
+            values = new String[]{".*"};
+        }
         getOrCreateQueryStringParameters().withEntry(string(name), Arrays.stream(values).map(NottableSchemaString::schemaString).toArray(NottableString[]::new));
         this.hashCode = 0;
         return this;
@@ -540,12 +589,15 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      * Adds one query string parameter to match on or to not match on using the NottableString, each NottableString can either be a positive matching
      * value, such as string("match"), or a value to not match on, such as not("do not match"), the string values passed to the NottableString
      * can also be a plain string or a regex (for more details of the supported regex syntax
-     * see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param name   the parameter name as a NottableString
      * @param values the parameter values which can be a varags of NottableStrings
      */
     public HttpRequest withQueryStringParameter(NottableString name, NottableString... values) {
+        if (values.length == 0) {
+            values = new NottableString[]{string(".*")};
+        }
         getOrCreateQueryStringParameters().withEntry(name, values);
         this.hashCode = 0;
         return this;
@@ -687,7 +739,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      * <p>
      * - new BinaryBody(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("example.pdf"), 1024));
      * <p>
-     * for more details of the supported regular expression syntax see <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html</a>
+     * for more details of the supported regular expression syntax see <a href="http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html</a>
      * for more details of the supported json syntax see <a href="http://jsonassert.skyscreamer.org">http://jsonassert.skyscreamer.org</a>
      * for more details of the supported json schema syntax see <a href="http://json-schema.org/">http://json-schema.org/</a>
      * for more detail of XPath syntax see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">http://saxon.sourceforge.net/saxon6.5.3/expressions.html</a>
@@ -757,7 +809,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * The headers to match on as a list of Header objects where the values or keys of each header can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param headers the list of Header objects where the values or keys of each header can be either a string or a regex
      */
@@ -769,7 +821,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * The headers to match on as a varags of Header objects where the values or keys of each header can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param headers the varags of Header objects where the values or keys of each header can be either a string or a regex
      */
@@ -781,7 +833,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * Adds one header to match on as a Header object where the header values list can be a list of strings or regular expressions
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param header the Header object which can have a values list of strings or regular expressions
      */
@@ -793,12 +845,15 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * Adds one header to match which can specified using plain strings or regular expressions
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param name   the header name
      * @param values the header values which can be a varags of strings or regular expressions
      */
     public HttpRequest withHeader(String name, String... values) {
+        if (values.length == 0) {
+            values = new String[]{".*"};
+        }
         getOrCreateHeaders().withEntry(header(name, values));
         this.hashCode = 0;
         return this;
@@ -812,6 +867,9 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      * @param values the header values which can be a varags of JSON schemas
      */
     public HttpRequest withSchemaHeader(String name, String... values) {
+        if (values.length == 0) {
+            values = new String[]{".*"};
+        }
         getOrCreateHeaders().withEntry(header(string(name), Arrays.stream(values).map(NottableSchemaString::schemaString).toArray(NottableString[]::new)));
         this.hashCode = 0;
         return this;
@@ -821,12 +879,15 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      * Adds one header to match on or to not match on using the NottableString, each NottableString can either be a positive matching value,
      * such as string("match"), or a value to not match on, such as not("do not match"), the string values passed to the NottableString
      * can also be a plain string or a regex (for more details of the supported regex syntax
-     * see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param name   the header name as a NottableString
      * @param values the header values which can be a varags of NottableStrings
      */
     public HttpRequest withHeader(NottableString name, NottableString... values) {
+        if (values.length == 0) {
+            values = new NottableString[]{string(".*")};
+        }
         getOrCreateHeaders().withEntry(header(name, values));
         this.hashCode = 0;
         return this;
@@ -840,7 +901,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * Adds one header to match on as a Header object where the header values list can be a list of strings or regular expressions
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param header the Header object which can have a values list of strings or regular expressions
      */
@@ -943,7 +1004,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * The cookies to match on as a list of Cookie objects where the values or keys of each cookie can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param cookies a list of Cookie objects
      */
@@ -955,7 +1016,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * The cookies to match on as a varags Cookie objects where the values or keys of each cookie can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param cookies a varargs of Cookie objects
      */
@@ -967,7 +1028,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * Adds one cookie to match on as a Cookie object where the cookie values list can be a list of strings or regular expressions
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param cookie a Cookie object
      */
@@ -979,7 +1040,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * Adds one cookie to match on, which the value is plain strings or regular expressions
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param name  the cookies name
      * @param value the cookies value
@@ -1007,7 +1068,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      * Adds one cookie to match on or to not match on using the NottableString, each NottableString can either be a positive matching value,
      * such as string("match"), or a value to not match on, such as not("do not match"), the string values passed to the NottableString
      * can be a plain string or a regex (for more details of the supported regex syntax see
-     * http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param name  the cookies name
      * @param value the cookies value
@@ -1065,41 +1126,59 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
             .withCookies(cookies != null ? cookies.clone() : null)
             .withKeepAlive(keepAlive)
             .withSecure(secure)
-            .withSocketAddress(socketAddress);
+            .withClientCertificateChain(clientCertificateChain != null && !clientCertificateChain.isEmpty() ? clientCertificateChain.stream().map(X509Certificate::clone).collect(Collectors.toList()) : null)
+            .withSocketAddress(socketAddress)
+            .withRemoteAddress(remoteAddress);
     }
 
-    public HttpRequest update(HttpRequest replaceRequest) {
-        if (replaceRequest.getMethod() != null && isNotBlank(replaceRequest.getMethod().getValue())) {
-            withMethod(replaceRequest.getMethod());
+    public HttpRequest update(HttpRequest requestOverride, HttpRequestModifier requestModifier) {
+        if (requestOverride != null) {
+            if (requestOverride.getMethod() != null && isNotBlank(requestOverride.getMethod().getValue())) {
+                withMethod(requestOverride.getMethod());
+            }
+            if (requestOverride.getPath() != null && isNotBlank(requestOverride.getPath().getValue())) {
+                withPath(requestOverride.getPath());
+            }
+            for (Parameter parameter : requestOverride.getPathParameterList()) {
+                getOrCreatePathParameters().replaceEntry(parameter);
+            }
+            for (Parameter parameter : requestOverride.getQueryStringParameterList()) {
+                getOrCreateQueryStringParameters().replaceEntry(parameter);
+            }
+            if (requestOverride.getBody() != null) {
+                withBody(requestOverride.getBody());
+            }
+            for (Header header : requestOverride.getHeaderList()) {
+                getOrCreateHeaders().replaceEntry(header);
+            }
+            for (Cookie cookie : requestOverride.getCookieList()) {
+                withCookie(cookie);
+            }
+            if (requestOverride.isSecure() != null) {
+                withSecure(requestOverride.isSecure());
+            }
+            if (requestOverride.isKeepAlive() != null) {
+                withKeepAlive(requestOverride.isKeepAlive());
+            }
+            if (requestOverride.getSocketAddress() != null) {
+                withSocketAddress(requestOverride.getSocketAddress());
+            }
+            this.hashCode = 0;
         }
-        if (replaceRequest.getPath() != null && isNotBlank(replaceRequest.getPath().getValue())) {
-            withPath(replaceRequest.getPath());
+        if (requestModifier != null) {
+            if (requestModifier.getPath() != null) {
+                withPath(requestModifier.getPath().update(getPath()));
+            }
+            if (requestModifier.getQueryStringParameters() != null) {
+                withQueryStringParameters(requestModifier.getQueryStringParameters().update(getQueryStringParameters()));
+            }
+            if (requestModifier.getHeaders() != null) {
+                withHeaders(requestModifier.getHeaders().update(getHeaders()));
+            }
+            if (requestModifier.getCookies() != null) {
+                withCookies(requestModifier.getCookies().update(getCookies()));
+            }
         }
-        for (Parameter parameter : replaceRequest.getPathParameterList()) {
-            getOrCreatePathParameters().replaceEntry(parameter);
-        }
-        for (Parameter parameter : replaceRequest.getQueryStringParameterList()) {
-            getOrCreateQueryStringParameters().replaceEntry(parameter);
-        }
-        if (replaceRequest.getBody() != null) {
-            withBody(replaceRequest.getBody());
-        }
-        for (Header header : replaceRequest.getHeaderList()) {
-            getOrCreateHeaders().replaceEntry(header);
-        }
-        for (Cookie cookie : replaceRequest.getCookieList()) {
-            withCookie(cookie);
-        }
-        if (replaceRequest.isSecure() != null) {
-            withSecure(replaceRequest.isSecure());
-        }
-        if (replaceRequest.isKeepAlive() != null) {
-            withKeepAlive(replaceRequest.isKeepAlive());
-        }
-        if (replaceRequest.getSocketAddress() != null) {
-            withSocketAddress(replaceRequest.getSocketAddress());
-        }
-        this.hashCode = 0;
         return this;
     }
 
@@ -1127,13 +1206,16 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
             Objects.equals(cookies, that.cookies) &&
             Objects.equals(keepAlive, that.keepAlive) &&
             Objects.equals(secure, that.secure) &&
+            Objects.equals(clientCertificateChain, that.clientCertificateChain) &&
             Objects.equals(socketAddress, that.socketAddress);
     }
 
     @Override
     public int hashCode() {
+        // need to call isSecure because getter can change the hashcode
+        isSecure();
         if (hashCode == 0) {
-            hashCode = Objects.hash(super.hashCode(), method, path, pathParameters, queryStringParameters, body, headers, cookies, keepAlive, secure, socketAddress);
+            hashCode = Objects.hash(super.hashCode(), method, path, pathParameters, queryStringParameters, body, headers, cookies, keepAlive, secure, clientCertificateChain, socketAddress);
         }
         return hashCode;
     }

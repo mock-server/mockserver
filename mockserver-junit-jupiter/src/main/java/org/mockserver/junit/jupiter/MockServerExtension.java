@@ -11,17 +11,17 @@ import java.util.List;
 import java.util.Optional;
 
 public class MockServerExtension implements ParameterResolver, BeforeAllCallback, AfterAllCallback {
-    private static ClientAndServer perTestSuiteClient;
-    private final ClientAndServer clientAndServer;
-    private ClientAndServer client;
-    private boolean perTestSuite;
+    protected static ClientAndServer perTestSuiteClientAndServer;
+    protected ClientAndServer customClientAndServer;
+    protected ClientAndServer clientAndServer;
+    protected boolean perTestSuite;
 
     public MockServerExtension() {
-        this.clientAndServer = new ClientAndServer();
+
     }
 
     public MockServerExtension(ClientAndServer clientAndServer) {
-        this.clientAndServer = clientAndServer;
+        this.customClientAndServer = clientAndServer;
     }
 
     @Override
@@ -31,7 +31,7 @@ public class MockServerExtension implements ParameterResolver, BeforeAllCallback
 
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return client;
+        return clientAndServer;
     }
 
     @Override
@@ -45,24 +45,29 @@ public class MockServerExtension implements ParameterResolver, BeforeAllCallback
                 ports.add(port);
             }
         }
-        client = instantiateClient(ports);
+        clientAndServer = instantiateClient(ports);
     }
 
-    private ClientAndServer instantiateClient(List<Integer> ports) {
-        if (perTestSuite) {
-            if (perTestSuiteClient == null) {
-                perTestSuiteClient = ClientAndServer.startClientAndServer(ports);
-                Runtime.getRuntime().addShutdownHook(new Scheduler.SchedulerThreadFactory("MockServer Test Extension ShutdownHook").newThread(() -> perTestSuiteClient.stop()));
+    ClientAndServer instantiateClient(List<Integer> ports) {
+        synchronized (MockServerExtension.class) {
+            if (perTestSuite) {
+                if (perTestSuiteClientAndServer == null) {
+                    perTestSuiteClientAndServer = ClientAndServer.startClientAndServer(ports);
+                    Runtime.getRuntime().addShutdownHook(new Scheduler.SchedulerThreadFactory("MockServer Test Extension ShutdownHook").newThread(() -> perTestSuiteClientAndServer.stop()));
+                }
+                return perTestSuiteClientAndServer;
+            } else if (customClientAndServer != null) {
+                return customClientAndServer;
+            } else {
+                return ClientAndServer.startClientAndServer(ports);
             }
-            return perTestSuiteClient;
         }
-        return ClientAndServer.startClientAndServer(ports);
     }
 
     @Override
     public void afterAll(ExtensionContext extensionContext) {
-        if (!perTestSuite && client.isRunning()) {
-            client.stop();
+        if (!perTestSuite && clientAndServer.isRunning()) {
+            clientAndServer.stop();
         }
     }
 

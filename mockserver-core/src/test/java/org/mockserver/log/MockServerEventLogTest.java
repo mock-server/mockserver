@@ -12,6 +12,7 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpState;
 import org.mockserver.model.RequestDefinition;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.time.EpochService;
 import org.slf4j.event.Level;
 
 import java.util.List;
@@ -25,6 +26,7 @@ import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.mock;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.log.model.LogEntryMessages.RECEIVED_REQUEST_MESSAGE_FORMAT;
 import static org.mockserver.model.HttpRequest.request;
@@ -39,13 +41,13 @@ public class MockServerEventLogTest {
 
     @BeforeClass
     public static void fixTime() {
-        TimeService.fixedTime = true;
+        EpochService.fixedTime = true;
     }
 
     @Before
     public void setupTestFixture() {
         Scheduler scheduler = mock(Scheduler.class);
-        HttpState httpStateHandler = new HttpState(new MockServerLogger(), scheduler);
+        HttpState httpStateHandler = new HttpState(configuration(), new MockServerLogger(), scheduler);
         mockServerLogger = httpStateHandler.getMockServerLogger();
         mockServerEventLog = httpStateHandler.getMockServerLog();
     }
@@ -248,7 +250,7 @@ public class MockServerEventLogTest {
             ));
             assertThat(retrieveRequestResponseMessageLogEntries(null), contains(
                 new LogEntry()
-                    .setEpochTime(TimeService.currentTimeMillis())
+                    .setEpochTime(EpochService.currentTimeMillis())
                     .setLogLevel(INFO)
                     .setType(NO_MATCH_RESPONSE)
                     .setHttpRequest(request("request_one"))
@@ -256,7 +258,7 @@ public class MockServerEventLogTest {
                     .setMessageFormat("no expectation for:{}returning response:{}")
                     .setArguments(request("request_one"), notFoundResponse()),
                 new LogEntry()
-                    .setEpochTime(TimeService.currentTimeMillis())
+                    .setEpochTime(EpochService.currentTimeMillis())
                     .setLogLevel(INFO)
                     .setType(EXPECTATION_RESPONSE)
                     .setHttpRequest(request("request_two"))
@@ -399,7 +401,7 @@ public class MockServerEventLogTest {
             ));
             assertThat(retrieveRequestResponseMessageLogEntries(requestMatcher), contains(
                 new LogEntry()
-                    .setEpochTime(TimeService.currentTimeMillis())
+                    .setEpochTime(EpochService.currentTimeMillis())
                     .setLogLevel(INFO)
                     .setType(NO_MATCH_RESPONSE)
                     .setHttpRequest(request("request_one"))
@@ -816,7 +818,7 @@ public class MockServerEventLogTest {
             ));
             assertThat(retrieveRequestResponseMessageLogEntries(null), contains(
                 new LogEntry()
-                    .setEpochTime(TimeService.currentTimeMillis())
+                    .setEpochTime(EpochService.currentTimeMillis())
                     .setLogLevel(INFO)
                     .setType(EXPECTATION_RESPONSE)
                     .setHttpRequest(request("request_two"))

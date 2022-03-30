@@ -2,6 +2,8 @@ package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.serialization.ObjectMapperFactory;
 
@@ -9,7 +11,7 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Objects;
 
-import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
+import static org.mockserver.model.MediaType.DEFAULT_TEXT_HTTP_CHARACTER_SET;
 
 /**
  * @author jamesdbloom
@@ -22,6 +24,8 @@ public class JsonBody extends BodyWithContentType<String> {
     private final String json;
     private final MatchType matchType;
     private final byte[] rawBytes;
+    private static ObjectMapper objectMapper;
+    private JsonNode jsonNode;
 
     public JsonBody(String json) {
         this(json, null, DEFAULT_JSON_CONTENT_TYPE, DEFAULT_MATCH_TYPE);
@@ -41,7 +45,7 @@ public class JsonBody extends BodyWithContentType<String> {
         this.matchType = matchType;
 
         if (rawBytes == null && json != null) {
-            this.rawBytes = json.getBytes(determineCharacterSet(contentType, DEFAULT_HTTP_CHARACTER_SET));
+            this.rawBytes = json.getBytes(determineCharacterSet(contentType, DEFAULT_TEXT_HTTP_CHARACTER_SET));
         } else {
             this.rawBytes = rawBytes;
         }
@@ -103,6 +107,20 @@ public class JsonBody extends BodyWithContentType<String> {
 
     public static JsonBody json(Object object, MediaType contentType, MatchType matchType) {
         return new JsonBody(toJson(object), null, contentType, matchType);
+    }
+
+    public JsonNode get(String field) {
+        if (jsonNode == null) {
+            if (objectMapper == null) {
+                objectMapper = ObjectMapperFactory.createObjectMapper();
+            }
+            try {
+                jsonNode = objectMapper.readTree(json);
+            } catch (JsonProcessingException jpe) {
+                throw new RuntimeException(jpe.getMessage(), jpe);
+            }
+        }
+        return jsonNode.get(field);
     }
 
     public String getValue() {

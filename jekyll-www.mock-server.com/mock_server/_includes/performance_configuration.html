@@ -14,7 +14,7 @@
         <li>retrieving logs</li>
     </ul>
     <p>Expectation actions are handled in a separate thread pool to ensure slow object or class callbacks and response / forward delays do not impact the main event loop.</p>
-    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">maximum of 35 or available processors count</span></p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">5</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.nioEventLoopThreadCount(int count)</code></pre>
     <p>System Property:</p>
@@ -24,7 +24,7 @@
     <p>Property File:</p>
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.nioEventLoopThreadCount=...</code></pre>
     <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.nioEventLoopThreadCount="20"</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.nioEventLoopThreadCount="5"</code></pre>
 </div>
 
 <button id="button_configuration_action_handler_thread_count" class="accordion title"><strong>Number of Action Handler Threads</strong></button>
@@ -37,7 +37,7 @@
         <li>executing class callbacks</li>
         <li>handling method / closure callbacks (using web sockets)</li>
     </ul>
-    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">maximum of 20 or available processors count</span></p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">maximum of 5 or available processors count</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.actionHandlerThreadCount(int count)</code></pre>
     <p>System Property:</p>
@@ -47,10 +47,27 @@
     <p>Property File:</p>
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.actionHandlerThreadCount=...</code></pre>
     <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.actionHandlerThreadCount="20"</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.actionHandlerThreadCount="5"</code></pre>
 </div>
 
-<button id="button_configuration_web_socket_event_loop_thread_count" class="accordion title"><strong>Number of Web Socket Client Event Loop Threads</strong></button>
+<button id="button_configuration_client_nio_event_loop_thread_count" class="accordion title"><strong>Number of Client Event Loop Threads</strong></button>
+<div class="panel title">
+    <p>Number of threads for client event loop when calling downstream</p>
+    <p>These threads are used for fast non-blocking activities such as, reading and de-serialise all requests and responses</p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">5</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.clientNioEventLoopThreadCount(int count)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.clientNioEventLoopThreadCount=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CLIENT_NIO_EVENT_LOOP_THREAD_COUNT=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.clientNioEventLoopThreadCount=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.clientNioEventLoopThreadCount="5"</code></pre>
+</div>
+
+<button id="button_configuration_web_socket_event_loop_thread_count" class="accordion title"><strong>Number of Client Web Socket Event Loop Threads</strong></button>
 <div class="panel title">
     <p>Number of threads for each expectation with a method / closure callback (i.e. web socket client) in the <strong>org.mockserver.client.MockServerClient</strong></p>
     <p>This setting only effects the Java client and how requests each method / closure callbacks it can handle, the default is 5 which should be suitable except in extreme cases.</p>
@@ -64,7 +81,40 @@
     <p>Property File:</p>
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.webSocketClientEventLoopThreadCount=...</code></pre>
     <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.webSocketClientEventLoopThreadCount="20"</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.webSocketClientEventLoopThreadCount="5"</code></pre>
+</div>
+
+<button id="button_configuration_max_socket_timeout" class="accordion title"><strong>Maximum Future Timeout In Millis</strong></button>
+<div class="panel title">
+    <p>Maximum time allowed in milliseconds for any future to wait, for example when waiting for a response over a web socket callback.</p>
+    <p>Type: <span class="keyword">long</span> Default: <span class="this_value">60000</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxFutureTimeout(long milliseconds)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxFutureTimeout=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_MAX_FUTURE_TIMEOUT=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.maxFutureTimeout=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxFutureTimeout="60000"</code></pre>
+</div>
+
+<button id="button_configuration_matchers_fail_fast" class="accordion title"><strong>Request Matchers Fail Fast</strong></button>
+<div class="panel title">
+    <p>If true (the default) request matchers will fail on the first non-matching field, if false request matchers will compare all fields.</p>
+    <p>This is useful to see all mismatching fields in the log event recording that a request matcher did not match.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">true</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.matchersFailFast(boolean enable)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.matchersFailFast=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_MATCHERS_FAIL_FAST=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.matchersFailFast=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.matchersFailFast="false"</code></pre>
 </div>
 
 <button id="button_configuration_performance_log_level" class="accordion title"><strong>Log Level</strong></button>
@@ -84,7 +134,7 @@
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.logLevel="DEBUG"</code></pre>
 </div>
 
-<button id="button_configuration_performance_disable_system_out" class="accordion title"><strong>Disable System Out Log Output</strong></button>
+<button id="button_configuration_performance_disable_system_out" class="accordion title"><strong>Disable Logging To System Out</strong></button>
 <div class="panel title">
     <p>Disable logging to the system output</p>
     <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
@@ -98,4 +148,20 @@
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.disableSystemOut=...</code></pre>
     <p>Example:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.disableSystemOut="true"</code></pre>
+</div>
+
+<button id="button_configuration_performance_disable_logging" class="accordion title"><strong>Disable All Logging</strong></button>
+<div class="panel title">
+    <p>Disable all logging and processing of log events</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.disableLogging(boolean disableLogging)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.disableLogging=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_DISABLE_LOGGING=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.disableLogging=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.disableLogging="true"</code></pre>
 </div>

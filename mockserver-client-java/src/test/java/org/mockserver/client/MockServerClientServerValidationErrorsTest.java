@@ -112,7 +112,7 @@ public class MockServerClientServerValidationErrorsTest {
             UUIDService.fixedUUID = true;
             String responseBody = "some_random_response";
             echoServer.withNextResponse(response()
-                .withStatusCode(401)
+                .withStatusCode(403)
                 .withContentType(TEXT_PLAIN)
                 .withBody(responseBody)
             );

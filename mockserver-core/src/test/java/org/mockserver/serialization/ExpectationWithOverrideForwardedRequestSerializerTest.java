@@ -51,11 +51,11 @@ public class ExpectationWithOverrideForwardedRequestSerializerTest {
         10)
         .thenForward(
             new HttpOverrideForwardedRequest()
-                .withHttpRequest(
+                .withRequestOverride(
                     request("some_overridden_path")
                         .withBody("some_overridden_body")
                 )
-                .withHttpResponse(
+                .withResponseOverride(
                     response("some_overridden_path")
                         .withHeader("headerName", "headerValue")
                 )
@@ -83,11 +83,11 @@ public class ExpectationWithOverrideForwardedRequestSerializerTest {
         .setHttpOverrideForwardedRequest(
             new HttpOverrideForwardedRequestDTO(
                 new HttpOverrideForwardedRequest()
-                    .withHttpRequest(
+                    .withRequestOverride(
                         request("some_overridden_path")
                             .withBody("some_overridden_body")
                     )
-                    .withHttpResponse(
+                    .withResponseOverride(
                         response("some_overridden_path")
                             .withHeader("headerName", "headerValue")
                     )

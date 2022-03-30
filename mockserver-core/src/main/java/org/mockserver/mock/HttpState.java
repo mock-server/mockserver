@@ -1,7 +1,11 @@
 package org.mockserver.mock;
 
+import com.google.common.annotations.VisibleForTesting;
+import org.mockserver.authentication.AuthenticationException;
+import org.mockserver.authentication.AuthenticationHandler;
+import org.mockserver.closurecallback.websocketregistry.LocalCallbackRegistry;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -23,6 +27,7 @@ import org.slf4j.event.Level;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -38,14 +43,13 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.*;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.configuration.ConfigurationProperties.addSubjectAlternativeName;
-import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 import static org.mockserver.log.model.LogEntry.LogMessageType.CLEARED;
 import static org.mockserver.log.model.LogEntry.LogMessageType.RETRIEVED;
 import static org.mockserver.log.model.LogEntryMessages.RECEIVED_REQUEST_MESSAGE_FORMAT;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.openapi.OpenAPIParser.OPEN_API_LOAD_ERROR;
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -62,6 +66,7 @@ public class HttpState {
     private ExpectationFileWatcher expectationFileWatcher;
     // mockserver
     private final RequestMatchers requestMatchers;
+    private final Configuration configuration;
     private final MockServerLogger mockServerLogger;
     private final WebSocketClientRegistry webSocketClientRegistry;
     // serializers
@@ -69,6 +74,7 @@ public class HttpState {
     private RequestDefinitionSerializer requestDefinitionSerializer;
     private LogEventRequestAndResponseSerializer httpRequestResponseSerializer;
     private ExpectationSerializer expectationSerializer;
+    private ExpectationSerializer expectationSerializerThatSerializesBodyDefault;
     private OpenAPIExpectationSerializer openAPIExpectationSerializer;
     private ExpectationToJavaSerializer expectationToJavaSerializer;
     private VerificationSerializer verificationSerializer;
@@ -76,6 +82,7 @@ public class HttpState {
     private LogEntrySerializer logEntrySerializer;
     private final MemoryMonitoring memoryMonitoring;
     private OpenAPIConverter openAPIConverter;
+    private AuthenticationHandler controlPlaneAuthenticationHandler;
 
     public static void setPort(final HttpRequest request) {
         if (request != null && request.getSocketAddress() != null) {
@@ -104,20 +111,35 @@ public class HttpState {
         return LOCAL_PORT.get();
     }
 
-    public HttpState(MockServerLogger mockServerLogger, Scheduler scheduler) {
+    public HttpState(Configuration configuration, MockServerLogger mockServerLogger, Scheduler scheduler) {
+        this.configuration = configuration;
         this.mockServerLogger = mockServerLogger.setHttpStateHandler(this);
         this.scheduler = scheduler;
-        this.webSocketClientRegistry = new WebSocketClientRegistry(mockServerLogger);
-        this.mockServerLog = new MockServerEventLog(mockServerLogger, scheduler, true);
-        this.requestMatchers = new RequestMatchers(mockServerLogger, scheduler, webSocketClientRegistry);
-        if (ConfigurationProperties.persistExpectations()) {
-            this.expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, requestMatchers);
+        this.webSocketClientRegistry = new WebSocketClientRegistry(configuration, mockServerLogger);
+        LocalCallbackRegistry.setMaxWebSocketExpectations(configuration.maxWebSocketExpectations());
+        this.mockServerLog = new MockServerEventLog(configuration, mockServerLogger, scheduler, true);
+        this.requestMatchers = new RequestMatchers(configuration, mockServerLogger, scheduler, webSocketClientRegistry);
+        if (configuration.persistExpectations()) {
+            this.expectationFileSystemPersistence = new ExpectationFileSystemPersistence(configuration, mockServerLogger, requestMatchers);
         }
-        if (ConfigurationProperties.watchInitializationJson()) {
-            this.expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, requestMatchers);
+        if (isNotBlank(configuration.initializationJsonPath()) || isNotBlank(configuration.initializationClass())) {
+            ExpectationInitializerLoader expectationInitializerLoader = new ExpectationInitializerLoader(configuration, mockServerLogger, requestMatchers);
+            if (isNotBlank(configuration.initializationJsonPath()) && configuration.watchInitializationJson()) {
+                this.expectationFileWatcher = new ExpectationFileWatcher(configuration, mockServerLogger, requestMatchers, expectationInitializerLoader);
+            }
         }
-        this.memoryMonitoring = new MemoryMonitoring(this.mockServerLog, this.requestMatchers);
-        new ExpectationInitializerLoader(mockServerLogger, requestMatchers);
+        this.memoryMonitoring = new MemoryMonitoring(configuration, this.mockServerLog, this.requestMatchers);
+        if (MockServerLogger.isEnabled(TRACE)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(TRACE)
+                    .setMessageFormat("log ring buffer created, with size " + configuration.ringBufferSize())
+            );
+        }
+    }
+
+    public void setControlPlaneAuthenticationHandler(AuthenticationHandler controlPlaneAuthenticationHandler) {
+        this.controlPlaneAuthenticationHandler = controlPlaneAuthenticationHandler;
     }
 
     public MockServerLogger getMockServerLogger() {
@@ -127,15 +149,21 @@ public class HttpState {
     public void clear(HttpRequest request) {
         final String logCorrelationId = UUIDService.getUUID();
         RequestDefinition requestDefinition = null;
+        ExpectationId expectationId = null;
         if (isNotBlank(request.getBodyAsString())) {
             String body = request.getBodyAsJsonOrXmlString();
             try {
-                requestDefinition = resolveExpectationId(getExpectationIdSerializer().deserialize(body));
-            } catch (IllegalArgumentException ignore) {
+                expectationId = getExpectationIdSerializer().deserialize(body);
+            } catch (Throwable throwable) {
                 // assume not expectationId
                 requestDefinition = getRequestDefinitionSerializer().deserialize(body);
-                requestDefinition.withLogCorrelationId(logCorrelationId);
             }
+            if (expectationId != null) {
+                requestDefinition = resolveExpectationId(expectationId);
+            }
+        }
+        if (requestDefinition != null) {
+            requestDefinition.withLogCorrelationId(logCorrelationId);
         }
         try {
             ClearType type = ClearType.valueOf(defaultIfEmpty(request.getFirstQueryStringParameter("type").toUpperCase(), "ALL"));
@@ -144,11 +172,19 @@ public class HttpState {
                     mockServerLog.clear(requestDefinition);
                     break;
                 case EXPECTATIONS:
-                    requestMatchers.clear(requestDefinition);
+                    if (expectationId != null) {
+                        requestMatchers.clear(expectationId, logCorrelationId);
+                    } else {
+                        requestMatchers.clear(requestDefinition);
+                    }
                     break;
                 case ALL:
                     mockServerLog.clear(requestDefinition);
-                    requestMatchers.clear(requestDefinition);
+                    if (expectationId != null) {
+                        requestMatchers.clear(expectationId, logCorrelationId);
+                    } else {
+                        requestMatchers.clear(requestDefinition);
+                    }
                     break;
             }
         } catch (IllegalArgumentException iae) {
@@ -166,17 +202,15 @@ public class HttpState {
 
     private RequestDefinition resolveExpectationId(ExpectationId expectationId) {
         return requestMatchers
-            .retrieveExpectations(expectationId)
+            .retrieveRequestDefinitions(Collections.singletonList(expectationId))
             .findFirst()
-            .map(Expectation::getHttpRequest)
             .orElse(null);
     }
 
-    private RequestDefinition[] resolveExpectationIds(ExpectationId... expectationId) {
+    private List<RequestDefinition> resolveExpectationIds(List<ExpectationId> expectationIds) {
         return requestMatchers
-            .retrieveExpectations(expectationId)
-            .map(Expectation::getHttpRequest)
-            .toArray(RequestDefinition[]::new);
+            .retrieveRequestDefinitions(expectationIds)
+            .collect(Collectors.toList());
     }
 
     public void reset() {
@@ -220,7 +254,7 @@ public class HttpState {
             if (requestDefinition instanceof HttpRequest) {
                 final String hostHeader = ((HttpRequest) requestDefinition).getFirstHeader(HOST.toString());
                 if (isNotBlank(hostHeader)) {
-                    scheduler.submit(() -> addSubjectAlternativeName(hostHeader));
+                    scheduler.submit(() -> configuration.addSubjectAlternativeName(hostHeader));
                 }
             }
             upsertedExpectations.add(requestMatchers.add(expectation, Cause.API));
@@ -233,6 +267,15 @@ public class HttpState {
             return null;
         } else {
             return requestMatchers.firstMatchingExpectation(request);
+        }
+    }
+
+    @VisibleForTesting
+    public List<Expectation> allMatchingExpectation(HttpRequest request) {
+        if (requestMatchers.isEmpty()) {
+            return Collections.emptyList();
+        } else {
+            return requestMatchers.retrieveActiveExpectations(request);
         }
     }
 
@@ -415,7 +458,7 @@ public class HttpState {
                                         requestDefinition,
                                         requests -> {
                                             response.withBody(
-                                                getExpectationSerializer().serialize(requests),
+                                                getExpectationSerializerThatSerializesBodyDefault().serialize(requests),
                                                 MediaType.JSON_UTF_8
                                             );
                                             mockServerLogger.logEvent(logEntry);
@@ -460,7 +503,7 @@ public class HttpState {
                                     .setLogLevel(Level.INFO)
                                     .setCorrelationId(logCorrelationId)
                                     .setHttpRequest(requestDefinition)
-                                    .setMessageFormat("retrieved active expectations in " + format.name().toLowerCase() + " that match:{}")
+                                    .setMessageFormat("retrieved " + expectations.size() + " active expectations in " + format.name().toLowerCase() + " that match:{}")
                                     .setArguments(requestDefinition)
                             );
                         }
@@ -470,7 +513,7 @@ public class HttpState {
                 }
 
                 try {
-                    return httpResponseFuture.get(maxFutureTimeout(), MILLISECONDS);
+                    return httpResponseFuture.get(configuration.maxFutureTimeoutInMillis(), MILLISECONDS);
                 } catch (ExecutionException | InterruptedException | TimeoutException ex) {
                     mockServerLogger.logEvent(
                         new LogEntry()
@@ -493,9 +536,11 @@ public class HttpState {
                 );
                 if (iae.getMessage().contains(RetrieveType.class.getSimpleName())) {
                     throw new IllegalArgumentException("\"" + request.getFirstQueryStringParameter("type") + "\" is not a valid value for \"type\" parameter, only the following values are supported " + Arrays.stream(RetrieveType.values()).map(input -> input.name().toLowerCase()).collect(Collectors.toList()));
-                } else {
+                }
+                if (iae.getMessage().contains(Format.class.getSimpleName())) {
                     throw new IllegalArgumentException("\"" + request.getFirstQueryStringParameter("format") + "\" is not a valid value for \"format\" parameter, only the following values are supported " + Arrays.stream(Format.values()).map(input -> input.name().toLowerCase()).collect(Collectors.toList()));
                 }
+                throw iae;
             }
         } else {
             return response().withStatusCode(200);
@@ -509,7 +554,7 @@ public class HttpState {
     }
 
     public void verify(Verification verification, Consumer<String> resultConsumer) {
-        if (verification.getHttpRequest() == null) {
+        if (verification.getExpectationId() != null) {
             verification.withRequest(resolveExpectationId(verification.getExpectationId()));
         }
         mockServerLog.verify(verification, resultConsumer);
@@ -521,11 +566,11 @@ public class HttpState {
         return result;
     }
 
-    public void verify(VerificationSequence verification, Consumer<String> resultConsumer) {
-        if (verification.getHttpRequests() == null) {
-            verification.withRequests(resolveExpectationIds(verification.getExpectationIds().toArray(new ExpectationId[0])));
+    public void verify(VerificationSequence verificationSequence, Consumer<String> resultConsumer) {
+        if (verificationSequence.getExpectationIds() != null && !verificationSequence.getExpectationIds().isEmpty()) {
+            verificationSequence.withRequests(resolveExpectationIds(verificationSequence.getExpectationIds()));
         }
-        mockServerLog.verify(verification, resultConsumer);
+        mockServerLog.verify(verificationSequence, resultConsumer);
     }
 
     public boolean handle(HttpRequest request, ResponseWriter responseWriter, boolean warDeployment) {
@@ -549,90 +594,110 @@ public class HttpState {
 
             if (request.matches("PUT", PATH_PREFIX + "/expectation", "/expectation")) {
 
-                List<Expectation> upsertedExpectations = new ArrayList<>();
-                for (Expectation expectation : getExpectationSerializer().deserializeArray(request.getBodyAsJsonOrXmlString(), false)) {
-                    if (!warDeployment || validateSupportedFeatures(expectation, request, responseWriter)) {
-                        upsertedExpectations.addAll(add(expectation));
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    List<Expectation> upsertedExpectations = new ArrayList<>();
+                    for (Expectation expectation : getExpectationSerializer().deserializeArray(request.getBodyAsJsonOrXmlString(), false)) {
+                        if (!warDeployment || validateSupportedFeatures(expectation, request, responseWriter)) {
+                            upsertedExpectations.addAll(add(expectation));
+                        }
                     }
-                }
 
-                responseWriter.writeResponse(request, response()
-                    .withStatusCode(CREATED.code())
-                    .withBody(getExpectationSerializer().serialize(upsertedExpectations), MediaType.JSON_UTF_8), true);
+                    responseWriter.writeResponse(request, response()
+                        .withStatusCode(CREATED.code())
+                        .withBody(getExpectationSerializer().serialize(upsertedExpectations), MediaType.JSON_UTF_8), true);
+                }
                 canHandle.complete(true);
 
             } else if (request.matches("PUT", PATH_PREFIX + "/openapi", "/openapi")) {
 
-                try {
-                    List<Expectation> upsertedExpectations = new ArrayList<>();
-                    for (OpenAPIExpectation openAPIExpectation : getOpenAPIExpectationSerializer().deserializeArray(request.getBodyAsJsonOrXmlString(), false)) {
-                        upsertedExpectations.addAll(add(openAPIExpectation));
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    try {
+                        List<Expectation> upsertedExpectations = new ArrayList<>();
+                        for (OpenAPIExpectation openAPIExpectation : getOpenAPIExpectationSerializer().deserializeArray(request.getBodyAsJsonOrXmlString(), false)) {
+                            upsertedExpectations.addAll(add(openAPIExpectation));
+                        }
+                        responseWriter.writeResponse(request, response()
+                            .withStatusCode(CREATED.code())
+                            .withBody(getExpectationSerializer().serialize(upsertedExpectations), MediaType.JSON_UTF_8), true);
+                    } catch (IllegalArgumentException iae) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setLogLevel(Level.ERROR)
+                                .setMessageFormat("exception handling request for open api expectation:{}error:{}")
+                                .setArguments(request, iae.getMessage())
+                                .setThrowable(iae)
+                        );
+                        responseWriter.writeResponse(
+                            request,
+                            BAD_REQUEST,
+                            (!iae.getMessage().startsWith(OPEN_API_LOAD_ERROR) ? OPEN_API_LOAD_ERROR + (isNotBlank(iae.getMessage()) ? ", " : "") : "") + iae.getMessage(),
+                            MediaType.create("text", "plain").toString()
+                        );
                     }
-                    responseWriter.writeResponse(request, response()
-                        .withStatusCode(CREATED.code())
-                        .withBody(getExpectationSerializer().serialize(upsertedExpectations), MediaType.JSON_UTF_8), true);
-                } catch (IllegalArgumentException iae) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setLogLevel(Level.ERROR)
-                            .setMessageFormat("exception handling request for open api expectation:{}error:{}")
-                            .setArguments(request, iae.getMessage())
-                            .setThrowable(iae)
-                    );
-                    responseWriter.writeResponse(
-                        request,
-                        BAD_REQUEST,
-                        (!iae.getMessage().startsWith(OPEN_API_LOAD_ERROR) ? OPEN_API_LOAD_ERROR + (isNotBlank(iae.getMessage()) ? ", " : "") : "") + iae.getMessage(),
-                        MediaType.create("text", "plain").toString()
-                    );
                 }
                 canHandle.complete(true);
 
             } else if (request.matches("PUT", PATH_PREFIX + "/clear", "/clear")) {
 
-                clear(request);
-                responseWriter.writeResponse(request, OK);
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    clear(request);
+                    responseWriter.writeResponse(request, OK);
+                }
                 canHandle.complete(true);
 
             } else if (request.matches("PUT", PATH_PREFIX + "/reset", "/reset")) {
 
-                reset();
-                responseWriter.writeResponse(request, OK);
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    reset();
+                    responseWriter.writeResponse(request, OK);
+                }
                 canHandle.complete(true);
 
             } else if (request.matches("PUT", PATH_PREFIX + "/retrieve", "/retrieve")) {
 
-                responseWriter.writeResponse(request, retrieve(request), true);
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    responseWriter.writeResponse(request, retrieve(request), true);
+                }
                 canHandle.complete(true);
 
             } else if (request.matches("PUT", PATH_PREFIX + "/verify", "/verify")) {
 
-                verify(getVerificationSerializer().deserialize(request.getBodyAsJsonOrXmlString()), result -> {
-                    if (isEmpty(result)) {
-                        responseWriter.writeResponse(request, ACCEPTED);
-                    } else {
-                        responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
-                    }
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    verify(getVerificationSerializer().deserialize(request.getBodyAsJsonOrXmlString()), result -> {
+                        if (isEmpty(result)) {
+                            responseWriter.writeResponse(request, ACCEPTED);
+                        } else {
+                            responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
+                        }
+                        canHandle.complete(true);
+                    });
+                } else {
                     canHandle.complete(true);
-                });
+                }
 
             } else if (request.matches("PUT", PATH_PREFIX + "/verifySequence", "/verifySequence")) {
 
-                verify(getVerificationSequenceSerializer().deserialize(request.getBodyAsJsonOrXmlString()), result -> {
-                    if (isEmpty(result)) {
-                        responseWriter.writeResponse(request, ACCEPTED);
-                    } else {
-                        responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
-                    }
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    verify(getVerificationSequenceSerializer().deserialize(request.getBodyAsJsonOrXmlString()), result -> {
+                        if (isEmpty(result)) {
+                            responseWriter.writeResponse(request, ACCEPTED);
+                        } else {
+                            responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
+                        }
+                        canHandle.complete(true);
+                    });
+                } else {
                     canHandle.complete(true);
-                });
+                }
 
             } else {
+
                 canHandle.complete(false);
+
             }
 
             try {
-                return canHandle.get(maxFutureTimeout(), MILLISECONDS);
+                return canHandle.get(configuration.maxFutureTimeoutInMillis(), MILLISECONDS);
             } catch (InterruptedException | ExecutionException | TimeoutException ex) {
                 mockServerLogger.logEvent(
                     new LogEntry()
@@ -650,6 +715,19 @@ public class HttpState {
 
         }
 
+    }
+
+    private boolean controlPlaneRequestAuthenticated(HttpRequest request, ResponseWriter responseWriter) {
+        try {
+            if (controlPlaneAuthenticationHandler == null || controlPlaneAuthenticationHandler.controlPlaneRequestAuthenticated(request)) {
+                return true;
+            }
+        } catch (AuthenticationException authenticationException) {
+            responseWriter.writeResponse(request, UNAUTHORIZED, "Unauthorized for control plane - " + authenticationException.getMessage(), MediaType.create("text", "plain").toString());
+            return false;
+        }
+        responseWriter.writeResponse(request, UNAUTHORIZED, "Unauthorized for control plane", MediaType.create("text", "plain").toString());
+        return false;
     }
 
     @SuppressWarnings("rawtypes")
@@ -730,6 +808,13 @@ public class HttpState {
             this.expectationSerializer = new ExpectationSerializer(mockServerLogger);
         }
         return expectationSerializer;
+    }
+
+    private ExpectationSerializer getExpectationSerializerThatSerializesBodyDefault() {
+        if (this.expectationSerializerThatSerializesBodyDefault == null) {
+            this.expectationSerializerThatSerializesBodyDefault = new ExpectationSerializer(mockServerLogger, true);
+        }
+        return expectationSerializerThatSerializesBodyDefault;
     }
 
     private OpenAPIExpectationSerializer getOpenAPIExpectationSerializer() {

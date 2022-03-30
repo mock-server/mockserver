@@ -2,6 +2,7 @@ package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.codec.ExpandedParameterDecoder;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Parameters;
 
@@ -15,11 +16,11 @@ public class ParameterStringMatcher extends BodyMatcher<String> {
     private final Parameters matcherParameters;
     private final ExpandedParameterDecoder expandedParameterDecoder;
 
-    ParameterStringMatcher(MockServerLogger mockServerLogger, Parameters matcherParameters, boolean controlPlaneMatcher) {
+    ParameterStringMatcher(Configuration configuration, MockServerLogger mockServerLogger, Parameters matcherParameters, boolean controlPlaneMatcher) {
         this.matcherParameters = matcherParameters;
         this.matcher = new MultiValueMapMatcher(mockServerLogger, matcherParameters, controlPlaneMatcher);
-        this.formParameterParser = new ExpandedParameterDecoder(mockServerLogger);
-        this.expandedParameterDecoder = new ExpandedParameterDecoder(mockServerLogger);
+        this.formParameterParser = new ExpandedParameterDecoder(configuration, mockServerLogger);
+        this.expandedParameterDecoder = new ExpandedParameterDecoder(configuration, mockServerLogger);
     }
 
     public boolean matches(final MatchDifference context, String matched) {

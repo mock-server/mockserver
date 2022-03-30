@@ -17,7 +17,7 @@ public class OpenAPIExpectationExamples {
         new MockServerClient("localhost", 1080)
             .upsert(
                 openAPIExpectation(
-                    "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json"
+                    "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
                 )
             );
     }
@@ -29,7 +29,7 @@ public class OpenAPIExpectationExamples {
         new MockServerClient("localhost", 1080)
             .upsert(
                 openAPIExpectation(
-                    "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
+                    "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
                     operationsAndResponses
                 )
             );
@@ -39,7 +39,7 @@ public class OpenAPIExpectationExamples {
         new MockServerClient("localhost", 1080)
             .upsert(
                 openAPIExpectation(
-                    "file:/Users/jamesbloom/git/mockserver/mockserver/mockserver-core/target/test-classes/org/mockserver/mock/openapi_petstore_example.json"
+                    "file:/Users/jamesbloom/git/mockserver/mockserver/mockserver-core/target/test-classes/org/mockserver/openapi/openapi_petstore_example.json"
                 )
             );
     }
@@ -47,14 +47,14 @@ public class OpenAPIExpectationExamples {
     public void createOpenAPIExpectationLoadedByClasspathLocation() {
         new MockServerClient("localhost", 1080)
             .upsert(
-                openAPIExpectation("org/mockserver/mock/openapi_petstore_example.json")
+                openAPIExpectation("org/mockserver/openapi/openapi_petstore_example.json")
             );
     }
 
     public void createOpenAPIExpectationLoadedByJsonLiteral() {
         new MockServerClient("localhost", 1080)
             .upsert(
-                openAPIExpectation(FileReader.readFileFromClassPathOrPath("/Users/jamesbloom/git/mockserver/mockserver/mockserver-core/target/test-classes/org/mockserver/mock/openapi_petstore_example.json"))
+                openAPIExpectation(FileReader.readFileFromClassPathOrPath("/Users/jamesbloom/git/mockserver/mockserver/mockserver-core/target/test-classes/org/mockserver/openapi/openapi_petstore_example.json"))
             );
     }
 

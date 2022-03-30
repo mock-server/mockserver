@@ -1,6 +1,6 @@
 {
   "title": "request definition",
-  "oneOf": [
+  "anyOf": [
     {
       "$ref": "#/definitions/httpRequest"
     },

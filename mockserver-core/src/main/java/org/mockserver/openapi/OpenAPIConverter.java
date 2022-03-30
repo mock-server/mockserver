@@ -15,10 +15,8 @@ import org.mockserver.openapi.examples.JsonNodeExampleSerializer;
 import org.mockserver.openapi.examples.models.StringExample;
 import org.mockserver.serialization.ObjectMapperFactory;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -38,7 +36,8 @@ public class OpenAPIConverter {
     }
 
     public List<Expectation> buildExpectations(String specUrlOrPayload, Map<String, String> operationsAndResponses) {
-        OpenAPI openAPI = buildOpenAPI(specUrlOrPayload);
+        OpenAPI openAPI = buildOpenAPI(specUrlOrPayload, mockServerLogger);
+        AtomicInteger expectationCounter = new AtomicInteger(0);
         return openAPI
             .getPaths()
             .values()
@@ -56,6 +55,10 @@ public class OpenAPIConverter {
                     operationsAndResponses != null ? operationsAndResponses.get(operation.getOperationId()) : null
                 ))
             )
+            .map(expectation -> {
+                int index = expectationCounter.incrementAndGet();
+                return expectation.withId(new UUID((long) Objects.hash(specUrlOrPayload, operationsAndResponses) * index, (long) Objects.hash(specUrlOrPayload, operationsAndResponses) * index).toString());
+            })
             .collect(Collectors.toList());
     }
 
@@ -108,7 +111,7 @@ public class OpenAPIConverter {
                                         response.withBody(String.valueOf(example.getValue()));
                                     }
                                 } else if (mediaType.getSchema() != null) {
-                                    org.mockserver.openapi.examples.models.Example generatedExample = ExampleBuilder.fromSchema(mediaType.getSchema(), openAPI.getComponents().getSchemas());
+                                    org.mockserver.openapi.examples.models.Example generatedExample = ExampleBuilder.fromSchema(mediaType.getSchema(), openAPI.getComponents() != null ? openAPI.getComponents().getSchemas() : null);
                                     if (generatedExample instanceof StringExample) {
                                         if (isJsonContentType(contentType.getKey())) {
                                             response.withBody(json(serialise(((StringExample) generatedExample).getValue())));

@@ -7,25 +7,26 @@ import org.mockserver.configuration.IntegerStringListParser;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.netty.MockServer;
+import org.mockserver.version.Version;
 
 import java.io.PrintStream;
 import java.util.*;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.substringAfter;
+import static org.apache.commons.lang3.StringUtils.*;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.cli.Main.Arguments.*;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.mockserver.mock.HttpState.setPort;
-import static org.slf4j.event.Level.DEBUG;
-import static org.slf4j.event.Level.ERROR;
+import static org.slf4j.event.Level.*;
 
 /**
  * @author jamesdbloom
  */
 public class Main {
     static final String USAGE = "" +
-        "   java -jar <path to mockserver-jetty-jar-with-dependencies.jar> -serverPort <port> [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>] [-logLevel <level>] " + NEW_LINE +
+        "   version: " + Version.getVersion() + NEW_LINE +
+        "    " + NEW_LINE +
+        "   java -jar <path to mockserver-jetty-shaded.jar> -serverPort <port> [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>] [-logLevel <level>] " + NEW_LINE +
         "                                                                                                                                                                 " + NEW_LINE +
         "     valid options are:                                                                                                                                          " + NEW_LINE +
         "        -serverPort <port>           The HTTP, HTTPS, SOCKS and HTTP CONNECT                                                                                     " + NEW_LINE +
@@ -55,10 +56,11 @@ public class Main {
         "                                     Logger levels: FINEST, FINE, INFO, WARNING,                                                                                 " + NEW_LINE +
         "                                     SEVERE or OFF. If not specified default is INFO                                                                             " + NEW_LINE +
         "                                                                                                                                                                 " + NEW_LINE +
-        "   i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort 1080 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com -logLevel WARN          " + NEW_LINE +
+        "   i.e. java -jar ./mockserver-jetty-shaded.jar -serverPort 1080 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com -logLevel WARN                         " + NEW_LINE +
         "                                                                                                                                                                 " + NEW_LINE;
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(Main.class);
     private static final IntegerStringListParser INTEGER_STRING_LIST_PARSER = new IntegerStringListParser();
+    static PrintStream systemErr = System.err;
     static PrintStream systemOut = System.out;
     static boolean usageShown = false;
 
@@ -74,14 +76,61 @@ public class Main {
     public static void main(String... arguments) {
         try {
             Map<String, String> parsedArguments = parseArguments(arguments);
+            Map<String, String> commandLineArguments = new HashMap<>(parsedArguments);
+            Map<String, String> environmentVariableArguments = new HashMap<>();
+            Map<String, String> systemPropertyArguments = new HashMap<>();
 
-            if (MockServerLogger.isEnabled(DEBUG)) {
+            System.getenv().forEach((key, value) -> {
+                if (key.startsWith("MOCKSERVER_") && isNotBlank(value)) {
+                    environmentVariableArguments.put(key, value);
+                }
+            });
+            System.getProperties().forEach((key, value) -> {
+                if (key instanceof String && value instanceof String) {
+                    if (((String) key).startsWith("mockserver") && isNotBlank((String) value)) {
+                        systemPropertyArguments.put((String) key, (String) value);
+                    }
+                }
+            });
+
+            for (Arguments parsedArgument : Arrays.asList(serverPort, proxyRemoteHost, proxyRemotePort)) {
+                if (!parsedArguments.containsKey(parsedArgument.name())) {
+                    if (systemPropertyArguments.containsKey(parsedArgument.systemPropertyName())) {
+                        parsedArguments.put(parsedArgument.name(), systemPropertyArguments.get(parsedArgument.systemPropertyName()));
+                        environmentVariableArguments.remove(parsedArgument.longEnvironmentVariableName());
+                        environmentVariableArguments.remove(parsedArgument.shortEnvironmentVariableName());
+                    } else {
+                        if (environmentVariableArguments.containsKey(parsedArgument.longEnvironmentVariableName())) {
+                            environmentVariableArguments.remove(parsedArgument.shortEnvironmentVariableName());
+                            parsedArguments.put(parsedArgument.name(), environmentVariableArguments.get(parsedArgument.longEnvironmentVariableName()));
+                        } else if (isNotBlank(System.getenv(parsedArgument.shortEnvironmentVariableName()))) {
+                            if (!(parsedArgument == serverPort && "1080".equals(System.getenv(serverPort.shortEnvironmentVariableName())) && ConfigurationProperties.PROPERTIES.containsKey(serverPort.systemPropertyName()))) {
+                                environmentVariableArguments.put(parsedArgument.shortEnvironmentVariableName(), System.getenv(parsedArgument.shortEnvironmentVariableName()));
+                                parsedArguments.put(parsedArgument.name(), environmentVariableArguments.get(parsedArgument.shortEnvironmentVariableName()));
+                            }
+                        }
+                    }
+                } else {
+                    systemPropertyArguments.remove(parsedArgument.systemPropertyName());
+                    environmentVariableArguments.remove(parsedArgument.longEnvironmentVariableName());
+                    environmentVariableArguments.remove(parsedArgument.shortEnvironmentVariableName());
+                }
+                if (!parsedArguments.containsKey(parsedArgument.name()) && ConfigurationProperties.PROPERTIES.containsKey(parsedArgument.systemPropertyName())) {
+                    parsedArguments.put(parsedArgument.name(), String.valueOf(ConfigurationProperties.PROPERTIES.get(parsedArgument.systemPropertyName())));
+                }
+            }
+
+            if (MockServerLogger.isEnabled(INFO)) {
                 MOCK_SERVER_LOGGER.logEvent(
                     new LogEntry()
                         .setType(SERVER_CONFIGURATION)
-                        .setLogLevel(DEBUG)
-                        .setMessageFormat("using command line options:{}")
-                        .setArguments(Joiner.on(", ").withKeyValueSeparator("=").join(parsedArguments))
+                        .setLogLevel(INFO)
+                        .setMessageFormat("using environment variables:{}and system properties:{}and command line options:{}")
+                        .setArguments(
+                            "[\n\t" + Joiner.on(",\n\t").withKeyValueSeparator("=").join(environmentVariableArguments) + "\n]",
+                            "[\n\t" + Joiner.on(",\n\t").withKeyValueSeparator("=").join(systemPropertyArguments) + "\n]",
+                            "[\n\t" + Joiner.on(",\n\t").withKeyValueSeparator("=").join(commandLineArguments) + "\n]"
+                        )
                 );
             }
 
@@ -110,7 +159,7 @@ public class Main {
                     );
                 }
             } else {
-                showUsage();
+                showUsage("\"" + serverPort.name() + "\" not specified");
             }
 
         } catch (Throwable throwable) {
@@ -121,10 +170,10 @@ public class Main {
                     .setMessageFormat("exception while starting:{}")
                     .setThrowable(throwable)
             );
+            showUsage(null);
             if (ConfigurationProperties.disableSystemOut()) {
-                System.out.println("exception while starting: " + throwable);
+                new RuntimeException("exception while starting: " + throwable.getMessage()).printStackTrace(System.err);
             }
-            showUsage();
         }
     }
 
@@ -139,7 +188,7 @@ public class Main {
             if (argumentsIterator.hasNext()) {
                 String argumentValue = argumentsIterator.next();
                 if (!Arguments.names().containsIgnoreCase(argumentName)) {
-                    showUsage();
+                    showUsage("invalid argument \"" + argumentName + "\" found");
                     break;
                 } else {
                     String errorMessage = "";
@@ -174,7 +223,6 @@ public class Main {
                     }
                 }
             } else {
-                showUsage();
                 break;
             }
         }
@@ -200,18 +248,23 @@ public class Main {
         systemOut.println("   " + Strings.padEnd("", maxLengthMessage, '=') + NEW_LINE);
     }
 
-    private static void showUsage() {
+    private static void showUsage(String errorMessage) {
         if (!usageShown) {
             usageShown = true;
             systemOut.print(USAGE);
+            systemOut.flush();
+        }
+        if (isNotBlank(errorMessage)) {
+            systemErr.print("\nERROR:  " + errorMessage + "\n\n");
+            systemErr.flush();
         }
     }
 
     public enum Arguments {
-        serverPort,
-        proxyRemotePort,
-        proxyRemoteHost,
-        logLevel;
+        serverPort("SERVER_PORT"),
+        proxyRemoteHost("PROXY_REMOTE_HOST"),
+        proxyRemotePort("PROXY_REMOTE_PORT"),
+        logLevel("LOG_LEVEL");
 
         final static CaseInsensitiveList names = new CaseInsensitiveList();
 
@@ -221,8 +274,26 @@ public class Main {
             }
         }
 
+        private final String shortEnvironmentVariableName;
+
+        Arguments(String shortEnvironmentVariableName) {
+            this.shortEnvironmentVariableName = shortEnvironmentVariableName;
+        }
+
         public static CaseInsensitiveList names() {
             return names;
+        }
+
+        public String shortEnvironmentVariableName() {
+            return shortEnvironmentVariableName;
+        }
+
+        public String longEnvironmentVariableName() {
+            return "MOCKSERVER_" + shortEnvironmentVariableName;
+        }
+
+        public String systemPropertyName() {
+            return "mockserver." + name();
         }
     }
 

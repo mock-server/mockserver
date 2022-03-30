@@ -9,8 +9,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.client.NettyHttpClient;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.echo.http.EchoServer;
+import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatcherBuilder;
@@ -29,6 +30,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.Header.header;
 import static org.slf4j.event.Level.WARN;
 
@@ -37,6 +39,7 @@ import static org.slf4j.event.Level.WARN;
  */
 public abstract class AbstractMockingIntegrationTestBase {
 
+    private static final Configuration CONFIGURATION = configuration();
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(AbstractMockingIntegrationTestBase.class);
     protected static MockServerClient mockServerClient;
     protected static String servletContext = "";
@@ -113,7 +116,7 @@ public abstract class AbstractMockingIntegrationTestBase {
     @BeforeAll
     public static void createClientAndEventLoopGroup() {
         clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(AbstractMockingIntegrationTestBase.class.getSimpleName() + "-eventLoop"));
-        httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false);
+        httpClient = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false);
     }
 
     @AfterAll
@@ -138,7 +141,7 @@ public abstract class AbstractMockingIntegrationTestBase {
             throw new AssertionError("Number of request matchers does not match number of requests, expected:<" + httpRequestMatchers.length + "> but was:<" + requestDefinitions.length + ">");
         } else {
             for (int i = 0; i < httpRequestMatchers.length; i++) {
-                if (!new MatcherBuilder(MOCK_SERVER_LOGGER).transformsToMatcher(httpRequestMatchers[i]).matches(null, requestDefinitions[i])) {
+                if (!new MatcherBuilder(CONFIGURATION, MOCK_SERVER_LOGGER).transformsToMatcher(httpRequestMatchers[i]).matches(null, requestDefinitions[i])) {
                     throw new AssertionError("Request does not match request matcher, expected <" + httpRequestMatchers[i] + "> but was:<" + requestDefinitions[i] + ">, full list requests is: " + Arrays.toString(httpRequestMatchers));
                 }
             }

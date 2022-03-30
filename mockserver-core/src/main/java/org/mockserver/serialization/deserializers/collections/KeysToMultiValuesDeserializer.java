@@ -69,6 +69,9 @@ public abstract class KeysToMultiValuesDeserializer<T extends KeysToMultiValues<
                 case START_ARRAY:
                     enteries.withEntry(key, ctxt.readValue(jsonParser, NottableString[].class));
                     break;
+                case VALUE_STRING:
+                    enteries.withEntry(key, ctxt.readValue(jsonParser, NottableString.class));
+                    break;
                 case END_OBJECT:
                     return enteries;
                 default:

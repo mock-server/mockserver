@@ -18,7 +18,7 @@ public class VerificationTimesDTOSerializerTest {
     @Test
     public void shouldSerializeBetween() throws JsonProcessingException {
         assertThat(ObjectMapperFactory
-                .createObjectMapper(true)
+                .createObjectMapper(true, false)
                 .writeValueAsString(
                     new VerificationTimesDTO(
                         between(1, 2)
@@ -33,7 +33,7 @@ public class VerificationTimesDTOSerializerTest {
     @Test
     public void shouldSerializeNever() throws JsonProcessingException {
     assertThat(ObjectMapperFactory
-                .createObjectMapper(true)
+                .createObjectMapper(true, false)
                 .writeValueAsString(
                     new VerificationTimesDTO(
                         never()
@@ -48,7 +48,7 @@ public class VerificationTimesDTOSerializerTest {
     @Test
     public void shouldSerializeOnce() throws JsonProcessingException {
         assertThat(ObjectMapperFactory
-                .createObjectMapper(true)
+                .createObjectMapper(true, false)
                 .writeValueAsString(
                     new VerificationTimesDTO(
                         once()
@@ -63,7 +63,7 @@ public class VerificationTimesDTOSerializerTest {
     @Test
     public void shouldSerializeExact() throws JsonProcessingException {
         assertThat(ObjectMapperFactory
-                .createObjectMapper(true)
+                .createObjectMapper(true, false)
                 .writeValueAsString(
                     new VerificationTimesDTO(
                         exactly(2)
@@ -78,7 +78,7 @@ public class VerificationTimesDTOSerializerTest {
     @Test
     public void shouldSerializeAtLeast() throws JsonProcessingException {
         assertThat(ObjectMapperFactory
-                .createObjectMapper(true)
+                .createObjectMapper(true, false)
                 .writeValueAsString(
                     new VerificationTimesDTO(
                         atLeast(2)
@@ -92,7 +92,7 @@ public class VerificationTimesDTOSerializerTest {
     @Test
     public void shouldSerializeAtMost() throws JsonProcessingException {
         assertThat(ObjectMapperFactory
-                .createObjectMapper(true)
+                .createObjectMapper(true, false)
                 .writeValueAsString(
                     new VerificationTimesDTO(
                         atMost(2)

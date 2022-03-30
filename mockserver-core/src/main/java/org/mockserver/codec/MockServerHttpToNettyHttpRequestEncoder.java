@@ -5,8 +5,10 @@ import io.netty.handler.codec.MessageToMessageEncoder;
 import org.mockserver.mappers.MockServerHttpRequestToFullHttpRequest;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.proxyconfiguration.ProxyConfiguration;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author jamesdbloom
@@ -15,8 +17,8 @@ public class MockServerHttpToNettyHttpRequestEncoder extends MessageToMessageEnc
 
     private final MockServerHttpRequestToFullHttpRequest mockServerHttpRequestToFullHttpRequest;
 
-    MockServerHttpToNettyHttpRequestEncoder(MockServerLogger mockServerLogger) {
-        mockServerHttpRequestToFullHttpRequest = new MockServerHttpRequestToFullHttpRequest(mockServerLogger);
+    MockServerHttpToNettyHttpRequestEncoder(MockServerLogger mockServerLogger, Map<ProxyConfiguration.Type, ProxyConfiguration> proxyConfigurations) {
+        mockServerHttpRequestToFullHttpRequest = new MockServerHttpRequestToFullHttpRequest(mockServerLogger, proxyConfigurations);
     }
 
     @Override

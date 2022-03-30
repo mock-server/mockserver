@@ -6,14 +6,15 @@ import io.netty.handler.codec.socksx.v4.DefaultSocks4CommandResponse;
 import io.netty.handler.codec.socksx.v4.Socks4CommandRequest;
 import io.netty.handler.codec.socksx.v4.Socks4CommandStatus;
 import io.netty.handler.codec.socksx.v4.Socks4ServerEncoder;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.MockServerLogger;
 
 @ChannelHandler.Sharable
 public final class Socks4ConnectHandler extends SocksConnectHandler<Socks4CommandRequest> {
 
-    public Socks4ConnectHandler(LifeCycle server, MockServerLogger mockServerLogger, String host, int port) {
-        super(server, mockServerLogger, host, port);
+    public Socks4ConnectHandler(Configuration configuration, MockServerLogger mockServerLogger, LifeCycle server, String host, int port) {
+        super(configuration, mockServerLogger, server, host, port);
     }
 
     protected void removeCodecSupport(ChannelHandlerContext ctx) {

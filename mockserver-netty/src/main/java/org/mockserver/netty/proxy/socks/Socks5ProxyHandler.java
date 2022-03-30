@@ -5,7 +5,7 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.socksx.v5.*;
 import io.netty.handler.ssl.SslHandler;
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -18,8 +18,8 @@ import static org.mockserver.netty.unification.PortUnificationHandler.isSslEnabl
 @ChannelHandler.Sharable
 public class Socks5ProxyHandler extends SocksProxyHandler<Socks5Message> {
 
-    public Socks5ProxyHandler(LifeCycle server, MockServerLogger mockServerLogger) {
-        super(server, mockServerLogger);
+    public Socks5ProxyHandler(Configuration configuration, MockServerLogger mockServerLogger, LifeCycle server) {
+        super(configuration, mockServerLogger, server);
     }
 
     @Override
@@ -36,8 +36,8 @@ public class Socks5ProxyHandler extends SocksProxyHandler<Socks5Message> {
     }
 
     private void handleInitialRequest(ChannelHandlerContext ctx, Socks5InitialRequest initialRequest) {
-        String username = ConfigurationProperties.proxyAuthenticationUsername();
-        String password = ConfigurationProperties.proxyAuthenticationPassword();
+        String username = configuration.proxyAuthenticationUsername();
+        String password = configuration.proxyAuthenticationPassword();
         Socks5AuthMethod requiredAuthMethod;
         ChannelHandler nextRequestDecoder;
         if (initialRequest.authMethods().contains(Socks5AuthMethod.NO_AUTH)) {
@@ -66,7 +66,7 @@ public class Socks5ProxyHandler extends SocksProxyHandler<Socks5Message> {
             .findFirst()
             .map(authMethod -> {
                 if (isSslEnabledUpstream(ctx.channel())) {
-                    ctx.pipeline().addAfter(SslHandler.class.getName(), null, nextRequestDecoder);
+                    ctx.pipeline().addAfter("SslHandler#0", null, nextRequestDecoder);
                 } else {
                     ctx.pipeline().addFirst(nextRequestDecoder);
                 }
@@ -78,10 +78,10 @@ public class Socks5ProxyHandler extends SocksProxyHandler<Socks5Message> {
     }
 
     private void handlePasswordAuthRequest(ChannelHandlerContext ctx, Socks5PasswordAuthRequest passwordAuthRequest) {
-        String username = ConfigurationProperties.proxyAuthenticationUsername();
-        String password = ConfigurationProperties.proxyAuthenticationPassword();
+        String username = configuration.proxyAuthenticationUsername();
+        String password = configuration.proxyAuthenticationPassword();
         // we need the null-check again here, in case the properties got unset between init and auth request
-        if (!username.isEmpty() && !password.isEmpty()
+        if (isNotBlank(username) && isNotBlank(password)
             && username.equals(passwordAuthRequest.username()) && password.equals(passwordAuthRequest.password())) {
             ctx.pipeline().replace(Socks5PasswordAuthRequestDecoder.class, null, new Socks5CommandRequestDecoder());
             ctx.writeAndFlush(new DefaultSocks5PasswordAuthResponse(Socks5PasswordAuthStatus.SUCCESS)).awaitUninterruptibly();
@@ -98,7 +98,7 @@ public class Socks5ProxyHandler extends SocksProxyHandler<Socks5Message> {
 
     private void handleCommandRequest(ChannelHandlerContext ctx, final Socks5CommandRequest commandRequest) {
         if (commandRequest.type().equals(Socks5CommandType.CONNECT)) { // IN HERE
-            forwardConnection(ctx, new Socks5ConnectHandler(server, mockServerLogger, commandRequest.dstAddr(), commandRequest.dstPort()), commandRequest.dstAddr(), commandRequest.dstPort());
+            forwardConnection(ctx, new Socks5ConnectHandler(configuration, mockServerLogger, server, commandRequest.dstAddr(), commandRequest.dstPort()), commandRequest.dstAddr(), commandRequest.dstPort());
             ctx.fireChannelRead(commandRequest);
         } else {
             ctx.writeAndFlush(new DefaultSocks5CommandResponse(Socks5CommandStatus.COMMAND_UNSUPPORTED, Socks5AddressType.DOMAIN, "", 0)).addListener(ChannelFutureListener.CLOSE);

@@ -4,7 +4,7 @@ servers:
   - url: 'https://localhost:1080/'
 info:
   title: MockServer API
-  version: "5.11.x"
+  version: 5.13.x
   description: >-
     MockServer enables easy mocking of any system you integrate with via HTTP or HTTPS with clients written in Java, JavaScript and Ruby and a simple REST API (as shown below).
 
@@ -18,14 +18,14 @@ info:
     name: Apache 2.0
 tags:
   - name: expectation
-    description: Create expectations (only supported by MockServer)
+    description: Create or update expectations - updates if the id matches an existing expecations (only supported by MockServer)
   - name: verify
     description: Verify requests (both MockServer & MockServer Proxy)
   - name: control
     description: Manage state or process (both MockServer & MockServer Proxy)
 
 paths:
-  /expectation:
+  /mockserver/expectation:
     put:
       tags:
         - expectation
@@ -52,7 +52,7 @@ paths:
               $ref: "#/components/schemas/Expectations"
         description: expectation(s) to create
         required: true
-  /openapi:
+  /mockserver/openapi:
     put:
       tags:
         - expectation
@@ -79,7 +79,7 @@ paths:
               $ref: "#/components/schemas/OpenAPIExpectations"
         description: expectation(s) to create
         required: true
-  /clear:
+  /mockserver/clear:
     put:
       tags:
         - control
@@ -97,7 +97,7 @@ paths:
                 - $ref: "#/components/schemas/RequestDefinition"
                 - $ref: "#/components/schemas/ExpectationId"
         description: request used to match expectations and recored requests to clear
-  /reset:
+  /mockserver/reset:
     put:
       tags:
         - control
@@ -105,7 +105,7 @@ paths:
       responses:
         '200':
           description: expectations and recorded requests cleared
-  /retrieve:
+  /mockserver/retrieve:
     put:
       tags:
         - control
@@ -115,13 +115,13 @@ paths:
           name: format
           schema:
             type: string
-            enum: ["java", "json", "log_entries"]
+            enum: [ "java", "json", "log_entries" ]
           description: changes response format, default if not specificed is "json", supported values are "java", "json", "log_entries"
         - in: query
           name: type
           schema:
             type: string
-            enum: ["logs", "requests", "request_responses", "recorded_expectations", "active_expectations"]
+            enum: [ "logs", "requests", "request_responses", "recorded_expectations", "active_expectations" ]
           description: specifies the type of object that is retrieve, default if not specified is "requests", supported values are "logs", "requests", "recorded_expectations", "active_expectations"
       responses:
         '200':
@@ -155,7 +155,7 @@ paths:
               $ref: "#/components/schemas/RequestDefinition"
         description: >-
           request used to match which recorded requests, expectations or log messages to return, an empty body matches all requests, expectations or log messages
-  /verify:
+  /mockserver/verify:
     put:
       tags:
         - verify
@@ -179,7 +179,7 @@ paths:
               $ref: "#/components/schemas/Verification"
         description: request matcher and the number of times to match
         required: true
-  /verifySequence:
+  /mockserver/verifySequence:
     put:
       tags:
         - verify
@@ -203,7 +203,7 @@ paths:
               $ref: "#/components/schemas/VerificationSequence"
         description: the sequence of requests matchers
         required: true
-  /status:
+  /mockserver/status:
     put:
       tags:
         - control
@@ -215,7 +215,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ports"
-  /bind:
+  /mockserver/bind:
     put:
       tags:
         - control
@@ -245,7 +245,7 @@ paths:
           list of ports to bind to, where 0 indicates dynamically bind to any
           available port
         required: true
-  /stop:
+  /mockserver/stop:
     put:
       tags:
         - control
@@ -329,6 +329,8 @@ components:
       properties:
         id:
           type: string
+      required:
+        - id
     OpenAPIExpectations:
       title: "list of open api expectations"
       oneOf:
@@ -419,8 +421,9 @@ components:
           $ref: "#/components/schemas/Delay"
         templateType:
           enum:
-            - JAVASCRIPT
             - VELOCITY
+            - JAVASCRIPT
+            - MUSTACHE
         template:
           type: string
     HttpForward:
@@ -460,15 +463,106 @@ components:
           type: boolean
     HttpOverrideForwardedRequest:
       title: override forwarded request
-      type: object
-      additionalProperties: false
-      properties:
-        delay:
-          $ref: "#/components/schemas/Delay"
-        httpRequest:
-          $ref: "#/components/schemas/HttpRequest"
-        httpResponse:
-          $ref: "#/components/schemas/HttpResponse"
+      oneOf:
+        - type: object
+          additionalProperties: false
+          properties:
+            delay:
+              "$ref": "#/components/schemas/Delay"
+            requestOverride:
+              "$ref": "#/components/schemas/HttpRequest"
+            requestModifier:
+              type: object
+              additionalProperties: false
+              properties:
+                path:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    regex:
+                      type: string
+                    substitution:
+                      type: string
+                queryStringParameters:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    add:
+                      "$ref": "#/components/schemas/KeyToMultiValue"
+                    replace:
+                      "$ref": "#/components/schemas/KeyToMultiValue"
+                    remove:
+                      type: array
+                      additionalProperties: false
+                      items:
+                        type: string
+                headers:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    add:
+                      "$ref": "#/components/schemas/KeyToMultiValue"
+                    replace:
+                      "$ref": "#/components/schemas/KeyToMultiValue"
+                    remove:
+                      type: array
+                      additionalProperties: false
+                      items:
+                        type: string
+                cookies:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    add:
+                      "$ref": "#/components/schemas/KeyToValue"
+                    replace:
+                      "$ref": "#/components/schemas/KeyToValue"
+                    remove:
+                      type: array
+                      additionalProperties: false
+                      items:
+                        type: string
+            responseOverride:
+              "$ref": "#/components/schemas/HttpResponse"
+            responseModifier:
+              type: object
+              additionalProperties: false
+              properties:
+                headers:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    add:
+                      "$ref": "#/components/schemas/KeyToMultiValue"
+                    replace:
+                      "$ref": "#/components/schemas/KeyToMultiValue"
+                    remove:
+                      type: array
+                      additionalProperties: false
+                      items:
+                        type: string
+                cookies:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    add:
+                      "$ref": "#/components/schemas/KeyToValue"
+                    replace:
+                      "$ref": "#/components/schemas/KeyToValue"
+                    remove:
+                      type: array
+                      additionalProperties: false
+                      items:
+                        type: string
+        - type: object
+          additionalProperties: false
+          properties:
+            delay:
+              "$ref": "#/components/schemas/Delay"
+            httpRequest:
+              "$ref": "#/components/schemas/HttpRequest"
+            httpResponse:
+              "$ref": "#/components/schemas/HttpResponse"
     HttpError:
       title: error behaviour
       type: object
@@ -528,8 +622,8 @@ components:
             keyMatchStyle:
               type: string
               enum:
-              - MATCHING_KEY
-              - SUB_SET
+                - MATCHING_KEY
+                - SUB_SET
               default: SUB_SET
           # patternProperties:
           #   "^(?!keyMatchStyle)\\S+$":
@@ -597,19 +691,19 @@ components:
             parameterStyle:
               type: string
               enum:
-              - SIMPLE
-              - SIMPLE_EXPLODED
-              - LABEL
-              - LABEL_EXPLODED
-              - MATRIX
-              - MATRIX_EXPLODED
-              - FORM_EXPLODED
-              - FORM
-              - SPACE_DELIMITED_EXPLODED
-              - SPACE_DELIMITED
-              - PIPE_DELIMITED_EXPLODED
-              - PIPE_DELIMITED
-              - DEEP_OBJECT
+                - SIMPLE
+                - SIMPLE_EXPLODED
+                - LABEL
+                - LABEL_EXPLODED
+                - MATRIX
+                - MATRIX_EXPLODED
+                - FORM_EXPLODED
+                - FORM
+                - SPACE_DELIMITED_EXPLODED
+                - SPACE_DELIMITED
+                - PIPE_DELIMITED_EXPLODED
+                - PIPE_DELIMITED
+                - DEEP_OBJECT
     SocketAddress:
       title: remote address to send request to
       type: object
@@ -854,6 +948,8 @@ components:
           $ref: "#/components/schemas/RequestDefinition"
         times:
           $ref: "#/components/schemas/VerificationTimes"
+        maximumNumberOfRequestToReturnInVerificationFailure:
+          type: integer
       oneOf:
         - required:
             - expectationId
@@ -882,6 +978,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/RequestDefinition"
+        maximumNumberOfRequestToReturnInVerificationFailure:
+          type: integer
       oneOf:
         - required:
             - expectationIds

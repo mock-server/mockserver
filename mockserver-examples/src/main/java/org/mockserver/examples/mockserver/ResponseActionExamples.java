@@ -2,7 +2,6 @@ package org.mockserver.examples.mockserver;
 
 import com.google.common.io.ByteStreams;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpStatusCode;
@@ -15,7 +14,6 @@ import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_DISPOSITION;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.Header.header;
@@ -222,29 +220,20 @@ public class ResponseActionExamples {
     }
 
     public void javascriptTemplatedResponse() {
-        new MockServerClient("localhost", 1080)
-            .when(
-                request()
-                    .withPath("/some/path")
-            )
+        new ClientAndServer(1080)
+            .when(request().withPath("/some/path"))
             .respond(
                 template(
                     HttpTemplate.TemplateType.JAVASCRIPT,
-                    "return {" + System.getProperty("line.separator") +
-                        "     'statusCode': 200," + System.getProperty("line.separator") +
-                        "     'cookies': {" + System.getProperty("line.separator") +
-                        "          'session' : request.headers['session-id'][0]" + System.getProperty("line.separator") +
-                        "     }," + System.getProperty("line.separator") +
-                        "     'headers': {" + System.getProperty("line.separator") +
-                        "          'Date' : Date()" + System.getProperty("line.separator") +
-                        "     }," + System.getProperty("line.separator") +
-                        "     'body': JSON.stringify(" + System.getProperty("line.separator") +
-                        "               {" + System.getProperty("line.separator") +
-                        "                    method: request.method," + System.getProperty("line.separator") +
-                        "                    path: request.path," + System.getProperty("line.separator") +
-                        "                    body: request.body" + System.getProperty("line.separator") +
-                        "               }" + System.getProperty("line.separator") +
-                        "          )" + System.getProperty("line.separator") +
+                    "return {\n" +
+                        "     'statusCode': 200,\n" +
+                        "     'cookies': {\n" +
+                        "          'session' : request.headers['session-id'][0]\n" +
+                        "     },\n" +
+                        "     'headers': {\n" +
+                        "          'Client-User-Agent': request.headers['User-Agent']\n" +
+                        "     },\n" +
+                        "     'body': request.body\n" +
                         "};"
                 )
             );
@@ -252,16 +241,16 @@ public class ResponseActionExamples {
 
     public void javascriptTemplatedResponseWithDelay() {
         String template = "" +
-            "if (request.method === 'POST' && request.path === '/somePath') {" + System.getProperty("line.separator") +
-            "    return {" + System.getProperty("line.separator") +
-            "        'statusCode': 200," + System.getProperty("line.separator") +
-            "        'body': JSON.stringify({name: 'value'})" + System.getProperty("line.separator") +
-            "    };" + System.getProperty("line.separator") +
-            "} else {" + System.getProperty("line.separator") +
-            "    return {" + System.getProperty("line.separator") +
-            "        'statusCode': 406," + System.getProperty("line.separator") +
-            "        'body': request.body" + System.getProperty("line.separator") +
-            "    };" + System.getProperty("line.separator") +
+            "if (request.method === 'POST' && request.path === '/somePath') {\n" +
+            "    return {\n" +
+            "        'statusCode': 200,\n" +
+            "        'body': JSON.stringify({name: 'value'})\n" +
+            "    };\n" +
+            "} else {\n" +
+            "    return {\n" +
+            "        'statusCode': 406,\n" +
+            "        'body': request.body\n" +
+            "    };\n" +
             "}";
 
         new MockServerClient("localhost", 1080)
@@ -278,32 +267,42 @@ public class ResponseActionExamples {
     }
 
     public void velocityTemplatedResponse() {
-        new MockServerClient("localhost", 1080)
-            .when(
-                request()
-                    .withPath("/some/path")
-            )
+        new ClientAndServer(1080)
+            .when(request().withPath("/some/path"))
             .respond(
                 template(
                     HttpTemplate.TemplateType.VELOCITY,
-                    "{" + System.getProperty("line.separator") +
-                        "     \"statusCode\": 200," + System.getProperty("line.separator") +
-                        "     \"cookies\": { " + System.getProperty("line.separator") +
-                        "          \"session\": \"$!request.headers['Session-Id'][0]\"" + System.getProperty("line.separator") +
-                        "     }," + System.getProperty("line.separator") +
-                        "     \"headers\": {" + System.getProperty("line.separator") +
-                        "          \"Client-User-Agent\": [ \"$!request.headers['User-Agent'][0]\" ]" + System.getProperty("line.separator") +
-                        "     }," + System.getProperty("line.separator") +
-                        "     \"body\": $!request.body" + System.getProperty("line.separator") +
+                    "{\n" +
+                        "     'statusCode': 200,\n" +
+                        "     'cookies': { \n" +
+                        "          'session': '$!request.headers['Session-Id'][0]'\n" +
+                        "     },\n" +
+                        "     'headers': {\n" +
+                        "          'Client-User-Agent': [ '$!request.headers['User-Agent'][0]' ]\n" +
+                        "     },\n" +
+                        "     'body': '$!request.body'\n" +
                         "}"
                 )
             );
     }
 
-    public static void main(String[] args) throws InterruptedException {
-        ConfigurationProperties.logLevel("DEBUG");
-        new ClientAndServer(1080);
-        new ResponseActionExamples().responseLiteralWithCookie();
-        MINUTES.sleep(5);
+    public void mustacheTemplatedResponse() {
+        new ClientAndServer(1080)
+            .when(request().withPath("/some/path"))
+            .respond(
+                template(
+                    HttpTemplate.TemplateType.MUSTACHE,
+                    "{\n" +
+                        "     'statusCode': 200,\n" +
+                        "     'cookies': {\n" +
+                        "          'session': '{{ request.headers.Session-Id.0 }}'\n" +
+                        "     },\n" +
+                        "     'headers': {\n" +
+                        "          'Client-User-Agent': [ '{{ request.headers.User-Agent.0 }}' ]\n" +
+                        "     },\n" +
+                        "     'body': '{{ request.body }}'\n" +
+                        "}"
+                )
+            );
     }
 }

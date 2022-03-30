@@ -22,9 +22,11 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.client.NettyHttpClient;
+import org.mockserver.echo.http.EchoServer;
+import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.Times;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.socket.tls.KeyStoreFactory;
@@ -48,6 +50,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.OK_200;
@@ -79,7 +82,7 @@ public abstract class AbstractProxyIntegrationTest {
     protected HttpClient createHttpClient() {
         return HttpClients
             .custom()
-            .setSSLSocketFactory(new SSLConnectionSocketFactory(new KeyStoreFactory(new MockServerLogger()).sslContext(), NoopHostnameVerifier.INSTANCE))
+            .setSSLSocketFactory(new SSLConnectionSocketFactory(new KeyStoreFactory(configuration(), new MockServerLogger()).sslContext(), NoopHostnameVerifier.INSTANCE))
             .setRoutePlanner(new DefaultProxyRoutePlanner(
                 new HttpHost(
                     System.getProperty("http.proxyHost", "127.0.0.1"),
@@ -90,11 +93,11 @@ public abstract class AbstractProxyIntegrationTest {
 
     public abstract int getProxyPort();
 
-    public abstract int getSecureProxyPort();
-
     public abstract MockServerClient getMockServerClient();
 
     public abstract int getServerPort();
+
+    public abstract EchoServer getEchoServer();
 
     protected String calculatePath(String path) {
         return (!path.startsWith("/") ? "/" : "") + path;
@@ -314,6 +317,70 @@ public abstract class AbstractProxyIntegrationTest {
             exactly(1)
         );
 
+    }
+
+    @Test
+    public void shouldForwardRequestsWithBlankQueryParameter() throws Exception {
+        try (Socket socket = new Socket("127.0.0.1", getProxyPort())) {
+            // given
+            getEchoServer().clear();
+            OutputStream output = socket.getOutputStream();
+
+            // when
+            // - send GET request
+            output.write(("" +
+                "GET " + addContextToPath("/some/path?parameter") + " HTTP/1.1\r" + NEW_LINE +
+                "Host: 127.0.0.1:" + getServerPort() + "\r" + NEW_LINE +
+                "Connection: close\r" + NEW_LINE +
+                "\r" + NEW_LINE
+            ).getBytes(StandardCharsets.UTF_8));
+            output.flush();
+
+            // then
+            assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 200");
+            HttpRequest proxiedRequest = getEchoServer().getLastRequest();
+            assertThat(proxiedRequest.getQueryStringParameters().getRawParameterString(), is("parameter"));
+        }
+
+        // and
+        getMockServerClient().verify(
+            request()
+                .withMethod("GET")
+                .withPath("/some/path"),
+            exactly(1)
+        );
+    }
+
+    @Test
+    public void shouldForwardRequestsWithQueryParameterStartingWithExclamationMark() throws Exception {
+        try (Socket socket = new Socket("127.0.0.1", getProxyPort())) {
+            // given
+            getEchoServer().clear();
+            OutputStream output = socket.getOutputStream();
+
+            // when
+            // - send GET request
+            output.write(("" +
+                "GET " + addContextToPath("/some/path?q=!in:chats%20is:unread") + " HTTP/1.1\r" + NEW_LINE +
+                "Host: 127.0.0.1:" + getServerPort() + "\r" + NEW_LINE +
+                "Connection: close\r" + NEW_LINE +
+                "\r" + NEW_LINE
+            ).getBytes(StandardCharsets.UTF_8));
+            output.flush();
+
+            // then
+            assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 200");
+            HttpRequest proxiedRequest = getEchoServer().getLastRequest();
+            assertThat(proxiedRequest.getQueryStringParameters().getRawParameterString(), is("q=!in:chats%20is:unread"));
+        }
+
+        // and
+        getMockServerClient().verify(
+            request()
+                .withMethod("GET")
+                .withPath("/some/path"),
+            exactly(1)
+        );
     }
 
     @Test
@@ -874,7 +941,7 @@ public abstract class AbstractProxyIntegrationTest {
     @Test
     public void shouldReturnErrorForInvalidRequestToClear() throws Exception {
         // when
-        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false).sendRequest(
+        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false).sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "127.0.0.1:" + getProxyPort())
@@ -902,7 +969,7 @@ public abstract class AbstractProxyIntegrationTest {
             "   - $.keepAlive: string found, boolean expected\n" +
             "   - $.method: boolean found, string expected\n" +
             "   - $.path: integer found, string expected\n" +
-            "   - $.specUrlOrPayload: is missing but it is required" + NEW_LINE +
+            "   - $.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher" + NEW_LINE +
             "  " + NEW_LINE +
             "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  ")));
     }
@@ -910,7 +977,7 @@ public abstract class AbstractProxyIntegrationTest {
     @Test
     public void shouldReturnErrorForInvalidRequestToVerify() throws Exception {
         // when
-        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false).sendRequest(
+        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false).sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "127.0.0.1:" + getProxyPort())
@@ -945,7 +1012,7 @@ public abstract class AbstractProxyIntegrationTest {
     @Test
     public void shouldReturnErrorForInvalidRequestToVerifySequence() throws Exception {
         // when
-        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false).sendRequest(
+        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false).sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "127.0.0.1:" + getProxyPort())

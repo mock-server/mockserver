@@ -6,7 +6,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.log.TimeService;
+import org.mockserver.time.EpochService;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
@@ -37,6 +37,7 @@ import static org.hamcrest.core.IsNull.nullValue;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.log.model.LogEntry.LOG_DATE_FORMAT;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.log.model.LogEntryMessages.RECEIVED_REQUEST_MESSAGE_FORMAT;
@@ -51,6 +52,7 @@ public class ProxyServletTest {
 
     private final HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(new MockServerLogger());
     private final ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
+    private final ExpectationSerializer expectationSerializerWithDefaultFields = new ExpectationSerializer(new MockServerLogger(), true);
     private final PortBindingSerializer portBindingSerializer = new PortBindingSerializer(new MockServerLogger());
 
     private HttpState httpStateHandler;
@@ -63,7 +65,7 @@ public class ProxyServletTest {
 
     @BeforeClass
     public static void fixTime() {
-        TimeService.fixedTime = true;
+        EpochService.fixedTime = true;
     }
 
     @Before
@@ -71,7 +73,7 @@ public class ProxyServletTest {
         mockActionHandler = mock(HttpActionHandler.class);
         Scheduler scheduler = mock(Scheduler.class);
 
-        httpStateHandler = spy(new HttpState(new MockServerLogger(), scheduler));
+        httpStateHandler = spy(new HttpState(configuration(), new MockServerLogger(), scheduler));
         response = new MockHttpServletResponse();
         proxyServlet = new ProxyServlet();
 
@@ -237,7 +239,7 @@ public class ProxyServletTest {
         proxyServlet.service(expectationRetrieveExpectationsRequest, response);
 
         // then
-        assertResponse(response, 200, expectationSerializer.serialize(Collections.singletonList(
+        assertResponse(response, 200, expectationSerializerWithDefaultFields.serialize(Collections.singletonList(
             new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited(), 0).withId("key_one").thenRespond(response("response_one"))
         )));
     }
@@ -270,7 +272,7 @@ public class ProxyServletTest {
             assertThat(response.getStatus(), is(200));
             assertThat(
                 new String(response.getContentAsByteArray(), UTF_8),
-                is(endsWith(LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - received request:" + NEW_LINE +
+                is(endsWith(LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - received request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"path\" : \"request_one\"" + NEW_LINE +

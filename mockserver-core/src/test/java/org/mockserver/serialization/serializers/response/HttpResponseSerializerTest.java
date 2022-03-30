@@ -22,13 +22,13 @@ public class HttpResponseSerializerTest {
 
     @Test
     public void shouldReturnFormattedResponseWithNoFieldsSet() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper(true).writeValueAsString(new HttpResponseDTO(response())),
+        assertThat(ObjectMapperFactory.createObjectMapper(true, false).writeValueAsString(new HttpResponseDTO(response())),
             is("{ }"));
     }
 
     @Test
     public void shouldReturnFormattedResponseWithAllFieldsSet() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper(true).writeValueAsString(
+        assertThat(ObjectMapperFactory.createObjectMapper(true, false).writeValueAsString(
             response()
                 .withStatusCode(302)
                 .withReasonPhrase("randomReason")
@@ -78,7 +78,7 @@ public class HttpResponseSerializerTest {
 
     @Test
     public void shouldReturnFormattedResponseWithJsonBodyInToString() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper(true).writeValueAsString(
+        assertThat(ObjectMapperFactory.createObjectMapper(true, false).writeValueAsString(
             response()
                 .withStatusCode(302)
                 .withBody(json("{ \"key\": \"some_value\" }"))
@@ -94,17 +94,14 @@ public class HttpResponseSerializerTest {
                 "    \"cookie_name\" : \"cookie_value\"" + NEW_LINE +
                 "  }," + NEW_LINE +
                 "  \"body\" : {" + NEW_LINE +
-                "    \"type\" : \"JSON\"," + NEW_LINE +
-                "    \"json\" : {" + NEW_LINE +
-                "      \"key\" : \"some_value\"" + NEW_LINE +
-                "    }" + NEW_LINE +
+                "    \"key\" : \"some_value\"" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}"));
     }
 
     @Test
     public void shouldReturnFormattedResponseWithDefaultStatusCode() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper(true).writeValueAsString(
+        assertThat(ObjectMapperFactory.createObjectMapper(true, false).writeValueAsString(
             response()
                 .withStatusCode(200)
                 .withHeaders(new Header("header_name", "header_value"))

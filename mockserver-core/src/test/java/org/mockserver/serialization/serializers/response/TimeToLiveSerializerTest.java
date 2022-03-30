@@ -13,7 +13,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 
 public class TimeToLiveSerializerTest {
 
-    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
+    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true, false);
 
     @Test
     public void shouldSerializeUnlimitedTimeToLive() throws JsonProcessingException {

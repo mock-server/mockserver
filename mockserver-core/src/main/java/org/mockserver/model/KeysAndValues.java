@@ -1,10 +1,8 @@
 package org.mockserver.model;
 
-import org.mockserver.collections.NottableStringHashMap;
-import org.mockserver.logging.MockServerLogger;
-
 import java.util.*;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -25,25 +23,27 @@ public abstract class KeysAndValues<T extends KeyAndValue, K extends KeysAndValu
 
     public abstract T build(NottableString name, NottableString value);
 
-    public K withEntries(List<T> cookies) {
+    public K withEntries(List<T> entries) {
         map.clear();
-        if (cookies != null) {
-            for (T cookie : cookies) {
+        if (entries != null) {
+            for (T cookie : entries) {
                 withEntry(cookie);
             }
         }
         return (K) this;
     }
 
-    public K withEntries(T... cookies) {
-        if (cookies != null) {
-            withEntries(Arrays.asList(cookies));
+    public K withEntries(T... entries) {
+        if (entries != null) {
+            withEntries(Arrays.asList(entries));
         }
         return (K) this;
     }
 
-    public K withEntry(T cookie) {
-        map.put(cookie.getName(), cookie.getValue());
+    public K withEntry(T entry) {
+        if (entry != null) {
+            map.put(entry.getName(), entry.getValue());
+        }
         return (K) this;
     }
 
@@ -54,6 +54,15 @@ public abstract class KeysAndValues<T extends KeyAndValue, K extends KeysAndValu
 
     public K withEntry(NottableString name, NottableString value) {
         map.put(name, value);
+        return (K) this;
+    }
+
+    public K replaceEntryIfExists(final T entry) {
+        if (entry != null) {
+            if (remove(entry.getName())) {
+                map.put(entry.getName(), entry.getValue());
+            }
+        }
         return (K) this;
     }
 
@@ -76,4 +85,17 @@ public abstract class KeysAndValues<T extends KeyAndValue, K extends KeysAndValu
     public boolean isEmpty() {
         return map.isEmpty();
     }
+
+    public boolean remove(NottableString name) {
+        return remove(name.getValue());
+    }
+
+    public boolean remove(String name) {
+        if (isNotBlank(name)) {
+            return map.remove(string(name)) != null;
+        }
+        return false;
+    }
+
+    public abstract K clone();
 }

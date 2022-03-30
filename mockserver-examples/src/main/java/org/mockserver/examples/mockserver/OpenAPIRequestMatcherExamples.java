@@ -21,7 +21,7 @@ public class OpenAPIRequestMatcherExamples {
         new MockServerClient("localhost", 1080)
             .when(
                 openAPI(
-                    "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json"
+                    "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
                 )
             )
             .respond(
@@ -34,7 +34,7 @@ public class OpenAPIRequestMatcherExamples {
         new MockServerClient("localhost", 1080)
             .when(
                 openAPI(
-                    "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
+                    "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
                     "showPetById"
                 )
             )
@@ -48,7 +48,7 @@ public class OpenAPIRequestMatcherExamples {
         new MockServerClient("localhost", 1080)
             .when(
                 openAPI(
-                    "file:/Users/jamesbloom/git/mockserver/mockserver/mockserver-core/target/test-classes/org/mockserver/mock/openapi_petstore_example.json"
+                    "file:/Users/jamesbloom/git/mockserver/mockserver/mockserver-core/target/test-classes/org/mockserver/openapi/openapi_petstore_example.json"
                 )
             )
             .respond(
@@ -60,7 +60,7 @@ public class OpenAPIRequestMatcherExamples {
     public void matchRequestByOpenAPILoadedByClasspathLocation() {
         new MockServerClient("localhost", 1080)
             .when(
-                openAPI("org/mockserver/mock/openapi_petstore_example.json")
+                openAPI("org/mockserver/openapi/openapi_petstore_example.json")
             )
             .respond(
                 response()
@@ -73,7 +73,7 @@ public class OpenAPIRequestMatcherExamples {
             .when(
                 new OpenAPIDefinition()
                     .withSpecUrlOrPayload(
-                        FileReader.readFileFromClassPathOrPath("/Users/jamesbloom/git/mockserver/mockserver/mockserver-core/target/test-classes/org/mockserver/mock/openapi_petstore_example.json")
+                        FileReader.readFileFromClassPathOrPath("/Users/jamesbloom/git/mockserver/mockserver/mockserver-core/target/test-classes/org/mockserver/openapi/openapi_petstore_example.json")
                     )
                     .withOperationId("listPets")
             )
@@ -281,7 +281,7 @@ public class OpenAPIRequestMatcherExamples {
             .when(
                 new OpenAPIDefinition()
                     .withSpecUrlOrPayload(
-                        FileReader.readFileFromClassPathOrPath("/Users/jamesbloom/git/mockserver/mockserver/mockserver-core/target/test-classes/org/mockserver/mock/openapi_petstore_example.json")
+                        FileReader.readFileFromClassPathOrPath("/Users/jamesbloom/git/mockserver/mockserver/mockserver-core/target/test-classes/org/mockserver/openapi/openapi_petstore_example.json")
                     )
                     .withOperationId("listPets"),
                 Times.exactly(2)
@@ -297,7 +297,7 @@ public class OpenAPIRequestMatcherExamples {
             .upsert(
                 new Expectation(
                     openAPI(
-                        "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
+                        "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
                         "showPetById"
                     ),
                     Times.once(),

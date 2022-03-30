@@ -22,6 +22,10 @@ public class Headers extends KeysToMultiValues<Header, Headers> {
         super(headers);
     }
 
+    public static Headers headers(Header... headers) {
+        return new Headers(headers);
+    }
+
     @Override
     public Header build(NottableString name, Collection<NottableString> values) {
         return new Header(name, values);
@@ -32,7 +36,6 @@ public class Headers extends KeysToMultiValues<Header, Headers> {
         return this;
     }
 
-    @SuppressWarnings("MethodDoesntCallSuperMethod")
     public Headers clone() {
         return new Headers(getMultimap());
     }

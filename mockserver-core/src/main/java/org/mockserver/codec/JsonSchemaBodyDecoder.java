@@ -3,11 +3,12 @@ package org.mockserver.codec;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.*;
 import com.google.common.base.Joiner;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.BodyMatcher;
 import org.mockserver.matchers.JsonSchemaMatcher;
-import org.mockserver.matchers.StringToXmlDocumentParser;
+import org.mockserver.xml.StringToXmlDocumentParser;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.serialization.ObjectMapperFactory;
@@ -25,8 +26,8 @@ import static java.util.jar.Attributes.Name.CONTENT_TYPE;
 import static java.util.stream.Collectors.toList;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXCEPTION;
-import static org.mockserver.matchers.StringToXmlDocumentParser.ErrorLevel.FATAL_ERROR;
-import static org.mockserver.matchers.StringToXmlDocumentParser.ErrorLevel.prettyPrint;
+import static org.mockserver.xml.StringToXmlDocumentParser.ErrorLevel.FATAL_ERROR;
+import static org.mockserver.xml.StringToXmlDocumentParser.ErrorLevel.prettyPrint;
 import static org.mockserver.model.NottableString.serialiseNottableString;
 
 public class JsonSchemaBodyDecoder {
@@ -34,16 +35,18 @@ public class JsonSchemaBodyDecoder {
     private static final String APPLICATION_XML = "application/xml";
     private static final String TEXT_XML = "text/xml";
     private static final String APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
+    private final Configuration configuration;
     private final MockServerLogger mockServerLogger;
     private final Expectation expectation;
     private final HttpRequest httpRequest;
     private final ExpandedParameterDecoder formParameterParser;
 
-    public JsonSchemaBodyDecoder(MockServerLogger mockServerLogger, Expectation expectation, HttpRequest httpRequest) {
+    public JsonSchemaBodyDecoder(Configuration configuration, MockServerLogger mockServerLogger, Expectation expectation, HttpRequest httpRequest) {
+        this.configuration = configuration;
         this.mockServerLogger = mockServerLogger;
         this.expectation = expectation;
         this.httpRequest = httpRequest;
-        formParameterParser = new ExpandedParameterDecoder(mockServerLogger);
+        formParameterParser = new ExpandedParameterDecoder(configuration, mockServerLogger);
     }
 
     public String convertToJson(HttpRequest request, BodyMatcher<?> bodyMatcher) {
@@ -99,7 +102,7 @@ public class JsonSchemaBodyDecoder {
             for (Map.Entry<String, ParameterStyle> parameterStyleEntry : parameterStyles.entrySet()) {
                 for (Parameter bodyParameterEntry : bodyParameters.getEntries()) {
                     if (parameterStyleEntry.getKey().equals(bodyParameterEntry.getName().getValue())) {
-                        bodyParameterEntry.replaceValues(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(parameterStyleEntry.getValue(), parameterStyleEntry.getKey(), bodyParameterEntry.getValues()));
+                        bodyParameterEntry.replaceValues(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(parameterStyleEntry.getValue(), parameterStyleEntry.getKey(), bodyParameterEntry.getValues()));
                         bodyParameters.replaceEntry(bodyParameterEntry);
                     }
                 }

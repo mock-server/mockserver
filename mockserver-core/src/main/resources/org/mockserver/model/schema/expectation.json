@@ -47,6 +47,10 @@
     },
     "timeToLive": {
       "$ref": "#/definitions/timeToLive"
+    },
+    "timestamp": {
+      "description": "added to allow request and response log output to be used to create expectations",
+      "type": "string"
     }
   },
   "oneOf": [
