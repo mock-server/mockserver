@@ -98,9 +98,17 @@
 
 <pre><code class="code">mvn mockserver:runForked</code></pre>
 
+<p>Or:</p>
+
+<pre><code class="code">mvnw org.mock-server:mockserver-maven-plugin:5.13.0:runForked -DserverPort=1080</code></pre>
+
 <p>To stop a forked instance of MockServer running on the same machine:</p>
 
 <pre><code class="code">mvn mockserver:stopForked</code></pre>
+
+<p>Or:</p>
+
+<pre><code class="code">mvnw org.mock-server:mockserver-maven-plugin:5.13.0:stopForked -DserverPort=1080</code></pre>
 
 <p>The <strong>stopForked</strong> goal does assumes that MockServer is running on the same physical machine as it uses 127.0.0.1 to communicate with MockServer stop socket.</p>
 
