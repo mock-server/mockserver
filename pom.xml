@@ -60,14 +60,14 @@
         <netty.version>4.1.75.Final</netty.version>
         <httpcomponents.version>4.4.1</httpcomponents.version>
         <boucycastle.verion>1.70</boucycastle.verion>
-        <spring.version>5.3.17</spring.version>
+        <spring.version>5.3.18</spring.version>
         <mockito.version>4.4.0</mockito.version>
         <hamcrest.version>2.2</hamcrest.version>
         <xmlunit.version>2.9.0</xmlunit.version>
         <skipTests>false</skipTests>
         <skipAssembly>false</skipAssembly>
-        <release.arguments />
-        <javadoc.additional.parameters />
+        <release.arguments/>
+        <javadoc.additional.parameters/>
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
     </properties>
 
@@ -847,7 +847,7 @@
                 <version>3.0.0</version>
                 <configuration>
                     <rules>
-                        <dependencyConvergence />
+                        <dependencyConvergence/>
                     </rules>
                 </configuration>
                 <executions>
