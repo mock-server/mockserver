@@ -9,11 +9,11 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>mockserver-junit-jupiter</artifactId>
+    <artifactId>mockserver-integration-testing</artifactId>
     <version>@project.version</version>
 
-    <name>MockServer JUnit Jupiter Integration</name>
-    <description>A JUnit5 Extension for MockServer</description>
+    <name>MockServer Integration Test</name>
+    <description>A module used to simplify integration testing of all MockServer versions by sharing commons integration testing components</description>
     <url>https://www.mock-server.com</url>
 
 </project>

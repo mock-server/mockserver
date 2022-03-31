@@ -122,8 +122,7 @@ public class FullHttpRequestToMockServerHttpRequest {
         if (!cookieHeaders.isEmpty()) {
             Cookies cookies = new Cookies();
             for (String cookieHeader : cookieHeaders) {
-                Set<Cookie> decodedCookies =
-                    ServerCookieDecoder.LAX.decode(cookieHeader);
+                Set<Cookie> decodedCookies = ServerCookieDecoder.LAX.decode(cookieHeader);
                 for (io.netty.handler.codec.http.cookie.Cookie decodedCookie : decodedCookies) {
                     cookies.withEntry(
                         decodedCookie.name(),

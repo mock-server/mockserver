@@ -78,7 +78,7 @@ public class BodyDecoderEncoder {
         return null;
     }
 
-    BodyWithContentType bytesToBody(byte[] bodyBytes, String contentTypeHeader) {
+    public BodyWithContentType bytesToBody(byte[] bodyBytes, String contentTypeHeader) {
         if (bodyBytes.length > 0) {
             MediaType mediaType = MediaType.parse(contentTypeHeader);
             if (mediaType.isJson()) {

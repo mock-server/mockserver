@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>mockserver-junit-rule</artifactId>
+    <version>@project.version</version>
 
     <name>MockServer JUnit 4 Integration</name>
     <description>A JUnit4 Rule for MockServer</description>

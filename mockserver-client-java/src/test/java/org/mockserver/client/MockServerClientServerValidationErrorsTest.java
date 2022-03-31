@@ -143,7 +143,9 @@ public class MockServerClientServerValidationErrorsTest {
             mockServerClient.when(request()).respond(response());
         } finally {
             UUIDService.fixedUUID = false;
-            ConfigurationProperties.logLevel(originalLevel.name());
+            if (originalLevel != null) {
+                ConfigurationProperties.logLevel(originalLevel.name());
+            }
         }
     }
 }

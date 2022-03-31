@@ -12,6 +12,10 @@
     <artifactId>mockserver-netty</artifactId>
     <url>https://www.mock-server.com</url>
 
+    <properties>
+        <maven-invoker-parallel-threads>2</maven-invoker-parallel-threads>
+    </properties>
+
     <dependencies>
         <!-- mockserver -->
         <dependency>
@@ -145,11 +149,67 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- copy dependency-reduced-pom.xml to target folder -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <overwrite>true</overwrite>
+                            <resources>
+                                <resource>
+                                    <!--source -->
+                                    <directory>./</directory>
+                                    <filtering>true</filtering>
+                                    <includes>
+                                        <include>dependency-reduced-pom.xml</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                            <!--target -->
+                            <outputDirectory>target</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- update version in dependency-reduced-pom.xml in target directory -->
+            <plugin>
+                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                <artifactId>replacer</artifactId>
+                <version>1.5.3</version>
+                <executions>
+                    <execution>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>replace</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <basedir>target</basedir>
+                    <includes>
+                        <include>dependency-reduced-pom.xml</include>
+                    </includes>
+                    <replacements>
+                        <replacement>
+                            <token>@project.version</token>
+                            <value>${project.version}</value>
+                        </replacement>
+                    </replacements>
+                </configuration>
+            </plugin>
             <!-- generate shaded dependency -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.3.0</version>
+                <version>3.2.4</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -307,6 +367,7 @@
                                     <pattern>org.objectweb</pattern>
                                     <shadedPattern>shaded_package.org.objectweb</shadedPattern>
                                 </relocation>
+                                <!-- deliberately skipped org.slf4j -->
                                 <relocation>
                                     <pattern>org.xmlunit</pattern>
                                     <shadedPattern>shaded_package.org.xmlunit</shadedPattern>
@@ -324,19 +385,6 @@
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
-                                    </excludes>
-                                </filter>
-                                <filter>
-                                    <artifact>com.fasterxml.jackson.dataformat:jackson-dataformat-yaml</artifact>
-                                    <excludes>
-                                        <exclude>META-INF/services/com.fasterxml.jackson.core.ObjectCodec</exclude>
-                                        <exclude>META-INF/services/com.fasterxml.jackson.core.JsonFactory</exclude>
-                                    </excludes>
-                                </filter>
-                                <filter>
-                                    <artifact>io.swagger:swagger-compat-spec-parser</artifact>
-                                    <excludes>
-                                        <exclude>META-INF/services/io.swagger.parser.SwaggerParserExtension</exclude>
                                     </excludes>
                                 </filter>
                                 <filter>
@@ -376,6 +424,80 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- install shaded plugin to local repository -->
+            <plugin>
+                <artifactId>maven-install-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>install-shaded-artefact</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <inherited>false</inherited>
+                        <configuration>
+                            <file>${project.build.directory}/${project.artifactId}-${project.version}-shaded.jar</file>
+                            <generatePom>false</generatePom>
+                            <pomFile>${project.build.directory}/dependency-reduced-pom.xml</pomFile>
+                            <artifactId>${project.artifactId}-no-dependencies</artifactId>
+                            <groupId>${project.groupId}</groupId>
+                            <version>${project.version}</version>
+                            <packaging>${project.packaging}</packaging>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- shaded dependency integration tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-invoker-plugin</artifactId>
+                <version>3.2.2</version>
+                <configuration>
+                    <!-- <skipInvocation>${skipTests}</skipInvocation> -->
+                    <skipInvocation>true</skipInvocation>
+                    <debug>false</debug>
+                    <streamLogs>false</streamLogs>
+                    <showErrors>false</showErrors>
+                    <showVersion>true</showVersion>
+                    <disableReports>true</disableReports>
+                    <parallelThreads>${maven-invoker-parallel-threads}</parallelThreads>
+                    <projectsDirectory>${basedir}/src/integration-tests/</projectsDirectory>
+                    <cloneProjectsTo>${project.build.directory}/integration-tests/</cloneProjectsTo>
+                    <reportsDirectory>${project.build.directory}</reportsDirectory>
+                    <cloneClean>true</cloneClean>
+                    <ignoreFailures>false</ignoreFailures>
+                    <addTestClassPath>true</addTestClassPath>
+                    <properties>
+                        <property>
+                            <name>mockserver.version</name>
+                            <value>${project.version}</value>
+                        </property>
+                    </properties>
+                    <environmentVariables>
+                        <mockserver.logLevel>DEBUG</mockserver.logLevel>
+                    </environmentVariables>
+                    <filterProperties>
+                        <mockserver.version>${project.version}</mockserver.version>
+                    </filterProperties>
+                    <settingsFile>src/integration-tests/settings.xml</settingsFile>
+                    <!--<mavenOpts>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005</mavenOpts>-->
+                    <pomIncludes>
+                        <pomInclude>**/pom.xml</pomInclude>
+                    </pomIncludes>
+                    <goals>
+                        <goal>test</goal>
+                    </goals>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>integration-test</id>
+                        <goals>
+                            <goal>install</goal>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
@@ -384,62 +506,6 @@
             <id>release</id>
             <build>
                 <plugins>
-                    <!-- copy dependency-reduced-pom.xml to target folder -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-resources-plugin</artifactId>
-                        <version>3.2.0</version>
-                        <executions>
-                            <execution>
-                                <id>copy-resources</id>
-                                <phase>process-resources</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <overwrite>true</overwrite>
-                                    <resources>
-                                        <resource>
-                                            <!--source -->
-                                            <directory>./</directory>
-                                            <filtering>true</filtering>
-                                            <includes>
-                                                <include>dependency-reduced-pom.xml</include>
-                                            </includes>
-                                        </resource>
-                                    </resources>
-                                    <!--target -->
-                                    <outputDirectory>target</outputDirectory>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <!-- update version in dependency-reduced-pom.xml in target directory -->
-                    <plugin>
-                        <groupId>com.google.code.maven-replacer-plugin</groupId>
-                        <artifactId>replacer</artifactId>
-                        <version>1.5.3</version>
-                        <executions>
-                            <execution>
-                                <phase>process-resources</phase>
-                                <goals>
-                                    <goal>replace</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <basedir>target</basedir>
-                            <includes>
-                                <include>dependency-reduced-pom.xml</include>
-                            </includes>
-                            <replacements>
-                                <replacement>
-                                    <token>@project.version</token>
-                                    <value>${project.version}}</value>
-                                </replacement>
-                            </replacements>
-                        </configuration>
-                    </plugin>
                     <!-- deploy shaded plugin to remote repository -->
                     <plugin>
                         <artifactId>maven-deploy-plugin</artifactId>
@@ -456,7 +522,7 @@
                                     <url>https://oss.sonatype.org/content/repositories/snapshots</url>
                                     <file>${project.build.directory}/${project.artifactId}-${project.version}-shaded.jar</file>
                                     <generatePom>false</generatePom>
-                                    <pomFile>dependency-reduced-pom.xml</pomFile>
+                                    <pomFile>${project.build.directory}/dependency-reduced-pom.xml</pomFile>
                                     <artifactId>${project.artifactId}-no-dependencies</artifactId>
                                     <groupId>${project.groupId}</groupId>
                                     <version>${project.version}</version>

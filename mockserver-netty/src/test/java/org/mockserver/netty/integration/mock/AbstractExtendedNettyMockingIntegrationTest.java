@@ -479,9 +479,47 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
         );
     }
 
-@Test
-public void shouldHandleLargeRequestBodyForResponseByObjectCallbackViaWebSocket() throws Exception {
-    viaWebSocket(() -> {
+    @Test
+    public void shouldHandleLargeRequestBodyForResponseByObjectCallbackViaWebSocket() throws Exception {
+        viaWebSocket(() -> {
+            // given
+            int requestBodySize = 5000;
+
+            // when
+            mockServerClient
+                .when(
+                    request()
+                        .withPath(calculatePath("object_callback")),
+                    exactly(2)
+                )
+                .respond(
+                    httpRequest -> response()
+                        .withStatusCode(200)
+                        .withBody(json(ImmutableMap.of("requestBodyLength", httpRequest.getBodyAsString().length()), StandardCharsets.UTF_8))
+                        .withConnectionOptions(connectionOptions().withCloseSocket(true))
+                );
+
+            // then
+            CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+            HttpPost httpPost = new HttpPost("http://localhost:" + mockServerClient.getPort() + calculatePath("object_callback"));
+            httpPost.setEntity(new StringEntity("{\"largeStringValue\":\"" + RandomStringUtils.randomAlphanumeric(requestBodySize) + "\"}", StandardCharsets.UTF_8));
+            httpPost.setHeader(CONTENT_TYPE.toString(), "application/json");
+            CloseableHttpResponse httpResponse = httpClient.execute(httpPost);
+
+            assertThat(httpResponse.getStatusLine().getStatusCode(), equalTo(200));
+            try (InputStreamReader isr = new InputStreamReader(httpResponse.getEntity().getContent()); BufferedReader br = new BufferedReader(isr)) {
+                String responseBody = br.lines().collect(Collectors.joining("\n"));
+                assertThat(responseBody, is("{" + NEW_LINE +
+                    "  \"requestBodyLength\" : " + (requestBodySize + ("{" + NEW_LINE +
+                    "  \"largeStringValue\" : \"\"" + NEW_LINE +
+                    "}").length()) + NEW_LINE +
+                    "}"));
+            }
+        });
+    }
+
+    @Test
+    public void shouldHandleLargeRequestBodyForResponseByObjectCallbackViaLocalJVM() throws IOException {
         // given
         int requestBodySize = 5000;
 
@@ -509,47 +547,9 @@ public void shouldHandleLargeRequestBodyForResponseByObjectCallbackViaWebSocket(
         assertThat(httpResponse.getStatusLine().getStatusCode(), equalTo(200));
         try (InputStreamReader isr = new InputStreamReader(httpResponse.getEntity().getContent()); BufferedReader br = new BufferedReader(isr)) {
             String responseBody = br.lines().collect(Collectors.joining("\n"));
-            assertThat(responseBody, is("{" + NEW_LINE +
-                "  \"requestBodyLength\" : " + (requestBodySize + ("{" + NEW_LINE +
-                "  \"largeStringValue\" : \"\"" + NEW_LINE +
-                "}").length()) + NEW_LINE +
-                "}"));
+            assertThat(responseBody, is("{\"requestBodyLength\":" + (requestBodySize + "{\"largeStringValue\":\"\"}".length()) + "}"));
         }
-    });
-}
-
-@Test
-public void shouldHandleLargeRequestBodyForResponseByObjectCallbackViaLocalJVM() throws IOException {
-    // given
-    int requestBodySize = 5000;
-
-    // when
-    mockServerClient
-        .when(
-            request()
-                .withPath(calculatePath("object_callback")),
-            exactly(2)
-        )
-        .respond(
-            httpRequest -> response()
-                .withStatusCode(200)
-                .withBody(json(ImmutableMap.of("requestBodyLength", httpRequest.getBodyAsString().length()), StandardCharsets.UTF_8))
-                .withConnectionOptions(connectionOptions().withCloseSocket(true))
-        );
-
-    // then
-    CloseableHttpClient httpClient = HttpClientBuilder.create().build();
-    HttpPost httpPost = new HttpPost("http://localhost:" + mockServerClient.getPort() + calculatePath("object_callback"));
-    httpPost.setEntity(new StringEntity("{\"largeStringValue\":\"" + RandomStringUtils.randomAlphanumeric(requestBodySize) + "\"}", StandardCharsets.UTF_8));
-    httpPost.setHeader(CONTENT_TYPE.toString(), "application/json");
-    CloseableHttpResponse httpResponse = httpClient.execute(httpPost);
-
-    assertThat(httpResponse.getStatusLine().getStatusCode(), equalTo(200));
-    try (InputStreamReader isr = new InputStreamReader(httpResponse.getEntity().getContent()); BufferedReader br = new BufferedReader(isr)) {
-        String responseBody = br.lines().collect(Collectors.joining("\n"));
-        assertThat(responseBody, is("{\"requestBodyLength\":" + (requestBodySize + "{\"largeStringValue\":\"\"}".length()) + "}"));
     }
-}
 
     private int objectCallbackCounter = 0;
 

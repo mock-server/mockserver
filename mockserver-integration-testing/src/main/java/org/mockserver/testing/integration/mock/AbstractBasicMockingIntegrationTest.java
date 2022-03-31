@@ -708,13 +708,13 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     @Test
     public void shouldSupportBatchedExpectations() throws Exception {
         // when
-        HttpResponse httpResponse = httpClient.sendRequest(
+        HttpResponse httpResponse = makeRequest(
             request()
                 .withMethod("PUT")
                 .withSecure(isSecureControlPlane())
                 .withHeader(HOST.toString(), "localhost:" + this.getServerPort())
                 .withHeader(authorisationHeader())
-                .withPath(addContextToPath("mockserver/expectation"))
+                .withPath(addContextToPath("expectation"))
                 .withBody("" +
                     "[" +
                     new ExpectationSerializer(new MockServerLogger())
@@ -733,8 +733,9 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                                 .thenRespond(response().withBody("some_body_three"))
                         ) +
                     "]"
-                )
-        ).get(10, SECONDS);
+                ),
+            HEADERS_TO_IGNORE
+        );
         assertThat(httpResponse.getStatusCode(), equalTo(201));
 
         // then
@@ -2250,13 +2251,13 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     @Test
     public void shouldErrorForInvalidExpectation() throws Exception {
         // when
-        HttpResponse httpResponse = httpClient.sendRequest(
+        HttpResponse httpResponse = makeRequest(
             request()
                 .withMethod("PUT")
                 .withSecure(isSecureControlPlane())
                 .withHeader(HOST.toString(), "localhost:" + this.getServerPort())
                 .withHeader(authorisationHeader())
-                .withPath(addContextToPath("mockserver/expectation"))
+                .withPath(addContextToPath("expectation"))
                 .withBody("{" + NEW_LINE +
                     "  \"httpRequest\" : {" + NEW_LINE +
                     "    \"path\" : \"/path_one\"" + NEW_LINE +
@@ -2270,8 +2271,9 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     "  \"timeToLive\" : {" + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }" + NEW_LINE +
-                    "}")
-        ).get(10, SECONDS);
+                    "}"),
+            HEADERS_TO_IGNORE
+        );
 
         // then
         assertThat(httpResponse.getStatusCode(), is(400));
@@ -2314,19 +2316,20 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     @Test
     public void shouldErrorForInvalidRequest() throws Exception {
         // when
-        HttpResponse httpResponse = httpClient.sendRequest(
+        HttpResponse httpResponse = makeRequest(
             request()
                 .withMethod("PUT")
                 .withSecure(isSecureControlPlane())
                 .withHeader(HOST.toString(), "localhost:" + this.getServerPort())
                 .withHeader(authorisationHeader())
-                .withPath(addContextToPath("mockserver/clear"))
+                .withPath(addContextToPath("clear"))
                 .withBody("{" + NEW_LINE +
                     "    \"path\" : 500," + NEW_LINE +
                     "    \"method\" : true," + NEW_LINE +
                     "    \"keepAlive\" : \"false\"" + NEW_LINE +
-                    "  }")
-        ).get(10, SECONDS);
+                    "  }"),
+            HEADERS_TO_IGNORE
+        );
 
         // then
         assertThat(httpResponse.getStatusCode(), is(400));
