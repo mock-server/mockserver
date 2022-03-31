@@ -1,10 +1,8 @@
 package org.mockserver.netty;
 
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.base64.Base64;
 import io.netty.util.AttributeKey;
 import org.apache.commons.text.StringEscapeUtils;
 import org.mockserver.configuration.Configuration;
@@ -22,6 +20,7 @@ import org.mockserver.netty.proxy.connect.HttpConnectHandler;
 import org.mockserver.netty.responsewriter.NettyResponseWriter;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.serialization.Base64Converter;
 import org.mockserver.serialization.PortBindingSerializer;
 import org.slf4j.event.Level;
 
@@ -52,6 +51,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
 
     public static final AttributeKey<Boolean> PROXYING = AttributeKey.valueOf("PROXYING");
     public static final AttributeKey<Set<String>> LOCAL_HOST_HEADERS = AttributeKey.valueOf("LOCAL_HOST_HEADERS");
+    private static final Base64Converter BASE_64_CONVERTER = new Base64Converter();
     private MockServerLogger mockServerLogger;
     private HttpState httpState;
     private PortBindingSerializer portBindingSerializer;
@@ -130,7 +130,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
                     String username = configuration.proxyAuthenticationUsername();
                     String password = configuration.proxyAuthenticationPassword();
                     if (isNotBlank(username) && isNotBlank(password) &&
-                        !request.containsHeader(PROXY_AUTHORIZATION.toString(), "Basic " + Base64.encode(Unpooled.copiedBuffer(username + ':' + password, StandardCharsets.UTF_8), false).toString(StandardCharsets.US_ASCII))) {
+                        !request.containsHeader(PROXY_AUTHORIZATION.toString(), "Basic " + BASE_64_CONVERTER.bytesToBase64String((username + ':' + password).getBytes(StandardCharsets.UTF_8), StandardCharsets.US_ASCII))) {
                         HttpResponse response = response()
                             .withStatusCode(PROXY_AUTHENTICATION_REQUIRED.code())
                             .withHeader(PROXY_AUTHENTICATE.toString(), "Basic realm=\"" + StringEscapeUtils.escapeJava(configuration.proxyAuthenticationRealm()) + "\", charset=\"UTF-8\"");

@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - removed external references to schema specification to remove required network connectivity
 - fixed docker latest tag by worked around bug in sonatype not updating the LATEST metadata for snapshots
 - fixed partial deletion of expectations from watched file initialiser
+- resolved small memory leak during proxy authentication
 
 ## [5.13.0] - 2022-03-17
 

@@ -2,6 +2,7 @@ package org.mockserver.serialization;
 
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
+import java.nio.charset.Charset;
 import java.util.Base64;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -26,7 +27,11 @@ public class Base64Converter extends ObjectWithReflectiveEqualsHashCodeToString 
     }
 
     public String bytesToBase64String(byte[] data) {
-        return new String(ENCODER.encode(data), UTF_8);
+        return bytesToBase64String(data, UTF_8);
+    }
+
+    public String bytesToBase64String(byte[] data, Charset charset) {
+        return new String(ENCODER.encode(data), charset);
     }
 
 }
