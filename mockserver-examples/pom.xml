@@ -55,10 +55,16 @@
                 <version>1.30</version>
             </dependency>
             <dependency>
-                <!-- Conflicting versions in spring-boot-starter-webflux and spring-context / spring-web  / spring-test -->
+                <!-- Conflicting versions in spring-boot-starter-webflux and spring-context / spring-webmvc -->
                 <groupId>org.springframework</groupId>
-                <artifactId>spring-core</artifactId>
-                <version>${spring.version}</version>
+                <artifactId>spring-aop</artifactId>
+                <version>${spring-web.version}</version>
+            </dependency>
+            <dependency>
+                <!-- Conflicting versions in spring-boot-starter-webflux and spring-context / spring-webmvc -->
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-expression</artifactId>
+                <version>${spring-web.version}</version>
             </dependency>
             <dependency>
                 <!-- Conflicting versions in okhttp and okio (both from okhttp) -->
@@ -262,7 +268,7 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-core</artifactId>
-            <version>${spring.version}</version>
+            <version>${spring-web.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>commons-logging</groupId>
@@ -302,13 +308,13 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
-            <version>${spring.version}</version>
+            <version>${spring-web.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
-            <version>${spring.version}</version>
+            <version>${spring-web.version}</version>
         </dependency>
 
         <!-- logging -->

@@ -60,7 +60,8 @@
         <netty.version>4.1.75.Final</netty.version>
         <httpcomponents.version>4.4.1</httpcomponents.version>
         <boucycastle.verion>1.70</boucycastle.verion>
-        <spring.version>5.3.18</spring.version>
+        <spring.version>5.3.17</spring.version>
+        <spring-web.version>5.3.18</spring-web.version>
         <mockito.version>4.4.0</mockito.version>
         <hamcrest.version>2.2</hamcrest.version>
         <xmlunit.version>2.9.0</xmlunit.version>
@@ -445,7 +446,12 @@
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-web</artifactId>
-                <version>${spring.version}</version>
+                <version>${spring-web.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-core</artifactId>
+                <version>${spring-web.version}</version>
             </dependency>
 
             <!-- test -->
