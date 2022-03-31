@@ -21,7 +21,7 @@ import static org.mockserver.closurecallback.websocketclient.WebSocketClient.CLI
  * @author jamesdbloom
  */
 @ChannelHandler.Sharable
-public class WebSocketServerHandler extends ChannelInboundHandlerAdapter {
+public class EchoWebSocketServerHandler extends ChannelInboundHandlerAdapter {
 
     private static final AttributeKey<Boolean> CHANNEL_UPGRADED_FOR_CALLBACK_WEB_SOCKET = AttributeKey.valueOf("CHANNEL_UPGRADED_FOR_CALLBACK_WEB_SOCKET");
     private static final String UPGRADE_CHANNEL_FOR_CALLBACK_WEB_SOCKET_URI = "/_mockserver_callback_websocket";
@@ -32,7 +32,7 @@ public class WebSocketServerHandler extends ChannelInboundHandlerAdapter {
     private final boolean isSecure;
     private WebSocketServerHandshaker handshaker;
 
-    WebSocketServerHandler(MockServerLogger mockServerLogger, List<String> registeredClients, List<Channel> websocketChannels, List<TextWebSocketFrame> textWebSocketFrames, boolean isSecure) {
+    EchoWebSocketServerHandler(MockServerLogger mockServerLogger, List<String> registeredClients, List<Channel> websocketChannels, List<TextWebSocketFrame> textWebSocketFrames, boolean isSecure) {
         this.mockServerLogger = mockServerLogger;
         this.registeredClients = registeredClients;
         this.websocketChannels = websocketChannels;
