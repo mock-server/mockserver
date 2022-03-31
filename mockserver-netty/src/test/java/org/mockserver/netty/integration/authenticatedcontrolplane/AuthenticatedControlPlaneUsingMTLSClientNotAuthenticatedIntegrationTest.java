@@ -10,6 +10,7 @@ import org.mockserver.authentication.AuthenticationException;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.httpclient.NettyHttpClient;
+import org.mockserver.integration.ClientAndServer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
@@ -50,7 +51,6 @@ import static org.mockserver.verify.VerificationTimes.exactly;
  */
 public class AuthenticatedControlPlaneUsingMTLSClientNotAuthenticatedIntegrationTest extends AbstractMockingIntegrationTestBase {
 
-    private static final int severHttpPort = PortFactory.findFreePort();
     private static String originalControlPlaneTLSMutualAuthenticationCAChain;
     private static String originalControlPlanePrivateKeyPath;
     private static String originalControlPlaneX509CertificatePath;
@@ -75,15 +75,14 @@ public class AuthenticatedControlPlaneUsingMTLSClientNotAuthenticatedIntegration
         ConfigurationProperties.controlPlaneX509CertificatePath("org/mockserver/netty/integration/tls/leaf-cert.pem");
         ConfigurationProperties.controlPlaneTLSMutualAuthenticationRequired(true);
 
-        Main.main("-serverPort", "" + severHttpPort);
-        mockServerClient = new MockServerClient("localhost", severHttpPort).withSecure(true);
+        mockServerClient = ClientAndServer.startClientAndServer().withSecure(true);
         mockServerClient.hasStarted();
 
         ConfigurationProperties.controlPlaneTLSMutualAuthenticationCAChain("org/mockserver/netty/integration/tls/separateca/ca.pem");
         ConfigurationProperties.controlPlanePrivateKeyPath("org/mockserver/netty/integration/tls/separateca/leaf-key-pkcs8.pem");
         ConfigurationProperties.controlPlaneX509CertificatePath("org/mockserver/netty/integration/tls/separateca/leaf-cert.pem");
 
-        mockServerClient = new MockServerClient("localhost", severHttpPort).withSecure(true);
+        mockServerClient = new MockServerClient("localhost", mockServerClient.getPort()).withSecure(true);
         MockServerLogger mockServerLogger = new MockServerLogger();
         NettySslContextFactory nettySslContextFactory = new NettySslContextFactory(configuration(), MOCK_SERVER_LOGGER);
         nettySslContextFactory.withClientSslContextBuilderFunction(
@@ -126,7 +125,7 @@ public class AuthenticatedControlPlaneUsingMTLSClientNotAuthenticatedIntegration
 
     @Override
     public int getServerPort() {
-        return severHttpPort;
+        return mockServerClient.getPort();
     }
 
     @Override

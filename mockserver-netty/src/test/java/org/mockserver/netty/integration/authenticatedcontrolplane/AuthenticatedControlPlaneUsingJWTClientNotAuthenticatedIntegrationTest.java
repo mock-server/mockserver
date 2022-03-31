@@ -11,8 +11,7 @@ import org.junit.function.ThrowingRunnable;
 import org.mockserver.authentication.AuthenticationException;
 import org.mockserver.authentication.jwt.JWKGenerator;
 import org.mockserver.authentication.jwt.JWTGenerator;
-import org.mockserver.cli.Main;
-import org.mockserver.client.MockServerClient;
+import org.mockserver.integration.ClientAndServer;
 import org.mockserver.keys.AsymmetricKeyGenerator;
 import org.mockserver.keys.AsymmetricKeyPair;
 import org.mockserver.keys.AsymmetricKeyPairAlgorithm;
@@ -27,7 +26,6 @@ import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.serialization.RequestDefinitionSerializer;
 import org.mockserver.serialization.VerificationSequenceSerializer;
 import org.mockserver.serialization.VerificationSerializer;
-import org.mockserver.socket.PortFactory;
 import org.mockserver.test.TempFileWriter;
 import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
 
@@ -58,7 +56,6 @@ import static org.mockserver.verify.VerificationTimes.exactly;
  */
 public class AuthenticatedControlPlaneUsingJWTClientNotAuthenticatedIntegrationTest extends AbstractMockingIntegrationTestBase {
 
-    private static final int severHttpPort = PortFactory.findFreePort();
     private static String originalControlPlaneJWTAuthenticationJWKSource;
     private static String originalControlPlaneJWTAuthenticationExpectedAudience;
     private static Map<String, String> originalControlPlaneJWTAuthenticationMatchingClaims;
@@ -89,9 +86,7 @@ public class AuthenticatedControlPlaneUsingJWTClientNotAuthenticatedIntegrationT
         controlPlaneJWTAuthenticationRequiredClaims(ImmutableSet.of("name", "admin", "scope"));
         controlPlaneJWTAuthenticationRequired(true);
 
-        Main.main("-serverPort", "" + severHttpPort);
-
-        mockServerClient = new MockServerClient("localhost", severHttpPort);
+        mockServerClient = ClientAndServer.startClientAndServer();
     }
 
     @AfterClass
@@ -114,7 +109,7 @@ public class AuthenticatedControlPlaneUsingJWTClientNotAuthenticatedIntegrationT
 
     @Override
     public int getServerPort() {
-        return severHttpPort;
+        return mockServerClient.getPort();
     }
 
     @Override
@@ -159,9 +154,9 @@ public class AuthenticatedControlPlaneUsingJWTClientNotAuthenticatedIntegrationT
 
         // when
         mockServerClient
-                .withControlPlaneJWT(() -> jwt)
-                .when(request())
-                .respond(response().withBody("some_body"));
+            .withControlPlaneJWT(() -> jwt)
+            .when(request())
+            .respond(response().withBody("some_body"));
 
         // then no exception thrown
     }

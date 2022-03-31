@@ -2,9 +2,7 @@ package org.mockserver.netty.integration.authenticatedcontrolplane;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.mockserver.cli.Main;
-import org.mockserver.client.MockServerClient;
-import org.mockserver.socket.PortFactory;
+import org.mockserver.integration.ClientAndServer;
 import org.mockserver.testing.integration.mock.AbstractBasicMockingSameJVMIntegrationTest;
 
 import static org.mockserver.configuration.ConfigurationProperties.*;
@@ -15,7 +13,6 @@ import static org.mockserver.stop.Stop.stopQuietly;
  */
 public class AuthenticatedControlPlaneUsingMTLSClientMockingIntegrationTest extends AbstractBasicMockingSameJVMIntegrationTest {
 
-    private static final int severHttpPort = PortFactory.findFreePort();
     private static String originalControlPlaneTLSMutualAuthenticationCAChain;
     private static String originalControlPlanePrivateKeyPath;
     private static String originalControlPlaneX509CertificatePath;
@@ -35,9 +32,7 @@ public class AuthenticatedControlPlaneUsingMTLSClientMockingIntegrationTest exte
         controlPlaneX509CertificatePath("org/mockserver/netty/integration/tls/leaf-cert.pem");
         controlPlaneTLSMutualAuthenticationRequired(true);
 
-        Main.main("-serverPort", "" + severHttpPort);
-
-        mockServerClient = new MockServerClient("localhost", severHttpPort).withSecure(true);
+        mockServerClient = ClientAndServer.startClientAndServer().withSecure(true);
     }
 
     @AfterClass
@@ -53,7 +48,7 @@ public class AuthenticatedControlPlaneUsingMTLSClientMockingIntegrationTest exte
 
     @Override
     public int getServerPort() {
-        return severHttpPort;
+        return mockServerClient.getPort();
     }
 
     @Override

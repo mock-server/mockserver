@@ -2,12 +2,11 @@ package org.mockserver.netty.integration.authenticatedcontrolplane;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.mockserver.keys.AsymmetricKeyGenerator;
-import org.mockserver.keys.AsymmetricKeyPair;
 import org.mockserver.authentication.jwt.JWKGenerator;
 import org.mockserver.authentication.jwt.JWTGenerator;
-import org.mockserver.cli.Main;
-import org.mockserver.client.MockServerClient;
+import org.mockserver.integration.ClientAndServer;
+import org.mockserver.keys.AsymmetricKeyGenerator;
+import org.mockserver.keys.AsymmetricKeyPair;
 import org.mockserver.keys.AsymmetricKeyPairAlgorithm;
 import org.mockserver.model.Header;
 import org.mockserver.socket.PortFactory;
@@ -26,7 +25,6 @@ import static org.mockserver.stop.Stop.stopQuietly;
  */
 public class AuthenticatedControlPlaneUsingJWTViaOverrideClientMockingIntegrationTest extends AbstractBasicMockingSameJVMIntegrationTest {
 
-    private static final int severHttpPort = PortFactory.findFreePort();
     private static String originalControlPlaneJWTAuthenticationJWKSource;
     private static boolean originalControlPlaneJWTAuthenticationRequired;
     private static Header authorisationHeader;
@@ -45,9 +43,7 @@ public class AuthenticatedControlPlaneUsingJWTViaOverrideClientMockingIntegratio
         controlPlaneJWTAuthenticationRequired(true);
         authorisationHeader = header(AUTHORIZATION.toString(), "Bearer " + jwt);
 
-        Main.main("-serverPort", "" + severHttpPort);
-
-        mockServerClient = new MockServerClient("localhost", severHttpPort).withRequestOverride(request().withHeader(authorisationHeader)).withSecure(true);
+        mockServerClient = ClientAndServer.startClientAndServer().withRequestOverride(request().withHeader(authorisationHeader)).withSecure(true);
     }
 
     @AfterClass
@@ -61,7 +57,7 @@ public class AuthenticatedControlPlaneUsingJWTViaOverrideClientMockingIntegratio
 
     @Override
     public int getServerPort() {
-        return severHttpPort;
+        return mockServerClient.getPort();
     }
 
     @Override

@@ -4,6 +4,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.cli.Main;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.integration.ClientAndServer;
 import org.mockserver.socket.PortFactory;
 
 import static org.mockserver.configuration.ConfigurationProperties.*;
@@ -14,7 +15,6 @@ import static org.mockserver.stop.Stop.stopQuietly;
  */
 public class ClientAuthenticationCustomCertificateAuthorityMockingIntegrationTest extends AbstractClientAuthenticationMockingIntegrationTest {
 
-    private static final int severHttpPort = PortFactory.findFreePort();
     private static String originalCertificateAuthorityCertificate;
     private static String originalCertificateAuthorityPrivateKey;
     private static boolean originalTLSMutualAuthenticationRequired;
@@ -31,9 +31,7 @@ public class ClientAuthenticationCustomCertificateAuthorityMockingIntegrationTes
         certificateAuthorityPrivateKey("org/mockserver/netty/integration/tls/ca-key-pkcs8.pem");
         tlsMutualAuthenticationRequired(true);
 
-        Main.main("-serverPort", "" + severHttpPort);
-
-        mockServerClient = new MockServerClient("localhost", severHttpPort).withSecure(true);
+        mockServerClient = ClientAndServer.startClientAndServer().withSecure(true);
     }
 
     @AfterClass
@@ -48,7 +46,7 @@ public class ClientAuthenticationCustomCertificateAuthorityMockingIntegrationTes
 
     @Override
     public int getServerPort() {
-        return severHttpPort;
+        return mockServerClient.getPort();
     }
 
 }

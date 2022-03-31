@@ -2,9 +2,7 @@ package org.mockserver.netty.integration.mock;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.mockserver.cli.Main;
-import org.mockserver.client.MockServerClient;
-import org.mockserver.socket.PortFactory;
+import org.mockserver.integration.ClientAndServer;
 import org.mockserver.testing.integration.mock.AbstractExtendedSameJVMMockingIntegrationTest;
 
 import static org.mockserver.stop.Stop.stopQuietly;
@@ -14,13 +12,9 @@ import static org.mockserver.stop.Stop.stopQuietly;
  */
 public class SecureClientMockingIntegrationTest extends AbstractExtendedSameJVMMockingIntegrationTest {
 
-    private static final int severHttpPort = PortFactory.findFreePort();
-
     @BeforeClass
     public static void startServer() {
-        Main.main("-serverPort", "" + severHttpPort);
-
-        mockServerClient = new MockServerClient("localhost", severHttpPort).withSecure(true);
+        mockServerClient = ClientAndServer.startClientAndServer().withSecure(true);
     }
 
     @AfterClass
@@ -30,7 +24,7 @@ public class SecureClientMockingIntegrationTest extends AbstractExtendedSameJVMM
 
     @Override
     public int getServerPort() {
-        return severHttpPort;
+        return mockServerClient.getPort();
     }
 
     @Override

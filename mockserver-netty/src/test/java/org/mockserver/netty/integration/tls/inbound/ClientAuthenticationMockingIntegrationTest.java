@@ -4,6 +4,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.cli.Main;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.integration.ClientAndServer;
 import org.mockserver.socket.PortFactory;
 
 import static org.mockserver.configuration.ConfigurationProperties.*;
@@ -14,7 +15,6 @@ import static org.mockserver.stop.Stop.stopQuietly;
  */
 public class ClientAuthenticationMockingIntegrationTest extends AbstractClientAuthenticationMockingIntegrationTest {
 
-    private static final int severHttpPort = PortFactory.findFreePort();
     private static boolean originalTLSMutualAuthenticationRequired;
 
     @BeforeClass
@@ -24,9 +24,7 @@ public class ClientAuthenticationMockingIntegrationTest extends AbstractClientAu
 
         tlsMutualAuthenticationRequired(true);
 
-        Main.main("-serverPort", "" + severHttpPort);
-
-        mockServerClient = new MockServerClient("localhost", severHttpPort).withSecure(true);
+        mockServerClient = ClientAndServer.startClientAndServer().withSecure(true);
     }
 
     @AfterClass
@@ -39,7 +37,7 @@ public class ClientAuthenticationMockingIntegrationTest extends AbstractClientAu
 
     @Override
     public int getServerPort() {
-        return severHttpPort;
+        return mockServerClient.getPort();
     }
 
 }

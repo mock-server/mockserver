@@ -4,6 +4,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.cli.Main;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.integration.ClientAndServer;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.uuid.UUIDService;
 
@@ -16,8 +17,6 @@ import static org.mockserver.stop.Stop.stopQuietly;
  * @author jamesdbloom
  */
 public class ClientAuthenticationDynamicCAMockingIntegrationTest extends AbstractClientAuthenticationMockingIntegrationTest {
-
-    private static final int severHttpPort = PortFactory.findFreePort();
 
     private static boolean originalTLSMutualAuthenticationRequired;
     private static boolean originalDynamicallyCreateCertificateAuthorityCertificate;
@@ -39,9 +38,7 @@ public class ClientAuthenticationDynamicCAMockingIntegrationTest extends Abstrac
         dynamicallyCreateCertificateAuthorityCertificate(true);
         directoryToSaveDynamicSSLCertificate(temporaryDirectory.getAbsolutePath());
 
-        Main.main("-serverPort", "" + severHttpPort);
-
-        mockServerClient = new MockServerClient("localhost", severHttpPort).withSecure(true);
+        mockServerClient = ClientAndServer.startClientAndServer().withSecure(true);
     }
 
     @AfterClass
@@ -56,7 +53,7 @@ public class ClientAuthenticationDynamicCAMockingIntegrationTest extends Abstrac
 
     @Override
     public int getServerPort() {
-        return severHttpPort;
+        return mockServerClient.getPort();
     }
 
 }

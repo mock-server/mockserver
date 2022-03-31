@@ -2,15 +2,13 @@ package org.mockserver.netty.integration.authenticatedcontrolplane;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.mockserver.keys.AsymmetricKeyGenerator;
-import org.mockserver.keys.AsymmetricKeyPair;
 import org.mockserver.authentication.jwt.JWKGenerator;
 import org.mockserver.authentication.jwt.JWTGenerator;
-import org.mockserver.cli.Main;
-import org.mockserver.client.MockServerClient;
+import org.mockserver.integration.ClientAndServer;
+import org.mockserver.keys.AsymmetricKeyGenerator;
+import org.mockserver.keys.AsymmetricKeyPair;
 import org.mockserver.keys.AsymmetricKeyPairAlgorithm;
 import org.mockserver.model.Header;
-import org.mockserver.socket.PortFactory;
 import org.mockserver.test.TempFileWriter;
 import org.mockserver.testing.integration.mock.AbstractBasicMockingSameJVMIntegrationTest;
 
@@ -20,7 +18,6 @@ import static io.netty.handler.codec.http.HttpHeaderNames.AUTHORIZATION;
 import static org.mockserver.configuration.ConfigurationProperties.controlPlaneJWTAuthenticationJWKSource;
 import static org.mockserver.configuration.ConfigurationProperties.controlPlaneJWTAuthenticationRequired;
 import static org.mockserver.model.Header.header;
-import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
@@ -28,7 +25,6 @@ import static org.mockserver.stop.Stop.stopQuietly;
  */
 public class AuthenticatedControlPlaneUsingJWTViaSupplierClientMockingIntegrationTest extends AbstractBasicMockingSameJVMIntegrationTest {
 
-    private static final int severHttpPort = PortFactory.findFreePort();
     private static String originalControlPlaneJWTAuthenticationJWKSource;
     private static boolean originalControlPlaneJWTAuthenticationRequired;
     private static Supplier<String> controlPlaneJWTSupplier;
@@ -47,9 +43,7 @@ public class AuthenticatedControlPlaneUsingJWTViaSupplierClientMockingIntegratio
         controlPlaneJWTAuthenticationRequired(true);
         controlPlaneJWTSupplier = () -> jwt;
 
-        Main.main("-serverPort", "" + severHttpPort);
-
-        mockServerClient = new MockServerClient("localhost", severHttpPort).withControlPlaneJWT(controlPlaneJWTSupplier).withSecure(true);
+        mockServerClient = ClientAndServer.startClientAndServer().withControlPlaneJWT(controlPlaneJWTSupplier).withSecure(true);
     }
 
     @AfterClass
@@ -63,7 +57,7 @@ public class AuthenticatedControlPlaneUsingJWTViaSupplierClientMockingIntegratio
 
     @Override
     public int getServerPort() {
-        return severHttpPort;
+        return mockServerClient.getPort();
     }
 
     @Override

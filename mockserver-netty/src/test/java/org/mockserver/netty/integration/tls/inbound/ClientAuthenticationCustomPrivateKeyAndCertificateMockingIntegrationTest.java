@@ -13,6 +13,7 @@ import org.junit.Test;
 import org.mockserver.cli.Main;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.integration.ClientAndServer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.tls.KeyStoreFactory;
@@ -42,7 +43,6 @@ import static org.mockserver.stop.Stop.stopQuietly;
  */
 public class ClientAuthenticationCustomPrivateKeyAndCertificateMockingIntegrationTest extends AbstractClientAuthenticationMockingIntegrationTest {
 
-    private static final int severHttpPort = PortFactory.findFreePort();
     private static String originalCertificateAuthorityCertificate;
     private static String originalPrivateKeyPath;
     private static String originalX509CertificatePath;
@@ -62,9 +62,7 @@ public class ClientAuthenticationCustomPrivateKeyAndCertificateMockingIntegratio
         x509CertificatePath("org/mockserver/netty/integration/tls/leaf-cert.pem");
         tlsMutualAuthenticationRequired(true);
 
-        Main.main("-serverPort", "" + severHttpPort);
-
-        mockServerClient = new MockServerClient("localhost", severHttpPort).withSecure(true);
+        mockServerClient = ClientAndServer.startClientAndServer().withSecure(true);
     }
 
     @AfterClass
@@ -80,7 +78,7 @@ public class ClientAuthenticationCustomPrivateKeyAndCertificateMockingIntegratio
 
     @Override
     public int getServerPort() {
-        return severHttpPort;
+        return mockServerClient.getPort();
     }
 
     @Test
