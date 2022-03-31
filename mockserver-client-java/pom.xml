@@ -84,7 +84,7 @@
                             <resources>
                                 <resource>
                                     <!--source -->
-                                    <directory>./</directory>
+                                    <directory>${project.basedir}</directory>
                                     <filtering>true</filtering>
                                     <includes>
                                         <include>dependency-reduced-pom.xml</include>
@@ -92,7 +92,7 @@
                                 </resource>
                             </resources>
                             <!--target -->
-                            <outputDirectory>target</outputDirectory>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -104,6 +104,7 @@
                 <version>1.5.3</version>
                 <executions>
                     <execution>
+                        <id>replace-project-version</id>
                         <phase>process-resources</phase>
                         <goals>
                             <goal>replace</goal>
@@ -111,7 +112,8 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <basedir>target</basedir>
+                    <detail>true</detail>
+                    <basedir>${project.build.directory}</basedir>
                     <includes>
                         <include>dependency-reduced-pom.xml</include>
                     </includes>
@@ -138,6 +140,9 @@
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer"/>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/LICENSE</resource>
+                                </transformer>
                             </transformers>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>shaded</shadedClassifierName>
@@ -338,7 +343,9 @@
             </plugin>
             <!-- install shaded plugin to local repository -->
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-install-plugin</artifactId>
+                <version>2.5.2</version>
                 <executions>
                     <execution>
                         <id>install-shaded-artefact</id>
@@ -369,7 +376,9 @@
                 <plugins>
                     <!-- deploy shaded plugin to remote repository -->
                     <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-deploy-plugin</artifactId>
+                        <version>2.8.2</version>
                         <executions>
                             <execution>
                                 <id>deploy-shaded-artefact</id>

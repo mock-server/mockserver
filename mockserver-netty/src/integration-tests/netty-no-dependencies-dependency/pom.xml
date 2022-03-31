@@ -19,15 +19,14 @@
         <dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-netty-no-dependencies</artifactId>
-            <version>5.13.1-SNAPSHOT</version>
+            <version>@mockserver.version@</version>
         </dependency>
 
         <!-- test -->
         <dependency>
             <groupId>org.mock-server</groupId>
-            <artifactId>mockserver-integration-testing</artifactId>
-            <version>5.13.1-SNAPSHOT</version>
-            <classifier>shaded</classifier>
+            <artifactId>mockserver-integration-testing-no-dependencies</artifactId>
+            <version>@mockserver.version@</version>
             <scope>test</scope>
         </dependency>
         <dependency>

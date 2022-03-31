@@ -26,9 +26,8 @@
         <!-- test -->
         <dependency>
             <groupId>org.mock-server</groupId>
-            <artifactId>mockserver-integration-testing</artifactId>
+            <artifactId>mockserver-integration-testing-no-dependencies</artifactId>
             <version>@mockserver.version@</version>
-            <classifier>shaded</classifier>
             <scope>test</scope>
         </dependency>
         <dependency>
