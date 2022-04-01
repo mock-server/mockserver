@@ -5,11 +5,13 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.google.common.io.Files;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 import org.mockserver.serialization.model.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
@@ -36,6 +38,7 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
     static {
         fieldNameToType.put("base64Bytes".toLowerCase(), Body.Type.BINARY);
         fieldNameToType.put("json".toLowerCase(), Body.Type.JSON);
+        fieldNameToType.put("jsonFile".toLowerCase(), Body.Type.JSON);
         fieldNameToType.put("string".toLowerCase(), Body.Type.STRING);
         fieldNameToType.put("xml".toLowerCase(), Body.Type.XML);
     }
@@ -101,6 +104,33 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                                         new LogEntry()
                                             .setLogLevel(DEBUG)
                                             .setMessageFormat("invalid base64 encoded rawBytes with value \"" + entry.getValue() + "\"")
+                                            .setThrowable(throwable)
+                                    );
+                                }
+                            }
+                        }
+                    }
+                    if (containsIgnoreCase(key, "jsonFile")) {
+                        if (entry.getValue() instanceof String) {
+                            try {
+                                File jsonFile = new File (entry.getValue().toString());
+                                if (jsonFile.exists()) {
+                                    valueJsonValue = Files.asCharSource(jsonFile, Charset.defaultCharset()).read();
+                                } else {
+                                    if (MockServerLogger.isEnabled(DEBUG)) {
+                                        MOCK_SERVER_LOGGER.logEvent(
+                                            new LogEntry()
+                                                .setLogLevel(DEBUG)
+                                                .setMessageFormat("JsonFile Provided at " + entry.getValue() + " does not exists")
+                                        );
+                                    }
+                                }
+                            } catch (Throwable throwable) {
+                                if (MockServerLogger.isEnabled(DEBUG)) {
+                                    MOCK_SERVER_LOGGER.logEvent(
+                                        new LogEntry()
+                                            .setLogLevel(DEBUG)
+                                            .setMessageFormat("invalid jsonFile provided \"" + entry.getValue() + "\"")
                                             .setThrowable(throwable)
                                     );
                                 }

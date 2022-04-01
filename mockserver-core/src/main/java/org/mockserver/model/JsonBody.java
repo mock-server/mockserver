@@ -4,9 +4,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.io.Files;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.serialization.ObjectMapperFactory;
+import org.apache.commons.lang3.StringUtils;
 
+import java.io.File;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Objects;
@@ -72,6 +75,18 @@ public class JsonBody extends BodyWithContentType<String> {
     }
 
     public static JsonBody json(String json, MediaType contentType, MatchType matchType) {
+        return new JsonBody(json, null, contentType, matchType);
+    }
+
+    public static JsonBody json(File file, MediaType contentType, MatchType matchType) {
+        String json = StringUtils.EMPTY;
+        if (file.exists()) {
+            try {
+                json = Files.asCharSource(file, Charset.defaultCharset()).read();
+            } catch (Exception ex) {
+                throw new RuntimeException("Error reading file at " + file.getAbsolutePath(), ex);
+            }
+        }
         return new JsonBody(json, null, contentType, matchType);
     }
 
