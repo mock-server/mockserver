@@ -9,7 +9,6 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.httpclient.NettyHttpClient;
-import org.mockserver.time.EpochService;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
@@ -18,6 +17,7 @@ import org.mockserver.model.*;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.curl.HttpRequestToCurlSerializer;
+import org.mockserver.time.EpochService;
 import org.mockserver.uuid.UUIDService;
 import org.slf4j.event.Level;
 
@@ -159,6 +159,7 @@ public class HttpActionHandlerTest {
                 .setType(EXPECTATION_RESPONSE)
                 .setHttpRequest(request)
                 .setHttpResponse(this.response)
+                .setExpectationId(expectation.getAction().getExpectationId())
                 .setMessageFormat("returning response:{}for request:{}for action:{}from expectation:{}")
                 .setArguments(this.response, request, response, expectation.getId())
         );
@@ -193,6 +194,7 @@ public class HttpActionHandlerTest {
                 .setType(EXPECTATION_RESPONSE)
                 .setHttpRequest(request)
                 .setHttpResponse(response)
+                .setExpectationId(expectation.getAction().getExpectationId())
                 .setMessageFormat("returning response:{}for request:{}for action:{}from expectation:{}")
                 .setArguments(response, request, template, expectation.getId())
         );
@@ -229,6 +231,7 @@ public class HttpActionHandlerTest {
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(request)
                 .setHttpResponse(notFoundResponse())
+                .setExpectationId(expectation.getAction().getExpectationId())
                 .setMessageFormat("returning response:{}for request:{}for action:{}from expectation:{}")
                 .setArguments(notFoundResponse(), request, expectation.getAction(), expectation.getId())
         );
@@ -269,6 +272,7 @@ public class HttpActionHandlerTest {
                 .setLogLevel(INFO)
                 .setHttpRequest(request)
                 .setHttpResponse(response)
+                .setExpectationId(expectation.getAction().getExpectationId())
                 .setMessageFormat("returning response:{}for request:{}for action:{}from expectation:{}")
                 .setArguments(response, request, callback, expectation.getId())
         );
@@ -330,6 +334,7 @@ public class HttpActionHandlerTest {
                 .setHttpRequest(request)
                 .setHttpResponse(response)
                 .setExpectation(request, response)
+                .setExpectationId(expectation.getAction().getExpectationId())
                 .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}from expectation:{}")
                 .setArguments(response, forwardedHttpRequest, "curl -v 'http://" + remoteAddress.getHostName() + ":" + remoteAddress.getPort() + "/'", expectation.getAction(), expectation.getId())
         );
@@ -365,6 +370,7 @@ public class HttpActionHandlerTest {
                 .setHttpRequest(request)
                 .setHttpResponse(response)
                 .setExpectation(request, response)
+                .setExpectationId(expectation.getAction().getExpectationId())
                 .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}from expectation:{}")
                 .setArguments(response, forwardedHttpRequest, "curl -v 'http://" + remoteAddress.getHostName() + ":" + remoteAddress.getPort() + "/'", expectation.getAction(), expectation.getId())
         );
@@ -400,6 +406,7 @@ public class HttpActionHandlerTest {
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(request)
                 .setHttpResponse(notFoundResponse())
+                .setExpectationId(expectation.getAction().getExpectationId())
                 .setMessageFormat("returning response:{}for request:{}for action:{}from expectation:{}")
                 .setArguments(notFoundResponse(), request, expectation.getAction(), expectation.getId())
         );
@@ -442,6 +449,7 @@ public class HttpActionHandlerTest {
                 .setHttpRequest(request)
                 .setHttpResponse(response)
                 .setExpectation(request, response)
+                .setExpectationId(expectation.getAction().getExpectationId())
                 .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}from expectation:{}")
                 .setArguments(response, forwardedHttpRequest, "curl -v 'http://" + remoteAddress.getHostName() + ":" + remoteAddress.getPort() + "/'", expectation.getAction(), expectation.getId())
         );
@@ -500,6 +508,7 @@ public class HttpActionHandlerTest {
                 .setHttpRequest(request)
                 .setHttpResponse(response)
                 .setExpectation(request, response)
+                .setExpectationId(expectation.getAction().getExpectationId())
                 .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}from expectation:{}")
                 .setArguments(response, forwardedHttpRequest, "curl -v 'http://" + remoteAddress.getHostName() + ":" + remoteAddress.getPort() + "/'", expectation.getAction(), expectation.getId())
         );
@@ -534,6 +543,7 @@ public class HttpActionHandlerTest {
                 .setType(EXPECTATION_RESPONSE)
                 .setHttpRequest(request)
                 .setHttpError(error)
+                .setExpectationId(expectation.getAction().getExpectationId())
                 .setMessageFormat("returning error:{}for request:{}for action:{}from expectation:{}")
                 .setArguments(error, request, error, expectation.getId())
         );

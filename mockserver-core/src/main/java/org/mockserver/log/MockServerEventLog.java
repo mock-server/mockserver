@@ -5,11 +5,13 @@ import com.lmax.disruptor.dsl.Disruptor;
 import org.mockserver.collections.CircularConcurrentLinkedDeque;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
+import org.mockserver.log.model.RequestAndExpectationId;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.listeners.MockServerEventLogNotifier;
+import org.mockserver.model.ExpectationId;
 import org.mockserver.model.LogEventRequestAndResponse;
 import org.mockserver.model.RequestDefinition;
 import org.mockserver.scheduler.Scheduler;
@@ -42,7 +44,6 @@ import static org.mockserver.log.model.LogEntryMessages.VERIFICATION_REQUEST_SEQ
 import static org.mockserver.logging.MockServerLogger.writeToSystemOut;
 import static org.mockserver.mock.HttpState.getPort;
 import static org.mockserver.model.HttpRequest.request;
-import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -57,6 +58,11 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         -> !input.isDeleted();
     private static final Predicate<LogEntry> requestLogPredicate = input
         -> !input.isDeleted() && input.getType() == RECEIVED_REQUEST;
+    private static final Predicate<LogEntry> expectationLogPredicate = input
+        -> !input.isDeleted() && (
+        input.getType() == EXPECTATION_RESPONSE
+            || input.getType() == FORWARDED_REQUEST
+    );
     private static final Predicate<LogEntry> requestResponseLogPredicate = input
         -> !input.isDeleted() && (
         input.getType() == EXPECTATION_RESPONSE
@@ -258,10 +264,107 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         );
     }
 
+    public void retrieveRequests(Verification verification, String logCorrelationId, Consumer<List<RequestDefinition>> listConsumer) {
+        if (verification.getExpectationId() != null) {
+            retrieveLogEntries(
+                Collections.singletonList(verification.getExpectationId().getId()),
+                expectationLogPredicate,
+                logEntryToRequest,
+                logEventStream -> listConsumer.accept(
+                    logEventStream
+                        .filter(Objects::nonNull)
+                        .flatMap(Arrays::stream)
+                        .collect(Collectors.toList())
+                )
+            );
+        } else {
+            retrieveLogEntries(
+                verification.getHttpRequest().withLogCorrelationId(logCorrelationId),
+                requestLogPredicate,
+                logEntryToRequest,
+                logEventStream -> listConsumer.accept(
+                    logEventStream
+                        .filter(Objects::nonNull)
+                        .flatMap(Arrays::stream)
+                        .collect(Collectors.toList())
+                )
+            );
+        }
+    }
+
+    public void retrieveAllRequests(boolean matchingExpectationsOnly, Consumer<List<RequestDefinition>> listConsumer) {
+        if (matchingExpectationsOnly) {
+            retrieveLogEntries(
+                (List<String>) null,
+                expectationLogPredicate,
+                logEntryToRequest,
+                logEventStream -> listConsumer.accept(
+                    logEventStream
+                        .filter(Objects::nonNull)
+                        .flatMap(Arrays::stream)
+                        .collect(Collectors.toList())
+                )
+            );
+        } else {
+            retrieveLogEntries(
+                (RequestDefinition) null,
+                requestLogPredicate,
+                logEntryToRequest,
+                logEventStream -> listConsumer.accept(
+                    logEventStream
+                        .filter(Objects::nonNull)
+                        .flatMap(Arrays::stream)
+                        .collect(Collectors.toList())
+                )
+            );
+        }
+    }
+
+    public void retrieveAllRequests(List<String> expectationIds, Consumer<List<RequestAndExpectationId>> listConsumer) {
+        retrieveLogEntries(
+            expectationIds,
+            expectationLogPredicate,
+            logEntry -> new RequestAndExpectationId(logEntry.getHttpRequest(), logEntry.getExpectationId()),
+            logEventStream -> listConsumer.accept(
+                logEventStream
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList())
+            )
+        );
+    }
+
     public void retrieveRequests(RequestDefinition requestDefinition, Consumer<List<RequestDefinition>> listConsumer) {
         retrieveLogEntries(
             requestDefinition,
             requestLogPredicate,
+            logEntryToRequest,
+            logEventStream -> listConsumer.accept(
+                logEventStream
+                    .filter(Objects::nonNull)
+                    .flatMap(Arrays::stream)
+                    .collect(Collectors.toList())
+            )
+        );
+    }
+
+    public void retrieveRequests(ExpectationId expectationId, Consumer<List<RequestDefinition>> listConsumer) {
+        retrieveLogEntries(
+            expectationId != null ? Collections.singletonList(expectationId.getId()) : Collections.emptyList(),
+            expectationLogPredicate,
+            logEntryToRequest,
+            logEventStream -> listConsumer.accept(
+                logEventStream
+                    .filter(Objects::nonNull)
+                    .flatMap(Arrays::stream)
+                    .collect(Collectors.toList())
+            )
+        );
+    }
+
+    public void retrieveRequests(List<String> expectationIds, Consumer<List<RequestDefinition>> listConsumer) {
+        retrieveLogEntries(
+            expectationIds,
+            expectationLogPredicate,
             logEntryToRequest,
             logEventStream -> listConsumer.accept(
                 logEventStream
@@ -336,6 +439,19 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         );
     }
 
+    @SuppressWarnings("SameParameterValue")
+    private <T> void retrieveLogEntries(List<String> expectationIds, Predicate<LogEntry> logEntryPredicate, Function<LogEntry, T> logEntryMapper, Consumer<Stream<T>> consumer) {
+        disruptor.publishEvent(new LogEntry()
+            .setType(RUNNABLE)
+            .setConsumer(() -> consumer.accept(this.eventLog
+                .stream()
+                .filter(logEntryPredicate)
+                .filter(logItem -> expectationIds == null || logItem.matchesAnyExpectationId(expectationIds))
+                .map(logEntryMapper)
+            ))
+        );
+    }
+
     public <T> void retrieveLogEntriesInReverseForUI(RequestDefinition requestDefinition, Predicate<LogEntry> logEntryPredicate, Function<LogEntry, T> logEntryMapper, Consumer<Stream<T>> consumer) {
         disruptor.publishEvent(new LogEntry()
             .setType(RUNNABLE)
@@ -372,10 +488,11 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                         .setArguments(verification)
                 );
             }
-            retrieveRequests(verification.getHttpRequest().withLogCorrelationId(logCorrelationId), httpRequests -> {
+            retrieveRequests(verification, logCorrelationId, httpRequests -> {
                 try {
                     if (!verification.getTimes().matches(httpRequests.size())) {
-                        retrieveRequests(null, allRequests -> {
+                        boolean matchByExpectationId = verification.getExpectationId() != null;
+                        retrieveAllRequests(matchByExpectationId, allRequests -> {
                             String failureMessage;
                             String serializedRequestToBeVerified = requestDefinitionSerializer.serialize(true, verification.getHttpRequest());
                             Integer maximumNumberOfRequestToReturnInVerificationFailure = verification.getMaximumNumberOfRequestToReturnInVerificationFailure() != null ? verification.getMaximumNumberOfRequestToReturnInVerificationFailure() : configuration.maximumNumberOfRequestToReturnInVerificationFailure();
@@ -437,85 +554,129 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     }
 
     public void verify(VerificationSequence verificationSequence, Consumer<String> resultConsumer) {
-        final String logCorrelationId = UUIDService.getUUID();
-        retrieveRequests(null, allRequests -> {
-            try {
-                if (verificationSequence != null) {
-                    if (MockServerLogger.isEnabled(Level.INFO)) {
-                        mockServerLogger.logEvent(
-                            new LogEntry()
-                                .setType(VERIFICATION)
-                                .setLogLevel(Level.INFO)
-                                .setCorrelationId(logCorrelationId)
-                                .setHttpRequests(verificationSequence.getHttpRequests().toArray(new RequestDefinition[0]))
-                                .setMessageFormat(VERIFICATION_REQUEST_SEQUENCES_MESSAGE_FORMAT)
-                                .setArguments(verificationSequence)
-                        );
-                    }
-                    String failureMessage = "";
-                    int requestLogCounter = 0;
-                    for (RequestDefinition verificationHttpRequest : verificationSequence.getHttpRequests()) {
-                        if (verificationHttpRequest != null) {
-                            verificationHttpRequest.withLogCorrelationId(logCorrelationId);
-                            HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(verificationHttpRequest);
-                            boolean foundRequest = false;
-                            for (; !foundRequest && requestLogCounter < allRequests.size(); requestLogCounter++) {
-                                if (httpRequestMatcher.matches(allRequests.get(requestLogCounter).cloneWithLogCorrelationId())) {
-                                    // move on to next request
-                                    foundRequest = true;
-                                }
-                            }
-                            if (!foundRequest) {
-                                String serializedRequestToBeVerified = requestDefinitionSerializer.serialize(true, verificationSequence.getHttpRequests());
-                                Integer maximumNumberOfRequestToReturnInVerificationFailure = verificationSequence.getMaximumNumberOfRequestToReturnInVerificationFailure() != null ? verificationSequence.getMaximumNumberOfRequestToReturnInVerificationFailure() : configuration.maximumNumberOfRequestToReturnInVerificationFailure();
-                                if (allRequests.size() < maximumNumberOfRequestToReturnInVerificationFailure) {
-                                    String serializedAllRequestInLog = allRequests.size() == 1 ? requestDefinitionSerializer.serialize(true, allRequests.get(0)) : requestDefinitionSerializer.serialize(true, allRequests);
-                                    failureMessage = "Request sequence not found, expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
-                                } else {
-                                    failureMessage = "Request sequence not found, expected:<" + serializedRequestToBeVerified + "> but was not found, found " + allRequests.size() + " other requests";
-                                }
-                                final Object[] arguments = new Object[]{verificationSequence.getHttpRequests(), allRequests.size() == 1 ? allRequests.get(0) : allRequests};
-                                if (MockServerLogger.isEnabled(Level.INFO)) {
-                                    mockServerLogger.logEvent(
-                                        new LogEntry()
-                                            .setType(VERIFICATION_FAILED)
-                                            .setLogLevel(Level.INFO)
-                                            .setCorrelationId(logCorrelationId)
-                                            .setHttpRequests(verificationSequence.getHttpRequests().toArray(new RequestDefinition[0]))
-                                            .setMessageFormat("request sequence not found, expected:{}but was:{}")
-                                            .setArguments(arguments)
-                                    );
-                                }
-                                break;
-                            }
-                        }
-                    }
-                    if (isBlank(failureMessage) && MockServerLogger.isEnabled(Level.INFO)) {
-                        mockServerLogger.logEvent(
-                            new LogEntry()
-                                .setType(VERIFICATION_PASSED)
-                                .setLogLevel(Level.INFO)
-                                .setCorrelationId(logCorrelationId)
-                                .setMessageFormat("request sequence found:{}")
-                                .setArguments(verificationSequence.getHttpRequests())
-                        );
-                    }
-                    resultConsumer.accept(failureMessage);
-                } else {
-                    resultConsumer.accept("");
-                }
-            } catch (Throwable throwable) {
+        if (verificationSequence != null) {
+            final String logCorrelationId = UUIDService.getUUID();
+            if (MockServerLogger.isEnabled(Level.INFO)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(EXCEPTION)
+                        .setType(VERIFICATION)
+                        .setLogLevel(Level.INFO)
                         .setCorrelationId(logCorrelationId)
-                        .setMessageFormat("exception:{} while processing verification sequence:{}")
-                        .setArguments(throwable.getMessage(), verificationSequence)
-                        .setThrowable(throwable)
+                        .setHttpRequests(verificationSequence.getHttpRequests().toArray(new RequestDefinition[0]))
+                        .setMessageFormat(VERIFICATION_REQUEST_SEQUENCES_MESSAGE_FORMAT)
+                        .setArguments(verificationSequence)
                 );
-                resultConsumer.accept("exception while processing verification sequence" + (isNotBlank(throwable.getMessage()) ? " " + throwable.getMessage() : ""));
             }
-        });
+            if (verificationSequence.getExpectationIds() != null && !verificationSequence.getExpectationIds().isEmpty()) {
+                retrieveAllRequests(verificationSequence.getExpectationIds().stream().map(ExpectationId::getId).collect(Collectors.toList()), allRequests -> {
+                    List<RequestDefinition> requestDefinitions = allRequests.stream().map(RequestAndExpectationId::getRequestDefinition).collect(Collectors.toList());
+                    try {
+                        String failureMessage = "";
+                        int requestLogCounter = 0;
+                        for (ExpectationId expectationId : verificationSequence.getExpectationIds()) {
+                            if (expectationId != null) {
+                                boolean foundRequest = false;
+                                for (; !foundRequest && requestLogCounter < allRequests.size(); requestLogCounter++) {
+                                    if (allRequests.get(requestLogCounter).matches(expectationId)) {
+                                        // move on to next request
+                                        foundRequest = true;
+                                    }
+                                }
+                                if (!foundRequest) {
+                                    failureMessage = verificationSequenceFailureMessage(verificationSequence, logCorrelationId, requestDefinitions);
+                                    break;
+                                }
+                            }
+                        }
+                        verificationSequenceSuccessMessage(verificationSequence, resultConsumer, logCorrelationId, failureMessage);
+
+                    } catch (Throwable throwable) {
+                        verificationSequenceExceptionHandler(verificationSequence, resultConsumer, logCorrelationId, throwable, "exception:{} while processing verification sequence:{}", "exception while processing verification sequence");
+                    }
+                });
+            } else {
+                retrieveAllRequests(false, allRequests -> {
+                    try {
+                        String failureMessage = "";
+                        int requestLogCounter = 0;
+                        for (RequestDefinition verificationHttpRequest : verificationSequence.getHttpRequests()) {
+                            if (verificationHttpRequest != null) {
+                                verificationHttpRequest.withLogCorrelationId(logCorrelationId);
+                                HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(verificationHttpRequest);
+                                boolean foundRequest = false;
+                                for (; !foundRequest && requestLogCounter < allRequests.size(); requestLogCounter++) {
+                                    if (httpRequestMatcher.matches(allRequests.get(requestLogCounter).cloneWithLogCorrelationId())) {
+                                        // move on to next request
+                                        foundRequest = true;
+                                    }
+                                }
+                                if (!foundRequest) {
+                                    failureMessage = verificationSequenceFailureMessage(verificationSequence, logCorrelationId, allRequests);
+                                    break;
+                                }
+                            }
+                        }
+                        verificationSequenceSuccessMessage(verificationSequence, resultConsumer, logCorrelationId, failureMessage);
+
+                    } catch (Throwable throwable) {
+                        verificationSequenceExceptionHandler(verificationSequence, resultConsumer, logCorrelationId, throwable, "exception:{} while processing verification sequence:{}", "exception while processing verification sequence");
+                    }
+                });
+            }
+        } else {
+            resultConsumer.accept("");
+        }
+    }
+
+    private void verificationSequenceSuccessMessage(VerificationSequence verificationSequence, Consumer<String> resultConsumer, String logCorrelationId, String failureMessage) {
+        if (isBlank(failureMessage) && MockServerLogger.isEnabled(Level.INFO)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(VERIFICATION_PASSED)
+                    .setLogLevel(Level.INFO)
+                    .setCorrelationId(logCorrelationId)
+                    .setMessageFormat("request sequence found:{}")
+                    .setArguments(verificationSequence.getHttpRequests())
+            );
+        }
+        resultConsumer.accept(failureMessage);
+    }
+
+    private String verificationSequenceFailureMessage(VerificationSequence verificationSequence, String logCorrelationId, List<RequestDefinition> allRequests) {
+        String failureMessage;
+        String serializedRequestToBeVerified = requestDefinitionSerializer.serialize(true, verificationSequence.getHttpRequests());
+        Integer maximumNumberOfRequestToReturnInVerificationFailure = verificationSequence.getMaximumNumberOfRequestToReturnInVerificationFailure() != null ? verificationSequence.getMaximumNumberOfRequestToReturnInVerificationFailure() : configuration.maximumNumberOfRequestToReturnInVerificationFailure();
+        if (allRequests.size() < maximumNumberOfRequestToReturnInVerificationFailure) {
+            String serializedAllRequestInLog = allRequests.size() == 1 ? requestDefinitionSerializer.serialize(true, allRequests.get(0)) : requestDefinitionSerializer.serialize(true, allRequests);
+            failureMessage = "Request sequence not found, expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
+        } else {
+            failureMessage = "Request sequence not found, expected:<" + serializedRequestToBeVerified + "> but was not found, found " + allRequests.size() + " other requests";
+        }
+        final Object[] arguments = new Object[]{verificationSequence.getHttpRequests(), allRequests.size() == 1 ? allRequests.get(0) : allRequests};
+        if (MockServerLogger.isEnabled(Level.INFO)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(VERIFICATION_FAILED)
+                    .setLogLevel(Level.INFO)
+                    .setCorrelationId(logCorrelationId)
+                    .setHttpRequests(verificationSequence.getHttpRequests().toArray(new RequestDefinition[0]))
+                    .setMessageFormat("request sequence not found, expected:{}but was:{}")
+                    .setArguments(arguments)
+            );
+        }
+        return failureMessage;
+    }
+
+    private void verificationSequenceExceptionHandler(VerificationSequence verificationSequence, Consumer<String> resultConsumer, String logCorrelationId, Throwable throwable, String s, String s2) {
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(EXCEPTION)
+                .setCorrelationId(logCorrelationId)
+                .setMessageFormat(s)
+                .setArguments(throwable.getMessage(), verificationSequence)
+                .setThrowable(throwable)
+        );
+        resultConsumer.accept(s2 + (isNotBlank(throwable.getMessage()) ? " " + throwable.getMessage() : ""));
     }
 
     protected String[] fieldsExcludedFromEqualsAndHashCode() {

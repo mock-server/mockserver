@@ -31,8 +31,7 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.Assert.assertThrows;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.matchers.Times.exactly;
-import static org.mockserver.matchers.Times.once;
+import static org.mockserver.matchers.Times.*;
 import static org.mockserver.mock.Expectation.when;
 import static org.mockserver.mock.OpenAPIExpectation.openAPIExpectation;
 import static org.mockserver.model.Cookie.cookie;
@@ -1067,6 +1066,73 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
+    public void shouldVerifyReceivedRequestsByExpectationIdWithIdenticalRequestMatchers() {
+        // when
+        Expectation firstExpectation = mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path")), exactly(1)
+            )
+            .respond(
+                response()
+                    .withBody("some_body")
+            )[0];
+        Expectation secondExpectation = mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path")), exactly(1)
+            )
+            .respond(
+                response()
+                    .withBody("some_other_body")
+            )[0];
+        Expectation thirdExpectation = mockServerClient
+            .when(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("some_other_path")), exactly(2)
+            )
+            .respond(
+                response()
+                    .withBody("some_body")
+            )[0];
+
+        // when
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                HEADERS_TO_IGNORE)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_other_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                HEADERS_TO_IGNORE)
+        );
+
+        // then
+        mockServerClient.verify(firstExpectation.getId(), VerificationTimes.atLeast(1));
+        mockServerClient.verify(firstExpectation.getId(), VerificationTimes.exactly(1));
+        mockServerClient.verify(secondExpectation.getId(), VerificationTimes.atLeast(1));
+        mockServerClient.verify(secondExpectation.getId(), VerificationTimes.exactly(1));
+        mockServerClient.verify(firstExpectation.getHttpRequest(), VerificationTimes.atLeast(2));
+        AssertionError firstAssertionError = assertThrows(AssertionError.class, () -> mockServerClient.verify(firstExpectation.getId(), VerificationTimes.atLeast(2)));
+        assertThat(firstAssertionError.getMessage(), startsWith("Request not found at least 2 times"));
+        AssertionError secondAssertionError = assertThrows(AssertionError.class, () -> mockServerClient.verify(secondExpectation.getId(), VerificationTimes.atLeast(2)));
+        assertThat(secondAssertionError.getMessage(), startsWith("Request not found at least 2 times"));
+        mockServerClient.verify(thirdExpectation.getId(), VerificationTimes.never());
+    }
+
+    @Test
     public void shouldVerifyNotReceivedRequestWithEmptyBody() {
         // when
         mockServerClient
@@ -1322,6 +1388,95 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         assertThat(secondAssertionError.getMessage(), startsWith("Request sequence not found"));
         AssertionError thirdAssertionError = assertThrows(AssertionError.class, () -> mockServerClient.verify(UUID.randomUUID().toString(), UUID.randomUUID().toString()));
         assertThat(thirdAssertionError.getMessage(), startsWith("No expectation found with id "));
+    }
+
+    @Test
+    public void shouldVerifySequenceOfRequestsReceivedByExceptionIdWithIdenticalRequestMatchers() {
+        // when
+        Expectation firstExpectation = mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path.*")),
+                exactly(2)
+            )
+            .respond(
+                response()
+                    .withBody("some_body")
+            )[0];
+        Expectation secondExpectation = mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path.*")),
+                exactly(2)
+            )
+            .respond(
+                response()
+                    .withBody("some_body")
+            )[0];
+        Expectation thirdExpectation = mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_other_path.*")),
+                unlimited()
+            )
+            .respond(
+                response()
+                    .withBody("some_body")
+            )[0];
+
+        // then
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request().withPath(calculatePath("some_path_one")),
+                HEADERS_TO_IGNORE
+            )
+        );
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request().withPath(calculatePath("some_path_two")),
+                HEADERS_TO_IGNORE
+            )
+        );
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request().withPath(calculatePath("some_path_three")),
+                HEADERS_TO_IGNORE
+            )
+        );
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request().withPath(calculatePath("some_path_four")),
+                HEADERS_TO_IGNORE
+            )
+        );
+        mockServerClient.verify(firstExpectation.getId());
+        mockServerClient.verify(firstExpectation.getId(), firstExpectation.getId());
+        mockServerClient.verify(firstExpectation.getId(), firstExpectation.getId(), secondExpectation.getId());
+        mockServerClient.verify(firstExpectation.getId(), firstExpectation.getId(), secondExpectation.getId(), secondExpectation.getId());
+        mockServerClient.verify(firstExpectation.getId(), secondExpectation.getId(), secondExpectation.getId());
+        mockServerClient.verify(secondExpectation.getId(), secondExpectation.getId());
+        mockServerClient.verify(firstExpectation.getId(), secondExpectation.getId());
+        // should pass only as request matchers
+        mockServerClient.verify(secondExpectation.getHttpRequest(), firstExpectation.getHttpRequest());
+        mockServerClient.verify(secondExpectation.getHttpRequest(), secondExpectation.getHttpRequest(), firstExpectation.getHttpRequest());
+        mockServerClient.verify(firstExpectation.getHttpRequest(), firstExpectation.getHttpRequest(), firstExpectation.getHttpRequest());
+        mockServerClient.verify(firstExpectation.getHttpRequest(), firstExpectation.getHttpRequest(), firstExpectation.getHttpRequest(), secondExpectation.getHttpRequest());
+        AssertionError firstAssertionError = assertThrows(AssertionError.class, () -> mockServerClient.verify(secondExpectation.getId(), firstExpectation.getId()));
+        assertThat(firstAssertionError.getMessage(), startsWith("Request sequence not found"));
+        AssertionError secondAssertionError = assertThrows(AssertionError.class, () -> mockServerClient.verify(secondExpectation.getId(), secondExpectation.getId(), firstExpectation.getId()));
+        assertThat(secondAssertionError.getMessage(), startsWith("Request sequence not found"));
+        AssertionError thirdAssertionError = assertThrows(AssertionError.class, () -> mockServerClient.verify(firstExpectation.getId(), firstExpectation.getId(), firstExpectation.getId()));
+        assertThat(thirdAssertionError.getMessage(), startsWith("Request sequence not found"));
+        AssertionError fourthAssertionError = assertThrows(AssertionError.class, () -> mockServerClient.verify(firstExpectation.getId(), firstExpectation.getId(), firstExpectation.getId(), secondExpectation.getId()));
+        assertThat(fourthAssertionError.getMessage(), startsWith("Request sequence not found"));
+        AssertionError fithAssertionError = assertThrows(AssertionError.class, () -> mockServerClient.verify(thirdExpectation.getId()));
+        assertThat(fithAssertionError.getMessage(), startsWith("Request sequence not found"));
+        AssertionError sixAssertionError = assertThrows(AssertionError.class, () -> mockServerClient.verify(UUID.randomUUID().toString(), UUID.randomUUID().toString()));
+        assertThat(sixAssertionError.getMessage(), startsWith("No expectation found with id "));
     }
 
     @Test

@@ -93,6 +93,7 @@ public class MockServerLogger {
     public void logEvent(LogEntry logEntry) {
         if (logEntry.getType() == RECEIVED_REQUEST
             || logEntry.getType() == FORWARDED_REQUEST
+            || logEntry.getType() == EXPECTATION_RESPONSE
             || logEntry.isAlwaysLog()
             || isEnabled(logEntry.getLogLevel())) {
             if (httpStateHandler != null) {

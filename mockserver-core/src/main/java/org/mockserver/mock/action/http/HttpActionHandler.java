@@ -171,18 +171,17 @@ public class HttpActionHandler {
                 case ERROR: {
                     scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         getHttpErrorActionHandler().handle((HttpError) action, ctx);
-                        if (MockServerLogger.isEnabled(Level.INFO)) {
-                            mockServerLogger.logEvent(
-                                new LogEntry()
-                                    .setType(EXPECTATION_RESPONSE)
-                                    .setLogLevel(Level.INFO)
-                                    .setCorrelationId(request.getLogCorrelationId())
-                                    .setHttpRequest(request)
-                                    .setHttpError((HttpError) action)
-                                    .setMessageFormat("returning error:{}for request:{}for action:{}from expectation:{}")
-                                    .setArguments(action, request, action, action.getExpectationId())
-                            );
-                        }
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setType(EXPECTATION_RESPONSE)
+                                .setLogLevel(Level.INFO)
+                                .setCorrelationId(request.getLogCorrelationId())
+                                .setHttpRequest(request)
+                                .setHttpError((HttpError) action)
+                                .setExpectationId(action.getExpectationId())
+                                .setMessageFormat("returning error:{}for request:{}for action:{}from expectation:{}")
+                                .setArguments(action, request, action, action.getExpectationId())
+                        );
                         expectationPostProcessor.run();
                     }), synchronous, action.getDelay());
                     break;
@@ -357,18 +356,17 @@ public class HttpActionHandler {
 
     void writeResponseActionResponse(final HttpResponse response, final ResponseWriter responseWriter, final HttpRequest request, final Action action, boolean synchronous) {
         scheduler.schedule(() -> {
-            if (MockServerLogger.isEnabled(Level.INFO)) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setType(EXPECTATION_RESPONSE)
-                        .setLogLevel(Level.INFO)
-                        .setCorrelationId(request.getLogCorrelationId())
-                        .setHttpRequest(request)
-                        .setHttpResponse(response)
-                        .setMessageFormat("returning response:{}for request:{}for action:{}from expectation:{}")
-                        .setArguments(response, request, action, action.getExpectationId())
-                );
-            }
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(EXPECTATION_RESPONSE)
+                    .setLogLevel(Level.INFO)
+                    .setCorrelationId(request.getLogCorrelationId())
+                    .setHttpRequest(request)
+                    .setHttpResponse(response)
+                    .setExpectationId(action.getExpectationId())
+                    .setMessageFormat("returning response:{}for request:{}for action:{}from expectation:{}")
+                    .setArguments(response, request, action, action.getExpectationId())
+            );
             responseWriter.writeResponse(request, response, false);
         }, synchronous, response.getDelay());
     }
@@ -390,6 +388,7 @@ public class HttpActionHandler {
                         .setHttpRequest(request)
                         .setHttpResponse(response)
                         .setExpectation(request, response)
+                        .setExpectationId(action.getExpectationId())
                         .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}from expectation:{}")
                         .setArguments(response, responseFuture.getHttpRequest(), httpRequestToCurlSerializer.toCurl(responseFuture.getHttpRequest(), responseFuture.getRemoteAddress()), action, action.getExpectationId())
                 );
@@ -397,6 +396,34 @@ public class HttpActionHandler {
                 handleExceptionDuringForwardingRequest(action, request, responseWriter, throwable);
             }
         }, synchronous, throwable -> true);
+    }
+
+    void writeForwardActionResponse(final HttpResponse response, final ResponseWriter responseWriter, final HttpRequest request, final Action action) {
+        try {
+            responseWriter.writeResponse(request, response, false);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(FORWARDED_REQUEST)
+                    .setLogLevel(Level.INFO)
+                    .setCorrelationId(request.getLogCorrelationId())
+                    .setHttpRequest(request)
+                    .setHttpResponse(response)
+                    .setExpectation(request, response)
+                    .setExpectationId(action.getExpectationId())
+                    .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}from expectation:{}")
+                    .setArguments(response, response, httpRequestToCurlSerializer.toCurl(request), action, action.getExpectationId())
+            );
+        } catch (Throwable throwable) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setCorrelationId(request.getLogCorrelationId())
+                    .setHttpRequest(request)
+                    .setMessageFormat(throwable.getMessage())
+                    .setThrowable(throwable)
+            );
+        }
     }
 
     void handleExceptionDuringForwardingRequest(Action action, HttpRequest request, ResponseWriter responseWriter, Throwable exception) {
@@ -434,33 +461,6 @@ public class HttpActionHandler {
                     .setThrowable(exception)
             );
             returnNotFound(responseWriter, request, exception != null ? exception.getMessage() : null);
-        }
-    }
-
-    void writeForwardActionResponse(final HttpResponse response, final ResponseWriter responseWriter, final HttpRequest request, final Action action) {
-        try {
-            responseWriter.writeResponse(request, response, false);
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(FORWARDED_REQUEST)
-                    .setLogLevel(Level.INFO)
-                    .setCorrelationId(request.getLogCorrelationId())
-                    .setHttpRequest(request)
-                    .setHttpResponse(response)
-                    .setExpectation(request, response)
-                    .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}from expectation:{}")
-                    .setArguments(response, response, httpRequestToCurlSerializer.toCurl(request), action, action.getExpectationId())
-            );
-        } catch (Throwable throwable) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(EXCEPTION)
-                    .setLogLevel(Level.ERROR)
-                    .setCorrelationId(request.getLogCorrelationId())
-                    .setHttpRequest(request)
-                    .setMessageFormat(throwable.getMessage())
-                    .setThrowable(throwable)
-            );
         }
     }
 

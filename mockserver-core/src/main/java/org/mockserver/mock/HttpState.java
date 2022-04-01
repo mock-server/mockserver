@@ -555,6 +555,7 @@ public class HttpState {
 
     public void verify(Verification verification, Consumer<String> resultConsumer) {
         if (verification.getExpectationId() != null) {
+            // check valid expectation id and populate for error message
             verification.withRequest(resolveExpectationId(verification.getExpectationId()));
         }
         mockServerLog.verify(verification, resultConsumer);

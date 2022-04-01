@@ -3,7 +3,6 @@ package org.mockserver.log.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lmax.disruptor.EventTranslator;
-import org.mockserver.time.EpochService;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatchDifference;
 import org.mockserver.matchers.TimeToLive;
@@ -11,6 +10,7 @@ import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.serialization.ObjectMapperFactory;
+import org.mockserver.time.EpochService;
 import org.mockserver.uuid.UUIDService;
 import org.slf4j.event.Level;
 
@@ -18,6 +18,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -49,6 +50,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
     private HttpResponse httpUpdatedResponse;
     private HttpError httpError;
     private Expectation expectation;
+    private String expectationId;
     private Throwable throwable;
     private Runnable consumer;
     private boolean deleted = false;
@@ -88,6 +90,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
         httpResponse = null;
         httpError = null;
         expectation = null;
+        expectationId = null;
         throwable = null;
         consumer = null;
         deleted = false;
@@ -271,6 +274,22 @@ public class LogEntry implements EventTranslator<LogEntry> {
         return this;
     }
 
+    public String getExpectationId() {
+        return expectationId;
+    }
+
+    public LogEntry setExpectationId(String expectationId) {
+        this.expectationId = expectationId;
+        return this;
+    }
+
+    public boolean matchesAnyExpectationId(List<String> expectationIds) {
+        if (expectationIds != null && isNotBlank(this.expectationId)) {
+            return expectationIds.contains(this.expectationId);
+        }
+        return false;
+    }
+
     public Throwable getThrowable() {
         return throwable;
     }
@@ -450,6 +469,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
             .setHttpResponse(getHttpResponse())
             .setHttpError(getHttpError())
             .setExpectation(getExpectation())
+            .setExpectationId(getExpectationId())
             .setMessageFormat(getMessageFormat())
             .setArguments(getArguments())
             .setBecause(getBecause())
@@ -472,6 +492,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
             .setHttpResponse(getHttpResponse())
             .setHttpError(getHttpError())
             .setExpectation(getExpectation())
+            .setExpectationId(getExpectationId())
             .setMessageFormat(getMessageFormat())
             .setArguments(getArguments())
             .setBecause(getBecause())
@@ -502,6 +523,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
             Objects.equals(httpResponse, logEntry.httpResponse) &&
             Objects.equals(httpError, logEntry.httpError) &&
             Objects.equals(expectation, logEntry.expectation) &&
+            Objects.equals(expectationId, logEntry.expectationId) &&
             Objects.equals(consumer, logEntry.consumer) &&
             Arrays.equals(arguments, logEntry.arguments) &&
             Arrays.equals(httpRequests, logEntry.httpRequests);
@@ -510,7 +532,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            int result = Objects.hash(epochTime, deleted, type, logLevel, alwaysLog, messageFormat, httpResponse, httpError, expectation, consumer);
+            int result = Objects.hash(epochTime, deleted, type, logLevel, alwaysLog, messageFormat, httpResponse, httpError, expectation, expectationId, consumer);
             result = 31 * result + Arrays.hashCode(arguments);
             result = 31 * result + Arrays.hashCode(httpRequests);
             hashCode = result;

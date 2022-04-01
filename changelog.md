@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fixed docker latest tag by worked around bug in sonatype not updating the LATEST metadata for snapshots
 - fixed partial deletion of expectations from watched file initialiser
 - resolved small memory leak during proxy authentication
+- updated verify by expectation id so it uses expectation match log events instead of the request matcher from the expectation
 
 ## [5.13.0] - 2022-03-17
 
