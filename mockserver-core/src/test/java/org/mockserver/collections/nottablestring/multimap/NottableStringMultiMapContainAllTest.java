@@ -2338,14 +2338,14 @@ public class NottableStringMultiMapContainAllTest {
 
     private void bidirectionMatch(boolean bothDirections, TestScenario testScenario, NottableStringMultiMap matcher, NottableStringMultiMap matched, boolean result, KeyMatchStyle keyMatchStyle, boolean controlPlane) {
         try {
-            assertThat(matched.containsAll(matcher), is(result));
+            assertThat(matched.containsAll(null, null, matcher), is(result));
         } catch (Throwable throwable) {
             System.out.println("expected " + (controlPlane ? "control plane " : "") + keyMatchStyle + " matcher: " + doubleArrayToString(testScenario.matcher) + " to " + (result ? "match" : "not match") + " matched: " + doubleArrayToString(testScenario.matched));
             throw throwable;
         }
         if (bothDirections) {
             try {
-                assertThat(matcher.containsAll(matched), is(result));
+                assertThat(matcher.containsAll(null, null, matched), is(result));
             } catch (Throwable throwable) {
                 System.out.println("expected reverse direction " + (controlPlane ? "control plane " : "") + keyMatchStyle + " matcher: " + doubleArrayToString(testScenario.matched) + " to " + (result ? "match" : "not match") + " matched: " + doubleArrayToString(testScenario.matcher));
                 throw throwable;
@@ -2353,7 +2353,7 @@ public class NottableStringMultiMapContainAllTest {
         } else if (result) {
             // only do not match in reverse for single directory when matches in non-reverse
             try {
-                assertThat(matcher.containsAll(matched), is(false));
+                assertThat(matcher.containsAll(null, null, matched), is(false));
             } catch (Throwable throwable) {
                 System.out.println("expected reverse direction " + (controlPlane ? "control plane " : "") + keyMatchStyle + " matcher: " + doubleArrayToString(testScenario.matched) + " to not match matched: " + doubleArrayToString(testScenario.matcher));
                 throw throwable;

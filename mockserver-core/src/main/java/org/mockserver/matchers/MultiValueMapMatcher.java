@@ -3,6 +3,7 @@ package org.mockserver.matchers;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.collections.NottableStringMultiMap;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.KeyMatchStyle;
 import org.mockserver.model.KeyToMultiValue;
 import org.mockserver.model.KeysToMultiValues;
 
@@ -46,11 +47,11 @@ public class MultiValueMapMatcher extends NotMatcher<KeysToMultiValues<? extends
             }
             result = allKeysNotted || allKeysOptional;
         } else {
-            result = new NottableStringMultiMap(mockServerLogger, controlPlaneMatcher, matched.getKeyMatchStyle(), matched.getEntries()).containsAll(matcher);
+            result = new NottableStringMultiMap(mockServerLogger, controlPlaneMatcher, matched.getKeyMatchStyle(), matched.getEntries()).containsAll(mockServerLogger, context, matcher);
         }
 
         if (!result && context != null) {
-            context.addDifference(mockServerLogger, "multimap subset match failed expected:{}found:{}failed because:{}", keysToMultiValues, matched != null ? matched : "none", matched != null ? "multimap is not a subset" : "none is not a subset");
+            context.addDifference(mockServerLogger, "multimap match failed expected:{}found:{}failed because:{}", keysToMultiValues, matched != null ? matched : "none", matched != null ? (matcher.getKeyMatchStyle() == KeyMatchStyle.SUB_SET ? "multimap is not a subset" : "multimap values don't match") : "none is not a subset");
         }
 
         return not != result;

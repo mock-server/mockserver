@@ -51,7 +51,7 @@ public class MatchDifference {
 
     @SuppressWarnings("UnusedReturnValue")
     public MatchDifference addDifference(MockServerLogger mockServerLogger, Throwable throwable, String messageFormat, Object... arguments) {
-        if (MockServerLogger.isEnabled(TRACE)) {
+        if (mockServerLogger != null && MockServerLogger.isEnabled(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(TRACE)

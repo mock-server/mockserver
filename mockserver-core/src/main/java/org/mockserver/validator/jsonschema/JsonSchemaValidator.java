@@ -58,6 +58,25 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
         this.validator = getJsonSchemaFactory(this.schemaJsonNode).getSchema(this.schemaJsonNode);
     }
 
+    public JsonSchemaValidator(MockServerLogger mockServerLogger, String schema, JsonNode schemaJsonNode) {
+        this.mockServerLogger = mockServerLogger;
+        this.type = null;
+        this.schema = schema;
+        this.schemaJsonNode = schemaJsonNode;
+        this.validator = getJsonSchemaFactory(this.schemaJsonNode).getSchema(this.schemaJsonNode);
+    }
+
+    public JsonSchemaValidator(MockServerLogger mockServerLogger, Class<?> type, String routePath, String mainSchemeFile, String... referenceFiles) {
+        this.mockServerLogger = mockServerLogger;
+        this.type = type;
+        if (!schemaCache.containsKey(mainSchemeFile)) {
+            schemaCache.put(mainSchemeFile, addReferencesIntoSchema(routePath, mainSchemeFile, referenceFiles));
+        }
+        this.schema = schemaCache.get(mainSchemeFile);
+        this.schemaJsonNode = getSchemaJsonNode();
+        this.validator = getJsonSchemaFactory(this.schemaJsonNode).getSchema(this.schemaJsonNode);
+    }
+
     private JsonSchemaFactory getJsonSchemaFactory(JsonNode schema) {
         if (schema != null) {
             JsonNode metaSchema = schema.get("$schema");
@@ -82,17 +101,6 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
             return JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V201909);
         }
         return JsonSchemaFactory.getInstance(DEFAULT_JSON_SCHEMA_VERSION);
-    }
-
-    public JsonSchemaValidator(MockServerLogger mockServerLogger, Class<?> type, String routePath, String mainSchemeFile, String... referenceFiles) {
-        this.mockServerLogger = mockServerLogger;
-        this.type = type;
-        if (!schemaCache.containsKey(mainSchemeFile)) {
-            schemaCache.put(mainSchemeFile, addReferencesIntoSchema(routePath, mainSchemeFile, referenceFiles));
-        }
-        this.schema = schemaCache.get(mainSchemeFile);
-        this.schemaJsonNode = getSchemaJsonNode();
-        this.validator = getJsonSchemaFactory(this.schemaJsonNode).getSchema(this.schemaJsonNode);
     }
 
     private JsonNode getSchemaJsonNode() {

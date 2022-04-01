@@ -6356,8 +6356,8 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(context.getDifferences(PATH), nullValue());
         assertThat(context.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(context.getDifferences(COOKIES), nullValue());
-        assertThat(context.getDifferences(HEADERS), containsInAnyOrder("  multimap subset match failed expected:" + NEW_LINE +
-            NEW_LINE +
+        assertThat(context.getDifferences(HEADERS), containsInAnyOrder("  multimap match failed expected:" + NEW_LINE +
+            "" + NEW_LINE +
             "    {" + NEW_LINE +
             "      \"keyMatchStyle\" : \"MATCHING_KEY\"," + NEW_LINE +
             "      \"X-Request-ID\" : {" + NEW_LINE +
@@ -6370,13 +6370,13 @@ public class HttpRequestsPropertiesMatcherTest {
             "        } ]" + NEW_LINE +
             "      }" + NEW_LINE +
             "    }" + NEW_LINE +
-            NEW_LINE +
+            "" + NEW_LINE +
             "   found:" + NEW_LINE +
-            NEW_LINE +
+            "" + NEW_LINE +
             "    none" + NEW_LINE +
-            NEW_LINE +
+            "" + NEW_LINE +
             "   failed because:" + NEW_LINE +
-            NEW_LINE +
+            "" + NEW_LINE +
             "    none is not a subset" + NEW_LINE));
         assertThat(context.getDifferences(BODY), nullValue());
         assertThat(context.getDifferences(SSL_MATCHES), nullValue());
@@ -6409,8 +6409,8 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(context.getDifferences(PATH), nullValue());
         assertThat(context.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(context.getDifferences(COOKIES), nullValue());
-        assertThat(context.getDifferences(HEADERS), containsInAnyOrder("  multimap subset match failed expected:" + NEW_LINE +
-            NEW_LINE +
+        assertThat(context.getDifferences(HEADERS), containsInAnyOrder("  multimap match failed expected:" + NEW_LINE +
+            "" + NEW_LINE +
             "    {" + NEW_LINE +
             "      \"keyMatchStyle\" : \"MATCHING_KEY\"," + NEW_LINE +
             "      \"X-Request-ID\" : {" + NEW_LINE +
@@ -6423,13 +6423,13 @@ public class HttpRequestsPropertiesMatcherTest {
             "        } ]" + NEW_LINE +
             "      }" + NEW_LINE +
             "    }" + NEW_LINE +
-            NEW_LINE +
+            "" + NEW_LINE +
             "   found:" + NEW_LINE +
-            NEW_LINE +
+            "" + NEW_LINE +
             "    none" + NEW_LINE +
-            NEW_LINE +
+            "" + NEW_LINE +
             "   failed because:" + NEW_LINE +
-            NEW_LINE +
+            "" + NEW_LINE +
             "    none is not a subset" + NEW_LINE));
         assertThat(context.getDifferences(BODY), nullValue());
         assertThat(context.getDifferences(SSL_MATCHES), nullValue());
@@ -6487,8 +6487,8 @@ public class HttpRequestsPropertiesMatcherTest {
                 "    GET" + NEW_LINE));
         assertThat(context.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(context.getDifferences(COOKIES), nullValue());
-        assertThat(context.getDifferences(HEADERS), containsInAnyOrder("  multimap subset match failed expected:" + NEW_LINE +
-            NEW_LINE +
+        assertThat(context.getDifferences(HEADERS), containsInAnyOrder("  multimap match failed expected:" + NEW_LINE +
+            "" + NEW_LINE +
             "    {" + NEW_LINE +
             "      \"keyMatchStyle\" : \"MATCHING_KEY\"," + NEW_LINE +
             "      \"X-Request-ID\" : {" + NEW_LINE +
@@ -6501,13 +6501,13 @@ public class HttpRequestsPropertiesMatcherTest {
             "        } ]" + NEW_LINE +
             "      }" + NEW_LINE +
             "    }" + NEW_LINE +
-            NEW_LINE +
+            "" + NEW_LINE +
             "   found:" + NEW_LINE +
-            NEW_LINE +
+            "" + NEW_LINE +
             "    none" + NEW_LINE +
-            NEW_LINE +
+            "" + NEW_LINE +
             "   failed because:" + NEW_LINE +
-            NEW_LINE +
+            "" + NEW_LINE +
             "    none is not a subset" + NEW_LINE));
         assertThat(context.getDifferences(BODY), nullValue());
         assertThat(context.getDifferences(SSL_MATCHES), nullValue());

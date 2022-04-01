@@ -163,9 +163,9 @@ public class NottableSchemaStringEqualsTest {
         NottableSchemaString string = schemaString(schema);
         NottableSchemaString notString = schemaString("!" + schema);
         assertThat(string.equals(string("mock-server.com")), is(true));
-        assertThat(string.equals(string("12345")), is(false));
+        assertThat(string.equals(string("123%£45")), is(false));
         assertThat(notString.equals(string("mock-server.com")), is(false));
-        assertThat(notString.equals(string("12345")), is(true));
+        assertThat(notString.equals(string("12@&345")), is(true));
     }
 
     @Test
@@ -306,9 +306,9 @@ public class NottableSchemaStringEqualsTest {
         NottableSchemaString string = schemaString(schema);
         NottableSchemaString notString = schemaString("!" + schema);
         assertThat(string("mock-server.com").equals(string), is(true));
-        assertThat(string("12345").equals(string), is(false));
+        assertThat(string("12*&345").equals(string), is(false));
         assertThat(string("mock-server.com").equals(notString), is(false));
-        assertThat(string("12345").equals(notString), is(true));
+        assertThat(string("1234%)5").equals(notString), is(true));
     }
 
     @Test

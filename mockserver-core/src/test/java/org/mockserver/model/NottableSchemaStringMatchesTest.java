@@ -165,9 +165,9 @@ public class NottableSchemaStringMatchesTest {
         NottableSchemaString string = schemaString(schema);
         NottableSchemaString notString = schemaString("!" + schema);
         assertThat(string.matches("mock-server.com"), is(true));
-        assertThat(string.matches("12345"), is(false));
+        assertThat(string.matches("%@12345"), is(false));
         assertThat(notString.matches("mock-server.com"), is(false));
-        assertThat(notString.matches("12345"), is(true));
+        assertThat(notString.matches("12$^345"), is(true));
     }
 
     @Test

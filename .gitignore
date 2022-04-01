@@ -26,7 +26,11 @@ mods
 *.sql
 *.sqlite
 *.csv
+
+# Temp files #
+##############
 TODO.md
+bug
 
 # Runtime artifacts #
 #####################
@@ -112,4 +116,3 @@ go_client
 # soft links #
 ##############
 kube_config.yaml
-/shaded/

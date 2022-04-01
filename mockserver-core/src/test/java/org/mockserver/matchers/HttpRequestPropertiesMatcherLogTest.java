@@ -1096,7 +1096,15 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  cookies matched" + NEW_LINE +
                     "  pathParameters didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
-                    "    multimap subset match failed expected:" + NEW_LINE +
+                    "    multimap subset match failed subset:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      [(someKey: someValue)]" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "     was not a subset of:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      [(someKey: someOtherValue)]" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "    multimap match failed expected:" + NEW_LINE +
                     "  " + NEW_LINE +
                     "      {" + NEW_LINE +
                     "        \"someKey\" : [ \"someValue\" ]" + NEW_LINE +
@@ -1159,7 +1167,15 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  pathParameters matched" + NEW_LINE +
                     "  queryParameters didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
-                    "    multimap subset match failed expected:" + NEW_LINE +
+                    "    multimap subset match failed subset:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      [(someKey: someValue)]" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "     was not a subset of:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      [(someOtherKey: someValue)]" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "    multimap match failed expected:" + NEW_LINE +
                     "  " + NEW_LINE +
                     "      {" + NEW_LINE +
                     "        \"someKey\" : [ \"someValue\" ]" + NEW_LINE +
@@ -1222,7 +1238,15 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  pathParameters matched" + NEW_LINE +
                     "  queryParameters didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
-                    "    multimap subset match failed expected:" + NEW_LINE +
+                    "    multimap subset match failed subset:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      [(someKey: someValue)]" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "     was not a subset of:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      [(someKey: someOtherValue)]" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "    multimap match failed expected:" + NEW_LINE +
                     "  " + NEW_LINE +
                     "      {" + NEW_LINE +
                     "        \"someKey\" : [ \"someValue\" ]" + NEW_LINE +
@@ -1282,7 +1306,15 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  path matched" + NEW_LINE +
                     "  body didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
-                    "    multimap subset match failed expected:" + NEW_LINE +
+                    "    multimap subset match failed subset:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      [(name: value)]" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "     was not a subset of:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      [(name1: value)]" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "    multimap match failed expected:" + NEW_LINE +
                     "  " + NEW_LINE +
                     "      {" + NEW_LINE +
                     "        \"name\" : [ \"value\" ]" + NEW_LINE +
@@ -1342,7 +1374,15 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  path matched" + NEW_LINE +
                     "  body didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
-                    "    multimap subset match failed expected:" + NEW_LINE +
+                    "    multimap subset match failed subset:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      [(name: va[0-9]{1}ue)]" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "     was not a subset of:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      [(name: value1)]" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "    multimap match failed expected:" + NEW_LINE +
                     "  " + NEW_LINE +
                     "      {" + NEW_LINE +
                     "        \"name\" : [ \"va[0-9]{1}ue\" ]" + NEW_LINE +
@@ -1868,35 +1908,35 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  {" + NEW_LINE +
                     "    \"body\" : {" + NEW_LINE +
                     "      \"type\" : \"JSON_SCHEMA\"," + NEW_LINE +
-                    "      \"jsonSchema\" : {\n" +
-                    "        \"$schema\" : \"http://json-schema.org/draft-04/schema#\",\n" +
-                    "        \"title\" : \"Product\",\n" +
-                    "        \"description\" : \"A product from Acme's catalog\",\n" +
-                    "        \"type\" : \"object\",\n" +
-                    "        \"properties\" : {\n" +
-                    "          \"id\" : {\n" +
-                    "            \"description\" : \"The unique identifier for a product\",\n" +
-                    "            \"type\" : \"integer\"\n" +
-                    "          },\n" +
-                    "          \"name\" : {\n" +
-                    "            \"description\" : \"Name of the product\",\n" +
-                    "            \"type\" : \"string\"\n" +
-                    "          },\n" +
-                    "          \"price\" : {\n" +
-                    "            \"type\" : \"number\",\n" +
-                    "            \"minimum\" : 0,\n" +
-                    "            \"exclusiveMinimum\" : true\n" +
-                    "          },\n" +
-                    "          \"tags\" : {\n" +
-                    "            \"type\" : \"array\",\n" +
-                    "            \"items\" : {\n" +
-                    "              \"type\" : \"string\"\n" +
-                    "            },\n" +
-                    "            \"minItems\" : 1,\n" +
-                    "            \"uniqueItems\" : true\n" +
-                    "          }\n" +
-                    "        },\n" +
-                    "        \"required\" : [ \"id\", \"name\", \"price\" ]\n" +
+                    "      \"jsonSchema\" : {" + NEW_LINE +
+                    "        \"$schema\" : \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                    "        \"title\" : \"Product\"," + NEW_LINE +
+                    "        \"description\" : \"A product from Acme's catalog\"," + NEW_LINE +
+                    "        \"type\" : \"object\"," + NEW_LINE +
+                    "        \"properties\" : {" + NEW_LINE +
+                    "          \"id\" : {" + NEW_LINE +
+                    "            \"description\" : \"The unique identifier for a product\"," + NEW_LINE +
+                    "            \"type\" : \"integer\"" + NEW_LINE +
+                    "          }," + NEW_LINE +
+                    "          \"name\" : {" + NEW_LINE +
+                    "            \"description\" : \"Name of the product\"," + NEW_LINE +
+                    "            \"type\" : \"string\"" + NEW_LINE +
+                    "          }," + NEW_LINE +
+                    "          \"price\" : {" + NEW_LINE +
+                    "            \"type\" : \"number\"," + NEW_LINE +
+                    "            \"minimum\" : 0," + NEW_LINE +
+                    "            \"exclusiveMinimum\" : true" + NEW_LINE +
+                    "          }," + NEW_LINE +
+                    "          \"tags\" : {" + NEW_LINE +
+                    "            \"type\" : \"array\"," + NEW_LINE +
+                    "            \"items\" : {" + NEW_LINE +
+                    "              \"type\" : \"string\"" + NEW_LINE +
+                    "            }," + NEW_LINE +
+                    "            \"minItems\" : 1," + NEW_LINE +
+                    "            \"uniqueItems\" : true" + NEW_LINE +
+                    "          }" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"required\" : [ \"id\", \"name\", \"price\" ]" + NEW_LINE +
                     "      }" + NEW_LINE +
                     "    }" + NEW_LINE +
                     "  }" + NEW_LINE +
@@ -2127,7 +2167,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "      base64:" + NEW_LINE +
                     "        c29tZSBiaW5hcnkgdmFsdWUgdGhhdCBpcyBhbHNvIGxvbmcgYW5kIHdyYXBzIGFz" + NEW_LINE +
                     "        IGxpdHRsZQ==" + NEW_LINE +
-                    "      hex:\n" +
+                    "      hex:" + NEW_LINE +
                     "        736f6d652062696e6172792076616c7565207468617420697320616c736f206c" + NEW_LINE +
                     "        6f6e6720616e64207772617073206173206c6974746c65" + NEW_LINE +
                     "  " + NEW_LINE +
@@ -2185,7 +2225,15 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  body matched" + NEW_LINE +
                     "  headers didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
-                    "    multimap subset match failed expected:" + NEW_LINE +
+                    "    multimap subset match failed subset:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      [(name: value)]" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "     was not a subset of:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      [(name1: value)]" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "    multimap match failed expected:" + NEW_LINE +
                     "  " + NEW_LINE +
                     "      {" + NEW_LINE +
                     "        \"name\" : [ \"value\" ]" + NEW_LINE +
@@ -2245,7 +2293,15 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  body matched" + NEW_LINE +
                     "  headers didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
-                    "    multimap subset match failed expected:" + NEW_LINE +
+                    "    multimap subset match failed subset:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      [(name: [0-9]{0,100})]" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "     was not a subset of:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      [(name: value1)]" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "    multimap match failed expected:" + NEW_LINE +
                     "  " + NEW_LINE +
                     "      {" + NEW_LINE +
                     "        \"name\" : [ \"[0-9]{0,100}\" ]" + NEW_LINE +

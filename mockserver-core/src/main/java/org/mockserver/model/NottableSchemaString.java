@@ -4,15 +4,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
-import com.github.fge.jsonschema.main.JsonValidator;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.parser.util.SchemaTypeUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.matchers.MatchDifference;
 import org.mockserver.serialization.ObjectMapperFactory;
+import org.mockserver.validator.jsonschema.JsonSchemaValidator;
 import org.slf4j.event.Level;
 
 import javax.annotation.Nonnull;
@@ -33,7 +32,7 @@ public class NottableSchemaString extends NottableString {
 
     private final static MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(NottableSchemaString.class);
     private final static ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
-    private final static JsonValidator VALIDATOR = JsonSchemaFactory.byDefault().getValidator();
+    //    private final static JsonValidator VALIDATOR = JsonSchemaFactory.byDefault().getValidator();
     private final static DateTimeFormatter RFC3339 = new DateTimeFormatterBuilder()
         .appendPattern("yyyy-MM-dd")
         .appendLiteral('T')
@@ -47,6 +46,7 @@ public class NottableSchemaString extends NottableString {
     private final String type;
     private final String format;
     private final String json;
+    private final JsonSchemaValidator jsonSchemaValidator;
 
 
     private static JsonNode convertToJsonNode(@Nonnull final String value, final String type, final String format) throws IOException {
@@ -122,6 +122,7 @@ public class NottableSchemaString extends NottableString {
             format = null;
         }
         json = (Boolean.TRUE.equals(isNot()) ? NOT_CHAR : "") + schema;
+        jsonSchemaValidator = new JsonSchemaValidator(MOCK_SERVER_LOGGER, this.json, this.schemaJsonNode);
     }
 
     private NottableSchemaString(String schema) {
@@ -137,12 +138,29 @@ public class NottableSchemaString extends NottableString {
             format = null;
         }
         json = (Boolean.TRUE.equals(isNot()) ? NOT_CHAR : "") + schema;
+        if (schemaJsonNode != null) {
+            jsonSchemaValidator = new JsonSchemaValidator(MOCK_SERVER_LOGGER, this.json, this.schemaJsonNode);
+        } else {
+            jsonSchemaValidator = null;
+        }
     }
 
     public boolean matches(String json) {
+        return matches(null, null, json);
+    }
+
+    public boolean matches(MockServerLogger mockServerLogger, MatchDifference context, String json) {
         if (schemaJsonNode != null) {
             try {
-                return isNot() != validate(json);
+                if (type.equals("string") && isNotBlank(json) && !json.startsWith("\"") && !json.endsWith("\"")) {
+                    json = "\"" + json + "\"";
+                }
+                String validationErrors = validate(json);
+                boolean result = isNot() != validationErrors.isEmpty();
+                if (!result && context != null) {
+                    context.addDifference(mockServerLogger, "schema match failed expect:{}found:{}errors:{}", this.json, json, validationErrors);
+                }
+                return result;
             } catch (Throwable throwable) {
                 MOCK_SERVER_LOGGER.logEvent(
                     new LogEntry()
@@ -150,6 +168,9 @@ public class NottableSchemaString extends NottableString {
                         .setMessageFormat("exception validating JSON")
                         .setThrowable(throwable)
                 );
+                if (!isNot() && context != null) {
+                    context.addDifference(mockServerLogger, "schema match failed expect:{}:found error:{}for:{}", this.json, throwable.getMessage(), json);
+                }
             }
             return isNot();
         } else {
@@ -157,11 +178,13 @@ public class NottableSchemaString extends NottableString {
         }
     }
 
-    private boolean validate(String json) throws ProcessingException, IOException {
+    private String validate(String json) {
         if (schemaJsonNode.get("nullable") != null && TRUE.equals(schemaJsonNode.get("nullable").asText()) && StringUtils.isBlank(json)) {
-            return true;
+            return "";
+        } else if (StringUtils.isBlank(json)) {
+            return "found blank value and value was not nullable";
         } else {
-            return VALIDATOR.validate(schemaJsonNode, convertToJsonNode(json, type, format), false).isSuccess();
+            return jsonSchemaValidator.isValid(json, false);
         }
     }
 

@@ -49,32 +49,36 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
     }
 
     public boolean matches(NottableString matcher, NottableString matched) {
+        return matches(null, null, matcher, matched);
+    }
+
+    public boolean matches(MockServerLogger mockServerLogger, MatchDifference context, NottableString matcher, NottableString matched) {
         if (matcher instanceof NottableSchemaString && matched instanceof NottableSchemaString) {
-            return controlPlaneMatcher && matchesByNottedStrings(matcher, matched);
+            return controlPlaneMatcher && matchesByNottedStrings(mockServerLogger, context, matcher, matched);
         } else if (matcher instanceof NottableSchemaString) {
-            return matchesBySchemas((NottableSchemaString) matcher, matched);
+            return matchesBySchemas(mockServerLogger, context, (NottableSchemaString) matcher, matched);
         } else if (matched instanceof NottableSchemaString) {
-            return controlPlaneMatcher && matchesBySchemas((NottableSchemaString) matched, matcher);
+            return controlPlaneMatcher && matchesBySchemas(mockServerLogger, context, (NottableSchemaString) matched, matcher);
         } else {
-            return matchesByNottedStrings(matcher, matched);
+            return matchesByNottedStrings(mockServerLogger, context, matcher, matched);
         }
     }
 
-    private boolean matchesByNottedStrings(NottableString matcher, NottableString matched) {
+    private boolean matchesByNottedStrings(MockServerLogger mockServerLogger, MatchDifference context, NottableString matcher, NottableString matched) {
         if (matcher.isNot() && matched.isNot()) {
             // mutual notted control plane match
-            return matchesByStrings(matcher, matched);
+            return matchesByStrings(mockServerLogger, context, matcher, matched);
         } else {
             // data plane & control plan match
-            return (matcher.isNot() || matched.isNot()) ^ matchesByStrings(matcher, matched);
+            return (matcher.isNot() || matched.isNot()) ^ matchesByStrings(mockServerLogger, context, matcher, matched);
         }
     }
 
-    private boolean matchesBySchemas(NottableSchemaString schema, NottableString string) {
-        return string.isNot() != schema.matches(string.getValue());
+    private boolean matchesBySchemas(MockServerLogger mockServerLogger, MatchDifference context, NottableSchemaString schema, NottableString string) {
+        return string.isNot() != schema.matches(mockServerLogger, context, string.getValue());
     }
 
-    private boolean matchesByStrings(NottableString matcher, NottableString matched) {
+    private boolean matchesByStrings(MockServerLogger mockServerLogger, MatchDifference context, NottableString matcher, NottableString matched) {
         final String matcherValue = matcher.getValue();
         if (StringUtils.isBlank(matcherValue)) {
             return true;
@@ -126,6 +130,9 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                     }
                 }
             }
+        }
+        if (context != null) {
+            context.addDifference(mockServerLogger, "regex string match failed expect:{}:found:{}", matcher, matched);
         }
 
         return false;
