@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - simplified JSON format accepted for headers and other multi-value maps by allowing single values to be used value list
 - added warning message when content-length in expectation is shorter than the body length
 - improved log output for multimap failures, especially when using schema matcher (i.e. with OpenAPI) for parameters, headers, etc
+- added support for endpoints examples in addition to existing schemas examples in an OpenAPI specifications
 
 ### Changed
 - improved error messages from main method

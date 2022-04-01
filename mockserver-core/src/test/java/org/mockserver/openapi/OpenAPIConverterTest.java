@@ -372,7 +372,45 @@ public class OpenAPIConverterTest {
         );
 
         // then
-        shouldBuildPetStoreExpectationsWithExamples(specUrlOrPayload, actualExpectations);
+        assertThat(actualExpectations.size(), is(3));
+        assertThat(actualExpectations.get(0), is(
+            when(specUrlOrPayload, "listPets")
+                .thenRespond(
+                    response()
+                        .withStatusCode(200)
+                        .withHeader("x-next", "/pets?query=752cd724e0d7&page=2")
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("[ {" + NEW_LINE +
+                            "  \"id\" : 1," + NEW_LINE +
+                            "  \"name\" : \"Scruffles\"," + NEW_LINE +
+                            "  \"tag\" : \"dog\"" + NEW_LINE +
+                            "}, {" + NEW_LINE +
+                            "  \"id\" : 2," + NEW_LINE +
+                            "  \"name\" : \"Goldie\"," + NEW_LINE +
+                            "  \"tag\" : \"fish\"" + NEW_LINE +
+                            "} ]"))
+                )
+        ));
+        assertThat(actualExpectations.get(1), is(
+            when(specUrlOrPayload, "createPets")
+                .thenRespond(
+                    response()
+                        .withStatusCode(201)
+                )
+        ));
+        assertThat(actualExpectations.get(2), is(
+            when(specUrlOrPayload, "showPetById")
+                .thenRespond(
+                    response()
+                        .withStatusCode(200)
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("{" + NEW_LINE +
+                            "  \"id\" : 2," + NEW_LINE +
+                            "  \"name\" : \"Crumble\"," + NEW_LINE +
+                            "  \"tag\" : \"dog\"" + NEW_LINE +
+                            "}"))
+                )
+        ));
     }
 
     @Test

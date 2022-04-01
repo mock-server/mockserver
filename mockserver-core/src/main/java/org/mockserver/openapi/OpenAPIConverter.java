@@ -103,12 +103,18 @@ public class OpenAPIConverter {
                         Optional
                             .ofNullable(contentType.getValue())
                             .ifPresent(mediaType -> {
-                                Example example = findExample(mediaType);
-                                if (example != null) {
+                                Object example = findExample(mediaType);
+                                if (example instanceof Example) {
                                     if (isJsonContentType(contentType.getKey())) {
-                                        response.withBody(json(serialise(example.getValue())));
+                                        response.withBody(json(serialise(((Example) example).getValue())));
                                     } else {
-                                        response.withBody(String.valueOf(example.getValue()));
+                                        response.withBody(String.valueOf(((Example) example).getValue()));
+                                    }
+                                } else if (example != null) {
+                                    if (isJsonContentType(contentType.getKey())) {
+                                        response.withBody(json(serialise(mediaType.getExample())));
+                                    } else {
+                                        response.withBody(serialise(mediaType.getExample()));
                                     }
                                 } else if (mediaType.getSchema() != null) {
                                     org.mockserver.openapi.examples.models.Example generatedExample = ExampleBuilder.fromSchema(mediaType.getSchema(), openAPI.getComponents() != null ? openAPI.getComponents().getSchemas() : null);
@@ -119,11 +125,14 @@ public class OpenAPIConverter {
                                             response.withBody(((StringExample) generatedExample).getValue());
                                         }
                                     } else {
-                                        String serialise = serialise(ExampleBuilder.fromSchema(mediaType.getSchema(), openAPI.getComponents().getSchemas()));
-                                        if (isJsonContentType(contentType.getKey())) {
-                                            response.withBody(json(serialise));
-                                        } else {
-                                            response.withBody(serialise);
+                                        org.mockserver.openapi.examples.models.Example exampleFromSchema = ExampleBuilder.fromSchema(mediaType.getSchema(), openAPI.getComponents().getSchemas());
+                                        if (exampleFromSchema != null) {
+                                            String serialise = serialise(exampleFromSchema);
+                                            if (isJsonContentType(contentType.getKey())) {
+                                                response.withBody(json(serialise));
+                                            } else {
+                                                response.withBody(serialise);
+                                            }
                                         }
                                     }
                                 }
@@ -147,10 +156,10 @@ public class OpenAPIConverter {
         return example;
     }
 
-    private Example findExample(MediaType mediaType) {
-        Example example = null;
-        if (mediaType.getExample() instanceof Example) {
-            example = (Example) mediaType.getExample();
+    private Object findExample(MediaType mediaType) {
+        Object example = null;
+        if (mediaType.getExample() != null) {
+            example = mediaType.getExample();
         } else if (mediaType.getExamples() != null && !mediaType.getExamples().isEmpty()) {
             example = mediaType.getExamples().values().stream().findFirst().orElse(null);
         }

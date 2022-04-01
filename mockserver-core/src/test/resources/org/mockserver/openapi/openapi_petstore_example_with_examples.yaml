@@ -39,6 +39,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Pets'
+              example:
+                - id: 1
+                  name: Scruffles
+                  tag: dog
+                - id: 2
+                  name: Goldie
+                  tag: fish
+
         '500':
           description: unexpected error
           headers:
