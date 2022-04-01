@@ -76,7 +76,7 @@
                 <!-- Conflicting versions in okhttp and okio (both from okhttp) -->
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-stdlib-common</artifactId>
-                <version>1.6.10</version>
+                <version>1.6.20</version>
             </dependency>
             <dependency>
                 <!-- Conflicting versions in json-unit and okhttp -->
