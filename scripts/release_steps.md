@@ -60,7 +60,7 @@
     2. cd helm
     3. helm package ./mockserver/
     4. cd ~/git/mockserver/mockserver/helm/charts
-    5. cp /Users/jamesbloom/git/mockserver/mockserver/helm/mockserver-x.x.x.tgz .
+    5. mv /Users/jamesbloom/git/mockserver/mockserver/helm/mockserver-x.x.x.tgz .
     6. helm repo index .
     7. upload new chart and index.yaml to S3 https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq
 8. update repo
