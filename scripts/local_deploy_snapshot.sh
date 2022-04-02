@@ -15,4 +15,4 @@ echo
 
 export GPG_TTY=$(tty)
 
-./mvnw clean deploy -DdeployPluginRespository=ossrh_snapshots -P release $1 -Djava.security.egd=file:/dev/./urandom
+./mvnw clean deploy -P release $1 -Djava.security.egd=file:/dev/./urandom

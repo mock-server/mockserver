@@ -390,8 +390,8 @@
                                 </goals>
                                 <inherited>false</inherited>
                                 <configuration>
-                                    <repositoryId>${deployPluginRespository}</repositoryId>
-                                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+                                    <repositoryId>ossrh</repositoryId>
+                                    <url>${deploy.plugin.respository.url}</url>
                                     <file>${project.build.directory}/${project.artifactId}-${project.version}-shaded.jar</file>
                                     <generatePom>false</generatePom>
                                     <pomFile>${project.build.directory}/dependency-reduced-pom.xml</pomFile>
