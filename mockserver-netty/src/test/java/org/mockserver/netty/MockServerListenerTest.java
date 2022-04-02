@@ -5,6 +5,7 @@ import org.mockserver.client.MockServerClient;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
+import org.mockserver.test.Retries;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,17 +35,19 @@ public class MockServerListenerTest {
             );
 
         // then
-        assertThat(expectations.size(), is(1));
-        assertThat(expectations.get(0), is(new Expectation(
-            request()
-                .withPath("/some/path"),
-            Times.unlimited(),
-            TimeToLive.unlimited(),
-            0
-        ).thenRespond(
-            response()
-                .withBody("some_response_body")
-        )));
+        Retries.tryWaitForSuccess(() -> {
+            assertThat(expectations.size(), is(1));
+            assertThat(expectations.get(0), is(new Expectation(
+                request()
+                    .withPath("/some/path"),
+                Times.unlimited(),
+                TimeToLive.unlimited(),
+                0
+            ).thenRespond(
+                response()
+                    .withBody("some_response_body")
+            )));
+        });
     }
 
 }
