@@ -383,7 +383,7 @@
                                 </goals>
                                 <inherited>false</inherited>
                                 <configuration>
-                                    <repositoryId>ossrh</repositoryId>
+                                    <repositoryId>${deployPluginRespository}</repositoryId>
                                     <url>https://oss.sonatype.org/content/repositories/snapshots</url>
                                     <file>${project.build.directory}/${project.artifactId}-${project.version}-shaded.jar</file>
                                     <generatePom>false</generatePom>

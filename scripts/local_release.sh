@@ -15,6 +15,6 @@ echo
 
 export GPG_TTY=$(tty)
 
-./mvnw release:clean -P release -Drelease.arguments="-Dmaven.test.skip=true -DskipTests=true" && \
-./mvnw release:prepare -P release -Drelease.arguments="-Dmaven.test.skip=true -DskipTests=true" && \
-./mvnw release:perform -P release -Drelease.arguments="-Dmaven.test.skip=true -DskipTests=true"
+./mvnw release:clean -DdeployPluginRespository=ossrh_releases -P release -Drelease.arguments="-Dmaven.test.skip=true -DskipTests=true -DdeployPluginRespository=ossrh_releases" && \
+./mvnw release:prepare -DdeployPluginRespository=ossrh_releases -P release -Drelease.arguments="-Dmaven.test.skip=true -DskipTests=true -DdeployPluginRespository=ossrh_releases" && \
+./mvnw release:perform -DdeployPluginRespository=ossrh_releases -P release -Drelease.arguments="-Dmaven.test.skip=true -DskipTests=true -DdeployPluginRespository=ossrh_releases"

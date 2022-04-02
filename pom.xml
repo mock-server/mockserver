@@ -31,11 +31,11 @@
 
     <distributionManagement>
         <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <id>ossrh_snapshots</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
         </snapshotRepository>
         <repository>
-            <id>ossrh</id>
+            <id>ossrh_releases</id>
             <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
@@ -67,6 +67,7 @@
         <xmlunit.version>2.9.0</xmlunit.version>
         <skipTests>false</skipTests>
         <skipAssembly>false</skipAssembly>
+        <deployPluginRespository>ossrh_snapshots</deployPluginRespository>
         <release.arguments/>
         <javadoc.additional.parameters/>
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
