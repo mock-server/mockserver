@@ -3,38 +3,47 @@
 1. publish RELEASE to maven central
     1. ./scripts/local_release.sh
     2. https://oss.sonatype.org/index.html#stagingRepositories
+    3. close -> release (auto drop)
 2. publish SNAPSHOT to sonatype
     3. ./scripts/local_deploy_snapshot.sh
 3. update mockserver-node
     1. rm -rf package-lock.json node_modules
-    2. find and replace MockServer version both 5.13.0 and 5.13.x
-    3. npm i
-    4. grunt
-    5. git push origin master
-    6. git tag mockserver-x.x.x
-    7. git push origin --tags
-    8. npm login
-    9. npm publish --access=public --otp=****
+    2. find and replace MockServer version both 5.13.1 and 5.13.x
+    3. nvm use v16.14.1
+    4. npm i
+    5. npm audit fix --force
+    6. grunt
+    7. git push origin master
+    8. git tag mockserver-x.x.x
+    9. git push origin --tags
+    10. npm login
+    11. npm publish --access=public --otp=****
 4. update mockserver-client-node
     1. rm -rf package-lock.json node_modules
-    2. find and replace MockServer version both 5.13.0 and 5.13.x
-    3. npm i
-    4. grunt
-    5. git push origin master
-    6. git tag mockserver-x.x.x
-    7. git push origin --tags
-    8. npm login (not required if done recently)
-    9. npm publish --access=public --otp=****
+    2. find and replace MockServer version both 5.13.1 and 5.13.x
+    3. nvm use v16.14.1
+    4. npm i
+    5. npm audit fix --force
+    6. grunt
+    7. git push origin master
+    8. git tag mockserver-x.x.x
+    9. git push origin --tags
+    10. npm login (not required if done recently)
+    11. npm publish --access=public --otp=****
 5. update mockserver-maven-plugin
     1. update parent pom SNAPSHOT version to RELEASE version
-    2. update shaded SNAPSHOT version to RELEASE version
-    3. ./scripts/local_deploy_snapshot.sh
-    4. git push origin master
-    5. ./scripts/local_release.sh
-    6. update parent pom RELEASE version to new SNAPSHOT version
-    7. update shaded RELEASE version to new SNAPSHOT version
-    8. /scripts/local_deploy_snapshot.sh
-    9. release on Maven https://oss.sonatype.org/index.html#stagingRepositories
+    2. update jar-with-dependencies SNAPSHOT version to RELEASE version
+    3. update integration-testing SNAPSHOT version to RELEASE version
+    4. ./scripts/local_deploy_snapshot.sh
+    5. git push origin master
+    6. ./scripts/local_release.sh
+    7. https://oss.sonatype.org/index.html#stagingRepositories
+    8. close -> release (auto drop)
+    9. update parent pom RELEASE version to new SNAPSHOT version
+    10. update jar-with-dependencies RELEASE version to new SNAPSHOT version
+    11. update integration-testing RELEASE version to new SNAPSHOT version
+    12. /scripts/local_deploy_snapshot.sh
+    13. release on Maven https://oss.sonatype.org/index.html#stagingRepositories
 6. update docker image
     1. ensure maven returns the latest release
         1. curl -v https://oss.sonatype.org/service/local/artifact/maven/redirect\?r\=releases\&g\=org.mock-server\&a\=mockserver-netty\&c\=shaded\&e\=jar\&v\=RELEASE
@@ -58,7 +67,7 @@
     1. update changelog
     2. rm -rf jekyll-www.mock-server.com/_site
     3. ./mvnw clean
-    4. find and replace maven / npm version references include 5.13.x, 5.13.0 and 5.13.1-SNAPSHOT (to new SNAPSHOT verion) 
+    4. find and replace maven / npm version references include 5.13.x, 5.13.1 and 5.13.2-SNAPSHOT (to new SNAPSHOT verion) 
     5. find and replace swagger version references (i.e. in website code example documentation)
     6. find and replace SNAPSHOT version references
     7. update README
@@ -108,7 +117,8 @@
     6. git -C "$(brew --repo homebrew/core)" reset --hard HEAD
     7. brew update
     8. HOMEBREW_GITHUB_API_TOKEN=<token value> **Note:** use personal access token as password (due to lack of 2FA)
-    9. brew bump-formula-pr --strict mockserver --url=https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/x.x.x/mockserver-netty-x.x.x-brew-tar.tar
+    9. brew bump-formula-pr --strict mockserver --url=https://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/x.x.x/mockserver-netty-x.x.x-brew-tar.tar
+       i.e. brew bump-formula-pr --strict mockserver --url=https://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/5.13.1/mockserver-netty-5.13.1-brew-tar.tar
 
 ## Cleanup Failed Release Steps
 

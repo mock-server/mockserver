@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.13.1] - 2022-04-02
+
 ### Added
 - simplified JSON format accepted for headers and other multi-value maps by allowing single values to be used value list
 - added warning message when content-length in expectation is shorter than the body length
