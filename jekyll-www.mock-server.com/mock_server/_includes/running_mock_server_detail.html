@@ -164,16 +164,17 @@
 
 <h2>Client API&nbsp;&nbsp;-&nbsp;&nbsp;starting and stopping</h2>
 
-<p>Use the client API to run MockServer programmatically.</p>
+<p>Use the client API to run or interact with MockServer programmatically.</p>
 
-<p>First add the following maven dependencies:</p>
+<p>For more details about the different dependency versions see the page on <a href="/where/maven_central.html#mockserver_netty">Maven Central</a></p>
+
+<p>For example add the following maven dependency:</p>
 
 <pre><code class="code xml">&lt;!-- mockserver --&gt;
 &lt;<span class="element">dependency</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;<span class="element">/groupId</span>&gt;
-     &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-netty</span>&lt;<span class="element">/artifactId</span>&gt;
+     &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-netty-no-dependencies</span>&lt;<span class="element">/artifactId</span>&gt;
      &lt;<span class="element">version</span>&gt;<span class="element_value">5.13.1</span>&lt;<span class="element">/version</span>&gt;
-     &lt;<span class="element">classifier</span>&gt;<span class="element_value">shaded</span>&lt;/<span class="element">classifier</span>&gt;
 &lt;<span class="element">/dependency</span>&gt;</code></pre>
 
 <p>To start the server or proxy create a client, for example by using one of the start factory methods <span class="inline_code">ClientAndServer.startClientAndServer</span> as follows:</p>
@@ -219,7 +220,7 @@
 
 <pre class="prettyprint lang-xml code"><code class="code">&lt;dependency&gt;
     &lt;groupId&gt;org.mock-server&lt;/groupId&gt;
-    &lt;artifactId&gt;mockserver-junit-rule&lt;/artifactId&gt;
+    &lt;artifactId&gt;mockserver-junit-rule-no-dependencies&lt;/artifactId&gt;
     &lt;version&gt;5.13.1&lt;/version&gt;
 &lt;/dependency&gt;</code></pre>
 
@@ -278,7 +279,7 @@
 
 <pre class="prettyprint lang-xml code"><code class="code">&lt;dependency&gt;
     &lt;groupId&gt;org.mock-server&lt;/groupId&gt;
-    &lt;artifactId&gt;mockserver-junit-jupiter&lt;/artifactId&gt;
+    &lt;artifactId&gt;mockserver-junit-jupiter-no-dependencies&lt;/artifactId&gt;
     &lt;version&gt;5.13.1&lt;/version&gt;
 &lt;/dependency&gt;</code></pre>
 
