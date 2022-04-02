@@ -6,11 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+-
+
+### Changed
+-
+
+### Fixed
+-
+
 ## [5.13.1] - 2022-04-02
 
 ### Added
-- simplified JSON format accepted for headers and other multi-value maps by allowing single values to be used value list
-- added warning message when content-length in expectation is shorter than the body length
+- simplified JSON format accepted for headers and other multi-value maps by allowing single values to be used as value list
+- added warning message when content-length in expectation response is shorter than the body length
 - improved log output for multimap failures, especially when using schema matcher (i.e. with OpenAPI) for parameters, headers, etc
 - added support for endpoints examples in addition to existing schemas examples in an OpenAPI specifications
 
