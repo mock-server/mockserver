@@ -1,4 +1,4 @@
-Release Steps
+## Release Steps
 
 1. publish RELEASE to maven central
     1. ./scripts/local_release.sh
@@ -109,3 +109,12 @@ Release Steps
     7. brew update
     8. HOMEBREW_GITHUB_API_TOKEN=<token value> **Note:** use personal access token as password (due to lack of 2FA)
     9. brew bump-formula-pr --strict mockserver --url=https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/x.x.x/mockserver-netty-x.x.x-brew-tar.tar
+
+## Cleanup Failed Release Steps
+
+1. revert git and do forced push
+   1. git reset --hard 4fa8917c8
+   2. git push --force
+2. delete tags
+   1. git tag -d mockserver-5.13.1
+   2. git push origin :refs/tags/mockserver-5.13.1
