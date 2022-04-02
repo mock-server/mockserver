@@ -118,3 +118,4 @@
 2. delete tags
    1. git tag -d mockserver-5.13.1
    2. git push origin :refs/tags/mockserver-5.13.1
+3. drop staging repository https://oss.sonatype.org/#stagingRepositories
