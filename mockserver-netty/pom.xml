@@ -508,7 +508,7 @@
                 <version>3.0.0</version>
                 <inherited>false</inherited>
                 <configuration>
-                    <skip>${skipTests}</skip>
+                    <skip>true</skip>
                     <workingDirectory>src/integration-tests</workingDirectory>
                 </configuration>
                 <executions>
