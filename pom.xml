@@ -340,7 +340,7 @@
             <dependency>
                 <groupId>io.swagger.parser.v3</groupId>
                 <artifactId>swagger-parser</artifactId>
-                <version>2.0.31</version>
+                <version>2.0.32</version>
                 <exclusions>
                     <exclusion>
                         <groupId>com.github.fge</groupId>
