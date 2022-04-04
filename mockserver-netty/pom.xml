@@ -508,8 +508,8 @@
                 <version>3.0.0</version>
                 <inherited>false</inherited>
                 <configuration>
-                    <skip>true</skip>
-                    <workingDirectory>src/integration-tests</workingDirectory>
+                    <skip>${skipTests}</skip>
+                    <workingDirectory>${basedir}</workingDirectory>
                 </configuration>
                 <executions>
                     <execution>
@@ -519,7 +519,7 @@
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <executable>gradle_integration_tests.sh</executable>
+                            <executable>src/integration-tests/gradle_integration_tests.sh</executable>
                             <arguments>${project.version}</arguments>
                         </configuration>
                     </execution>

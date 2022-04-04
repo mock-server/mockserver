@@ -546,7 +546,7 @@
                         <version>3.0.0</version>
                         <inherited>false</inherited>
                         <configuration>
-                            <workingDirectory>${basedir}/build</workingDirectory>
+                            <workingDirectory>${basedir}</workingDirectory>
                         </configuration>
                         <executions>
                             <execution>
