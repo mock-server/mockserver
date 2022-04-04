@@ -1,0 +1,19 @@
+plugins {
+    id 'java'
+    id 'groovy'
+}
+
+repositories {
+    mavenLocal()
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+    mavenCentral()
+}
+
+dependencies {
+
+    implementation "org.mock-server:mockserver-client-java:${project.findProperty('mockserverVersion')}:shaded"
+    implementation "org.mock-server:mockserver-netty:${project.findProperty('mockserverVersion')}:shaded"
+    testImplementation "org.mock-server:mockserver-integration-testing:${project.findProperty('mockserverVersion')}:shaded"
+
+}
+

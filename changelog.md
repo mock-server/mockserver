@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -
 
 ### Fixed
--
+- fixed artefact name in no-dependencies pom which caused issue with gradle builds
 
 ## [5.13.1] - 2022-04-02
 

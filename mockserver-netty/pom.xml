@@ -223,8 +223,8 @@
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>org.mockserver.cli.Main</mainClass>
                                 </transformer>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer" />
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer"/>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>META-INF/LICENSE</resource>
                                 </transformer>
@@ -451,13 +451,13 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- shaded dependency integration tests -->
+            <!-- shaded dependency maven integration tests -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-invoker-plugin</artifactId>
                 <version>3.2.2</version>
                 <configuration>
-                     <skipInvocation>${skipTests}</skipInvocation>
+                    <skipInvocation>${skipTests}</skipInvocation>
                     <debug>false</debug>
                     <streamLogs>false</streamLogs>
                     <showErrors>false</showErrors>
@@ -485,7 +485,7 @@
                     <settingsFile>src/integration-tests/settings.xml</settingsFile>
                     <!--<mavenOpts>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005</mavenOpts>-->
                     <pomIncludes>
-                        <pomInclude>**/pom.xml</pomInclude>
+                        <pomInclude>maven-**/pom.xml</pomInclude>
                     </pomIncludes>
                     <goals>
                         <goal>test</goal>
@@ -498,6 +498,30 @@
                             <goal>install</goal>
                             <goal>run</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- shaded dependency gradle integration tests -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <inherited>false</inherited>
+                <configuration>
+                    <skip>${skipTests}</skip>
+                    <workingDirectory>src/integration-tests</workingDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>gradle_integration_tests</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>gradle_integration_tests.sh</executable>
+                            <arguments>${project.version}</arguments>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

@@ -9,7 +9,7 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>mockserver-client-java</artifactId>
+    <artifactId>mockserver-client-java-no-dependencies</artifactId>
     <version>@project.version</version>
 
     <name>MockServer Java Client</name>

@@ -9,7 +9,7 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>mockserver-integration-testing</artifactId>
+    <artifactId>mockserver-integration-testing-no-dependencies</artifactId>
     <version>@project.version</version>
 
     <name>MockServer Integration Test</name>
