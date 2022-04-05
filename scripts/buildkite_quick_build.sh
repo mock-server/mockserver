@@ -2,8 +2,8 @@
 
 set -e
 
-export MAVEN_OPTS="$MAVEN_OPTS -Xms8192m -Xmx8192m"
-export JAVA_OPTS="$JAVA_OPTS -Xms8192m -Xmx8192m"
+export MAVEN_OPTS="$MAVEN_OPTS -Xms2048m -Xmx8192m"
+export JAVA_OPTS="$JAVA_OPTS -Xms2048m -Xmx8192m"
 echo
 java -version
 echo
@@ -19,4 +19,4 @@ fi
 echo "whoami: "
 whoami
 
-./mvnw -T 2C clean install $1 -Djava.security.egd=file:/dev/urandom -DskipAssembly=true
+./mvnw clean install $1 -DskipAssembly=true
