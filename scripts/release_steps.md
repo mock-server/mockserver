@@ -54,13 +54,9 @@
     1. ensure maven returns the latest release
         1. curl -v https://oss.sonatype.org/service/local/artifact/maven/redirect\?r\=releases\&g\=org.mock-server\&a\=mockserver-netty\&c\=shaded\&e\=jar\&v\=RELEASE
     2. update Dockerfile (no longer required as done in earlier step)
-    3. docker build --no-cache -t mockserver/mockserver:mockserver-5.13.2 ./docker
-    4. docker build --no-cache -t mockserver/mockserver:5.13.2 ./docker
-    5. docker build --no-cache -t jamesdbloom/mockserver:mockserver-5.13.2 ./docker
+    3. docker build --no-cache -t mockserver/mockserver:mockserver-5.13.2 ./docker && docker build --no-cache -t mockserver/mockserver:5.13.2 ./docker && docker build --no-cache -t jamesdbloom/mockserver:mockserver-5.13.2 ./docker
     6. docker login
-    7. docker push mockserver/mockserver:mockserver-5.13.2
-    8. docker push mockserver/mockserver:5.13.2
-    9. docker push jamesdbloom/mockserver:mockserver-5.13.2
+    7. docker push mockserver/mockserver:mockserver-5.13.2 && docker push mockserver/mockserver:5.13.2 && docker push jamesdbloom/mockserver:mockserver-5.13.2
 8. update helm chart
     1. find and replace previous MockServer release version to new release
     2. cd helm
@@ -69,6 +65,7 @@
     5. mv /Users/jamesbloom/git/mockserver/mockserver/helm/mockserver-5.13.2.tgz .
     6. helm repo index .
     7. upload new chart and index.yaml to S3 https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq
+    8. git add -A && git commit -m "added new heml chart" && git pull --rebase && git push origin master
 9. add javaDoc
    1. git checkout mockserver-5.13.2
    2. export JAVA_HOME=`/usr/libexec/java_home -v 1.8` or export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home
