@@ -54,9 +54,9 @@
     1. ensure maven returns the latest release
         1. curl -v https://oss.sonatype.org/service/local/artifact/maven/redirect\?r\=releases\&g\=org.mock-server\&a\=mockserver-netty\&c\=shaded\&e\=jar\&v\=RELEASE
     2. update Dockerfile (no longer required as done in earlier step)
-    3. docker build --no-cache -t mockserver/mockserver:mockserver-5.13.2 ./docker && docker build --no-cache -t mockserver/mockserver:5.13.2 ./docker && docker build --no-cache -t jamesdbloom/mockserver:mockserver-5.13.2 ./docker
+    3. docker build --no-cache -t mockserver/mockserver:mockserver-5.13.2 ./docker && docker build --no-cache -t mockserver/mockserver:5.13.2 ./docker
     6. docker login
-    7. docker push mockserver/mockserver:mockserver-5.13.2 && docker push mockserver/mockserver:5.13.2 && docker push jamesdbloom/mockserver:mockserver-5.13.2
+    7. docker push mockserver/mockserver:mockserver-5.13.2 && docker push mockserver/mockserver:5.13.2
 8. update helm chart
     1. find and replace previous MockServer release version to new release
     2. cd helm
