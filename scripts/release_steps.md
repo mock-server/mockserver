@@ -11,25 +11,23 @@
     2. find and replace MockServer version both 5.13.1 and 5.13.x
     3. nvm use v16.14.1
     4. npm i
-    5. npm audit fix --force
-    6. grunt
-    7. git push origin master
-    8. git tag mockserver-x.x.x
-    9. git push origin --tags
-    10. npm login
-    11. npm publish --access=public --otp=****
+    5. grunt
+    6. git push origin master
+    7. git tag mockserver-x.x.x
+    8. git push origin --tags
+    9. npm login
+    10. npm publish --access=public --otp=****
 4. update mockserver-client-node
     1. rm -rf package-lock.json node_modules
     2. find and replace MockServer version both 5.13.1 and 5.13.x
     3. nvm use v16.14.1
     4. npm i
-    5. npm audit fix --force
-    6. grunt
-    7. git push origin master
-    8. git tag mockserver-x.x.x
-    9. git push origin --tags
-    10. npm login (not required if done recently)
-    11. npm publish --access=public --otp=****
+    5. grunt
+    6. git push origin master
+    7. git tag mockserver-x.x.x
+    8. git push origin --tags
+    9. npm login (not required if done recently)
+    10. npm publish --access=public --otp=****
 5. update mockserver-maven-plugin
     1. update parent pom SNAPSHOT version to RELEASE version
     2. update jar-with-dependencies SNAPSHOT version to RELEASE version
@@ -37,17 +35,25 @@
     4. ./scripts/local_deploy_snapshot.sh
     5. git push origin master
     6. ./scripts/local_release.sh
-    7. https://oss.sonatype.org/index.html#stagingRepositories
+    7. release on Maven https://oss.sonatype.org/index.html#stagingRepositories
     8. close -> release (auto drop)
     9. update parent pom RELEASE version to new SNAPSHOT version
     10. update jar-with-dependencies RELEASE version to new SNAPSHOT version
     11. update integration-testing RELEASE version to new SNAPSHOT version
-    12. /scripts/local_deploy_snapshot.sh
-    13. release on Maven https://oss.sonatype.org/index.html#stagingRepositories
-6. update docker image
+    12. ./scripts/local_deploy_snapshot.sh
+6. update repo
+    13. update changelog
+    14. rm -rf jekyll-www.mock-server.com/_site
+    15. ./mvnw clean
+    16. find and replace maven / npm version references include 5.13.x, 5.13.1 and 5.13.2-SNAPSHOT (to new SNAPSHOT verion)
+    17. find and replace swagger version references (i.e. in website code example documentation)
+    18. find and replace SNAPSHOT version references
+    19. update README
+    20. commit to github
+7. update docker image
     1. ensure maven returns the latest release
         1. curl -v https://oss.sonatype.org/service/local/artifact/maven/redirect\?r\=releases\&g\=org.mock-server\&a\=mockserver-netty\&c\=shaded\&e\=jar\&v\=RELEASE
-    2. update Dockerfile (no longer required)
+    2. update Dockerfile (no longer required as done in earlier step)
     3. docker build --no-cache -t mockserver/mockserver:mockserver-x.x.x ./docker
     4. docker build --no-cache -t mockserver/mockserver:x.x.x ./docker
     5. docker build --no-cache -t jamesdbloom/mockserver:mockserver-x.x.x ./docker
@@ -55,7 +61,7 @@
     7. docker push mockserver/mockserver:mockserver-x.x.x
     8. docker push mockserver/mockserver:x.x.x
     9. docker push jamesdbloom/mockserver:mockserver-x.x.x
-7. update helm chart
+8. update helm chart
     1. find and replace previous MockServer release version to new release
     2. cd helm
     3. helm package ./mockserver/
@@ -63,15 +69,6 @@
     5. mv /Users/jamesbloom/git/mockserver/mockserver/helm/mockserver-x.x.x.tgz .
     6. helm repo index .
     7. upload new chart and index.yaml to S3 https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq
-8. update repo
-    1. update changelog
-    2. rm -rf jekyll-www.mock-server.com/_site
-    3. ./mvnw clean
-    4. find and replace maven / npm version references include 5.13.x, 5.13.1 and 5.13.2-SNAPSHOT (to new SNAPSHOT verion) 
-    5. find and replace swagger version references (i.e. in website code example documentation)
-    6. find and replace SNAPSHOT version references
-    7. update README
-    8. commit to github
 9. add javaDoc
    1. git checkout mockserver-x.x.x
    2. export JAVA_HOME=`/usr/libexec/java_home -v 1.8` or export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home
