@@ -44,7 +44,6 @@ public class NottableSchemaString extends NottableString {
     private static final String TRUE = "true";
     private final ObjectNode schemaJsonNode;
     private final String type;
-    private final String format;
     private final String json;
     private final JsonSchemaValidator jsonSchemaValidator;
 
@@ -115,11 +114,9 @@ public class NottableSchemaString extends NottableString {
             schemaJsonNode = getSchemaJsonNode(getValue());
             Schema<?> schemaByType = SchemaTypeUtil.createSchemaByType(schemaJsonNode);
             type = schemaByType.getType();
-            format = schemaByType.getFormat();
         } else {
             schemaJsonNode = null;
             type = null;
-            format = null;
         }
         json = (Boolean.TRUE.equals(isNot()) ? NOT_CHAR : "") + schema;
         jsonSchemaValidator = new JsonSchemaValidator(MOCK_SERVER_LOGGER, this.json, this.schemaJsonNode);
@@ -131,11 +128,9 @@ public class NottableSchemaString extends NottableString {
             schemaJsonNode = getSchemaJsonNode(getValue());
             Schema<?> schemaByType = SchemaTypeUtil.createSchemaByType(schemaJsonNode);
             type = schemaByType.getType();
-            format = schemaByType.getFormat();
         } else {
             schemaJsonNode = null;
             type = null;
-            format = null;
         }
         json = (Boolean.TRUE.equals(isNot()) ? NOT_CHAR : "") + schema;
         if (schemaJsonNode != null) {
@@ -152,7 +147,8 @@ public class NottableSchemaString extends NottableString {
     public boolean matches(MockServerLogger mockServerLogger, MatchDifference context, String json) {
         if (schemaJsonNode != null) {
             try {
-                if (type.equals("string") && isNotBlank(json) && !json.startsWith("\"") && !json.endsWith("\"")) {
+                // allow for string values without quotes to be validated as json strings
+                if (isNotBlank(type) && type.equals("string") && isNotBlank(json) && !json.startsWith("\"") && !json.endsWith("\"")) {
                     json = "\"" + json + "\"";
                 }
                 String validationErrors = validate(json);
@@ -169,7 +165,7 @@ public class NottableSchemaString extends NottableString {
                         .setThrowable(throwable)
                 );
                 if (!isNot() && context != null) {
-                    context.addDifference(mockServerLogger, "schema match failed expect:{}:found error:{}for:{}", this.json, throwable.getMessage(), json);
+                    context.addDifference(mockServerLogger, "schema match failed expect:{}found error:{}for:{}", this.json, throwable.getMessage(), json);
                 }
             }
             return isNot();

@@ -324,4 +324,25 @@ public class NottableSchemaStringEqualsTest {
         assertThat(string("2018-11-13T20:20:39+00:00").equals(notString), is(false));
         assertThat(string("2018-11-13 20:20:39").equals(notString), is(true));
     }
+
+    @Test
+    public void shouldEqualSchemaForArrayOfItems() {
+        String schema = "{" + NEW_LINE +
+            "    \"items\": {" +
+            "        \"description\":\"Agent ID\"," +
+            "        \"format\":\"numbers\"," +
+            "        \"minLength\":3," +
+            "        \"type\":\"string\"" +
+            "    }," +
+            "    \"type\":\"array\"" +
+            "}";
+        NottableSchemaString string = schemaString(schema);
+        NottableSchemaString notString = schemaString("!" + schema);
+        assertThat(string("[\"000\",\"000\"]").equals(string), is(true));
+        assertThat(string("[\"00\",\"000\"]").equals(string), is(false));
+        assertThat(string("[\"000\",\"00\"]").equals(string), is(false));
+        assertThat(string("[\"000\",\"000\"]").equals(notString), is(false));
+        assertThat(string("[\"00\",\"000\"]").equals(notString), is(true));
+        assertThat(string("[\"000\",\"00\"]").equals(notString), is(true));
+    }
 }

@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -
 
 ### Fixed
-- 
+- error matching header or parameters using array schema 
 
 ## [5.13.2] - 2022-04-05
 
