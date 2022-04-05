@@ -6011,7 +6011,7 @@ public class HttpRequestsPropertiesMatcherTest {
     }
 
     @Test
-    public void shouldHandleInvalidOpenAPIYamlSpec() {
+    public void shouldHandleInvalidOpenAPIYamlSpecWithYamlExtension() {
         // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
@@ -6020,6 +6020,33 @@ public class HttpRequestsPropertiesMatcherTest {
             httpRequestsPropertiesMatcher.update(
                 new OpenAPIDefinition()
                     .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.yaml").substring(0, 100))
+                    .withOperationId("listPets")
+            );
+
+            // then
+            fail("expected exception");
+        } catch (IllegalArgumentException iae) {
+            assertThat(iae.getMessage(), is("Unable to load API spec, while scanning a simple key" + NEW_LINE +
+                " in 'reader', line 8, column 1:" + NEW_LINE +
+                "    servers" + NEW_LINE +
+                "    ^" + NEW_LINE +
+                "could not find expected ':'" + NEW_LINE +
+                " in 'reader', line 8, column 8:" + NEW_LINE +
+                "    servers" + NEW_LINE +
+                "           ^"));
+        }
+    }
+
+    @Test
+    public void shouldHandleInvalidOpenAPIYamlSpecWithYmlExtension() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
+
+        try {
+            // when
+            httpRequestsPropertiesMatcher.update(
+                new OpenAPIDefinition()
+                    .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.yml").substring(0, 100))
                     .withOperationId("listPets")
             );
 

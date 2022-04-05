@@ -487,7 +487,7 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
         String urlOrPath = (urlOrPathLength > maxUrlOrPathLength ? "..." : "") + openAPIDefinition.getSpecUrlOrPayload().substring(urlOrPathLength > maxUrlOrPathLength ? urlOrPathLength - maxUrlOrPathLength : urlOrPathLength);
         httpRequestPropertiesMatcher.setDescription("" +
             " open api" +
-            (openAPIDefinition.getSpecUrlOrPayload().endsWith(".json") || openAPIDefinition.getSpecUrlOrPayload().endsWith(".yaml") ? " \"" + urlOrPath + "\"" : "") +
+            (openAPIDefinition.getSpecUrlOrPayload().endsWith(".json") || openAPIDefinition.getSpecUrlOrPayload().endsWith(".yaml") || openAPIDefinition.getSpecUrlOrPayload().endsWith(".yml") ? " \"" + urlOrPath + "\"" : "") +
             (isNotBlank(methodOperationPair.getValue().getOperationId()) ? " operation \"" + methodOperationPair.getValue().getOperationId() + "\"" : "") +
             (isNotBlank(contentType) ? " content-type \"" + contentType + "\"" : "")
         );
