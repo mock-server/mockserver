@@ -18,7 +18,7 @@ function tear-down-k8s() {
 }
 
 function start-up() {
-  runCommand "helm --kube-context microk8s upgrade --install --namespace ${2:-mockserver} --create-namespace ${1:-} --wait --version 5.13.1 ${2:-mockserver} ${SCRIPT_DIR}/../../helm/mockserver"
+  runCommand "helm --kube-context microk8s upgrade --install --namespace ${2:-mockserver} --create-namespace ${1:-} --wait --version 5.13.2 ${2:-mockserver} ${SCRIPT_DIR}/../../helm/mockserver"
   # TODO add poll for startup
   sleep 3
   export NODE_PORT=$(runCommand "kubectl --context microk8s --namespace ${2:-mockserver} -o jsonpath='{.spec.ports[0].nodePort}' get services ${2:-mockserver}")

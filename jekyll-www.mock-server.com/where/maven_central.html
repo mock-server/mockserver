@@ -35,27 +35,27 @@ sitemap:
 
 <pre><code class="code"><span class="final">dependencies</span> {
     ...
-    <span class="final">testImplementation</span>(<span class="string_literal">"org.mock-server:mockserver-netty-no-dependencies:5.13.1"</span>)
+    <span class="final">testImplementation</span>(<span class="string_literal">"org.mock-server:mockserver-netty-no-dependencies:5.13.2"</span>)
     ...
 }</code></pre>
 
         <p>The following versions are available for <strong>mockserver-netty</strong> in Maven Central.  These dependencies work for Maven, Gradle, Scala SBT, Apache Ivy, etc</p>
 
         <ul>
-            <li><strong>org.mock-server:mockserver-netty-no-dependencies:5.13.1</strong> - MockServer compiled code and transitive dependencies bundled into a single jar, with packages for most transitive dependencies being updated to avoid clashes with dependencies from projects importing MockServer.  This has no transitive dependencies and so is the recommended best option.</li>
-            <li><strong>org.mock-server:mockserver-netty:5.13.1</strong> - only MockServer compiled code with transitive dependencies pulled in by Maven, Gradle, etc.  As per normal Maven or Ivy dependencies this includes transitive dependencies (in its pom.xml) which would be pulled in by Maven, Gradle, Ivy, SBT, etc unless explicitly excluded.</li>
-            <li><strong>org.mock-server:mockserver-netty:5.13.1:shaded</strong> - MockServer compiled code and transitive dependencies bundled into a single jar, with packages for most transitive dependencies being updated to avoid clashes with dependencies from projects importing MockServer.  Because classifiers all use the same pom.xml this library still includes transitive dependencies (in its pom.xml) which would be pulled in by Maven, Gradle, Ivy, SBT, etc unless explicitly excluded.  Use the <strong>org.mock-server:mockserver-netty-no-dependencies:5.13.1</strong> dependencies to avoid the transitive dependencies.</li>
-            <li><strong>org.mock-server:mockserver-netty:5.13.1:jar-with-dependencies</strong> - MockServer compiled code and transitive dependencies bundled into a single jar.  Because classifiers all use the same pom.xml this library still includes transitive dependencies (in its pom.xml) which would be pulled in by Maven, Gradle, Ivy, SBT, etc unless explicitly excluded.  Use the <strong>org.mock-server:mockserver-netty-no-dependencies:5.13.1</strong> dependencies to avoid the transitive dependencies.</li>
+            <li><strong>org.mock-server:mockserver-netty-no-dependencies:5.13.2</strong> - MockServer compiled code and transitive dependencies bundled into a single jar, with packages for most transitive dependencies being updated to avoid clashes with dependencies from projects importing MockServer.  This has no transitive dependencies and so is the recommended best option.</li>
+            <li><strong>org.mock-server:mockserver-netty:5.13.2</strong> - only MockServer compiled code with transitive dependencies pulled in by Maven, Gradle, etc.  As per normal Maven or Ivy dependencies this includes transitive dependencies (in its pom.xml) which would be pulled in by Maven, Gradle, Ivy, SBT, etc unless explicitly excluded.</li>
+            <li><strong>org.mock-server:mockserver-netty:5.13.2:shaded</strong> - MockServer compiled code and transitive dependencies bundled into a single jar, with packages for most transitive dependencies being updated to avoid clashes with dependencies from projects importing MockServer.  Because classifiers all use the same pom.xml this library still includes transitive dependencies (in its pom.xml) which would be pulled in by Maven, Gradle, Ivy, SBT, etc unless explicitly excluded.  Use the <strong>org.mock-server:mockserver-netty-no-dependencies:5.13.2</strong> dependencies to avoid the transitive dependencies.</li>
+            <li><strong>org.mock-server:mockserver-netty:5.13.2:jar-with-dependencies</strong> - MockServer compiled code and transitive dependencies bundled into a single jar.  Because classifiers all use the same pom.xml this library still includes transitive dependencies (in its pom.xml) which would be pulled in by Maven, Gradle, Ivy, SBT, etc unless explicitly excluded.  Use the <strong>org.mock-server:mockserver-netty-no-dependencies:5.13.2</strong> dependencies to avoid the transitive dependencies.</li>
         </ul>
 
     </li>
 
 	<li><a target="_blank" href="https://search.maven.org/#search%7Cga%7C1%7Cmockserver-war">mockserver-war</a> - a deployable WAR for mocking that can be deployed to any JEE web server, this artifact
-		<a target="_blank" href="https://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/5.13.1/mockserver-war-5.13.1.war">can be downloaded</a>.
+		<a target="_blank" href="https://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/5.13.2/mockserver-war-5.13.2.war">can be downloaded</a>.
 	</li>
 
 	<li><a target="_blank" href="https://search.maven.org/#search%7Cga%7C1%7Cmockserver-proxy-war">mockserver-proxy-war</a> - a deployable WAR for proxying that can be deployed to any JEE web server, this artifact
-		<a target="_blank" href="https://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-proxy-war/5.13.1/mockserver-proxy-war-5.13.1.war">can be downloaded</a>.
+		<a target="_blank" href="https://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-proxy-war/5.13.2/mockserver-proxy-war-5.13.2.war">can be downloaded</a>.
 	</li>
 
 	<li><a target="_blank" href="https://search.maven.org/#search%7Cga%7C1%7Cmockserver-maven-plugin">mockserver-maven-plugin</a> - a set of maven plugins to start, stop and fork MockServer using maven
@@ -86,17 +86,17 @@ sitemap:
 
 <pre><code class="code"><span class="final">dependencies</span> {
     ...
-    <span class="final">testImplementation</span>(<span class="string_literal">"org.mock-server:mockserver-client-java-no-dependencies:5.13.1"</span>)
+    <span class="final">testImplementation</span>(<span class="string_literal">"org.mock-server:mockserver-client-java-no-dependencies:5.13.2"</span>)
     ...
 }</code></pre>
 
     <p>The following versions are available for the Java client in Maven Central.  These dependencies work for Maven, Gradle, Scala SBT, Apache Ivy, etc</p>
 
     <ul>
-        <li><strong>org.mock-server:mockserver-client-java-no-dependencies:5.13.1</strong> - MockServer compiled code and transitive dependencies bundled into a single jar, with packages for most transitive dependencies being updated to avoid clashes with dependencies from projects importing MockServer.  This has no transitive dependencies and so is the recommended best option.</li>
-        <li><strong>org.mock-server:mockserver-client-java:5.13.1</strong> - only MockServer compiled code with transitive dependencies pulled in by Maven, Gradle, etc.  As per normal Maven or Ivy dependencies this includes transitive dependencies (in its pom.xml) which would be pulled in by Maven, Gradle, Ivy, SBT, etc unless explicitly excluded.</li>
-        <li><strong>org.mock-server:mockserver-client-java:5.13.1:shaded</strong> - MockServer compiled code and transitive dependencies bundled into a single jar, with packages for most transitive dependencies being updated to avoid clashes with dependencies from projects importing MockServer.  Because classifiers all use the same pom.xml this library still includes transitive dependencies (in its pom.xml) which would be pulled in by Maven, Gradle, Ivy, SBT, etc unless explicitly excluded.  Use the <strong>org.mock-server:mockserver-client-java-no-dependencies:5.13.1</strong> dependencies to avoid the transitive dependencies.</li>
-        <li><strong>org.mock-server:mockserver-client-java:5.13.1:jar-with-dependencies</strong> - MockServer compiled code and transitive dependencies bundled into a single jar.  Because classifiers all use the same pom.xml this library still includes transitive dependencies (in its pom.xml) which would be pulled in by Maven, Gradle, Ivy, SBT, etc unless explicitly excluded.  Use the <strong>org.mock-server:mockserver-client-java-no-dependencies:5.13.1</strong> dependencies to avoid the transitive dependencies.</li>
+        <li><strong>org.mock-server:mockserver-client-java-no-dependencies:5.13.2</strong> - MockServer compiled code and transitive dependencies bundled into a single jar, with packages for most transitive dependencies being updated to avoid clashes with dependencies from projects importing MockServer.  This has no transitive dependencies and so is the recommended best option.</li>
+        <li><strong>org.mock-server:mockserver-client-java:5.13.2</strong> - only MockServer compiled code with transitive dependencies pulled in by Maven, Gradle, etc.  As per normal Maven or Ivy dependencies this includes transitive dependencies (in its pom.xml) which would be pulled in by Maven, Gradle, Ivy, SBT, etc unless explicitly excluded.</li>
+        <li><strong>org.mock-server:mockserver-client-java:5.13.2:shaded</strong> - MockServer compiled code and transitive dependencies bundled into a single jar, with packages for most transitive dependencies being updated to avoid clashes with dependencies from projects importing MockServer.  Because classifiers all use the same pom.xml this library still includes transitive dependencies (in its pom.xml) which would be pulled in by Maven, Gradle, Ivy, SBT, etc unless explicitly excluded.  Use the <strong>org.mock-server:mockserver-client-java-no-dependencies:5.13.2</strong> dependencies to avoid the transitive dependencies.</li>
+        <li><strong>org.mock-server:mockserver-client-java:5.13.2:jar-with-dependencies</strong> - MockServer compiled code and transitive dependencies bundled into a single jar.  Because classifiers all use the same pom.xml this library still includes transitive dependencies (in its pom.xml) which would be pulled in by Maven, Gradle, Ivy, SBT, etc unless explicitly excluded.  Use the <strong>org.mock-server:mockserver-client-java-no-dependencies:5.13.2</strong> dependencies to avoid the transitive dependencies.</li>
     </ul>
 
 </li>
@@ -177,6 +177,6 @@ sitemap:
 
 <pre><code class="code"><span class="final">dependencies</span> {
     ...
-    <span class="final">testImplementation</span>(<span class="string_literal">"org.mock-server:mockserver-netty:5.13.2-SNAPSHOT"</span>)
+    <span class="final">testImplementation</span>(<span class="string_literal">"org.mock-server:mockserver-netty:5.13.3-SNAPSHOT"</span>)
     ...
 }</code></pre>

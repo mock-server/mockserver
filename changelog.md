@@ -13,10 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -
 
 ### Fixed
+- 
+
+## [5.13.2] - 2022-04-05
+
+### Fixed
 - fixed artefact name in no-dependencies pom which caused issue with gradle builds
 - added support for yml in addition to yaml for yaml files
 
-## [5.13.1] - 2022-04-02
+## [5.13.2] - 2022-04-02
 
 ### Added
 - simplified JSON format accepted for headers and other multi-value maps by allowing single values to be used as value list
