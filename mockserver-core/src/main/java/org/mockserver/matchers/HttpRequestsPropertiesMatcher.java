@@ -17,6 +17,7 @@ import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
+import org.mockserver.openapi.OpenAPIParser;
 import org.mockserver.openapi.OpenAPISerialiser;
 import org.mockserver.openapi.examples.JsonNodeExampleSerializer;
 import org.mockserver.serialization.ObjectMapperFactory;
@@ -487,7 +488,7 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
         String urlOrPath = (urlOrPathLength > maxUrlOrPathLength ? "..." : "") + openAPIDefinition.getSpecUrlOrPayload().substring(urlOrPathLength > maxUrlOrPathLength ? urlOrPathLength - maxUrlOrPathLength : urlOrPathLength);
         httpRequestPropertiesMatcher.setDescription("" +
             " open api" +
-            (openAPIDefinition.getSpecUrlOrPayload().endsWith(".json") || openAPIDefinition.getSpecUrlOrPayload().endsWith(".yaml") || openAPIDefinition.getSpecUrlOrPayload().endsWith(".yml") ? " \"" + urlOrPath + "\"" : "") +
+            (OpenAPIParser.isSpecUrl(openAPIDefinition.getSpecUrlOrPayload()) ? " \"" + urlOrPath + "\"" : "") +
             (isNotBlank(methodOperationPair.getValue().getOperationId()) ? " operation \"" + methodOperationPair.getValue().getOperationId() + "\"" : "") +
             (isNotBlank(contentType) ? " content-type \"" + contentType + "\"" : "")
         );

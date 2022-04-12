@@ -30,6 +30,17 @@ public class OpenAPIParser {
 
     public static final String OPEN_API_LOAD_ERROR = "Unable to load API spec";
 
+    /**
+     * Helper function that checks if the provided string is a reference to an API specification file
+     * @param specUrlOrPayload - string that might contain an API specification file reference
+     * @return <b>true</b> if the provided string ends with special file suffix
+     */
+    public static boolean isSpecUrl(String specUrlOrPayload) {
+        return specUrlOrPayload != null && (
+            specUrlOrPayload.endsWith(".json") || specUrlOrPayload.endsWith(".yaml") || specUrlOrPayload.endsWith(".yml")
+        );
+    }
+
     public static OpenAPI buildOpenAPI(String specUrlOrPayload, MockServerLogger mockServerLogger) {
         OpenAPI openAPI = openAPILRUCache.get(specUrlOrPayload);
         if (openAPI == null) {
@@ -45,7 +56,7 @@ public class OpenAPIParser {
 
             List<String> errorMessage = new ArrayList<>();
             try {
-                if (specUrlOrPayload.endsWith(".json") || specUrlOrPayload.endsWith(".yaml")) {
+                if (OpenAPIParser.isSpecUrl(specUrlOrPayload)) {
                     specUrlOrPayload = specUrlOrPayload.replaceAll("\\\\", "/");
                     List<SwaggerParserExtension> parserExtensions = getExtensions();
                     for (SwaggerParserExtension extension : parserExtensions) {

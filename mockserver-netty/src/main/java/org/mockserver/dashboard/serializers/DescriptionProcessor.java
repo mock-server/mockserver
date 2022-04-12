@@ -6,6 +6,7 @@ import org.mockserver.dashboard.model.DashboardLogEntryDTO;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.OpenAPIDefinition;
+import org.mockserver.openapi.OpenAPIParser;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.openapi.OpenAPIParser.buildOpenAPI;
@@ -51,7 +52,7 @@ public class DescriptionProcessor {
             OpenAPIDefinition openAPIDefinition = (OpenAPIDefinition) object;
             String operationId = isNotBlank(openAPIDefinition.getOperationId()) ? openAPIDefinition.getOperationId() : "";
             String specUrlOrPayload = openAPIDefinition.getSpecUrlOrPayload().trim();
-            if (specUrlOrPayload.endsWith(".json") || specUrlOrPayload.endsWith(".yaml")) {
+            if (OpenAPIParser.isSpecUrl(specUrlOrPayload)) {
                 description = new RequestDefinitionDescription(idMessage + StringUtils.substringAfterLast(specUrlOrPayload, "/"), operationId, this, true);
                 if (description.length() >= maxOpenAPILength) {
                     maxOpenAPILength = description.length();
