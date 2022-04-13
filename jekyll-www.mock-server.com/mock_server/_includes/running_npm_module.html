@@ -25,6 +25,22 @@ mockserver.stop_mockserver({
                 serverPort: <span class="numeric_literal">1080</span>
             });</code></pre>
 
+<p>You can customize the JVM arguments and set <a href="/mock_server/configuration_properties.html">configuration</a> options as follows</p>
+
+<pre><code class="code">var mockserver = require(<span class="string_literal">'mockserver-node'</span>);
+mockserver.start_mockserver({
+              serverPort: <span class="numeric_literal">1080</span>,
+              jvmOptions: [
+                  <span class="string_literal">'-Dmockserver.enableCORSForAllResponses=true'</span>,
+                  <span class="string_literal">'-Dmockserver.corsAllowMethods="CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE"'</span>,
+                  <span class="string_literal">'-Dmockserver.corsAllowHeaders="Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"'</span>,
+                  <span class="string_literal">'-Dmockserver.corsAllowCredentials=true -Dmockserver.corsMaxAgeInSeconds=300'</span>
+              ],
+              mockServerVersion: <span class="string_literal">"5.13.2"</span>,
+              verbose: <span class="keyword">true</span>
+          });</code></pre>
+
+
 <p>MockServer uses port unification to support HTTP, HTTPS, SOCKS, HTTP CONNECT, Port Forwarding Proxying on the same port. A client can then connect to the single port with both HTTP and HTTPS as the socket will automatically detected SSL traffic and decrypt it when required.</p>
 
 <p><strong>Grunt Plugin</strong></p>
