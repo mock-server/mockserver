@@ -6095,7 +6095,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         HttpRequest httpRequest = request()
             .withMethod("GET")
-            .withPath("/pets")
+            .withPath("/v2/pets")
             .withQueryStringParameter("limit", "10");
         MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
@@ -6117,7 +6117,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         HttpRequest httpRequest = request()
             .withMethod("GET")
-            .withPath("/pets/12345")
+            .withPath("/v1/pets/12345")
             .withHeader("X-Request-ID", UUID.randomUUID().toString())
             .withHeader("Other-Header", UUID.randomUUID().toString());
         MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
@@ -6140,7 +6140,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         HttpRequest httpRequest = request()
             .withMethod("GET")
-            .withPath("/pets")
+            .withPath("/v2/pets")
             .withQueryStringParameter("limit", "10");
         MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
@@ -6162,7 +6162,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         HttpRequest httpRequest = request()
             .withMethod("GET")
-            .withPath("/pets")
+            .withPath("/v1/pets")
             .withQueryStringParameter("limit", "10");
         MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
@@ -6184,7 +6184,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         HttpRequest httpRequest = request()
             .withMethod("GET")
-            .withPath("/pets")
+            .withPath("/v1/pets")
             .withQueryStringParameter("limit", "10");
         MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
@@ -6206,7 +6206,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         HttpRequest httpRequest = request()
             .withMethod("GET")
-            .withPath("/pets")
+            .withPath("/v2/pets")
             .withQueryStringParameter("limit", "10");
         MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
@@ -6228,7 +6228,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         HttpRequest httpRequest = request()
             .withMethod("GET")
-            .withPath("/pets")
+            .withPath("/v2/pets")
             .withQueryStringParameter("limit", "10");
         MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
@@ -6241,12 +6241,12 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(context.getDifferences(PATH), containsInAnyOrder(
             "  string or regex match failed expected:" + NEW_LINE +
                 NEW_LINE +
-                "    /pets/.*" + NEW_LINE +
+                "    /v1/pets/.*" + NEW_LINE +
                 NEW_LINE +
                 "   found:" + NEW_LINE +
                 NEW_LINE +
-                "    /pets" + NEW_LINE,
-            "  expected path /pets/{petId} has 2 parts but path /pets has 1 part "
+                "    /v2/pets" + NEW_LINE,
+            "  expected path /v1/pets/{petId} has 3 parts but path /v2/pets has 2 parts "
         ));
         assertThat(context.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(context.getDifferences(COOKIES), nullValue());
@@ -6269,7 +6269,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         HttpRequest httpRequest = request()
             .withMethod("GET")
-            .withPath("/pets")
+            .withPath("/v2/pets")
             .withQueryStringParameter("limit", "10");
         MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
@@ -6291,7 +6291,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         HttpRequest httpRequest = request()
             .withMethod("PUT")
-            .withPath("/pets")
+            .withPath("/v2/pets")
             .withQueryStringParameter("limit", "10");
         MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
@@ -6342,12 +6342,12 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(context.getDifferences(PATH), containsInAnyOrder(
             "  string or regex match failed expected:" + NEW_LINE +
                 NEW_LINE +
-                "    /pets/.*" + NEW_LINE +
+                "    /v1/pets/.*" + NEW_LINE +
                 NEW_LINE +
                 "   found:" + NEW_LINE +
                 NEW_LINE +
                 "    /wrong" + NEW_LINE,
-            "  expected path /pets/{petId} has 2 parts but path /wrong has 1 part "
+            "  expected path /v1/pets/{petId} has 3 parts but path /wrong has 1 part "
         ));
         assertThat(context.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(context.getDifferences(COOKIES), nullValue());
@@ -6370,7 +6370,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         HttpRequest httpRequest = request()
             .withMethod("GET")
-            .withPath("/some/path")
+            .withPath("/v1/some/path")
             .withQueryStringParameter("limit", "10");
         MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
@@ -6423,7 +6423,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         HttpRequest httpRequest = request()
             .withMethod("GET")
-            .withPath("/some/path")
+            .withPath("/v1/some/path")
             .withQueryStringParameter("limit", "not_a_number");
         MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
@@ -6475,7 +6475,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         HttpRequest httpRequest = request()
             .withMethod("GET")
-            .withPath("/some/path")
+            .withPath("/v1/some/path")
             .withQueryStringParameter("limit", "not_a_number");
         MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
@@ -6486,18 +6486,18 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(matches, is(false));
         assertThat(context.getDifferences(PATH), containsInAnyOrder("  string or regex match failed expected:" + NEW_LINE +
                 NEW_LINE +
-                "    /pets" + NEW_LINE +
+                "    /v2/pets" + NEW_LINE +
                 NEW_LINE +
                 "   found:" + NEW_LINE +
                 NEW_LINE +
-                "    /some/path" + NEW_LINE,
+                "    /v1/some/path" + NEW_LINE,
             "  string or regex match failed expected:" + NEW_LINE +
                 NEW_LINE +
-                "    /pets/.*" + NEW_LINE +
+                "    /v1/pets/.*" + NEW_LINE +
                 NEW_LINE +
                 "   found:" + NEW_LINE +
                 NEW_LINE +
-                "    /some/path" + NEW_LINE));
+                "    /v1/some/path" + NEW_LINE));
         assertThat(context.getDifferences(METHOD), containsInAnyOrder("  string or regex match failed expected:" + NEW_LINE +
                 NEW_LINE +
                 "    POST" + NEW_LINE +
@@ -6554,7 +6554,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         HttpRequest httpRequest = request()
             .withMethod("POST")
-            .withPath("/pets")
+            .withPath("/v3/pets")
             .withHeader("content-type", "application/json")
             .withBody(json("{" + NEW_LINE +
                 "    \"id\": \"invalid_id_format\", " + NEW_LINE +
@@ -6622,7 +6622,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         HttpRequest httpRequest = request()
             .withMethod("POST")
-            .withPath("/pets")
+            .withPath("/v3/pets")
             .withHeader("content-type", "application/json")
             .withBody(json("{" + NEW_LINE +
                 "    \"id\": \"invalid_id_format\", " + NEW_LINE +
@@ -6698,7 +6698,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         HttpRequest httpRequest = request()
             .withMethod("POST")
-            .withPath("/pets")
+            .withPath("/v3/pets")
             .withBody(json("{" + NEW_LINE +
                 "    \"id\": \"invalid_id_format\", " + NEW_LINE +
                 "    \"name\": \"scruffles\", " + NEW_LINE +

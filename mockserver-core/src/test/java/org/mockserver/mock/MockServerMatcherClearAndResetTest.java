@@ -132,7 +132,7 @@ public class MockServerMatcherClearAndResetTest {
             new Expectation(
                 request()
                     .withMethod("GET")
-                    .withPath("/pets")
+                    .withPath("/v2/pets")
                     .withQueryStringParameter("limit", "10")
             ),
             new Expectation(request().withPath("def")).thenRespond(response().withBody("somebody"))
@@ -161,7 +161,7 @@ public class MockServerMatcherClearAndResetTest {
             new Expectation(
                 request()
                     .withMethod("GET")
-                    .withPath("/pets")
+                    .withPath("/v2/pets")
                     .withQueryStringParameter("limit", "10")
             ),
             new Expectation(request().withPath("def")).thenRespond(response().withBody("somebody"))
@@ -187,7 +187,7 @@ public class MockServerMatcherClearAndResetTest {
             new Expectation(
                 request()
                     .withMethod("GET")
-                    .withPath("/pets")
+                    .withPath("/v2/pets")
                     .withQueryStringParameter("limit", "10")
             ),
             new Expectation(request().withPath("def")).thenRespond(response().withBody("somebody"))
@@ -216,7 +216,7 @@ public class MockServerMatcherClearAndResetTest {
             new Expectation(
                 request()
                     .withMethod("GET")
-                    .withPath("/pets")
+                    .withPath("/v2/pets")
                     .withQueryStringParameter("limit", "10")
             ),
             new Expectation(request().withPath("def")).thenRespond(response().withBody("somebody"))

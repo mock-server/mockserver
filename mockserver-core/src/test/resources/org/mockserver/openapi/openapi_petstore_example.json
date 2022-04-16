@@ -14,6 +14,11 @@
   ],
   "paths": {
     "/pets": {
+      "servers": [
+        {
+          "url": "http://petstore.swagger.io/v2"
+        }
+      ],
       "get": {
         "summary": "List all pets",
         "operationId": "listPets",
@@ -78,6 +83,16 @@
         "operationId": "createPets",
         "tags": [
           "pets"
+        ],
+        "servers": [
+          {
+            "url": "http://petstore.swagger.io/{version}",
+            "variables": {
+              "version": {
+                "default": "v3"
+              }
+            }
+          }
         ],
         "requestBody": {
           "description": "a pet",
