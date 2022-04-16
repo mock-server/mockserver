@@ -928,7 +928,7 @@ public class MockServerClient implements Stoppable {
      */
     public MockServerClient verify(Integer maximumNumberOfRequestToReturnInVerificationFailure, ExpectationId... expectationIds) throws AssertionError {
         if (expectationIds == null || expectationIds.length == 0 || expectationIds[0] == null) {
-            throw new IllegalArgumentException("verify(RequestDefinition...) requires a non-null non-empty array of RequestDefinition objects");
+            throw new IllegalArgumentException("verify(ExpectationId...) requires a non-null non-empty array of ExpectationId objects");
         }
 
         try {
@@ -1110,10 +1110,10 @@ public class MockServerClient implements Stoppable {
     @SuppressWarnings("DuplicatedCode")
     public MockServerClient verify(ExpectationId expectationId, VerificationTimes times, Integer maximumNumberOfRequestToReturnInVerificationFailure) throws AssertionError {
         if (expectationId == null) {
-            throw new IllegalArgumentException("verify(RequestDefinition, VerificationTimes) requires a non null RequestDefinition object");
+            throw new IllegalArgumentException("verify(ExpectationId, VerificationTimes) requires a non null ExpectationId object");
         }
         if (times == null) {
-            throw new IllegalArgumentException("verify(RequestDefinition, VerificationTimes) requires a non null VerificationTimes object");
+            throw new IllegalArgumentException("verify(ExpectationId, VerificationTimes) requires a non null VerificationTimes object");
         }
 
         try {
