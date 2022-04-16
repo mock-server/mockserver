@@ -132,7 +132,10 @@ public class OpenAPISerialiser {
     private final String getPriorityServerPath(List<Server>... serverLists) {
         String prefixPath = "";
         for (List<Server> serverList : serverLists) {
-            if ((prefixPath = getServerPath(serverList)).length() > 0) {
+            // Traversing from inner to outer "servers" sections - pick the first
+            // that is defined and has at least one item
+            if (serverList != null && serverList.size() > 0) {
+                prefixPath = getServerPath(serverList);
                 break;
             }
         }
