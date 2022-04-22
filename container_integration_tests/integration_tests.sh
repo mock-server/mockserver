@@ -16,9 +16,9 @@ function build_docker() {
   if [[ "${SKIP_JAVA_BUILD:-}" != "true" ]]; then
     runCommand "cd ..; ./mvnw -DskipTests=true package; cd -"
   fi
-  runCommand "cp ../mockserver-netty/target/mockserver-netty-*-SNAPSHOT-shaded.jar ../docker/mockserver-netty-shaded.jar"
+  runCommand "cp ../mockserver-netty/target/mockserver-netty-*-SNAPSHOT-jar-with-dependencies.jar ../docker/mockserver-netty-jar-with-dependencies.jar"
   runCommand "docker build --no-cache -t mockserver/mockserver:integration_testing --build-arg source=copy ../docker"
-  runCommand "rm ../docker/mockserver-netty-shaded.jar"
+  runCommand "rm ../docker/mockserver-netty-jar-with-dependencies.jar"
   runCommand "docker build -t mockserver/mockserver:integration_testing_client -f ClientDockerfile ."
 }
 

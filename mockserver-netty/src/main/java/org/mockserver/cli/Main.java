@@ -26,7 +26,7 @@ public class Main {
     static final String USAGE = "" +
         "   version: " + Version.getVersion() + NEW_LINE +
         "    " + NEW_LINE +
-        "   java -jar <path to mockserver-jetty-shaded.jar> -serverPort <port> [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>] [-logLevel <level>] " + NEW_LINE +
+        "   java -jar <path to mockserver-netty-jar-with-dependencies.jar> -serverPort <port> [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>] [-logLevel <level>] " + NEW_LINE +
         "                                                                                                                                                                 " + NEW_LINE +
         "     valid options are:                                                                                                                                          " + NEW_LINE +
         "        -serverPort <port>           The HTTP, HTTPS, SOCKS and HTTP CONNECT                                                                                     " + NEW_LINE +
@@ -56,7 +56,7 @@ public class Main {
         "                                     Logger levels: FINEST, FINE, INFO, WARNING,                                                                                 " + NEW_LINE +
         "                                     SEVERE or OFF. If not specified default is INFO                                                                             " + NEW_LINE +
         "                                                                                                                                                                 " + NEW_LINE +
-        "   i.e. java -jar ./mockserver-jetty-shaded.jar -serverPort 1080 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com -logLevel WARN                         " + NEW_LINE +
+        "   i.e. java -jar ./mockserver-netty-jar-with-dependencies.jar -serverPort 1080 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com -logLevel WARN                         " + NEW_LINE +
         "                                                                                                                                                                 " + NEW_LINE;
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(Main.class);
     private static final IntegerStringListParser INTEGER_STRING_LIST_PARSER = new IntegerStringListParser();

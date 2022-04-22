@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - error matching header or parameters using array schema
 - updated Ingress apiVersion in helm chart to non deprecated value
+- removed the jdk14 slf4j bindings from the shaded and no-dependencies jars
 
 ## [5.13.2] - 2022-04-05
 
