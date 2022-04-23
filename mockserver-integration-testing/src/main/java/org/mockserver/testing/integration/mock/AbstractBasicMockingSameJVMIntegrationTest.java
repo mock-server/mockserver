@@ -467,7 +467,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
             makeRequest(
                 request()
                     .withMethod("GET")
-                    .withPath("/pets")
+                    .withPath("/v1/pets")
                     .withQueryStringParameter("limit", "10"),
                 HEADERS_TO_IGNORE)
         );
@@ -478,7 +478,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
             makeRequest(
                 request()
                     .withMethod("POST")
-                    .withPath("/pets")
+                    .withPath("/v1/pets")
                     .withBody(json("{" + NEW_LINE +
                         "  \"id\" : 0," + NEW_LINE +
                         "  \"name\" : \"some_string_value\"," + NEW_LINE +
@@ -499,7 +499,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
             makeRequest(
                 request()
                     .withMethod("GET")
-                    .withPath("/pets/12345")
+                    .withPath("/v1/pets/12345")
                     .withHeader("x-request-id", UUIDService.getUUID()),
                 HEADERS_TO_IGNORE)
         );
@@ -574,7 +574,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
             makeRequest(
                 request()
                     .withMethod("GET")
-                    .withPath("/pets")
+                    .withPath("/v1/pets")
                     .withQueryStringParameter("limit", "10"),
                 HEADERS_TO_IGNORE)
         );
@@ -601,7 +601,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
             makeRequest(
                 request()
                     .withMethod("GET")
-                    .withPath("/pets")
+                    .withPath("/v1/pets")
                     .withQueryStringParameter("limit", "10"),
                 HEADERS_TO_IGNORE)
         );
@@ -628,7 +628,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
             makeRequest(
                 request()
                     .withMethod("PUT")
-                    .withPath("/pets")
+                    .withPath("/v1/pets")
                     .withQueryStringParameter("limit", "10"),
                 HEADERS_TO_IGNORE)
         );
@@ -652,7 +652,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
             makeRequest(
                 request()
                     .withMethod("GET")
-                    .withPath(calculatePath("/pets"))
+                    .withPath(calculatePath("/v1/pets"))
                     .withQueryStringParameter("limit", "10"),
                 HEADERS_TO_IGNORE
             )
@@ -662,7 +662,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
             makeRequest(
                 request()
                     .withMethod("POST")
-                    .withPath(calculatePath("/pets"))
+                    .withPath(calculatePath("/v1/pets"))
                     .withHeader("content-type", "application/json")
                     .withBody(json("" +
                         "{" + NEW_LINE +
@@ -698,7 +698,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
             makeRequest(
                 request()
                     .withMethod("GET")
-                    .withPath(calculatePath("/pets"))
+                    .withPath(calculatePath("/v1/pets"))
                     .withQueryStringParameter("limit", "10"),
                 HEADERS_TO_IGNORE
             )
@@ -708,7 +708,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
             makeRequest(
                 request()
                     .withMethod("POST")
-                    .withPath(calculatePath("/pets"))
+                    .withPath(calculatePath("/v1/pets"))
                     .withHeader("content-type", "application/json")
                     .withBody(json("" +
                         "{" + NEW_LINE +
@@ -766,7 +766,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
             makeRequest(
                 request()
                     .withMethod("GET")
-                    .withPath(calculatePath("/pets"))
+                    .withPath(calculatePath("/v1/pets"))
                     .withQueryStringParameter("limit", "10"),
                 HEADERS_TO_IGNORE
             )
@@ -783,7 +783,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
             makeRequest(
                 request()
                     .withMethod("POST")
-                    .withPath(calculatePath("/pets"))
+                    .withPath(calculatePath("/v1/pets"))
                     .withHeader("content-type", "application/json")
                     .withBody(json("" +
                         "{" + NEW_LINE +
@@ -802,11 +802,11 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
             mockServerClient.retrieveRecordedRequests(openAPI().withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json")),
             request()
                 .withMethod("GET")
-                .withPath("/pets")
+                .withPath("/v1/pets")
                 .withQueryStringParameter("limit", "10"),
             request()
                 .withMethod("POST")
-                .withPath("/pets")
+                .withPath("/v1/pets")
                 .withHeader("content-type", "application/json")
                 .withBody(json("" +
                     "{" + NEW_LINE +
@@ -840,7 +840,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
             makeRequest(
                 request()
                     .withMethod("GET")
-                    .withPath(calculatePath("/pets"))
+                    .withPath(calculatePath("/v1/pets"))
                     .withQueryStringParameter("limit", "10"),
                 HEADERS_TO_IGNORE
             )
@@ -857,7 +857,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
             makeRequest(
                 request()
                     .withMethod("POST")
-                    .withPath(calculatePath("/pets"))
+                    .withPath(calculatePath("/v1/pets"))
                     .withHeader("content-type", "application/json")
                     .withBody(json("" +
                         "{" + NEW_LINE +
@@ -901,7 +901,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
             makeRequest(
                 request()
                     .withMethod("GET")
-                    .withPath(calculatePath("/pets"))
+                    .withPath(calculatePath("/v1/pets"))
                     .withQueryStringParameter("limit", "10"),
                 HEADERS_TO_IGNORE
             )

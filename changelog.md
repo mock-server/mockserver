@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
--
+- support for server urls in OpenAPI specification, by adding server url path as path prefix to operations
 
 ### Changed
 -

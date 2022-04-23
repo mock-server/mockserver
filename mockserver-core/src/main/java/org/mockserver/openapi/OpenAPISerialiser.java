@@ -3,17 +3,21 @@ package org.mockserver.openapi;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
+import io.swagger.v3.oas.models.servers.Server;
+import io.swagger.v3.oas.models.servers.ServerVariables;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.OpenAPIDefinition;
 import org.mockserver.openapi.examples.JsonNodeExampleSerializer;
 import org.mockserver.serialization.ObjectMapperFactory;
+import org.mockserver.url.URLParser;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.*;
 import static org.mockserver.openapi.OpenAPIParser.buildOpenAPI;
 import static org.mockserver.openapi.OpenAPIParser.mapOperations;
 import static org.slf4j.event.Level.ERROR;
@@ -49,6 +53,33 @@ public class OpenAPISerialiser {
         return "";
     }
 
+    private static String serverUrlWithVariablesExpanded(Server server) {
+        String serverUrl = "";
+        if (server != null && server.getUrl() != null) {
+            serverUrl = server.getUrl();
+            if (server.getVariables() != null) {
+                ServerVariables variables = server.getVariables();
+                for (String variableName : variables.keySet()) {
+                    serverUrl = serverUrl.replaceAll("\\{" + variableName + "}", defaultString(variables.get(variableName).getDefault()));
+                }
+            }
+        }
+        return serverUrl;
+    }
+
+    @SafeVarargs
+    private final String firstValidServerPath(List<Server>... serverLists) {
+        for (List<Server> serverList : serverLists) {
+            if (serverList != null && serverList.size() > 0) {
+                String returnPath = URLParser.returnPath(serverUrlWithVariablesExpanded(serverList.get(0)));
+                if (isNotBlank(returnPath)) {
+                    return StringUtils.removeEnd(StringUtils.prependIfMissing(returnPath, "/"), "/");
+                }
+            }
+        }
+        return "";
+    }
+
     public Optional<Pair<String, Operation>> retrieveOperation(String specUrlOrPayload, String operationId) {
         return buildOpenAPI(specUrlOrPayload, mockServerLogger)
             .getPaths()
@@ -64,15 +95,19 @@ public class OpenAPISerialiser {
         if (openAPI != null) {
             openAPI
                 .getPaths()
-                .forEach((key, value) -> {
-                    if (key != null && value != null) {
-                        List<Pair<String, Operation>> filteredOperations = mapOperations(value)
+                .forEach((pathString, pathObject) -> {
+                    if (pathString != null && pathObject != null) {
+                        List<Pair<String, Operation>> filteredOperations = mapOperations(pathObject)
                             .stream()
                             .filter(operation -> isBlank(operationId) || operationId.equals(operation.getRight().getOperationId()))
                             .sorted(Comparator.comparing(Pair::getLeft))
                             .collect(Collectors.toList());
                         if (!filteredOperations.isEmpty()) {
-                            operations.put(key, filteredOperations);
+                            // add server path prefix to each operation path
+                            filteredOperations.forEach((methodOperationPair) -> {
+                                String pathWithServerPrefixAdded = firstValidServerPath(methodOperationPair.getValue().getServers(), pathObject.getServers(), openAPI.getServers()) + pathString;
+                                operations.computeIfAbsent(pathWithServerPrefixAdded, k -> new ArrayList<>()).add(methodOperationPair);
+                            });
                         }
                     }
                 });
