@@ -3,7 +3,7 @@
 docker stop mockserver > /dev/null 2>&1 || true
 docker rm mockserver > /dev/null 2>&1 || true
 docker pull mockserver/mockserver:snapshot
-docker run --rm --name mockserver --memory=500m -p 1080:1080 -e MOCKSERVER_LOG_LEVEL=WARN --entrypoint "java" mockserver/mockserver:snapshot "-Xmx64M" "-Dfile.encoding=UTF-8" "-cp" "/mockserver-netty-shaded.jar:/libs/*" "org.mockserver.cli.Main" &
+docker run --rm --name mockserver --memory=500m -p 1080:1080 -e MOCKSERVER_LOG_LEVEL=WARN --entrypoint "java" mockserver/mockserver:snapshot "-Xmx64M" "-Dfile.encoding=UTF-8" "-cp" "/mockserver-netty-jar-with-dependencies.jar:/libs/*" "org.mockserver.cli.Main" &
 sleep 3
 curl -v -s -X PUT "http://localhost:1080/mockserver/reset"
 

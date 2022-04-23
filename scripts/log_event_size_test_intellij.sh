@@ -24,10 +24,3 @@ for counter in $(seq 1 1 5000); do
   printf "%d,%d,%d,%d,%s\n" "$counter" "$COUNT_LOGS" "$COUNT_REQUESTS" "$EXPECTATIONS" "$MEM"
   printf "%d,%d,%d,%d,%s\n" "$counter" "$COUNT_LOGS" "$COUNT_REQUESTS" "$EXPECTATIONS" "$MEM" >> memory_with_expectation.csv
 done
-
-cleanup() {
-  docker stop mockserver || true
-  docker rm mockserver || true
-}
-
-trap cleanup EXIT
