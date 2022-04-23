@@ -142,7 +142,7 @@ public class ExpectationInitializerIntegrationTest {
                     request()
                         .withMethod("GET")
                         .withHeader(HOST.toString(), "localhost:" + mockServer.getLocalPort())
-                        .withPath("/pets")
+                        .withPath("/v1/pets")
                 ).get(10, TimeUnit.SECONDS).getBodyAsString(),
                 is("{" + NEW_LINE +
                     "  \"code\" : 0," + NEW_LINE +
