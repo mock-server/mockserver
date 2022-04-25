@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.mockserver.serialization.deserializers.body.BodyDTODeserializer;
 import org.mockserver.serialization.deserializers.body.BodyWithContentTypeDTODeserializer;
 import org.mockserver.serialization.deserializers.collections.CookiesDeserializer;
@@ -146,6 +147,9 @@ public class ObjectMapperFactory {
         swallowThrowable(() -> objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT));
         swallowThrowable(() -> objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL));
         swallowThrowable(() -> objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY));
+
+        // add support for java date time serialisation and de-serialisation
+        objectMapper.registerModule(new JavaTimeModule());
 
         return objectMapper;
     }
