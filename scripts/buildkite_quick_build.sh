@@ -19,4 +19,4 @@ fi
 echo "whoami: "
 whoami
 
-./mvnw clean install $1 -DskipAssembly=true
+./mvnw clean install $1
