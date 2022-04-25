@@ -1,5 +1,6 @@
 package org.mockserver.matchers;
 
+import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.file.FileReader;
@@ -229,7 +230,7 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertThat(httpRequestsPropertiesMatcher.getHttpRequestPropertiesMatchers().size(), equalTo(0));
         assertThat(logEntries.size(), equalTo(1));
-            assertThat(logEntries.get(0), equalTo(
+        assertThat(logEntries.get(0), equalTo(
             new LogEntry()
                 .setEpochTime(logEntries.get(0).getEpochTime())
                 .setLogLevel(ERROR)
@@ -6180,11 +6181,38 @@ public class HttpRequestsPropertiesMatcherTest {
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example_with_operation_server.yaml")
+                .withOperationId("createPets")
+        ));
+        HttpRequest httpRequest = request()
+            .withMethod("POST")
+            .withPath("/v2/pets")
+            .withHeader("content-type", "application/json")
+            .withBody(json(ImmutableMap.of(
+                "id", 10,
+                "name", "fido",
+                "tag", "friendly"
+            )));
+        MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
+
+        // when
+        boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
+
+        // then
+        thenMatchesEmptyFieldDifferences(context, matches, true);
+    }
+
+    @Test
+    public void shouldMatchSingleOperationInOpenAPIWithMethodServerYamlUrl() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example_with_operation_server.yaml")
                 .withOperationId("listPets")
         ));
         HttpRequest httpRequest = request()
             .withMethod("GET")
-            .withPath("/v2/pets")
+            .withPath("/v3/pets")
             .withQueryStringParameter("limit", "10");
         MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 

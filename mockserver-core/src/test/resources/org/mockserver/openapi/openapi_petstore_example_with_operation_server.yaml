@@ -16,6 +16,11 @@ paths:
       operationId: listPets
       tags:
         - pets
+      servers:
+        - url: http://petstore.swagger.io/{version}
+          variables:
+            version:
+              default: v3
       parameters:
         - name: limit
           in: query
