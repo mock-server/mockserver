@@ -44,7 +44,7 @@ public class HashMapMatcher extends NotMatcher<KeysAndValues<? extends KeyAndVal
             }
             result = allKeysNotted || allKeysOptional;
         } else {
-            result = new NottableStringHashMap(mockServerLogger, controlPlaneMatcher, matched.getEntries()).containsAll(matcher);
+            result = new NottableStringHashMap(mockServerLogger, controlPlaneMatcher, matched.getEntries()).containsAll(mockServerLogger, context, matcher);
         }
 
         if (!result && context != null) {

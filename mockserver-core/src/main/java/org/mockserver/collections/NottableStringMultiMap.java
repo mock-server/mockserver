@@ -49,7 +49,7 @@ public class NottableStringMultiMap extends ObjectWithReflectiveEqualsHashCodeTo
     public boolean containsAll(MockServerLogger mockServerLogger, MatchDifference context, NottableStringMultiMap subset) {
         switch (subset.keyMatchStyle) {
             case SUB_SET: {
-                boolean isSubset = containsSubset(regexStringMatcher, subset.entryList(), entryList());
+                boolean isSubset = containsSubset(mockServerLogger, context, regexStringMatcher, subset.entryList(), entryList());
                 if (!isSubset && context != null) {
                     context.addDifference(mockServerLogger, "multimap subset match failed subset:{}was not a subset of:{}", subset.entryList(), entryList());
                 }

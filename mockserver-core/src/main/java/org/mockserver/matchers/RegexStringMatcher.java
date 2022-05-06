@@ -39,17 +39,12 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
     }
 
     public boolean matches(final MatchDifference context, NottableString matched) {
-        boolean result = matcher == null || matches(matcher, matched);
-
-        if (!result && context != null) {
-            context.addDifference(mockServerLogger, "string or regex match failed expected:{}found:{}", this.matcher, matched);
-        }
-
+        boolean result = matcher == null || matches(mockServerLogger, context, matcher, matched);
         return not != result;
     }
 
     public boolean matches(NottableString matcher, NottableString matched) {
-        return matches(null, null, matcher, matched);
+        return matches(mockServerLogger, null, matcher, matched);
     }
 
     public boolean matches(MockServerLogger mockServerLogger, MatchDifference context, NottableString matcher, NottableString matched) {
@@ -119,7 +114,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                     }
                 } catch (PatternSyntaxException pse) {
                     if (controlPlaneMatcher) {
-                        if (MockServerLogger.isEnabled(DEBUG)) {
+                        if (MockServerLogger.isEnabled(DEBUG) && mockServerLogger != null) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setLogLevel(DEBUG)
@@ -132,7 +127,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
             }
         }
         if (context != null) {
-            context.addDifference(mockServerLogger, "regex string match failed expect:{}:found:{}", matcher, matched);
+            context.addDifference(mockServerLogger, "string or regex match failed expected:{}found:{}", matcher, matched);
         }
 
         return false;

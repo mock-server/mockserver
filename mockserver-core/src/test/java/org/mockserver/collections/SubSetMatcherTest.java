@@ -20,7 +20,7 @@ public class SubSetMatcherTest {
 
     @Test
     public void shouldContainSubsetForEmpty() {
-        assertTrue(containsSubset(regexStringMatcher,
+        assertTrue(containsSubset(null, null, regexStringMatcher,
             Collections.emptyList(),
             new ArrayList<>(Arrays.asList(
                 new ImmutableEntry(regexStringMatcher, "one", "one"),
@@ -32,7 +32,7 @@ public class SubSetMatcherTest {
 
     @Test
     public void shouldContainSubsetForMultiValuesAllMatching() {
-        assertTrue(containsSubset(regexStringMatcher,
+        assertTrue(containsSubset(null, null, regexStringMatcher,
             Arrays.asList(
                 new ImmutableEntry(regexStringMatcher, "one", "one_one"),
                 new ImmutableEntry(regexStringMatcher, "one", "one_two"),
@@ -50,7 +50,7 @@ public class SubSetMatcherTest {
 
     @Test
     public void shouldContainSubsetForMultiValuesSubset() {
-        assertTrue(containsSubset(regexStringMatcher,
+        assertTrue(containsSubset(null, null, regexStringMatcher,
             Arrays.asList(
                 new ImmutableEntry(regexStringMatcher, "one", "one_one"),
                 new ImmutableEntry(regexStringMatcher, "two", "two"),
@@ -67,7 +67,7 @@ public class SubSetMatcherTest {
 
     @Test
     public void shouldContainSubsetForNottedKey() {
-        assertTrue(containsSubset(regexStringMatcher,
+        assertTrue(containsSubset(null, null, regexStringMatcher,
             Arrays.asList(
                 new ImmutableEntry(regexStringMatcher, "one", "one"),
                 new ImmutableEntry(regexStringMatcher, "!two", "two"),
@@ -83,7 +83,7 @@ public class SubSetMatcherTest {
 
     @Test
     public void shouldContainSubsetForNottedValue() {
-        assertTrue(containsSubset(regexStringMatcher,
+        assertTrue(containsSubset(null, null, regexStringMatcher,
             Arrays.asList(
                 new ImmutableEntry(regexStringMatcher, "one", "one"),
                 new ImmutableEntry(regexStringMatcher, "two", "!two"),
@@ -99,7 +99,7 @@ public class SubSetMatcherTest {
 
     @Test
     public void shouldContainSubsetForNottedMultiValue() {
-        assertTrue(containsSubset(regexStringMatcher,
+        assertTrue(containsSubset(null, null, regexStringMatcher,
             Arrays.asList(
                 new ImmutableEntry(regexStringMatcher, "one", "one_one"),
                 new ImmutableEntry(regexStringMatcher, "one", "!one_two"),
@@ -117,7 +117,7 @@ public class SubSetMatcherTest {
 
     @Test
     public void shouldContainSubsetForSubsetWithPresentOptional() {
-        assertTrue(containsSubset(regexStringMatcher,
+        assertTrue(containsSubset(null, null, regexStringMatcher,
             Arrays.asList(
                 new ImmutableEntry(regexStringMatcher, "one", "one"),
                 new ImmutableEntry(regexStringMatcher, "two", "two"),
@@ -134,7 +134,7 @@ public class SubSetMatcherTest {
 
     @Test
     public void shouldContainSubsetForSubsetWithNotPresentOptional() {
-        assertTrue(containsSubset(regexStringMatcher,
+        assertTrue(containsSubset(null, null, regexStringMatcher,
             Arrays.asList(
                 new ImmutableEntry(regexStringMatcher, "one", "one"),
                 new ImmutableEntry(regexStringMatcher, "two", "two"),
@@ -150,7 +150,7 @@ public class SubSetMatcherTest {
 
     @Test
     public void shouldContainSubsetForOptionalWrongValue() {
-        assertFalse(containsSubset(regexStringMatcher,
+        assertFalse(containsSubset(null, null, regexStringMatcher,
             Arrays.asList(
                 new ImmutableEntry(regexStringMatcher, "one", "one"),
                 new ImmutableEntry(regexStringMatcher, "two", "two"),
@@ -167,7 +167,7 @@ public class SubSetMatcherTest {
 
     @Test
     public void shouldContainSubsetForOptionalWrongValueInReverse() {
-        assertFalse(containsSubset(regexStringMatcher,
+        assertFalse(containsSubset(null, null, regexStringMatcher,
             Arrays.asList(
                 new ImmutableEntry(regexStringMatcher, "one", "one"),
                 new ImmutableEntry(regexStringMatcher, "two", "two"),
@@ -184,7 +184,7 @@ public class SubSetMatcherTest {
 
     @Test
     public void shouldContainSubsetForExtraValue() {
-        assertFalse(containsSubset(regexStringMatcher,
+        assertFalse(containsSubset(null, null, regexStringMatcher,
             Arrays.asList(
                 new ImmutableEntry(regexStringMatcher, "one", "one"),
                 new ImmutableEntry(regexStringMatcher, "two", "two"),
@@ -202,7 +202,7 @@ public class SubSetMatcherTest {
 
     @Test
     public void shouldContainSubsetForWrongValue() {
-        assertFalse(containsSubset(regexStringMatcher,
+        assertFalse(containsSubset(null, null, regexStringMatcher,
             Arrays.asList(
                 new ImmutableEntry(regexStringMatcher, "one", "one"),
                 new ImmutableEntry(regexStringMatcher, "two", "two"),
@@ -219,7 +219,7 @@ public class SubSetMatcherTest {
 
     @Test
     public void shouldContainSubsetForWrongKey() {
-        assertFalse(containsSubset(regexStringMatcher,
+        assertFalse(containsSubset(null, null, regexStringMatcher,
             Arrays.asList(
                 new ImmutableEntry(regexStringMatcher, "one", "one"),
                 new ImmutableEntry(regexStringMatcher, "two", "two"),
@@ -236,7 +236,7 @@ public class SubSetMatcherTest {
 
     @Test
     public void shouldContainSubsetForSchemaKey() {
-        assertTrue(containsSubset(regexStringMatcher,
+        assertTrue(containsSubset(null, null, regexStringMatcher,
             Arrays.asList(
                 new ImmutableEntry(regexStringMatcher, "one", "one"),
                 new ImmutableEntry(regexStringMatcher, schemaString("{\"type\": \"string\", \"pattern\": \"tw.{1}\"}"), string("two"))
@@ -251,7 +251,7 @@ public class SubSetMatcherTest {
 
     @Test
     public void shouldContainSubsetForSchemaValue() {
-        assertTrue(containsSubset(regexStringMatcher,
+        assertTrue(containsSubset(null, null, regexStringMatcher,
             Arrays.asList(
                 new ImmutableEntry(regexStringMatcher, "one", "one"),
                 new ImmutableEntry(regexStringMatcher, string("two"), schemaString("{\"type\": \"string\", \"pattern\": \"tw.{1}\"}"))
@@ -266,7 +266,7 @@ public class SubSetMatcherTest {
 
     @Test
     public void shouldContainSubsetForSchemaMultiValue() {
-        assertTrue(containsSubset(regexStringMatcher,
+        assertTrue(containsSubset(null, null, regexStringMatcher,
             Arrays.asList(
                 new ImmutableEntry(regexStringMatcher, "one", "one_one"),
                 new ImmutableEntry(regexStringMatcher, string("one"), schemaString("{\"type\": \"string\", \"pattern\": \"one_t.*\"}")),
@@ -284,7 +284,7 @@ public class SubSetMatcherTest {
 
     @Test
     public void shouldContainSubsetForSchemaKeyAndMultiValue() {
-        assertTrue(containsSubset(regexStringMatcher,
+        assertTrue(containsSubset(null, null, regexStringMatcher,
             Arrays.asList(
                 new ImmutableEntry(regexStringMatcher, schemaString("{\"type\": \"string\", \"pattern\": \"o.*\"}"), string("one_one")),
                 new ImmutableEntry(regexStringMatcher, schemaString("{\"type\": \"string\", \"pattern\": \"o.*\"}"), string("one_two")),
@@ -298,7 +298,7 @@ public class SubSetMatcherTest {
                 new ImmutableEntry(regexStringMatcher, "three", "three")
             )))
         );
-        assertFalse(containsSubset(regexStringMatcher,
+        assertFalse(containsSubset(null, null, regexStringMatcher,
             Arrays.asList(
                 new ImmutableEntry(regexStringMatcher, schemaString("{\"type\": \"string\", \"pattern\": \"o.*\"}"), string("one_one")),
                 new ImmutableEntry(regexStringMatcher, schemaString("{\"type\": \"string\", \"pattern\": \"o.*\"}"), string("one_two")),

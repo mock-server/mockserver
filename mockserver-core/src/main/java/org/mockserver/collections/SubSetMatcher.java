@@ -1,5 +1,7 @@
 package org.mockserver.collections;
 
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.matchers.MatchDifference;
 import org.mockserver.matchers.RegexStringMatcher;
 import org.mockserver.model.NottableString;
 
@@ -11,11 +13,11 @@ import static org.mockserver.model.NottableString.string;
 
 public class SubSetMatcher {
 
-    static boolean containsSubset(RegexStringMatcher regexStringMatcher, List<ImmutableEntry> subset, List<ImmutableEntry> superset) {
+    static boolean containsSubset(MockServerLogger mockServerLogger, MatchDifference context, RegexStringMatcher regexStringMatcher, List<ImmutableEntry> subset, List<ImmutableEntry> superset) {
         boolean result = true;
         Set<Integer> matchingIndexes = new HashSet<>();
         for (ImmutableEntry subsetItem : subset) {
-            Set<Integer> subsetItemMatchingIndexes = matchesIndexes(regexStringMatcher, subsetItem, superset);
+            Set<Integer> subsetItemMatchingIndexes = matchesIndexes(mockServerLogger, context, regexStringMatcher, subsetItem, superset);
             boolean optionalAndNotPresent = subsetItem.isOptional() && !containsKey(regexStringMatcher, subsetItem, superset);
             boolean nottedAndPresent = nottedAndPresent(regexStringMatcher, subsetItem, superset);
             if ((!optionalAndNotPresent && subsetItemMatchingIndexes.isEmpty()) || nottedAndPresent) {
@@ -33,12 +35,12 @@ public class SubSetMatcher {
         return result;
     }
 
-    private static Set<Integer> matchesIndexes(RegexStringMatcher regexStringMatcher, ImmutableEntry matcherItem, List<ImmutableEntry> matchedList) {
+    private static Set<Integer> matchesIndexes(MockServerLogger mockServerLogger, MatchDifference context, RegexStringMatcher regexStringMatcher, ImmutableEntry matcherItem, List<ImmutableEntry> matchedList) {
         Set<Integer> matchingIndexes = new HashSet<>();
         for (int i = 0; i < matchedList.size(); i++) {
             ImmutableEntry matchedItem = matchedList.get(i);
-            boolean keyMatches = regexStringMatcher.matches(matcherItem.getKey(), matchedItem.getKey());
-            boolean valueMatches = regexStringMatcher.matches(matcherItem.getValue(), matchedItem.getValue());
+            boolean keyMatches = regexStringMatcher.matches(mockServerLogger, context, matcherItem.getKey(), matchedItem.getKey());
+            boolean valueMatches = regexStringMatcher.matches(mockServerLogger, context, matcherItem.getValue(), matchedItem.getValue());
             if (keyMatches && valueMatches) {
                 matchingIndexes.add(i);
             }

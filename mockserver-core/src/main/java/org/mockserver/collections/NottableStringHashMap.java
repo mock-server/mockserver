@@ -2,6 +2,7 @@ package org.mockserver.collections;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.matchers.MatchDifference;
 import org.mockserver.matchers.RegexStringMatcher;
 import org.mockserver.model.KeyAndValue;
 import org.mockserver.model.NottableString;
@@ -37,8 +38,8 @@ public class NottableStringHashMap {
         }
     }
 
-    public boolean containsAll(NottableStringHashMap subset) {
-        return containsSubset(regexStringMatcher, subset.entryList(), entryList());
+    public boolean containsAll(MockServerLogger mockServerLogger, MatchDifference context, NottableStringHashMap subset) {
+        return containsSubset(mockServerLogger, context, regexStringMatcher, subset.entryList(), entryList());
     }
 
     public boolean allKeysNotted() {

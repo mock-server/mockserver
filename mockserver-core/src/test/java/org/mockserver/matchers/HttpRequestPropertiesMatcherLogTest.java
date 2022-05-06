@@ -1096,6 +1096,14 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  cookies matched" + NEW_LINE +
                     "  pathParameters didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
+                    "    string or regex match failed expected:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      someValue" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "     found:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      someOtherValue" + NEW_LINE +
+                    "  " + NEW_LINE +
                     "    multimap subset match failed subset:" + NEW_LINE +
                     "  " + NEW_LINE +
                     "      [(someKey: someValue)]" + NEW_LINE +
@@ -1166,6 +1174,14 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  cookies matched" + NEW_LINE +
                     "  pathParameters matched" + NEW_LINE +
                     "  queryParameters didn't match: " + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "    string or regex match failed expected:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      someKey" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "     found:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      someOtherKey" + NEW_LINE +
                     "  " + NEW_LINE +
                     "    multimap subset match failed subset:" + NEW_LINE +
                     "  " + NEW_LINE +
@@ -1238,6 +1254,14 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  pathParameters matched" + NEW_LINE +
                     "  queryParameters didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
+                    "    string or regex match failed expected:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      someValue" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "     found:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      someOtherValue" + NEW_LINE +
+                    "  " + NEW_LINE +
                     "    multimap subset match failed subset:" + NEW_LINE +
                     "  " + NEW_LINE +
                     "      [(someKey: someValue)]" + NEW_LINE +
@@ -1306,6 +1330,14 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  path matched" + NEW_LINE +
                     "  body didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
+                    "    string or regex match failed expected:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      name" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "     found:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      name1" + NEW_LINE +
+                    "  " + NEW_LINE +
                     "    multimap subset match failed subset:" + NEW_LINE +
                     "  " + NEW_LINE +
                     "      [(name: value)]" + NEW_LINE +
@@ -1373,6 +1405,14 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  method matched" + NEW_LINE +
                     "  path matched" + NEW_LINE +
                     "  body didn't match: " + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "    string or regex match failed expected:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      va[0-9]{1}ue" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "     found:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      value1" + NEW_LINE +
                     "  " + NEW_LINE +
                     "    multimap subset match failed subset:" + NEW_LINE +
                     "  " + NEW_LINE +
@@ -2225,6 +2265,14 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  body matched" + NEW_LINE +
                     "  headers didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
+                    "    string or regex match failed expected:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      name" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "     found:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      name1" + NEW_LINE +
+                    "  " + NEW_LINE +
                     "    multimap subset match failed subset:" + NEW_LINE +
                     "  " + NEW_LINE +
                     "      [(name: value)]" + NEW_LINE +
@@ -2292,6 +2340,14 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  path matched" + NEW_LINE +
                     "  body matched" + NEW_LINE +
                     "  headers didn't match: " + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "    string or regex match failed expected:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      [0-9]{0,100}" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "     found:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      value1" + NEW_LINE +
                     "  " + NEW_LINE +
                     "    multimap subset match failed subset:" + NEW_LINE +
                     "  " + NEW_LINE +
@@ -2361,6 +2417,14 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  body matched" + NEW_LINE +
                     "  headers matched" + NEW_LINE +
                     "  cookies didn't match: " + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "    string or regex match failed expected:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      value" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "     found:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      value1" + NEW_LINE +
                     "  " + NEW_LINE +
                     "    map subset match failed expected:" + NEW_LINE +
                     "  " + NEW_LINE +
