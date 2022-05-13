@@ -60,7 +60,7 @@
         <netty.version>4.1.77.Final</netty.version>
         <httpcomponents.version>4.4.1</httpcomponents.version>
         <boucycastle.verion>1.70</boucycastle.verion>
-        <spring.version>5.3.19</spring.version>
+        <spring.version>5.3.20</spring.version>
         <spring-web.version>5.3.20</spring-web.version>
         <mockito.version>4.5.1</mockito.version>
         <hamcrest.version>2.2</hamcrest.version>
@@ -68,8 +68,8 @@
         <skipTests>false</skipTests>
         <skipAssembly>false</skipAssembly>
         <deploy.plugin.respository.url>https://oss.sonatype.org/content/repositories/snapshots/</deploy.plugin.respository.url>
-        <release.arguments />
-        <javadoc.additional.parameters />
+        <release.arguments/>
+        <javadoc.additional.parameters/>
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
     </properties>
 
@@ -854,7 +854,7 @@
                 <version>3.0.0</version>
                 <configuration>
                     <rules>
-                        <dependencyConvergence />
+                        <dependencyConvergence/>
                     </rules>
                 </configuration>
                 <executions>
