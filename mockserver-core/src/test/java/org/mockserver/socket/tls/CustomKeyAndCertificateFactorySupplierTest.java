@@ -1,5 +1,6 @@
 package org.mockserver.socket.tls;
 
+import java.util.List;
 import org.junit.Test;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
@@ -48,6 +49,11 @@ public class CustomKeyAndCertificateFactorySupplierTest {
 
             @Override
             public X509Certificate certificateAuthorityX509Certificate() {
+                return null;
+            }
+
+            @Override
+            public List<X509Certificate> certificateChain() {
                 return null;
             }
         };
