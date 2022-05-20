@@ -21,9 +21,9 @@ public class KeyAndCertificateFactoryFactory {
         return createKeyAndCertificateFactory(configuration, mockServerLogger, true);
     }
 
-    public static KeyAndCertificateFactory createKeyAndCertificateFactory(Configuration configuration, MockServerLogger mockServerLogger, boolean isServerInstance) {
+    public static KeyAndCertificateFactory createKeyAndCertificateFactory(Configuration configuration, MockServerLogger mockServerLogger, boolean forServer) {
         if (customKeyAndCertificateFactorySupplier != null) {
-            return customKeyAndCertificateFactorySupplier.apply(mockServerLogger, isServerInstance);
+            return customKeyAndCertificateFactorySupplier.apply(mockServerLogger, forServer);
         } else {
             return new BCKeyAndCertificateFactory(configuration, mockServerLogger);
         }
