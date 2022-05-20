@@ -68,7 +68,6 @@ public class BinaryHandler extends SimpleChannelInboundHandler<ByteBuf> {
         );
         final InetSocketAddress remoteAddress = getRemoteAddress(ctx);
         if (remoteAddress != null) {
-            final LocalDateTime requestStart = LocalDateTime.now();
             boolean synchronous = true;
             CompletableFuture<BinaryMessage> binaryResponseFuture = httpClient.sendRequest(binaryRequest, isSslEnabledUpstream(ctx.channel()), remoteAddress, configuration.socketConnectionTimeoutInMillis().intValue());
             scheduler.submit(binaryResponseFuture, () -> {
@@ -82,10 +81,8 @@ public class BinaryHandler extends SimpleChannelInboundHandler<ByteBuf> {
                             .setMessageFormat("returning binary response:{}from:{}for forwarded binary request:{}")
                             .setArguments(formatBytes(binaryResponse.getBytes()), remoteAddress, formatBytes(binaryRequest.getBytes()))
                     );
-                    LocalDateTime requestEnd = LocalDateTime.now();
                     binaryExchangeCallback.accept(new BinaryExchangeDescriptor(binaryRequest, binaryResponse,
-                        requestStart, requestEnd,
-                        remoteAddress, convertSocketAddress(ctx.channel().remoteAddress())));
+                        remoteAddress, ctx.channel().remoteAddress()));
                     ctx.writeAndFlush(Unpooled.copiedBuffer(binaryResponse.getBytes()));
                 } catch (Throwable throwable) {
                     if (MockServerLogger.isEnabled(Level.WARN)) {
@@ -113,14 +110,6 @@ public class BinaryHandler extends SimpleChannelInboundHandler<ByteBuf> {
             }
             ctx.writeAndFlush(Unpooled.copiedBuffer("unknown message format".getBytes(StandardCharsets.UTF_8)));
             ctx.close();
-        }
-    }
-
-    private InetSocketAddress convertSocketAddress(SocketAddress remoteAddress) {
-        if (remoteAddress instanceof InetSocketAddress) {
-            return (InetSocketAddress) remoteAddress;
-        } else {
-            return null;
         }
     }
 
