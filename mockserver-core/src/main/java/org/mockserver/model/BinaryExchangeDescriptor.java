@@ -1,24 +1,18 @@
 package org.mockserver.model;
 
-import java.net.InetSocketAddress;
-import java.time.LocalDateTime;
+import java.net.SocketAddress;
 
 public class BinaryExchangeDescriptor {
 
     private final BinaryMessage binaryRequest;
     private final BinaryMessage binaryResponse;
-    private final LocalDateTime requestStart;
-    private final LocalDateTime requestEnd;
-    private final InetSocketAddress serverAddress;
-    private final InetSocketAddress clientAddress;
+    private final SocketAddress serverAddress;
+    private final SocketAddress clientAddress;
 
     public BinaryExchangeDescriptor(BinaryMessage binaryRequest,
-        BinaryMessage binaryResponse, LocalDateTime requestStart, LocalDateTime requestEnd,
-        InetSocketAddress serverAddress, InetSocketAddress clientAddress) {
+        BinaryMessage binaryResponse, SocketAddress serverAddress, SocketAddress clientAddress) {
         this.binaryRequest = binaryRequest;
         this.binaryResponse = binaryResponse;
-        this.requestStart = requestStart;
-        this.requestEnd = requestEnd;
         this.serverAddress = serverAddress;
         this.clientAddress = clientAddress;
     }
@@ -31,19 +25,11 @@ public class BinaryExchangeDescriptor {
         return binaryResponse;
     }
 
-    public LocalDateTime getRequestStart() {
-        return requestStart;
-    }
-
-    public LocalDateTime getRequestEnd() {
-        return requestEnd;
-    }
-
-    public InetSocketAddress getServerAddress() {
+    public SocketAddress getServerAddress() {
         return serverAddress;
     }
 
-    public InetSocketAddress getClientAddress() {
+    public SocketAddress getClientAddress() {
         return clientAddress;
     }
 }
