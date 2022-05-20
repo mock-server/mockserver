@@ -55,7 +55,7 @@ public class NettySslContextFactory {
     private SslContext clientSslContext = null;
     private SslContext serverSslContext = null;
     private Function<SslContextBuilder, SslContext> instanceClientSslContextBuilderFunction = clientSslContextBuilderFunction;
-    private final boolean isServerInstance;
+    private final boolean forServer;
 
     /**
      * @deprecated use constructor that specifies configuration explicitly
@@ -64,7 +64,7 @@ public class NettySslContextFactory {
     public NettySslContextFactory(MockServerLogger mockServerLogger) {
         this.configuration = configuration();
         this.mockServerLogger = mockServerLogger;
-        this.isServerInstance = true;
+        this.forServer = true;
         keyAndCertificateFactory = createKeyAndCertificateFactory(configuration, mockServerLogger);
         System.setProperty("https.protocols", Joiner.on(",").join(TLS_PROTOCOLS));
         nettySslContextFactoryCustomizer.accept(this);
@@ -73,10 +73,10 @@ public class NettySslContextFactory {
         }
     }
 
-    public NettySslContextFactory(Configuration configuration, MockServerLogger mockServerLogger, boolean isServerInstance) {
+    public NettySslContextFactory(Configuration configuration, MockServerLogger mockServerLogger, boolean forServer) {
         this.configuration = configuration;
         this.mockServerLogger = mockServerLogger;
-        this.isServerInstance = isServerInstance;
+        this.forServer = forServer;
         keyAndCertificateFactory = createKeyAndCertificateFactory(configuration, mockServerLogger);
         System.setProperty("https.protocols", Joiner.on(",").join(TLS_PROTOCOLS));
         nettySslContextFactoryCustomizer.accept(this);
@@ -243,7 +243,7 @@ public class NettySslContextFactory {
         }
     }
 
-    public boolean isServerInstance() {
-        return isServerInstance;
+    public boolean isForServer() {
+        return forServer;
     }
 }
