@@ -66,7 +66,7 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
         this.workerGroup = new NioEventLoopGroup(configuration.nioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-eventLoop"));
-        this.actionHandler = new HttpActionHandler(configuration(), workerGroup, httpStateHandler, null, new NettySslContextFactory(this.configuration, this.mockServerLogger));
+        this.actionHandler = new HttpActionHandler(configuration(), workerGroup, httpStateHandler, null, new NettySslContextFactory(this.configuration, this.mockServerLogger, true));
     }
 
     @Override

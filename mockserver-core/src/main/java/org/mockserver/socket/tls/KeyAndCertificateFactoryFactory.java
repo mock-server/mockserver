@@ -5,6 +5,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.tls.bouncycastle.BCKeyAndCertificateFactory;
 
 import java.lang.reflect.Constructor;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -12,13 +13,17 @@ import java.util.function.Function;
  */
 public class KeyAndCertificateFactoryFactory {
 
-    private static Function<MockServerLogger, KeyAndCertificateFactory> customKeyAndCertificateFactorySupplier = null;
+    private static BiFunction<MockServerLogger, Boolean, KeyAndCertificateFactory> customKeyAndCertificateFactorySupplier = null;
 
     private static final ClassLoader CLASS_LOADER = KeyAndCertificateFactoryFactory.class.getClassLoader();
 
     public static KeyAndCertificateFactory createKeyAndCertificateFactory(Configuration configuration, MockServerLogger mockServerLogger) {
+        return createKeyAndCertificateFactory(configuration, mockServerLogger, true);
+    }
+
+    public static KeyAndCertificateFactory createKeyAndCertificateFactory(Configuration configuration, MockServerLogger mockServerLogger, boolean forServer) {
         if (customKeyAndCertificateFactorySupplier != null) {
-            return customKeyAndCertificateFactorySupplier.apply(mockServerLogger);
+            return customKeyAndCertificateFactorySupplier.apply(mockServerLogger, forServer);
         } else {
             return new BCKeyAndCertificateFactory(configuration, mockServerLogger);
         }
@@ -53,11 +58,12 @@ public class KeyAndCertificateFactoryFactory {
         return bouncyCastleProvider == null || bouncyCastleX509Holder == null;
     }
 
-    public static Function<MockServerLogger, KeyAndCertificateFactory> getCustomKeyAndCertificateFactorySupplier() {
+    public static BiFunction<MockServerLogger, Boolean, KeyAndCertificateFactory> getCustomKeyAndCertificateFactorySupplier() {
         return customKeyAndCertificateFactorySupplier;
     }
 
-    public static void setCustomKeyAndCertificateFactorySupplier(Function<MockServerLogger, KeyAndCertificateFactory> customKeyAndCertificateFactorySupplier) {
+    public static void setCustomKeyAndCertificateFactorySupplier(
+        BiFunction<MockServerLogger, Boolean, KeyAndCertificateFactory> customKeyAndCertificateFactorySupplier) {
         KeyAndCertificateFactoryFactory.customKeyAndCertificateFactorySupplier = customKeyAndCertificateFactorySupplier;
     }
 }

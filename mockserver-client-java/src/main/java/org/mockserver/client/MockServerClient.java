@@ -339,7 +339,7 @@ public class MockServerClient implements Stoppable {
 
     private NettyHttpClient getNettyHttpClient() {
         if (nettyHttpClient == null) {
-            NettySslContextFactory nettySslContextFactory = new NettySslContextFactory(configuration.toServerConfiguration(), MOCK_SERVER_LOGGER);
+            NettySslContextFactory nettySslContextFactory = new NettySslContextFactory(configuration.toServerConfiguration(), MOCK_SERVER_LOGGER, false);
             Function<SslContextBuilder, SslContext> clientSslContextBuilderFunction = NettySslContextFactory.clientSslContextBuilderFunction;
             if (configuration.controlPlaneTLSMutualAuthenticationRequired()) {
                 if (isBlank(configuration.controlPlanePrivateKeyPath()) || isBlank(configuration.controlPlaneX509CertificatePath()) || isBlank(configuration.controlPlaneTLSMutualAuthenticationCAChain())) {

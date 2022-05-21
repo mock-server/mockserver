@@ -23,6 +23,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.Configuration.configuration;
@@ -44,6 +46,8 @@ public class NettySslContextFactory {
                 throw new RuntimeException(e);
             }
         };
+    public static Consumer<NettySslContextFactory> nettySslContextFactoryCustomizer = factory -> {
+    };
 
     private final Configuration configuration;
     private final MockServerLogger mockServerLogger;
@@ -51,6 +55,7 @@ public class NettySslContextFactory {
     private SslContext clientSslContext = null;
     private SslContext serverSslContext = null;
     private Function<SslContextBuilder, SslContext> instanceClientSslContextBuilderFunction = clientSslContextBuilderFunction;
+    private final boolean forServer;
 
     /**
      * @deprecated use constructor that specifies configuration explicitly
@@ -59,18 +64,22 @@ public class NettySslContextFactory {
     public NettySslContextFactory(MockServerLogger mockServerLogger) {
         this.configuration = configuration();
         this.mockServerLogger = mockServerLogger;
+        this.forServer = true;
         keyAndCertificateFactory = createKeyAndCertificateFactory(configuration, mockServerLogger);
         System.setProperty("https.protocols", Joiner.on(",").join(TLS_PROTOCOLS));
+        nettySslContextFactoryCustomizer.accept(this);
         if (configuration.proactivelyInitialiseTLS()) {
             createServerSslContext();
         }
     }
 
-    public NettySslContextFactory(Configuration configuration, MockServerLogger mockServerLogger) {
+    public NettySslContextFactory(Configuration configuration, MockServerLogger mockServerLogger, boolean forServer) {
         this.configuration = configuration;
         this.mockServerLogger = mockServerLogger;
+        this.forServer = forServer;
         keyAndCertificateFactory = createKeyAndCertificateFactory(configuration, mockServerLogger);
         System.setProperty("https.protocols", Joiner.on(",").join(TLS_PROTOCOLS));
+        nettySslContextFactoryCustomizer.accept(this);
         if (configuration.proactivelyInitialiseTLS()) {
             createServerSslContext();
         }
@@ -233,4 +242,7 @@ public class NettySslContextFactory {
         }
     }
 
+    public boolean isForServer() {
+        return forServer;
+    }
 }
