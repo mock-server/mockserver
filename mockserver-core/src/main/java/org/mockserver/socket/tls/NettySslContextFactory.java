@@ -57,6 +57,7 @@ public class NettySslContextFactory {
     private SslContext clientSslContext = null;
     private SslContext serverSslContext = null;
     private Function<SslContextBuilder, SslContext> instanceClientSslContextBuilderFunction = clientSslContextBuilderFunction;
+    private final boolean forServer;
 
     /**
      * @deprecated use constructor that specifies configuration explicitly
@@ -65,18 +66,22 @@ public class NettySslContextFactory {
     public NettySslContextFactory(MockServerLogger mockServerLogger) {
         this.configuration = configuration();
         this.mockServerLogger = mockServerLogger;
+        this.forServer = true;
         keyAndCertificateFactory = createKeyAndCertificateFactory(configuration, mockServerLogger);
         System.setProperty("https.protocols", Joiner.on(",").join(TLS_PROTOCOLS));
+        nettySslContextFactoryCustomizer.accept(this);
         if (configuration.proactivelyInitialiseTLS()) {
             createServerSslContext();
         }
     }
 
-    public NettySslContextFactory(Configuration configuration, MockServerLogger mockServerLogger) {
+    public NettySslContextFactory(Configuration configuration, MockServerLogger mockServerLogger, boolean forServer) {
         this.configuration = configuration;
         this.mockServerLogger = mockServerLogger;
+        this.forServer = forServer;
         keyAndCertificateFactory = createKeyAndCertificateFactory(configuration, mockServerLogger);
         System.setProperty("https.protocols", Joiner.on(",").join(TLS_PROTOCOLS));
+        nettySslContextFactoryCustomizer.accept(this);
         if (configuration.proactivelyInitialiseTLS()) {
             createServerSslContext();
         }
@@ -199,8 +204,7 @@ public class NettySslContextFactory {
                 final SslContextBuilder sslContextBuilder = SslContextBuilder
                     .forServer(
                         keyAndCertificateFactory.privateKey(),
-                        keyAndCertificateFactory.x509Certificate(),
-                        keyAndCertificateFactory.certificateAuthorityX509Certificate()
+                        keyAndCertificateFactory.certificateChain()
                     )
                     .protocols(TLS_PROTOCOLS)
 //                    .sslProvider(SslProvider.JDK)
@@ -243,4 +247,7 @@ public class NettySslContextFactory {
         }
     }
 
+    public boolean isForServer() {
+        return forServer;
+    }
 }

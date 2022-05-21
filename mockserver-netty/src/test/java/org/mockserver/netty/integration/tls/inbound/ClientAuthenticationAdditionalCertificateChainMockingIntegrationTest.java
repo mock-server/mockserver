@@ -135,7 +135,8 @@ public class ClientAuthenticationAdditionalCertificateChainMockingIntegrationTes
     }
 
     private SSLContext getSslContext() {
-        KeyAndCertificateFactory keyAndCertificateFactory = KeyAndCertificateFactoryFactory.createKeyAndCertificateFactory(configuration(), new MockServerLogger());
+        KeyAndCertificateFactory keyAndCertificateFactory
+            = KeyAndCertificateFactoryFactory.createKeyAndCertificateFactory(configuration(), new MockServerLogger());
         assertThat(keyAndCertificateFactory, notNullValue());
         keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
         return new KeyStoreFactory(configuration(), new MockServerLogger())

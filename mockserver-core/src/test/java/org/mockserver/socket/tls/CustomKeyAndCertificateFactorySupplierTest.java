@@ -1,16 +1,16 @@
 package org.mockserver.socket.tls;
 
+import java.util.List;
+import java.util.function.BiFunction;
 import org.junit.Test;
 import org.junit.AfterClass;
 import java.math.BigInteger;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.socket.tls.bouncycastle.BCKeyAndCertificateFactory;
 
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
-import java.util.function.Function;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -22,7 +22,7 @@ public class CustomKeyAndCertificateFactorySupplierTest {
 
     @Test
     public void shouldReturnCustomFactory() {
-        Function<MockServerLogger, KeyAndCertificateFactory> originalCustomKeyAndCertificateFactorySupplier = KeyAndCertificateFactoryFactory.getCustomKeyAndCertificateFactorySupplier();
+        BiFunction<MockServerLogger, Boolean, KeyAndCertificateFactory> originalCustomKeyAndCertificateFactorySupplier = KeyAndCertificateFactoryFactory.getCustomKeyAndCertificateFactorySupplier();
 
         // given
         Configuration configuration = configuration();
@@ -55,11 +55,16 @@ public class CustomKeyAndCertificateFactorySupplierTest {
             public X509Certificate certificateAuthorityX509Certificate() {
                 return null;
             }
+
+            @Override
+            public List<X509Certificate> certificateChain() {
+                return null;
+            }
         };
 
         try {
             // when
-            KeyAndCertificateFactoryFactory.setCustomKeyAndCertificateFactorySupplier(logger -> factoryInstance);
+            KeyAndCertificateFactoryFactory.setCustomKeyAndCertificateFactorySupplier((logger, isServer) -> factoryInstance);
 
             // then
             assertThat(KeyAndCertificateFactoryFactory.createKeyAndCertificateFactory(configuration, mockServerLogger), equalTo(factoryInstance));
