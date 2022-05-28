@@ -5,6 +5,7 @@ import org.mockserver.keys.AsymmetricKeyPairAlgorithm;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author jamesdbloom
@@ -64,5 +65,7 @@ public interface KeyAndCertificateFactory {
     X509Certificate x509Certificate();
 
     X509Certificate certificateAuthorityX509Certificate();
+
+    List<X509Certificate> certificateChain();
 
 }
