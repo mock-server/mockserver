@@ -133,7 +133,8 @@ public class NettySslContextFactory {
                     }
                     sslContextBuilder.trustManager(jvmCAX509TrustCertificates(mockServerX509Certificates));
                 }
-                clientSslContext = instanceClientSslContextBuilderFunction.apply(sslContextBuilder);
+                clientSslContext = instanceClientSslContextBuilderFunction.apply(
+                    sslClientContextBuilderCustomizer.apply(sslContextBuilder));
                 configuration.rebuildTLSContext(false);
             } catch (Throwable throwable) {
                 throw new RuntimeException("Exception creating SSL context for client", throwable);
