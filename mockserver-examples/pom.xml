@@ -34,7 +34,7 @@
                 <!-- Conflicting versions in swagger-parser and jersey-media-json-jackson -->
                 <groupId>jakarta.validation</groupId>
                 <artifactId>jakarta.validation-api</artifactId>
-                <version>3.0.0</version>
+                <version>3.0.2</version>
             </dependency>
             <dependency>
                 <!-- Conflicting versions in httpclient and google-http-client -->
