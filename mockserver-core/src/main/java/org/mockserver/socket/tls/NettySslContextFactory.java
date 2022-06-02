@@ -24,7 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.Configuration.configuration;
@@ -48,6 +48,8 @@ public class NettySslContextFactory {
         };
     public static Consumer<NettySslContextFactory> nettySslContextFactoryCustomizer = factory -> {
     };
+    public static UnaryOperator<SslContextBuilder> sslServerContextBuilderCustomizer = UnaryOperator.identity();
+    public static UnaryOperator<SslContextBuilder> sslClientContextBuilderCustomizer = UnaryOperator.identity();
 
     private final Configuration configuration;
     private final MockServerLogger mockServerLogger;
@@ -131,7 +133,8 @@ public class NettySslContextFactory {
                     }
                     sslContextBuilder.trustManager(jvmCAX509TrustCertificates(mockServerX509Certificates));
                 }
-                clientSslContext = instanceClientSslContextBuilderFunction.apply(sslContextBuilder);
+                clientSslContext = instanceClientSslContextBuilderFunction.apply(
+                    sslClientContextBuilderCustomizer.apply(sslContextBuilder));
                 configuration.rebuildTLSContext(false);
             } catch (Throwable throwable) {
                 throw new RuntimeException("Exception creating SSL context for client", throwable);
@@ -199,7 +202,7 @@ public class NettySslContextFactory {
                             keyAndCertificateFactory.x509Certificate().getSubjectDN()
                         )
                 );
-                SslContextBuilder sslContextBuilder = SslContextBuilder
+                final SslContextBuilder sslContextBuilder = SslContextBuilder
                     .forServer(
                         keyAndCertificateFactory.privateKey(),
                         keyAndCertificateFactory.certificateChain()
@@ -213,6 +216,9 @@ public class NettySslContextFactory {
                     sslContextBuilder.trustManager(InsecureTrustManagerFactory.INSTANCE);
                 }
                 serverSslContext = sslContextBuilder.build();
+                serverSslContext = sslServerContextBuilderCustomizer
+                    .apply(sslContextBuilder)
+                    .build();
                 configuration.rebuildServerTLSContext(false);
             } catch (Throwable throwable) {
                 mockServerLogger.logEvent(
