@@ -6,7 +6,7 @@
 #
 
 # pull base image.
-FROM ubuntu:focal
+FROM ubuntu:20.04
 
 # maintainer details
 MAINTAINER James Bloom "jamesdbloom@gmail.com"
