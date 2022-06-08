@@ -37,7 +37,7 @@ spec:
         paths:
           - path: {{ $ingressPath }}
             backend:
-  {{- if semverCompare ">=1.22-0" .Capabilities.KubeVersion.GitVersion }}
+  {{- if semverCompare ">=1.22-0" $.Capabilities.KubeVersion.GitVersion }}
               service:
                 name: {{ $fullName }}
                 port:
