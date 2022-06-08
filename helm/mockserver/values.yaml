@@ -37,6 +37,7 @@ ingress:
   path: /
   hosts:
     - mockserver.local
+  tls: []
 
 podAnnotations: {}
 
