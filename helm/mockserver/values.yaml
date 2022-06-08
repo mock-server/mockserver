@@ -35,6 +35,7 @@ ingress:
   enabled: false
   annotations: {}
   path: /
+  pathType: Prefix
   hosts:
     - mockserver.local
   tls: []
