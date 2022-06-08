@@ -45,7 +45,7 @@ spec:
             pathType: {{ $ingressPathType }}
   {{- else }}
               serviceName: {{ $fullName }}
-              servicePort: {{ $serviceport }}
+              servicePort: {{ $servicePort }}
   {{- end }}
   {{- end }}
   {{- end }}
