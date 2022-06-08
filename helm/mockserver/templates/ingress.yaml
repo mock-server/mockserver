@@ -36,11 +36,16 @@ spec:
       http:
         paths:
           - path: {{ $ingressPath }}
-            pathType: {{ $ingressPathType }}
             backend:
+  {{- if semverCompare ">=1.22-0" .Capabilities.KubeVersion.GitVersion }}
               service:
                 name: {{ $fullName }}
                 port:
                   number: {{ $servicePort }}
+            pathType: {{ $ingressPathType }}
+  {{- else }}
+              serviceName: {{ $fullName }}
+              servicePort: {{ $serviceport }}
+  {{- end }}
   {{- end }}
   {{- end }}
