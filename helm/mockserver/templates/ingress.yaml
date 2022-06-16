@@ -2,6 +2,7 @@
 {{- $fullName := include "chart.fullname" . -}}
 {{- $servicePort := .Values.service.port -}}
 {{- $ingressPath := .Values.ingress.path -}}
+{{- $ingressPathType := .Values.ingress.pathType -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -36,7 +37,15 @@ spec:
         paths:
           - path: {{ $ingressPath }}
             backend:
+  {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
+              service:
+                name: {{ $fullName }}
+                port:
+                  number: {{ $servicePort }}
+            pathType: {{ $ingressPathType }}
+  {{- else }}
               serviceName: {{ $fullName }}
-              servicePort: serviceport
+              servicePort: {{ $servicePort }}
+  {{- end }}
   {{- end }}
   {{- end }}
