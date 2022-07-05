@@ -819,6 +819,23 @@ public class MockServerClientTest {
     }
 
     @Test
+    public void shouldSendResetLogsRequest() {
+        // when
+        mockServerClient.resetLogs();
+
+        // then
+        verify(mockHttpClient).sendRequest(
+            request()
+                .withHeader(HOST.toString(), "localhost:" + 1090)
+                .withMethod("PUT")
+                .withPath("/mockserver/reset/logs"),
+            20000,
+            TimeUnit.MILLISECONDS,
+            false
+        );
+    }
+
+    @Test
     public void shouldSendClearRequest() {
         // given
         HttpRequest someRequestMatcher = new HttpRequest()

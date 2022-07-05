@@ -702,7 +702,7 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
-     * Reset MockServer by clearing all expectations
+     * Reset MockServer by clearing all expectations and logs
      */
     public MockServerClient reset() {
         getMockServerEventBus().publish(EventType.RESET);
@@ -710,6 +710,19 @@ public class MockServerClient implements Stoppable {
             request()
                 .withMethod("PUT")
                 .withPath(calculatePath("reset"))
+        );
+        return clientClass.cast(this);
+    }
+
+    /**
+     * Reset MockServer's history by clearing all logs
+     */
+    public MockServerClient resetLogs() {
+        getMockServerEventBus().publish(EventType.RESET);
+        sendRequest(
+            request()
+                .withMethod("PUT")
+                .withPath(calculatePath("reset/logs"))
         );
         return clientClass.cast(this);
     }

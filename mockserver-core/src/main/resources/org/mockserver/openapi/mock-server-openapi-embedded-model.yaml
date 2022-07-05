@@ -105,6 +105,14 @@ paths:
       responses:
         '200':
           description: expectations and recorded requests cleared
+  /mockserver/reset/logs:
+    put:
+      tags:
+        - control
+      summary: clears all recorded requests
+      responses:
+        '200':
+          description: recorded requests cleared
   /mockserver/retrieve:
     put:
       tags:

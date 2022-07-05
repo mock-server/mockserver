@@ -2145,7 +2145,7 @@ public class HttpStateTest {
             );
 
             // when
-            httpState.reset();
+            httpState.reset(false);
 
             // then - retrieves correct state
             assertThat(

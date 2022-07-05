@@ -213,17 +213,20 @@ public class HttpState {
             .collect(Collectors.toList());
     }
 
-    public void reset() {
-        requestMatchers.reset();
+    public void reset(boolean onlyLogs) {
+        if (!onlyLogs) {
+            requestMatchers.reset();
+            webSocketClientRegistry.reset();
+        }
         mockServerLog.reset();
-        webSocketClientRegistry.reset();
         if (MockServerLogger.isEnabled(Level.INFO)) {
+            String message = (onlyLogs) ? "resetting all request logs" : "resetting all expectations and request logs";
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(CLEARED)
                     .setLogLevel(Level.INFO)
                     .setHttpRequest(request())
-                    .setMessageFormat("resetting all expectations and request logs")
+                    .setMessageFormat(message)
             );
         }
         new Scheduler.SchedulerThreadFactory("MockServer Memory Metrics").newThread(() -> {
@@ -646,10 +649,18 @@ public class HttpState {
                 }
                 canHandle.complete(true);
 
+            } else if (request.matches("PUT", PATH_PREFIX + "/reset/logs", "/reset/logs")) {
+
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    reset(true);
+                    responseWriter.writeResponse(request, OK);
+                }
+                canHandle.complete(true);
+
             } else if (request.matches("PUT", PATH_PREFIX + "/reset", "/reset")) {
 
                 if (controlPlaneRequestAuthenticated(request, responseWriter)) {
-                    reset();
+                    reset(false);
                     responseWriter.writeResponse(request, OK);
                 }
                 canHandle.complete(true);
