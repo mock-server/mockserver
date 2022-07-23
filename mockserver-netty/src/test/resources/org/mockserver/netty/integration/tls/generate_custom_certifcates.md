@@ -57,7 +57,7 @@ cat << EOF > ca-csr.json
 }
 EOF
 # 4. generate leaf X509 and Private Key (PKCS#1) as JSON
-cfssl gencert -ca ca.pem -ca-key ca-key.pem csr.json | jq > leaf-cert-and-key.json
+cfssl gencert -ca ca.pem -ca-key ca-key.pem ca-csr.json | jq '.' > leaf-cert-and-key.json
 # 5. separate leaf X509 from JSON into PEM
 cat leaf-cert-and-key.json | jq  -r  '.cert' > leaf-cert.pem
 # 6. separate leaf Private Key (PKCS#1) from JSON into PEM
