@@ -16,7 +16,7 @@
     <url>https://www.mock-server.com</url>
 
     <properties>
-        <jersey.version>3.0.4</jersey.version>
+        <jersey.version>3.0.5</jersey.version>
         <!-- highest 1.8 jetty version is 9.4 -->
         <jetty.version>9.4.48.v20220622</jetty.version>
         <google-http-client.version>1.42.2</google-http-client.version>
