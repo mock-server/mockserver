@@ -91,7 +91,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                         return true;
                     }
                 } catch (PatternSyntaxException pse) {
-                    if (MockServerLogger.isEnabled(DEBUG)) {
+                    if (MockServerLogger.isEnabled(DEBUG) && mockServerLogger != null) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(DEBUG)
@@ -104,7 +104,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                 try {
                     if (controlPlaneMatcher && matched.matches(matcherValue)) {
                         return true;
-                    } else if (MockServerLogger.isEnabled(DEBUG) && matched.matches(matcherValue)) {
+                    } else if (MockServerLogger.isEnabled(DEBUG) && matched.matches(matcherValue) && mockServerLogger != null) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(DEBUG)
