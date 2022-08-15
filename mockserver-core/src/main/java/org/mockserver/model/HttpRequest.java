@@ -1111,7 +1111,9 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
             .withCookies(cookies)
             .withKeepAlive(keepAlive)
             .withSecure(secure)
-            .withSocketAddress(socketAddress);
+            .withClientCertificateChain(clientCertificateChain)
+            .withSocketAddress(socketAddress)
+            .withRemoteAddress(remoteAddress);
     }
 
     @SuppressWarnings("MethodDoesntCallSuperMethod")
