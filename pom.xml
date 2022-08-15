@@ -59,7 +59,7 @@
         <velocity.version>2.3</velocity.version>
         <netty.version>4.1.79.Final</netty.version>
         <httpcomponents.version>4.4.1</httpcomponents.version>
-        <boucycastle.verion>1.70</boucycastle.verion>
+        <bouncycastle.version>1.71</bouncycastle.version>
         <spring.version>5.3.21</spring.version>
         <spring-web.version>5.3.22</spring-web.version>
         <mockito.version>4.6.1</mockito.version>
@@ -262,13 +262,13 @@
             <!-- SSL X509 -->
             <dependency>
                 <groupId>org.bouncycastle</groupId>
-                <artifactId>bcprov-jdk15on</artifactId>
-                <version>${boucycastle.verion}</version>
+                <artifactId>bcprov-jdk18on</artifactId>
+                <version>${bouncycastle.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
-                <artifactId>bcpkix-jdk15on</artifactId>
-                <version>${boucycastle.verion}</version>
+                <artifactId>bcpkix-jdk18on</artifactId>
+                <version>${bouncycastle.version}</version>
             </dependency>
 
             <!-- JWT -->
