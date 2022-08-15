@@ -89,6 +89,15 @@ paths:
           description: expectations and recorded requests cleared
         '400':
           description: incorrect request format
+      parameters:
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: ["all", "log", "expectations"]
+            default: "all"
+          required: false
+          description: specifies the type of information to clear, default if not specified is "all", supported values are "all", "log", "expectations"
       requestBody:
         content:
           application/json:
@@ -116,12 +125,14 @@ paths:
           schema:
             type: string
             enum: [ "java", "json", "log_entries" ]
+          required: false
           description: changes response format, default if not specificed is "json", supported values are "java", "json", "log_entries"
         - in: query
           name: type
           schema:
             type: string
             enum: [ "logs", "requests", "request_responses", "recorded_expectations", "active_expectations" ]
+          required: false
           description: specifies the type of object that is retrieve, default if not specified is "requests", supported values are "logs", "requests", "recorded_expectations", "active_expectations"
       responses:
         '200':

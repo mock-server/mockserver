@@ -266,7 +266,7 @@ curl -X PUT "http://localhost:1080/mockserver/clear" -d '{
 #### Clear Requests And Logs With Request Properties Matcher
 
 ```bash
-curl -X PUT "http://localhost:1080/mockserver/clear?type=LOGS" -d '{
+curl -X PUT "http://localhost:1080/mockserver/clear?type=log" -d '{
     "path": "/some/path"
 }'
 ```
@@ -274,7 +274,7 @@ curl -X PUT "http://localhost:1080/mockserver/clear?type=LOGS" -d '{
 #### Clear Requests And Logs With Open API Request Properties Matcher
 
 ```bash
-curl -X PUT "http://localhost:1080/mockserver/clear?type=LOGS" -d '{
+curl -X PUT "http://localhost:1080/mockserver/clear?type=log" -d '{
     "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
     "operationId": "showPetById"
 }'
