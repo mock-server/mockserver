@@ -38,7 +38,7 @@ public class HttpResponseObjectCallbackActionHandler {
     }
 
     private void handleLocally(HttpActionHandler actionHandler, HttpObjectCallback httpObjectCallback, HttpRequest request, ResponseWriter responseWriter, boolean synchronous, String clientId) {
-        if (MockServerLogger.isEnabled(TRACE)) {
+        if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(TRACE)
@@ -51,7 +51,7 @@ public class HttpResponseObjectCallbackActionHandler {
             HttpResponse callbackResponse = LocalCallbackRegistry.retrieveResponseCallback(clientId).handle(request);
             actionHandler.writeResponseActionResponse(callbackResponse, responseWriter, request, httpObjectCallback, synchronous);
         } catch (Throwable throwable) {
-            if (MockServerLogger.isEnabled(WARN)) {
+            if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(WARN)
@@ -68,7 +68,7 @@ public class HttpResponseObjectCallbackActionHandler {
     private void handleViaWebSocket(HttpActionHandler actionHandler, HttpObjectCallback httpObjectCallback, HttpRequest request, ResponseWriter responseWriter, boolean synchronous, Runnable expectationPostProcessor, String clientId) {
         final String webSocketCorrelationId = UUIDService.getUUID();
         webSocketClientRegistry.registerResponseCallbackHandler(webSocketCorrelationId, response -> {
-            if (MockServerLogger.isEnabled(TRACE)) {
+            if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(TRACE)
@@ -84,7 +84,7 @@ public class HttpResponseObjectCallbackActionHandler {
             actionHandler.writeResponseActionResponse(response.removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME), responseWriter, request, httpObjectCallback, synchronous);
         });
         if (!webSocketClientRegistry.sendClientMessage(clientId, request.clone().withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId), null)) {
-            if (MockServerLogger.isEnabled(WARN)) {
+            if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(WARN)
@@ -94,7 +94,7 @@ public class HttpResponseObjectCallbackActionHandler {
                 );
             }
             actionHandler.writeResponseActionResponse(notFoundResponse(), responseWriter, request, httpObjectCallback, synchronous);
-        } else if (MockServerLogger.isEnabled(TRACE)) {
+        } else if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(TRACE)

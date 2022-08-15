@@ -44,7 +44,7 @@ public class XPathMatcher extends BodyMatcher<String> {
             try {
                 xPathEvaluator = new XPathEvaluator(matcher, namespacePrefixes);
             } catch (Throwable throwable) {
-                if (MockServerLogger.isEnabled(DEBUG)) {
+                if (MockServerLogger.isEnabled(DEBUG) && mockServerLogger != null) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(DEBUG)

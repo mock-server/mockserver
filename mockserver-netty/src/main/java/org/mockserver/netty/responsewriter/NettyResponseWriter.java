@@ -70,7 +70,7 @@ public class NettyResponseWriter extends ResponseWriter {
                             .close()
                             .addListener(closeFuture -> {
                                 if (disconnectFuture.isSuccess()) {
-                                    if (MockServerLogger.isEnabled(TRACE)) {
+                                    if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
                                         mockServerLogger
                                             .logEvent(new LogEntry()
                                                 .setLogLevel(TRACE)
@@ -78,7 +78,7 @@ public class NettyResponseWriter extends ResponseWriter {
                                             );
                                     }
                                 } else {
-                                    if (MockServerLogger.isEnabled(WARN)) {
+                                    if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
                                         mockServerLogger
                                             .logEvent(new LogEntry()
                                                 .setLogLevel(WARN)
@@ -88,7 +88,7 @@ public class NettyResponseWriter extends ResponseWriter {
                                     }
                                 }
                             });
-                    } else if (MockServerLogger.isEnabled(WARN)) {
+                    } else if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
                         mockServerLogger
                             .logEvent(new LogEntry()
                                 .setLogLevel(WARN)

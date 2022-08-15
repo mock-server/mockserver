@@ -58,7 +58,7 @@ public abstract class LifeCycle implements Stoppable {
     public CompletableFuture<String> stopAsync() {
         if (!stopFuture.isDone() && stopping.compareAndSet(false, true)) {
             final String message = "stopped for port" + (getLocalPorts().size() == 1 ? ": " + getLocalPorts().get(0) : "s: " + getLocalPorts());
-            if (MockServerLogger.isEnabled(INFO)) {
+            if (MockServerLogger.isEnabled(INFO) && mockServerLogger != null) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(SERVER_CONFIGURATION)
@@ -110,7 +110,7 @@ public abstract class LifeCycle implements Stoppable {
         try {
             stopAsync().get(10, SECONDS);
         } catch (Throwable throwable) {
-            if (MockServerLogger.isEnabled(DEBUG)) {
+            if (MockServerLogger.isEnabled(DEBUG) && mockServerLogger != null) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(DEBUG)
@@ -159,7 +159,7 @@ public abstract class LifeCycle implements Stoppable {
             try {
                 return ((InetSocketAddress) channelOpened.get(15, SECONDS).localAddress()).getPort();
             } catch (Throwable throwable) {
-                if (MockServerLogger.isEnabled(WARN)) {
+                if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(WARN)
@@ -178,7 +178,7 @@ public abstract class LifeCycle implements Stoppable {
             try {
                 ports.add(((InetSocketAddress) channelOpened.get(3, SECONDS).localAddress()).getPort());
             } catch (Exception e) {
-                if (MockServerLogger.isEnabled(DEBUG)) {
+                if (MockServerLogger.isEnabled(DEBUG) && mockServerLogger != null) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(DEBUG)
@@ -237,7 +237,7 @@ public abstract class LifeCycle implements Stoppable {
     protected void startedServer(List<Integer> ports) {
         final String message = "started on port" + (ports.size() == 1 ? ": " + ports.get(0) : "s: " + ports);
         setPort(ports);
-        if (MockServerLogger.isEnabled(INFO)) {
+        if (MockServerLogger.isEnabled(INFO) && mockServerLogger != null) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(SERVER_CONFIGURATION)

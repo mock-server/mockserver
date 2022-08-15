@@ -61,7 +61,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
             httpRequestMatcher -> httpRequestMatcher.getExpectation() != null ? httpRequestMatcher.getExpectation().getId() : ""
         );
         expectationRequestDefinitions = new CircularHashMap<>(configuration.maxExpectations());
-        if (MockServerLogger.isEnabled(TRACE)) {
+        if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(TRACE)

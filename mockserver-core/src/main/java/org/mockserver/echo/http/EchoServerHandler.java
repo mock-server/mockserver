@@ -81,7 +81,7 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 httpResponse.replaceHeader(CONTENT_LENGTH.toString(), String.valueOf(length));
             }
 
-            if (MockServerLogger.isEnabled(INFO)) {
+            if (MockServerLogger.isEnabled(INFO) && mockServerLogger != null) {
                 mockServerEventLog.add(
                     new LogEntry()
                         .setLogLevel(INFO)

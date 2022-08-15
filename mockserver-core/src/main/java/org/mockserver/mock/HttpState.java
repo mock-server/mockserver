@@ -129,7 +129,7 @@ public class HttpState {
             }
         }
         this.memoryMonitoring = new MemoryMonitoring(configuration, this.mockServerLog, this.requestMatchers);
-        if (MockServerLogger.isEnabled(TRACE)) {
+        if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(TRACE)

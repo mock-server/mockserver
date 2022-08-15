@@ -47,7 +47,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
     }
 
     private void handleLocally(HttpActionHandler actionHandler, HttpObjectCallback httpObjectCallback, HttpRequest request, ResponseWriter responseWriter, boolean synchronous, String clientId) {
-        if (MockServerLogger.isEnabled(TRACE)) {
+        if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(TRACE)
@@ -72,7 +72,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                             HttpResponse callbackResponse = expectationForwardAndResponseCallback.handle(callbackRequest, httpResponse);
                             actionHandler.writeForwardActionResponse(callbackResponse, responseWriter, request, httpObjectCallback);
                         } catch (Throwable throwable) {
-                            if (MockServerLogger.isEnabled(WARN)) {
+                            if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
                                 mockServerLogger.logEvent(
                                     new LogEntry()
                                         .setLogLevel(WARN)
@@ -92,7 +92,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                 actionHandler.writeForwardActionResponse(responseFuture, responseWriter, request, httpObjectCallback, synchronous);
             }
         } catch (Throwable throwable) {
-            if (MockServerLogger.isEnabled(WARN)) {
+            if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(WARN)
@@ -111,7 +111,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
         webSocketClientRegistry.registerForwardCallbackHandler(webSocketCorrelationId, new WebSocketRequestCallback() {
             @Override
             public void handle(final HttpRequest callbackRequest) {
-                if (MockServerLogger.isEnabled(TRACE)) {
+                if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(TRACE)
@@ -125,7 +125,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                     null,
                     null
                 );
-                if (MockServerLogger.isEnabled(TRACE)) {
+                if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(TRACE)
@@ -147,7 +147,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
 
             @Override
             public void handleError(HttpResponse httpResponse) {
-                if (MockServerLogger.isEnabled(DEBUG)) {
+                if (MockServerLogger.isEnabled(DEBUG) && mockServerLogger != null) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(DEBUG)
@@ -160,7 +160,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
             }
         });
         if (!webSocketClientRegistry.sendClientMessage(clientId, request.clone().withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId), null)) {
-            if (MockServerLogger.isEnabled(WARN)) {
+            if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(WARN)
@@ -170,7 +170,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                 );
             }
             actionHandler.writeForwardActionResponse(notFoundFuture(request), responseWriter, request, httpObjectCallback, synchronous);
-        } else if (MockServerLogger.isEnabled(TRACE)) {
+        } else if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(TRACE)
@@ -187,7 +187,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                 // register callback for overridden response
                 CompletableFuture<HttpResponse> httpResponseCompletableFuture = new CompletableFuture<>();
                 webSocketClientRegistry.registerResponseCallbackHandler(webSocketCorrelationId, overriddenResponse -> {
-                    if (MockServerLogger.isEnabled(TRACE)) {
+                    if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(TRACE)
@@ -209,7 +209,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                 });
                 // send websocket message to override response
                 if (!webSocketClientRegistry.sendClientMessage(clientId, request.clone().withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId), httpResponse)) {
-                    if (MockServerLogger.isEnabled(WARN)) {
+                    if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(WARN)
@@ -219,7 +219,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                         );
                     }
                     actionHandler.writeForwardActionResponse(notFoundFuture(request), responseWriter, request, httpObjectCallback, synchronous);
-                } else if (MockServerLogger.isEnabled(TRACE)) {
+                } else if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(TRACE)

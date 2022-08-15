@@ -94,7 +94,7 @@ public class SniHandler extends AbstractSniHandler<SslContext> {
                         ctx.channel().attr(UPSTREAM_CLIENT_CERTIFICATES).set(peerCertificates);
                         return peerCertificates;
                     } catch (SSLPeerUnverifiedException ignore) {
-                        if (MockServerLogger.isEnabled(TRACE)) {
+                        if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setLogLevel(Level.TRACE)

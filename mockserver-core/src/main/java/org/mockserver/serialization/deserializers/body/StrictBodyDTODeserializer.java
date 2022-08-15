@@ -217,7 +217,7 @@ public class StrictBodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         }
                         namespacePrefixes = objectMapper.readValue(objectWriter.writeValueAsString(entry.getValue()), new TypeReference<Map<String, String>>(){});
                     }
-                  
+
                 }
             }
             if (type != null) {

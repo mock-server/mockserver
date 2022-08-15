@@ -116,7 +116,7 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                 logEntries.forEach(mockServerLogger::logEvent);
             }
             this.hashCode = 0;
-            if (MockServerLogger.isEnabled(TRACE)) {
+            if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(TRACE)

@@ -50,7 +50,7 @@ public class WebSocketClientRegistry {
     public void receivedTextWebSocketFrame(TextWebSocketFrame textWebSocketFrame) {
         try {
             Object deserializedMessage = webSocketMessageSerializer.deserialize(textWebSocketFrame.text());
-            if (MockServerLogger.isEnabled(TRACE)) {
+            if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(TRACE)
@@ -111,7 +111,7 @@ public class WebSocketClientRegistry {
         }
         clientRegistry.put(clientId, ctx.channel());
         metrics.set(WEBSOCKET_CALLBACK_CLIENT_COUNT, clientRegistry.size());
-        if (MockServerLogger.isEnabled(TRACE)) {
+        if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(TRACE)
@@ -127,7 +127,7 @@ public class WebSocketClientRegistry {
             removeChannel.close();
         }
         metrics.set(WEBSOCKET_CALLBACK_CLIENT_COUNT, clientRegistry.size());
-        if (MockServerLogger.isEnabled(TRACE)) {
+        if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(TRACE)
@@ -139,7 +139,7 @@ public class WebSocketClientRegistry {
     public void registerResponseCallbackHandler(String webSocketCorrelationId, WebSocketResponseCallback expectationResponseCallback) {
         responseCallbackRegistry.put(webSocketCorrelationId, expectationResponseCallback);
         metrics.set(WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT, responseCallbackRegistry.size());
-        if (MockServerLogger.isEnabled(TRACE)) {
+        if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(TRACE)
@@ -151,7 +151,7 @@ public class WebSocketClientRegistry {
     public void unregisterResponseCallbackHandler(String webSocketCorrelationId) {
         responseCallbackRegistry.remove(webSocketCorrelationId);
         metrics.set(WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT, responseCallbackRegistry.size());
-        if (MockServerLogger.isEnabled(TRACE)) {
+        if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(TRACE)
@@ -163,7 +163,7 @@ public class WebSocketClientRegistry {
     public void registerForwardCallbackHandler(String webSocketCorrelationId, WebSocketRequestCallback expectationForwardCallback) {
         forwardCallbackRegistry.put(webSocketCorrelationId, expectationForwardCallback);
         metrics.set(WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT, forwardCallbackRegistry.size());
-        if (MockServerLogger.isEnabled(TRACE)) {
+        if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(TRACE)
@@ -175,7 +175,7 @@ public class WebSocketClientRegistry {
     public void unregisterForwardCallbackHandler(String webSocketCorrelationId) {
         forwardCallbackRegistry.remove(webSocketCorrelationId);
         metrics.set(WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT, forwardCallbackRegistry.size());
-        if (MockServerLogger.isEnabled(TRACE)) {
+        if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(TRACE)
@@ -188,7 +188,7 @@ public class WebSocketClientRegistry {
         try {
             if (clientRegistry.containsKey(clientId)) {
                 if (httpResponse == null) {
-                    if (MockServerLogger.isEnabled(TRACE)) {
+                    if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(TRACE)
@@ -202,7 +202,7 @@ public class WebSocketClientRegistry {
                     HttpRequestAndHttpResponse httpRequestAndHttpResponse = new HttpRequestAndHttpResponse()
                         .withHttpRequest(httpRequest)
                         .withHttpResponse(httpResponse);
-                    if (MockServerLogger.isEnabled(TRACE)) {
+                    if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(TRACE)
@@ -215,7 +215,7 @@ public class WebSocketClientRegistry {
                 }
                 return true;
             } else {
-                if (MockServerLogger.isEnabled(WARN)) {
+                if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(WARN)

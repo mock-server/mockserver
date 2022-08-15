@@ -60,7 +60,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        if (MockServerLogger.isEnabled(TRACE)) {
+        if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(TRACE)
@@ -72,7 +72,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
     @Override
     public void channelRead0(ChannelHandlerContext ctx, Object msg) {
         Channel ch = ctx.channel();
-        if (MockServerLogger.isEnabled(TRACE)) {
+        if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(TRACE)
@@ -86,7 +86,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
             if (httpResponse.headers().contains(UPGRADE, WEBSOCKET, true) && !handshaker.isHandshakeComplete()) {
                 handshaker.finishHandshake(ch, httpResponse);
                 registrationFuture.complete(clientId);
-                if (MockServerLogger.isEnabled(TRACE)) {
+                if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(TRACE)
@@ -100,7 +100,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
             } else if (httpResponse.status().equals(HttpResponseStatus.NOT_IMPLEMENTED)) {
                 String message = readRequestBody(httpResponse);
                 registrationFuture.completeExceptionally(new WebSocketException(message));
-                if (MockServerLogger.isEnabled(WARN)) {
+                if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(WARN)
@@ -108,7 +108,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
                     );
                 }
             } else if (httpResponse.status().equals(HttpResponseStatus.RESET_CONTENT)) {
-                if (MockServerLogger.isEnabled(TRACE)) {
+                if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(TRACE)
@@ -118,7 +118,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
                 registrationFuture.complete(clientId);
             } else {
                 registrationFuture.completeExceptionally(new WebSocketException("handshake failure unsupported message received " + new FullHttpResponseToMockServerHttpResponse(mockServerLogger).mapFullHttpResponseToMockServerResponse(httpResponse)));
-                if (MockServerLogger.isEnabled(WARN)) {
+                if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(WARN)
@@ -134,7 +134,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
             } else if (frame instanceof PingWebSocketFrame) {
                 ctx.write(new PongWebSocketFrame(frame.content().retain()));
             } else if (frame instanceof CloseWebSocketFrame) {
-                if (MockServerLogger.isEnabled(TRACE)) {
+                if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(TRACE)
@@ -142,7 +142,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
                     );
                 }
                 ch.close();
-            } else if (MockServerLogger.isEnabled(WARN)) {
+            } else if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(WARN)
@@ -150,7 +150,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
                         .setArguments(msg)
                 );
             }
-        } else if (MockServerLogger.isEnabled(WARN)) {
+        } else if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(WARN)

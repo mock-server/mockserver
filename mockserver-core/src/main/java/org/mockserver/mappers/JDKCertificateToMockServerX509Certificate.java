@@ -38,7 +38,7 @@ public class JDKCertificateToMockServerX509Certificate {
                                     .withCertificate(certificate)
                             );
                         } catch (Throwable throwable) {
-                            if (MockServerLogger.isEnabled(INFO)) {
+                            if (MockServerLogger.isEnabled(INFO) && mockServerLogger != null) {
                                 mockServerLogger.logEvent(
                                     new LogEntry()
                                         .setLogLevel(INFO)

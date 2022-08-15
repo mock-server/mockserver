@@ -205,7 +205,7 @@ public class HttpActionHandler {
 
             if (request.getHeaders() != null && request.getHeaders().containsEntry(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue())) {
 
-                if (MockServerLogger.isEnabled(TRACE)) {
+                if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(TRACE)
@@ -283,7 +283,7 @@ public class HttpActionHandler {
                                 returnNotFound(responseWriter, request, sce.getMessage());
                             } catch (Throwable throwable) {
                                 if (potentiallyHttpProxy && connectionException(throwable)) {
-                                    if (MockServerLogger.isEnabled(TRACE)) {
+                                    if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
                                         mockServerLogger.logEvent(
                                             new LogEntry()
                                                 .setLogLevel(TRACE)
@@ -428,7 +428,7 @@ public class HttpActionHandler {
 
     void handleExceptionDuringForwardingRequest(Action action, HttpRequest request, ResponseWriter responseWriter, Throwable exception) {
         if (connectionException(exception)) {
-            if (MockServerLogger.isEnabled(TRACE)) {
+            if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(TRACE)
@@ -468,7 +468,7 @@ public class HttpActionHandler {
         HttpResponse response = notFoundResponse();
         if (request.getHeaders() != null && request.getHeaders().containsEntry(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue())) {
             response.withHeader(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue());
-            if (MockServerLogger.isEnabled(TRACE)) {
+            if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(TRACE)

@@ -36,7 +36,7 @@ public class ExceptionHandling {
         try {
             runnable.run();
         } catch (Throwable throwable) {
-            if (MockServerLogger.isEnabled(WARN)) {
+            if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(WARN)

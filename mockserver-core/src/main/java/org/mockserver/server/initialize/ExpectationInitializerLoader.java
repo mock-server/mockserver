@@ -68,7 +68,7 @@ public class ExpectationInitializerLoader {
         String initializationClass = configuration.initializationClass();
         try {
             if (isNotBlank(initializationClass)) {
-                if (MockServerLogger.isEnabled(INFO)) {
+                if (MockServerLogger.isEnabled(INFO) && mockServerLogger != null) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setType(SERVER_CONFIGURATION)
@@ -87,7 +87,7 @@ public class ExpectationInitializerLoader {
                 }
             }
             if (expectations.length > 0) {
-                if (MockServerLogger.isEnabled(TRACE)) {
+                if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(TRACE)
@@ -98,7 +98,7 @@ public class ExpectationInitializerLoader {
                 requestMatchers.update(expectations, new MockServerMatcherNotifier.Cause(initializationClass, Cause.Type.CLASS_INITIALISER));
             }
         } catch (Throwable throwable) {
-            if (MockServerLogger.isEnabled(WARN)) {
+            if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(SERVER_CONFIGURATION)
@@ -150,7 +150,7 @@ public class ExpectationInitializerLoader {
                             });
                         }
                     } catch (Throwable throwable) {
-                        if (MockServerLogger.isEnabled(WARN)) {
+                        if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setType(SERVER_CONFIGURATION)
@@ -162,7 +162,7 @@ public class ExpectationInitializerLoader {
                         }
                     }
                 }
-                if (MockServerLogger.isEnabled(TRACE)) {
+                if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(TRACE)

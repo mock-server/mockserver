@@ -346,7 +346,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
             );
         } else if (sslHandshakeException(throwable)) {
             if (throwable.getMessage().contains("certificate_unknown")) {
-                if (MockServerLogger.isEnabled(WARN)) {
+                if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.WARN)

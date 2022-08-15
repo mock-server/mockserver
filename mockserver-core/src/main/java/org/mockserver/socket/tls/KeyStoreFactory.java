@@ -142,7 +142,7 @@ public class KeyStoreFactory {
 
     private SSLContext getSSLContextInstance() throws NoSuchAlgorithmException {
         try {
-            if (MockServerLogger.isEnabled(DEBUG)) {
+            if (MockServerLogger.isEnabled(DEBUG) && mockServerLogger != null) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(SERVER_CONFIGURATION)
@@ -153,7 +153,7 @@ public class KeyStoreFactory {
             }
             return SSLContext.getInstance(SSL_CONTEXT_PROTOCOL);
         } catch (NoSuchAlgorithmException nsae) {
-            if (MockServerLogger.isEnabled(WARN)) {
+            if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(WARN)
@@ -197,7 +197,7 @@ public class KeyStoreFactory {
             String keyStoreFileAbsolutePath = new File(keyStoreFileName).getAbsolutePath();
             try (FileOutputStream fileOutputStream = new FileOutputStream(keyStoreFileAbsolutePath)) {
                 keyStore.store(fileOutputStream, keyStorePassword);
-                if (MockServerLogger.isEnabled(TRACE)) {
+                if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(TRACE)
