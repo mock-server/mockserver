@@ -44,7 +44,7 @@ public class MockServerHttpResponseToHttpServletResponseEncoderCookieHeaderTest 
         assertEquals(HttpStatusCode.OK_200.code(), httpServletResponse.getStatus());
         assertThat(httpServletResponse.getHeaders("Set-Cookie"), containsInAnyOrder(
             "cookieName1=\"\"; Path=/; Max-Age=15552000; Expires=Sat, 19 Mar 2016 18:43:26 GMT",
-            "cookieName2=\"cookie==Value2\"; Path=/; Max-Age=15552000; Expires=Sat, 19 Mar 2016 18:43:26 GMT",
+            "cookieName2=\"cookie==Value2\"; Path=/; Max-Age=15552000; Expires=Sat, 19 Mar 2016 18:43:26 GMT; Comment=\"Anonymous cookie for site\"",
             "cookieName3=cookie==Value3"
         ));
         assertThat(httpServletResponse.getHeaderNames(), contains("Set-Cookie"));
