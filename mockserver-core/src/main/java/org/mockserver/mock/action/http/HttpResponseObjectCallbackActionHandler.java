@@ -19,6 +19,7 @@ import static org.slf4j.event.Level.WARN;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("FieldMayBeFinal")
 public class HttpResponseObjectCallbackActionHandler {
     private WebSocketClientRegistry webSocketClientRegistry;
     private final MockServerLogger mockServerLogger;
