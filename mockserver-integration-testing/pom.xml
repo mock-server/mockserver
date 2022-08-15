@@ -195,7 +195,10 @@
                                     <pattern>com.github</pattern>
                                     <shadedPattern>shaded_package.com.github</shadedPattern>
                                 </relocation>
-                                <!-- deliberately skipped com.google -->
+                                <relocation>
+                                    <pattern>com.google</pattern>
+                                    <shadedPattern>shaded_package.com.google</shadedPattern>
+                                </relocation>
                                 <relocation>
                                     <pattern>com.jayway</pattern>
                                     <shadedPattern>shaded_package.com.jayway</shadedPattern>
