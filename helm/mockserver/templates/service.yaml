@@ -1,16 +1,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ template "chart.fullname" . }}
+  name: {{ template "release.name" . }}
 {{- if .Values.service.annotations }}
   annotations:
 {{ toYaml .Values.service.annotations | indent 4 }}
 {{- end }}
   labels:
     app: {{ template "chart.name" . }}
-    chart: {{ template "chart.name_version" . }}
     release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
+    chart: {{ template "chart.name_version" . }}
 spec:
   type: {{ .Values.service.type }}
 {{- if .Values.service.clusterIP }}

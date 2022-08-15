@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - improved documentation of clear functionality and type parameter and added examples
 
 ### Changed
--
+- used helm release name in K8s resources to avoid conflicts for multiple deployments in same namespace (without extra values being set)
 
 ### Fixed
 - error matching header or parameters using array schema

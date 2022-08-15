@@ -1,13 +1,12 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "chart.name" . }}
+  name: {{ template "release.name" . }}
   namespace: {{ .Release.Namespace }}
   labels:
     app: {{ template "chart.name" . }}
-    chart: {{ template "chart.name_version" . }}
     release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
+    chart: {{ template "chart.name_version" . }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
@@ -21,14 +20,14 @@ spec:
       annotations:
 {{ toYaml .Values.podAnnotations | indent 8 }}
 {{- end }}
-      name: {{ template "chart.name" . }}
+      name: {{ template "release.name" . }}
       labels:
         app: {{ template "chart.name" . }}
         release: {{ .Release.Name }}
     spec:
       serviceAccountName: {{ .Values.app.serviceAccountName }}
       containers:
-        - name: {{ template "chart.name" . }}
+        - name: {{ template "release.name" . }}
           image: {{ if .Values.image.repositoryNameAndTag }}{{ .Values.image.repositoryNameAndTag }}{{- else }}{{ .Values.image.repository }}/mockserver:mockserver-{{- if .Values.image.snapshot }}snapshot{{- else }}{{ .Chart.Version }}{{- end }}{{- end }}
 {{- if .Values.image.snapshot }}
           imagePullPolicy: Always

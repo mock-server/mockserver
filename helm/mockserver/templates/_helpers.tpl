@@ -1,13 +1,15 @@
 {{/* vim: set filetype=mustache: */}}
 
-{{/* Expand the name of the chart. */}}
+{{/* Chart name truncated at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec). */}}
 {{- define "chart.name" -}}
     {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-{{/* Create a default fully qualified app name truncated at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec). */}}
-{{- define "chart.fullname" -}}
-    {{- if .Values.fullnameOverride -}}
+{{/* Release name truncated at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec). */}}
+{{- define "release.name" -}}
+    {{- if .Values.releasenameOverride -}}
+        {{- .Values.releasenameOverride | trunc 63 | trimSuffix "-" -}}
+    {{- else if .Values.fullnameOverride -}}
         {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
     {{- else -}}
         {{- .Release.Name | trunc 63 | trimSuffix "-" -}}
