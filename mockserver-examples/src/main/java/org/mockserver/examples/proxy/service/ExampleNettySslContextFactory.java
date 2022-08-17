@@ -200,7 +200,7 @@ public class ExampleNettySslContextFactory {
                     .protocols(TLS_PROTOCOLS)
 //                    .sslProvider(SslProvider.JDK)
                     .clientAuth(configuration.tlsMutualAuthenticationRequired() ? ClientAuth.REQUIRE : ClientAuth.OPTIONAL);
-                if (isNotBlank(configuration.tlsMutualAuthenticationCertificateChain())) {
+                if (isNotBlank(configuration.tlsMutualAuthenticationCertificateChain()) || configuration.tlsMutualAuthenticationRequired()) {
                     sslContextBuilder.trustManager(trustCertificateChain());
                 } else {
                     sslContextBuilder.trustManager(InsecureTrustManagerFactory.INSTANCE);
