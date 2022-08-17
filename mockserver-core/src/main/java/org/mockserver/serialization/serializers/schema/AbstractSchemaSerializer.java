@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import com.google.common.collect.ImmutableList;
 import io.swagger.v3.oas.models.media.Schema;
 import org.mockserver.serialization.ObjectMapperFactory;
 
@@ -21,8 +22,9 @@ import java.util.function.Consumer;
 public class AbstractSchemaSerializer<T extends Schema> extends StdSerializer<T> {
 
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.buildObjectMapperWithOnlyConfigurationDefaults();
-    private static final List<String> fieldsToRemove = Collections.singletonList(
-        "exampleSetFlag"
+    private static final List<String> fieldsToRemove = ImmutableList.of(
+        "exampleSetFlag",
+        "types"
     );
 
     public AbstractSchemaSerializer(Class<T> type) {
