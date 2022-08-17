@@ -9,11 +9,8 @@ import org.apache.http.util.EntityUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockserver.cli.Main;
-import org.mockserver.client.MockServerClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.tls.KeyAndCertificateFactory;
 import org.mockserver.socket.tls.KeyAndCertificateFactoryFactory;
 import org.mockserver.socket.tls.KeyStoreFactory;
@@ -31,7 +28,8 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.configuration.Configuration.configuration;
-import static org.mockserver.configuration.ConfigurationProperties.*;
+import static org.mockserver.configuration.ConfigurationProperties.tlsMutualAuthenticationCertificateChain;
+import static org.mockserver.configuration.ConfigurationProperties.tlsMutualAuthenticationRequired;
 import static org.mockserver.echo.tls.UniqueCertificateChainSSLContextBuilder.uniqueCertificateChainSSLContext;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -100,7 +98,8 @@ public class ClientAuthenticationAdditionalCertificateChainMockingIntegrationTes
                 request()
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 

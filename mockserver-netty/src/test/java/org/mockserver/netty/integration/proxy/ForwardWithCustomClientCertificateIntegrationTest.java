@@ -6,18 +6,17 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.netty.MockServer;
-import org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager;
 import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
 
 import javax.net.ssl.SSLException;
 
 import static junit.framework.TestCase.assertEquals;
-import static org.mockserver.configuration.ConfigurationProperties.*;
+import static org.mockserver.configuration.ConfigurationProperties.forwardProxyCertificateChain;
+import static org.mockserver.configuration.ConfigurationProperties.forwardProxyPrivateKey;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpRequest.request;
@@ -163,7 +162,8 @@ public class ForwardWithCustomClientCertificateIntegrationTest extends AbstractM
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
 
         // then - trusted certificate returns response
@@ -185,7 +185,8 @@ public class ForwardWithCustomClientCertificateIntegrationTest extends AbstractM
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
 
         // then - valid certificate returns response
@@ -207,7 +208,8 @@ public class ForwardWithCustomClientCertificateIntegrationTest extends AbstractM
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 

@@ -1,5 +1,6 @@
 package org.mockserver.mockservlet.integration;
 
+import io.netty.handler.codec.http.HttpHeaderNames;
 import org.apache.catalina.Context;
 import org.apache.catalina.Service;
 import org.apache.catalina.connector.Connector;
@@ -14,6 +15,8 @@ import org.mockserver.socket.tls.KeyStoreFactory;
 import org.mockserver.testing.integration.mock.AbstractBasicMockingSameJVMIntegrationTest;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockserver.configuration.Configuration.configuration;

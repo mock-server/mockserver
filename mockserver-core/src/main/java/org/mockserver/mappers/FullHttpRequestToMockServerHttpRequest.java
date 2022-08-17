@@ -11,6 +11,7 @@ import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Cookies;
+import org.mockserver.model.Header;
 import org.mockserver.model.Headers;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.url.URLParser;
@@ -49,7 +50,7 @@ public class FullHttpRequestToMockServerHttpRequest {
         this.jdkCertificateToMockServerX509Certificate = new JDKCertificateToMockServerX509Certificate(mockServerLogger);
     }
 
-    public HttpRequest mapFullHttpRequestToMockServerRequest(FullHttpRequest fullHttpRequest, SocketAddress localAddress, SocketAddress remoteAddress) {
+    public HttpRequest mapFullHttpRequestToMockServerRequest(FullHttpRequest fullHttpRequest, List<Header> preservedHeaders, SocketAddress localAddress, SocketAddress remoteAddress) {
         HttpRequest httpRequest = new HttpRequest();
         try {
             if (fullHttpRequest != null) {
@@ -65,7 +66,7 @@ public class FullHttpRequestToMockServerHttpRequest {
 
                 setPath(httpRequest, fullHttpRequest);
                 setQueryString(httpRequest, fullHttpRequest);
-                setHeaders(httpRequest, fullHttpRequest);
+                setHeaders(httpRequest, fullHttpRequest, preservedHeaders);
                 setCookies(httpRequest, fullHttpRequest);
                 setBody(httpRequest, fullHttpRequest);
                 setSocketAddress(httpRequest, fullHttpRequest, isSecure, port, localAddress, remoteAddress);
@@ -110,7 +111,7 @@ public class FullHttpRequestToMockServerHttpRequest {
         }
     }
 
-    private void setHeaders(HttpRequest httpRequest, FullHttpRequest fullHttpResponse) {
+    private void setHeaders(HttpRequest httpRequest, FullHttpRequest fullHttpResponse, List<Header> preservedHeaders) {
         HttpHeaders httpHeaders = fullHttpResponse.headers();
         if (!httpHeaders.isEmpty()) {
             Headers headers = new Headers();
@@ -118,6 +119,11 @@ public class FullHttpRequestToMockServerHttpRequest {
                 headers.withEntry(headerName, httpHeaders.getAll(headerName));
             }
             httpRequest.withHeaders(headers);
+        }
+        if (preservedHeaders != null && !preservedHeaders.isEmpty()) {
+            for (Header preservedHeader : preservedHeaders) {
+                httpRequest.withHeader(preservedHeader);
+            }
         }
     }
 

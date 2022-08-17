@@ -9,7 +9,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.log.model.LogEntry;
@@ -51,6 +50,7 @@ public abstract class AbstractMockingIntegrationTestBase {
         HttpHeaderNames.CONNECTION.toString(),
         HttpHeaderNames.USER_AGENT.toString(),
         HttpHeaderNames.CONTENT_LENGTH.toString(),
+        HttpHeaderNames.CONTENT_ENCODING.toString(),
         HttpHeaderNames.ACCEPT_ENCODING.toString(),
         HttpHeaderNames.TRANSFER_ENCODING.toString(),
         HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN.toString(),
@@ -81,6 +81,10 @@ public abstract class AbstractMockingIntegrationTestBase {
     @BeforeClass
     public static void resetServletContext() {
         servletContext = "";
+    }
+
+    public List<String> getHeadersToRemove() {
+        return HEADERS_TO_IGNORE;
     }
 
     public abstract int getServerPort();
@@ -178,7 +182,7 @@ public abstract class AbstractMockingIntegrationTestBase {
         }
     }
 
-    protected HttpResponse makeRequest(HttpRequest httpRequest, Collection<String> headersToIgnore) {
+    protected HttpResponse makeRequest(HttpRequest httpRequest, Collection<String> headersToRemove) {
         try {
             boolean isSsl = httpRequest.isSecure() != null && httpRequest.isSecure();
             int port = (isSsl ? getServerSecurePort() : getServerPort());
@@ -189,7 +193,7 @@ public abstract class AbstractMockingIntegrationTestBase {
             boolean isDebug = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
             HttpResponse httpResponse = httpClient.sendRequest(httpRequest, new InetSocketAddress("localhost", port))
                 .get(30, (isDebug ? TimeUnit.MINUTES : TimeUnit.SECONDS));
-            httpResponse.withHeaders(filterHeaders(headersToIgnore, httpResponse.getHeaderList()));
+            httpResponse.withHeaders(filterHeaders(headersToRemove, httpResponse.getHeaderList()));
             httpResponse.withReasonPhrase(
                 isBlank(httpResponse.getReasonPhrase()) ?
                     HttpResponseStatus.valueOf(httpResponse.getStatusCode()).reasonPhrase() :

@@ -107,7 +107,8 @@ public class ForwardViaHttpAndHttpsProxyMockingIntegrationTest extends AbstractF
                 .withBody("an_example_body_http"),
             makeRequest(
                 httpRequest,
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         proxyClient.verify(httpRequest.withSecure(false));
     }
@@ -147,7 +148,8 @@ public class ForwardViaHttpAndHttpsProxyMockingIntegrationTest extends AbstractF
                 .withBody("an_example_body_http"),
             makeRequest(
                 httpRequest,
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         proxyClient.verify(httpRequest.withSecure(true));
     }

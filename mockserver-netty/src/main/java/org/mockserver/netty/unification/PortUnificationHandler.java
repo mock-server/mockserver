@@ -15,6 +15,7 @@ import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.codec.MockServerHttpServerCodec;
+import org.mockserver.codec.PreserveHeadersNettyRemoves;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.dashboard.DashboardWebSocketHandler;
 import org.mockserver.lifecycle.LifeCycle;
@@ -67,6 +68,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
     protected final MockServerLogger mockServerLogger;
     private final LoggingHandler loggingHandler = new LoggingHandler(PortUnificationHandler.class.getName() + "-first");
     private final HttpContentLengthRemover httpContentLengthRemover = new HttpContentLengthRemover();
+    private final PreserveHeadersNettyRemoves preserveHeadersNettyRemoves = new PreserveHeadersNettyRemoves();
     private final Configuration configuration;
     private final LifeCycle server;
     private final HttpState httpState;
@@ -219,6 +221,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
             configuration.maxHeaderSize(),
             configuration.maxChunkSize()
         ));
+        addLastIfNotPresent(pipeline, preserveHeadersNettyRemoves);
         addLastIfNotPresent(pipeline, new HttpContentDecompressor());
         addLastIfNotPresent(pipeline, httpContentLengthRemover);
         addLastIfNotPresent(pipeline, new HttpObjectAggregator(Integer.MAX_VALUE));

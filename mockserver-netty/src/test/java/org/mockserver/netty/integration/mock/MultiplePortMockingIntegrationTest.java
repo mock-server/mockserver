@@ -71,7 +71,8 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingSame
                 request()
                     .withPath(calculatePath("mockserver/status"))
                     .withMethod("PUT"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         // - in https
         assertEquals(
@@ -87,7 +88,8 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingSame
                     .withSecure(true)
                     .withPath(calculatePath("mockserver/status"))
                     .withMethod("PUT"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 
@@ -112,7 +114,8 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingSame
                     request()
                         .withPath(calculatePath("livenessProbe"))
                         .withMethod("GET"),
-                    HEADERS_TO_IGNORE)
+                    getHeadersToRemove()
+                )
             );
             // - in https
             assertEquals(
@@ -128,7 +131,8 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingSame
                         .withSecure(true)
                         .withPath(calculatePath("livenessProbe"))
                         .withMethod("GET"),
-                    HEADERS_TO_IGNORE)
+                    getHeadersToRemove()
+                )
             );
         } finally {
             ConfigurationProperties.livenessHttpGetPath(originalStatusPath);
@@ -159,7 +163,8 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingSame
                     .withBody("{" + NEW_LINE +
                         "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
                         "}"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         ArrayList<Integer> ports = new ArrayList<>(Arrays.asList(severHttpPort));
         ports.add(firstNewPort);
@@ -175,7 +180,8 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingSame
                 request()
                     .withPath(calculatePath("mockserver/status"))
                     .withMethod("PUT"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         // - in https
         assertEquals(
@@ -194,7 +200,8 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingSame
                     .withBody("{" + NEW_LINE +
                         "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +
                         "}"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         ports.add(secondNewPort);
         assertEquals(
@@ -213,7 +220,8 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingSame
                     .withBody("{" + NEW_LINE +
                         "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
                         "}"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 }

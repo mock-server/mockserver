@@ -1,7 +1,6 @@
 package org.mockserver.testing.integration.mock;
 
 import org.junit.Test;
-import org.mockserver.file.FileReader;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.Delay;
 import org.mockserver.model.HttpResponse;
@@ -32,7 +31,6 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.*;
-import static org.mockserver.model.HttpStatusCode.CREATED_201;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.OpenAPIDefinition.openAPI;
 
@@ -65,7 +63,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                     header("x-test", "test_headers_and_body")
                 )
                 .withBody("an_example_body_http"),
-            HEADERS_TO_IGNORE
+            getHeadersToRemove()
         );
         long timeAfterRequest = System.currentTimeMillis();
 
@@ -114,7 +112,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
     }
@@ -144,7 +142,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                     header("x-echo-server-port", insecureEchoServer.getPort())
                 )
                 .withBody("an_example_body_http"),
-            HEADERS_TO_IGNORE
+            getHeadersToRemove()
         );
         long timeAfterRequest = System.currentTimeMillis();
 
@@ -195,7 +193,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                         header("x-echo-server-port", insecureEchoServer.getPort())
                     )
                     .withBody("an_example_body_http"),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         assertThat(upsertedExpectations.length, is(1));
@@ -229,7 +227,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                         header("x-echo-server-port", secureEchoServer.getPort())
                     )
                     .withBody("an_example_body_https"),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
     }
@@ -266,7 +264,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                         header("x-echo-server-port", insecureEchoServer.getPort())
                     )
                     .withBody("an_example_body_http"),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         assertThat(upsertedExpectations.length, is(1));
@@ -300,7 +298,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                         header("x-echo-server-port", secureEchoServer.getPort())
                     )
                     .withBody("an_example_body_https"),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
     }
@@ -338,7 +336,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                         header("x-echo-server-port", insecureEchoServer.getPort())
                     )
                     .withBody("an_example_body_http"),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         assertThat(upsertedExpectations.length, is(1));
@@ -373,7 +371,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                         header("x-echo-server-port", secureEchoServer.getPort())
                     )
                     .withBody("an_example_body_https"),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
     }
@@ -421,7 +419,8 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         // - respond
         assertEquals(
@@ -432,7 +431,8 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
             makeRequest(
                 request()
                     .withPath(calculatePath("test_headers_and_body")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         // - no response or forward
         assertEquals(
@@ -440,7 +440,8 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
             makeRequest(
                 request()
                     .withPath(calculatePath("test_headers_and_body")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 
@@ -469,7 +470,8 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                     .withMethod("GET")
                     .withPath("/v1/pets")
                     .withQueryStringParameter("limit", "10"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(
             response()
@@ -484,7 +486,8 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                         "  \"name\" : \"some_string_value\"," + NEW_LINE +
                         "  \"tag\" : \"some_string_value\"" + NEW_LINE +
                         "}", MediaType.APPLICATION_JSON)),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(
             response()
@@ -501,7 +504,8 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                     .withMethod("GET")
                     .withPath("/v1/pets/12345")
                     .withHeader("x-request-id", UUIDService.getUUID()),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
 
         // and
@@ -576,7 +580,8 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                     .withMethod("GET")
                     .withPath("/v1/pets")
                     .withQueryStringParameter("limit", "10"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertThat(upsertedExpectations.length, is(1));
         assertThat(upsertedExpectations[0], is(new Expectation(openAPI(
@@ -603,7 +608,8 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                     .withMethod("GET")
                     .withPath("/v1/pets")
                     .withQueryStringParameter("limit", "10"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertThat(upsertedExpectations.length, is(1));
         assertThat(upsertedExpectations[0], is(new Expectation(
@@ -630,7 +636,8 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                     .withMethod("PUT")
                     .withPath("/v1/pets")
                     .withQueryStringParameter("limit", "10"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertThat(upsertedExpectations.length, is(1));
         assertThat(upsertedExpectations[0], is(new Expectation(openAPI(
@@ -654,7 +661,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                     .withMethod("GET")
                     .withPath(calculatePath("/v1/pets"))
                     .withQueryStringParameter("limit", "10"),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         assertEquals(
@@ -671,7 +678,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                         "    \"tag\": \"dog\"" + NEW_LINE +
                         "}"
                     )),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
 
@@ -700,7 +707,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                     .withMethod("GET")
                     .withPath(calculatePath("/v1/pets"))
                     .withQueryStringParameter("limit", "10"),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         assertEquals(
@@ -717,7 +724,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                         "    \"tag\": \"dog\"" + NEW_LINE +
                         "}"
                     )),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
 
@@ -768,14 +775,14 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                     .withMethod("GET")
                     .withPath(calculatePath("/v1/pets"))
                     .withQueryStringParameter("limit", "10"),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         assertEquals(
             notFoundResponse(),
             makeRequest(
                 request().withPath(calculatePath("not_found")),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         assertEquals(
@@ -792,7 +799,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                         "    \"tag\": \"dog\"" + NEW_LINE +
                         "}"
                     )),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
 
@@ -842,14 +849,14 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                     .withMethod("GET")
                     .withPath(calculatePath("/v1/pets"))
                     .withQueryStringParameter("limit", "10"),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         assertEquals(
             notFoundResponse(),
             makeRequest(
                 request().withPath(calculatePath("not_found")),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         assertEquals(
@@ -866,7 +873,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                         "    \"tag\": \"dog\"" + NEW_LINE +
                         "}"
                     )),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
 
@@ -903,7 +910,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                     .withMethod("GET")
                     .withPath(calculatePath("/v1/pets"))
                     .withQueryStringParameter("limit", "10"),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
 
@@ -916,7 +923,8 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path2")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 

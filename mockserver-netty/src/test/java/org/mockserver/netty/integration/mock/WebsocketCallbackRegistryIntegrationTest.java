@@ -196,7 +196,8 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                 makeRequest(
                     request()
                         .withPath(calculatePath("websocket_response_handler")),
-                    HEADERS_TO_IGNORE)
+                    getHeadersToRemove()
+                )
             );
 
             // then
@@ -234,7 +235,8 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
             makeRequest(
                 request()
                     .withPath(calculatePath("websocket_response_handler")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
 
         // then
@@ -270,7 +272,8 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                 makeRequest(
                     request()
                         .withPath(calculatePath("websocket_forward_handler")),
-                    HEADERS_TO_IGNORE)
+                    getHeadersToRemove()
+                )
             );
 
             // then
@@ -306,7 +309,8 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
             makeRequest(
                 request()
                     .withPath(calculatePath("websocket_forward_handler")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
 
         // then
@@ -348,7 +352,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                 makeRequest(
                     request()
                         .withPath(calculatePath("websocket_forward_handler")),
-                    HEADERS_TO_IGNORE
+                    getHeadersToRemove()
                 )
             );
 
@@ -394,7 +398,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
             makeRequest(
                 request()
                     .withPath(calculatePath("websocket_forward_handler")),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
 
@@ -459,7 +463,8 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                     makeRequest(
                         request()
                             .withPath(calculatePath("outer_websocket_client_registration_" + objectCallbackCounter)),
-                        HEADERS_TO_IGNORE)
+                        getHeadersToRemove()
+                    )
                 );
                 assertEquals(
                     response()
@@ -469,7 +474,8 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                     makeRequest(
                         request()
                             .withPath(calculatePath("inner_websocket_client_registration_" + objectCallbackCounter)),
-                        HEADERS_TO_IGNORE)
+                        getHeadersToRemove()
+                    )
                 );
                 objectCallbackCounter++;
             }
@@ -529,7 +535,8 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                 makeRequest(
                     request()
                         .withPath(calculatePath("outer_websocket_client_registration_" + objectCallbackCounter)),
-                    HEADERS_TO_IGNORE)
+                    getHeadersToRemove()
+                )
             );
             assertEquals(
                 response()
@@ -539,7 +546,8 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                 makeRequest(
                     request()
                         .withPath(calculatePath("inner_websocket_client_registration_" + objectCallbackCounter)),
-                    HEADERS_TO_IGNORE)
+                    getHeadersToRemove()
+                )
             );
             objectCallbackCounter++;
         }
@@ -588,7 +596,8 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                     makeRequest(
                         request()
                             .withPath(calculatePath("outer_websocket_client_registration_" + objectCallbackCounter)),
-                        HEADERS_TO_IGNORE)
+                        getHeadersToRemove()
+                    )
                 );
                 assertEquals(
                     response()
@@ -598,7 +607,8 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                     makeRequest(
                         request()
                             .withPath(calculatePath("inner_websocket_client_registration_" + objectCallbackCounter)),
-                        HEADERS_TO_IGNORE)
+                        getHeadersToRemove()
+                    )
                 );
                 objectCallbackCounter++;
             }

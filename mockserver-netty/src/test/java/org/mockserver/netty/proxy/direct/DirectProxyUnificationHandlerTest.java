@@ -142,6 +142,7 @@ public class DirectProxyUnificationHandlerTest {
         } else {
             assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
                 "HttpServerCodec#0",
+                "PreserveHeadersNettyRemoves#0",
                 "HttpContentDecompressor#0",
                 "HttpContentLengthRemover#0",
                 "HttpObjectAggregator#0",

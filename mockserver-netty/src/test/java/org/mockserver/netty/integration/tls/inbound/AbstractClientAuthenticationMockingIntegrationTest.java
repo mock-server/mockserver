@@ -55,7 +55,8 @@ public abstract class AbstractClientAuthenticationMockingIntegrationTest extends
                 request()
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST"),
-                    HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 
@@ -85,7 +86,8 @@ public abstract class AbstractClientAuthenticationMockingIntegrationTest extends
                     .withSecure(true)
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST"),
-                    HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 

@@ -80,7 +80,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertThat(upsertedExpectations.length, is(1));
         assertThat(upsertedExpectations[0], is(new Expectation(request()).thenRespond(response().withBody("some_body"))));
@@ -112,7 +113,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 request()
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         // - in https
         assertEquals(
@@ -125,7 +127,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withSecure(true)
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 
@@ -152,7 +155,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 request()
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 
@@ -185,7 +189,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 request()
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
 
         // then
@@ -195,7 +200,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 request()
                     .withPath(calculatePath("some_other_path"))
                     .withMethod("POST"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
 
         // then
@@ -205,7 +211,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 request()
                     .withPath(calculatePath("some_path"))
                     .withMethod("PUT"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 
@@ -240,7 +247,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path/variableOneValue/variableTwoValue")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
 
         // then
@@ -249,7 +257,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("some/other/path")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
 
         // then
@@ -258,7 +267,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path/variableOneValue/variableTwoOtherValue")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
 
         // then
@@ -267,7 +277,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path/variableOneOtherValue/variableTwoValue")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 
@@ -295,7 +306,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withMethod("POST")
                     .withPath(calculatePath("some_path"))
                     .withBody("some_random_body"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(
             localNotFoundResponse(),
@@ -303,7 +315,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 request()
                     .withMethod("POST")
                     .withPath(calculatePath("some_path")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 
@@ -348,7 +361,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withHeader("headerName", "headerValue")
                     .withCookie("cookieName", "cookieValue")
                 ,
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
 
         // then
@@ -360,7 +374,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withHeader("headerName", "headerValue")
                     .withCookie("cookieName", "cookieValue")
                 ,
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
 
         // then
@@ -372,7 +387,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withHeader("headerName", "headerOtherValue")
                     .withCookie("cookieName", "cookieValue")
                 ,
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
 
         // then
@@ -384,7 +400,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withHeader("headerName", "headerValue")
                     .withCookie("cookieName", "cookieOtherValue")
                 ,
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 
@@ -412,7 +429,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 request()
                     .withMethod("POST")
                     .withPath(calculatePath("some_path")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(
             localNotFoundResponse(),
@@ -421,7 +439,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withMethod("POST")
                     .withPath(calculatePath("some_path"))
                     .withBody("some_random_body"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 
@@ -456,7 +475,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withPath(calculatePath("some_path"))
                     .withHeader("name", "value")
                     .withBody("some_request_body"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 
@@ -491,7 +511,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withPath(calculatePath("some_path"))
                     .withHeader("name", "value")
                     .withBody("some_request_body"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 
@@ -527,7 +548,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     )
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 
@@ -550,7 +572,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         HttpResponse httpResponse = makeRequest(
             request()
                 .withPath(calculatePath("some_path1")),
-            HEADERS_TO_IGNORE
+            getHeadersToRemove()
         );
         long timeAfterRequest = System.currentTimeMillis();
 
@@ -587,7 +609,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withMethod("GET")
                     .withPath("/v1/pets")
                     .withQueryStringParameter("limit", "10"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertThat(upsertedExpectations.length, is(1));
         assertThat(upsertedExpectations[0], is(new Expectation(openAPI(
@@ -624,7 +647,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withMethod("GET")
                     .withPath("/v1/pets")
                     .withQueryStringParameter("limit", "10"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(
             response()
@@ -644,7 +668,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         "  \"name\" : \"some_string_value\"," + NEW_LINE +
                         "  \"tag\" : \"some_string_value\"" + NEW_LINE +
                         "}")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(
             response()
@@ -661,7 +686,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withMethod("GET")
                     .withPath("/v1/pets/12345")
                     .withHeader("x-request-id", UUIDService.getUUID()),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
 
         // and
@@ -733,7 +759,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         ) +
                     "]"
                 ),
-            HEADERS_TO_IGNORE
+            getHeadersToRemove()
         );
         assertThat(httpResponse.getStatusCode(), equalTo(201));
 
@@ -760,7 +786,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("/path_one")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(
             response()
@@ -770,7 +797,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("/path_two")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(
             response()
@@ -780,7 +808,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("/path_three")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 
@@ -823,7 +852,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withBody(exact("some_other_body"))
                     .withHeaders(header("headerName", "headerValue"))
                     .withCookies(cookie("cookieName", "cookieValue")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(
             response()
@@ -846,7 +876,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withBody(exact("some_body"))
                     .withHeaders(header("headerName", "headerValue"))
                     .withCookies(cookie("cookieName", "cookieValue")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 
@@ -889,7 +920,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withBody(exact("some_body"))
                     .withHeaders(header("headerName", "headerValue"))
                     .withCookies(cookie("cookieName", "cookieValue")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 
@@ -916,7 +948,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 request()
                     .withMethod("GET")
                     .withHeaders(header("headerName", "headerValue")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
 
         // then
@@ -929,7 +962,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 request()
                     .withMethod("GET")
                     .withHeaders(header("otherHeaderName", "headerValue")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 
@@ -951,7 +985,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withMethod("PUT")
                     .withPath("/v1/pets")
                     .withQueryStringParameter("limit", "10"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertThat(upsertedExpectations.length, is(1));
         assertThat(upsertedExpectations[0], is(new Expectation(openAPI(
@@ -983,7 +1018,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 request()
                     .withSecure(true)
                     .withPath(calculatePath("some_path")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
 
         // then
@@ -999,7 +1035,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
 
         // then
@@ -1042,7 +1079,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(
             response()
@@ -1052,7 +1090,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
 
         // then
@@ -1106,7 +1145,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(
             response()
@@ -1116,7 +1156,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
 
         // then
@@ -1149,7 +1190,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path_no_body")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
 
         // and
@@ -1172,7 +1214,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 request()
                     .withPath(calculatePath("some_path_with_body"))
                     .withBody("some_request_body"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
 
         mockServerClient.verify(request().withPath(calculatePath("some_path_no_body")));
@@ -1199,7 +1242,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         try {
             mockServerClient
@@ -1229,7 +1273,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(
             response()
@@ -1239,7 +1284,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(
             response()
@@ -1249,7 +1295,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
 
         try {
@@ -1283,7 +1330,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withMethod("GET")
                     .withPath(calculatePath("/v1/pets"))
                     .withQueryStringParameter("limit", "10"),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         assertEquals(
@@ -1300,7 +1347,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         "    \"tag\": \"dog\"" + NEW_LINE +
                         "}"
                     )),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
 
@@ -1332,19 +1379,22 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             response("some_body"),
             makeRequest(
                 request().withPath(calculatePath("some_path_one")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(
             response("some_body"),
             makeRequest(
                 request().withPath(calculatePath("some_path_two")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(
             response("some_body"),
             makeRequest(
                 request().withPath(calculatePath("some_path_three")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
         mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")));
@@ -1362,21 +1412,21 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             response("some_body"),
             makeRequest(
                 request().withPath(calculatePath("some_path_one")),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         assertEquals(
             response("some_body"),
             makeRequest(
                 request().withPath(calculatePath("some_path_two")),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         assertEquals(
             response("some_body"),
             makeRequest(
                 request().withPath(calculatePath("some_path_three")),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         mockServerClient.verify(firstExpectation.getId());
@@ -1429,28 +1479,28 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             response("some_body"),
             makeRequest(
                 request().withPath(calculatePath("some_path_one")),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         assertEquals(
             response("some_body"),
             makeRequest(
                 request().withPath(calculatePath("some_path_two")),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         assertEquals(
             response("some_body"),
             makeRequest(
                 request().withPath(calculatePath("some_path_three")),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         assertEquals(
             response("some_body"),
             makeRequest(
                 request().withPath(calculatePath("some_path_four")),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         mockServerClient.verify(firstExpectation.getId());
@@ -1495,7 +1545,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withMethod("GET")
                     .withPath(calculatePath("/v1/pets"))
                     .withQueryStringParameter("limit", "10"),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         assertEquals(
@@ -1512,7 +1562,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         "    \"tag\": \"dog\"" + NEW_LINE +
                         "}"
                     )),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
 
@@ -1562,7 +1612,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(
             response()
@@ -1572,7 +1623,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(
             response()
@@ -1582,7 +1634,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
 
         try {
@@ -1612,21 +1665,21 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             response("some_body"),
             makeRequest(
                 request().withPath(calculatePath("some_path_one")),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         assertEquals(
             notFoundResponse(),
             makeRequest(
                 request().withPath(calculatePath("not_found")),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         assertEquals(
             response("some_body"),
             makeRequest(
                 request().withPath(calculatePath("some_path_three")),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
 
@@ -1662,21 +1715,21 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 response("some_body"),
                 makeRequest(
                     request().withPath(calculatePath("some_path_one")),
-                    HEADERS_TO_IGNORE
+                    getHeadersToRemove()
                 )
             );
             assertEquals(
                 notFoundResponse(),
                 makeRequest(
                     request().withPath(calculatePath("not_found")),
-                    HEADERS_TO_IGNORE
+                    getHeadersToRemove()
                 )
             );
             assertEquals(
                 response("some_body"),
                 makeRequest(
                     request().withPath(calculatePath("some_path_three")),
-                    HEADERS_TO_IGNORE
+                    getHeadersToRemove()
                 )
             );
 
@@ -1728,14 +1781,14 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withMethod("GET")
                     .withPath(calculatePath("/v1/pets"))
                     .withQueryStringParameter("limit", "10"),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         assertEquals(
             notFoundResponse(),
             makeRequest(
                 request().withPath(calculatePath("not_found")),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         assertEquals(
@@ -1752,7 +1805,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         "    \"tag\": \"dog\"" + NEW_LINE +
                         "}"
                     )),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
 
@@ -1862,7 +1915,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withQueryStringParameter("some", "parameter")
                     .withCookie("some", "parameter")
                     .withBody("some_body_one"),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         MILLISECONDS.sleep(500);
@@ -1872,7 +1925,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 request()
                     .withPath(calculatePath("some_path_three"))
                     .withBody("some_body_three"),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
 
@@ -1929,19 +1982,22 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 response("some_body"),
                 makeRequest(
                     request().withPath(calculatePath("some_path_one")),
-                    HEADERS_TO_IGNORE)
+                    getHeadersToRemove()
+                )
             );
             assertEquals(
                 notFoundResponse(),
                 makeRequest(
                     request().withPath(calculatePath("not_found")),
-                    HEADERS_TO_IGNORE)
+                    getHeadersToRemove()
+                )
             );
             assertEquals(
                 response("some_body"),
                 makeRequest(
                     request().withPath(calculatePath("some_path_three")),
-                    HEADERS_TO_IGNORE)
+                    getHeadersToRemove()
+                )
             );
 
             // then
@@ -2178,7 +2234,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path1")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(
             response()
@@ -2188,7 +2245,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path2")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
 
         // when
@@ -2226,14 +2284,16 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path2")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(
             localNotFoundResponse(),
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path1")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 
@@ -2261,14 +2321,14 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withMethod("GET")
                     .withPath(calculatePath("/v1/pets"))
                     .withQueryStringParameter("limit", "10"),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         assertEquals(
             notFoundResponse(),
             makeRequest(
                 request().withPath(calculatePath("not_found")),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         assertEquals(
@@ -2285,7 +2345,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         "    \"tag\": \"dog\"" + NEW_LINE +
                         "}"
                     )),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
 
@@ -2322,7 +2382,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withMethod("GET")
                     .withPath(calculatePath("/v1/pets"))
                     .withQueryStringParameter("limit", "10"),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
 
@@ -2335,7 +2395,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path2")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 
@@ -2371,14 +2432,16 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path1")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(
             localNotFoundResponse(),
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path2")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         // - in https
         assertEquals(
@@ -2389,7 +2452,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 request()
                     .withSecure(true)
                     .withPath(calculatePath("some_path1")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(
             response()
@@ -2399,7 +2463,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 request()
                     .withSecure(true)
                     .withPath(calculatePath("some_path2")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 
@@ -2427,7 +2492,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }" + NEW_LINE +
                     "}"),
-            HEADERS_TO_IGNORE
+            getHeadersToRemove()
         );
 
         // then
@@ -2483,7 +2548,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     "    \"method\" : true," + NEW_LINE +
                     "    \"keepAlive\" : \"false\"" + NEW_LINE +
                     "  }"),
-            HEADERS_TO_IGNORE
+            getHeadersToRemove()
         );
 
         // then
@@ -2532,7 +2597,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     header("x-test", "test_headers_and_body")
                 )
                 .withBody("an_example_body_http"),
-            HEADERS_TO_IGNORE);
+            getHeadersToRemove()
+        );
         long timeAfterRequest = System.currentTimeMillis();
 
         // and
@@ -2579,7 +2645,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     header("x-test", "test_headers_and_body")
                 )
                 .withBody("an_example_body_http"),
-            HEADERS_TO_IGNORE
+            getHeadersToRemove()
         );
         long timeAfterRequest = System.currentTimeMillis();
 
@@ -2657,13 +2723,13 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withHeader("requestHeaderToRemove", "originalValue")
                 .withCookie("requestCookieToReplace", "replacedValue")
                 .withBody("an_example_body_http"),
-            HEADERS_TO_IGNORE
+            getHeadersToRemove()
         );
 
         // and
         HttpRequest echoServerRequest = insecureEchoServer.getLastRequest();
         assertEquals(
-            echoServerRequest.withHeaders(filterHeaders(HEADERS_TO_IGNORE, echoServerRequest.getHeaderList())),
+            echoServerRequest.withHeaders(filterHeaders(getHeadersToRemove(), echoServerRequest.getHeaderList())),
             request()
                 .withMethod("POST")
                 .withPath(calculatePath("/prefix/some/infix/path/postfix"))
@@ -2786,13 +2852,13 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withHeader("requestHeaderToReplace", "originalValue")
                 .withHeader("requestHeaderToRemove", "originalValue")
                 .withBody("an_example_body_http"),
-            HEADERS_TO_IGNORE
+            getHeadersToRemove()
         );
 
         // and
         HttpRequest echoServerRequest = insecureEchoServer.getLastRequest();
         assertEquals(
-            echoServerRequest.withHeaders(filterHeaders(HEADERS_TO_IGNORE, echoServerRequest.getHeaderList())),
+            echoServerRequest.withHeaders(filterHeaders(getHeadersToRemove(), echoServerRequest.getHeaderList())),
             request()
                 .withMethod("POST")
                 .withPath(calculatePath("/prefix/some/infix/path/postfix"))
@@ -2871,13 +2937,13 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withMethod("POST")
                 .withHeader("x-test", "test_headers_and_body")
                 .withBody("an_example_body_http"),
-            HEADERS_TO_IGNORE
+            getHeadersToRemove()
         );
 
         // and
         HttpRequest echoServerRequest = insecureEchoServer.getLastRequest();
         assertEquals(
-            echoServerRequest.withHeaders(filterHeaders(HEADERS_TO_IGNORE, echoServerRequest.getHeaderList())),
+            echoServerRequest.withHeaders(filterHeaders(getHeadersToRemove(), echoServerRequest.getHeaderList())),
             request()
                 .withMethod("POST")
                 .withPath(calculatePath("/some/path"))
@@ -2954,7 +3020,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         // - in https
         assertEquals(
@@ -2974,7 +3041,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_https"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 
@@ -3025,7 +3093,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         // - in https
         assertEquals(
@@ -3045,7 +3114,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_https"),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
     }
@@ -3113,7 +3182,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
 
             )
         );
@@ -3150,7 +3219,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         header("x-test", "test_headers_and_body_https")
                     )
                     .withBody("an_example_body_https"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 
@@ -3211,7 +3281,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
 
             )
         );
@@ -3253,7 +3323,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         header("x-test", "test_headers_and_body_https")
                     )
                     .withBody("an_example_body_https"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertThat(upsertedSecureExpectations.length, is(1));
         assertThat(upsertedSecureExpectations[0], is(
@@ -3334,7 +3405,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
 
             )
         );
@@ -3376,7 +3447,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         header("x-test", "test_headers_and_body_https")
                     )
                     .withBody("an_example_body_https"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertThat(upsertedSecureExpectations.length, is(1));
         assertThat(upsertedSecureExpectations[0], is(
@@ -3441,7 +3513,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         assertThat(upsertedExpectations.length, is(1));
@@ -3509,7 +3581,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         assertThat(upsertedExpectations.length, is(1));
@@ -3579,7 +3651,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body"),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         // - respond
         assertEquals(
@@ -3590,7 +3663,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("test_headers_and_body")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         // - no response or forward
         assertEquals(
@@ -3598,7 +3672,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("test_headers_and_body")),
-                HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 }

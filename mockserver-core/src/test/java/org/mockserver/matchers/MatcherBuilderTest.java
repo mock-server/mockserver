@@ -1,5 +1,6 @@
 package org.mockserver.matchers;
 
+import com.google.common.collect.ImmutableList;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.FullHttpRequest;
 import org.junit.Before;
@@ -65,7 +66,7 @@ public class MatcherBuilderTest {
         fullHttpRequest.headers().add(CONTENT_TYPE, PLAIN_TEXT_UTF_8.withCharset(DEFAULT_TEXT_HTTP_CHARACTER_SET).toString());
 
         // when
-        HttpRequest httpRequest = fullHttpRequestToMockServerRequest.mapFullHttpRequestToMockServerRequest(fullHttpRequest, null, null);
+        HttpRequest httpRequest = fullHttpRequestToMockServerRequest.mapFullHttpRequestToMockServerRequest(fullHttpRequest, ImmutableList.of(), null, null);
 
         // and
         HttpRequestMatcher httpRequestMapper = new MatcherBuilder(configuration, new MockServerLogger()).transformsToMatcher(new Expectation(
@@ -94,7 +95,7 @@ public class MatcherBuilderTest {
         );
 
         // when
-        HttpRequest httpRequest = fullHttpRequestToMockServerRequest.mapFullHttpRequestToMockServerRequest(fullHttpRequest, null, null);
+        HttpRequest httpRequest = fullHttpRequestToMockServerRequest.mapFullHttpRequestToMockServerRequest(fullHttpRequest, ImmutableList.of(), null, null);
 
         // and
         HttpRequestMatcher httpRequestMapper = new MatcherBuilder(configuration, new MockServerLogger()).transformsToMatcher(new Expectation(
@@ -123,7 +124,7 @@ public class MatcherBuilderTest {
         );
 
         // when
-        HttpRequest httpRequest = fullHttpRequestToMockServerRequest.mapFullHttpRequestToMockServerRequest(fullHttpRequest, null, null);
+        HttpRequest httpRequest = fullHttpRequestToMockServerRequest.mapFullHttpRequestToMockServerRequest(fullHttpRequest, ImmutableList.of(), null, null);
 
         // and
         HttpRequestMatcher httpRequestMapper = new MatcherBuilder(configuration, new MockServerLogger()).transformsToMatcher(new Expectation(

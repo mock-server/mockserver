@@ -64,7 +64,8 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
                         header("X-Test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(StaticTestExpectationResponseCallback.httpRequests.get(0).getBody().getValue(), "an_example_body_http");
         assertEquals(StaticTestExpectationResponseCallback.httpRequests.get(0).getPath().getValue(), calculatePath("callback"));
@@ -87,7 +88,7 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
                         header("X-Test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_https"),
-                    HEADERS_TO_IGNORE
+                getHeadersToRemove()
             )
         );
         assertEquals(StaticTestExpectationResponseCallback.httpRequests.get(1).getBody().getValue(), "an_example_body_https");
@@ -135,7 +136,8 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
                         .withPath(calculatePath("some_path"))
                         .withCookie("name", "value")
                         .withBody("some_request_body"),
-                        HEADERS_TO_IGNORE)
+                    getHeadersToRemove()
+                )
             );
             // - in https
             assertEquals(
@@ -151,7 +153,8 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
                         .withPath(calculatePath("some_path"))
                         .withCookie("name", "value")
                         .withBody("some_request_body"),
-                        HEADERS_TO_IGNORE)
+                    getHeadersToRemove()
+                )
             );
 
         } else {
@@ -165,7 +168,8 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
                         .withPath(calculatePath("some_path"))
                         .withCookie("name", "value")
                         .withBody("some_request_body"),
-                        HEADERS_TO_IGNORE)
+                    getHeadersToRemove()
+                )
             );
             // - in https
             assertEquals(
@@ -176,7 +180,8 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
                         .withPath(calculatePath("some_path"))
                         .withCookie("name", "value")
                         .withBody("some_request_body"),
-                        HEADERS_TO_IGNORE)
+                    getHeadersToRemove()
+                )
             );
 
         }
@@ -226,7 +231,8 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
                             header("x-test", "test_headers_and_body")
                         )
                         .withBody("an_example_body_http"),
-                        HEADERS_TO_IGNORE)
+                    getHeadersToRemove()
+                )
             );
             // - in https
             assertEquals(
@@ -246,7 +252,8 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
                             header("x-test", "test_headers_and_body")
                         )
                         .withBody("an_example_body_https"),
-                        HEADERS_TO_IGNORE)
+                    getHeadersToRemove()
+                )
             );
 
         } else {
@@ -260,7 +267,8 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
                         .withPath(calculatePath("some_path"))
                         .withCookie("name", "value")
                         .withBody("some_request_body"),
-                        HEADERS_TO_IGNORE)
+                    getHeadersToRemove()
+                )
             );
             // - in https
             assertEquals(
@@ -271,7 +279,8 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
                         .withPath(calculatePath("some_path"))
                         .withCookie("name", "value")
                         .withBody("some_request_body"),
-                        HEADERS_TO_IGNORE)
+                    getHeadersToRemove()
+                )
             );
 
         }

@@ -1,5 +1,6 @@
 package org.mockserver.mockservlet.integration;
 
+import io.netty.handler.codec.http.HttpHeaderNames;
 import org.apache.catalina.Context;
 import org.apache.catalina.Service;
 import org.apache.catalina.connector.Connector;
@@ -13,6 +14,8 @@ import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.tls.KeyStoreFactory;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockserver.configuration.Configuration.configuration;
@@ -92,6 +95,11 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
     @Override
     public int getServerSecurePort() {
         return SERVER_HTTPS_PORT;
+    }
+
+    @Override
+    public boolean contentEncodingSupport() {
+        return false;
     }
 
 }

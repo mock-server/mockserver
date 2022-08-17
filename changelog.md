@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - support for server urls in OpenAPI specification, by adding server url path as path prefix to operations
 - improved documentation of clear functionality and type parameter and added examples
 - local ip and port exposed to callbacks and log, useful when bound on multiple ports
+- ability to match on content-encoding header
 
 ### Changed
 - used helm release name in K8s resources to avoid conflicts for multiple deployments in same namespace (without extra values being set)

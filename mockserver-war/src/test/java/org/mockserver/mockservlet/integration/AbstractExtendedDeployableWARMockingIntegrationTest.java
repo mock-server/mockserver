@@ -68,7 +68,8 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
                     )
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         // - in https
         assertEquals(
@@ -87,7 +88,8 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
                     )
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 
@@ -237,7 +239,8 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
                         header("X-Test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(0).getBody().getValue(), "an_example_body_http");
         assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(0).getPath().getValue(), calculatePath("callback"));
@@ -260,7 +263,8 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
                         header("X-Test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_https"),
-                    HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(1).getBody().getValue(), "an_example_body_https");
         assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(1).getPath().getValue(), calculatePath("callback"));
@@ -306,7 +310,8 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
                         header("X-Test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(TestClasspathTestExpectationForwardCallback.httpRequests.get(0).getBody().getValue(), "an_example_body_http");
         assertEquals(TestClasspathTestExpectationForwardCallback.httpRequests.get(0).getPath().getValue(), calculatePath("callback"));
@@ -329,7 +334,8 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
                         header("X-Test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_https"),
-                    HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(TestClasspathTestExpectationForwardCallback.httpRequests.get(1).getBody().getValue(), "an_example_body_https");
         assertEquals(TestClasspathTestExpectationForwardCallback.httpRequests.get(1).getPath().getValue(), calculatePath("callback"));
@@ -380,7 +386,8 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
                         header("X-Test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(TestClasspathTestExpectationForwardCallbackWithResponseOverride.httpRequests.get(0).getPath().getValue(), calculatePath("callback"));
         assertEquals(TestClasspathTestExpectationForwardCallbackWithResponseOverride.httpRequests.get(0).getBody().getValue(), "an_example_body_http");
@@ -404,7 +411,8 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
                         header("X-Test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         assertEquals(TestClasspathTestExpectationForwardCallbackWithResponseOverride.httpRequests.get(0).getPath().getValue(), calculatePath("callback"));
         assertEquals(TestClasspathTestExpectationForwardCallbackWithResponseOverride.httpRequests.get(0).getBody().getValue(), "an_example_body_http");
@@ -430,7 +438,8 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
                 request()
                     .withPath(calculatePath("mockserver/status"))
                     .withMethod("PUT"),
-                    HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
         // - in https
         assertEquals(
@@ -446,7 +455,8 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
                     .withSecure(true)
                     .withPath(calculatePath("mockserver/status"))
                     .withMethod("PUT"),
-                    HEADERS_TO_IGNORE)
+                getHeadersToRemove()
+            )
         );
     }
 
@@ -472,7 +482,8 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
                     request()
                         .withPath(calculatePath("livenessProbe"))
                         .withMethod("GET"),
-                        HEADERS_TO_IGNORE)
+                    getHeadersToRemove()
+                )
             );
             // - in https
             assertEquals(
@@ -488,7 +499,8 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
                         .withSecure(true)
                         .withPath(calculatePath("livenessProbe"))
                         .withMethod("GET"),
-                        HEADERS_TO_IGNORE)
+                    getHeadersToRemove()
+                )
             );
         } finally {
             ConfigurationProperties.livenessHttpGetPath(originalStatusPath);

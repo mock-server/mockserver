@@ -515,10 +515,11 @@ public class NettyHttpProxySOCKSIntegrationTest {
         ).getBytes(StandardCharsets.UTF_8));
         outputStream.flush();
 
-        byte[] echoServerResponse = new byte[95];
+        byte[] echoServerResponse = new byte[125];
         inputStream.read(echoServerResponse);
         assertThat(new String(echoServerResponse, StandardCharsets.UTF_8), startsWith("" +
             "HTTP/1.1 200 OK\r\n" +
+            "content-encoding: .*\r\n" +
             "accept-encoding: gzip,deflate\r\n" +
             "connection: keep-alive\r\n" +
             "content-length: 0\r\n" +
