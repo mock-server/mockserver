@@ -301,6 +301,8 @@ public class ProxyServletTest {
             eq(
                 request
                     .withSecure(false)
+                    .withLocalAddress("local_address:80")
+                    .withRemoteAddress("localhost")
                     .withKeepAlive(true)
             ),
             any(ServletResponseWriter.class),
@@ -331,6 +333,8 @@ public class ProxyServletTest {
             eq(
                 request
                     .withSecure(false)
+                    .withLocalAddress("local_address:666")
+                    .withRemoteAddress("localhost")
                     .withKeepAlive(true)
             ),
             any(ServletResponseWriter.class),
@@ -362,6 +366,8 @@ public class ProxyServletTest {
             eq(
                 request
                     .withSecure(true)
+                    .withLocalAddress("local_address:443")
+                    .withRemoteAddress("localhost")
                     .withKeepAlive(true)
             ),
             any(ServletResponseWriter.class),
@@ -393,6 +399,8 @@ public class ProxyServletTest {
             eq(
                 request
                     .withSecure(true)
+                    .withLocalAddress("local_address:666")
+                    .withRemoteAddress("localhost")
                     .withKeepAlive(true)
             ),
             any(ServletResponseWriter.class),

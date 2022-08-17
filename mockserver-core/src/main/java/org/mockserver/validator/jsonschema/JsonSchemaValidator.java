@@ -214,6 +214,8 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                             validationMessageText.contains(".headers: is not defined in the schema and the schema does not allow additional properties") ||
                             validationMessageText.contains(".cookies: is not defined in the schema and the schema does not allow additional properties") ||
                             validationMessageText.contains(".socketAddress: is not defined in the schema and the schema does not allow additional properties") ||
+                            validationMessageText.contains(".localAddress: is not defined in the schema and the schema does not allow additional properties") ||
+                            validationMessageText.contains(".remoteAddress: is not defined in the schema and the schema does not allow additional properties") ||
                             validationMessageText.contains(".specUrlOrPayload: is not defined in the schema and the schema does not allow additional properties") ||
                             validationMessageText.contains(".operationId: is not defined in the schema and the schema does not allow additional properties")) {
                             return null;

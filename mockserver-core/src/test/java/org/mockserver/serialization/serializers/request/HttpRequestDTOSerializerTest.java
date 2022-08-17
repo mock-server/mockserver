@@ -50,6 +50,8 @@ public class HttpRequestDTOSerializerTest {
                     .withHeaders(new Header("name", "value"))
                     .withCookies(new Cookie("name", "[A-Z]{0,10}"))
                     .withKeepAlive(true)
+                    .withLocalAddress("local_addr:1234")
+                    .withRemoteAddress("remote_addr")
                     .withSecure(true)
             )
             ),
@@ -70,6 +72,8 @@ public class HttpRequestDTOSerializerTest {
                 "  }," + NEW_LINE +
                 "  \"keepAlive\" : true," + NEW_LINE +
                 "  \"secure\" : true," + NEW_LINE +
+                "  \"localAddress\" : \"local_addr:1234\"," + NEW_LINE +
+                "  \"remoteAddress\" : \"remote_addr\"," + NEW_LINE +
                 "  \"body\" : \"some_body\"" + NEW_LINE +
                 "}"));
     }

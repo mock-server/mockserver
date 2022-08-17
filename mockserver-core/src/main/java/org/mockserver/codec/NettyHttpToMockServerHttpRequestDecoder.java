@@ -24,11 +24,13 @@ public class NettyHttpToMockServerHttpRequestDecoder extends MessageToMessageDec
 
     @Override
     protected void decode(ChannelHandlerContext ctx, FullHttpRequest fullHttpRequest, List<Object> out) {
+        SocketAddress localAddress = null;
         SocketAddress remoteAddress = null;
         if (ctx != null && ctx.channel() != null) {
+            localAddress = ctx.channel().localAddress();
             remoteAddress = ctx.channel().remoteAddress();
         }
-        out.add(fullHttpRequestToMockServerRequest.mapFullHttpRequestToMockServerRequest(fullHttpRequest, remoteAddress));
+        out.add(fullHttpRequestToMockServerRequest.mapFullHttpRequestToMockServerRequest(fullHttpRequest, localAddress, remoteAddress));
     }
 
 }

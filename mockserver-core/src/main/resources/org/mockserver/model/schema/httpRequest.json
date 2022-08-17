@@ -33,6 +33,9 @@
     "socketAddress": {
       "$ref": "#/definitions/socketAddress"
     },
+    "localAddress": {
+      "type": "string"
+    },
     "remoteAddress": {
       "type": "string"
     },

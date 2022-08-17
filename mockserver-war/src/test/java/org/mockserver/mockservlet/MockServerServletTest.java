@@ -382,8 +382,10 @@ public class MockServerServletTest {
                 request("request_one")
                     .withMethod("GET")
                     .withHeader("Content-Type", APPLICATION_JSON_UTF_8.toString())
-                    .withKeepAlive(true)
                     .withSecure(false)
+                    .withLocalAddress("local_address:80")
+                    .withRemoteAddress("localhost")
+                    .withKeepAlive(true)
             ),
             any(ServletResponseWriter.class),
             isNull(),
@@ -416,8 +418,10 @@ public class MockServerServletTest {
                 request("request_one")
                     .withMethod("GET")
                     .withHeader("Content-Type", APPLICATION_JSON_UTF_8.toString())
-                    .withKeepAlive(true)
                     .withSecure(false)
+                    .withLocalAddress("local_address:666")
+                    .withRemoteAddress("localhost")
+                    .withKeepAlive(true)
             ),
             any(ServletResponseWriter.class),
             isNull(),
@@ -451,8 +455,10 @@ public class MockServerServletTest {
                 request("request_one")
                     .withMethod("GET")
                     .withHeader("Content-Type", APPLICATION_JSON_UTF_8.toString())
-                    .withKeepAlive(true)
                     .withSecure(true)
+                    .withLocalAddress("local_address:443")
+                    .withRemoteAddress("localhost")
+                    .withKeepAlive(true)
             ),
             any(ServletResponseWriter.class),
             isNull(),
@@ -486,8 +492,10 @@ public class MockServerServletTest {
                 request("request_one")
                     .withMethod("GET")
                     .withHeader("Content-Type", APPLICATION_JSON_UTF_8.toString())
-                    .withKeepAlive(true)
                     .withSecure(true)
+                    .withLocalAddress("local_address:666")
+                    .withRemoteAddress("localhost")
+                    .withKeepAlive(true)
             ),
             any(ServletResponseWriter.class),
             isNull(),

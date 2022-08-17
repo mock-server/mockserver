@@ -54,6 +54,9 @@ public class HttpRequestSerializer extends StdSerializer<HttpRequest> {
         if (httpRequest.getSocketAddress() != null) {
             jgen.writeObjectField("socketAddress", httpRequest.getSocketAddress());
         }
+        if (isNotBlank(httpRequest.getLocalAddress())) {
+            jgen.writeObjectField("localAddress", httpRequest.getLocalAddress());
+        }
         if (isNotBlank(httpRequest.getRemoteAddress())) {
             jgen.writeObjectField("remoteAddress", httpRequest.getRemoteAddress());
         }

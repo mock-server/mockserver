@@ -36,7 +36,7 @@ paths:
           content:
             application/json:
               schema:
-                title: list of upserted expectations
+                description: "list of upserted expectations"
                 type: array
                 additionalProperties: false
                 items:
@@ -63,7 +63,7 @@ paths:
           content:
             application/json:
               schema:
-                title: list of upserted expectations
+                description: "list of upserted expectations"
                 type: array
                 additionalProperties: false
                 items:
@@ -268,7 +268,7 @@ paths:
 components:
   schemas:
     Expectations:
-      title: "list of expectations"
+      description: "list of expectations"
       oneOf:
         - $ref: "#/components/schemas/Expectation"
         - type: array
@@ -276,7 +276,7 @@ components:
           items:
             $ref: "#/components/schemas/Expectation"
     Expectation:
-      title: "expectation"
+      description: "expectation"
       type: object
       additionalProperties: false
       properties:
@@ -334,7 +334,7 @@ components:
         - required:
             - httpError
     ExpectationId:
-      title: "pointer to existing expectation"
+      description: "pointer to existing expectation"
       type: object
       additionalProperties: false
       properties:
@@ -343,7 +343,7 @@ components:
       required:
         - id
     OpenAPIExpectations:
-      title: "list of open api expectations"
+      description: "list of open api expectations"
       oneOf:
         - $ref: "#/components/schemas/OpenAPIExpectation"
         - type: array
@@ -351,7 +351,7 @@ components:
           items:
             $ref: "#/components/schemas/OpenAPIExpectation"
     OpenAPIExpectation:
-      title: "open api or swagger expectation"
+      description: "open api or swagger expectation"
       type: object
       additionalProperties: false
       properties:
@@ -366,12 +366,12 @@ components:
       required:
         - specUrlOrPayload
     RequestDefinition:
-      title: "request definition"
+      description: "request definition"
       oneOf:
         - $ref: "#/components/schemas/HttpRequest"
         - $ref: "#/components/schemas/OpenAPIDefinition"
     HttpRequest:
-      title: "request properties matcher"
+      description: "request properties matcher"
       type: object
       additionalProperties: false
       properties:
@@ -396,7 +396,7 @@ components:
         socketAddress:
           $ref: "#/components/schemas/SocketAddress"
     OpenAPIDefinition:
-      title: "open api or swagger request matcher"
+      description: "open api or swagger request matcher"
       type: object
       additionalProperties: false
       properties:
@@ -405,7 +405,7 @@ components:
         operationId:
           type: string
     HttpResponse:
-      title: "response to return"
+      description: "response to return"
       type: object
       additionalProperties: false
       properties:
@@ -424,7 +424,7 @@ components:
         reasonPhrase:
           type: string
     HttpTemplate:
-      title: "template to generate response / request"
+      description: "template to generate response / request"
       type: object
       additionalProperties: false
       properties:
@@ -438,7 +438,7 @@ components:
         template:
           type: string
     HttpForward:
-      title: host and port to forward to
+      description: "host and port to forward to"
       type: object
       additionalProperties: false
       properties:
@@ -453,7 +453,7 @@ components:
             - HTTP
             - HTTPS
     HttpClassCallback:
-      title: class callback
+      description: "class callback"
       type: object
       additionalProperties: false
       properties:
@@ -462,7 +462,7 @@ components:
         callbackClass:
           type: string
     HttpObjectCallback:
-      title: object / method callback
+      description: "object / method callback"
       type: object
       additionalProperties: false
       properties:
@@ -473,7 +473,7 @@ components:
         responseCallback:
           type: boolean
     HttpOverrideForwardedRequest:
-      title: override forwarded request
+      description: "override forwarded request"
       oneOf:
         - type: object
           additionalProperties: false
@@ -575,7 +575,7 @@ components:
             httpResponse:
               "$ref": "#/components/schemas/HttpResponse"
     HttpError:
-      title: error behaviour
+      description: "error behaviour"
       type: object
       additionalProperties: false
       properties:
@@ -586,7 +586,7 @@ components:
         responseBytes:
           type: string
     Times:
-      title: "number of responses"
+      description: "number of responses"
       type: object
       additionalProperties: false
       properties:
@@ -595,7 +595,7 @@ components:
         unlimited:
           type: boolean
     TimeToLive:
-      title: "time expectation is valid for"
+      description: "time expectation is valid for"
       type: object
       additionalProperties: false
       properties:
@@ -685,7 +685,7 @@ components:
           #   "^\\S+$":
           #     $ref: "#/components/schemas/StringOrJsonSchema"
     StringOrJsonSchema:
-      title: string value that can be support nottable, optional or a json schema
+      description: "string value that can be support nottable, optional or a json schema"
       oneOf:
         - type: string
         - type: object
@@ -716,7 +716,7 @@ components:
                 - PIPE_DELIMITED
                 - DEEP_OBJECT
     SocketAddress:
-      title: remote address to send request to
+      description: "remote address to send request to, only used for request overrides"
       type: object
       additionalProperties: false
       properties:

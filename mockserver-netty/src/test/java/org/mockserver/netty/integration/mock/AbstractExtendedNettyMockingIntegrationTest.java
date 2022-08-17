@@ -329,6 +329,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                             )
                             .withBody("an_example_body_http");
 
+                        assertThat(httpRequest.getLocalAddress(), equalTo("127.0.0.1:" + (httpRequest.isSecure() ? getServerSecurePort() : getServerPort())));
                         assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1"));
                         if (httpRequest.isSecure()) {
                             assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
@@ -414,6 +415,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         )
                         .withBody("an_example_body_http");
 
+                    assertThat(httpRequest.getLocalAddress(), equalTo("127.0.0.1:" + (httpRequest.isSecure() ? getServerSecurePort() : getServerPort())));
                     assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1"));
                     if (httpRequest.isSecure()) {
                         assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
@@ -832,6 +834,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 )
                 .forward(
                     httpRequest -> {
+                        assertThat(httpRequest.getLocalAddress(), equalTo("127.0.0.1:" + (httpRequest.isSecure() ? getServerSecurePort() : getServerPort())));
                         assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1"));
                         if (httpRequest.isSecure()) {
                             assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
@@ -899,11 +902,20 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withPath(calculatePath("echo"))
             )
             .forward(
-                httpRequest -> request()
-                    .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort()))
-                    .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
-                    .withBody("some_overridden_body")
-                    .withSecure(httpRequest.isSecure())
+                httpRequest -> {
+                    assertThat(httpRequest.getLocalAddress(), equalTo("127.0.0.1:" + (httpRequest.isSecure() ? getServerSecurePort() : getServerPort())));
+                    assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1"));
+                    if (httpRequest.isSecure()) {
+                        assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
+                        assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=localhost"));
+                        assertThat(httpRequest.getClientCertificateChain().get(1).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=www.mockserver.com"));
+                    }
+                    return request()
+                        .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort()))
+                        .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
+                        .withBody("some_overridden_body")
+                        .withSecure(httpRequest.isSecure());
+                }
             );
 
         // then
@@ -968,11 +980,20 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     )
             )
             .forward(
-                httpRequest -> request()
-                    .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort()))
-                    .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
-                    .withBody("some_overridden_body " + httpRequest.getPathParameters())
-                    .withSecure(httpRequest.isSecure())
+                httpRequest -> {
+                    assertThat(httpRequest.getLocalAddress(), equalTo("127.0.0.1:" + (httpRequest.isSecure() ? getServerSecurePort() : getServerPort())));
+                    assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1"));
+                    if (httpRequest.isSecure()) {
+                        assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
+                        assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=localhost"));
+                        assertThat(httpRequest.getClientCertificateChain().get(1).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=www.mockserver.com"));
+                    }
+                    return request()
+                        .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort()))
+                        .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
+                        .withBody("some_overridden_body " + httpRequest.getPathParameters())
+                        .withSecure(httpRequest.isSecure());
+                }
             );
 
         // then
@@ -1172,6 +1193,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 )
                 .forward(
                     httpRequest -> {
+                        assertThat(httpRequest.getLocalAddress(), equalTo("127.0.0.1:" + (httpRequest.isSecure() ? getServerSecurePort() : getServerPort())));
                         assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1"));
                         if (httpRequest.isSecure()) {
                             assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
@@ -1244,16 +1266,25 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withPath(calculatePath("echo"))
             )
             .forward(
-                httpRequest -> request()
-                    .withHeader("Host", "incorrect_host:1234")
-                    .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
-                    .withBody("some_overridden_body")
-                    .withSecure(httpRequest.isSecure())
-                    .withSocketAddress(
-                        "localhost",
-                        httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort(),
-                        httpRequest.isSecure() ? SocketAddress.Scheme.HTTPS : SocketAddress.Scheme.HTTP
-                    )
+                httpRequest -> {
+                    assertThat(httpRequest.getLocalAddress(), equalTo("127.0.0.1:" + (httpRequest.isSecure() ? getServerSecurePort() : getServerPort())));
+                    assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1"));
+                    if (httpRequest.isSecure()) {
+                        assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
+                        assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=localhost"));
+                        assertThat(httpRequest.getClientCertificateChain().get(1).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=www.mockserver.com"));
+                    }
+                    return request()
+                        .withHeader("Host", "incorrect_host:1234")
+                        .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
+                        .withBody("some_overridden_body")
+                        .withSecure(httpRequest.isSecure())
+                        .withSocketAddress(
+                            "localhost",
+                            httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort(),
+                            httpRequest.isSecure() ? SocketAddress.Scheme.HTTPS : SocketAddress.Scheme.HTTP
+                        );
+                }
             );
 
         // then

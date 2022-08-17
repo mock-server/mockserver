@@ -22,6 +22,7 @@ public class HttpRequestDTO extends RequestDefinitionDTO implements DTO<HttpRequ
     private Boolean secure;
     private List<X509Certificate> clientCertificateChain;
     private SocketAddress socketAddress;
+    private String localAddress;
     private String remoteAddress;
 
     public HttpRequestDTO() {
@@ -42,6 +43,7 @@ public class HttpRequestDTO extends RequestDefinitionDTO implements DTO<HttpRequ
             secure = httpRequest.isSecure();
             clientCertificateChain = httpRequest.getClientCertificateChain();
             socketAddress = httpRequest.getSocketAddress();
+            localAddress = httpRequest.getLocalAddress();
             remoteAddress = httpRequest.getRemoteAddress();
         }
     }
@@ -59,6 +61,7 @@ public class HttpRequestDTO extends RequestDefinitionDTO implements DTO<HttpRequ
             .withKeepAlive(keepAlive)
             .withClientCertificateChain(clientCertificateChain)
             .withSocketAddress(socketAddress)
+            .withLocalAddress(localAddress)
             .withRemoteAddress(remoteAddress)
             .withNot(getNot());
     }
@@ -159,6 +162,15 @@ public class HttpRequestDTO extends RequestDefinitionDTO implements DTO<HttpRequ
 
     public HttpRequestDTO setSocketAddress(SocketAddress socketAddress) {
         this.socketAddress = socketAddress;
+        return this;
+    }
+
+    public String getLocalAddress() {
+        return localAddress;
+    }
+
+    public HttpRequestDTO setLocalAddress(String localAddress) {
+        this.localAddress = localAddress;
         return this;
     }
 

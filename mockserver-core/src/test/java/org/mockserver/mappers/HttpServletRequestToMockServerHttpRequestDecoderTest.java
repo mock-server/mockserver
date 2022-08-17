@@ -15,6 +15,8 @@ import java.util.HashSet;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static junit.framework.TestCase.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockserver.configuration.Configuration.configuration;
@@ -38,6 +40,9 @@ public class HttpServletRequestToMockServerHttpRequestDecoderTest {
         httpServletRequest.addHeader("Content-Type", "multipart/form-data");
         httpServletRequest.setCookies(new javax.servlet.http.Cookie("cookieName1", "cookieValue1"), new javax.servlet.http.Cookie("cookieName2", "cookieValue2"));
         httpServletRequest.setContent("bodyParameterNameOne=bodyParameterValueOne_One&bodyParameterNameOne=bodyParameterValueOne_Two&bodyParameterNameTwo=bodyParameterValueTwo_One".getBytes(UTF_8));
+        httpServletRequest.setLocalAddr("local_addr");
+        httpServletRequest.setLocalPort(1234);
+        httpServletRequest.setRemoteHost("remote_addr");
 
         // when
         HttpRequest httpRequest = new HttpServletRequestToMockServerHttpRequestDecoder(configuration(), new MockServerLogger()).mapHttpServletRequestToMockServerRequest(httpServletRequest);
@@ -63,6 +68,8 @@ public class HttpServletRequestToMockServerHttpRequestDecoderTest {
             new Cookie("cookieName1", "cookieValue1"),
             new Cookie("cookieName2", "cookieValue2")
         ), httpRequest.getCookieList());
+        assertThat(httpRequest.getLocalAddress(), equalTo("local_addr:1234"));
+        assertThat(httpRequest.getRemoteAddress(), equalTo("remote_addr"));
     }
 
     @Test

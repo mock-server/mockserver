@@ -2680,6 +2680,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withKeepAlive(true)
                 .withSecure(false)
                 .withSocketAddress("localhost", insecureEchoServer.getPort(), SocketAddress.Scheme.HTTP)
+                .withLocalAddress("127.0.0.1:" + insecureEchoServer.getPort())
+                .withRemoteAddress("127.0.0.1")
                 .withBody("some_overridden_body")
         );
         assertEquals(
@@ -2807,6 +2809,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withKeepAlive(true)
                 .withSecure(false)
                 .withSocketAddress("localhost", insecureEchoServer.getPort(), SocketAddress.Scheme.HTTP)
+                .withLocalAddress("127.0.0.1:" + insecureEchoServer.getPort())
+                .withRemoteAddress("127.0.0.1")
                 .withBody("some_overridden_body")
         );
         assertEquals(
@@ -2886,6 +2890,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withKeepAlive(true)
                 .withSecure(false)
                 .withSocketAddress("localhost", insecureEchoServer.getPort(), SocketAddress.Scheme.HTTP)
+                .withLocalAddress("127.0.0.1:" + insecureEchoServer.getPort())
+                .withRemoteAddress("127.0.0.1")
                 .withBody("some_overridden_body")
         );
         assertEquals(

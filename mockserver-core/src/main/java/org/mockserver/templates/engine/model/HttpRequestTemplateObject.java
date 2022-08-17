@@ -23,6 +23,7 @@ public class HttpRequestTemplateObject extends RequestDefinition {
     private BodyDTO body = null;
     private Boolean secure = null;
     private List<X509Certificate> clientCertificateChain = null;
+    private String localAddress = null;
     private String remoteAddress = null;
     private Boolean keepAlive = null;
 
@@ -45,6 +46,7 @@ public class HttpRequestTemplateObject extends RequestDefinition {
             body = BodyDTO.createDTO(httpRequest.getBody());
             secure = httpRequest.isSecure();
             clientCertificateChain = httpRequest.getClientCertificateChain();
+            localAddress = httpRequest.getLocalAddress();
             remoteAddress = httpRequest.getRemoteAddress();
             keepAlive = httpRequest.isKeepAlive();
             setNot(httpRequest.getNot());
@@ -92,6 +94,10 @@ public class HttpRequestTemplateObject extends RequestDefinition {
         return clientCertificateChain;
     }
 
+    public String getLocalAddress() {
+        return localAddress;
+    }
+
     public String getRemoteAddress() {
         return remoteAddress;
     }
@@ -127,6 +133,7 @@ public class HttpRequestTemplateObject extends RequestDefinition {
             Objects.equals(headers, that.headers) &&
             Objects.equals(body, that.body) &&
             Objects.equals(secure, that.secure) &&
+            Objects.equals(localAddress, that.localAddress) &&
             Objects.equals(remoteAddress, that.remoteAddress) &&
             Objects.equals(keepAlive, that.keepAlive);
     }
@@ -134,7 +141,7 @@ public class HttpRequestTemplateObject extends RequestDefinition {
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(super.hashCode(), method, path, pathParameters, queryStringParameters, cookies, headers, body, secure, remoteAddress, keepAlive);
+            hashCode = Objects.hash(super.hashCode(), method, path, pathParameters, queryStringParameters, cookies, headers, body, secure, localAddress, remoteAddress, keepAlive);
         }
         return hashCode;
     }

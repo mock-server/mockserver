@@ -36,6 +36,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     private Boolean secure = null;
     private List<X509Certificate> clientCertificateChain;
     private SocketAddress socketAddress;
+    private String localAddress;
     private String remoteAddress;
 
     public static HttpRequest request() {
@@ -179,8 +180,19 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
         return this;
     }
 
+    public HttpRequest withLocalAddress(String localAddress) {
+        this.localAddress = localAddress;
+        this.hashCode = 0;
+        return this;
+    }
+
+    public String getLocalAddress() {
+        return localAddress;
+    }
+
     public HttpRequest withRemoteAddress(String remoteAddress) {
         this.remoteAddress = remoteAddress;
+        this.hashCode = 0;
         return this;
     }
 
@@ -1113,6 +1125,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
             .withSecure(secure)
             .withClientCertificateChain(clientCertificateChain)
             .withSocketAddress(socketAddress)
+            .withLocalAddress(localAddress)
             .withRemoteAddress(remoteAddress);
     }
 
@@ -1130,6 +1143,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
             .withSecure(secure)
             .withClientCertificateChain(clientCertificateChain != null && !clientCertificateChain.isEmpty() ? clientCertificateChain.stream().map(X509Certificate::clone).collect(Collectors.toList()) : null)
             .withSocketAddress(socketAddress)
+            .withLocalAddress(localAddress)
             .withRemoteAddress(remoteAddress);
     }
 
@@ -1209,7 +1223,9 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
             Objects.equals(keepAlive, that.keepAlive) &&
             Objects.equals(secure, that.secure) &&
             Objects.equals(clientCertificateChain, that.clientCertificateChain) &&
-            Objects.equals(socketAddress, that.socketAddress);
+            Objects.equals(socketAddress, that.socketAddress) &&
+            Objects.equals(localAddress, that.localAddress) &&
+            Objects.equals(remoteAddress, that.remoteAddress);
     }
 
     @Override
@@ -1217,7 +1233,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
         // need to call isSecure because getter can change the hashcode
         isSecure();
         if (hashCode == 0) {
-            hashCode = Objects.hash(super.hashCode(), method, path, pathParameters, queryStringParameters, body, headers, cookies, keepAlive, secure, clientCertificateChain, socketAddress);
+            hashCode = Objects.hash(super.hashCode(), method, path, pathParameters, queryStringParameters, body, headers, cookies, keepAlive, secure, clientCertificateChain, socketAddress, localAddress, remoteAddress);
         }
         return hashCode;
     }
