@@ -26,9 +26,11 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.mockserver.configuration.Configuration.configuration;
 
 
@@ -138,10 +140,10 @@ public class EchoServer implements Stoppable {
 
     public HttpRequest getLastRequest() {
         try {
-            HttpRequest httpRequest = lastRequest.httpRequest.get().get();
+            HttpRequest httpRequest = lastRequest.httpRequest.get().get(configuration.maxFutureTimeoutInMillis(), MILLISECONDS);
             lastRequest.httpRequest.set(new CompletableFuture<>());
             return httpRequest;
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (TimeoutException | InterruptedException | ExecutionException e) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(Level.ERROR)
