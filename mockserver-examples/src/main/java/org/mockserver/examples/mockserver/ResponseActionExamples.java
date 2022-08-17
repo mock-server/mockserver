@@ -21,6 +21,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpTemplate.template;
 import static org.mockserver.model.JsonBody.json;
+import static org.mockserver.model.NottableString.string;
 
 /**
  * @author jamesdbloom
@@ -65,6 +66,20 @@ public class ResponseActionExamples {
             .respond(
                 response()
                     .withBody(json("سلام", MediaType.APPLICATION_JSON_UTF_8))
+            );
+    }
+
+    public void invalidJsonResponseBody() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withMethod("GET")
+                    .withPath("/invalid_json")
+            )
+            .respond(
+                response()
+                    .withHeader("Content-Type", MediaType.APPLICATION_JSON_UTF_8.toString())
+                    .withBody("{ \"name\", \"", MediaType.APPLICATION_JSON_UTF_8)
             );
     }
 
