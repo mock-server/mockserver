@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - used helm release name in K8s resources to avoid conflicts for multiple deployments in same namespace (without extra values being set)
+- tlsMutualAuthenticationCertificateChain is used if configured, even if tlsMutualAuthenticationRequired is false, so clients can choose correct certificate for optional client auth
 
 ### Fixed
 - error matching header or parameters using array schema
