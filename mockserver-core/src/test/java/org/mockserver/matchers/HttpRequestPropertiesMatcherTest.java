@@ -741,7 +741,7 @@ public class HttpRequestPropertiesMatcherTest {
                 new Parameter("someKey", "someValueOne", "someValueTwo")
             )
         ));
-        assertTrue(updateForControlPlane(new HttpRequest()
+        assertFalse(updateForControlPlane(new HttpRequest()
             .withPath(
                 "/some/path/someValue"
             )
@@ -756,7 +756,7 @@ public class HttpRequestPropertiesMatcherTest {
                 new Parameter("someKey", "someValue")
             )
         ));
-        assertTrue(updateForControlPlane(new HttpRequest()
+        assertFalse(updateForControlPlane(new HttpRequest()
             .withPath(
                 "/some/path/someValueOne,someValueTwo"
             )

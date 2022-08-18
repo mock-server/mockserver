@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fixed NullPointerException and added more context information for match failures
 - fixed NullPointerException during matcher logging
 - fixed override logic for query and path parameters
+- fixed verification of path parameters with multiple path parameter expectations
 
 ## [5.13.2] - 2022-04-05
 

@@ -87,8 +87,6 @@ public class PathParametersDecoder {
                 }
             }
         }
-        // ensure actions have path parameters available to them
-        matched.withPathParameters(parsedParameters);
         return parsedParameters;
     }
 

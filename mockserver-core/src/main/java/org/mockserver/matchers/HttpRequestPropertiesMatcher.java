@@ -267,7 +267,11 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                     boolean pathMatches = StringUtils.isBlank(request.getPath().getValue()) || matches(PATH, context, pathMatcher, controlPlaneMatcher ? pathParametersParser.normalisePathWithParametersForMatching(request) : request.getPath());
                     Parameters pathParameters = null;
                     try {
-                        pathParameters = controlPlaneMatcher ? pathParametersParser.extractPathParameters(request, httpRequest) : pathParametersParser.extractPathParameters(httpRequest, request);
+//                        if (controlPlaneMatcher) {
+//                            pathParameters = pathParametersParser.extractPathParameters(request, httpRequest);
+//                        } else {
+                            pathParameters = pathParametersParser.extractPathParameters(httpRequest, request);
+//                        }
                     } catch (IllegalArgumentException iae) {
                         if (!httpRequest.getPath().isBlank()) {
                             if (context != null) {
@@ -299,12 +303,12 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                     boolean pathParametersMatches = true;
                     if (!httpRequest.getPath().isBlank()) {
                         if (!controlPlaneMatcher) {
-                            expandedParameterDecoder.splitParameters(httpRequest.getPathParameters(), request.getPathParameters());
+                            expandedParameterDecoder.splitParameters(httpRequest.getPathParameters(), pathParameters);
                         }
-                        MultiValueMapMatcher pathParameterMatcher = controlPlaneMatcher ? new MultiValueMapMatcher(mockServerLogger, request.getPathParameters(), controlPlaneMatcher) : this.pathParameterMatcher;
+                        MultiValueMapMatcher pathParameterMatcher = controlPlaneMatcher ? new MultiValueMapMatcher(mockServerLogger, pathParametersParser.extractPathParameters(request, httpRequest), controlPlaneMatcher) : this.pathParameterMatcher;
                         pathParametersMatches = matches(PATH_PARAMETERS, context, pathParameterMatcher, pathParameters);
                     }
-                    if (failFast(pathParameterMatcher, context, matchDifferenceCount, becauseBuilder, pathParametersMatches, PATH_PARAMETERS)) {
+                    if (failFast(this.pathParameterMatcher, context, matchDifferenceCount, becauseBuilder, pathParametersMatches, PATH_PARAMETERS)) {
                         return false;
                     }
 
@@ -326,7 +330,12 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                         return false;
                     }
 
-                    return combinedResultAreTrue(matchDifferenceCount.getFailures() == 0, request.isNot(), this.httpRequest.isNot(), not);
+                    boolean combinedResultAreTrue = combinedResultAreTrue(matchDifferenceCount.getFailures() == 0, request.isNot(), this.httpRequest.isNot(), not);
+                    if (!controlPlaneMatcher && combinedResultAreTrue) {
+                        // ensure actions have path parameters available to them
+                        request.withPathParameters(pathParameters);
+                    }
+                    return combinedResultAreTrue;
                 } else {
                     return combinedResultAreTrue(true, this.httpRequest.isNot(), not);
                 }

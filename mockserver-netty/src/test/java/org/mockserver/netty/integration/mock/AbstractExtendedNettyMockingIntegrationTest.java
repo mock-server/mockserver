@@ -9,6 +9,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.Test;
+import org.mockserver.authentication.AuthenticationException;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.matchers.TimeToLive;
@@ -43,6 +44,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.Configuration.configuration;
@@ -324,6 +326,89 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 getHeadersToRemove()
             )
         );
+    }
+
+    @Test
+    public void shouldVerifyWithMultiplePathParameterExpectations() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withMethod("GET")
+                    .withPath("/three/{three}/four/{four}")
+                    .withPathParameter("three", "yellow")
+                    .withPathParameter("four", "red")
+            )
+            .respond(
+                response()
+            );
+        mockServerClient
+            .when(
+                request()
+                    .withMethod("GET")
+                    .withPath("/one/{one}/two/{two}")
+                    .withPathParameter("one", "blue")
+                    .withPathParameter("two", "green")
+            )
+            .respond(
+                response()
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("/one/blue/two/green")),
+                getHeadersToRemove()
+            )
+        );
+
+        // and
+        mockServerClient
+            .verify(
+                request()
+                    .withPath("/one/{one}/two/{two}")
+                    .withPathParameter("one", "blue")
+                    .withPathParameter("two", "green")
+            );
+
+        AssertionError assertionError = assertThrows(AssertionError.class, () ->
+            mockServerClient
+                .verify(
+                    request()
+                        .withPath("/one/{one}/two/{two}")
+                        .withPathParameter("one", "blue")
+                        .withPathParameter("two", "green")
+                        .withPathParameter("three", "blue")
+                        .withPathParameter("four", "green")
+                )
+        );
+        assertThat(assertionError.getMessage(), containsString("Request sequence not found"));
+
+        assertionError = assertThrows(AssertionError.class, () ->
+            mockServerClient
+                .verify(
+                    request()
+                        .withPath("/one/{one}/two/{two}")
+                        .withPathParameter("one", "red")
+                        .withPathParameter("two", "green")
+                )
+        );
+        assertThat(assertionError.getMessage(), containsString("Request sequence not found"));
+
+        assertionError = assertThrows(AssertionError.class, () ->
+            mockServerClient
+                .verify(
+                    request()
+                        .withPath("/one/{one}/two/{two}")
+                        .withPathParameter("one", "blue")
+                        .withPathParameter("two", "yellow")
+                )
+        );
+        assertThat(assertionError.getMessage(), containsString("Request sequence not found"));
     }
 
     @Test
