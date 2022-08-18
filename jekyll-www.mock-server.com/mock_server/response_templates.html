@@ -751,7 +751,7 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
 <h4>Inverted Sections</h4>
 
 <p>An inverted section begins with a tag starting with a caret and ends with a matching tag starting with a slash.</p>
-<p>For example <code class="inline code">&lbrace;&lbrace;^-first&rbrace;&rbrace;</code> starts a <strong>-first</strong> section and <code class="inline code">&lbrace;&lbrace;/-first&rbrace;&rbrace;</code> closes the section.</p>
+<p>For example <code class="inline code">&lbrace;&lbrace;^-first&rbrace;&rbrace;</code> starts a <strong>-first</strong> section and <code class="inline code">&lbrace;&lbrace;/-first&rbrace;&rbrace;</code> closes the section.  This section therefore applies for all items in a list except the first item.</p>
 
 <p>Inverted sections render once based on the inverse value of the key, they will be rendered if the key doesn't exist, is false, is an empty string, or is an empty list.</p>
 
