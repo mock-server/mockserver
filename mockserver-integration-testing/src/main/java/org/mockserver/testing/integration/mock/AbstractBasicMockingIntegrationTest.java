@@ -2786,6 +2786,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                             .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
                             .withHeader("overrideHeaderToReplace", "originalValue")
                             .withHeader("overrideHeaderToRemove", "originalValue")
+                            .withQueryStringParameter("overrideParamToReplace", "originalValue")
+                            .withQueryStringParameter("overrideParamToRemove", "originalValue")
                             .withCookie("overrideCookieToReplace", "replacedValue")
                             .withCookie("requestCookieToReplace", "replacedValue")
                             .withBody("some_overridden_body")
@@ -2803,6 +2805,17 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                                     header("requestHeaderToReplace", "replacedValue")
                                 ),
                                 ImmutableList.of("overrideHeaderToRemove", "requestHeaderToRemove")
+                            )
+                            .withQueryStringParameters(
+                                ImmutableList.of(
+                                    param("paramToAddOne", "addedValue"),
+                                    param("paramToAddTwo", "addedValue")
+                                ),
+                                ImmutableList.of(
+                                    param("overrideParamToReplace", "replacedValue"),
+                                    param("requestParamToReplace", "replacedValue")
+                                ),
+                                ImmutableList.of("overrideParamToRemove", "requestParamToRemove")
                             )
                             .withCookies(
                                 ImmutableList.of(
@@ -2851,6 +2864,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withHeader("x-test", "test_headers_and_body")
                 .withHeader("requestHeaderToReplace", "originalValue")
                 .withHeader("requestHeaderToRemove", "originalValue")
+                .withQueryStringParameter("requestParamToReplace", "originalValue")
+                .withQueryStringParameter("requestParamToRemove", "originalValue")
                 .withBody("an_example_body_http"),
             getHeadersToRemove()
         );
@@ -2862,6 +2877,10 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             request()
                 .withMethod("POST")
                 .withPath(calculatePath("/prefix/some/infix/path/postfix"))
+                .withQueryStringParameter("requestParamToReplace", "replacedValue")
+                .withQueryStringParameter("paramToAddTwo", "addedValue")
+                .withQueryStringParameter("paramToAddOne", "addedValue")
+                .withQueryStringParameter("overrideParamToReplace", "replacedValue")
                 .withHeader("x-test", "test_headers_and_body")
                 .withHeader("requestHeaderToReplace", "replacedValue")
                 .withHeader("overrideHeaderToReplace", "replacedValue")

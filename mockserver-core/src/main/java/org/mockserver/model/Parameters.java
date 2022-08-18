@@ -33,6 +33,10 @@ public class Parameters extends KeysToMultiValues<Parameter, Parameters> {
         return new Parameter(name, values);
     }
 
+    protected void isModified() {
+        rawParameterString = null;
+    }
+
     public Parameters withKeyMatchStyle(KeyMatchStyle keyMatchStyle) {
         super.withKeyMatchStyle(keyMatchStyle);
         return this;

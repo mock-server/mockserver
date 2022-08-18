@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - removed the jdk14 slf4j bindings from the shaded and no-dependencies jars
 - fixed NullPointerException and added more context information for match failures
 - fixed NullPointerException during matcher logging
+- fixed override logic for query and path parameters
 
 ## [5.13.2] - 2022-04-05
 

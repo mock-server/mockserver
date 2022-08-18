@@ -29,6 +29,8 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
 
     public abstract T build(final NottableString name, final Collection<NottableString> values);
 
+    protected abstract void isModified();
+
     public KeyMatchStyle getKeyMatchStyle() {
         return keyMatchStyle;
     }
@@ -40,6 +42,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     }
 
     public K withEntries(final Map<String, List<String>> entries) {
+        isModified();
         multimap.clear();
         for (String name : entries.keySet()) {
             for (String value : entries.get(name)) {
@@ -50,6 +53,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     }
 
     public K withEntries(final List<T> entries) {
+        isModified();
         multimap.clear();
         if (entries != null) {
             for (T entry : entries) {
@@ -69,6 +73,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
 
     public K withEntry(final T entry) {
         if (entry != null) {
+            isModified();
             if (entry.getValues().isEmpty()) {
                 multimap.put(entry.getName(), null);
             } else {
@@ -79,6 +84,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     }
 
     public K withEntry(final String name, final String... values) {
+        isModified();
         if (values == null || values.length == 0) {
             multimap.put(string(name), string(""));
         } else {
@@ -88,6 +94,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     }
 
     public K withEntry(final String name, final List<String> values) {
+        isModified();
         if (values == null || values.size() == 0) {
             multimap.put(string(name), null);
         } else {
@@ -98,6 +105,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
 
     public K withEntry(final NottableString name, final List<NottableString> values) {
         if (values != null) {
+            isModified();
             multimap.putAll(name, values);
         }
         return k;
@@ -113,6 +121,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     public boolean remove(final String name) {
         boolean exists = false;
         if (name != null) {
+            isModified();
             for (NottableString key : multimap.keySet().toArray(new NottableString[0])) {
                 if (key.equalsIgnoreCase(name)) {
                     multimap.removeAll(key);
@@ -126,6 +135,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     public boolean remove(final NottableString name) {
         boolean exists = false;
         if (name != null) {
+            isModified();
             for (NottableString key : multimap.keySet().toArray(new NottableString[0])) {
                 if (key.equalsIgnoreCase(name)) {
                     multimap.removeAll(key);
@@ -139,6 +149,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     @SuppressWarnings("UnusedReturnValue")
     public K replaceEntry(final T entry) {
         if (entry != null) {
+            isModified();
             remove(entry.getName());
             multimap.putAll(entry.getName(), entry.getValues());
         }
@@ -148,6 +159,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     @SuppressWarnings("UnusedReturnValue")
     public K replaceEntryIfExists(final T entry) {
         if (entry != null) {
+            isModified();
             if (remove(entry.getName())) {
                 multimap.putAll(entry.getName(), entry.getValues());
             }
@@ -158,6 +170,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     @SuppressWarnings("UnusedReturnValue")
     public K replaceEntry(final String name, final String... values) {
         if (ArrayUtils.isNotEmpty(values)) {
+            isModified();
             remove(name);
             multimap.putAll(string(name), deserializeNottableStrings(values));
         }
