@@ -2,11 +2,15 @@ package org.mockserver.examples.mockserver;
 
 import org.mockserver.client.MockServerClient;
 import org.mockserver.file.FileReader;
+import org.mockserver.integration.ClientAndServer;
+import org.mockserver.model.ClearType;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static org.mockserver.mock.OpenAPIExpectation.openAPIExpectation;
+import static org.mockserver.model.HttpRequest.request;
 
 /**
  * @author jamesdbloom
@@ -18,6 +22,15 @@ public class OpenAPIExpectationExamples {
             .upsert(
                 openAPIExpectation(
                     "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
+                )
+            );
+    }
+
+    public void createOpenAPIPetStoreExpectationLoadedByHttpUrl() {
+        new MockServerClient("localhost", 1080)
+            .upsert(
+                openAPIExpectation(
+                    "https://petstore.swagger.io/v2/swagger.json"
                 )
             );
     }

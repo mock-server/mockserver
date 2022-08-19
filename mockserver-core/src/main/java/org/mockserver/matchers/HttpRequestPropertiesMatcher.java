@@ -267,11 +267,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                     boolean pathMatches = StringUtils.isBlank(request.getPath().getValue()) || matches(PATH, context, pathMatcher, controlPlaneMatcher ? pathParametersParser.normalisePathWithParametersForMatching(request) : request.getPath());
                     Parameters pathParameters = null;
                     try {
-//                        if (controlPlaneMatcher) {
-//                            pathParameters = pathParametersParser.extractPathParameters(request, httpRequest);
-//                        } else {
-                            pathParameters = pathParametersParser.extractPathParameters(httpRequest, request);
-//                        }
+                        pathParameters = pathParametersParser.extractPathParameters(httpRequest, request);
                     } catch (IllegalArgumentException iae) {
                         if (!httpRequest.getPath().isBlank()) {
                             if (context != null) {
@@ -305,7 +301,17 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                         if (!controlPlaneMatcher) {
                             expandedParameterDecoder.splitParameters(httpRequest.getPathParameters(), pathParameters);
                         }
-                        MultiValueMapMatcher pathParameterMatcher = controlPlaneMatcher ? new MultiValueMapMatcher(mockServerLogger, pathParametersParser.extractPathParameters(request, httpRequest), controlPlaneMatcher) : this.pathParameterMatcher;
+                        MultiValueMapMatcher pathParameterMatcher = this.pathParameterMatcher;
+                        if (controlPlaneMatcher) {
+                            Parameters controlPlaneParameters;
+                            try {
+                                controlPlaneParameters = pathParametersParser.extractPathParameters(request, httpRequest);
+                            } catch (IllegalArgumentException iae) {
+                                controlPlaneParameters = new Parameters();
+                            }
+                            pathParameterMatcher = new MultiValueMapMatcher(mockServerLogger, controlPlaneParameters, controlPlaneMatcher);
+
+                        }
                         pathParametersMatches = matches(PATH_PARAMETERS, context, pathParameterMatcher, pathParameters);
                     }
                     if (failFast(this.pathParameterMatcher, context, matchDifferenceCount, becauseBuilder, pathParametersMatches, PATH_PARAMETERS)) {

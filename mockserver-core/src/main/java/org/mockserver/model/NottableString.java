@@ -160,7 +160,7 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
     }
 
     public NottableString withStyle(ParameterStyle style) {
-        if (style.equals(DEEP_OBJECT)) {
+        if (style != null && style.equals(DEEP_OBJECT)) {
             throw new IllegalArgumentException("deep object style is not supported");
         }
         this.parameterStyle = style;

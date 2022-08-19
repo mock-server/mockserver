@@ -107,6 +107,7 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                                 .setLogLevel(ERROR)
                                 .setMessageFormat((StringUtils.isBlank(throwable.getMessage()) || !throwable.getMessage().contains(OPEN_API_LOAD_ERROR) ? OPEN_API_LOAD_ERROR + (isNotBlank(throwable.getMessage()) ? ", " : "") : "") + throwable.getMessage() + " for open api:{}")
                                 .setArguments(openAPIDefinition)
+                                .setThrowable(throwable)
                         );
                     }
                 } catch (Throwable throwable) {
@@ -253,83 +254,87 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
 
     private ParameterStyle parameterStyle(Boolean explode, Parameter.StyleEnum style) {
         ParameterStyle result = null;
-        switch (style) {
-            case MATRIX:
-                if (explode) {
-                    result = MATRIX_EXPLODED;
-                } else {
-                    result = MATRIX;
-                }
-                break;
-            case LABEL:
-                if (explode) {
-                    result = LABEL_EXPLODED;
-                } else {
-                    result = LABEL;
-                }
-                break;
-            case FORM:
-                if (explode) {
-                    result = FORM_EXPLODED;
-                } else {
-                    result = FORM;
-                }
-                break;
-            case SIMPLE:
-                if (explode) {
-                    result = SIMPLE_EXPLODED;
-                } else {
-                    result = SIMPLE;
-                }
-                break;
-            case SPACEDELIMITED:
-                if (explode) {
-                    result = SPACE_DELIMITED_EXPLODED;
-                } else {
-                    result = SPACE_DELIMITED;
-                }
-                break;
-            case PIPEDELIMITED:
-                if (explode) {
-                    result = PIPE_DELIMITED_EXPLODED;
-                } else {
-                    result = PIPE_DELIMITED;
-                }
-                break;
-            case DEEPOBJECT:
-                result = DEEP_OBJECT;
-                break;
+        if (explode != null && style != null) {
+            switch (style) {
+                case MATRIX:
+                    if (explode) {
+                        result = MATRIX_EXPLODED;
+                    } else {
+                        result = MATRIX;
+                    }
+                    break;
+                case LABEL:
+                    if (explode) {
+                        result = LABEL_EXPLODED;
+                    } else {
+                        result = LABEL;
+                    }
+                    break;
+                case FORM:
+                    if (explode) {
+                        result = FORM_EXPLODED;
+                    } else {
+                        result = FORM;
+                    }
+                    break;
+                case SIMPLE:
+                    if (explode) {
+                        result = SIMPLE_EXPLODED;
+                    } else {
+                        result = SIMPLE;
+                    }
+                    break;
+                case SPACEDELIMITED:
+                    if (explode) {
+                        result = SPACE_DELIMITED_EXPLODED;
+                    } else {
+                        result = SPACE_DELIMITED;
+                    }
+                    break;
+                case PIPEDELIMITED:
+                    if (explode) {
+                        result = PIPE_DELIMITED_EXPLODED;
+                    } else {
+                        result = PIPE_DELIMITED;
+                    }
+                    break;
+                case DEEPOBJECT:
+                    result = DEEP_OBJECT;
+                    break;
+            }
         }
         return result;
     }
 
     private ParameterStyle parameterStyle(Boolean explode, Encoding.StyleEnum style) {
         ParameterStyle result = null;
-        switch (style) {
-            case FORM:
-                if (explode) {
-                    result = FORM_EXPLODED;
-                } else {
-                    result = FORM;
-                }
-                break;
-            case SPACE_DELIMITED:
-                if (explode) {
-                    result = SPACE_DELIMITED_EXPLODED;
-                } else {
-                    result = SPACE_DELIMITED;
-                }
-                break;
-            case PIPE_DELIMITED:
-                if (explode) {
-                    result = PIPE_DELIMITED_EXPLODED;
-                } else {
-                    result = PIPE_DELIMITED;
-                }
-                break;
-            case DEEP_OBJECT:
-                result = DEEP_OBJECT;
-                break;
+        if (explode != null && style != null) {
+            switch (style) {
+                case FORM:
+                    if (explode) {
+                        result = FORM_EXPLODED;
+                    } else {
+                        result = FORM;
+                    }
+                    break;
+                case SPACE_DELIMITED:
+                    if (explode) {
+                        result = SPACE_DELIMITED_EXPLODED;
+                    } else {
+                        result = SPACE_DELIMITED;
+                    }
+                    break;
+                case PIPE_DELIMITED:
+                    if (explode) {
+                        result = PIPE_DELIMITED_EXPLODED;
+                    } else {
+                        result = PIPE_DELIMITED;
+                    }
+                    break;
+                case DEEP_OBJECT:
+                    result = DEEP_OBJECT;
+                    break;
+            }
         }
         return result;
     }
