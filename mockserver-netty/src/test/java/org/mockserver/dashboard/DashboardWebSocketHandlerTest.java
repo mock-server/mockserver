@@ -37,6 +37,200 @@ import static org.mockserver.model.HttpResponse.response;
 public class DashboardWebSocketHandlerTest {
 
     @Test
+    public void shouldSerialiseEventsAndIgnoreDeletedLogEvents() throws InterruptedException {
+        // given
+        List<LogEntry> logEntries = Arrays.asList(
+            new LogEntry()
+                .setHttpRequest(request("/somePathOne"))
+                .setMessageFormat("messagePartOne:{}messagePartTwo:{}")
+                .setArguments("argumentOne", "argumentTwo"),
+            new LogEntry()
+                .setHttpRequest(request("/somePathOne"))
+                .setMessageFormat("messagePartOne:{}messagePartTwo:{}")
+                .setArguments("argumentOne", "argumentTwo")
+                .setDeleted(true),
+            new LogEntry()
+                .setHttpRequest(request("/somePathOne"))
+                .setMessageFormat("messageFormat"),
+            new LogEntry()
+                .setHttpRequest(request("/somePathOne"))
+                .setMessageFormat("messageFormat")
+                .setDeleted(true),
+            new LogEntry()
+                .setHttpRequest(request("/somePathTwo"))
+                .setMessageFormat("messageFormat"),
+            new LogEntry()
+                .setHttpRequest(request("/somePathTwo"))
+                .setMessageFormat("messageFormat")
+                .setDeleted(true),
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setHttpRequest(request("/somePathOne"))
+                .setMessageFormat("messageFormatOne"),
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setHttpRequest(request("/somePathOne"))
+                .setMessageFormat("messageFormatOne")
+                .setDeleted(true),
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setHttpRequest(request("/somePathOne"))
+                .setMessageFormat("messageFormatTwo"),
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setHttpRequest(request("/somePathOne"))
+                .setMessageFormat("messageFormatTwo")
+                .setDeleted(true),
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setHttpRequest(request("/somePathTwo"))
+                .setMessageFormat("messageFormatThree"),
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setHttpRequest(request("/somePathTwo"))
+                .setMessageFormat("messageFormatThree")
+                .setDeleted(true)
+        );
+        String renderedList = "{\n" +
+            "  \"logMessages\" : [ {\n" +
+            "    \"key\" : \"" + logEntries.get(10).id() + "_log\",\n" +
+            "    \"value\" : {\n" +
+            "      \"description\" : \"" + StringUtils.substringAfter(logEntries.get(10).getTimestamp(), "-") + " RECEIVED_REQUEST   \",\n" +
+            "      \"style\" : {\n" +
+            "        \"paddingBottom\" : \"4px\",\n" +
+            "        \"whiteSpace\" : \"nowrap\",\n" +
+            "        \"overflow\" : \"auto\",\n" +
+            "        \"color\" : \"rgb(114,160,193)\",\n" +
+            "        \"paddingTop\" : \"4px\"\n" +
+            "      },\n" +
+            "      \"messageParts\" : [ {\n" +
+            "        \"key\" : \"" + logEntries.get(10).id() + "_0msg\",\n" +
+            "        \"value\" : \"messageFormatThree\"\n" +
+            "      } ]\n" +
+            "    }\n" +
+            "  }, {\n" +
+            "    \"key\" : \"" + logEntries.get(8).id() + "_log\",\n" +
+            "    \"value\" : {\n" +
+            "      \"description\" : \"" + StringUtils.substringAfter(logEntries.get(8).getTimestamp(), "-") + " RECEIVED_REQUEST   \",\n" +
+            "      \"style\" : {\n" +
+            "        \"paddingBottom\" : \"4px\",\n" +
+            "        \"whiteSpace\" : \"nowrap\",\n" +
+            "        \"overflow\" : \"auto\",\n" +
+            "        \"color\" : \"rgb(114,160,193)\",\n" +
+            "        \"paddingTop\" : \"4px\"\n" +
+            "      },\n" +
+            "      \"messageParts\" : [ {\n" +
+            "        \"key\" : \"" + logEntries.get(8).id() + "_0msg\",\n" +
+            "        \"value\" : \"messageFormatTwo\"\n" +
+            "      } ]\n" +
+            "    }\n" +
+            "  }, {\n" +
+            "    \"key\" : \"" + logEntries.get(6).id() + "_log\",\n" +
+            "    \"value\" : {\n" +
+            "      \"description\" : \"" + StringUtils.substringAfter(logEntries.get(6).getTimestamp(), "-") + " RECEIVED_REQUEST   \",\n" +
+            "      \"style\" : {\n" +
+            "        \"paddingBottom\" : \"4px\",\n" +
+            "        \"whiteSpace\" : \"nowrap\",\n" +
+            "        \"overflow\" : \"auto\",\n" +
+            "        \"color\" : \"rgb(114,160,193)\",\n" +
+            "        \"paddingTop\" : \"4px\"\n" +
+            "      },\n" +
+            "      \"messageParts\" : [ {\n" +
+            "        \"key\" : \"" + logEntries.get(6).id() + "_0msg\",\n" +
+            "        \"value\" : \"messageFormatOne\"\n" +
+            "      } ]\n" +
+            "    }\n" +
+            "  }, {\n" +
+            "    \"key\" : \"" + logEntries.get(4).id() + "_log\",\n" +
+            "    \"value\" : {\n" +
+            "      \"description\" : \"" + StringUtils.substringAfter(logEntries.get(4).getTimestamp(), "-") + " INFO               \",\n" +
+            "      \"style\" : {\n" +
+            "        \"style.whiteSpace\" : \"pre-wrap\",\n" +
+            "        \"paddingBottom\" : \"4px\",\n" +
+            "        \"whiteSpace\" : \"nowrap\",\n" +
+            "        \"overflow\" : \"auto\",\n" +
+            "        \"color\" : \"rgb(59,122,87)\",\n" +
+            "        \"paddingTop\" : \"4px\"\n" +
+            "      },\n" +
+            "      \"messageParts\" : [ {\n" +
+            "        \"key\" : \"" + logEntries.get(4).id() + "_0msg\",\n" +
+            "        \"value\" : \"messageFormat\"\n" +
+            "      } ]\n" +
+            "    }\n" +
+            "  }, {\n" +
+            "    \"key\" : \"" + logEntries.get(2).id() + "_log\",\n" +
+            "    \"value\" : {\n" +
+            "      \"description\" : \"" + StringUtils.substringAfter(logEntries.get(2).getTimestamp(), "-") + " INFO               \",\n" +
+            "      \"style\" : {\n" +
+            "        \"style.whiteSpace\" : \"pre-wrap\",\n" +
+            "        \"paddingBottom\" : \"4px\",\n" +
+            "        \"whiteSpace\" : \"nowrap\",\n" +
+            "        \"overflow\" : \"auto\",\n" +
+            "        \"color\" : \"rgb(59,122,87)\",\n" +
+            "        \"paddingTop\" : \"4px\"\n" +
+            "      },\n" +
+            "      \"messageParts\" : [ {\n" +
+            "        \"key\" : \"" + logEntries.get(2).id() + "_0msg\",\n" +
+            "        \"value\" : \"messageFormat\"\n" +
+            "      } ]\n" +
+            "    }\n" +
+            "  }, {\n" +
+            "    \"key\" : \"" + logEntries.get(0).id() + "_log\",\n" +
+            "    \"value\" : {\n" +
+            "      \"description\" : \"" + StringUtils.substringAfter(logEntries.get(0).getTimestamp(), "-") + " INFO               \",\n" +
+            "      \"style\" : {\n" +
+            "        \"style.whiteSpace\" : \"pre-wrap\",\n" +
+            "        \"paddingBottom\" : \"4px\",\n" +
+            "        \"whiteSpace\" : \"nowrap\",\n" +
+            "        \"overflow\" : \"auto\",\n" +
+            "        \"color\" : \"rgb(59,122,87)\",\n" +
+            "        \"paddingTop\" : \"4px\"\n" +
+            "      },\n" +
+            "      \"messageParts\" : [ {\n" +
+            "        \"key\" : \"" + logEntries.get(0).id() + "_0msg\",\n" +
+            "        \"value\" : \"messagePartOne:\"\n" +
+            "      }, {\n" +
+            "        \"key\" : \"" + logEntries.get(0).id() + "_0arg\",\n" +
+            "        \"multiline\" : false,\n" +
+            "        \"argument\" : true,\n" +
+            "        \"value\" : \"\\\"argumentOne\\\"\"\n" +
+            "      }, {\n" +
+            "        \"key\" : \"" + logEntries.get(0).id() + "_1msg\",\n" +
+            "        \"value\" : \"messagePartTwo:\"\n" +
+            "      }, {\n" +
+            "        \"key\" : \"" + logEntries.get(0).id() + "_1arg\",\n" +
+            "        \"multiline\" : false,\n" +
+            "        \"argument\" : true,\n" +
+            "        \"value\" : \"\\\"argumentTwo\\\"\"\n" +
+            "      } ]\n" +
+            "    }\n" +
+            "  } ],\n" +
+            "  \"recordedRequests\" : [ {\n" +
+            "    \"description\" : \"  /somePathTwo\",\n" +
+            "    \"value\" : {\n" +
+            "      \"path\" : \"/somePathTwo\"\n" +
+            "    },\n" +
+            "    \"key\" : \"" + logEntries.get(10).id() + "_request\"\n" +
+            "  }, {\n" +
+            "    \"description\" : \"  /somePathOne\",\n" +
+            "    \"value\" : {\n" +
+            "      \"path\" : \"/somePathOne\"\n" +
+            "    },\n" +
+            "    \"key\" : \"" + logEntries.get(8).id() + "_request\"\n" +
+            "  }, {\n" +
+            "    \"description\" : \"  /somePathOne\",\n" +
+            "    \"value\" : {\n" +
+            "      \"path\" : \"/somePathOne\"\n" +
+            "    },\n" +
+            "    \"key\" : \"" + logEntries.get(6).id() + "_request\"\n" +
+            "  } ]\n" +
+            "}";
+
+        // then
+        shouldRenderFilteredLogEntriesCorrectly(false, request(), logEntries, Collections.emptyList(), renderedList);
+    }
+
+    @Test
     public void shouldSerialiseEventsWithNoRequestFilter() throws InterruptedException {
         // given
         List<LogEntry> logEntries = Arrays.asList(

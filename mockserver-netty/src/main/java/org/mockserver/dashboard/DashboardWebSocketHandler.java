@@ -336,7 +336,7 @@ public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter impl
         mockServerEventLog
             .retrieveLogEntriesInReverseForUI(
                 httpRequest,
-                logEntry -> true,
+                logEntry -> !logEntry.isDeleted(),
                 DashboardLogEntryDTO::new,
                 reverseLogEventsStream -> {
                     List<ImmutableMap<String, Object>> activeExpectations = requestMatchers

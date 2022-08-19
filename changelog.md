@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fixed verification of path parameters with multiple path parameter expectations
 - fixed matching for array parameters using OpenAPI or a schema based parameter matcher
 - resolved errors matching path by regex against expectations with path parameters
+- resolved error with some deleted logs still appearing in the dashboard
 
 ## [5.13.2] - 2022-04-05
 
