@@ -9,7 +9,6 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.Header.header;

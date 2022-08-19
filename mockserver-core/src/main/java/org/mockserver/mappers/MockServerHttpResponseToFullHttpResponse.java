@@ -116,7 +116,7 @@ public class MockServerHttpResponseToFullHttpResponse {
         if (isBlank(httpResponse.getFirstHeader(CONTENT_LENGTH.toString()))) {
             boolean overrideContentLength = connectionOptions != null && connectionOptions.getContentLengthHeaderOverride() != null;
             boolean addContentLength = connectionOptions == null || !Boolean.TRUE.equals(connectionOptions.getSuppressContentLengthHeader());
-            boolean chunkedEncoding = connectionOptions != null && connectionOptions.getChunkSize() != null;
+            boolean chunkedEncoding = (connectionOptions != null && connectionOptions.getChunkSize() != null) || response.headers().contains(HttpHeaderNames.TRANSFER_ENCODING);
             if (overrideContentLength) {
                 response.headers().set(CONTENT_LENGTH, connectionOptions.getContentLengthHeaderOverride());
             } else if (addContentLength && !chunkedEncoding) {

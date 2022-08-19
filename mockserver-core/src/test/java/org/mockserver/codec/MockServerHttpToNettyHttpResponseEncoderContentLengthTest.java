@@ -1,6 +1,8 @@
 package org.mockserver.codec;
 
 import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpHeaders;
 import org.junit.Before;
 import org.junit.Test;
@@ -108,11 +110,26 @@ public class MockServerHttpToNettyHttpResponseEncoderContentLengthTest {
     public void shouldSuppressContentLengthViaConnectionOptions() {
         // given - a request
         httpResponse = response()
-                .withBody("some_content")
-                .withConnectionOptions(
-                        new ConnectionOptions()
-                                .withSuppressContentLengthHeader(true)
-                );
+            .withBody("some_content")
+            .withConnectionOptions(
+                new ConnectionOptions()
+                    .withSuppressContentLengthHeader(true)
+            );
+
+        // when
+        mockServerResponseEncoder.encode(null, httpResponse, output);
+
+        // then
+        HttpHeaders headers = ((FullHttpResponse) output.get(0)).headers();
+        assertThat(headers.contains("Content-Length"), is(false));
+    }
+
+    @Test
+    public void shouldSuppressContentLengthIfTransferEncodingSet() {
+        // given - a request
+        httpResponse = response()
+            .withBody("some_content")
+            .withHeader(HttpHeaderNames.TRANSFER_ENCODING.toString(), HttpHeaderValues.CHUNKED.toString());
 
         // when
         mockServerResponseEncoder.encode(null, httpResponse, output);
@@ -126,11 +143,11 @@ public class MockServerHttpToNettyHttpResponseEncoderContentLengthTest {
     public void shouldOverrideContentLengthViaConnectionOptions() {
         // given - a request
         httpResponse = response()
-                .withBody("some_content")
-                .withConnectionOptions(
-                        new ConnectionOptions()
-                                .withContentLengthHeaderOverride(50)
-                );
+            .withBody("some_content")
+            .withConnectionOptions(
+                new ConnectionOptions()
+                    .withContentLengthHeaderOverride(50)
+            );
 
         // when
         mockServerResponseEncoder.encode(null, httpResponse, output);
