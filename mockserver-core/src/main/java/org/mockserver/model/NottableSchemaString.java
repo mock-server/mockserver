@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
-import io.swagger.v3.oas.models.media.Schema;
-import io.swagger.v3.parser.util.SchemaTypeUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -21,6 +19,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoField;
+import java.util.List;
 
 import static io.swagger.v3.parser.util.SchemaTypeUtil.*;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -42,11 +41,11 @@ public class NottableSchemaString extends NottableString {
         .optionalEnd()
         .appendOffset("+HH:mm", "Z").toFormatter();
     private static final String TRUE = "true";
+    private static final String TYPE = "type";
     private final ObjectNode schemaJsonNode;
     private final String type;
     private final String json;
     private final JsonSchemaValidator jsonSchemaValidator;
-
 
     private static JsonNode convertToJsonNode(@Nonnull final String value, final String type, final String format) throws IOException {
         if ("null".equalsIgnoreCase(value)) {
@@ -112,8 +111,7 @@ public class NottableSchemaString extends NottableString {
         super(schema, not);
         if (isNotBlank(schema)) {
             schemaJsonNode = getSchemaJsonNode(getValue());
-            Schema<?> schemaByType = SchemaTypeUtil.createSchemaByType(schemaJsonNode);
-            type = schemaByType.getType();
+            type = getNodeValue(schemaJsonNode, TYPE);
         } else {
             schemaJsonNode = null;
             type = null;
@@ -126,8 +124,7 @@ public class NottableSchemaString extends NottableString {
         super(schema);
         if (isNotBlank(schema)) {
             schemaJsonNode = getSchemaJsonNode(getValue());
-            Schema<?> schemaByType = SchemaTypeUtil.createSchemaByType(schemaJsonNode);
-            type = schemaByType.getType();
+            type = getNodeValue(schemaJsonNode, TYPE);
         } else {
             schemaJsonNode = null;
             type = null;
@@ -138,6 +135,25 @@ public class NottableSchemaString extends NottableString {
         } else {
             jsonSchemaValidator = null;
         }
+    }
+
+    public boolean matches(MockServerLogger mockServerLogger, MatchDifference context, List<NottableString> json) {
+        if (isNotBlank(type) && type.equalsIgnoreCase("array")) {
+            try {
+                return matches(mockServerLogger, context, OBJECT_MAPPER.writeValueAsString(json));
+            } catch (Throwable throwable) {
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setLogLevel(Level.ERROR)
+                        .setMessageFormat("exception validating JSON")
+                        .setThrowable(throwable)
+                );
+                if (!isNot() && context != null) {
+                    context.addDifference(mockServerLogger, "schema match failed expect:{}found error:{}for:{}", this.json, throwable.getMessage(), json);
+                }
+            }
+        }
+        return false;
     }
 
     public boolean matches(String json) {
@@ -182,6 +198,18 @@ public class NottableSchemaString extends NottableString {
         } else {
             return jsonSchemaValidator.isValid(json, false);
         }
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private static String getNodeValue(ObjectNode node, String field) {
+        if (node != null) {
+            final JsonNode jsonNode = node.get(field);
+            if (jsonNode == null) {
+                return null;
+            }
+            return jsonNode.textValue();
+        }
+        return null;
     }
 
     @Override

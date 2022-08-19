@@ -805,6 +805,43 @@ public class NottableStringMultiMapContainAllTest {
     }
 
     @Test
+    public void shouldContainAllIdenticalSchemaValuesForArraySchema() {
+        // given - matching pattern
+        NottableStringMultiMap matcherForMatchingKey = new NottableStringMultiMap(
+            new MockServerLogger(),
+            false,
+            KeyMatchStyle.MATCHING_KEY,
+            new NottableString[]{string("keyOne"), schemaString("{\"type\": \"array\", \"items\": {\"type\": \"string\", \"pattern\": \"value.*\"}}")}
+        );
+        NottableStringMultiMap matched = new NottableStringMultiMap(
+            new MockServerLogger(),
+            false,
+            KeyMatchStyle.MATCHING_KEY,
+            new NottableString[]{string("keyOne"), string("valueOne"), string("valueTwo"), string("valueThree")}
+        );
+
+        // then
+        assertThat(matched.containsAll(null, null, matcherForMatchingKey), is(true));
+
+        // given - not matching pattern
+        matcherForMatchingKey = new NottableStringMultiMap(
+            new MockServerLogger(),
+            false,
+            KeyMatchStyle.MATCHING_KEY,
+            new NottableString[]{string("keyOne"), schemaString("{\"type\": \"array\", \"items\": {\"type\": \"string\", \"pattern\": \"valueO.*\"}}")}
+        );
+        matched = new NottableStringMultiMap(
+            new MockServerLogger(),
+            false,
+            KeyMatchStyle.MATCHING_KEY,
+            new NottableString[]{string("keyOne"), string("valueOne"), string("valueTwo"), string("valueThree")}
+        );
+
+        // then
+        assertThat(matched.containsAll(null, null, matcherForMatchingKey), is(false));
+    }
+
+    @Test
     public void shouldContainAllIdenticalSchemaKeysAndValues() {
         // can't match schema in reverse (without control plane)
         // can't match schema by matching keys (without control plane)

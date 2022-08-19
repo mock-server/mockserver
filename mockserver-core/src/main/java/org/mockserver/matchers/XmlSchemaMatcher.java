@@ -4,6 +4,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.validator.xmlschema.XmlSchemaValidator;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 /**
  * See http://xml-schema.org/
  *
@@ -28,17 +30,23 @@ public class XmlSchemaMatcher extends BodyMatcher<String> {
     public boolean matches(final MatchDifference context, String matched) {
         boolean result = false;
 
-        try {
-            String validation = xmlSchemaValidator.isValid(matched);
+        if (isNotBlank(matched)) {
+            try {
+                String validation = xmlSchemaValidator.isValid(matched);
 
-            result = validation.isEmpty();
+                result = validation.isEmpty();
 
-            if (!result && context != null) {
-                context.addDifference(mockServerLogger, "xml schema match failed expected:{}found:{}failed because:{}", this.matcher, matched, validation);
+                if (!result && context != null) {
+                    context.addDifference(mockServerLogger, "xml schema match failed expected:{}found:{}failed because:{}", this.matcher, matched, validation);
+                }
+            } catch (Throwable throwable) {
+                if (context != null) {
+                    context.addDifference(mockServerLogger, throwable, "xml schema match failed expected:{}found:{}failed because:{}", this.matcher, matched, throwable.getMessage());
+                }
             }
-        } catch (Throwable throwable) {
+        } else {
             if (context != null) {
-                context.addDifference(mockServerLogger, throwable, "xml schema match failed expected:{}found:{}failed because:{}", this.matcher, matched, throwable.getMessage());
+                context.addDifference(mockServerLogger, "xml schema match failed expected:{}found:{}failed because xml is null or empty", this.matcher, matched);
             }
         }
 

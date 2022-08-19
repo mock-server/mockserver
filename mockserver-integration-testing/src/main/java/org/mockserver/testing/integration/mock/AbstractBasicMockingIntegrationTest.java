@@ -53,6 +53,7 @@ import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.Parameter.schemaParam;
 import static org.mockserver.model.RegexBody.regex;
 import static org.mockserver.model.StringBody.exact;
+import static org.mockserver.model.XmlBody.xml;
 import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
 
 /**
@@ -731,6 +732,76 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
+    public void shouldReturnResponseByMatchingOpenAPIExpectationWithArrayParametersWithSpecAndResponse() throws JsonProcessingException {
+        // when
+
+        Expectation[] upsertedExpectations = mockServerClient
+            .upsert(
+                openAPIExpectation(
+                    FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example_with_array_parameters.json"),
+                    ImmutableMap.of(
+                        "findPetsByTags", "200"
+                    )
+                )
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader("content-type", "application/xml")
+                .withBody(xml("[ {" + NEW_LINE +
+                    "  \"id\" : 10," + NEW_LINE +
+                    "  \"name\" : \"doggie\"," + NEW_LINE +
+                    "  \"category\" : {" + NEW_LINE +
+                    "    \"id\" : 1," + NEW_LINE +
+                    "    \"name\" : \"Dogs\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"photoUrls\" : [ \"some_string_value\" ]," + NEW_LINE +
+                    "  \"tags\" : [ {" + NEW_LINE +
+                    "    \"id\" : 0," + NEW_LINE +
+                    "    \"name\" : \"some_string_value\"" + NEW_LINE +
+                    "  } ]," + NEW_LINE +
+                    "  \"status\" : \"available\"" + NEW_LINE +
+                    "} ]", MediaType.APPLICATION_XML)),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath("/v3/pet/findByTags")
+                    .withHeader("authorization", "some_tag")
+                    .withQueryStringParameter("tags", "tag1", "tag2", "tag3"),
+                getHeadersToRemove()
+            )
+        );
+
+        // and
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(
+            when(ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example_with_array_parameters.json")).toPrettyString(), "findPetsByTags")
+                .thenRespond(
+                    response()
+                        .withStatusCode(200)
+                        .withHeader("content-type", "application/xml")
+                        .withBody("[ {" + NEW_LINE +
+                            "  \"id\" : 10," + NEW_LINE +
+                            "  \"name\" : \"doggie\"," + NEW_LINE +
+                            "  \"category\" : {" + NEW_LINE +
+                            "    \"id\" : 1," + NEW_LINE +
+                            "    \"name\" : \"Dogs\"" + NEW_LINE +
+                            "  }," + NEW_LINE +
+                            "  \"photoUrls\" : [ \"some_string_value\" ]," + NEW_LINE +
+                            "  \"tags\" : [ {" + NEW_LINE +
+                            "    \"id\" : 0," + NEW_LINE +
+                            "    \"name\" : \"some_string_value\"" + NEW_LINE +
+                            "  } ]," + NEW_LINE +
+                            "  \"status\" : \"available\"" + NEW_LINE +
+                            "} ]")
+                )
+        ));
+    }
+
+    @Test
     public void shouldSupportBatchedExpectations() throws Exception {
         // when
         HttpResponse httpResponse = makeRequest(
@@ -1309,8 +1380,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 );
             fail("expected exception to be thrown");
         } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), equalTo("Request not found at least 4 times, expected:<{\n" +
-                "  \"path\" : \"" + calculatePath("some_path") + "\"\n" +
+            assertThat(ae.getMessage(), equalTo("Request not found at least 4 times, expected:<{" + NEW_LINE +
+                "  \"path\" : \"" + calculatePath("some_path") + "\"" + NEW_LINE +
                 "}> but was not found, found 3 other requests"));
         }
     }
@@ -1649,10 +1720,10 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 );
             fail("expected exception to be thrown");
         } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), equalTo("Request sequence not found, expected:<[ {\n" +
-                "  \"path\" : \"" + calculatePath("some_other_path") + "\"\n" +
-                "}, {\n" +
-                "  \"path\" : \"" + calculatePath("some_path") + "\"\n" +
+            assertThat(ae.getMessage(), equalTo("Request sequence not found, expected:<[ {" + NEW_LINE +
+                "  \"path\" : \"" + calculatePath("some_other_path") + "\"" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"path\" : \"" + calculatePath("some_path") + "\"" + NEW_LINE +
                 "} ]> but was not found, found 3 other requests"));
         }
     }
@@ -2516,18 +2587,18 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             "" + NEW_LINE +
             " schema validation errors:" + NEW_LINE +
             "" + NEW_LINE +
-            "  12 errors:\n" +
-            "   - $.httpError: is missing, but is required, if specifying action of type Error\n" +
-            "   - $.httpForward: is missing, but is required, if specifying action of type Forward\n" +
-            "   - $.httpForwardClassCallback: is missing, but is required, if specifying action of type ForwardClassCallback\n" +
-            "   - $.httpForwardObjectCallback: is missing, but is required, if specifying action of type ForwardObjectCallback\n" +
-            "   - $.httpForwardTemplate: is missing, but is required, if specifying action of type ForwardTemplate\n" +
-            "   - $.httpOverrideForwardedRequest: is missing, but is required, if specifying action of type OverrideForwardedRequest\n" +
-            "   - $.httpResponse: is missing, but is required, if specifying action of type Response\n" +
-            "   - $.httpResponseClassCallback: is missing, but is required, if specifying action of type ResponseClassCallback\n" +
-            "   - $.httpResponseObjectCallback: is missing, but is required, if specifying action of type ResponseObjectCallback\n" +
-            "   - $.httpResponseTemplate: is missing, but is required, if specifying action of type ResponseTemplate\n" +
-            "   - $.incorrectField: is not defined in the schema and the schema does not allow additional properties\n" +
+            "  12 errors:" + NEW_LINE +
+            "   - $.httpError: is missing, but is required, if specifying action of type Error" + NEW_LINE +
+            "   - $.httpForward: is missing, but is required, if specifying action of type Forward" + NEW_LINE +
+            "   - $.httpForwardClassCallback: is missing, but is required, if specifying action of type ForwardClassCallback" + NEW_LINE +
+            "   - $.httpForwardObjectCallback: is missing, but is required, if specifying action of type ForwardObjectCallback" + NEW_LINE +
+            "   - $.httpForwardTemplate: is missing, but is required, if specifying action of type ForwardTemplate" + NEW_LINE +
+            "   - $.httpOverrideForwardedRequest: is missing, but is required, if specifying action of type OverrideForwardedRequest" + NEW_LINE +
+            "   - $.httpResponse: is missing, but is required, if specifying action of type Response" + NEW_LINE +
+            "   - $.httpResponseClassCallback: is missing, but is required, if specifying action of type ResponseClassCallback" + NEW_LINE +
+            "   - $.httpResponseObjectCallback: is missing, but is required, if specifying action of type ResponseObjectCallback" + NEW_LINE +
+            "   - $.httpResponseTemplate: is missing, but is required, if specifying action of type ResponseTemplate" + NEW_LINE +
+            "   - $.incorrectField: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
             "   - oneOf of the following must be specified [httpError, httpForward, httpForwardClassCallback, httpForwardObjectCallback, httpForwardTemplate, httpOverrideForwardedRequest, httpResponse, httpResponseClassCallback, httpResponseObjectCallback, httpResponseTemplate]" + NEW_LINE +
             "  " + NEW_LINE +
             "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  ")));
@@ -2563,10 +2634,10 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             "" + NEW_LINE +
             " schema validation errors:" + NEW_LINE +
             "" + NEW_LINE +
-            "  4 errors:\n" +
-            "   - $.keepAlive: string found, boolean expected\n" +
-            "   - $.method: boolean found, string expected\n" +
-            "   - $.path: integer found, string expected\n" +
+            "  4 errors:" + NEW_LINE +
+            "   - $.keepAlive: string found, boolean expected" + NEW_LINE +
+            "   - $.method: boolean found, string expected" + NEW_LINE +
+            "   - $.path: integer found, string expected" + NEW_LINE +
             "   - $.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher" + NEW_LINE +
             "  " + NEW_LINE +
             "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  ")));
