@@ -286,8 +286,6 @@ components:
           type: integer
         httpRequest:
           $ref: "#/components/schemas/RequestDefinition"
-        openAPIDefinition:
-          $ref: "#/components/schemas/OpenAPIDefinition"
         httpResponse:
           $ref: "#/components/schemas/HttpResponse"
         httpResponseTemplate:
