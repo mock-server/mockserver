@@ -76,6 +76,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_MAX_HEADER_SIZE = "mockserver.maxHeaderSize";
     private static final String MOCKSERVER_MAX_CHUNK_SIZE = "mockserver.maxChunkSize";
     private static final String MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR = "mockserver.useSemicolonAsQueryParameterSeparator";
+    private static final String MOCKSERVER_ASSUME_ALL_REQUESTS_ARE_HTTP = "mockserver.assumeAllRequestsAreHttp";
 
     // CORS
     private static final String MOCKSERVER_ENABLE_CORS_FOR_API = "mockserver.enableCORSForAPI";
@@ -649,6 +650,21 @@ public class ConfigurationProperties {
         return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR, "MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR", "true"));
     }
 
+    /**
+     * If true requests are assumed as binary if the method isn't one of "GET", "POST", "PUT", "HEAD", "OPTIONS", "PATCH", "DELETE", "TRACE" or "CONNECT"
+     * <p>
+     * The default is true
+     *
+     * @param assumeAllRequestsAreHttp if true requests are assumed as binary if the method isn't one of "GET", "POST", "PUT", "HEAD", "OPTIONS", "PATCH", "DELETE", "TRACE" or "CONNECT"
+     */
+    public static void assumeAllRequestsAreHttp(boolean assumeAllRequestsAreHttp) {
+        setProperty(MOCKSERVER_ASSUME_ALL_REQUESTS_ARE_HTTP, "" + assumeAllRequestsAreHttp);
+    }
+
+    public static boolean assumeAllRequestsAreHttp() {
+        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_ASSUME_ALL_REQUESTS_ARE_HTTP, "MOCKSERVER_ASSUME_ALL_REQUESTS_ARE_HTTP", "false"));
+    }
+
     // CORS
 
     public static boolean enableCORSForAPI() {
@@ -778,6 +794,7 @@ public class ConfigurationProperties {
     /**
      * <p>The path to the json file used to initialize expectations in MockServer at startup, if set MockServer will load this file and initialise expectations for each item in the file when is starts.</p>
      * <p>The expected format of the file is a JSON array of expectations, as per the <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x#/Expectations" target="_blank">REST API format</a></p>
+     * <p>To watch multiple files use a file globs as documented here: https://mock-server.com/mock_server/initializing_expectations.html#expectation_initializer_json_glob_patterns</p>
      *
      * @param initializationJsonPath path to the json file used to initialize expectations in MockServer at startup
      */

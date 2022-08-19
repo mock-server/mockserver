@@ -63,6 +63,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
     private static final AttributeKey<Boolean> TLS_ENABLED_UPSTREAM = AttributeKey.valueOf("TLS_ENABLED_UPSTREAM");
     private static final AttributeKey<Boolean> TLS_ENABLED_DOWNSTREAM = AttributeKey.valueOf("TLS_ENABLED_DOWNSTREAM");
     private static final AttributeKey<NettySslContextFactory> NETTY_SSL_CONTEXT_FACTORY = AttributeKey.valueOf("NETTY_SSL_CONTEXT_FACTORY");
+    private static final AttributeKey<Boolean> HTTP_ENABLED = AttributeKey.valueOf("HTTP_ENABLED");
     private static final Map<PortBinding, Set<String>> localAddressesCache = new ConcurrentHashMap<>();
 
     protected final MockServerLogger mockServerLogger;
@@ -123,6 +124,18 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         }
     }
 
+    public static void httpEnabled(Channel channel) {
+        channel.attr(HTTP_ENABLED).set(Boolean.TRUE);
+    }
+
+    public static boolean isHttpEnabled(Channel channel) {
+        if (channel.attr(HTTP_ENABLED).get() != null) {
+            return channel.attr(HTTP_ENABLED).get();
+        } else {
+            return false;
+        }
+    }
+
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) {
         ctx.channel().attr(NETTY_SSL_CONTEXT_FACTORY).set(nettySslContextFactory);
@@ -141,6 +154,9 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         } else if (isProxyConnected(msg)) {
             logStage(ctx, "setting proxy connected");
             switchToProxyConnected(ctx, msg);
+        } else if (configuration.assumeAllRequestsAreHttp()) {
+            logStage(ctx, "adding HTTP decoders");
+            switchToHttp(ctx, msg);
         } else {
             logStage(ctx, "adding binary decoder");
             switchToBinary(ctx, msg);
@@ -214,50 +230,54 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
     }
 
     private void switchToHttp(ChannelHandlerContext ctx, ByteBuf msg) {
-        ChannelPipeline pipeline = ctx.pipeline();
+        if (!isHttpEnabled(ctx.channel())) {
+            httpEnabled(ctx.channel());
 
-        addLastIfNotPresent(pipeline, new HttpServerCodec(
-            configuration.maxInitialLineLength(),
-            configuration.maxHeaderSize(),
-            configuration.maxChunkSize()
-        ));
-        addLastIfNotPresent(pipeline, preserveHeadersNettyRemoves);
-        addLastIfNotPresent(pipeline, new HttpContentDecompressor());
-        addLastIfNotPresent(pipeline, httpContentLengthRemover);
-        addLastIfNotPresent(pipeline, new HttpObjectAggregator(Integer.MAX_VALUE));
-        if (configuration.tlsMutualAuthenticationRequired() && !isSslEnabledUpstream(ctx.channel())) {
-            HttpResponse httpResponse = response()
-                .withStatusCode(426)
-                .withHeader("Upgrade", "TLS/1.2, HTTP/1.1")
-                .withHeader("Connection", "Upgrade");
-            if (MockServerLogger.isEnabled(Level.INFO)) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(Level.INFO)
-                        .setMessageFormat("no tls for connection:{}returning response:{}")
-                        .setArguments(ctx.channel().localAddress(), httpResponse)
-                );
+            ChannelPipeline pipeline = ctx.pipeline();
+
+            addLastIfNotPresent(pipeline, new HttpServerCodec(
+                configuration.maxInitialLineLength(),
+                configuration.maxHeaderSize(),
+                configuration.maxChunkSize()
+            ));
+            addLastIfNotPresent(pipeline, preserveHeadersNettyRemoves);
+            addLastIfNotPresent(pipeline, new HttpContentDecompressor());
+            addLastIfNotPresent(pipeline, httpContentLengthRemover);
+            addLastIfNotPresent(pipeline, new HttpObjectAggregator(Integer.MAX_VALUE));
+            if (configuration.tlsMutualAuthenticationRequired() && !isSslEnabledUpstream(ctx.channel())) {
+                HttpResponse httpResponse = response()
+                    .withStatusCode(426)
+                    .withHeader("Upgrade", "TLS/1.2, HTTP/1.1")
+                    .withHeader("Connection", "Upgrade");
+                if (MockServerLogger.isEnabled(Level.INFO)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(Level.INFO)
+                            .setMessageFormat("no tls for connection:{}returning response:{}")
+                            .setArguments(ctx.channel().localAddress(), httpResponse)
+                    );
+                }
+                ctx
+                    .channel()
+                    .writeAndFlush(mockServerHttpResponseToFullHttpResponse
+                        .mapMockServerResponseToNettyResponse(
+                            // Upgrade Required
+                            httpResponse
+                        ).get(0)
+                    )
+                    .addListener((ChannelFuture future) -> future.channel().disconnect().awaitUninterruptibly());
+            } else {
+                addLastIfNotPresent(pipeline, new CallbackWebSocketServerHandler(httpState));
+                addLastIfNotPresent(pipeline, new DashboardWebSocketHandler(httpState, isSslEnabledUpstream(ctx.channel()), false));
+                addLastIfNotPresent(pipeline, new MockServerHttpServerCodec(configuration, mockServerLogger, isSslEnabledUpstream(ctx.channel()), ctx.channel().localAddress(), SniHandler.retrieveClientCertificates(mockServerLogger, ctx)));
+                addLastIfNotPresent(pipeline, new HttpRequestHandler(configuration, server, httpState, actionHandler));
+                pipeline.remove(this);
+
+                ctx.channel().attr(LOCAL_HOST_HEADERS).set(getLocalAddresses(ctx));
+
+                // fire message back through pipeline
+                ctx.fireChannelRead(msg.readBytes(actualReadableBytes()));
             }
-            ctx
-                .channel()
-                .writeAndFlush(mockServerHttpResponseToFullHttpResponse
-                    .mapMockServerResponseToNettyResponse(
-                        // Upgrade Required
-                        httpResponse
-                    ).get(0)
-                )
-                .addListener((ChannelFuture future) -> future.channel().disconnect().awaitUninterruptibly());
-        } else {
-            addLastIfNotPresent(pipeline, new CallbackWebSocketServerHandler(httpState));
-            addLastIfNotPresent(pipeline, new DashboardWebSocketHandler(httpState, isSslEnabledUpstream(ctx.channel()), false));
-            addLastIfNotPresent(pipeline, new MockServerHttpServerCodec(configuration, mockServerLogger, isSslEnabledUpstream(ctx.channel()), ctx.channel().localAddress(), SniHandler.retrieveClientCertificates(mockServerLogger, ctx)));
-            addLastIfNotPresent(pipeline, new HttpRequestHandler(configuration, server, httpState, actionHandler));
-            pipeline.remove(this);
-
-            ctx.channel().attr(LOCAL_HOST_HEADERS).set(getLocalAddresses(ctx));
-
-            // fire message back through pipeline
-            ctx.fireChannelRead(msg.readBytes(actualReadableBytes()));
         }
     }
 

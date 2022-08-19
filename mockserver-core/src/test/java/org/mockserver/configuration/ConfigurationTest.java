@@ -687,6 +687,32 @@ public class ConfigurationTest {
     }
 
     @Test
+    public void shouldSetAndGetAssumeAllRequestsAreHttp() {
+        boolean original = ConfigurationProperties.assumeAllRequestsAreHttp();
+        try {
+            // then - default value
+            assertThat(configuration.assumeAllRequestsAreHttp(), equalTo(false));
+
+            // when - system property setter
+            ConfigurationProperties.assumeAllRequestsAreHttp(true);
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.assumeAllRequestsAreHttp(), equalTo(true));
+            assertThat(System.getProperty("mockserver.assumeAllRequestsAreHttp"), equalTo("true"));
+            assertThat(configuration.assumeAllRequestsAreHttp(), equalTo(true));
+            ConfigurationProperties.assumeAllRequestsAreHttp(original);
+
+            // when - setter
+            configuration.assumeAllRequestsAreHttp(true);
+
+            // then - getter
+            assertThat(configuration.assumeAllRequestsAreHttp(), equalTo(true));
+        } finally {
+            ConfigurationProperties.assumeAllRequestsAreHttp(original);
+        }
+    }
+
+    @Test
     public void shouldSetAndGetEnableCORSForAPI() {
         boolean original = ConfigurationProperties.enableCORSForAPI();
         try {

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - improved documentation of clear functionality and type parameter and added examples
 - local ip and port exposed to callbacks and log, useful when bound on multiple ports
 - ability to match on content-encoding header
+- added support for custom HTTP methods (via assumeAllRequestsAreHttp)
 
 ### Changed
 - used helm release name in K8s resources to avoid conflicts for multiple deployments in same namespace (without extra values being set)
