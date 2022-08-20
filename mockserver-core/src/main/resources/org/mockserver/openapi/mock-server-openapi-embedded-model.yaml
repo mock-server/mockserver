@@ -148,7 +148,11 @@ paths:
                   - type: array
                     additionalProperties: false
                     items:
-                      $ref: "#/components/schemas/HttpResponse"
+                      $ref: "#/components/schemas/HttpRequest"
+                  - type: array
+                    additionalProperties: false
+                    items:
+                      $ref: "#/components/schemas/HttpRequestAndHttpResponse"
             application/java:
               schema:
                 type: string
@@ -1003,3 +1007,14 @@ components:
           items:
             type: number
           type: array
+    HttpRequestAndHttpResponse:
+      description: "request and response"
+      type: object
+      additionalProperties: false
+      properties:
+        httpRequest:
+          $ref: "#/components/schemas/HttpRequest"
+        httpResponse:
+          $ref: "#/components/schemas/HttpResponse"
+        timestamp:
+          type: string
