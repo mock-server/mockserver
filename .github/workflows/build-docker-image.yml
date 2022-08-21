@@ -1,9 +1,10 @@
 name: Build and push Docker image to Docker Hub
 on:
   workflow_dispatch:
-    tags:
-      description: 'Docker image tag'
-      required: true
+    inputs:
+      tags:
+        description: 'Docker image tag'
+        required: true
   push:
     tags:
       - mockserver-*
