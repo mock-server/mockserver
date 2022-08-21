@@ -1,6 +1,7 @@
 package org.mockserver.socket.tls;
 
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.mockserver.file.FileReader;
@@ -8,15 +9,15 @@ import org.mockserver.file.FileReader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.StringReader;
-import java.security.KeyFactory;
+import java.security.PrivateKey;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.security.PrivateKey;
 import java.security.spec.KeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -28,12 +29,27 @@ public class PEMToFile {
     private static final String END_CERTIFICATE = "-----END CERTIFICATE-----";
 
     private static final String BEGIN_PRIVATE_KEY = "-----BEGIN PRIVATE KEY-----";
-    private static final String BEGIN_RSA_PRIVATE_KEY = "-----BEGIN RSA PRIVATE KEY-----";
     private static final String END_PRIVATE_KEY = "-----END PRIVATE KEY-----";
+    private static final String BEGIN_RSA_PRIVATE_KEY = "-----BEGIN RSA PRIVATE KEY-----";
     private static final String END_RSA_PRIVATE_KEY = "-----END RSA PRIVATE KEY-----";
+    private static final String BEGIN_EC_PRIVATE_KEY = "-----BEGIN EC PRIVATE KEY-----";
+    private static final String END_EC_PRIVATE_KEY = "-----END EC PRIVATE KEY-----";
+    private static final Pattern BEGIN_PATTERN = Pattern.compile("-----BEGIN ([A-Z ]+)-----");
+    private static final Pattern END_PATTERN = Pattern.compile("-----END ([A-Z ]+)-----");
 
-    public static String privateKeyToPEM(final byte[] privateKey) {
-        return toPEM(privateKey, BEGIN_PRIVATE_KEY, END_PRIVATE_KEY);
+    public static String privateKeyToPEM(final PrivateKey privateKey) {
+        switch (privateKey.getAlgorithm()) {
+            case "ES256":
+            case "ES384":
+            case "ES512":
+                return toPEM(privateKey.getEncoded(), BEGIN_EC_PRIVATE_KEY, END_EC_PRIVATE_KEY);
+            case "RS256":
+            case "RS384":
+            case "RS512":
+                return toPEM(privateKey.getEncoded(), BEGIN_RSA_PRIVATE_KEY, END_RSA_PRIVATE_KEY);
+            default:
+                throw new IllegalArgumentException("Error invalid algorithm has been provided");
+        }
     }
 
     public static String certToPEM(final X509Certificate... x509Certificates) throws CertificateEncodingException {
@@ -68,8 +84,10 @@ public class PEMToFile {
                 pem
                     .replaceFirst(BEGIN_PRIVATE_KEY, EMPTY)
                     .replaceFirst(BEGIN_RSA_PRIVATE_KEY, EMPTY)
+                    .replaceFirst(BEGIN_EC_PRIVATE_KEY, EMPTY)
                     .replaceFirst(END_PRIVATE_KEY, EMPTY)
                     .replaceFirst(END_RSA_PRIVATE_KEY, EMPTY)
+                    .replaceFirst(END_EC_PRIVATE_KEY, EMPTY)
             );
     }
 
@@ -87,10 +105,15 @@ public class PEMToFile {
 
     public static PrivateKey privateKeyFromPEM(String pem) {
         try {
-
             PEMParser pemParser = new PEMParser(new StringReader(pem));
-            JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
-            return converter.getPrivateKey(PrivateKeyInfo.getInstance(pemParser.readObject()));
+            JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
+
+            Object readObject = pemParser.readObject();
+            if (readObject instanceof PEMKeyPair) {
+                return converter.getKeyPair((PEMKeyPair) readObject).getPrivate();
+            } else {
+                return converter.getPrivateKey(PrivateKeyInfo.getInstance(readObject));
+            }
         } catch (Exception e) {
             throw new RuntimeException("Exception reading private key from PEM file", e);
         }
