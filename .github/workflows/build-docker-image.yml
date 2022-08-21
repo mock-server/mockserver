@@ -1,5 +1,9 @@
 name: Build and push Docker image to Docker Hub
 on:
+  workflow_dispatch:
+    tags:
+      description: 'Docker image tag'
+      required: true
   push:
     tags:
       - mockserver-*
@@ -11,7 +15,15 @@ jobs:
       - uses: actions/checkout@v3
       - name: Get tag name
         id: get_tag_version
-        run: echo "::set-output name=version::${GITHUB_REF/refs\/tags\//}"
+        shell: bash
+        run: |
+          if [ "$DOCKER_TAG" == "" ]; then
+            echo "::set-output name=version::${GITHUB_REF/refs\/tags\//}"
+          else
+            echo "::set-output name=version::${DOCKER_TAG}"
+          fi
+        env:
+          DOCKER_TAG: ${{ github.event.inputs.logLevel }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
