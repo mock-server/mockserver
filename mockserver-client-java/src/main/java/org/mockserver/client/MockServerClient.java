@@ -35,7 +35,7 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
+import java.security.PrivateKey;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -348,7 +348,7 @@ public class MockServerClient implements Stoppable {
                 clientSslContextBuilderFunction =
                     sslContextBuilder -> {
                         try {
-                            RSAPrivateKey key = privateKeyFromPEMFile(configuration.controlPlanePrivateKeyPath());
+                            PrivateKey key = privateKeyFromPEMFile(configuration.controlPlanePrivateKeyPath());
                             X509Certificate[] keyCertChain = x509ChainFromPEMFile(configuration.controlPlaneX509CertificatePath()).toArray(new X509Certificate[0]);
                             X509Certificate[] trustCertCollection = nettySslContextFactory.trustCertificateChain(configuration.controlPlaneTLSMutualAuthenticationCAChain());
                             sslContextBuilder

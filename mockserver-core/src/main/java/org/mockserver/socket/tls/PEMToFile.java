@@ -1,14 +1,18 @@
 package org.mockserver.socket.tls;
 
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.mockserver.file.FileReader;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.security.KeyFactory;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
+import java.security.PrivateKey;
 import java.security.spec.KeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
@@ -73,7 +77,7 @@ public class PEMToFile {
         return new PKCS8EncodedKeySpec(privateKeyBytesFromPEM(pem));
     }
 
-    public static RSAPrivateKey privateKeyFromPEMFile(String filename) {
+    public static PrivateKey privateKeyFromPEMFile(String filename) {
         try {
             return privateKeyFromPEM(FileReader.readFileFromClassPathOrPath(filename));
         } catch (Exception e) {
@@ -81,9 +85,12 @@ public class PEMToFile {
         }
     }
 
-    public static RSAPrivateKey privateKeyFromPEM(String pem) {
+    public static PrivateKey privateKeyFromPEM(String pem) {
         try {
-            return (RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(keySpecFromPEM(pem));
+
+            PEMParser pemParser = new PEMParser(new StringReader(pem));
+            JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
+            return converter.getPrivateKey(PrivateKeyInfo.getInstance(pemParser.readObject()));
         } catch (Exception e) {
             throw new RuntimeException("Exception reading private key from PEM file", e);
         }

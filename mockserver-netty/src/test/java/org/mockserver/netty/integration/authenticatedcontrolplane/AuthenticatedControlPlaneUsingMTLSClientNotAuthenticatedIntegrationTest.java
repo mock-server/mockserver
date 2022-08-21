@@ -28,7 +28,7 @@ import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBas
 
 import javax.net.ssl.SSLException;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
+import java.security.PrivateKey;
 import java.util.Collections;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
@@ -88,7 +88,7 @@ public class AuthenticatedControlPlaneUsingMTLSClientNotAuthenticatedIntegration
         nettySslContextFactory.withClientSslContextBuilderFunction(
             sslContextBuilder -> {
                 try {
-                    RSAPrivateKey key = privateKeyFromPEMFile(ConfigurationProperties.controlPlanePrivateKeyPath());
+                    PrivateKey key = privateKeyFromPEMFile(ConfigurationProperties.controlPlanePrivateKeyPath());
                     X509Certificate[] keyCertChain = x509ChainFromPEMFile(ConfigurationProperties.controlPlaneX509CertificatePath()).toArray(new X509Certificate[0]);
                     X509Certificate[] trustCertCollection = nettySslContextFactory.trustCertificateChain(ConfigurationProperties.controlPlaneTLSMutualAuthenticationCAChain());
                     sslContextBuilder
