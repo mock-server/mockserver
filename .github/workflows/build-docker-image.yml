@@ -1,10 +1,5 @@
 name: Build and push Docker image to Docker Hub
 on:
-  workflow_dispatch:
-    inputs:
-      docker_image_tag:
-        description: 'Docker image tag'
-        required: true
   push:
     tags:
       - mockserver-*
@@ -42,7 +37,4 @@ jobs:
           file: docker/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          ${{ if gt(length(github.event.inputs.docker_image_tag), 0 ) }}:
-            tags: ${{ github.event.inputs.docker_image_tag }}
-          ${{ else }}:
-            tags:  ${{ steps.meta.outputs.tags }}
+          tags:  ${{ steps.meta.outputs.tags }}
