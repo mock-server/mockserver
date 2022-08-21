@@ -21,6 +21,7 @@ jobs:
           tags: |
             type=match,pattern=(.*),group=1
             type=match,pattern=mockserver-(.*),group=1
+#           type=raw,value=latest,enable=false
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
