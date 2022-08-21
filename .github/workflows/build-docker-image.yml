@@ -13,18 +13,19 @@ jobs:
   build-and-push-docker:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Get tag name
-        id: get_docker_image_tag
-        shell: bash
-        run: |
-          if [ "$DOCKER_TAG" == "" ]; then
-            echo "::set-output name=docker_image_tag::${GITHUB_REF/refs\/tags\//}"
-          else
-            echo "::set-output name=docker_image_tag::${DOCKER_TAG}"
-          fi
-        env:
-          DOCKER_TAG: ${{ github.event.inputs.docker_image_tag }}
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Get tags
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          # list of Docker images to use as base name for tags
+          images: |
+            mockserver/mockserver
+          # generate Docker tags based on the following events/attributes
+          tags: |
+            type=match,pattern=(.*),group=1
+            type=match,pattern=mockserver-(.*),group=1
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
@@ -41,4 +42,7 @@ jobs:
           file: docker/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: mockserver/mockserver:${{ steps.get_docker_image_tag.outputs.docker_image_tag }}
+          ${{ if gt(length(github.event.inputs.docker_image_tag), 0 ) }}:
+            tags: ${{ github.event.inputs.docker_image_tag }}
+          ${{ else }}:
+            tags:  ${{ steps.meta.outputs.tags }}
