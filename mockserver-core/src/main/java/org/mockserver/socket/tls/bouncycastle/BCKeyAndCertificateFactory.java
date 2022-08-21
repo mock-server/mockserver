@@ -34,7 +34,7 @@ import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
+import java.security.PrivateKey;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -57,7 +57,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
 
     private PrivateKey privateKey;
     private X509Certificate x509Certificate;
-    private RSAPrivateKey certificateAuthorityPrivateKey;
+    private PrivateKey certificateAuthorityPrivateKey;
     private X509Certificate certificateAuthorityX509Certificate;
 
     public BCKeyAndCertificateFactory(Configuration configuration, MockServerLogger mockServerLogger) {
@@ -101,7 +101,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
     /**
      * load ca private key
      */
-    private RSAPrivateKey certificateAuthorityPrivateKey() {
+    private PrivateKey certificateAuthorityPrivateKey() {
         if (certificateAuthorityPrivateKey == null) {
             if (dynamicallyUpdateCertificateAuthority()) {
                 buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
