@@ -4,7 +4,7 @@
 
     <groupId>org.mock-server</groupId>
     <artifactId>mockserver</artifactId>
-    <version>5.13.3-SNAPSHOT</version>
+    <version>5.14.0</version>
     <packaging>pom</packaging>
 
     <name>MockServer</name>
@@ -26,7 +26,7 @@
         <url>https://github.com/jamesdbloom/mockservice.git</url>
         <connection>scm:git:https://github.com/jamesdbloom/mockservice.git</connection>
         <developerConnection>scm:git:git@github.com:jamesdbloom/mockservice.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>mockserver-5.14.0</tag>
     </scm>
 
     <distributionManagement>
@@ -68,8 +68,8 @@
         <skipTests>false</skipTests>
         <skipAssembly>false</skipAssembly>
         <deploy.plugin.respository.url>https://oss.sonatype.org/content/repositories/snapshots/</deploy.plugin.respository.url>
-        <release.arguments/>
-        <javadoc.additional.parameters/>
+        <release.arguments />
+        <javadoc.additional.parameters />
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
     </properties>
 
@@ -859,7 +859,7 @@
                 <version>3.1.0</version>
                 <configuration>
                     <rules>
-                        <dependencyConvergence/>
+                        <dependencyConvergence />
                     </rules>
                 </configuration>
                 <executions>
