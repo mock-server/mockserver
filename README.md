@@ -65,6 +65,7 @@ Docker Hub contains the following artifacts:
 ##### Helm Chart
 
 * [MockServer Helm Chart](helm/mockserver/README.md) - a Helm Chart that installs MockServer to a Kubernetes cluster, available versions:
+  * [5.14.0](http://www.mock-server.com/mockserver-5.14.0.tgz)
   * [5.13.2](http://www.mock-server.com/mockserver-5.13.2.tgz)
   * [5.13.1](http://www.mock-server.com/mockserver-5.13.1.tgz)
   * [5.13.0](http://www.mock-server.com/mockserver-5.13.0.tgz)
@@ -84,7 +85,8 @@ Docker Hub contains the following artifacts:
 ##### Previous Versions
 Version         | Date        | Git & Docker Tag / Git Hash                                                                                                                                                                 | Documentation                                 | Java API                                                              | REST API
 :---------------|:------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:--------------------------------------------- |:--------------------------------------------------------------------- |:---------------------------------------------------------------------------------------
-5.13.2 (latest) | 05 Apr 2022 | [mockserver-5.13.2](https://github.com/mock-server/mockserver/tree/mockserver-5.13.2) / [81105b](https://github.com/mock-server/mockserver/commit/81105b3153674bbe66df612ad1b3a09a34a520cf) | [Documentation](http://mock-server.com)	    | [Java API](http://mock-server.com/versions/5.13.2/apidocs/index.html) | [5.13.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x)
+5.14.0 (latest) | 22 Aug 2022 | [mockserver-5.14.0](https://github.com/mock-server/mockserver/tree/mockserver-5.14.0) / [808eba](https://github.com/mock-server/mockserver/commit/808ebaa44a88b630ca181e62712aa47d4c9c7ff4) | [Documentation](http://mock-server.com)	    | [Java API](http://mock-server.com/versions/5.14.0/apidocs/index.html) | [5.14.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.14.x)
+5.13.2          | 05 Apr 2022 | [mockserver-5.13.2](https://github.com/mock-server/mockserver/tree/mockserver-5.13.2) / [81105b](https://github.com/mock-server/mockserver/commit/81105b3153674bbe66df612ad1b3a09a34a520cf) | [Documentation](http://5-13.mock-server.com)	| [Java API](http://mock-server.com/versions/5.13.2/apidocs/index.html) | [5.13.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x)
 5.13.1          | 02 Apr 2022 | [mockserver-5.13.1](https://github.com/mock-server/mockserver/tree/mockserver-5.13.1) / [39d1cc](https://github.com/mock-server/mockserver/commit/39d1cc6251e6dbd00ab8012dbe39def6d8bb7312) | [Documentation](http://5-13.mock-server.com)	| [Java API](http://mock-server.com/versions/5.13.1/apidocs/index.html) | [5.13.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x)
 5.13.0          | 17 Mar 2022 | [mockserver-5.13.0](https://github.com/mock-server/mockserver/tree/mockserver-5.13.0) / [604888](https://github.com/mock-server/mockserver/commit/604888cdb0f66f1f217e54c4f3ad3e3c7785f3af) | [Documentation](http://5-13.mock-server.com)  | [Java API](http://mock-server.com/versions/5.13.0/apidocs/index.html) | [5.13.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x)
 5.12.0          | 12 Feb 2022 | [mockserver-5.12.0](https://github.com/mock-server/mockserver/tree/mockserver-5.12.0) / [61747f](https://github.com/mock-server/mockserver/commit/61747fd20316603e7ff4c0dd0e3ee34ea386882f) | [Documentation](http://5-12.mock-server.com)  | [Java API](http://mock-server.com/versions/5.12.0/apidocs/index.html) | [5.12.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.12.x)
@@ -107,7 +109,7 @@ Version         | Date        | Git & Docker Tag / Git Hash                     
 ### Issues
 
 If you have any problems, please [check the project issues](https://github.com/mock-server/mockserver/issues?state=open) and avoid opening issues that have already been fixed.  When you open an issue please provide the following information:
-- MockServer version (i.e. 5.13.2)
+- MockServer version (i.e. 5.14.0)
 - How your running the MockServer (i.e maven plugin, docker, etc)
 - MockServer log output, at INFO level (or higher)
 - What the error is

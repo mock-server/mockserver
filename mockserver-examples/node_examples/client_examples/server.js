@@ -10,7 +10,7 @@ function runMockServer() {
                 '-Dmockserver.corsAllowHeaders="Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"',
                 '-Dmockserver.corsAllowCredentials=true -Dmockserver.corsMaxAgeInSeconds=300'
             ],
-            mockServerVersion: "5.13.2",
+            mockServerVersion: "5.14.0",
             verbose: true
         })
         .then(

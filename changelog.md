@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Fixed
+
+## [5.14.0] - 2022-08-22
+
+### Added
 - added support for json serialisation and de-serialisation java date time
 - support for server urls in OpenAPI specification, by adding server url path as path prefix to operations
 - improved documentation of clear functionality and type parameter and added examples
