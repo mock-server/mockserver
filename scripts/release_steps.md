@@ -14,27 +14,23 @@
     8. find and replace maven / npm version references include 5.14.x, 5.14.0 and 5.14.1-SNAPSHOT (to new SNAPSHOT verion)
     9. find and replace swagger version references (i.e. in website code example documentation) - 5.14.x mentioned in item above
     10. find and replace SNAPSHOT version references - 5.14.1-SNAPSHOT mentioned in item above
-    11. commit to github
+    11. git add -A && git commit -m "updates after a release" && git push origin master
 4. update mockserver-node
     1. rm -rf package-lock.json node_modules
     2. find and replace MockServer version both 5.14.0 and 5.14.x
     3. nvm use v16.14.1
     4. npm i
     5. grunt
-    6. git push origin master
-    7. git tag mockserver-5.14.0
-    8. git push origin --tags
-    9. npm login
-    10. npm publish --access=public --otp=****
+    6. git add -A && git commit -m "upgraded to MockServer 5.14.0" && git push origin master && git tag mockserver-5.14.0 && git push origin --tags
+    11. npm login
+    12. npm publish --access=public --otp=****
 5. update mockserver-client-node
     1. rm -rf package-lock.json node_modules
     2. find and replace MockServer version both 5.14.0 and 5.14.x
     3. nvm use v16.14.1
     4. npm i
     5. grunt
-    6. git push origin master
-    7. git tag mockserver-5.14.0
-    8. git push origin --tags
+    6. git add -A && git commit -m "upgraded to MockServer 5.14.0" && git push origin master && git tag mockserver-5.14.0 && git push origin --tags
     9. npm login (not required if done recently)
     10. npm publish --access=public --otp=****
 6. update mockserver-maven-plugin
@@ -42,7 +38,7 @@
     2. update jar-with-dependencies SNAPSHOT version to RELEASE version
     3. update integration-testing SNAPSHOT version to RELEASE version
     4. ./scripts/local_deploy_snapshot.sh
-    5. git push origin master
+    5. git add -A && git commit -m "upgraded to MockServer 5.14.0" && git push origin master
     6. ./scripts/local_release.sh
     7. release on Maven https://oss.sonatype.org/index.html#stagingRepositories
     8. close -> release (auto drop)
@@ -50,6 +46,7 @@
     10. update jar-with-dependencies RELEASE version to new SNAPSHOT version
     11. update integration-testing RELEASE version to new SNAPSHOT version
     12. ./scripts/local_deploy_snapshot.sh
+    13. git add -A && git commit -m "updates after a release" && git push origin master
 7. update docker image
     1. ensure maven returns the latest release
         1. curl -v https://oss.sonatype.org/service/local/artifact/maven/redirect\?r\=releases\&g\=org.mock-server\&a\=mockserver-netty\&c\=shaded\&e\=jar\&v\=RELEASE
@@ -65,7 +62,7 @@
     5. mv /Users/jamesbloom/git/mockserver/mockserver/helm/mockserver-5.14.0.tgz .
     6. helm repo index .
     7. upload new chart and index.yaml to S3 https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq
-    8. git add -A && git commit -m "added new heml chart" && git pull --rebase && git push origin master
+    8. git add -A && git commit -m "added new heml chart release" && git pull --rebase && git push origin master
 9. add javaDoc
    1. git checkout mockserver-5.14.0
    2. export JAVA_HOME=`/usr/libexec/java_home -v 1.8` or export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home
