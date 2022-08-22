@@ -61,13 +61,14 @@
     4. cd ~/git/mockserver/mockserver/helm/charts
     5. mv /Users/jamesbloom/git/mockserver/mockserver/helm/mockserver-5.14.0.tgz .
     6. helm repo index .
-    7. upload new chart and index.yaml to S3 https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq
-    8. git add -A && git commit -m "added new heml chart release" && git pull --rebase && git push origin master
+    7. open . && open https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq
+    8. upload new chart and index.yaml to S3 https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq
+    9. git add -A && git commit -m "added new heml chart release" && git pull --rebase && git push origin master
 9. add javaDoc
    1. git checkout mockserver-5.14.0
    2. export JAVA_HOME=`/usr/libexec/java_home -v 1.8` or export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home
    3. ./mvnw javadoc:aggregate -P release -DreportOutputDirectory='/Users/jamesbloom/git/mockserver/javadoc/5.14.0'
-   4. open /Users/jamesbloom/git/mockserver/javadoc
+   4. open /Users/jamesbloom/git/mockserver/javadoc && open https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq/versions/?region=us-east-1
    5. upload as public to S3 https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq/versions/?region=us-east-1
    6. git checkout master
 10. update swaggehub
@@ -82,23 +83,24 @@
         1. cd jekyll-www.mock-server.com
         2. rm -rf _site
         3. `rbenv which bundle` exec jekyll build
-        4. cd _site
+        4. open _site && open https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq/?region=us-east-1 
         5. copy to https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq/?region=us-east-1
         6. invalidate CloudFront cache i.e. using `/*` here: https://console.aws.amazon.com/cloudfront/v3/home?region=us-east-1#/distributions/E3R1W2C7JJIMNR/invalidations
 12. create copy of document / website for existing version (for minor or major releases)
     1. create S3 bucket cloning permissions from existing
     2. copy public policy
     3. enabled ACLs and set `Object writer` object ownership
-    4. upload to S3
+    4. turn off `Block all public access`
+    5. upload to S3
         1. cd jekyll-www.mock-server.com
         2. rm -rf _site
         3. `rbenv which bundle` exec jekyll build
         4. cd _site
         5. copy to new bucket
-    5. create cloud front distribution copying existing settings
-    6. make sure to set the default root object to "index.html"
-    7. create Route53 A record as alias to cloud front distribution
-    8. ensure links in README are correct
+    6. create cloud front distribution copying existing settings
+    7. make sure to set the default root object to "index.html"
+    8. create Route53 A record as alias to cloud front distribution
+    9. ensure links in README are correct
 13. update homebrew
     1. brew doctor
     2. delete https://github.com/jamesdbloom/homebrew-core
@@ -107,7 +109,7 @@
     5. git -C "$(brew --repo homebrew/core)" branch -D bump-mockserver-5.14.0
     6. git -C "$(brew --repo homebrew/core)" reset --hard HEAD
     7. brew update
-    8. HOMEBREW_GITHUB_API_TOKEN=<token value> **Note:** use personal access token as password (due to lack of 2FA)
+    8. HOMEBREW_GITHUB_API_TOKEN=<token value> **Note:** use personal access token as password (due to lack of 2FA) - if expired create new token with full repo access only
     9. brew bump-formula-pr --strict mockserver --url="https://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/5.14.0/mockserver-netty-5.14.0-brew-tar.tar"
 
 ## Cleanup Failed Release Steps
