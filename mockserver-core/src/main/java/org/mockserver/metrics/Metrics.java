@@ -1,10 +1,17 @@
 package org.mockserver.metrics;
 
+import io.prometheus.client.Gauge;
 import org.mockserver.configuration.Configuration;
+import org.mockserver.log.model.LogEntry;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Action;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.mockserver.log.model.LogEntry.LogMessageType.EXCEPTION;
 
 /**
  * @author jamesdbloom
@@ -12,105 +19,133 @@ import java.util.concurrent.ConcurrentHashMap;
 @SuppressWarnings({"SynchronizationOnLocalVariableOrMethodParameter", "FieldMayBeFinal"})
 public class Metrics {
 
-    private static Map<Name, Integer> metrics = new ConcurrentHashMap<>();
-    private final Configuration configuration;
+    private static final AtomicReference<Boolean> additionalMetricsRegistered = new AtomicReference<>(false);
+    private static final Map<Name, Gauge> metrics = new ConcurrentHashMap<>();
+
+    private final Boolean metricsEnabled;
 
     public Metrics(Configuration configuration) {
-        this.configuration = configuration;
-    }
-
-    public static void clear() {
-        metrics.clear();
-    }
-
-    public void set(Name name, Integer value) {
-        metrics.put(name, value);
-    }
-
-    public static Integer get(Name name) {
-        Integer value = metrics.get(name);
-        return value != null ? value : 0;
-    }
-
-    public void increment(Name name) {
-        if (configuration.metricsEnabled()) {
-            synchronized (name) {
-                metrics.merge(name, 1, Integer::sum);
-            }
+        metricsEnabled = configuration.metricsEnabled();
+        if (metricsEnabled && additionalMetricsRegistered.compareAndSet(false, true)) {
+            new BuildInfoCollector().register();
+            Arrays.stream(Name.values()).forEach(Metrics::getOrCreate);
         }
     }
 
-    public void decrement(Name name) {
-        if (configuration.metricsEnabled()) {
-            synchronized (name) {
-                final Integer currentValue = metrics.get(name);
-                if (currentValue != null) {
-                    metrics.put(name, currentValue - 1);
-                } else {
-                    throw new IllegalArgumentException("Can not decrement metric \"" + name + "\" because it not exist");
+    private static Gauge getOrCreate(Name name) {
+        synchronized (name) {
+            Gauge gauge = metrics.get(name);
+            if (gauge == null) {
+                try {
+                    gauge = Gauge.build()
+                        .name(name.name().toLowerCase())
+                        .help(name.description)
+                        .register();
+                    metrics.put(name, gauge);
+                } catch (Throwable throwable) {
+                    new MockServerLogger().logEvent(
+                        new LogEntry()
+                            .setType(EXCEPTION)
+                            .setMessageFormat("exception:{} creating metric:{}")
+                            .setArguments(throwable.getMessage(), name.name())
+                            .setThrowable(throwable)
+                    );
                 }
             }
+            return gauge;
+        }
+    }
+
+    public static void clear() {
+        metrics.forEach((name, gauge) -> gauge.set(0));
+    }
+
+    public static void clear(Name name) {
+        getOrCreate(name).set(0);
+    }
+
+    public void set(Name name, Integer value) {
+        if (metricsEnabled) {
+            getOrCreate(name).set(value);
+        }
+    }
+
+    public static Integer get(Name name) {
+        return (int) getOrCreate(name).get();
+    }
+
+    public void increment(Name name) {
+        if (metricsEnabled) {
+            getOrCreate(name).inc();
         }
     }
 
     public void increment(Action.Type type) {
-        if (configuration.metricsEnabled()) {
-            Name name = Name.valueOf("ACTION_" + type.name() + "_COUNT");
-            synchronized (name) {
-                metrics.merge(name, 1, Integer::sum);
-            }
+        if (metricsEnabled) {
+            increment(Name.valueOf(type.name() + "_ACTIONS_COUNT"));
+        }
+    }
+
+    public void decrement(Name name) {
+        if (metricsEnabled) {
+            getOrCreate(name).dec();
         }
     }
 
     public void decrement(Action.Type type) {
-        if (configuration.metricsEnabled()) {
-            Name name = Name.valueOf("ACTION_" + type.name() + "_COUNT");
-            synchronized (name) {
-                final Integer currentValue = metrics.get(name);
-                if (currentValue != null) {
-                    metrics.put(name, currentValue - 1);
-                } else {
-                    throw new IllegalArgumentException("Can not decrement metric \"" + name + "\" because it not exist");
-                }
-            }
+        if (metricsEnabled) {
+            decrement(Name.valueOf(type.name() + "_ACTIONS_COUNT"));
         }
     }
 
+    public static void clearRequestAndExpectationMetrics() {
+        clear(Name.REQUESTS_RECEIVED_COUNT);
+        clear(Name.EXPECTATIONS_NOT_MATCHED_COUNT);
+        clear(Name.RESPONSE_EXPECTATIONS_MATCHED_COUNT);
+    }
+
     public static void clearActionMetrics() {
-        metrics.remove(Name.ACTION_FORWARD_COUNT);
-        metrics.remove(Name.ACTION_FORWARD_TEMPLATE_COUNT);
-        metrics.remove(Name.ACTION_FORWARD_CLASS_CALLBACK_COUNT);
-        metrics.remove(Name.ACTION_FORWARD_OBJECT_CALLBACK_COUNT);
-        metrics.remove(Name.ACTION_FORWARD_REPLACE_COUNT);
-        metrics.remove(Name.ACTION_RESPONSE_COUNT);
-        metrics.remove(Name.ACTION_RESPONSE_TEMPLATE_COUNT);
-        metrics.remove(Name.ACTION_RESPONSE_CLASS_CALLBACK_COUNT);
-        metrics.remove(Name.ACTION_RESPONSE_OBJECT_CALLBACK_COUNT);
-        metrics.remove(Name.ACTION_ERROR_COUNT);
+        clear(Name.FORWARD_ACTIONS_COUNT);
+        clear(Name.FORWARD_TEMPLATE_ACTIONS_COUNT);
+        clear(Name.FORWARD_CLASS_CALLBACK_ACTIONS_COUNT);
+        clear(Name.FORWARD_OBJECT_CALLBACK_ACTIONS_COUNT);
+        clear(Name.FORWARD_REPLACE_ACTIONS_COUNT);
+        clear(Name.RESPONSE_ACTIONS_COUNT);
+        clear(Name.RESPONSE_TEMPLATE_ACTIONS_COUNT);
+        clear(Name.RESPONSE_CLASS_CALLBACK_ACTIONS_COUNT);
+        clear(Name.RESPONSE_OBJECT_CALLBACK_ACTIONS_COUNT);
+        clear(Name.ERROR_ACTIONS_COUNT);
     }
 
     public static void clearWebSocketMetrics() {
-        metrics.remove(Name.WEBSOCKET_CALLBACK_CLIENT_COUNT);
-        metrics.remove(Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT);
-        metrics.remove(Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT);
+        clear(Name.WEBSOCKET_CALLBACK_CLIENTS_COUNT);
+        clear(Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLERS_COUNT);
+        clear(Name.WEBSOCKET_CALLBACK_FORWARD_HANDLERS_COUNT);
     }
 
     public enum Name {
-        EXPECTATION_NOT_MATCHED_COUNT,
-        RESPONSE_EXPECTATION_MATCHED_COUNT,
-        FORWARD_EXPECTATION_MATCHED_COUNT,
-        ACTION_FORWARD_COUNT,
-        ACTION_FORWARD_TEMPLATE_COUNT,
-        ACTION_FORWARD_CLASS_CALLBACK_COUNT,
-        ACTION_FORWARD_OBJECT_CALLBACK_COUNT,
-        ACTION_FORWARD_REPLACE_COUNT,
-        ACTION_RESPONSE_COUNT,
-        ACTION_RESPONSE_TEMPLATE_COUNT,
-        ACTION_RESPONSE_CLASS_CALLBACK_COUNT,
-        ACTION_RESPONSE_OBJECT_CALLBACK_COUNT,
-        ACTION_ERROR_COUNT,
-        WEBSOCKET_CALLBACK_CLIENT_COUNT,
-        WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT,
-        WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT
+        REQUESTS_RECEIVED_COUNT("Expectation not matched count"),
+        EXPECTATIONS_NOT_MATCHED_COUNT("Expectation not matched count"),
+        RESPONSE_EXPECTATIONS_MATCHED_COUNT("Response expectation matched count"),
+        FORWARD_EXPECTATIONS_MATCHED_COUNT("Forward expectation matched count"),
+        FORWARD_ACTIONS_COUNT("Action forward count"),
+        FORWARD_TEMPLATE_ACTIONS_COUNT("Action forward template count"),
+        FORWARD_CLASS_CALLBACK_ACTIONS_COUNT("Action forward class callback count"),
+        FORWARD_OBJECT_CALLBACK_ACTIONS_COUNT("Action forward object callback count"),
+        FORWARD_REPLACE_ACTIONS_COUNT("Action forward replace count"),
+        RESPONSE_ACTIONS_COUNT("Action response count"),
+        RESPONSE_TEMPLATE_ACTIONS_COUNT("Action response template count"),
+        RESPONSE_CLASS_CALLBACK_ACTIONS_COUNT("Action response class callback count"),
+        RESPONSE_OBJECT_CALLBACK_ACTIONS_COUNT("Action response object callback count"),
+        ERROR_ACTIONS_COUNT("Action error count"),
+        WEBSOCKET_CALLBACK_CLIENTS_COUNT("Websocket callback client count"),
+        WEBSOCKET_CALLBACK_RESPONSE_HANDLERS_COUNT("Websocket callback response handler count"),
+        WEBSOCKET_CALLBACK_FORWARD_HANDLERS_COUNT("Websocket callback forward handler count");
+
+        public final String description;
+
+        Name(String description) {
+            this.description = description;
+        }
     }
 }

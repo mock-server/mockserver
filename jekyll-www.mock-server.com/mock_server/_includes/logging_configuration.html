@@ -85,7 +85,7 @@
 
 <button id="button_configuration_enabled_metrics" class="accordion title"><strong>Enable Metrics</strong></button>
 <div class="panel title">
-    <p>Enable the recording of metrics for different activities within MockServer, such as, EXPECTATION_NOT_MATCHED_COUNT, ACTION_RESPONSE_COUNT, WEBSOCKET_CALLBACK_CLIENT_COUNT, etc</p>
+    <p>Enable the recording of metrics for different activities within MockServer, these are exposed via /mockserver/metrics in prometheus format</p>
     <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.metricsEnabled(boolean enable)</code></pre>

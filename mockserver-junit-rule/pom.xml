@@ -203,6 +203,10 @@
                                     <shadedPattern>shaded_package.io.swagger</shadedPattern>
                                 </relocation>
                                 <relocation>
+                                    <pattern>io.prometheus</pattern>
+                                    <shadedPattern>shaded_package.io.prometheus</shadedPattern>
+                                </relocation>
+                                <relocation>
                                     <pattern>jakarta.activation</pattern>
                                     <shadedPattern>shaded_package.jakarta.activation</shadedPattern>
                                 </relocation>

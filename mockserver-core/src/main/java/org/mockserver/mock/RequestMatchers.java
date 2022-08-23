@@ -211,6 +211,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         httpRequestMatchers.stream().forEach(httpRequestMatcher -> removeHttpRequestMatcher(httpRequestMatcher, cause, false, UUIDService.getUUID()));
         expectationRequestDefinitions.clear();
         Metrics.clearActionMetrics();
+        Metrics.clearRequestAndExpectationMetrics();
         notifyListeners(this, cause);
     }
 
@@ -241,11 +242,11 @@ public class RequestMatchers extends MockServerMatcherNotifier {
             .findFirst();
         if (configuration.metricsEnabled()) {
             if (!first.isPresent() || first.get().getAction() == null) {
-                metrics.increment(EXPECTATION_NOT_MATCHED_COUNT);
+                metrics.increment(EXPECTATIONS_NOT_MATCHED_COUNT);
             } else if (first.get().getAction().getType().direction == Action.Direction.FORWARD) {
-                metrics.increment(FORWARD_EXPECTATION_MATCHED_COUNT);
+                metrics.increment(FORWARD_EXPECTATIONS_MATCHED_COUNT);
             } else {
-                metrics.increment(RESPONSE_EXPECTATION_MATCHED_COUNT);
+                metrics.increment(RESPONSE_EXPECTATIONS_MATCHED_COUNT);
             }
         }
         return first.orElse(null);

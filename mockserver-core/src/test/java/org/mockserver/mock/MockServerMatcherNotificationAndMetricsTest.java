@@ -77,7 +77,7 @@ public class MockServerMatcherNotificationAndMetricsTest {
         MILLISECONDS.sleep(500);
         assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
         assertThat(causes, contains(API));
-        assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(1));
+        assertThat(Metrics.get(Metrics.Name.RESPONSE_ACTIONS_COUNT), is(1));
     }
 
     @Test
@@ -105,8 +105,8 @@ public class MockServerMatcherNotificationAndMetricsTest {
         MILLISECONDS.sleep(500);
         assertThat(requestMatchers.httpRequestMatchers.size(), is(2));
         assertThat(causes, contains(API, API));
-        assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(1));
-        assertThat(Metrics.get(Metrics.Name.ACTION_FORWARD_COUNT), is(1));
+        assertThat(Metrics.get(Metrics.Name.RESPONSE_ACTIONS_COUNT), is(1));
+        assertThat(Metrics.get(Metrics.Name.FORWARD_ACTIONS_COUNT), is(1));
 
         // when
         causes.clear();
@@ -116,8 +116,8 @@ public class MockServerMatcherNotificationAndMetricsTest {
         MILLISECONDS.sleep(500);
         assertThat(requestMatchers.httpRequestMatchers.size(), is(0));
         assertThat(causes, contains(API));
-        assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(0));
-        assertThat(Metrics.get(Metrics.Name.ACTION_FORWARD_COUNT), is(0));
+        assertThat(Metrics.get(Metrics.Name.RESPONSE_ACTIONS_COUNT), is(0));
+        assertThat(Metrics.get(Metrics.Name.FORWARD_ACTIONS_COUNT), is(0));
     }
 
     @Test
@@ -139,7 +139,7 @@ public class MockServerMatcherNotificationAndMetricsTest {
         MILLISECONDS.sleep(500);
         assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
         assertThat(causes, contains(API));
-        assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(1));
+        assertThat(Metrics.get(Metrics.Name.RESPONSE_ACTIONS_COUNT), is(1));
 
         // when
         causes.clear();
@@ -155,7 +155,7 @@ public class MockServerMatcherNotificationAndMetricsTest {
         MILLISECONDS.sleep(500);
         assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
         assertThat(causes, contains(API));
-        assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(1));
+        assertThat(Metrics.get(Metrics.Name.RESPONSE_ACTIONS_COUNT), is(1));
     }
 
 
@@ -186,9 +186,9 @@ public class MockServerMatcherNotificationAndMetricsTest {
             API,
             API
         ));
-        assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(1));
-        assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_OBJECT_CALLBACK_COUNT), is(1));
-        assertThat(Metrics.get(Metrics.Name.ACTION_FORWARD_OBJECT_CALLBACK_COUNT), is(1));
+        assertThat(Metrics.get(Metrics.Name.RESPONSE_ACTIONS_COUNT), is(1));
+        assertThat(Metrics.get(Metrics.Name.RESPONSE_OBJECT_CALLBACK_ACTIONS_COUNT), is(1));
+        assertThat(Metrics.get(Metrics.Name.FORWARD_OBJECT_CALLBACK_ACTIONS_COUNT), is(1));
 
         // when
         causes.clear();
@@ -205,7 +205,7 @@ public class MockServerMatcherNotificationAndMetricsTest {
         MILLISECONDS.sleep(500);
         assertThat(requestMatchers.httpRequestMatchers.size(), is(3));
         assertThat(causes, contains(API));
-        assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(3));
+        assertThat(Metrics.get(Metrics.Name.RESPONSE_ACTIONS_COUNT), is(3));
     }
 
 }

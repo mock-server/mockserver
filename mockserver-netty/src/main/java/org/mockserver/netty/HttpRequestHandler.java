@@ -10,6 +10,8 @@ import org.mockserver.dashboard.DashboardHandler;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.metrics.Metrics;
+import org.mockserver.metrics.MetricsHandler;
 import org.mockserver.mock.HttpState;
 import org.mockserver.mock.action.http.HttpActionHandler;
 import org.mockserver.model.HttpRequest;
@@ -36,6 +38,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.exception.ExceptionHandling.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
 import static org.mockserver.log.model.LogEntry.LogMessageType.AUTHENTICATION_FAILED;
+import static org.mockserver.metrics.Metrics.Name.REQUESTS_RECEIVED_COUNT;
 import static org.mockserver.mock.HttpState.PATH_PREFIX;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
@@ -52,22 +55,27 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
     public static final AttributeKey<Boolean> PROXYING = AttributeKey.valueOf("PROXYING");
     public static final AttributeKey<Set<String>> LOCAL_HOST_HEADERS = AttributeKey.valueOf("LOCAL_HOST_HEADERS");
     private static final Base64Converter BASE_64_CONVERTER = new Base64Converter();
-    private MockServerLogger mockServerLogger;
-    private HttpState httpState;
-    private PortBindingSerializer portBindingSerializer;
     private final Configuration configuration;
     private LifeCycle server;
+    private HttpState httpState;
+    private Metrics metrics;
+    private MockServerLogger mockServerLogger;
+    private PortBindingSerializer portBindingSerializer;
     private HttpActionHandler httpActionHandler;
-    private DashboardHandler dashboardHandler = new DashboardHandler();
+    private DashboardHandler dashboardHandler;
+    private MetricsHandler metricsHandler;
 
     public HttpRequestHandler(Configuration configuration, LifeCycle server, HttpState httpState, HttpActionHandler httpActionHandler) {
         super(false);
         this.configuration = configuration;
         this.server = server;
         this.httpState = httpState;
+        this.metrics = new Metrics(configuration);
         this.mockServerLogger = httpState.getMockServerLogger();
         this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
         this.httpActionHandler = httpActionHandler;
+        this.dashboardHandler = new DashboardHandler();
+        this.metricsHandler = new MetricsHandler(configuration);
     }
 
     private static boolean isProxyingRequest(ChannelHandlerContext ctx) {
@@ -88,6 +96,10 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
 
     @Override
     protected void channelRead0(final ChannelHandlerContext ctx, final HttpRequest request) {
+
+        if (configuration.metricsEnabled()) {
+            metrics.increment(REQUESTS_RECEIVED_COUNT);
+        }
 
         ResponseWriter responseWriter = new NettyResponseWriter(configuration, mockServerLogger, ctx, httpState.getScheduler());
         try {
@@ -124,6 +136,10 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
                 } else if (request.getMethod().getValue().equals("GET") && request.getPath().getValue().startsWith(PATH_PREFIX + "/dashboard")) {
 
                     dashboardHandler.renderDashboard(ctx, request);
+
+                } else if (configuration.metricsEnabled() && request.getMethod().getValue().equals("GET") && request.getPath().getValue().matches(PATH_PREFIX + "/metrics")) {
+
+                    metricsHandler.renderMetrics(ctx, request);
 
                 } else if (request.getMethod().getValue().equals("CONNECT")) {
 

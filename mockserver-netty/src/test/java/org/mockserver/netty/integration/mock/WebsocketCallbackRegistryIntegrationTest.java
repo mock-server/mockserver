@@ -27,6 +27,8 @@ import java.nio.charset.StandardCharsets;
 import static junit.framework.TestCase.assertEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.mockserver.configuration.ConfigurationProperties.controlPlaneJWTAuthenticationJWKSource;
+import static org.mockserver.configuration.ConfigurationProperties.metricsEnabled;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.matchers.Times.once;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
@@ -43,17 +45,28 @@ import static org.mockserver.testing.closurecallback.ViaWebSocket.viaWebSocket;
  */
 public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingIntegrationTestBase {
 
+    private static boolean originalMetricsEnabled;
+
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
     @BeforeClass
     public static void startServer() {
+        // save original value
+        originalMetricsEnabled = metricsEnabled();
+
+        // enabled metrics
+        metricsEnabled(true);
+
         mockServerClient = new ClientAndServer();
     }
 
     @AfterClass
     public static void stopServer() {
         stopQuietly(mockServerClient);
+
+        // set back to original value
+        metricsEnabled(originalMetricsEnabled);
     }
 
     @Override
@@ -76,13 +89,13 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                 );
 
             // then
-            tryWaitForSuccess(() -> assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENT_COUNT), CoreMatchers.is(1)));
+            tryWaitForSuccess(() -> assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENTS_COUNT), CoreMatchers.is(1)));
 
             // when
             mockServerClient.reset();
 
             // then
-            tryWaitForSuccess(() -> assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENT_COUNT), CoreMatchers.is(0)));
+            tryWaitForSuccess(() -> assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENTS_COUNT), CoreMatchers.is(0)));
         });
     }
 
@@ -100,13 +113,13 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
             );
 
         // then
-        assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENT_COUNT), CoreMatchers.is(0));
+        assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENTS_COUNT), CoreMatchers.is(0));
 
         // when
         mockServerClient.reset();
 
         // then
-        assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENT_COUNT), CoreMatchers.is(0));
+        assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENTS_COUNT), CoreMatchers.is(0));
     }
 
     @Test // same JVM due to dynamic calls to static Metrics class
@@ -125,13 +138,13 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
 
             try {
                 // then
-                tryWaitForSuccess(() -> assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENT_COUNT), CoreMatchers.is(1)));
+                tryWaitForSuccess(() -> assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENTS_COUNT), CoreMatchers.is(1)));
 
                 // when
                 mockServerClient.stop();
 
                 // then
-                tryWaitForSuccess(() -> assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENT_COUNT), CoreMatchers.is(0)));
+                tryWaitForSuccess(() -> assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENTS_COUNT), CoreMatchers.is(0)));
             } finally {
                 mockServerClient.stop();
             }
@@ -153,13 +166,13 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
 
         try {
             // then
-            assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENT_COUNT), CoreMatchers.is(0));
+            assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENTS_COUNT), CoreMatchers.is(0));
 
             // when
             mockServerClient.stop();
 
             // then
-            assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENT_COUNT), CoreMatchers.is(0));
+            assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENTS_COUNT), CoreMatchers.is(0));
         } finally {
             mockServerClient.stop();
         }
@@ -180,12 +193,12 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                     httpRequest -> {
                         // then
                         return response()
-                            .withBody("websocket_response_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT));
+                            .withBody("websocket_response_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLERS_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLERS_COUNT));
                     }
                 );
 
             // then
-            assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENT_COUNT), CoreMatchers.is(1));
+            assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENTS_COUNT), CoreMatchers.is(1));
 
             // when
             assertEquals(
@@ -201,7 +214,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
             );
 
             // then
-            assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT), CoreMatchers.is(0));
+            assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLERS_COUNT), CoreMatchers.is(0));
         });
     }
 
@@ -219,12 +232,12 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                 httpRequest -> {
                     // then
                     return response()
-                        .withBody("websocket_response_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT));
+                        .withBody("websocket_response_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLERS_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLERS_COUNT));
                 }
             );
 
         // then
-        assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENT_COUNT), CoreMatchers.is(0));
+        assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENTS_COUNT), CoreMatchers.is(0));
 
         // when
         assertEquals(
@@ -240,7 +253,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
         );
 
         // then
-        assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT), CoreMatchers.is(0));
+        assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLERS_COUNT), CoreMatchers.is(0));
     }
 
     @Test // same JVM due to dynamic calls to static Metrics class
@@ -257,11 +270,11 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                 .forward(
                     httpRequest -> request()
                         .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
-                        .withBody("websocket_forward_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT))
+                        .withBody("websocket_forward_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLERS_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLERS_COUNT))
                 );
 
             // then
-            tryWaitForSuccess(() -> assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENT_COUNT), CoreMatchers.is(1)));
+            tryWaitForSuccess(() -> assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENTS_COUNT), CoreMatchers.is(1)));
 
             // when
             assertEquals(
@@ -277,7 +290,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
             );
 
             // then
-            tryWaitForSuccess(() -> assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT), CoreMatchers.is(0)));
+            tryWaitForSuccess(() -> assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLERS_COUNT), CoreMatchers.is(0)));
         });
     }
 
@@ -294,11 +307,11 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
             .forward(
                 httpRequest -> request()
                     .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
-                    .withBody("websocket_forward_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT))
+                    .withBody("websocket_forward_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLERS_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLERS_COUNT))
             );
 
         // then
-        assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENT_COUNT), CoreMatchers.is(0));
+        assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENTS_COUNT), CoreMatchers.is(0));
 
         // when
         assertEquals(
@@ -314,7 +327,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
         );
 
         // then
-        assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT), CoreMatchers.is(0));
+        assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLERS_COUNT), CoreMatchers.is(0));
     }
 
     @Test // same JVM due to dynamic calls to static Metrics class
@@ -333,14 +346,14 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                     httpRequest ->
                         request()
                             .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
-                            .withBody("websocket_forward_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT)),
+                            .withBody("websocket_forward_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLERS_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLERS_COUNT)),
                     (httpRequest, httpResponse) ->
                         httpResponse
-                            .withHeader("x-response-test", "websocket_forward_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT))
+                            .withHeader("x-response-test", "websocket_forward_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLERS_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLERS_COUNT))
                 );
 
             // then
-            tryWaitForSuccess(() -> assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENT_COUNT), CoreMatchers.is(1)));
+            tryWaitForSuccess(() -> assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENTS_COUNT), CoreMatchers.is(1)));
 
             // when
             assertEquals(
@@ -358,8 +371,8 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
 
             // then
             tryWaitForSuccess(() -> {
-                assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT), CoreMatchers.is(0));
-                assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT), CoreMatchers.is(0));
+                assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLERS_COUNT), CoreMatchers.is(0));
+                assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLERS_COUNT), CoreMatchers.is(0));
             });
         });
     }
@@ -379,14 +392,14 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                 httpRequest ->
                     request()
                         .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
-                        .withBody("websocket_forward_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT)),
+                        .withBody("websocket_forward_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLERS_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLERS_COUNT)),
                 (httpRequest, httpResponse) ->
                     httpResponse
-                        .withHeader("x-response-test", "websocket_forward_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT))
+                        .withHeader("x-response-test", "websocket_forward_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLERS_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLERS_COUNT))
             );
 
         // then
-        assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENT_COUNT), CoreMatchers.is(0));
+        assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENTS_COUNT), CoreMatchers.is(0));
 
         // when
         assertEquals(
@@ -403,8 +416,8 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
         );
 
         // then
-        assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT), CoreMatchers.is(0));
-        assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT), CoreMatchers.is(0));
+        assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLERS_COUNT), CoreMatchers.is(0));
+        assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLERS_COUNT), CoreMatchers.is(0));
     }
 
     private int objectCallbackCounter = 0;
