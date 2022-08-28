@@ -368,13 +368,14 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
                     .setThrowable(throwable)
             );
         } else if (sslHandshakeException(throwable)) {
-            if (throwable.getMessage().contains("certificate_unknown")) {
+            if (throwable.getMessage().contains("certificate_unknown") || throwable.getMessage().toLowerCase().contains("unknown_ca")) {
                 if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.WARN)
                             .setMessageFormat("TLS handshake failure:" + NEW_LINE + NEW_LINE + " Client does not trust MockServer Certificate Authority for:{}See http://mock-server.com/mock_server/HTTPS_TLS.html to enable the client to trust MocksServer Certificate Authority." + NEW_LINE)
                             .setArguments(ctx.channel())
+                            .setThrowable(throwable)
                     );
                 }
             } else if (!throwable.getMessage().contains("close_notify during handshake")) {
