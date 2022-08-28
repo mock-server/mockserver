@@ -363,7 +363,7 @@ public class MockServerClient implements Stoppable {
                         }
                     };
             }
-            this.nettyHttpClient = new NettyHttpClient(configuration(), MOCK_SERVER_LOGGER, eventLoopGroup, proxyConfiguration != null ? ImmutableList.of(proxyConfiguration) : null, false, nettySslContextFactory.withClientSslContextBuilderFunction(clientSslContextBuilderFunction));
+            this.nettyHttpClient = new NettyHttpClient(configuration.toServerConfiguration(), MOCK_SERVER_LOGGER, eventLoopGroup, proxyConfiguration != null ? ImmutableList.of(proxyConfiguration) : null, false, nettySslContextFactory.withClientSslContextBuilderFunction(clientSslContextBuilderFunction));
         }
         return nettyHttpClient;
     }

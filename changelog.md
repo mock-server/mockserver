@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - improved error handling for not valid HTTP requests that are not being proxied
 
 ### Fixed
+- fixed error passing configuration in MockServerClient
 
 ## [5.14.0] - 2022-08-22
 
