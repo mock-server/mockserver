@@ -27,7 +27,7 @@ import org.mockserver.mock.HttpState;
 import org.mockserver.mock.action.http.HttpActionHandler;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.netty.HttpRequestHandler;
-import org.mockserver.netty.proxy.BinaryHandler;
+import org.mockserver.netty.proxy.BinaryRequestProxyingHandler;
 import org.mockserver.netty.proxy.socks.Socks4ProxyHandler;
 import org.mockserver.netty.proxy.socks.Socks5ProxyHandler;
 import org.mockserver.netty.proxy.socks.SocksDetector;
@@ -159,7 +159,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
             switchToHttp(ctx, msg);
         } else {
             logStage(ctx, "adding binary decoder");
-            switchToBinary(ctx, msg);
+            switchToBinaryRequestProxying(ctx, msg);
         }
 
         if (isEnabled(TRACE)) {
@@ -308,8 +308,8 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         return new String(bytes, StandardCharsets.US_ASCII);
     }
 
-    private void switchToBinary(ChannelHandlerContext ctx, ByteBuf msg) {
-        addLastIfNotPresent(ctx.pipeline(), new BinaryHandler(configuration, httpState.getMockServerLogger(), httpState.getScheduler(), actionHandler.getHttpClient()));
+    private void switchToBinaryRequestProxying(ChannelHandlerContext ctx, ByteBuf msg) {
+        addLastIfNotPresent(ctx.pipeline(), new BinaryRequestProxyingHandler(configuration, httpState.getMockServerLogger(), httpState.getScheduler(), actionHandler.getHttpClient()));
         // fire message back through pipeline
         ctx.fireChannelRead(msg.readBytes(actualReadableBytes()));
     }

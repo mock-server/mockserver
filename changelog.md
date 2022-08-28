@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+- improved error handling for not valid HTTP requests that are not being proxied
 
 ### Fixed
 

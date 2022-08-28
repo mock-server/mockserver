@@ -37,7 +37,7 @@ import static org.mockserver.netty.unification.PortUnificationHandler.isSslEnabl
  * @author jamesdbloom
  */
 @ChannelHandler.Sharable
-public class BinaryHandler extends SimpleChannelInboundHandler<ByteBuf> {
+public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
     public static Consumer<BinaryExchangeDescriptor> binaryExchangeCallback = data -> {};
 
@@ -46,7 +46,7 @@ public class BinaryHandler extends SimpleChannelInboundHandler<ByteBuf> {
     private final Scheduler scheduler;
     private final NettyHttpClient httpClient;
 
-    public BinaryHandler(final Configuration configuration, final MockServerLogger mockServerLogger, final Scheduler scheduler, final NettyHttpClient httpClient) {
+    public BinaryRequestProxyingHandler(final Configuration configuration, final MockServerLogger mockServerLogger, final Scheduler scheduler, final NettyHttpClient httpClient) {
         super(true);
         this.configuration = configuration;
         this.mockServerLogger = mockServerLogger;
@@ -104,11 +104,11 @@ public class BinaryHandler extends SimpleChannelInboundHandler<ByteBuf> {
                     new LogEntry()
                         .setLogLevel(Level.INFO)
                         .setCorrelationId(logCorrelationId)
-                        .setMessageFormat("unknown message format{}")
-                        .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()))
+                        .setMessageFormat("unknown message format, only HTTP requests are supported for mocking or HTTP & binary requests for proxying, but request is not being proxied and request is not valid HTTP, found request in binary: {} in utf8 text: {}")
+                        .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()), new String(binaryRequest.getBytes(), StandardCharsets.UTF_8))
                 );
             }
-            ctx.writeAndFlush(Unpooled.copiedBuffer("unknown message format".getBytes(StandardCharsets.UTF_8)));
+            ctx.writeAndFlush(Unpooled.copiedBuffer("unknown message format, only HTTP requests are supported for mocking or HTTP & binary requests for proxying, but request is not being proxied and request is not valid HTTP".getBytes(StandardCharsets.UTF_8)));
             ctx.close();
         }
     }

@@ -181,7 +181,7 @@ public class BinaryProxyIntegrationTest {
             .get(10, SECONDS);
 
         // then
-        assertThat(ByteBufUtil.hexDump(binaryResponse.getBytes()), is(ByteBufUtil.hexDump("unknown message format".getBytes(StandardCharsets.UTF_8))));
+        assertThat(new String(binaryResponse.getBytes(), StandardCharsets.UTF_8), is("unknown message format, only HTTP requests are supported for mocking or HTTP & binary requests for proxying, but request is not being proxied and request is not valid HTTP"));
     }
 
 }
