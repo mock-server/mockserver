@@ -732,6 +732,92 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
+    public void shouldReturnResponseByMatchingOpenAPIExpectationWithContentTypeWithSpecialCharacters() throws JsonProcessingException {
+        // when
+        Expectation[] upsertedExpectations = mockServerClient
+            .upsert(
+                openAPIExpectation("{" + NEW_LINE +
+                    "    \"openapi\": \"3.0.3\", " + NEW_LINE +
+                    "    \"info\": {" + NEW_LINE +
+                    "        \"title\": \"OAS 3.0.3 sample\", " + NEW_LINE +
+                    "        \"version\": \"0.1.0\"" + NEW_LINE +
+                    "    }, " + NEW_LINE +
+                    "    \"paths\": {" + NEW_LINE +
+                    "        \"/test\": {" + NEW_LINE +
+                    "            \"post\": {" + NEW_LINE +
+                    "                \"requestBody\": {" + NEW_LINE +
+                    "                    \"$ref\": \"#/components/requestBodies/testRequest\"" + NEW_LINE +
+                    "                }, " + NEW_LINE +
+                    "                \"responses\": {" + NEW_LINE +
+                    "                    \"200\": {" + NEW_LINE +
+                    "                        \"description\": \"some response\"" + NEW_LINE +
+                    "                    }" + NEW_LINE +
+                    "                }" + NEW_LINE +
+                    "            }" + NEW_LINE +
+                    "        }" + NEW_LINE +
+                    "    }, " + NEW_LINE +
+                    "    \"components\": {" + NEW_LINE +
+                    "        \"requestBodies\": {" + NEW_LINE +
+                    "            \"testRequest\": {" + NEW_LINE +
+                    "                \"required\": true, " + NEW_LINE +
+                    "                \"content\": {" + NEW_LINE +
+                    "                    \"application/vnd.api+json\": {" + NEW_LINE +
+                    "                        \"schema\": {" + NEW_LINE +
+                    "                            \"type\": \"object\"" + NEW_LINE +
+                    "                        }" + NEW_LINE +
+                    "                    }" + NEW_LINE +
+                    "                }" + NEW_LINE +
+                    "            }" + NEW_LINE +
+                    "        }" + NEW_LINE +
+                    "    }" + NEW_LINE +
+                    "}")
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath("/test")
+                    .withHeader("content-type", "application/vnd.api+json")
+                    .withBody(json("{}")),
+                getHeadersToRemove()
+            )
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath("/test")
+                    .withHeader("content-type", "application/vnd.api+json; charset=utf8")
+                    .withBody(json("{}")),
+                getHeadersToRemove()
+            )
+        );
+
+        // and - dot only matches a dot
+        assertEquals(
+            response()
+                .withStatusCode(NOT_FOUND_404.code())
+                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath("/test")
+                    .withHeader("content-type", "application/vndXapi+json")
+                    .withBody(json("{}")),
+                getHeadersToRemove()
+            )
+        );
+    }
+
+    @Test
     public void shouldReturnResponseByMatchingOpenAPIExpectationWithArrayParametersWithSpecAndResponse() throws JsonProcessingException {
         // when
 

@@ -1,10 +1,12 @@
 package org.mockserver.netty.integration.mock;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.netty.MockServer;
 import org.mockserver.testing.integration.mock.AbstractBasicMockingSameJVMIntegrationTest;
@@ -19,6 +21,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.Times.exactly;
+import static org.mockserver.mock.OpenAPIExpectation.openAPIExpectation;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Cookie.schemaCookie;
 import static org.mockserver.model.Header.header;
@@ -26,8 +29,9 @@ import static org.mockserver.model.Header.schemaHeader;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.model.HttpStatusCode.ACCEPTED_202;
-import static org.mockserver.model.HttpStatusCode.OK_200;
+import static org.mockserver.model.HttpStatusCode.*;
+import static org.mockserver.model.HttpStatusCode.NOT_FOUND_404;
+import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.Parameter.schemaParam;
 import static org.mockserver.model.RegexBody.regex;
@@ -434,6 +438,95 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingSa
                     .withMethod("POST")
                     .withPath(calculatePath("some_path"))
                     .withBody("some_random_body"),
+                getHeadersToRemove()
+            )
+        );
+    }
+
+    @Test
+    @Override
+    public void shouldReturnResponseByMatchingOpenAPIExpectationWithContentTypeWithSpecialCharacters() throws JsonProcessingException {
+        // when
+        Expectation[] upsertedExpectations = mockServerClient
+            .upsert(
+                openAPIExpectation("{" + NEW_LINE +
+                    "    \"openapi\": \"3.0.3\", " + NEW_LINE +
+                    "    \"info\": {" + NEW_LINE +
+                    "        \"title\": \"OAS 3.0.3 sample\", " + NEW_LINE +
+                    "        \"version\": \"0.1.0\"" + NEW_LINE +
+                    "    }, " + NEW_LINE +
+                    "    \"paths\": {" + NEW_LINE +
+                    "        \"/test\": {" + NEW_LINE +
+                    "            \"post\": {" + NEW_LINE +
+                    "                \"requestBody\": {" + NEW_LINE +
+                    "                    \"$ref\": \"#/components/requestBodies/testRequest\"" + NEW_LINE +
+                    "                }, " + NEW_LINE +
+                    "                \"responses\": {" + NEW_LINE +
+                    "                    \"200\": {" + NEW_LINE +
+                    "                        \"description\": \"some response\"" + NEW_LINE +
+                    "                    }" + NEW_LINE +
+                    "                }" + NEW_LINE +
+                    "            }" + NEW_LINE +
+                    "        }" + NEW_LINE +
+                    "    }, " + NEW_LINE +
+                    "    \"components\": {" + NEW_LINE +
+                    "        \"requestBodies\": {" + NEW_LINE +
+                    "            \"testRequest\": {" + NEW_LINE +
+                    "                \"required\": true, " + NEW_LINE +
+                    "                \"content\": {" + NEW_LINE +
+                    "                    \"application/vnd.api+json\": {" + NEW_LINE +
+                    "                        \"schema\": {" + NEW_LINE +
+                    "                            \"type\": \"object\"" + NEW_LINE +
+                    "                        }" + NEW_LINE +
+                    "                    }" + NEW_LINE +
+                    "                }" + NEW_LINE +
+                    "            }" + NEW_LINE +
+                    "        }" + NEW_LINE +
+                    "    }" + NEW_LINE +
+                    "}")
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath("/test")
+                    .withHeader("content-type", "application/vnd.api+json")
+                    .withBody(json("{}")),
+                getHeadersToRemove()
+            )
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath("/test")
+                    .withHeader("content-type", "application/vnd.api+json; charset=utf8")
+                    .withBody(json("{}")),
+                getHeadersToRemove()
+            )
+        );
+
+        // and - dot only matches a dot
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader("content-type", "application/vndXapi+json")
+                .withBody(json("{}", MediaType.parse("application/vndXapi+json"))),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath("/test")
+                    .withHeader("content-type", "application/vndXapi+json")
+                    .withBody(json("{}")),
                 getHeadersToRemove()
             )
         );
