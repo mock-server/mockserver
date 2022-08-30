@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - fixed error passing configuration in MockServerClient
+- fixed handling of additional content-type parameter and special characters in the content-type such as '+'
 
 ## [5.14.0] - 2022-08-22
 

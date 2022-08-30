@@ -448,8 +448,8 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                 return;
             }
             if (!contentType.equals("*/*") && required) {
-                // ensure that parameters added to the content type such as charset don't break the matching
-                httpRequest.withHeader(CONTENT_TYPE.toString(), contentType.replaceAll("\\*", ".*") + ".*");
+                // ensure that parameters added to the content type such as charset don't break the matching (but escape special characters in header value so they don't break regex)
+                httpRequest.withHeader(CONTENT_TYPE.toString(), contentType.replaceAll("[_ :;.,/\"'?!(){}\\[\\]@<>=\\-+*#$&`|~^%]", "\\\\$0").replaceAll("\\*", ".*") + ".*");
             }
             if (mediaType != null && mediaType.getSchema() != null) {
                 Map<String, ParameterStyle> parameterStyle = null;
