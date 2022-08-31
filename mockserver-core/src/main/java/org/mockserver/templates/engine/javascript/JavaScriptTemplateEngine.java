@@ -167,7 +167,7 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
      * If this property is not set, or has the value as *... it exposes any java class to javascript
      * Ex: mockserver.javascript.class.deny=java.lang.Runtime will deny exposing java.lang.Runtime class to javascript, while all other classes will be exposed.
      */
-    class SecureFilter implements ClassFilter {
+    static class SecureFilter implements ClassFilter {
         ArrayList<String> restrictedClassesList = null;
 
         SecureFilter() {
