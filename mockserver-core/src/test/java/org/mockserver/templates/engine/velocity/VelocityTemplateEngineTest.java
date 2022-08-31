@@ -35,9 +35,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.ConfigurationProperties.velocityDenyClasses;
 import static org.mockserver.log.model.LogEntry.LogMessageType.TEMPLATE_GENERATED;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -480,6 +482,41 @@ public class VelocityTemplateEngineTest {
                     request
                 )
         );
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithVelocityResponseTemplateWithJavaCodeInjection() throws JsonProcessingException {
+        // given
+        String template = "{" + NEW_LINE +
+            "    'statusCode': 200," + NEW_LINE +
+            "    'body': \"$!request.class.forName('java.lang.Runtime').getRuntime().exec(\"calc.exe\")\"" + NEW_LINE +
+            "}";
+        HttpRequest request = request()
+            .withPath("/somePath")
+            .withMethod("POST")
+            .withHeader(HOST.toString(), "mock-server.com")
+            .withBody("some_body".getBytes(StandardCharsets.UTF_8));
+
+        // when
+        HttpResponse actualHttpResponse = null;
+        try {
+            actualHttpResponse = new VelocityTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        } catch (Exception e) {
+            System.out.println("e.getMessage() - " + e.getMessage());
+            e.printStackTrace();
+            if (e.getMessage().contains("")) {
+
+            }
+        }
+
+        // then
+        if (actualHttpResponse != null) {
+            if (velocityDenyClasses()) {
+                assertTrue((actualHttpResponse.getStatusCode() == 200) && (!actualHttpResponse.getBodyAsString().contains("java.lang.ProcessImpl@")));
+            } else {
+                assertTrue((actualHttpResponse.getStatusCode() == 200) && (actualHttpResponse.getBodyAsString().contains("java.lang.ProcessImpl@")));
+            }
+        }
     }
 
     @Test
