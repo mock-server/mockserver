@@ -5,12 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- fix references to globally-scoped values within Ingress template
 
 ### Added
 
 ### Changed
 - improved error message for not valid HTTP requests that are not being proxied
-- improved error message when client doesn't trust MockServer's CA 
+- improved error message when client doesn't trust MockServer's CA
 
 ### Fixed
 - fixed error passing configuration in MockServerClient
@@ -127,7 +128,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - worked around JDK error 'flip()Ljava/nio/ByteBuffer; does not exist in class java.nio.ByteBuffer'
 - null pointer exception when serialising string bodies with non string content types (i.e. image/png)
-- disabled native TLS for netty to improve TLS resilience 
+- disabled native TLS for netty to improve TLS resilience
 - fixed handling of circular references in OpenAPI specifications to be as gracefully as possible
 
 ## [5.12.0] - 2022-02-12
@@ -179,14 +180,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - fixed recursive loop on stopAsync for ClientAndServer
-- header matching for subsets to ensure notted header keys don't exist 
+- header matching for subsets to ensure notted header keys don't exist
 
 ## [5.11.1] - 2020-07-22
 
 ### Added
 - port is now printed at start of each log line
 - shutdown log message specifying port
-- UI updated prior to stopping MockServer to ensure all pending log messages are sent over UI web socket 
+- UI updated prior to stopping MockServer to ensure all pending log messages are sent over UI web socket
 - added listener for expectation modifications that can be used with ExpectationInitializer for custom expectation persistence
 
 ### Changed
@@ -201,7 +202,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - fixed field name error when serializing ParameterBody
-- error when log level DEBUG cleared log events were returned from the API 
+- error when log level DEBUG cleared log events were returned from the API
 
 ## [5.11.0] - 2020-07-08
 
@@ -215,7 +216,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - verifications of requests or request sequences using OpenAPI or Swagger specification
 - clear log, clear expectations, retrieve logs and retrieve requests using OpenAPI or Swagger specification
 - json schema matchers for method, path, headers, query string parameters and cookies
-- path variables matched by nottable string, regex or json schema (as per query string parameters)  
+- path variables matched by nottable string, regex or json schema (as per query string parameters)
 - support for optional query parameters, header and cookies
 - support for nullable keyword in JSON Schemas (part of Open API specification not JSON Schema specification)
 - matching xml bodies against JSON Schema matchers
@@ -241,12 +242,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - added version to log output to improve resolution of github issues with logs attached
 - improved logic around proxies to make HTTP CONNECT, SOCKS4 and SOCKS5 more reliable and faster
 - reduced object creation (and therefore GCs) for log especially during request matching
-- print logs timestamp with milliseconds  
+- print logs timestamp with milliseconds
 - reduced expiry of certification to one year to avoid errors from modern systems that don't like long lived certificates (such as Chrome or VMWare)
 - defaulted charset for XML and JSON to UTF8 as per rfc3470 and rfc8259
 - version matching logic for client now only matches on major and minor version and not bug fix version
 - improved handling of body matching for control plane to clearly separate control plane and data plan matching
-- simplified and improved stability for UI by moving all data processing into back-end and other simplifications 
+- simplified and improved stability for UI by moving all data processing into back-end and other simplifications
 
 ### Fixed
 - fixed but with environment variable configuration for long, integer and integer list values
@@ -254,7 +255,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fixed destination port and ip in Socks5CommandResponse which prevented SOCKS5 proxied connections
 - fixed Subject Alternative Names with wildcards or other valid DNS name formats not supported by certain versions of the JDK (<= 1.8)
 - fixed json body responses by returning blank or null fields, objects and arrays
-- fixed generics for withCallbackClass to allow ExpectationResponseCallback to be specified as a Class (not only a string) 
+- fixed generics for withCallbackClass to allow ExpectationResponseCallback to be specified as a Class (not only a string)
 
 ## [5.10.0] - 2020-03-24
 
