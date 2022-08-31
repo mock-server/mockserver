@@ -192,7 +192,7 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
          * @return true if the java class can be exposed to javascript, false otherwise
          */
         public boolean exposeToScripts(String className) {
-            if ((restrictedClassesList == null) || (restrictedClassesList.size() < 1) || (restrictedClassesList.contains("*"))) {
+            if ((restrictedClassesList == null) || (restrictedClassesList.size() < 1) ||  restrictedClassesList.contains("*")) {
                 return true;
             }
 
