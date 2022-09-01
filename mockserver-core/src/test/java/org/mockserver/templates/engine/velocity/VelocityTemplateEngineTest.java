@@ -485,11 +485,11 @@ public class VelocityTemplateEngineTest {
     }
 
     @Test
-    public void shouldHandleHttpRequestsWithVelocityResponseTemplateWithJavaCodeInjection() throws JsonProcessingException {
+    public void shouldHandleHttpRequestsWithVelocityTemplateWithJavaStrings() throws JsonProcessingException {
         // given
         String template = "{" + NEW_LINE +
             "    'statusCode': 200," + NEW_LINE +
-            "    'body': \"$!request.class.forName('java.lang.Runtime').getRuntime().exec(\"calc.exe\")\"" + NEW_LINE +
+            "    'body': \"$!request.class.forName('java.lang.Runtime').getRuntime().exec(\"notepad.exe\")\"" + NEW_LINE +
             "}";
         HttpRequest request = request()
             .withPath("/somePath")
@@ -502,11 +502,6 @@ public class VelocityTemplateEngineTest {
         try {
             actualHttpResponse = new VelocityTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
         } catch (Exception e) {
-            System.out.println("e.getMessage() - " + e.getMessage());
-            e.printStackTrace();
-            if (e.getMessage().contains("")) {
-
-            }
         }
 
         // then
