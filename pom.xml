@@ -62,7 +62,7 @@
         <bouncycastle.version>1.71.1</bouncycastle.version>
         <spring.version>5.3.22</spring.version>
         <spring-web.version>5.3.22</spring-web.version>
-        <mockito.version>4.7.0</mockito.version>
+        <mockito.version>4.8.0</mockito.version>
         <hamcrest.version>2.2</hamcrest.version>
         <xmlunit.version>2.9.0</xmlunit.version>
         <skipTests>false</skipTests>
