@@ -432,7 +432,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                             .withBody("an_example_body_http");
 
                         assertThat(httpRequest.getLocalAddress(), equalTo("127.0.0.1:" + (httpRequest.isSecure() ? getServerSecurePort() : getServerPort())));
-                        assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1"));
+                        assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1:" + getRequestTcpPortForPath("object_callback")));
                         if (httpRequest.isSecure()) {
                             assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
                             assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=localhost"));
@@ -518,7 +518,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         .withBody("an_example_body_http");
 
                     assertThat(httpRequest.getLocalAddress(), equalTo("127.0.0.1:" + (httpRequest.isSecure() ? getServerSecurePort() : getServerPort())));
-                    assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1"));
+                    assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1:" + getRequestTcpPortForPath("object_callback")));
                     if (httpRequest.isSecure()) {
                         assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
                         assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=localhost"));
@@ -937,7 +937,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 .forward(
                     httpRequest -> {
                         assertThat(httpRequest.getLocalAddress(), equalTo("127.0.0.1:" + (httpRequest.isSecure() ? getServerSecurePort() : getServerPort())));
-                        assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1"));
+                        assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1:" + getRequestTcpPortForPath("echo")));
                         if (httpRequest.isSecure()) {
                             assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
                             assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=localhost"));
@@ -1007,7 +1007,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             .forward(
                 httpRequest -> {
                     assertThat(httpRequest.getLocalAddress(), equalTo("127.0.0.1:" + (httpRequest.isSecure() ? getServerSecurePort() : getServerPort())));
-                    assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1"));
+                    assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1:" + getRequestTcpPortForPath("echo")));
                     if (httpRequest.isSecure()) {
                         assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
                         assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=localhost"));
@@ -1086,7 +1086,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             .forward(
                 httpRequest -> {
                     assertThat(httpRequest.getLocalAddress(), equalTo("127.0.0.1:" + (httpRequest.isSecure() ? getServerSecurePort() : getServerPort())));
-                    assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1"));
+                    assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1:" + getRequestTcpPortForPath("/some/path/.*")));
                     if (httpRequest.isSecure()) {
                         assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
                         assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=localhost"));
@@ -1137,7 +1137,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 )
                 .forward(
                     httpRequest -> {
-                        assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1"));
+                        assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1:" + getRequestTcpPortForPath("echo")));
                         if (httpRequest.isSecure()) {
                             assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
                             assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=localhost"));
@@ -1218,7 +1218,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             )
             .forward(
                 httpRequest -> {
-                    assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1"));
+                    assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1:" + getRequestTcpPortForPath("echo")));
                     if (httpRequest.isSecure()) {
                         assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
                         assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=localhost"));
@@ -1300,7 +1300,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 .forward(
                     httpRequest -> {
                         assertThat(httpRequest.getLocalAddress(), equalTo("127.0.0.1:" + (httpRequest.isSecure() ? getServerSecurePort() : getServerPort())));
-                        assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1"));
+                        assertThat(httpRequest.getRemoteAddress(), startsWith("127.0.0.1:"));
                         if (httpRequest.isSecure()) {
                             assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
                             assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=localhost"));
@@ -1375,7 +1375,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             .forward(
                 httpRequest -> {
                     assertThat(httpRequest.getLocalAddress(), equalTo("127.0.0.1:" + (httpRequest.isSecure() ? getServerSecurePort() : getServerPort())));
-                    assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1"));
+                    assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1:" + getRequestTcpPortForPath("echo")));
                     if (httpRequest.isSecure()) {
                         assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
                         assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=localhost"));

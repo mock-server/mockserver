@@ -1,7 +1,10 @@
 package org.mockserver.testing.integration.mock;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Uninterruptibles;
+import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -14,6 +17,7 @@ import org.mockserver.model.*;
 import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.serialization.HttpRequestSerializer;
 import org.mockserver.serialization.LogEntrySerializer;
+import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.time.EpochService;
 import org.mockserver.verify.VerificationTimes;
@@ -21,10 +25,7 @@ import org.slf4j.event.Level;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -5576,7 +5577,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
-    public void shouldRetrieveRecordedRequestsAsLogEntries() {
+    public void shouldRetrieveRecordedRequestsAsLogEntries() throws JsonProcessingException {
         // given
         mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).respond(response().withBody("some_body"));
         assertEquals(
@@ -5603,6 +5604,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
 
         // when
         String logEntriesActual = mockServerClient.retrieveRecordedRequests(request().withPath(calculatePath("some_path.*")), Format.LOG_ENTRIES);
+
         HttpRequest requestOne = request("/some_path_one")
             .withMethod("GET")
             .withHeader("host", "localhost:" + this.getServerPort())
@@ -5612,7 +5614,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             .withKeepAlive(true)
             .withSecure(false)
             .withLocalAddress("127.0.0.1:" + getServerPort())
-            .withRemoteAddress("127.0.0.1");
+            .withRemoteAddress("127.0.0.1:" + getRequestTcpPortForPath("/some_path_one"));
         HttpRequest requestTwo = request("/some_path_three")
             .withMethod("GET")
             .withHeader("host", "localhost:" + this.getServerPort())
@@ -5622,7 +5624,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             .withKeepAlive(true)
             .withSecure(false)
             .withLocalAddress("127.0.0.1:" + getServerPort())
-            .withRemoteAddress("127.0.0.1");
+            .withRemoteAddress("127.0.0.1:" + getRequestTcpPortForPath("/some_path_three"));
 
         if (contentEncodingSupport()) {
             requestOne.withHeader("content-encoding", ".*");
@@ -5646,6 +5648,20 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
 
         // then
         assertThat(logEntriesActual, is(new LogEntrySerializer(new MockServerLogger()).serialize(logEntriesExpected)));
+    }
+
+    public String getRequestTcpPortForPath(String path) throws JsonProcessingException {
+        final Iterator<JsonNode> foundRequests = ObjectMapperFactory.createObjectMapper().readTree(
+                mockServerClient.retrieveRecordedRequests(request().withPath(calculatePath(path)),
+                    Format.JAVA))
+            .elements();
+        JsonNode currentRequests;
+        do {
+            currentRequests = foundRequests.next();
+        } while (foundRequests.hasNext());
+        return currentRequests
+            .get("remoteAddress").asText()
+            .split(":")[1];
     }
 
     public boolean contentEncodingSupport() {
@@ -5963,7 +5979,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         );
 
         // when - wrong id
-        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, () -> mockServerClient.clear(UUID.randomUUID().toString(), ClearType.EXPECTATIONS));
+        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, () -> mockServerClient.clear(
+            UUID.randomUUID().toString(), ClearType.EXPECTATIONS));
         assertThat(illegalArgumentException.getMessage(), startsWith("No expectation found with id "));
 
         // then - expectations not cleared
