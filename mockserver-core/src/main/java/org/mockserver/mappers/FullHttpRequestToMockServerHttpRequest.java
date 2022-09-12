@@ -90,7 +90,7 @@ public class FullHttpRequestToMockServerHttpRequest {
     private void setSocketAddress(HttpRequest httpRequest, FullHttpRequest fullHttpRequest, boolean isSecure, Integer port, SocketAddress localAddress, SocketAddress remoteAddress) {
         httpRequest.withSocketAddress(isSecure, fullHttpRequest.headers().get("host"), port);
         if (remoteAddress instanceof InetSocketAddress) {
-            httpRequest.withRemoteAddress(((InetSocketAddress) remoteAddress).getHostString());
+            httpRequest.withRemoteAddress(StringUtils.removeStart(remoteAddress.toString(), "/"));
         }
         if (localAddress instanceof InetSocketAddress) {
             httpRequest.withLocalAddress(StringUtils.removeStart(localAddress.toString(), "/"));

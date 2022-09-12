@@ -69,7 +69,7 @@ public class HttpServletRequestToMockServerHttpRequestDecoderTest {
             new Cookie("cookieName2", "cookieValue2")
         ), httpRequest.getCookieList());
         assertThat(httpRequest.getLocalAddress(), equalTo("local_addr:1234"));
-        assertThat(httpRequest.getRemoteAddress(), equalTo("remote_addr"));
+        assertThat(httpRequest.getRemoteAddress(), equalTo("remote_addr:80"));
     }
 
     @Test

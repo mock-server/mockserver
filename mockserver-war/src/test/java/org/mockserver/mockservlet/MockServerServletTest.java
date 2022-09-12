@@ -384,7 +384,7 @@ public class MockServerServletTest {
                     .withHeader("Content-Type", APPLICATION_JSON_UTF_8.toString())
                     .withSecure(false)
                     .withLocalAddress("local_address:80")
-                    .withRemoteAddress("localhost")
+                    .withRemoteAddress("localhost:80")
                     .withKeepAlive(true)
             ),
             any(ServletResponseWriter.class),
@@ -420,7 +420,7 @@ public class MockServerServletTest {
                     .withHeader("Content-Type", APPLICATION_JSON_UTF_8.toString())
                     .withSecure(false)
                     .withLocalAddress("local_address:666")
-                    .withRemoteAddress("localhost")
+                    .withRemoteAddress("localhost:80")
                     .withKeepAlive(true)
             ),
             any(ServletResponseWriter.class),
@@ -457,7 +457,7 @@ public class MockServerServletTest {
                     .withHeader("Content-Type", APPLICATION_JSON_UTF_8.toString())
                     .withSecure(true)
                     .withLocalAddress("local_address:443")
-                    .withRemoteAddress("localhost")
+                    .withRemoteAddress("localhost:80")
                     .withKeepAlive(true)
             ),
             any(ServletResponseWriter.class),
@@ -494,7 +494,7 @@ public class MockServerServletTest {
                     .withHeader("Content-Type", APPLICATION_JSON_UTF_8.toString())
                     .withSecure(true)
                     .withLocalAddress("local_address:666")
-                    .withRemoteAddress("localhost")
+                    .withRemoteAddress("localhost:80")
                     .withKeepAlive(true)
             ),
             any(ServletResponseWriter.class),
