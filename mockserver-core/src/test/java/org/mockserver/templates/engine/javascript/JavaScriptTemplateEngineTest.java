@@ -7,6 +7,7 @@ import org.hamcrest.Matcher;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.java.JDKVersion;
 import org.mockserver.log.model.LogEntry;
@@ -17,6 +18,7 @@ import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.HttpRequestDTO;
 import org.mockserver.serialization.model.HttpResponseDTO;
+import org.mockserver.templates.engine.velocity.VelocityTemplateEngine;
 import org.mockserver.time.EpochService;
 import org.mockserver.time.TimeService;
 import org.mockserver.uuid.UUIDService;
@@ -45,8 +47,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.configuration.ConfigurationProperties.javaScriptDeniedClasses;
-import static org.mockserver.configuration.ConfigurationProperties.javaScriptDeniedText;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.log.model.LogEntry.LogMessageType.TEMPLATE_GENERATED;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -63,6 +64,7 @@ public class JavaScriptTemplateEngineTest {
 
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
     private static boolean originalFixedTime;
+    private static final Configuration configuration = configuration();
 
     @Rule
     public final ExpectedException exception = ExpectedException.none();
@@ -507,7 +509,74 @@ public class JavaScriptTemplateEngineTest {
     }
 
     @Test
-    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStrings() {
+    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsUseCase1() {
+        // case1: mockserver.javascript.class.deny and mockserver.javascript.text.deny are not configured
+
+        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
+        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
+
+        try {
+            configuration.javaScriptDeniedClasses(null);
+            configuration.javaScriptDeniedText(null);
+            testsShouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStrings();
+        } finally {
+            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
+            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsUseCase2() {
+        // case2: mockserver.javascript.class.deny=java.lang.Runtime, and mockserver.javascript.text.deny is not configured
+
+        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
+        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
+
+        try {
+            configuration.javaScriptDeniedClasses("java.lang.Runtime");
+            configuration.javaScriptDeniedText(null);
+            testsShouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStrings();
+        } finally {
+            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
+            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsUseCase3() {
+        // case3: mockserver.javascript.class.deny is not set, and mockserver.javascript.text.deny=engine.factory
+
+        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
+        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
+
+        try {
+            configuration.javaScriptDeniedClasses(null);
+            configuration.javaScriptDeniedText("engine.factory");
+            testsShouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStrings();
+        } finally {
+            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
+            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsUseCase4() {
+        // case4: mockserver.javascript.class.deny=java.lang.Runtime, and mockserver.javascript.text.deny=engine.factory
+
+        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
+        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
+
+        try {
+            configuration.javaScriptDeniedClasses("java.lang.Runtime");
+            configuration.javaScriptDeniedText("engine.factory");
+            testsShouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStrings();
+        } finally {
+            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
+            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
+        }
+    }
+
+    public void testsShouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStrings() {
         // given
         String template = "" +
             "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
@@ -543,8 +612,9 @@ public class JavaScriptTemplateEngineTest {
         }
 
         // then
-        String javaScriptRestrictedClass = javaScriptDeniedClasses();
-        String javaScriptRestrictedText = javaScriptDeniedText();
+        String javaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
+        String javaScriptRestrictedText = configuration.javaScriptDeniedText();
+
         // case1: mockserver.javascript.class.deny and mockserver.javascript.text.deny are not configured
         if (((javaScriptRestrictedClass == null) || (javaScriptRestrictedClass.trim().length() < 1)) &&
             ((javaScriptRestrictedText == null) || (javaScriptRestrictedText.trim().length() < 1))) {
@@ -577,6 +647,73 @@ public class JavaScriptTemplateEngineTest {
     }
 
     @Test
+    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaExistingEngineUseCase1() {
+        // case1: mockserver.javascript.class.deny and mockserver.javascript.text.deny are not configured
+
+        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
+        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
+
+        try {
+            configuration.javaScriptDeniedClasses(null);
+            configuration.javaScriptDeniedText(null);
+            shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaExistingEngine();
+        } finally {
+            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
+            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaExistingEngineUseCase2() {
+        // case2: mockserver.javascript.class.deny=java.lang.Runtime, and mockserver.javascript.text.deny is not configured
+
+        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
+        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
+
+        try {
+            configuration.javaScriptDeniedClasses("java.lang.Runtime");
+            configuration.javaScriptDeniedText(null);
+            shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaExistingEngine();
+        } finally {
+            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
+            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaExistingEngineUseCase3() {
+        // case3: mockserver.javascript.class.deny is not set, and mockserver.javascript.text.deny=engine.factory
+
+        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
+        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
+
+        try {
+            configuration.javaScriptDeniedClasses(null);
+            configuration.javaScriptDeniedText("engine.factory");
+            shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaExistingEngine();
+        } finally {
+            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
+            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaExistingEngineUseCase4() {
+        // case4: mockserver.javascript.class.deny=java.lang.Runtime, and mockserver.javascript.text.deny=engine.factory
+
+        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
+        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
+
+        try {
+            configuration.javaScriptDeniedClasses("java.lang.Runtime");
+            configuration.javaScriptDeniedText("engine.factory");
+            shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaExistingEngine();
+        } finally {
+            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
+            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
+        }
+    }
+
     public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaExistingEngine() {
         // given
         String template = "" +
@@ -617,8 +754,8 @@ public class JavaScriptTemplateEngineTest {
         }
 
         // then
-        String javaScriptRestrictedClass = javaScriptDeniedClasses();
-        String javaScriptRestrictedText = javaScriptDeniedText();
+        String javaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
+        String javaScriptRestrictedText = configuration.javaScriptDeniedText();
         // case1: mockserver.javascript.class.deny and mockserver.javascript.text.deny are not configured
         if (((javaScriptRestrictedClass == null) || (javaScriptRestrictedClass.trim().length() < 1)) &&
             ((javaScriptRestrictedText == null) || (javaScriptRestrictedText.trim().length() < 1))) {
@@ -651,6 +788,73 @@ public class JavaScriptTemplateEngineTest {
     }
 
     @Test
+    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaNewEngineUseCase1() {
+        // case1: mockserver.javascript.class.deny and mockserver.javascript.text.deny are not configured
+
+        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
+        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
+
+        try {
+            configuration.javaScriptDeniedClasses(null);
+            configuration.javaScriptDeniedText(null);
+            shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaNewEngine();
+        } finally {
+            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
+            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaNewEngineUseCase2() {
+        // case2: mockserver.javascript.class.deny=java.lang.Runtime, and mockserver.javascript.text.deny is not configured
+
+        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
+        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
+
+        try {
+            configuration.javaScriptDeniedClasses("java.lang.Runtime");
+            configuration.javaScriptDeniedText(null);
+            shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaNewEngine();
+        } finally {
+            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
+            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaNewEngineUseCase3() {
+        // case3: mockserver.javascript.class.deny is not set, and mockserver.javascript.text.deny=engine.factory
+
+        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
+        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
+
+        try {
+            configuration.javaScriptDeniedClasses(null);
+            configuration.javaScriptDeniedText("engine.factory");
+            shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaNewEngine();
+        } finally {
+            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
+            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaNewEngineUseCase4() {
+        // case4: mockserver.javascript.class.deny=java.lang.Runtime, and mockserver.javascript.text.deny=engine.factory
+
+        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
+        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
+
+        try {
+            configuration.javaScriptDeniedClasses("java.lang.Runtime");
+            configuration.javaScriptDeniedText("engine.factory");
+            shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaNewEngine();
+        } finally {
+            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
+            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
+        }
+    }
+
     public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaNewEngine() {
         // given
         String template = "" +
@@ -691,8 +895,8 @@ public class JavaScriptTemplateEngineTest {
         }
 
         // then
-        String javaScriptRestrictedClass = javaScriptDeniedClasses();
-        String javaScriptRestrictedText = javaScriptDeniedText();
+        String javaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
+        String javaScriptRestrictedText = configuration.javaScriptDeniedText();
 
         // case1: mockserver.javascript.class.deny and mockserver.javascript.text.deny are not configured
         if (((javaScriptRestrictedClass == null) || (javaScriptRestrictedClass.trim().length() < 1)) &&

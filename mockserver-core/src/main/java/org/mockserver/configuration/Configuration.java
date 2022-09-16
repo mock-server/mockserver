@@ -143,6 +143,12 @@ public class Configuration {
     private String forwardProxyPrivateKey;
     private String forwardProxyCertificateChain;
 
+    // security
+    private String javaScriptDeniedClasses;
+    private String javaScriptDeniedText;
+    private Boolean velocityDenyClasses;
+
+
     public Level logLevel() {
         if (logLevel == null) {
             return ConfigurationProperties.logLevel();
@@ -1727,4 +1733,58 @@ public class Configuration {
         }
         return (int) Math.pow(2, 16);
     }
+
+
+    // security
+    public String javaScriptDeniedClasses() {
+        if (javaScriptDeniedClasses == null) {
+            return ConfigurationProperties.javaScriptDeniedClasses();
+        }
+        return javaScriptDeniedClasses;
+    }
+
+    /**
+     * Specifies whether the Java class of the specified name be exposed to javascript
+     *
+     * @param javaScriptDeniedClasses specifies the list of denied java classes, separated by comma
+     */
+    public Configuration javaScriptDeniedClasses(String javaScriptDeniedClasses) {
+        this.javaScriptDeniedClasses = javaScriptDeniedClasses;
+        return this;
+    }
+
+    public String javaScriptDeniedText() {
+        if (javaScriptDeniedText == null) {
+            return ConfigurationProperties.javaScriptDeniedText();
+        }
+        return javaScriptDeniedText;
+    }
+
+    /**
+     * Specifies the restricted text which when found in template will result in restricting execution of javascript
+     *
+     * @param javaScriptDeniedText specifies the restricted text (separated by comma), if found in template will prevent execution of javascript
+     */
+    public Configuration javaScriptDeniedText(String javaScriptDeniedText) {
+        this.javaScriptDeniedText = javaScriptDeniedText;
+        return this;
+    }
+
+    public Boolean velocityDenyClasses() {
+        if (velocityDenyClasses == null) {
+            return ConfigurationProperties.velocityDenyClasses();
+        }
+        return velocityDenyClasses;
+    }
+
+    /**
+     * Specifies whether restricted Java class and packages should be exposed to exposed to javascript
+     *
+     * @param velocityDenyClasses specifies whether to enable or disable exposing restricted java packages/classes in javascript
+     */
+    public Configuration velocityDenyClasses(Boolean velocityDenyClasses) {
+        this.velocityDenyClasses = velocityDenyClasses;
+        return this;
+    }
+
 }

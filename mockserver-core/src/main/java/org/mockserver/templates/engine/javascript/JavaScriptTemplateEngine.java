@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import jdk.nashorn.api.scripting.ClassFilter;
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -28,8 +29,7 @@ import java.util.Arrays;
 import java.util.function.Supplier;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.configuration.ConfigurationProperties.javaScriptDeniedClasses;
-import static org.mockserver.configuration.ConfigurationProperties.javaScriptDeniedText;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.formatting.StringFormatter.indentAndToString;
 import static org.mockserver.log.model.LogEntry.LogMessageType.TEMPLATE_GENERATED;
@@ -45,6 +45,7 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
     private static ObjectMapper objectMapper;
     private final MockServerLogger mockServerLogger;
     private HttpTemplateOutputDeserializer httpTemplateOutputDeserializer;
+    private static final Configuration configuration = configuration();
 
     public JavaScriptTemplateEngine(MockServerLogger mockServerLogger) {
         System.setProperty("nashorn.args", "--language=es6");
@@ -140,7 +141,7 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
         }
 
         try {
-            String restrictedText = javaScriptDeniedText();
+            String restrictedText = configuration.javaScriptDeniedText();
             if ((restrictedText != null) && (restrictedText.trim().length() > 0)) {
                 String[] restrictedTextElements = (restrictedText.indexOf(",") > -1) ? restrictedText.split(",") : new String[] {restrictedText};
                 for (String restrictedTextElement : restrictedTextElements) {
@@ -175,7 +176,7 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
         }
 
         void init() {
-            String restrictedClasses = javaScriptDeniedClasses();
+            String restrictedClasses = configuration.javaScriptDeniedClasses();
             if (restrictedClassesList == null) {
                 if ((restrictedClasses != null) && (restrictedClasses.trim().length() > 0)) {
                     restrictedClassesList = new ArrayList<String>();

@@ -6,6 +6,7 @@ import org.hamcrest.Matcher;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -39,7 +40,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.configuration.ConfigurationProperties.velocityDenyClasses;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.log.model.LogEntry.LogMessageType.TEMPLATE_GENERATED;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -53,6 +54,7 @@ public class VelocityTemplateEngineTest {
 
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
     private static boolean originalFixedTime;
+    private static final Configuration configuration = configuration();
 
     @Rule
     public final ExpectedException exception = ExpectedException.none();
@@ -499,19 +501,22 @@ public class VelocityTemplateEngineTest {
 
         // when
         HttpResponse actualHttpResponse = null;
+        boolean originalVelocityDenyClasses = configuration.velocityDenyClasses();
         try {
+            configuration.velocityDenyClasses(true);
             actualHttpResponse = new VelocityTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
         } catch (Exception e) {
         }
 
         // then
         if (actualHttpResponse != null) {
-            if (velocityDenyClasses()) {
+            if (configuration.velocityDenyClasses()) {
                 assertTrue((actualHttpResponse.getStatusCode() == 200) && (!actualHttpResponse.getBodyAsString().contains("java.lang.ProcessImpl@")));
             } else {
                 assertTrue((actualHttpResponse.getStatusCode() == 200) && (actualHttpResponse.getBodyAsString().contains("java.lang.ProcessImpl@")));
             }
         }
+        configuration.velocityDenyClasses(originalVelocityDenyClasses);
     }
 
     @Test
