@@ -120,14 +120,14 @@ public class VelocityTemplateEngine implements TemplateEngine {
         this(mockServerLogger, null);
     }
 
-    public VelocityTemplateEngine(MockServerLogger mockServerLogger, Configuration configuration) {
+    public VelocityTemplateEngine(MockServerLogger mockServerLogger, Configuration _configuration) {
         this.mockServerLogger = mockServerLogger;
         this.httpTemplateOutputDeserializer = new HttpTemplateOutputDeserializer(mockServerLogger);
         if (objectMapper == null) {
             objectMapper = ObjectMapperFactory.createObjectMapper();
         }
-        this.configuration = (configuration == null) ? configuration() : configuration;
-        if (this.configuration.velocityDenyClasses()) {
+        configuration = (_configuration == null) ? configuration() : _configuration;
+        if (configuration.velocityDenyClasses()) {
             velocityEngine.setProperty(RuntimeConstants.UBERSPECT_CLASSNAME, SecureUberspector.class.getName());
         }
     }

@@ -51,9 +51,9 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
         this(mockServerLogger, null);
     }
 
-    public JavaScriptTemplateEngine(MockServerLogger mockServerLogger, Configuration configuration) {
+    public JavaScriptTemplateEngine(MockServerLogger mockServerLogger, Configuration _configuration) {
         System.setProperty("nashorn.args", "--language=es6");
-        this.configuration = (configuration == null) ? configuration() : configuration;
+        configuration = (_configuration == null) ? configuration() : _configuration;
         if (engine == null) {
             engine = new NashornScriptEngineFactory().getScriptEngine(new SecureFilter());
         }
