@@ -45,10 +45,15 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
     private static ObjectMapper objectMapper;
     private final MockServerLogger mockServerLogger;
     private HttpTemplateOutputDeserializer httpTemplateOutputDeserializer;
-    private static final Configuration configuration = configuration();
+    private static Configuration configuration;
 
     public JavaScriptTemplateEngine(MockServerLogger mockServerLogger) {
+        this(mockServerLogger, null);
+    }
+
+    public JavaScriptTemplateEngine(MockServerLogger mockServerLogger, Configuration configuration) {
         System.setProperty("nashorn.args", "--language=es6");
+        this.configuration = (configuration == null) ? configuration() : configuration;
         if (engine == null) {
             engine = new NashornScriptEngineFactory().getScriptEngine(new SecureFilter());
         }
@@ -203,6 +208,12 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
 
             return true;
         }
+    }
+
+    public static void clear() {
+        engine = null;
+        configuration = null;
+        objectMapper = null;
     }
 
 }

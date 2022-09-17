@@ -488,6 +488,9 @@ public class VelocityTemplateEngineTest {
 
     @Test
     public void shouldHandleHttpRequestsWithVelocityTemplateWithJavaStrings() throws JsonProcessingException {
+        // Test Case: mockserver.velocity.class.deny=true
+        // Expected Result: Deny velocity script execution due to restricted class found in template
+
         // given
         String template = "{" + NEW_LINE +
             "    'statusCode': 200," + NEW_LINE +
@@ -504,7 +507,7 @@ public class VelocityTemplateEngineTest {
         boolean originalVelocityDenyClasses = configuration.velocityDenyClasses();
         try {
             configuration.velocityDenyClasses(true);
-            actualHttpResponse = new VelocityTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+            actualHttpResponse = new VelocityTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
         } catch (Exception e) {
         }
 

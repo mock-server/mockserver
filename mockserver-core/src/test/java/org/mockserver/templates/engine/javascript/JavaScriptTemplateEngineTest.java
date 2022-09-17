@@ -509,420 +509,741 @@ public class JavaScriptTemplateEngineTest {
     }
 
     @Test
-    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsUseCase1() {
-        // case1: mockserver.javascript.class.deny and mockserver.javascript.text.deny are not configured
+    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsWithoutDeniedClassWithoutDeniedText() {
+        // Test Case: mockserver.javascript.class.deny and mockserver.javascript.text.deny are not configured
+        // Expected Result: Deny javascript execution due to restricted text found in template
 
         String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
         String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
 
         try {
+            // given
             configuration.javaScriptDeniedClasses(null);
             configuration.javaScriptDeniedText(null);
-            testsShouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStrings();
-        } finally {
-            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
-            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
-        }
-    }
 
-    @Test
-    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsUseCase2() {
-        // case2: mockserver.javascript.class.deny=java.lang.Runtime, and mockserver.javascript.text.deny is not configured
+            String template = "" +
+                "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 200," + NEW_LINE +
+                "        'body': java.lang.Runtime.getRuntime().exec(\"notepad.exe\")" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "} else {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 406," + NEW_LINE +
+                "        'body': request.body" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "}";
 
-        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
-        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
-
-        try {
-            configuration.javaScriptDeniedClasses("java.lang.Runtime");
-            configuration.javaScriptDeniedText(null);
-            testsShouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStrings();
-        } finally {
-            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
-            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
-        }
-    }
-
-    @Test
-    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsUseCase3() {
-        // case3: mockserver.javascript.class.deny is not set, and mockserver.javascript.text.deny=engine.factory
-
-        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
-        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
-
-        try {
-            configuration.javaScriptDeniedClasses(null);
-            configuration.javaScriptDeniedText("engine.factory");
-            testsShouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStrings();
-        } finally {
-            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
-            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
-        }
-    }
-
-    @Test
-    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsUseCase4() {
-        // case4: mockserver.javascript.class.deny=java.lang.Runtime, and mockserver.javascript.text.deny=engine.factory
-
-        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
-        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
-
-        try {
-            configuration.javaScriptDeniedClasses("java.lang.Runtime");
-            configuration.javaScriptDeniedText("engine.factory");
-            testsShouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStrings();
-        } finally {
-            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
-            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
-        }
-    }
-
-    public void testsShouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStrings() {
-        // given
-        String template = "" +
-            "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
-            "    return {" + NEW_LINE +
-            "        'statusCode': 200," + NEW_LINE +
-            "        'body': java.lang.Runtime.getRuntime().exec(\"notepad.exe\")" + NEW_LINE +
-            "    };" + NEW_LINE +
-            "} else {" + NEW_LINE +
-            "    return {" + NEW_LINE +
-            "        'statusCode': 406," + NEW_LINE +
-            "        'body': request.body" + NEW_LINE +
-            "    };" + NEW_LINE +
-            "}";
-
-        // when
-        HttpResponse actualHttpResponse = null;
-        boolean javascriptClassDenial = false;
-        boolean javascriptTextDenial = false;
-        try {
-            actualHttpResponse = new JavaScriptTemplateEngine(mockServerLogger).executeTemplate(template, request()
-                    .withPath("/somePath")
-                    .withMethod("POST")
-                    .withBody("some_body"),
-                HttpResponseDTO.class
-            );
-        } catch (Exception exception) {
-            if (exception.getMessage().contains("java.lang.ClassNotFoundException: java.lang.Runtime")) {
-                javascriptClassDenial = true;
+            // when
+            HttpResponse actualHttpResponse = null;
+            boolean javascriptClassDenial = false;
+            boolean javascriptTextDenial = false;
+            try {
+                JavaScriptTemplateEngine.clear();
+                actualHttpResponse = new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
+                        .withPath("/somePath")
+                        .withMethod("POST")
+                        .withBody("some_body"),
+                    HttpResponseDTO.class
+                );
+            } catch (Exception exception) {
+                exception.printStackTrace();
+                if (exception.getMessage().contains("java.lang.ClassNotFoundException: java.lang.Runtime")) {
+                    javascriptClassDenial = true;
+                }
+                if (exception.getMessage().contains("Invalid template string specified: ")) {
+                    javascriptTextDenial = true;
+                }
             }
-            if (exception.getMessage().contains("Invalid template string specified: ")) {
-                javascriptTextDenial = true;
-            }
-        }
 
-        // then
-        String javaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
-        String javaScriptRestrictedText = configuration.javaScriptDeniedText();
-
-        // case1: mockserver.javascript.class.deny and mockserver.javascript.text.deny are not configured
-        if (((javaScriptRestrictedClass == null) || (javaScriptRestrictedClass.trim().length() < 1)) &&
-            ((javaScriptRestrictedText == null) || (javaScriptRestrictedText.trim().length() < 1))) {
+            // then
             if (actualHttpResponse != null) {
                 assertTrue((actualHttpResponse.getStatusCode() == 200)
                     && (actualHttpResponse.getBodyAsString() == null));
             }
-        }
 
-        // case2: mockserver.javascript.class.deny=java.lang.Runtime, and mockserver.javascript.text.deny is not configured
-        if (((javaScriptRestrictedClass != null) && (javaScriptRestrictedClass.contains("java.lang.Runtime"))) &&
-            ((javaScriptRestrictedText == null) || (javaScriptRestrictedText.trim().length() < 1))) {
+        } finally {
+            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
+            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsWithDeniedClassWithoutDeniedText() {
+        // Test Case: mockserver.javascript.class.deny=java.lang.Runtime, and mockserver.javascript.text.deny is not configured
+        // Expected Result: Deny javascript execution due to restricted text found in template
+
+        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
+        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
+
+        try {
+            // given
+            configuration.javaScriptDeniedClasses("java.lang.Runtime");
+            configuration.javaScriptDeniedText(null);
+
+            String template = "" +
+                "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 200," + NEW_LINE +
+                "        'body': java.lang.Runtime.getRuntime().exec(\"notepad.exe\")" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "} else {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 406," + NEW_LINE +
+                "        'body': request.body" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "}";
+
+            // when
+            HttpResponse actualHttpResponse = null;
+            boolean javascriptClassDenial = false;
+            boolean javascriptTextDenial = false;
+            try {
+                JavaScriptTemplateEngine.clear();
+                actualHttpResponse = new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
+                        .withPath("/somePath")
+                        .withMethod("POST")
+                        .withBody("some_body"),
+                    HttpResponseDTO.class
+                );
+            } catch (Exception exception) {
+                exception.printStackTrace();
+                if (exception.getMessage().contains("java.lang.ClassNotFoundException: java.lang.Runtime")) {
+                    javascriptClassDenial = true;
+                }
+                if (exception.getMessage().contains("Invalid template string specified: ")) {
+                    javascriptTextDenial = true;
+                }
+            }
+
+            // then
             assertTrue(javascriptClassDenial);
-        }
 
-        // case3: mockserver.javascript.class.deny is not set, and mockserver.javascript.text.deny=engine.factory
-        if (((javaScriptRestrictedClass == null) || (javaScriptRestrictedClass.trim().length() < 1)) &&
-            ((javaScriptRestrictedText != null) && (javaScriptRestrictedText.contains("engine.factory")))) {
+        } finally {
+            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
+            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsWithoutDeniedClassWithDeniedText() {
+        // Test Case: mockserver.javascript.class.deny is not set, and mockserver.javascript.text.deny=engine.factory
+        // Expected Result: javascript execution allowed
+
+        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
+        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
+
+        try {
+            // given
+            configuration.javaScriptDeniedClasses(null);
+            configuration.javaScriptDeniedText("engine.factory");
+
+            String template = "" +
+                "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 200," + NEW_LINE +
+                "        'body': java.lang.Runtime.getRuntime().exec(\"notepad.exe\")" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "} else {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 406," + NEW_LINE +
+                "        'body': request.body" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "}";
+
+            // when
+            HttpResponse actualHttpResponse = null;
+            boolean javascriptClassDenial = false;
+            boolean javascriptTextDenial = false;
+            try {
+                JavaScriptTemplateEngine.clear();
+                actualHttpResponse = new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
+                        .withPath("/somePath")
+                        .withMethod("POST")
+                        .withBody("some_body"),
+                    HttpResponseDTO.class
+                );
+            } catch (Exception exception) {
+                exception.printStackTrace();
+                if (exception.getMessage().contains("java.lang.ClassNotFoundException: java.lang.Runtime")) {
+                    javascriptClassDenial = true;
+                }
+                if (exception.getMessage().contains("Invalid template string specified: ")) {
+                    javascriptTextDenial = true;
+                }
+            }
+
+            // then
             if (actualHttpResponse != null) {
                 assertTrue((actualHttpResponse.getStatusCode() == 200)
                     && (actualHttpResponse.getBodyAsString() == null));
             }
-        }
 
-        // case4: mockserver.javascript.class.deny=java.lang.Runtime, and mockserver.javascript.text.deny=engine.factory
-        if (((javaScriptRestrictedClass != null) && (javaScriptRestrictedClass.contains("java.lang.Runtime"))) &&
-            ((javaScriptRestrictedText != null) && (javaScriptRestrictedText.contains("engine.factory")))) {
+        } finally {
+            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
+            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsWithDeniedClassWithDeniedText() {
+        // Test Case: mockserver.javascript.class.deny=java.lang.Runtime, and mockserver.javascript.text.deny=engine.factory
+        // Expected Result: Deny javascript execution due to restricted class found in template
+
+        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
+        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
+
+        try {
+            // given
+            configuration.javaScriptDeniedClasses("java.lang.Runtime");
+            configuration.javaScriptDeniedText("engine.factory");
+
+            String template = "" +
+                "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 200," + NEW_LINE +
+                "        'body': java.lang.Runtime.getRuntime().exec(\"notepad.exe\")" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "} else {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 406," + NEW_LINE +
+                "        'body': request.body" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "}";
+
+            // when
+            HttpResponse actualHttpResponse = null;
+            boolean javascriptClassDenial = false;
+            boolean javascriptTextDenial = false;
+            try {
+                JavaScriptTemplateEngine.clear();
+                actualHttpResponse = new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
+                        .withPath("/somePath")
+                        .withMethod("POST")
+                        .withBody("some_body"),
+                    HttpResponseDTO.class
+                );
+            } catch (Exception exception) {
+                exception.printStackTrace();
+                if (exception.getMessage().contains("java.lang.ClassNotFoundException: java.lang.Runtime")) {
+                    javascriptClassDenial = true;
+                }
+                if (exception.getMessage().contains("Invalid template string specified: ")) {
+                    javascriptTextDenial = true;
+                }
+            }
+
+            // then
             assertTrue(javascriptClassDenial);
+
+        } finally {
+            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
+            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
         }
     }
 
     @Test
-    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaExistingEngineUseCase1() {
-        // case1: mockserver.javascript.class.deny and mockserver.javascript.text.deny are not configured
+    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaExistingEngineWithoutDeniedClassWithoutDeniedText() {
+        // Test Case: mockserver.javascript.class.deny and mockserver.javascript.text.deny are not configured
+        // Expected Result: javascript execution allowed
 
         String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
         String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
 
         try {
+            // given
             configuration.javaScriptDeniedClasses(null);
             configuration.javaScriptDeniedText(null);
-            shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaExistingEngine();
-        } finally {
-            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
-            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
-        }
-    }
 
-    @Test
-    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaExistingEngineUseCase2() {
-        // case2: mockserver.javascript.class.deny=java.lang.Runtime, and mockserver.javascript.text.deny is not configured
+            String template = "" +
+                "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 200," + NEW_LINE +
+                "        'body': String(this.engine.eval(java.lang.Runtime.getRuntime().exec(\"notepad.exe\")))" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "} else {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 406," + NEW_LINE +
+                "        'body': request.body" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "}";
 
-        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
-        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
-
-        try {
-            configuration.javaScriptDeniedClasses("java.lang.Runtime");
-            configuration.javaScriptDeniedText(null);
-            shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaExistingEngine();
-        } finally {
-            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
-            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
-        }
-    }
-
-    @Test
-    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaExistingEngineUseCase3() {
-        // case3: mockserver.javascript.class.deny is not set, and mockserver.javascript.text.deny=engine.factory
-
-        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
-        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
-
-        try {
-            configuration.javaScriptDeniedClasses(null);
-            configuration.javaScriptDeniedText("engine.factory");
-            shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaExistingEngine();
-        } finally {
-            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
-            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
-        }
-    }
-
-    @Test
-    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaExistingEngineUseCase4() {
-        // case4: mockserver.javascript.class.deny=java.lang.Runtime, and mockserver.javascript.text.deny=engine.factory
-
-        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
-        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
-
-        try {
-            configuration.javaScriptDeniedClasses("java.lang.Runtime");
-            configuration.javaScriptDeniedText("engine.factory");
-            shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaExistingEngine();
-        } finally {
-            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
-            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
-        }
-    }
-
-    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaExistingEngine() {
-        // given
-        String template = "" +
-            "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
-            "    return {" + NEW_LINE +
-            "        'statusCode': 200," + NEW_LINE +
-            "        'body': String(this.engine.eval(java.lang.Runtime.getRuntime().exec(\"notepad.exe\")))" + NEW_LINE +
-            "    };" + NEW_LINE +
-            "} else {" + NEW_LINE +
-            "    return {" + NEW_LINE +
-            "        'statusCode': 406," + NEW_LINE +
-            "        'body': request.body" + NEW_LINE +
-            "    };" + NEW_LINE +
-            "}";
-
-        // when
-        HttpResponse actualHttpResponse = null;
-        boolean javascriptClassDenial = false;
-        boolean javascriptTextDenial = false;
-        boolean processTriggered = false;
-        try {
-            actualHttpResponse = new JavaScriptTemplateEngine(mockServerLogger).executeTemplate(template, request()
-                    .withPath("/somePath")
-                    .withMethod("POST")
-                    .withBody("some_body"),
-                HttpResponseDTO.class
-            );
-        } catch (Exception exception) {
-            if (exception.getMessage().contains("java.lang.ClassNotFoundException: java.lang.Runtime")) {
-                javascriptClassDenial = true;
+            // when
+            HttpResponse actualHttpResponse = null;
+            boolean javascriptClassDenial = false;
+            boolean javascriptTextDenial = false;
+            boolean processTriggered = false;
+            try {
+                JavaScriptTemplateEngine.clear();
+                actualHttpResponse = new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
+                        .withPath("/somePath")
+                        .withMethod("POST")
+                        .withBody("some_body"),
+                    HttpResponseDTO.class
+                );
+            } catch (Exception exception) {
+                exception.printStackTrace();
+                if (exception.getMessage().contains("java.lang.ClassNotFoundException: java.lang.Runtime")) {
+                    javascriptClassDenial = true;
+                }
+                if (exception.getMessage().contains("Invalid template string specified: ")) {
+                    javascriptTextDenial = true;
+                }
+                if (exception.getMessage().contains("java.lang.ProcessImpl@")
+                    || exception.getMessage().contains("\"Process\" is not defined in <eval>")) {
+                    processTriggered = true;
+                }
             }
-            if (exception.getMessage().contains("Invalid template string specified: ")) {
-                javascriptTextDenial = true;
-            }
-            if (exception.getMessage().contains("java.lang.ProcessImpl@")) {
-                processTriggered = true;
-            }
-        }
 
-        // then
-        String javaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
-        String javaScriptRestrictedText = configuration.javaScriptDeniedText();
-        // case1: mockserver.javascript.class.deny and mockserver.javascript.text.deny are not configured
-        if (((javaScriptRestrictedClass == null) || (javaScriptRestrictedClass.trim().length() < 1)) &&
-            ((javaScriptRestrictedText == null) || (javaScriptRestrictedText.trim().length() < 1))) {
+            // then
             if (actualHttpResponse != null) {
                 assertTrue((processTriggered) || ((actualHttpResponse.getStatusCode() == 200)
                     && (actualHttpResponse.getBodyAsString() == null)));
             }
-        }
 
-        // case2: mockserver.javascript.class.deny=java.lang.Runtime, and mockserver.javascript.text.deny is not configured
-        if (((javaScriptRestrictedClass != null) && (javaScriptRestrictedClass.contains("java.lang.Runtime"))) &&
-            ((javaScriptRestrictedText == null) || (javaScriptRestrictedText.trim().length() < 1))) {
+        } finally {
+            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
+            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaExistingEngineWithDeniedClassWithoutDeniedText() {
+        // Test Case: mockserver.javascript.class.deny=java.lang.Runtime, and mockserver.javascript.text.deny is not configured
+        // Expected Result: Deny javascript execution due to restricted class found in template
+
+        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
+        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
+
+        try {
+            // given
+            configuration.javaScriptDeniedClasses("java.lang.Runtime");
+            configuration.javaScriptDeniedText(null);
+
+            String template = "" +
+                "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 200," + NEW_LINE +
+                "        'body': String(this.engine.eval(java.lang.Runtime.getRuntime().exec(\"notepad.exe\")))" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "} else {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 406," + NEW_LINE +
+                "        'body': request.body" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "}";
+
+            // when
+            HttpResponse actualHttpResponse = null;
+            boolean javascriptClassDenial = false;
+            boolean javascriptTextDenial = false;
+            boolean processTriggered = false;
+            try {
+                JavaScriptTemplateEngine.clear();
+                actualHttpResponse = new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
+                        .withPath("/somePath")
+                        .withMethod("POST")
+                        .withBody("some_body"),
+                    HttpResponseDTO.class
+                );
+            } catch (Exception exception) {
+                exception.printStackTrace();
+                if (exception.getMessage().contains("java.lang.ClassNotFoundException: java.lang.Runtime")) {
+                    javascriptClassDenial = true;
+                }
+                if (exception.getMessage().contains("Invalid template string specified: ")) {
+                    javascriptTextDenial = true;
+                }
+                if (exception.getMessage().contains("java.lang.ProcessImpl@")
+                    || exception.getMessage().contains("\"Process\" is not defined in <eval>")) {
+                    processTriggered = true;
+                }
+            }
+
+            // then
             assertTrue(javascriptClassDenial);
-        }
 
-        // case3: mockserver.javascript.class.deny is not set, and mockserver.javascript.text.deny=engine.factory
-        if (((javaScriptRestrictedClass == null) || (javaScriptRestrictedClass.trim().length() < 1)) &&
-            ((javaScriptRestrictedText != null) && (javaScriptRestrictedText.contains("engine.factory")))) {
+        } finally {
+            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
+            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaExistingEngineWithoutDeniedClassWithDeniedText() {
+        // Test Case: mockserver.javascript.class.deny is not set, and mockserver.javascript.text.deny=engine.factory
+        // Expected Result: javascript execution allowed
+
+        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
+        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
+
+        try {
+            // given
+            configuration.javaScriptDeniedClasses(null);
+            configuration.javaScriptDeniedText("engine.factory");
+
+            String template = "" +
+                "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 200," + NEW_LINE +
+                "        'body': String(this.engine.eval(java.lang.Runtime.getRuntime().exec(\"notepad.exe\")))" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "} else {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 406," + NEW_LINE +
+                "        'body': request.body" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "}";
+
+            // when
+            HttpResponse actualHttpResponse = null;
+            boolean javascriptClassDenial = false;
+            boolean javascriptTextDenial = false;
+            boolean processTriggered = false;
+            try {
+                JavaScriptTemplateEngine.clear();
+                actualHttpResponse = new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
+                        .withPath("/somePath")
+                        .withMethod("POST")
+                        .withBody("some_body"),
+                    HttpResponseDTO.class
+                );
+            } catch (Exception exception) {
+                exception.printStackTrace();
+                if (exception.getMessage().contains("java.lang.ClassNotFoundException: java.lang.Runtime")) {
+                    javascriptClassDenial = true;
+                }
+                if (exception.getMessage().contains("Invalid template string specified: ")) {
+                    javascriptTextDenial = true;
+                }
+                if (exception.getMessage().contains("java.lang.ProcessImpl@")
+                    || exception.getMessage().contains("\"Process\" is not defined in <eval>")) {
+                    processTriggered = true;
+                }
+            }
+
+            // then
             if (actualHttpResponse != null) {
                 assertTrue((processTriggered) || ((actualHttpResponse.getStatusCode() == 200)
                     && (actualHttpResponse.getBodyAsString() == null)));
             }
-        }
 
-        // case4: mockserver.javascript.class.deny=java.lang.Runtime, and mockserver.javascript.text.deny=engine.factory
-        if (((javaScriptRestrictedClass != null) && (javaScriptRestrictedClass.contains("java.lang.Runtime"))) &&
-            ((javaScriptRestrictedText != null) && (javaScriptRestrictedText.contains("engine.factory")))) {
+        } finally {
+            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
+            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaExistingEngineWithDeniedClassWithDeniedText() {
+        // Test Case: mockserver.javascript.class.deny=java.lang.Runtime, and mockserver.javascript.text.deny=engine.factory
+        // Expected Result: Deny javascript execution due to restricted class found in template
+
+        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
+        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
+
+        try {
+            // given
+            configuration.javaScriptDeniedClasses("java.lang.Runtime");
+            configuration.javaScriptDeniedText("engine.factory");
+
+            String template = "" +
+                "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 200," + NEW_LINE +
+                "        'body': String(this.engine.eval(java.lang.Runtime.getRuntime().exec(\"notepad.exe\")))" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "} else {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 406," + NEW_LINE +
+                "        'body': request.body" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "}";
+
+            // when
+            HttpResponse actualHttpResponse = null;
+            boolean javascriptClassDenial = false;
+            boolean javascriptTextDenial = false;
+            boolean processTriggered = false;
+            try {
+                JavaScriptTemplateEngine.clear();
+                actualHttpResponse = new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
+                        .withPath("/somePath")
+                        .withMethod("POST")
+                        .withBody("some_body"),
+                    HttpResponseDTO.class
+                );
+            } catch (Exception exception) {
+                exception.printStackTrace();
+                if (exception.getMessage().contains("java.lang.ClassNotFoundException: java.lang.Runtime")) {
+                    javascriptClassDenial = true;
+                }
+                if (exception.getMessage().contains("Invalid template string specified: ")) {
+                    javascriptTextDenial = true;
+                }
+                if (exception.getMessage().contains("java.lang.ProcessImpl@")
+                    || exception.getMessage().contains("\"Process\" is not defined in <eval>")) {
+                    processTriggered = true;
+                }
+            }
+
+            // then
             assertTrue(javascriptClassDenial);
+
+        } finally {
+            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
+            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
         }
     }
 
     @Test
-    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaNewEngineUseCase1() {
-        // case1: mockserver.javascript.class.deny and mockserver.javascript.text.deny are not configured
+    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaNewEngineWithoutDeniedClassWithoutDeniedText() {
+        // Test Case: mockserver.javascript.class.deny and mockserver.javascript.text.deny are not configured
+        // Expected Result: javascript execution allowed
 
         String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
         String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
 
         try {
+            // given
             configuration.javaScriptDeniedClasses(null);
             configuration.javaScriptDeniedText(null);
-            shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaNewEngine();
-        } finally {
-            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
-            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
-        }
-    }
 
-    @Test
-    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaNewEngineUseCase2() {
-        // case2: mockserver.javascript.class.deny=java.lang.Runtime, and mockserver.javascript.text.deny is not configured
+            String template = "" +
+                "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 200," + NEW_LINE +
+                "        'body': String(this.engine.factory.scriptEngine.eval(java.lang.Runtime.getRuntime().exec(\"notepad.exe\")))" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "} else {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 406," + NEW_LINE +
+                "        'body': request.body" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "}";
 
-        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
-        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
-
-        try {
-            configuration.javaScriptDeniedClasses("java.lang.Runtime");
-            configuration.javaScriptDeniedText(null);
-            shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaNewEngine();
-        } finally {
-            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
-            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
-        }
-    }
-
-    @Test
-    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaNewEngineUseCase3() {
-        // case3: mockserver.javascript.class.deny is not set, and mockserver.javascript.text.deny=engine.factory
-
-        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
-        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
-
-        try {
-            configuration.javaScriptDeniedClasses(null);
-            configuration.javaScriptDeniedText("engine.factory");
-            shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaNewEngine();
-        } finally {
-            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
-            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
-        }
-    }
-
-    @Test
-    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaNewEngineUseCase4() {
-        // case4: mockserver.javascript.class.deny=java.lang.Runtime, and mockserver.javascript.text.deny=engine.factory
-
-        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
-        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
-
-        try {
-            configuration.javaScriptDeniedClasses("java.lang.Runtime");
-            configuration.javaScriptDeniedText("engine.factory");
-            shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaNewEngine();
-        } finally {
-            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
-            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
-        }
-    }
-
-    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaNewEngine() {
-        // given
-        String template = "" +
-            "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
-            "    return {" + NEW_LINE +
-            "        'statusCode': 200," + NEW_LINE +
-            "        'body': String(this.engine.factory.scriptEngine.eval(java.lang.Runtime.getRuntime().exec(\"notepad.exe\")))" + NEW_LINE +
-            "    };" + NEW_LINE +
-            "} else {" + NEW_LINE +
-            "    return {" + NEW_LINE +
-            "        'statusCode': 406," + NEW_LINE +
-            "        'body': request.body" + NEW_LINE +
-            "    };" + NEW_LINE +
-            "}";
-
-        // when
-        HttpResponse actualHttpResponse = null;
-        boolean javascriptClassDenial = false;
-        boolean javascriptTextDenial = false;
-        boolean processTriggered = false;
-        try {
-            actualHttpResponse = new JavaScriptTemplateEngine(mockServerLogger).executeTemplate(template, request()
-                    .withPath("/somePath")
-                    .withMethod("POST")
-                    .withBody("some_body"),
-                HttpResponseDTO.class
-            );
-        } catch (Exception exception) {
-            if (exception.getMessage().contains("java.lang.ClassNotFoundException: java.lang.Runtime")) {
-                javascriptClassDenial = true;
+            // when
+            HttpResponse actualHttpResponse = null;
+            boolean javascriptClassDenial = false;
+            boolean javascriptTextDenial = false;
+            boolean processTriggered = false;
+            try {
+                JavaScriptTemplateEngine.clear();
+                actualHttpResponse = new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
+                        .withPath("/somePath")
+                        .withMethod("POST")
+                        .withBody("some_body"),
+                    HttpResponseDTO.class
+                );
+            } catch (Exception exception) {
+                exception.printStackTrace();
+                if (exception.getMessage().contains("java.lang.ClassNotFoundException: java.lang.Runtime")) {
+                    javascriptClassDenial = true;
+                }
+                if (exception.getMessage().contains("Invalid template string specified: ")) {
+                    javascriptTextDenial = true;
+                }
+                if (exception.getMessage().contains("java.lang.ProcessImpl@")
+                    || exception.getMessage().contains("\"Process\" is not defined in <eval>")) {
+                    processTriggered = true;
+                }
             }
-            if (exception.getMessage().contains("Invalid template string specified: ")) {
-                javascriptTextDenial = true;
-            }
-            if (exception.getMessage().contains("java.lang.ProcessImpl@")) {
-                processTriggered = true;
-            }
-        }
 
-        // then
-        String javaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
-        String javaScriptRestrictedText = configuration.javaScriptDeniedText();
-
-        // case1: mockserver.javascript.class.deny and mockserver.javascript.text.deny are not configured
-        if (((javaScriptRestrictedClass == null) || (javaScriptRestrictedClass.trim().length() < 1)) &&
-            ((javaScriptRestrictedText == null) || (javaScriptRestrictedText.trim().length() < 1))) {
+            // then
             if (actualHttpResponse != null) {
                 assertTrue((processTriggered) || ((actualHttpResponse.getStatusCode() == 200)
                     && (actualHttpResponse.getBodyAsString() == null)));
             }
-        }
 
-        // case2: mockserver.javascript.class.deny=java.lang.Runtime, and mockserver.javascript.text.deny is not configured
-        if (((javaScriptRestrictedClass != null) && (javaScriptRestrictedClass.contains("java.lang.Runtime"))) &&
-            ((javaScriptRestrictedText == null) || (javaScriptRestrictedText.trim().length() < 1))) {
+        } finally {
+            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
+            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaNewEngineWithDeniedClassWithoutDeniedText() {
+        // Test Case: mockserver.javascript.class.deny=java.lang.Runtime, and mockserver.javascript.text.deny is not configured
+        // Expected Result: Deny javascript execution due to restricted class found in template
+
+        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
+        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
+
+        try {
+            // given
+            configuration.javaScriptDeniedClasses("java.lang.Runtime");
+            configuration.javaScriptDeniedText(null);
+
+            String template = "" +
+                "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 200," + NEW_LINE +
+                "        'body': String(this.engine.factory.scriptEngine.eval(java.lang.Runtime.getRuntime().exec(\"notepad.exe\")))" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "} else {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 406," + NEW_LINE +
+                "        'body': request.body" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "}";
+
+            // when
+            HttpResponse actualHttpResponse = null;
+            boolean javascriptClassDenial = false;
+            boolean javascriptTextDenial = false;
+            boolean processTriggered = false;
+            try {
+                JavaScriptTemplateEngine.clear();
+                actualHttpResponse = new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
+                        .withPath("/somePath")
+                        .withMethod("POST")
+                        .withBody("some_body"),
+                    HttpResponseDTO.class
+                );
+            } catch (Exception exception) {
+                exception.printStackTrace();
+                if (exception.getMessage().contains("java.lang.ClassNotFoundException: java.lang.Runtime")) {
+                    javascriptClassDenial = true;
+                }
+                if (exception.getMessage().contains("Invalid template string specified: ")) {
+                    javascriptTextDenial = true;
+                }
+                if (exception.getMessage().contains("java.lang.ProcessImpl@")
+                    || exception.getMessage().contains("\"Process\" is not defined in <eval>")) {
+                    processTriggered = true;
+                }
+            }
+
+            // then
             assertTrue(javascriptClassDenial);
-        }
 
-        // case3: mockserver.javascript.class.deny is not set, and mockserver.javascript.text.deny=engine.factory
-        if (((javaScriptRestrictedClass == null) || (javaScriptRestrictedClass.trim().length() < 1)) &&
-            ((javaScriptRestrictedText != null) && (javaScriptRestrictedText.contains("engine.factory")))) {
+        } finally {
+            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
+            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaNewEngineWithoutDeniedClassWithDeniedText() {
+        // Test Case: mockserver.javascript.class.deny is not set, and mockserver.javascript.text.deny=engine.factory
+        // Expected Result: Deny javascript execution due to restricted text found in template
+
+        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
+        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
+
+        try {
+            // given
+            configuration.javaScriptDeniedClasses(null);
+            configuration.javaScriptDeniedText("engine.factory");
+
+            String template = "" +
+                "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 200," + NEW_LINE +
+                "        'body': String(this.engine.factory.scriptEngine.eval(java.lang.Runtime.getRuntime().exec(\"notepad.exe\")))" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "} else {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 406," + NEW_LINE +
+                "        'body': request.body" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "}";
+
+            // when
+            HttpResponse actualHttpResponse = null;
+            boolean javascriptClassDenial = false;
+            boolean javascriptTextDenial = false;
+            boolean processTriggered = false;
+            try {
+                JavaScriptTemplateEngine.clear();
+                actualHttpResponse = new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
+                        .withPath("/somePath")
+                        .withMethod("POST")
+                        .withBody("some_body"),
+                    HttpResponseDTO.class
+                );
+            } catch (Exception exception) {
+                exception.printStackTrace();
+                if (exception.getMessage().contains("java.lang.ClassNotFoundException: java.lang.Runtime")) {
+                    javascriptClassDenial = true;
+                }
+                if (exception.getMessage().contains("Invalid template string specified: ")) {
+                    javascriptTextDenial = true;
+                }
+                if (exception.getMessage().contains("java.lang.ProcessImpl@")
+                    || exception.getMessage().contains("\"Process\" is not defined in <eval>")) {
+                    processTriggered = true;
+                }
+            }
+
+            // then
             assertTrue(javascriptTextDenial);
-        }
 
-        // case4: mockserver.javascript.class.deny=java.lang.Runtime, and mockserver.javascript.text.deny=engine.factory
-        if (((javaScriptRestrictedClass != null) && (javaScriptRestrictedClass.contains("java.lang.Runtime"))) &&
-            ((javaScriptRestrictedText != null) && (javaScriptRestrictedText.contains("engine.factory")))) {
+        } finally {
+            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
+            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithJavaScriptTemplateWithJavaStringsViaNewEngineWithDeniedClassWithDeniedText() {
+        // Test Case: mockserver.javascript.class.deny=java.lang.Runtime, and mockserver.javascript.text.deny=engine.factory
+        // Expected Result: Deny javascript execution due to restricted text found in template
+
+        String originalJavaScriptRestrictedClass = configuration.javaScriptDeniedClasses();
+        String originalJavaScriptRestrictedText = configuration.javaScriptDeniedText();
+
+        try {
+            // given
+            configuration.javaScriptDeniedClasses("java.lang.Runtime");
+            configuration.javaScriptDeniedText("engine.factory");
+
+            String template = "" +
+                "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 200," + NEW_LINE +
+                "        'body': String(this.engine.factory.scriptEngine.eval(java.lang.Runtime.getRuntime().exec(\"notepad.exe\")))" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "} else {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 406," + NEW_LINE +
+                "        'body': request.body" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "}";
+
+            // when
+            HttpResponse actualHttpResponse = null;
+            boolean javascriptClassDenial = false;
+            boolean javascriptTextDenial = false;
+            boolean processTriggered = false;
+            try {
+                JavaScriptTemplateEngine.clear();
+                actualHttpResponse = new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
+                        .withPath("/somePath")
+                        .withMethod("POST")
+                        .withBody("some_body"),
+                    HttpResponseDTO.class
+                );
+            } catch (Exception exception) {
+                exception.printStackTrace();
+                if (exception.getMessage().contains("java.lang.ClassNotFoundException: java.lang.Runtime")) {
+                    javascriptClassDenial = true;
+                }
+                if (exception.getMessage().contains("Invalid template string specified: ")) {
+                    javascriptTextDenial = true;
+                }
+                if (exception.getMessage().contains("java.lang.ProcessImpl@")
+                    || exception.getMessage().contains("\"Process\" is not defined in <eval>")) {
+                    processTriggered = true;
+                }
+            }
+
+            // then
             assertTrue(javascriptTextDenial);
+
+        } finally {
+            configuration.javaScriptDeniedClasses(originalJavaScriptRestrictedClass);
+            configuration.javaScriptDeniedText(originalJavaScriptRestrictedText);
         }
     }
 

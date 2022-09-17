@@ -45,7 +45,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
     private static ObjectMapper objectMapper;
     private final MockServerLogger mockServerLogger;
     private HttpTemplateOutputDeserializer httpTemplateOutputDeserializer;
-    private static final Configuration configuration = configuration();
+    private static Configuration configuration = configuration();
 
     static {
         // See: https://velocity.apache.org/engine/2.0/configuration.html
@@ -117,10 +117,18 @@ public class VelocityTemplateEngine implements TemplateEngine {
     }
 
     public VelocityTemplateEngine(MockServerLogger mockServerLogger) {
+        this(mockServerLogger, null);
+    }
+
+    public VelocityTemplateEngine(MockServerLogger mockServerLogger, Configuration configuration) {
         this.mockServerLogger = mockServerLogger;
         this.httpTemplateOutputDeserializer = new HttpTemplateOutputDeserializer(mockServerLogger);
         if (objectMapper == null) {
             objectMapper = ObjectMapperFactory.createObjectMapper();
+        }
+        this.configuration = (configuration == null) ? configuration() : configuration;
+        if (this.configuration.velocityDenyClasses()) {
+            velocityEngine.setProperty(RuntimeConstants.UBERSPECT_CLASSNAME, SecureUberspector.class.getName());
         }
     }
 
