@@ -6,6 +6,7 @@ import org.hamcrest.Matcher;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -35,9 +36,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.log.model.LogEntry.LogMessageType.TEMPLATE_GENERATED;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -51,6 +54,7 @@ public class VelocityTemplateEngineTest {
 
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
     private static boolean originalFixedTime;
+    private static final Configuration configuration = configuration();
 
     @Rule
     public final ExpectedException exception = ExpectedException.none();
@@ -480,6 +484,42 @@ public class VelocityTemplateEngineTest {
                     request
                 )
         );
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithVelocityTemplateWithJavaStrings() throws JsonProcessingException {
+        // Test Case: mockserver.velocity.class.deny=true
+        // Expected Result: Deny velocity script execution due to restricted class found in template
+
+        // given
+        String template = "{" + NEW_LINE +
+            "    'statusCode': 200," + NEW_LINE +
+            "    'body': \"$!request.class.forName('java.lang.Runtime').getRuntime().exec(\"notepad.exe\")\"" + NEW_LINE +
+            "}";
+        HttpRequest request = request()
+            .withPath("/somePath")
+            .withMethod("POST")
+            .withHeader(HOST.toString(), "mock-server.com")
+            .withBody("some_body".getBytes(StandardCharsets.UTF_8));
+
+        // when
+        HttpResponse actualHttpResponse = null;
+        boolean originalVelocityDenyClasses = configuration.velocityDenyClasses();
+        try {
+            configuration.velocityDenyClasses(true);
+            actualHttpResponse = new VelocityTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
+        } catch (Exception e) {
+        }
+
+        // then
+        if (actualHttpResponse != null) {
+            if (configuration.velocityDenyClasses()) {
+                assertTrue((actualHttpResponse.getStatusCode() == 200) && (!actualHttpResponse.getBodyAsString().contains("java.lang.ProcessImpl@")));
+            } else {
+                assertTrue((actualHttpResponse.getStatusCode() == 200) && (actualHttpResponse.getBodyAsString().contains("java.lang.ProcessImpl@")));
+            }
+        }
+        configuration.velocityDenyClasses(originalVelocityDenyClasses);
     }
 
     @Test

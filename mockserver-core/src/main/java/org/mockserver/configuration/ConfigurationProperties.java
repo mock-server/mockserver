@@ -161,6 +161,11 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_FORWARD_PROXY_TLS_PRIVATE_KEY = "mockserver.forwardProxyPrivateKey";
     private static final String MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATE_CHAIN = "mockserver.forwardProxyCertificateChain";
 
+    // Security
+    private static final String MOCKSERVER_JAVASCRIPT_CLASS_DENY = "mockserver.javascript.class.deny";
+    private static final String MOCKSERVER_JAVASCRIPT_TEXT_DENY = "mockserver.javascript.text.deny";
+    private static final String MOCKSERVER_VELOCITY_CLASS_DENY = "mockserver.velocity.class.deny";
+
     // properties file
     private static final String MOCKSERVER_PROPERTY_FILE = "mockserver.propertyFile";
     public static final Properties PROPERTIES = readPropertyFile();
@@ -1501,6 +1506,19 @@ public class ConfigurationProperties {
 
     public static String forwardProxyCertificateChain() {
         return readPropertyHierarchically(PROPERTIES, MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATE_CHAIN, "MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATE_CHAIN", "");
+    }
+
+    // security
+    public static String javaScriptDeniedClasses() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_JAVASCRIPT_CLASS_DENY, "MOCKSERVER_JAVASCRIPT_CLASS_DENY", "");
+    }
+
+    public static String javaScriptDeniedText() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_JAVASCRIPT_TEXT_DENY, "MOCKSERVER_JAVASCRIPT_TEXT_DENY", "");
+    }
+
+    public static boolean velocityDenyClasses() {
+        return "true".equalsIgnoreCase(readPropertyHierarchically(PROPERTIES, MOCKSERVER_VELOCITY_CLASS_DENY, "MOCKSERVER_VELOCITY_CLASS_DENY", "false"));
     }
 
     /**

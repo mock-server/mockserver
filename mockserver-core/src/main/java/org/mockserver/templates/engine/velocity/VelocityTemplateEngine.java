@@ -10,6 +10,8 @@ import org.apache.velocity.tools.ToolManager;
 import org.apache.velocity.tools.config.ToolConfiguration;
 import org.apache.velocity.tools.config.ToolboxConfiguration;
 import org.apache.velocity.tools.config.XmlFactoryConfiguration;
+import org.apache.velocity.util.introspection.SecureUberspector;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -27,6 +29,7 @@ import java.io.Writer;
 import java.util.Properties;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.log.model.LogEntry.LogMessageType.TEMPLATE_GENERATED;
 import static org.mockserver.log.model.LogEntryMessages.TEMPLATE_GENERATED_MESSAGE_FORMAT;
@@ -42,6 +45,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
     private static ObjectMapper objectMapper;
     private final MockServerLogger mockServerLogger;
     private HttpTemplateOutputDeserializer httpTemplateOutputDeserializer;
+    private static Configuration configuration = configuration();
 
     static {
         // See: https://velocity.apache.org/engine/2.0/configuration.html
@@ -68,6 +72,9 @@ public class VelocityTemplateEngine implements TemplateEngine {
         velocityProperties.put(RuntimeConstants.RESOURCE_MANAGER_CLASS, org.apache.velocity.runtime.resource.ResourceManagerImpl.class.getName());
         velocityProperties.put(RuntimeConstants.RESOURCE_MANAGER_CACHE_CLASS, org.apache.velocity.runtime.resource.ResourceCacheImpl.class.getName());
         velocityProperties.put("resource.loader.file.class", org.apache.velocity.runtime.resource.loader.FileResourceLoader.class.getName());
+        if (configuration.velocityDenyClasses()) {
+            velocityProperties.put(RuntimeConstants.UBERSPECT_CLASSNAME, SecureUberspector.class.getName());
+        }
         velocityEngine = new VelocityEngine();
         velocityEngine.init(velocityProperties);
 
@@ -110,10 +117,18 @@ public class VelocityTemplateEngine implements TemplateEngine {
     }
 
     public VelocityTemplateEngine(MockServerLogger mockServerLogger) {
+        this(mockServerLogger, null);
+    }
+
+    public VelocityTemplateEngine(MockServerLogger mockServerLogger, Configuration _configuration) {
         this.mockServerLogger = mockServerLogger;
         this.httpTemplateOutputDeserializer = new HttpTemplateOutputDeserializer(mockServerLogger);
         if (objectMapper == null) {
             objectMapper = ObjectMapperFactory.createObjectMapper();
+        }
+        configuration = (_configuration == null) ? configuration() : _configuration;
+        if (configuration.velocityDenyClasses()) {
+            velocityEngine.setProperty(RuntimeConstants.UBERSPECT_CLASSNAME, SecureUberspector.class.getName());
         }
     }
 
