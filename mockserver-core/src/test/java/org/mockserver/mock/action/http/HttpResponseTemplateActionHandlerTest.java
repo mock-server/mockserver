@@ -2,8 +2,8 @@ package org.mockserver.mock.action.http;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.mock.action.http.HttpResponseTemplateActionHandler;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpTemplate;
 
@@ -29,7 +29,7 @@ public class HttpResponseTemplateActionHandlerTest {
     @Before
     public void setupMocks() {
         MockServerLogger mockLogFormatter = mock(MockServerLogger.class);
-        httpResponseTemplateActionHandler = new HttpResponseTemplateActionHandler(mockLogFormatter);
+        httpResponseTemplateActionHandler = new HttpResponseTemplateActionHandler(mockLogFormatter, new Configuration());
         openMocks(this);
     }
 

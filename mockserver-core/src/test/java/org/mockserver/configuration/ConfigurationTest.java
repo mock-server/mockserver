@@ -891,6 +891,106 @@ public class ConfigurationTest {
     }
 
     @Test
+    public void shouldSetAndGetJavaScriptDisallowedClasses() {
+        String original = ConfigurationProperties.javascriptDisallowedClasses();
+        try {
+            // then - default value
+            assertThat(configuration.javascriptDisallowedClasses(), equalTo(""));
+
+            // when - system property setter
+            ConfigurationProperties.javascriptDisallowedClasses("java.lang.Runtime");
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.javascriptDisallowedClasses(), equalTo("java.lang.Runtime"));
+            assertThat(System.getProperty("mockserver.javascriptDisallowedClasses"), equalTo("java.lang.Runtime"));
+            assertThat(configuration.javascriptDisallowedClasses(), equalTo("java.lang.Runtime"));
+
+            // when - setter
+            configuration.javascriptDisallowedClasses("java.lang.Class");
+
+            // then - getter
+            assertThat(configuration.javascriptDisallowedClasses(), equalTo("java.lang.Class"));
+        } finally {
+            ConfigurationProperties.javascriptDisallowedClasses(original);
+        }
+    }
+
+    @Test
+    public void shouldSetAndGetJavaScriptDisallowedText() {
+        String original = ConfigurationProperties.javascriptDisallowedText();
+        try {
+            // then - default value
+            assertThat(configuration.javascriptDisallowedText(), equalTo(""));
+
+            // when - system property setter
+            ConfigurationProperties.javascriptDisallowedText("some_text");
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.javascriptDisallowedText(), equalTo("some_text"));
+            assertThat(System.getProperty("mockserver.javascriptDisallowedText"), equalTo("some_text"));
+            assertThat(configuration.javascriptDisallowedText(), equalTo("some_text"));
+
+            // when - setter
+            configuration.javascriptDisallowedText("some_other_text");
+
+            // then - getter
+            assertThat(configuration.javascriptDisallowedText(), equalTo("some_other_text"));
+        } finally {
+            ConfigurationProperties.javascriptDisallowedText(original);
+        }
+    }
+
+    @Test
+    public void shouldSetAndGetVelocityDisallowClassLoading() {
+        boolean original = ConfigurationProperties.velocityDisallowClassLoading();
+        try {
+            // then - default value
+            assertThat(configuration.velocityDisallowClassLoading(), equalTo(false));
+
+            // when - system property setter
+            ConfigurationProperties.velocityDisallowClassLoading(true);
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.velocityDisallowClassLoading(), equalTo(true));
+            assertThat(System.getProperty("mockserver.velocityDisallowClassLoading"), equalTo("true"));
+            assertThat(configuration.velocityDisallowClassLoading(), equalTo(true));
+
+            // when - setter
+            configuration.velocityDisallowClassLoading(false);
+
+            // then - getter
+            assertThat(configuration.velocityDisallowClassLoading(), equalTo(false));
+        } finally {
+            ConfigurationProperties.velocityDisallowClassLoading(original);
+        }
+    }
+
+    @Test
+    public void shouldSetAndGetVelocityDisallowedText() {
+        String original = ConfigurationProperties.velocityDisallowedText();
+        try {
+            // then - default value
+            assertThat(configuration.velocityDisallowedText(), equalTo(""));
+
+            // when - system property setter
+            ConfigurationProperties.velocityDisallowedText("some_text");
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.velocityDisallowedText(), equalTo("some_text"));
+            assertThat(System.getProperty("mockserver.velocityDisallowedText"), equalTo("some_text"));
+            assertThat(configuration.velocityDisallowedText(), equalTo("some_text"));
+
+            // when - setter
+            configuration.velocityDisallowedText("some_other_text");
+
+            // then - getter
+            assertThat(configuration.velocityDisallowedText(), equalTo("some_other_text"));
+        } finally {
+            ConfigurationProperties.velocityDisallowedText(original);
+        }
+    }
+
+    @Test
     public void shouldSetAndGetInitializationClass() {
         String original = ConfigurationProperties.initializationClass();
         try {

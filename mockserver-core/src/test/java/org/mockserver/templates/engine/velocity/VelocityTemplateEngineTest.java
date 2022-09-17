@@ -36,7 +36,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -105,7 +104,7 @@ public class VelocityTemplateEngineTest {
             .withBody("some_body");
 
         // when
-        HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
 
         // then
         assertThat(actualHttpResponse, is(
@@ -151,7 +150,7 @@ public class VelocityTemplateEngineTest {
             .withBody("some_body");
 
         // when
-        HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
 
         // then
         assertThat(actualHttpResponse, is(
@@ -197,7 +196,7 @@ public class VelocityTemplateEngineTest {
                 .withBody("some_body");
 
             // when
-            HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+            HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
 
             // then
             assertThat(actualHttpResponse, is(
@@ -247,7 +246,7 @@ public class VelocityTemplateEngineTest {
             .withBody("some_body");
 
         // when
-        HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
 
         // then
         assertThat(actualHttpResponse.getBodyAsString(), not(equalTo("")));
@@ -271,7 +270,7 @@ public class VelocityTemplateEngineTest {
             .withBody("some_body");
 
         // when
-        HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
 
         // then
         assertThat(actualHttpResponse, is(
@@ -316,7 +315,7 @@ public class VelocityTemplateEngineTest {
             .withBody("some_body");
 
         // when
-        HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
 
         // then
         assertThat(actualHttpResponse, is(
@@ -354,7 +353,7 @@ public class VelocityTemplateEngineTest {
             .withBody("<element><key>some_key</key><value>some_value</value></element>");
 
         // when
-        HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
 
         // then
         assertThat(actualHttpResponse, is(
@@ -415,7 +414,7 @@ public class VelocityTemplateEngineTest {
                 "}"));
 
         // when
-        HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
 
         // then
         assertThat(actualHttpResponse, is(
@@ -461,7 +460,7 @@ public class VelocityTemplateEngineTest {
             .withBody("some_body");
 
         // when
-        HttpRequest actualHttpRequest = new VelocityTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpRequestDTO.class);
+        HttpRequest actualHttpRequest = new VelocityTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpRequestDTO.class);
 
         // then
         assertThat(actualHttpRequest, is(
@@ -487,39 +486,101 @@ public class VelocityTemplateEngineTest {
     }
 
     @Test
-    public void shouldHandleHttpRequestsWithVelocityTemplateWithJavaStrings() throws JsonProcessingException {
-        // Test Case: mockserver.velocity.class.deny=true
-        // Expected Result: Deny velocity script execution due to restricted class found in template
+    public void shouldHandleHttpRequestsWithVelocityTemplateWithDisallowClassLoading() {
+        Boolean originalVelocityDenyClasses = configuration.velocityDisallowClassLoading();
 
-        // given
-        String template = "{" + NEW_LINE +
-            "    'statusCode': 200," + NEW_LINE +
-            "    'body': \"$!request.class.forName('java.lang.Runtime').getRuntime().exec(\"notepad.exe\")\"" + NEW_LINE +
-            "}";
-        HttpRequest request = request()
-            .withPath("/somePath")
-            .withMethod("POST")
-            .withHeader(HOST.toString(), "mock-server.com")
-            .withBody("some_body".getBytes(StandardCharsets.UTF_8));
-
-        // when
-        HttpResponse actualHttpResponse = null;
-        boolean originalVelocityDenyClasses = configuration.velocityDenyClasses();
         try {
-            configuration.velocityDenyClasses(true);
-            actualHttpResponse = new VelocityTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
-        } catch (Exception e) {
-        }
+            // given
+            String template = "{" + NEW_LINE +
+                "    'statusCode': 200," + NEW_LINE +
+                "    'body': \"$!request.class.classLoader.loadClass('java.lang.Runtime').getRuntime().exec(\"does_not_exist.sh\")\"" + NEW_LINE +
+                "}";
+            HttpRequest request = request()
+                .withPath("/somePath")
+                .withMethod("POST")
+                .withHeader(HOST.toString(), "mock-server.com")
+                .withBody("some_body".getBytes(StandardCharsets.UTF_8));
 
-        // then
-        if (actualHttpResponse != null) {
-            if (configuration.velocityDenyClasses()) {
-                assertTrue((actualHttpResponse.getStatusCode() == 200) && (!actualHttpResponse.getBodyAsString().contains("java.lang.ProcessImpl@")));
-            } else {
-                assertTrue((actualHttpResponse.getStatusCode() == 200) && (actualHttpResponse.getBodyAsString().contains("java.lang.ProcessImpl@")));
-            }
+            // then
+            Exception exception = assertThrows(RuntimeException.class, () -> new VelocityTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class));
+            assertThat(exception.getMessage(), containsString("Cannot run program \"does_not_exist.sh\""));
+
+            // when
+            configuration.velocityDisallowClassLoading(true);
+
+            // then - should skip execution of line and not thrown error
+            HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
+            assertThat(actualHttpResponse, is(
+                response()
+                    .withStatusCode(200)
+                    .withBody("")
+            ));
+        } finally {
+            configuration.velocityDisallowClassLoading(originalVelocityDenyClasses);
         }
-        configuration.velocityDenyClasses(originalVelocityDenyClasses);
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithVelocityTemplateWithDisallowedText() {
+        String originalVelocityDisallowedText = configuration.velocityDisallowedText();
+
+        try {
+            // given
+            String template = "{" + NEW_LINE +
+                "    'statusCode': 200," + NEW_LINE +
+                "    'body': \"$!request.class.classLoader.loadClass('java.lang.Runtime').getRuntime().exec(\"does_not_exist.sh\")\"" + NEW_LINE +
+                "}";
+            HttpRequest request = request()
+                .withPath("/somePath")
+                .withMethod("POST")
+                .withHeader(HOST.toString(), "mock-server.com")
+                .withBody("some_body".getBytes(StandardCharsets.UTF_8));
+
+            // then
+            Exception exception = assertThrows(RuntimeException.class, () -> new VelocityTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class));
+            assertThat(exception.getMessage(), containsString("Cannot run program \"does_not_exist.sh\""));
+
+            // when
+            configuration.velocityDisallowedText("request.class");
+
+            // then
+            exception = assertThrows(RuntimeException.class, () -> new VelocityTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class));
+            assertThat(exception.getMessage(), containsString("Found disallowed string \"request.class\" in template:"));
+        } finally {
+            configuration.velocityDisallowedText(originalVelocityDisallowedText);
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithVelocityTemplateWithDisallowedTextList() {
+        String originalVelocityDisallowedText = configuration.velocityDisallowedText();
+
+        try {
+            // given
+            String template = "{" + NEW_LINE +
+                "    'statusCode': 200," + NEW_LINE +
+                "    'body': \"$!request.class.classLoader.loadClass('java.lang.Runtime').getRuntime().exec(\"does_not_exist.sh\")\"" + NEW_LINE +
+                "}";
+            HttpRequest request = request()
+                .withPath("/somePath")
+                .withMethod("POST")
+                .withHeader(HOST.toString(), "mock-server.com")
+                .withBody("some_body".getBytes(StandardCharsets.UTF_8));
+            configuration.velocityDisallowedText("request.class,classLoader.loadClass");
+
+            // then
+            Exception exception = assertThrows(RuntimeException.class, () -> new VelocityTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class));
+            assertThat(exception.getMessage(), containsString("Found disallowed string \"request.class\" in template:"));
+
+            // when
+            configuration.velocityDisallowedText("classLoader.loadClass,request.class");
+
+            // then
+            exception = assertThrows(RuntimeException.class, () -> new VelocityTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class));
+            assertThat(exception.getMessage(), containsString("Found disallowed string \"classLoader.loadClass\" in template:"));
+        } finally {
+            configuration.velocityDisallowedText(originalVelocityDisallowedText);
+        }
     }
 
     @Test
@@ -536,7 +597,7 @@ public class VelocityTemplateEngineTest {
             .withBody("some_body".getBytes(StandardCharsets.UTF_8));
 
         // when
-        HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
 
         // then
         assertThat(actualHttpResponse, is(
@@ -578,7 +639,7 @@ public class VelocityTemplateEngineTest {
             "}";
 
         // when
-        RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> new VelocityTemplateEngine(mockServerLogger).executeTemplate(template, request()
+        RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> new VelocityTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
                 .withPath("/someOtherPath")
                 .withQueryStringParameter("queryParameter", "someValue")
                 .withBody("some_body"),
@@ -643,7 +704,7 @@ public class VelocityTemplateEngineTest {
             .withBody("some_body");
 
         // when
-        VelocityTemplateEngine velocityTemplateEngine = new VelocityTemplateEngine(mockServerLogger);
+        VelocityTemplateEngine velocityTemplateEngine = new VelocityTemplateEngine(mockServerLogger, configuration);
 
         ExecutorService newFixedThreadPool = Executors.newFixedThreadPool(30);
 

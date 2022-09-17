@@ -1,6 +1,7 @@
 package org.mockserver.templates;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -20,12 +21,12 @@ public class ResponseTemplateTester {
     }
 
     public static HttpResponse testVelocityTemplate(String template, HttpRequest request) {
-        return new VelocityTemplateEngine(MOCK_SERVER_LOGGER).executeTemplate(template, request, HttpResponseDTO.class);
+        return new VelocityTemplateEngine(MOCK_SERVER_LOGGER, new Configuration()).executeTemplate(template, request, HttpResponseDTO.class);
     }
 
     public static HttpResponse testJavaScriptTemplate(String template, HttpRequest request) {
         if (new ScriptEngineManager().getEngineByName("nashorn") != null) {
-            return new JavaScriptTemplateEngine(MOCK_SERVER_LOGGER).executeTemplate(template, request, HttpResponseDTO.class);
+            return new JavaScriptTemplateEngine(MOCK_SERVER_LOGGER, new Configuration()).executeTemplate(template, request, HttpResponseDTO.class);
         } else {
             throw new NotImplementedException("Nashorn is not available on this JVM so JavaScript templates are not supported");
         }

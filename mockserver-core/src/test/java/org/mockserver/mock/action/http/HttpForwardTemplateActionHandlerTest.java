@@ -2,6 +2,7 @@ package org.mockserver.mock.action.http;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -33,7 +34,7 @@ public class HttpForwardTemplateActionHandlerTest {
     public void setupMocks() {
         mockHttpClient = mock(NettyHttpClient.class);
         MockServerLogger mockLogFormatter = mock(MockServerLogger.class);
-        httpForwardTemplateActionHandler = new HttpForwardTemplateActionHandler(mockLogFormatter, mockHttpClient);
+        httpForwardTemplateActionHandler = new HttpForwardTemplateActionHandler(mockLogFormatter, new Configuration(), mockHttpClient);
         openMocks(this);
     }
 

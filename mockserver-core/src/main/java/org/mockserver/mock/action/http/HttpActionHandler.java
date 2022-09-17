@@ -517,7 +517,7 @@ public class HttpActionHandler {
 
     private HttpResponseTemplateActionHandler getHttpResponseTemplateActionHandler() {
         if (httpResponseTemplateActionHandler == null) {
-            httpResponseTemplateActionHandler = new HttpResponseTemplateActionHandler(mockServerLogger);
+            httpResponseTemplateActionHandler = new HttpResponseTemplateActionHandler(mockServerLogger, configuration);
         }
         return httpResponseTemplateActionHandler;
     }
@@ -545,7 +545,7 @@ public class HttpActionHandler {
 
     private HttpForwardTemplateActionHandler getHttpForwardTemplateActionHandler() {
         if (httpForwardTemplateActionHandler == null) {
-            httpForwardTemplateActionHandler = new HttpForwardTemplateActionHandler(mockServerLogger, httpClient);
+            httpForwardTemplateActionHandler = new HttpForwardTemplateActionHandler(mockServerLogger, configuration, httpClient);
         }
         return httpForwardTemplateActionHandler;
     }

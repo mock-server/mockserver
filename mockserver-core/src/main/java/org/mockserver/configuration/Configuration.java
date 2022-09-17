@@ -69,6 +69,12 @@ public class Configuration {
     private Boolean corsAllowCredentials;
     private Integer corsMaxAgeInSeconds;
 
+    // template restrictions
+    private String javascriptDisallowedClasses;
+    private String javascriptDisallowedText;
+    private Boolean velocityDisallowClassLoading;
+    private String velocityDisallowedText;
+
     // mock initialization
     private String initializationClass;
     private String initializationJsonPath;
@@ -142,11 +148,6 @@ public class Configuration {
     // outbound - fixed private key & x509
     private String forwardProxyPrivateKey;
     private String forwardProxyCertificateChain;
-
-    // security
-    private String javaScriptDeniedClasses;
-    private String javaScriptDeniedText;
-    private Boolean velocityDenyClasses;
 
 
     public Level logLevel() {
@@ -782,6 +783,84 @@ public class Configuration {
      */
     public Configuration corsMaxAgeInSeconds(Integer corsMaxAgeInSeconds) {
         this.corsMaxAgeInSeconds = corsMaxAgeInSeconds;
+        return this;
+    }
+
+    // template restrictions
+
+    public String javascriptDisallowedClasses() {
+        if (javascriptDisallowedClasses == null) {
+            return ConfigurationProperties.javascriptDisallowedClasses();
+        }
+        return javascriptDisallowedClasses;
+    }
+
+    /**
+     * Set comma separate list of classes not allowed to be used by javascript templates
+     * <p>
+     * The default is all allowed
+     *
+     * @param javascriptDisallowedClasses comma separated list of classes not allowed to be used
+     */
+    public Configuration javascriptDisallowedClasses(String javascriptDisallowedClasses) {
+        this.javascriptDisallowedClasses = javascriptDisallowedClasses;
+        return this;
+    }
+
+    public String javascriptDisallowedText() {
+        if (javascriptDisallowedText == null) {
+            return ConfigurationProperties.javascriptDisallowedText();
+        }
+        return javascriptDisallowedText;
+    }
+
+    /**
+     * Set comma separate list of text not allowed to be contained in javascript templates
+     * <p>
+     * The default is all allowed
+     *
+     * @param javascriptDisallowedText comma separated list of text not allowed to be contained in javascript templates
+     */
+    public Configuration javascriptDisallowedText(String javascriptDisallowedText) {
+        this.javascriptDisallowedText = javascriptDisallowedText;
+        return this;
+    }
+
+    public Boolean velocityDisallowClassLoading() {
+        if (velocityDisallowClassLoading == null) {
+            return ConfigurationProperties.velocityDisallowClassLoading();
+        }
+        return velocityDisallowClassLoading;
+    }
+
+    /**
+     * If true class loading is not allowed in velocity templates
+     * <p>
+     * The default is false
+     *
+     * @param velocityDisallowClassLoading class loading is not allowed in velocity templates
+     */
+    public Configuration velocityDisallowClassLoading(Boolean velocityDisallowClassLoading) {
+        this.velocityDisallowClassLoading = velocityDisallowClassLoading;
+        return this;
+    }
+
+    public String velocityDisallowedText() {
+        if (velocityDisallowedText == null) {
+            return ConfigurationProperties.velocityDisallowedText();
+        }
+        return velocityDisallowedText;
+    }
+
+    /**
+     * Set comma separate list of text not allowed to be contained in javascript templates
+     * <p>
+     * The default is all allowed
+     *
+     * @param velocityDisallowedText comma separated list of text not allowed to be contained in javascript templates
+     */
+    public Configuration velocityDisallowedText(String velocityDisallowedText) {
+        this.velocityDisallowedText = velocityDisallowedText;
         return this;
     }
 
@@ -1732,59 +1811,6 @@ public class Configuration {
             }
         }
         return (int) Math.pow(2, 16);
-    }
-
-
-    // security
-    public String javaScriptDeniedClasses() {
-        if (javaScriptDeniedClasses == null) {
-            return ConfigurationProperties.javaScriptDeniedClasses();
-        }
-        return javaScriptDeniedClasses;
-    }
-
-    /**
-     * Specifies whether the Java class of the specified name be exposed to javascript
-     *
-     * @param javaScriptDeniedClasses specifies the list of denied java classes, separated by comma
-     */
-    public Configuration javaScriptDeniedClasses(String javaScriptDeniedClasses) {
-        this.javaScriptDeniedClasses = javaScriptDeniedClasses;
-        return this;
-    }
-
-    public String javaScriptDeniedText() {
-        if (javaScriptDeniedText == null) {
-            return ConfigurationProperties.javaScriptDeniedText();
-        }
-        return javaScriptDeniedText;
-    }
-
-    /**
-     * Specifies the restricted text which when found in template will result in restricting execution of javascript
-     *
-     * @param javaScriptDeniedText specifies the restricted text (separated by comma), if found in template will prevent execution of javascript
-     */
-    public Configuration javaScriptDeniedText(String javaScriptDeniedText) {
-        this.javaScriptDeniedText = javaScriptDeniedText;
-        return this;
-    }
-
-    public Boolean velocityDenyClasses() {
-        if (velocityDenyClasses == null) {
-            return ConfigurationProperties.velocityDenyClasses();
-        }
-        return velocityDenyClasses;
-    }
-
-    /**
-     * Specifies whether restricted Java class and packages should be exposed to exposed to javascript
-     *
-     * @param velocityDenyClasses specifies whether to enable or disable exposing restricted java packages/classes in javascript
-     */
-    public Configuration velocityDenyClasses(Boolean velocityDenyClasses) {
-        this.velocityDenyClasses = velocityDenyClasses;
-        return this;
     }
 
 }

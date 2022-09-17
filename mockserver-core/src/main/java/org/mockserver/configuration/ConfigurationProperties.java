@@ -87,6 +87,12 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_CORS_ALLOW_CREDENTIALS = "mockserver.corsAllowCredentials";
     private static final String MOCKSERVER_CORS_MAX_AGE_IN_SECONDS = "mockserver.corsMaxAgeInSeconds";
 
+    // template restrictions
+    private static final String MOCKSERVER_JAVASCRIPT_DISALLOWED_CLASSES = "mockserver.javascriptDisallowedClasses";
+    private static final String MOCKSERVER_JAVASCRIPT_DISALLOWED_TEXT = "mockserver.javascriptDisallowedText";
+    private static final String MOCKSERVER_VELOCITY_DISALLOW_CLASS_LOADING = "mockserver.velocityDisallowClassLoading";
+    private static final String MOCKSERVER_VELOCITY_DISALLOWED_TEXT = "mockserver.velocityDisallowedText";
+
     // mock initialization
     private static final String MOCKSERVER_INITIALIZATION_CLASS = "mockserver.initializationClass";
     private static final String MOCKSERVER_INITIALIZATION_JSON_PATH = "mockserver.initializationJsonPath";
@@ -160,11 +166,6 @@ public class ConfigurationProperties {
     // outbound - fixed private key & x509
     private static final String MOCKSERVER_FORWARD_PROXY_TLS_PRIVATE_KEY = "mockserver.forwardProxyPrivateKey";
     private static final String MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATE_CHAIN = "mockserver.forwardProxyCertificateChain";
-
-    // Security
-    private static final String MOCKSERVER_JAVASCRIPT_CLASS_DENY = "mockserver.javascript.class.deny";
-    private static final String MOCKSERVER_JAVASCRIPT_TEXT_DENY = "mockserver.javascript.text.deny";
-    private static final String MOCKSERVER_VELOCITY_CLASS_DENY = "mockserver.velocity.class.deny";
 
     // properties file
     private static final String MOCKSERVER_PROPERTY_FILE = "mockserver.propertyFile";
@@ -773,6 +774,69 @@ public class ConfigurationProperties {
      */
     public static void corsMaxAgeInSeconds(int ageInSeconds) {
         setProperty(MOCKSERVER_CORS_MAX_AGE_IN_SECONDS, "" + ageInSeconds);
+    }
+
+    // template restrictions
+
+    public static String javascriptDisallowedClasses() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_JAVASCRIPT_DISALLOWED_CLASSES, "MOCKSERVER_JAVASCRIPT_DISALLOWED_CLASSES", "");
+    }
+
+    /**
+     * Set comma separate list of classes not allowed to be used by javascript templates
+     * <p>
+     * The default is all allowed
+     *
+     * @param javascriptDisallowedClasses comma separated list of classes not allowed to be used
+     */
+    public static void javascriptDisallowedClasses(String javascriptDisallowedClasses) {
+        setProperty(MOCKSERVER_JAVASCRIPT_DISALLOWED_CLASSES, javascriptDisallowedClasses);
+    }
+
+    public static String javascriptDisallowedText() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_JAVASCRIPT_DISALLOWED_TEXT, "MOCKSERVER_JAVASCRIPT_DISALLOWED_TEXT", "");
+    }
+
+    /**
+     * Set comma separate list of text not allowed to be contained in javascript templates
+     * <p>
+     * The default is all allowed
+     *
+     * @param javascriptDisallowedText comma separated list of text not allowed to be contained in javascript templates
+     */
+    public static void javascriptDisallowedText(String javascriptDisallowedText) {
+        setProperty(MOCKSERVER_JAVASCRIPT_DISALLOWED_TEXT, javascriptDisallowedText);
+    }
+
+
+    public static boolean velocityDisallowClassLoading() {
+        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_VELOCITY_DISALLOW_CLASS_LOADING, "MOCKSERVER_VELOCITY_DISALLOW_CLASS_LOADING", "" + false));
+    }
+
+    /**
+     * If true class loading is not allowed in velocity templates
+     * <p>
+     * The default is false
+     *
+     * @param velocityDisallowClassLoading class loading is not allowed in velocity templates
+     */
+    public static void velocityDisallowClassLoading(boolean velocityDisallowClassLoading) {
+        setProperty(MOCKSERVER_VELOCITY_DISALLOW_CLASS_LOADING, "" + velocityDisallowClassLoading);
+    }
+
+    public static String velocityDisallowedText() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_VELOCITY_DISALLOWED_TEXT, "MOCKSERVER_VELOCITY_DISALLOWED_TEXT", "");
+    }
+
+    /**
+     * Set comma separate list of text not allowed to be contained in velocity templates
+     * <p>
+     * The default is all allowed
+     *
+     * @param velocityDisallowedText comma separated list of text not allowed to be contained in velocity templates
+     */
+    public static void velocityDisallowedText(String velocityDisallowedText) {
+        setProperty(MOCKSERVER_VELOCITY_DISALLOWED_TEXT, velocityDisallowedText);
     }
 
     // mock initialization
@@ -1506,19 +1570,6 @@ public class ConfigurationProperties {
 
     public static String forwardProxyCertificateChain() {
         return readPropertyHierarchically(PROPERTIES, MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATE_CHAIN, "MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATE_CHAIN", "");
-    }
-
-    // security
-    public static String javaScriptDeniedClasses() {
-        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_JAVASCRIPT_CLASS_DENY, "MOCKSERVER_JAVASCRIPT_CLASS_DENY", "");
-    }
-
-    public static String javaScriptDeniedText() {
-        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_JAVASCRIPT_TEXT_DENY, "MOCKSERVER_JAVASCRIPT_TEXT_DENY", "");
-    }
-
-    public static boolean velocityDenyClasses() {
-        return "true".equalsIgnoreCase(readPropertyHierarchically(PROPERTIES, MOCKSERVER_VELOCITY_CLASS_DENY, "MOCKSERVER_VELOCITY_CLASS_DENY", "false"));
     }
 
     /**

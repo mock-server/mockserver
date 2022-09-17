@@ -2,6 +2,7 @@ package org.mockserver.templates.engine.velocity;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Splitter;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.RuntimeConstants;
@@ -29,7 +30,6 @@ import java.io.Writer;
 import java.util.Properties;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.log.model.LogEntry.LogMessageType.TEMPLATE_GENERATED;
 import static org.mockserver.log.model.LogEntryMessages.TEMPLATE_GENERATED_MESSAGE_FORMAT;
@@ -40,14 +40,27 @@ import static org.mockserver.log.model.LogEntryMessages.TEMPLATE_GENERATED_MESSA
 @SuppressWarnings("FieldMayBeFinal")
 public class VelocityTemplateEngine implements TemplateEngine {
 
-    private static final VelocityEngine velocityEngine;
-    private static final ToolContext toolContext;
     private static ObjectMapper objectMapper;
     private final MockServerLogger mockServerLogger;
     private HttpTemplateOutputDeserializer httpTemplateOutputDeserializer;
-    private static Configuration configuration = configuration();
+    private final Configuration configuration;
+    private final VelocityEngine velocityEngine;
+    private final ToolContext toolContext;
 
-    static {
+    public VelocityTemplateEngine(MockServerLogger mockServerLogger, Configuration configuration) {
+        this.mockServerLogger = mockServerLogger;
+        this.configuration = configuration;
+        this.httpTemplateOutputDeserializer = new HttpTemplateOutputDeserializer(mockServerLogger);
+        if (objectMapper == null) {
+            objectMapper = ObjectMapperFactory.createObjectMapper();
+        }
+        velocityEngine = buildVelocityEngine(configuration);
+        toolContext = buildToolManager(velocityEngine);
+    }
+
+    private VelocityEngine buildVelocityEngine(Configuration configuration) {
+        VelocityEngine velocityEngine;
+
         // See: https://velocity.apache.org/engine/2.0/configuration.html
         Properties velocityProperties = new Properties();
         velocityProperties.put(RuntimeConstants.RUNTIME_LOG_REFERENCE_LOG_INVALID, "true");
@@ -72,12 +85,16 @@ public class VelocityTemplateEngine implements TemplateEngine {
         velocityProperties.put(RuntimeConstants.RESOURCE_MANAGER_CLASS, org.apache.velocity.runtime.resource.ResourceManagerImpl.class.getName());
         velocityProperties.put(RuntimeConstants.RESOURCE_MANAGER_CACHE_CLASS, org.apache.velocity.runtime.resource.ResourceCacheImpl.class.getName());
         velocityProperties.put("resource.loader.file.class", org.apache.velocity.runtime.resource.loader.FileResourceLoader.class.getName());
-        if (configuration.velocityDenyClasses()) {
+        if (configuration.velocityDisallowClassLoading()) {
             velocityProperties.put(RuntimeConstants.UBERSPECT_CLASSNAME, SecureUberspector.class.getName());
         }
         velocityEngine = new VelocityEngine();
         velocityEngine.init(velocityProperties);
 
+        return velocityEngine;
+    }
+
+    private ToolContext buildToolManager(VelocityEngine velocityEngine) {
         ToolManager manager = new ToolManager();
 
         ToolboxConfiguration applicationToolboxConfiguration = new ToolboxConfiguration();
@@ -113,29 +130,15 @@ public class VelocityTemplateEngine implements TemplateEngine {
         xmlFactoryConfiguration.addToolbox(requestToolboxConfiguration);
         manager.configure(xmlFactoryConfiguration);
         manager.setVelocityEngine(velocityEngine);
-        toolContext = manager.createContext();
-    }
 
-    public VelocityTemplateEngine(MockServerLogger mockServerLogger) {
-        this(mockServerLogger, null);
-    }
-
-    public VelocityTemplateEngine(MockServerLogger mockServerLogger, Configuration _configuration) {
-        this.mockServerLogger = mockServerLogger;
-        this.httpTemplateOutputDeserializer = new HttpTemplateOutputDeserializer(mockServerLogger);
-        if (objectMapper == null) {
-            objectMapper = ObjectMapperFactory.createObjectMapper();
-        }
-        configuration = (_configuration == null) ? configuration() : _configuration;
-        if (configuration.velocityDenyClasses()) {
-            velocityEngine.setProperty(RuntimeConstants.UBERSPECT_CLASSNAME, SecureUberspector.class.getName());
-        }
+        return manager.createContext();
     }
 
     @Override
     public <T> T executeTemplate(String template, HttpRequest request, Class<? extends DTO<T>> dtoClass) {
         T result;
         try {
+            validateTemplate(template);
             Writer writer = new StringWriter();
             VelocityContext context = new VelocityContext(toolContext);
             context.put("request", new HttpRequestTemplateObject(request));
@@ -170,5 +173,16 @@ public class VelocityTemplateEngine implements TemplateEngine {
             throw new RuntimeException(formatLogMessage("Exception:{}transforming template:{}for request:{}", isNotBlank(e.getMessage()) ? e.getMessage() : e.getClass().getSimpleName(), template, request), e);
         }
         return result;
+    }
+
+    private void validateTemplate(String template) {
+        if (isNotBlank(template) && isNotBlank(configuration.velocityDisallowedText())) {
+            Iterable<String> deniedStrings = Splitter.on(",").trimResults().split(configuration.velocityDisallowedText());
+            for (String deniedString : deniedStrings) {
+                if (template.contains(deniedString)) {
+                    throw new UnsupportedOperationException("Found disallowed string \"" + deniedString + "\" in template: " + template);
+                }
+            }
+        }
     }
 }

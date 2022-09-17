@@ -1,5 +1,6 @@
 package org.mockserver.mock.action.http;
 
+import org.mockserver.configuration.Configuration;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.serialization.model.HttpRequestDTO;
 import org.mockserver.logging.MockServerLogger;
@@ -15,12 +16,14 @@ import org.mockserver.templates.engine.velocity.VelocityTemplateEngine;
  */
 public class HttpForwardTemplateActionHandler extends HttpForwardAction {
 
+    private final Configuration configuration;
     private VelocityTemplateEngine velocityTemplateEngine;
-    private JavaScriptTemplateEngine javaScriptTemplateEngine;
+    private JavaScriptTemplateEngine javascriptTemplateEngine;
     private MustacheTemplateEngine mustacheTemplateEngine;
 
-    public HttpForwardTemplateActionHandler(MockServerLogger mockServerLogger, NettyHttpClient httpClient) {
+    public HttpForwardTemplateActionHandler(MockServerLogger mockServerLogger, Configuration configuration, NettyHttpClient httpClient) {
         super(mockServerLogger, httpClient);
+        this.configuration = configuration;
     }
 
     public HttpForwardActionResult handle(HttpTemplate httpTemplate, HttpRequest originalRequest) {
@@ -50,16 +53,16 @@ public class HttpForwardTemplateActionHandler extends HttpForwardAction {
 
     private VelocityTemplateEngine getVelocityTemplateEngine() {
         if (velocityTemplateEngine == null) {
-            velocityTemplateEngine = new VelocityTemplateEngine(mockServerLogger);
+            velocityTemplateEngine = new VelocityTemplateEngine(mockServerLogger, configuration);
         }
         return velocityTemplateEngine;
     }
 
     private JavaScriptTemplateEngine getJavaScriptTemplateEngine() {
-        if (javaScriptTemplateEngine == null) {
-            javaScriptTemplateEngine = new JavaScriptTemplateEngine(mockServerLogger);
+        if (javascriptTemplateEngine == null) {
+            javascriptTemplateEngine = new JavaScriptTemplateEngine(mockServerLogger, configuration);
         }
-        return javaScriptTemplateEngine;
+        return javascriptTemplateEngine;
     }
 
     private MustacheTemplateEngine getMustacheTemplateEngine() {
