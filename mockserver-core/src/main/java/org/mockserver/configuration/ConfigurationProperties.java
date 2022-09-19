@@ -92,6 +92,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_JAVASCRIPT_DISALLOWED_TEXT = "mockserver.javascriptDisallowedText";
     private static final String MOCKSERVER_VELOCITY_DISALLOW_CLASS_LOADING = "mockserver.velocityDisallowClassLoading";
     private static final String MOCKSERVER_VELOCITY_DISALLOWED_TEXT = "mockserver.velocityDisallowedText";
+    private static final String MOCKSERVER_MUSTACHE_DISALLOWED_TEXT = "mockserver.mustacheDisallowedText";
 
     // mock initialization
     private static final String MOCKSERVER_INITIALIZATION_CLASS = "mockserver.initializationClass";
@@ -837,6 +838,21 @@ public class ConfigurationProperties {
      */
     public static void velocityDisallowedText(String velocityDisallowedText) {
         setProperty(MOCKSERVER_VELOCITY_DISALLOWED_TEXT, velocityDisallowedText);
+    }
+
+    public static String mustacheDisallowedText() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_MUSTACHE_DISALLOWED_TEXT, "MOCKSERVER_MUSTACHE_DISALLOWED_TEXT", "");
+    }
+
+    /**
+     * Set comma separate list of text not allowed to be contained in mustache templates
+     * <p>
+     * The default is all allowed
+     *
+     * @param mustacheDisallowedText comma separated list of text not allowed to be contained in mustache templates
+     */
+    public static void mustacheDisallowedText(String mustacheDisallowedText) {
+        setProperty(MOCKSERVER_MUSTACHE_DISALLOWED_TEXT, mustacheDisallowedText);
     }
 
     // mock initialization

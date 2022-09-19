@@ -42,8 +42,8 @@ public class VelocityTemplateEngine implements TemplateEngine {
 
     private static ObjectMapper objectMapper;
     private final MockServerLogger mockServerLogger;
-    private HttpTemplateOutputDeserializer httpTemplateOutputDeserializer;
     private final Configuration configuration;
+    private HttpTemplateOutputDeserializer httpTemplateOutputDeserializer;
     private final VelocityEngine velocityEngine;
     private final ToolContext toolContext;
 

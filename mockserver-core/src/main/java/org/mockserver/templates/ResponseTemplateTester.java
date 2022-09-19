@@ -17,7 +17,7 @@ public class ResponseTemplateTester {
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(ResponseTemplateTester.class);
 
     public static HttpResponse testMustacheTemplate(String template, HttpRequest request) {
-        return new MustacheTemplateEngine(MOCK_SERVER_LOGGER).executeTemplate(template, request, HttpResponseDTO.class);
+        return new MustacheTemplateEngine(MOCK_SERVER_LOGGER, new Configuration()).executeTemplate(template, request, HttpResponseDTO.class);
     }
 
     public static HttpResponse testVelocityTemplate(String template, HttpRequest request) {

@@ -6,6 +6,7 @@ import org.hamcrest.Matcher;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -14,6 +15,7 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.HttpRequestDTO;
 import org.mockserver.serialization.model.HttpResponseDTO;
+import org.mockserver.templates.engine.mustache.MustacheTemplateEngine;
 import org.mockserver.time.EpochService;
 import org.mockserver.time.TimeService;
 import org.mockserver.uuid.UUIDService;
@@ -38,6 +40,7 @@ import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.log.model.LogEntry.LogMessageType.TEMPLATE_GENERATED;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -51,6 +54,7 @@ public class MustacheTemplateEngineTest {
 
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
     private static boolean originalFixedTime;
+    private static final Configuration configuration = configuration();
 
     @Rule
     public final ExpectedException exception = ExpectedException.none();
@@ -101,7 +105,7 @@ public class MustacheTemplateEngineTest {
             .withBody("some_body");
 
         // when
-        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
 
         // then
         assertThat(actualHttpResponse, is(
@@ -141,7 +145,7 @@ public class MustacheTemplateEngineTest {
             .withBody("some_body");
 
         // when
-        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
 
         // then
         assertThat(actualHttpResponse, is(
@@ -181,7 +185,7 @@ public class MustacheTemplateEngineTest {
             .withBody("some_body");
 
         // when
-        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
 
         // then
         assertThat(actualHttpResponse, is(
@@ -221,7 +225,7 @@ public class MustacheTemplateEngineTest {
             .withBody("some_body");
 
         // when
-        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
 
         // then
         assertThat(actualHttpResponse, is(
@@ -261,7 +265,7 @@ public class MustacheTemplateEngineTest {
             .withBody("some_body");
 
         // when
-        HttpResponse nonEmptyBodyActualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, nonEmptyBodyRequest, HttpResponseDTO.class);
+        HttpResponse nonEmptyBodyActualHttpResponse = new MustacheTemplateEngine(mockServerLogger, configuration).executeTemplate(template, nonEmptyBodyRequest, HttpResponseDTO.class);
 
         // then
         assertThat(nonEmptyBodyActualHttpResponse, is(
@@ -278,7 +282,7 @@ public class MustacheTemplateEngineTest {
             .withHeader(CONTENT_TYPE.toString(), "plain/text");
 
         // when
-        HttpResponse emptyBodyActualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, emptyBodyRequest, HttpResponseDTO.class);
+        HttpResponse emptyBodyActualHttpResponse = new MustacheTemplateEngine(mockServerLogger, configuration).executeTemplate(template, emptyBodyRequest, HttpResponseDTO.class);
 
         // then
         assertThat(emptyBodyActualHttpResponse, is(
@@ -309,7 +313,7 @@ public class MustacheTemplateEngineTest {
             .withBody("some_body");
 
         // when
-        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
 
         // then
         assertThat(actualHttpResponse, is(
@@ -355,7 +359,7 @@ public class MustacheTemplateEngineTest {
                 .withBody("some_body");
 
             // when
-            HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+            HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
 
             // then
             assertThat(actualHttpResponse, is(
@@ -405,7 +409,7 @@ public class MustacheTemplateEngineTest {
             .withBody("some_body");
 
         // when
-        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
 
         // then
         assertThat(actualHttpResponse.getBodyAsString(), not(equalTo("")));
@@ -427,7 +431,7 @@ public class MustacheTemplateEngineTest {
                 "</element>");
 
         // when
-        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
 
         // then
         assertThat(actualHttpResponse, is(
@@ -484,7 +488,7 @@ public class MustacheTemplateEngineTest {
                 "</store>");
 
         // when
-        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
 
         // then
         assertThat(actualHttpResponse, is(
@@ -526,7 +530,7 @@ public class MustacheTemplateEngineTest {
                 "}");
 
         // when
-        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
 
         // then
         assertThat(actualHttpResponse, is(
@@ -563,7 +567,7 @@ public class MustacheTemplateEngineTest {
             .withBody("some_string_body");
 
         // when
-        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
 
         // then
         assertThat(actualHttpResponse, is(
@@ -623,7 +627,7 @@ public class MustacheTemplateEngineTest {
                 "}"));
 
         // when
-        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
 
         // then
         assertThat(actualHttpResponse, is(
@@ -682,7 +686,7 @@ public class MustacheTemplateEngineTest {
                 "</root>");
 
         // when
-        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
 
         // then
         assertThat(actualHttpResponse, is(
@@ -719,7 +723,7 @@ public class MustacheTemplateEngineTest {
             .withBody("some_string_body");
 
         // when
-        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
 
         // then
         assertThat(actualHttpResponse, is(
@@ -758,7 +762,7 @@ public class MustacheTemplateEngineTest {
             .withBody("some_body".getBytes(StandardCharsets.UTF_8));
 
         // when
-        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
 
         // then
         assertThat(actualHttpResponse, is(
@@ -804,7 +808,7 @@ public class MustacheTemplateEngineTest {
             .withBody("some_body");
 
         // when
-        HttpRequest actualHttpRequest = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpRequestDTO.class);
+        HttpRequest actualHttpRequest = new MustacheTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpRequestDTO.class);
 
         // then
         assertThat(actualHttpRequest, is(
@@ -830,6 +834,75 @@ public class MustacheTemplateEngineTest {
     }
 
     @Test
+    public void shouldHandleHttpRequestsWithMustacheTemplateWithDisallowedText() {
+        String originalMustacheDisallowedText = configuration.mustacheDisallowedText();
+
+        try {
+            // given
+            String template = "{" + NEW_LINE +
+                "    'statusCode': 200," + NEW_LINE +
+                "    'body': \"{'method': '{{ request.method }}', 'path': '{{ request.path }}', 'headers': '{{ request.headers.host.0 }}'}\"" + NEW_LINE +
+                "}";
+            HttpRequest request = request()
+                .withPath("/somePath")
+                .withMethod("POST")
+                .withHeader(HOST.toString(), "mock-server.com")
+                .withBody("some_body");
+
+            // when
+            HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
+
+            // then
+            assertThat(actualHttpResponse, is(
+                response()
+                    .withStatusCode(200)
+                    .withBody("{'method': 'POST', 'path': '/somePath', 'headers': 'mock-server.com'}")
+            ));
+
+            // when
+            configuration.mustacheDisallowedText("request.method");
+
+            // then
+            Exception exception = assertThrows(RuntimeException.class, () -> new MustacheTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class));
+            assertThat(exception.getMessage(), containsString("Found disallowed string \"request.method\" in template:"));
+        } finally {
+            configuration.mustacheDisallowedText(originalMustacheDisallowedText);
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithMustacheTemplateWithDisallowedTextList() {
+        String originalMustacheDisallowedText = configuration.mustacheDisallowedText();
+
+        try {
+            // given
+            String template = "{" + NEW_LINE +
+                "    'statusCode': 200," + NEW_LINE +
+                "    'body': \"{'method': '{{ request.method }}', 'path': '{{ request.path }}', 'headers': '{{ request.headers.host.0 }}'}\"" + NEW_LINE +
+                "}";
+            HttpRequest request = request()
+                .withPath("/somePath")
+                .withMethod("POST")
+                .withHeader(HOST.toString(), "mock-server.com")
+                .withBody("some_body");
+            configuration.mustacheDisallowedText("request.method , request.path");
+
+            // then
+            Exception exception = assertThrows(RuntimeException.class, () -> new MustacheTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class));
+            assertThat(exception.getMessage(), containsString("Found disallowed string \"request.method\" in template:"));
+
+            // when
+            configuration.mustacheDisallowedText(" request.path   ,request.method");
+
+            // then
+            exception = assertThrows(RuntimeException.class, () -> new MustacheTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class));
+            assertThat(exception.getMessage(), containsString("Found disallowed string \"request.path\" in template:"));
+        } finally {
+            configuration.mustacheDisallowedText(originalMustacheDisallowedText);
+        }
+    }
+
+    @Test
     public void shouldHandleHttpRequestsWithMustacheResponseTemplateInvalidFields() throws JsonProcessingException {
         // given
         String template = "{" + NEW_LINE +
@@ -843,7 +916,7 @@ public class MustacheTemplateEngineTest {
             .withBody("some_body".getBytes(StandardCharsets.UTF_8));
 
         // when
-        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
 
         // then
         assertThat(actualHttpResponse, is(
@@ -874,7 +947,7 @@ public class MustacheTemplateEngineTest {
         String template = "{{ {{ }} }}";
 
         // when
-        RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, request()
+        RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> new MustacheTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
                 .withPath("/someOtherPath")
                 .withQueryStringParameter("queryParameter", "someValue")
                 .withBody("some_body"),
@@ -916,7 +989,7 @@ public class MustacheTemplateEngineTest {
             .withBody("some_body");
 
         // when
-        MustacheTemplateEngine mustacheTemplateEngine = new MustacheTemplateEngine(mockServerLogger);
+        MustacheTemplateEngine mustacheTemplateEngine = new MustacheTemplateEngine(mockServerLogger, configuration);
 
         ExecutorService newFixedThreadPool = Executors.newFixedThreadPool(30);
 

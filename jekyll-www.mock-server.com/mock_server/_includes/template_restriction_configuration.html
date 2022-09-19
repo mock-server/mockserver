@@ -1,0 +1,83 @@
+<a id="template_restriction_configuration" class="anchor" href="#template_restriction_configuration">&nbsp;</a>
+
+<h2>Template Restriction Configuration:</h2>
+
+<button id="button_configuration_disable_classes_in_javascript_templates" class="accordion title"><strong>Disable classes in javascript templates</strong></button>
+<div class="panel title">
+    <p>Set comma separate list of classes not allowed to be used by javascript templates</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.javascriptDisallowedClasses(String javascriptDisallowedClasses)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.javascriptDisallowedClasses=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_JAVASCRIPT_DISALLOWED_CLASSES=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.javascriptDisallowedClasses=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.javascriptDisallowedClasses="java.lang.Runtime,java.lang.Class"</code></pre>
+</div>
+
+<button id="button_configuration_restrict_content_allowed_in_javascript_templates" class="accordion title"><strong>Restrict content allowed in javascript templates</strong></button>
+<div class="panel title">
+    <p>Set comma separate list of text not allowed to be contained in javascript templates</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.javascriptDisallowedText(String javascriptDisallowedText)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.javascriptDisallowedText=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_JAVASCRIPT_DISALLOWED_TEXT=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.javascriptDisallowedText=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.javascriptDisallowedText="getRuntime().exec"</code></pre>
+</div>
+    
+<button id="button_configuration_disable_class_loading_in_velocity_templates" class="accordion title"><strong>Disable class loading in velocity templates</strong></button>
+<div class="panel title">
+    <p>If true class loading is not allowed in velocity templates</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.velocityDisallowClassLoading(boolean velocityDisallowClassLoading)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.velocityDisallowClassLoading=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_VELOCITY_DISALLOW_CLASS_LOADING=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.velocityDisallowClassLoading=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.velocityDisallowClassLoading="true"</code></pre>
+</div>
+
+<button id="button_configuration_restrict_content_allowed_in_velocity_templates" class="accordion title"><strong>Restrict content allowed in velocity templates</strong></button>
+<div class="panel title">
+    <p>Set comma separate list of text not allowed to be contained in velocity templates</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.velocityDisallowedText(String velocityDisallowedText)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.velocityDisallowedText=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_VELOCITY_DISALLOWED_TEXT=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.velocityDisallowedText=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.velocityDisallowedText="request.class"</code></pre>
+</div>
+    
+<button id="button_configuration_restrict_content_allowed_in_mustache_templates" class="accordion title"><strong>Restrict content allowed in mustache templates</strong></button>
+<div class="panel title">
+    <p>Set comma separate list of text not allowed to be contained in mustache templates</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.mustacheDisallowedText(String mustacheDisallowedText)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.mustacheDisallowedText=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_MUSTACHE_DISALLOWED_TEXT=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.mustacheDisallowedText=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.mustacheDisallowedText="request.method"</code></pre>
+</div>

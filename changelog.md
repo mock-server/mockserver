@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - support to disallow specific text in javascript templates 
 - support to disallow loading of any class in velocity templates
 - support to disallow specific text in velocity templates
+- support to disallow specific text in mustache templates
 
 ### Changed
 - improved error message for not valid HTTP requests that are not being proxied

@@ -74,6 +74,7 @@ public class Configuration {
     private String javascriptDisallowedText;
     private Boolean velocityDisallowClassLoading;
     private String velocityDisallowedText;
+    private String mustacheDisallowedText;
 
     // mock initialization
     private String initializationClass;
@@ -853,14 +854,33 @@ public class Configuration {
     }
 
     /**
-     * Set comma separate list of text not allowed to be contained in javascript templates
+     * Set comma separate list of text not allowed to be contained in velocity templates
      * <p>
      * The default is all allowed
      *
-     * @param velocityDisallowedText comma separated list of text not allowed to be contained in javascript templates
+     * @param velocityDisallowedText comma separated list of text not allowed to be contained in velocity templates
      */
     public Configuration velocityDisallowedText(String velocityDisallowedText) {
         this.velocityDisallowedText = velocityDisallowedText;
+        return this;
+    }
+
+    public String mustacheDisallowedText() {
+        if (mustacheDisallowedText == null) {
+            return ConfigurationProperties.mustacheDisallowedText();
+        }
+        return mustacheDisallowedText;
+    }
+
+    /**
+     * Set comma separate list of text not allowed to be contained in mustache templates
+     * <p>
+     * The default is all allowed
+     *
+     * @param mustacheDisallowedText comma separated list of text not allowed to be contained in mustache templates
+     */
+    public Configuration mustacheDisallowedText(String mustacheDisallowedText) {
+        this.mustacheDisallowedText = mustacheDisallowedText;
         return this;
     }
 

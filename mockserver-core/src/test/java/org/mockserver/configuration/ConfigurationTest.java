@@ -991,6 +991,31 @@ public class ConfigurationTest {
     }
 
     @Test
+    public void shouldSetAndGetMustacheDisallowedText() {
+        String original = ConfigurationProperties.mustacheDisallowedText();
+        try {
+            // then - default value
+            assertThat(configuration.mustacheDisallowedText(), equalTo(""));
+
+            // when - system property setter
+            ConfigurationProperties.mustacheDisallowedText("some_text");
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.mustacheDisallowedText(), equalTo("some_text"));
+            assertThat(System.getProperty("mockserver.mustacheDisallowedText"), equalTo("some_text"));
+            assertThat(configuration.mustacheDisallowedText(), equalTo("some_text"));
+
+            // when - setter
+            configuration.mustacheDisallowedText("some_other_text");
+
+            // then - getter
+            assertThat(configuration.mustacheDisallowedText(), equalTo("some_other_text"));
+        } finally {
+            ConfigurationProperties.mustacheDisallowedText(original);
+        }
+    }
+
+    @Test
     public void shouldSetAndGetInitializationClass() {
         String original = ConfigurationProperties.initializationClass();
         try {

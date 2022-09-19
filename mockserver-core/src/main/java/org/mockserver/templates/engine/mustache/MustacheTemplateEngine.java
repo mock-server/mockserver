@@ -2,9 +2,11 @@ package org.mockserver.templates.engine.mustache;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Splitter;
 import com.jayway.jsonpath.JsonPath;
 import com.samskivert.mustache.Mustache;
 import com.samskivert.mustache.Template;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -38,11 +40,13 @@ public class MustacheTemplateEngine implements TemplateEngine {
 
     private static ObjectMapper objectMapper;
     private final MockServerLogger mockServerLogger;
+    private final Configuration configuration;
     private final Mustache.Compiler compiler;
     private HttpTemplateOutputDeserializer httpTemplateOutputDeserializer;
 
-    public MustacheTemplateEngine(MockServerLogger mockServerLogger) {
+    public MustacheTemplateEngine(MockServerLogger mockServerLogger, Configuration configuration) {
         this.mockServerLogger = mockServerLogger;
+        this.configuration = configuration;
         this.httpTemplateOutputDeserializer = new HttpTemplateOutputDeserializer(mockServerLogger);
         if (objectMapper == null) {
             objectMapper = ObjectMapperFactory.createObjectMapper();
@@ -60,9 +64,9 @@ public class MustacheTemplateEngine implements TemplateEngine {
     public <T> T executeTemplate(String template, HttpRequest request, Class<? extends DTO<T>> dtoClass) {
         T result;
         try {
+            validateTemplate(template);
             Writer writer = new StringWriter();
             Template compiledTemplate = compiler.compile(template);
-
             Map<String, Object> data = new ConcurrentHashMap<>();
             data.put("request", new HttpRequestTemplateObject(request));
             data.putAll(TemplateFunctions.BUILT_IN_FUNCTIONS);
@@ -100,6 +104,17 @@ public class MustacheTemplateEngine implements TemplateEngine {
         return result;
     }
 
+    private void validateTemplate(String template) {
+        if (isNotBlank(template) && isNotBlank(configuration.mustacheDisallowedText())) {
+            Iterable<String> deniedStrings = Splitter.on(",").trimResults().split(configuration.mustacheDisallowedText());
+            for (String deniedString : deniedStrings) {
+                if (template.contains(deniedString)) {
+                    throw new UnsupportedOperationException("Found disallowed string \"" + deniedString + "\" in template: " + template);
+                }
+            }
+        }
+    }
+
     private void evaluateJsonPath(Map<String, Object> data, String jsonPath, HttpRequest request, Writer out) {
         try {
             Object jsonPathResult = JsonPath.compile(jsonPath).read(request.getBodyAsJsonOrXmlString());
@@ -128,16 +143,14 @@ public class MustacheTemplateEngine implements TemplateEngine {
 
     private void evaluatedXPath(String xPath, HttpRequest request, Writer out) {
         try {
-            String xPathResult = String.valueOf(new XPathEvaluator(xPath, null).evaluateXPathExpression(request.getBodyAsJsonOrXmlString(), (matched, exception, level) -> {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(Level.INFO)
-                        .setHttpRequest(request)
-                        .setMessageFormat("exception evaluating xPath:{}against xml body:{}")
-                        .setArguments(xPath, request.getBodyAsJsonOrXmlString())
-                        .setThrowable(exception)
-                );
-            }, XPathConstants.STRING));
+            String xPathResult = String.valueOf(new XPathEvaluator(xPath, null).evaluateXPathExpression(request.getBodyAsJsonOrXmlString(), (matched, exception, level) -> mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(Level.INFO)
+                    .setHttpRequest(request)
+                    .setMessageFormat("exception evaluating xPath:{}against xml body:{}")
+                    .setArguments(xPath, request.getBodyAsJsonOrXmlString())
+                    .setThrowable(exception)
+            ), XPathConstants.STRING));
             if (MockServerLogger.isEnabled(Level.TRACE)) {
                 mockServerLogger.logEvent(
                     new LogEntry()

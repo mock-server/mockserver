@@ -67,7 +67,7 @@ public class HttpForwardTemplateActionHandler extends HttpForwardAction {
 
     private MustacheTemplateEngine getMustacheTemplateEngine() {
         if (mustacheTemplateEngine == null) {
-            mustacheTemplateEngine = new MustacheTemplateEngine(mockServerLogger);
+            mustacheTemplateEngine = new MustacheTemplateEngine(mockServerLogger, configuration);
         }
         return mustacheTemplateEngine;
     }
