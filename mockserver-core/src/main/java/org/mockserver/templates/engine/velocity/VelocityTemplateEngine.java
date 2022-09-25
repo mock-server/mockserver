@@ -97,6 +97,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
     private ToolContext buildToolManager(VelocityEngine velocityEngine) {
         ToolManager manager = new ToolManager();
 
+        // ToolboxConfiguration for "application" scope
         ToolboxConfiguration applicationToolboxConfiguration = new ToolboxConfiguration();
         applicationToolboxConfiguration.setScope("application");
         ToolConfiguration collectionTool = new ToolConfiguration();
@@ -117,6 +118,8 @@ public class VelocityTemplateEngine implements TemplateEngine {
         ToolConfiguration numberTool = new ToolConfiguration();
         numberTool.setClass(org.apache.velocity.tools.generic.NumberTool.class.getName());
         applicationToolboxConfiguration.addTool(numberTool);
+
+        // ToolboxConfiguration for "request" scope
         ToolboxConfiguration requestToolboxConfiguration = new ToolboxConfiguration();
         requestToolboxConfiguration.setScope("request");
         ToolConfiguration jsonTool = new ToolConfiguration();
@@ -125,6 +128,10 @@ public class VelocityTemplateEngine implements TemplateEngine {
         ToolConfiguration xmlTool = new ToolConfiguration();
         xmlTool.setClass(org.apache.velocity.tools.generic.XmlTool.class.getName());
         requestToolboxConfiguration.addTool(xmlTool);
+        ToolConfiguration importTool = new ToolConfiguration();
+        importTool.setClass(org.apache.velocity.tools.generic.ImportTool.class.getName());
+        requestToolboxConfiguration.addTool(importTool);
+
         XmlFactoryConfiguration xmlFactoryConfiguration = new XmlFactoryConfiguration();
         xmlFactoryConfiguration.addToolbox(applicationToolboxConfiguration);
         xmlFactoryConfiguration.addToolbox(requestToolboxConfiguration);
