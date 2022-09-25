@@ -656,14 +656,18 @@ public class VelocityTemplateEngineTest {
         // given
         String template = "{" + NEW_LINE +
             "    'statusCode': 200," + NEW_LINE +
-            "    'body': \"$date\"" + NEW_LINE +
+            "    'body': \"$date.day $date.month $date.year\"" + NEW_LINE +
             "}";
         HttpRequest request = request()
             .withPath("/somePath")
             .withMethod("POST")
             .withHeader(HOST.toString(), "mock-server.com")
             .withBody("some_body".getBytes(StandardCharsets.UTF_8));
-
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.setTime(new java.util.Date());
+        int year = cal.get(java.util.Calendar.YEAR);
+        int month = cal.get(java.util.Calendar.MONTH);
+        int day = cal.get(java.util.Calendar.DAY_OF_MONTH);
 
         // when
         HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
@@ -672,7 +676,7 @@ public class VelocityTemplateEngineTest {
         assertThat(actualHttpResponse, is(
             response()
                 .withStatusCode(200)
-                .withBody(new java.text.SimpleDateFormat("dd MMM yyyy, HH:mm:ss").format(new java.util.Date()))
+                .withBody(day + " " + month + " " + year)
         ));
     }
 
