@@ -21,6 +21,9 @@ import org.mockserver.uuid.UUIDService;
 import org.slf4j.event.Level;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.io.File;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -581,6 +584,100 @@ public class VelocityTemplateEngineTest {
         } finally {
             configuration.velocityDisallowedText(originalVelocityDisallowedText);
         }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithVelocityTemplateWithImportTool() {
+        File testInputFile = new File("testInputFile.txt");
+        String testInputFileContent = "This file content will be part of the response body";
+        try {
+            // given
+            String template = "{" + NEW_LINE +
+                "    'statusCode': 200," + NEW_LINE +
+                "    'body': \"$import.read('testInputFile.txt')\"" + NEW_LINE +
+                "}";
+            HttpRequest request = request()
+                .withPath("/somePath")
+                .withMethod("POST")
+                .withHeader(HOST.toString(), "mock-server.com")
+                .withBody("some_body".getBytes(StandardCharsets.UTF_8));
+
+            try {
+                testInputFile = new File("testInputFile.txt");
+                testInputFile.delete();
+                testInputFile.createNewFile();
+                Files.write(Paths.get(testInputFile.getAbsolutePath()), testInputFileContent.getBytes());
+            } catch (Throwable t) {
+                t.printStackTrace();
+            }
+
+            // when
+            HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
+
+            // then
+            assertThat(actualHttpResponse, is(
+                response()
+                    .withStatusCode(200)
+                    .withBody(testInputFileContent)
+            ));
+        } finally {
+            if (testInputFile != null) {
+                testInputFile.delete();
+            }
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithVelocityTemplateWithMathTool() {
+        // given
+        String template = "{" + NEW_LINE +
+            "    'statusCode': 200," + NEW_LINE +
+            "    'body': \"$math.sub('5', '3')\"" + NEW_LINE +
+            "}";
+        HttpRequest request = request()
+            .withPath("/somePath")
+            .withMethod("POST")
+            .withHeader(HOST.toString(), "mock-server.com")
+            .withBody("some_body".getBytes(StandardCharsets.UTF_8));
+
+        // when
+        HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
+
+        // then
+        assertThat(actualHttpResponse, is(
+            response()
+                .withStatusCode(200)
+                .withBody("2")
+        ));
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithVelocityTemplateWithDateTool() {
+        // given
+        String template = "{" + NEW_LINE +
+            "    'statusCode': 200," + NEW_LINE +
+            "    'body': \"$date.day $date.month $date.year\"" + NEW_LINE +
+            "}";
+        HttpRequest request = request()
+            .withPath("/somePath")
+            .withMethod("POST")
+            .withHeader(HOST.toString(), "mock-server.com")
+            .withBody("some_body".getBytes(StandardCharsets.UTF_8));
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.setTime(new java.util.Date());
+        int year = cal.get(java.util.Calendar.YEAR);
+        int month = cal.get(java.util.Calendar.MONTH);
+        int day = cal.get(java.util.Calendar.DAY_OF_MONTH);
+
+        // when
+        HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, HttpResponseDTO.class);
+
+        // then
+        assertThat(actualHttpResponse, is(
+            response()
+                .withStatusCode(200)
+                .withBody(day + " " + month + " " + year)
+        ));
     }
 
     @Test
