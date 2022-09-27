@@ -22,9 +22,11 @@ public class PreserveHeadersNettyRemoves extends MessageToMessageDecoder<HttpObj
     protected void decode(ChannelHandlerContext ctx, HttpObject httpObject, List<Object> out) throws Exception {
         if (httpObject instanceof HttpMessage) {
             final HttpHeaders headers = ((HttpMessage) httpObject).headers();
-            ctx.channel().attr(PRESERVED_HEADERS).set(ImmutableList.of(
-                new Header(HttpHeaderNames.CONTENT_ENCODING.toString(), headers.getAll(HttpHeaderNames.CONTENT_ENCODING))
-            ));
+            if (headers.contains(HttpHeaderNames.CONTENT_ENCODING)) {
+                ctx.channel().attr(PRESERVED_HEADERS).set(ImmutableList.of(
+                    new Header(HttpHeaderNames.CONTENT_ENCODING.toString(), headers.getAll(HttpHeaderNames.CONTENT_ENCODING))
+                ));
+            }
         }
         ReferenceCountUtil.retain(httpObject);
         out.add(httpObject);

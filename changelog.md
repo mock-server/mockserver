@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - support to disallow loading of any class in velocity templates
 - support to disallow specific text in velocity templates
 - support to disallow specific text in mustache templates
+- support to velocity templates to load files via $import.read(...)
 
 ### Changed
 - improved error message for not valid HTTP requests that are not being proxied
@@ -21,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - fixed error passing configuration in MockServerClient
 - fixed handling of additional content-type parameter and special characters in the content-type such as '+'
+- removed invalid extra content-encoding header add when forwarding if content-encoding was not present
 
 ## [5.14.0] - 2022-08-22
 
