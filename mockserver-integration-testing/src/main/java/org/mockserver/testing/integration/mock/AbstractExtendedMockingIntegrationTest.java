@@ -5626,11 +5626,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             .withLocalAddress("127.0.0.1:" + getServerPort())
             .withRemoteAddress("127.0.0.1:" + getRequestTcpPortForPath("/some_path_three"));
 
-        if (contentEncodingSupport()) {
-            requestOne.withHeader("content-encoding", ".*");
-            requestTwo.withHeader("content-encoding", ".*");
-        }
-
         List<LogEntry> logEntriesExpected = Arrays.asList(
             new LogEntry()
                 .setType(RECEIVED_REQUEST)
@@ -5662,10 +5657,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         return currentRequests
             .get("remoteAddress").asText()
             .split(":")[1];
-    }
-
-    public boolean contentEncodingSupport() {
-        return true;
     }
 
     @Test

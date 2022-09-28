@@ -97,9 +97,4 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
         return SERVER_HTTPS_PORT;
     }
 
-    @Override
-    public boolean contentEncodingSupport() {
-        return false;
-    }
-
 }

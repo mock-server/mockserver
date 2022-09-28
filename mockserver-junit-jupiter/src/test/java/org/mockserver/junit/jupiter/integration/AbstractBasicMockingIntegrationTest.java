@@ -1288,7 +1288,6 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             response("some_body_one")
                 .withHeader("some", "header")
                 .withHeader("cookie", "some=parameter")
-                .withHeader("content-encoding", ".*")
                 .withHeader("set-cookie", "some=parameter")
                 .withCookie("some", "parameter"),
             makeRequest(
@@ -1303,8 +1302,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         );
         MILLISECONDS.sleep(500);
         assertEquals(
-            response("some_body_three")
-                .withHeader("content-encoding", ".*"),
+            response("some_body_three"),
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path_three"))
@@ -1874,8 +1872,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeaders(
-                    header("x-test", "test_headers_and_body"),
-                    header("content-encoding", ".*")
+                    header("x-test", "test_headers_and_body")
                 )
                 .withBody("an_example_body_http"),
             httpResponse
@@ -1923,8 +1920,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeaders(
-                    header("x-test", "test_headers_and_body"),
-                    header("content-encoding", ".*")
+                    header("x-test", "test_headers_and_body")
                 )
                 .withBody("some_overridden_body"),
             httpResponse
@@ -1966,8 +1962,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeaders(
-                    header("x-test", "test_headers_and_body"),
-                    header("content-encoding", ".*")
+                    header("x-test", "test_headers_and_body")
                 )
                 .withBody("an_example_body_http"),
             makeRequest(
@@ -1986,8 +1981,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeaders(
-                    header("x-test", "test_headers_and_body"),
-                    header("content-encoding", ".*")
+                    header("x-test", "test_headers_and_body")
                 )
                 .withBody("an_example_body_https"),
             makeRequest(
@@ -2039,8 +2033,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeaders(
-                    header("x-test", "test_headers_and_body"),
-                    header("content-encoding", ".*")
+                    header("x-test", "test_headers_and_body")
                 )
                 .withBody("an_example_body_http"),
             makeRequest(
@@ -2059,8 +2052,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeaders(
-                    header("x-test", "test_headers_and_body"),
-                    header("content-encoding", ".*")
+                    header("x-test", "test_headers_and_body")
                 )
                 .withBody("an_example_body_https"),
             makeRequest(
@@ -2128,8 +2120,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeaders(
-                    header("x-test", "test_headers_and_body"),
-                    header("content-encoding", ".*")
+                    header("x-test", "test_headers_and_body")
                 )
                 .withBody("some_overridden_body"),
             makeRequest(
@@ -2165,8 +2156,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeaders(
-                    header("x-test", "test_headers_and_body_https"),
-                    header("content-encoding", ".*")
+                    header("x-test", "test_headers_and_body_https")
                 )
                 .withBody("some_overridden_body"),
             makeRequest(
@@ -2228,8 +2218,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeaders(
                     header("x-test", "test_headers_and_body"),
-                    header("extra_header", "some_value"),
-                    header("content-encoding", ".*")
+                    header("extra_header", "some_value")
                 )
                 .withBody("some_overridden_response_body"),
             makeRequest(
@@ -2270,8 +2259,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeaders(
                     header("x-test", "test_headers_and_body_https"),
-                    header("extra_header", "some_value"),
-                    header("content-encoding", ".*")
+                    header("extra_header", "some_value")
                 )
                 .withBody("some_overridden_response_body"),
             makeRequest(
@@ -2353,8 +2341,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeaders(
-                    header("x-test", "test_headers_and_body"),
-                    header("content-encoding", ".*")
+                    header("x-test", "test_headers_and_body")
                 )
                 .withBody("some_overridden_body"),
             makeRequest(
@@ -2395,8 +2382,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeaders(
-                    header("x-test", "test_headers_and_body_https"),
-                    header("content-encoding", ".*")
+                    header("x-test", "test_headers_and_body_https")
                 )
                 .withBody("some_overridden_body"),
             makeRequest(
@@ -2720,8 +2706,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeaders(
-                    header("x-test", "test_headers_and_body"),
-                    header("content-encoding", ".*")
+                    header("x-test", "test_headers_and_body")
                 )
                 .withBody("an_example_body"),
             makeRequest(
