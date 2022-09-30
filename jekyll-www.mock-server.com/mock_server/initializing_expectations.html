@@ -165,7 +165,7 @@ java -jar ~/Downloads/mockserver-netty-5.14.0-shaded.jar -serverPort 1080,1081 -
 
 <p>The class must implement the <strong>org.mockserver.client.initialize.PluginExpectationInitializer</strong> interface and have a default constructor with zero arguments, for example:</p>
 
-<pre class="prettyprint lang-java code"><code class="code">public class ExampleInitializationClass implements ExpectationInitializer {
+<pre class="prettyprint lang-java code"><code class="code">public class ExampleInitializationClass implements PluginExpectationInitializer {
 
     @Override
     public void initializeExpectations(MockServerClient mockServerClient) {
