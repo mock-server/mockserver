@@ -326,7 +326,7 @@
             <dependency>
                 <groupId>net.javacrumbs.json-unit</groupId>
                 <artifactId>json-unit-core</artifactId>
-                <version>2.35.0</version>
+                <version>2.36.0</version>
             </dependency>
 
             <!-- json validation -->
