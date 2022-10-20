@@ -79,7 +79,7 @@ public class NettySslContextFactory {
         this.configuration = configuration;
         this.mockServerLogger = mockServerLogger;
         this.forServer = forServer;
-        keyAndCertificateFactory = createKeyAndCertificateFactory(configuration, mockServerLogger);
+        keyAndCertificateFactory = createKeyAndCertificateFactory(configuration, mockServerLogger, forServer);
         System.setProperty("https.protocols", Joiner.on(",").join(TLS_PROTOCOLS));
         nettySslContextFactoryCustomizer.accept(this);
         if (configuration.proactivelyInitialiseTLS()) {
@@ -155,10 +155,7 @@ public class NettySslContextFactory {
         if (isNotBlank(configuration.forwardProxyCertificateChain())) {
             return x509ChainFromPEMFile(configuration.forwardProxyCertificateChain()).toArray(new X509Certificate[0]);
         } else {
-            return new X509Certificate[]{
-                keyAndCertificateFactory.x509Certificate(),
-                keyAndCertificateFactory.certificateAuthorityX509Certificate()
-            };
+            return keyAndCertificateFactory.certificateChain().toArray(new X509Certificate[0]);
         }
     }
 
