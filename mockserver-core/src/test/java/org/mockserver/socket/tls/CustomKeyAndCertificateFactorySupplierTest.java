@@ -1,10 +1,10 @@
 package org.mockserver.socket.tls;
 
 import java.util.List;
-import java.util.function.BiFunction;
+
 import org.junit.Test;
 import org.junit.AfterClass;
-import java.math.BigInteger;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
@@ -22,7 +22,8 @@ public class CustomKeyAndCertificateFactorySupplierTest {
 
     @Test
     public void shouldReturnCustomFactory() {
-        BiFunction<MockServerLogger, Boolean, KeyAndCertificateFactory> originalCustomKeyAndCertificateFactorySupplier = KeyAndCertificateFactoryFactory.getCustomKeyAndCertificateFactorySupplier();
+        KeyAndCertificateFactorySupplier originalCustomKeyAndCertificateFactorySupplier
+            = KeyAndCertificateFactoryFactory.getCustomKeyAndCertificateFactorySupplier();
 
         // given
         Configuration configuration = configuration();
@@ -64,7 +65,7 @@ public class CustomKeyAndCertificateFactorySupplierTest {
 
         try {
             // when
-            KeyAndCertificateFactoryFactory.setCustomKeyAndCertificateFactorySupplier((logger, isServer) -> factoryInstance);
+            KeyAndCertificateFactoryFactory.setCustomKeyAndCertificateFactorySupplier((logger, isServer, config) -> factoryInstance);
 
             // then
             assertThat(KeyAndCertificateFactoryFactory.createKeyAndCertificateFactory(configuration, mockServerLogger), equalTo(factoryInstance));
