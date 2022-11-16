@@ -98,6 +98,7 @@ public class Configuration {
     private String proxyAuthenticationRealm;
     private String proxyAuthenticationUsername;
     private String proxyAuthenticationPassword;
+    private String noProxyHosts;
 
     // liveness
     private String livenessHttpGetPath;
@@ -1167,6 +1168,24 @@ public class Configuration {
      */
     public Configuration proxyAuthenticationPassword(String proxyAuthenticationPassword) {
         this.proxyAuthenticationPassword = proxyAuthenticationPassword;
+        return this;
+    }
+
+    public String noProxyHosts() {
+        if (noProxyHosts == null) {
+            return ConfigurationProperties.noProxyHosts();
+        }
+        return noProxyHosts;
+    }
+
+    /**
+     * <p>The list of hostnames to not use the configured proxy. Several values may be present, seperated by comma (,)</p>
+     * The default is ""
+     *
+     * @param noProxyHosts Comma-seperated list of hosts to not be proxied.
+     */
+    public Configuration noProxyHosts(String noProxyHosts) {
+        this.noProxyHosts = noProxyHosts;
         return this;
     }
 
