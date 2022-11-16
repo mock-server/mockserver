@@ -23,9 +23,9 @@
     </licenses>
 
     <scm>
-        <url>https://github.com/jamesdbloom/mockservice.git</url>
-        <connection>scm:git:https://github.com/jamesdbloom/mockservice.git</connection>
-        <developerConnection>scm:git:git@github.com:jamesdbloom/mockservice.git</developerConnection>
+        <url>https://github.com/arkinator/mockserver.git</url>
+        <connection>scm:git:https://github.com/arkinator/mockserver.git</connection>
+        <developerConnection>scm:git:git@github.com:arkinator/mockserver.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
