@@ -67,7 +67,7 @@
         <xmlunit.version>2.9.0</xmlunit.version>
         <skipTests>false</skipTests>
         <skipAssembly>false</skipAssembly>
-        <deploy.plugin.respository.url>https://oss.sonatype.org/content/repositories/snapshots/</deploy.plugin.respository.url>
+        <deploy.plugin.respository.url>https://s01.oss.sonatype.org/content/repositories/snapshots/</deploy.plugin.respository.url>
         <release.arguments />
         <javadoc.additional.parameters />
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
