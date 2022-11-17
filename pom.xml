@@ -4,7 +4,7 @@
 
     <groupId>io.github.arkinator</groupId>
     <artifactId>mockserver</artifactId>
-    <version>5.14.1-SNAPSHOT</version>
+    <version>5.14.1</version>
     <packaging>pom</packaging>
 
     <name>MockServer</name>
@@ -26,7 +26,7 @@
         <url>https://github.com/arkinator/mockserver.git</url>
         <connection>scm:git:https://github.com/arkinator/mockserver.git</connection>
         <developerConnection>scm:git:git@github.com:arkinator/mockserver.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>mockserver-5.14.1</tag>
     </scm>
 
     <distributionManagement>
