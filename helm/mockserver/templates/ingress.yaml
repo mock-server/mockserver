@@ -1,4 +1,6 @@
 {{- if .Values.ingress.enabled -}}
+{{- $fullName := include "release.name" . -}}
+{{- $svcPort := .Values.service.port -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -9,11 +11,11 @@ metadata:
     chart: {{ template "chart.name_version" . }}
   {{- with .Values.ingress.annotations }}
   annotations:
-  {{ toYaml . | indent 4 }}
+    {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  {{- if .Values.ingress.ingressClass.enabled }}
-  ingressClassName: {{.Values.ingress.ingressClass.name}}
+  {{- if and .Values.ingress.className (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion) }}
+  ingressClassName: {{ .Values.ingress.className }}
   {{- end }}
   {{- if .Values.ingress.tls }}
   tls:
@@ -27,20 +29,24 @@ spec:
   {{- end }}
   rules:
     {{- range .Values.ingress.hosts }}
-    - host: {{ . }}
+    - host: {{ .host | quote }}
       http:
         paths:
-          - path: {{ $.Values.ingress.path }}
+          {{- range .paths }}
+          - path: {{ .path }}
+            {{- if and .pathType (semverCompare ">=1.18-0" $.Capabilities.KubeVersion.GitVersion) }}
+            pathType: {{ .pathType }}
+            {{- end }}
             backend:
               {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
               service:
-                name: {{ template "release.name" $ }}
+                name: {{ $fullName }}
                 port:
-                  number: {{ $.Values.service.port }}
-            pathType: {{ $.Values.ingress.pathType }}
+                  number: {{ $svcPort }}
               {{- else }}
-              serviceName: {{ template "release.name" . }}
-              servicePort: {{ $.Values.service.port }}
+              serviceName: {{ $fullName }}
+              servicePort: {{ $svcPort }}
+              {{- end }}
+          {{- end }}
     {{- end }}
-  {{- end }}
 {{- end }}
