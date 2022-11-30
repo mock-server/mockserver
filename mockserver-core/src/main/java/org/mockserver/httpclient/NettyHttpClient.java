@@ -47,6 +47,7 @@ public class NettyHttpClient {
     static final AttributeKey<Boolean> SECURE = AttributeKey.valueOf("SECURE");
     static final AttributeKey<InetSocketAddress> REMOTE_SOCKET = AttributeKey.valueOf("REMOTE_SOCKET");
     static final AttributeKey<CompletableFuture<Message>> RESPONSE_FUTURE = AttributeKey.valueOf("RESPONSE_FUTURE");
+    static final AttributeKey<Boolean> ENFORCE_SYNCHRONOUS_COMPLETION = AttributeKey.valueOf("ENFORCE_SYNCHRONOUS_COMPLETION");
     private static final HopByHopHeaderFilter hopByHopHeaderFilter = new HopByHopHeaderFilter();
     private final Configuration configuration;
     private final MockServerLogger mockServerLogger;
@@ -100,6 +101,7 @@ public class NettyHttpClient {
                 .attr(SECURE, httpRequest.isSecure() != null && httpRequest.isSecure())
                 .attr(REMOTE_SOCKET, remoteAddress)
                 .attr(RESPONSE_FUTURE, responseFuture)
+                .attr(ENFORCE_SYNCHRONOUS_COMPLETION, true)
                 .handler(new HttpClientInitializer(proxyConfigurations, mockServerLogger, forwardProxyClient, nettySslContextFactory, true))
                 .connect(remoteAddress)
                 .addListener((ChannelFutureListener) future -> {
@@ -154,6 +156,7 @@ public class NettyHttpClient {
                 .attr(SECURE, isSecure)
                 .attr(REMOTE_SOCKET, remoteAddress)
                 .attr(RESPONSE_FUTURE, responseFuture)
+                .attr(ENFORCE_SYNCHRONOUS_COMPLETION, false)
                 .handler(new HttpClientInitializer(proxyConfigurations, mockServerLogger, forwardProxyClient, nettySslContextFactory, false))
                 .connect(remoteAddress)
                 .addListener((ChannelFutureListener) future -> {
