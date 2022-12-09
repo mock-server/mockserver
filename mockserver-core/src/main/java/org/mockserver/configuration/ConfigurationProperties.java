@@ -116,6 +116,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_PROXY_SERVER_REALM = "mockserver.proxyAuthenticationRealm";
     private static final String MOCKSERVER_PROXY_AUTHENTICATION_USERNAME = "mockserver.proxyAuthenticationUsername";
     private static final String MOCKSERVER_PROXY_AUTHENTICATION_PASSWORD = "mockserver.proxyAuthenticationPassword";
+    private static final String MOCKSERVER_NO_PROXY_HOSTS = "mockserver.noProxyHosts";
 
     // liveness
     private static final String MOCKSERVER_LIVENESS_HTTP_GET_PATH = "mockserver.livenessHttpGetPath";
@@ -144,6 +145,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS = "mockserver.sslSubjectAlternativeNameDomains";
     private static final String MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS = "mockserver.sslSubjectAlternativeNameIps";
 
+    // inbound - fixed CA
     // inbound - fixed CA
     private static final String MOCKSERVER_CERTIFICATE_AUTHORITY_PRIVATE_KEY = "mockserver.certificateAuthorityPrivateKey";
     private static final String MOCKSERVER_CERTIFICATE_AUTHORITY_X509_CERTIFICATE = "mockserver.certificateAuthorityCertificate";
@@ -1116,6 +1118,20 @@ public class ConfigurationProperties {
 
     public static String proxyAuthenticationPassword() {
         return readPropertyHierarchically(PROPERTIES, MOCKSERVER_PROXY_AUTHENTICATION_PASSWORD, "MOCKSERVER_PROXY_AUTHENTICATION_PASSWORD", "");
+    }
+
+    /**
+     * <p>The list of hostnames to not use the configured proxy. Several values may be present, seperated by comma (,)</p>
+     * The default is ""
+     *
+     * @param noProxyHosts Comma-seperated list of hosts to not be proxied.
+     */
+    public static void noProxyHosts(String noProxyHosts) {
+        setProperty(MOCKSERVER_NO_PROXY_HOSTS, noProxyHosts);
+    }
+
+    public static String noProxyHosts() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_NO_PROXY_HOSTS, "MOCKSERVER_NO_PROXY_HOSTS", "");
     }
 
     /**

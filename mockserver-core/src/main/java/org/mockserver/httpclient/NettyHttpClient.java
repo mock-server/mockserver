@@ -11,6 +11,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.AttributeKey;
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.log.model.LogEntry;
@@ -28,6 +29,9 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.net.InetAddress;
+import java.util.Objects;
+import java.util.stream.Stream;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -74,7 +78,9 @@ public class NettyHttpClient {
 
     public CompletableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress, Long connectionTimeoutMillis) throws SocketConnectionException {
         if (!eventLoopGroup.isShuttingDown()) {
-            if (proxyConfigurations != null && !Boolean.TRUE.equals(httpRequest.isSecure()) && proxyConfigurations.containsKey(ProxyConfiguration.Type.HTTP)) {
+            if (proxyConfigurations != null && !Boolean.TRUE.equals(httpRequest.isSecure())
+                && proxyConfigurations.containsKey(ProxyConfiguration.Type.HTTP)
+                && isHostNotOnNoProxyHostList(remoteAddress)) {
                 ProxyConfiguration proxyConfiguration = proxyConfigurations.get(ProxyConfiguration.Type.HTTP);
                 remoteAddress = proxyConfiguration.getProxyAddress();
                 proxyConfiguration.addProxyAuthenticationHeader(httpRequest);
@@ -212,5 +218,23 @@ public class NettyHttpClient {
 
     public HttpResponse sendRequest(HttpRequest httpRequest, long timeout, TimeUnit unit) {
         return sendRequest(httpRequest, timeout, unit, false);
+    }
+
+    private boolean isHostNotOnNoProxyHostList(InetSocketAddress remoteAddress) {
+        if (remoteAddress == null
+            || StringUtils.isBlank(configuration.noProxyHosts())) {
+            return true;
+        }
+        return Stream.of(configuration.noProxyHosts().split(","))
+            .map(String::trim)
+            .map(host -> {
+                try {
+                    return InetAddress.getByName(host);
+                } catch (UnknownHostException e) {
+                    return null;
+                }
+            })
+            .filter(Objects::nonNull)
+            .noneMatch(remoteAddress.getAddress()::equals);
     }
 }
