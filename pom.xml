@@ -57,11 +57,12 @@
         <slf4j.version>2.0.5</slf4j.version>
         <jackson.version>2.14.0</jackson.version>
         <velocity.version>2.3</velocity.version>
-        <netty.version>4.1.85.Final</netty.version>
+        <netty.version>4.1.86.Final</netty.version>
         <httpcomponents.version>4.4.1</httpcomponents.version>
         <bouncycastle.version>1.72</bouncycastle.version>
-        <spring.version>5.3.23</spring.version>
-        <spring-web.version>5.3.23</spring-web.version>
+        <!-- highest spring version is 5.3 due to Java 1.8 version -->
+        <spring.version>5.3.24</spring.version>
+        <spring-web.version>5.3.24</spring-web.version>
         <mockito.version>4.9.0</mockito.version>
         <hamcrest.version>2.2</hamcrest.version>
         <xmlunit.version>2.9.0</xmlunit.version>
@@ -853,7 +854,6 @@
                     </dependency>
                 </dependencies>
                 <configuration>
-                    <encoding>UTF-8</encoding>
                     <linkXRef>false</linkXRef>
                     <failsOnError>true</failsOnError>
                     <consoleOutput>true</consoleOutput>
