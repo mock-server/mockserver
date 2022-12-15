@@ -124,7 +124,7 @@ public class NettyUnidirectionalBinaryForwardingIntegrationTest {
             },
             (requestCalls, responseCalls, serverCalled) -> {
                 waitForCondition(() -> serverCalled.get() >= 2,
-                    () -> "Wait timed out. ServerCalled never reached, is currently at " + serverCalled.get());
+                    () -> "Wait timed out. ServerCalled never reached 2, is currently at " + serverCalled.get());
                 assertEquals(2, requestCalls.get());
                 assertEquals(0, responseCalls.get());
                 assertEquals(2, serverCalled.get());
@@ -132,9 +132,43 @@ public class NettyUnidirectionalBinaryForwardingIntegrationTest {
         );
     }
 
-    //TODO test für websocket style (einmal client, mehrmals server)
-    //TODO CETP style (mehrere client nachrichten OHNE close, keine server response)
-    //TODO CETP monk style (mehrere client nachrichten MIT close, keine server response)
+
+    @Test
+    public void sendNonHttpTrafficWithMultipleResponsesFromServerForOnlyASingleRequest() throws Exception {
+        AtomicInteger serverResponsesRead = new AtomicInteger(0);
+        executeTestRun(
+            socket -> {
+                writeSingleRequestMessage(socket);
+                readSingleResponseMessage(socket);
+                serverResponsesRead.incrementAndGet();
+                readSingleResponseMessage(socket);
+                serverResponsesRead.incrementAndGet();
+                readSingleResponseMessage(socket);
+                serverResponsesRead.incrementAndGet();
+                readSingleResponseMessage(socket);
+                serverResponsesRead.incrementAndGet();
+            },
+            serverSocket -> {
+                serverSocket.setTcpNoDelay(true);
+                serverSocket.getOutputStream().write(RESPONSE_MESSAGE.getBytes());
+                serverSocket.getOutputStream().flush();
+                serverSocket.getOutputStream().write(RESPONSE_MESSAGE.getBytes());
+                serverSocket.getOutputStream().flush();
+                serverSocket.getOutputStream().write(RESPONSE_MESSAGE.getBytes());
+                serverSocket.getOutputStream().flush();
+                serverSocket.getOutputStream().write(RESPONSE_MESSAGE.getBytes());
+                serverSocket.getOutputStream().flush();
+
+            },
+            (requestCalls, responseCalls, serverCalled) -> {
+                waitForCondition(() -> serverResponsesRead.get() >= 4,
+                    () -> "Wait timed out. serverResponsesRead never reached 4, is currently at " + serverResponsesRead.get());
+                assertEquals(1, requestCalls.get());
+                assertEquals(1, responseCalls.get());
+                assertEquals(1, serverCalled.get());
+            }
+        );
+    }
 
     private static void writeSingleRequestMessage(Socket socket) throws IOException {
         socket.setSendBufferSize(MESSAGE.length());
@@ -149,7 +183,9 @@ public class NettyUnidirectionalBinaryForwardingIntegrationTest {
             () -> "Timeout while waiting for message (Found " + input.available()
                 + " bytes available, wanted " + RESPONSE_MESSAGE.length() + ")");
         byte[] buffer = new byte[RESPONSE_MESSAGE.length() + 1];
+        log("Before reading from buffer. Currently "+socket.getInputStream().available()+" bytes available");
         socket.getInputStream().read(buffer, 0, buffer.length);
+        log("After reading from buffer. Currently "+socket.getInputStream().available()+" bytes available");
         assertEquals(RESPONSE_MESSAGE, new String(buffer));
     }
 
@@ -188,9 +224,6 @@ public class NettyUnidirectionalBinaryForwardingIntegrationTest {
                 return binaryMessages;
             };
 
-            //TODO seems unnecessary
-            ReentrantLock startVerificationLock = new ReentrantLock();
-            startVerificationLock.lock();
             AtomicInteger handlerCalledRequest = new AtomicInteger(0);
             AtomicInteger handlerCalledResponse = new AtomicInteger(0);
             AtomicInteger serverCalled = new AtomicInteger(0);
@@ -220,7 +253,6 @@ public class NettyUnidirectionalBinaryForwardingIntegrationTest {
                 clientActionCallback.accept(clientSocket);
             }
 
-            startVerificationLock.tryLock(2, TimeUnit.SECONDS);
             log("Verifying interactions... (requests=" + handlerCalledRequest.get() + ", response="
                 + handlerCalledResponse.get() + ", serverCalled=" + serverCalled.get() + ")");
             interactionsVerificationCallback.acceptThrows(
