@@ -47,7 +47,7 @@
                 <!-- Conflicting versions in swagger-parser and spring-boot-starter-webflux -->
                 <groupId>com.fasterxml.jackson.datatype</groupId>
                 <artifactId>jackson-datatype-jsr310</artifactId>
-                <version>2.14.0</version>
+                <version>${jackson.version}</version>
             </dependency>
             <dependency>
                 <!-- Conflicting versions in swagger-parser and spring-boot-starter-webflux -->
