@@ -63,7 +63,7 @@
         <!-- highest spring version is 5.3 due to Java 1.8 version -->
         <spring.version>5.3.24</spring.version>
         <spring-web.version>5.3.24</spring-web.version>
-        <mockito.version>4.9.0</mockito.version>
+        <mockito.version>4.10.0</mockito.version>
         <hamcrest.version>2.2</hamcrest.version>
         <xmlunit.version>2.9.0</xmlunit.version>
         <skipTests>false</skipTests>
