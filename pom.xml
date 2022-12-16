@@ -150,7 +150,7 @@
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-core</artifactId>
                 <!-- highest version for Servlet 4 is 9.x, highest version for Java 1.8 is 10.x -->
-                <version>9.0.69</version>
+                <version>9.0.70</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
