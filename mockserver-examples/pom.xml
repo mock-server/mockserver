@@ -41,7 +41,7 @@
                 <!-- Conflicting versions in httpclient and google-http-client -->
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpcore</artifactId>
-                <version>4.4.15</version>
+                <version>4.4.16</version>
             </dependency>
             <dependency>
                 <!-- Conflicting versions in swagger-parser and spring-boot-starter-webflux -->
