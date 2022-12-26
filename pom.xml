@@ -69,8 +69,8 @@
         <skipTests>false</skipTests>
         <skipAssembly>false</skipAssembly>
         <deploy.plugin.respository.url>https://oss.sonatype.org/content/repositories/snapshots/</deploy.plugin.respository.url>
-        <release.arguments />
-        <javadoc.additional.parameters />
+        <release.arguments/>
+        <javadoc.additional.parameters/>
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
     </properties>
 
@@ -334,7 +334,7 @@
             <dependency>
                 <groupId>com.networknt</groupId>
                 <artifactId>json-schema-validator</artifactId>
-                <version>1.0.73</version>
+                <version>1.0.74</version>
             </dependency>
             <dependency>
                 <groupId>com.jayway.jsonpath</groupId>
@@ -877,7 +877,7 @@
                 <version>3.1.0</version>
                 <configuration>
                     <rules>
-                        <dependencyConvergence />
+                        <dependencyConvergence/>
                     </rules>
                 </configuration>
                 <executions>
