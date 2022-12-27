@@ -62,7 +62,7 @@ public class MockServerHttpResponseToHttpServletResponseEncoder {
     private void setCookies(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
         if (httpResponse.getCookieList() != null) {
             for (Cookie cookie : httpResponse.getCookieList()) {
-                if (httpResponse.cookieHeadeDoesNotAlreadyExists(cookie)) {
+                if (httpResponse.cookieHeaderDoesNotAlreadyExists(cookie)) {
                     httpServletResponse.addHeader(SET_COOKIE.toString(), ServerCookieEncoder.LAX.encode(new DefaultCookie(cookie.getName().getValue(), cookie.getValue().getValue())));
                 }
             }

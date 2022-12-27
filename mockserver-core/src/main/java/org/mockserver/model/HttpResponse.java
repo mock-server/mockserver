@@ -486,7 +486,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
         }
     }
 
-    public boolean cookieHeadeDoesNotAlreadyExists(Cookie cookieValue) {
+    public boolean cookieHeaderDoesNotAlreadyExists(Cookie cookieValue) {
         List<String> setCookieHeaders = getHeader(SET_COOKIE.toString());
         for (String setCookieHeader : setCookieHeaders) {
             String existingCookieName = ClientCookieDecoder.LAX.decode(setCookieHeader).name();
@@ -498,7 +498,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
         return true;
     }
 
-    public boolean cookieHeadeDoesNotAlreadyExists(String name, String value) {
+    public boolean cookieHeaderDoesNotAlreadyExists(String name, String value) {
         List<String> setCookieHeaders = getHeader(SET_COOKIE.toString());
         for (String setCookieHeader : setCookieHeaders) {
             String existingCookieName = ClientCookieDecoder.LAX.decode(setCookieHeader).name();
