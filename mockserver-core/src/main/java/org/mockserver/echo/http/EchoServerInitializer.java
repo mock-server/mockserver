@@ -94,7 +94,7 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
         mockServerLogger.logEvent(
             new LogEntry()
                 .setLogLevel(Level.ERROR)
-                .setMessageFormat("echo server server caught exception")
+                .setMessageFormat("echo server caught exception")
                 .setThrowable(cause)
         );
         ctx.close();
