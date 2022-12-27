@@ -15,6 +15,6 @@ echo
 
 export GPG_TTY=$(tty)
 
-./mvnw release:clean -Ddeploy.plugin.respository.url=https://oss.sonatype.org/service/local/staging/deploy/maven2/ -P release -Drelease.arguments="-Dmaven.test.skip=true -DskipTests=true -Ddeploy.plugin.respository.url=https://oss.sonatype.org/service/local/staging/deploy/maven2/" && \
-./mvnw release:prepare -Ddeploy.plugin.respository.url=https://oss.sonatype.org/service/local/staging/deploy/maven2/ -P release -Drelease.arguments="-Dmaven.test.skip=true -DskipTests=true -Ddeploy.plugin.respository.url=https://oss.sonatype.org/service/local/staging/deploy/maven2/" && \
-./mvnw release:perform -Ddeploy.plugin.respository.url=https://oss.sonatype.org/service/local/staging/deploy/maven2/ -P release -Drelease.arguments="-Dmaven.test.skip=true -DskipTests=true -Ddeploy.plugin.respository.url=https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+./mvnw release:clean -Ddeploy.plugin.repository.url=https://oss.sonatype.org/service/local/staging/deploy/maven2/ -P release -Drelease.arguments="-Dmaven.test.skip=true -DskipTests=true -Ddeploy.plugin.repository.url=https://oss.sonatype.org/service/local/staging/deploy/maven2/" && \
+./mvnw release:prepare -Ddeploy.plugin.repository.url=https://oss.sonatype.org/service/local/staging/deploy/maven2/ -P release -Drelease.arguments="-Dmaven.test.skip=true -DskipTests=true -Ddeploy.plugin.repository.url=https://oss.sonatype.org/service/local/staging/deploy/maven2/" && \
+./mvnw release:perform -Ddeploy.plugin.repository.url=https://oss.sonatype.org/service/local/staging/deploy/maven2/ -P release -Drelease.arguments="-Dmaven.test.skip=true -DskipTests=true -Ddeploy.plugin.repository.url=https://oss.sonatype.org/service/local/staging/deploy/maven2/"
