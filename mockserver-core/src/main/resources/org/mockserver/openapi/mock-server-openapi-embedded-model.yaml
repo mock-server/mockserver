@@ -126,7 +126,7 @@ paths:
             type: string
             enum: [ "java", "json", "log_entries" ]
           required: false
-          description: changes response format, default if not specificed is "json", supported values are "java", "json", "log_entries"
+          description: changes response format, default if not specified is "json", supported values are "java", "json", "log_entries"
         - in: query
           name: type
           schema:
