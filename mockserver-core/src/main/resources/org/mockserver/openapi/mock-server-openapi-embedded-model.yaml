@@ -105,7 +105,7 @@ paths:
               oneOf:
                 - $ref: "#/components/schemas/RequestDefinition"
                 - $ref: "#/components/schemas/ExpectationId"
-        description: request used to match expectations and recored requests to clear
+        description: request used to match expectations and record requests to clear
   /mockserver/reset:
     put:
       tags:

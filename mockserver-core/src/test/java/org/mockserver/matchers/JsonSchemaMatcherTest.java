@@ -27,7 +27,7 @@ public class JsonSchemaMatcherTest {
     private static boolean disableSystemOut;
 
     @BeforeClass
-    public static void recordeSystemProperties() {
+    public static void recordSystemProperties() {
         disableSystemOut = ConfigurationProperties.disableSystemOut();
         ConfigurationProperties.disableSystemOut(false);
     }
