@@ -1680,8 +1680,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         assertThat(thirdAssertionError.getMessage(), startsWith("Request sequence not found"));
         AssertionError fourthAssertionError = assertThrows(AssertionError.class, () -> mockServerClient.verify(firstExpectation.getId(), firstExpectation.getId(), firstExpectation.getId(), secondExpectation.getId()));
         assertThat(fourthAssertionError.getMessage(), startsWith("Request sequence not found"));
-        AssertionError fithAssertionError = assertThrows(AssertionError.class, () -> mockServerClient.verify(thirdExpectation.getId()));
-        assertThat(fithAssertionError.getMessage(), startsWith("Request sequence not found"));
+        AssertionError fifthAssertionError = assertThrows(AssertionError.class, () -> mockServerClient.verify(thirdExpectation.getId()));
+        assertThat(fifthAssertionError.getMessage(), startsWith("Request sequence not found"));
         AssertionError sixAssertionError = assertThrows(AssertionError.class, () -> mockServerClient.verify(UUID.randomUUID().toString(), UUID.randomUUID().toString()));
         assertThat(sixAssertionError.getMessage(), startsWith("No expectation found with id "));
     }
