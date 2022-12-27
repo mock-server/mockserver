@@ -45,7 +45,7 @@ public class JWKGenerator {
                 )
             );
         } catch (Throwable throwable) {
-            throw new RuntimeException("Exception createing JWK", throwable);
+            throw new RuntimeException("Exception creating JWK", throwable);
         }
     }
 
