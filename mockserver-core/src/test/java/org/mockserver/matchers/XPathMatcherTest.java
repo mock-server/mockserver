@@ -106,7 +106,7 @@ public class XPathMatcherTest {
         assertFalse(new XPathMatcher(new MockServerLogger(),"//content").matches(null, matched));
         assertTrue(new XPathMatcher(new MockServerLogger(),"//*[local-name()='content']").matches(null, matched));
 
-        // xml is not parsed namespac aware, so this should fail
+        // xml is not parsed namespace aware, so this should fail
         assertFalse(new XPathMatcher(new MockServerLogger(),"//*[local-name()='content' and namespace-uri()='http://bar.example.com']").matches(null, matched));
         
         // when using namespace prefixes, xml is parsed as namespace aware
