@@ -393,7 +393,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - stopped usage being printed multiple time under certain error scenarios
 
 ### Removed
-- removed re-entrant WebSocket prevention by creating WebSocket client per expectation to improve resilience
+- removed reentrant WebSocket prevention by creating WebSocket client per expectation to improve resilience
 
 ## [5.7.2] - 2019-11-16
 
