@@ -18,7 +18,7 @@ info:
     name: Apache 2.0
 tags:
   - name: expectation
-    description: Create or update expectations - updates if the id matches an existing expecations (only supported by MockServer)
+    description: Create or update expectations - updates if the id matches an existing expectations (only supported by MockServer)
   - name: verify
     description: Verify requests (both MockServer & MockServer Proxy)
   - name: control

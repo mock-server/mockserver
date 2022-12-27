@@ -145,9 +145,9 @@ public class OpenAPIExpectationSerializer implements Serializer<OpenAPIExpectati
             List<String> jsonOpenAPIExpectationList = jsonArraySerializer.splitJSONArray(jsonOpenAPIExpectations);
             if (!jsonOpenAPIExpectationList.isEmpty()) {
                 List<String> validationErrorsList = new ArrayList<String>();
-                for (String jsonExpecation : jsonOpenAPIExpectationList) {
+                for (String jsonExpectation : jsonOpenAPIExpectationList) {
                     try {
-                        expectations.add(deserialize(jsonExpecation));
+                        expectations.add(deserialize(jsonExpectation));
                     } catch (IllegalArgumentException iae) {
                         validationErrorsList.add(iae.getMessage());
                     }

@@ -174,7 +174,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - resolved multiple issues with verifying by expectation id
 - resolved multiple NullPointerExceptions in backend for UI
 - ensure exact query parameter string is proxied allowing for empty values, leading `!` or or other special scenarios
-- improved expectation updates from FileWatcher so only expecation from matching source are updated resolving multiple bugs
+- improved expectation updates from FileWatcher so only expectation from matching source are updated resolving multiple bugs
 - ensured socket protocol of HTTPS is honoured resulting in forwarded requests using TLS
 - fixed logging of exceptions such as port already bound at startup
 - fixed retrieval of active exceptions where expectations were no longer active but not yet removed from expectations list
