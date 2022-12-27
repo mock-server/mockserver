@@ -308,7 +308,7 @@ public class ExpectationFileWatcherTest {
             expectationFileWatcher = new ExpectationFileWatcher(configuration(), mockServerLogger, requestMatchers, new ExpectationInitializerLoader(configuration(), mockServerLogger, requestMatchers));
 
             // when
-            Expectation[] expections = {
+            Expectation[] expectations = {
                 new Expectation(
                     request()
                         .withPath("/simpleFirst")
@@ -326,8 +326,8 @@ public class ExpectationFileWatcherTest {
                         .withBody("some second response")
                 )
             };
-            Files.write(mockserverInitializer.toPath(), expectationSerializer.serialize(expections).getBytes(StandardCharsets.UTF_8));
-            Expectation[] expectionsOne = {
+            Files.write(mockserverInitializer.toPath(), expectationSerializer.serialize(expectations).getBytes(StandardCharsets.UTF_8));
+            Expectation[] expectationsOne = {
                 new Expectation(
                     request()
                         .withPath("/pathOneFirst")
@@ -345,8 +345,8 @@ public class ExpectationFileWatcherTest {
                         .withBody("one second response")
                 )
             };
-            Files.write(mockserverInitializerOne.toPath(), expectationSerializer.serialize(expectionsOne).getBytes(StandardCharsets.UTF_8));
-            Expectation[] expectionsTwo = {
+            Files.write(mockserverInitializerOne.toPath(), expectationSerializer.serialize(expectationsOne).getBytes(StandardCharsets.UTF_8));
+            Expectation[] expectationsTwo = {
                 new Expectation(
                     request()
                         .withPath("/pathTwoFirst")
@@ -364,8 +364,8 @@ public class ExpectationFileWatcherTest {
                         .withBody("two second response")
                 )
             };
-            Files.write(mockserverInitializerTwo.toPath(), expectationSerializer.serialize(expectionsTwo).getBytes(StandardCharsets.UTF_8));
-            Expectation[] expectionsThree = {
+            Files.write(mockserverInitializerTwo.toPath(), expectationSerializer.serialize(expectationsTwo).getBytes(StandardCharsets.UTF_8));
+            Expectation[] expectationsThree = {
                 new Expectation(
                     request()
                         .withPath("/pathThreeFirst")
@@ -383,16 +383,16 @@ public class ExpectationFileWatcherTest {
                         .withBody("three second response")
                 )
             };
-            Files.write(mockserverInitializerThree.toPath(), expectationSerializer.serialize(expectionsThree).getBytes(StandardCharsets.UTF_8));
+            Files.write(mockserverInitializerThree.toPath(), expectationSerializer.serialize(expectationsThree).getBytes(StandardCharsets.UTF_8));
             long updatedFileTime = System.currentTimeMillis();
 
             Retries.tryWaitForSuccess(() -> assertThat(expectationsUpdatedCount.get(), equalTo(2)), 150, 100, MILLISECONDS);
             System.out.println("update processed in: " + (System.currentTimeMillis() - updatedFileTime) + "ms");
 
             // then
-            List<Expectation> expectations = requestMatchers.retrieveActiveExpectations(null);
-            assertThat(expectations.size(), equalTo(4));
-            assertThat(expectations, containsInAnyOrder(
+            List<Expectation> expectationsList = requestMatchers.retrieveActiveExpectations(null);
+            assertThat(expectationsList.size(), equalTo(4));
+            assertThat(expectationsList, containsInAnyOrder(
                 new Expectation(
                     request()
                         .withPath("/pathOneFirst")
