@@ -222,7 +222,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - added basic support to proxy binary requests that are not HTTP
 - dynamic maximum log events and maximum expectations based on available memory
-- added ability to switch between BouncyCastle and vanillar JDK for key and certificate generation
+- added ability to switch between BouncyCastle and vanilla JDK for key and certificate generation
 - added support for TLS over SOCKS4 or SOCKS5
 - request matching and expectations using OpenAPI or Swagger specification
 - create expectation using OpenAPI or Swagger specification with automatic example responses
