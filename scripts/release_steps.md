@@ -71,7 +71,7 @@
    4. open /Users/jamesbloom/git/mockserver/javadoc && open https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq/versions/?region=us-east-1
    5. upload as public to S3 https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq/versions/?region=us-east-1
    6. git checkout master
-10. update swaggehub
+10. update swaggerhub
     1. update mockserver-core/src/main/resources/org/mockserver/openapi/mock-server-openapi-embedded-model.yaml
     2. login to https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi
     3. create new version
