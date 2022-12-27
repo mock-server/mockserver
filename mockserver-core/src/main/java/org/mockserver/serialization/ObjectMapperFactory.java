@@ -248,7 +248,7 @@ public class ObjectMapperFactory {
             new HeadersSerializer(),
             new ParametersSerializer(),
             new CookiesSerializer(),
-            // certifcates
+            // certificates
             new X509CertificateSerializer(),
             new CertificateSerializer(),
             // log

@@ -1,1 +1,1 @@
-see [generate_custom_certifcates](src/test/resources/org/mockserver/netty/integration/tls/generate_custom_certificates.md) for instructions on how to generate these certificates
+see [generate_custom_certificates](src/test/resources/org/mockserver/netty/integration/tls/generate_custom_certificates.md) for instructions on how to generate these certificates
