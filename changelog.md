@@ -310,7 +310,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - added support to control trusted certificate authorities (trust store) for proxied & forwarded requests
 - added support for two-way TLS (mTLS), also called client authentication
 - now sends TLS X509 certificate from proxy (i.e. support forward client authentication / mTLS)
-- added ability to dynamically create local unique Certificate Authority (CA) X.509 and Private Key to improve securiy of clients trusting the CA
+- added ability to dynamically create local unique Certificate Authority (CA) X.509 and Private Key to improve security of clients trusting the CA
 
 ### Changed
 - performance improvements for header and cookie handling
