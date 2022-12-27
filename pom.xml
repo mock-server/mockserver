@@ -722,7 +722,7 @@
                 <version>1.0.0</version>
                 <executions>
                     <execution>
-                        <id>generate-verion-class</id>
+                        <id>generate-version-class</id>
                         <goals>
                             <goal>filter-sources</goal>
                         </goals>

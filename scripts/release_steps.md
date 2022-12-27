@@ -11,7 +11,7 @@
     5. update README
     6. rm -rf jekyll-www.mock-server.com/_site
     7. ./mvnw clean
-    8. find and replace maven / npm version references include 5.14.x, 5.14.0 and 5.14.1-SNAPSHOT (to new SNAPSHOT verion)
+    8. find and replace maven / npm version references include 5.14.x, 5.14.0 and 5.14.1-SNAPSHOT (to new SNAPSHOT version)
     9. find and replace swagger version references (i.e. in website code example documentation) - 5.14.x mentioned in item above
     10. find and replace SNAPSHOT version references - 5.14.1-SNAPSHOT mentioned in item above
     11. git add -A && git commit -m "updates after a release" && git push origin master
