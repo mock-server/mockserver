@@ -209,13 +209,13 @@ public class NettyHttpProxyIntegrationTest extends AbstractProxyIntegrationTest 
             // given
             ConfigurationProperties.proxyAuthenticationUsername("");
             ConfigurationProperties.proxyAuthenticationPassword("");
-            AtomicInteger proaxyAuthenticatorCounter = new AtomicInteger(0);
+            AtomicInteger proxyAuthenticatorCounter = new AtomicInteger(0);
 
             // when
             Authenticator.setDefault(new Authenticator() {
                 @Override
                 protected PasswordAuthentication getPasswordAuthentication() {
-                    proaxyAuthenticatorCounter.incrementAndGet();
+                    proxyAuthenticatorCounter.incrementAndGet();
                     if (getRequestorType() == RequestorType.PROXY) {
                         return new PasswordAuthentication(UUIDService.getUUID(), UUIDService.getUUID().toCharArray());
                     }
@@ -227,7 +227,7 @@ public class NettyHttpProxyIntegrationTest extends AbstractProxyIntegrationTest 
 
             // then
             assertThat(con.getResponseCode(), equalTo(200));
-            assertThat(proaxyAuthenticatorCounter.get(), equalTo(0));
+            assertThat(proxyAuthenticatorCounter.get(), equalTo(0));
         } finally {
             ConfigurationProperties.proxyAuthenticationUsername(existingUsername);
             ConfigurationProperties.proxyAuthenticationPassword(existingPassword);
@@ -244,14 +244,14 @@ public class NettyHttpProxyIntegrationTest extends AbstractProxyIntegrationTest 
             String password = UUIDService.getUUID();
             ConfigurationProperties.proxyAuthenticationUsername(username);
             ConfigurationProperties.proxyAuthenticationPassword(password);
-            AtomicInteger proaxyAuthenticatorCounter = new AtomicInteger(0);
+            AtomicInteger proxyAuthenticatorCounter = new AtomicInteger(0);
 
             // when
             Authenticator.setDefault(new Authenticator() {
                 @Override
                 protected PasswordAuthentication getPasswordAuthentication() {
                     if (getRequestorType() == RequestorType.PROXY) {
-                        proaxyAuthenticatorCounter.incrementAndGet();
+                        proxyAuthenticatorCounter.incrementAndGet();
                         return new PasswordAuthentication(username, password.toCharArray());
                     }
                     return null;
@@ -262,7 +262,7 @@ public class NettyHttpProxyIntegrationTest extends AbstractProxyIntegrationTest 
 
             // then
             assertThat(con.getResponseCode(), equalTo(200));
-            assertThat(proaxyAuthenticatorCounter.get(), equalTo(1));
+            assertThat(proxyAuthenticatorCounter.get(), equalTo(1));
         } finally {
             ConfigurationProperties.proxyAuthenticationUsername(existingUsername);
             ConfigurationProperties.proxyAuthenticationPassword(existingPassword);
