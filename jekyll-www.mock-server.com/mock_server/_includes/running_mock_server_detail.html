@@ -315,13 +315,13 @@ class ExampleTestClass {
     }
 
 }</code></pre></div>
-<button id="button_test_extension_lifecyle_method_client_injection" class="accordion">inject MockServerClient inject to @BeforeEach</button>
+<button id="button_test_extension_lifecycle_method_client_injection" class="accordion">inject MockServerClient inject to @BeforeEach</button>
 <div class="panel"><pre class="prettyprint lang-java code"><code class="code">@ExtendWith(MockServerExtension.class)
 class ExampleTestClass {
     private MockServerClient client;
 
     @BeforeEach
-    public void beforeEachLifecyleMethod(MockServerClient client) {
+    public void beforeEachLifecycleMethod(MockServerClient client) {
         this.client = client;
     }
 

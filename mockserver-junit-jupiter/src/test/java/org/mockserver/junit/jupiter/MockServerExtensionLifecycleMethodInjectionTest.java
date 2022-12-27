@@ -19,7 +19,7 @@ class MockServerExtensionLifecycleMethodInjectionTest {
     private MockServerClient client;
 
     @BeforeEach
-    public void beforeEachLifecyleMethod(MockServerClient client) {
+    public void beforeEachLifecycleMethod(MockServerClient client) {
         this.client = client;
     }
 
