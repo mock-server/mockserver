@@ -590,4 +590,11 @@ public class HttpActionHandler {
             return null;
         }
     }
+
+
+    public static void setRemoteAddress(final ChannelHandlerContext ctx, final InetSocketAddress inetSocketAddress) {
+        if (ctx != null && ctx.channel() != null) {
+            ctx.channel().attr(REMOTE_SOCKET).set(inetSocketAddress);
+        }
+    }
 }

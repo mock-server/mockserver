@@ -7,10 +7,12 @@ import io.netty.handler.codec.ReplayingDecoder;
 import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
+import io.netty.handler.codec.http2.*;
 import io.netty.handler.codec.socksx.v4.Socks4ServerDecoder;
 import io.netty.handler.codec.socksx.v4.Socks4ServerEncoder;
 import io.netty.handler.codec.socksx.v5.Socks5InitialRequestDecoder;
 import io.netty.handler.codec.socksx.v5.Socks5ServerEncoder;
+import io.netty.handler.logging.LogLevel;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
 import org.apache.commons.lang3.StringUtils;
@@ -47,11 +49,12 @@ import static java.util.Collections.unmodifiableSet;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.exception.ExceptionHandling.*;
 import static org.mockserver.logging.MockServerLogger.isEnabled;
-import static org.mockserver.mock.action.http.HttpActionHandler.REMOTE_SOCKET;
+import static org.mockserver.mock.action.http.HttpActionHandler.setRemoteAddress;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.netty.HttpRequestHandler.LOCAL_HOST_HEADERS;
-import static org.mockserver.netty.HttpRequestHandler.PROXYING;
+import static org.mockserver.netty.HttpRequestHandler.setProxyingRequest;
 import static org.mockserver.netty.proxy.relay.RelayConnectHandler.*;
+import static org.mockserver.socket.tls.SniHandler.isHTTP2Enabled;
 import static org.slf4j.event.Level.TRACE;
 import static org.slf4j.event.Level.WARN;
 
@@ -64,6 +67,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
     private static final AttributeKey<Boolean> TLS_ENABLED_DOWNSTREAM = AttributeKey.valueOf("TLS_ENABLED_DOWNSTREAM");
     private static final AttributeKey<NettySslContextFactory> NETTY_SSL_CONTEXT_FACTORY = AttributeKey.valueOf("NETTY_SSL_CONTEXT_FACTORY");
     private static final AttributeKey<Boolean> HTTP_ENABLED = AttributeKey.valueOf("HTTP_ENABLED");
+    private static final AttributeKey<Boolean> HTTP2_ENABLED = AttributeKey.valueOf("HTTP2_ENABLED");
     private static final Map<PortBinding, Set<String>> localAddressesCache = new ConcurrentHashMap<>();
 
     protected final MockServerLogger mockServerLogger;
@@ -136,6 +140,18 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         }
     }
 
+    public static void http2Enabled(Channel channel) {
+        channel.attr(HTTP2_ENABLED).set(Boolean.TRUE);
+    }
+
+    public static boolean isHttp2Enabled(Channel channel) {
+        if (channel.attr(HTTP2_ENABLED).get() != null) {
+            return channel.attr(HTTP2_ENABLED).get();
+        } else {
+            return false;
+        }
+    }
+
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) {
         ctx.channel().attr(NETTY_SSL_CONTEXT_FACTORY).set(nettySslContextFactory);
@@ -148,6 +164,9 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         } else if (isTls(msg)) {
             logStage(ctx, "adding TLS decoders");
             enableTls(ctx, msg);
+        } else if (isHTTP2Enabled(mockServerLogger, ctx)) {
+            logStage(ctx, "adding HTTP2 decoders");
+            switchToHttp2(ctx, msg);
         } else if (isHttp(msg)) {
             logStage(ctx, "adding HTTP decoders");
             switchToHttp(ctx, msg);
@@ -197,7 +216,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         }
         pipeline.addFirst(socksInitialRequestDecoder);
 
-        ctx.channel().attr(PROXYING).set(Boolean.TRUE);
+        setProxyingRequest(ctx, Boolean.TRUE);
 
         // re-unify (with SOCKS5 enabled)
         ctx.pipeline().fireChannelRead(msg.readBytes(actualReadableBytes()));
@@ -227,6 +246,42 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
             method.startsWith("DELETE ") ||
             method.startsWith("TRACE ") ||
             method.startsWith("CONNECT ");
+    }
+
+    private void switchToHttp2(ChannelHandlerContext ctx, ByteBuf msg) {
+        if (!isHttp2Enabled(ctx.channel())) {
+            http2Enabled(ctx.channel());
+
+            ChannelPipeline pipeline = ctx.pipeline();
+
+            final Http2Connection connection = new DefaultHttp2Connection(true);
+            HttpToHttp2ConnectionHandlerBuilder http2ConnectionHandlerBuilder = new HttpToHttp2ConnectionHandlerBuilder()
+                .frameListener(
+                    new DelegatingDecompressorFrameListener(
+                        connection,
+                        new InboundHttp2ToHttpAdapterBuilder(connection)
+                            .maxContentLength(Integer.MAX_VALUE)
+                            .propagateSettings(true)
+                            .validateHttpHeaders(false)
+                            .build()
+                    )
+                );
+            if (isEnabled(TRACE)) {
+                http2ConnectionHandlerBuilder.frameLogger(new Http2FrameLogger(LogLevel.TRACE, PortUnificationHandler.class.getName()));
+            }
+            addLastIfNotPresent(pipeline, http2ConnectionHandlerBuilder.connection(connection).build());
+            // TODO(jamesdbloom) consider Http2MultiplexHandler and test behaviour when multiple requests sent over the same connection
+            addLastIfNotPresent(pipeline, new CallbackWebSocketServerHandler(httpState));
+            addLastIfNotPresent(pipeline, new DashboardWebSocketHandler(httpState, isSslEnabledUpstream(ctx.channel()), false));
+            addLastIfNotPresent(pipeline, new MockServerHttpServerCodec(configuration, mockServerLogger, isSslEnabledUpstream(ctx.channel()), ctx.channel().localAddress(), SniHandler.retrieveClientCertificates(mockServerLogger, ctx)));
+            addLastIfNotPresent(pipeline, new HttpRequestHandler(configuration, server, httpState, actionHandler));
+            pipeline.remove(this);
+
+            ctx.channel().attr(LOCAL_HOST_HEADERS).set(getLocalAddresses(ctx));
+
+            // fire message back through pipeline
+            ctx.fireChannelRead(msg.readBytes(actualReadableBytes()));
+        }
     }
 
     private void switchToHttp(ChannelHandlerContext ctx, ByteBuf msg) {
@@ -291,13 +346,13 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
             String[] hostParts = StringUtils.substringAfter(message, PROXIED_SECURE).split(":");
             int port = hostParts.length > 1 ? Integer.parseInt(hostParts[1]) : 443;
             enableSslUpstreamAndDownstream(ctx.channel());
-            ctx.channel().attr(PROXYING).set(Boolean.TRUE);
-            ctx.channel().attr(REMOTE_SOCKET).set(new InetSocketAddress(hostParts[0], port));
+            setProxyingRequest(ctx, Boolean.TRUE);
+            setRemoteAddress(ctx, new InetSocketAddress(hostParts[0], port));
         } else if (message.startsWith(PROXIED)) {
             String[] hostParts = StringUtils.substringAfter(message, PROXIED).split(":");
             int port = hostParts.length > 1 ? Integer.parseInt(hostParts[1]) : 80;
-            ctx.channel().attr(PROXYING).set(Boolean.TRUE);
-            ctx.channel().attr(REMOTE_SOCKET).set(new InetSocketAddress(hostParts[0], port));
+            setProxyingRequest(ctx, Boolean.TRUE);
+            setRemoteAddress(ctx, new InetSocketAddress(hostParts[0], port));
         }
         ctx.writeAndFlush(Unpooled.copiedBuffer((PROXIED_RESPONSE + message).getBytes(StandardCharsets.UTF_8))).awaitUninterruptibly();
     }
@@ -310,6 +365,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
 
     private void switchToBinaryRequestProxying(ChannelHandlerContext ctx, ByteBuf msg) {
         addLastIfNotPresent(ctx.pipeline(), new BinaryRequestProxyingHandler(configuration, httpState.getMockServerLogger(), httpState.getScheduler(), actionHandler.getHttpClient()));
+
         // fire message back through pipeline
         ctx.fireChannelRead(msg.readBytes(actualReadableBytes()));
     }

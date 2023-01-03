@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.mock-server</groupId>
         <artifactId>mockserver</artifactId>
@@ -49,6 +50,10 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-codec-http</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec-http2</artifactId>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
@@ -220,19 +225,24 @@
                         </goals>
                         <configuration>
                             <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <transformer
+                                    implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>org.mockserver.cli.Main</mainClass>
                                 </transformer>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer" />
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                <transformer
+                                    implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer"/>
+                                <transformer
+                                    implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer
+                                    implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>META-INF/LICENSE</resource>
                                 </transformer>
                             </transformers>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>shaded</shadedClassifierName>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
-                            <dependencyReducedPomLocation>${basedir}/dependency-reduced-pom.xml</dependencyReducedPomLocation>
+                            <dependencyReducedPomLocation>${basedir}/dependency-reduced-pom.xml
+                            </dependencyReducedPomLocation>
                             <keepDependenciesWithProvidedScope>false</keepDependenciesWithProvidedScope>
                             <minimizeJar>false</minimizeJar>
                             <relocations>
@@ -571,15 +581,21 @@
                                 <configuration>
                                     <repositoryId>ossrh</repositoryId>
                                     <url>${deploy.plugin.respository.url}</url>
-                                    <file>${project.build.directory}/${project.artifactId}-${project.version}-shaded.jar</file>
+                                    <file>
+                                        ${project.build.directory}/${project.artifactId}-${project.version}-shaded.jar
+                                    </file>
                                     <generatePom>false</generatePom>
                                     <pomFile>${project.build.directory}/dependency-reduced-pom.xml</pomFile>
                                     <artifactId>${project.artifactId}-no-dependencies</artifactId>
                                     <groupId>${project.groupId}</groupId>
                                     <version>${project.version}</version>
                                     <packaging>${project.packaging}</packaging>
-                                    <sources>${project.build.directory}/${project.artifactId}-${project.version}-sources.jar</sources>
-                                    <javadoc>${project.build.directory}/${project.artifactId}-${project.version}-javadoc.jar</javadoc>
+                                    <sources>
+                                        ${project.build.directory}/${project.artifactId}-${project.version}-sources.jar
+                                    </sources>
+                                    <javadoc>
+                                        ${project.build.directory}/${project.artifactId}-${project.version}-javadoc.jar
+                                    </javadoc>
                                 </configuration>
                             </execution>
                         </executions>

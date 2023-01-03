@@ -48,6 +48,9 @@ public class HttpRequestDTOSerializer extends StdSerializer<HttpRequestDTO> {
         if (httpRequest.getSecure() != null) {
             jgen.writeBooleanField("secure", httpRequest.getSecure());
         }
+        if (httpRequest.getProtocol() != null) {
+            jgen.writeStringField("protocol", httpRequest.getProtocol().name());
+        }
         if (httpRequest.getClientCertificateChain() != null && !httpRequest.getClientCertificateChain().isEmpty()) {
             jgen.writeObjectField("clientCertificateChain", httpRequest.getClientCertificateChain());
         }

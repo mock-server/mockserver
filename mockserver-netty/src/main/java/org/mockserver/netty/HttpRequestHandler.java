@@ -79,10 +79,16 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
     }
 
     private static boolean isProxyingRequest(ChannelHandlerContext ctx) {
-        if (ctx != null && ctx.channel().attr(PROXYING).get() != null) {
+        if (ctx != null && ctx.channel() != null && ctx.channel().attr(PROXYING).get() != null) {
             return ctx.channel().attr(PROXYING).get();
         }
         return false;
+    }
+
+    public static void setProxyingRequest(ChannelHandlerContext ctx, Boolean value) {
+        if (ctx != null && ctx.channel() != null) {
+            ctx.channel().attr(PROXYING).set(value);
+        }
     }
 
     private static Set<String> getLocalAddresses(ChannelHandlerContext ctx) {
@@ -163,7 +169,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
                                 .setArguments(response, request)
                         );
                     } else {
-                        ctx.channel().attr(PROXYING).set(Boolean.TRUE);
+                        setProxyingRequest(ctx, Boolean.TRUE);
                         // assume SSL for CONNECT request
                         enableSslUpstreamAndDownstream(ctx.channel());
                         // add Subject Alternative Name for SSL certificate

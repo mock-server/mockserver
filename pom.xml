@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.mock-server</groupId>
@@ -68,9 +69,10 @@
         <xmlunit.version>2.9.0</xmlunit.version>
         <skipTests>false</skipTests>
         <skipAssembly>false</skipAssembly>
-        <deploy.plugin.respository.url>https://oss.sonatype.org/content/repositories/snapshots/</deploy.plugin.respository.url>
-        <release.arguments />
-        <javadoc.additional.parameters />
+        <deploy.plugin.respository.url>https://oss.sonatype.org/content/repositories/snapshots/
+        </deploy.plugin.respository.url>
+        <release.arguments/>
+        <javadoc.additional.parameters/>
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
     </properties>
 
@@ -196,6 +198,11 @@
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-codec-http</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec-http2</artifactId>
                 <version>${netty.version}</version>
             </dependency>
             <dependency>
@@ -639,7 +646,8 @@
                                 </goals>
                                 <phase>site</phase>
                                 <configuration>
-                                    <reportOutputDirectory>${basedir}/jekyll-www.mock-server.com/_site</reportOutputDirectory>
+                                    <reportOutputDirectory>${basedir}/jekyll-www.mock-server.com/_site
+                                    </reportOutputDirectory>
                                     <destDir>apidocs</destDir>
                                 </configuration>
                             </execution>
@@ -877,7 +885,7 @@
                 <version>3.1.0</version>
                 <configuration>
                     <rules>
-                        <dependencyConvergence />
+                        <dependencyConvergence/>
                     </rules>
                 </configuration>
                 <executions>

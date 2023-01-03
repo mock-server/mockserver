@@ -24,7 +24,6 @@ import java.nio.charset.StandardCharsets;
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
 import static org.mockserver.mock.action.http.HttpActionHandler.getRemoteAddress;
 import static org.mockserver.netty.unification.PortUnificationHandler.*;
-import static org.slf4j.event.Level.DEBUG;
 
 @ChannelHandler.Sharable
 public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler<T> {
@@ -74,8 +73,10 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                                     // downstream (to MockServer)
                                     ChannelPipeline pipelineToMockServer = mockServerCtx.channel().pipeline();
 
+                                    // TODO(jamesdbloom) test proxying with HTTP2
                                     if (isSslEnabledDownstream(proxyClientCtx.channel())) {
-                                        pipelineToMockServer.addLast(nettySslContextFactory(proxyClientCtx.channel()).createClientSslContext(true).newHandler(mockServerCtx.alloc(), host, port));
+                                        pipelineToMockServer.addLast(nettySslContextFactory(proxyClientCtx.channel()).createClientSslContext(true, false).newHandler(mockServerCtx.alloc(), host, port));
+//                                        pipelineToMockServer.addLast(nettySslContextFactory(proxyClientCtx.channel()).createClientSslContext(true, isHTTP2Enabled(mockServerLogger, mockServerCtx)).newHandler(mockServerCtx.alloc(), host, port));
                                     }
 
                                     if (MockServerLogger.isEnabled(Level.TRACE)) {
@@ -83,9 +84,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                                     }
 
                                     pipelineToMockServer.addLast(new HttpClientCodec(configuration.maxInitialLineLength(), configuration.maxHeaderSize(), configuration.maxChunkSize()));
-
                                     pipelineToMockServer.addLast(new HttpContentDecompressor());
-
                                     pipelineToMockServer.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
 
                                     pipelineToMockServer.addLast(new DownstreamProxyRelayHandler(mockServerLogger, proxyClientCtx.channel()));
@@ -101,11 +100,28 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                                         pipelineToProxyClient.addLast(new LoggingHandler(RelayConnectHandler.class.getName() + "-upstream <-- "));
                                     }
 
+//                                    if (isHTTP2Enabled(mockServerLogger, proxyClientCtx)) {
+//                                        final Http2Connection connection = new DefaultHttp2Connection(true);
+//                                        HttpToHttp2ConnectionHandlerBuilder http2ConnectionHandlerBuilder = new HttpToHttp2ConnectionHandlerBuilder()
+//                                            .frameListener(
+//                                                new DelegatingDecompressorFrameListener(
+//                                                    connection,
+//                                                    new InboundHttp2ToHttpAdapterBuilder(connection)
+//                                                        .maxContentLength(Integer.MAX_VALUE)
+//                                                        .propagateSettings(true)
+//                                                        .validateHttpHeaders(false)
+//                                                        .build()
+//                                                )
+//                                            );
+//                                        if (isEnabled(TRACE)) {
+//                                            http2ConnectionHandlerBuilder.frameLogger(new Http2FrameLogger(LogLevel.TRACE, PortUnificationHandler.class.getName()));
+//                                        }
+//                                        pipelineToProxyClient.addLast(http2ConnectionHandlerBuilder.connection(connection).build());
+//                                    } else {
                                     pipelineToProxyClient.addLast(new HttpServerCodec(configuration.maxInitialLineLength(), configuration.maxHeaderSize(), configuration.maxChunkSize()));
-
                                     pipelineToProxyClient.addLast(new HttpContentDecompressor());
-
                                     pipelineToProxyClient.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
+//                                    }
 
                                     pipelineToProxyClient.addLast(new UpstreamProxyRelayHandler(mockServerLogger, proxyClientCtx.channel(), mockServerCtx.channel()));
                                 });

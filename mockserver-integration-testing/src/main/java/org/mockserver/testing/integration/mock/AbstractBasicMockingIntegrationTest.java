@@ -89,7 +89,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
-    public void shouldReturnResponseInHttpAndHttps() {
+    public void shouldReturnResponseInHTTP() {
         // when
         mockServerClient
             .when(
@@ -117,6 +117,24 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 getHeadersToRemove()
             )
         );
+    }
+
+    @Test
+    public void shouldReturnResponseInHTTPS() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_path"))
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+                    .withBody("some_body_response")
+            );
+
+        // then
         // - in https
         assertEquals(
             response()
@@ -126,6 +144,39 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withSecure(true)
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST"),
+                getHeadersToRemove()
+            )
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseInHTTP2UsingALPN() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_path"))
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+                    .withBody("some_body_response")
+            );
+
+        // then
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_response"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withProtocol(Protocol.HTTP2)
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST"),
                 getHeadersToRemove()

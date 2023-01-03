@@ -5,6 +5,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http2.HttpConversionUtil;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -62,7 +63,10 @@ public abstract class AbstractMockingIntegrationTestBase {
         HttpHeaderNames.ACCESS_CONTROL_MAX_AGE.toString(),
         HttpHeaderNames.KEEP_ALIVE.toString(),
         "version",
-        "x-cors"
+        "x-cors",
+        // HTTP2 headers
+        HttpConversionUtil.ExtensionHeaderNames.STREAM_WEIGHT.text().toString(),
+        HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text().toString()
     );
 
     protected static EchoServer insecureEchoServer;
