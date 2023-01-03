@@ -48,6 +48,9 @@ public class HttpRequestSerializer extends StdSerializer<HttpRequest> {
         if (httpRequest.isSecure() != null) {
             jgen.writeBooleanField("secure", httpRequest.isSecure());
         }
+        if (httpRequest.getProtocol() != null) {
+            jgen.writeStringField("protocol", httpRequest.getProtocol().name());
+        }
         if (httpRequest.getClientCertificateChain() != null && !httpRequest.getClientCertificateChain().isEmpty()) {
             jgen.writeObjectField("clientCertificateChain", httpRequest.getClientCertificateChain());
         }

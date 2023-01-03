@@ -11,6 +11,7 @@ import org.mockserver.integration.ClientAndServer;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.BinaryMessage;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.scheduler.Scheduler;
 
 import javax.net.ssl.SSLServerSocket;
@@ -74,7 +75,8 @@ public class BinaryProxyIntegrationTest {
                         bytes(randomRequestBytes),
                         false,
                         new InetSocketAddress(proxyClientAndServer.getLocalPort()),
-                        (int) SECONDS.toMillis(10)
+                        SECONDS.toMillis(10),
+                        false
                     );
 
                 // then
@@ -132,7 +134,8 @@ public class BinaryProxyIntegrationTest {
                         bytes(randomRequestBytes),
                         true,
                         new InetSocketAddress(proxyClientAndServer.getPort()),
-                        (int) SECONDS.toMillis(10)
+                        SECONDS.toMillis(10),
+                        false
                     );
 
                 // then
@@ -176,7 +179,8 @@ public class BinaryProxyIntegrationTest {
                 bytes(randomRequestBytes),
                 true,
                 new InetSocketAddress(clientAndServer.getPort()),
-                (int) SECONDS.toMillis(10)
+                SECONDS.toMillis(10),
+                false
             )
             .get(10, SECONDS);
 

@@ -18,6 +18,7 @@ import static org.mockserver.exception.ExceptionHandling.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
 import static org.mockserver.netty.unification.PortUnificationHandler.isSslEnabledDownstream;
 import static org.mockserver.netty.unification.PortUnificationHandler.nettySslContextFactory;
+import static org.mockserver.socket.tls.SniHandler.isHTTP2Enabled;
 
 public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
@@ -41,7 +42,7 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, final FullHttpRequest request) {
         if (isSslEnabledDownstream(upstreamChannel) && downstreamChannel.pipeline().get(SslHandler.class) == null) {
-            downstreamChannel.pipeline().addFirst(nettySslContextFactory(ctx.channel()).createClientSslContext(true).newHandler(ctx.alloc()));
+            downstreamChannel.pipeline().addFirst(nettySslContextFactory(ctx.channel()).createClientSslContext(true, isHTTP2Enabled(mockServerLogger, ctx)).newHandler(ctx.alloc()));
         }
         downstreamChannel.writeAndFlush(request).addListener((ChannelFutureListener) future -> {
             if (future.isSuccess()) {

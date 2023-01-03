@@ -30,15 +30,14 @@ service:
     image: radial/busyboxplus:curl
 
 ingress:
-  ingressClass:
-    enabled: false
-    name: ""
   enabled: false
+  className: ""
   annotations: {}
-  path: /
-  pathType: Prefix
   hosts:
-    - mockserver.local
+    - host: mockserver.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
   tls: []
 
 podAnnotations: {}

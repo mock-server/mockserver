@@ -78,6 +78,9 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR = "mockserver.useSemicolonAsQueryParameterSeparator";
     private static final String MOCKSERVER_ASSUME_ALL_REQUESTS_ARE_HTTP = "mockserver.assumeAllRequestsAreHttp";
 
+    // non http proxying
+    private static final String MOCKSERVER_FORWARD_BINARY_REQUESTS_ASYNCHRONOUSLY = "mockserver.forwardBinaryRequestsAsynchronously";
+
     // CORS
     private static final String MOCKSERVER_ENABLE_CORS_FOR_API = "mockserver.enableCORSForAPI";
     private static final String MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES = "mockserver.enableCORSForAllResponses";
@@ -672,6 +675,22 @@ public class ConfigurationProperties {
 
     public static boolean assumeAllRequestsAreHttp() {
         return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_ASSUME_ALL_REQUESTS_ARE_HTTP, "MOCKSERVER_ASSUME_ALL_REQUESTS_ARE_HTTP", "false"));
+    }
+
+    /**
+     * If true the BinaryRequestProxyingHandler.binaryExchangeCallback is called before a response is received from the
+     * remote host. This enables the proxying of messages without a response.
+     * <p>
+     * The default is false
+     *
+     * @param forwardBinaryRequestsAsynchronously target value
+     */
+    public static void forwardBinaryRequestsAsynchronously(boolean forwardBinaryRequestsAsynchronously) {
+        setProperty(MOCKSERVER_FORWARD_BINARY_REQUESTS_ASYNCHRONOUSLY, "" + forwardBinaryRequestsAsynchronously);
+    }
+
+    public static boolean forwardBinaryRequestsAsynchronously() {
+        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_FORWARD_BINARY_REQUESTS_ASYNCHRONOUSLY, "MOCKSERVER_FORWARD_BINARY_REQUESTS_ASYNCHRONOUSLY", "false"));
     }
 
     // CORS

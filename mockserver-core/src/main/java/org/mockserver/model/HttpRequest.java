@@ -34,6 +34,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     private Cookies cookies;
     private Boolean keepAlive = null;
     private Boolean secure = null;
+    private Protocol protocol = null;
     private List<X509Certificate> clientCertificateChain;
     private SocketAddress socketAddress;
     private String localAddress;
@@ -84,6 +85,21 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
                 secure = true;
             }
         }
+        this.hashCode = 0;
+        return this;
+    }
+
+    public Protocol getProtocol() {
+        return protocol;
+    }
+
+    /**
+     * Match on whether the request was made over HTTP or HTTP2
+     *
+     * @param protocol used to indicate HTTP or HTTP2
+     */
+    public HttpRequest withProtocol(Protocol protocol) {
+        this.protocol = protocol;
         this.hashCode = 0;
         return this;
     }
@@ -1141,6 +1157,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
             .withCookies(cookies != null ? cookies.clone() : null)
             .withKeepAlive(keepAlive)
             .withSecure(secure)
+            .withProtocol(protocol)
             .withClientCertificateChain(clientCertificateChain != null && !clientCertificateChain.isEmpty() ? clientCertificateChain.stream().map(X509Certificate::clone).collect(Collectors.toList()) : null)
             .withSocketAddress(socketAddress)
             .withLocalAddress(localAddress)
@@ -1172,6 +1189,9 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
             }
             if (requestOverride.isSecure() != null) {
                 withSecure(requestOverride.isSecure());
+            }
+            if (requestOverride.getProtocol() != null) {
+                withProtocol(requestOverride.getProtocol());
             }
             if (requestOverride.isKeepAlive() != null) {
                 withKeepAlive(requestOverride.isKeepAlive());
@@ -1222,6 +1242,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
             Objects.equals(cookies, that.cookies) &&
             Objects.equals(keepAlive, that.keepAlive) &&
             Objects.equals(secure, that.secure) &&
+            Objects.equals(protocol, that.protocol) &&
             Objects.equals(clientCertificateChain, that.clientCertificateChain) &&
             Objects.equals(socketAddress, that.socketAddress) &&
             Objects.equals(localAddress, that.localAddress) &&
@@ -1233,7 +1254,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
         // need to call isSecure because getter can change the hashcode
         isSecure();
         if (hashCode == 0) {
-            hashCode = Objects.hash(super.hashCode(), method, path, pathParameters, queryStringParameters, body, headers, cookies, keepAlive, secure, clientCertificateChain, socketAddress, localAddress, remoteAddress);
+            hashCode = Objects.hash(super.hashCode(), method, path, pathParameters, queryStringParameters, body, headers, cookies, keepAlive, secure, protocol, clientCertificateChain, socketAddress, localAddress, remoteAddress);
         }
         return hashCode;
     }

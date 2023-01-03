@@ -78,7 +78,7 @@ public class ServletResponseWriterTest {
     public void shouldWriteContentTypeForJsonBody() {
         // given
         HttpRequest request = request("some_request");
-        HttpResponse response = response().withBody(json("some_response"));
+        HttpResponse response = response().withBody(json("\"some_response\""));
 
         // when
         servletResponseWriter.writeResponse(request, response, false);
@@ -87,7 +87,7 @@ public class ServletResponseWriterTest {
         verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(
             response()
                 .withHeader("connection", "close")
-                .withBody(json("some_response")),
+                .withBody(json("\"some_response\"")),
             httpServletResponse
         );
     }

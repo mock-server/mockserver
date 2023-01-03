@@ -18,6 +18,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.junit.*;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.BinaryMessage;
@@ -213,16 +214,17 @@ public class NettyUnidirectionalBinaryForwardingIntegrationTest {
         VerifyInteractionsConsumer interactionsVerificationCallback
     ) throws Exception {
         try (FlexibleServer listenerServer = new FlexibleServer()) {
-            mockServer = new MockServer(listenerServer.getLocalPort(), "127.0.0.1", 50505);
-            BinaryRequestProxyingHandler.binaryRequestMapper = req -> {
-                final ArrayList<BinaryMessage> binaryMessages = new ArrayList<>();
-                for (String part : new String(req.getBytes()).split("\n")) {
-                    binaryMessages.add(new BinaryMessage()
-                        .withBytes((part + "\n").getBytes())
-                        .withTimestamp(req.getTimestamp()));
-                }
-                return binaryMessages;
-            };
+            mockServer = new MockServer(Configuration.configuration().forwardBinaryRequestsAsynchronously(true),
+                listenerServer.getLocalPort(), "127.0.0.1", 50505);
+            //BinaryRequestProxyingHandler.binaryRequestMapper = req -> {
+            //    final ArrayList<BinaryMessage> binaryMessages = new ArrayList<>();
+            //    for (String part : new String(req.getBytes()).split("\n")) {
+            //        binaryMessages.add(new BinaryMessage()
+            //            .withBytes((part + "\n").getBytes())
+            //            .withTimestamp(req.getTimestamp()));
+            //    }
+            //    return binaryMessages;
+            //};
 
             AtomicInteger handlerCalledRequest = new AtomicInteger(0);
             AtomicInteger handlerCalledResponse = new AtomicInteger(0);

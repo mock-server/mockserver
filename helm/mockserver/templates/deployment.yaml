@@ -28,7 +28,7 @@ spec:
       serviceAccountName: {{ .Values.app.serviceAccountName }}
       containers:
         - name: {{ template "release.name" . }}
-          image: {{ if .Values.image.repositoryNameAndTag }}{{ .Values.image.repositoryNameAndTag }}{{- else }}{{ .Values.image.repository }}/mockserver:mockserver-{{- if .Values.image.snapshot }}snapshot{{- else }}{{ .Chart.Version }}{{- end }}{{- end }}
+          image: {{ if .Values.image.repositoryNameAndTag }}{{ .Values.image.repositoryNameAndTag }}{{- else }}{{ .Values.image.repository }}/mockserver:mockserver-{{- if .Values.image.snapshot }}snapshot{{- else }}{{ .Chart.AppVersion }}{{- end }}{{- end }}
 {{- if .Values.image.snapshot }}
           imagePullPolicy: Always
 {{- else }}
@@ -80,8 +80,10 @@ spec:
           volumeMounts:
             - name: config-volume
               mountPath: /config
+{{- if .Values.app.mountedLibsConfigMapName}}
             - name: libs-volume
               mountPath: /libs
+{{- end}}
 {{- if .Values.resources }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
@@ -91,10 +93,12 @@ spec:
           configMap:
             name: {{ .Values.app.mountedConfigMapName }}
             optional: true
+{{- if .Values.app.mountedLibsConfigMapName}}
         - name: libs-volume
           configMap:
             name: {{ .Values.app.mountedLibsConfigMapName }}
             optional: true
+{{- end}}
 {{- with .Values.nodeSelector }}
       nodeSelector:
 {{ toYaml . | indent 8 }}

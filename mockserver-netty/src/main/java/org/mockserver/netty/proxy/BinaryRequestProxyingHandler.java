@@ -18,11 +18,8 @@ import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mockserver.exception.ExceptionHandling.closeOnFlush;
@@ -41,11 +38,6 @@ import static org.mockserver.netty.unification.PortUnificationHandler.isSslEnabl
 public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
     public static Consumer<BinaryExchangeDescriptor> binaryExchangeCallback = data -> {
-    };
-    public static Function<BinaryMessage, List<BinaryMessage>> binaryRequestMapper = request -> {
-        final ArrayList<BinaryMessage> binaryMessages = new ArrayList<>();
-        binaryMessages.add(request);
-        return binaryMessages;
     };
 
     private final Configuration configuration;
@@ -75,9 +67,8 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
                 .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()))
         );
         final InetSocketAddress remoteAddress = getRemoteAddress(ctx);
-        if (remoteAddress != null) {
-            binaryRequestMapper.apply(binaryRequest).stream()
-                    .forEach(mappedRequest -> sendMessage(ctx, mappedRequest, logCorrelationId, remoteAddress));
+        if (remoteAddress != null) { // binary protocol is only supported for proxies request and not mocking
+            sendMessage(ctx, binaryRequest, logCorrelationId, remoteAddress);
         } else {
             if (MockServerLogger.isEnabled(Level.INFO)) {
                 mockServerLogger.logEvent(
@@ -101,9 +92,14 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
         InetSocketAddress remoteAddress) {
         CompletableFuture<BinaryMessage> binaryResponseFuture = httpClient.sendRequest(binaryRequest,
             isSslEnabledUpstream(ctx.channel()), remoteAddress,
-            configuration.socketConnectionTimeoutInMillis().intValue());
-        //processWaitingForResponse(ctx, binaryRequest, logCorrelationId, remoteAddress, synchronous, binaryResponseFuture);
-        processAsynchronously(ctx, binaryRequest, logCorrelationId, remoteAddress, binaryResponseFuture);
+            configuration.socketConnectionTimeoutInMillis(),
+            configuration.forwardBinaryRequestsAsynchronously());
+
+        if (configuration.forwardBinaryRequestsAsynchronously()) {
+            processAsynchronously(ctx, binaryRequest, logCorrelationId, remoteAddress, binaryResponseFuture);
+        } else {
+            processWaitingForResponse(ctx, binaryRequest, logCorrelationId, remoteAddress, binaryResponseFuture);
+        }
     }
 
     private void processAsynchronously(ChannelHandlerContext ctx, BinaryMessage binaryRequest, String logCorrelationId,

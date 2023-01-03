@@ -4,11 +4,9 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.echo.http.EchoServer;
+import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.MediaType;
@@ -16,7 +14,6 @@ import org.mockserver.scheduler.Scheduler;
 import org.mockserver.socket.PortFactory;
 
 import java.net.InetSocketAddress;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
@@ -27,6 +24,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThrows;
 import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;
@@ -36,8 +34,6 @@ import static org.mockserver.stop.Stop.stopQuietly;
 
 public class NettyHttpClientErrorHandlingTest {
 
-    @Rule
-    public final ExpectedException exception = ExpectedException.none();
     private static EventLoopGroup clientEventLoopGroup;
     private final MockServerLogger mockServerLogger = new MockServerLogger();
 
@@ -52,20 +48,21 @@ public class NettyHttpClientErrorHandlingTest {
     }
 
     @Test
-    public void shouldThrowSocketCommunicationExceptionForConnectException() throws Exception {
-        // then
+    public void shouldThrowSocketCommunicationExceptionForConnectException() {
+        // given
         int freePort = PortFactory.findFreePort();
-        exception.expect(ExecutionException.class);
-        exception.expectMessage(anyOf(
+
+        // when
+        Exception exception = assertThrows(Exception.class, () -> new NettyHttpClient(configuration(), mockServerLogger, clientEventLoopGroup, null, false)
+            .sendRequest(request().withHeader(HOST.toString(), "127.0.0.1:" + freePort))
+            .get(10, TimeUnit.SECONDS));
+
+        // then
+        assertThat(exception.getMessage(), anyOf(
             containsString("Connection refused: /127.0.0.1:" + freePort),
             containsString("Connection refused: no further information: /127.0.0.1:" + freePort),
             containsString("Channel closed before valid response")
         ));
-
-        // when
-        new NettyHttpClient(configuration(), mockServerLogger, clientEventLoopGroup, null, false)
-            .sendRequest(request().withHeader(HOST.toString(), "127.0.0.1:" + freePort))
-            .get(10, TimeUnit.SECONDS);
     }
 
     @Test
@@ -74,17 +71,16 @@ public class NettyHttpClientErrorHandlingTest {
         EchoServer echoServer = new EchoServer(true, EchoServer.Error.CLOSE_CONNECTION);
 
         try {
+            // when
+            Exception exception = assertThrows(Exception.class, () -> new NettyHttpClient(configuration(), mockServerLogger, clientEventLoopGroup, null, false).sendRequest(request().withSecure(true).withHeader(HOST.toString(), "127.0.0.1:" + echoServer.getPort()))
+                .get(10, TimeUnit.SECONDS));
+
             // then
-            exception.expect(ExecutionException.class);
-            exception.expectMessage(anyOf(
+            assertThat(exception.getMessage(), anyOf(
                 containsString("Connection reset by peer"),
                 containsString("Channel set as inactive before valid response has been received"),
                 containsString("Channel handler removed before valid response has been received")
             ));
-
-            // when
-            new NettyHttpClient(configuration(), mockServerLogger, clientEventLoopGroup, null, false).sendRequest(request().withSecure(true).withHeader(HOST.toString(), "127.0.0.1:" + echoServer.getPort()))
-                .get(10, TimeUnit.SECONDS);
         } finally {
             stopQuietly(echoServer);
         }
