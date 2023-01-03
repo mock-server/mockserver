@@ -184,7 +184,7 @@ public class NettyUnidirectionalBinaryForwardingIntegrationTest {
                 + " bytes available, wanted " + RESPONSE_MESSAGE.length() + ")");
         byte[] buffer = new byte[RESPONSE_MESSAGE.length() + 1];
         log("Before reading from buffer. Currently "+socket.getInputStream().available()+" bytes available");
-        socket.getInputStream().read(buffer, 0, buffer.length);
+        input.read(buffer, 0, buffer.length);
         log("After reading from buffer. Currently "+socket.getInputStream().available()+" bytes available");
         assertEquals(RESPONSE_MESSAGE, new String(buffer));
     }
