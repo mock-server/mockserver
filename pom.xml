@@ -1,4 +1,3 @@
-
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -6,7 +5,7 @@
 
     <groupId>org.mock-server</groupId>
     <artifactId>mockserver</artifactId>
-    <version>5.14.2-SNAPSHOT</version>
+    <version>5.14.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>MockServer</name>
@@ -25,20 +24,20 @@
     </licenses>
 
     <scm>
-        <url>https://github.com/arkinator/mockserver.git</url>
-        <connection>scm:git:https://github.com/arkinator/mockserver.git</connection>
-        <developerConnection>scm:git:git@github.com:arkinator/mockserver.git</developerConnection>
+        <url>https://github.com/jamesdbloom/mockservice.git</url>
+        <connection>scm:git:https://github.com/jamesdbloom/mockservice.git</connection>
+        <developerConnection>scm:git:git@github.com:jamesdbloom/mockservice.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
     <distributionManagement>
         <snapshotRepository>
             <id>ossrh</id>
-            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
         </snapshotRepository>
         <repository>
             <id>ossrh</id>
-            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
 
