@@ -93,7 +93,7 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
         CompletableFuture<BinaryMessage> binaryResponseFuture = httpClient.sendRequest(binaryRequest,
             isSslEnabledUpstream(ctx.channel()), remoteAddress,
             configuration.socketConnectionTimeoutInMillis(),
-            configuration.forwardBinaryRequestsAsynchronously());
+            !configuration.forwardBinaryRequestsAsynchronously());
 
         if (configuration.forwardBinaryRequestsAsynchronously()) {
             processAsynchronously(ctx, binaryRequest, logCorrelationId, remoteAddress, binaryResponseFuture);

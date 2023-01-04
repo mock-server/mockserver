@@ -10,37 +10,33 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.*;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.BinaryMessage;
 import org.mockserver.netty.MockServer;
 import org.mockserver.netty.proxy.BinaryRequestProxyingHandler;
 
-
-public class NettyUnidirectionalBinaryForwardingIntegrationTest {
+public class NettyAssymetricBinaryForwardingIntegrationTest {
 
     public static final MockServerLogger LOGGER = new MockServerLogger(
-        NettyUnidirectionalBinaryForwardingIntegrationTest.class);
-    private static final String MESSAGE = "Hello not world!\n";
-    private static final String RESPONSE_MESSAGE = "und einmal zurück!\n";
+        NettyAssymetricBinaryForwardingIntegrationTest.class);
+    private String message;
+    private String responseMessage;
     private MockServer mockServer;
 
     @Before
     public void setupFixture() throws IOException {
-
-    }
-
-    @After
-    public void shutdownFixture() {
+        message = "Hello not world!\n";
+        responseMessage = "and back again!\n";
     }
 
     @Test
@@ -52,13 +48,55 @@ public class NettyUnidirectionalBinaryForwardingIntegrationTest {
             },
             serverSocket -> {
             },
-            (requestCalls, responseCalls, serverCalled) -> {
-                waitForCondition(() -> serverCalled.get() >= 2,
+            (requestCalls, responseCalls, serverCalled, serverReceivedText) -> {
+                waitForCondition(() -> serverReceivedText.get().equals(message + message),
                     () -> "Timeout while waiting for server to receive two messages "
-                        + "(got " + serverCalled.get() + ")");
-                assertEquals(2, requestCalls.get());
-                assertEquals(0, responseCalls.get());
-                assertEquals(2, serverCalled.get());
+                        + "(got " + serverReceivedText.get() + ")");
+            }
+        );
+    }
+
+    @Test
+    public void sendNonHttpTrafficWithLongMessageWithoutResponseFromServer() throws Exception {
+        message = StringUtils.repeat("LongMessage", 1000) + "\n";
+        executeTestRun(
+            socket -> {
+                writeSingleRequestMessage(socket);
+                writeSingleRequestMessage(socket);
+            },
+            serverSocket -> {
+            },
+            (requestCalls, responseCalls, serverCalled, serverReceivedText) ->
+                waitForCondition(() -> serverReceivedText.get().equals(message + message),
+                    () -> "Timeout while waiting for server to receive two messages "
+                        + "(got " + serverReceivedText.get().length() + ", expected " + message.length() * 2 + ")")
+        );
+    }
+
+    @Test
+    public void sendNonHttpTrafficWithLongMessageWithoutResponseAndWithSocketCloseBetweenEachMessage()
+        throws Exception {
+        message = StringUtils.repeat("LongMessage", 1000) + "\n";
+        executeTestRun(
+            socket -> {
+                socket.close();
+                try (Socket clientSocket = new Socket("127.0.0.1", mockServer.getLocalPort())) {
+                    writeSingleRequestMessage(clientSocket);
+                }
+
+            },
+            serverSocket -> {
+            },
+            (requestCalls, responseCalls, serverCalled, serverReceivedText) -> {
+                waitForCondition(() -> serverReceivedText.get().equals(message),
+                    () -> "Timeout while waiting for server to receive two messages "
+                        + "(got \n" + serverReceivedText.get() + ", expected \n" + message + ")");
+                try (Socket clientSocket = new Socket("127.0.0.1", mockServer.getLocalPort())) {
+                    writeSingleRequestMessage(clientSocket);
+                }
+                waitForCondition(() -> serverReceivedText.get().equals(message + message),
+                    () -> "Timeout while waiting for server to receive two messages "
+                        + "(got \n" + serverReceivedText.get() + ", expected \n" + message + message + ")");
             }
         );
     }
@@ -73,10 +111,10 @@ public class NettyUnidirectionalBinaryForwardingIntegrationTest {
                 readSingleResponseMessage(socket);
             },
             serverSocket -> {
-                serverSocket.getOutputStream().write(RESPONSE_MESSAGE.getBytes());
+                serverSocket.getOutputStream().write(responseMessage.getBytes());
                 serverSocket.getOutputStream().flush();
             },
-            (requestCalls, responseCalls, serverCalled) -> {
+            (requestCalls, responseCalls, serverCalled, serverReceivedText) -> {
                 assertContains(requestCalls.toString(), "2");
                 assertContains(responseCalls.toString(), "2");
                 assertContains(serverCalled.toString(), "2");
@@ -96,12 +134,12 @@ public class NettyUnidirectionalBinaryForwardingIntegrationTest {
                 readSingleResponseMessage(socket);
             },
             serverSocket -> {
-                serverSocket.getOutputStream().write(RESPONSE_MESSAGE.getBytes());
+                serverSocket.getOutputStream().write(responseMessage.getBytes());
                 serverSocket.getOutputStream().flush();
-                serverSocket.getOutputStream().write(RESPONSE_MESSAGE.getBytes());
+                serverSocket.getOutputStream().write(responseMessage.getBytes());
                 serverSocket.getOutputStream().flush();
             },
-            (requestCalls, responseCalls, serverCalled) -> {
+            (requestCalls, responseCalls, serverCalled, serverReceivedText) -> {
                 assertEquals(2, requestCalls.get());
                 assertEquals(2, responseCalls.get());
                 assertEquals(2, serverCalled.get());
@@ -123,7 +161,7 @@ public class NettyUnidirectionalBinaryForwardingIntegrationTest {
             },
             serverSocket -> {
             },
-            (requestCalls, responseCalls, serverCalled) -> {
+            (requestCalls, responseCalls, serverCalled, serverReceivedText) -> {
                 waitForCondition(() -> serverCalled.get() >= 2,
                     () -> "Wait timed out. ServerCalled never reached 2, is currently at " + serverCalled.get());
                 assertEquals(2, requestCalls.get());
@@ -151,19 +189,20 @@ public class NettyUnidirectionalBinaryForwardingIntegrationTest {
             },
             serverSocket -> {
                 serverSocket.setTcpNoDelay(true);
-                serverSocket.getOutputStream().write(RESPONSE_MESSAGE.getBytes());
+                serverSocket.getOutputStream().write(responseMessage.getBytes());
                 serverSocket.getOutputStream().flush();
-                serverSocket.getOutputStream().write(RESPONSE_MESSAGE.getBytes());
+                serverSocket.getOutputStream().write(responseMessage.getBytes());
                 serverSocket.getOutputStream().flush();
-                serverSocket.getOutputStream().write(RESPONSE_MESSAGE.getBytes());
+                serverSocket.getOutputStream().write(responseMessage.getBytes());
                 serverSocket.getOutputStream().flush();
-                serverSocket.getOutputStream().write(RESPONSE_MESSAGE.getBytes());
+                serverSocket.getOutputStream().write(responseMessage.getBytes());
                 serverSocket.getOutputStream().flush();
 
             },
-            (requestCalls, responseCalls, serverCalled) -> {
+            (requestCalls, responseCalls, serverCalled, serverReceivedText) -> {
                 waitForCondition(() -> serverResponsesRead.get() >= 4,
-                    () -> "Wait timed out. serverResponsesRead never reached 4, is currently at " + serverResponsesRead.get());
+                    () -> "Wait timed out. serverResponsesRead never reached 4, is currently at "
+                        + serverResponsesRead.get());
                 assertEquals(1, requestCalls.get());
                 assertEquals(1, responseCalls.get());
                 assertEquals(1, serverCalled.get());
@@ -171,23 +210,27 @@ public class NettyUnidirectionalBinaryForwardingIntegrationTest {
         );
     }
 
-    private static void writeSingleRequestMessage(Socket socket) throws IOException {
-        socket.setSendBufferSize(MESSAGE.length());
+    private void writeSingleRequestMessage(Socket socket) throws IOException {
+        socket.setSendBufferSize(message.length());
         OutputStream output = socket.getOutputStream();
-        output.write((MESSAGE).getBytes(StandardCharsets.UTF_8));
+        output.write((message).getBytes(StandardCharsets.UTF_8));
         output.flush();
     }
 
-    private static void readSingleResponseMessage(Socket socket) throws IOException, InterruptedException {
+    private void readSingleResponseMessage(Socket socket) throws IOException, InterruptedException {
+        readSingleMessage(socket, responseMessage);
+    }
+
+    private void readSingleMessage(Socket socket, String expectedMessage) throws IOException, InterruptedException {
         InputStream input = socket.getInputStream();
-        waitForCondition(() -> input.available() >= RESPONSE_MESSAGE.length(),
+        waitForCondition(() -> input.available() >= expectedMessage.length(),
             () -> "Timeout while waiting for message (Found " + input.available()
-                + " bytes available, wanted " + RESPONSE_MESSAGE.length() + ")");
-        byte[] buffer = new byte[RESPONSE_MESSAGE.length() + 1];
-        log("Before reading from buffer. Currently "+socket.getInputStream().available()+" bytes available");
+                + " bytes available, wanted " + expectedMessage.length() + ")");
+        byte[] buffer = new byte[expectedMessage.length()];
+        log("Before reading from buffer. Currently " + socket.getInputStream().available() + " bytes available");
         input.read(buffer, 0, buffer.length);
-        log("After reading from buffer. Currently "+socket.getInputStream().available()+" bytes available");
-        assertEquals(RESPONSE_MESSAGE, new String(buffer));
+        log("After reading from buffer. Currently " + socket.getInputStream().available() + " bytes available");
+        assertEquals(expectedMessage, new String(buffer));
     }
 
     private static void log(String s) {
@@ -216,15 +259,6 @@ public class NettyUnidirectionalBinaryForwardingIntegrationTest {
         try (FlexibleServer listenerServer = new FlexibleServer()) {
             mockServer = new MockServer(Configuration.configuration().forwardBinaryRequestsAsynchronously(true),
                 listenerServer.getLocalPort(), "127.0.0.1", 50505);
-            //BinaryRequestProxyingHandler.binaryRequestMapper = req -> {
-            //    final ArrayList<BinaryMessage> binaryMessages = new ArrayList<>();
-            //    for (String part : new String(req.getBytes()).split("\n")) {
-            //        binaryMessages.add(new BinaryMessage()
-            //            .withBytes((part + "\n").getBytes())
-            //            .withTimestamp(req.getTimestamp()));
-            //    }
-            //    return binaryMessages;
-            //};
 
             AtomicInteger handlerCalledRequest = new AtomicInteger(0);
             AtomicInteger handlerCalledResponse = new AtomicInteger(0);
@@ -241,13 +275,10 @@ public class NettyUnidirectionalBinaryForwardingIntegrationTest {
                         new String(desc.getBinaryRequest().getBytes()) + "'");
                 }
             };
+            AtomicReference<String> accumulatedServerReceivedText = new AtomicReference<>("");
             listenerServer.setAcceptedConnectionConsumer(serverSocket -> {
-                final BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(serverSocket.getInputStream()));
-                final String serverArrivedMessage = reader.readLine();
-                log("listener server: read message");
+                accumulatedServerReceivedText.getAndAccumulate(drainStream(serverSocket), (o1, o2) -> o1 + o2);
                 serverActionCallback.accept(serverSocket);
-                assertContains(MESSAGE, serverArrivedMessage);
                 serverCalled.incrementAndGet();
             });
             try (Socket clientSocket = new Socket("127.0.0.1", mockServer.getLocalPort())) {
@@ -260,10 +291,27 @@ public class NettyUnidirectionalBinaryForwardingIntegrationTest {
             interactionsVerificationCallback.acceptThrows(
                 handlerCalledRequest,
                 handlerCalledResponse,
-                serverCalled
+                serverCalled,
+                accumulatedServerReceivedText
             );
         } finally {
             stopQuietly(mockServer);
+        }
+    }
+
+    private String drainStream(Socket serverSocket) {
+        String result = "";
+        try {
+            InputStream inputStream = serverSocket.getInputStream();
+            do {
+                final byte[] buffer = new byte[10000];
+                final int readBytes = inputStream.read(buffer);
+                result = result + new String(Arrays.copyOfRange(buffer, 0, readBytes),
+                    StandardCharsets.UTF_8);
+            } while (inputStream.available() > 0);
+            return result;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -286,7 +334,7 @@ public class NettyUnidirectionalBinaryForwardingIntegrationTest {
                     try {
                         final Socket serverSocket = listenerServer.accept();
                         log("listener server: got connection!");
-                        acceptedConnectionConsumer.accept(serverSocket);
+                        new Thread(() -> acceptedConnectionConsumer.accept(serverSocket)).start();
                         log("listener server: after assert");
                     } catch (IOException e) {
                         // swallow. makes for a less confusing test run output
@@ -347,6 +395,7 @@ public class NettyUnidirectionalBinaryForwardingIntegrationTest {
 
         void acceptThrows(AtomicInteger request,
             AtomicInteger responses,
-            AtomicInteger serverCalls) throws Exception;
+            AtomicInteger serverCalls,
+            AtomicReference<String> serverReceivedMessage) throws Exception;
     }
 }
