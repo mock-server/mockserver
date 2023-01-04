@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.github.arkinator</groupId>
+    <groupId>org.mock-server</groupId>
     <artifactId>mockserver</artifactId>
     <version>5.14.2-SNAPSHOT</version>
     <packaging>pom</packaging>

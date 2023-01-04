@@ -17,7 +17,7 @@ ARG REPOSITORY=snapshots
 # VERSION is LATEST or RELEASE or x.x.x
 ARG VERSION=5.14.1-SNAPSHOT
 # see: https://oss.sonatype.org/nexus-restlet1x-plugin/default/docs/path__artifact_maven_redirect.html
-ARG REPOSITORY_URL=https://oss.sonatype.org/service/local/artifact/maven/redirect?r=${REPOSITORY}&g=io.github.arkinator&a=mockserver-netty&c=jar-with-dependencies&e=jar&v=${VERSION}
+ARG REPOSITORY_URL=https://oss.sonatype.org/service/local/artifact/maven/redirect?r=${REPOSITORY}&g=org.mock-server&a=mockserver-netty&c=jar-with-dependencies&e=jar&v=${VERSION}
 RUN wget --max-redirect=10 -O mockserver-netty-jar-with-dependencies.jar "$REPOSITORY_URL"
 # add netty-tcnative-boringssl so file
 RUN wget --max-redirect=10 -O netty-tcnative-boringssl-static.jar "https://oss.sonatype.org/service/local/artifact/maven/redirect?r=releases&g=io.netty&a=netty-tcnative-boringssl-static&c=linux-x86_64&e=jar&v=2.0.50.Final"

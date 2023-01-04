@@ -11,9 +11,9 @@ repositories {
 
 dependencies {
 
-    implementation "io.github.arkinator:mockserver-client-java-no-dependencies:${project.findProperty('mockserverVersion')}"
-    implementation "io.github.arkinator:mockserver-netty-no-dependencies:${project.findProperty('mockserverVersion')}"
-    testImplementation "io.github.arkinator:mockserver-integration-testing-no-dependencies:${project.findProperty('mockserverVersion')}"
+    implementation "org.mock-server:mockserver-client-java-no-dependencies:${project.findProperty('mockserverVersion')}"
+    implementation "org.mock-server:mockserver-netty-no-dependencies:${project.findProperty('mockserverVersion')}"
+    testImplementation "org.mock-server:mockserver-integration-testing-no-dependencies:${project.findProperty('mockserverVersion')}"
 
 }
 
