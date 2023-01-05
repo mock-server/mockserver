@@ -33,9 +33,9 @@ public class Http2SettingsHandler extends SimpleChannelInboundHandler<Http2Setti
             if (throwable != null) {
                 protocolFuture.completeExceptionally(throwable);
             } else if (http2Settings != null) {
-                protocolFuture.complete(Protocol.HTTP2);
+                protocolFuture.complete(Protocol.HTTP_2);
             } else {
-                protocolFuture.complete(Protocol.HTTP);
+                protocolFuture.complete(Protocol.HTTP_1_1);
             }
         }));
     }

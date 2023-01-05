@@ -1,7 +1,6 @@
 package org.mockserver.httpclient;
 
 import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
@@ -12,8 +11,6 @@ import io.netty.handler.codec.http2.*;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.proxy.HttpProxyHandler;
 import io.netty.handler.proxy.Socks5ProxyHandler;
-import io.netty.handler.ssl.ApplicationProtocolNames;
-import io.netty.handler.ssl.ApplicationProtocolNegotiationHandler;
 import org.mockserver.codec.MockServerBinaryClientCodec;
 import org.mockserver.codec.MockServerHttpClientCodec;
 import org.mockserver.logging.LoggingHandler;
@@ -85,7 +82,7 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
 
         if (secure) {
             InetSocketAddress remoteAddress = channel.attr(REMOTE_SOCKET).get();
-            pipeline.addLast(nettySslContextFactory.createClientSslContext(forwardProxyClient, httpProtocol != null && httpProtocol.equals(Protocol.HTTP2)).newHandler(channel.alloc(), remoteAddress.getHostName(), remoteAddress.getPort()));
+            pipeline.addLast(nettySslContextFactory.createClientSslContext(forwardProxyClient, httpProtocol != null && httpProtocol.equals(Protocol.HTTP_2)).newHandler(channel.alloc(), remoteAddress.getHostName(), remoteAddress.getPort()));
         }
 
         // add logging
@@ -94,56 +91,52 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
         }
 
         if (httpProtocol == null) {
-            // binary
-            pipeline.addLast(new MockServerBinaryClientCodec());
-            pipeline.addLast(httpClientHandler);
-            protocolFuture.complete(null);
-        } else if (httpProtocol.equals(Protocol.HTTP2)) {
-            // http2
-            pipeline.addLast(new ApplicationProtocolNegotiationHandler("") {
-                @Override
-                protected void configurePipeline(ChannelHandlerContext ctx, String protocol) {
-                    if (ApplicationProtocolNames.HTTP_2.equals(protocol)) {
-                        final Http2Connection connection = new DefaultHttp2Connection(false);
-                        HttpToHttp2ConnectionHandlerBuilder http2ConnectionHandlerBuilder = new HttpToHttp2ConnectionHandlerBuilder()
-                            .frameListener(
-                                new DelegatingDecompressorFrameListener(
-                                    connection,
-                                    new InboundHttp2ToHttpAdapterBuilder(connection)
-                                        .maxContentLength(Integer.MAX_VALUE)
-                                        .propagateSettings(true)
-                                        .validateHttpHeaders(false)
-                                        .build()
-                                )
-                            );
-                        if (MockServerLogger.isEnabled(TRACE)) {
-                            http2ConnectionHandlerBuilder.frameLogger(new Http2FrameLogger(LogLevel.TRACE, HttpClientHandler.class.getName()));
-                        }
-                        pipeline.addLast(http2ConnectionHandlerBuilder.connection(connection).build());
-                        pipeline.addLast(new Http2SettingsHandler(protocolFuture));
-                        pipeline.addLast(new MockServerHttpClientCodec(mockServerLogger, proxyConfigurations));
-                        pipeline.addLast(httpClientHandler);
-                    } else {
-                        pipeline.addLast(new HttpClientCodec());
-                        pipeline.addLast(new HttpContentDecompressor());
-                        pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
-                        pipeline.addLast(new MockServerHttpClientCodec(mockServerLogger, proxyConfigurations));
-                        pipeline.addLast(httpClientHandler);
-                        protocolFuture.complete(Protocol.HTTP);
-                    }
-                    if (pipeline.get(ApplicationProtocolNegotiationHandler.class) != null) {
-                        pipeline.remove(ApplicationProtocolNegotiationHandler.class);
-                    }
-                }
-            });
+            configureBinaryPipeline(pipeline);
+        } else if (secure) {
+            // use ALPN to determine http1 or http2
+            pipeline.addLast(new HttpOrHttp2Initializer(this::configureHttp1Pipeline, this::configureHttp2Pipeline));
         } else {
-            // http1
-            pipeline.addLast(new HttpClientCodec());
-            pipeline.addLast(new HttpContentDecompressor());
-            pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
-            pipeline.addLast(new MockServerHttpClientCodec(mockServerLogger, proxyConfigurations));
-            pipeline.addLast(httpClientHandler);
-            protocolFuture.complete(Protocol.HTTP);
+            // default to http1 without TLS
+            configureHttp1Pipeline(pipeline);
         }
+    }
+
+    private void configureHttp1Pipeline(ChannelPipeline pipeline) {
+        pipeline.addLast(new HttpClientCodec());
+        pipeline.addLast(new HttpContentDecompressor());
+        pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
+        pipeline.addLast(new MockServerHttpClientCodec(mockServerLogger, proxyConfigurations));
+        pipeline.addLast(httpClientHandler);
+        protocolFuture.complete(Protocol.HTTP_1_1);
+    }
+
+    private void configureHttp2Pipeline(ChannelPipeline pipeline) {
+        final Http2Connection connection = new DefaultHttp2Connection(false);
+        final HttpToHttp2ConnectionHandlerBuilder http2ConnectionHandlerBuilder = new HttpToHttp2ConnectionHandlerBuilder()
+            .frameListener(
+                new DelegatingDecompressorFrameListener(
+                    connection,
+                    new InboundHttp2ToHttpAdapterBuilder(connection)
+                        .maxContentLength(Integer.MAX_VALUE)
+                        .propagateSettings(true)
+                        .validateHttpHeaders(false)
+                        .build()
+                )
+            )
+            .connection(connection)
+            .flushPreface(true);
+        if (MockServerLogger.isEnabled(TRACE)) {
+            http2ConnectionHandlerBuilder.frameLogger(new Http2FrameLogger(LogLevel.TRACE, HttpClientHandler.class.getName()));
+        }
+        pipeline.addLast(http2ConnectionHandlerBuilder.build());
+        pipeline.addLast(new Http2SettingsHandler(protocolFuture));
+        pipeline.addLast(new MockServerHttpClientCodec(mockServerLogger, proxyConfigurations));
+        pipeline.addLast(httpClientHandler);
+    }
+
+    private void configureBinaryPipeline(ChannelPipeline pipeline) {
+        pipeline.addLast(new MockServerBinaryClientCodec());
+        pipeline.addLast(httpClientHandler);
+        protocolFuture.complete(null);
     }
 }

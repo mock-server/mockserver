@@ -18,6 +18,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.BinaryBody.binary;
@@ -173,6 +174,20 @@ public class NettyHttpToMockServerHttpRequestDecoderTest {
         // then
         HttpRequest httpRequest = (HttpRequest) output.get(0);
         assertThat(httpRequest.isKeepAlive(), is(false));
+    }
+
+    @Test
+    public void shouldDecodeProtocol() {
+        // given
+        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri");
+        fullHttpRequest.headers().add("Connection", "close");
+
+        // when
+        mockServerRequestDecoder.decode(null, fullHttpRequest, output);
+
+        // then
+        HttpRequest httpRequest = (HttpRequest) output.get(0);
+        assertThat(httpRequest.getProtocol(), is(Protocol.HTTP_1_1));
     }
 
     @Test

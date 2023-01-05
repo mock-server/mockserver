@@ -32,6 +32,11 @@ public class ForwardWithCustomTrustManagerWithMockServerCAMockingIntegrationTest
         mockServerClient = new MockServerClient("localhost", mockServer.getLocalPort(), servletContext);
     }
 
+    @Override
+    public MockServerClient getProxyClient() {
+        return mockServerClient;
+    }
+
     @AfterClass
     public static void stopServer() {
         stopQuietly(mockServer);

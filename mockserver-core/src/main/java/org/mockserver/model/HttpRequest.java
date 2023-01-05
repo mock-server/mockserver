@@ -1139,6 +1139,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
             .withCookies(cookies)
             .withKeepAlive(keepAlive)
             .withSecure(secure)
+            .withProtocol(protocol)
             .withClientCertificateChain(clientCertificateChain)
             .withSocketAddress(socketAddress)
             .withLocalAddress(localAddress)

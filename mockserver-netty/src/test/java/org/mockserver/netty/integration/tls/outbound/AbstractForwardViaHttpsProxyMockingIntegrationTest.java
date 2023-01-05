@@ -4,11 +4,11 @@ import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.SslContextBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.mockserver.client.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
-import org.mockserver.model.HttpForward;
-import org.mockserver.model.HttpStatusCode;
-import org.mockserver.model.HttpTemplate;
+import org.mockserver.model.*;
 import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequest;
 import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
 
@@ -27,6 +27,7 @@ import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverriddenRequest;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.HttpStatusCode.NOT_FOUND_404;
 import static org.mockserver.model.HttpStatusCode.OK_200;
 import static org.mockserver.model.HttpTemplate.template;
 import static org.mockserver.socket.tls.PEMToFile.privateKeyFromPEMFile;
@@ -36,9 +37,12 @@ import static org.mockserver.verify.Verification.verification;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("resource")
 public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends AbstractMockingIntegrationTestBase {
 
     protected static EchoServer trustNoneTLSEchoServer;
+
+    public abstract MockServerClient getProxyClient();
 
     @BeforeClass
     public static void startTrustNoneTLSEchoServer() throws SSLException {
@@ -66,21 +70,32 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
     }
 
     @Test
-    public void shouldForwardRequestInHTTPS() {
+    public void shouldForwardRequestInHTTP() {
         // when
         mockServerClient
             .when(
                 request()
                     .withPath(calculatePath("echo"))
+                    .withSecure(false)
             )
             .forward(
                 forward()
                     .withHost("127.0.0.1")
-                    .withPort(secureEchoServer.getPort())
-                    .withScheme(HttpForward.Scheme.HTTPS)
+                    .withPort(insecureEchoServer.getPort())
+                    .withScheme(HttpForward.Scheme.HTTP)
             );
 
         // then
+        // forward from mockserver to proxy then to echo server using header
+        HttpRequest httpRequestMatchExpectation = request()
+            .withSecure(false)
+            .withPath(calculatePath("echo"))
+            .withMethod("POST")
+            .withHeaders(
+                header("Host", "127.0.0.1:" + insecureEchoServer.getPort()),
+                header("x-test", "test_headers_and_body")
+            )
+            .withBody("an_example_body_http");
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -90,18 +105,99 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
                 )
                 .withBody("an_example_body_http"),
             makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("echo"))
-                    .withMethod("POST")
-                    .withHeaders(
-                        header("Host", "127.0.0.1:" + secureEchoServer.getPort()),
-                        header("x-test", "test_headers_and_body")
-                    )
-                    .withBody("an_example_body_http"),
+                httpRequestMatchExpectation,
                 getHeadersToRemove()
             )
         );
+    }
+
+    @Test
+    public void shouldForwardRequestInHTTPS() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(false)
+            )
+            .forward(
+                forward()
+                    .withHost("127.0.0.1")
+                    .withPort(secureEchoServer.getPort())
+                    .withScheme(HttpForward.Scheme.HTTPS)
+            );
+
+        // then
+        // match expectation send to echo server via proxy
+        HttpRequest httpRequestMatchExpectation = request()
+            .withSecure(false)
+            .withPath(calculatePath("echo"))
+            .withMethod("POST")
+            .withHeaders(
+
+                header("x-test", "test_headers_and_body")
+            )
+            .withBody("an_example_body_http");
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("an_example_body_http"),
+            makeRequest(
+                httpRequestMatchExpectation,
+                getHeadersToRemove()
+            )
+        );
+        // don't match expectation and forward to proxy
+        HttpRequest httpRequestDontMatchExpectation = request()
+            .withSecure(true)
+            .withPath(calculatePath("echo_no_match"))
+            .withMethod("POST")
+            .withHeaders(
+                header("x-test", "test_headers_and_body")
+            )
+            .withBody("an_example_body_http");
+        assertEquals(
+            response()
+                .withStatusCode(NOT_FOUND_404.code())
+                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                httpRequestDontMatchExpectation,
+                getHeadersToRemove()
+            )
+        );
+        // forward from mockserver to proxy then to echo server using header
+        HttpRequest httpRequestProxy = request()
+            .withSecure(true)
+            .withPath(calculatePath("echo_proxy_host"))
+            .withMethod("POST")
+            .withHeaders(
+                header("Host", "127.0.0.1:" + secureEchoServer.getPort()),
+                header("x-test", "test_headers_and_body")
+            )
+            .withBody("an_example_body_http");
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("an_example_body_http"),
+            makeRequest(
+                httpRequestProxy,
+                getHeadersToRemove()
+            )
+        );
+        // and - verify sent via proxy to echo server
+        getProxyClient()
+            .verify(
+                httpRequestMatchExpectation.withSecure(true),
+                httpRequestProxy
+            );
     }
 
     @Test
@@ -329,6 +425,48 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
                     .withBody("an_example_body_http"),
                 getHeadersToRemove()
 
+            )
+        );
+    }
+
+    @Test
+    @Ignore
+    public void shouldForwardOverriddenRequestToHTTP2() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(true)
+            )
+            .forward(
+                forwardOverriddenRequest(
+                    request()
+                        .withHeader("Host", "localhost:" + secureEchoServer.getPort())
+                        .withBody("some_overridden_body")
+                ).withDelay(MILLISECONDS, 10)
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("some_overridden_body"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withProtocol(Protocol.HTTP_2)
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                getHeadersToRemove()
             )
         );
     }

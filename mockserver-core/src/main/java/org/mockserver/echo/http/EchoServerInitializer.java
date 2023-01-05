@@ -9,6 +9,8 @@ import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import io.netty.handler.codec.http2.*;
+import io.netty.handler.logging.LogLevel;
 import io.netty.handler.ssl.SslContext;
 import org.mockserver.codec.MockServerHttpServerCodec;
 import org.mockserver.configuration.Configuration;
@@ -21,6 +23,7 @@ import org.slf4j.event.Level;
 import java.util.List;
 
 import static org.mockserver.echo.http.EchoServer.*;
+import static org.mockserver.logging.MockServerLogger.isEnabled;
 import static org.slf4j.event.Level.TRACE;
 
 /**
@@ -65,21 +68,50 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
         if (MockServerLogger.isEnabled(TRACE)) {
             pipeline.addLast(new LoggingHandler(EchoServer.class.getName() + " <-->"));
         }
-
-        pipeline.addLast(new HttpServerCodec());
-
-        pipeline.addLast(new HttpContentDecompressor());
-
-        pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
-
-        pipeline.addLast(new EchoWebSocketServerHandler(mockServerLogger, registeredClients, websocketChannels, textWebSocketFrames, secure));
-
-        pipeline.addLast(new MockServerHttpServerCodec(configuration, mockServerLogger, secure, null, channel.localAddress().getPort()));
-
-        if (!secure && error == EchoServer.Error.CLOSE_CONNECTION) {
-            throw new IllegalArgumentException("Error type CLOSE_CONNECTION is not supported in non-secure mode");
+        if (secure) {
+            // use ALPN to determine http1 or http2
+            pipeline.addLast(new EchoServerHttpOrHttp2Initializer(mockServerLogger, channel, this::configureHttp1Pipeline, this::configureHttp2Pipeline));
+        } else {
+            // default to http1 without TLS
+            configureHttp1Pipeline(channel, pipeline);
         }
+    }
 
+    private void configureHttp1Pipeline(SocketChannel channel, ChannelPipeline pipeline) {
+        pipeline.addLast(new HttpServerCodec());
+        pipeline.addLast(new HttpContentDecompressor());
+        pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
+        pipeline.addLast(new EchoWebSocketServerHandler(mockServerLogger, registeredClients, websocketChannels, textWebSocketFrames, secure));
+        pipeline.addLast(new MockServerHttpServerCodec(configuration, mockServerLogger, secure, null, channel.localAddress().getPort()));
+        pipeline.addLast(new EchoServerHandler(
+            error,
+            mockServerLogger,
+            channel.attr(LOG_FILTER).get(),
+            channel.attr(NEXT_RESPONSE).get(),
+            channel.attr(LAST_REQUEST).get()
+        ));
+    }
+
+    private void configureHttp2Pipeline(SocketChannel channel, ChannelPipeline pipeline) {
+        final Http2Connection connection = new DefaultHttp2Connection(true);
+        final HttpToHttp2ConnectionHandlerBuilder http2ConnectionHandlerBuilder = new HttpToHttp2ConnectionHandlerBuilder()
+            .frameListener(
+                new DelegatingDecompressorFrameListener(
+                    connection,
+                    new InboundHttp2ToHttpAdapterBuilder(connection)
+                        .maxContentLength(Integer.MAX_VALUE)
+                        .propagateSettings(true)
+                        .validateHttpHeaders(false)
+                        .build()
+                )
+            )
+            .connection(connection);
+        if (isEnabled(TRACE)) {
+            http2ConnectionHandlerBuilder.frameLogger(new Http2FrameLogger(LogLevel.TRACE, EchoServerInitializer.class.getName()));
+        }
+        pipeline.addLast(http2ConnectionHandlerBuilder.build());
+        pipeline.addLast(new EchoWebSocketServerHandler(mockServerLogger, registeredClients, websocketChannels, textWebSocketFrames, secure));
+        pipeline.addLast(new MockServerHttpServerCodec(configuration, mockServerLogger, secure, null, channel.localAddress().getPort()));
         pipeline.addLast(new EchoServerHandler(
             error,
             mockServerLogger,

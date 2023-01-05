@@ -36,6 +36,10 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
     @Rule
     public final ExpectedException exception = ExpectedException.none();
 
+    protected boolean supportsHTTP2() {
+        return false;
+    }
+
     @Test
     public void shouldReturnResponseByMatchingUrlEncodedPath() {
         // when

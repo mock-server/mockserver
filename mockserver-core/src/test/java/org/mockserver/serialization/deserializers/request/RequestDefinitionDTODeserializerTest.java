@@ -118,7 +118,7 @@ public class RequestDefinitionDTODeserializerTest {
         // given
         String requestBytes = "{" + NEW_LINE +
             "  \"method\" : \"someMethod\"," + NEW_LINE +
-            "  \"keepAlive\" : false," + NEW_LINE +
+            "  \"path\" : \"somePath\"," + NEW_LINE +
             "  \"pathParameters\" : [ {" + NEW_LINE +
             "    \"name\" : \"path_queryParameterName\"," + NEW_LINE +
             "    \"values\" : [ \"path_queryParameterValue\" ]" + NEW_LINE +
@@ -139,8 +139,9 @@ public class RequestDefinitionDTODeserializerTest {
             "    \"name\" : \"someHeaderName\"," + NEW_LINE +
             "    \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
             "  } ]," + NEW_LINE +
-            "  \"path\" : \"somePath\"," + NEW_LINE +
             "  \"secure\" : true," + NEW_LINE +
+            "  \"keepAlive\" : false," + NEW_LINE +
+            "  \"protocol\" : \"HTTP_2\"," + NEW_LINE +
             "  \"socketAddress\" : {" + NEW_LINE +
             "    \"host\" : \"someHost\"," + NEW_LINE +
             "    \"port\" : 1234," + NEW_LINE +
@@ -170,6 +171,7 @@ public class RequestDefinitionDTODeserializerTest {
                 ))
                 .setSecure(true)
                 .setKeepAlive(false)
+                .setProtocol(Protocol.HTTP_2)
                 .setSocketAddress(new SocketAddress()
                     .withHost("someHost")
                     .withPort(1234)

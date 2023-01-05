@@ -54,6 +54,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
     private HashMapMatcher cookieMatcher = null;
     private BooleanMatcher keepAliveMatcher = null;
     private BooleanMatcher sslMatcher = null;
+    private ExactStringMatcher protocolMatcher = null;
     private ObjectMapper objectMapperWithStrictBodyDTODeserializer;
     private JsonSchemaBodyDecoder jsonSchemaBodyParser;
     private MatcherBuilder matcherBuilder;
@@ -89,6 +90,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                 withCookies(httpRequest.getCookies());
                 withKeepAlive(httpRequest.isKeepAlive());
                 withSsl(httpRequest.isSecure());
+                withProtocol(httpRequest.getProtocol());
                 this.jsonSchemaBodyParser = new JsonSchemaBodyDecoder(configuration, mockServerLogger, expectation, httpRequest);
             }
             return true;
@@ -193,6 +195,10 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
 
     private void withSsl(Boolean isSsl) {
         this.sslMatcher = new BooleanMatcher(mockServerLogger, isSsl);
+    }
+
+    private void withProtocol(Protocol protocol) {
+        this.protocolMatcher = new ExactStringMatcher(mockServerLogger, protocol != null ? string(protocol.name()) : null);
     }
 
     public boolean matches(final MatchDifference context, final RequestDefinition requestDefinition) {
@@ -331,8 +337,13 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                         return false;
                     }
 
-                    boolean sslMatches = matches(SSL_MATCHES, context, sslMatcher, request.isSecure());
-                    if (failFast(sslMatcher, context, matchDifferenceCount, becauseBuilder, sslMatches, SSL_MATCHES)) {
+                    boolean sslMatches = matches(SECURE, context, sslMatcher, request.isSecure());
+                    if (failFast(sslMatcher, context, matchDifferenceCount, becauseBuilder, sslMatches, SECURE)) {
+                        return false;
+                    }
+
+                    boolean protocolMatches = matches(PROTOCOL, context, protocolMatcher, request.getProtocol() != null ? string(request.getProtocol().name()) : null);
+                    if (failFast(protocolMatcher, context, matchDifferenceCount, becauseBuilder, protocolMatches, PROTOCOL)) {
                         return false;
                     }
 

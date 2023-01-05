@@ -10,10 +10,7 @@ import org.mockserver.codec.ExpandedParameterDecoder;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.Cookies;
-import org.mockserver.model.Header;
-import org.mockserver.model.Headers;
-import org.mockserver.model.HttpRequest;
+import org.mockserver.model.*;
 import org.mockserver.url.URLParser;
 import org.slf4j.event.Level;
 
@@ -50,7 +47,7 @@ public class FullHttpRequestToMockServerHttpRequest {
         this.jdkCertificateToMockServerX509Certificate = new JDKCertificateToMockServerX509Certificate(mockServerLogger);
     }
 
-    public HttpRequest mapFullHttpRequestToMockServerRequest(FullHttpRequest fullHttpRequest, List<Header> preservedHeaders, SocketAddress localAddress, SocketAddress remoteAddress) {
+    public HttpRequest mapFullHttpRequestToMockServerRequest(FullHttpRequest fullHttpRequest, List<Header> preservedHeaders, SocketAddress localAddress, SocketAddress remoteAddress, Protocol protocol) {
         HttpRequest httpRequest = new HttpRequest();
         try {
             if (fullHttpRequest != null) {
@@ -74,6 +71,7 @@ public class FullHttpRequestToMockServerHttpRequest {
 
                 httpRequest.withKeepAlive(isKeepAlive(fullHttpRequest));
                 httpRequest.withSecure(isSecure);
+                httpRequest.withProtocol(protocol == null ? Protocol.HTTP_1_1 : protocol);
             }
         } catch (Throwable throwable) {
             mockServerLogger.logEvent(

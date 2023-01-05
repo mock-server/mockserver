@@ -51,10 +51,11 @@ import static org.mockserver.exception.ExceptionHandling.*;
 import static org.mockserver.logging.MockServerLogger.isEnabled;
 import static org.mockserver.mock.action.http.HttpActionHandler.setRemoteAddress;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.Protocol.HTTP_2;
 import static org.mockserver.netty.HttpRequestHandler.LOCAL_HOST_HEADERS;
 import static org.mockserver.netty.HttpRequestHandler.setProxyingRequest;
 import static org.mockserver.netty.proxy.relay.RelayConnectHandler.*;
-import static org.mockserver.socket.tls.SniHandler.isHTTP2Enabled;
+import static org.mockserver.socket.tls.SniHandler.getALPNProtocol;
 import static org.slf4j.event.Level.TRACE;
 import static org.slf4j.event.Level.WARN;
 
@@ -164,7 +165,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         } else if (isTls(msg)) {
             logStage(ctx, "adding TLS decoders");
             enableTls(ctx, msg);
-        } else if (isHTTP2Enabled(mockServerLogger, ctx)) {
+        } else if (HTTP_2.equals(getALPNProtocol(mockServerLogger, ctx))) {
             logStage(ctx, "adding HTTP2 decoders");
             switchToHttp2(ctx, msg);
         } else if (isHttp(msg)) {
@@ -255,7 +256,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
             ChannelPipeline pipeline = ctx.pipeline();
 
             final Http2Connection connection = new DefaultHttp2Connection(true);
-            HttpToHttp2ConnectionHandlerBuilder http2ConnectionHandlerBuilder = new HttpToHttp2ConnectionHandlerBuilder()
+            final HttpToHttp2ConnectionHandlerBuilder http2ConnectionHandlerBuilder = new HttpToHttp2ConnectionHandlerBuilder()
                 .frameListener(
                     new DelegatingDecompressorFrameListener(
                         connection,
@@ -273,7 +274,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
             // TODO(jamesdbloom) consider Http2MultiplexHandler and test behaviour when multiple requests sent over the same connection
             addLastIfNotPresent(pipeline, new CallbackWebSocketServerHandler(httpState));
             addLastIfNotPresent(pipeline, new DashboardWebSocketHandler(httpState, isSslEnabledUpstream(ctx.channel()), false));
-            addLastIfNotPresent(pipeline, new MockServerHttpServerCodec(configuration, mockServerLogger, isSslEnabledUpstream(ctx.channel()), ctx.channel().localAddress(), SniHandler.retrieveClientCertificates(mockServerLogger, ctx)));
+            addLastIfNotPresent(pipeline, new MockServerHttpServerCodec(configuration, mockServerLogger, isSslEnabledUpstream(ctx.channel()), SniHandler.retrieveClientCertificates(mockServerLogger, ctx), ctx.channel().localAddress()));
             addLastIfNotPresent(pipeline, new HttpRequestHandler(configuration, server, httpState, actionHandler));
             pipeline.remove(this);
 
@@ -324,7 +325,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
             } else {
                 addLastIfNotPresent(pipeline, new CallbackWebSocketServerHandler(httpState));
                 addLastIfNotPresent(pipeline, new DashboardWebSocketHandler(httpState, isSslEnabledUpstream(ctx.channel()), false));
-                addLastIfNotPresent(pipeline, new MockServerHttpServerCodec(configuration, mockServerLogger, isSslEnabledUpstream(ctx.channel()), ctx.channel().localAddress(), SniHandler.retrieveClientCertificates(mockServerLogger, ctx)));
+                addLastIfNotPresent(pipeline, new MockServerHttpServerCodec(configuration, mockServerLogger, isSslEnabledUpstream(ctx.channel()), SniHandler.retrieveClientCertificates(mockServerLogger, ctx), ctx.channel().localAddress()));
                 addLastIfNotPresent(pipeline, new HttpRequestHandler(configuration, server, httpState, actionHandler));
                 pipeline.remove(this);
 

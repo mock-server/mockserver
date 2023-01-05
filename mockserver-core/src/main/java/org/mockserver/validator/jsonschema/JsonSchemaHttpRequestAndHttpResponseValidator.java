@@ -22,6 +22,7 @@ public class JsonSchemaHttpRequestAndHttpResponseValidator extends JsonSchemaVal
             "keyToMultiValue",
             "keyToValue",
             "socketAddress",
+            "protocol",
             "httpResponse",
             "bodyWithContentType",
             "delay",

@@ -3,8 +3,8 @@ package org.mockserver.validator.jsonschema;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 
-import static org.hamcrest.core.Is.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator.jsonSchemaHttpRequestValidator;
 import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
@@ -40,7 +40,10 @@ public class JsonSchemaVerificationValidatorIntegrationTest {
             "    \"headers\" : [ {" + NEW_LINE +
             "      \"name\" : \"someHeaderName\"," + NEW_LINE +
             "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
-            "    } ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"secure\" : true," + NEW_LINE +
+            "    \"keepAlive\" : false," + NEW_LINE +
+            "    \"protocol\" : \"HTTP_2\"," + NEW_LINE +
             "  }"), is(""));
     }
 

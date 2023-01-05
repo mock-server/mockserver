@@ -124,8 +124,8 @@ public class MockServerHttpRequestToFullHttpRequest {
             request.headers().add(HOST, httpRequest.getFirstHeader(HOST.toString()));
         }
         request.headers().set(ACCEPT_ENCODING, GZIP + "," + DEFLATE);
-        if (Protocol.HTTP2.equals(httpRequest.getProtocol())) {
-            HttpScheme scheme = httpRequest.isSecure() ? HttpScheme.HTTPS : HttpScheme.HTTP;
+        if (Protocol.HTTP_2.equals(httpRequest.getProtocol())) {
+            HttpScheme scheme = Boolean.TRUE.equals(httpRequest.isSecure()) ? HttpScheme.HTTPS : HttpScheme.HTTP;
             request.headers().add(HttpConversionUtil.ExtensionHeaderNames.SCHEME.text(), scheme.name());
         }
         request.headers().set(CONTENT_LENGTH, request.content().readableBytes());
