@@ -9,17 +9,19 @@ source "${SCRIPT_DIR}/helm-deploy.sh"
 source "${SCRIPT_DIR}/docker-compose.sh"
 
 # SKIP_JAVA_BUILD=true ./integration_tests.sh
-# SKIP_HELM_TESTS=true SKIP_JAVA_BUILD=true ./container_integration_tests/integration_tests.sh
+# SKIP_HELM_TESTS=true SKIP_JAVA_BUILD=true DOCKER_BUILD=true ./container_integration_tests/integration_tests.sh
 
 function build_docker() {
   runCommand "cd ${SCRIPT_DIR}"
   if [[ "${SKIP_JAVA_BUILD:-}" != "true" ]]; then
     runCommand "cd ..; ./mvnw -DskipTests=true package; cd -"
   fi
-  runCommand "cp ../mockserver-netty/target/mockserver-netty-*-SNAPSHOT-jar-with-dependencies.jar ../docker/mockserver-netty-jar-with-dependencies.jar"
-  runCommand "docker build --no-cache -t mockserver/mockserver:integration_testing --build-arg source=copy ../docker"
-  runCommand "rm ../docker/mockserver-netty-jar-with-dependencies.jar"
-  runCommand "docker build -t mockserver/mockserver:integration_testing_client -f ClientDockerfile ."
+  if [[ "${DOCKER_BUILD:-}" != "true" ]]; then
+    runCommand "cp ../mockserver-netty/target/mockserver-netty-*-SNAPSHOT-jar-with-dependencies.jar ../docker/mockserver-netty-jar-with-dependencies.jar"
+    runCommand "docker build --no-cache -t mockserver/mockserver:integration_testing --build-arg source=copy ../docker"
+    runCommand "rm ../docker/mockserver-netty-jar-with-dependencies.jar"
+    runCommand "docker build -t mockserver/mockserver:integration_testing_client -f ClientDockerfile ."
+  fi
 }
 
 function test() {
@@ -31,9 +33,6 @@ function test() {
 }
 
 function run_all_tests() {
-  if [[ "${SKIP_HELM_TESTS:-}" != "true" ]]; then
-    start-up-k8s &
-  fi
   export PASS_LOG_FILE=$(mktemp)
   export FAIL_LOG_FILE=$(mktemp)
 
