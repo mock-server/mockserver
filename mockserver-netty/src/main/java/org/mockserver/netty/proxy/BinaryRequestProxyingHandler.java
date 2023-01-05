@@ -188,8 +188,7 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat(
-                        "exception caught by " + this.getClass() + " handler -> closing pipeline " + ctx.channel())
+                    .setMessageFormat("exception caught by " + this.getClass() + " handler -> closing pipeline " + ctx.channel())
                     .setThrowable(cause)
             );
         }
