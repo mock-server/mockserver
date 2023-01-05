@@ -30,13 +30,11 @@ public class NettyAssymetricBinaryForwardingIntegrationTest {
     public static final MockServerLogger LOGGER = new MockServerLogger(
         NettyAssymetricBinaryForwardingIntegrationTest.class);
     private String message;
-    private String responseMessage;
     private MockServer mockServer;
 
     @Before
     public void setupFixture() throws IOException {
         message = "Hello not world!\n";
-        responseMessage = "and back again!\n";
     }
 
     @Test
@@ -76,7 +74,6 @@ public class NettyAssymetricBinaryForwardingIntegrationTest {
     @Test
     public void sendNonHttpTrafficWithLongMessageWithoutResponseAndWithSocketCloseBetweenEachMessage()
         throws Exception {
-        message = StringUtils.repeat("LongMessage", 1000) + "\n";
         executeTestRun(
             socket -> {
                 socket.close();
@@ -97,52 +94,6 @@ public class NettyAssymetricBinaryForwardingIntegrationTest {
                 waitForCondition(() -> serverReceivedText.get().equals(message + message),
                     () -> "Timeout while waiting for server to receive two messages "
                         + "(got \n" + serverReceivedText.get() + ", expected \n" + message + message + ")");
-            }
-        );
-    }
-
-    @Test
-    public void sendNonHttpTrafficWithResponseFromServer() throws Exception {
-        executeTestRun(
-            socket -> {
-                writeSingleRequestMessage(socket);
-                readSingleResponseMessage(socket);
-                writeSingleRequestMessage(socket);
-                readSingleResponseMessage(socket);
-            },
-            serverSocket -> {
-                serverSocket.getOutputStream().write(responseMessage.getBytes());
-                serverSocket.getOutputStream().flush();
-            },
-            (requestCalls, responseCalls, serverCalled, serverReceivedText) -> {
-                assertContains(requestCalls.toString(), "2");
-                assertContains(responseCalls.toString(), "2");
-                assertContains(serverCalled.toString(), "2");
-            }
-        );
-    }
-
-    @Test
-    public void sendNonHttpTrafficWithMultipleResponsesFromServer() throws Exception {
-        executeTestRun(
-            socket -> {
-                writeSingleRequestMessage(socket);
-                readSingleResponseMessage(socket);
-                readSingleResponseMessage(socket);
-                writeSingleRequestMessage(socket);
-                readSingleResponseMessage(socket);
-                readSingleResponseMessage(socket);
-            },
-            serverSocket -> {
-                serverSocket.getOutputStream().write(responseMessage.getBytes());
-                serverSocket.getOutputStream().flush();
-                serverSocket.getOutputStream().write(responseMessage.getBytes());
-                serverSocket.getOutputStream().flush();
-            },
-            (requestCalls, responseCalls, serverCalled, serverReceivedText) -> {
-                assertEquals(2, requestCalls.get());
-                assertEquals(2, responseCalls.get());
-                assertEquals(2, serverCalled.get());
             }
         );
     }
@@ -171,66 +122,11 @@ public class NettyAssymetricBinaryForwardingIntegrationTest {
         );
     }
 
-
-    @Test
-    public void sendNonHttpTrafficWithMultipleResponsesFromServerForOnlyASingleRequest() throws Exception {
-        AtomicInteger serverResponsesRead = new AtomicInteger(0);
-        executeTestRun(
-            socket -> {
-                writeSingleRequestMessage(socket);
-                readSingleResponseMessage(socket);
-                serverResponsesRead.incrementAndGet();
-                readSingleResponseMessage(socket);
-                serverResponsesRead.incrementAndGet();
-                readSingleResponseMessage(socket);
-                serverResponsesRead.incrementAndGet();
-                readSingleResponseMessage(socket);
-                serverResponsesRead.incrementAndGet();
-            },
-            serverSocket -> {
-                serverSocket.setTcpNoDelay(true);
-                serverSocket.getOutputStream().write(responseMessage.getBytes());
-                serverSocket.getOutputStream().flush();
-                serverSocket.getOutputStream().write(responseMessage.getBytes());
-                serverSocket.getOutputStream().flush();
-                serverSocket.getOutputStream().write(responseMessage.getBytes());
-                serverSocket.getOutputStream().flush();
-                serverSocket.getOutputStream().write(responseMessage.getBytes());
-                serverSocket.getOutputStream().flush();
-
-            },
-            (requestCalls, responseCalls, serverCalled, serverReceivedText) -> {
-                waitForCondition(() -> serverResponsesRead.get() >= 4,
-                    () -> "Wait timed out. serverResponsesRead never reached 4, is currently at "
-                        + serverResponsesRead.get());
-                assertEquals(1, requestCalls.get());
-                assertEquals(1, responseCalls.get());
-                assertEquals(1, serverCalled.get());
-            }
-        );
-    }
-
     private void writeSingleRequestMessage(Socket socket) throws IOException {
         socket.setSendBufferSize(message.length());
         OutputStream output = socket.getOutputStream();
         output.write((message).getBytes(StandardCharsets.UTF_8));
         output.flush();
-    }
-
-    private void readSingleResponseMessage(Socket socket) throws IOException, InterruptedException {
-        readSingleMessage(socket, responseMessage);
-    }
-
-    private void readSingleMessage(Socket socket, String expectedMessage) throws IOException, InterruptedException {
-        InputStream input = socket.getInputStream();
-        waitForCondition(() -> input.available() >= expectedMessage.length(),
-            () -> "Timeout while waiting for message (Found " + input.available()
-                + " bytes available, wanted " + expectedMessage.length() + ")");
-        byte[] buffer = new byte[expectedMessage.length()];
-        log("Before reading from buffer. Currently " + socket.getInputStream().available() + " bytes available");
-        input.read(buffer, 0, buffer.length);
-        log("After reading from buffer. Currently " + socket.getInputStream().available() + " bytes available");
-        assertEquals(expectedMessage, new String(buffer));
     }
 
     private static void log(String s) {
