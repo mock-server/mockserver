@@ -1,7 +1,7 @@
 version: "2.4"
 services:
   client:
-    image: mockserver/mockserver:integration_testing_client
+    image: mockserver/mockserver:integration_testing_client_curl
     networks:
       - test-network
     command:

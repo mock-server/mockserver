@@ -16,11 +16,16 @@ function build_docker() {
   if [[ "${SKIP_JAVA_BUILD:-}" != "true" ]]; then
     runCommand "cd ..; ./mvnw -DskipTests=true package; cd -"
   fi
-  if [[ "${DOCKER_BUILD:-}" != "true" ]]; then
-    runCommand "cp ../mockserver-netty/target/mockserver-netty-*-SNAPSHOT-jar-with-dependencies.jar ../docker/mockserver-netty-jar-with-dependencies.jar"
-    runCommand "docker build --no-cache -t mockserver/mockserver:integration_testing --build-arg source=copy ../docker"
-    runCommand "rm ../docker/mockserver-netty-jar-with-dependencies.jar"
-    runCommand "docker build -t mockserver/mockserver:integration_testing_client -f ClientDockerfile ."
+  if [[ "${SKIP_DOCKER_BUILD_MOCKSERVER:-}" != "true" ]]; then
+    runCommand "cp ${SCRIPT_DIR}/../mockserver-netty/target/mockserver-netty-*-SNAPSHOT-jar-with-dependencies.jar ${SCRIPT_DIR}/../docker/mockserver-netty-jar-with-dependencies.jar"
+    runCommand "docker build --no-cache -t mockserver/mockserver:integration_testing --build-arg source=copy ${SCRIPT_DIR}/../docker"
+    runCommand "rm ${SCRIPT_DIR}/../docker/mockserver-netty-jar-with-dependencies.jar"
+  fi
+  if [[ "${FORCE_DOCKER_REBUILD_CLIENT:-}" == "true" ]]; then
+    runCommand "docker build -t mockserver/mockserver:integration_testing_client_curl -f ${SCRIPT_DIR}/client_docker_images/CurlClientDockerfile ${SCRIPT_DIR}/client_docker_images"
+  fi
+  if [[ "${FORCE_DOCKER_REBUILD_CLIENT:-}" == "true" ]]; then
+    runCommand "docker build -t mockserver/mockserver:integration_testing_client_nghttp -f ${SCRIPT_DIR}/client_docker_images/Nghttp2ClientDockerfile ${SCRIPT_DIR}/client_docker_images"
   fi
 }
 
