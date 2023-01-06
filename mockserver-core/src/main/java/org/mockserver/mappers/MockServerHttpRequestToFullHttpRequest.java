@@ -127,6 +127,10 @@ public class MockServerHttpRequestToFullHttpRequest {
         if (Protocol.HTTP_2.equals(httpRequest.getProtocol())) {
             HttpScheme scheme = Boolean.TRUE.equals(httpRequest.isSecure()) ? HttpScheme.HTTPS : HttpScheme.HTTP;
             request.headers().add(HttpConversionUtil.ExtensionHeaderNames.SCHEME.text(), scheme.name());
+            Integer streamId = httpRequest.getStreamId();
+            if (streamId != null) {
+                request.headers().add(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(), streamId);
+            }
         }
         request.headers().set(CONTENT_LENGTH, request.content().readableBytes());
         if (isKeepAlive(request)) {

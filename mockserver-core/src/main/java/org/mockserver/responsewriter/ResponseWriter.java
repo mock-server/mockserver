@@ -88,6 +88,11 @@ public abstract class ResponseWriter {
             }
         }
 
+        // send response down the request HTTP2 stream
+        if (request.getStreamId() != null) {
+            response.withStreamId(request.getStreamId());
+        }
+
         sendResponse(request, addConnectionHeader(request, response));
     }
 

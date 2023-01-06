@@ -4,6 +4,7 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
+import io.netty.handler.codec.http2.HttpConversionUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.codec.BodyDecoderEncoder;
 import org.mockserver.codec.ExpandedParameterDecoder;
@@ -60,6 +61,9 @@ public class FullHttpRequestToMockServerHttpRequest {
                     );
                 }
                 setMethod(httpRequest, fullHttpRequest);
+                httpRequest.withKeepAlive(isKeepAlive(fullHttpRequest));
+                httpRequest.withSecure(isSecure);
+                httpRequest.withProtocol(protocol == null ? Protocol.HTTP_1_1 : protocol);
 
                 setPath(httpRequest, fullHttpRequest);
                 setQueryString(httpRequest, fullHttpRequest);
@@ -68,10 +72,6 @@ public class FullHttpRequestToMockServerHttpRequest {
                 setBody(httpRequest, fullHttpRequest);
                 setSocketAddress(httpRequest, fullHttpRequest, isSecure, port, localAddress, remoteAddress);
                 jdkCertificateToMockServerX509Certificate.setClientCertificates(httpRequest, clientCertificates);
-
-                httpRequest.withKeepAlive(isKeepAlive(fullHttpRequest));
-                httpRequest.withSecure(isSecure);
-                httpRequest.withProtocol(protocol == null ? Protocol.HTTP_1_1 : protocol);
             }
         } catch (Throwable throwable) {
             mockServerLogger.logEvent(
@@ -122,6 +122,10 @@ public class FullHttpRequestToMockServerHttpRequest {
             for (Header preservedHeader : preservedHeaders) {
                 httpRequest.withHeader(preservedHeader);
             }
+        }
+        if (Protocol.HTTP_2.equals(httpRequest.getProtocol())) {
+            Integer streamId = fullHttpResponse.headers().getInt(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text());
+            httpRequest.withStreamId(streamId);
         }
     }
 
