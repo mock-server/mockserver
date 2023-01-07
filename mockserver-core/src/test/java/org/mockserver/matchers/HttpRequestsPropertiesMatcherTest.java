@@ -6346,7 +6346,7 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(context.getDifferences(COOKIES), nullValue());
         assertThat(context.getDifferences(HEADERS), nullValue());
         assertThat(context.getDifferences(BODY), nullValue());
-        assertThat(context.getDifferences(SSL_MATCHES), nullValue());
+        assertThat(context.getDifferences(SECURE), nullValue());
         assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(context.getDifferences(OPERATION), nullValue());
         assertThat(context.getDifferences(OPENAPI), nullValue());
@@ -6406,7 +6406,7 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(context.getDifferences(COOKIES), nullValue());
         assertThat(context.getDifferences(HEADERS), nullValue());
         assertThat(context.getDifferences(BODY), nullValue());
-        assertThat(context.getDifferences(SSL_MATCHES), nullValue());
+        assertThat(context.getDifferences(SECURE), nullValue());
         assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(context.getDifferences(OPERATION), nullValue());
         assertThat(context.getDifferences(OPENAPI), nullValue());
@@ -6447,7 +6447,7 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(context.getDifferences(COOKIES), nullValue());
         assertThat(context.getDifferences(HEADERS), nullValue());
         assertThat(context.getDifferences(BODY), nullValue());
-        assertThat(context.getDifferences(SSL_MATCHES), nullValue());
+        assertThat(context.getDifferences(SECURE), nullValue());
         assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(context.getDifferences(OPERATION), nullValue());
         assertThat(context.getDifferences(OPENAPI), nullValue());
@@ -6500,7 +6500,7 @@ public class HttpRequestsPropertiesMatcherTest {
             "" + NEW_LINE +
             "    none is not a subset" + NEW_LINE));
         assertThat(context.getDifferences(BODY), nullValue());
-        assertThat(context.getDifferences(SSL_MATCHES), nullValue());
+        assertThat(context.getDifferences(SECURE), nullValue());
         assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(context.getDifferences(OPERATION), nullValue());
         assertThat(context.getDifferences(OPENAPI), nullValue());
@@ -6553,7 +6553,7 @@ public class HttpRequestsPropertiesMatcherTest {
             "" + NEW_LINE +
             "    none is not a subset" + NEW_LINE));
         assertThat(context.getDifferences(BODY), nullValue());
-        assertThat(context.getDifferences(SSL_MATCHES), nullValue());
+        assertThat(context.getDifferences(SECURE), nullValue());
         assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(context.getDifferences(OPERATION), nullValue());
         assertThat(context.getDifferences(OPENAPI), nullValue());
@@ -6631,7 +6631,7 @@ public class HttpRequestsPropertiesMatcherTest {
             "" + NEW_LINE +
             "    none is not a subset" + NEW_LINE));
         assertThat(context.getDifferences(BODY), nullValue());
-        assertThat(context.getDifferences(SSL_MATCHES), nullValue());
+        assertThat(context.getDifferences(SECURE), nullValue());
         assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(context.getDifferences(OPERATION), nullValue());
         assertThat(context.getDifferences(OPENAPI), nullValue());
@@ -6700,7 +6700,7 @@ public class HttpRequestsPropertiesMatcherTest {
             "     - $.id: string found, integer expected" + NEW_LINE;
         assertThat(context.getDifferences(BODY).get(0), equalTo(bodyError));
         assertThat(context.getDifferences(BODY), containsInAnyOrder(bodyError, bodyError));
-        assertThat(context.getDifferences(SSL_MATCHES), nullValue());
+        assertThat(context.getDifferences(SECURE), nullValue());
         assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(context.getDifferences(OPERATION), nullValue());
         assertThat(context.getDifferences(OPENAPI), nullValue());
@@ -6775,7 +6775,7 @@ public class HttpRequestsPropertiesMatcherTest {
             "     - $.id: string found, integer expected" + NEW_LINE;
         assertThat(context.getDifferences(BODY).get(0), equalTo(bodyError));
         assertThat(context.getDifferences(BODY), containsInAnyOrder(bodyError, bodyError));
-        assertThat(context.getDifferences(SSL_MATCHES), nullValue());
+        assertThat(context.getDifferences(SECURE), nullValue());
         assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(context.getDifferences(OPERATION), nullValue());
         assertThat(context.getDifferences(OPENAPI), nullValue());
@@ -6843,7 +6843,7 @@ public class HttpRequestsPropertiesMatcherTest {
             "     - $.id: string found, integer expected" + NEW_LINE;
         assertThat(context.getDifferences(BODY).get(0), equalTo(schemaValidationError));
         assertThat(context.getDifferences(BODY), containsInAnyOrder(schemaValidationError, schemaValidationError));
-        assertThat(context.getDifferences(SSL_MATCHES), nullValue());
+        assertThat(context.getDifferences(SECURE), nullValue());
         assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(context.getDifferences(OPERATION), nullValue());
         assertThat(context.getDifferences(OPENAPI), nullValue());
@@ -6857,7 +6857,7 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(context.getDifferences(COOKIES), nullValue());
         assertThat(context.getDifferences(HEADERS), nullValue());
         assertThat(context.getDifferences(BODY), nullValue());
-        assertThat(context.getDifferences(SSL_MATCHES), nullValue());
+        assertThat(context.getDifferences(SECURE), nullValue());
         assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(context.getDifferences(OPERATION), nullValue());
         assertThat(context.getDifferences(OPENAPI), nullValue());

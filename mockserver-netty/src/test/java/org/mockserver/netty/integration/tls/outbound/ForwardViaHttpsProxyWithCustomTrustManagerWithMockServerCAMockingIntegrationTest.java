@@ -18,6 +18,7 @@ public class ForwardViaHttpsProxyWithCustomTrustManagerWithMockServerCAMockingIn
 
     private static MockServer mockServer;
     private static MockServer proxy;
+    private static MockServerClient proxyClient;
     private static ForwardProxyTLSX509CertificatesTrustManager originalForwardProxyTLSX509CertificatesTrustManager;
     private static String originalForwardProxyTLSCustomTrustX509Certificates;
 
@@ -34,6 +35,12 @@ public class ForwardViaHttpsProxyWithCustomTrustManagerWithMockServerCAMockingIn
         mockServer = new MockServer(proxyConfiguration(ProxyConfiguration.Type.HTTPS, "127.0.0.1:" + proxy.getLocalPort()));
 
         mockServerClient = new MockServerClient("localhost", mockServer.getLocalPort(), servletContext);
+        proxyClient = new MockServerClient("localhost", proxy.getLocalPort(), "");
+    }
+
+    @Override
+    public MockServerClient getProxyClient() {
+        return proxyClient;
     }
 
     @AfterClass
@@ -41,6 +48,7 @@ public class ForwardViaHttpsProxyWithCustomTrustManagerWithMockServerCAMockingIn
         stopQuietly(proxy);
         stopQuietly(mockServer);
         stopQuietly(mockServerClient);
+        stopQuietly(proxyClient);
 
         // set back to original value
         forwardProxyTLSX509CertificatesTrustManagerType(originalForwardProxyTLSX509CertificatesTrustManager);

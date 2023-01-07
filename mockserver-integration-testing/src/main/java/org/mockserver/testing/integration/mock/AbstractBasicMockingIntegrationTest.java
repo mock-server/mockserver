@@ -67,6 +67,10 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             .withReasonPhrase(NOT_FOUND_404.reasonPhrase());
     }
 
+    protected boolean supportsHTTP2() {
+        return true;
+    }
+
     @Test
     public void shouldReturnResponseWithOnlyBody() {
         // when
@@ -89,7 +93,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
-    public void shouldReturnResponseInHttpAndHttps() {
+    public void shouldReturnResponseInHTTP() {
         // when
         mockServerClient
             .when(
@@ -117,12 +121,122 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 getHeadersToRemove()
             )
         );
+    }
+
+    @Test
+    public void shouldReturnResponseInHTTPS() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_path"))
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+                    .withBody("some_body_response")
+            );
+
+        // then
         // - in https
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withBody("some_body_response"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST"),
+                getHeadersToRemove()
+            )
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseInHTTP2UsingALPN() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_path"))
+                    .withProtocol(Protocol.HTTP_1_1)
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+                    .withBody("some_body_response_in_http_1_1")
+            );
+        mockServerClient
+            .when(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_path"))
+                    .withProtocol(Protocol.HTTP_2)
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+                    .withBody("some_body_response_in_http_2")
+            );
+
+        // then
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody(supportsHTTP2() ? "some_body_response_in_http_2" : "some_body_response_in_http_1_1"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withProtocol(Protocol.HTTP_2)
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST"),
+                getHeadersToRemove()
+            )
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseInHTTP_1_1ByDefault() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_path"))
+                    .withProtocol(Protocol.HTTP_1_1)
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+                    .withBody("some_body_response_in_http_1_1")
+            );
+        mockServerClient
+            .when(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_path"))
+                    .withProtocol(Protocol.HTTP_2)
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+                    .withBody("some_body_response_in_http_2")
+            );
+
+        // then
+        // - in https
+        boolean overridesProtocolToHTTP2 = Protocol.HTTP_2.equals(getRequestModifier(request().withSecure(true)).getProtocol());
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody(overridesProtocolToHTTP2 ? "some_body_response_in_http_2" : "some_body_response_in_http_1_1"),
             makeRequest(
                 request()
                     .withSecure(true)
@@ -2902,6 +3016,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withCookie("requestCookieToReplace", "replacedValue")
                 .withKeepAlive(true)
                 .withSecure(false)
+                .withProtocol(Protocol.HTTP_1_1)
                 .withSocketAddress("localhost", insecureEchoServer.getPort(), SocketAddress.Scheme.HTTP)
                 .withLocalAddress("127.0.0.1:" + insecureEchoServer.getPort())
                 .withRemoteAddress("127.0.0.1:" + echoServerRequest.getRemoteAddress().split(":")[1])
@@ -3050,6 +3165,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withCookie("requestCookieToReplace", "replacedValue")
                 .withKeepAlive(true)
                 .withSecure(false)
+                .withProtocol(Protocol.HTTP_1_1)
                 .withSocketAddress("localhost", insecureEchoServer.getPort(), SocketAddress.Scheme.HTTP)
                 .withLocalAddress("127.0.0.1:" + insecureEchoServer.getPort())
                 .withRemoteAddress("127.0.0.1:" + echoServerRequest.getRemoteAddress().split(":")[1])
@@ -3131,6 +3247,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withCookie("requestCookieToReplace", "replacedValue")
                 .withKeepAlive(true)
                 .withSecure(false)
+                .withProtocol(Protocol.HTTP_1_1)
                 .withSocketAddress("localhost", insecureEchoServer.getPort(), SocketAddress.Scheme.HTTP)
                 .withLocalAddress("127.0.0.1:" + insecureEchoServer.getPort())
                 .withRemoteAddress("127.0.0.1:" + echoServerRequest.getRemoteAddress().split(":")[1])

@@ -4,16 +4,14 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
+import io.netty.handler.codec.http2.HttpConversionUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.codec.BodyDecoderEncoder;
 import org.mockserver.codec.ExpandedParameterDecoder;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.Cookies;
-import org.mockserver.model.Header;
-import org.mockserver.model.Headers;
-import org.mockserver.model.HttpRequest;
+import org.mockserver.model.*;
 import org.mockserver.url.URLParser;
 import org.slf4j.event.Level;
 
@@ -50,7 +48,7 @@ public class FullHttpRequestToMockServerHttpRequest {
         this.jdkCertificateToMockServerX509Certificate = new JDKCertificateToMockServerX509Certificate(mockServerLogger);
     }
 
-    public HttpRequest mapFullHttpRequestToMockServerRequest(FullHttpRequest fullHttpRequest, List<Header> preservedHeaders, SocketAddress localAddress, SocketAddress remoteAddress) {
+    public HttpRequest mapFullHttpRequestToMockServerRequest(FullHttpRequest fullHttpRequest, List<Header> preservedHeaders, SocketAddress localAddress, SocketAddress remoteAddress, Protocol protocol) {
         HttpRequest httpRequest = new HttpRequest();
         try {
             if (fullHttpRequest != null) {
@@ -63,6 +61,9 @@ public class FullHttpRequestToMockServerHttpRequest {
                     );
                 }
                 setMethod(httpRequest, fullHttpRequest);
+                httpRequest.withKeepAlive(isKeepAlive(fullHttpRequest));
+                httpRequest.withSecure(isSecure);
+                httpRequest.withProtocol(protocol == null ? Protocol.HTTP_1_1 : protocol);
 
                 setPath(httpRequest, fullHttpRequest);
                 setQueryString(httpRequest, fullHttpRequest);
@@ -71,9 +72,6 @@ public class FullHttpRequestToMockServerHttpRequest {
                 setBody(httpRequest, fullHttpRequest);
                 setSocketAddress(httpRequest, fullHttpRequest, isSecure, port, localAddress, remoteAddress);
                 jdkCertificateToMockServerX509Certificate.setClientCertificates(httpRequest, clientCertificates);
-
-                httpRequest.withKeepAlive(isKeepAlive(fullHttpRequest));
-                httpRequest.withSecure(isSecure);
             }
         } catch (Throwable throwable) {
             mockServerLogger.logEvent(
@@ -124,6 +122,10 @@ public class FullHttpRequestToMockServerHttpRequest {
             for (Header preservedHeader : preservedHeaders) {
                 httpRequest.withHeader(preservedHeader);
             }
+        }
+        if (Protocol.HTTP_2.equals(httpRequest.getProtocol())) {
+            Integer streamId = fullHttpResponse.headers().getInt(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text());
+            httpRequest.withStreamId(streamId);
         }
     }
 

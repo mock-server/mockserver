@@ -5,13 +5,20 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import org.mockserver.log.model.LogEntry;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
-import org.mockserver.serialization.model.*;
+import org.mockserver.serialization.model.BodyDTO;
+import org.mockserver.serialization.model.HttpRequestDTO;
+import org.mockserver.serialization.model.OpenAPIDefinitionDTO;
+import org.mockserver.serialization.model.RequestDefinitionDTO;
 
 import java.io.IOException;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mockserver.log.model.LogEntry.LogMessageType.EXCEPTION;
 import static org.mockserver.model.NottableString.string;
+import static org.slf4j.event.Level.ERROR;
 
 public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDefinitionDTO> {
 
@@ -32,6 +39,7 @@ public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDef
             Headers headers = null;
             Boolean keepAlive = null;
             Boolean secure = null;
+            Protocol protocol = null;
             SocketAddress socketAddress = null;
             String specUrlOrPayload = null;
             String operationId = null;
@@ -94,6 +102,21 @@ public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDef
                             socketAddress = ctxt.readValue(jsonParser, SocketAddress.class);
                             break;
                         }
+                        case "protocol": {
+                            jsonParser.nextToken();
+                            try {
+                                protocol = Protocol.valueOf(ctxt.readValue(jsonParser, String.class));
+                            } catch (Throwable throwable) {
+                                new MockServerLogger().logEvent(
+                                    new LogEntry()
+                                        .setType(EXCEPTION)
+                                        .setLogLevel(ERROR)
+                                        .setMessageFormat("exception while parsing protocol value for RequestDefinitionDTO - " + throwable.getMessage())
+                                        .setThrowable(throwable)
+                                );
+                            }
+                            break;
+                        }
                         case "specUrlOrPayload": {
                             jsonParser.nextToken();
                             JsonNode potentiallyJsonField = ctxt.readValue(jsonParser, JsonNode.class);
@@ -128,6 +151,7 @@ public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDef
                     .setHeaders(headers)
                     .setKeepAlive(keepAlive)
                     .setSecure(secure)
+                    .setProtocol(protocol)
                     .setSocketAddress(socketAddress)
                     .setNot(not);
             }

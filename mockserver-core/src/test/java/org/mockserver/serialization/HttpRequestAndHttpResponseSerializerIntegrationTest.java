@@ -36,8 +36,9 @@ public class HttpRequestAndHttpResponseSerializerIntegrationTest {
                     .withHeaders(new Header("headerName", "headerValue"))
                     .withCookies(new Cookie("cookieName", "cookieValue"))
                     .withSecure(true)
-                    .withSocketAddress("someHost", 1234, SocketAddress.Scheme.HTTPS)
                     .withKeepAlive(true)
+                    .withProtocol(Protocol.HTTP_2)
+                    .withSocketAddress("someHost", 1234, SocketAddress.Scheme.HTTPS)
             )
             .withHttpResponse(
                 new HttpResponse()
@@ -73,6 +74,7 @@ public class HttpRequestAndHttpResponseSerializerIntegrationTest {
         "      \"port\" : 1234," + NEW_LINE +
         "      \"scheme\" : \"HTTPS\"" + NEW_LINE +
         "    }," + NEW_LINE +
+        "    \"protocol\" : \"HTTP_2\"," + NEW_LINE +
         "    \"body\" : \"someBody\"" + NEW_LINE +
         "  }," + NEW_LINE +
         "  \"httpResponse\" : {" + NEW_LINE +

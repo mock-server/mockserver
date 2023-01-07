@@ -11,7 +11,7 @@ source "${SCRIPT_DIR}/../logging.sh"
 printMessage "Start: \"${SCRIPT_DIR/\//}\""
 
 function integration_test() {
-  start-up "--set image.repositoryNameAndTag=mockserver/mockserver:integration_testing --set service.port=1090" "proxy-target"
+  start-up "--set image.repositoryNameAndTag=mockserver/mockserver:integration_testing --set service.port=1090" "proxy-target" "1090"
   PROXY_TARGET="${MOCKSERVER_HOST}"
   sleep 3
   start-up "--set image.repositoryNameAndTag=mockserver/mockserver:integration_testing --set app.proxyRemoteHost=proxy-target.proxy-target.svc.cluster.local --set app.proxyRemotePort=1090"
@@ -34,8 +34,8 @@ function integration_test() {
     fi
   fi
   logTestResult "${TEST_EXIT_CODE}" "${TEST_CASE}" "proxy-target"
-#  tear-down "proxy-target"
-#  tear-down
+  tear-down "proxy-target" "1090"
+  tear-down
   return ${TEST_EXIT_CODE}
 }
 

@@ -5,12 +5,12 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.configuration.Configuration;
-import org.mockserver.time.EpochService;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpState;
 import org.mockserver.model.*;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.time.EpochService;
 import org.mockserver.uuid.UUIDService;
 import org.slf4j.event.Level;
 
@@ -328,7 +328,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      false" + NEW_LINE +
                     "  " + NEW_LINE +
-                    "  sslMatches didn't match: " + NEW_LINE +
+                    "  secure didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
                     "    boolean match failed expected:" + NEW_LINE +
                     "  " + NEW_LINE +
@@ -337,7 +337,8 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "     found:" + NEW_LINE +
                     "  " + NEW_LINE +
                     "      false" + NEW_LINE +
-                    NEW_LINE +
+                    "  " + NEW_LINE +
+                    "  protocol matched" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -451,7 +452,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      false" + NEW_LINE +
                     "  " + NEW_LINE +
-                    "  sslMatches didn't match: " + NEW_LINE +
+                    "  secure didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
                     "    boolean match failed expected:" + NEW_LINE +
                     "  " + NEW_LINE +
@@ -460,7 +461,8 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "     found:" + NEW_LINE +
                     "  " + NEW_LINE +
                     "      false" + NEW_LINE +
-                    NEW_LINE +
+                    "  " + NEW_LINE +
+                    "  protocol matched" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -594,7 +596,8 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      false" + NEW_LINE +
                     "  " + NEW_LINE +
-                    "  sslMatches matched" + NEW_LINE +
+                    "  secure matched" + NEW_LINE +
+                    "  protocol matched" + NEW_LINE +
                     NEW_LINE +
                     "------------------------------------" + NEW_LINE +
                     LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
@@ -626,7 +629,8 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      null" + NEW_LINE +
                     "  " + NEW_LINE +
-                    "  sslMatches matched" + NEW_LINE +
+                    "  secure matched" + NEW_LINE +
+                    "  protocol matched" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -691,7 +695,8 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      false" + NEW_LINE +
                     "  " + NEW_LINE +
-                    "  sslMatches matched" + NEW_LINE +
+                    "  secure matched" + NEW_LINE +
+                    "  protocol matched" + NEW_LINE +
                     NEW_LINE +
                     "------------------------------------" + NEW_LINE +
                     LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
@@ -733,7 +738,8 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      null" + NEW_LINE +
                     "  " + NEW_LINE +
-                    "  sslMatches matched" + NEW_LINE +
+                    "  secure matched" + NEW_LINE +
+                    "  protocol matched" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -778,7 +784,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  pathParameters matched" + NEW_LINE +
                     "  queryParameters matched" + NEW_LINE +
                     "  keep-alive matched" + NEW_LINE +
-                    "  sslMatches didn't match: " + NEW_LINE +
+                    "  secure didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
                     "    boolean match failed expected:" + NEW_LINE +
                     "  " + NEW_LINE +
@@ -810,11 +816,99 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  pathParameters matched" + NEW_LINE +
                     "  queryParameters matched" + NEW_LINE +
                     "  keep-alive matched" + NEW_LINE +
-                    "  sslMatches didn't match: " + NEW_LINE +
+                    "  secure didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
                     "    boolean match failed expected:" + NEW_LINE +
                     "  " + NEW_LINE +
                     "      true" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "     found:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      null" + NEW_LINE +
+                    NEW_LINE +
+                    NEW_LINE
+            ));
+        } finally {
+            matchersFailFast(originalMatchersFailFast);
+        }
+    }
+
+    @Test
+    public void doesNotMatchIncorrectProtocol() {
+        boolean originalMatchersFailFast = matchersFailFast();
+        try {
+            // given
+            assertFalse(match(request().withProtocol(Protocol.HTTP_1_1), request().withProtocol(Protocol.HTTP_2)));
+            assertFalse(match(request().withProtocol(Protocol.HTTP_2), request().withProtocol(null)));
+
+            // then
+            HttpResponse response = httpStateHandler
+                .retrieve(
+                    request()
+                        .withQueryStringParameter("type", "logs")
+                );
+            assertThat(response.getBodyAsString(), is(
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                    NEW_LINE +
+                    "  {" + NEW_LINE +
+                    "    \"protocol\" : \"HTTP_2\"" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    NEW_LINE +
+                    " didn't match request matcher:" + NEW_LINE +
+                    NEW_LINE +
+                    "  {" + NEW_LINE +
+                    "    \"protocol\" : \"HTTP_1_1\"" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    NEW_LINE +
+                    " because:" + NEW_LINE +
+                    NEW_LINE +
+                    "  method matched" + NEW_LINE +
+                    "  path matched" + NEW_LINE +
+                    "  body matched" + NEW_LINE +
+                    "  headers matched" + NEW_LINE +
+                    "  cookies matched" + NEW_LINE +
+                    "  pathParameters matched" + NEW_LINE +
+                    "  queryParameters matched" + NEW_LINE +
+                    "  keep-alive matched" + NEW_LINE +
+                    "  secure matched" + NEW_LINE +
+                    "  protocol didn't match: " + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "    exact string match failed expected:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      HTTP_1_1" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "     found:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      HTTP_2" + NEW_LINE +
+                    NEW_LINE +
+                    NEW_LINE +
+                    "------------------------------------" + NEW_LINE +
+                    LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                    NEW_LINE +
+                    "  { }" + NEW_LINE +
+                    NEW_LINE +
+                    " didn't match request matcher:" + NEW_LINE +
+                    NEW_LINE +
+                    "  {" + NEW_LINE +
+                    "    \"protocol\" : \"HTTP_2\"" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    NEW_LINE +
+                    " because:" + NEW_LINE +
+                    NEW_LINE +
+                    "  method matched" + NEW_LINE +
+                    "  path matched" + NEW_LINE +
+                    "  body matched" + NEW_LINE +
+                    "  headers matched" + NEW_LINE +
+                    "  cookies matched" + NEW_LINE +
+                    "  pathParameters matched" + NEW_LINE +
+                    "  queryParameters matched" + NEW_LINE +
+                    "  keep-alive matched" + NEW_LINE +
+                    "  secure matched" + NEW_LINE +
+                    "  protocol didn't match: " + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "    exact string match failed expected:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      HTTP_2" + NEW_LINE +
                     "  " + NEW_LINE +
                     "     found:" + NEW_LINE +
                     "  " + NEW_LINE +

@@ -290,6 +290,7 @@ public class HttpRequestSerializerIntegrationTest {
             "  \"path\" : \"somePath\"," + NEW_LINE +
             "  \"secure\" : true," + NEW_LINE +
             "  \"keepAlive\" : false," + NEW_LINE +
+            "  \"protocol\" : \"HTTP_2\"," + NEW_LINE +
             "  \"pathParameters\" : [ {" + NEW_LINE +
             "    \"name\" : \"pathParameterName\"," + NEW_LINE +
             "    \"values\" : [ \"pathParameterValue\" ]" + NEW_LINE +
@@ -339,6 +340,7 @@ public class HttpRequestSerializerIntegrationTest {
             ))
             .setSecure(true)
             .setKeepAlive(false)
+            .setProtocol(Protocol.HTTP_2)
             .setSocketAddress(new SocketAddress()
                 .withHost("someHost")
                 .withPort(1234)

@@ -12,7 +12,7 @@ import org.slf4j.event.Level;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
-import static org.mockserver.netty.HttpRequestHandler.PROXYING;
+import static org.mockserver.netty.HttpRequestHandler.setProxyingRequest;
 import static org.mockserver.netty.unification.PortUnificationHandler.disableSslDownstream;
 import static org.mockserver.netty.unification.PortUnificationHandler.enableSslDownstream;
 
@@ -32,7 +32,7 @@ public abstract class SocksProxyHandler<T> extends SimpleChannelInboundHandler<T
 
     protected void forwardConnection(final ChannelHandlerContext ctx, ChannelHandler forwarder, final String addr, int port) {
         Channel channel = ctx.channel();
-        channel.attr(PROXYING).set(Boolean.TRUE);
+        setProxyingRequest(ctx, Boolean.TRUE);
         if (String.valueOf(port).endsWith("80")) {
             disableSslDownstream(channel);
         } else if (String.valueOf(port).endsWith("443")) {

@@ -74,53 +74,58 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
     }
 
     private boolean matchesByStrings(MockServerLogger mockServerLogger, MatchDifference context, NottableString matcher, NottableString matched) {
+        if (matcher == null) {
+            return true;
+        }
         final String matcherValue = matcher.getValue();
         if (StringUtils.isBlank(matcherValue)) {
             return true;
         } else {
-            final String matchedValue = matched.getValue();
-            if (matchedValue != null) {
-                // match as exact string
-                if (matchedValue.equals(matcherValue) || matchedValue.equalsIgnoreCase(matcherValue)) {
-                    return true;
-                }
+            if (matched != null) {
+                final String matchedValue = matched.getValue();
+                if (matchedValue != null) {
+                    // match as exact string
+                    if (matchedValue.equals(matcherValue) || matchedValue.equalsIgnoreCase(matcherValue)) {
+                        return true;
+                    }
 
-                // match as regex - matcher -> matched (data plane or control plane)
-                try {
-                    if (matcher.matches(matchedValue)) {
-                        return true;
-                    }
-                } catch (PatternSyntaxException pse) {
-                    if (MockServerLogger.isEnabled(DEBUG) && mockServerLogger != null) {
-                        mockServerLogger.logEvent(
-                            new LogEntry()
-                                .setLogLevel(DEBUG)
-                                .setMessageFormat("error while matching regex [" + matcher + "] for string [" + matched + "] " + pse.getMessage())
-                                .setThrowable(pse)
-                        );
-                    }
-                }
-                // match as regex - matched -> matcher (control plane only)
-                try {
-                    if (controlPlaneMatcher && matched.matches(matcherValue)) {
-                        return true;
-                    } else if (MockServerLogger.isEnabled(DEBUG) && matched.matches(matcherValue) && mockServerLogger != null) {
-                        mockServerLogger.logEvent(
-                            new LogEntry()
-                                .setLogLevel(DEBUG)
-                                .setMessageFormat("matcher{}would match{}if matcher was used for control plane")
-                                .setArguments(matcher, matched)
-                        );
-                    }
-                } catch (PatternSyntaxException pse) {
-                    if (controlPlaneMatcher) {
+                    // match as regex - matcher -> matched (data plane or control plane)
+                    try {
+                        if (matcher.matches(matchedValue)) {
+                            return true;
+                        }
+                    } catch (PatternSyntaxException pse) {
                         if (MockServerLogger.isEnabled(DEBUG) && mockServerLogger != null) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setLogLevel(DEBUG)
-                                    .setMessageFormat("error while matching regex [" + matched + "] for string [" + matcher + "] " + pse.getMessage())
+                                    .setMessageFormat("error while matching regex [" + matcher + "] for string [" + matched + "] " + pse.getMessage())
                                     .setThrowable(pse)
                             );
+                        }
+                    }
+                    // match as regex - matched -> matcher (control plane only)
+                    try {
+                        if (controlPlaneMatcher && matched.matches(matcherValue)) {
+                            return true;
+                        } else if (MockServerLogger.isEnabled(DEBUG) && matched.matches(matcherValue) && mockServerLogger != null) {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setLogLevel(DEBUG)
+                                    .setMessageFormat("matcher{}would match{}if matcher was used for control plane")
+                                    .setArguments(matcher, matched)
+                            );
+                        }
+                    } catch (PatternSyntaxException pse) {
+                        if (controlPlaneMatcher) {
+                            if (MockServerLogger.isEnabled(DEBUG) && mockServerLogger != null) {
+                                mockServerLogger.logEvent(
+                                    new LogEntry()
+                                        .setLogLevel(DEBUG)
+                                        .setMessageFormat("error while matching regex [" + matched + "] for string [" + matcher + "] " + pse.getMessage())
+                                        .setThrowable(pse)
+                                );
+                            }
                         }
                     }
                 }

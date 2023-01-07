@@ -1,9 +1,8 @@
 package org.mockserver.socket.tls;
 
 import com.google.common.base.Joiner;
-import io.netty.handler.ssl.ClientAuth;
-import io.netty.handler.ssl.SslContext;
-import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.codec.http2.Http2SecurityUtil;
+import io.netty.handler.ssl.*;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
@@ -18,12 +17,10 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.function.Function;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -54,7 +51,7 @@ public class NettySslContextFactory {
     private final Configuration configuration;
     private final MockServerLogger mockServerLogger;
     private final KeyAndCertificateFactory keyAndCertificateFactory;
-    private SslContext clientSslContext = null;
+    private final Map<String, SslContext> clientSslContexts = new ConcurrentHashMap<>();
     private SslContext serverSslContext = null;
     private Function<SslContextBuilder, SslContext> instanceClientSslContextBuilderFunction = clientSslContextBuilderFunction;
     private final boolean forServer;
@@ -92,7 +89,9 @@ public class NettySslContextFactory {
         return this;
     }
 
-    public synchronized SslContext createClientSslContext(boolean forwardProxyClient) {
+    public synchronized SslContext createClientSslContext(boolean forwardProxyClient, boolean enableHttp2) {
+        String key = "forwardProxyClient=" + forwardProxyClient + ",enableHttp2=" + enableHttp2;
+        SslContext clientSslContext = clientSslContexts.get(key);
         if (clientSslContext == null || configuration.rebuildTLSContext()) {
             try {
                 // create x509 and private key if none exist yet
@@ -103,11 +102,13 @@ public class NettySslContextFactory {
                     SslContextBuilder
                         .forClient()
                         .protocols(TLS_PROTOCOLS)
-//                        .sslProvider(SslProvider.JDK)
                         .keyManager(
                             forwardProxyPrivateKey(),
                             forwardProxyCertificateChain()
                         );
+                if (enableHttp2) {
+                    configureALPN(sslContextBuilder);
+                }
                 if (forwardProxyClient) {
                     switch (configuration.forwardProxyTLSX509CertificatesTrustManagerType()) {
                         case ANY:
@@ -133,8 +134,8 @@ public class NettySslContextFactory {
                     }
                     sslContextBuilder.trustManager(jvmCAX509TrustCertificates(mockServerX509Certificates));
                 }
-                clientSslContext = instanceClientSslContextBuilderFunction.apply(
-                    sslClientContextBuilderCustomizer.apply(sslContextBuilder));
+                clientSslContext = instanceClientSslContextBuilderFunction.apply(sslClientContextBuilderCustomizer.apply(sslContextBuilder));
+                clientSslContexts.put(key, clientSslContext);
                 configuration.rebuildTLSContext(false);
             } catch (Throwable throwable) {
                 throw new RuntimeException("Exception creating SSL context for client", throwable);
@@ -205,8 +206,8 @@ public class NettySslContextFactory {
                         keyAndCertificateFactory.certificateChain()
                     )
                     .protocols(TLS_PROTOCOLS)
-//                    .sslProvider(SslProvider.JDK)
                     .clientAuth(configuration.tlsMutualAuthenticationRequired() ? ClientAuth.REQUIRE : ClientAuth.OPTIONAL);
+                configureALPN(sslContextBuilder);
                 if (isNotBlank(configuration.tlsMutualAuthenticationCertificateChain()) || configuration.tlsMutualAuthenticationRequired()) {
                     sslContextBuilder.trustManager(trustCertificateChain());
                 } else {
@@ -227,6 +228,22 @@ public class NettySslContextFactory {
             }
         }
         return serverSslContext;
+    }
+
+    private static void configureALPN(SslContextBuilder sslContextBuilder) {
+        if (SslProvider.isAlpnSupported(SslContext.defaultServerProvider())) {
+            sslContextBuilder
+                .ciphers(Http2SecurityUtil.CIPHERS, SupportedCipherSuiteFilter.INSTANCE)
+                .applicationProtocolConfig(new ApplicationProtocolConfig(
+                    ApplicationProtocolConfig.Protocol.ALPN,
+                    // NO_ADVERTISE is currently the only mode supported by both OpenSsl and JDK providers.
+                    ApplicationProtocolConfig.SelectorFailureBehavior.NO_ADVERTISE,
+                    // ACCEPT is currently the only mode supported by both OpenSsl and JDK providers.
+                    ApplicationProtocolConfig.SelectedListenerFailureBehavior.ACCEPT,
+                    ApplicationProtocolNames.HTTP_2,
+                    ApplicationProtocolNames.HTTP_1_1
+                ));
+        }
     }
 
     private X509Certificate[] trustCertificateChain() {

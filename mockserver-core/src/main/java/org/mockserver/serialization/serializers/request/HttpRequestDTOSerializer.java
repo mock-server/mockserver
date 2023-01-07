@@ -54,6 +54,9 @@ public class HttpRequestDTOSerializer extends StdSerializer<HttpRequestDTO> {
         if (httpRequest.getSocketAddress() != null) {
             jgen.writeObjectField("socketAddress", httpRequest.getSocketAddress());
         }
+        if (httpRequest.getProtocol() != null) {
+            jgen.writeStringField("protocol", httpRequest.getProtocol().name());
+        }
         if (isNotBlank(httpRequest.getLocalAddress())) {
             jgen.writeObjectField("localAddress", httpRequest.getLocalAddress());
         }

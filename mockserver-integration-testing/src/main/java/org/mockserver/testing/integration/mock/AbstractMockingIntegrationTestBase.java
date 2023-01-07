@@ -5,6 +5,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http2.HttpConversionUtil;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -62,7 +63,10 @@ public abstract class AbstractMockingIntegrationTestBase {
         HttpHeaderNames.ACCESS_CONTROL_MAX_AGE.toString(),
         HttpHeaderNames.KEEP_ALIVE.toString(),
         "version",
-        "x-cors"
+        "x-cors",
+        // HTTP2 headers
+        HttpConversionUtil.ExtensionHeaderNames.STREAM_WEIGHT.text().toString(),
+        HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text().toString()
     );
 
     protected static EchoServer insecureEchoServer;
@@ -99,6 +103,10 @@ public abstract class AbstractMockingIntegrationTestBase {
 
     protected Header authorisationHeader() {
         return null;
+    }
+
+    public HttpRequest getRequestModifier(HttpRequest httpRequest) {
+        return httpRequest;
     }
 
     @Before
@@ -184,6 +192,7 @@ public abstract class AbstractMockingIntegrationTestBase {
 
     protected HttpResponse makeRequest(HttpRequest httpRequest, Collection<String> headersToRemove) {
         try {
+            httpRequest = getRequestModifier(httpRequest);
             boolean isSsl = httpRequest.isSecure() != null && httpRequest.isSecure();
             int port = (isSsl ? getServerSecurePort() : getServerPort());
             httpRequest.withPath(addContextToPath(httpRequest.getPath().getValue()));
@@ -191,7 +200,8 @@ public abstract class AbstractMockingIntegrationTestBase {
                 httpRequest.withHeader(HOST.toString(), "localhost:" + port);
             }
             boolean isDebug = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
-            HttpResponse httpResponse = httpClient.sendRequest(httpRequest, new InetSocketAddress("localhost", port))
+            HttpResponse httpResponse = httpClient
+                .sendRequest(httpRequest, new InetSocketAddress("localhost", port))
                 .get(30, (isDebug ? TimeUnit.MINUTES : TimeUnit.SECONDS));
             httpResponse.withHeaders(filterHeaders(headersToRemove, httpResponse.getHeaderList()));
             httpResponse.withReasonPhrase(

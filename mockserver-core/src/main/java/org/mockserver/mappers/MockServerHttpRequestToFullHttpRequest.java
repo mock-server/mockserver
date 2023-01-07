@@ -2,13 +2,12 @@ package org.mockserver.mappers;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http2.HttpConversionUtil;
 import org.mockserver.codec.BodyDecoderEncoder;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.NottableString;
-import org.mockserver.model.Parameter;
+import org.mockserver.model.*;
 import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.slf4j.event.Level;
 
@@ -125,6 +124,14 @@ public class MockServerHttpRequestToFullHttpRequest {
             request.headers().add(HOST, httpRequest.getFirstHeader(HOST.toString()));
         }
         request.headers().set(ACCEPT_ENCODING, GZIP + "," + DEFLATE);
+        if (Protocol.HTTP_2.equals(httpRequest.getProtocol())) {
+            HttpScheme scheme = Boolean.TRUE.equals(httpRequest.isSecure()) ? HttpScheme.HTTPS : HttpScheme.HTTP;
+            request.headers().add(HttpConversionUtil.ExtensionHeaderNames.SCHEME.text(), scheme.name());
+            Integer streamId = httpRequest.getStreamId();
+            if (streamId != null) {
+                request.headers().add(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(), streamId);
+            }
+        }
         request.headers().set(CONTENT_LENGTH, request.content().readableBytes());
         if (isKeepAlive(request)) {
             request.headers().set(CONNECTION, KEEP_ALIVE);

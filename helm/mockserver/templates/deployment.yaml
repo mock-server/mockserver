@@ -35,7 +35,9 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
 {{- end }}
           securityContext:
+{{- if .Values.app.runAsUser }}
             runAsUser: {{ .Values.app.runAsUser }}
+{{- end }}
             readOnlyRootFilesystem: {{ .Values.app.readOnlyRootFilesystem }}
             allowPrivilegeEscalation: false
           ports:

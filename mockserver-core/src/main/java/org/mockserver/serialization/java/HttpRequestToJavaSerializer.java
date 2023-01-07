@@ -53,6 +53,10 @@ public class HttpRequestToJavaSerializer implements ToJavaSerializer<HttpRequest
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                 output.append(".withKeepAlive(").append(request.isKeepAlive().toString()).append(")");
             }
+            if (request.getProtocol() != null) {
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
+                output.append(".withProtocol(Protocol.").append(request.getProtocol().toString()).append(")");
+            }
             if (request.getSocketAddress() != null) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                 output.append(".withSocketAddress(");

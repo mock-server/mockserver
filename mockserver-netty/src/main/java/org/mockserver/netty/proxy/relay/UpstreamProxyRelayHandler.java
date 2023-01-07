@@ -16,8 +16,10 @@ import java.nio.channels.ClosedSelectorException;
 
 import static org.mockserver.exception.ExceptionHandling.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
+import static org.mockserver.model.Protocol.HTTP_2;
 import static org.mockserver.netty.unification.PortUnificationHandler.isSslEnabledDownstream;
 import static org.mockserver.netty.unification.PortUnificationHandler.nettySslContextFactory;
+import static org.mockserver.socket.tls.SniHandler.getALPNProtocol;
 
 public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
@@ -41,7 +43,7 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, final FullHttpRequest request) {
         if (isSslEnabledDownstream(upstreamChannel) && downstreamChannel.pipeline().get(SslHandler.class) == null) {
-            downstreamChannel.pipeline().addFirst(nettySslContextFactory(ctx.channel()).createClientSslContext(true).newHandler(ctx.alloc()));
+            downstreamChannel.pipeline().addFirst(nettySslContextFactory(ctx.channel()).createClientSslContext(true, HTTP_2.equals(getALPNProtocol(mockServerLogger, ctx))).newHandler(ctx.alloc()));
         }
         downstreamChannel.writeAndFlush(request).addListener((ChannelFutureListener) future -> {
             if (future.isSuccess()) {

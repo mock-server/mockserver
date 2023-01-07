@@ -3,6 +3,7 @@ package org.mockserver.socket.tls;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.ssl.AbstractSniHandler;
+import io.netty.handler.ssl.ApplicationProtocolNames;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
@@ -12,6 +13,7 @@ import io.netty.util.internal.PlatformDependent;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.Protocol;
 import org.slf4j.event.Level;
 
 import javax.net.ssl.SSLEngine;
@@ -21,6 +23,7 @@ import java.security.cert.Certificate;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.slf4j.event.Level.TRACE;
+import static org.slf4j.event.Level.WARN;
 
 /**
  * @author jamesdbloom
@@ -28,7 +31,9 @@ import static org.slf4j.event.Level.TRACE;
 public class SniHandler extends AbstractSniHandler<SslContext> {
 
     private static final AttributeKey<SSLEngine> UPSTREAM_SSL_ENGINE = AttributeKey.valueOf("UPSTREAM_SSL_ENGINE");
+    private static final AttributeKey<SslHandler> UPSTREAM_SSL_HANDLER = AttributeKey.valueOf("UPSTREAM_SSL_HANDLER");
     private static final AttributeKey<Certificate[]> UPSTREAM_CLIENT_CERTIFICATES = AttributeKey.valueOf("UPSTREAM_CLIENT_CERTIFICATES");
+    private static final AttributeKey<Protocol> NEGOTIATED_APPLICATION_PROTOCOL = AttributeKey.valueOf("NEGOTIATED_APPLICATION_PROTOCOL");
 
     private final Configuration configuration;
     private final NettySslContextFactory nettySslContextFactory;
@@ -68,6 +73,7 @@ public class SniHandler extends AbstractSniHandler<SslContext> {
         try {
             sslHandler = sslContext.getNow().newHandler(ctx.alloc());
             ctx.channel().attr(UPSTREAM_SSL_ENGINE).set(sslHandler.engine());
+            ctx.channel().attr(UPSTREAM_SSL_HANDLER).set(sslHandler);
             ctx.pipeline().replace(this, "SslHandler#0", sslHandler);
             sslHandler = null;
         } finally {
@@ -106,5 +112,45 @@ public class SniHandler extends AbstractSniHandler<SslContext> {
             }
         }
         return clientCertificates;
+    }
+
+    public static Protocol getALPNProtocol(MockServerLogger mockServerLogger, ChannelHandlerContext ctx) {
+        Protocol protocol = null;
+        try {
+            if (ctx != null && ctx.channel() != null) {
+                if (ctx.channel().attr(NEGOTIATED_APPLICATION_PROTOCOL).get() != null) {
+                    return ctx.channel().attr(NEGOTIATED_APPLICATION_PROTOCOL).get();
+                } else if (ctx.channel().attr(UPSTREAM_SSL_HANDLER).get() != null) {
+                    SslHandler sslHandler = ctx.channel().attr(UPSTREAM_SSL_HANDLER).get();
+                    String negotiatedApplicationProtocol = sslHandler.applicationProtocol();
+                    if (isNotBlank(negotiatedApplicationProtocol)) {
+                        if (negotiatedApplicationProtocol.equalsIgnoreCase(ApplicationProtocolNames.HTTP_2)) {
+                            protocol = Protocol.HTTP_2;
+                        } else if (negotiatedApplicationProtocol.equalsIgnoreCase(ApplicationProtocolNames.HTTP_1_1)) {
+                            protocol = Protocol.HTTP_1_1;
+                        }
+                        ctx.channel().attr(NEGOTIATED_APPLICATION_PROTOCOL).set(protocol);
+                        if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setLogLevel(Level.TRACE)
+                                    .setMessageFormat("found ALPN protocol:{}")
+                                    .setArguments(negotiatedApplicationProtocol)
+                            );
+                        }
+                    }
+                }
+            }
+        } catch (Throwable throwable) {
+            if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(Level.WARN)
+                        .setMessageFormat("exception reading ALPN protocol")
+                        .setThrowable(throwable)
+                );
+            }
+        }
+        return protocol;
     }
 }

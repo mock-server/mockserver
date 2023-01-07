@@ -16,6 +16,7 @@ public class PrecannedTestExpectationForwardCallbackRequest implements Expectati
             .withHeader("Host", "localhost:" + httpRequest.getFirstHeader("x-echo-server-port"))
             .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
             .withBody("some_overridden_body")
+            .withProtocol(httpRequest.getProtocol())
             .withSecure(httpRequest.isSecure());
     }
 

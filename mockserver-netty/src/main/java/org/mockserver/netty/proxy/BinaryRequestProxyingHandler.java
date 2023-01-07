@@ -6,7 +6,6 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import org.slf4j.event.Level;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.log.model.LogEntry;
@@ -15,11 +14,10 @@ import org.mockserver.model.BinaryExchangeDescriptor;
 import org.mockserver.model.BinaryMessage;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.uuid.UUIDService;
+import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -39,7 +37,8 @@ import static org.mockserver.netty.unification.PortUnificationHandler.isSslEnabl
 @ChannelHandler.Sharable
 public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
-    public static Consumer<BinaryExchangeDescriptor> binaryExchangeCallback = data -> {};
+    public static Consumer<BinaryExchangeDescriptor> binaryExchangeCallback = data -> {
+    };
 
     private final Configuration configuration;
     private final MockServerLogger mockServerLogger;
@@ -67,9 +66,9 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
                 .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()))
         );
         final InetSocketAddress remoteAddress = getRemoteAddress(ctx);
-        if (remoteAddress != null) {
+        if (remoteAddress != null) { // binary protocol is only supported for proxies request and not mocking
             boolean synchronous = true;
-            CompletableFuture<BinaryMessage> binaryResponseFuture = httpClient.sendRequest(binaryRequest, isSslEnabledUpstream(ctx.channel()), remoteAddress, configuration.socketConnectionTimeoutInMillis().intValue());
+            CompletableFuture<BinaryMessage> binaryResponseFuture = httpClient.sendRequest(binaryRequest, isSslEnabledUpstream(ctx.channel()), remoteAddress, configuration.socketConnectionTimeoutInMillis());
             scheduler.submit(binaryResponseFuture, () -> {
                 try {
                     BinaryMessage binaryResponse = binaryResponseFuture.get(configuration.maxFutureTimeoutInMillis(), MILLISECONDS);

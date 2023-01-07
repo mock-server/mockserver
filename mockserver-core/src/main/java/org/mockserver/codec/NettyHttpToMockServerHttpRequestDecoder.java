@@ -12,15 +12,19 @@ import java.net.SocketAddress;
 import java.security.cert.Certificate;
 import java.util.List;
 
+import static org.mockserver.socket.tls.SniHandler.getALPNProtocol;
+
 /**
  * @author jamesdbloom
  */
 public class NettyHttpToMockServerHttpRequestDecoder extends MessageToMessageDecoder<FullHttpRequest> {
 
     private final FullHttpRequestToMockServerHttpRequest fullHttpRequestToMockServerRequest;
+    private final MockServerLogger mockServerLogger;
 
     public NettyHttpToMockServerHttpRequestDecoder(Configuration configuration, MockServerLogger mockServerLogger, boolean isSecure, Certificate[] clientCertificates, Integer port) {
-        fullHttpRequestToMockServerRequest = new FullHttpRequestToMockServerHttpRequest(configuration, mockServerLogger, isSecure, clientCertificates, port);
+        this.mockServerLogger = mockServerLogger;
+        this.fullHttpRequestToMockServerRequest = new FullHttpRequestToMockServerHttpRequest(configuration, mockServerLogger, isSecure, clientCertificates, port);
     }
 
     @Override
@@ -33,7 +37,7 @@ public class NettyHttpToMockServerHttpRequestDecoder extends MessageToMessageDec
             localAddress = ctx.channel().localAddress();
             remoteAddress = ctx.channel().remoteAddress();
         }
-        out.add(fullHttpRequestToMockServerRequest.mapFullHttpRequestToMockServerRequest(fullHttpRequest, preservedHeaders, localAddress, remoteAddress));
+        out.add(fullHttpRequestToMockServerRequest.mapFullHttpRequestToMockServerRequest(fullHttpRequest, preservedHeaders, localAddress, remoteAddress, getALPNProtocol(mockServerLogger, ctx)));
     }
 
 }

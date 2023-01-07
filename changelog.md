@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - an image tag that allows container to run as root
+- HTTP2 protocol support for mocking
 
 ### Changed
 

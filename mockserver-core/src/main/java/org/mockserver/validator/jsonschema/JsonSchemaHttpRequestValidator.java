@@ -19,6 +19,7 @@ public class JsonSchemaHttpRequestValidator extends JsonSchemaValidator {
             "keyToMultiValue",
             "keyToValue",
             "socketAddress",
+            "protocol",
             "draft-07"
         );
     }

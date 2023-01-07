@@ -13,6 +13,7 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpState;
 import org.mockserver.mock.action.http.HttpActionHandler;
 import org.mockserver.model.MediaType;
+import org.mockserver.model.Protocol;
 import org.mockserver.model.RetrieveType;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.ExpectationSerializer;
@@ -386,6 +387,7 @@ public class MockServerServletTest {
                     .withLocalAddress("local_address:80")
                     .withRemoteAddress("localhost:80")
                     .withKeepAlive(true)
+                    .withProtocol(Protocol.HTTP_1_1)
             ),
             any(ServletResponseWriter.class),
             isNull(),
@@ -422,6 +424,7 @@ public class MockServerServletTest {
                     .withLocalAddress("local_address:666")
                     .withRemoteAddress("localhost:80")
                     .withKeepAlive(true)
+                    .withProtocol(Protocol.HTTP_1_1)
             ),
             any(ServletResponseWriter.class),
             isNull(),
@@ -459,6 +462,7 @@ public class MockServerServletTest {
                     .withLocalAddress("local_address:443")
                     .withRemoteAddress("localhost:80")
                     .withKeepAlive(true)
+                    .withProtocol(Protocol.HTTP_1_1)
             ),
             any(ServletResponseWriter.class),
             isNull(),
@@ -496,6 +500,7 @@ public class MockServerServletTest {
                     .withLocalAddress("local_address:666")
                     .withRemoteAddress("localhost:80")
                     .withKeepAlive(true)
+                    .withProtocol(Protocol.HTTP_1_1)
             ),
             any(ServletResponseWriter.class),
             isNull(),

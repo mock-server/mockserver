@@ -1,21 +1,19 @@
 package org.mockserver.socket.tls;
 
-import java.util.List;
-
-import org.junit.Test;
 import org.junit.AfterClass;
-
-import java.util.concurrent.atomic.AtomicBoolean;
+import org.junit.Test;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
 
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 import static org.mockserver.configuration.Configuration.configuration;
 
 public class CustomKeyAndCertificateFactorySupplierTest {
@@ -97,7 +95,7 @@ public class CustomKeyAndCertificateFactorySupplierTest {
         };
 
         new NettySslContextFactory(new Configuration(), mock(MockServerLogger.class), false)
-            .createClientSslContext(false);
+            .createClientSslContext(false, false);
 
         assertTrue(customizerCallFlag.get());
     }

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.mock-server</groupId>
@@ -63,7 +64,7 @@
         <!-- highest spring version is 5.3 due to Java 1.8 version -->
         <spring.version>5.3.24</spring.version>
         <spring-web.version>5.3.24</spring-web.version>
-        <mockito.version>4.10.0</mockito.version>
+        <mockito.version>4.11.0</mockito.version>
         <hamcrest.version>2.2</hamcrest.version>
         <xmlunit.version>2.9.0</xmlunit.version>
         <skipTests>false</skipTests>
@@ -200,6 +201,11 @@
             </dependency>
             <dependency>
                 <groupId>io.netty</groupId>
+                <artifactId>netty-codec-http2</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
                 <artifactId>netty-codec-socks</artifactId>
                 <version>${netty.version}</version>
             </dependency>
@@ -238,7 +244,7 @@
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-tcnative-boringssl-static</artifactId>
-                <version>2.0.54.Final</version>
+                <version>2.0.55.Final</version>
             </dependency>
             <dependency>
                 <groupId>io.netty</groupId>
@@ -276,7 +282,7 @@
             <dependency>
                 <groupId>com.nimbusds</groupId>
                 <artifactId>nimbus-jose-jwt</artifactId>
-                <version>9.25.6</version>
+                <version>9.28</version>
             </dependency>
 
             <!-- templating -->
@@ -346,7 +352,7 @@
             <dependency>
                 <groupId>io.swagger.parser.v3</groupId>
                 <artifactId>swagger-parser</artifactId>
-                <version>2.1.9</version>
+                <version>2.1.10</version>
                 <exclusions>
                     <exclusion>
                         <groupId>com.github.fge</groupId>
@@ -418,7 +424,7 @@
             <dependency>
                 <groupId>io.github.classgraph</groupId>
                 <artifactId>classgraph</artifactId>
-                <version>4.8.153</version>
+                <version>4.8.154</version>
             </dependency>
 
             <!-- logging -->
@@ -639,7 +645,8 @@
                                 </goals>
                                 <phase>site</phase>
                                 <configuration>
-                                    <reportOutputDirectory>${basedir}/jekyll-www.mock-server.com/_site</reportOutputDirectory>
+                                    <reportOutputDirectory>${basedir}/jekyll-www.mock-server.com/_site
+                                    </reportOutputDirectory>
                                     <destDir>apidocs</destDir>
                                 </configuration>
                             </execution>
@@ -877,7 +884,7 @@
                 <version>3.1.0</version>
                 <configuration>
                     <rules>
-                        <dependencyConvergence />
+                        <dependencyConvergence/>
                     </rules>
                 </configuration>
                 <executions>

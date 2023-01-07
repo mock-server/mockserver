@@ -29,6 +29,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
     private Headers headers;
     private Cookies cookies;
     private ConnectionOptions connectionOptions;
+    private Integer streamId = null;
 
     /**
      * Static builder to create a response.
@@ -456,10 +457,11 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
     }
 
     /**
+     * <p>
      * Adds one cookie to match on or to not match on using the NottableString, each NottableString can either be a positive matching value,
      * such as string("match"), or a value to not match on, such as not("do not match"), the string values passed to the NottableString
-     * can be a plain string or a regex (for more details of the supported regex syntax see
-     * http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
+     * can be a plain string or a regex (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html">...</a>)
+     * </p>
      *
      * @param name  the cookies name
      * @param value the cookies value
@@ -526,6 +528,16 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
         return connectionOptions;
     }
 
+    public HttpResponse withStreamId(Integer streamId) {
+        this.streamId = streamId;
+        this.hashCode = 0;
+        return this;
+    }
+
+    public Integer getStreamId() {
+        return streamId;
+    }
+
     @Override
     @JsonIgnore
     public Type getType() {
@@ -540,7 +552,8 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
             .withHeaders(headers)
             .withCookies(cookies)
             .withDelay(getDelay())
-            .withConnectionOptions(connectionOptions);
+            .withConnectionOptions(connectionOptions)
+            .withStreamId(streamId);
     }
 
 
@@ -553,7 +566,8 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
             .withHeaders(headers != null ? headers.clone() : null)
             .withCookies(cookies != null ? cookies.clone() : null)
             .withDelay(getDelay())
-            .withConnectionOptions(connectionOptions);
+            .withConnectionOptions(connectionOptions)
+            .withStreamId(streamId);
     }
 
     public HttpResponse update(HttpResponse responseOverride, HttpResponseModifier responseModifier) {
@@ -575,6 +589,9 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
             }
             if (responseOverride.getConnectionOptions() != null) {
                 withConnectionOptions(responseOverride.getConnectionOptions());
+            }
+            if (responseOverride.getStreamId() != null) {
+                withStreamId(responseOverride.getStreamId());
             }
             this.hashCode = 0;
         }
@@ -609,13 +626,14 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
             Objects.equals(body, that.body) &&
             Objects.equals(headers, that.headers) &&
             Objects.equals(cookies, that.cookies) &&
-            Objects.equals(connectionOptions, that.connectionOptions);
+            Objects.equals(connectionOptions, that.connectionOptions) &&
+            Objects.equals(streamId, that.streamId);
     }
 
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(super.hashCode(), statusCode, reasonPhrase, body, headers, cookies, connectionOptions);
+            hashCode = Objects.hash(super.hashCode(), statusCode, reasonPhrase, body, headers, cookies, connectionOptions, streamId);
         }
         return hashCode;
     }

@@ -9,17 +9,24 @@ source "${SCRIPT_DIR}/helm-deploy.sh"
 source "${SCRIPT_DIR}/docker-compose.sh"
 
 # SKIP_JAVA_BUILD=true ./integration_tests.sh
-# SKIP_HELM_TESTS=true SKIP_JAVA_BUILD=true ./container_integration_tests/integration_tests.sh
+# SKIP_HELM_TESTS=true SKIP_JAVA_BUILD=true DOCKER_BUILD=true ./container_integration_tests/integration_tests.sh
 
 function build_docker() {
   runCommand "cd ${SCRIPT_DIR}"
   if [[ "${SKIP_JAVA_BUILD:-}" != "true" ]]; then
     runCommand "cd ..; ./mvnw -DskipTests=true package; cd -"
   fi
-  runCommand "cp ../mockserver-netty/target/mockserver-netty-*-SNAPSHOT-jar-with-dependencies.jar ../docker/mockserver-netty-jar-with-dependencies.jar"
-  runCommand "docker build --no-cache -t mockserver/mockserver:integration_testing --build-arg source=copy ../docker"
-  runCommand "rm ../docker/mockserver-netty-jar-with-dependencies.jar"
-  runCommand "docker build -t mockserver/mockserver:integration_testing_client -f ClientDockerfile ."
+  if [[ "${SKIP_DOCKER_BUILD_MOCKSERVER:-}" != "true" ]]; then
+    runCommand "cp ${SCRIPT_DIR}/../mockserver-netty/target/mockserver-netty-*-SNAPSHOT-jar-with-dependencies.jar ${SCRIPT_DIR}/../docker/mockserver-netty-jar-with-dependencies.jar"
+    runCommand "docker build --no-cache -t mockserver/mockserver:integration_testing --build-arg source=copy ${SCRIPT_DIR}/../docker"
+    runCommand "rm ${SCRIPT_DIR}/../docker/mockserver-netty-jar-with-dependencies.jar"
+  fi
+  if [[ "${FORCE_DOCKER_REBUILD_CLIENT:-}" == "true" ]]; then
+    runCommand "docker build -t mockserver/mockserver:integration_testing_client_curl -f ${SCRIPT_DIR}/client_docker_images/CurlClientDockerfile ${SCRIPT_DIR}/client_docker_images"
+  fi
+  if [[ "${FORCE_DOCKER_REBUILD_CLIENT:-}" == "true" ]]; then
+    runCommand "docker build -t mockserver/mockserver:integration_testing_client_nghttp -f ${SCRIPT_DIR}/client_docker_images/Nghttp2ClientDockerfile ${SCRIPT_DIR}/client_docker_images"
+  fi
 }
 
 function test() {
@@ -31,9 +38,6 @@ function test() {
 }
 
 function run_all_tests() {
-  if [[ "${SKIP_HELM_TESTS:-}" != "true" ]]; then
-    start-up-k8s &
-  fi
   export PASS_LOG_FILE=$(mktemp)
   export FAIL_LOG_FILE=$(mktemp)
 

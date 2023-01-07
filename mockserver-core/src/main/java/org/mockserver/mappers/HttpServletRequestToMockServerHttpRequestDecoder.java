@@ -6,10 +6,7 @@ import org.mockserver.codec.BodyServletDecoderEncoder;
 import org.mockserver.codec.ExpandedParameterDecoder;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.Cookie;
-import org.mockserver.model.Cookies;
-import org.mockserver.model.Headers;
-import org.mockserver.model.HttpRequest;
+import org.mockserver.model.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
@@ -45,6 +42,7 @@ public class HttpServletRequestToMockServerHttpRequestDecoder {
 
         request.withKeepAlive(isKeepAlive(httpServletRequest));
         request.withSecure(httpServletRequest.isSecure());
+        request.withProtocol(Protocol.HTTP_1_1);
         request.withLocalAddress(httpServletRequest.getLocalAddr() + ":" + httpServletRequest.getLocalPort());
         request.withRemoteAddress(httpServletRequest.getRemoteHost() + ":" + httpServletRequest.getRemotePort());
         return request;
