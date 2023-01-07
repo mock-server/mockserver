@@ -191,7 +191,8 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                 .stream()
                 .map(validationMessage -> {
                     String validationMessageText = String.valueOf(validationMessage);
-                    if ((validationMessageText.startsWith("$.httpRequest") && validationMessageText.contains(".body: should be valid to any of the schemas")) || validationMessageText.contains("$.body: should be valid to any of the schemas")) {
+                    if (((validationMessageText.startsWith("$.httpRequest") && validationMessageText.contains(".body: ")) || validationMessageText.contains("$.body: "))
+                    && !validationMessageText.contains("is not defined in the schema and the schema does not allow additional properties")) {
                         return StringUtils.substringBefore(validationMessageText, ":") + ": should match one of its valid types: " + FileReader.readFileFromClassPathOrPath("org/mockserver/model/schema/body.json")
                             .replaceAll("#/definitions/draft-07", "http://json-schema.org/draft-07/schema")
                             .replaceAll(NEW_LINE, NEW_LINE + "   ");
@@ -199,7 +200,7 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                     if (validationMessageText.contains(".specUrlOrPayload: is missing but it is required")) {
                         return StringUtils.substringBefore(validationMessageText, ":") + ": is missing, but is required, if specifying OpenAPI request matcher";
                     }
-                    if (validationMessageText.startsWith("$.httpResponse.body: should be valid to any of the schemas")) {
+                    if (validationMessageText.startsWith("$.httpResponse.body: ")) {
                         return "$.httpResponse.body: should match one of its valid types: " + FileReader.readFileFromClassPathOrPath("org/mockserver/model/schema/bodyWithContentType.json")
                             .replaceAll(NEW_LINE, NEW_LINE + "   ");
                     }
