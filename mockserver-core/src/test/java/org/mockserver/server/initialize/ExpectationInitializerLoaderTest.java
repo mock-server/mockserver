@@ -197,7 +197,7 @@ public class ExpectationInitializerLoaderTest {
         // given
         String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
         try {
-            Expectation[] expections = {
+            Expectation[] expectations = {
                 new Expectation(
                     request()
                         .withPath("/simpleFirst")
@@ -216,14 +216,14 @@ public class ExpectationInitializerLoaderTest {
                 )
             };
             File mockserverInitializer = File.createTempFile("mockserverInitialization", ".json");
-            Files.write(mockserverInitializer.toPath(), expectationSerializer.serialize(expections).getBytes(StandardCharsets.UTF_8));
+            Files.write(mockserverInitializer.toPath(), expectationSerializer.serialize(expectations).getBytes(StandardCharsets.UTF_8));
             ConfigurationProperties.initializationJsonPath(mockserverInitializer.getAbsolutePath());
 
             // when
-            final Expectation[] expectations = new ExpectationInitializerLoader(configuration(), new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
+            final Expectation[] loadedExpectations = new ExpectationInitializerLoader(configuration(), new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
 
             // then
-            assertThat(expectations, is(expections));
+            assertThat(expectations, is(loadedExpectations));
         } finally {
             ConfigurationProperties.initializationJsonPath(initializationJsonPath);
         }
@@ -235,7 +235,7 @@ public class ExpectationInitializerLoaderTest {
         String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
         try {
             String uniquePrefix = UUID.randomUUID().toString();
-            Expectation[] expections = {
+            Expectation[] expectations = {
                 new Expectation(
                     request()
                         .withPath("/simpleFirst")
@@ -254,8 +254,8 @@ public class ExpectationInitializerLoaderTest {
                 )
             };
             File mockserverInitializer = File.createTempFile(uniquePrefix + "_mockserverInitialization", ".json");
-            Files.write(mockserverInitializer.toPath(), expectationSerializer.serialize(expections).getBytes(StandardCharsets.UTF_8));
-            Expectation[] expectionsOne = {
+            Files.write(mockserverInitializer.toPath(), expectationSerializer.serialize(expectations).getBytes(StandardCharsets.UTF_8));
+            Expectation[] expectationsOne = {
                 new Expectation(
                     request()
                         .withPath("/pathOneFirst")
@@ -274,8 +274,8 @@ public class ExpectationInitializerLoaderTest {
                 )
             };
             File mockserverInitializerOne = File.createTempFile(uniquePrefix + "_mockserverInitializationOne", ".json");
-            Files.write(mockserverInitializerOne.toPath(), expectationSerializer.serialize(expectionsOne).getBytes(StandardCharsets.UTF_8));
-            Expectation[] expectionsTwo = {
+            Files.write(mockserverInitializerOne.toPath(), expectationSerializer.serialize(expectationsOne).getBytes(StandardCharsets.UTF_8));
+            Expectation[] expectationsTwo = {
                 new Expectation(
                     request()
                         .withPath("/pathTwoFirst")
@@ -294,8 +294,8 @@ public class ExpectationInitializerLoaderTest {
                 )
             };
             File mockserverInitializerTwo = File.createTempFile(uniquePrefix + "_mockserverInitializationTwo", ".json");
-            Files.write(mockserverInitializerTwo.toPath(), expectationSerializer.serialize(expectionsTwo).getBytes(StandardCharsets.UTF_8));
-            Expectation[] expectionsThree = {
+            Files.write(mockserverInitializerTwo.toPath(), expectationSerializer.serialize(expectationsTwo).getBytes(StandardCharsets.UTF_8));
+            Expectation[] expectationsThree = {
                 new Expectation(
                     request()
                         .withPath("/pathThreeFirst")
@@ -314,11 +314,11 @@ public class ExpectationInitializerLoaderTest {
                 )
             };
             File mockserverInitializerThree = File.createTempFile(uniquePrefix + "_mockserverInitializationThree", ".json");
-            Files.write(mockserverInitializerThree.toPath(), expectationSerializer.serialize(expectionsThree).getBytes(StandardCharsets.UTF_8));
+            Files.write(mockserverInitializerThree.toPath(), expectationSerializer.serialize(expectationsThree).getBytes(StandardCharsets.UTF_8));
             ConfigurationProperties.initializationJsonPath(mockserverInitializer.getParentFile().getAbsolutePath() + "/" + uniquePrefix + "_mockserverInitialization*.json");
 
             // when
-            final Expectation[] expectations = new ExpectationInitializerLoader(configuration(), new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
+            expectations = new ExpectationInitializerLoader(configuration(), new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
 
             // then
             assertThat(expectations, is(new Expectation[]{
@@ -398,7 +398,7 @@ public class ExpectationInitializerLoaderTest {
         String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
         try {
             String uniquePrefix = UUID.randomUUID().toString();
-            Expectation[] expections = {
+            Expectation[] expectations = {
                 new Expectation(
                     request()
                         .withPath("/simpleFirst")
@@ -417,8 +417,8 @@ public class ExpectationInitializerLoaderTest {
                 )
             };
             File mockserverInitializer = File.createTempFile(uniquePrefix + "_mockserverInitialization", ".json");
-            Files.write(mockserverInitializer.toPath(), expectationSerializer.serialize(expections).getBytes(StandardCharsets.UTF_8));
-            Expectation[] expectionsOne = {
+            Files.write(mockserverInitializer.toPath(), expectationSerializer.serialize(expectations).getBytes(StandardCharsets.UTF_8));
+            Expectation[] expectationsOne = {
                 new Expectation(
                     request()
                         .withPath("/pathOneFirst")
@@ -437,8 +437,8 @@ public class ExpectationInitializerLoaderTest {
                 )
             };
             File mockserverInitializerOne = File.createTempFile(uniquePrefix + "_mockserverInitializationOne", ".json");
-            Files.write(mockserverInitializerOne.toPath(), expectationSerializer.serialize(expectionsOne).getBytes(StandardCharsets.UTF_8));
-            Expectation[] expectionsTwo = {
+            Files.write(mockserverInitializerOne.toPath(), expectationSerializer.serialize(expectationsOne).getBytes(StandardCharsets.UTF_8));
+            Expectation[] expectationsTwo = {
                 new Expectation(
                     request()
                         .withPath("/pathTwoFirst")
@@ -457,8 +457,8 @@ public class ExpectationInitializerLoaderTest {
                 )
             };
             File mockserverInitializerTwo = File.createTempFile(uniquePrefix + "_mockserverInitializationTwo", ".json");
-            Files.write(mockserverInitializerTwo.toPath(), expectationSerializer.serialize(expectionsTwo).getBytes(StandardCharsets.UTF_8));
-            Expectation[] expectionsThree = {
+            Files.write(mockserverInitializerTwo.toPath(), expectationSerializer.serialize(expectationsTwo).getBytes(StandardCharsets.UTF_8));
+            Expectation[] expectationsThree = {
                 new Expectation(
                     request()
                         .withPath("/pathThreeFirst")
@@ -477,11 +477,11 @@ public class ExpectationInitializerLoaderTest {
                 )
             };
             File mockserverInitializerThree = File.createTempFile(uniquePrefix + "_mockserverInitializationThree", ".json");
-            Files.write(mockserverInitializerThree.toPath(), expectationSerializer.serialize(expectionsThree).getBytes(StandardCharsets.UTF_8));
+            Files.write(mockserverInitializerThree.toPath(), expectationSerializer.serialize(expectationsThree).getBytes(StandardCharsets.UTF_8));
             ConfigurationProperties.initializationJsonPath(mockserverInitializer.getParentFile().getAbsolutePath() + "/" + uniquePrefix + "_mockserverInitialization{One,Two}*.json");
 
             // when
-            final Expectation[] expectations = new ExpectationInitializerLoader(configuration(), new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
+            expectations = new ExpectationInitializerLoader(configuration(), new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
 
             // then
             assertThat(expectations, is(new Expectation[]{

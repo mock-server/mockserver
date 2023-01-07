@@ -175,7 +175,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - resolved multiple issues with verifying by expectation id
 - resolved multiple NullPointerExceptions in backend for UI
 - ensure exact query parameter string is proxied allowing for empty values, leading `!` or or other special scenarios
-- improved expectation updates from FileWatcher so only expecation from matching source are updated resolving multiple bugs
+- improved expectation updates from FileWatcher so only expectation from matching source are updated resolving multiple bugs
 - ensured socket protocol of HTTPS is honoured resulting in forwarded requests using TLS
 - fixed logging of exceptions such as port already bound at startup
 - fixed retrieval of active exceptions where expectations were no longer active but not yet removed from expectations list
@@ -223,7 +223,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - added basic support to proxy binary requests that are not HTTP
 - dynamic maximum log events and maximum expectations based on available memory
-- added ability to switch between BouncyCastle and vanillar JDK for key and certificate generation
+- added ability to switch between BouncyCastle and vanilla JDK for key and certificate generation
 - added support for TLS over SOCKS4 or SOCKS5
 - request matching and expectations using OpenAPI or Swagger specification
 - create expectation using OpenAPI or Swagger specification with automatic example responses
@@ -311,7 +311,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - added support to control trusted certificate authorities (trust store) for proxied & forwarded requests
 - added support for two-way TLS (mTLS), also called client authentication
 - now sends TLS X509 certificate from proxy (i.e. support forward client authentication / mTLS)
-- added ability to dynamically create local unique Certificate Authority (CA) X.509 and Private Key to improve securiy of clients trusting the CA
+- added ability to dynamically create local unique Certificate Authority (CA) X.509 and Private Key to improve security of clients trusting the CA
 
 ### Changed
 - performance improvements for header and cookie handling
@@ -394,7 +394,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - stopped usage being printed multiple time under certain error scenarios
 
 ### Removed
-- removed re-entrant WebSocket prevention by creating WebSocket client per expectation to improve resilience
+- removed reentrant WebSocket prevention by creating WebSocket client per expectation to improve resilience
 
 ## [5.7.2] - 2019-11-16
 

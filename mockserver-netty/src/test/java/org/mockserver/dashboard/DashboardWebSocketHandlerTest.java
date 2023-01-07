@@ -1506,7 +1506,7 @@ public class DashboardWebSocketHandlerTest {
 
     public static class MockChannelHandlerContext extends EmbeddedChannel {
 
-        // can't use future as called mutiple times
+        // can't use future as called multiple times
         TextWebSocketFrame textWebSocketFrame;
 
         @Override

@@ -38,7 +38,7 @@ public class BodyDecoderEncoderTest {
     }
 
     @Test
-    public void shouldSerialiseBodyToByteBufWithIvalidContentType() {
+    public void shouldSerialiseBodyToByteBufWithInvalidContentType() {
         // given
         String bodyValue = new String(new byte[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9});
         Body body = new StringBody(bodyValue);

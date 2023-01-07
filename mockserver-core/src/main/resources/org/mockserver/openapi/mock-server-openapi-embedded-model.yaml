@@ -18,7 +18,7 @@ info:
     name: Apache 2.0
 tags:
   - name: expectation
-    description: Create or update expectations - updates if the id matches an existing expecations (only supported by MockServer)
+    description: Create or update expectations - updates if the id matches an existing expectations (only supported by MockServer)
   - name: verify
     description: Verify requests (both MockServer & MockServer Proxy)
   - name: control
@@ -105,7 +105,7 @@ paths:
               oneOf:
                 - $ref: "#/components/schemas/RequestDefinition"
                 - $ref: "#/components/schemas/ExpectationId"
-        description: request used to match expectations and recored requests to clear
+        description: request used to match expectations and record requests to clear
   /mockserver/reset:
     put:
       tags:
@@ -126,7 +126,7 @@ paths:
             type: string
             enum: [ "java", "json", "log_entries" ]
           required: false
-          description: changes response format, default if not specificed is "json", supported values are "java", "json", "log_entries"
+          description: changes response format, default if not specified is "json", supported values are "java", "json", "log_entries"
         - in: query
           name: type
           schema:

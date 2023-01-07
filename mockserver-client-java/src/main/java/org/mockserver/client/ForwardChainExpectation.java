@@ -59,7 +59,7 @@ public class ForwardChainExpectation {
 
     /**
      * <p>
-     * Set priority of this expectation which is used to determin the matching
+     * Set priority of this expectation which is used to determine the matching
      * order of expectations when a request is received.
      * </p>
      * <p>

@@ -157,7 +157,7 @@ public class MTLSAuthenticationHandlerTest {
     }
 
     @Test
-    public void shouldNotValidateEmptyClientCertifcates() {
+    public void shouldNotValidateEmptyClientCertificates() {
         // given
         AuthenticationHandler authenticationHandler = new MTLSAuthenticationHandler(
             mockServerLogger,
@@ -174,7 +174,7 @@ public class MTLSAuthenticationHandlerTest {
     }
 
     @Test
-    public void shouldNotValidateNoClientCertifcates() {
+    public void shouldNotValidateNoClientCertificates() {
         // given
         AuthenticationHandler authenticationHandler = new MTLSAuthenticationHandler(
             mockServerLogger,

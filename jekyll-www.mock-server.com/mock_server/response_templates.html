@@ -959,7 +959,7 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
 
 <h4>Conditionals</h4>
 
-<p>Conditional expressions are possible using <code class="inline code">#if</code>, <code class="inline code">#elseif</code> and <code class="inline code">#else</code> directives, as folows:</p>
+<p>Conditional expressions are possible using <code class="inline code">#if</code>, <code class="inline code">#elseif</code> and <code class="inline code">#else</code> directives, as follows:</p>
 
 <pre class="prettyprint lang-java code"><code class="code">#if($request.method == 'POST' && $request.path == '/somePath')
     {
@@ -1101,7 +1101,7 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
 
 <h2>JavaScript Response Templates</h2>
 
-<p>The following shows a basic example for a Javaacript format response template</p>
+<p>The following shows a basic example for a JavaScript format response template</p>
 
 <pre class="prettyprint code"><code class="code">new ClientAndServer(1080)
     .when(request().withPath("/some/path"))
@@ -1125,13 +1125,13 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
 
 <p>All javascript response templates should return the response as an object as shown in the example above.</p>
 
-<p>Javascript response templates support ES6 syntax for Java 9 to 14, for a summary of ES6 syntax see <a target="_blank" href="https://www.w3schools.com/js/js_es6.asp">w3schools</a>.</p>
+<p>JavaScript response templates support ES6 syntax for Java 9 to 14, for a summary of ES6 syntax see <a target="_blank" href="https://www.w3schools.com/js/js_es6.asp">w3schools</a>.</p>
 
-<p>Javascript response templates support ES5 syntax for Java 8, for a summary of ES5 syntax see <a target="_blank" href="https://www.w3schools.com/js/js_es5.asp">w3schools</a>.</p>
+<p>JavaScript response templates support ES5 syntax for Java 8, for a summary of ES5 syntax see <a target="_blank" href="https://www.w3schools.com/js/js_es5.asp">w3schools</a>.</p>
 
 <h4>Java Version Support</h4>
 
-<p>Javascript templates rely on Nashorn which has the following limitations for Java versions:</p>
+<p>JavaScript templates rely on Nashorn which has the following limitations for Java versions:</p>
 <ul>
     <li>Java 8 - ES5 only</li>
     <li>Java 9 or 10 - ES5 & ES6</li>

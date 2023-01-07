@@ -228,13 +228,13 @@ public class Main {
         }
 
         if (!errorMessages.isEmpty()) {
-            printValidationEror(errorMessages);
+            printValidationError(errorMessages);
             throw new IllegalArgumentException(errorMessages.toString());
         }
         return parsedArguments;
     }
 
-    private static void printValidationEror(List<String> errorMessages) {
+    private static void printValidationError(List<String> errorMessages) {
         int maxLengthMessage = 0;
         for (String errorMessage : errorMessages) {
             if (errorMessage.length() > maxLengthMessage) {

@@ -36,7 +36,7 @@ public abstract class KeysToMultiValuesDeserializer<T extends KeysToMultiValues<
     }
 
     private T deserializeObject(JsonParser jsonParser, DeserializationContext ctxt) throws IOException {
-        T enteries = build();
+        T entries = build();
         NottableString key = string("");
         while (true) {
             JsonToken token = jsonParser.nextToken();
@@ -45,7 +45,7 @@ public abstract class KeysToMultiValuesDeserializer<T extends KeysToMultiValues<
                     key = string(jsonParser.getText());
                     if ("keyMatchStyle".equals(key.getValue())) {
                         jsonParser.nextToken();
-                        enteries.withKeyMatchStyle(ctxt.readValue(jsonParser, KeyMatchStyle.class));
+                        entries.withKeyMatchStyle(ctxt.readValue(jsonParser, KeyMatchStyle.class));
                     }
                     break;
                 case START_OBJECT:
@@ -64,16 +64,16 @@ public abstract class KeysToMultiValuesDeserializer<T extends KeysToMultiValues<
                         }
                         token = jsonParser.nextToken();
                     }
-                    enteries.withEntry(key.withStyle(parameterStyle), values);
+                    entries.withEntry(key.withStyle(parameterStyle), values);
                     break;
                 case START_ARRAY:
-                    enteries.withEntry(key, ctxt.readValue(jsonParser, NottableString[].class));
+                    entries.withEntry(key, ctxt.readValue(jsonParser, NottableString[].class));
                     break;
                 case VALUE_STRING:
-                    enteries.withEntry(key, ctxt.readValue(jsonParser, NottableString.class));
+                    entries.withEntry(key, ctxt.readValue(jsonParser, NottableString.class));
                     break;
                 case END_OBJECT:
-                    return enteries;
+                    return entries;
                 default:
                     throw new RuntimeException("Unexpected token: \"" + token + "\" id: \"" + token.id() + "\" text: \"" + jsonParser.getText());
             }

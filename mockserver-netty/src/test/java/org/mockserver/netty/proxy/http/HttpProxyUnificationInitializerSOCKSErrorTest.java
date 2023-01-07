@@ -102,7 +102,7 @@ public class HttpProxyUnificationInitializerSOCKSErrorTest {
 
         // then - CONNECT response
         byte[] domainInBytes = "127.0.0.1".getBytes(CharsetUtil.US_ASCII);
-        String dominLegnthAndBytes = Strings.padStart(BigInteger.valueOf(domainInBytes.length).toString(16), 2, '0') + new BigInteger(domainInBytes).toString(16);
+        String domainLengthAndBytes = Strings.padStart(BigInteger.valueOf(domainInBytes.length).toString(16), 2, '0') + new BigInteger(domainInBytes).toString(16);
         assertThat(ByteBufUtil.hexDump((ByteBuf) embeddedChannel.readOutbound()), is(
             Hex.encodeHexString(new byte[]{
                 (byte) 0x05,                                        // SOCKS5
@@ -110,7 +110,7 @@ public class HttpProxyUnificationInitializerSOCKSErrorTest {
                 (byte) 0x00,                                        // reserved (must be 0x00)
                 (byte) 0x03,                                        // address type domain
             }) +
-                dominLegnthAndBytes +                               // ip address
+                domainLengthAndBytes +                              // ip address
                 portInHex                                           // port
         ));
 

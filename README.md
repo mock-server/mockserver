@@ -20,11 +20,11 @@ Please see: [Change Log](https://github.com/mock-server/mockserver/blob/master/c
     </tr>
     <tr>
         <td>Feature Requests</td>
-        <td><a href="https://github.com/mock-server/mockserver/issues"><img height="20px" src="http://mock-server.com/images/GitHub_Logo-md.png" alt="Github Issues"></a></td>
+        <td><a href="https://github.com/mock-server/mockserver/issues"><img height="20px" src="http://mock-server.com/images/GitHub_Logo-md.png" alt="GitHub Issues"></a></td>
     </tr>
     <tr> 
         <td>Issues / Bugs</td>
-        <td><a href="https://github.com/mock-server/mockserver/issues"><img height="20px" src="http://mock-server.com/images/GitHub_Logo-md.png" alt="Github Issues"></a></td>
+        <td><a href="https://github.com/mock-server/mockserver/issues"><img height="20px" src="http://mock-server.com/images/GitHub_Logo-md.png" alt="GitHub Issues"></a></td>
     </tr>
     <tr>
         <td>Backlog</td>

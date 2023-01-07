@@ -150,9 +150,9 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
                 throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a response or array of response is required");
             } else {
                 List<String> validationErrorsList = new ArrayList<>();
-                for (String jsonExpecation : jsonResponseList) {
+                for (String jsonExpectation : jsonResponseList) {
                     try {
-                        httpResponses.add(deserialize(jsonExpecation));
+                        httpResponses.add(deserialize(jsonExpectation));
                     } catch (IllegalArgumentException iae) {
                         validationErrorsList.add(iae.getMessage());
                     }

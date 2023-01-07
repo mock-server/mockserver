@@ -443,7 +443,7 @@
                                 <inherited>false</inherited>
                                 <configuration>
                                     <repositoryId>ossrh</repositoryId>
-                                    <url>${deploy.plugin.respository.url}</url>
+                                    <url>${deploy.plugin.repository.url}</url>
                                     <file>${project.build.directory}/${project.artifactId}-${project.version}-shaded.jar</file>
                                     <generatePom>false</generatePom>
                                     <pomFile>${project.build.directory}/dependency-reduced-pom.xml</pomFile>
