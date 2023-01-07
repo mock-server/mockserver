@@ -45,7 +45,8 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
     private final Scheduler scheduler;
     private final NettyHttpClient httpClient;
 
-    public BinaryRequestProxyingHandler(final Configuration configuration, final MockServerLogger mockServerLogger, final Scheduler scheduler, final NettyHttpClient httpClient) {
+    public BinaryRequestProxyingHandler(final Configuration configuration, final MockServerLogger mockServerLogger,
+        final Scheduler scheduler, final NettyHttpClient httpClient) {
         super(true);
         this.configuration = configuration;
         this.mockServerLogger = mockServerLogger;
@@ -67,49 +68,113 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
         );
         final InetSocketAddress remoteAddress = getRemoteAddress(ctx);
         if (remoteAddress != null) { // binary protocol is only supported for proxies request and not mocking
-            boolean synchronous = true;
-            CompletableFuture<BinaryMessage> binaryResponseFuture = httpClient.sendRequest(binaryRequest, isSslEnabledUpstream(ctx.channel()), remoteAddress, configuration.socketConnectionTimeoutInMillis());
-            scheduler.submit(binaryResponseFuture, () -> {
-                try {
-                    BinaryMessage binaryResponse = binaryResponseFuture.get(configuration.maxFutureTimeoutInMillis(), MILLISECONDS);
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setType(FORWARDED_REQUEST)
-                            .setLogLevel(Level.INFO)
-                            .setCorrelationId(logCorrelationId)
-                            .setMessageFormat("returning binary response:{}from:{}for forwarded binary request:{}")
-                            .setArguments(formatBytes(binaryResponse.getBytes()), remoteAddress, formatBytes(binaryRequest.getBytes()))
-                    );
-                    binaryExchangeCallback.accept(new BinaryExchangeDescriptor(binaryRequest, binaryResponse,
-                        remoteAddress, ctx.channel().remoteAddress()));
-                    ctx.writeAndFlush(Unpooled.copiedBuffer(binaryResponse.getBytes()));
-                } catch (Throwable throwable) {
-                    if (MockServerLogger.isEnabled(Level.WARN)) {
-                        mockServerLogger.logEvent(
-                            new LogEntry()
-                                .setLogLevel(Level.WARN)
-                                .setCorrelationId(logCorrelationId)
-                                .setMessageFormat("exception " + throwable.getMessage() + " sending hex{}to{}closing connection")
-                                .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()), remoteAddress)
-                                .setThrowable(throwable)
-                        );
-                    }
-                    ctx.close();
-                }
-            }, synchronous);
+            sendMessage(ctx, binaryRequest, logCorrelationId, remoteAddress);
         } else {
             if (MockServerLogger.isEnabled(Level.INFO)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(Level.INFO)
                         .setCorrelationId(logCorrelationId)
-                        .setMessageFormat("unknown message format, only HTTP requests are supported for mocking or HTTP & binary requests for proxying, but request is not being proxied and request is not valid HTTP, found request in binary: {} in utf8 text: {}")
-                        .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()), new String(binaryRequest.getBytes(), StandardCharsets.UTF_8))
+                        .setMessageFormat(
+                            "unknown message format, only HTTP requests are supported for mocking or HTTP & binary requests for proxying, but request is not being proxied and request is not valid HTTP, found request in binary: {} in utf8 text: {}")
+                        .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()),
+                            new String(binaryRequest.getBytes(), StandardCharsets.UTF_8))
                 );
             }
-            ctx.writeAndFlush(Unpooled.copiedBuffer("unknown message format, only HTTP requests are supported for mocking or HTTP & binary requests for proxying, but request is not being proxied and request is not valid HTTP".getBytes(StandardCharsets.UTF_8)));
+            ctx.writeAndFlush(Unpooled.copiedBuffer(
+                "unknown message format, only HTTP requests are supported for mocking or HTTP & binary requests for proxying, but request is not being proxied and request is not valid HTTP".getBytes(
+                    StandardCharsets.UTF_8)));
             ctx.close();
         }
+    }
+
+    private void sendMessage(ChannelHandlerContext ctx, BinaryMessage binaryRequest, String logCorrelationId,
+        InetSocketAddress remoteAddress) {
+        CompletableFuture<BinaryMessage> binaryResponseFuture = httpClient.sendRequest(binaryRequest,
+            isSslEnabledUpstream(ctx.channel()), remoteAddress,
+            configuration.socketConnectionTimeoutInMillis(),
+            !configuration.forwardBinaryRequestsAsynchronously());
+
+        if (configuration.forwardBinaryRequestsAsynchronously()) {
+            processAsynchronously(ctx, binaryRequest, logCorrelationId, remoteAddress, binaryResponseFuture);
+        } else {
+            processWaitingForResponse(ctx, binaryRequest, logCorrelationId, remoteAddress, binaryResponseFuture);
+        }
+    }
+
+    private void processAsynchronously(ChannelHandlerContext ctx, BinaryMessage binaryRequest, String logCorrelationId,
+        InetSocketAddress remoteAddress, CompletableFuture<BinaryMessage> binaryResponseFuture) {
+        binaryExchangeCallback.accept(new BinaryExchangeDescriptor(binaryRequest, null,
+            remoteAddress, ctx.channel().remoteAddress()));
+        scheduler.submit(binaryResponseFuture, () -> {
+            try {
+                BinaryMessage binaryResponse = binaryResponseFuture.get(configuration.maxFutureTimeoutInMillis(),
+                    MILLISECONDS);
+                if (binaryResponse != null) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(FORWARDED_REQUEST)
+                            .setLogLevel(Level.INFO)
+                            .setCorrelationId(logCorrelationId)
+                            .setMessageFormat("returning binary response:{}from:{}for forwarded binary request:{}")
+                            .setArguments(formatBytes(binaryResponse.getBytes()), remoteAddress,
+                                formatBytes(binaryRequest.getBytes()))
+                    );
+                    binaryExchangeCallback.accept(new BinaryExchangeDescriptor(null, binaryResponse,
+                        remoteAddress, ctx.channel().remoteAddress()));
+                    ctx.writeAndFlush(Unpooled.copiedBuffer(binaryResponse.getBytes()));
+                }
+            } catch (Throwable throwable) {
+                if (MockServerLogger.isEnabled(Level.WARN)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(Level.WARN)
+                            .setCorrelationId(logCorrelationId)
+                            .setMessageFormat(
+                                "exception " + throwable.getMessage() + " sending hex{}to{}closing connection")
+                            .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()), remoteAddress)
+                            .setThrowable(throwable)
+                    );
+                }
+                ctx.close();
+            }
+        }, false);
+    }
+
+    private void processWaitingForResponse(ChannelHandlerContext ctx, BinaryMessage binaryRequest,
+        String logCorrelationId,
+        InetSocketAddress remoteAddress, CompletableFuture<BinaryMessage> binaryResponseFuture) {
+        scheduler.submit(binaryResponseFuture, () -> {
+            try {
+                BinaryMessage binaryResponse = binaryResponseFuture.get(configuration.maxFutureTimeoutInMillis(),
+                    MILLISECONDS);
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(FORWARDED_REQUEST)
+                        .setLogLevel(Level.INFO)
+                        .setCorrelationId(logCorrelationId)
+                        .setMessageFormat("returning binary response:{}from:{}for forwarded binary request:{}")
+                        .setArguments(formatBytes(binaryResponse.getBytes()), remoteAddress,
+                            formatBytes(binaryRequest.getBytes()))
+                );
+                binaryExchangeCallback.accept(new BinaryExchangeDescriptor(binaryRequest, binaryResponse,
+                    remoteAddress, ctx.channel().remoteAddress()));
+                ctx.writeAndFlush(Unpooled.copiedBuffer(binaryResponse.getBytes()));
+            } catch (Throwable throwable) {
+                if (MockServerLogger.isEnabled(Level.WARN)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(Level.WARN)
+                            .setCorrelationId(logCorrelationId)
+                            .setMessageFormat(
+                                "exception " + throwable.getMessage() + " sending hex{}to{}closing connection")
+                            .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()), remoteAddress)
+                            .setThrowable(throwable)
+                    );
+                }
+                ctx.close();
+            }
+        }, true);
     }
 
     @Override

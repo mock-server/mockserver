@@ -60,6 +60,9 @@ public class Configuration {
     private Boolean useSemicolonAsQueryParameterSeparator;
     private Boolean assumeAllRequestsAreHttp;
 
+    // non http proxying
+    private Boolean forwardBinaryRequestsAsynchronously;
+
     // CORS
     private Boolean enableCORSForAPI;
     private Boolean enableCORSForAllResponses;
@@ -654,6 +657,26 @@ public class Configuration {
      */
     public Configuration assumeAllRequestsAreHttp(Boolean assumeAllRequestsAreHttp) {
         this.assumeAllRequestsAreHttp = assumeAllRequestsAreHttp;
+        return this;
+    }
+
+    public Boolean forwardBinaryRequestsAsynchronously() {
+        if (forwardBinaryRequestsAsynchronously == null) {
+            return ConfigurationProperties.forwardBinaryRequestsAsynchronously();
+        }
+        return forwardBinaryRequestsAsynchronously;
+    }
+
+    /**
+     * If true the BinaryRequestProxyingHandler.binaryExchangeCallback is called before a response is received from the
+     * remote host. This enables the proxying of messages without a response.
+     * <p>
+     * The default is false
+     *
+     * @param forwardBinaryRequestsAsynchronously target value
+     */
+    public Configuration forwardBinaryRequestsAsynchronously(Boolean forwardBinaryRequestsAsynchronously) {
+        this.forwardBinaryRequestsAsynchronously = forwardBinaryRequestsAsynchronously;
         return this;
     }
 
