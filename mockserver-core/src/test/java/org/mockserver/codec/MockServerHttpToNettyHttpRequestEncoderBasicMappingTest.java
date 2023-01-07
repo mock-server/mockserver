@@ -7,10 +7,7 @@ import io.netty.handler.codec.http.HttpMethod;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.Cookie;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.MediaType;
+import org.mockserver.model.*;
 import org.mockserver.proxyconfiguration.ProxyConfiguration;
 
 import java.nio.charset.StandardCharsets;
@@ -220,6 +217,46 @@ public class MockServerHttpToNettyHttpRequestEncoderBasicMappingTest {
         assertThat(headers.getAll("Accept-Encoding"), containsInAnyOrder("gzip,deflate"));
         assertThat(headers.getAll("Content-Length"), containsInAnyOrder("0"));
         assertThat(headers.getAll("Connection"), containsInAnyOrder("keep-alive"));
+    }
+
+    @Test
+    public void shouldAddHTTP2SchemeHeaderForNotSecureRequest() {
+        // given
+        httpRequest.withProtocol(Protocol.HTTP_2);
+
+        // when
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
+
+        // then
+        HttpHeaders headers = ((FullHttpRequest) output.get(0)).headers();
+        assertThat(headers.names(), containsInAnyOrder(
+            "accept-encoding",
+            "content-length",
+            "connection",
+            "x-http2-scheme"
+        ));
+        assertThat(headers.getAll("x-http2-scheme"), containsInAnyOrder("http"));
+    }
+
+    @Test
+    public void shouldAddHTTP2SchemeHeaderForSecureRequest() {
+        // given
+        httpRequest
+            .withProtocol(Protocol.HTTP_2)
+            .withSecure(true);
+
+        // when
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
+
+        // then
+        HttpHeaders headers = ((FullHttpRequest) output.get(0)).headers();
+        assertThat(headers.names(), containsInAnyOrder(
+            "accept-encoding",
+            "content-length",
+            "connection",
+            "x-http2-scheme"
+        ));
+        assertThat(headers.getAll("x-http2-scheme"), containsInAnyOrder("https"));
     }
 
     @Test

@@ -5,6 +5,7 @@ import io.netty.handler.codec.base64.Base64;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.ObjectWithJsonToString;
+import org.mockserver.model.Protocol;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;

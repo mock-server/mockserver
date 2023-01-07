@@ -3,6 +3,7 @@ package org.mockserver.mappers;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
+import io.netty.handler.codec.http2.HttpConversionUtil;
 import org.mockserver.codec.BodyDecoderEncoder;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -125,6 +126,12 @@ public class MockServerHttpResponseToFullHttpResponse {
             if (chunkedEncoding) {
                 response.headers().set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED);
             }
+        }
+
+        // HTTP2 extension headers
+        Integer streamId = httpResponse.getStreamId();
+        if (streamId != null) {
+            response.headers().add(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(), streamId);
         }
     }
 

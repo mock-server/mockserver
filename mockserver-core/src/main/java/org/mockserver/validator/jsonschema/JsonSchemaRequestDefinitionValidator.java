@@ -21,6 +21,7 @@ public class JsonSchemaRequestDefinitionValidator extends JsonSchemaValidator {
             "keyToMultiValue",
             "keyToValue",
             "socketAddress",
+            "protocol",
             "openAPIDefinition",
             "draft-07"
         );

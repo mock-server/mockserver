@@ -24,6 +24,7 @@ public class JsonSchemaVerificationValidator extends JsonSchemaValidator {
             "keyToValue",
             "verificationTimes",
             "socketAddress",
+            "protocol",
             "draft-07"
         );
     }

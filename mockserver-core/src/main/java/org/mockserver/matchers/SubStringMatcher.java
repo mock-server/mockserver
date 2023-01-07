@@ -43,12 +43,20 @@ public class SubStringMatcher extends BodyMatcher<NottableString> {
     public boolean matches(final MatchDifference context, NottableString matched) {
         boolean result = false;
 
-        if (matches(matcher.getValue(), matched.getValue(), false)) {
+        if (matcher == null) {
+            return true;
+        }
+
+        if (matched != null && matches(matcher.getValue(), matched.getValue(), false)) {
             result = true;
         }
 
         if (!result && context != null) {
             context.addDifference(mockServerLogger, "substring match failed expected:{}found:{}", this.matcher, matched);
+        }
+
+        if (matched == null) {
+            return false;
         }
 
         return matched.isNot() == (matcher.isNot() == (not != result));

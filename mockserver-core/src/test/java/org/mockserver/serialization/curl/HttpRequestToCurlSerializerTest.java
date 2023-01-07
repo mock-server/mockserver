@@ -24,8 +24,8 @@ public class HttpRequestToCurlSerializerTest {
 
         // when
         String curl = httpRequestToCurlSerializer.toCurl(
-                request(),
-                new InetSocketAddress("localhost", 80)
+            request(),
+            new InetSocketAddress("localhost", 80)
         );
 
         // then
@@ -39,13 +39,30 @@ public class HttpRequestToCurlSerializerTest {
 
         // when
         String curl = httpRequestToCurlSerializer.toCurl(
-                request()
-                        .withMethod("POST"),
-                new InetSocketAddress("localhost", 80)
+            request()
+                .withMethod("POST"),
+            new InetSocketAddress("localhost", 80)
         );
 
         // then
         assertThat(curl, is("curl -v 'http://localhost:80/' -X POST"));
+    }
+
+    @Test
+    public void shouldGenerateCurlForSecureRequestWithPOST() {
+        // given
+        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer(mockServerLogger);
+
+        // when
+        String curl = httpRequestToCurlSerializer.toCurl(
+            request()
+                .withMethod("POST")
+                .withSecure(true),
+            new InetSocketAddress("localhost", 443)
+        );
+
+        // then
+        assertThat(curl, is("curl -v 'https://localhost:443/' -X POST"));
     }
 
     @Test
@@ -55,9 +72,9 @@ public class HttpRequestToCurlSerializerTest {
 
         // when
         String curl = httpRequestToCurlSerializer.toCurl(
-                request()
-                        .withMethod("GET"),
-                new InetSocketAddress("localhost", 80)
+            request()
+                .withMethod("GET"),
+            new InetSocketAddress("localhost", 80)
         );
 
         // then
@@ -71,10 +88,10 @@ public class HttpRequestToCurlSerializerTest {
 
         // when
         String curl = httpRequestToCurlSerializer.toCurl(
-                request()
-                        .withHeader(HOST.toString(), "localhost:" + 80)
-                        .withMethod("GET"),
-                null
+            request()
+                .withHeader(HOST.toString(), "localhost:" + 80)
+                .withMethod("GET"),
+            null
         );
 
         // then
@@ -88,9 +105,9 @@ public class HttpRequestToCurlSerializerTest {
 
         // when
         String curl = httpRequestToCurlSerializer.toCurl(
-                request()
-                        .withMethod("GET"),
-                null
+            request()
+                .withMethod("GET"),
+            null
         );
 
         // then
@@ -104,12 +121,12 @@ public class HttpRequestToCurlSerializerTest {
 
         // when
         String curl = httpRequestToCurlSerializer.toCurl(
-                request()
-                        .withQueryStringParameters(
-                                param("parameterName1", "parameterValue1_1", "parameterValue1_2"),
-                                param("another parameter with spaces", "a value with single 'quotes', double \"quotes\" and spaces")
-                        ),
-                new InetSocketAddress("localhost", 80)
+            request()
+                .withQueryStringParameters(
+                    param("parameterName1", "parameterValue1_1", "parameterValue1_2"),
+                    param("another parameter with spaces", "a value with single 'quotes', double \"quotes\" and spaces")
+                ),
+            new InetSocketAddress("localhost", 80)
         );
 
         // then
@@ -123,12 +140,12 @@ public class HttpRequestToCurlSerializerTest {
 
         // when
         String curl = httpRequestToCurlSerializer.toCurl(
-                request()
-                        .withHeaders(
-                                new Header("headerName1", "headerValue1"),
-                                new Header("headerName2", "headerValue2_1", "headerValue2_2")
-                        ),
-                new InetSocketAddress("localhost", 80)
+            request()
+                .withHeaders(
+                    new Header("headerName1", "headerValue1"),
+                    new Header("headerName2", "headerValue2_1", "headerValue2_2")
+                ),
+            new InetSocketAddress("localhost", 80)
         );
 
         // then
@@ -142,17 +159,17 @@ public class HttpRequestToCurlSerializerTest {
 
         // when
         String curl = httpRequestToCurlSerializer.toCurl(
-                request()
-                        .withCookies(
-                                new Cookie("cookieName1", "cookieValue1"),
-                                new Cookie("cookieName2", "cookieValue2")
-                        ),
-                new InetSocketAddress("localhost", 80)
+            request()
+                .withCookies(
+                    new Cookie("cookieName1", "cookieValue1"),
+                    new Cookie("cookieName2", "cookieValue2")
+                ),
+            new InetSocketAddress("localhost", 80)
         );
 
         // then
         assertThat(curl, is("curl -v 'http://localhost:80/' " +
-                "-H 'cookie: cookieName1=cookieValue1; cookieName2=cookieValue2'"));
+            "-H 'cookie: cookieName1=cookieValue1; cookieName2=cookieValue2'"));
     }
 
     @Test
@@ -162,33 +179,33 @@ public class HttpRequestToCurlSerializerTest {
 
         // when
         String curl = httpRequestToCurlSerializer.toCurl(
-                request()
-                        .withPath("/somePath")
-                        .withMethod("POST")
-                        .withQueryStringParameters(
-                                param("parameterName1", "parameterValue1_1", "parameterValue1_2"),
-                                param("another parameter with spaces", "a value with single 'quotes', double \"quotes\" and spaces")
-                        )
-                        .withHeaders(
-                                new Header("headerName1", "headerValue1"),
-                                new Header("headerName2", "headerValue2_1", "headerValue2_2")
-                        )
-                        .withCookies(
-                                new Cookie("cookieName1", "cookieValue1"),
-                                new Cookie("cookieName2", "cookieValue2")
-                        ),
-                new InetSocketAddress("localhost", 80)
+            request()
+                .withPath("/somePath")
+                .withMethod("POST")
+                .withQueryStringParameters(
+                    param("parameterName1", "parameterValue1_1", "parameterValue1_2"),
+                    param("another parameter with spaces", "a value with single 'quotes', double \"quotes\" and spaces")
+                )
+                .withHeaders(
+                    new Header("headerName1", "headerValue1"),
+                    new Header("headerName2", "headerValue2_1", "headerValue2_2")
+                )
+                .withCookies(
+                    new Cookie("cookieName1", "cookieValue1"),
+                    new Cookie("cookieName2", "cookieValue2")
+                ),
+            new InetSocketAddress("localhost", 80)
         );
 
         // then
         assertThat(curl, is("curl -v " +
-                "'http://localhost:80/somePath" +
-                "?parameterName1=parameterValue1_1&parameterName1=parameterValue1_2&another%20parameter%20with%20spaces=a%20value%20with%20single%20%27quotes%27%2C%20double%20%22quotes%22%20and%20spaces'" +
-                " -X POST" +
-                " -H 'headerName1: headerValue1'" +
-                " -H 'headerName2: headerValue2_1'" +
-                " -H 'headerName2: headerValue2_2'" +
-                " -H 'cookie: cookieName1=cookieValue1; cookieName2=cookieValue2'"));
+            "'http://localhost:80/somePath" +
+            "?parameterName1=parameterValue1_1&parameterName1=parameterValue1_2&another%20parameter%20with%20spaces=a%20value%20with%20single%20%27quotes%27%2C%20double%20%22quotes%22%20and%20spaces'" +
+            " -X POST" +
+            " -H 'headerName1: headerValue1'" +
+            " -H 'headerName2: headerValue2_1'" +
+            " -H 'headerName2: headerValue2_2'" +
+            " -H 'cookie: cookieName1=cookieValue1; cookieName2=cookieValue2'"));
     }
 
     @Test

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Uninterruptibles;
-import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -77,7 +76,6 @@ import static org.mockserver.model.XmlSchemaBody.xmlSchemaFromResource;
  * @author jamesdbloom
  */
 public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBasicMockingSameJVMIntegrationTest {
-
     @BeforeClass
     public static void fixTime() {
         EpochService.fixedTime = true;
@@ -5613,6 +5611,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             .withHeader("connection", "keep-alive")
             .withKeepAlive(true)
             .withSecure(false)
+            .withProtocol(Protocol.HTTP_1_1)
             .withLocalAddress("127.0.0.1:" + getServerPort())
             .withRemoteAddress("127.0.0.1:" + getRequestTcpPortForPath("/some_path_one"));
         HttpRequest requestTwo = request("/some_path_three")
@@ -5623,6 +5622,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             .withHeader("connection", "keep-alive")
             .withKeepAlive(true)
             .withSecure(false)
+            .withProtocol(Protocol.HTTP_1_1)
             .withLocalAddress("127.0.0.1:" + getServerPort())
             .withRemoteAddress("127.0.0.1:" + getRequestTcpPortForPath("/some_path_three"));
 

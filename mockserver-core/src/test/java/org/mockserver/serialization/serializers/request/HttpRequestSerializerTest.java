@@ -5,10 +5,11 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import org.junit.Test;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
+import org.mockserver.model.Protocol;
 import org.mockserver.serialization.ObjectMapperFactory;
 
-import static org.hamcrest.core.Is.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.JsonBody.json;
@@ -28,18 +29,19 @@ public class HttpRequestSerializerTest {
     @Test
     public void shouldReturnJsontWithAllFieldsSet() throws JsonProcessingException {
         assertThat(objectMapper.writeValueAsString(
-            request()
-                .withMethod("GET")
-                .withPath("/some/path")
-                .withPathParameters(param("path_parameterOneName", "path_parameterOneValue"))
-                .withQueryStringParameters(param("parameterOneName", "parameterOneValue"))
-                .withBody("some_body")
-                .withHeaders(new Header("name", "value"))
-                .withCookies(new Cookie("name", "[A-Z]{0,10}"))
-                .withSecure(true)
-                .withLocalAddress("local_addr:1234")
-                .withRemoteAddress("remote_addr")
-                .withKeepAlive(true)
+                request()
+                    .withMethod("GET")
+                    .withPath("/some/path")
+                    .withPathParameters(param("path_parameterOneName", "path_parameterOneValue"))
+                    .withQueryStringParameters(param("parameterOneName", "parameterOneValue"))
+                    .withBody("some_body")
+                    .withHeaders(new Header("name", "value"))
+                    .withCookies(new Cookie("name", "[A-Z]{0,10}"))
+                    .withSecure(true)
+                    .withLocalAddress("local_addr:1234")
+                    .withRemoteAddress("remote_addr")
+                    .withKeepAlive(true)
+                    .withProtocol(Protocol.HTTP_2)
             ),
             is("{" + NEW_LINE +
                 "  \"method\" : \"GET\"," + NEW_LINE +
@@ -58,6 +60,7 @@ public class HttpRequestSerializerTest {
                 "  }," + NEW_LINE +
                 "  \"keepAlive\" : true," + NEW_LINE +
                 "  \"secure\" : true," + NEW_LINE +
+                "  \"protocol\" : \"HTTP_2\"," + NEW_LINE +
                 "  \"localAddress\" : \"local_addr:1234\"," + NEW_LINE +
                 "  \"remoteAddress\" : \"remote_addr\"," + NEW_LINE +
                 "  \"body\" : \"some_body\"" + NEW_LINE +

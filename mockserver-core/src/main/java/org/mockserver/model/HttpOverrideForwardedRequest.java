@@ -69,7 +69,9 @@ public class HttpOverrideForwardedRequest extends Action<HttpOverrideForwardedRe
     public static HttpOverrideForwardedRequest forwardOverriddenRequest(HttpRequest httpRequest, HttpRequestModifier requestModifier, HttpResponse httpResponse, HttpResponseModifier responseModifier) {
         return new HttpOverrideForwardedRequest()
             .withRequestOverride(httpRequest)
-            .withResponseOverride(httpResponse);
+            .withResponseModifier(responseModifier)
+            .withResponseOverride(httpResponse)
+            .withRequestModifier(requestModifier);
     }
 
     public HttpRequest getRequestOverride() {

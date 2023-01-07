@@ -6,6 +6,7 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.Protocol;
 import org.slf4j.event.Level;
 
 import javax.annotation.Nullable;
@@ -32,7 +33,8 @@ public abstract class HttpForwardAction {
 
     protected HttpForwardActionResult sendRequest(HttpRequest request, @Nullable InetSocketAddress remoteAddress, Function<HttpResponse, HttpResponse> overrideHttpResponse) {
         try {
-            return new HttpForwardActionResult(request, httpClient.sendRequest(hopByHopHeaderFilter.onRequest(request), remoteAddress), overrideHttpResponse, remoteAddress);
+            // TODO(jamesdbloom) support proxying via HTTP2, for now always force into HTTP1
+            return new HttpForwardActionResult(request, httpClient.sendRequest(hopByHopHeaderFilter.onRequest(request).withProtocol(null), remoteAddress), overrideHttpResponse, remoteAddress);
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()

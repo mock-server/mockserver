@@ -1,5 +1,5 @@
 package org.mockserver.model;
 
 public enum Protocol {
-    HTTP, HTTP2
+    HTTP_1_1, HTTP_2
 }

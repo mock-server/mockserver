@@ -23,7 +23,8 @@ public class MatchDifference {
         COOKIES("cookies"),
         HEADERS("headers"),
         BODY("body"),
-        SSL_MATCHES("sslMatches"),
+        SECURE("secure"),
+        PROTOCOL("protocol"),
         KEEP_ALIVE("keep-alive"),
         OPERATION("operation"),
         OPENAPI("openapi");

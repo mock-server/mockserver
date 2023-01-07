@@ -28,7 +28,7 @@ public class ExactStringMatcher extends BodyMatcher<NottableString> {
             if (matched.equals(matcher)) {
                 return true;
             }
-            // case insensitive comparison is mainly to improve matching in web containers like Tomcat that convert header names to lower case
+            // case-insensitive comparison is mainly to improve matching in web containers like Tomcat that convert header names to lower case
             if (ignoreCase) {
                 return matched.equalsIgnoreCase(matcher);
             }
@@ -44,12 +44,20 @@ public class ExactStringMatcher extends BodyMatcher<NottableString> {
     public boolean matches(final MatchDifference context, NottableString matched) {
         boolean result = false;
 
-        if (matches(matcher.getValue(), matched.getValue(), false)) {
+        if (matcher == null) {
+            return true;
+        }
+
+        if (matched != null && matches(matcher.getValue(), matched.getValue(), false)) {
             result = true;
         }
 
         if (!result && context != null) {
             context.addDifference(mockServerLogger, "exact string match failed expected:{}found:{}", this.matcher, matched);
+        }
+
+        if (matched == null) {
+            return false;
         }
 
         return matched.isNot() == (matcher.isNot() == (not != result));

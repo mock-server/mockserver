@@ -27,6 +27,7 @@ public class HttpOverrideForwardedRequestToJavaSerializerTest {
                 "                        request()" + NEW_LINE +
                 "                                .withMethod(\"GET\")" + NEW_LINE +
                 "                                .withPath(\"somePathOne\")" + NEW_LINE +
+                "                                .withProtocol(Protocol.HTTP_2)" + NEW_LINE +
                 "                                .withBody(new StringBody(\"responseBodyOne\"))" + NEW_LINE +
                 "                )" + NEW_LINE +
                 "                .withResponseOverride(" + NEW_LINE +
@@ -51,6 +52,7 @@ public class HttpOverrideForwardedRequestToJavaSerializerTest {
                         .withMethod("GET")
                         .withPath("somePathOne")
                         .withBody(new StringBody("responseBodyOne"))
+                        .withProtocol(Protocol.HTTP_2)
                     )
                     .withResponseOverride(new HttpResponse()
                         .withStatusCode(304)

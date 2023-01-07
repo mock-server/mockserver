@@ -97,6 +97,11 @@ public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDef
                             secure = ctxt.readValue(jsonParser, Boolean.class);
                             break;
                         }
+                        case "socketAddress": {
+                            jsonParser.nextToken();
+                            socketAddress = ctxt.readValue(jsonParser, SocketAddress.class);
+                            break;
+                        }
                         case "protocol": {
                             jsonParser.nextToken();
                             try {
@@ -110,11 +115,6 @@ public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDef
                                         .setThrowable(throwable)
                                 );
                             }
-                            break;
-                        }
-                        case "socketAddress": {
-                            jsonParser.nextToken();
-                            socketAddress = ctxt.readValue(jsonParser, SocketAddress.class);
                             break;
                         }
                         case "specUrlOrPayload": {

@@ -65,6 +65,7 @@ public class HttpRequestToJavaSerializerTest {
                 "                )" + NEW_LINE +
                 "                .withSecure(true)" + NEW_LINE +
                 "                .withKeepAlive(false)" + NEW_LINE +
+                "                .withProtocol(Protocol.HTTP_2)" + NEW_LINE +
                 "                .withSocketAddress(" + NEW_LINE +
                 "                        new SocketAddress()" + NEW_LINE +
                 "                                .withHost(\"someHost\")" + NEW_LINE +
@@ -90,6 +91,7 @@ public class HttpRequestToJavaSerializerTest {
                     )
                     .withSecure(true)
                     .withKeepAlive(false)
+                    .withProtocol(Protocol.HTTP_2)
                     .withSocketAddress(
                         new SocketAddress().withHost("someHost").withPort(1234).withScheme(SocketAddress.Scheme.HTTPS)
                     )

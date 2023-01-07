@@ -6,7 +6,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.time.EpochService;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
@@ -16,12 +15,14 @@ import org.mockserver.mock.HttpState;
 import org.mockserver.mock.action.http.HttpActionHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.MediaType;
+import org.mockserver.model.Protocol;
 import org.mockserver.model.RetrieveType;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.serialization.HttpRequestSerializer;
 import org.mockserver.serialization.PortBindingSerializer;
 import org.mockserver.servlet.responsewriter.ServletResponseWriter;
+import org.mockserver.time.EpochService;
 import org.slf4j.event.Level;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -304,6 +305,7 @@ public class ProxyServletTest {
                     .withLocalAddress("local_address:80")
                     .withRemoteAddress("localhost:80")
                     .withKeepAlive(true)
+                    .withProtocol(Protocol.HTTP_1_1)
             ),
             any(ServletResponseWriter.class),
             isNull(),
@@ -336,6 +338,7 @@ public class ProxyServletTest {
                     .withLocalAddress("local_address:666")
                     .withRemoteAddress("localhost:80")
                     .withKeepAlive(true)
+                    .withProtocol(Protocol.HTTP_1_1)
             ),
             any(ServletResponseWriter.class),
             isNull(),
@@ -369,6 +372,7 @@ public class ProxyServletTest {
                     .withLocalAddress("local_address:443")
                     .withRemoteAddress("localhost:80")
                     .withKeepAlive(true)
+                    .withProtocol(Protocol.HTTP_1_1)
             ),
             any(ServletResponseWriter.class),
             isNull(),
@@ -402,6 +406,7 @@ public class ProxyServletTest {
                     .withLocalAddress("local_address:666")
                     .withRemoteAddress("localhost:80")
                     .withKeepAlive(true)
+                    .withProtocol(Protocol.HTTP_1_1)
             ),
             any(ServletResponseWriter.class),
             isNull(),

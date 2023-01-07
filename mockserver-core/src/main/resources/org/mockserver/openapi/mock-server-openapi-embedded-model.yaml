@@ -94,7 +94,7 @@ paths:
           name: type
           schema:
             type: string
-            enum: ["all", "log", "expectations"]
+            enum: [ "all", "log", "expectations" ]
             default: "all"
           required: false
           description: specifies the type of information to clear, default if not specified is "all", supported values are "all", "log", "expectations"
@@ -397,6 +397,8 @@ components:
           $ref: "#/components/schemas/KeyToValue"
         socketAddress:
           $ref: "#/components/schemas/SocketAddress"
+        protocol:
+          $ref: "#/components/schemas/Protocol"
     OpenAPIDefinition:
       description: "open api or swagger request matcher"
       type: object
@@ -730,6 +732,11 @@ components:
           enum:
             - HTTP
             - HTTPS
+    Protocol:
+      description: "protocol matcher"
+      enum:
+        - HTTP_1_1
+        - HTTP_2
     Body:
       description: "request body matcher"
       anyOf:

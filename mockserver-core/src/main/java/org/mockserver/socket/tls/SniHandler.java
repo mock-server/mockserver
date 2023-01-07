@@ -13,6 +13,7 @@ import io.netty.util.internal.PlatformDependent;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.Protocol;
 import org.slf4j.event.Level;
 
 import javax.net.ssl.SSLEngine;
@@ -32,7 +33,7 @@ public class SniHandler extends AbstractSniHandler<SslContext> {
     private static final AttributeKey<SSLEngine> UPSTREAM_SSL_ENGINE = AttributeKey.valueOf("UPSTREAM_SSL_ENGINE");
     private static final AttributeKey<SslHandler> UPSTREAM_SSL_HANDLER = AttributeKey.valueOf("UPSTREAM_SSL_HANDLER");
     private static final AttributeKey<Certificate[]> UPSTREAM_CLIENT_CERTIFICATES = AttributeKey.valueOf("UPSTREAM_CLIENT_CERTIFICATES");
-    private static final AttributeKey<String> NEGOTIATED_APPLICATION_PROTOCOL = AttributeKey.valueOf("NEGOTIATED_APPLICATION_PROTOCOL");
+    private static final AttributeKey<Protocol> NEGOTIATED_APPLICATION_PROTOCOL = AttributeKey.valueOf("NEGOTIATED_APPLICATION_PROTOCOL");
 
     private final Configuration configuration;
     private final NettySslContextFactory nettySslContextFactory;
@@ -113,23 +114,30 @@ public class SniHandler extends AbstractSniHandler<SslContext> {
         return clientCertificates;
     }
 
-    public static boolean isHTTP2Enabled(MockServerLogger mockServerLogger, ChannelHandlerContext ctx) {
-        String negotiatedApplicationProtocol = null;
+    public static Protocol getALPNProtocol(MockServerLogger mockServerLogger, ChannelHandlerContext ctx) {
+        Protocol protocol = null;
         try {
-            if (ctx.channel().attr(NEGOTIATED_APPLICATION_PROTOCOL).get() != null) {
-                negotiatedApplicationProtocol = ctx.channel().attr(NEGOTIATED_APPLICATION_PROTOCOL).get();
-            } else if (ctx.channel().attr(UPSTREAM_SSL_HANDLER).get() != null) {
-                SslHandler sslHandler = ctx.channel().attr(UPSTREAM_SSL_HANDLER).get();
-                negotiatedApplicationProtocol = sslHandler.applicationProtocol();
-                if (negotiatedApplicationProtocol != null) {
-                    ctx.channel().attr(NEGOTIATED_APPLICATION_PROTOCOL).set(negotiatedApplicationProtocol);
-                    if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
-                        mockServerLogger.logEvent(
-                            new LogEntry()
-                                .setLogLevel(Level.TRACE)
-                                .setMessageFormat("found ALPN protocol:{}")
-                                .setArguments(negotiatedApplicationProtocol)
-                        );
+            if (ctx != null && ctx.channel() != null) {
+                if (ctx.channel().attr(NEGOTIATED_APPLICATION_PROTOCOL).get() != null) {
+                    return ctx.channel().attr(NEGOTIATED_APPLICATION_PROTOCOL).get();
+                } else if (ctx.channel().attr(UPSTREAM_SSL_HANDLER).get() != null) {
+                    SslHandler sslHandler = ctx.channel().attr(UPSTREAM_SSL_HANDLER).get();
+                    String negotiatedApplicationProtocol = sslHandler.applicationProtocol();
+                    if (isNotBlank(negotiatedApplicationProtocol)) {
+                        if (negotiatedApplicationProtocol.equalsIgnoreCase(ApplicationProtocolNames.HTTP_2)) {
+                            protocol = Protocol.HTTP_2;
+                        } else if (negotiatedApplicationProtocol.equalsIgnoreCase(ApplicationProtocolNames.HTTP_1_1)) {
+                            protocol = Protocol.HTTP_1_1;
+                        }
+                        ctx.channel().attr(NEGOTIATED_APPLICATION_PROTOCOL).set(protocol);
+                        if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setLogLevel(Level.TRACE)
+                                    .setMessageFormat("found ALPN protocol:{}")
+                                    .setArguments(negotiatedApplicationProtocol)
+                            );
+                        }
                     }
                 }
             }
@@ -143,6 +151,6 @@ public class SniHandler extends AbstractSniHandler<SslContext> {
                 );
             }
         }
-        return isNotBlank(negotiatedApplicationProtocol) && negotiatedApplicationProtocol.equalsIgnoreCase(ApplicationProtocolNames.HTTP_2);
+        return protocol;
     }
 }

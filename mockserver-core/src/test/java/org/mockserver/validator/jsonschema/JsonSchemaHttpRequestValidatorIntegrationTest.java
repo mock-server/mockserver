@@ -5,8 +5,8 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.serialization.HttpRequestSerializer;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.hamcrest.core.Is.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.HttpRequest.request;
@@ -54,6 +54,9 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
             "      \"name\" : \"someHeaderName\"," + NEW_LINE +
             "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
             "    } ]," + NEW_LINE +
+            "  \"secure\" : true," + NEW_LINE +
+            "  \"keepAlive\" : false," + NEW_LINE +
+            "  \"protocol\" : \"HTTP_2\"," + NEW_LINE +
             "  \"socketAddress\" : {" + NEW_LINE +
             "    \"host\" : \"someHost\"," + NEW_LINE +
             "    \"port\" : 1234," + NEW_LINE +

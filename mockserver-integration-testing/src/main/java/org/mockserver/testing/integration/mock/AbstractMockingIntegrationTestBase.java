@@ -105,6 +105,10 @@ public abstract class AbstractMockingIntegrationTestBase {
         return null;
     }
 
+    public HttpRequest getRequestModifier(HttpRequest httpRequest) {
+        return httpRequest;
+    }
+
     @Before
     public void resetServer() {
         try {
@@ -188,6 +192,7 @@ public abstract class AbstractMockingIntegrationTestBase {
 
     protected HttpResponse makeRequest(HttpRequest httpRequest, Collection<String> headersToRemove) {
         try {
+            httpRequest = getRequestModifier(httpRequest);
             boolean isSsl = httpRequest.isSecure() != null && httpRequest.isSecure();
             int port = (isSsl ? getServerSecurePort() : getServerPort());
             httpRequest.withPath(addContextToPath(httpRequest.getPath().getValue()));
@@ -195,7 +200,8 @@ public abstract class AbstractMockingIntegrationTestBase {
                 httpRequest.withHeader(HOST.toString(), "localhost:" + port);
             }
             boolean isDebug = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
-            HttpResponse httpResponse = httpClient.sendRequest(httpRequest, new InetSocketAddress("localhost", port))
+            HttpResponse httpResponse = httpClient
+                .sendRequest(httpRequest, new InetSocketAddress("localhost", port))
                 .get(30, (isDebug ? TimeUnit.MINUTES : TimeUnit.SECONDS));
             httpResponse.withHeaders(filterHeaders(headersToRemove, httpResponse.getHeaderList()));
             httpResponse.withReasonPhrase(

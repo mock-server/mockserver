@@ -2,7 +2,6 @@ package org.mockserver.mappers;
 
 import com.google.common.collect.Lists;
 import org.junit.Test;
-import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -70,6 +69,7 @@ public class HttpServletRequestToMockServerHttpRequestDecoderTest {
         ), httpRequest.getCookieList());
         assertThat(httpRequest.getLocalAddress(), equalTo("local_addr:1234"));
         assertThat(httpRequest.getRemoteAddress(), equalTo("remote_addr:80"));
+        assertThat(httpRequest.getProtocol(), equalTo(Protocol.HTTP_1_1));
     }
 
     @Test

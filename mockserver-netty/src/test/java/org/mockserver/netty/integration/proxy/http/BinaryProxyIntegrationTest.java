@@ -13,6 +13,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.BinaryMessage;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.test.IsDebug;
 
 import javax.net.ssl.SSLServerSocket;
 import java.net.InetSocketAddress;
@@ -75,7 +76,7 @@ public class BinaryProxyIntegrationTest {
                         bytes(randomRequestBytes),
                         false,
                         new InetSocketAddress(proxyClientAndServer.getLocalPort()),
-                        SECONDS.toMillis(10),
+                        IsDebug.timeoutUnits().toMillis(10),
                         false
                     );
 
@@ -88,7 +89,7 @@ public class BinaryProxyIntegrationTest {
 
                 // when
                 socket.getOutputStream().write(randomResponseBytes);
-                BinaryMessage binaryResponse = binaryResponseFuture.get(10, SECONDS);
+                BinaryMessage binaryResponse = binaryResponseFuture.get(10, IsDebug.timeoutUnits());
 
                 // then
                 assertThat(ByteBufUtil.hexDump(binaryResponse.getBytes()), is(ByteBufUtil.hexDump(randomResponseBytes)));
@@ -134,7 +135,7 @@ public class BinaryProxyIntegrationTest {
                         bytes(randomRequestBytes),
                         true,
                         new InetSocketAddress(proxyClientAndServer.getPort()),
-                        SECONDS.toMillis(10),
+                        IsDebug.timeoutUnits().toMillis(10),
                         false
                     );
 
@@ -147,7 +148,7 @@ public class BinaryProxyIntegrationTest {
 
                 // when
                 socket.getOutputStream().write(randomResponseBytes);
-                BinaryMessage binaryResponse = binaryResponseFuture.get(10, SECONDS);
+                BinaryMessage binaryResponse = binaryResponseFuture.get(10, IsDebug.timeoutUnits());
 
                 // then
                 assertThat(ByteBufUtil.hexDump(binaryResponse.getBytes()), is(ByteBufUtil.hexDump(randomResponseBytes)));
@@ -179,10 +180,10 @@ public class BinaryProxyIntegrationTest {
                 bytes(randomRequestBytes),
                 true,
                 new InetSocketAddress(clientAndServer.getPort()),
-                SECONDS.toMillis(10),
+                IsDebug.timeoutUnits().toMillis(10),
                 false
             )
-            .get(10, SECONDS);
+            .get(10, IsDebug.timeoutUnits());
 
         // then
         assertThat(new String(binaryResponse.getBytes(), StandardCharsets.UTF_8), is("unknown message format, only HTTP requests are supported for mocking or HTTP & binary requests for proxying, but request is not being proxied and request is not valid HTTP"));
