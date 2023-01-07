@@ -154,7 +154,7 @@ public class NettyAssymetricBinaryForwardingIntegrationTest {
     ) throws Exception {
         try (FlexibleServer listenerServer = new FlexibleServer()) {
             mockServer = new MockServer(Configuration.configuration().forwardBinaryRequestsAsynchronously(true),
-                listenerServer.getLocalPort(), "127.0.0.1", 50505);
+                listenerServer.getLocalPort(), "127.0.0.1", 0);
 
             AtomicInteger handlerCalledRequest = new AtomicInteger(0);
             AtomicInteger handlerCalledResponse = new AtomicInteger(0);
@@ -218,7 +218,7 @@ public class NettyAssymetricBinaryForwardingIntegrationTest {
 
         public FlexibleServer() throws InterruptedException {
             try {
-                listenerServer = new ServerSocket(60606);
+                listenerServer = new ServerSocket(0);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
