@@ -21,11 +21,8 @@ function build_docker() {
     runCommand "docker build --no-cache -t mockserver/mockserver:integration_testing --build-arg source=copy ${SCRIPT_DIR}/../docker"
     runCommand "rm ${SCRIPT_DIR}/../docker/mockserver-netty-jar-with-dependencies.jar"
   fi
-  if [[ "${FORCE_DOCKER_REBUILD_CLIENT:-}" == "true" ]]; then
+  if [[ "${SKIP_DOCKER_REBUILD_CLIENT:-}" != "true" ]]; then
     runCommand "docker build -t mockserver/mockserver:integration_testing_client_curl -f ${SCRIPT_DIR}/client_docker_images/CurlClientDockerfile ${SCRIPT_DIR}/client_docker_images"
-  fi
-  if [[ "${FORCE_DOCKER_REBUILD_CLIENT:-}" == "true" ]]; then
-    runCommand "docker build -t mockserver/mockserver:integration_testing_client_nghttp -f ${SCRIPT_DIR}/client_docker_images/Nghttp2ClientDockerfile ${SCRIPT_DIR}/client_docker_images"
   fi
 }
 

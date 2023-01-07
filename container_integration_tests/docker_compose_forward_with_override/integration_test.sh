@@ -42,6 +42,15 @@ function integration_test() {
                         }
                       }\\\"" || TEST_EXIT_CODE=1
     if [[ "${TEST_EXIT_CODE}" == "0" ]]; then
+      NGHTTP_OUTPUT=$(docker-exec-client "nghttp -v 'https://mockserver:1234/some/path'")
+
+      if [[ "${NGHTTP_OUTPUT}" != *"NO_ERROR"* ]]; then
+        printPlainFailureMessage "Failed to send HTTP2 request, found: \"${NGHTTP_OUTPUT}\""
+        TEST_EXIT_CODE=1
+      else
+        printf "${NGHTTP_OUTPUT}"
+      fi
+
       RESPONSE_BODY=$(docker-exec-client "curl -v -s -X PUT 'http://mockserver:1234/some/path'")
 
       if [[ "${RESPONSE_BODY}" != "some_response_body" ]]; then

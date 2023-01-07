@@ -2,6 +2,7 @@ FROM ubuntu:20.04
 
 RUN apt-get update && apt-get install -y \
     curl \
+    nghttp2 \
     jq
 
 CMD ["sleep", "86400"]
