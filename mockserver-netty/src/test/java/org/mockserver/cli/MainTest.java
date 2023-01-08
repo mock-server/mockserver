@@ -71,8 +71,8 @@ public class MainTest {
             );
 
             // then
-            assertThat(mockServerClient.hasStarted(), is(true));
-            assertThat(ConfigurationProperties.logLevel().toString(), is("DEBUG"));
+            assertThat("mockServerClient.hasStarted",  mockServerClient.hasStarted(), is(true));
+            assertThat("ConfigurationProperties.logLevel", ConfigurationProperties.logLevel().toString(), is("DEBUG"));
         } finally {
             ConfigurationProperties.logLevel(originalLogLevel.toString());
             stopQuietly(mockServerClient);
@@ -103,8 +103,8 @@ public class MainTest {
                 );
 
             // then
-            assertThat(mockServerClient.hasStarted(), is(true));
-            assertThat(response.getBodyAsString(), is("port_forwarded_response"));
+            assertThat("mockServerClient.hasStarted", mockServerClient.hasStarted(), is(true));
+            assertThat("response.getBodyAsString", response.getBodyAsString(), is("port_forwarded_response"));
         } finally {
             stopQuietly(mockServerClient);
         }
@@ -133,8 +133,8 @@ public class MainTest {
                 );
 
             // then
-            assertThat(mockServerClient.hasStarted(), is(true));
-            assertThat(response.getBodyAsString(), is("port_forwarded_response"));
+            assertThat("mockServerClient.hasStarted", mockServerClient.hasStarted(), is(true));
+            assertThat("response.getBodyAsString", response.getBodyAsString(), is("port_forwarded_response"));
         } finally {
             stopQuietly(mockServerClient);
         }
