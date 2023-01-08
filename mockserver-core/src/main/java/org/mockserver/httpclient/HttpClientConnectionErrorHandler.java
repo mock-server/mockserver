@@ -7,7 +7,7 @@ import org.mockserver.model.Message;
 
 import java.util.concurrent.CompletableFuture;
 
-import static org.mockserver.httpclient.NettyHttpClient.ENFORCE_SYNCHRONOUS_COMPLETION;
+import static org.mockserver.httpclient.NettyHttpClient.ERROR_IF_CHANNEL_CLOSED_WITHOUT_RESPONSE;
 import static org.mockserver.httpclient.NettyHttpClient.RESPONSE_FUTURE;
 
 @ChannelHandler.Sharable
@@ -17,9 +17,8 @@ public class HttpClientConnectionErrorHandler extends ChannelDuplexHandler {
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
         CompletableFuture<? extends Message> responseFuture = ctx.channel().attr(RESPONSE_FUTURE).get();
         if (responseFuture != null && !responseFuture.isDone()) {
-            if (ctx.channel().attr(ENFORCE_SYNCHRONOUS_COMPLETION).get()) {
-                responseFuture.completeExceptionally(
-                    new SocketConnectionException("Channel handler removed before valid response has been received"));
+            if (ctx.channel().attr(ERROR_IF_CHANNEL_CLOSED_WITHOUT_RESPONSE).get()) {
+                responseFuture.completeExceptionally(new SocketConnectionException("Channel handler removed before valid response has been received"));
             } else {
                 responseFuture.complete(null);
             }

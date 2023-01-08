@@ -79,7 +79,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_ASSUME_ALL_REQUESTS_ARE_HTTP = "mockserver.assumeAllRequestsAreHttp";
 
     // non http proxying
-    private static final String MOCKSERVER_FORWARD_BINARY_REQUESTS_ASYNCHRONOUSLY = "mockserver.forwardBinaryRequestsAsynchronously";
+    private static final String MOCKSERVER_FORWARD_BINARY_REQUESTS_WITHOUT_WAITING_FOR_RESPONSE = "mockserver.forwardBinaryRequestsWithoutWaitingForResponse";
 
     // CORS
     private static final String MOCKSERVER_ENABLE_CORS_FOR_API = "mockserver.enableCORSForAPI";
@@ -685,12 +685,12 @@ public class ConfigurationProperties {
      *
      * @param forwardBinaryRequestsAsynchronously target value
      */
-    public static void forwardBinaryRequestsAsynchronously(boolean forwardBinaryRequestsAsynchronously) {
-        setProperty(MOCKSERVER_FORWARD_BINARY_REQUESTS_ASYNCHRONOUSLY, "" + forwardBinaryRequestsAsynchronously);
+    public static void forwardBinaryRequestsWithoutWaitingForResponse(boolean forwardBinaryRequestsAsynchronously) {
+        setProperty(MOCKSERVER_FORWARD_BINARY_REQUESTS_WITHOUT_WAITING_FOR_RESPONSE, "" + forwardBinaryRequestsAsynchronously);
     }
 
-    public static boolean forwardBinaryRequestsAsynchronously() {
-        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_FORWARD_BINARY_REQUESTS_ASYNCHRONOUSLY, "MOCKSERVER_FORWARD_BINARY_REQUESTS_ASYNCHRONOUSLY", "false"));
+    public static boolean forwardBinaryRequestsWithoutWaitingForResponse() {
+        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_FORWARD_BINARY_REQUESTS_WITHOUT_WAITING_FOR_RESPONSE, "MOCKSERVER_FORWARD_BINARY_REQUESTS_WITHOUT_WAITING_FOR_RESPONSE", "false"));
     }
 
     // CORS

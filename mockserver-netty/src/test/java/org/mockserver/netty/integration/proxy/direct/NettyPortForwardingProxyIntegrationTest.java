@@ -53,7 +53,7 @@ public class NettyPortForwardingProxyIntegrationTest {
             output.flush();
 
             // then
-            assertContains(IOStreamUtils.readInputStreamToString(socket), "X-Test: test_headers_only");
+            assertContains(IOStreamUtils.readHttpInputStreamToString(socket), "X-Test: test_headers_only");
         }
     }
 
@@ -76,7 +76,7 @@ public class NettyPortForwardingProxyIntegrationTest {
             output.flush();
 
             // then
-            String response = IOStreamUtils.readInputStreamToString(socket);
+            String response = IOStreamUtils.readHttpInputStreamToString(socket);
             assertContains(response, "X-Test: test_headers_and_body");
             assertContains(response, "an_example_body");
         }
@@ -98,7 +98,7 @@ public class NettyPortForwardingProxyIntegrationTest {
             output.flush();
 
             // then
-            assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 404 Not Found");
+            assertContains(IOStreamUtils.readHttpInputStreamToString(socket), "HTTP/1.1 404 Not Found");
         }
     }
 }

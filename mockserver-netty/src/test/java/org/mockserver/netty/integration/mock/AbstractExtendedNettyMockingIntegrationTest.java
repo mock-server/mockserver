@@ -9,7 +9,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.Test;
-import org.mockserver.authentication.AuthenticationException;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.matchers.TimeToLive;
@@ -18,7 +17,6 @@ import org.mockserver.serialization.PortBindingSerializer;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.streams.IOStreamUtils;
 import org.mockserver.testing.integration.mock.AbstractExtendedSameJVMMockingIntegrationTest;
-import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
 import org.mockserver.verify.VerificationTimes;
 
 import javax.net.ssl.SSLSocket;
@@ -56,7 +54,6 @@ import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpError.error;
-import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
@@ -65,6 +62,7 @@ import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.Parameter.schemaParam;
 import static org.mockserver.model.PortBinding.portBinding;
+import static org.mockserver.test.Retries.tryWaitForSuccess;
 import static org.mockserver.testing.closurecallback.ViaWebSocket.viaWebSocket;
 import static org.mockserver.testing.tls.SSLSocketFactory.sslSocketFactory;
 
@@ -161,8 +159,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path" +
-                        "?variableOne=variableOneValaa|variableOneValbb|variableOneValcc" +
-                        "&variableTwo=variableTwoValue|variableTwoValue")),
+                                                "?variableOne=variableOneValaa|variableOneValbb|variableOneValcc" +
+                                                "&variableTwo=variableTwoValue|variableTwoValue")),
                 getHeadersToRemove()
             )
         );
@@ -173,8 +171,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path" +
-                        "?variableOne=variableOneValab" +
-                        "&variableTwo=variableTwoValue")),
+                                                "?variableOne=variableOneValab" +
+                                                "&variableTwo=variableTwoValue")),
                 getHeadersToRemove()
             )
         );
@@ -185,7 +183,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path" +
-                        "?variableOne=variableOneValaa|variableOneValbb|variableOneValcc")),
+                                                "?variableOne=variableOneValaa|variableOneValbb|variableOneValcc")),
                 getHeadersToRemove()
             )
         );
@@ -194,7 +192,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path" +
-                        "?variableOne=variableOneValaax|variableOneValbb|variableOneValcc")),
+                                                "?variableOne=variableOneValaax|variableOneValbb|variableOneValcc")),
                 getHeadersToRemove()
             )
         );
@@ -203,7 +201,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path" +
-                        "?variableOne=variableOneValaa|variableOneValbbx|variableOneValcc")),
+                                                "?variableOne=variableOneValaa|variableOneValbbx|variableOneValcc")),
                 getHeadersToRemove()
             )
         );
@@ -212,7 +210,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path" +
-                        "?variableOne=variableOneValaa|variableOneValbb|variableOneValccx")),
+                                                "?variableOne=variableOneValaa|variableOneValbb|variableOneValccx")),
                 getHeadersToRemove()
             )
         );
@@ -221,8 +219,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path" +
-                        "?variableOne=variableOneValaa|variableOneValbb|variableOneValcc" +
-                        "&variableTwo=variableTwoOtherValue|variableTwoValue")),
+                                                "?variableOne=variableOneValaa|variableOneValbb|variableOneValcc" +
+                                                "&variableTwo=variableTwoOtherValue|variableTwoValue")),
                 getHeadersToRemove()
             )
         );
@@ -231,8 +229,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path" +
-                        "?variableOne=variableOneValaa|variableOneValbb|variableOneValcc" +
-                        "&variableTwo=variableTwoValue|variableTwoOtherValue")),
+                                                "?variableOne=variableOneValaa|variableOneValbb|variableOneValcc" +
+                                                "&variableTwo=variableTwoValue|variableTwoOtherValue")),
                 getHeadersToRemove()
             )
         );
@@ -241,8 +239,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path" +
-                        "?variableOne=variableOneValaax|variableOneValbb|variableOneValcc" +
-                        "&variableTwo=variableTwoValue|variableTwoOtherValue")),
+                                                "?variableOne=variableOneValaax|variableOneValbb|variableOneValcc" +
+                                                "&variableTwo=variableTwoValue|variableTwoOtherValue")),
                 getHeadersToRemove()
             )
         );
@@ -279,8 +277,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path" +
-                        "/;variableOne=variableOneValaa;variableOne=variableOneValbb;variableOne=variableOneValcc" +
-                        "/;variableTwo=variableTwoValue,variableTwoValue")),
+                                                "/;variableOne=variableOneValaa;variableOne=variableOneValbb;variableOne=variableOneValcc" +
+                                                "/;variableTwo=variableTwoValue,variableTwoValue")),
                 getHeadersToRemove()
             )
         );
@@ -291,8 +289,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path" +
-                        "/;variableOne=variableOneValab" +
-                        "/;variableTwo=variableTwoValue")),
+                                                "/;variableOne=variableOneValab" +
+                                                "/;variableTwo=variableTwoValue")),
                 getHeadersToRemove()
             )
         );
@@ -301,8 +299,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path" +
-                        "/;variableOne=variableOneValaa;variableOne=variableOneValbb;variableOne=variableOneValcc" +
-                        "/;variableTwo=variableTwoOtherValue,variableTwoValue")),
+                                                "/;variableOne=variableOneValaa;variableOne=variableOneValbb;variableOne=variableOneValcc" +
+                                                "/;variableTwo=variableTwoOtherValue,variableTwoValue")),
                 getHeadersToRemove()
             )
         );
@@ -311,8 +309,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path" +
-                        "/;variableOne=variableOneValaa;variableOne=variableOneValbb;variableOne=variableOneValcc" +
-                        "/;variableTwo=variableTwoValue,variableTwoOtherValue")),
+                                                "/;variableOne=variableOneValaa;variableOne=variableOneValbb;variableOne=variableOneValcc" +
+                                                "/;variableTwo=variableTwoValue,variableTwoOtherValue")),
                 getHeadersToRemove()
             )
         );
@@ -321,8 +319,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path" +
-                        "/;variableOne=variableOneValaax;variableOne=variableOneValbb;variableOne=variableOneValcc" +
-                        "/;variableTwo=variableTwoValue,variableTwoOtherValue")),
+                                                "/;variableOne=variableOneValaax;variableOne=variableOneValbb;variableOne=variableOneValcc" +
+                                                "/;variableTwo=variableTwoValue,variableTwoOtherValue")),
                 getHeadersToRemove()
             )
         );
@@ -614,10 +612,10 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             try (InputStreamReader isr = new InputStreamReader(httpResponse.getEntity().getContent()); BufferedReader br = new BufferedReader(isr)) {
                 String responseBody = br.lines().collect(Collectors.joining("\n"));
                 assertThat(responseBody, is("{" + NEW_LINE +
-                    "  \"requestBodyLength\" : " + (requestBodySize + ("{" + NEW_LINE +
+                                                "  \"requestBodyLength\" : " + (requestBodySize + ("{" + NEW_LINE +
                     "  \"largeStringValue\" : \"\"" + NEW_LINE +
                     "}").length()) + NEW_LINE +
-                    "}"));
+                                                "}"));
             }
         });
     }
@@ -1110,9 +1108,9 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     header("x-test", "test_headers_and_body")
                 )
                 .withBody("some_overridden_body {" + NEW_LINE +
-                    "  \"variableTwo\" : [ \"variableTwoValue\" ]," + NEW_LINE +
-                    "  \"variableOne\" : [ \"variableOneValue\" ]" + NEW_LINE +
-                    "}"),
+                              "  \"variableTwo\" : [ \"variableTwoValue\" ]," + NEW_LINE +
+                              "  \"variableOne\" : [ \"variableOneValue\" ]" + NEW_LINE +
+                              "}"),
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path/variableOneValue/variableTwoValue"))
@@ -1476,8 +1474,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withPath(calculatePath("mockserver/bind"))
                     .withMethod("PUT")
                     .withBody("{" + NEW_LINE +
-                        "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
-                        "}"),
+                                  "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
+                                  "}"),
                 getHeadersToRemove()
             )
         );
@@ -1511,8 +1509,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withPath(calculatePath("mockserver/bind"))
                     .withMethod("PUT")
                     .withBody("{" + NEW_LINE +
-                        "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +
-                        "}"),
+                                  "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +
+                                  "}"),
                 getHeadersToRemove()
             )
         );
@@ -1530,8 +1528,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withPath(calculatePath("mockserver/status"))
                     .withMethod("PUT")
                     .withBody("{" + NEW_LINE +
-                        "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
-                        "}"),
+                                  "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
+                                  "}"),
                 getHeadersToRemove()
             )
         );
@@ -1551,8 +1549,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withPath(calculatePath("mockserver/bind"))
                     .withMethod("PUT")
                     .withBody("{" + NEW_LINE +
-                        "  \"ports\" : [ " + newPort + " ]" + NEW_LINE +
-                        "}"),
+                                  "  \"ports\" : [ " + newPort + " ]" + NEW_LINE +
+                                  "}"),
                 getHeadersToRemove()
             );
 
@@ -1603,7 +1601,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             makeRequest(
                 request()
                     .withPath(calculatePath("")),
-                headersToIgnore)
+                headersToIgnore
+            )
         );
         // - in https
         assertEquals(
@@ -1617,7 +1616,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 request()
                     .withSecure(true)
                     .withPath(calculatePath("")),
-                headersToIgnore)
+                headersToIgnore
+            )
         );
     }
 
@@ -1684,7 +1684,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         header("Content-Type", "application/json; charset=utf-8"),
                         header("Cache-Control", "no-cache, no-store")
                     )
-                    .withBody("[{\"_id\":\"f26b3bfe-a6c2-4aa4-8376-bbba44b75ae6\",\"_applicationId\":\"43d05a04-eb1d-462e-933e-3b3b4592e1c8\",\"name\":\"You can't connect the pixel without programming the redundant RAM system!\",\"url\":\"https://jeremie.info\"}]")
+                    .withBody(
+                        "[{\"_id\":\"f26b3bfe-a6c2-4aa4-8376-bbba44b75ae6\",\"_applicationId\":\"43d05a04-eb1d-462e-933e-3b3b4592e1c8\",\"name\":\"You can't connect the pixel without programming the redundant RAM system!\",\"url\":\"https://jeremie.info\"}]")
             );
 
         // then
@@ -1799,7 +1800,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             makeRequest(
                 request()
                     .withPath(calculatePath("")),
-                headersToIgnore)
+                headersToIgnore
+            )
         );
         // - in https
         assertEquals(
@@ -1814,7 +1816,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 request()
                     .withSecure(true)
                     .withPath(calculatePath("")),
-                headersToIgnore)
+                headersToIgnore
+            )
         );
     }
 
@@ -1891,31 +1894,31 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 "GET " + calculatePath("") + " HTTP/1.1\r" + NEW_LINE +
                 "Content-Length: 0\r" + NEW_LINE +
                 "\r\n"
-            ).getBytes(StandardCharsets.UTF_8));
+                         ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then
-            assertThat(IOStreamUtils.readInputStreamToString(socket), is("" +
-                "HTTP/1.1 200 OK" + NEW_LINE +
-                "content-type: audio/*" + NEW_LINE +
-                "connection: keep-alive" + NEW_LINE
+            assertThat(IOStreamUtils.readHttpInputStreamToString(socket), is("" +
+                                                                                 "HTTP/1.1 200 OK" + NEW_LINE +
+                                                                                 "content-type: audio/*" + NEW_LINE +
+                                                                                 "connection: keep-alive" + NEW_LINE
             ));
 
             TimeUnit.SECONDS.sleep(3);
 
             // and - socket is closed
             try {
-                // flush data to increase chance that Java / OS notice socket has been closed
-                output.write("some_random_bytes".getBytes(StandardCharsets.UTF_8));
-                output.flush();
-                output.write("some_random_bytes".getBytes(StandardCharsets.UTF_8));
-                output.flush();
+                tryWaitForSuccess(() -> {
+                    // flush data to increase chance that Java / OS notice socket has been closed
+                    output.write("some_random_bytes".getBytes(StandardCharsets.UTF_8));
+                    output.flush();
+                    output.write("some_random_bytes".getBytes(StandardCharsets.UTF_8));
+                    output.flush();
 
-                TimeUnit.SECONDS.sleep(2);
-
-                IOStreamUtils.readInputStreamToString(socket);
-                fail("Expected socket read to fail because the socket was closed / reset");
-            } catch (SocketException se) {
+                    IOStreamUtils.readHttpInputStreamToString(socket);
+                    fail("Expected socket read to fail because the socket was closed / reset");
+                }, 100, 100, TimeUnit.MILLISECONDS);
+            } catch (Error se) {
                 assertThat(se.getMessage(), anyOf(
                     containsString("Broken pipe"),
                     containsString("(broken pipe)"),
@@ -1936,14 +1939,14 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
                 "Content-Length: 0" + NEW_LINE +
                 NEW_LINE
-            ).getBytes(StandardCharsets.UTF_8));
+                         ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then
-            assertThat(IOStreamUtils.readInputStreamToString(sslSocket), is("" +
-                "HTTP/1.1 200 OK" + NEW_LINE +
-                "content-type: audio/*" + NEW_LINE +
-                "connection: keep-alive" + NEW_LINE
+            assertThat(IOStreamUtils.readHttpInputStreamToString(sslSocket), is("" +
+                                                                                    "HTTP/1.1 200 OK" + NEW_LINE +
+                                                                                    "content-type: audio/*" + NEW_LINE +
+                                                                                    "connection: keep-alive" + NEW_LINE
             ));
         }
     }
@@ -1976,21 +1979,21 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 "GET " + calculatePath("") + " HTTP/1.1\r" + NEW_LINE +
                 "Content-Length: 0\r" + NEW_LINE +
                 "\r\n"
-            ).getBytes(StandardCharsets.UTF_8));
+                         ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then
             String actual = IOUtils.toString(socket.getInputStream(), StandardCharsets.UTF_8.name());
             assertThat(actual, is("HTTP/1.1 200 OK\r" + NEW_LINE +
-                "connection: keep-alive\r" + NEW_LINE +
-                "transfer-encoding: chunked\r" + NEW_LINE +
-                "\r" + NEW_LINE +
-                "a\r" + NEW_LINE +
-                "some_long_\r" + NEW_LINE +
-                "4\r" + NEW_LINE +
-                "body\r" + NEW_LINE +
-                "0\r" + NEW_LINE +
-                "\r\n"
+                                      "connection: keep-alive\r" + NEW_LINE +
+                                      "transfer-encoding: chunked\r" + NEW_LINE +
+                                      "\r" + NEW_LINE +
+                                      "a\r" + NEW_LINE +
+                                      "some_long_\r" + NEW_LINE +
+                                      "4\r" + NEW_LINE +
+                                      "body\r" + NEW_LINE +
+                                      "0\r" + NEW_LINE +
+                                      "\r\n"
             ));
 
         }
@@ -2005,21 +2008,21 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 "GET " + calculatePath("") + " HTTP/1.1\r" + NEW_LINE +
                 "Content-Length: 0\r" + NEW_LINE +
                 "\r\n"
-            ).getBytes(StandardCharsets.UTF_8));
+                         ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then
             String actual = IOUtils.toString(sslSocket.getInputStream(), StandardCharsets.UTF_8.name());
             assertThat(actual, is("HTTP/1.1 200 OK\r" + NEW_LINE +
-                "connection: keep-alive\r" + NEW_LINE +
-                "transfer-encoding: chunked\r" + NEW_LINE +
-                "\r" + NEW_LINE +
-                "a\r" + NEW_LINE +
-                "some_long_\r" + NEW_LINE +
-                "4\r" + NEW_LINE +
-                "body\r" + NEW_LINE +
-                "0\r" + NEW_LINE +
-                "\r\n"
+                                      "connection: keep-alive\r" + NEW_LINE +
+                                      "transfer-encoding: chunked\r" + NEW_LINE +
+                                      "\r" + NEW_LINE +
+                                      "a\r" + NEW_LINE +
+                                      "some_long_\r" + NEW_LINE +
+                                      "4\r" + NEW_LINE +
+                                      "body\r" + NEW_LINE +
+                                      "0\r" + NEW_LINE +
+                                      "\r\n"
             ));
         }
     }
@@ -2050,7 +2053,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 "POST " + calculatePath("/some_error") + " HTTP/1.1\r" + NEW_LINE +
                 "Content-Length: 0\r" + NEW_LINE +
                 "\r\n"
-            ).getBytes(StandardCharsets.UTF_8));
+                         ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then
@@ -2069,7 +2072,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 "POST " + calculatePath("/some_error") + " HTTP/1.1" + NEW_LINE +
                 "Content-Length: 0" + NEW_LINE +
                 NEW_LINE
-            ).getBytes(StandardCharsets.UTF_8));
+                         ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then
@@ -2103,7 +2106,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 "GET " + calculatePath("") + " HTTP/1.1\r" + NEW_LINE +
                 "Content-Length: 0\r" + NEW_LINE +
                 "\r\n"
-            ).getBytes(StandardCharsets.UTF_8));
+                         ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then
@@ -2120,7 +2123,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 "GET " + calculatePath("") + " HTTP/1.1\r" + NEW_LINE +
                 "Content-Length: 0\r" + NEW_LINE +
                 "\r\n"
-            ).getBytes(StandardCharsets.UTF_8));
+                         ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then
@@ -2151,7 +2154,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 "GET " + calculatePath("http_error") + " HTTP/1.1\r" + NEW_LINE +
                 "Content-Length: 0\r" + NEW_LINE +
                 "\r\n"
-            ).getBytes(StandardCharsets.UTF_8));
+                         ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then

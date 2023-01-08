@@ -139,7 +139,7 @@ public abstract class AbstractProxyIntegrationTest {
             output.flush();
 
             // then
-            assertContains(IOStreamUtils.readInputStreamToString(socket), "x-test: test_headers_only");
+            assertContains(IOStreamUtils.readHttpInputStreamToString(socket), "x-test: test_headers_only");
 
             // and
             getMockServerClient().verify(
@@ -161,7 +161,7 @@ public abstract class AbstractProxyIntegrationTest {
             output.flush();
 
             // then
-            String response = IOStreamUtils.readInputStreamToString(socket);
+            String response = IOStreamUtils.readHttpInputStreamToString(socket);
             assertContains(response, "x-test: test_headers_and_body");
             assertContains(response, "an_example_body");
         }
@@ -306,7 +306,7 @@ public abstract class AbstractProxyIntegrationTest {
             output.flush();
 
             // then
-            assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 404");
+            assertContains(IOStreamUtils.readHttpInputStreamToString(socket), "HTTP/1.1 404");
         }
 
         // and
@@ -337,7 +337,7 @@ public abstract class AbstractProxyIntegrationTest {
             output.flush();
 
             // then
-            assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 200");
+            assertContains(IOStreamUtils.readHttpInputStreamToString(socket), "HTTP/1.1 200");
             HttpRequest proxiedRequest = getEchoServer().getLastRequest();
             assertThat(proxiedRequest.getQueryStringParameters().getRawParameterString(), is("parameter"));
         }
@@ -369,7 +369,7 @@ public abstract class AbstractProxyIntegrationTest {
             output.flush();
 
             // then
-            assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 200");
+            assertContains(IOStreamUtils.readHttpInputStreamToString(socket), "HTTP/1.1 200");
             HttpRequest proxiedRequest = getEchoServer().getLastRequest();
             assertThat(proxiedRequest.getQueryStringParameters().getRawParameterString(), is("q=!in:chats%20is:unread"));
         }

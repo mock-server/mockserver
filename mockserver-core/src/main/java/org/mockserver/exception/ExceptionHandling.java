@@ -21,6 +21,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import static org.slf4j.event.Level.WARN;
@@ -32,7 +36,40 @@ public class ExceptionHandling {
     private static final Pattern IGNORABLE_CLASS_IN_STACK = Pattern.compile("^.*(?:Socket|Datagram|Sctp|Udt)Channel.*$");
     private static final Pattern IGNORABLE_ERROR_MESSAGE = Pattern.compile("^.*(?:connection.*(?:reset|closed|abort|broken)|broken.*pipe).*$", Pattern.CASE_INSENSITIVE);
 
-    public static void swallowThrowable(Runnable runnable) {
+
+    public static <T> T handleThrowable(CompletableFuture<T> future, long timeout, TimeUnit unit) {
+        try {
+            return future.get(timeout, unit);
+        } catch (Throwable throwable) {
+            if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(WARN)
+                        .setMessageFormat(throwable.getMessage())
+                        .setThrowable(throwable)
+                );
+            }
+            throw new RuntimeException(throwable);
+        }
+    }
+
+    public static <T> T handleThrowable(Callable<T> callable) {
+        try {
+            return callable.call();
+        } catch (Throwable throwable) {
+            if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(WARN)
+                        .setMessageFormat(throwable.getMessage())
+                        .setThrowable(throwable)
+                );
+            }
+            throw new RuntimeException(throwable);
+        }
+    }
+
+    public static void swallowThrowable(ThrowingRunnable runnable) {
         try {
             runnable.run();
         } catch (Throwable throwable) {
@@ -45,6 +82,26 @@ public class ExceptionHandling {
                 );
             }
         }
+    }
+
+    @FunctionalInterface
+    public interface ThrowingRunnable {
+        void run() throws Throwable;
+    }
+
+    @FunctionalInterface
+    public interface ThrowingConsumer<T> extends Consumer<T> {
+
+        @Override
+        default void accept(final T elem) {
+            try {
+                acceptThrows(elem);
+            } catch (final Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        void acceptThrows(T elem) throws Exception;
     }
 
     /**

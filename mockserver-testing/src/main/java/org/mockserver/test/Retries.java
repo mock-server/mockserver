@@ -1,19 +1,21 @@
 package org.mockserver.test;
 
+import org.junit.function.ThrowingRunnable;
+
 import java.util.concurrent.TimeUnit;
 
 public class Retries {
 
-    public static void tryWaitForSuccess(Runnable runnable, int maxAttempts, long retryInterval, TimeUnit retryIntervalUnits) {
+    public static void tryWaitForSuccess(ThrowingRunnable runnable, int maxAttempts, long retryInterval, TimeUnit retryIntervalUnits) {
         int attempts = 0;
         Error lastThrown = new AssertionError("fail");
         while (attempts++ < maxAttempts) {
             try {
                 runnable.run();
                 return;
-            } catch (Error throwable) {
+            } catch (Throwable throwable) {
                 // ignore and try again if allowed
-                lastThrown = throwable;
+                lastThrown = new Error(throwable);
             }
             if (attempts < maxAttempts) {
                 try {
@@ -26,7 +28,7 @@ public class Retries {
         throw lastThrown;
     }
 
-    public static void tryWaitForSuccess(Runnable runnable) {
+    public static void tryWaitForSuccess(ThrowingRunnable runnable) {
         tryWaitForSuccess(runnable, 50, 100, TimeUnit.MILLISECONDS);
     }
 

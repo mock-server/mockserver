@@ -713,6 +713,32 @@ public class ConfigurationTest {
     }
 
     @Test
+    public void shouldSetAndGetForwardBinaryRequestsWithoutWaitingForResponse() {
+        boolean original = ConfigurationProperties.forwardBinaryRequestsWithoutWaitingForResponse();
+        try {
+            // then - default value
+            assertThat(configuration.forwardBinaryRequestsWithoutWaitingForResponse(), equalTo(false));
+
+            // when - system property setter
+            ConfigurationProperties.forwardBinaryRequestsWithoutWaitingForResponse(true);
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.forwardBinaryRequestsWithoutWaitingForResponse(), equalTo(true));
+            assertThat(System.getProperty("mockserver.forwardBinaryRequestsWithoutWaitingForResponse"), equalTo("true"));
+            assertThat(configuration.forwardBinaryRequestsWithoutWaitingForResponse(), equalTo(true));
+            ConfigurationProperties.forwardBinaryRequestsWithoutWaitingForResponse(original);
+
+            // when - setter
+            configuration.forwardBinaryRequestsWithoutWaitingForResponse(true);
+
+            // then - getter
+            assertThat(configuration.forwardBinaryRequestsWithoutWaitingForResponse(), equalTo(true));
+        } finally {
+            ConfigurationProperties.forwardBinaryRequestsWithoutWaitingForResponse(original);
+        }
+    }
+
+    @Test
     public void shouldSetAndGetEnableCORSForAPI() {
         boolean original = ConfigurationProperties.enableCORSForAPI();
         try {

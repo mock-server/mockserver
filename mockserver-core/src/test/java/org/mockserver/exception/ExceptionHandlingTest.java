@@ -7,6 +7,7 @@ import org.mockserver.logging.MockServerLogger;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockserver.exception.ExceptionHandling.handleThrowable;
 import static org.mockserver.exception.ExceptionHandling.swallowThrowable;
 
 public class ExceptionHandlingTest {
@@ -37,9 +38,7 @@ public class ExceptionHandlingTest {
         ExceptionHandling.mockServerLogger = mock(MockServerLogger.class);
 
         // when
-        swallowThrowable(() -> {
-            System.out.println("ignore me");
-        });
+        swallowThrowable(() -> System.out.println("ignore me"));
 
         // then
         verify(ExceptionHandling.mockServerLogger, never()).logEvent(any(LogEntry.class));

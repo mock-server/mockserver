@@ -29,7 +29,7 @@ public class IOStreamUtilsTest {
         when(socket.getInputStream()).thenReturn(IOUtils.toInputStream("bytes", UTF_8));
 
         // when
-        String result = IOStreamUtils.readInputStreamToString(socket);
+        String result = IOStreamUtils.readHttpInputStreamToString(socket);
 
         // then
         assertEquals("bytes" + NEW_LINE, result);
@@ -42,7 +42,7 @@ public class IOStreamUtilsTest {
         when(socket.getInputStream()).thenReturn(IOUtils.toInputStream("bytes" + NEW_LINE, UTF_8));
 
         // when
-        String result = IOStreamUtils.readInputStreamToString(socket);
+        String result = IOStreamUtils.readHttpInputStreamToString(socket);
 
         // then
         assertEquals("bytes" + NEW_LINE, result);
@@ -65,7 +65,7 @@ public class IOStreamUtilsTest {
             UTF_8));
 
         // when
-        String result = IOStreamUtils.readInputStreamToString(socket);
+        String result = IOStreamUtils.readHttpInputStreamToString(socket);
 
         // then
         assertEquals("" +
@@ -97,7 +97,7 @@ public class IOStreamUtilsTest {
             UTF_8));
 
         // when
-        String result = IOStreamUtils.readInputStreamToString(socket);
+        String result = IOStreamUtils.readHttpInputStreamToString(socket);
 
         // then
         assertEquals("" +
@@ -121,7 +121,7 @@ public class IOStreamUtilsTest {
         );
 
         // when
-        String result = ioStreamUtils.readInputStreamToString(servletRequest);
+        String result = ioStreamUtils.readHttpInputStreamToString(servletRequest);
 
         // then
         assertEquals("bytes", result);
@@ -134,7 +134,7 @@ public class IOStreamUtilsTest {
         when(servletRequest.getInputStream()).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
-        ioStreamUtils.readInputStreamToString(servletRequest);
+        ioStreamUtils.readHttpInputStreamToString(servletRequest);
     }
 
     @Test

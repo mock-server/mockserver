@@ -106,7 +106,7 @@ public class NettyHttpsProxyShadedJarIntegrationTest {
                 output.flush();
 
                 // then
-                assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 200 OK");
+                assertContains(IOStreamUtils.readHttpInputStreamToString(socket), "HTTP/1.1 200 OK");
             }
         } catch (java.net.SocketException se) {
             new MockServerLogger().logEvent(
@@ -137,7 +137,7 @@ public class NettyHttpsProxyShadedJarIntegrationTest {
                     output.flush();
 
                     // then
-                    assertContains(IOStreamUtils.readInputStreamToString(sslSocket), "HTTP/1.1 200 OK");
+                    assertContains(IOStreamUtils.readHttpInputStreamToString(sslSocket), "HTTP/1.1 200 OK");
                 }
             }
         } catch (java.net.SocketException se) {
@@ -167,7 +167,7 @@ public class NettyHttpsProxyShadedJarIntegrationTest {
             output.flush();
 
             // - flush CONNECT response
-            assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 200 OK");
+            assertContains(IOStreamUtils.readHttpInputStreamToString(socket), "HTTP/1.1 200 OK");
 
             // Upgrade the socket to SSL
             try (SSLSocket sslSocket = sslSocketFactory().wrapSocket(socket)) {
@@ -185,7 +185,7 @@ public class NettyHttpsProxyShadedJarIntegrationTest {
                 output.flush();
 
                 // then
-                assertContains(IOStreamUtils.readInputStreamToString(sslSocket), "X-Test: test_headers_only");
+                assertContains(IOStreamUtils.readHttpInputStreamToString(sslSocket), "X-Test: test_headers_only");
 
                 // - send GET request for headers and body
                 output.write(("" +
@@ -199,7 +199,7 @@ public class NettyHttpsProxyShadedJarIntegrationTest {
                 output.flush();
 
                 // then
-                String response = IOStreamUtils.readInputStreamToString(sslSocket);
+                String response = IOStreamUtils.readHttpInputStreamToString(sslSocket);
                 assertContains(response, "X-Test: test_headers_and_body");
                 assertContains(response, "an_example_body");
 
@@ -235,7 +235,7 @@ public class NettyHttpsProxyShadedJarIntegrationTest {
                 output.flush();
 
                 // - flush CONNECT response
-                assertContains(IOStreamUtils.readInputStreamToString(sslSocket), "HTTP/1.1 200 OK");
+                assertContains(IOStreamUtils.readHttpInputStreamToString(sslSocket), "HTTP/1.1 200 OK");
 
                 // - send GET request for headers only
                 output.write(("" +
@@ -248,7 +248,7 @@ public class NettyHttpsProxyShadedJarIntegrationTest {
                 output.flush();
 
                 // then
-                assertContains(IOStreamUtils.readInputStreamToString(sslSocket), "X-Test: test_headers_only");
+                assertContains(IOStreamUtils.readHttpInputStreamToString(sslSocket), "X-Test: test_headers_only");
 
                 // - send GET request for headers and body
                 output.write(("" +
@@ -262,7 +262,7 @@ public class NettyHttpsProxyShadedJarIntegrationTest {
                 output.flush();
 
                 // then
-                String response = IOStreamUtils.readInputStreamToString(sslSocket);
+                String response = IOStreamUtils.readHttpInputStreamToString(sslSocket);
                 assertContains(response, "X-Test: test_headers_and_body");
                 assertContains(response, "an_example_body");
 
@@ -334,7 +334,7 @@ public class NettyHttpsProxyShadedJarIntegrationTest {
             output.flush();
 
             // - flush CONNECT response
-            assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 200 OK");
+            assertContains(IOStreamUtils.readHttpInputStreamToString(socket), "HTTP/1.1 200 OK");
 
             // Upgrade the socket to SSL
             try (SSLSocket sslSocket = sslSocketFactory().wrapSocket(socket)) {
@@ -349,7 +349,7 @@ public class NettyHttpsProxyShadedJarIntegrationTest {
                 output.flush();
 
                 // then
-                assertContains(IOStreamUtils.readInputStreamToString(sslSocket), "HTTP/1.1 404 Not Found");
+                assertContains(IOStreamUtils.readHttpInputStreamToString(sslSocket), "HTTP/1.1 404 Not Found");
 
                 // and
                 mockServerClient.verify(

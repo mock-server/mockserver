@@ -2,6 +2,7 @@ package org.mockserver.configuration;
 
 import com.google.common.collect.Sets;
 import com.google.common.net.InetAddresses;
+import org.mockserver.model.BinaryProxyListener;
 import org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager;
 import org.slf4j.event.Level;
 
@@ -61,7 +62,8 @@ public class Configuration {
     private Boolean assumeAllRequestsAreHttp;
 
     // non http proxying
-    private Boolean forwardBinaryRequestsAsynchronously;
+    private Boolean forwardBinaryRequestsWithoutWaitingForResponse;
+    private BinaryProxyListener binaryProxyListener;
 
     // CORS
     private Boolean enableCORSForAPI;
@@ -660,23 +662,37 @@ public class Configuration {
         return this;
     }
 
-    public Boolean forwardBinaryRequestsAsynchronously() {
-        if (forwardBinaryRequestsAsynchronously == null) {
-            return ConfigurationProperties.forwardBinaryRequestsAsynchronously();
+    public Boolean forwardBinaryRequestsWithoutWaitingForResponse() {
+        if (forwardBinaryRequestsWithoutWaitingForResponse == null) {
+            return ConfigurationProperties.forwardBinaryRequestsWithoutWaitingForResponse();
         }
-        return forwardBinaryRequestsAsynchronously;
+        return forwardBinaryRequestsWithoutWaitingForResponse;
     }
 
     /**
-     * If true the BinaryRequestProxyingHandler.binaryExchangeCallback is called before a response is received from the
+     * If true the BinaryProxyListener is called before a response is received from the
      * remote host. This enables the proxying of messages without a response.
      * <p>
      * The default is false
      *
-     * @param forwardBinaryRequestsAsynchronously target value
+     * @param forwardBinaryRequestsWithoutWaitingForResponse target value
      */
-    public Configuration forwardBinaryRequestsAsynchronously(Boolean forwardBinaryRequestsAsynchronously) {
-        this.forwardBinaryRequestsAsynchronously = forwardBinaryRequestsAsynchronously;
+    public Configuration forwardBinaryRequestsWithoutWaitingForResponse(Boolean forwardBinaryRequestsWithoutWaitingForResponse) {
+        this.forwardBinaryRequestsWithoutWaitingForResponse = forwardBinaryRequestsWithoutWaitingForResponse;
+        return this;
+    }
+
+    public BinaryProxyListener binaryProxyListener() {
+        return binaryProxyListener;
+    }
+
+    /**
+     * Set a org.mockserver.model.BinaryProxyListener called when binary content is proxied
+     *
+     * @param binaryProxyListener a BinaryProxyListener called when binary content is proxied
+     */
+    public Configuration binaryProxyListener(BinaryProxyListener binaryProxyListener) {
+        this.binaryProxyListener = binaryProxyListener;
         return this;
     }
 

@@ -417,7 +417,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
             output.flush();
 
             // then
-            String response = IOStreamUtils.readInputStreamToString(socket);
+            String response = IOStreamUtils.readHttpInputStreamToString(socket);
             assertContains(response, "X-Test: test_headers_and_body");
             assertContains(response, "an_example_body");
 

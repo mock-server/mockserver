@@ -11,7 +11,6 @@ import org.mockserver.integration.ClientAndServer;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.BinaryMessage;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.test.IsDebug;
 
@@ -76,8 +75,7 @@ public class BinaryProxyIntegrationTest {
                         bytes(randomRequestBytes),
                         false,
                         new InetSocketAddress(proxyClientAndServer.getLocalPort()),
-                        IsDebug.timeoutUnits().toMillis(10),
-                        false
+                        IsDebug.timeoutUnits().toMillis(10)
                     );
 
                 // then
@@ -135,8 +133,7 @@ public class BinaryProxyIntegrationTest {
                         bytes(randomRequestBytes),
                         true,
                         new InetSocketAddress(proxyClientAndServer.getPort()),
-                        IsDebug.timeoutUnits().toMillis(10),
-                        false
+                        IsDebug.timeoutUnits().toMillis(10)
                     );
 
                 // then
@@ -180,8 +177,7 @@ public class BinaryProxyIntegrationTest {
                 bytes(randomRequestBytes),
                 true,
                 new InetSocketAddress(clientAndServer.getPort()),
-                IsDebug.timeoutUnits().toMillis(10),
-                false
+                IsDebug.timeoutUnits().toMillis(10)
             )
             .get(10, IsDebug.timeoutUnits());
 
