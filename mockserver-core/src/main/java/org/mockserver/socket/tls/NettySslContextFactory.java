@@ -231,18 +231,23 @@ public class NettySslContextFactory {
     }
 
     private static void configureALPN(SslContextBuilder sslContextBuilder) {
+        Consumer<SslContextBuilder> configureALPN = contextBuilder -> contextBuilder
+            .ciphers(Http2SecurityUtil.CIPHERS, SupportedCipherSuiteFilter.INSTANCE)
+            .applicationProtocolConfig(new ApplicationProtocolConfig(
+                ApplicationProtocolConfig.Protocol.ALPN,
+                // NO_ADVERTISE is currently the only mode supported by both OpenSsl and JDK providers.
+                ApplicationProtocolConfig.SelectorFailureBehavior.NO_ADVERTISE,
+                // ACCEPT is currently the only mode supported by both OpenSsl and JDK providers.
+                ApplicationProtocolConfig.SelectedListenerFailureBehavior.ACCEPT,
+                ApplicationProtocolNames.HTTP_2,
+                ApplicationProtocolNames.HTTP_1_1
+            ));
         if (SslProvider.isAlpnSupported(SslContext.defaultServerProvider())) {
-            sslContextBuilder
-                .ciphers(Http2SecurityUtil.CIPHERS, SupportedCipherSuiteFilter.INSTANCE)
-                .applicationProtocolConfig(new ApplicationProtocolConfig(
-                    ApplicationProtocolConfig.Protocol.ALPN,
-                    // NO_ADVERTISE is currently the only mode supported by both OpenSsl and JDK providers.
-                    ApplicationProtocolConfig.SelectorFailureBehavior.NO_ADVERTISE,
-                    // ACCEPT is currently the only mode supported by both OpenSsl and JDK providers.
-                    ApplicationProtocolConfig.SelectedListenerFailureBehavior.ACCEPT,
-                    ApplicationProtocolNames.HTTP_2,
-                    ApplicationProtocolNames.HTTP_1_1
-                ));
+            configureALPN.accept(sslContextBuilder.sslProvider(SslContext.defaultServerProvider()));
+        } else if (SslProvider.isAlpnSupported(SslProvider.JDK)) {
+            configureALPN.accept(sslContextBuilder.sslProvider(SslProvider.JDK));
+        } else if (SslProvider.isAlpnSupported(SslProvider.OPENSSL)) {
+            configureALPN.accept(sslContextBuilder.sslProvider(SslProvider.OPENSSL));
         }
     }
 
