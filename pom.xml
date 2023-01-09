@@ -512,6 +512,14 @@
                 <version>1.5.1</version>
             </dependency>
 
+            <!-- Fixes for vulnerable transitive dependencies -->
+            <dependency>
+                <!-- from velocity-tools-generic -->
+                <groupId>commons-collections</groupId>
+                <artifactId>commons-collections</artifactId>
+                <version>3.2.2</version>
+            </dependency>
+
             <!-- Fixes for conflicting transitive dependencies -->
             <dependency>
                 <!-- Conflicting versions in json-unit-core and junit -->
