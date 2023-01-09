@@ -67,9 +67,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             .withReasonPhrase(NOT_FOUND_404.reasonPhrase());
     }
 
-    protected boolean supportsHTTP2() {
-        return true;
-    }
+    protected abstract boolean supportsHTTP2();
 
     @Test
     public void shouldReturnResponseWithOnlyBody() {

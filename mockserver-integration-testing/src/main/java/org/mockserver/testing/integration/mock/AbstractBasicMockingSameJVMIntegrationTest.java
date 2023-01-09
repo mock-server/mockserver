@@ -1,5 +1,7 @@
 package org.mockserver.testing.integration.mock;
 
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslProvider;
 import org.junit.Test;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.Delay;
@@ -38,6 +40,12 @@ import static org.mockserver.model.OpenAPIDefinition.openAPI;
  * @author jamesdbloom
  */
 public abstract class AbstractBasicMockingSameJVMIntegrationTest extends AbstractBasicMockingIntegrationTest {
+
+    @Override
+    protected boolean supportsHTTP2() {
+        // TODO(jamesdbloom) support copying native content into the no-dependencies jar
+        return SslProvider.isAlpnSupported(SslContext.defaultServerProvider()) || SslProvider.isAlpnSupported(SslProvider.JDK) || SslProvider.isAlpnSupported(SslProvider.OPENSSL);
+    }
 
     @Test
     public void shouldReturnResponseForCallbackClassWithDelay() {
@@ -927,5 +935,4 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
             )
         );
     }
-
 }

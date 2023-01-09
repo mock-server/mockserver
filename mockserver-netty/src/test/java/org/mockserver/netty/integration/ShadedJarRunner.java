@@ -31,7 +31,9 @@ public class ShadedJarRunner {
         }
         List<String> arguments = new ArrayList<>(Collections.singletonList(getJavaBin()));
         arguments.add("-Dfile.encoding=UTF-8");
-        arguments.add("-Dmockserver.logLevel=" + ConfigurationProperties.logLevel());
+        if (MockServerLogger.isEnabled(Level.TRACE)) {
+            arguments.add("-Dmockserver.logLevel=" + ConfigurationProperties.logLevel());
+        }
         if (DEBUG) {
             arguments.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005");
         }

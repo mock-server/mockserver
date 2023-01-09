@@ -4,7 +4,6 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslProvider;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.netty.integration.ShadedJarRunner;
 import org.mockserver.socket.PortFactory;
@@ -22,7 +21,7 @@ public class ExtendedShadedJarMockingIntegrationTest extends AbstractBasicMockin
 
     protected boolean supportsHTTP2() {
         // TODO(jamesdbloom) support copying native content into the no-dependencies jar
-        return SslProvider.isAlpnSupported(SslContext.defaultServerProvider()) || SslProvider.isAlpnSupported(SslProvider.JDK) || SslProvider.isAlpnSupported(SslProvider.OPENSSL);
+        return SslProvider.isAlpnSupported(SslProvider.JDK);
     }
 
     @BeforeClass

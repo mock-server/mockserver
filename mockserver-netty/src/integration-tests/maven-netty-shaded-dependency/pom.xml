@@ -5,10 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.mock-server.integration-test</groupId>
-    <artifactId>netty-shaded-dependency</artifactId>
+    <artifactId>maven-netty-shaded-dependency</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
+        <mockserver.version>@mockserver.version@</mockserver.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -19,13 +20,13 @@
         <dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-client-java</artifactId>
-            <version>@mockserver.version@</version>
+            <version>${mockserver.version}</version>
             <classifier>shaded</classifier>
         </dependency>
         <dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-netty</artifactId>
-            <version>@mockserver.version@</version>
+            <version>${mockserver.version}</version>
             <classifier>shaded</classifier>
         </dependency>
 
@@ -33,7 +34,7 @@
         <dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-integration-testing-no-dependencies</artifactId>
-            <version>@mockserver.version@</version>
+            <version>${mockserver.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
