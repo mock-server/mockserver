@@ -1,9 +1,12 @@
 package org.mockserver.netty.integration;
 
 import org.mockserver.client.MockServerClient;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.file.FileReader;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.netty.integration.mock.ExtendedShadedJarMockingIntegrationTest;
 import org.mockserver.version.Version;
+import org.slf4j.event.Level;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -28,6 +31,7 @@ public class ShadedJarRunner {
         }
         List<String> arguments = new ArrayList<>(Collections.singletonList(getJavaBin()));
         arguments.add("-Dfile.encoding=UTF-8");
+        arguments.add("-Dmockserver.logLevel=" + ConfigurationProperties.logLevel());
         if (DEBUG) {
             arguments.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005");
         }
@@ -57,10 +61,13 @@ public class ShadedJarRunner {
         if (!mockServerClient.hasStarted()) {
             printOutputStreams();
         }
+        if (MockServerLogger.isEnabled(Level.DEBUG)) {
+            printOutputStreams();
+        }
         return mockServerClient;
     }
 
-    private static void printOutputStreams() {
+    public static void printOutputStreams() {
         System.err.println("stderr:\n\n" + FileReader.readFileFromClassPathOrPath(ExtendedShadedJarMockingIntegrationTest.class.getSimpleName() + "_stderr.log"));
         try {
             // ensure streams don't get intermingled
