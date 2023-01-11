@@ -5,17 +5,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
 ### Added
-- an image tag that allows container to run as root
-- HTTP2 protocol support for mocking
-- ability to proxy multiple binary messages without waiting for response 
 
 ### Changed
 
 ### Fixed
-- references to globally-scoped values within Ingress template
+
+## [5.15.0] - 2023-01-11
 
 ### Added
+- an image tag that allows container to run as root
+- HTTP2 protocol support for mocking
+- ability to proxy multiple binary messages without waiting for response 
 - support to disallow loading of specific class in javascript templates 
 - support to disallow specific text in javascript templates 
 - support to disallow loading of any class in velocity templates
@@ -28,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - improved error message when client doesn't trust MockServer's CA
 
 ### Fixed
+- references to globally-scoped values within Ingress template
 - fixed error passing configuration in MockServerClient
 - fixed handling of additional content-type parameter and special characters in the content-type such as '+'
 - removed invalid extra content-encoding header add when forwarding if content-encoding was not present
