@@ -4,14 +4,19 @@ on:
     tags:
       - mockserver-*
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'docker tag'
+        required: true
+        default: ''
 
 jobs:
   build-and-push-docker:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: checkout
         uses: actions/checkout@v3
-      - name: Get tags
+      - name: get tags
         id: meta
         uses: docker/metadata-action@v4
         with:
@@ -23,16 +28,26 @@ jobs:
             type=match,pattern=(.*),group=1
             type=match,pattern=mockserver-(.*),group=1
 #           type=raw,value=latest,enable=false
-      - name: Set up QEMU
+      - name: set up QEMU
         uses: docker/setup-qemu-action@v2
-      - name: Set up Docker Buildx
+      - name: set up docker buildx
         uses: docker/setup-buildx-action@v2
-      - name: Login to DockerHub
+      - name: login to DockerHub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and push
+      - name: build and push (tag override)
+        if: inputs.tag != ''
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags:  ${{ inputs.tag }}
+      - name: build and push (tag from release)
+        if: inputs.tag == ''
         uses: docker/build-push-action@v3
         with:
           context: .
