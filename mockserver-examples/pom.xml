@@ -83,7 +83,7 @@
                 <!-- Conflicting versions in json-unit and okhttp -->
                 <groupId>org.jetbrains</groupId>
                 <artifactId>annotations</artifactId>
-                <version>23.1.0</version>
+                <version>24.0.0</version>
             </dependency>
             <dependency>
                 <!-- Conflicting versions in spring-webflux and reactor-netty-http -->
