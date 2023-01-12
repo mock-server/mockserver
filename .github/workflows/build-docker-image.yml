@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'docker tag'
+        description: 'comma separated list of full docker tags, i.e. mockserver/mockserver:mockserver-5.15.0,mockserver/mockserver:5.15.0,mockserver/mockserver:latest'
         required: true
         default: ''
 
