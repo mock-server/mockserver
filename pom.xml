@@ -72,6 +72,9 @@
         <release.arguments />
         <javadoc.additional.parameters />
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
+        <!-- also update in docker -->
+        <!-- TODO(jamesdbloom) consider automating using `NETTY_TC_NATIVE_VERSION=$(./mvnw help:evaluate -Dexpression=netty-tcnative-boringssl-static.version -q -DforceStdout)` -->
+        <netty-tcnative-boringssl-static.version>2.0.56.Final</netty-tcnative-boringssl-static.version>
     </properties>
 
     <modules>
@@ -243,7 +246,7 @@
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-tcnative-boringssl-static</artifactId>
-                <version>2.0.56.Final</version>
+                <version>${netty-tcnative-boringssl-static.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.netty</groupId>
