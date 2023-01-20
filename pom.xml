@@ -284,7 +284,7 @@
             <dependency>
                 <groupId>com.nimbusds</groupId>
                 <artifactId>nimbus-jose-jwt</artifactId>
-                <version>9.28</version>
+                <version>9.29</version>
             </dependency>
 
             <!-- templating -->
