@@ -1,22 +1,20 @@
 package org.mockserver.cache;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
+import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import static org.slf4j.event.Level.TRACE;
 
 @SuppressWarnings("unused")
 public class LRUCache<K, V> {
 
     private static boolean allCachesEnabled = true;
     private static int maxSizeOverride = 0;
-    private static final List<LRUCache<?, ?>> allCaches = new ArrayList<>();
+    private static final Set<LRUCache<?, ?>> allCaches = Collections.synchronizedSet(Collections.newSetFromMap(new WeakHashMap<>()));
     private final long ttlInMillis;
     private final int maxSize;
     private final ConcurrentHashMap<K, Entry<V>> map;
@@ -38,11 +36,12 @@ public class LRUCache<K, V> {
 
     @VisibleForTesting
     public static void clearAllCaches() {
-        for (LRUCache<?, ?> cache : allCaches) {
+        // using synchronized foreach instead of a for-loop
+        allCaches.forEach(cache -> {
             if (cache != null) {
                 cache.clear();
             }
-        }
+        });
     }
 
     public void put(K key, final V value) {
@@ -55,8 +54,7 @@ public class LRUCache<K, V> {
                 // ensure the queue is in FIFO order
                 queue.remove(key);
             }
-            while (queue.size() >= maxSize
-                || maxSizeOverride > 0 && queue.size() >= maxSizeOverride) {
+            while (queue.size() >= maxSize || maxSizeOverride > 0 && queue.size() >= maxSizeOverride) {
                 K oldestKey = queue.poll();
                 if (null != oldestKey) {
                     map.remove(oldestKey);
