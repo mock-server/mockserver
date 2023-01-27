@@ -30,12 +30,6 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>mockserver-client-java</artifactId>
-                <version>${project.version}</version>
-                <classifier>jar-with-dependencies</classifier>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
                 <artifactId>mockserver-client-java-no-dependencies</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -62,12 +56,6 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>mockserver-integration-testing</artifactId>
-                <version>${project.version}</version>
-                <classifier>jar-with-dependencies</classifier>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
                 <artifactId>mockserver-integration-testing-no-dependencies</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -84,12 +72,6 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>mockserver-junit-jupiter</artifactId>
-                <version>${project.version}</version>
-                <classifier>jar-with-dependencies</classifier>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
                 <artifactId>mockserver-junit-jupiter-no-dependencies</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -103,12 +85,6 @@
                 <artifactId>mockserver-junit-rule</artifactId>
                 <version>${project.version}</version>
                 <classifier>shaded</classifier>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>mockserver-junit-rule</artifactId>
-                <version>${project.version}</version>
-                <classifier>jar-with-dependencies</classifier>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
@@ -159,12 +135,6 @@
                 <artifactId>mockserver-spring-test-listener</artifactId>
                 <version>${project.version}</version>
                 <classifier>shaded</classifier>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>mockserver-spring-test-listener</artifactId>
-                <version>${project.version}</version>
-                <classifier>jar-with-dependencies</classifier>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
