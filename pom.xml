@@ -78,6 +78,7 @@
     </properties>
 
     <modules>
+        <module>mockserver-bom</module>
         <module>mockserver-testing</module>
         <module>mockserver-client-java</module>
         <module>mockserver-core</module>
