@@ -134,6 +134,14 @@ public class NettyHttpClient {
                     if (throwable == null) {
                         if (message != null) {
                             if (forwardProxyClient) {
+                                mockServerLogger.logEvent(
+                                        new LogEntry()
+                                                .setType(LogEntry.LogMessageType.FORWARDED_REQUEST)
+                                                .setLogLevel(Level.INFO)
+                                                .setCorrelationId(httpRequest.getLogCorrelationId())
+                                                .setHttpRequest(httpRequest)
+                                                .setMessageFormat("actual response from destination server: {}")
+                                                .setArguments(message));
                                 httpResponseFuture.complete(hopByHopHeaderFilter.onResponse((HttpResponse) message));
                             } else {
                                 httpResponseFuture.complete((HttpResponse) message);

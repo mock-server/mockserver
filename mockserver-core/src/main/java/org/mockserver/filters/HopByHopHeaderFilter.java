@@ -45,7 +45,7 @@ public class HopByHopHeaderFilter {
                     headers.withEntry(header);
                 }
             }
-            HttpRequest clonedRequest = request.clone();
+            HttpRequest clonedRequest = (HttpRequest) request.clone().withLogCorrelationId(request.getLogCorrelationId());
             if (!headers.isEmpty()) {
                 clonedRequest.withHeaders(headers);
             }
