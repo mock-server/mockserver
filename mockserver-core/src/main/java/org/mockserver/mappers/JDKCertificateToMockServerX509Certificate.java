@@ -1,6 +1,5 @@
 package org.mockserver.mappers;
 
-import io.netty.handler.ssl.util.LazyJavaxX509Certificate;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -11,6 +10,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.io.ByteArrayInputStream;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 
 import static org.slf4j.event.Level.INFO;
 
@@ -28,16 +30,18 @@ public class JDKCertificateToMockServerX509Certificate {
                 .stream(clientCertificates)
                 .flatMap(certificate -> {
                         try {
-                            LazyJavaxX509Certificate x509Certificate = new LazyJavaxX509Certificate(certificate.getEncoded());
+                            java.security.cert.X509Certificate x509Certificate = (java.security.cert.X509Certificate)
+                                        CertificateFactory.getInstance("X.509")
+                                                          .generateCertificate(new ByteArrayInputStream(certificate.getEncoded()));
                             return Stream.of(
                                 new X509Certificate()
                                     .withSerialNumber(x509Certificate.getSerialNumber().toString())
-                                    .withIssuerDistinguishedName(x509Certificate.getIssuerDN().getName())
-                                    .withSubjectDistinguishedName(x509Certificate.getSubjectDN().getName())
+                                    .withIssuerDistinguishedName(x509Certificate.getIssuerX500Principal().getName())
+                                    .withSubjectDistinguishedName(x509Certificate.getSubjectX500Principal().getName())
                                     .withSignatureAlgorithmName(x509Certificate.getSigAlgName())
                                     .withCertificate(certificate)
                             );
-                        } catch (Throwable throwable) {
+                        } catch (RuntimeException | CertificateException throwable) {
                             if (MockServerLogger.isEnabled(INFO) && mockServerLogger != null) {
                                 mockServerLogger.logEvent(
                                     new LogEntry()
