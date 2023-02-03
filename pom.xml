@@ -61,7 +61,7 @@
         <httpcomponents.version>4.4.1</httpcomponents.version>
         <bouncycastle.version>1.72</bouncycastle.version>
         <!-- highest spring version is 5.3 due to Java 1.8 version -->
-        <spring.version>5.3.24</spring.version>
+        <spring.version>5.3.25</spring.version>
         <spring-web.version>5.3.25</spring-web.version>
         <mockito.version>4.11.0</mockito.version>
         <hamcrest.version>2.2</hamcrest.version>
@@ -153,7 +153,7 @@
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-core</artifactId>
                 <!-- highest version for Servlet 4 is 9.x, highest version for Java 1.8 is 10.x -->
-                <version>9.0.70</version>
+                <version>9.0.71</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
