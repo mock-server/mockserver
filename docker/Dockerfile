@@ -41,6 +41,7 @@ RUN unzip netty-tcnative-boringssl-static.jar
 
 FROM ${source} as intermediate
 
+# runtime image https://console.cloud.google.com/gcr/images/distroless/global/java17-debian11
 FROM gcr.io/distroless/java17-debian11:nonroot
 
 # maintainer details
