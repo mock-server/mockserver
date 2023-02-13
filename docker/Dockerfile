@@ -20,9 +20,10 @@ ARG VERSION=RELEASE
 ARG REPOSITORY_URL=https://oss.sonatype.org/service/local/artifact/maven/redirect?r=${REPOSITORY}&g=org.mock-server&a=mockserver-netty&c=jar-with-dependencies&e=jar&v=${VERSION}
 RUN wget --max-redirect=10 -O mockserver-netty-jar-with-dependencies.jar "$REPOSITORY_URL"
 # add netty-tcnative-boringssl so file
+ARG NETTY_TCNATIVE=2.0.58.Final
 RUN if [ "$(uname -m)" = "x86_64" ]; \
-    then wget --max-redirect=10 -O netty-tcnative-boringssl-static.jar "https://oss.sonatype.org/service/local/artifact/maven/redirect?r=releases&g=io.netty&a=netty-tcnative-boringssl-static&c=linux-x86_64&e=jar&v=2.0.54.Final"; \
-    else wget --max-redirect=10 -O netty-tcnative-boringssl-static.jar "https://repo1.maven.org/maven2/io/netty/netty-tcnative/2.0.54.Final/netty-tcnative-2.0.54.Final-linux-aarch_64-fedora.jar"; \
+    then wget --max-redirect=10 -O netty-tcnative-boringssl-static.jar "https://oss.sonatype.org/service/local/artifact/maven/redirect?r=releases&g=io.netty&a=netty-tcnative-boringssl-static&c=linux-x86_64&e=jar&v=$NETTY_TCNATIVE"; \
+    else wget --max-redirect=10 -O netty-tcnative-boringssl-static.jar "https://oss.sonatype.org/service/local/artifact/maven/redirect?r=releases&g=io.netty&a=netty-tcnative-boringssl-static&c=linux-aarch_64&e=jar&v=$NETTY_TCNATIVE"; \
     fi
 RUN unzip netty-tcnative-boringssl-static.jar
 
@@ -34,8 +35,8 @@ COPY mockserver-netty-jar-with-dependencies.jar .
 # add netty-tcnative-boringssl so file
 RUN apk add --update openssl ca-certificates bash wget
 RUN if [ "$(uname -m)" = "x86_64" ]; \
-    then wget --max-redirect=10 -O netty-tcnative-boringssl-static.jar "https://oss.sonatype.org/service/local/artifact/maven/redirect?r=releases&g=io.netty&a=netty-tcnative-boringssl-static&c=linux-x86_64&e=jar&v=2.0.54.Final"; \
-    else wget --max-redirect=10 -O netty-tcnative-boringssl-static.jar "https://repo1.maven.org/maven2/io/netty/netty-tcnative/2.0.54.Final/netty-tcnative-2.0.54.Final-linux-aarch_64-fedora.jar"; \
+    then wget --max-redirect=10 -O netty-tcnative-boringssl-static.jar "https://oss.sonatype.org/service/local/artifact/maven/redirect?r=releases&g=io.netty&a=netty-tcnative-boringssl-static&c=linux-x86_64&e=jar&v=$NETTY_TCNATIVE"; \
+    else wget --max-redirect=10 -O netty-tcnative-boringssl-static.jar "https://oss.sonatype.org/service/local/artifact/maven/redirect?r=releases&g=io.netty&a=netty-tcnative-boringssl-static&c=linux-aarch_64&e=jar&v=$NETTY_TCNATIVE"; \
     fi
 RUN unzip netty-tcnative-boringssl-static.jar
 
