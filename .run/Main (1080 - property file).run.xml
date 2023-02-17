@@ -1,0 +1,23 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Main (1080 - property file)" type="Application" factoryName="Application">
+    <envs>
+      <env name="MOCKSERVER_INITIALIZATION_JSON_PATH" value="$PROJECT_DIR$/container_integration_tests/docker_compose_with_expectation_initialiser/config/expectationInitialiser.json" />
+      <env name="MOCKSERVER_PERSIST_EXPECTATIONS" value="true" />
+      <env name="MOCKSERVER_PERSISTED_EXPECTATIONS_PATH" value="$PROJECT_DIR$/persistedExpectations.json" />
+      <env name="MOCKSERVER_WATCH_INITIALIZATION_JSON" value="true" />
+      <env name="MOCKSERVER_SERVER_PORTS" value="1080,1081" />
+    </envs>
+    <option name="MAIN_CLASS_NAME" value="org.mockserver.cli.Main" />
+    <module name="mockserver-netty" />
+    <option name="VM_PARAMETERS" value="-Dmockserver.logLevel=DEBUG -Dmockserver.enableCORSForAllResponses=false -Dmockserver.disableSystemOut=false -Dmockserver.dynamicallyCreateCertificateAuthorityCertificate=true -Dmockserver.serverPorts=1080 -Dmockserver.propertyFile=$PROJECT_DIR$/mockserver.example.properties" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="org.mockserver.cli.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

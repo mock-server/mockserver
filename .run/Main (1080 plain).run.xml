@@ -1,0 +1,17 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Main (1080 plain)" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="org.mockserver.cli.Main" />
+    <module name="mockserver-netty" />
+    <option name="PROGRAM_PARAMETERS" value="-serverPort 1080" />
+    <option name="VM_PARAMETERS" value="-Dmockserver.logLevel=DEBUG" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="org.mockserver.cli.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

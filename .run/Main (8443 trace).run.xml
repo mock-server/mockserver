@@ -1,0 +1,26 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Main (8443 trace)" type="Application" factoryName="Application">
+    <envs>
+      <env name="MOCKSERVER_CERTIFICATE_AUTHORITY_PRIVATE_KEY" value="$PROJECT_DIR$/mockserver-core/src/test/resources/org/mockserver/authentication/mtls/ca-key.pem" />
+      <env name="MOCKSERVER_MAX_EXPECTATIONS" value="200" />
+      <env name="MOCKSERVER_CERTIFICATE_AUTHORITY_X509_CERTIFICATE" value="$PROJECT_DIR$/mockserver-core/src/test/resources/org/mockserver/authentication/mtls/ca.pem" />
+      <env name="MOCKSERVER_MAX_LOG_ENTRIES" value="1000" />
+      <env name="MOCKSERVER_SSL_CERTIFICATE_DOMAIN_NAME" value="isc-test-endpoint-westeurope-1.westeurope.azurecontainer.io" />
+      <env name="MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_REQUIRED" value="false" />
+      <env name="MOCKSERVER_METRICS_ENABLED" value="true" />
+    </envs>
+    <option name="MAIN_CLASS_NAME" value="org.mockserver.cli.Main" />
+    <module name="mockserver-netty" />
+    <option name="PROGRAM_PARAMETERS" value="-serverPort 8443" />
+    <option name="VM_PARAMETERS" value="-Xmx200m -Dmockserver.logLevel=TRACE -Dmockserver.disableSystemOut=false -Djavax.net.debug=none" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="org.mockserver.cli.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
