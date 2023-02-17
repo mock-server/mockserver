@@ -39,7 +39,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: build and push (tag override)
         if: inputs.tag != ''
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: .
           file: docker/Dockerfile
@@ -48,7 +48,7 @@ jobs:
           tags:  ${{ inputs.tag }}
       - name: build and push (tag from release)
         if: inputs.tag == ''
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: .
           file: docker/Dockerfile
