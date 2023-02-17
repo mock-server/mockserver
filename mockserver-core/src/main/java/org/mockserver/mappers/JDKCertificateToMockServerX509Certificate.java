@@ -43,7 +43,7 @@ public class JDKCertificateToMockServerX509Certificate {
                                     new LogEntry()
                                         .setLogLevel(INFO)
                                         .setHttpRequest(httpRequest)
-                                        .setMessageFormat("exception decoding client certificate")
+                                        .setMessageFormat("exception decoding client certificate " + throwable.getMessage())
                                         .setThrowable(throwable)
                                 );
                             }
