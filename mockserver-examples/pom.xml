@@ -89,7 +89,7 @@
                 <!-- Conflicting versions in spring-webflux and reactor-netty-http -->
                 <groupId>io.projectreactor</groupId>
                 <artifactId>reactor-core</artifactId>
-                <version>3.5.2</version>
+                <version>3.5.3</version>
             </dependency>
             <dependency>
                 <!-- Conflicting versions in google-http-client and guava -->
