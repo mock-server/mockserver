@@ -6,7 +6,7 @@
 #
 
 # pull base image.
-FROM ubuntu:20.04
+FROM ubuntu:23.04
 
 # maintainer details
 MAINTAINER James Bloom "jamesdbloom@gmail.com"
@@ -22,7 +22,7 @@ RUN apt-get -y upgrade
 ENV TZ=Europe/London
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN apt-get install -y build-essential
-RUN apt-get install -y software-properties-common
+RUN apt-get install -y software-properties-common dirmngr apt-transport-https lsb-release ca-certificates
 RUN apt-get install -y curl git htop man unzip vim wget pkg-config python2.7
 
 # install java
