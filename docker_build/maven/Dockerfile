@@ -6,7 +6,7 @@
 #
 
 # pull base image.
-FROM ubuntu:23.04
+FROM ubuntu:jammy
 
 # maintainer details
 MAINTAINER James Bloom "jamesdbloom@gmail.com"
@@ -25,7 +25,7 @@ RUN apt-get install -y build-essential
 RUN apt-get install -y software-properties-common dirmngr apt-transport-https lsb-release ca-certificates
 RUN apt-get install -y curl git htop man unzip vim wget pkg-config python2.7
 
-# install java
+# install java (see: https://launchpad.net/~openjdk-r/+archive/ubuntu/ppa)
 RUN add-apt-repository -y ppa:openjdk-r/ppa
 RUN apt-get update
 RUN apt-get install -y openjdk-8-jdk
