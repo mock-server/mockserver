@@ -107,6 +107,8 @@ mockserver_keystore_*_jks
 !/*/CertificateAuthorityCertificate.pem
 /PKCS8CertificateAuthorityPrivateKey.pem
 !/*/PKCS8CertificateAuthorityPrivateKey.pem
+/**/Certificate.pem
+/**/PKCS8PrivateKey.pem
 /*/mockserverInitialization*.json
 persistedExpectations.json
 mockserverInitialization.json

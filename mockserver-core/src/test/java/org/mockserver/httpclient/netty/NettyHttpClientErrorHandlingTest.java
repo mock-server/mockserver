@@ -77,7 +77,7 @@ public class NettyHttpClientErrorHandlingTest {
 
             // then
             assertThat(exception.getMessage(), anyOf(
-                containsString("Connection reset by peer"),
+                containsString("Connection reset"),
                 containsString("Channel set as inactive before valid response has been received"),
                 containsString("Channel handler removed before valid response has been received")
             ));

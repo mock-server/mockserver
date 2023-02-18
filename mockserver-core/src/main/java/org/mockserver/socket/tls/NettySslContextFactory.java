@@ -193,11 +193,11 @@ public class NettySslContextFactory {
                         .setMessageFormat("using certificate authority serial:{}issuer:{}subject:{}and certificate serial:{}issuer:{}subject:{}")
                         .setArguments(
                             keyAndCertificateFactory.certificateAuthorityX509Certificate().getSerialNumber(),
-                            keyAndCertificateFactory.certificateAuthorityX509Certificate().getIssuerDN(),
-                            keyAndCertificateFactory.certificateAuthorityX509Certificate().getSubjectDN(),
+                            keyAndCertificateFactory.certificateAuthorityX509Certificate().getIssuerX500Principal(),
+                            keyAndCertificateFactory.certificateAuthorityX509Certificate().getSubjectX500Principal(),
                             keyAndCertificateFactory.x509Certificate().getSerialNumber(),
-                            keyAndCertificateFactory.x509Certificate().getIssuerDN(),
-                            keyAndCertificateFactory.x509Certificate().getSubjectDN()
+                            keyAndCertificateFactory.x509Certificate().getIssuerX500Principal(),
+                            keyAndCertificateFactory.x509Certificate().getSubjectX500Principal()
                         )
                 );
                 final SslContextBuilder sslContextBuilder = SslContextBuilder
