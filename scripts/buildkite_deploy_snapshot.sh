@@ -1,9 +1,18 @@
 #!/usr/bin/env bash
 
-set -e
+set -xeuo pipefail
 
 #export MAVEN_OPTS="$MAVEN_OPTS -Xmx3072m"
 #export JAVA_OPTS="$JAVA_OPTS -Xmx3072m"
+echo
+free -mh
+ulimit -u
+ulimit -a
+ps -eLf | grep 'myuser' | wc -l
+ps -eLf | wc -l
+sysctl kernel.pid_max
+sysctl -w kernel.pid_max=4194303
+sysctl kernel.pid_max
 echo
 java -version
 echo
