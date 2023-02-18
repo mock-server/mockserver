@@ -6,7 +6,7 @@
 #
 
 # pull base image.
-FROM ubuntu:20.04
+FROM ubuntu:jammy
 
 # maintainer details
 MAINTAINER James Bloom "jamesdbloom@gmail.com"
