@@ -123,6 +123,7 @@ public class Configuration {
     private Boolean proactivelyInitialiseTLS;
     private boolean rebuildTLSContext;
     private boolean rebuildServerTLSContext;
+    private String tlsProtocols;
 
     // inbound - dynamic CA
     private Boolean dynamicallyCreateCertificateAuthorityCertificate;
@@ -1478,6 +1479,23 @@ public class Configuration {
 
     public Configuration rebuildServerTLSContext(boolean rebuildServerTLSContext) {
         this.rebuildServerTLSContext = rebuildServerTLSContext;
+        return this;
+    }
+
+    public String tlsProtocols() {
+        if (tlsProtocols == null) {
+            return ConfigurationProperties.tlsProtocols();
+        }
+        return tlsProtocols;
+    }
+
+    /**
+     * Comma seperated list of TLS protocols, by default TLSv1,TLSv1.1,TLSv1.2
+     *
+     * @param tlsProtocols comma seperated list of TLS protocols
+     */
+    public Configuration tlsProtocols(String tlsProtocols) {
+        this.tlsProtocols = tlsProtocols;
         return this;
     }
 

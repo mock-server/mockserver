@@ -137,6 +137,7 @@ public class ConfigurationProperties {
 
     // TLS
     private static final String MOCKSERVER_PROACTIVELY_INITIALISE_TLS = "mockserver.proactivelyInitialiseTLS";
+    private static final String MOCKSERVER_TLS_PROTOCOLS = "mockserver.tlsProtocols";
 
     // inbound - dynamic CA
     private static final String MOCKSERVER_DYNAMICALLY_CREATE_CERTIFICATE_AUTHORITY_CERTIFICATE = "mockserver.dynamicallyCreateCertificateAuthorityCertificate";
@@ -1371,6 +1372,19 @@ public class ConfigurationProperties {
 
     public static boolean proactivelyInitialiseTLS() {
         return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_PROACTIVELY_INITIALISE_TLS, "MOCKSERVER_PROACTIVELY_INITIALISE_TLS", "false"));
+    }
+
+    public static String tlsProtocols() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_TLS_PROTOCOLS, "MOCKSERVER_TLS_PROTOCOLS", "TLSv1,TLSv1.1,TLSv1.2");
+    }
+
+    /**
+     * Comma seperated list of TLS protocols, by default TLSv1,TLSv1.1,TLSv1.2
+     *
+     * @param tlsProtocols comma seperated list of TLS protocols
+     */
+    public static  void tlsProtocols(String tlsProtocols) {
+        setProperty(MOCKSERVER_TLS_PROTOCOLS, tlsProtocols);
     }
 
     public static boolean dynamicallyCreateCertificateAuthorityCertificate() {

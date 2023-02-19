@@ -1,6 +1,5 @@
 package org.mockserver.socket.tls;
 
-import com.google.common.base.Joiner;
 import io.netty.handler.codec.http2.Http2SecurityUtil;
 import io.netty.handler.ssl.*;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
@@ -34,7 +33,6 @@ import static org.mockserver.socket.tls.PEMToFile.x509ChainFromPEMFile;
  */
 public class NettySslContextFactory {
 
-    private static final String[] TLS_PROTOCOLS = "TLSv1,TLSv1.1,TLSv1.2".split(",");
     public static Function<SslContextBuilder, SslContext> clientSslContextBuilderFunction =
         sslContextBuilder -> {
             try {
@@ -65,7 +63,7 @@ public class NettySslContextFactory {
         this.mockServerLogger = mockServerLogger;
         this.forServer = true;
         keyAndCertificateFactory = createKeyAndCertificateFactory(configuration, mockServerLogger);
-        System.setProperty("https.protocols", Joiner.on(",").join(TLS_PROTOCOLS));
+        System.setProperty("https.protocols", configuration.tlsProtocols());
         nettySslContextFactoryCustomizer.accept(this);
         if (configuration.proactivelyInitialiseTLS()) {
             createServerSslContext();
@@ -77,7 +75,7 @@ public class NettySslContextFactory {
         this.mockServerLogger = mockServerLogger;
         this.forServer = forServer;
         keyAndCertificateFactory = createKeyAndCertificateFactory(configuration, mockServerLogger, forServer);
-        System.setProperty("https.protocols", Joiner.on(",").join(TLS_PROTOCOLS));
+        System.setProperty("https.protocols", configuration.tlsProtocols());
         nettySslContextFactoryCustomizer.accept(this);
         if (configuration.proactivelyInitialiseTLS()) {
             createServerSslContext();
@@ -101,7 +99,7 @@ public class NettySslContextFactory {
                 SslContextBuilder sslContextBuilder =
                     SslContextBuilder
                         .forClient()
-                        .protocols(TLS_PROTOCOLS)
+                        .protocols(configuration.tlsProtocols().split(","))
                         .keyManager(
                             forwardProxyPrivateKey(),
                             forwardProxyCertificateChain()
@@ -205,7 +203,7 @@ public class NettySslContextFactory {
                         keyAndCertificateFactory.privateKey(),
                         keyAndCertificateFactory.certificateChain()
                     )
-                    .protocols(TLS_PROTOCOLS)
+                    .protocols(configuration.tlsProtocols().split(","))
                     .clientAuth(configuration.tlsMutualAuthenticationRequired() ? ClientAuth.REQUIRE : ClientAuth.OPTIONAL);
                 configureALPN(sslContextBuilder);
                 if (isNotBlank(configuration.tlsMutualAuthenticationCertificateChain()) || configuration.tlsMutualAuthenticationRequired()) {
