@@ -2,9 +2,7 @@ package org.mockserver.client;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -33,12 +31,11 @@ import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.CREATED;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static junit.framework.TestCase.*;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsArrayWithSize.arrayWithSize;
+import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.matchers.Times.unlimited;
@@ -54,9 +51,6 @@ import static org.mockserver.verify.VerificationTimes.once;
  * @author jamesdbloom
  */
 public class MockServerClientTest {
-
-    @Rule
-    public final ExpectedException exception = ExpectedException.none();
 
     @Mock
     private NettyHttpClient mockHttpClient;
@@ -85,21 +79,19 @@ public class MockServerClientTest {
 
     @Test
     public void shouldHandleNullHostnameExceptions() {
-        // then
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("Host can not be null or empty"));
-
         // when
-        new MockServerClient(null, 1090);
+        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, () -> new MockServerClient(null, 1090));
+
+        // then
+        assertThat(illegalArgumentException.getMessage(), containsString("Host can not be null or empty"));
     }
 
     @Test
     public void shouldHandleNullHttpRequestEnhancerException() {
-        // then
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("Request with default properties can not be null"));
+        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, () -> mockServerClient.withRequestOverride(null));
 
-        mockServerClient.withRequestOverride(null);
+        // then
+        assertThat(illegalArgumentException.getMessage(), containsString("Request with default properties can not be null"));
     }
 
     @Test
@@ -123,30 +115,29 @@ public class MockServerClientTest {
 
     @Test
     public void shouldHandleNullContextPathExceptions() {
-        // then
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("ContextPath can not be null"));
-
         // when
-        new MockServerClient("localhost", 1090, null);
+        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, () -> new MockServerClient("localhost", 1090, null));
+
+        // then
+        assertThat(illegalArgumentException.getMessage(), containsString("ContextPath can not be null"));
+
     }
 
     @Test
     public void shouldHandleInvalidExpectationException() {
-        // then
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("error_body"));
-
         // given
         when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean()))
             .thenReturn(response()
-                .withStatusCode(BAD_REQUEST.code())
-                .withBody("error_body")
+                            .withStatusCode(BAD_REQUEST.code())
+                            .withBody("error_body")
             );
 
         // when
         ForwardChainExpectation forwardChainExpectation = mockServerClient.when(request());
-        forwardChainExpectation.respond(response());
+        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, () -> forwardChainExpectation.respond(response()));
+
+        // then
+        assertThat(illegalArgumentException.getMessage(), containsString("error_body"));
     }
 
     @Test
@@ -154,20 +145,19 @@ public class MockServerClientTest {
         try {
             System.setProperty("MOCKSERVER_VERSION", "1.2.3");
 
-            // then
-            exception.expect(ClientException.class);
-            exception.expectMessage(containsString("Client version \"" + Version.getVersion() + "\" major and minor versions do not match server version \"1.3.2\""));
-
             // given
             when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean()))
                 .thenReturn(response()
-                    .withHeader("version", "1.3.2")
-                    .withStatusCode(CREATED.code())
+                                .withHeader("version", "1.3.2")
+                                .withStatusCode(CREATED.code())
                 );
 
             // when
             ForwardChainExpectation forwardChainExpectation = mockServerClient.when(request());
-            forwardChainExpectation.respond(response());
+            ClientException clientException = assertThrows(ClientException.class, () -> forwardChainExpectation.respond(response()));
+
+            // then
+            assertThat(clientException.getMessage(), containsString("Client version \"" + Version.getVersion() + "\" major and minor versions do not match server version \"1.3.2\""));
         } finally {
             System.clearProperty("MOCKSERVER_VERSION");
         }
@@ -180,8 +170,8 @@ public class MockServerClientTest {
             System.setProperty("MOCKSERVER_VERSION", "same_version");
             when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean()))
                 .thenReturn(response()
-                    .withHeader("version", Version.getVersion())
-                    .withStatusCode(CREATED.code())
+                                .withHeader("version", Version.getVersion())
+                                .withStatusCode(CREATED.code())
                 );
 
             // when
@@ -202,8 +192,8 @@ public class MockServerClientTest {
             System.setProperty("MOCKSERVER_VERSION", "1.2.3");
             when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean()))
                 .thenReturn(response()
-                    .withHeader("version", StringUtils.substringBeforeLast(Version.getVersion(), ".") + ".100")
-                    .withStatusCode(CREATED.code())
+                                .withHeader("version", StringUtils.substringBeforeLast(Version.getVersion(), ".") + ".100")
+                                .withStatusCode(CREATED.code())
                 );
 
             // when
@@ -401,7 +391,7 @@ public class MockServerClientTest {
         assertTrue(expectation.isActive());
         assertThat(expectation.getHttpForwardTemplate(), nullValue());
         assertThat(expectation.getHttpOverrideForwardedRequest(), is(new HttpOverrideForwardedRequest()
-            .withRequestOverride(request().withBody("some_overridden_body"))
+                                                                         .withRequestOverride(request().withBody("some_overridden_body"))
         ));
         assertEquals(Times.unlimited(), expectation.getTimes());
     }
@@ -449,11 +439,11 @@ public class MockServerClientTest {
         verify(mockExpectationSerializer).serialize(
             new ExpectationDTO()
                 .setHttpRequest(new HttpRequestDTO(new HttpRequest()
-                    .withPath("/some_path")
-                    .withBody(new StringBody("some_request_body"))))
+                                                       .withPath("/some_path")
+                                                       .withBody(new StringBody("some_request_body"))))
                 .setHttpResponse(new HttpResponseDTO(new HttpResponse()
-                    .withBody("some_response_body")
-                    .withHeaders(new Header("responseName", "responseValue"))))
+                                                         .withBody("some_response_body")
+                                                         .withHeaders(new Header("responseName", "responseValue"))))
                 .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(3)))
                 .buildObject()
         );
@@ -479,11 +469,11 @@ public class MockServerClientTest {
         verify(mockExpectationSerializer).serialize(
             new ExpectationDTO()
                 .setHttpRequest(new HttpRequestDTO(new HttpRequest()
-                    .withPath("/some_path")
-                    .withBody(new StringBody("some_request_body"))))
+                                                       .withPath("/some_path")
+                                                       .withBody(new StringBody("some_request_body"))))
                 .setHttpResponse(new HttpResponseDTO(new HttpResponse()
-                    .withBody("some_response_body")
-                    .withHeaders(new Header("responseName", "responseValue"))))
+                                                         .withBody("some_response_body")
+                                                         .withHeaders(new Header("responseName", "responseValue"))))
                 .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(3)))
                 .buildObject()
         );
@@ -508,8 +498,8 @@ public class MockServerClientTest {
         verify(mockExpectationSerializer).serialize(
             new ExpectationDTO()
                 .setHttpRequest(new HttpRequestDTO(new HttpRequest()
-                    .withPath("/some_path")
-                    .withBody(new StringBody("some_request_body"))))
+                                                       .withPath("/some_path")
+                                                       .withBody(new StringBody("some_request_body"))))
                 .setHttpResponseClassCallback(
                     new HttpClassCallbackDTO(
                         new HttpClassCallback()
@@ -542,8 +532,8 @@ public class MockServerClientTest {
         verify(mockExpectationSerializer).serialize(
             new ExpectationDTO()
                 .setHttpRequest(new HttpRequestDTO(new HttpRequest()
-                    .withPath("/some_path")
-                    .withBody(new StringBody("some_request_body"))))
+                                                       .withPath("/some_path")
+                                                       .withBody(new StringBody("some_request_body"))))
                 .setHttpForward(
                     new HttpForwardDTO(
                         new HttpForward()
@@ -578,8 +568,8 @@ public class MockServerClientTest {
         verify(mockExpectationSerializer).serialize(
             new ExpectationDTO()
                 .setHttpRequest(new HttpRequestDTO(new HttpRequest()
-                    .withPath("/some_path")
-                    .withBody(new StringBody("some_request_body"))))
+                                                       .withPath("/some_path")
+                                                       .withBody(new StringBody("some_request_body"))))
                 .setHttpForward(
                     new HttpForwardDTO(
                         new HttpForward()
@@ -612,8 +602,8 @@ public class MockServerClientTest {
         verify(mockExpectationSerializer).serialize(
             new ExpectationDTO()
                 .setHttpRequest(new HttpRequestDTO(new HttpRequest()
-                    .withPath("/some_path")
-                    .withBody(new StringBody("some_request_body"))))
+                                                       .withPath("/some_path")
+                                                       .withBody(new StringBody("some_request_body"))))
                 .setHttpForwardClassCallback(
                     new HttpClassCallbackDTO(
                         new HttpClassCallback()
@@ -641,8 +631,8 @@ public class MockServerClientTest {
         verify(mockExpectationSerializer).serialize(
             new ExpectationDTO()
                 .setHttpRequest(new HttpRequestDTO(new HttpRequest()
-                    .withPath("/some_path")
-                    .withBody(new StringBody("some_request_body"))))
+                                                       .withPath("/some_path")
+                                                       .withBody(new StringBody("some_request_body"))))
                 .setHttpOverrideForwardedRequest(
                     new HttpOverrideForwardedRequestDTO(
                         new HttpOverrideForwardedRequest()
@@ -677,8 +667,8 @@ public class MockServerClientTest {
         verify(mockExpectationSerializer).serialize(
             new ExpectationDTO()
                 .setHttpRequest(new HttpRequestDTO(new HttpRequest()
-                    .withPath("/some_path")
-                    .withBody(new StringBody("some_request_body"))))
+                                                       .withPath("/some_path")
+                                                       .withBody(new StringBody("some_request_body"))))
                 .setHttpError(
                     new HttpErrorDTO(
                         new HttpError()
@@ -710,11 +700,11 @@ public class MockServerClientTest {
         verify(mockExpectationSerializer).serialize(
             new ExpectationDTO()
                 .setHttpRequest(new HttpRequestDTO(new HttpRequest()
-                    .withPath("/some_path")
-                    .withBody(new StringBody("some_request_body"))))
+                                                       .withPath("/some_path")
+                                                       .withBody(new StringBody("some_request_body"))))
                 .setHttpResponse(new HttpResponseDTO(new HttpResponse()
-                    .withBody("some_response_body")
-                    .withHeaders(new Header("responseName", "responseValue"))))
+                                                         .withBody("some_response_body")
+                                                         .withHeaders(new Header("responseName", "responseValue"))))
                 .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.unlimited()))
                 .buildObject()
         );
@@ -921,7 +911,8 @@ public class MockServerClientTest {
                 .withBody(someRequestMatcher.toString(), StandardCharsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS,
-            false);
+            false
+        );
         verify(mockRequestDefinitionSerializer).deserializeArray("body");
     }
 
@@ -1299,42 +1290,38 @@ public class MockServerClientTest {
 
     @Test
     public void shouldHandleNullHttpRequest() {
-        // then
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("verify(RequestDefinition, VerificationTimes) requires a non null RequestDefinition object"));
-
         // when
-        mockServerClient.verify((RequestDefinition) null, VerificationTimes.exactly(2));
+        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, () -> mockServerClient.verify((RequestDefinition) null, VerificationTimes.exactly(2)));
+
+        // then
+        assertThat(illegalArgumentException.getMessage(), containsString("verify(RequestDefinition, VerificationTimes) requires a non null RequestDefinition object"));
     }
 
     @Test
     public void shouldHandleNullVerificationTimes() {
-        // then
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("verify(RequestDefinition, VerificationTimes) requires a non null VerificationTimes object"));
-
         // when
-        mockServerClient.verify(request(), null);
+        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, () -> mockServerClient.verify(request(), null));
+
+        // then
+        assertThat(illegalArgumentException.getMessage(), containsString("verify(RequestDefinition, VerificationTimes) requires a non null VerificationTimes object"));
     }
 
     @Test
     public void shouldHandleNullHttpRequestSequence() {
-        // then
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("verify(RequestDefinition...) requires a non-null non-empty array of RequestDefinition objects"));
-
         // when
-        mockServerClient.verify((HttpRequest) null);
+        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, () -> mockServerClient.verify((HttpRequest) null));
+
+        // then
+        assertThat(illegalArgumentException.getMessage(), containsString("verify(RequestDefinition...) requires a non-null non-empty array of RequestDefinition objects"));
     }
 
     @Test
     public void shouldHandleEmptyHttpRequestSequence() {
-        // then
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("verify(RequestDefinition...) requires a non-null non-empty array of RequestDefinition objects"));
-
         // when
-        mockServerClient.verify(new RequestDefinition[0]);
+        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, () -> mockServerClient.verify(new RequestDefinition[0]));
+
+        // then
+        assertThat(illegalArgumentException.getMessage(), containsString("verify(RequestDefinition...) requires a non-null non-empty array of RequestDefinition objects"));
     }
 
     @Test

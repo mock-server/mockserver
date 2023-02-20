@@ -342,7 +342,8 @@ public class MockServerClient implements Stoppable {
             Function<SslContextBuilder, SslContext> clientSslContextBuilderFunction = NettySslContextFactory.clientSslContextBuilderFunction;
             if (configuration.controlPlaneTLSMutualAuthenticationRequired()) {
                 if (isBlank(configuration.controlPlanePrivateKeyPath()) || isBlank(configuration.controlPlaneX509CertificatePath()) || isBlank(configuration.controlPlaneTLSMutualAuthenticationCAChain())) {
-                    throw new IllegalArgumentException("when 'controlPlaneTLSMutualAuthenticationRequired' is enabled 'controlPlanePrivateKeyPath', 'controlPlaneX509CertificatePath' and 'controlPlaneTLSMutualAuthenticationCAChain' must all be specified,\n\tfound controlPlanePrivateKeyPath: \"" + configuration.controlPlanePrivateKeyPath() + "\"\n\tand controlPlaneX509CertificatePath: \"" + configuration.controlPlaneX509CertificatePath() + "\"\n\tand controlPlaneTLSMutualAuthenticationCAChain: \"" + configuration.controlPlaneTLSMutualAuthenticationCAChain() + "\"");
+                    throw new IllegalArgumentException(
+                        "when 'controlPlaneTLSMutualAuthenticationRequired' is enabled 'controlPlanePrivateKeyPath', 'controlPlaneX509CertificatePath' and 'controlPlaneTLSMutualAuthenticationCAChain' must all be specified,\n\tfound controlPlanePrivateKeyPath: \"" + configuration.controlPlanePrivateKeyPath() + "\"\n\tand controlPlaneX509CertificatePath: \"" + configuration.controlPlaneX509CertificatePath() + "\"\n\tand controlPlaneTLSMutualAuthenticationCAChain: \"" + configuration.controlPlaneTLSMutualAuthenticationCAChain() + "\"");
                 }
                 clientSslContextBuilderFunction =
                     sslContextBuilder -> {
@@ -362,7 +363,14 @@ public class MockServerClient implements Stoppable {
                         }
                     };
             }
-            this.nettyHttpClient = new NettyHttpClient(configuration.toServerConfiguration(), MOCK_SERVER_LOGGER, eventLoopGroup, proxyConfiguration != null ? ImmutableList.of(proxyConfiguration) : null, false, nettySslContextFactory.withClientSslContextBuilderFunction(clientSslContextBuilderFunction));
+            this.nettyHttpClient = new NettyHttpClient(
+                configuration.toServerConfiguration(),
+                MOCK_SERVER_LOGGER,
+                eventLoopGroup,
+                proxyConfiguration != null ? ImmutableList.of(proxyConfiguration) : null,
+                false,
+                nettySslContextFactory.withClientSslContextBuilderFunction(clientSslContextBuilderFunction)
+            );
         }
         return nettyHttpClient;
     }
@@ -409,6 +417,10 @@ public class MockServerClient implements Stoppable {
                     if (!Version.matchesMajorMinorVersion(serverVersion)) {
                         throw new ClientException("Client version \"" + clientVersion + "\" major and minor versions do not match server version \"" + serverVersion + "\"");
                     }
+                }
+
+                if (response != null && response.getStatusCode() != null && response.getStatusCode() >= 400) {
+                    throw new ClientException(formatLogMessage("error:{}while sending request:{}", response, request));
                 }
 
                 return response;
@@ -562,7 +574,7 @@ public class MockServerClient implements Stoppable {
             } else {
                 return true;
             }
-        } catch (SocketConnectionException | IllegalStateException sce) {
+        } catch (ClientException | SocketConnectionException | IllegalStateException sce) {
             return true;
         }
     }
@@ -593,7 +605,7 @@ public class MockServerClient implements Stoppable {
                 }
                 return hasStarted(attempts - 1, timeout, timeUnit);
             }
-        } catch (SocketConnectionException | IllegalStateException sce) {
+        } catch (ClientException | SocketConnectionException | IllegalStateException sce) {
             if (attempts <= 0) {
                 if (MockServerLogger.isEnabled(DEBUG)) {
                     MOCK_SERVER_LOGGER.logEvent(
@@ -845,7 +857,9 @@ public class MockServerClient implements Stoppable {
         }
 
         try {
-            VerificationSequence verificationSequence = new VerificationSequence().withRequests(requestDefinitions).withMaximumNumberOfRequestToReturnInVerificationFailure(maximumNumberOfRequestToReturnInVerificationFailure);
+            VerificationSequence verificationSequence = new VerificationSequence()
+                .withRequests(requestDefinitions)
+                .withMaximumNumberOfRequestToReturnInVerificationFailure(maximumNumberOfRequestToReturnInVerificationFailure);
             String result = sendRequest(
                 request()
                     .withMethod("PUT")
@@ -931,7 +945,9 @@ public class MockServerClient implements Stoppable {
         }
 
         try {
-            VerificationSequence verificationSequence = new VerificationSequence().withExpectationIds(expectationIds).withMaximumNumberOfRequestToReturnInVerificationFailure(maximumNumberOfRequestToReturnInVerificationFailure);
+            VerificationSequence verificationSequence = new VerificationSequence()
+                .withExpectationIds(expectationIds)
+                .withMaximumNumberOfRequestToReturnInVerificationFailure(maximumNumberOfRequestToReturnInVerificationFailure);
             String result = sendRequest(
                 request()
                     .withMethod("PUT")
@@ -1434,7 +1450,7 @@ public class MockServerClient implements Stoppable {
                             .withBody(openAPIExpectationSerializer.serialize(openAPIExpectations[0]), StandardCharsets.UTF_8)
                     );
                 if (httpResponse != null && httpResponse.getStatusCode() != 201) {
-                    throw new ClientException(formatLogMessage("error:{}while submitted OpenAPI expectation:{}", httpResponse.getBody(), openAPIExpectations[0]));
+                    throw new ClientException(formatLogMessage("error:{}while submitted OpenAPI expectation:{}", httpResponse, openAPIExpectations[0]));
                 }
             } else if (openAPIExpectations.length > 1) {
                 httpResponse =
@@ -1446,7 +1462,7 @@ public class MockServerClient implements Stoppable {
                             .withBody(openAPIExpectationSerializer.serialize(openAPIExpectations), StandardCharsets.UTF_8)
                     );
                 if (httpResponse != null && httpResponse.getStatusCode() != 201) {
-                    throw new ClientException(formatLogMessage("error:{}while submitted OpenAPI expectations:{}", httpResponse.getBody(), openAPIExpectations));
+                    throw new ClientException(formatLogMessage("error:{}while submitted OpenAPI expectations:{}", httpResponse, openAPIExpectations));
                 }
             }
             if (httpResponse != null && isNotBlank(httpResponse.getBodyAsString())) {
@@ -1498,7 +1514,7 @@ public class MockServerClient implements Stoppable {
                             .withBody(expectationSerializer.serialize(expectations[0]), StandardCharsets.UTF_8)
                     );
                 if (httpResponse != null && httpResponse.getStatusCode() != 201) {
-                    throw new ClientException(formatLogMessage("error:{}while submitted expectation:{}", httpResponse.getBody(), expectations[0]));
+                    throw new ClientException(formatLogMessage("error:{}while submitted expectation:{}", httpResponse, expectations[0]));
                 }
             } else if (expectations.length > 1) {
                 httpResponse =
@@ -1510,7 +1526,7 @@ public class MockServerClient implements Stoppable {
                             .withBody(expectationSerializer.serialize(expectations), StandardCharsets.UTF_8)
                     );
                 if (httpResponse != null && httpResponse.getStatusCode() != 201) {
-                    throw new ClientException(formatLogMessage("error:{}while submitted expectations:{}", httpResponse.getBody(), expectations));
+                    throw new ClientException(formatLogMessage("error:{}while submitted expectations:{}", httpResponse, expectations));
                 }
             }
             if (httpResponse != null && isNotBlank(httpResponse.getBodyAsString())) {
