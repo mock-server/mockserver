@@ -18,6 +18,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpTemplate.template;
+import static org.mockserver.templates.engine.javascript.JavaScriptTemplateEngineTest.nashornAvailable;
 
 /**
  * @author jamesdbloom
@@ -36,6 +37,7 @@ public class HttpResponseTemplateActionHandlerTest {
     @Test
     public void shouldHandleHttpRequestsWithJavaScriptTemplateFirstExample() {
         // given
+        nashornAvailable();
         HttpTemplate template = template(HttpTemplate.TemplateType.JAVASCRIPT, "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
                 "    return {" + NEW_LINE +
                 "        'statusCode': 200," + NEW_LINE +
@@ -72,6 +74,7 @@ public class HttpResponseTemplateActionHandlerTest {
     @Test
     public void shouldHandleHttpRequestsWithJavaScriptTemplateSecondExample() {
         // given
+        nashornAvailable();
         HttpTemplate template = template(HttpTemplate.TemplateType.JAVASCRIPT, "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
                 "    return {" + NEW_LINE +
                 "        'statusCode': 200," + NEW_LINE +

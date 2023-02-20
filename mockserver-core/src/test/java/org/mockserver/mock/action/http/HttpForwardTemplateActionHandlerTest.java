@@ -21,6 +21,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpTemplate.template;
+import static org.mockserver.templates.engine.javascript.JavaScriptTemplateEngineTest.nashornAvailable;
 
 /**
  * @author jamesdbloom
@@ -41,6 +42,7 @@ public class HttpForwardTemplateActionHandlerTest {
     @Test
     public void shouldHandleHttpRequestsWithJavaScriptTemplateFirstExample() throws Exception {
         // given
+        nashornAvailable();
         HttpTemplate template = template(HttpTemplate.TemplateType.JAVASCRIPT, "return { 'path': \"somePath\", 'body': JSON.stringify({name: 'value'}) };");
         HttpRequest httpRequest = request("somePath").withBody("{\"name\":\"value\"}");
         CompletableFuture<HttpResponse> httpResponse = new CompletableFuture<>();
