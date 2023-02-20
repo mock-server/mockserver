@@ -6,7 +6,7 @@
 #
 
 # pull base image.
-FROM ubuntu:focal
+FROM ubuntu:jammy
 
 # maintainer details
 MAINTAINER James Bloom "jamesdbloom@gmail.com"
@@ -29,8 +29,8 @@ RUN sysctl -w kernel.pid_max=4194303
 # install java (see: https://launchpad.net/~openjdk-r/+archive/ubuntu/ppa)
 RUN add-apt-repository -y ppa:openjdk-r/ppa
 RUN apt-get update
-RUN apt-get install -y openjdk-13-jdk
-RUN rm -f /etc/alternatives/java && ln -s /usr/lib/jvm/java-13-openjdk-amd64/jre/bin/java /etc/alternatives/java
+RUN apt-get install -y openjdk-8-jdk
+RUN rm -f /etc/alternatives/java && ln -s /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java /etc/alternatives/java
 
 # install maven
 RUN apt-get install -y maven
@@ -39,6 +39,7 @@ COPY settings.xml /etc/maven/settings.xml
 # pre-fetch maven dependencies
 RUN git clone https://github.com/mock-server/mockserver.git
 RUN cd mockserver && \
-    ./mvnw -s /etc/maven/settings.xml --no-transfer-progress dependency:go-offline && \
+    ./mvnw -s /etc/maven/settings.xml dependency:go-offline && \
+    ./mvnw -s /etc/maven/settings.xml package -DskipTests && \
     cd .. && \
     rm -rf mockserver
