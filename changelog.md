@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - support for custom TLS protocols such as TLSv1.2,TLSv1.3
+- better error messages when MockServerClient fails due to TLS or networking errors
 
 ### Changed
 - removed implicit reliance on internal java-certificate-classes (thanks to @Arkinator)

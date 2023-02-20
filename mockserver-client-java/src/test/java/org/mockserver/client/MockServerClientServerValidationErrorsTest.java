@@ -133,11 +133,7 @@ public class MockServerClientServerValidationErrorsTest {
                             "    }" + NEW_LINE +
                             "  }" + NEW_LINE +
                             "" + NEW_LINE +
-                            " while sending request:" + NEW_LINE +
-                            "" + NEW_LINE +
-                            "  {" + NEW_LINE +
-                            "    \"method\" : \"PUT\"," + NEW_LINE +
-                            "    \"path\" : \"/mockserver/expectation\",")
+                            " while submitted expectation:")
             )
             ;
         } finally {
