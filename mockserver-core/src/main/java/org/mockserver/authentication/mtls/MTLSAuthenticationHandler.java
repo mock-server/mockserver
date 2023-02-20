@@ -34,8 +34,8 @@ public class MTLSAuthenticationHandler implements AuthenticationHandler {
                         );
                         String caCertificateInformation = getClientCertificateInformation(
                             caCertificate.getSerialNumber().toString(),
-                            caCertificate.getIssuerDN().getName(),
-                            caCertificate.getSubjectDN().getName()
+                            caCertificate.getIssuerX500Principal().getName(),
+                            caCertificate.getSubjectX500Principal().getName()
                         );
                         try {
                             clientCertificate.getCertificate().verify(caCertificate.getPublicKey());

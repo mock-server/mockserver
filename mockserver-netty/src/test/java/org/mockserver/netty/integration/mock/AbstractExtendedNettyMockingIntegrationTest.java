@@ -23,7 +23,6 @@ import javax.net.ssl.SSLSocket;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -433,8 +432,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1:" + getRequestTcpPortForPath("object_callback")));
                         if (httpRequest.isSecure()) {
                             assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
-                            assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=localhost"));
-                            assertThat(httpRequest.getClientCertificateChain().get(1).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=www.mockserver.com"));
+                            assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK,ST=England,L=London,O=MockServer,CN=localhost"));
+                            assertThat(httpRequest.getClientCertificateChain().get(1).getSubjectDistinguishedName(), equalTo("C=UK,ST=England,L=London,O=MockServer,CN=www.mockserver.com"));
                         }
                         if (new MatcherBuilder(configuration(), mock(MockServerLogger.class)).transformsToMatcher(expectation).matches(null, httpRequest)) {
                             return response()
@@ -519,8 +518,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1:" + getRequestTcpPortForPath("object_callback")));
                     if (httpRequest.isSecure()) {
                         assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
-                        assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=localhost"));
-                        assertThat(httpRequest.getClientCertificateChain().get(1).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=www.mockserver.com"));
+                        assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK,ST=England,L=London,O=MockServer,CN=localhost"));
+                        assertThat(httpRequest.getClientCertificateChain().get(1).getSubjectDistinguishedName(), equalTo("C=UK,ST=England,L=London,O=MockServer,CN=www.mockserver.com"));
                     }
                     if (new MatcherBuilder(configuration(), mock(MockServerLogger.class)).transformsToMatcher(expectation).matches(null, httpRequest)) {
                         return response()
@@ -938,8 +937,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1:" + getRequestTcpPortForPath("echo")));
                         if (httpRequest.isSecure()) {
                             assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
-                            assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=localhost"));
-                            assertThat(httpRequest.getClientCertificateChain().get(1).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=www.mockserver.com"));
+                            assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK,ST=England,L=London,O=MockServer,CN=localhost"));
+                            assertThat(httpRequest.getClientCertificateChain().get(1).getSubjectDistinguishedName(), equalTo("C=UK,ST=England,L=London,O=MockServer,CN=www.mockserver.com"));
                         }
                         return request()
                             .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort()))
@@ -1008,8 +1007,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1:" + getRequestTcpPortForPath("echo")));
                     if (httpRequest.isSecure()) {
                         assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
-                        assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=localhost"));
-                        assertThat(httpRequest.getClientCertificateChain().get(1).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=www.mockserver.com"));
+                        assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK,ST=England,L=London,O=MockServer,CN=localhost"));
+                        assertThat(httpRequest.getClientCertificateChain().get(1).getSubjectDistinguishedName(), equalTo("C=UK,ST=England,L=London,O=MockServer,CN=www.mockserver.com"));
                     }
                     return request()
                         .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort()))
@@ -1087,8 +1086,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1:" + getRequestTcpPortForPath("/some/path/.*")));
                     if (httpRequest.isSecure()) {
                         assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
-                        assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=localhost"));
-                        assertThat(httpRequest.getClientCertificateChain().get(1).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=www.mockserver.com"));
+                        assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK,ST=England,L=London,O=MockServer,CN=localhost"));
+                        assertThat(httpRequest.getClientCertificateChain().get(1).getSubjectDistinguishedName(), equalTo("C=UK,ST=England,L=London,O=MockServer,CN=www.mockserver.com"));
                     }
                     return request()
                         .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort()))
@@ -1138,8 +1137,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1:" + getRequestTcpPortForPath("echo")));
                         if (httpRequest.isSecure()) {
                             assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
-                            assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=localhost"));
-                            assertThat(httpRequest.getClientCertificateChain().get(1).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=www.mockserver.com"));
+                            assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK,ST=England,L=London,O=MockServer,CN=localhost"));
+                            assertThat(httpRequest.getClientCertificateChain().get(1).getSubjectDistinguishedName(), equalTo("C=UK,ST=England,L=London,O=MockServer,CN=www.mockserver.com"));
                         }
                         return request()
                             .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort()))
@@ -1219,8 +1218,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1:" + getRequestTcpPortForPath("echo")));
                     if (httpRequest.isSecure()) {
                         assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
-                        assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=localhost"));
-                        assertThat(httpRequest.getClientCertificateChain().get(1).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=www.mockserver.com"));
+                        assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK,ST=England,L=London,O=MockServer,CN=localhost"));
+                        assertThat(httpRequest.getClientCertificateChain().get(1).getSubjectDistinguishedName(), equalTo("C=UK,ST=England,L=London,O=MockServer,CN=www.mockserver.com"));
                     }
                     return request()
                         .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort()))
@@ -1301,8 +1300,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         assertThat(httpRequest.getRemoteAddress(), startsWith("127.0.0.1:"));
                         if (httpRequest.isSecure()) {
                             assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
-                            assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=localhost"));
-                            assertThat(httpRequest.getClientCertificateChain().get(1).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=www.mockserver.com"));
+                            assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK,ST=England,L=London,O=MockServer,CN=localhost"));
+                            assertThat(httpRequest.getClientCertificateChain().get(1).getSubjectDistinguishedName(), equalTo("C=UK,ST=England,L=London,O=MockServer,CN=www.mockserver.com"));
                         }
                         return request()
                             .withHeader("Host", "incorrect_host:1234")
@@ -1376,8 +1375,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1:" + getRequestTcpPortForPath("echo")));
                     if (httpRequest.isSecure()) {
                         assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
-                        assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=localhost"));
-                        assertThat(httpRequest.getClientCertificateChain().get(1).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=www.mockserver.com"));
+                        assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK,ST=England,L=London,O=MockServer,CN=localhost"));
+                        assertThat(httpRequest.getClientCertificateChain().get(1).getSubjectDistinguishedName(), equalTo("C=UK,ST=England,L=London,O=MockServer,CN=www.mockserver.com"));
                     }
                     return request()
                         .withHeader("Host", "incorrect_host:1234")

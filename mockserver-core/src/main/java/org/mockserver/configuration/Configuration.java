@@ -123,6 +123,7 @@ public class Configuration {
     private Boolean proactivelyInitialiseTLS;
     private boolean rebuildTLSContext;
     private boolean rebuildServerTLSContext;
+    private String tlsProtocols;
 
     // inbound - dynamic CA
     private Boolean dynamicallyCreateCertificateAuthorityCertificate;
@@ -1481,6 +1482,23 @@ public class Configuration {
         return this;
     }
 
+    public String tlsProtocols() {
+        if (tlsProtocols == null) {
+            return ConfigurationProperties.tlsProtocols();
+        }
+        return tlsProtocols;
+    }
+
+    /**
+     * Comma seperated list of TLS protocols, by default TLSv1,TLSv1.1,TLSv1.2
+     *
+     * @param tlsProtocols comma seperated list of TLS protocols
+     */
+    public Configuration tlsProtocols(String tlsProtocols) {
+        this.tlsProtocols = tlsProtocols;
+        return this;
+    }
+
     public Boolean dynamicallyCreateCertificateAuthorityCertificate() {
         if (dynamicallyCreateCertificateAuthorityCertificate == null) {
             return ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate();
@@ -1631,7 +1649,6 @@ public class Configuration {
      * @param certificateAuthorityPrivateKey location of the PEM file containing the certificate authority private key
      */
     public Configuration certificateAuthorityPrivateKey(String certificateAuthorityPrivateKey) {
-        fileExists(certificateAuthorityPrivateKey);
         this.certificateAuthorityPrivateKey = certificateAuthorityPrivateKey;
         return this;
     }
@@ -1649,7 +1666,6 @@ public class Configuration {
      * @param certificateAuthorityCertificate location of the PEM file containing the certificate authority X509 certificate
      */
     public Configuration certificateAuthorityCertificate(String certificateAuthorityCertificate) {
-        fileExists(certificateAuthorityCertificate);
         this.certificateAuthorityCertificate = certificateAuthorityCertificate;
         return this;
     }
@@ -1674,7 +1690,6 @@ public class Configuration {
      * @param privateKeyPath location of the PKCS#8 PEM file containing the private key
      */
     public Configuration privateKeyPath(String privateKeyPath) {
-        fileExists(privateKeyPath);
         this.privateKeyPath = privateKeyPath;
         return this;
     }
@@ -1697,7 +1712,6 @@ public class Configuration {
      * @param x509CertificatePath location of the PEM file containing the X509 certificate
      */
     public Configuration x509CertificatePath(String x509CertificatePath) {
-        fileExists(x509CertificatePath);
         this.x509CertificatePath = x509CertificatePath;
         return this;
     }

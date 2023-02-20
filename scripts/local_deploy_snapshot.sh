@@ -1,18 +1,7 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
-export MAVEN_OPTS="$MAVEN_OPTS -Xms8192m -Xmx8192m"
-export JAVA_OPTS="$JAVA_OPTS -Xms8192m -Xmx8192m"
-# line below no longer appears to be working so using less resilient hard coded location
-export JAVA_HOME=`/usr/libexec/java_home -v 1.8`
-export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home
-echo
-java -version
-echo
-./mvnw -version
-echo
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
 
-export GPG_TTY=$(tty)
-
-./mvnw clean deploy -P release $1 -Djava.security.egd=file:/dev/./urandom
+docker run --net=host -v /var/run/docker.sock:/var/run/docker.sock -v ~/.m2:/root/.m2 -v ~/.gradle:/root/.gradle -v "${SCRIPT_DIR}"/..:/build/mockserver -w /build/mockserver -e BUILDKITE_BRANCH=master mockserver/mockserver:maven /build/mockserver/scripts/buildkite_deploy_snapshot.sh

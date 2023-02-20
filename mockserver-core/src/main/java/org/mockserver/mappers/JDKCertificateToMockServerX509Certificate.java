@@ -1,12 +1,13 @@
 package org.mockserver.mappers;
 
-import io.netty.handler.ssl.util.LazyJavaxX509Certificate;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.X509Certificate;
 
+import java.io.ByteArrayInputStream;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,29 +28,31 @@ public class JDKCertificateToMockServerX509Certificate {
             List<X509Certificate> x509Certificates = Arrays
                 .stream(clientCertificates)
                 .flatMap(certificate -> {
-                        try {
-                            LazyJavaxX509Certificate x509Certificate = new LazyJavaxX509Certificate(certificate.getEncoded());
-                            return Stream.of(
-                                new X509Certificate()
-                                    .withSerialNumber(x509Certificate.getSerialNumber().toString())
-                                    .withIssuerDistinguishedName(x509Certificate.getIssuerDN().getName())
-                                    .withSubjectDistinguishedName(x509Certificate.getSubjectDN().getName())
-                                    .withSignatureAlgorithmName(x509Certificate.getSigAlgName())
-                                    .withCertificate(certificate)
-                            );
-                        } catch (Throwable throwable) {
-                            if (MockServerLogger.isEnabled(INFO) && mockServerLogger != null) {
-                                mockServerLogger.logEvent(
-                                    new LogEntry()
-                                        .setLogLevel(INFO)
-                                        .setHttpRequest(httpRequest)
-                                        .setMessageFormat("exception decoding client certificate")
-                                        .setThrowable(throwable)
-                                );
-                            }
-                        }
-                        return Stream.empty();
-                    }
+                             try {
+                                 java.security.cert.X509Certificate x509Certificate = (java.security.cert.X509Certificate) CertificateFactory
+                                     .getInstance("X.509")
+                                     .generateCertificate(new ByteArrayInputStream(certificate.getEncoded()));
+                                 return Stream.of(
+                                     new X509Certificate()
+                                         .withSerialNumber(x509Certificate.getSerialNumber().toString())
+                                         .withIssuerDistinguishedName(x509Certificate.getIssuerX500Principal().getName())
+                                         .withSubjectDistinguishedName(x509Certificate.getSubjectX500Principal().getName())
+                                         .withSignatureAlgorithmName(x509Certificate.getSigAlgName())
+                                         .withCertificate(certificate)
+                                 );
+                             } catch (Throwable throwable) {
+                                 if (MockServerLogger.isEnabled(INFO) && mockServerLogger != null) {
+                                     mockServerLogger.logEvent(
+                                         new LogEntry()
+                                             .setLogLevel(INFO)
+                                             .setHttpRequest(httpRequest)
+                                             .setMessageFormat("exception decoding client certificate " + throwable.getMessage())
+                                             .setThrowable(throwable)
+                                     );
+                                 }
+                             }
+                             return Stream.empty();
+                         }
                 )
                 .collect(Collectors.toList());
             if (!x509Certificates.isEmpty()) {

@@ -7,8 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- support for custom TLS protocols such as TLSv1.2,TLSv1.3
 
 ### Changed
+- removed implicit reliance on internal java-certificate-classes (thanks to @Arkinator)
 
 ### Fixed
 
