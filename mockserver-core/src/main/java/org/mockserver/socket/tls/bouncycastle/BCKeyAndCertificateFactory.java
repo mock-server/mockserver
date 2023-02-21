@@ -229,8 +229,10 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
                             .setArguments(x509Certificate(), configuration.sslSubjectAlternativeNameDomains(), configuration.sslSubjectAlternativeNameIps())
                     );
                 }
-                saveAsPEMFile(x509Certificate, x509CertificatePath(), "X509 Certificate PEM");
-                saveAsPEMFile(privateKey, privateKeyPath(), "Private Key PEM");
+                if (configuration.preventCertificateDynamicUpdate() || configuration.proactivelyInitialiseTLS()) {
+                    saveAsPEMFile(x509Certificate, x509CertificatePath(), "X509 Certificate PEM");
+                    saveAsPEMFile(privateKey, privateKeyPath(), "Private Key PEM");
+                }
             } catch (Exception e) {
                 mockServerLogger.logEvent(
                     new LogEntry()
