@@ -1,28 +1,21 @@
 #!/usr/bin/env bash
 
-set -xeuo pipefail
+set -euo pipefail
 
-#export MAVEN_OPTS="$MAVEN_OPTS -Xmx3072m"
-#export JAVA_OPTS="$JAVA_OPTS -Xmx3072m"
-echo
-free -mh
-ulimit -u
-ulimit -a
-ps -eLf | grep 'myuser' | wc -l
-ps -eLf | wc -l
-sysctl kernel.pid_max
-sysctl -w kernel.pid_max=4194303
-sysctl kernel.pid_max
+echo "whoami: $(whoami)"
+
 echo
 java -version
 echo
 ./mvnw -version
 echo
+export MAVEN_OPTS="${MAVEN_OPTS:-} -Xms2048m -Xmx8192m"
+export JAVA_OPTS="${JAVA_OPTS:-} -Xms2048m -Xmx8192m"
 
-if test "$BUILDKITE_BRANCH" = "master"; then
+if test "${BUILDKITE_BRANCH:-}" = "master"; then
     echo "BRANCH: MASTER"
-    ./mvnw -s /root/.m2/settings.xml clean deploy ${1:-} -Djava.security.egd=file:/dev/./urandom
 else
-    echo "BRANCH: $CURRENT_BRANCH"
-    ./mvnw -s /root/.m2/settings.xml clean install ${1:-} -Djava.security.egd=file:/dev/./urandom
+    echo "BRANCH: ${CURRENT_BRANCH:-}"
 fi
+
+./mvnw clean deploy ${1:-} -Djava.security.egd=file:/dev/./urandom
