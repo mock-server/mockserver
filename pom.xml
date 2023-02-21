@@ -55,7 +55,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF8</project.build.sourceEncoding>
         <slf4j.version>2.0.6</slf4j.version>
-        <jackson.version>2.14.1</jackson.version>
+        <jackson.version>2.14.2</jackson.version>
         <velocity.version>2.3</velocity.version>
         <netty.version>4.1.89.Final</netty.version>
         <httpcomponents.version>4.4.1</httpcomponents.version>
@@ -69,8 +69,8 @@
         <skipTests>false</skipTests>
         <skipAssembly>false</skipAssembly>
         <deploy.plugin.repository.url>https://oss.sonatype.org/content/repositories/snapshots/</deploy.plugin.repository.url>
-        <release.arguments />
-        <javadoc.additional.parameters />
+        <release.arguments/>
+        <javadoc.additional.parameters/>
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
         <!-- also update in docker -->
         <!-- TODO(jamesdbloom) consider automating using `NETTY_TC_NATIVE_VERSION=$(./mvnw help:evaluate -Dexpression=netty-tcnative-boringssl-static.version -q -DforceStdout)` -->
@@ -894,7 +894,7 @@
                 <version>3.1.0</version>
                 <configuration>
                     <rules>
-                        <dependencyConvergence />
+                        <dependencyConvergence/>
                     </rules>
                 </configuration>
                 <executions>
