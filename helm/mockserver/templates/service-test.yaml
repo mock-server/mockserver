@@ -9,6 +9,10 @@ metadata:
   annotations:
     "helm.sh/hook": test-success
 spec:
+{{- if .Values.imagePullSecrets }}
+  imagePullSecrets:
+    {{ toYaml .Values.imagePullSecrets }}
+{{- end }}
   containers:
     - name: curl
       image: {{ .Values.service.test.image}}

@@ -26,6 +26,10 @@ spec:
         release: {{ .Release.Name }}
     spec:
       serviceAccountName: {{ .Values.app.serviceAccountName }}
+{{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{ toYaml .Values.imagePullSecrets }}
+{{- end }}
       containers:
         - name: {{ template "release.name" . }}
           image: {{ if .Values.image.repositoryNameAndTag }}{{ .Values.image.repositoryNameAndTag }}{{- else }}{{ .Values.image.repository }}/mockserver:mockserver-{{- if .Values.image.snapshot }}snapshot{{- else }}{{ .Chart.AppVersion }}{{- end }}{{- end }}
