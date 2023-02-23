@@ -14,5 +14,6 @@ The following examples can be found:
 - [node - running mock server, proxying & mocking scenarios](https://github.com/mock-server/mockserver/blob/master/mockserver-examples/node_examples/server.js)
 - [curl - mocking scenarios](https://github.com/mock-server/mockserver/blob/master/mockserver-examples/curl_examples.md)
 - [json - mocking & verifying scenarios](https://github.com/mock-server/mockserver/blob/master/mockserver-examples/json_examples.md)
+- [php - behat phrases](https://github.com/lequipefr/mockserver-behat-context/blob/1.x-dev/docs/behat-phrases.md)
 
 For information on how to use the MockServer please see https://www.mock-server.com
