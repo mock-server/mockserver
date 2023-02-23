@@ -16,6 +16,7 @@ sitemap:
     <li><a href="#rest-api">REST API</a></li>
 	<li><a href="#java-mockserver-client">Java</a></li>
 	<li><a href="#javascript-mockserver-client">JavaScript</a> (both browser API & Node.js module)</li>
+	<li><a href="#php-mockserver-client">PHP</a> (client & Behat)</li>
 </ul>
 
 <p>The following activities are supported:</p>
@@ -66,6 +67,19 @@ sitemap:
 <p>To include the browser based client in an HTML page as follows:</p>
 
 <pre class="prettyprint lang-java code"><code class="code">&lt;script src=&quot;https://raw.githubusercontent.com/mock-server/mockserver-client-node/mockserver-{{ site.mockserver_version }}/mockServerClient.js&quot;&gt;&lt;/script&gt;</code></pre>
+
+<a id="php-mockserver-client" class="anchor" href="#php-mockserver-client">&nbsp;</a>
+
+<h2>PHP Client</h2>
+
+<p>The PHP integration contains a client, and a Behat context for functional tests.</p>
+
+<p>It is accessible:</p>
+
+<ul>
+    <li>on github: <a href="https://github.com/lequipefr/mockserver-behat-context">lequipefr/mockserver-behat-context</a></li>
+    <li>on packagist: <a href="https://packagist.org/packages/lequipefr/mockserver-behat-context">lequipefr/mockserver-behat-context</a></li>
+</ul>
 
 <a id="client-code-examples" class="anchor" href="#client-code-examples">&nbsp;</a>
 
@@ -169,6 +183,34 @@ mockServerClient("localhost", 1080)
     );
 &lt;/script&gt;</code></pre>
         </div>
+        <button class="accordion inner">PHP Client</button>
+        <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">use Lequipe\MockServer\MockServerClient;
+use Lequipe\MockServer\Builder\Expectation;
+
+$client = new MockServerClient('http://127.0.0.1:1080');
+$expectation = new Expectation();
+
+$expectation->httpRequest()
+    ->method('get')
+    ->pathWithParameters('/view/cart?cartId=055CA455-1DF7-45BB-8535-4F83E7266092')
+    ->addCookie('session', '4930456C-C718-476F-971F-CB8E047AB349')
+;
+
+$expectation->httpResponse()
+    ->body('some_response_body')
+;
+
+$client->expectation($expectation);</code></pre>
+        </div>
+        <button class="accordion inner">PHP Behat phrase</button>
+        <div class="panel">
+        <pre class="prettyprint lang-cucumber code"><code class="code">Given I will receive the cookie "session" "4930456C-C718-476F-971F-CB8E047AB349"
+And the request "GET" "/view/cart?cartId=055CA455-1DF7-45BB-8535-4F83E7266092" will return:
+    """
+    some_response_body
+    """</code></pre>
+        </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
@@ -258,6 +300,26 @@ mockServerClient("localhost", 1080, undefined, true)
     }
   );</code></pre>
         </div>
+        <button class="accordion inner">PHP Client</button>
+        <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">use Lequipe\MockServer\MockServerClient;
+use Lequipe\MockServer\Builder\Expectation;
+
+$client = new MockServerClient('https://127.0.0.1:1080');
+$expectation = new Expectation();
+
+$expectation->httpRequest()
+    ->method('get')
+    ->pathWithParameters('/view/cart?cartId=055CA455-1DF7-45BB-8535-4F83E7266092')
+    ->addCookie('session', '4930456C-C718-476F-971F-CB8E047AB349')
+;
+
+$expectation->httpResponse()
+    ->body('some_response_body')
+;
+
+$client->expectation($expectation);</code></pre>
+        </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -k -X PUT "https://localhost:1080/mockserver/expectation" -d '{
@@ -332,6 +394,26 @@ mockServerClient("localhost", 1080)
       }
     );
 &lt;/script&gt;</code></pre>
+        </div>
+        <button class="accordion inner">PHP Client</button>
+        <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">use Lequipe\MockServer\MockServerClient;
+use Lequipe\MockServer\Builder\Verification;
+
+$client = new MockServerClient('http://127.0.0.1:1080');
+$verification = new Verification();
+
+$verification->httpRequest()
+    ->path('/simple')
+;
+
+$verification->exactly(2);
+
+$client->verify($verification);</code></pre>
+        </div>
+        <button class="accordion inner">PHP Behat phrase</button>
+        <div class="panel">
+        <pre class="prettyprint lang-cucumber code"><code class="code">Then the request "GET" "/simple" should have been called exactly 2 times</code></pre>
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
@@ -792,6 +874,18 @@ mockServerClient("localhost", 1080)
       }
     );
 &lt;/script&gt;</code></pre>
+        </div>
+        <button class="accordion inner">PHP Client</button>
+        <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">use Lequipe\MockServer\MockServerClient;
+
+$client = new MockServerClient('http://127.0.0.1:1080');
+
+$client->reset();</code></pre>
+        </div>
+        <button class="accordion inner">PHP Behat phrase</button>
+        <div class="panel">
+        <pre class="prettyprint lang-cucumber code"><code class="code">Given I reset mocks</code></pre>
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">

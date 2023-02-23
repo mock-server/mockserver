@@ -293,6 +293,18 @@ mockServerClient("localhost", 1080)
   );</code></pre>
         <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/control/put_reset" target="_blank">REST API</a> for full JSON specification</p>
     </div>
+    <button class="accordion inner">PHP Client</button>
+    <div class="panel">
+    <pre class="prettyprint lang-php code"><code class="code">use Lequipe\MockServer\MockServerClient;
+
+$client = new MockServerClient('http://localhost:1080');
+
+$client->reset();</code></pre>
+    </div>
+    <button class="accordion inner">PHP Behat phrase</button>
+    <div class="panel">
+    <pre class="prettyprint lang-cucumber code"><code class="code">Given I reset mocks</code></pre>
+    </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/reset</code></pre>
