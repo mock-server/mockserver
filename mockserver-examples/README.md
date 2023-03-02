@@ -11,7 +11,7 @@ The following examples can be found:
   - [Jetty](https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/main/java/org/mockserver/examples/proxy/service/jettyclient)
   - [Spring Rest Template](https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/main/java/org/mockserver/examples/proxy/service/springresttemplate) 
   - [Spring Web Client](https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/main/java/org/mockserver/examples/proxy/service/springwebclient)
-- [node - running mock server, proxying & mocking scenarios](https://github.com/mock-server/mockserver/blob/master/mockserver-examples/node_examples/server.js)
+- [node - running mock server, proxying & mocking scenarios](https://github.com/mock-server/mockserver/tree/master/mockserver-examples/node_examples)
 - [curl - mocking scenarios](https://github.com/mock-server/mockserver/blob/master/mockserver-examples/curl_examples.md)
 - [json - mocking & verifying scenarios](https://github.com/mock-server/mockserver/blob/master/mockserver-examples/json_examples.md)
 
