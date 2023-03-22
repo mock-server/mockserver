@@ -170,6 +170,12 @@
             <groupId>io.swagger.parser.v3</groupId>
             <artifactId>swagger-parser</artifactId>
         </dependency>
+        <dependency>
+            <!-- upgrade swagger-parser dependency fixing
+                 https://security.snyk.io/vuln/SNYK-JAVA-ORGMOZILLA-1314295 -->
+            <groupId>org.mozilla</groupId>
+            <artifactId>rhino</artifactId>
+        </dependency>
 
         <!-- xml -->
         <dependency>
