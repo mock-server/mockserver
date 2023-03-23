@@ -293,7 +293,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
             <!-- highest spring-boot-starter-webflux version is 2.x due to Java 1.8 version -->
-            <version>2.7.8</version>
+            <version>2.7.10</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.osgi</groupId>
