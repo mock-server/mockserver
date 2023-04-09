@@ -397,7 +397,7 @@
                                 <filter>
                                     <artifact>*:*</artifact>
                                     <excludes>
-                                        <exclude>org/slf4j/impl/**</exclude>
+                                        <exclude>org/slf4j/jul/**</exclude>
                                     </excludes>
                                 </filter>
                                 <!-- exclude manifest signature files -->
