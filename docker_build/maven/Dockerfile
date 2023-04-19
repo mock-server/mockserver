@@ -6,7 +6,7 @@
 #
 
 # pull base image.
-FROM ubuntu:jammy
+FROM ubuntu:kinetic
 
 # maintainer details
 MAINTAINER James Bloom "jamesdbloom@gmail.com"
