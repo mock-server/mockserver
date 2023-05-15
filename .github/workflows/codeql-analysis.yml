@@ -36,6 +36,9 @@ jobs:
         # a pull request then we can checkout the head.
         fetch-depth: 2
 
+    - name: cache setup
+      uses: actions/setup-java@v3
+
     # If this run was triggered by a pull request event, then checkout
     # the head of the pull request instead of the merge commit.
     - run: git checkout HEAD^2
