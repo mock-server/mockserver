@@ -187,19 +187,7 @@ public class NettySslContextFactory {
             || configuration.rebuildServerTLSContext() && !configuration.preventCertificateDynamicUpdate()) {
             try {
                 keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(Level.DEBUG)
-                        .setMessageFormat("using certificate authority serial:{}issuer:{}subject:{}and certificate serial:{}issuer:{}subject:{}")
-                        .setArguments(
-                            keyAndCertificateFactory.certificateAuthorityX509Certificate().getSerialNumber(),
-                            keyAndCertificateFactory.certificateAuthorityX509Certificate().getIssuerDN(),
-                            keyAndCertificateFactory.certificateAuthorityX509Certificate().getSubjectDN(),
-                            keyAndCertificateFactory.x509Certificate().getSerialNumber(),
-                            keyAndCertificateFactory.x509Certificate().getIssuerDN(),
-                            keyAndCertificateFactory.x509Certificate().getSubjectDN()
-                        )
-                );
+                logUsedCertificateData();
                 final SslContextBuilder sslContextBuilder = SslContextBuilder
                     .forServer(
                         keyAndCertificateFactory.privateKey(),
@@ -228,6 +216,26 @@ public class NettySslContextFactory {
             }
         }
         return serverSslContext;
+    }
+
+    private void logUsedCertificateData() {
+        final X509Certificate caCertificate = keyAndCertificateFactory.certificateAuthorityX509Certificate();
+        final X509Certificate eeCertificate = keyAndCertificateFactory.x509Certificate();
+        if (caCertificate != null && eeCertificate != null) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(Level.DEBUG)
+                    .setMessageFormat("using certificate authority serial:{}issuer:{}subject:{}and certificate serial:{}issuer:{}subject:{}")
+                    .setArguments(
+                        caCertificate.getSerialNumber(),
+                        caCertificate.getIssuerDN(),
+                        caCertificate.getSubjectDN(),
+                        eeCertificate.getSerialNumber(),
+                        eeCertificate.getIssuerDN(),
+                        eeCertificate.getSubjectDN()
+                    )
+            );
+        }
     }
 
     private static void configureALPN(SslContextBuilder sslContextBuilder) {
