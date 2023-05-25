@@ -1,0 +1,14 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="All Unit Tests" type="CompoundRunConfigurationType">
+    <toRun name="All in mockserver-client-java" type="JUnit" />
+    <toRun name="All in mockserver-core" type="JUnit" />
+    <toRun name="All in mockserver-examples" type="JUnit" />
+    <toRun name="All in mockserver-junit-jupiter" type="JUnit" />
+    <toRun name="All in mockserver-junit-rule" type="JUnit" />
+    <toRun name="All in mockserver-netty" type="JUnit" />
+    <toRun name="All in mockserver-proxy-war" type="JUnit" />
+    <toRun name="All in mockserver-spring-test-listener" type="JUnit" />
+    <toRun name="All in mockserver-war" type="JUnit" />
+    <method v="2" />
+  </configuration>
+</component>

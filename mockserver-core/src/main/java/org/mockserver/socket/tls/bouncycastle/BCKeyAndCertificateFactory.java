@@ -15,7 +15,6 @@ import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.util.IPAddress;
 import org.mockserver.configuration.Configuration;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.file.FileCreator;
 import org.mockserver.file.FilePath;
 import org.mockserver.file.FileReader;
@@ -34,7 +33,6 @@ import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.security.PrivateKey;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -92,10 +90,9 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
      */
     private String certificateAuthorityPrivateKeyPath() {
         if (dynamicallyUpdateCertificateAuthority()) {
-            return new File(new File(configuration.directoryToSaveDynamicSSLCertificate()), "PKCS8CertificateAuthorityPrivateKey.pem").getAbsolutePath();
-        } else {
-            return configuration.certificateAuthorityPrivateKey();
+            configuration.certificateAuthorityPrivateKey(new File(new File(configuration.directoryToSaveDynamicSSLCertificate()), "PKCS8CertificateAuthorityPrivateKey.pem").getAbsolutePath());
         }
+        return configuration.certificateAuthorityPrivateKey();
     }
 
     /**
@@ -131,10 +128,10 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
      */
     private String certificateAuthorityX509CertificatePath() {
         if (dynamicallyUpdateCertificateAuthority()) {
-            return new File(new File(configuration.directoryToSaveDynamicSSLCertificate()), "CertificateAuthorityCertificate.pem").getAbsolutePath();
-        } else {
-            return configuration.certificateAuthorityCertificate();
+            String absolutePath = new File(new File(configuration.directoryToSaveDynamicSSLCertificate()), "CertificateAuthorityCertificate.pem").getAbsolutePath();
+            configuration.certificateAuthorityCertificate(absolutePath);
         }
+        return configuration.certificateAuthorityCertificate();
     }
 
     /**
@@ -151,7 +148,11 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
                     new LogEntry()
                         .setLogLevel(DEBUG)
                         .setMessageFormat("loaded CA X509 from path{}containing PEM{}as{}")
-                        .setArguments(FilePath.absolutePathFromClassPathOrPath(certificateAuthorityX509CertificatePath()), FileReader.readFileFromClassPathOrPath(certificateAuthorityX509CertificatePath()), certificateAuthorityX509Certificate)
+                        .setArguments(
+                            FilePath.absolutePathFromClassPathOrPath(certificateAuthorityX509CertificatePath()),
+                            FileReader.readFileFromClassPathOrPath(certificateAuthorityX509CertificatePath()),
+                            certificateAuthorityX509Certificate
+                        )
                 );
             } else if (MockServerLogger.isEnabled(INFO) && mockServerLogger != null) {
                 mockServerLogger.logEvent(
@@ -228,7 +229,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
                             .setArguments(x509Certificate(), configuration.sslSubjectAlternativeNameDomains(), configuration.sslSubjectAlternativeNameIps())
                     );
                 }
-                if (configuration.preventCertificateDynamicUpdate()) {
+                if (configuration.preventCertificateDynamicUpdate() || configuration.proactivelyInitialiseTLS()) {
                     saveAsPEMFile(x509Certificate, x509CertificatePath(), "X509 Certificate PEM");
                     saveAsPEMFile(privateKey, privateKeyPath(), "Private Key PEM");
                 }
@@ -247,7 +248,8 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
      * leaf private key path
      */
     private String privateKeyPath() {
-        return new File(new File(configuration.directoryToSaveDynamicSSLCertificate()), "PKCS8PrivateKey.pem").getAbsolutePath();
+        configuration.privateKeyPath(new File(new File(configuration.directoryToSaveDynamicSSLCertificate()), "PKCS8PrivateKey.pem").getAbsolutePath());
+        return configuration.privateKeyPath();
     }
 
     /**
@@ -265,7 +267,8 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
      * leaf certificate path
      */
     private String x509CertificatePath() {
-        return new File(new File(configuration.directoryToSaveDynamicSSLCertificate()), "Certificate.pem").getAbsolutePath();
+        configuration.x509CertificatePath(new File(new File(configuration.directoryToSaveDynamicSSLCertificate()), "Certificate.pem").getAbsolutePath());
+        return configuration.x509CertificatePath();
     }
 
     /**

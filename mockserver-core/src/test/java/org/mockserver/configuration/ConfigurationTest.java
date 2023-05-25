@@ -1736,6 +1736,32 @@ public class ConfigurationTest {
     }
 
     @Test
+    public void shouldSetAndGetTlsProtocols() {
+        String original = ConfigurationProperties.tlsProtocols();
+        try {
+            // then - default value
+            assertThat(configuration.tlsProtocols(), equalTo("TLSv1,TLSv1.1,TLSv1.2"));
+
+            // when - system property setter
+            String firstPath = tempFilePath();
+            ConfigurationProperties.tlsProtocols(firstPath);
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.tlsProtocols(), equalTo(firstPath));
+            assertThat(System.getProperty("mockserver.tlsProtocols"), equalTo(firstPath));
+            assertThat(configuration.tlsProtocols(), equalTo(firstPath));
+
+            // when - setter
+            configuration.tlsProtocols("TLSv1.2,TLSv1.3");
+
+            // then - getter
+            assertThat(configuration.tlsProtocols(), equalTo("TLSv1.2,TLSv1.3"));
+        } finally {
+            ConfigurationProperties.tlsProtocols(original);
+        }
+    }
+
+    @Test
     public void shouldSetAndGetDynamicallyCreateCertificateAuthorityCertificate() {
         boolean original = ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate();
         try {

@@ -39,10 +39,11 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -100,9 +101,19 @@ public class JavaScriptTemplateEngineTest {
         ConfigurationProperties.logLevel(originalLogLevel.name());
     }
 
+    public static void nashornAvailable() {
+        try {
+            Class<?> nashornClass = JavaScriptTemplateEngineTest.class.getClassLoader().loadClass("jdk.nashorn.api.scripting.ClassFilter");
+            assumeThat("attempted to load nashorn", nashornClass, notNullValue());
+        } catch (Throwable throwable) {
+            assumeThat("attempted to load nashorn, but " + throwable.getMessage(), throwable, nullValue());
+        }
+    }
+
     @Test
     public void shouldHandleHttpRequestsWithJavaScriptResponseTemplateWithECMA6() throws JsonProcessingException {
         // given
+        nashornAvailable();
         String template = "var customer = { name: \"Foo\" }" + NEW_LINE +
             "var card = { amount: 7, product: \"Bar\", unitprice: 42 }" + NEW_LINE +
             "return {" + NEW_LINE +
@@ -132,11 +143,12 @@ public class JavaScriptTemplateEngineTest {
                         .setLogLevel(INFO)
                         .setHttpRequest(request)
                         .setMessageFormat("generated output:{}from template:{}for request:{}")
-                        .setArguments(OBJECT_MAPPER.readTree("" +
-                                "{" + NEW_LINE +
-                                "    'statusCode': 200," + NEW_LINE +
-                                "    'body': \"Hello Foo, want to buy 7 Bar for a total of 294 bucks?\"" + NEW_LINE +
-                                "}" + NEW_LINE),
+                        .setArguments(
+                            OBJECT_MAPPER.readTree("" +
+                                                       "{" + NEW_LINE +
+                                                       "    'statusCode': 200," + NEW_LINE +
+                                                       "    'body': \"Hello Foo, want to buy 7 Bar for a total of 294 bucks?\"" + NEW_LINE +
+                                                       "}" + NEW_LINE),
                             JavaScriptTemplateEngine.wrapTemplate(template),
                             request
                         )
@@ -150,6 +162,7 @@ public class JavaScriptTemplateEngineTest {
     @Test
     public void shouldHandleHttpRequestsWithJavaScriptResponseTemplateWithMethodPathAndHeader() throws JsonProcessingException {
         // given
+        nashornAvailable();
         String template = "return {" + NEW_LINE +
             "    'statusCode': 200," + NEW_LINE +
             "    'body': '{\\'method\\': \\'' + request.method + '\\', \\'path\\': \\'' + request.path + '\\', \\'headers\\': \\'' + request.headers.host[0] + '\\'}'" + NEW_LINE +
@@ -176,11 +189,12 @@ public class JavaScriptTemplateEngineTest {
                     .setLogLevel(INFO)
                     .setHttpRequest(request)
                     .setMessageFormat("generated output:{}from template:{}for request:{}")
-                    .setArguments(OBJECT_MAPPER.readTree("" +
-                            "{" + NEW_LINE +
-                            "    'statusCode': 200," + NEW_LINE +
-                            "    'body': \"{'method': 'POST', 'path': '/somePath', 'headers': 'mock-server.com'}\"" + NEW_LINE +
-                            "}" + NEW_LINE),
+                    .setArguments(
+                        OBJECT_MAPPER.readTree("" +
+                                                   "{" + NEW_LINE +
+                                                   "    'statusCode': 200," + NEW_LINE +
+                                                   "    'body': \"{'method': 'POST', 'path': '/somePath', 'headers': 'mock-server.com'}\"" + NEW_LINE +
+                                                   "}" + NEW_LINE),
                         JavaScriptTemplateEngine.wrapTemplate(template),
                         request
                     )
@@ -193,6 +207,7 @@ public class JavaScriptTemplateEngineTest {
     @Test
     public void shouldHandleHttpRequestsWithJavaScriptResponseTemplateWithParametersCookiesAndBody() throws JsonProcessingException {
         // given
+        nashornAvailable();
         String template = "return {" + NEW_LINE +
             "    'statusCode': 200," + NEW_LINE +
             "    'body': '{\\'queryStringParameters\\': \\'' + request.queryStringParameters.nameOne[0] + ',' + request.queryStringParameters.nameTwo[0] + ',' + request.queryStringParameters.nameTwo[1] + '\\'," +
@@ -218,7 +233,8 @@ public class JavaScriptTemplateEngineTest {
             assertThat(actualHttpResponse, is(
                 response()
                     .withStatusCode(200)
-                    .withBody("{'queryStringParameters': 'queryValueOne,queryValueTwoOne,queryValueTwoTwo', 'pathParameters': 'pathValueOne,pathValueTwoOne,pathValueTwoTwo', 'cookies': 'some_session_id', 'body': 'some_body'}")
+                    .withBody(
+                        "{'queryStringParameters': 'queryValueOne,queryValueTwoOne,queryValueTwoTwo', 'pathParameters': 'pathValueOne,pathValueTwoOne,pathValueTwoTwo', 'cookies': 'some_session_id', 'body': 'some_body'}")
             ));
             verify(mockServerLogger).logEvent(
                 new LogEntry()
@@ -226,11 +242,12 @@ public class JavaScriptTemplateEngineTest {
                     .setLogLevel(INFO)
                     .setHttpRequest(request)
                     .setMessageFormat("generated output:{}from template:{}for request:{}")
-                    .setArguments(OBJECT_MAPPER.readTree("" +
-                            "{" + NEW_LINE +
-                            "    'statusCode': 200," + NEW_LINE +
-                            "    'body': \"{'queryStringParameters': 'queryValueOne,queryValueTwoOne,queryValueTwoTwo', 'pathParameters': 'pathValueOne,pathValueTwoOne,pathValueTwoTwo', 'cookies': 'some_session_id', 'body': 'some_body'}\"" + NEW_LINE +
-                            "}" + NEW_LINE),
+                    .setArguments(
+                        OBJECT_MAPPER.readTree("" +
+                                                   "{" + NEW_LINE +
+                                                   "    'statusCode': 200," + NEW_LINE +
+                                                   "    'body': \"{'queryStringParameters': 'queryValueOne,queryValueTwoOne,queryValueTwoTwo', 'pathParameters': 'pathValueOne,pathValueTwoOne,pathValueTwoTwo', 'cookies': 'some_session_id', 'body': 'some_body'}\"" + NEW_LINE +
+                                                   "}" + NEW_LINE),
                         JavaScriptTemplateEngine.wrapTemplate(template),
                         request
                     )
@@ -246,6 +263,7 @@ public class JavaScriptTemplateEngineTest {
         boolean originalFixedTime = TimeService.fixedTime;
         try {
             // given
+        nashornAvailable();
             UUIDService.fixedUUID = true;
             TimeService.fixedTime = true;
             String template = "return {" + NEW_LINE +
@@ -268,7 +286,9 @@ public class JavaScriptTemplateEngineTest {
                 assertThat(actualHttpResponse, is(
                     response()
                         .withStatusCode(200)
-                        .withBody("{'date': '" + TimeService.now() + "', 'date_epoch': '" + TimeService.now().getEpochSecond() + "', 'date_iso_8601': '" + DateTimeFormatter.ISO_INSTANT.format(TimeService.now()) + "', 'date_rfc_1123': '" + DateTimeFormatter.RFC_1123_DATE_TIME.format(TimeService.offsetNow()) + "', 'uuids': ['" + UUIDService.getUUID() + "', '" + UUIDService.getUUID() + "'] }")
+                        .withBody("{'date': '" + TimeService.now() + "', 'date_epoch': '" + TimeService
+                            .now()
+                            .getEpochSecond() + "', 'date_iso_8601': '" + DateTimeFormatter.ISO_INSTANT.format(TimeService.now()) + "', 'date_rfc_1123': '" + DateTimeFormatter.RFC_1123_DATE_TIME.format(TimeService.offsetNow()) + "', 'uuids': ['" + UUIDService.getUUID() + "', '" + UUIDService.getUUID() + "'] }")
                 ));
                 verify(mockServerLogger).logEvent(
                     new LogEntry()
@@ -276,11 +296,14 @@ public class JavaScriptTemplateEngineTest {
                         .setLogLevel(INFO)
                         .setHttpRequest(request)
                         .setMessageFormat("generated output:{}from template:{}for request:{}")
-                        .setArguments(OBJECT_MAPPER.readTree("" +
-                                "{" + NEW_LINE +
-                                "    'statusCode': 200," + NEW_LINE +
-                                "    'body': \"{'date': '" + TimeService.now() + "', 'date_epoch': '" + TimeService.now().getEpochSecond() + "', 'date_iso_8601': '" + DateTimeFormatter.ISO_INSTANT.format(TimeService.now()) + "', 'date_rfc_1123': '" + DateTimeFormatter.RFC_1123_DATE_TIME.format(TimeService.offsetNow()) + "', 'uuids': ['" + UUIDService.getUUID() + "', '" + UUIDService.getUUID() + "'] }\"" + NEW_LINE +
-                                "}" + NEW_LINE),
+                        .setArguments(
+                            OBJECT_MAPPER.readTree("" +
+                                                       "{" + NEW_LINE +
+                                                       "    'statusCode': 200," + NEW_LINE +
+                                                       "    'body': \"{'date': '" + TimeService.now() + "', 'date_epoch': '" + TimeService
+                                .now()
+                                .getEpochSecond() + "', 'date_iso_8601': '" + DateTimeFormatter.ISO_INSTANT.format(TimeService.now()) + "', 'date_rfc_1123': '" + DateTimeFormatter.RFC_1123_DATE_TIME.format(TimeService.offsetNow()) + "', 'uuids': ['" + UUIDService.getUUID() + "', '" + UUIDService.getUUID() + "'] }\"" + NEW_LINE +
+                                                       "}" + NEW_LINE),
                             JavaScriptTemplateEngine.wrapTemplate(template),
                             request
                         )
@@ -309,6 +332,7 @@ public class JavaScriptTemplateEngineTest {
 
     private void shouldPopulateRandomValue(String function, Matcher<Integer> matcher) {
         // given
+        nashornAvailable();
         String template = "return { 'body': " + function + " };";
         HttpRequest request = request()
             .withPath("/somePath")
@@ -329,6 +353,7 @@ public class JavaScriptTemplateEngineTest {
     @Test
     public void shouldHandleHttpRequestsWithJavaScriptResponseTemplateWithLoopOverValuesUsingThis() throws JsonProcessingException {
         // given
+        nashornAvailable();
         String template = "var headers = '';" + NEW_LINE +
             "for (header in request.headers) {" + NEW_LINE +
             "  headers += '\\'' + request.headers[header] + '\\', ';" + NEW_LINE +
@@ -360,11 +385,12 @@ public class JavaScriptTemplateEngineTest {
                 .setLogLevel(INFO)
                 .setHttpRequest(request)
                 .setMessageFormat("generated output:{}from template:{}for request:{}")
-                .setArguments(OBJECT_MAPPER.readTree("" +
-                        "{" + NEW_LINE +
-                        "    'statusCode': 200," + NEW_LINE +
-                        "    'body': \"{'headers': ['mock-server.com', 'plain/text']}\"" + NEW_LINE +
-                        "}" + NEW_LINE),
+                .setArguments(
+                    OBJECT_MAPPER.readTree("" +
+                                               "{" + NEW_LINE +
+                                               "    'statusCode': 200," + NEW_LINE +
+                                               "    'body': \"{'headers': ['mock-server.com', 'plain/text']}\"" + NEW_LINE +
+                                               "}" + NEW_LINE),
                     JavaScriptTemplateEngine.wrapTemplate(template),
                     request
                 )
@@ -374,6 +400,7 @@ public class JavaScriptTemplateEngineTest {
     @Test
     public void shouldHandleHttpRequestsWithJavaScriptResponseTemplateWithIfElse() throws JsonProcessingException {
         // given
+        nashornAvailable();
         String template = "" +
             "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
             "    return {" + NEW_LINE +
@@ -407,11 +434,12 @@ public class JavaScriptTemplateEngineTest {
                     .setLogLevel(INFO)
                     .setHttpRequest(request)
                     .setMessageFormat("generated output:{}from template:{}for request:{}")
-                    .setArguments(OBJECT_MAPPER.readTree("" +
-                            "{" + NEW_LINE +
-                            "    'statusCode': 200," + NEW_LINE +
-                            "    'body': \"{\\\"name\\\":\\\"value\\\"}\"" + NEW_LINE +
-                            "}" + NEW_LINE),
+                    .setArguments(
+                        OBJECT_MAPPER.readTree("" +
+                                                   "{" + NEW_LINE +
+                                                   "    'statusCode': 200," + NEW_LINE +
+                                                   "    'body': \"{\\\"name\\\":\\\"value\\\"}\"" + NEW_LINE +
+                                                   "}" + NEW_LINE),
                         JavaScriptTemplateEngine.wrapTemplate(template),
                         request
                     )
@@ -424,6 +452,7 @@ public class JavaScriptTemplateEngineTest {
     @Test
     public void shouldHandleHttpRequestsWithJavaScriptForwardTemplateWithPathBodyParametersAndCookies() throws JsonProcessingException {
         // given
+        nashornAvailable();
         String template = "return {" + NEW_LINE +
             "    'path': request.path," + NEW_LINE +
             "    'body': '{\\'queryStringParameters\\': \\'' + request.queryStringParameters.nameOne[0] + ',' + request.queryStringParameters.nameTwo[0] + ',' + request.queryStringParameters.nameTwo[1] + '\\'," +
@@ -449,7 +478,8 @@ public class JavaScriptTemplateEngineTest {
             assertThat(actualHttpRequest, is(
                 request()
                     .withPath("/somePath")
-                    .withBody("{'queryStringParameters': 'queryValueOne,queryValueTwoOne,queryValueTwoTwo', 'pathParameters': 'pathValueOne,pathValueTwoOne,pathValueTwoTwo', 'cookies': 'some_session_id', 'body': 'some_body'}")
+                    .withBody(
+                        "{'queryStringParameters': 'queryValueOne,queryValueTwoOne,queryValueTwoTwo', 'pathParameters': 'pathValueOne,pathValueTwoOne,pathValueTwoTwo', 'cookies': 'some_session_id', 'body': 'some_body'}")
             ));
             verify(mockServerLogger).logEvent(
                 new LogEntry()
@@ -457,11 +487,12 @@ public class JavaScriptTemplateEngineTest {
                     .setLogLevel(INFO)
                     .setHttpRequest(request)
                     .setMessageFormat("generated output:{}from template:{}for request:{}")
-                    .setArguments(OBJECT_MAPPER.readTree("" +
-                            "{" + NEW_LINE +
-                            "    'path' : \"/somePath\"," + NEW_LINE +
-                            "    'body': \"{'queryStringParameters': 'queryValueOne,queryValueTwoOne,queryValueTwoTwo', 'pathParameters': 'pathValueOne,pathValueTwoOne,pathValueTwoTwo', 'cookies': 'some_session_id', 'body': 'some_body'}\"" + NEW_LINE +
-                            "}" + NEW_LINE),
+                    .setArguments(
+                        OBJECT_MAPPER.readTree("" +
+                                                   "{" + NEW_LINE +
+                                                   "    'path' : \"/somePath\"," + NEW_LINE +
+                                                   "    'body': \"{'queryStringParameters': 'queryValueOne,queryValueTwoOne,queryValueTwoTwo', 'pathParameters': 'pathValueOne,pathValueTwoOne,pathValueTwoTwo', 'cookies': 'some_session_id', 'body': 'some_body'}\"" + NEW_LINE +
+                                                   "}" + NEW_LINE),
                         JavaScriptTemplateEngine.wrapTemplate(template),
                         request
                     )
@@ -474,6 +505,7 @@ public class JavaScriptTemplateEngineTest {
     @Test
     public void shouldHandleHttpRequestsWithJavaScriptTemplateFirstExample() {
         // given
+        nashornAvailable();
         String template = "" +
             "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
             "    return {" + NEW_LINE +
@@ -489,10 +521,10 @@ public class JavaScriptTemplateEngineTest {
 
         // when
         HttpResponse actualHttpResponse = new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
-                .withPath("/somePath")
-                .withMethod("POST")
-                .withBody("some_body"),
-            HttpResponseDTO.class
+                                                                                                                            .withPath("/somePath")
+                                                                                                                            .withMethod("POST")
+                                                                                                                            .withBody("some_body"),
+                                                                                                                        HttpResponseDTO.class
         );
 
         // then
@@ -514,6 +546,7 @@ public class JavaScriptTemplateEngineTest {
 
         try {
             // given
+        nashornAvailable();
             configuration.javascriptDisallowedClasses(null);
             configuration.javascriptDisallowedText(null);
 
@@ -532,10 +565,10 @@ public class JavaScriptTemplateEngineTest {
 
             // then
             Exception exception = assertThrows(RuntimeException.class, () -> new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
-                    .withPath("/somePath")
-                    .withMethod("POST")
-                    .withBody("some_body"),
-                HttpResponseDTO.class
+                                                                                                                                                               .withPath("/somePath")
+                                                                                                                                                               .withMethod("POST")
+                                                                                                                                                               .withBody("some_body"),
+                                                                                                                                                           HttpResponseDTO.class
             ));
             assertThat(exception.getMessage(), containsString("Cannot run program \"does_not_exist.sh\""));
 
@@ -552,6 +585,7 @@ public class JavaScriptTemplateEngineTest {
 
         try {
             // given
+        nashornAvailable();
             configuration.javascriptDisallowedClasses("java.lang.Runtime");
             configuration.javascriptDisallowedText(null);
 
@@ -570,10 +604,10 @@ public class JavaScriptTemplateEngineTest {
 
             // then
             Exception exception = assertThrows(RuntimeException.class, () -> new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
-                    .withPath("/somePath")
-                    .withMethod("POST")
-                    .withBody("some_body"),
-                HttpResponseDTO.class
+                                                                                                                                                               .withPath("/somePath")
+                                                                                                                                                               .withMethod("POST")
+                                                                                                                                                               .withBody("some_body"),
+                                                                                                                                                           HttpResponseDTO.class
             ));
             assertThat(exception.getMessage(), containsString("java.lang.ClassNotFoundException: java.lang.Runtime"));
 
@@ -590,6 +624,7 @@ public class JavaScriptTemplateEngineTest {
 
         try {
             // given
+        nashornAvailable();
             configuration.javascriptDisallowedClasses("java.lang.Runtime,java.lang.String");
             configuration.javascriptDisallowedText(null);
 
@@ -608,14 +643,15 @@ public class JavaScriptTemplateEngineTest {
 
             // then
             Exception exception = assertThrows(RuntimeException.class, () -> new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(templateOne, request()
-                    .withPath("/somePath")
-                    .withMethod("POST")
-                    .withBody("some_body"),
-                HttpResponseDTO.class
+                                                                                                                                                               .withPath("/somePath")
+                                                                                                                                                               .withMethod("POST")
+                                                                                                                                                               .withBody("some_body"),
+                                                                                                                                                           HttpResponseDTO.class
             ));
             assertThat(exception.getMessage(), containsString("java.lang.ClassNotFoundException: java.lang.Runtime"));
 
             // given
+        nashornAvailable();
             configuration.javascriptDisallowedClasses("java.lang.String,java.lang.Runtime");
             configuration.javascriptDisallowedText(null);
 
@@ -634,10 +670,10 @@ public class JavaScriptTemplateEngineTest {
 
             // then
             exception = assertThrows(RuntimeException.class, () -> new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(templateTwo, request()
-                    .withPath("/somePath")
-                    .withMethod("POST")
-                    .withBody("some_body"),
-                HttpResponseDTO.class
+                                                                                                                                                     .withPath("/somePath")
+                                                                                                                                                     .withMethod("POST")
+                                                                                                                                                     .withBody("some_body"),
+                                                                                                                                                 HttpResponseDTO.class
             ));
             assertThat(exception.getMessage(), containsString("java.lang.ClassNotFoundException: java.lang.String"));
 
@@ -654,6 +690,7 @@ public class JavaScriptTemplateEngineTest {
 
         try {
             // given
+        nashornAvailable();
             configuration.javascriptDisallowedClasses(null);
             configuration.javascriptDisallowedText("getRuntime().exec");
 
@@ -672,10 +709,10 @@ public class JavaScriptTemplateEngineTest {
 
             // then
             Exception exception = assertThrows(RuntimeException.class, () -> new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
-                    .withPath("/somePath")
-                    .withMethod("POST")
-                    .withBody("some_body"),
-                HttpResponseDTO.class
+                                                                                                                                                               .withPath("/somePath")
+                                                                                                                                                               .withMethod("POST")
+                                                                                                                                                               .withBody("some_body"),
+                                                                                                                                                           HttpResponseDTO.class
             ));
             assertThat(exception.getMessage(), containsString("Found disallowed string \"getRuntime().exec\" in template:"));
 
@@ -692,6 +729,7 @@ public class JavaScriptTemplateEngineTest {
 
         try {
             // given
+        nashornAvailable();
             configuration.javascriptDisallowedClasses(null);
             configuration.javascriptDisallowedText("getRuntime().exec,does_not_exist.sh");
 
@@ -710,23 +748,24 @@ public class JavaScriptTemplateEngineTest {
 
             // then
             Exception exception = assertThrows(RuntimeException.class, () -> new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
-                    .withPath("/somePath")
-                    .withMethod("POST")
-                    .withBody("some_body"),
-                HttpResponseDTO.class
+                                                                                                                                                               .withPath("/somePath")
+                                                                                                                                                               .withMethod("POST")
+                                                                                                                                                               .withBody("some_body"),
+                                                                                                                                                           HttpResponseDTO.class
             ));
             assertThat(exception.getMessage(), containsString("Found disallowed string \"getRuntime().exec\" in template:"));
 
             // given
+        nashornAvailable();
             configuration.javascriptDisallowedClasses(null);
             configuration.javascriptDisallowedText("does_not_exist.sh,getRuntime().exec");
 
             // then
             exception = assertThrows(RuntimeException.class, () -> new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
-                    .withPath("/somePath")
-                    .withMethod("POST")
-                    .withBody("some_body"),
-                HttpResponseDTO.class
+                                                                                                                                                     .withPath("/somePath")
+                                                                                                                                                     .withMethod("POST")
+                                                                                                                                                     .withBody("some_body"),
+                                                                                                                                                 HttpResponseDTO.class
             ));
             assertThat(exception.getMessage(), containsString("Found disallowed string \"does_not_exist.sh\" in template:"));
 
@@ -743,6 +782,7 @@ public class JavaScriptTemplateEngineTest {
 
         try {
             // given
+        nashornAvailable();
             configuration.javascriptDisallowedClasses("java.lang.Runtime");
             configuration.javascriptDisallowedText("getRuntime().exec");
 
@@ -761,10 +801,10 @@ public class JavaScriptTemplateEngineTest {
 
             // then
             Exception exception = assertThrows(RuntimeException.class, () -> new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
-                    .withPath("/somePath")
-                    .withMethod("POST")
-                    .withBody("some_body"),
-                HttpResponseDTO.class
+                                                                                                                                                               .withPath("/somePath")
+                                                                                                                                                               .withMethod("POST")
+                                                                                                                                                               .withBody("some_body"),
+                                                                                                                                                           HttpResponseDTO.class
             ));
             assertThat(exception.getMessage(), containsString("Found disallowed string \"getRuntime().exec\" in template:"));
 
@@ -777,6 +817,7 @@ public class JavaScriptTemplateEngineTest {
     @Test
     public void shouldHandleHttpRequestsWithSlowJavaScriptTemplate() {
         // given
+        nashornAvailable();
         String template = "" +
             "for (var i = 0; i < 1000000000; i++) {" + NEW_LINE +
             "  i * i;" + NEW_LINE +
@@ -795,10 +836,10 @@ public class JavaScriptTemplateEngineTest {
 
         // when
         HttpResponse actualHttpResponse = new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
-                .withPath("/somePath")
-                .withMethod("POST")
-                .withBody("some_body"),
-            HttpResponseDTO.class
+                                                                                                                            .withPath("/somePath")
+                                                                                                                            .withMethod("POST")
+                                                                                                                            .withBody("some_body"),
+                                                                                                                        HttpResponseDTO.class
         );
 
         // then
@@ -816,6 +857,7 @@ public class JavaScriptTemplateEngineTest {
     @Test
     public void shouldHandleMultipleHttpRequestsInParallel() throws InterruptedException {
         // given
+        nashornAvailable();
         final String template = "" +
             "for (var i = 0; i < 1000000000; i++) {" + NEW_LINE +
             "  i * i;" + NEW_LINE +
@@ -844,7 +886,7 @@ public class JavaScriptTemplateEngineTest {
             Thread[] threads = new Thread[3];
             for (int i = 0; i < threads.length; i++) {
                 threads[i] = new Scheduler.SchedulerThreadFactory("MockServer Test " + this.getClass().getSimpleName()).newThread(() -> assertThat(javascriptTemplateEngine.executeTemplate(template, request,
-                    HttpResponseDTO.class
+                                                                                                                                                                                            HttpResponseDTO.class
                 ), is(
                     response()
                         .withStatusCode(200)
@@ -857,7 +899,7 @@ public class JavaScriptTemplateEngineTest {
             }
         } else {
             assertThat(javascriptTemplateEngine.executeTemplate(template, request,
-                HttpResponseDTO.class
+                                                                HttpResponseDTO.class
             ), nullValue());
         }
     }
@@ -865,6 +907,7 @@ public class JavaScriptTemplateEngineTest {
     @Test
     public void shouldHandleHttpRequestsWithJavaScriptTemplateSecondExample() {
         // given
+        nashornAvailable();
         String template = "" +
             "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
             "    return {" + NEW_LINE +
@@ -880,9 +923,9 @@ public class JavaScriptTemplateEngineTest {
 
         // when
         HttpResponse actualHttpResponse = new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
-                .withPath("/someOtherPath")
-                .withBody("some_body"),
-            HttpResponseDTO.class
+                                                                                                                            .withPath("/someOtherPath")
+                                                                                                                            .withBody("some_body"),
+                                                                                                                        HttpResponseDTO.class
         );
 
         // then
@@ -900,6 +943,7 @@ public class JavaScriptTemplateEngineTest {
     @Test
     public void shouldHandleHttpRequestsWithJavaScriptForwardTemplateWithMethodPathAndHeader() {
         // given
+        nashornAvailable();
         String template = "return {" + NEW_LINE +
             "    'path': '/somePath'," + NEW_LINE +
             "    'body': '{\\'method\\': \\'' + request.method + '\\', \\'path\\': \\'' + request.path + '\\', \\'headers\\': \\'' + request.headers.host[0] + '\\'}'" + NEW_LINE +
@@ -928,15 +972,16 @@ public class JavaScriptTemplateEngineTest {
     @Test
     public void shouldHandleHttpRequestsWithJavaScriptUsingBodyAsStringForRequestWithStringBody() {
         // given
+        nashornAvailable();
         String template = "" +
             "return { statusCode: 200, headers: { Date: [ \"Fri Jan 28 2022 22:02:46 GMT+0000 (GMT)\" ] }, body: JSON.stringify({is_active: JSON.parse(request.body).is_active, id: \"1234\", name: \"taras\"}) };";
 
 
         // when
         HttpResponse actualHttpRequest = new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
-                .withPath("/someOtherPath")
-                .withBody("{\"is_active\":\"active_value\",\"id\":\"1234\",\"name\":\"taras\"}"),
-            HttpResponseDTO.class
+                                                                                                                           .withPath("/someOtherPath")
+                                                                                                                           .withBody("{\"is_active\":\"active_value\",\"id\":\"1234\",\"name\":\"taras\"}"),
+                                                                                                                       HttpResponseDTO.class
         );
 
         // then
@@ -955,15 +1000,16 @@ public class JavaScriptTemplateEngineTest {
     @Test
     public void shouldHandleHttpRequestsWithJavaScriptUsingBodyAsStringForRequestWithJsonBody() {
         // given
+        nashornAvailable();
         String template = "" +
             "return { statusCode: 200, headers: { Date: [ \"Fri Jan 28 2022 22:02:46 GMT+0000 (GMT)\" ] }, body: JSON.stringify({is_active: JSON.parse(request.body).is_active, id: \"1234\", name: \"taras\"}) };";
 
 
         // when
         HttpResponse actualHttpRequest = new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
-                .withPath("/someOtherPath")
-                .withBody(json("{\"is_active\":\"active_value\",\"id\":\"1234\",\"name\":\"taras\"}")),
-            HttpResponseDTO.class
+                                                                                                                           .withPath("/someOtherPath")
+                                                                                                                           .withBody(json("{\"is_active\":\"active_value\",\"id\":\"1234\",\"name\":\"taras\"}")),
+                                                                                                                       HttpResponseDTO.class
         );
 
         // then
@@ -982,15 +1028,16 @@ public class JavaScriptTemplateEngineTest {
     @Test
     public void shouldHandleHttpRequestsWithJavaScriptUsingBodyAsStringForRequestWithXmlBody() {
         // given
+        nashornAvailable();
         String template = "" +
             "return { statusCode: 200, headers: { Date: [ \"Fri Jan 28 2022 22:02:46 GMT+0000 (GMT)\" ] }, body: JSON.stringify({is_active: request.body, id: \"1234\", name: \"taras\"}) };";
 
 
         // when
         HttpResponse actualHttpRequest = new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
-                .withPath("/someOtherPath")
-                .withBody(xml("<root><is_active>active_value</is_active></root>")),
-            HttpResponseDTO.class
+                                                                                                                           .withPath("/someOtherPath")
+                                                                                                                           .withBody(xml("<root><is_active>active_value</is_active></root>")),
+                                                                                                                       HttpResponseDTO.class
         );
 
         // then
@@ -1009,15 +1056,16 @@ public class JavaScriptTemplateEngineTest {
     @Test
     public void shouldHandleHttpRequestsWithJavaScriptUsingBodyAsStringForRequestWithParameterBody() {
         // given
+        nashornAvailable();
         String template = "" +
             "return { statusCode: 200, headers: { Date: [ \"Fri Jan 28 2022 22:02:46 GMT+0000 (GMT)\" ] }, body: JSON.stringify({is_active: JSON.parse(request.body), id: \"1234\", name: \"taras\"}) };";
 
 
         // when
         HttpResponse actualHttpRequest = new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
-                .withPath("/someOtherPath")
-                .withBody(params(param("one", "valueOne"), param("two", "valueTwoOne", "valueTwoTwo"))),
-            HttpResponseDTO.class
+                                                                                                                           .withPath("/someOtherPath")
+                                                                                                                           .withBody(params(param("one", "valueOne"), param("two", "valueTwoOne", "valueTwoTwo"))),
+                                                                                                                       HttpResponseDTO.class
         );
 
         // then
@@ -1036,6 +1084,7 @@ public class JavaScriptTemplateEngineTest {
     @Test
     public void shouldHandleInvalidJavaScript() {
         // given
+        nashornAvailable();
         String template = "{" + NEW_LINE +
             "    'path' : \"/somePath\"," + NEW_LINE +
             "    'queryStringParameters' : [ {" + NEW_LINE +
@@ -1051,49 +1100,50 @@ public class JavaScriptTemplateEngineTest {
         if (new ScriptEngineManager().getEngineByName("nashorn") != null) {
             // when
             RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request()
-                    .withPath("/someOtherPath")
-                    .withQueryStringParameter("queryParameter", "someValue")
-                    .withBody("some_body"),
-                HttpRequestDTO.class
+                                                                                                                                                                             .withPath("/someOtherPath")
+                                                                                                                                                                             .withQueryStringParameter("queryParameter", "someValue")
+                                                                                                                                                                             .withBody("some_body"),
+                                                                                                                                                                         HttpRequestDTO.class
             ));
 
             // then
             assertThat(runtimeException.getMessage(), is("Exception:" + NEW_LINE +
-                "" + NEW_LINE +
-                "  <eval>:4:13 Expected ; but found :" + NEW_LINE +
-                "        'path' : \"/somePath\"," + NEW_LINE +
-                "               ^ in <eval> at line number 4 at column number 13" + NEW_LINE +
-                "" + NEW_LINE +
-                " transforming template:" + NEW_LINE +
-                "" + NEW_LINE +
-                "  {" + NEW_LINE +
-                "      'path' : \"/somePath\"," + NEW_LINE +
-                "      'queryStringParameters' : [ {" + NEW_LINE +
-                "          'name' : \"queryParameter\"," + NEW_LINE +
-                "          'values' : request.queryStringParameters['queryParameter']" + NEW_LINE +
-                "      } ]," + NEW_LINE +
-                "      'headers' : [ {" + NEW_LINE +
-                "          'name' : \"Host\"," + NEW_LINE +
-                "          'values' : [ \"localhost:1090\" ]" + NEW_LINE +
-                "      } ]," + NEW_LINE +
-                "      'body': \"{'name': 'value'}\"" + NEW_LINE +
-                "  };" + NEW_LINE +
-                "" + NEW_LINE +
-                " for request:" + NEW_LINE +
-                "" + NEW_LINE +
-                "  {" + NEW_LINE +
-                "    \"path\" : \"/someOtherPath\"," + NEW_LINE +
-                "    \"queryStringParameters\" : {" + NEW_LINE +
-                "      \"queryParameter\" : [ \"someValue\" ]" + NEW_LINE +
-                "    }," + NEW_LINE +
-                "    \"body\" : \"some_body\"" + NEW_LINE +
-                "  }" + NEW_LINE));
+                                                             "" + NEW_LINE +
+                                                             "  <eval>:4:13 Expected ; but found :" + NEW_LINE +
+                                                             "        'path' : \"/somePath\"," + NEW_LINE +
+                                                             "               ^ in <eval> at line number 4 at column number 13" + NEW_LINE +
+                                                             "" + NEW_LINE +
+                                                             " transforming template:" + NEW_LINE +
+                                                             "" + NEW_LINE +
+                                                             "  {" + NEW_LINE +
+                                                             "      'path' : \"/somePath\"," + NEW_LINE +
+                                                             "      'queryStringParameters' : [ {" + NEW_LINE +
+                                                             "          'name' : \"queryParameter\"," + NEW_LINE +
+                                                             "          'values' : request.queryStringParameters['queryParameter']" + NEW_LINE +
+                                                             "      } ]," + NEW_LINE +
+                                                             "      'headers' : [ {" + NEW_LINE +
+                                                             "          'name' : \"Host\"," + NEW_LINE +
+                                                             "          'values' : [ \"localhost:1090\" ]" + NEW_LINE +
+                                                             "      } ]," + NEW_LINE +
+                                                             "      'body': \"{'name': 'value'}\"" + NEW_LINE +
+                                                             "  };" + NEW_LINE +
+                                                             "" + NEW_LINE +
+                                                             " for request:" + NEW_LINE +
+                                                             "" + NEW_LINE +
+                                                             "  {" + NEW_LINE +
+                                                             "    \"path\" : \"/someOtherPath\"," + NEW_LINE +
+                                                             "    \"queryStringParameters\" : {" + NEW_LINE +
+                                                             "      \"queryParameter\" : [ \"someValue\" ]" + NEW_LINE +
+                                                             "    }," + NEW_LINE +
+                                                             "    \"body\" : \"some_body\"" + NEW_LINE +
+                                                             "  }" + NEW_LINE));
         }
     }
 
     @Test
     public void shouldRestrictGlobalContextMultipleHttpRequestsInParallel() throws InterruptedException, ExecutionException {
         // given
+        nashornAvailable();
         final String template = ""
             + "var resbody = \"ok\"; " + NEW_LINE
             + "if (request.path.match(\".*1$\")) { " + NEW_LINE
@@ -1126,7 +1176,7 @@ public class JavaScriptTemplateEngineTest {
             for (int i = 0; i < 100; i++) {
                 futures.add(newFixedThreadPool.submit(() -> {
                     assertThat(javascriptTemplateEngine.executeTemplate(template, ok,
-                        HttpResponseDTO.class
+                                                                        HttpResponseDTO.class
                     ), is(
                         response()
                             .withStatusCode(200)
@@ -1137,7 +1187,7 @@ public class JavaScriptTemplateEngineTest {
 
                 futures.add(newFixedThreadPool.submit(() -> {
                     assertThat(javascriptTemplateEngine.executeTemplate(template, nok,
-                        HttpResponseDTO.class
+                                                                        HttpResponseDTO.class
                     ), is(
                         response()
                             .withStatusCode(200)
@@ -1155,7 +1205,7 @@ public class JavaScriptTemplateEngineTest {
 
         } else {
             assertThat(javascriptTemplateEngine.executeTemplate(template, ok,
-                HttpResponseDTO.class
+                                                                HttpResponseDTO.class
             ), nullValue());
         }
     }
