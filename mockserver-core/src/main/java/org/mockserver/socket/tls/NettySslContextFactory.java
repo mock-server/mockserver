@@ -182,22 +182,10 @@ public class NettySslContextFactory {
             // create x509 and private key if none exist yet
             || keyAndCertificateFactory.certificateNotYetCreated()
             // re-create x509 and private key if SAN list has been updated and dynamic update has not been disabled
-            || configuration.rebuildServerTLSContext() && !configuration.preventCertificateDynamicUpdate()) {
+            || (configuration.rebuildServerTLSContext() && !configuration.preventCertificateDynamicUpdate())) {
             try {
                 keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(Level.DEBUG)
-                        .setMessageFormat("using certificate authority serial:{}issuer:{}subject:{}and certificate serial:{}issuer:{}subject:{}")
-                        .setArguments(
-                            keyAndCertificateFactory.certificateAuthorityX509Certificate().getSerialNumber(),
-                            keyAndCertificateFactory.certificateAuthorityX509Certificate().getIssuerX500Principal(),
-                            keyAndCertificateFactory.certificateAuthorityX509Certificate().getSubjectX500Principal(),
-                            keyAndCertificateFactory.x509Certificate().getSerialNumber(),
-                            keyAndCertificateFactory.x509Certificate().getIssuerX500Principal(),
-                            keyAndCertificateFactory.x509Certificate().getSubjectX500Principal()
-                        )
-                );
+                logUsedCertificateData();
                 final SslContextBuilder sslContextBuilder = SslContextBuilder
                     .forServer(
                         keyAndCertificateFactory.privateKey(),
@@ -226,6 +214,26 @@ public class NettySslContextFactory {
             }
         }
         return serverSslContext;
+    }
+
+    private void logUsedCertificateData() {
+        final X509Certificate caCertificate = keyAndCertificateFactory.certificateAuthorityX509Certificate();
+        final X509Certificate eeCertificate = keyAndCertificateFactory.x509Certificate();
+        if (caCertificate != null && eeCertificate != null) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(Level.DEBUG)
+                    .setMessageFormat("using certificate authority serial:{}issuer:{}subject:{}and certificate serial:{}issuer:{}subject:{}")
+                    .setArguments(
+                        caCertificate.getSerialNumber(),
+                        caCertificate.getIssuerX500Principal(),
+                        caCertificate.getSubjectX500Principal(),
+                        eeCertificate.getSerialNumber(),
+                        eeCertificate.getIssuerX500Principal(),
+                        eeCertificate.getSubjectX500Principal()
+                    )
+            );
+        }
     }
 
     private static void configureALPN(SslContextBuilder sslContextBuilder) {
