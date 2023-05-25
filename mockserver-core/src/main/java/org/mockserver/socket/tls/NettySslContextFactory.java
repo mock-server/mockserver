@@ -182,7 +182,7 @@ public class NettySslContextFactory {
             // create x509 and private key if none exist yet
             || keyAndCertificateFactory.certificateNotYetCreated()
             // re-create x509 and private key if SAN list has been updated and dynamic update has not been disabled
-            || configuration.rebuildServerTLSContext() && !configuration.preventCertificateDynamicUpdate()) {
+            || (configuration.rebuildServerTLSContext() && !configuration.preventCertificateDynamicUpdate())) {
             try {
                 keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
                 logUsedCertificateData();
