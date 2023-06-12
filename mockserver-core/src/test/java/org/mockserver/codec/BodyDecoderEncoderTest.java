@@ -2,14 +2,15 @@ package org.mockserver.codec;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.handler.codec.http.DefaultFullHttpRequest;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpVersion;
 import org.junit.Test;
-import org.mockserver.model.Body;
-import org.mockserver.model.BodyWithContentType;
-import org.mockserver.model.MediaType;
-import org.mockserver.model.StringBody;
+import org.mockserver.model.*;
 
 import java.util.Arrays;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
@@ -195,5 +196,18 @@ public class BodyDecoderEncoderTest {
 
         // then
         assertThat(result, is(exact("bytes", MediaType.ANY_VIDEO_TYPE.withCharset(UTF_8))));
+    }
+
+    @Test
+    public void shouldNotAlterBodyForXmlsWithWrongCharset() {
+        // given
+        final byte[] rawContent = {-1, -20, 127, 23, 43, 5, -5, -9};
+        ByteBuf byteBuf = Unpooled.copiedBuffer(rawContent);
+
+        // when
+        BodyWithContentType result = new BodyDecoderEncoder().byteBufToBody(byteBuf, MediaType.XML_UTF_8.toString());
+
+        // then
+        assertThat(result.getRawBytes(), is(rawContent));
     }
 }
