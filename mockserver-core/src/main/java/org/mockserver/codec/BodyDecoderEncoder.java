@@ -91,6 +91,7 @@ public class BodyDecoderEncoder {
             } else if (mediaType.isXml()) {
                 return new XmlBody(
                     new String(bodyBytes, mediaType.getCharsetOrDefault()),
+                    bodyBytes,
                     mediaType
                 );
             } else if (mediaType.isString()) {
