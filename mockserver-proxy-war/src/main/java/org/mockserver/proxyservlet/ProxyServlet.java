@@ -36,6 +36,7 @@ import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.mock.HttpState.PATH_PREFIX;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
+import static org.mockserver.proxyconfiguration.ProxyConfiguration.proxyConfiguration;
 
 /**
  * @author jamesdbloom
@@ -66,7 +67,7 @@ public class ProxyServlet extends HttpServlet implements ServletContextListener 
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
         this.workerGroup = new NioEventLoopGroup(configuration.nioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-eventLoop"));
-        this.actionHandler = new HttpActionHandler(configuration(), workerGroup, httpStateHandler, null, new NettySslContextFactory(this.configuration, this.mockServerLogger, true));
+        this.actionHandler = new HttpActionHandler(configuration(), workerGroup, httpStateHandler, proxyConfiguration(configuration()), new NettySslContextFactory(this.configuration, this.mockServerLogger, true));
     }
 
     @Override
