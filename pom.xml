@@ -61,8 +61,8 @@
         <httpcomponents.version>4.4.1</httpcomponents.version>
         <bouncycastle.version>1.72</bouncycastle.version>
         <!-- highest spring version is 5.3 due to Java 1.8 version -->
-        <spring.version>5.3.25</spring.version>
-        <spring-web.version>5.3.25</spring-web.version>
+        <spring.version>5.3.27</spring.version>
+        <spring-web.version>5.3.27</spring-web.version>
         <mockito.version>4.11.0</mockito.version>
         <hamcrest.version>2.2</hamcrest.version>
         <xmlunit.version>2.9.1</xmlunit.version>
