@@ -6,7 +6,6 @@ import com.google.common.base.Splitter;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.RuntimeConstants;
-import org.apache.velocity.tools.ToolContext;
 import org.apache.velocity.tools.ToolManager;
 import org.apache.velocity.tools.config.ToolConfiguration;
 import org.apache.velocity.tools.config.ToolboxConfiguration;
@@ -45,7 +44,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
     private final Configuration configuration;
     private HttpTemplateOutputDeserializer httpTemplateOutputDeserializer;
     private final VelocityEngine velocityEngine;
-    private final ToolContext toolContext;
+    private final ToolManager toolManager;
 
     public VelocityTemplateEngine(MockServerLogger mockServerLogger, Configuration configuration) {
         this.mockServerLogger = mockServerLogger;
@@ -55,7 +54,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
             objectMapper = ObjectMapperFactory.createObjectMapper();
         }
         velocityEngine = buildVelocityEngine(configuration);
-        toolContext = buildToolManager(velocityEngine);
+        toolManager = buildToolManager(velocityEngine);
     }
 
     private VelocityEngine buildVelocityEngine(Configuration configuration) {
@@ -94,9 +93,8 @@ public class VelocityTemplateEngine implements TemplateEngine {
         return velocityEngine;
     }
 
-    private ToolContext buildToolManager(VelocityEngine velocityEngine) {
+    private ToolManager buildToolManager(VelocityEngine velocityEngine) {
         ToolManager manager = new ToolManager();
-
         // ToolboxConfiguration for "application" scope
         ToolboxConfiguration applicationToolboxConfiguration = new ToolboxConfiguration();
         applicationToolboxConfiguration.setScope("application");
@@ -138,7 +136,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
         manager.configure(xmlFactoryConfiguration);
         manager.setVelocityEngine(velocityEngine);
 
-        return manager.createContext();
+        return manager;
     }
 
     @Override
@@ -147,7 +145,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
         try {
             validateTemplate(template);
             Writer writer = new StringWriter();
-            VelocityContext context = new VelocityContext(toolContext);
+            VelocityContext context = new VelocityContext(toolManager.createContext());
             context.put("request", new HttpRequestTemplateObject(request));
             TemplateFunctions.BUILT_IN_FUNCTIONS.forEach(context::put);
             velocityEngine.evaluate(context, writer, "VelocityResponseTemplate", template);
