@@ -20,10 +20,10 @@ import org.mockserver.time.TimeService;
 import org.mockserver.uuid.UUIDService;
 import org.slf4j.event.Level;
 
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.io.File;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -822,6 +822,49 @@ public class VelocityTemplateEngineTest {
             future.get();
         }
         newFixedThreadPool.shutdown();
+    }
+
+    /**
+     * JsonTool ($json) is a request scoped tool, so it should be recreated for each request. Otherwise, failures
+     * @throws JsonProcessingException
+     */
+    @Test
+    public void shouldUseRequestScopeToolsInThreadSafeWay() throws JsonProcessingException, ExecutionException, InterruptedException {
+        // given
+        String template = "{" + NEW_LINE +
+            "    'statusCode': 200," + NEW_LINE +
+            "    'body': '$json.parse($!request.body).name'"+ NEW_LINE +
+            "}";
+
+        // when
+        VelocityTemplateEngine velocityTemplateEngine = new VelocityTemplateEngine(mockServerLogger, configuration);
+        ExecutorService newFixedThreadPool = Executors.newFixedThreadPool(30);
+        List<Future<Boolean>> futures = new ArrayList<>();
+        for (int i = 0; i < 100;i++) {
+            final int requestNumber = i;
+            futures.add(newFixedThreadPool.submit(() -> {
+                HttpRequest request = request()
+                    .withPath("/somePath")
+                    .withMethod("POST")
+                    .withHeader(HOST.toString(), "mock-server.com")
+                    .withBody(String.format("{\"name\": \"value%s\"}",requestNumber));
+
+
+                assertThat(velocityTemplateEngine.executeTemplate(template, request, HttpResponseDTO.class), is(
+                    response()
+                        .withStatusCode(200)
+                        .withBody(String.format("value%s", requestNumber))
+                ));
+                return true;
+            }));
+        }
+
+
+        for (Future<Boolean> future : futures) {
+            future.get();
+        }
+        newFixedThreadPool.shutdown();
+
     }
 
 }
