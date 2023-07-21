@@ -86,6 +86,10 @@ spec:
             - name: libs-volume
               mountPath: /libs
 {{- end}}
+{{- if .Values.app.persistentVolumeClaimName}}
+            - name: init-storage
+              mountPath: /init
+{{- end}}
 {{- if .Values.resources }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
@@ -95,11 +99,16 @@ spec:
           configMap:
             name: {{ .Values.app.mountedConfigMapName }}
             optional: true
-{{- if .Values.app.mountedLibsConfigMapName}}
+{{- if .Values.app.mountedLibsConfigMapName }}
         - name: libs-volume
           configMap:
             name: {{ .Values.app.mountedLibsConfigMapName }}
             optional: true
+{{- end}}
+{{- if .Values.app.persistentVolumeClaimName }}
+        - name: init-storage
+          persistentVolumeClaim:
+            claimName: {{ .Values.app.persistentVolumeClaimName }}
 {{- end}}
 {{- with .Values.nodeSelector }}
       nodeSelector:
