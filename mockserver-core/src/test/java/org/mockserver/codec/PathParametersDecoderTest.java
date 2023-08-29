@@ -2,7 +2,9 @@ package org.mockserver.codec;
 
 import com.google.common.collect.ImmutableList;
 import org.junit.Test;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.model.Parameter;
+import org.mockserver.model.Parameters;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -10,6 +12,7 @@ import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.NottableString.string;
@@ -875,6 +878,19 @@ public class PathParametersDecoderTest {
                 param("name", "bob;name=bill;name=tony")
             )
         );
+    }
+
+    @Test
+    public void shouldNotAlterRequestPathParametersDuringExtraction() {
+        HttpRequest originalRequest = request()
+            .withPath("/path/{pathId}/subPath")
+            .withPathParameters(param("pathId", "(.+)"));
+        HttpRequest clonedRequest = originalRequest.clone();
+
+        Parameters parameters = new PathParametersDecoder().extractPathParameters(originalRequest, clonedRequest);
+
+        assertThat(parameters, equalTo(new Parameters(param("pathId", "(.+)", "{pathId}"))));
+        assertThat(clonedRequest, equalTo(originalRequest));
     }
 
     void shouldRetrieveParameters(String matcherPath, Parameter[] parameter, String requestPath, List<Parameter> expected) {
