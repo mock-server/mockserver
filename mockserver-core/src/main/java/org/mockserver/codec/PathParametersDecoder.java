@@ -67,7 +67,7 @@ public class PathParametersDecoder {
     }
 
     public Parameters extractPathParameters(HttpRequest matcher, HttpRequest matched) {
-        Parameters parsedParameters = matched.getPathParameters() != null ? matched.getPathParameters() : new Parameters();
+        Parameters parsedParameters = matched.getPathParameters() != null ? matched.getPathParameters().clone() : new Parameters();
         if (matcher.getPathParameters() != null && !matcher.getPathParameters().isEmpty()) {
             String[] matcherPathParts = getPathParts(matcher.getPath());
             String[] matchedPathParts = getPathParts(matched.getPath());
