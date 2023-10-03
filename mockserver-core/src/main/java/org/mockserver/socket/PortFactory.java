@@ -11,11 +11,19 @@ public class PortFactory {
 
     private static final Random random = new Random();
 
+    /**
+     * @return number of some available port
+     */
     public static int findFreePort() {
         int[] freePorts = findSomeFreePorts(1);
         return freePorts[random.nextInt(freePorts.length)];
     }
 
+    /**
+     *
+     * @param size size of available ports to be found
+     * @return numbers of available ports
+     */
     public static int[] findFreePorts(int size) {
         int[] freePorts = findFreePorts(size);
         int ratio = freePorts.length/size;
