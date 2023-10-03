@@ -21,4 +21,15 @@ public class PortFactoryTest {
         assertTrue(new ServerSocket(freePort).isBound());
     }
 
+    @Test
+    public void shouldFindMoreFreePorts() throws IOException {
+        // when
+        int[] freePorts = PortFactory.findFreePorts(2);
+
+        // then
+        for (int freePort : freePorts) {
+            assertTrue(new ServerSocket(freePort).isBound());
+        }
+    }
+
 }
