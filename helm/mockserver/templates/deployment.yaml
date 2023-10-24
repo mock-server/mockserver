@@ -72,7 +72,7 @@ spec:
               value: {{ .Values.app.proxyRemotePort | quote }}
 {{- end }}
 {{- if .Values.app.jvmOptions }}
-            - name: JVM_OPTIONS
+            - name: JAVA_TOOL_OPTIONS
               value: {{ .Values.app.jvmOptions | quote }}
 {{- end }}
 {{- if .Values.app.mountConfigMap }}
