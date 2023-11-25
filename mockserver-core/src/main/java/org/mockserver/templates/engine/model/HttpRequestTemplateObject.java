@@ -3,7 +3,11 @@ package org.mockserver.templates.engine.model;
 import org.mockserver.model.*;
 import org.mockserver.serialization.model.BodyDTO;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
