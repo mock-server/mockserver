@@ -59,7 +59,7 @@
         <velocity.version>2.3</velocity.version>
         <netty.version>4.1.89.Final</netty.version>
         <httpcomponents.version>4.4.1</httpcomponents.version>
-        <bouncycastle.version>1.72</bouncycastle.version>
+        <bouncycastle.version>1.77</bouncycastle.version>
         <!-- highest spring version is 5.3 due to Java 1.8 version -->
         <spring.version>5.3.25</spring.version>
         <spring-web.version>5.3.25</spring-web.version>
