@@ -93,6 +93,7 @@ public class DashboardLogEntryDTOSerializer extends StdSerializer<DashboardLogEn
 
     public Map<String, String> logStyle(DashboardLogEntryDTO logEntry) {
         Map<String, String> style = new LinkedHashMap<>();
+        style.put("style.whiteSpace", "");
         style.put("paddingBottom", "4px");
         style.put("whiteSpace", "nowrap");
         style.put("overflow", "auto");
@@ -170,6 +171,9 @@ public class DashboardLogEntryDTOSerializer extends StdSerializer<DashboardLogEn
                 break;
             default:
                 style.put("color", "rgb(201, 125, 240)");
+        }
+        if (style.get("style.whiteSpace").isEmpty()) {
+            style.remove("style.whiteSpace");
         }
         style.put("paddingTop", "4px");
         return style;
