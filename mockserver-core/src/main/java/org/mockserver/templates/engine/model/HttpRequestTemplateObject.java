@@ -6,6 +6,7 @@ import org.mockserver.serialization.model.BodyDTO;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -19,7 +20,7 @@ public class HttpRequestTemplateObject extends RequestDefinition {
     private final Map<String, List<String>> pathParameters = new HashMap<>();
     private final Map<String, List<String>> queryStringParameters = new HashMap<>();
     private final Map<String, String> cookies = new HashMap<>();
-    private final Map<String, List<String>> headers = new HashMap<>();
+    private final Map<String, List<String>> headers = new LinkedHashMap<>();
     private BodyDTO body = null;
     private Boolean secure = null;
     private List<X509Certificate> clientCertificateChain = null;
