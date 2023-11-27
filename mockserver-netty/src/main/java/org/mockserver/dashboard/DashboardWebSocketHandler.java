@@ -383,32 +383,32 @@ public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter impl
                                 if (recordedRequestsPredicate.test(logEntryDTO) && recordedRequests.size() < UI_UPDATE_ITEM_LIMIT) {
                                     for (RequestDefinition request : logEntryDTO.getHttpRequests()) {
                                         if (request != null) {
-                                            Map<String, Object> entry = new HashMap<>();
-                                            entry.put("key", logEntryDTO.getId() + "_request");
+                                            Map<String, Object> entry = new LinkedHashMap<>();
                                             Description description = recordedRequestsDescriptionProcessor.description(request);
                                             if (description != null) {
                                                 entry.put("description", description);
                                             }
                                             entry.put("value", request);
+                                            entry.put("key", logEntryDTO.getId() + "_request");
                                             recordedRequests.add(entry);
                                         }
                                     }
                                 }
                                 if (proxiedRequestsPredicate.test(logEntryDTO) && proxiedRequests.size() < UI_UPDATE_ITEM_LIMIT) {
-                                    Map<String, Object> value = new HashMap<>();
+                                    Map<String, Object> value = new LinkedHashMap<>();
                                     if (logEntryDTO.getHttpRequest() != null) {
                                         value.put("httpRequest", logEntryDTO.getHttpRequest());
                                     }
                                     if (logEntryDTO.getHttpResponse() != null) {
                                         value.put("httpResponse", logEntryDTO.getHttpResponse());
                                     }
-                                    Map<String, Object> entry = new HashMap<>();
-                                    entry.put("key", logEntryDTO.getId() + "_proxied");
+                                    Map<String, Object> entry = new LinkedHashMap<>();
                                     Description description = proxiedRequestsDescriptionProcessor.description(logEntryDTO.getHttpRequest());
                                     if (description != null) {
                                         entry.put("description", description);
                                     }
                                     entry.put("value", value);
+                                    entry.put("key", logEntryDTO.getId() + "_proxied");
                                     if (!value.isEmpty()) {
                                         proxiedRequests.add(entry);
                                     }
