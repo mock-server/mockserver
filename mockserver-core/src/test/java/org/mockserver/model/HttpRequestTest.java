@@ -379,4 +379,22 @@ public class HttpRequestTest {
         ));
     }
 
+    @Test
+    public void parsesIpv6AndIpv4HostPort() {
+        String[] hostParts = HttpRequest.splitHostPort("[::1]:32890");
+        assertEquals("[::1]", hostParts[0]);
+        assertEquals("32890", hostParts[1]);
+        hostParts = HttpRequest.splitHostPort("localhost:32890");
+        assertEquals("localhost", hostParts[0]);
+        assertEquals("32890", hostParts[1]);
+        hostParts = HttpRequest.splitHostPort("127.0.0.1:32890");
+        assertEquals("127.0.0.1", hostParts[0]);
+        assertEquals("32890", hostParts[1]);
+        hostParts = HttpRequest.splitHostPort("127.0.0.1");
+        assertEquals("127.0.0.1", hostParts[0]);
+        assertEquals(1, hostParts.length);
+        hostParts = HttpRequest.splitHostPort("[::1]");
+        assertEquals("[::1]", hostParts[0]);
+        assertEquals(1, hostParts.length);
+    }
 }
