@@ -380,7 +380,7 @@ public class HttpRequestTest {
     }
 
     @Test
-    void parsesIpv6AndIpv4HostPort() {
+    public void parsesIpv6AndIpv4HostPort() {
         String[] hostParts = HttpRequest.splitHostPort("[::1]:32890");
         assertEquals("[::1]", hostParts[0]);
         assertEquals("32890", hostParts[1]);
