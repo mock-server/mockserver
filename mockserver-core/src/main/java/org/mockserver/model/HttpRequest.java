@@ -198,7 +198,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      */
     public HttpRequest withSocketAddress(Boolean isSecure, String host, Integer port) {
         if (isNotBlank(host)) {
-            String[] hostParts = host.split(":");
+            String[] hostParts = splitHostPort(host);
             boolean secure = Boolean.TRUE.equals(isSecure);
             if (hostParts.length > 1) {
                 withSocketAddress(hostParts[0], port != null ? port : Integer.parseInt(hostParts[1]), secure ? HTTPS : HTTP);
@@ -210,6 +210,21 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
         }
         this.hashCode = 0;
         return this;
+    }
+
+    public static String[] splitHostPort(String hostPort) {
+        boolean isIpV6 = hostPort.matches("\\[(.*)].*");
+        if (isIpV6) {
+            int endOfHost = hostPort.indexOf(']') + 1;
+            int startOfPort = hostPort.indexOf(':', endOfHost);
+            if (startOfPort > 0) {
+                return new String[] { hostPort.substring(0, endOfHost), hostPort.substring(startOfPort + 1) };
+            } else {
+                return new String[] {hostPort};
+            }
+        } else {
+            return hostPort.split(":");
+        }
     }
 
     public HttpRequest withLocalAddress(String localAddress) {
@@ -1137,7 +1152,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
             return new InetSocketAddress(socketAddress.getHost(), socketAddress.getPort() != null ? socketAddress.getPort() : isSsl ? 443 : 80);
         } else if (isNotBlank(getFirstHeader(HOST.toString()))) {
             boolean isSsl = isSecure() != null && isSecure();
-            String[] hostHeaderParts = getFirstHeader(HOST.toString()).split(":");
+            String[] hostHeaderParts = splitHostPort(getFirstHeader(HOST.toString()));
             return new InetSocketAddress(hostHeaderParts[0], hostHeaderParts.length > 1 ? Integer.parseInt(hostHeaderParts[1]) : isSsl ? 443 : 80);
         } else {
             throw new IllegalArgumentException("Host header must be provided to determine remote socket address, the request does not include the \"Host\" header:" + NEW_LINE + this);
