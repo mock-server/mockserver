@@ -315,7 +315,7 @@ public class ExpectationInitializerLoaderTest {
             };
             File mockserverInitializerThree = File.createTempFile(uniquePrefix + "_mockserverInitializationThree", ".json");
             Files.write(mockserverInitializerThree.toPath(), expectationSerializer.serialize(expectationsThree).getBytes(StandardCharsets.UTF_8));
-            ConfigurationProperties.initializationJsonPath(mockserverInitializer.getParentFile().getAbsolutePath() + "/" + uniquePrefix + "_mockserverInitialization*.json");
+            ConfigurationProperties.initializationJsonPath(mockserverInitializer.getParentFile().getAbsolutePath() + File.separator + uniquePrefix + "_mockserverInitialization*.json");
 
             // when
             expectations = new ExpectationInitializerLoader(configuration(), new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
@@ -478,7 +478,7 @@ public class ExpectationInitializerLoaderTest {
             };
             File mockserverInitializerThree = File.createTempFile(uniquePrefix + "_mockserverInitializationThree", ".json");
             Files.write(mockserverInitializerThree.toPath(), expectationSerializer.serialize(expectationsThree).getBytes(StandardCharsets.UTF_8));
-            ConfigurationProperties.initializationJsonPath(mockserverInitializer.getParentFile().getAbsolutePath() + "/" + uniquePrefix + "_mockserverInitialization{One,Two}*.json");
+            ConfigurationProperties.initializationJsonPath(mockserverInitializer.getParentFile().getAbsolutePath() + File.separator + uniquePrefix + "_mockserverInitialization{One,Two}*.json");
 
             // when
             expectations = new ExpectationInitializerLoader(configuration(), new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();

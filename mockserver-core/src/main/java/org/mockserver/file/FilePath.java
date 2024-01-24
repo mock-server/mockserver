@@ -58,7 +58,7 @@ public class FilePath {
                 PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:" + filePath);
                 Finder finder = new Finder(filePath, pathMatcher);
                 try {
-                    String startingDir = filePath.contains("/") ? StringUtils.substringBeforeLast(StringUtils.substringBefore(filePath, "*"), "/") : ".";
+                    String startingDir = filePath.contains(File.separator) ? StringUtils.substringBeforeLast(StringUtils.substringBefore(filePath, "*"), File.separator) : ".";
                     if (new File(startingDir).exists()) {
                         Files.walkFileTree(
                             new File(startingDir).toPath(),

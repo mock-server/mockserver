@@ -7,12 +7,14 @@ import org.mockserver.file.FileReader;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 
+import java.nio.file.Paths;
 import java.util.List;
 
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.character.Character.UNIX_LINE_SEPARATOR;
 import static org.mockserver.mock.Expectation.when;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.JsonBody.json;
@@ -472,13 +474,13 @@ public class OpenAPIConverterTest {
             // then
             fail("exception expected");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec, while parsing a block mapping" + NEW_LINE +
-                " in 'reader', line 1, column 1:" + NEW_LINE +
-                "    \"openapi\": \"3.0.0\"," + NEW_LINE +
-                "    ^" + NEW_LINE +
-                "expected <block end>, but found ','" + NEW_LINE +
-                " in 'reader', line 1, column 19:" + NEW_LINE +
-                "    \"openapi\": \"3.0.0\"," + NEW_LINE +
+            assertThat(iae.getMessage(), is("Unable to load API spec, while parsing a block mapping" + UNIX_LINE_SEPARATOR +
+                " in 'reader', line 1, column 1:" + UNIX_LINE_SEPARATOR +
+                "    \"openapi\": \"3.0.0\"," + UNIX_LINE_SEPARATOR +
+                "    ^" + UNIX_LINE_SEPARATOR +
+                "expected <block end>, but found ','" + UNIX_LINE_SEPARATOR +
+                " in 'reader', line 1, column 19:" + UNIX_LINE_SEPARATOR +
+                "    \"openapi\": \"3.0.0\"," + UNIX_LINE_SEPARATOR +
                 "                      ^"));
         }
     }
@@ -487,22 +489,16 @@ public class OpenAPIConverterTest {
     public void shouldHandleInvalidOpenAPIYaml() {
         try {
             // when
+            String path = Paths.get("org", "mockserver", "openapi", "openapi_petstore_example.yaml").toString();
             new OpenAPIConverter(mockServerLogger).buildExpectations(
-                FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.yaml").substring(0, 100),
+                FileReader.readFileFromClassPathOrPath(path).substring(0, 100),
                 null
             );
 
             // then
             fail("exception expected");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec, while scanning a simple key" + NEW_LINE +
-                " in 'reader', line 8, column 1:" + NEW_LINE +
-                "    servers" + NEW_LINE +
-                "    ^" + NEW_LINE +
-                "could not find expected ':'" + NEW_LINE +
-                " in 'reader', line 8, column 8:" + NEW_LINE +
-                "    servers" + NEW_LINE +
-                "           ^"));
+            assertThat(iae.getMessage(), is("Unable to load API spec, attribute paths is missing"));
         }
     }
 
@@ -522,13 +518,13 @@ public class OpenAPIConverterTest {
             // then
             fail("exception expected");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec, while parsing a block mapping" + NEW_LINE +
-                " in 'reader', line 1, column 1:" + NEW_LINE +
-                "    \"openapi\": \"3.0.0\"," + NEW_LINE +
-                "    ^" + NEW_LINE +
-                "expected <block end>, but found ','" + NEW_LINE +
-                " in 'reader', line 1, column 19:" + NEW_LINE +
-                "    \"openapi\": \"3.0.0\"," + NEW_LINE +
+            assertThat(iae.getMessage(), is("Unable to load API spec, while parsing a block mapping" + UNIX_LINE_SEPARATOR +
+                " in 'reader', line 1, column 1:" + UNIX_LINE_SEPARATOR +
+                "    \"openapi\": \"3.0.0\"," + UNIX_LINE_SEPARATOR +
+                "    ^" + UNIX_LINE_SEPARATOR +
+                "expected <block end>, but found ','" + UNIX_LINE_SEPARATOR +
+                " in 'reader', line 1, column 19:" + UNIX_LINE_SEPARATOR +
+                "    \"openapi\": \"3.0.0\"," + UNIX_LINE_SEPARATOR +
                 "                      ^"));
         }
     }
@@ -545,14 +541,7 @@ public class OpenAPIConverterTest {
             // then
             fail("exception expected");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec, while scanning a simple key" + NEW_LINE +
-                " in 'reader', line 8, column 1:" + NEW_LINE +
-                "    servers" + NEW_LINE +
-                "    ^" + NEW_LINE +
-                "could not find expected ':'" + NEW_LINE +
-                " in 'reader', line 8, column 8:" + NEW_LINE +
-                "    servers" + NEW_LINE +
-                "           ^"));
+            assertThat(iae.getMessage(), is("Unable to load API spec, attribute paths is missing"));
         }
     }
 

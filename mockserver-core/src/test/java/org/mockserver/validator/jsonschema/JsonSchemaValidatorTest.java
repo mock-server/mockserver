@@ -9,6 +9,7 @@ import org.mockserver.logging.MockServerLogger;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.MockitoAnnotations.openMocks;
+import static org.mockserver.character.Character.UNIX_LINE_SEPARATOR;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
 
@@ -82,49 +83,56 @@ public class JsonSchemaValidatorTest {
     public void shouldHandleJsonTooFewItems() {
         // then
         assertThat(new JsonSchemaValidator(mockServerLogger, JSON_SCHEMA).isValid("{arrayField: [ ],         enumField: \\\"one\\\"}"),
-            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')" + NEW_LINE +
+            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')" + UNIX_LINE_SEPARATOR
+                       +
                 " at [Source: (String)\"{arrayField: [ ],         enumField: \\\"one\\\"}\"; line: 1, column: 39]"));
     }
 
     @Test
     public void shouldHandleJsonTooLongString() {
         assertThat(new JsonSchemaValidator(mockServerLogger, JSON_SCHEMA).isValid("{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", stringField: \\\"1234567\\\"}"),
-            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')" + NEW_LINE +
+            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')" + UNIX_LINE_SEPARATOR
+                       +
                 " at [Source: (String)\"{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", stringField: \\\"1234567\\\"}\"; line: 1, column: 17]"));
     }
 
     @Test
     public void shouldHandleJsonIncorrectEnum() {
         assertThat(new JsonSchemaValidator(mockServerLogger, JSON_SCHEMA).isValid("{arrayField: [ \\\"one\\\" ], enumField: \\\"four\\\"}"),
-            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')" + NEW_LINE +
+            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')" + UNIX_LINE_SEPARATOR
+                       +
                 " at [Source: (String)\"{arrayField: [ \\\"one\\\" ], enumField: \\\"four\\\"}\"; line: 1, column: 17]"));
     }
 
     @Test
     public void shouldHandleJsonExtraField() {
         assertThat(new JsonSchemaValidator(mockServerLogger, JSON_SCHEMA).isValid("{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", extra: \\\"field\\\"}"),
-            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')" + NEW_LINE +
+            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')" + UNIX_LINE_SEPARATOR
+                       +
                 " at [Source: (String)\"{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", extra: \\\"field\\\"}\"; line: 1, column: 17]"));
     }
 
     @Test
     public void shouldHandleJsonIncorrectSubField() {
         assertThat(new JsonSchemaValidator(mockServerLogger, JSON_SCHEMA).isValid("{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: {stringField: \\\"1234\\\"} }"),
-            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')" + NEW_LINE +
+            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')" + UNIX_LINE_SEPARATOR
+                       +
                 " at [Source: (String)\"{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: {stringField: \\\"1234\\\"} }\"; line: 1, column: 17]"));
     }
 
     @Test
     public void shouldHandleJsonMissingSubField() {
         assertThat(new JsonSchemaValidator(mockServerLogger, JSON_SCHEMA).isValid("{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: { } }"),
-            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')" + NEW_LINE +
+            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')" + UNIX_LINE_SEPARATOR
+                       +
                 " at [Source: (String)\"{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: { } }\"; line: 1, column: 17]"));
     }
 
     @Test
     public void shouldHandleJsonMultipleErrors() {
         assertThat(new JsonSchemaValidator(mockServerLogger, JSON_SCHEMA).isValid("{arrayField: [ ],  stringField: \\\"1234\\\"}"),
-            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')" + NEW_LINE +
+            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')" + UNIX_LINE_SEPARATOR
+                       +
                 " at [Source: (String)\"{arrayField: [ ],  stringField: \\\"1234\\\"}\"; line: 1, column: 34]"));
     }
 

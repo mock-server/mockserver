@@ -70,9 +70,10 @@ public class OpenAPIParser {
                     }
                 } else {
                     swaggerParseResult = new OpenAPIV3Parser().readContents(specUrlOrPayload, auths, parseOptions);
-                    openAPI = swaggerParseResult.getOpenAPI();
-                    if (openAPI == null) {
+                    if (!swaggerParseResult.getMessages().isEmpty()) {
                         errorMessage.addAll(swaggerParseResult.getMessages());
+                    } else {
+                        openAPI = swaggerParseResult.getOpenAPI();
                     }
                 }
             } catch (Throwable throwable) {

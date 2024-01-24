@@ -34,6 +34,15 @@ import static org.slf4j.event.Level.ERROR;
  * @author jamesdbloom
  */
 public class HttpRequestsPropertiesMatcherTest {
+    private static final String INFO_OPEN_API_PART =
+        "info:" + NEW_LINE +
+        "  version: 1.0.0" + NEW_LINE +
+        "  title: Swagger test" + NEW_LINE;
+
+    private static final String RESPONSES_OPEN_API_PART =
+        "      responses:" + NEW_LINE +
+        "        '201':" + NEW_LINE +
+        "          description: Null response" + NEW_LINE;
 
     private final Configuration configuration = configuration();
     private final MockServerLogger mockServerLogger = new MockServerLogger(HttpRequestsPropertiesMatcherTest.class);
@@ -98,10 +107,12 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
-                    "      operationId: someOperation" + NEW_LINE)
+                    "      operationId: someOperation" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -125,10 +136,12 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
-                    "      operationId: someOperation" + NEW_LINE)
+                    "      operationId: someOperation" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
                 .withOperationId("someOperation")
         ));
 
@@ -155,10 +168,12 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
-                    "      operationId: someOperation" + NEW_LINE)
+                    "      operationId: someOperation" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -182,10 +197,12 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
-                    "      operationId: someOperation" + NEW_LINE)
+                    "      operationId: someOperation" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
                 .withOperationId("someOperation")
         ));
 
@@ -213,6 +230,7 @@ public class HttpRequestsPropertiesMatcherTest {
         OpenAPIDefinition requestDefinition = new OpenAPIDefinition()
             .withSpecUrlOrPayload("---" + NEW_LINE +
                 "openapi: 3.0.0" + NEW_LINE +
+                INFO_OPEN_API_PART +
                 "paths:" + NEW_LINE +
                 "  \"/somePath/{someParam}\":" + NEW_LINE +
                 "    get:" + NEW_LINE +
@@ -224,7 +242,8 @@ public class HttpRequestsPropertiesMatcherTest {
                 "          allowReserved: true" + NEW_LINE +
                 "          schema:" + NEW_LINE +
                 "            type: integer" + NEW_LINE +
-                "            minimum: 1");
+                "            minimum: 1" + NEW_LINE +
+                RESPONSES_OPEN_API_PART);
         httpRequestsPropertiesMatcher.apply(requestDefinition, logEntries);
 
         // then
@@ -251,6 +270,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath/{someParam}\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -261,7 +281,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          required: true" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -293,6 +314,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath/{someParam}/{someOtherParam}\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -310,7 +332,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          schema:" + NEW_LINE +
                     "            type: string" + NEW_LINE +
                     "            minLength: 2" + NEW_LINE +
-                    "            maxLength: 3" + NEW_LINE)
+                    "            maxLength: 3" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -346,6 +369,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -363,7 +387,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          schema:" + NEW_LINE +
                     "            type: string" + NEW_LINE +
                     "            minLength: 2" + NEW_LINE +
-                    "            maxLength: 3" + NEW_LINE)
+                    "            maxLength: 3" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -395,6 +420,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath/{someParam}\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -405,7 +431,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          required: true" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
                 .withOperationId("someOperation")
         ));
 
@@ -438,6 +465,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath/{someParam}\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -445,10 +473,11 @@ public class HttpRequestsPropertiesMatcherTest {
                     "      parameters:" + NEW_LINE +
                     "        - in: path" + NEW_LINE +
                     "          name: someParam" + NEW_LINE +
-                    "          required: false" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then - required: false not supported for pathParameters
@@ -484,6 +513,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath/{someParam}\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -495,7 +525,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          allowEmptyValue: true" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then - allowEmptyValue not supported for pathParameters
@@ -531,6 +562,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath/{someParam}\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -543,7 +575,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          explode: false" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -583,8 +616,9 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
-                    "  \"/somePath/{someParam*}\":" + NEW_LINE +
+                    "  \"/somePath/{someParam}\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
                     "      parameters:" + NEW_LINE +
@@ -595,7 +629,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          explode: true" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -635,8 +670,9 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
-                    "  \"/somePath/{.someParam}\":" + NEW_LINE +
+                    "  \"/somePath/{someParam}\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
                     "      parameters:" + NEW_LINE +
@@ -647,7 +683,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          explode: false" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -687,8 +724,9 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
-                    "  \"/somePath/{.someParam}\":" + NEW_LINE +
+                    "  \"/somePath/{someParam}\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
                     "      parameters:" + NEW_LINE +
@@ -699,7 +737,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          explode: true" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -739,8 +778,9 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
-                    "  \"/somePath/{;someParam}\":" + NEW_LINE +
+                    "  \"/somePath/{someParam}\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
                     "      parameters:" + NEW_LINE +
@@ -751,7 +791,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          explode: false" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -795,8 +836,9 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
-                    "  \"/somePath/{;someParam*}\":" + NEW_LINE +
+                    "  \"/somePath/{someParam}\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
                     "      parameters:" + NEW_LINE +
@@ -807,7 +849,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          explode: true" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -851,6 +894,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath/{someSimpleParam}/{someLabelParam}\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -871,7 +915,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          explode: true" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -943,8 +988,9 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
-                    "  \"/somePath/{.someLabelParam}/{;someMatrixParam*}\":" + NEW_LINE +
+                    "  \"/somePath/{someLabelParam}/{someMatrixParam}\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
                     "      parameters:" + NEW_LINE +
@@ -963,7 +1009,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          explode: true" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -1021,6 +1068,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -1031,7 +1079,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          required: true" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -1059,6 +1108,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -1069,7 +1119,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          required: true" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
                 .withOperationId("someOperation")
         ));
 
@@ -1098,6 +1149,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -1108,7 +1160,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          required: false" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -1140,6 +1193,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -1149,7 +1203,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          name: someParam" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -1181,6 +1236,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -1192,7 +1248,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          allowEmptyValue: true" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -1224,6 +1281,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -1235,7 +1293,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          allowEmptyValue: true" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -1271,6 +1330,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  parameters:" + NEW_LINE +
                     "    someParam:" + NEW_LINE +
@@ -1295,7 +1355,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "    get:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
                     "      parameters:" + NEW_LINE +
-                    "        - $ref: '#/components/parameters/someOtherParam'" + NEW_LINE)
+                    "        - $ref: '#/components/parameters/someOtherParam'" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -1330,6 +1391,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    parameters:" + NEW_LINE +
@@ -1340,7 +1402,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          type: integer" + NEW_LINE +
                     "          minimum: 1" + NEW_LINE +
                     "    get:" + NEW_LINE +
-                    "      operationId: someOperation" + NEW_LINE)
+                    "      operationId: someOperation" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -1368,6 +1431,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  parameters:" + NEW_LINE +
                     "    someParam:" + NEW_LINE +
@@ -1397,7 +1461,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "    get:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
                     "      parameters:" + NEW_LINE +
-                    "        - $ref: '#/components/parameters/someOtherParam'" + NEW_LINE)
+                    "        - $ref: '#/components/parameters/someOtherParam'" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -1432,6 +1497,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  parameters:" + NEW_LINE +
                     "    someParam:" + NEW_LINE +
@@ -1467,7 +1533,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
                     "            minimum: 100" + NEW_LINE +
-                    "        - $ref: '#/components/parameters/someOtherParam'" + NEW_LINE)
+                    "        - $ref: '#/components/parameters/someOtherParam'" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -1502,6 +1569,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -1514,7 +1582,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          explode: false" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -1559,6 +1628,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -1571,7 +1641,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          explode: true" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -1616,6 +1687,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -1628,7 +1700,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          explode: false" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -1713,6 +1786,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -1725,7 +1799,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          explode: true" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -1770,6 +1845,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -1782,7 +1858,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          explode: false" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -1827,6 +1904,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -1839,7 +1917,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          explode: true" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -1884,6 +1963,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -1904,7 +1984,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          explode: false" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -1978,6 +2059,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -1998,7 +2080,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          explode: false" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -2080,6 +2163,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -2090,7 +2174,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          required: true" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -2118,6 +2203,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -2128,7 +2214,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          required: true" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
                 .withOperationId("someOperation")
         ));
 
@@ -2157,6 +2244,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -2167,7 +2255,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          required: false" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -2199,6 +2288,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -2208,7 +2298,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          name: someParam" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -2240,6 +2331,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -2251,7 +2343,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          allowEmptyValue: true" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then - allowEmptyValue not supported for header
@@ -2283,6 +2376,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  parameters:" + NEW_LINE +
                     "    someParam:" + NEW_LINE +
@@ -2307,7 +2401,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "    get:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
                     "      parameters:" + NEW_LINE +
-                    "        - $ref: '#/components/parameters/someOtherParam'" + NEW_LINE)
+                    "        - $ref: '#/components/parameters/someOtherParam'" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -2342,6 +2437,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    parameters:" + NEW_LINE +
@@ -2352,7 +2448,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          type: integer" + NEW_LINE +
                     "          minimum: 1" + NEW_LINE +
                     "    get:" + NEW_LINE +
-                    "      operationId: someOperation" + NEW_LINE)
+                    "      operationId: someOperation" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -2380,6 +2477,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  parameters:" + NEW_LINE +
                     "    someParam:" + NEW_LINE +
@@ -2415,7 +2513,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
                     "            minimum: 100" + NEW_LINE +
-                    "        - $ref: '#/components/parameters/someOtherParam'" + NEW_LINE)
+                    "        - $ref: '#/components/parameters/someOtherParam'" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -2452,6 +2551,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -2462,7 +2562,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          required: true" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -2490,6 +2591,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -2500,7 +2602,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          required: true" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
                 .withOperationId("someOperation")
         ));
 
@@ -2529,6 +2632,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -2539,7 +2643,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          required: false" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -2571,6 +2676,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -2580,7 +2686,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          name: someParam" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -2612,6 +2719,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -2623,7 +2731,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          allowEmptyValue: true" + NEW_LINE +
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
-                    "            minimum: 1")
+                    "            minimum: 1" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then - allowEmptyValue not supported for cookie
@@ -2655,6 +2764,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    parameters:" + NEW_LINE +
@@ -2665,7 +2775,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          type: integer" + NEW_LINE +
                     "          minimum: 1" + NEW_LINE +
                     "    get:" + NEW_LINE +
-                    "      operationId: someOperation" + NEW_LINE)
+                    "      operationId: someOperation" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -2693,6 +2804,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  parameters:" + NEW_LINE +
                     "    someParam:" + NEW_LINE +
@@ -2717,7 +2829,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "    get:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
                     "      parameters:" + NEW_LINE +
-                    "        - $ref: '#/components/parameters/someOtherParam'" + NEW_LINE)
+                    "        - $ref: '#/components/parameters/someOtherParam'" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -2752,6 +2865,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  parameters:" + NEW_LINE +
                     "    someParam:" + NEW_LINE +
@@ -2787,7 +2901,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          schema:" + NEW_LINE +
                     "            type: integer" + NEW_LINE +
                     "            minimum: 100" + NEW_LINE +
-                    "        - $ref: '#/components/parameters/someOtherParam'" + NEW_LINE)
+                    "        - $ref: '#/components/parameters/someOtherParam'" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -2824,6 +2939,7 @@ public class HttpRequestsPropertiesMatcherTest {
         OpenAPIDefinition requestDefinition = new OpenAPIDefinition()
             .withSpecUrlOrPayload("---" + NEW_LINE +
                 "openapi: 3.0.0" + NEW_LINE +
+                INFO_OPEN_API_PART +
                 "paths:" + NEW_LINE +
                 "  \"/somePath\":" + NEW_LINE +
                 "    post:" + NEW_LINE +
@@ -2854,7 +2970,8 @@ public class HttpRequestsPropertiesMatcherTest {
                 "                  type: integer" + NEW_LINE +
                 "                  format: int64" + NEW_LINE +
                 "                name:" + NEW_LINE +
-                "                  type: string" + NEW_LINE);
+                "                  type: string" + NEW_LINE +
+                RESPONSES_OPEN_API_PART);
         httpRequestsPropertiesMatcher.apply(requestDefinition, logEntries);
 
         // then
@@ -2881,6 +2998,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    post:" + NEW_LINE +
@@ -2911,7 +3029,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "                  type: integer" + NEW_LINE +
                     "                  format: int64" + NEW_LINE +
                     "                name:" + NEW_LINE +
-                    "                  type: string" + NEW_LINE)
+                    "                  type: string" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -2947,6 +3066,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    post:" + NEW_LINE +
@@ -2977,7 +3097,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "                  type: integer" + NEW_LINE +
                     "                  format: int64" + NEW_LINE +
                     "                name:" + NEW_LINE +
-                    "                  type: string" + NEW_LINE)
+                    "                  type: string" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -3008,6 +3129,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    post:" + NEW_LINE +
@@ -3038,7 +3160,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "                  type: integer" + NEW_LINE +
                     "                  format: int64" + NEW_LINE +
                     "                name:" + NEW_LINE +
-                    "                  type: string" + NEW_LINE)
+                    "                  type: string" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -3069,6 +3192,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    post:" + NEW_LINE +
@@ -3082,6 +3206,7 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          application/xml:" + NEW_LINE +
                     "            schema:" + NEW_LINE +
                     "              $ref: '#/components/schemas/Simple'" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  schemas:" + NEW_LINE +
                     "    Simple:" + NEW_LINE +
@@ -3125,12 +3250,14 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    post:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
                     "      requestBody:" + NEW_LINE +
                     "        $ref: '#/components/requestBodies/SimpleBody'" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  requestBodies:" + NEW_LINE +
                     "    SimpleBody:" + NEW_LINE +
@@ -3186,6 +3313,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    post:" + NEW_LINE +
@@ -3216,7 +3344,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "                  type: integer" + NEW_LINE +
                     "                  format: int64" + NEW_LINE +
                     "                name:" + NEW_LINE +
-                    "                  type: string" + NEW_LINE)
+                    "                  type: string" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -3252,6 +3381,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    post:" + NEW_LINE +
@@ -3282,7 +3412,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "                  type: integer" + NEW_LINE +
                     "                  format: int64" + NEW_LINE +
                     "                name:" + NEW_LINE +
-                    "                  type: string" + NEW_LINE)
+                    "                  type: string" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -3331,6 +3462,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    post:" + NEW_LINE +
@@ -3360,7 +3492,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "                  type: integer" + NEW_LINE +
                     "                  format: int64" + NEW_LINE +
                     "                name:" + NEW_LINE +
-                    "                  type: string" + NEW_LINE)
+                    "                  type: string" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -3409,6 +3542,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    post:" + NEW_LINE +
@@ -3439,7 +3573,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "                  type: integer" + NEW_LINE +
                     "                  format: int64" + NEW_LINE +
                     "                name:" + NEW_LINE +
-                    "                  type: string" + NEW_LINE)
+                    "                  type: string" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -3470,6 +3605,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    post:" + NEW_LINE +
@@ -3500,7 +3636,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "                  type: integer" + NEW_LINE +
                     "                  format: int64" + NEW_LINE +
                     "                name:" + NEW_LINE +
-                    "                  type: string" + NEW_LINE)
+                    "                  type: string" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -3528,6 +3665,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    post:" + NEW_LINE +
@@ -3541,6 +3679,7 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          plain/text:" + NEW_LINE +
                     "            schema:" + NEW_LINE +
                     "              $ref: '#/components/schemas/Simple'" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  schemas:" + NEW_LINE +
                     "    Simple:" + NEW_LINE +
@@ -3584,12 +3723,14 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    post:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
                     "      requestBody:" + NEW_LINE +
                     "        $ref: '#/components/requestBodies/SimpleBody'" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  requestBodies:" + NEW_LINE +
                     "    SimpleBody:" + NEW_LINE +
@@ -3645,6 +3786,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    post:" + NEW_LINE +
@@ -3678,7 +3820,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "                - email'" + NEW_LINE +
                     "          text/plain:" + NEW_LINE +
                     "            schema:" + NEW_LINE +
-                    "              type: string" + NEW_LINE)
+                    "              type: string" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -3714,6 +3857,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    post:" + NEW_LINE +
@@ -3747,7 +3891,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "                - email'" + NEW_LINE +
                     "          text/plain:" + NEW_LINE +
                     "            schema:" + NEW_LINE +
-                    "              type: string" + NEW_LINE)
+                    "              type: string" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -3796,6 +3941,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    post:" + NEW_LINE +
@@ -3828,7 +3974,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "                - email'" + NEW_LINE +
                     "          text/plain:" + NEW_LINE +
                     "            schema:" + NEW_LINE +
-                    "              type: string" + NEW_LINE)
+                    "              type: string" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -3877,6 +4024,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    post:" + NEW_LINE +
@@ -3890,6 +4038,7 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          application/xml:" + NEW_LINE +
                     "            schema:" + NEW_LINE +
                     "              $ref: '#/components/schemas/Simple'" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  schemas:" + NEW_LINE +
                     "    Simple:" + NEW_LINE +
@@ -3933,12 +4082,14 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    post:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
                     "      requestBody:" + NEW_LINE +
                     "        $ref: '#/components/requestBodies/SimpleBody'" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  requestBodies:" + NEW_LINE +
                     "    SimpleBody:" + NEW_LINE +
@@ -3994,6 +4145,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    post:" + NEW_LINE +
@@ -4015,7 +4167,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "                  type: string" + NEW_LINE +
                     "          text/plain:" + NEW_LINE +
                     "            schema:" + NEW_LINE +
-                    "              type: string" + NEW_LINE)
+                    "              type: string" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -4051,6 +4204,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    post:" + NEW_LINE +
@@ -4079,7 +4233,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "                explode: false" + NEW_LINE +
                     "              name:" + NEW_LINE +
                     "                style: form" + NEW_LINE +
-                    "                explode: true" + NEW_LINE)
+                    "                explode: true" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -4115,6 +4270,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    post:" + NEW_LINE +
@@ -4143,7 +4299,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "                explode: false" + NEW_LINE +
                     "              name:" + NEW_LINE +
                     "                style: spaceDelimited" + NEW_LINE +
-                    "                explode: true" + NEW_LINE)
+                    "                explode: true" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -4204,6 +4361,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    post:" + NEW_LINE +
@@ -4232,7 +4390,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "                explode: false" + NEW_LINE +
                     "              name:" + NEW_LINE +
                     "                style: pipeDelimited" + NEW_LINE +
-                    "                explode: true" + NEW_LINE)
+                    "                explode: true" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -4268,6 +4427,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    post:" + NEW_LINE +
@@ -4289,7 +4449,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "                  type: string" + NEW_LINE +
                     "          text/plain:" + NEW_LINE +
                     "            schema:" + NEW_LINE +
-                    "              type: string" + NEW_LINE)
+                    "              type: string" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -4338,6 +4499,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    post:" + NEW_LINE +
@@ -4358,7 +4520,8 @@ public class HttpRequestsPropertiesMatcherTest {
                     "                  type: string" + NEW_LINE +
                     "          text/plain:" + NEW_LINE +
                     "            schema:" + NEW_LINE +
-                    "              type: string" + NEW_LINE)
+                    "              type: string" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART)
         ));
 
         // then
@@ -4407,6 +4570,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    post:" + NEW_LINE +
@@ -4420,6 +4584,7 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          application/xml:" + NEW_LINE +
                     "            schema:" + NEW_LINE +
                     "              $ref: '#/components/schemas/Simple'" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  schemas:" + NEW_LINE +
                     "    Simple:" + NEW_LINE +
@@ -4464,12 +4629,14 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    post:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
                     "      requestBody:" + NEW_LINE +
                     "        $ref: '#/components/requestBodies/SimpleBody'" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  requestBodies:" + NEW_LINE +
                     "    SimpleBody:" + NEW_LINE +
@@ -4546,12 +4713,14 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
                     "      security:" + NEW_LINE +
                     "        - BasicAuth: []" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    BasicAuth:" + NEW_LINE +
@@ -4588,12 +4757,14 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
                     "      security:" + NEW_LINE +
                     "        - BearerAuth: []" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    BearerAuth:" + NEW_LINE +
@@ -4630,12 +4801,14 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
                     "      security:" + NEW_LINE +
                     "        - ApiKeyAuth: []" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    ApiKeyAuth:" + NEW_LINE +
@@ -4669,6 +4842,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -4677,6 +4851,7 @@ public class HttpRequestsPropertiesMatcherTest {
                     "        - OpenID:" + NEW_LINE +
                     "            - read" + NEW_LINE +
                     "            - write" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    OpenID:" + NEW_LINE +
@@ -4705,6 +4880,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -4713,6 +4889,7 @@ public class HttpRequestsPropertiesMatcherTest {
                     "        - OAuth2:" + NEW_LINE +
                     "            - read" + NEW_LINE +
                     "            - write" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    OAuth2:" + NEW_LINE +
@@ -4748,6 +4925,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -4755,6 +4933,7 @@ public class HttpRequestsPropertiesMatcherTest {
                     "      security:" + NEW_LINE +
                     "        - BasicAuth: []" + NEW_LINE +
                     "        - BearerAuth: []" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    BasicAuth:" + NEW_LINE +
@@ -4798,6 +4977,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -4806,6 +4986,7 @@ public class HttpRequestsPropertiesMatcherTest {
                     "        - BasicAuth: []" + NEW_LINE +
                     "        - BearerAuth: []" + NEW_LINE +
                     "        - ApiKeyAuth: []" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    BasicAuth:" + NEW_LINE +
@@ -4861,6 +5042,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "security:" + NEW_LINE +
                     "  - BasicAuth: []" + NEW_LINE +
                     "  - BearerAuth: []" + NEW_LINE +
@@ -4869,6 +5051,7 @@ public class HttpRequestsPropertiesMatcherTest {
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    BasicAuth:" + NEW_LINE +
@@ -4924,6 +5107,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "security:" + NEW_LINE +
                     "  - BasicAuth: []" + NEW_LINE +
                     "  - BearerAuth: []" + NEW_LINE +
@@ -4933,6 +5117,7 @@ public class HttpRequestsPropertiesMatcherTest {
                     "      operationId: someOperation" + NEW_LINE +
                     "      security:" + NEW_LINE +
                     "        - ApiKeyAuth: []" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    BasicAuth:" + NEW_LINE +
@@ -4990,12 +5175,14 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
                     "      security:" + NEW_LINE +
                     "        - BasicAuth: []" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    BasicAuth:" + NEW_LINE +
@@ -5033,12 +5220,14 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
                     "      security:" + NEW_LINE +
                     "        - BearerAuth: []" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    BearerAuth:" + NEW_LINE +
@@ -5076,12 +5265,14 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
                     "      security:" + NEW_LINE +
                     "        - ApiKeyAuth: []" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    ApiKeyAuth:" + NEW_LINE +
@@ -5115,6 +5306,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -5123,6 +5315,7 @@ public class HttpRequestsPropertiesMatcherTest {
                     "        - OpenID:" + NEW_LINE +
                     "            - read" + NEW_LINE +
                     "            - write" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    OpenID:" + NEW_LINE +
@@ -5152,6 +5345,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -5160,6 +5354,7 @@ public class HttpRequestsPropertiesMatcherTest {
                     "        - OAuth2:" + NEW_LINE +
                     "            - read" + NEW_LINE +
                     "            - write" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    OAuth2:" + NEW_LINE +
@@ -5196,6 +5391,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -5203,6 +5399,7 @@ public class HttpRequestsPropertiesMatcherTest {
                     "      security:" + NEW_LINE +
                     "        - BasicAuth: []" + NEW_LINE +
                     "        - BearerAuth: []" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    BasicAuth:" + NEW_LINE +
@@ -5248,6 +5445,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -5256,6 +5454,7 @@ public class HttpRequestsPropertiesMatcherTest {
                     "        - BasicAuth: []" + NEW_LINE +
                     "        - BearerAuth: []" + NEW_LINE +
                     "        - ApiKeyAuth: []" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    BasicAuth:" + NEW_LINE +
@@ -5313,6 +5512,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "security:" + NEW_LINE +
                     "  - BasicAuth: []" + NEW_LINE +
                     "  - BearerAuth: []" + NEW_LINE +
@@ -5321,6 +5521,7 @@ public class HttpRequestsPropertiesMatcherTest {
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    BasicAuth:" + NEW_LINE +
@@ -5378,6 +5579,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "security:" + NEW_LINE +
                     "  - BasicAuth: []" + NEW_LINE +
                     "  - BearerAuth: []" + NEW_LINE +
@@ -5387,6 +5589,7 @@ public class HttpRequestsPropertiesMatcherTest {
                     "      operationId: someOperation" + NEW_LINE +
                     "      security:" + NEW_LINE +
                     "        - ApiKeyAuth: []" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    BasicAuth:" + NEW_LINE +
@@ -5446,12 +5649,14 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
                     "      security:" + NEW_LINE +
                     "        - BasicAuth: []" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    BasicAuth:" + NEW_LINE +
@@ -5489,12 +5694,14 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
                     "      security:" + NEW_LINE +
                     "        - BearerAuth: []" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    BearerAuth:" + NEW_LINE +
@@ -5532,12 +5739,14 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
                     "      security:" + NEW_LINE +
                     "        - ApiKeyAuth: []" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    ApiKeyAuth:" + NEW_LINE +
@@ -5571,6 +5780,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -5579,6 +5789,7 @@ public class HttpRequestsPropertiesMatcherTest {
                     "        - OpenID:" + NEW_LINE +
                     "            - read" + NEW_LINE +
                     "            - write" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    OpenID:" + NEW_LINE +
@@ -5608,6 +5819,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -5616,6 +5828,7 @@ public class HttpRequestsPropertiesMatcherTest {
                     "        - OAuth2:" + NEW_LINE +
                     "            - read" + NEW_LINE +
                     "            - write" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    OAuth2:" + NEW_LINE +
@@ -5652,6 +5865,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -5659,6 +5873,7 @@ public class HttpRequestsPropertiesMatcherTest {
                     "      security:" + NEW_LINE +
                     "        - BasicAuth: []" + NEW_LINE +
                     "        - BearerAuth: []" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    BasicAuth:" + NEW_LINE +
@@ -5704,6 +5919,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "paths:" + NEW_LINE +
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
@@ -5712,6 +5928,7 @@ public class HttpRequestsPropertiesMatcherTest {
                     "        - BasicAuth: []" + NEW_LINE +
                     "        - BearerAuth: []" + NEW_LINE +
                     "        - ApiKeyAuth: []" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    BasicAuth:" + NEW_LINE +
@@ -5769,6 +5986,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "security:" + NEW_LINE +
                     "  - BasicAuth: []" + NEW_LINE +
                     "  - BearerAuth: []" + NEW_LINE +
@@ -5777,6 +5995,7 @@ public class HttpRequestsPropertiesMatcherTest {
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    BasicAuth:" + NEW_LINE +
@@ -5834,6 +6053,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "security:" + NEW_LINE +
                     "  - BasicAuth: []" + NEW_LINE +
                     "  - BearerAuth: []" + NEW_LINE +
@@ -5843,6 +6063,7 @@ public class HttpRequestsPropertiesMatcherTest {
                     "      operationId: someOperation" + NEW_LINE +
                     "      security:" + NEW_LINE +
                     "        - ApiKeyAuth: []" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    BasicAuth:" + NEW_LINE +
@@ -5902,6 +6123,7 @@ public class HttpRequestsPropertiesMatcherTest {
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
                     "openapi: 3.0.0" + NEW_LINE +
+                    INFO_OPEN_API_PART +
                     "security:" + NEW_LINE +
                     "  - BasicAuth: []" + NEW_LINE +
                     "  - BearerAuth: []" + NEW_LINE +
@@ -5910,6 +6132,7 @@ public class HttpRequestsPropertiesMatcherTest {
                     "  \"/somePath\":" + NEW_LINE +
                     "    get:" + NEW_LINE +
                     "      operationId: someOperation" + NEW_LINE +
+                    RESPONSES_OPEN_API_PART +
                     "components:" + NEW_LINE +
                     "  securitySchemes:" + NEW_LINE +
                     "    BasicAuth:" + NEW_LINE +
@@ -6000,7 +6223,7 @@ public class HttpRequestsPropertiesMatcherTest {
             // when
             httpRequestsPropertiesMatcher.update(
                 new OpenAPIDefinition()
-                    .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json").substring(0, 100))
+                    .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json").substring(0, 110))
                     .withOperationId("listPets")
             );
 
@@ -6027,14 +6250,7 @@ public class HttpRequestsPropertiesMatcherTest {
             // then
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec, while scanning a simple key" + NEW_LINE +
-                " in 'reader', line 8, column 1:" + NEW_LINE +
-                "    servers" + NEW_LINE +
-                "    ^" + NEW_LINE +
-                "could not find expected ':'" + NEW_LINE +
-                " in 'reader', line 8, column 8:" + NEW_LINE +
-                "    servers" + NEW_LINE +
-                "           ^"));
+            assertThat(iae.getMessage(), is("Unable to load API spec, attribute paths is missing"));
         }
     }
 
@@ -6054,14 +6270,7 @@ public class HttpRequestsPropertiesMatcherTest {
             // then
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec, while scanning a simple key" + NEW_LINE +
-                " in 'reader', line 8, column 1:" + NEW_LINE +
-                "    servers" + NEW_LINE +
-                "    ^" + NEW_LINE +
-                "could not find expected ':'" + NEW_LINE +
-                " in 'reader', line 8, column 8:" + NEW_LINE +
-                "    servers" + NEW_LINE +
-                "           ^"));
+            assertThat(iae.getMessage(), is("Unable to load API spec, attribute paths is missing"));
         }
     }
 
