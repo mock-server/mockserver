@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @SuppressWarnings("unused")
 public class LRUCache<K, V> {
 
-    private static boolean allCachesEnabled = true;
+    private static boolean allCachesEnabled = false;
     private static int maxSizeOverride = 0;
     private static final Set<LRUCache<?, ?>> allCaches = Collections.synchronizedSet(Collections.newSetFromMap(new WeakHashMap<>()));
     private final long ttlInMillis;
@@ -27,7 +27,9 @@ public class LRUCache<K, V> {
         this.map = new ConcurrentHashMap<>(maxSize);
         this.queue = new ConcurrentLinkedQueue<>();
         this.ttlInMillis = ttlInMillis;
-        LRUCache.allCaches.add(this);
+        if (allCachesEnabled) {
+            allCaches.add(this);
+        }
     }
 
     public static void allCachesEnabled(boolean enabled) {
