@@ -1,5 +1,7 @@
 package org.mockserver.cache;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 
@@ -12,6 +14,16 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class LRUCacheTest {
 
     private final MockServerLogger mockServerLogger = new MockServerLogger(LRUCacheTest.class);
+
+    @Before
+    public void setUp() {
+        LRUCache.allCachesEnabled(true);
+    }
+
+    @After
+    public void tearDown() {
+        LRUCache.allCachesEnabled(false);
+    }
 
     @Test
     public void shouldReturnCachedObjects() {
@@ -30,21 +42,17 @@ public class LRUCacheTest {
 
     @Test
     public void shouldNotCacheIfGloballyDisabled() {
-        try {
-            // given
-            LRUCache.allCachesEnabled(false);
-            LRUCache<String, Object> lruCache = new LRUCache<>(mockServerLogger, 5, MINUTES.toMillis(10));
+        // given
+        LRUCache.allCachesEnabled(false);
+        LRUCache<String, Object> lruCache = new LRUCache<>(mockServerLogger, 5, MINUTES.toMillis(10));
 
-            // when
-            lruCache.put("one", "a");
-            lruCache.put("two", "b");
+        // when
+        lruCache.put("one", "a");
+        lruCache.put("two", "b");
 
-            // then
-            assertThat(lruCache.get("one"), nullValue());
-            assertThat(lruCache.get("two"), nullValue());
-        } finally {
-            LRUCache.allCachesEnabled(true);
-        }
+        // then
+        assertThat(lruCache.get("one"), nullValue());
+        assertThat(lruCache.get("two"), nullValue());
     }
 
     @Test
