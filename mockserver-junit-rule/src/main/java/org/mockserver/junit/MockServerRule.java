@@ -55,7 +55,9 @@ public class MockServerRule implements TestRule {
      * <p>
      * If the test class contains a MockServerClient field it is set with a client configured for the created MockServer.
      *
-     * @param target an instance of the test being executed
+     * @param perTestSuite indicates how many instances of MockServer are created
+     *                     if true a single MockServer is created per JVM
+     *                     if false one instance per test class is created
      * @param ports  the HTTP(S) port for the proxy
      */
     public MockServerRule(Object target, Integer... ports) {
@@ -68,6 +70,8 @@ public class MockServerRule implements TestRule {
      *
      * @param target       an instance of the test being executed
      * @param perTestSuite indicates how many instances of MockServer are created
+     *                     if true a single MockServer is created per JVM
+     *                     if false one instance per test class is created
      * @param ports        the HTTP(S) port for the proxy
      */
     public MockServerRule(Object target, boolean perTestSuite, Integer... ports) {
