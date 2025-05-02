@@ -14,6 +14,11 @@
     <description>A java client for the MockServer</description>
     <url>https://www.mock-server.com</url>
 
+    <properties>
+        <guava.version>32.0.0-android</guava.version>
+        <guava.version>31.1-jre</guava.version>
+    </properties>
+
     <dependencies>
         <!-- mockserver -->
         <dependency>
@@ -34,6 +39,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
         </dependency>
 
         <!-- logging -->

@@ -14,10 +14,36 @@
 
     <properties>
         <maven-invoker-parallel-threads>2</maven-invoker-parallel-threads>
+        <!-- Updated dependency versions to fix vulnerabilities -->
+        <netty.version>4.1.118.Final</netty.version>
+        <commons-io.version>2.14.0</commons-io.version>
+        <guava.version>32.0.0-android</guava.version>
+        <json-smart.version>2.5.2</json-smart.version>
+        <snakeyaml.version>2.0</snakeyaml.version>
+        <nimbus-jose-jwt.version>9.37.2</nimbus-jose-jwt.version>
+        <xmlunit.version>2.10.0</xmlunit.version>
     </properties>
-
+    <repositories>
+        <repository>
+            <id>sonatype-nexus-snapshots</id>
+            <name>sonatype-nexus-snapshots</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <releases>
+            <enabled>true</enabled>
+            </releases>
+            <snapshots>
+            <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        </repositories>
     <dependencies>
         <!-- mockserver -->
+        <!-- <dependency>
+            <groupId>org.openjdk.nashorn</groupId>
+            <artifactId>nashorn-core</artifactId>
+            <version>15.3</version>
+        </dependency> -->
+
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>mockserver-client-java</artifactId>
@@ -41,30 +67,37 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-buffer</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-codec</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-codec-http</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-codec-http2</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-common</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-handler</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-transport</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
@@ -75,10 +108,34 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
+            <version>${commons-io.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
+        </dependency>
+
+        <!-- Additional dependency updates to fix vulnerabilities -->
+        <dependency>
+            <groupId>com.nimbusds</groupId>
+            <artifactId>nimbus-jose-jwt</artifactId>
+            <version>${nimbus-jose-jwt.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.minidev</groupId>
+            <artifactId>json-smart</artifactId>
+            <version>${json-smart.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>${snakeyaml.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.xmlunit</groupId>
+            <artifactId>xmlunit-core</artifactId>
+            <version>${xmlunit.version}</version>
         </dependency>
 
         <!-- logging -->
@@ -440,6 +497,18 @@
                                         <exclude>ASL-2.0.txt</exclude>
                                         <exclude>samples/**</exclude>
                                     </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.velocity:velocity-engine-core</artifact>
+                                    <excludes>
+                                        <exclude>org/apache/velocity/util/ExceptionUtils.java</exclude>
+                                    </excludes>
+                                    </filter>
+                                    <filter>
+                                    <artifact>commons-io:commons-io</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
                                 </filter>
                             </filters>
                         </configuration>

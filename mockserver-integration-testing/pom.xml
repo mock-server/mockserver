@@ -14,6 +14,12 @@
     <description>A module used to simplify integration testing of all MockServer versions by sharing commons integration testing components</description>
     <url>https://www.mock-server.com</url>
 
+    <properties>
+        <netty.version>4.1.118.Final</netty.version>
+        <guava.version>32.0.0-android</guava.version>
+        <commons-io.version>2.14.0</commons-io.version>
+    </properties>
+
     <dependencies>
         <!-- MockServer -->
         <dependency>
@@ -34,26 +40,32 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-buffer</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-codec</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-codec-http</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-common</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-handler</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-transport</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
@@ -70,11 +82,13 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <scope>compile</scope>
+            <version>${commons-io.version}</version>
         </dependency>
 
         <!-- logging -->

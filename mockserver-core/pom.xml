@@ -14,6 +14,14 @@
     <description>Functionality used by all MockServer modules for matching and expectations</description>
     <url>https://www.mock-server.com</url>
 
+    <properties>
+        <netty.version>4.1.118.Final</netty.version>
+        <guava.version>31.1-jre</guava.version>
+        <nimbus-jose-jwt.version>9.37.2</nimbus-jose-jwt.version>
+        <commons-io.version>2.14.0</commons-io.version>
+        <velocity.version>2.4</velocity.version>
+    </properties>
+
     <dependencies>
         <!-- mockserver -->
         <dependency>
@@ -38,34 +46,42 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-buffer</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-codec</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-codec-http</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-codec-http2</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-codec-socks</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-handler</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-handler-proxy</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-transport</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
@@ -98,20 +114,27 @@
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
+            <version>${nimbus-jose-jwt.version}</version>
         </dependency>
 
         <!-- templating -->
         <dependency>
             <groupId>org.apache.velocity</groupId>
             <artifactId>velocity-engine-scripting</artifactId>
+            <version>${velocity.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.velocity</groupId>
             <artifactId>velocity-engine-core</artifactId>
+            <version>${velocity.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.commons</groupId>
                     <artifactId>commons-lang3</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-io</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -163,12 +186,25 @@
         <dependency>
             <groupId>com.jayway.jsonpath</groupId>
             <artifactId>json-path</artifactId>
+            <version>2.9.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>net.minidev</groupId>
+                    <artifactId>json-smart</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>net.minidev</groupId>
+            <artifactId>json-smart</artifactId>
+            <version>2.5.2</version>
         </dependency>
 
         <!-- open api -->
         <dependency>
             <groupId>io.swagger.parser.v3</groupId>
             <artifactId>swagger-parser</artifactId>
+            <version>2.1.12</version>
         </dependency>
 
         <!-- xml -->
@@ -198,6 +234,7 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
+            <version>${commons-io.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -216,6 +253,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
         </dependency>
 
         <!-- classpath scanning -->

@@ -21,6 +21,9 @@
         <!-- highest jetty version is 9.4 due to Java 1.8 version -->
         <jetty.version>9.4.50.v20221201</jetty.version>
         <google-http-client.version>1.42.3</google-http-client.version>
+        <netty.version>4.1.118.Final</netty.version>
+        <guava.version>32.0.0-android</guava.version>
+        <snakeyaml.version>2.0</snakeyaml.version>
     </properties>
 
     <dependencyManagement>
@@ -53,7 +56,7 @@
                 <!-- Conflicting versions in swagger-parser and spring-boot-starter-webflux -->
                 <groupId>org.yaml</groupId>
                 <artifactId>snakeyaml</artifactId>
-                <version>1.33</version>
+                <version>${snakeyaml.version}</version>
             </dependency>
             <dependency>
                 <!-- Conflicting versions in spring-boot-starter-webflux and spring-context / spring-webmvc -->
@@ -159,34 +162,42 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-buffer</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-codec</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-codec-http</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-codec-socks</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-common</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-handler</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-handler-proxy</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-transport</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
@@ -195,6 +206,7 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-resolver</artifactId>
+            <version>${netty.version}</version>
         </dependency>
 
         <!-- Jersey HTTP Client -->
@@ -229,11 +241,31 @@
             <groupId>com.google.http-client</groupId>
             <artifactId>google-http-client</artifactId>
             <version>${google-http-client.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.j2objc</groupId>
+                    <artifactId>j2objc-annotations</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.google.http-client</groupId>
             <artifactId>google-http-client-jackson2</artifactId>
             <version>${google-http-client.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.j2objc</groupId>
+                    <artifactId>j2objc-annotations</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- OK HTTP Client -->
@@ -270,6 +302,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
         </dependency>
 
         <!-- Spring -->
