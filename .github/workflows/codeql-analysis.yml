@@ -37,6 +37,11 @@ jobs:
         fetch-depth: 2
 
 
+    - name: Setup Java JDK
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
