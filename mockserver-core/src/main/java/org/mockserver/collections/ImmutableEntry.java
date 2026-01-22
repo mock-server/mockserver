@@ -45,6 +45,10 @@ public class ImmutableEntry extends Pair<NottableString, NottableString> impleme
         return !isOptional();
     }
 
+    public boolean isNotNotted() {
+        return !isNotted();
+    }
+
     @Override
     public NottableString getLeft() {
         return key;
