@@ -28,9 +28,12 @@ public class SubSetMatcher {
         }
 
         if (result) {
-            long subsetNonOptionalSize = subset.stream().filter(ImmutableEntry::isNotOptional).count();
+            long subsetRequiredSize = subset.stream()
+                .filter(ImmutableEntry::isNotOptional)
+                .filter(ImmutableEntry::isNotNotted)
+                .count();
             // this prevents multiple items in the subset from being matched by a single item in the superset
-            result = matchingIndexes.size() >= subsetNonOptionalSize;
+            result = matchingIndexes.size() >= subsetRequiredSize;
         }
         return result;
     }
