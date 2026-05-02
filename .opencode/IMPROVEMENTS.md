@@ -70,7 +70,7 @@ Per-agent models are now set in `opencode.jsonc` with a 4-tier cost/quality stra
 
 | Tier | Model | Cost | Agents |
 |------|-------|------|--------|
-| Premium (code gen) | `opus-4.6` | $5/$25 | `impl-worker`, `simplifier` |
+| Premium (code gen) | `opus-4.6` | $5/$25 | `implementer`, `simplifier` |
 | Standard (analysis) | `sonnet-4.6` | $3/$15 | `code-reviewer`, `security-auditor`, `docs-writer`, `taskify-agent` |
 | Independent review | `gpt-5.5` | $5/$30 | `review-final`, `debugger`, `pipeline-investigator` |
 | Budget | `kimi-k2.6` | $0.95/$4 | `review-cheap` |
@@ -100,4 +100,4 @@ Agents that have no reason to load skills now have `"skill": false` in their too
 Agents that need skills retain access:
 - `pipeline-investigator` — loads the `pipeline-investigation` skill
 - `review-cheap`, `review-final` — load review skills (`review-code`, `review-spec`)
-- `impl-worker`, `simplifier`, `docs-writer`, `taskify-agent` — may load skills as part of their workflows
+- `implementer`, `simplifier`, `docs-writer`, `taskify-agent` — may load skills as part of their workflows

@@ -75,10 +75,10 @@
       "model": "tesco-anthropic/opus-4.6",
       "agent": ".opencode/agents/simplifier.md"
     },
-    "impl-worker": {
+    "implementer": {
       "description": "Implementation specialist — writes production code and tests",
       "model": "tesco-anthropic/opus-4.6",
-      "agent": ".opencode/agents/impl-worker.md"
+      "agent": ".opencode/agents/implementer.md"
     },
     "review-cheap": {
       "description": "Intermediate deep reviewer on cheaper model — non-authoritative PASS",
