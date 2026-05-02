@@ -40,6 +40,7 @@ Build process, releases, dependencies, and the documentation website.
 | [Release Process](operations/release-process.md) | End-to-end release workflow with Mermaid diagrams |
 | [Dependencies](operations/dependencies.md) | Complete dependency inventory with versions |
 | [Website](operations/website.md) | Jekyll documentation site structure and publishing |
+| [OpenCode Configuration](operations/opencode-configuration.md) | AI harness: config, agents, rules, skills, commands, plugins |
 
 ### Other
 

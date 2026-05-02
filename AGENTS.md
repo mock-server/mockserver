@@ -40,6 +40,7 @@ Comprehensive internal documentation is maintained in `docs/`. **Always consult 
 | [docs/operations/website.md](docs/operations/website.md) | Before modifying the Jekyll documentation site |
 | [docs/operations/dependencies.md](docs/operations/dependencies.md) | Before adding, removing, or upgrading dependencies |
 | [docs/operations/release-process.md](docs/operations/release-process.md) | When performing or automating releases |
+| [docs/operations/opencode-configuration.md](docs/operations/opencode-configuration.md) | Before modifying opencode config, agents, rules, skills, or commands |
 | [docs/gaps-and-recommendations.md](docs/gaps-and-recommendations.md) | For improvement opportunities and known gaps |
 
 When making changes to the project, **update the relevant docs/ file** if the change affects architecture, dependencies, build process, CI/CD, infrastructure, or deployment.
@@ -138,7 +139,7 @@ When the user asks for a code review:
 | Code review (pre-commit) | `code-reviewer` |
 | Intermediate deep review | `review-cheap` |
 | Final authoritative review | `review-final` |
-| Implementation work | `impl-worker` |
+| Implementation work | `implementer` |
 | Code simplification | `simplifier` |
 | Test execution | `test-runner` |
 | Security audit | `security-auditor` |
