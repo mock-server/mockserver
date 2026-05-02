@@ -326,11 +326,11 @@ CHANGED_MODULES=$(git diff --name-only HEAD~1 | grep -oP 'mockserver-[^/]+' | so
 
 **Risk:** Higher - misses transitive dependency changes. Better suited as a PR-only optimisation, not for master builds.
 
-### 2.3 Skip Shade Plugin for Non-Release Builds
+### 2.3 Skip Shade Plugin for Local Development Only
 
-The shade plugin is the most expensive packaging step, running on 6 modules. For CI builds that only need to verify compilation and tests pass, shading is unnecessary.
+The shade plugin is the most expensive packaging step, running on 6 modules. A `skipShade` property has been added to allow skipping shade during local development iteration.
 
-**Approach:** Add a `skipShade` property:
+**Approach:** Added a `skipShade` property wired into all 6 shade plugin modules:
 
 ```xml
 <!-- In root pom.xml -->
@@ -349,27 +349,20 @@ The shade plugin is the most expensive packaging step, running on 6 modules. For
 </plugin>
 ```
 
-**CI invocation:**
+**Local invocation only:**
 ```bash
-./mvnw -T 1C clean install -DskipShade=true -Dmockserver.testOutput=quiet ...
+./mvnw clean install -DskipShade=true -DskipAssembly=true ...
 ```
 
-**Expected impact:** Eliminates 6 shade plugin executions, each of which processes hundreds of dependency JARs with 35+ relocations. Estimated 2-5 minutes saved depending on I/O speed.
+**IMPORTANT: Cannot be used in CI.** The `mockserver-netty` module has Maven invoker and Gradle integration tests that depend on the shaded artifacts (`*-shaded` classifier JARs, `*-no-dependencies` artifacts, and `jar-with-dependencies`). Skipping shade/assembly in CI would cause these integration tests to fail or silently test stale artifacts.
 
-**Risk:** Low. The shade plugin produces secondary artifacts (`-shaded.jar`, `-no-dependencies.jar`) that are only needed for releases and downstream consumers. Tests run against the unshaded artifacts.
+**Use case:** Local development when iterating on code changes where you only need to verify compilation and unit tests pass, not the full packaging pipeline.
 
-### 2.4 Skip Assembly Plugin in CI
+### 2.4 Skip Assembly Plugin for Local Development Only
 
-Similarly, the assembly plugin in `mockserver-netty` creates a fat JAR and Homebrew tarball that aren't needed for CI verification.
+Similarly, the assembly plugin in `mockserver-netty` creates a fat JAR and Homebrew tarball. The `skipAssembly` property exists and can be used for local development.
 
-**Already supported:** The `skipAssembly` property exists and is used by `local_single_module.sh`.
-
-**CI invocation:**
-```bash
-./mvnw -T 1C clean install -DskipShade=true -DskipAssembly=true -Dmockserver.testOutput=quiet ...
-```
-
-**Expected impact:** Eliminates the jar-with-dependencies and brew-tar assembly steps.
+**IMPORTANT: Cannot be used in CI** for the same reason as `skipShade` — the `maven-netty-jar-with-dependencies-dependency` invoker test depends on the `jar-with-dependencies` classifier artifact produced by the assembly plugin.
 
 ---
 
@@ -567,7 +560,7 @@ gantt
 
 | File | Changes |
 |------|---------|
-| `scripts/buildkite_quick_build.sh` | Add `-T 1C`, `-DskipShade=true`, `-DskipAssembly=true`, `-Dmockserver.testOutput=quiet` |
+| `scripts/buildkite_quick_build.sh` | Add `-T 1C`, `-Dmockserver.testOutput=quiet` |
 | `.mvn/maven.config` | New file: common Maven flags |
 | `.mvn/jvm.config` | New file: JVM memory settings |
 | `.mvn/extensions.xml` | New file: build cache extension (Phase 2) |
