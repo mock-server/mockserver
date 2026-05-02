@@ -63,14 +63,14 @@ To investigate or manage AWS infrastructure:
 
 ### Buildkite Agent Infrastructure
 
-Build agents run on EC2 instances in an AutoScaling Group, managed by a Lambda-based autoscaler:
+Build agents run on EC2 Spot instances in an AutoScaling Group, managed by a Lambda-based autoscaler. Infrastructure is managed by Terraform in `terraform/buildkite-agents/`. See [docs/infrastructure/aws-infrastructure.md](docs/infrastructure/aws-infrastructure.md) for full details.
 
-| Resource | Identifier | Region |
-|----------|-----------|--------|
-| AutoScaling Group | `buildkite-AgentAutoScaleGroup-VGG28FR0DE6Q` | `us-east-1` |
-| CloudFormation Stack | `buildkite` | `us-east-1` |
-| Instance Type | `t3.large` (On-Demand, 1 agent per instance) | `us-east-1` |
-| Autoscaling Lambda | `buildkite-Autoscaling-1B7NLL8Z-AutoscalingFunction-iUVGfB0m0ynh` | `us-east-1` |
+| Property | Current (Terraform) | Legacy (CloudFormation) |
+|----------|---------------------|------------------------|
+| Region | `eu-west-2` | `us-east-1` |
+| Instance Type | `t3.large` (Spot) | `t3.large` (On-Demand) |
+| IaC in repo | Yes (`terraform/`) | No |
+| Scaling | 0–2 instances, Lambda-based | 0–2 instances, Lambda-based |
 
 The scaler runs every minute, scales 0-2 instances based on Buildkite job queue depth. `MIN_SIZE=0` means agents scale to zero when idle.
 

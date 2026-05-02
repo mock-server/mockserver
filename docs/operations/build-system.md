@@ -1,0 +1,117 @@
+# Build System
+
+## Maven Configuration
+
+MockServer uses Maven 3.9.0 via the Maven Wrapper (`mvnw`). The project targets Java 8 source/target compatibility.
+
+### Quick Reference
+
+```bash
+# Full build (clean + compile + test + package)
+./mvnw clean install
+
+# Build without tests
+./mvnw clean install -DskipTests
+
+# Build a single module
+./mvnw clean install -pl mockserver-core
+
+# Run unit tests only
+./mvnw test -pl mockserver-netty
+
+# Run integration tests
+./mvnw verify -pl mockserver-netty
+```
+
+### Build Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/buildkite_quick_build.sh` | CI build — `mvnw clean install` with 8GB heap |
+| `scripts/buildkite_deploy_snapshot.sh` | CI deploy — `mvnw clean deploy` to Sonatype snapshots |
+| `scripts/local_quick_build.sh` | Local build — Java 17, 3 threads, includes integration tests |
+| `scripts/local_online_build.sh` | Local build — Java 13, includes integration tests |
+| `scripts/local_buildkite_build.sh` | Run Buildkite build locally inside Docker |
+| `scripts/local_build_module_by_module.sh` | Build each module sequentially |
+| `scripts/local_release.sh` | Maven release (prepare + perform) to Sonatype staging |
+| `scripts/local_deploy_snapshot.sh` | Deploy SNAPSHOT via Docker container |
+| `scripts/local_single_test.sh` | Run a single integration test |
+| `scripts/local_single_module.sh` | Build a single module |
+| `scripts/stop_MockServer.sh` | Kill running MockServer processes |
+
+## Maven Profiles
+
+```mermaid
+graph LR
+    subgraph "Profiles"
+        KM[kill_mockserver_instances<br/><i>Auto-activates on Unix</i>]
+        DJ[disable-java8-doclint<br/><i>Auto-activates on JDK 8+</i>]
+        RL[release<br/><i>Manual activation</i>]
+    end
+
+    KM -->|clean phase| STOP["scripts/stop_MockServer.sh"]
+    DJ -->|sets| DOCLINT["-Xdoclint:none"]
+    RL -->|adds| SRC[maven-source-plugin]
+    RL -->|adds| JD[maven-javadoc-plugin]
+    RL -->|adds| GPG[maven-gpg-plugin]
+    RL -->|adds| REL[maven-release-plugin]
+```
+
+| Profile | Activation | Purpose |
+|---------|-----------|---------|
+| `kill_mockserver_instances` | Auto on Unix (`/usr/bin/env` exists) | Kills existing MockServer processes during `clean` phase |
+| `disable-java8-doclint` | Auto on JDK 8+ | Disables strict Javadoc linting |
+| `release` | Manual (`-P release`) | Adds source JARs, Javadoc JARs, GPG signing, Maven release plugin |
+
+## Build Plugins
+
+| Plugin | Version | Phase | Purpose |
+|--------|---------|-------|---------|
+| `maven-compiler-plugin` | 3.10.1 | compile | Java 8 compilation with `-Xlint:all` |
+| `templating-maven-plugin` | 1.0.0 | generate-sources | Generates version class from templates |
+| `maven-jar-plugin` | 3.3.0 | package | JAR packaging with MANIFEST.MF metadata |
+| `maven-clean-plugin` | 3.2.0 | clean | Removes `.log`, keystore, and temp files |
+| `maven-surefire-plugin` | 2.22.2 | test | Unit tests (`*Test.java`, excludes `*IntegrationTest.java`) |
+| `maven-failsafe-plugin` | 2.22.2 | integration-test | Integration tests (`*IntegrationTest.java`) |
+| `maven-checkstyle-plugin` | 3.2.1 | validate | Code style enforcement via `checkstyle.xml` |
+| `maven-enforcer-plugin` | 3.2.1 | validate | Dependency convergence checks |
+| `exec-maven-plugin` | 3.1.0 | clean | Runs `stop_MockServer.sh` (Unix profile) |
+
+## Test Configuration
+
+- **Unit tests:** `*Test.java` — run during `test` phase via Surefire
+- **Integration tests:** `*IntegrationTest.java` — run during `integration-test`/`verify` phases via Failsafe
+- **Log level:** `mockserver.logLevel=ERROR` during tests
+- **Locale:** Forced to `en-GB` (`-Duser.language=en -Duser.country=GB`)
+- **Test listener:** `org.mockserver.test.PrintOutCurrentTestRunListener` for progress output
+
+## Packaging Outputs
+
+The `mockserver-netty` module produces multiple artifacts:
+
+```mermaid
+graph TD
+    MN[mockserver-netty]
+    MN --> JAR[Standard JAR]
+    MN --> FAT[jar-with-dependencies<br/><i>Fat JAR with all deps</i>]
+    MN --> SHADED[Shaded JAR<br/><i>Relocated packages</i>]
+    MN --> BREW[brew-tar<br/><i>Homebrew tarball</i>]
+    MN --> DEB[Debian Package<br/><i>.deb with init.d</i>]
+```
+
+| Artifact | Classifier | Description |
+|----------|-----------|-------------|
+| Standard JAR | (none) | Module classes only |
+| Fat JAR | `jar-with-dependencies` | All dependencies bundled (used by Docker) |
+| Shaded JAR | `shaded` | Dependencies relocated to avoid conflicts |
+| Homebrew tarball | `brew-tar` | Tarball for Homebrew formula |
+| Debian package | (none) | `.deb` with SysV init.d and Upstart configs |
+
+## Distribution
+
+Artifacts are published to:
+
+- **Sonatype OSSRH** (snapshots): `https://oss.sonatype.org/content/repositories/snapshots/`
+- **Maven Central** (releases): via Sonatype staging at `https://oss.sonatype.org/service/local/staging/deploy/maven2/`
+
+GPG signing is required for releases (configured in the `release` profile).
