@@ -116,6 +116,11 @@ mockserverInitialization.json
 _test*.java
 go_client
 
+# opencode scratch directory #
+##############################
+/.tmp/*
+!/.tmp/.gitkeep
+
 # soft links #
 ##############
 kube_config.yaml

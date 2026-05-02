@@ -1,0 +1,137 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  // MockServer opencode configuration
+  "compaction": {
+    "auto": true,
+    "prune": true
+  },
+  "share": "manual",
+  "default_agent": "plan",
+  "small_model": "tesco-anthropic/haiku-4.5",
+  "instructions": [
+    "AGENTS.md"
+  ],
+  "watcher": {
+    "ignore": [
+      "vendor/**",
+      "node_modules/**",
+      ".git/**",
+      ".tmp/**",
+      "target/**",
+      ".idea/**",
+      "*.class",
+      "*.jar",
+      "_site/**",
+      ".sass-cache/**"
+    ]
+  },
+  "permission": {
+    "bash": {
+      "*": "allow",
+      "git push --force*": "deny",
+      "git reset --hard*": "deny",
+      "git clean -fd*": "deny",
+      "rm -rf /*": "deny"
+    }
+  },
+  "agent": {
+    "test-runner": {
+      "description": "Runs Maven tests for changed modules and reports results",
+      "model": "tesco-anthropic/haiku-4.5",
+      "agent": ".opencode/agents/test-runner.md",
+      "tools": {
+        "write": false,
+        "edit": false,
+        "skill": false
+      }
+    },
+    "code-reviewer": {
+      "description": "Pre-commit code reviewer — checks for correctness, security, and conventions",
+      "model": "tesco-anthropic/sonnet-4.6",
+      "agent": ".opencode/agents/code-reviewer.md",
+      "tools": {
+        "write": false,
+        "edit": false,
+        "skill": false
+      }
+    },
+    "security-auditor": {
+      "description": "Security-focused code auditor for Java applications",
+      "model": "tesco-anthropic/sonnet-4.6",
+      "agent": ".opencode/agents/security-auditor.md",
+      "tools": {
+        "write": false,
+        "edit": false,
+        "skill": false
+      }
+    },
+    "docs-writer": {
+      "description": "Technical writer for architecture docs, ADRs, and READMEs",
+      "model": "tesco-anthropic/sonnet-4.6",
+      "agent": ".opencode/agents/docs-writer.md"
+    },
+    "simplifier": {
+      "description": "Code simplification specialist — reduces code to smallest correct form",
+      "model": "tesco-anthropic/opus-4.6",
+      "agent": ".opencode/agents/simplifier.md"
+    },
+    "impl-worker": {
+      "description": "Implementation specialist — writes production code and tests",
+      "model": "tesco-anthropic/opus-4.6",
+      "agent": ".opencode/agents/impl-worker.md"
+    },
+    "review-cheap": {
+      "description": "Intermediate deep reviewer on cheaper model — non-authoritative PASS",
+      "model": "tesco-other/kimi-k2.6",
+      "agent": ".opencode/agents/review-cheap.md",
+      "tools": {
+        "write": false,
+        "edit": false
+      }
+    },
+    "review-final": {
+      "description": "Authoritative final reviewer — binding PASS/BLOCK verdict",
+      "model": "tesco-other/gpt-5.5",
+      "agent": ".opencode/agents/review-final.md",
+      "tools": {
+        "write": false,
+        "edit": false
+      }
+    },
+    "debugger": {
+      "description": "Production debugger — investigates issues using logs, metrics, and CI data",
+      "model": "tesco-other/gpt-5.5",
+      "agent": ".opencode/agents/debugger.md",
+      "tools": {
+        "write": false,
+        "edit": false,
+        "skill": false
+      }
+    },
+    "pipeline-investigator": {
+      "description": "Buildkite pipeline failure investigator",
+      "model": "tesco-other/gpt-5.5",
+      "agent": ".opencode/agents/pipeline-investigator.md",
+      "tools": {
+        "write": false,
+        "edit": false
+      }
+    },
+    "taskify-agent": {
+      "description": "Task decomposition specialist — breaks specs into structured task graphs",
+      "model": "tesco-anthropic/sonnet-4.6",
+      "agent": ".opencode/agents/taskify-agent.md"
+    },
+    "council-seat": {
+      "description": "Read-only design council seat for parallel fan-out debates",
+      "model": "tesco-anthropic/haiku-4.5",
+      "agent": ".opencode/agents/council-seat.md",
+      "tools": {
+        "write": false,
+        "edit": false,
+        "bash": false,
+        "skill": false
+      }
+    }
+  }
+}
