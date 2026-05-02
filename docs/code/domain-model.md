@@ -133,7 +133,43 @@ classDiagram
     BodyWithContentType <|-- BinaryBody
 ```
 
-Body `Type` enum: `BINARY`, `JSON`, `JSON_SCHEMA`, `JSON_PATH`, `PARAMETERS`, `REGEX`, `STRING`, `XML`, `XML_SCHEMA`, `XPATH`
+Body `Type` enum: `BINARY`, `JSON`, `JSON_SCHEMA`, `JSON_PATH`, `PARAMETERS`, `REGEX`, `STRING`, `XML`, `XML_SCHEMA`, `XPATH`, `LOG_EVENT`
+
+### ConnectionOptions
+
+`ConnectionOptions` on `HttpResponse` provides low-level control over the HTTP connection:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `suppressContentLengthHeader` | Boolean | Prevent `Content-Length` header from being added |
+| `contentLengthHeaderOverride` | Integer | Override `Content-Length` with a specific value |
+| `suppressConnectionHeader` | Boolean | Prevent `Connection` header from being added |
+| `chunkSize` | Integer | If positive, response is sent with `Transfer-Encoding: chunked` in chunks of this size |
+| `keepAliveOverride` | Boolean | If true, `Connection: keep-alive`; if false, `Connection: close` |
+| `closeSocket` | Boolean | Force close (true) or keep open (false) the socket after responding |
+| `closeSocketDelay` | Delay | Delay before closing the socket (ignored if socket is not being closed) |
+
+### Request & Response Modifiers
+
+Used by `HttpOverrideForwardedRequest` to modify forwarded requests and responses:
+
+**`HttpRequestModifier`** fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `path` | `PathModifier` | Regex-based path rewriting (`regex` + `substitution`) |
+| `queryStringParameters` | `QueryParametersModifier` | Add, replace, or remove query parameters |
+| `headers` | `HeadersModifier` | Add, replace, or remove headers |
+| `cookies` | `CookiesModifier` | Add, replace, or remove cookies |
+
+**`HttpResponseModifier`** fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `headers` | `HeadersModifier` | Add, replace, or remove response headers |
+| `cookies` | `CookiesModifier` | Add, replace, or remove response cookies |
+
+Each modifier type (`HeadersModifier`, `CookiesModifier`, `QueryParametersModifier`) supports three operations: `add`, `replace`, and `remove`.
 
 ### NottableString
 
@@ -281,7 +317,7 @@ graph LR
 
 ### OpenAPI Parameter Styles
 
-`ExpandedParameterDecoder` handles 14 OpenAPI parameter serialization styles: `SIMPLE`, `SIMPLE_EXPLODED`, `LABEL`, `LABEL_EXPLODED`, `MATRIX`, `MATRIX_EXPLODED`, `FORM`, `FORM_EXPLODED`, `SPACE_DELIMITED`, `SPACE_DELIMITED_EXPLODED`, `PIPE_DELIMITED`, `PIPE_DELIMITED_EXPLODED`, `DEEP_OBJECT`.
+`ExpandedParameterDecoder` handles 13 OpenAPI parameter serialization styles: `SIMPLE`, `SIMPLE_EXPLODED`, `LABEL`, `LABEL_EXPLODED`, `MATRIX`, `MATRIX_EXPLODED`, `FORM`, `FORM_EXPLODED`, `SPACE_DELIMITED`, `SPACE_DELIMITED_EXPLODED`, `PIPE_DELIMITED`, `PIPE_DELIMITED_EXPLODED`, `DEEP_OBJECT`.
 
 ## Serialization
 

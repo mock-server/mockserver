@@ -173,6 +173,14 @@ flowchart TD
     JSON --> SEND[Send via TextWebSocketFrame<br/><i>Throttled: max 1/sec</i>]
 ```
 
+### Dashboard Model Classes
+
+| Class | Package | Purpose |
+|-------|---------|---------|
+| `DashboardLogEntryDTO` | `o.m.dashboard.model` | Simplified log entry for UI display with description, style, and HTTP request/response data |
+| `DashboardLogEntryDTOGroup` | `o.m.dashboard.model` | Groups related log entries by correlation ID (e.g., a request and its matching response) |
+| `Description` | `o.m.dashboard.serializers` | Truncated request description (method + path) for UI column display |
+
 ### Custom Serializers
 
 The dashboard uses specialized Jackson serializers for UI-friendly output:
@@ -200,6 +208,18 @@ The dashboard uses specialized Jackson serializers for UI-friendly output:
 | EXCEPTION | Bright red | `rgb(211,33,45)` |
 | INFO | Green | `rgb(59,122,87)` |
 | TEMPLATE_GENERATED | Gold | `rgb(241,186,27)` |
+| CREATED_EXPECTATION | (default) | Uses log level colour |
+| UPDATED_EXPECTATION | (default) | Uses log level colour |
+| REMOVED_EXPECTATION | (default) | Uses log level colour |
+| CLEARED | (default) | Uses log level colour |
+| RETRIEVED | (default) | Uses log level colour |
+| VERIFICATION_PASSED | (default) | Uses log level colour |
+| NO_MATCH_RESPONSE | (default) | Uses log level colour |
+| SERVER_CONFIGURATION | (default) | Uses log level colour |
+| AUTHENTICATION_FAILED | (default) | Uses log level colour |
+| DEBUG | (default) | Uses log level colour |
+| TRACE | (default) | Uses log level colour |
+| RUNNABLE | (hidden) | Internal — not displayed in UI |
 
 ### JSON Message Structure
 

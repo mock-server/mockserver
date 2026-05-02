@@ -107,7 +107,7 @@ disruptor.getRingBuffer().tryPublishEvent(
 
 ## LogEntry
 
-Each event is represented by a `LogEntry` with 23 possible types:
+Each event is represented by a `LogEntry` with 24 possible types:
 
 | Category | Types |
 |----------|-------|
@@ -279,6 +279,10 @@ The `Scheduler` manages async task execution with a `ScheduledThreadPoolExecutor
 | `submit(CompletableFuture<BinaryMessage>, Runnable)` | Execute when binary result completes |
 
 Thread names follow the pattern `MockServer-<name><N>`. The pool uses `CallerRunsPolicy` as a backpressure mechanism when saturated.
+
+## Memory Monitoring
+
+`MemoryMonitoring` implements both `MockServerLogListener` and `MockServerMatcherListener` to track JVM memory usage. When `outputMemoryUsageCsv` is enabled, it writes memory statistics to a CSV file every 50 updates. See [Metrics & Monitoring](metrics.md) for full details.
 
 ## Class Reference
 

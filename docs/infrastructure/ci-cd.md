@@ -26,7 +26,7 @@ graph LR
 
 **File:** `.buildkite/pipeline.yml`
 
-The pipeline has two sequential steps:
+The pipeline has two sequential steps (separated by an explicit `- wait` directive):
 
 ```mermaid
 sequenceDiagram

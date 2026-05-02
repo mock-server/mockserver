@@ -77,6 +77,12 @@ graph TB
         MC[mockserver-core<br/><i>Domain model, matching,<br/>TLS, templates, codecs,<br/>event log, action handlers</i>]
     end
 
+    subgraph "Test & Example Infrastructure"
+        MT[mockserver-testing<br/><i>Shared test utilities</i>]
+        MIT[mockserver-integration-testing<br/><i>Integration test base classes</i>]
+        MEX[mockserver-examples<br/><i>Usage examples</i>]
+    end
+
     JC --> MC
     MN --> MC
     MW --> MC
@@ -86,6 +92,11 @@ graph TB
     JR --> CAS
     JJ --> CAS
     STL --> CAS
+    MT --> MC
+    MIT --> MC
+    MIT --> JC
+    MEX --> MN
+    MEX --> JC
 ```
 
 ## Key Architectural Principles
@@ -146,6 +157,8 @@ See: [Request Processing, Mocking & Proxying](request-processing.md)
 | `org.mockserver.openapi` | core | OpenAPI spec parsing | [Domain Model](domain-model.md) |
 | `org.mockserver.closurecallback` | core | WebSocket callback system | [Client & Integrations](client-and-integrations.md) |
 | `org.mockserver.persistence` | core | File persistence & watching | [Event System](event-system.md) |
+| `org.mockserver.metrics` | core | Prometheus metrics collection | [Metrics & Monitoring](metrics.md) |
+| `org.mockserver.memory` | core | Memory usage monitoring/CSV export | [Metrics & Monitoring](metrics.md) |
 | `org.mockserver.client` | client-java | MockServerClient API | [Client & Integrations](client-and-integrations.md) |
 | `org.mockserver.junit` | junit-rule | JUnit 4 Rule | [Client & Integrations](client-and-integrations.md) |
 | `org.mockserver.junit.jupiter` | junit-jupiter | JUnit 5 Extension | [Client & Integrations](client-and-integrations.md) |
@@ -163,3 +176,4 @@ See: [Request Processing, Mocking & Proxying](request-processing.md)
 | **Low** | [Domain Model, Matchers & Serialization](domain-model.md) | Model classes, matcher hierarchy, codec layer, OpenAPI, configuration |
 | **Low** | [TLS, Certificates & Security](tls-and-security.md) | BouncyCastle CA, SNI, mTLS, JWT, control plane auth |
 | **Low** | [Client API & Test Integrations](client-and-integrations.md) | MockServerClient, JUnit 4/5, Spring, WebSocket callbacks |
+| **Low** | [Metrics & Monitoring](metrics.md) | Prometheus metrics, memory monitoring |

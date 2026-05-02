@@ -18,7 +18,7 @@ The MockServer documentation website at `https://www.mock-server.com` is a Jekyl
 | `mockserver_version` | `5.15.0` |
 | `mockserver_api_version` | `5.15.x` |
 | `mockserver_snapshot_version` | `5.15.1-SNAPSHOT` |
-| Google Analytics | `UA-32687194-4` |
+| Google Analytics | `UA-32687194-4` (in `_includes/head.html`, not `_config.yml`) |
 | Custom plugin | `jekyll-code-example-tag` |
 
 ## Site Structure
@@ -160,6 +160,23 @@ bundle exec jekyll build
 3. Invalidate CloudFront cache (`/*` pattern) for distribution `E3R1W2C7JJIMNR`
 
 See [AWS Infrastructure](../infrastructure/aws-infrastructure.md) and [Release Process](release-process.md) for details.
+
+## SEO & Metadata Files
+
+| File | Purpose |
+|------|---------|
+| `sitemap.xml` | XML sitemap for search engines |
+| `sitemap.html` | HTML sitemap for users |
+| `robots.txt` | Search engine crawl directives |
+| `feed.xml` | Atom/RSS feed |
+
+## Proxy Sub-includes
+
+`proxy/_includes/` contains reusable fragments for proxy documentation:
+
+| Include | Content |
+|---------|---------|
+| `analysing_behaviour.html` | Proxy behaviour analysis examples |
 
 ## External References
 

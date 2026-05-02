@@ -2,7 +2,25 @@
 
 ## Maven Configuration
 
-MockServer uses Maven 3.9.0 via the Maven Wrapper (`mvnw`). The project targets Java 8 source/target compatibility.
+MockServer uses Maven 3.9.0 via the Maven Wrapper (`mvnw`). The project targets Java 11 source/target compatibility.
+
+### Modules
+
+The project comprises 11 Maven modules:
+
+| Module | Packaging | Purpose |
+|--------|-----------|---------|
+| `mockserver-core` | jar | Domain model, matching, TLS, templates, codecs, event log, action handlers |
+| `mockserver-netty` | jar (+fat, shaded) | Netty server, CLI, dashboard, proxy relay |
+| `mockserver-client-java` | jar (+shaded) | Java client API (`MockServerClient`) |
+| `mockserver-war` | war | Servlet WAR deployment |
+| `mockserver-proxy-war` | war | Proxy-only WAR deployment |
+| `mockserver-junit-rule` | jar (+shaded) | JUnit 4 `@Rule` integration |
+| `mockserver-junit-jupiter` | jar (+shaded) | JUnit 5 `@ExtendWith` integration |
+| `mockserver-spring-test-listener` | jar (+shaded) | Spring Test integration |
+| `mockserver-testing` | jar | Shared test utilities |
+| `mockserver-integration-testing` | jar (+shaded) | Integration test base classes |
+| `mockserver-examples` | jar | Usage examples |
 
 ### Quick Reference
 
@@ -38,6 +56,16 @@ MockServer uses Maven 3.9.0 via the Maven Wrapper (`mvnw`). The project targets 
 | `scripts/local_single_test.sh` | Run a single integration test |
 | `scripts/local_single_module.sh` | Build a single module |
 | `scripts/stop_MockServer.sh` | Kill running MockServer processes |
+| `scripts/bash_functions.sh` | Shared shell functions library |
+| `scripts/download_maven_jars.sh` | Download Maven JARs from repositories |
+| `scripts/install_ca_certificate.sh` | Install CA certificates into trust stores |
+| `scripts/jekyll_server.sh` | Start Jekyll development server |
+| `scripts/local_docker_launch.sh` | Launch interactive Docker Maven container |
+| `scripts/local_docker_push_tag.sh` | Push Docker image with tag |
+| `scripts/local_generate_web_site.sh` | Generate Jekyll documentation website |
+| `scripts/local_javadoc_build_all_versions.sh` | Build Javadoc for all versions |
+| `scripts/local_list_versions.sh` | List project versions |
+| `scripts/log_event_size_test_*.sh` | Log event size test variants (4 scripts) |
 
 ## Maven Profiles
 
@@ -67,7 +95,7 @@ graph LR
 
 | Plugin | Version | Phase | Purpose |
 |--------|---------|-------|---------|
-| `maven-compiler-plugin` | 3.10.1 | compile | Java 8 compilation with `-Xlint:all` |
+| `maven-compiler-plugin` | 3.10.1 | compile | Java 11 compilation with `-Xlint:all` |
 | `templating-maven-plugin` | 1.0.0 | generate-sources | Generates version class from templates |
 | `maven-jar-plugin` | 3.3.0 | package | JAR packaging with MANIFEST.MF metadata |
 | `maven-clean-plugin` | 3.2.0 | clean | Removes `.log`, keystore, and temp files |

@@ -104,7 +104,7 @@ graph LR
 | Handler | Class | Purpose |
 |---------|-------|---------|
 | HttpServerCodec | Netty built-in | HTTP/1.1 request decoding / response encoding |
-| PreserveHeadersNettyRemoves | `o.m.codec` | Preserves headers Netty would strip |
+| PreserveHeadersNettyRemoves | `o.m.codec` | Preserves `Host`, `Content-Length`, and `Transfer-Encoding` headers that Netty's HTTP codec would otherwise strip or modify during decode/encode |
 | HttpContentDecompressor | Netty built-in | Decompresses gzipped request bodies |
 | HttpContentLengthRemover | `o.m.netty.unification` | Strips empty Content-Length headers |
 | HttpObjectAggregator | Netty built-in | Aggregates HTTP chunks into `FullHttpRequest` |
@@ -251,7 +251,7 @@ graph LR
 When no known protocol is detected and a remote address is configured, `BinaryRequestProxyingHandler` forwards raw bytes via `NettyHttpClient.sendRequest(BinaryMessage, ...)`. It supports:
 
 - **Waiting mode**: Blocks until upstream response arrives, writes it back
-- **Non-waiting mode**: Fire-and-forget with optional `BinaryProxyListener` callback
+- **Non-waiting mode**: Fire-and-forget with optional `BinaryProxyListener` callback. `BinaryProxyListener` (`o.m.model.BinaryProxyListener`) is a functional interface with `onProxy(BinaryMessage binaryRequest, CompletableFuture<BinaryMessage> binaryResponse, SocketAddress serverAddress, SocketAddress clientAddress)` invoked when binary data is proxied
 
 ## SOCKS Protocol Detection
 

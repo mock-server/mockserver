@@ -18,6 +18,7 @@ Deep-dive documentation of MockServer's codebase, from high-level module structu
 | [Domain Model](code/domain-model.md) | Low | Model hierarchy, matchers, codecs, OpenAPI support, configuration |
 | [TLS & Security](code/tls-and-security.md) | Low | BouncyCastle CA, SNI, mTLS, JWT auth, control plane security |
 | [Client & Integrations](code/client-and-integrations.md) | Low | MockServerClient, JUnit 4/5, Spring, WebSocket callbacks |
+| [Metrics & Monitoring](code/metrics.md) | Low | Prometheus metrics, memory monitoring, CSV export |
 
 ### Infrastructure
 
@@ -40,6 +41,7 @@ Build process, releases, dependencies, and the documentation website.
 | [Release Process](operations/release-process.md) | End-to-end release workflow with Mermaid diagrams |
 | [Dependencies](operations/dependencies.md) | Complete dependency inventory with versions |
 | [Website](operations/website.md) | Jekyll documentation site structure and publishing |
+| [Testing](testing.md) | Test categories, running tests, container integration tests |
 | [OpenCode Configuration](operations/opencode-configuration.md) | AI harness: config, agents, rules, skills, commands, plugins |
 
 ### Other
@@ -72,9 +74,10 @@ mockserver/
 ├── container_integration_tests/# Docker & Helm integration tests
 ├── scripts/                    # Build, deploy, and utility scripts
 └── docs/                       # This documentation (you are here)
-    ├── code/                   #   Code architecture (8 docs)
+    ├── code/                   #   Code architecture (9 docs)
     ├── infrastructure/         #   AWS, CI/CD, Docker, Helm (4 docs)
-    └── operations/             #   Build, release, deps, website (4 docs)
+    ├── operations/             #   Build, release, deps, website (5 docs)
+    └── testing.md              #   Test categories, CI, container tests
 ```
 
 ## Key Links

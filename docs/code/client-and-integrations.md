@@ -47,6 +47,75 @@ HttpRequest[] requests = client.retrieveRecordedRequests(
 );
 ```
 
+### API Methods
+
+#### Expectation Setup
+
+| Method | Description |
+|--------|-------------|
+| `when(RequestDefinition)` | Create expectation with unlimited matches |
+| `when(RequestDefinition, Times)` | Create expectation with limited matches |
+| `when(RequestDefinition, Times, TimeToLive)` | Create with match limit and TTL |
+| `when(RequestDefinition, Times, TimeToLive, Integer)` | Create with priority |
+| `upsert(Expectation...)` | Create or update expectations (by ID) |
+| `upsert(OpenAPIExpectation...)` | Create expectations from OpenAPI specs |
+
+#### Verification
+
+| Method | Description |
+|--------|-------------|
+| `verify(RequestDefinition, VerificationTimes)` | Verify request count |
+| `verify(RequestDefinition...)` | Verify requests received in order |
+| `verify(ExpectationId, VerificationTimes)` | Verify by expectation ID |
+| `verify(ExpectationId...)` | Verify sequence by expectation IDs |
+| `verifyZeroInteractions()` | Verify no requests received |
+
+#### Retrieval
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `retrieveRecordedRequests(RequestDefinition)` | `HttpRequest[]` | Received requests |
+| `retrieveRecordedRequests(RequestDefinition, Format)` | `String` | Received requests as JSON/Java |
+| `retrieveRecordedRequestsAndResponses(RequestDefinition)` | `LogEventRequestAndResponse[]` | Request/response pairs |
+| `retrieveRecordedExpectations(RequestDefinition)` | `Expectation[]` | Recorded proxy expectations |
+| `retrieveActiveExpectations(RequestDefinition)` | `Expectation[]` | Currently active expectations |
+| `retrieveActiveExpectations(RequestDefinition, Format)` | `String` | Active expectations as JSON/Java |
+| `retrieveLogMessages(RequestDefinition)` | `String` | Log messages as text |
+| `retrieveLogMessagesArray(RequestDefinition)` | `String[]` | Log messages as array |
+
+#### Clear & Reset
+
+| Method | Description |
+|--------|-------------|
+| `clear(RequestDefinition)` | Clear expectations and logs matching request |
+| `clear(RequestDefinition, ClearType)` | Clear specific type (`EXPECTATIONS`, `LOG`, `ALL`) |
+| `clear(ExpectationId)` | Clear by expectation ID |
+| `clear(String)` | Clear by expectation ID string |
+| `reset()` | Reset all state (expectations, logs, WebSocket registry) |
+
+#### Lifecycle
+
+| Method | Description |
+|--------|-------------|
+| `hasStarted()` | Whether server has started |
+| `hasStopped()` | Whether server has stopped |
+| `isRunning()` | (deprecated) Use `hasStarted()`/`hasStopped()` |
+| `stop()` | Stop server synchronously |
+| `stopAsync()` | Stop server asynchronously |
+| `close()` | Alias for `stop()` |
+| `bind(Integer...)` | Bind additional ports |
+| `openUI()` | Launch dashboard UI in browser |
+
+#### Configuration
+
+| Method | Description |
+|--------|-------------|
+| `withSecure(boolean)` | Enable TLS for client communication |
+| `withControlPlaneJWT(String)` | Set static JWT token |
+| `withControlPlaneJWT(Supplier<String>)` | Set dynamic JWT supplier |
+| `withRequestOverride(HttpRequest)` | Default headers for control-plane requests |
+| `withProxyConfiguration(ProxyConfiguration)` | Route via proxy |
+
 ### ForwardChainExpectation
 
 Returned by `when()`, provides terminal methods to define the action:

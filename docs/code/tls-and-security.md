@@ -122,13 +122,38 @@ flowchart TD
     CHAIN -->|Either fails| DENY
 ```
 
-Authentication is configured in `MockServer.createServerBootstrap()`:
+Authentication is configured in `MockServer.createServerBootstrap()` and validated in `HttpState.controlPlaneRequestAuthenticated()`:
 
 | Configuration | Handler | Mechanism |
 |---------------|---------|-----------|
 | `controlPlaneTLSMutualAuthenticationCAChain` | mTLS handler | Validates client cert against CA chain |
 | `controlPlaneJWTAuthenticationJWKSource` | JWT handler | Validates Bearer token using JWK source |
 | Both configured | Chained handler | Both mTLS and JWT must succeed |
+
+### Authentication Classes
+
+| Class | Package | Purpose |
+|-------|---------|---------|
+| `AuthenticationHandler` | `o.m.authentication` | Core interface: `controlPlaneRequestAuthenticated(HttpRequest): boolean` |
+| `ChainedAuthenticationHandler` | `o.m.authentication` | Chains multiple `AuthenticationHandler` instances (logical AND — all must pass) |
+| `AuthenticationException` | `o.m.authentication` | Thrown on authentication failure |
+| `MTLSAuthenticationHandler` | `o.m.authentication.mtls` | Validates client certificate chain against configured CA certificates via `X509Certificate.verify()` |
+| `JWTAuthenticationHandler` | `o.m.authentication.jwt` | Loads JWK keys from URL (`RemoteJWKSet`) or file (`ImmutableJWKSet`), extracts Bearer token from `Authorization` header, delegates to `JWTValidator` |
+| `JWTValidator` | `o.m.authentication.jwt` | Validates JWT tokens using nimbus-jose-jwt; supports `withExpectedAudience()`, `withMatchingClaims()`, `withRequiredClaims()` |
+| `JWTGenerator` | `o.m.authentication.jwt` | Generates JWT tokens with configurable claims (used in tests) |
+| `JWKGenerator` | `o.m.authentication.jwt` | Generates JWK sets from `AsymmetricKeyPair` objects (RSA and EC key types) |
+
+### Supported JWS Algorithms
+
+`JWTValidator` supports 15 JWS algorithms:
+
+| Family | Algorithms |
+|--------|-----------|
+| HMAC | `HS256`, `HS384`, `HS512` |
+| RSA PKCS#1 | `RS256`, `RS384`, `RS512` |
+| ECDSA | `ES256`, `ES256K`, `ES384`, `ES512` |
+| RSA-PSS | `PS256`, `PS384`, `PS512` |
+| EdDSA | `EdDSA` |
 
 ### JWT Authentication
 

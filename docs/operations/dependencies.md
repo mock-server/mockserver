@@ -6,7 +6,7 @@ All managed dependency versions are declared in the root `pom.xml`:
 
 | Property | Version |
 |----------|---------|
-| `maven.compiler.source/target` | `1.8` (Java 8) |
+| `maven.compiler.source/target` | `11` (Java 11) |
 | `netty.version` | `4.1.89.Final` |
 | `jackson.version` | `2.14.2` |
 | `slf4j.version` | `2.0.6` |
@@ -209,7 +209,7 @@ These are explicitly managed to resolve version conflicts or CVEs:
 
 | Plugin | Version | Purpose |
 |--------|---------|---------|
-| `maven-compiler-plugin` | 3.10.1 | Java 8 compilation |
+| `maven-compiler-plugin` | 3.10.1 | Java 11 compilation |
 | `templating-maven-plugin` | 1.0.0 | Source template filtering |
 | `maven-jar-plugin` | 3.3.0 | JAR packaging |
 | `maven-clean-plugin` | 3.2.0 | Build cleanup |

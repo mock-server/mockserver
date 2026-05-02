@@ -14,6 +14,12 @@ This document identifies missing documentation, undocumented areas, and recommen
 
 **Remaining:** Website infrastructure (S3, CloudFront, Route53 in account `014848309742`) is still manually provisioned. Consider adding Terraform definitions for these resources.
 
+### ~~1b. DynamoDB Locking Reference~~ (Resolved)
+
+**Status:** ~~Documentation referenced DynamoDB for Terraform state locking.~~
+
+**Resolution:** `backend.tf` uses `use_lockfile = true` (S3-native locking), not DynamoDB. Docs updated to reflect this.
+
 ### 2. No Automated Release Pipeline
 
 **Status:** The release process is a manual 13-step checklist (`scripts/release_steps.md`) spanning 6+ repositories, 4 registries, and multiple AWS services. There is significant risk of human error, inconsistency, or partial releases.
@@ -72,28 +78,17 @@ This document identifies missing documentation, undocumented areas, and recommen
 - Link to `docs/architecture.md` from `CONTRIBUTING.md`
 - Add a "Where to make changes" section mapping feature types to modules
 
-### 7. No Testing Documentation
+### ~~7. No Testing Documentation~~ (Resolved)
 
-**Status:** The test infrastructure is complex (unit tests, integration tests, container integration tests, performance tests) but undocumented.
+**Status:** ~~The test infrastructure is complex (unit tests, integration tests, container integration tests, performance tests) but undocumented.~~
 
-**Recommendation:** Create `docs/testing.md` covering:
-- How to run unit tests (`./mvnw test`)
-- How to run integration tests (`./mvnw verify`)
-- How to run container integration tests (`container_integration_tests/integration_tests.sh`)
-- How to run performance tests (Locust)
-- Test naming conventions (`*Test.java` vs `*IntegrationTest.java`)
-- The custom test listener (`PrintOutCurrentTestRunListener`)
+**Resolution:** Created `docs/testing.md` covering unit tests, integration tests, container integration tests, performance tests, test naming conventions, helper scripts, environment variable controls, and CI execution.
 
-### 8. No Security Documentation
+### ~~8. No Security Documentation~~ (Resolved)
 
-**Status:** `SECURITY.md` exists but only covers reporting policy. There is no documentation of security features (TLS, mTLS, JWT auth, control plane auth) from an architectural perspective.
+**Status:** ~~`SECURITY.md` exists but only covers reporting policy. There is no documentation of security features from an architectural perspective.~~
 
-**Recommendation:** Create `docs/security.md` covering:
-- TLS certificate generation (BouncyCastle CA)
-- mTLS configuration
-- Control plane authentication (JWT, mTLS)
-- Template security restrictions
-- Dependency vulnerability management
+**Resolution:** `docs/code/tls-and-security.md` now comprehensively covers BouncyCastle CA, SNI, mTLS, JWT auth (with all 15 supported JWS algorithms), control plane security, and authentication classes (8 classes documented).
 
 ### 9. Helm Chart Repo Hosting
 
@@ -144,8 +139,9 @@ No Dependabot or Renovate configuration exists for automated dependency update P
 | Website structure | Documented | [operations/website.md](operations/website.md) |
 | Dependencies | Documented | [operations/dependencies.md](operations/dependencies.md) |
 | Release process | Documented | [operations/release-process.md](operations/release-process.md) |
-| Testing strategy | **Missing** | Recommended: `docs/testing.md` |
-| Security architecture | **Missing** | Recommended: `docs/security.md` |
+| Testing strategy | Documented | [testing.md](testing.md) |
+| Security architecture | Documented | [code/tls-and-security.md](code/tls-and-security.md) |
+| Metrics & monitoring | Documented | [code/metrics.md](code/metrics.md) |
 | Operational runbook | **Missing** | Recommended: `docs/runbook.md` |
 | Infrastructure as Code | **Partial** | `terraform/buildkite-agents/` (website IaC still missing) |
 | API documentation | **Partial** | OpenAPI spec exists, not integrated |

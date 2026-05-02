@@ -71,6 +71,38 @@ flowchart TD
 
 All control-plane requests go through `controlPlaneRequestAuthenticated()` which enforces mTLS and/or JWT authentication if configured.
 
+### Retrieve, Clear & Format Enums
+
+The retrieve and clear endpoints accept type parameters:
+
+**`RetrieveType`** (query parameter `?type=`):
+
+| Value | Description |
+|-------|-------------|
+| `REQUESTS` | Received requests matching the filter |
+| `REQUEST_RESPONSES` | Request/response pairs |
+| `RECORDED_EXPECTATIONS` | Expectations recorded from proxy forwarding |
+| `ACTIVE_EXPECTATIONS` | Currently active expectations |
+| `LOGS` | Log messages |
+
+**`Format`** (query parameter `?format=`):
+
+| Value | Description |
+|-------|-------------|
+| `JSON` | Standard JSON serialization |
+| `JAVA` | Generated Java client API code (via `ExpectationToJavaSerializer`) |
+| `LOG_ENTRIES` | Raw log entry format |
+
+**`ClearType`** (query parameter `?type=`):
+
+| Value | Description |
+|-------|-------------|
+| `EXPECTATIONS` | Clear expectations only |
+| `LOG` | Clear logs only |
+| `ALL` | Clear both expectations and logs (default) |
+
+Clear also supports clearing by `ExpectationId` (not just `RequestDefinition`).
+
 ### Non-Control-Plane Routes (in HttpRequestHandler)
 
 | Route | Method | Handler |
@@ -220,7 +252,7 @@ sequenceDiagram
 
 ### Loop Prevention
 
-To prevent infinite forwarding loops (where MockServer forwards to itself), a `x-]]forwarded-by` header is added to forwarded requests. If an incoming request already has this header, it is identified as a loop and returned with a 404.
+To prevent infinite forwarding loops (where MockServer forwards to itself), an `x-forwarded-by` header with a unique per-instance value (`MockServer_<UUID>`) is added to forwarded requests. If an incoming request already has this header with the matching value, it is identified as a loop and returned with a 404.
 
 ### Proxy Authentication
 
@@ -243,3 +275,18 @@ graph LR
 The only difference between the two servlets is a single boolean flag: `ProxyServlet` passes `proxyRequest=true` to `processAction()`, enabling forwarding of unmatched requests.
 
 **WAR limitations**: WebSocket callbacks, dynamic port binding, and server stop are not supported.
+
+## Startup Initialisation
+
+`HttpState` performs several initialisation steps in its constructor:
+
+| Step | Condition | Class |
+|------|-----------|-------|
+| File persistence | `configuration.persistExpectations()` | `ExpectationFileSystemPersistence` |
+| Expectation loading | `initializationJsonPath` or `initializationClass` set | `ExpectationInitializerLoader` |
+| JSON file watching | `watchInitializationJson` enabled | `ExpectationFileWatcher` |
+| Memory monitoring | `outputMemoryUsageCsv` enabled | `MemoryMonitoring` |
+
+### Loop Prevention Header
+
+MockServer adds an `x-forwarded-by` header to forwarded requests to prevent infinite loops. The header name is fixed (`x-forwarded-by`); the value is generated per server instance using the pattern `MockServer_<UUID>`. If an incoming request already contains this header with the matching value, it is identified as a loop and returned with a 404.

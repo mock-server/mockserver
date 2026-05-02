@@ -46,6 +46,7 @@ app:
   logLevel: "INFO"
   serverPort: "1080"
   mountedConfigMapName: "mockserver-config"
+  mountedLibsConfigMapName: "mockserver-config"
   propertiesFileName: "mockserver.properties"
   readOnlyRootFilesystem: false
   serviceAccountName: default
@@ -57,8 +58,30 @@ image:
 service:
   type: NodePort
   port: 1080
+  annotations: {}
+  clusterIP: ""
+  externalIPs: []
+  loadBalancerIP: ""
+  loadBalancerSourceRanges: []
+  nodePort: ""
+  test:
+    image: radial/busyboxplus:curl
 ingress:
   enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: mockserver.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+podAnnotations: {}
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+releasenameOverride: ""
 ```
 
 ### Deployment Architecture
@@ -114,6 +137,8 @@ Provides a ConfigMap containing:
 
 ### Template
 
+The ConfigMap template loads default files from `static/`:
+
 ```yaml
 apiVersion: v1
 kind: ConfigMap
@@ -121,10 +146,14 @@ metadata:
   name: {{ .Chart.Name }}
 data:
   mockserver.properties: |-
-    {{ .Files.Get "static/mockserver.properties" | nindent 4 }}
+    {{ printf "%s" (.Files.Get "static/mockserver.properties") | indent 4 }}
   initializerJson.json: |-
-    {{ .Files.Get "static/initializerJson.json" | nindent 4 }}
+    {{ printf "%s" (.Files.Get "static/initializerJson.json") | indent 4 }}
 ```
+
+Static defaults are in `helm/mockserver-config/static/`:
+- `mockserver.properties` — default MockServer properties
+- `initializerJson.json` — default expectation initialiser (empty array)
 
 ## Chart Repository
 

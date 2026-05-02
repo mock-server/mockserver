@@ -175,6 +175,28 @@ Each test:
 3. Validates responses using a curl-based client container
 4. Tears down the environment
 
+### Helper Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `integration_tests.sh` | Main orchestrator: builds images, runs all tests, prints summary |
+| `docker-compose.sh` | Docker Compose helpers: `start-up`, `tear-down`, `docker-exec`, `container-logs` |
+| `helm-deploy.sh` | Kind cluster lifecycle: `start-up-k8s`, `tear-down-k8s`, Helm install/uninstall |
+| `logging.sh` | Coloured terminal output, `runCommand`, `retryCommand`, `logTestResult` |
+
+### Environment Variable Controls
+
+| Variable | Purpose |
+|----------|---------|
+| `SKIP_JAVA_BUILD` | Skip `mvnw package` step |
+| `SKIP_DOCKER_BUILD_MOCKSERVER` | Skip building MockServer Docker image |
+| `SKIP_DOCKER_REBUILD_CLIENT` | Skip rebuilding the curl client image |
+| `SKIP_ALL_TESTS` | Skip all tests (build only) |
+| `SKIP_DOCKER_TESTS` | Skip Docker Compose tests |
+| `SKIP_HELM_TESTS` | Skip Helm/Kind tests |
+
+See [Testing](../testing.md) for full details on running container integration tests.
+
 ## Maven CI Image
 
 ### Building Locally
