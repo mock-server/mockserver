@@ -1,0 +1,11 @@
+# Copy this to terraform.tfvars and fill in values.
+# NEVER commit terraform.tfvars — it is gitignored.
+
+# Get your agent token from: https://buildkite.com/organizations/mockserver/agents
+# buildkite_agent_token = "your-token-here"
+
+region               = "eu-west-2"
+instance_types       = "t3.large"
+min_size             = 0
+max_size             = 2
+on_demand_percentage = 0

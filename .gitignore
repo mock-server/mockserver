@@ -116,6 +116,15 @@ mockserverInitialization.json
 _test*.java
 go_client
 
+# terraform #
+#############
+terraform/**/.terraform/
+terraform/**/*.tfstate
+terraform/**/*.tfstate.backup
+terraform/**/*.tfvars
+!terraform/**/*.tfvars.example
+terraform/**/.terraform.lock.hcl
+
 # opencode scratch directory #
 ##############################
 /.tmp/*
