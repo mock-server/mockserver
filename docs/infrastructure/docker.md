@@ -185,11 +185,33 @@ The Maven CI image supports an optional corporate CA certificate for environment
 # Copy your corporate root CA certificate (optional, for TLS proxy environments)
 cp /path/to/your/corporate-root-ca.pem docker_build/maven/corporate-root-ca.pem
 
-# Build the image
+# Build the image (native architecture)
 docker build -t mockserver/mockserver:maven docker_build/maven/
 ```
 
 Without a corporate CA cert, create an empty `corporate-root-ca.pem` file (or copy the `.pem.example` placeholder). The Dockerfile detects the empty file and skips certificate injection.
+
+### Cross-Architecture Build (amd64 on Apple Silicon)
+
+Buildkite agents run on amd64 EC2 instances. When building on Apple Silicon, cross-compile to amd64 before pushing:
+
+```bash
+docker buildx build \
+    --builder desktop-linux \
+    --platform linux/amd64 \
+    --load \
+    -t mockserver/mockserver:maven \
+    docker_build/maven/
+```
+
+**Important:** Use the `desktop-linux` buildx builder, not `docker-container` builders (e.g. `multiplatform`). The `docker-container` driver runs in its own container and does not inherit the host's TLS certificate trust store, causing `x509: certificate signed by unknown authority` errors behind corporate TLS proxies.
+
+Verify the architecture before pushing:
+
+```bash
+docker inspect mockserver/mockserver:maven --format '{{.Architecture}}'
+# Should print: amd64
+```
 
 ### Corporate CA Certificate
 
