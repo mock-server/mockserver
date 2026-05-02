@@ -18,4 +18,4 @@ else
     echo "BRANCH: ${CURRENT_BRANCH:-}"
 fi
 
-./mvnw clean deploy ${1:-} -Djava.security.egd=file:/dev/./urandom
+./mvnw -T 1C clean deploy ${1:-} -Djava.security.egd=file:/dev/./urandom -Dmockserver.testOutput=quiet
