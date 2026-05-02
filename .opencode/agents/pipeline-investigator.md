@@ -83,6 +83,18 @@ gh run view {run_id} --repo mockserver/mockserver --log-failed
 | `Connection refused` or `BindException` | Port conflict | Check for port contention in tests |
 | `Timeout` | Operation stuck | Check for deadlocks, slow external deps |
 | `SNAPSHOT` dependency errors | Maven dep issue | Check artifact repository availability |
+| Build stuck in `scheduled` | Agent not running | Check AWS ASG via `/aws-investigation` |
+| Agent did not connect | Agent infrastructure | Check AWS ASG via `/aws-investigation` |
+
+## Agent Infrastructure
+
+If builds are stuck in `scheduled` state with no agent picking them up, the issue is likely with the AWS EC2 instances that run the Buildkite agents. Use `/aws-investigation` to check:
+
+- AutoScaling Group desired capacity and instance health
+- Autoscaling Lambda invocations and errors
+- EC2 instance status checks
+
+See `.opencode/skills/aws-investigation/SKILL.md` for full details.
 
 ## Important
 

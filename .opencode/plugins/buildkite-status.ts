@@ -67,22 +67,55 @@ export const BuildkiteStatus: Plugin = async ({ $, client, worktree }) => {
       }
 
       const failed = builds.filter((b) => b.state === "failed")
+      const TEN_MINUTES = 10 * 60 * 1000
+      const stuck = builds.filter(
+        (b) =>
+          b.state === "scheduled" &&
+          Date.now() - new Date(b.created_at).getTime() > TEN_MINUTES
+      )
+
+      const problems: string[] = []
+      let toastMessage = ""
+      let toastVariant: "warning" | "error" = "warning"
+
+      if (stuck.length > 0) {
+        const stuckSummary = stuck
+          .map(
+            (b) =>
+              `- Build #${b.number} (${b.branch}): scheduled ${Math.round((Date.now() - new Date(b.created_at).getTime()) / 60000)}min ago — no agent\n  ${b.web_url}`
+          )
+          .join("\n")
+        problems.push(
+          `${stuck.length} build(s) stuck waiting for an agent:\n\n${stuckSummary}`
+        )
+        toastMessage = `Buildkite: ${stuck.length} build(s) waiting for agent — check AWS ASG`
+        toastVariant = "error"
+      }
 
       if (failed.length > 0) {
-        const summary = failed
+        const failedSummary = failed
           .map(
             (b) =>
               `- Build #${b.number} (${b.branch}): ${b.message?.split("\n")[0] || "no message"}\n  ${b.web_url}`
           )
           .join("\n")
+        problems.push(
+          `${failed.length} of ${builds.length} recent builds failed:\n\n${failedSummary}`
+        )
+        if (!toastMessage) {
+          toastMessage = `Buildkite: ${failed.length} recent build(s) failing`
+        }
+      }
+
+      if (problems.length > 0) {
         await fs.writeFile(
           path.join(worktree, STATUS_FILE),
-          `# Buildkite Status\n\nChecked at ${new Date().toISOString()}\n\n${failed.length} of ${builds.length} recent builds failed:\n\n${summary}\n`
+          `# Buildkite Status\n\nChecked at ${new Date().toISOString()}\n\n${problems.join("\n\n---\n\n")}\n`
         )
         await client.tui.showToast({
           body: {
-            message: `Buildkite: ${failed.length} recent build(s) failing`,
-            variant: "warning",
+            message: toastMessage,
+            variant: toastVariant,
           },
         })
       } else {
