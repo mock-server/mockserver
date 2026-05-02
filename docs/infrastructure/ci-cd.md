@@ -141,6 +141,25 @@ Builds and pushes the `mockserver/mockserver:maven` CI image to Docker Hub. This
 
 **Process:** Uses GitHub's CodeQL autobuild to compile Java sources, then runs static analysis queries to detect security vulnerabilities.
 
+### GitHub Actions Versions
+
+| Workflow | Action | Version |
+|----------|--------|---------|
+| `build-maven-ci-image.yml` | `actions/checkout` | `v4` |
+| `build-maven-ci-image.yml` | `docker/setup-buildx-action` | `v3` |
+| `build-maven-ci-image.yml` | `docker/login-action` | `v3` |
+| `build-maven-ci-image.yml` | `docker/build-push-action` | `v5` |
+| `build-docker-image.yml` | `actions/checkout` | `v3` |
+| `build-docker-image.yml` | `docker/metadata-action` | `v4` |
+| `build-docker-image.yml` | `docker/setup-qemu-action` | `v2` |
+| `build-docker-image.yml` | `docker/setup-buildx-action` | `v2` |
+| `build-docker-image.yml` | `docker/login-action` | `v2` |
+| `build-docker-image.yml` | `docker/build-push-action` | `v4` |
+| `codeql-analysis.yml` | `actions/checkout` | `v3` |
+| `codeql-analysis.yml` | `github/codeql-action/*` | `v2` |
+
+Note: `build-maven-ci-image.yml` uses newer action versions than the other workflows.
+
 ## Build Agent Infrastructure
 
 See [AWS Infrastructure](aws-infrastructure.md) for details on the Buildkite agent EC2 instances, AutoScaling Group, and Lambda-based autoscaler.
