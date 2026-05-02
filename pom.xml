@@ -153,7 +153,7 @@
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-core</artifactId>
                 <!-- Tomcat 9.x = Servlet 4.0 (javax); Tomcat 10+ = Jakarta EE 9+ (jakarta namespace) -->
-                <version>9.0.71</version>
+                <version>9.0.117</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
