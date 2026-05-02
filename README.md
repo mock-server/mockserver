@@ -32,6 +32,10 @@ Please see: [Change Log](https://github.com/mock-server/mockserver/blob/master/c
     </tr>
 </table>
 
+### Requirements
+
+MockServer requires **Java 11+**. Java 11 is the minimum supported version to maximise compatibility — approximately 23% of Java projects still run on Java 11.
+
 ### Versions
 
 ##### Maven Central [![mockserver](https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-netty/badge.svg?style=flat)](http://search.maven.org/#search%7Cga%7C1%7Cmockserver)

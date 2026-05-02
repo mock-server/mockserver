@@ -1,5 +1,21 @@
 # Dependencies
 
+## Java Compatibility
+
+MockServer targets **Java 11** as the minimum supported version. This is a deliberate decision to maximise compatibility — approximately 23% of Java projects still run on Java 11.
+
+All dependency upgrades must be compatible with Java 11. The following major version ceilings apply:
+
+| Dependency | Maximum Version | Reason |
+|-----------|----------------|--------|
+| Spring Framework | 5.x | Spring 6 requires Java 17+ and Jakarta EE 9+ |
+| Spring Boot | 2.x | Spring Boot 3 requires Spring 6 |
+| Tomcat Embed | 9.x | Tomcat 10+ uses `jakarta.servlet` namespace |
+| Jetty | 9.x | Jetty 10+ requires Java 11+ minimum, Jetty 12+ requires Jakarta |
+| Servlet API | `javax.servlet` | `jakarta.servlet` requires Jakarta EE 9+ |
+
+When evaluating Snyk/Dependabot PRs, **reject any that require Java 17+** or migrate from `javax` to `jakarta` namespace.
+
 ## Version Properties
 
 All managed dependency versions are declared in the root `pom.xml`:
@@ -7,19 +23,19 @@ All managed dependency versions are declared in the root `pom.xml`:
 | Property | Version |
 |----------|---------|
 | `maven.compiler.source/target` | `11` (Java 11) |
-| `netty.version` | `4.1.89.Final` |
+| `netty.version` | `4.1.132.Final` |
 | `jackson.version` | `2.14.2` |
 | `slf4j.version` | `2.0.6` |
 | `spring.version` | `5.3.26` |
 | `spring-web.version` | `5.3.25` |
-| `bouncycastle.version` | `1.72` |
+| `bouncycastle.version` | `1.84` |
 | `mockito.version` | `4.11.0` |
 | `velocity.version` | `2.3` |
 | `hamcrest.version` | `2.2` |
 | `xmlunit.version` | `2.9.1` |
 | `httpcomponents.version` | `4.4.1` |
 | `maven-surefire-plugin.version` | `2.22.2` |
-| `netty-tcnative-boringssl-static.version` | `2.0.56.Final` |
+| `netty-tcnative-boringssl-static.version` | `2.0.75.Final` |
 
 ## Dependency Map
 
@@ -28,8 +44,8 @@ graph TB
     MS[MockServer Core]
 
     subgraph "Network"
-        NETTY[Netty 4.1.89]
-        TCNATIVE[tcnative-boringssl 2.0.56]
+        NETTY[Netty 4.1.132]
+        TCNATIVE[tcnative-boringssl 2.0.75]
         APACHE_HTTP[HttpClient 4.5.14]
     end
 
@@ -39,16 +55,16 @@ graph TB
     end
 
     subgraph "Security"
-        BC[BouncyCastle 1.72]
+        BC[BouncyCastle 1.84]
         JWT[Nimbus JOSE+JWT 9.31]
     end
 
     subgraph "Matching"
         JSON_SCHEMA[json-schema-validator 1.0.77]
-        JSON_PATH[json-path 2.7.0]
+        JSON_PATH[json-path 2.9.0]
         JSON_UNIT[json-unit-core 2.36.1]
         XMLUNIT[XMLUnit 2.9.1]
-        SWAGGER[swagger-parser 2.1.12]
+        SWAGGER[swagger-parser 2.1.22]
     end
 
     subgraph "Templating"
@@ -59,8 +75,8 @@ graph TB
 
     subgraph "Utilities"
         GUAVA[Guava 32.0.0-jre]
-        COMMONS_LANG[commons-lang3 3.12.0]
-        COMMONS_IO[commons-io 2.11.0]
+        COMMONS_LANG[commons-lang3 3.18.0]
+        COMMONS_IO[commons-io 2.14.0]
         CLASSGRAPH[ClassGraph 4.8.155]
         DISRUPTOR[LMAX Disruptor 3.4.4]
     end
@@ -85,21 +101,21 @@ graph TB
 
 | GroupId | ArtifactId | Version | Purpose |
 |---------|-----------|---------|---------|
-| `io.netty` | `netty-buffer` | 4.1.89.Final | Byte buffer management |
-| `io.netty` | `netty-codec` | 4.1.89.Final | Protocol codecs |
-| `io.netty` | `netty-codec-http` | 4.1.89.Final | HTTP/1.1 codec |
-| `io.netty` | `netty-codec-http2` | 4.1.89.Final | HTTP/2 codec |
-| `io.netty` | `netty-codec-socks` | 4.1.89.Final | SOCKS proxy codec |
-| `io.netty` | `netty-common` | 4.1.89.Final | Common utilities |
-| `io.netty` | `netty-handler` | 4.1.89.Final | Channel handlers |
-| `io.netty` | `netty-handler-proxy` | 4.1.89.Final | Proxy protocol handler |
-| `io.netty` | `netty-transport` | 4.1.89.Final | Transport layer |
-| `io.netty` | `netty-transport-native-unix-common` | 4.1.89.Final | Unix native transport |
-| `io.netty` | `netty-resolver` | 4.1.89.Final | DNS resolver |
-| `io.netty` | `netty-tcnative-boringssl-static` | 2.0.56.Final | Native TLS (BoringSSL) |
+| `io.netty` | `netty-buffer` | 4.1.132.Final | Byte buffer management |
+| `io.netty` | `netty-codec` | 4.1.132.Final | Protocol codecs |
+| `io.netty` | `netty-codec-http` | 4.1.132.Final | HTTP/1.1 codec |
+| `io.netty` | `netty-codec-http2` | 4.1.132.Final | HTTP/2 codec |
+| `io.netty` | `netty-codec-socks` | 4.1.132.Final | SOCKS proxy codec |
+| `io.netty` | `netty-common` | 4.1.132.Final | Common utilities |
+| `io.netty` | `netty-handler` | 4.1.132.Final | Channel handlers |
+| `io.netty` | `netty-handler-proxy` | 4.1.132.Final | Proxy protocol handler |
+| `io.netty` | `netty-transport` | 4.1.132.Final | Transport layer |
+| `io.netty` | `netty-transport-native-unix-common` | 4.1.132.Final | Unix native transport |
+| `io.netty` | `netty-resolver` | 4.1.132.Final | DNS resolver |
+| `io.netty` | `netty-tcnative-boringssl-static` | 2.0.75.Final | Native TLS (BoringSSL) |
 | `javax.servlet` | `javax.servlet-api` | 4.0.1 | Servlet API |
 | `org.apache.httpcomponents` | `httpclient` | 4.5.14 | Apache HTTP client |
-| `org.apache.tomcat.embed` | `tomcat-embed-core` | 9.0.71 | Embedded Tomcat |
+| `org.apache.tomcat.embed` | `tomcat-embed-core` | 9.0.117 | Embedded Tomcat |
 | `org.apache.tomcat.embed` | `tomcat-embed-logging-juli` | 8.5.2 | Tomcat logging |
 | `com.jcraft` | `jzlib` | 1.1.3 | HTTP gzip compression |
 
@@ -119,8 +135,8 @@ graph TB
 
 | GroupId | ArtifactId | Version | Purpose |
 |---------|-----------|---------|---------|
-| `org.bouncycastle` | `bcprov-jdk18on` | 1.72 | Cryptography provider |
-| `org.bouncycastle` | `bcpkix-jdk18on` | 1.72 | X.509 certificate handling |
+| `org.bouncycastle` | `bcprov-jdk18on` | 1.84 | Cryptography provider |
+| `org.bouncycastle` | `bcpkix-jdk18on` | 1.84 | X.509 certificate handling |
 | `com.nimbusds` | `nimbus-jose-jwt` | 9.31 | JWT token handling |
 
 ### Matching & Validation
@@ -128,12 +144,12 @@ graph TB
 | GroupId | ArtifactId | Version | Purpose |
 |---------|-----------|---------|---------|
 | `com.networknt` | `json-schema-validator` | 1.0.77 | JSON Schema validation |
-| `com.jayway.jsonpath` | `json-path` | 2.7.0 | JSONPath expressions |
+| `com.jayway.jsonpath` | `json-path` | 2.9.0 | JSONPath expressions |
 | `net.javacrumbs.json-unit` | `json-unit-core` | 2.36.1 | JSON comparison |
 | `org.xmlunit` | `xmlunit-core` | 2.9.1 | XML comparison |
 | `org.xmlunit` | `xmlunit-placeholders` | 2.9.1 | XML placeholder matching |
-| `io.swagger.parser.v3` | `swagger-parser` | 2.1.12 | OpenAPI spec parsing |
-| `org.mozilla` | `rhino` | 1.7.14 | JavaScript engine (swagger-parser dep) |
+| `io.swagger.parser.v3` | `swagger-parser` | 2.1.22 | OpenAPI spec parsing |
+| `org.mozilla` | `rhino` | 1.7.14.1 | JavaScript engine (swagger-parser dep) |
 
 ### Templating
 
@@ -154,10 +170,10 @@ graph TB
 | GroupId | ArtifactId | Version | Purpose |
 |---------|-----------|---------|---------|
 | `com.google.guava` | `guava` | 32.0.0-jre | General utilities |
-| `org.apache.commons` | `commons-lang3` | 3.12.0 | String/reflection utilities |
+| `org.apache.commons` | `commons-lang3` | 3.18.0 | String/reflection utilities |
 | `org.apache.commons` | `commons-text` | 1.10.0 | Text utilities |
 | `commons-codec` | `commons-codec` | 1.15 | Encoding/decoding |
-| `commons-io` | `commons-io` | 2.11.0 | I/O utilities |
+| `commons-io` | `commons-io` | 2.14.0 | I/O utilities |
 | `io.github.classgraph` | `classgraph` | 4.8.155 | Classpath scanning |
 | `com.fasterxml.uuid` | `java-uuid-generator` | 4.1.0 | Non-blocking UUID generation |
 | `com.lmax` | `disruptor` | 3.4.4 | High-performance ring buffer |
@@ -204,6 +220,8 @@ These are explicitly managed to resolve version conflicts or CVEs:
 | `com.sun.activation` | `jakarta.activation` | 2.0.1 | Conflict (jakarta.xml.bind vs jaxb-core) |
 | `commons-beanutils` | `commons-beanutils` | 1.9.4 | Conflict (velocity-tools vs commons-digester3) |
 | `commons-logging` | `commons-logging` | 1.2 | Conflict (beanutils vs digester3 vs swagger) |
+| `com.fasterxml.jackson.datatype` | `jackson-datatype-jsr310` | 2.14.2 | Conflict (swagger-parser 2.1.22 pulls 2.16.2) |
+| `com.fasterxml.jackson.dataformat` | `jackson-dataformat-yaml` | 2.14.2 | Conflict (swagger-parser vs swagger-core) |
 
 ## Build Plugins
 

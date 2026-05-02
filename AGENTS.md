@@ -12,7 +12,7 @@
 
 MockServer is an open-source HTTP(S) mock server and proxy for testing, written in Java. It uses Netty as the HTTP server framework, Maven for builds, and is deployed as Docker containers, JARs, and WARs.
 
-**Tech stack:** Java 8+, Netty 4.1, Jackson 2.14, Maven (multi-module), Docker, Helm, Jekyll (documentation site)
+**Tech stack:** Java 11+ (minimum supported), Netty 4.1, Jackson 2.14, Maven (multi-module), Docker, Helm, Jekyll (documentation site)
 **CI/CD:** Buildkite (primary CI), GitHub Actions (Docker image builds, CodeQL)
 **Infrastructure:** AWS (Buildkite build agents, documentation site hosting), Docker Hub (container images)
 **Repository:** GitHub (github.com)
@@ -117,6 +117,18 @@ See `.opencode/rules/commit-workflow.md` for the full workflow and skip conditio
 - Use grep/glob for finding code across the codebase
 - Read surrounding context before making changes
 - Follow existing code conventions in neighboring files
+
+## Java Compatibility Policy
+
+MockServer targets **Java 11** as the minimum supported version. This is a deliberate decision to maximise compatibility — approximately 23% of Java projects still run on Java 11.
+
+**Rules:**
+- The Maven compiler source/target MUST remain at `11` (`pom.xml` properties `maven.compiler.source` and `maven.compiler.target`)
+- NEVER accept dependency upgrades that require Java 17+ (e.g., Spring 6, Jakarta EE 9+, Jetty 10+/12+)
+- NEVER use Java language features or APIs introduced after Java 11
+- When evaluating Snyk/Dependabot PRs, reject any that pull in transitive dependencies requiring Java 17+
+- The `javax` namespace is used throughout — do NOT migrate to `jakarta` namespace
+- Spring 5.x, Tomcat 9.x, and Jetty 9.x are the highest major versions compatible with Java 11 + `javax`
 
 ## Fix Placement Policy
 

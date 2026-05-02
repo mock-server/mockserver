@@ -99,6 +99,22 @@ graph TB
     MEX --> JC
 ```
 
+## Java Compatibility
+
+MockServer targets **Java 11** as the minimum supported version. This is a deliberate decision to maximise compatibility — approximately 23% of Java projects still run on Java 11 ([New Relic State of the Java Ecosystem](https://newrelic.com/resources/report/2024-state-of-the-java-ecosystem)).
+
+The Maven compiler source and target are set to `11` in the root `pom.xml`. All dependencies must be compatible with Java 11:
+
+| Constraint | Maximum Version | Reason |
+|-----------|----------------|--------|
+| Spring Framework | 5.x | Spring 6 requires Java 17+ and Jakarta EE 9+ |
+| Spring Boot | 2.x | Spring Boot 3 requires Spring 6 |
+| Tomcat Embed | 9.x | Tomcat 10+ uses `jakarta` namespace |
+| Jetty | 9.x | Jetty 10+ requires Java 11+ minimum, Jetty 12+ requires Jakarta |
+| Servlet API | `javax.servlet` | `jakarta.servlet` requires Jakarta EE 9+ |
+
+When evaluating dependency upgrade PRs (Snyk, Dependabot, or community), reject any that transitively require Java 17+ or migrate from `javax` to `jakarta` namespace.
+
 ## Key Architectural Principles
 
 ### 1. Port Unification (Single-Port Multi-Protocol)
