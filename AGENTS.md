@@ -78,6 +78,7 @@ The scaler runs every minute, scales 0-2 instances based on Buildkite job queue 
 ## Git Policy
 
 - NEVER commit or push without explicit user request
+- NEVER run `git commit` without first completing the full pre-commit workflow in `.opencode/rules/commit-workflow.md` (classify → validate → adversarial review → commit). Use the `/commit` command to ensure the workflow is followed.
 - NEVER run destructive git commands without confirmation (see `.opencode/rules/git-safety.md`)
 - NEVER add Co-Authored-By, Signed-off-by, or any other trailers to commit messages
 - NEVER amend commits that have been pushed to remote
