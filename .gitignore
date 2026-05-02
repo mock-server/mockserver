@@ -130,6 +130,10 @@ terraform/**/.terraform.lock.hcl
 /.tmp/*
 !/.tmp/.gitkeep
 
+# docker build - corporate CA certificate (local only) #
+#########################################################
+docker_build/maven/corporate-root-ca.pem
+
 # soft links #
 ##############
 kube_config.yaml

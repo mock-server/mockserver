@@ -15,7 +15,7 @@ graph TB
     end
 
     subgraph "Build Images"
-        MVN["docker_build/maven/Dockerfile<br/><b>Maven CI</b><br/>Ubuntu 22.04 + JDK 8"]
+        MVN["docker_build/maven/Dockerfile<br/><b>Maven CI</b><br/>Ubuntu 24.04 + JDK 21 + Maven 3.9"]
         GRUNT["docker_build/grunt/Dockerfile<br/><b>Grunt/Frontend</b><br/>Ubuntu 20.04 + Chrome + Node"]
         PERF["docker_build/performance/Dockerfile<br/><b>Performance</b><br/>locustio/locust"]
     end
@@ -64,7 +64,7 @@ It also bundles `netty-tcnative-boringssl-static` native library for TLS perform
 
 | Image | Dockerfile | Base | Purpose |
 |-------|-----------|------|---------|
-| `mockserver/mockserver:maven` | `docker_build/maven/Dockerfile` | Ubuntu 22.04 | CI builds — JDK 8, Maven, pre-fetched deps |
+| `mockserver/mockserver:maven` | `docker_build/maven/Dockerfile` | Ubuntu 24.04 | CI builds — JDK 21, Maven 3.9.15, pre-fetched deps |
 | `mockserver/mockserver:grunt` | `docker_build/grunt/Dockerfile` | Ubuntu 20.04 | Frontend tests — JDK 8, Chrome, Node 16, Grunt |
 | Performance | `docker_build/performance/Dockerfile` | `locustio/locust` | Load testing with Locust |
 
@@ -174,3 +174,38 @@ Each test:
 2. Creates expectations via the REST API
 3. Validates responses using a curl-based client container
 4. Tears down the environment
+
+## Maven CI Image
+
+### Building Locally
+
+The Maven CI image supports an optional corporate CA certificate for environments behind a TLS inspection proxy:
+
+```bash
+# Copy your corporate root CA certificate (optional, for TLS proxy environments)
+cp /path/to/your/corporate-root-ca.pem docker_build/maven/corporate-root-ca.pem
+
+# Build the image
+docker build -t mockserver/mockserver:maven docker_build/maven/
+```
+
+Without a corporate CA cert, create an empty `corporate-root-ca.pem` file (or copy the `.pem.example` placeholder). The Dockerfile detects the empty file and skips certificate injection.
+
+### Corporate CA Certificate
+
+The Dockerfile supports injecting a corporate root CA certificate at build time:
+
+- **Placeholder:** `docker_build/maven/corporate-root-ca.pem.example` (empty, committed to git)
+- **Real cert:** `docker_build/maven/corporate-root-ca.pem` (gitignored, local only)
+- If the cert file has content, it is added to the OS trust store (`update-ca-certificates`) and the Java truststore (`keytool`)
+- In CI (GitHub Actions), the empty placeholder is used — no corporate CA is needed
+
+### Automated Build
+
+The Maven CI image is automatically built and pushed to Docker Hub by the GitHub Actions workflow `.github/workflows/build-maven-ci-image.yml`:
+
+- **Triggers:** changes to `docker_build/maven/**` on `master`, monthly schedule, manual dispatch
+- **Auth:** `DOCKERHUB_USERNAME` / `DOCKERHUB_TOKEN` GitHub secrets
+- **Tag:** `mockserver/mockserver:maven`
+
+See [CI/CD](ci-cd.md) for details.

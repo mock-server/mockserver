@@ -13,11 +13,13 @@ graph LR
     subgraph "GitHub Actions"
         GA1[Docker Image Build<br/>Multi-arch push]
         GA2[CodeQL Analysis<br/>Security scanning]
+        GA3[Maven CI Image Build<br/>Build image push]
     end
 
     BK -->|runs on| EC2[AWS EC2 Agents]
     GA1 -->|pushes to| DH[Docker Hub]
     GA2 -->|reports to| GH[GitHub Security]
+    GA3 -->|pushes to| DH
 ```
 
 ## Buildkite Pipeline
@@ -75,10 +77,11 @@ Runs the full Maven build inside the `mockserver/mockserver:maven` Docker image:
 
 The `mockserver/mockserver:maven` image is defined in `docker_build/maven/Dockerfile`:
 
-- Base: Ubuntu 22.04 (Jammy)
-- JDK: OpenJDK 8
-- Maven: Pre-installed via wrapper
+- Base: Ubuntu 24.04 (Noble)
+- JDK: OpenJDK 21
+- Maven: 3.9.15 (manually installed from Apache)
 - Dependencies: Pre-fetched by running a throwaway build during image creation
+- Corporate CA: Optional certificate injection for TLS proxy environments (see [Docker](docker.md#maven-ci-image))
 
 ## GitHub Actions
 
@@ -111,6 +114,19 @@ flowchart TD
 **Platforms:** `linux/amd64` and `linux/arm64` (via QEMU emulation)
 
 **Dockerfile:** `docker/Dockerfile` (see [Docker documentation](docker.md))
+
+### Maven CI Image Build & Push
+
+**File:** `.github/workflows/build-maven-ci-image.yml`
+
+**Triggers:**
+- Push to `master` when `docker_build/maven/**` changes
+- Monthly schedule (1st of month, 06:00 UTC) for base OS security updates
+- Manual `workflow_dispatch`
+
+Builds and pushes the `mockserver/mockserver:maven` CI image to Docker Hub. This is the image used by the Buildkite pipeline to compile and test the project. The image is built for `linux/amd64` only (matching the Buildkite EC2 agents).
+
+**Docker Hub credentials** are stored as GitHub Actions secrets (`DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`). AWS Secrets Manager infrastructure for centralised credential management is provisioned in `terraform/buildkite-agents/build-secrets.tf` for future use.
 
 ### CodeQL Security Analysis
 

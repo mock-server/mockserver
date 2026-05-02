@@ -103,13 +103,13 @@ This document identifies missing documentation, undocumented areas, and recommen
 - Consider using GitHub Releases or OCI registry for chart hosting
 - Automate chart packaging and index regeneration in CI
 
-### 10. Build Image Staleness
+### 10. ~~Build Image Staleness~~ (Resolved)
 
-**Status:** The `mockserver/mockserver:maven` CI build image pre-fetches dependencies by cloning and building the repo. This image is not automatically rebuilt when dependencies change, potentially causing CI cache misses.
+**Status:** ~~The `mockserver/mockserver:maven` CI build image pre-fetches dependencies by cloning and building the repo. This image is not automatically rebuilt when dependencies change, potentially causing CI cache misses.~~
 
-**Recommendation:**
-- Add a CI pipeline to rebuild build images when `pom.xml` dependencies change
-- Tag build images with a hash of the dependency configuration
+**Resolution:** The Maven CI image is now automatically built and pushed by the GitHub Actions workflow `.github/workflows/build-maven-ci-image.yml`, triggered on changes to `docker_build/maven/**`, monthly schedule, and manual dispatch. The image has been modernised from Ubuntu 22.10 + JDK 8 to Ubuntu 24.04 + JDK 21 + Maven 3.9.15. Docker Hub credentials are managed via GitHub Actions secrets, with AWS Secrets Manager + OIDC federation infrastructure provisioned in `terraform/buildkite-agents/build-secrets.tf` for future centralised credential management.
+
+**Remaining:** Consider tagging build images with a dependency hash for better cache invalidation when `pom.xml` changes.
 
 ## Minor Gaps
 

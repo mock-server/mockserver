@@ -53,6 +53,8 @@ A commit may contain files from multiple categories. Run ALL applicable validati
 ### Docker changes (`docker`)
 1. Review the Dockerfile for syntax errors and best practice violations (FROM, COPY, RUN ordering, multi-stage builds, no secrets in layers)
 2. If `hadolint` is available, run `hadolint <Dockerfile>`
+3. If the Dockerfile is for a CI/build image (e.g. under `docker_build/`), run `docker build` to verify the image builds successfully
+4. If the build uses an optional corporate CA cert, verify the placeholder file exists and the real cert file is in `.gitignore`
 
 ### Helm changes (`helm`)
 1. Run `helm lint` on the chart directory

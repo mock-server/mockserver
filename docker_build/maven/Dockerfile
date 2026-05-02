@@ -5,41 +5,49 @@
 # http://www.mock-server.com
 #
 
-# pull base image.
-FROM ubuntu:22.10
+FROM ubuntu:24.04
 
-# maintainer details
-MAINTAINER James Bloom "jamesdbloom@gmail.com"
+LABEL maintainer="James Bloom <jamesdbloom@gmail.com>"
 
-# update packages
 ENV DEBIAN_FRONTEND=noninteractive
-RUN export DEBIAN_FRONTEND=noninteractive
-RUN sed -i 's/# \(.*multiverse$\)/\1/g' /etc/apt/sources.list
-RUN apt-get update
-RUN apt-get -y upgrade
-
-# install basic build tools
 ENV TZ=Europe/London
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-RUN apt-get install -y build-essential
-RUN apt-get install -y software-properties-common dirmngr apt-transport-https lsb-release ca-certificates
-RUN apt-get install -y curl git htop man unzip vim wget pkg-config python2.7
-RUN sysctl -w kernel.pid_max=4194303
 
-# install java (see: https://launchpad.net/~openjdk-r/+archive/ubuntu/ppa)
-RUN add-apt-repository -y ppa:openjdk-r/ppa
-RUN apt-get update
-RUN apt-get install -y openjdk-8-jdk
-RUN rm -f /etc/alternatives/java && ln -s /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java /etc/alternatives/java
+ARG MAVEN_VERSION=3.9.15
 
-# install maven
-RUN apt-get install -y maven
-COPY settings.xml /etc/maven/settings.xml
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
+    && apt-get update \
+    && apt-get -y upgrade \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        git \
+        unzip \
+        openjdk-21-jdk \
+    && rm -rf /var/lib/apt/lists/*
 
-# pre-fetch maven dependencies
-RUN git clone https://github.com/mock-server/mockserver.git
-RUN cd mockserver && \
-    ./mvnw -s /etc/maven/settings.xml dependency:go-offline && \
-    ./mvnw -s /etc/maven/settings.xml package -DskipTests && \
-    cd .. && \
-    rm -rf mockserver
+RUN ln -s /usr/lib/jvm/java-21-openjdk-$(dpkg --print-architecture) /usr/lib/jvm/java-21-openjdk
+ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk
+
+COPY corporate-root-ca.pem /tmp/corporate-root-ca.pem
+RUN CACERTS=$(find /usr/lib/jvm -name cacerts -path "*/security/cacerts" | head -1) \
+    && if [ -s /tmp/corporate-root-ca.pem ]; then \
+        cp /tmp/corporate-root-ca.pem /usr/local/share/ca-certificates/corporate-root-ca.crt \
+        && update-ca-certificates \
+        && keytool -noprompt -import -alias corporate_root_ca \
+            -keystore "$CACERTS" \
+            -storepass changeit \
+            -file /tmp/corporate-root-ca.pem; \
+    fi \
+    && rm -f /tmp/corporate-root-ca.pem
+
+RUN curl -fsSL https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
+        | tar xz -C /opt \
+    && ln -s /opt/apache-maven-${MAVEN_VERSION}/bin/mvn /usr/local/bin/mvn
+
+COPY settings.xml /opt/apache-maven-${MAVEN_VERSION}/conf/settings.xml
+
+RUN git clone https://github.com/mock-server/mockserver.git \
+    && cd mockserver \
+    && ./mvnw install -DskipTests \
+    && cd .. \
+    && rm -rf mockserver
