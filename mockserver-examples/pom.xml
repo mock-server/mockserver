@@ -19,8 +19,8 @@
         <!-- highest jersey version is 3.0 due to Java 1.8 version -->
         <jersey.version>3.1.1</jersey.version>
         <!-- highest jetty version is 9.4 due to Java 1.8 version -->
-        <jetty.version>9.4.50.v20221201</jetty.version>
-        <google-http-client.version>1.42.3</google-http-client.version>
+        <jetty.version>9.4.57.v20241219</jetty.version>
+        <google-http-client.version>1.45.0</google-http-client.version>
     </properties>
 
     <dependencyManagement>
@@ -71,13 +71,25 @@
                 <!-- Conflicting versions in okhttp and okio (both from okhttp) -->
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-stdlib</artifactId>
-                <version>1.8.10</version>
+                <version>1.9.10</version>
             </dependency>
             <dependency>
                 <!-- Conflicting versions in okhttp and okio (both from okhttp) -->
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-stdlib-common</artifactId>
-                <version>1.8.10</version>
+                <version>1.9.10</version>
+            </dependency>
+            <dependency>
+                <!-- Conflicting versions in okhttp and okio (both from okhttp) -->
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-stdlib-jdk8</artifactId>
+                <version>1.9.10</version>
+            </dependency>
+            <dependency>
+                <!-- Conflicting versions in google-http-client and opencensus-api -->
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-context</artifactId>
+                <version>1.66.0</version>
             </dependency>
             <dependency>
                 <!-- Conflicting versions in json-unit and okhttp -->
@@ -246,7 +258,7 @@
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
-            <version>4.10.0</version>
+            <version>4.12.0</version>
         </dependency>
 
         <!-- html -->

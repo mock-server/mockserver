@@ -2,10 +2,11 @@ package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jayway.jsonpath.JsonPath;
-import net.minidev.json.JSONArray;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+
+import java.util.Collection;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.slf4j.event.Level.DEBUG;
@@ -53,7 +54,12 @@ public class JsonPathMatcher extends BodyMatcher<String> {
             result = true;
         } else if (matched != null) {
             try {
-                result = !jsonPath.<JSONArray>read(matched).isEmpty();
+                Object jsonPathResult = jsonPath.read(matched);
+                if (jsonPathResult instanceof Collection) {
+                    result = !((Collection<?>) jsonPathResult).isEmpty();
+                } else {
+                    result = jsonPathResult != null;
+                }
             } catch (Throwable throwable) {
                 if (context != null) {
                     context.addDifference(mockServerLogger, throwable, "json path match failed expected:{}found:{}failed because:{}", matcher, matched, throwable.getMessage());
