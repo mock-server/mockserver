@@ -14,7 +14,35 @@ MockServer is an open-source HTTP(S) mock server and proxy for testing, written 
 
 **Tech stack:** Java 8+, Netty 4.1, Jackson 2.14, Maven (multi-module), Docker, Helm, Jekyll (documentation site)
 **CI/CD:** Buildkite (primary CI), GitHub Actions (Docker image builds, CodeQL)
-**Infrastructure:** AWS, Docker Hub (container images)
+**Infrastructure:** AWS (Buildkite build agents, documentation site hosting), Docker Hub (container images)
+**Repository:** GitHub (github.com)
+
+### Project Documentation
+
+Comprehensive internal documentation is maintained in `docs/`. **Always consult these docs before making changes** to understand architecture, conventions, and dependencies:
+
+| Document | When to consult |
+|----------|----------------|
+| [docs/README.md](docs/README.md) | Documentation index and quick reference |
+| [docs/code/overview.md](docs/code/overview.md) | Before modifying any module — understand module boundaries and dependencies |
+| [docs/code/netty-pipeline.md](docs/code/netty-pipeline.md) | Before modifying Netty handlers, protocol detection, or TLS |
+| [docs/code/request-processing.md](docs/code/request-processing.md) | Before modifying mock matching, proxy forwarding, or action dispatch |
+| [docs/code/event-system.md](docs/code/event-system.md) | Before modifying event logging, verification, or persistence |
+| [docs/code/dashboard-ui.md](docs/code/dashboard-ui.md) | Before modifying the dashboard UI or WebSocket communication |
+| [docs/code/domain-model.md](docs/code/domain-model.md) | Before modifying domain model, matchers, codecs, or configuration |
+| [docs/code/tls-and-security.md](docs/code/tls-and-security.md) | Before modifying TLS, mTLS, certificates, or authentication |
+| [docs/code/client-and-integrations.md](docs/code/client-and-integrations.md) | Before modifying client library, JUnit rules, or Spring integration |
+| [docs/operations/build-system.md](docs/operations/build-system.md) | Before changing Maven config, plugins, or build scripts |
+| [docs/infrastructure/ci-cd.md](docs/infrastructure/ci-cd.md) | Before modifying Buildkite or GitHub Actions pipelines |
+| [docs/infrastructure/aws-infrastructure.md](docs/infrastructure/aws-infrastructure.md) | Before investigating AWS, Terraform, or Buildkite agent issues |
+| [docs/infrastructure/docker.md](docs/infrastructure/docker.md) | Before modifying Dockerfiles, images, or Compose configs |
+| [docs/infrastructure/helm.md](docs/infrastructure/helm.md) | Before modifying Helm charts or Kubernetes deployment |
+| [docs/operations/website.md](docs/operations/website.md) | Before modifying the Jekyll documentation site |
+| [docs/operations/dependencies.md](docs/operations/dependencies.md) | Before adding, removing, or upgrading dependencies |
+| [docs/operations/release-process.md](docs/operations/release-process.md) | When performing or automating releases |
+| [docs/gaps-and-recommendations.md](docs/gaps-and-recommendations.md) | For improvement opportunities and known gaps |
+
+When making changes to the project, **update the relevant docs/ file** if the change affects architecture, dependencies, build process, CI/CD, infrastructure, or deployment.
 
 ### AWS Accounts
 
@@ -22,7 +50,29 @@ MockServer is an open-source HTTP(S) mock server and proxy for testing, written 
 |------------|---------|
 | 814548061024 | Pipeline build agents and infrastructure |
 | 014848309742 | Website (S3, CloudFront, DNS, TLS) |
-**Repository:** GitHub (github.com)
+
+### AWS Prerequisites
+
+To investigate or manage AWS infrastructure:
+
+1. **Install AWS CLI**: `brew install awscli`
+2. **Configure SSO profile**: `aws configure sso --profile mockserver-build` (SSO region: `eu-west-1`, default region: `us-east-1`)
+3. **Authenticate**: `aws sso login --profile mockserver-build`
+4. **Corporate TLS proxy**: if behind a TLS inspection proxy, set `AWS_CA_BUNDLE` to your corporate root CA PEM file (e.g. `export AWS_CA_BUNDLE=$NODE_EXTRA_CA_CERTS`)
+5. **macOS + Python 3.14 + Homebrew**: if you get `pyexpat` symbol errors, set `export DYLD_LIBRARY_PATH=/opt/homebrew/opt/expat/lib`
+
+### Buildkite Agent Infrastructure
+
+Build agents run on EC2 instances in an AutoScaling Group, managed by a Lambda-based autoscaler:
+
+| Resource | Identifier | Region |
+|----------|-----------|--------|
+| AutoScaling Group | `buildkite-AgentAutoScaleGroup-VGG28FR0DE6Q` | `us-east-1` |
+| CloudFormation Stack | `buildkite` | `us-east-1` |
+| Instance Type | `t3.large` (On-Demand, 1 agent per instance) | `us-east-1` |
+| Autoscaling Lambda | `buildkite-Autoscaling-1B7NLL8Z-AutoscalingFunction-iUVGfB0m0ynh` | `us-east-1` |
+
+The scaler runs every minute, scales 0-2 instances based on Buildkite job queue depth. `MIN_SIZE=0` means agents scale to zero when idle.
 
 ## Git Policy
 
@@ -31,12 +81,34 @@ MockServer is an open-source HTTP(S) mock server and proxy for testing, written 
 - NEVER add Co-Authored-By, Signed-off-by, or any other trailers to commit messages
 - NEVER amend commits that have been pushed to remote
 
-## Pre-Commit Testing
+### Parallel Session Safety
 
-Before every commit:
-1. Run unit tests for affected modules: `./mvnw test -pl <module>`
-2. Run code review on `git diff` against project conventions
-3. Only then commit
+Multiple opencode sessions may run concurrently on the same repository. You MUST:
+
+- **Only commit files you changed in THIS session.** Never stage files modified by another session.
+- **Never use `git add .` or `git add -A`.** Always stage files by explicit path.
+- **Re-read files before editing.** Another session may have modified them since you last read.
+- **Check `git status` before committing.** If unexpected changes appear, stop and ask the user.
+- **Pull before push.** Run `git pull --rebase` before pushing — another session may have pushed.
+
+See `.opencode/rules/commit-workflow.md` for the full parallel session safety rules.
+
+## Pre-Commit Workflow
+
+Before every commit, follow the full workflow in `.opencode/rules/commit-workflow.md`:
+
+1. **Classify** changed files by category (java, terraform, bash, docs, etc.)
+2. **Validate** per category (Java → `mvnw test`, Terraform → `fmt`/`validate`/`plan`, Bash → `bash -n`, etc.)
+3. **Adversarial review** using `review-cheap` subagent (different model, fresh context)
+4. Only then commit
+
+See `.opencode/rules/commit-workflow.md` for the full workflow and skip conditions.
+
+## Diagrams and Formatting
+
+- **Always use Mermaid** for diagrams in markdown files. Never use ASCII art for flowcharts, sequence diagrams, or architecture diagrams.
+- Use `flowchart`, `sequenceDiagram`, `graph`, or `classDiagram` as appropriate.
+- Keep diagrams concise — if a diagram needs more than ~15 nodes, split it into multiple diagrams.
 
 ## Code Navigation
 
@@ -73,6 +145,7 @@ When the user asks for a code review:
 | Documentation writing | `docs-writer` |
 | Pipeline investigation | `pipeline-investigator` |
 | Debugging/investigation | `debugger` |
+| AWS infrastructure | `debugger` (with `aws-investigation` skill) |
 | Task decomposition | `taskify-agent` |
 | Design council seat | `council-seat` |
 

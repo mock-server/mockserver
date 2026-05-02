@@ -8,19 +8,21 @@ After making code changes, ALWAYS run unit tests for the affected module(s).
 - Run unit tests with Maven targeting the specific module: `./mvnw test -pl <module>`
 - If tests fail, fix the issues before considering the task complete
 - When a specific test fails, re-run just that test: `./mvnw test -pl <module> -Dtest=<TestClassName>#<testMethodName>`
-- Do NOT run integration tests automatically — only before committing (see below)
+- Do NOT run integration tests automatically — they are slow and run in CI
 - If changes span multiple modules, run tests for ALL affected modules: `./mvnw test -pl <module1>,<module2>`
 
 ## Before Committing (MANDATORY)
 
-When the user asks to commit:
+Follow the full pre-commit workflow in `commit-workflow.md`. That workflow covers all file types (Java, Terraform, Bash, Docker, Helm, docs). This file covers the Java-specific testing details.
+
+When the user asks to commit Java changes:
 1. **Run unit tests** — `./mvnw test -pl <modules>` for all affected modules. Fix failures before committing.
-2. **Run code review** — review `git diff` and `git diff --cached` against project conventions.
+2. **Adversarial review** — launch `review-cheap` subagent (see `commit-workflow.md` Step 3).
 3. **Only then commit.**
 
 **Skip condition:** If user explicitly says to skip (e.g., "skip tests", "just commit"), skip corresponding steps.
 
-If unit tests already passed in this session for the same changes, skip re-running.
+If unit tests already passed earlier in this conversation for the exact same changes (no further edits since), skip re-running.
 
 ## Maven Module Mapping
 
