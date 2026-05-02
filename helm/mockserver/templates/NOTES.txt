@@ -15,7 +15,7 @@
 {{- else if contains "NodePort" .Values.service.type }}
 
    export NODE_PORT=$(kubectl --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" get services {{ template "release.name" . }})
-   export NODE_IP=$(kubectl --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address} get nodes")
+   export NODE_IP=$(kubectl --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}" get nodes)
    export MOCKSERVER_HOST=$NODE_IP:$NODE_PORT
    echo http://$MOCKSERVER_HOST
 
