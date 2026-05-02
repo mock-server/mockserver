@@ -18,4 +18,4 @@ else
     echo "BRANCH: ${CURRENT_BRANCH:-}"
 fi
 
-./mvnw -T 1C clean deploy ${1:-} -Djava.security.egd=file:/dev/./urandom -Dmockserver.testOutput=quiet
+./mvnw -T 1C clean deploy ${1:-} -Djava.security.egd=file:/dev/./urandom -Dmockserver.testOutput=quiet -DskipShade=true -Dshade.install.phase=none -DskipAssembly=true

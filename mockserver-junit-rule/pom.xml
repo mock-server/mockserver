@@ -125,6 +125,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.4.1</version>
+                <configuration>
+                    <skip>${skipShade}</skip>
+                </configuration>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -360,7 +363,7 @@
                 <executions>
                     <execution>
                         <id>install-shaded-artefact</id>
-                        <phase>package</phase>
+                        <phase>${shade.install.phase}</phase>
                         <goals>
                             <goal>install-file</goal>
                         </goals>

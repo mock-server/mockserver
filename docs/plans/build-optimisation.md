@@ -261,6 +261,8 @@ Post-process Maven output to inject Buildkite group markers before each `[INFO] 
 
 **Risk:** Medium. Some unit tests may have hidden shared state. Will need a test run to verify no flaky failures are introduced.
 
+**Implementation note:** Surefire/Failsafe upgraded to 3.2.5. Parallel test execution was attempted with `parallel=classes, threadCount=4` but caused 48 test failures in `mockserver-core` due to shared static state in `ConfigurationProperties` and `MockServerLogger`. Parallel execution is deferred until tests are refactored to avoid shared mutable statics. The surefire upgrade alone still provides benefits: better JUnit 5 support, improved fork management, and the deprecated `systemProperties` warning is resolved.
+
 ### 2.2 Add Maven Build Caching
 
 **Option A: Maven Build Cache Extension (Recommended)**

@@ -68,11 +68,13 @@
         <xmlunit.version>2.9.1</xmlunit.version>
         <skipTests>false</skipTests>
         <skipAssembly>false</skipAssembly>
+        <skipShade>false</skipShade>
+        <shade.install.phase>package</shade.install.phase>
         <mockserver.testOutput>verbose</mockserver.testOutput>
         <deploy.plugin.repository.url>https://oss.sonatype.org/content/repositories/snapshots/</deploy.plugin.repository.url>
         <release.arguments/>
         <javadoc.additional.parameters/>
-        <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
+        <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
         <!-- also update in docker -->
         <!-- TODO(jamesdbloom) consider automating using `NETTY_TC_NATIVE_VERSION=$(./mvnw help:evaluate -Dexpression=netty-tcnative-boringssl-static.version -q -DforceStdout)` -->
         <netty-tcnative-boringssl-static.version>2.0.75.Final</netty-tcnative-boringssl-static.version>
@@ -838,9 +840,9 @@
                     <excludes>
                         <exclude>**/*IntegrationTest.java</exclude>
                     </excludes>
-                    <systemProperties>
+                    <systemPropertyVariables>
                         <mockserver.logLevel>ERROR</mockserver.logLevel>
-                    </systemProperties>
+                    </systemPropertyVariables>
                     <argLine>-Duser.language=en -Duser.country=GB -Dmockserver.testOutput=${mockserver.testOutput}</argLine>
                     <disableXmlReport>true</disableXmlReport>
                     <properties>
@@ -861,11 +863,11 @@
                     <includes>
                         <include>**/*IntegrationTest.java</include>
                     </includes>
-                    <systemProperties>
+                    <systemPropertyVariables>
                         <mockserver.logLevel>ERROR</mockserver.logLevel>
                         <project.version>${project.version}</project.version>
                         <project.basedir>${project.basedir}</project.basedir>
-                    </systemProperties>
+                    </systemPropertyVariables>
                     <argLine>-Duser.language=en -Duser.country=GB -Dmockserver.testOutput=${mockserver.testOutput}</argLine>
                     <disableXmlReport>true</disableXmlReport>
                     <properties>
