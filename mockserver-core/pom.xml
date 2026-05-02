@@ -126,10 +126,10 @@
         </dependency>
 
         <!-- javascript (only java 11+) -->
-        <!-- <dependency>
+        <dependency>
             <groupId>org.openjdk.nashorn</groupId>
             <artifactId>nashorn-core</artifactId>
-        </dependency> -->
+        </dependency>
 
         <!-- json (object serialisation) -->
         <dependency>

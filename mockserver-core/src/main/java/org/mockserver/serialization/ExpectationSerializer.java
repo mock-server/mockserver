@@ -57,7 +57,7 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                 // output warning if Java 11+ due to deprecation warning from Nashorn
                 if (!System.getProperty("java.version").contains("1.8") && !System.getProperty("java.version").contains("1.9")) {
                     try {
-                        this.getClass().getClassLoader().loadClass("jdk.nashorn.api.scripting.NashornScriptEngineFactory");
+                        this.getClass().getClassLoader().loadClass("org.openjdk.nashorn.api.scripting.NashornScriptEngineFactory");
                         System.err.println("Loading JavaScript to validate ECMA262 regular expression in JsonSchema because java.util.regex package in Java does not match ECMA262");
                     } catch (ClassNotFoundException ignore) {
                     }

@@ -103,7 +103,7 @@ public class JavaScriptTemplateEngineTest {
 
     public static void nashornAvailable() {
         try {
-            Class<?> nashornClass = JavaScriptTemplateEngineTest.class.getClassLoader().loadClass("jdk.nashorn.api.scripting.ClassFilter");
+            Class<?> nashornClass = JavaScriptTemplateEngineTest.class.getClassLoader().loadClass("org.openjdk.nashorn.api.scripting.ClassFilter");
             assumeThat("attempted to load nashorn", nashornClass, notNullValue());
         } catch (Throwable throwable) {
             assumeThat("attempted to load nashorn, but " + throwable.getMessage(), throwable, nullValue());
