@@ -65,7 +65,7 @@
         <spring-web.version>5.3.25</spring-web.version>
         <mockito.version>4.11.0</mockito.version>
         <hamcrest.version>2.2</hamcrest.version>
-        <xmlunit.version>2.9.1</xmlunit.version>
+        <xmlunit.version>2.10.0</xmlunit.version>
         <skipTests>false</skipTests>
         <skipAssembly>false</skipAssembly>
         <deploy.plugin.repository.url>https://oss.sonatype.org/content/repositories/snapshots/</deploy.plugin.repository.url>
