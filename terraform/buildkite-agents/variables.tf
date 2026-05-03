@@ -13,7 +13,7 @@ variable "region" {
 variable "instance_types" {
   description = "EC2 instance types (comma-separated). First type preferred for on-demand."
   type        = string
-  default     = "t3.large"
+  default     = "c5.2xlarge"
 }
 
 variable "min_size" {

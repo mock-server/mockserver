@@ -5,7 +5,7 @@
 # buildkite_agent_token = "your-token-here"
 
 region               = "eu-west-2"
-instance_types       = "t3.large"
+instance_types       = "c5.2xlarge"
 min_size             = 0
 max_size             = 2
 on_demand_percentage = 0
