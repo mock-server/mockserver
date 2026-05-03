@@ -1935,9 +1935,9 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
 
             // when
             output.write(("" +
-                "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
-                "Content-Length: 0" + NEW_LINE +
-                NEW_LINE
+                "GET " + calculatePath("") + " HTTP/1.1\r" + NEW_LINE +
+                "Content-Length: 0\r" + NEW_LINE +
+                "\r\n"
                          ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
@@ -2068,9 +2068,9 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
 
             // when
             output.write(("" +
-                "POST " + calculatePath("/some_error") + " HTTP/1.1" + NEW_LINE +
-                "Content-Length: 0" + NEW_LINE +
-                NEW_LINE
+                "POST " + calculatePath("/some_error") + " HTTP/1.1\r" + NEW_LINE +
+                "Content-Length: 0\r" + NEW_LINE +
+                "\r\n"
                          ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
