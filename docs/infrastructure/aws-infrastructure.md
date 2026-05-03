@@ -11,7 +11,7 @@ graph TB
         TF["Terraform<br/>buildkite-agents/"]
         ASG["AutoScaling Group<br/>buildkite-mockserver-e40b8a59-asg"]
         SCALER["Lambda Autoscaler<br/>buildkite-mockserver-e40b8a59-scaler"]
-        EC2["EC2 Spot t3.large<br/>0–2 agents"]
+        EC2["EC2 Spot t3.large<br/>0–10 agents"]
         SSM["SSM Parameter Store<br/>Agent Token"]
         S3_SECRETS["S3 Secrets Bucket<br/>buildkite-mockserver-e40b8a59-secrets"]
         S3_STATE["S3 State Bucket<br/>mockserver-terraform-state"]
@@ -96,7 +96,7 @@ flowchart TB
 
     BK_API -->|queue depth| SCALER
     EB -->|invokes| SCALER
-    SCALER -->|set desired 0–2| EC2_1 & EC2_2
+    SCALER -->|set desired 0–10| EC2_1 & EC2_2
     EC2_1 & EC2_2 -->|poll for jobs| BK_QUEUE
     EC2_1 & EC2_2 -->|read token via| VPCE
     VPCE -->|reads| SSM
@@ -110,9 +110,9 @@ flowchart TB
 
 | Resource | Identifier | Details |
 |----------|-----------|---------|
-| AutoScaling Group | `buildkite-mockserver-e40b8a59-asg` | Min 0, Max 2, 100% Spot, `t3.large`, AZRebalance suspended |
+| AutoScaling Group | `buildkite-mockserver-e40b8a59-asg` | Min 0, Max 10, 100% Spot, `t3.large`, AZRebalance suspended |
 | Launch Template | `lt-0017604425320a39e` (`buildkite-mockserver-e40b8a59-launch-template`) | t3.large, 250 GiB gp3 root volume, delete-on-termination |
-| EC2 Instances | 0–2 Spot instances (ephemeral) | Scale to zero when idle |
+| EC2 Instances | 0–10 Spot instances (ephemeral) | Scale to zero when idle |
 
 #### Networking
 
@@ -197,7 +197,7 @@ These will be created on the next `terraform apply`.
 ### Scaling Behaviour
 
 - **Minimum:** 0 instances (scales to zero when idle)
-- **Maximum:** 2 instances
+- **Maximum:** 10 instances
 - **Agents per instance:** 1
 - **Scaling frequency:** Every 60 seconds
 - **Scale trigger:** Buildkite job queue depth
@@ -217,7 +217,7 @@ sequenceDiagram
 
     loop Every 60 seconds
         Lambda->>BK: Check job queue depth
-        Lambda->>ASG: Set desired capacity (0–2)
+        Lambda->>ASG: Set desired capacity (0–10)
     end
 
     BK->>Agent: Job available
@@ -259,7 +259,7 @@ terraform/
 | Terraform module | `buildkite/elastic-ci-stack-for-aws/buildkite` ~0.7.x |
 | Region | `eu-west-2` |
 | Instance type | `t3.large` (Spot) |
-| Scaling | 0–2 instances |
+| Scaling | 0–10 instances |
 | State backend | S3 in `eu-west-2` (native lockfile) |
 
 ### State Backend
@@ -283,7 +283,7 @@ The bootstrap uses `import` blocks, making it idempotent — safe to re-run agai
 | `region` | `string` | `eu-west-2` | AWS region |
 | `instance_types` | `string` | `t3.large` | EC2 instance types (comma-separated) |
 | `min_size` | `number` | `0` | Minimum instances (0 = scale to zero) |
-| `max_size` | `number` | `2` | Maximum instances |
+| `max_size` | `number` | `10` | Maximum instances |
 | `on_demand_percentage` | `number` | `0` | % on-demand vs spot (0 = all spot) |
 
 ### Quick Start
@@ -497,7 +497,7 @@ aws ec2 get-console-output --instance-id <instance-id> \
 
 aws autoscaling set-desired-capacity \
   --auto-scaling-group-name "$ASG_NAME" \
-  --desired-capacity 2 --region eu-west-2 --profile mockserver-build
+  --desired-capacity 4 --region eu-west-2 --profile mockserver-build
 ```
 
 ## AWS CLI Prerequisites

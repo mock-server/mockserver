@@ -85,9 +85,9 @@ Build agents run on EC2 Spot instances in an AutoScaling Group, managed by a Lam
 | Region | `eu-west-2` | `us-east-1` |
 | Instance Type | `t3.large` (Spot) | `t3.large` (On-Demand) |
 | IaC in repo | Yes (`terraform/`) | No |
-| Scaling | 0–2 instances, Lambda-based | 0–2 instances, Lambda-based |
+| Scaling | 0–10 instances, Lambda-based | 0–2 instances, Lambda-based |
 
-The scaler runs every minute, scales 0-2 instances based on Buildkite job queue depth. `MIN_SIZE=0` means agents scale to zero when idle.
+The scaler runs every minute, scales 0-10 instances based on Buildkite job queue depth. `MIN_SIZE=0` means agents scale to zero when idle.
 
 ## Git Policy
 

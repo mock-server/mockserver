@@ -25,7 +25,7 @@ variable "min_size" {
 variable "max_size" {
   description = "Maximum number of agent instances"
   type        = number
-  default     = 2
+  default     = 10
 }
 
 variable "on_demand_percentage" {

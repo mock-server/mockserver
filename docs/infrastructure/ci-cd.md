@@ -164,6 +164,84 @@ Note: `build-maven-ci-image.yml` uses newer action versions than the other workf
 
 See [AWS Infrastructure](aws-infrastructure.md) for details on the Buildkite agent EC2 instances, AutoScaling Group, and Lambda-based autoscaler.
 
+## Buildkite CLI Access
+
+The Buildkite CLI (`bk`) provides authenticated access to builds, pipelines, and agents from the terminal. It uses browser-based OAuth login (similar to `aws sso login`) — no long-lived API tokens to manage.
+
+### Install
+
+```bash
+brew tap buildkite/buildkite
+brew install buildkite/buildkite/bk
+```
+
+Or download a binary from the [GitHub releases page](https://github.com/buildkite/cli/releases).
+
+### Authenticate
+
+```bash
+bk auth login
+```
+
+This opens a browser window for OAuth login to Buildkite (similar to `aws sso login`). Once authenticated, the CLI stores credentials in the macOS keychain. No API token creation or manual secret management required.
+
+After login, select the organization:
+
+```bash
+bk auth switch mockserver
+```
+
+### Verify
+
+```bash
+bk auth status
+```
+
+### Common Operations
+
+The `bk` CLI uses `-p {pipeline}` for pipeline selection. The organization is set globally via `bk auth switch`.
+
+```bash
+# List recent builds
+bk build list -p mockserver
+
+# View a specific build
+bk build view 3292 -p mockserver
+
+# View a build as JSON
+bk build view 3292 -p mockserver --json
+
+# Cancel a build
+bk build cancel 3292 -p mockserver -y
+
+# Rebuild (retrigger) a build
+bk build rebuild 3292 -p mockserver -y
+
+# List agents (across all pipelines in the org)
+bk agent list
+
+# List agents as JSON
+bk agent list --json
+```
+
+### REST API Token (via CLI)
+
+The `bk` CLI can extract its OAuth token for use with the REST API:
+
+```bash
+TOKEN=$(bk auth token)
+curl -sH "Authorization: Bearer $TOKEN" \
+  "https://api.buildkite.com/v2/organizations/mockserver/pipelines/mockserver/builds/3292"
+```
+
+This avoids creating and managing separate API tokens. The token is the same OAuth token created by `bk auth login`.
+
+### Opencode Integration
+
+Once `bk` is installed and authenticated, opencode agents can use it directly for build operations (cancel, rebuild, inspect) without needing a separate API token. The `bk` CLI is the recommended approach.
+
+**Note:** `bk auth login` requires an interactive TTY (browser OAuth flow), so it must be run by the user in a separate terminal before opencode can use `bk` commands. If the agent detects `bk` is not authenticated, it will prompt the user to run `bk auth login` manually.
+
 ## Local CI Simulation
 
 To run the Buildkite build locally:
