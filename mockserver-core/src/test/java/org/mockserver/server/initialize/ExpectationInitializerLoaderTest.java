@@ -8,12 +8,14 @@ import org.mockserver.mock.RequestMatchers;
 import org.mockserver.serialization.ExpectationSerializer;
 
 import java.io.File;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Mockito.mock;
 import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.HttpRequest.request;
@@ -549,6 +551,165 @@ public class ExpectationInitializerLoaderTest {
                 )
             }));
         } finally {
+            ConfigurationProperties.initializationClass(initializationClass);
+        }
+    }
+
+    @Test
+    public void shouldLoadExpectationsFromClasspathOpenAPIYaml() {
+        // given
+        String initializationOpenAPIPath = ConfigurationProperties.initializationOpenAPIPath();
+        try {
+            ConfigurationProperties.initializationOpenAPIPath("org/mockserver/openapi/openapi_petstore_example.yaml");
+
+            // when
+            final Expectation[] expectations = new ExpectationInitializerLoader(configuration(), new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
+
+            // then - petstore has 4 operations: listPets, createPets, showPetById, somePath
+            assertThat(expectations.length, equalTo(4));
+        } finally {
+            ConfigurationProperties.initializationOpenAPIPath(initializationOpenAPIPath);
+        }
+    }
+
+    @Test
+    public void shouldLoadExpectationsFromClasspathOpenAPIJson() {
+        // given
+        String initializationOpenAPIPath = ConfigurationProperties.initializationOpenAPIPath();
+        try {
+            ConfigurationProperties.initializationOpenAPIPath("org/mockserver/openapi/openapi_petstore_example.json");
+
+            // when
+            final Expectation[] expectations = new ExpectationInitializerLoader(configuration(), new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
+
+            // then - petstore has 4 operations: listPets, createPets, showPetById, somePath
+            assertThat(expectations.length, equalTo(4));
+        } finally {
+            ConfigurationProperties.initializationOpenAPIPath(initializationOpenAPIPath);
+        }
+    }
+
+    @Test
+    public void shouldLoadExpectationsFromFileSystemOpenAPIYaml() throws Exception {
+        // given
+        String initializationOpenAPIPath = ConfigurationProperties.initializationOpenAPIPath();
+        try {
+            File openAPIFile = File.createTempFile("mockserverOpenAPI", ".yaml");
+            openAPIFile.deleteOnExit();
+            try (InputStream inputStream = ExpectationInitializerLoaderTest.class.getClassLoader().getResourceAsStream("org/mockserver/openapi/openapi_petstore_example.yaml")) {
+                Files.write(openAPIFile.toPath(), inputStream.readAllBytes());
+            }
+            ConfigurationProperties.initializationOpenAPIPath(openAPIFile.getAbsolutePath());
+
+            // when
+            final Expectation[] expectations = new ExpectationInitializerLoader(configuration(), new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
+
+            // then
+            assertThat(expectations.length, equalTo(4));
+        } finally {
+            ConfigurationProperties.initializationOpenAPIPath(initializationOpenAPIPath);
+        }
+    }
+
+    @Test
+    public void shouldLoadExpectationsFromBothJsonAndOpenAPI() {
+        // given
+        String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
+        String initializationOpenAPIPath = ConfigurationProperties.initializationOpenAPIPath();
+        try {
+            ConfigurationProperties.initializationJsonPath("org/mockserver/server/initialize/initializerJson.json");
+            ConfigurationProperties.initializationOpenAPIPath("org/mockserver/openapi/openapi_petstore_example.yaml");
+
+            // when
+            final Expectation[] expectations = new ExpectationInitializerLoader(configuration(), new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
+
+            // then - 2 from JSON + 4 from OpenAPI = 6
+            assertThat(expectations.length, equalTo(6));
+        } finally {
+            ConfigurationProperties.initializationJsonPath(initializationJsonPath);
+            ConfigurationProperties.initializationOpenAPIPath(initializationOpenAPIPath);
+        }
+    }
+
+    @Test
+    public void shouldLoadExpectationsFromFileSystemOpenAPIWithGlob() throws Exception {
+        // given
+        String initializationOpenAPIPath = ConfigurationProperties.initializationOpenAPIPath();
+        try {
+            String uniquePrefix = UUID.randomUUID().toString();
+            File openAPIFile = File.createTempFile(uniquePrefix + "_openapi", ".yaml");
+            openAPIFile.deleteOnExit();
+            try (InputStream inputStream = ExpectationInitializerLoaderTest.class.getClassLoader().getResourceAsStream("org/mockserver/openapi/openapi_petstore_example.yaml")) {
+                Files.write(openAPIFile.toPath(), inputStream.readAllBytes());
+            }
+            ConfigurationProperties.initializationOpenAPIPath(openAPIFile.getParentFile().getAbsolutePath() + "/" + uniquePrefix + "_openapi*.yaml");
+
+            // when
+            final Expectation[] expectations = new ExpectationInitializerLoader(configuration(), new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
+
+            // then
+            assertThat(expectations.length, equalTo(4));
+        } finally {
+            ConfigurationProperties.initializationOpenAPIPath(initializationOpenAPIPath);
+        }
+    }
+
+    @Test
+    public void shouldHandleInvalidOpenAPISpecGracefully() throws Exception {
+        // given
+        String initializationOpenAPIPath = ConfigurationProperties.initializationOpenAPIPath();
+        try {
+            File invalidSpecFile = File.createTempFile("mockserverInvalidOpenAPI", ".yaml");
+            invalidSpecFile.deleteOnExit();
+            Files.write(invalidSpecFile.toPath(), "this is not valid openapi".getBytes(StandardCharsets.UTF_8));
+            ConfigurationProperties.initializationOpenAPIPath(invalidSpecFile.getAbsolutePath());
+
+            // when
+            final Expectation[] expectations = new ExpectationInitializerLoader(configuration(), new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
+
+            // then - should not crash, just return empty
+            assertThat(expectations.length, equalTo(0));
+        } finally {
+            ConfigurationProperties.initializationOpenAPIPath(initializationOpenAPIPath);
+        }
+    }
+
+    @Test
+    public void shouldHandleNonExistentOpenAPIPathGracefully() {
+        // given
+        String initializationOpenAPIPath = ConfigurationProperties.initializationOpenAPIPath();
+        try {
+            ConfigurationProperties.initializationOpenAPIPath("/nonexistent/path/spec.yaml");
+
+            // when
+            final Expectation[] expectations = new ExpectationInitializerLoader(configuration(), new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
+
+            // then - should not crash, just return empty
+            assertThat(expectations.length, equalTo(0));
+        } finally {
+            ConfigurationProperties.initializationOpenAPIPath(initializationOpenAPIPath);
+        }
+    }
+
+    @Test
+    public void shouldNotLoadOpenAPIExpectationsWhenPathNotSet() {
+        // given
+        String initializationOpenAPIPath = ConfigurationProperties.initializationOpenAPIPath();
+        String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
+        String initializationClass = ConfigurationProperties.initializationClass();
+        try {
+            ConfigurationProperties.initializationOpenAPIPath("");
+            ConfigurationProperties.initializationJsonPath("");
+            ConfigurationProperties.initializationClass("");
+
+            // when
+            final Expectation[] expectations = new ExpectationInitializerLoader(configuration(), new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
+
+            // then
+            assertThat(expectations.length, equalTo(0));
+        } finally {
+            ConfigurationProperties.initializationOpenAPIPath(initializationOpenAPIPath);
+            ConfigurationProperties.initializationJsonPath(initializationJsonPath);
             ConfigurationProperties.initializationClass(initializationClass);
         }
     }

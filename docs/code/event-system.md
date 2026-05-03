@@ -224,7 +224,7 @@ sequenceDiagram
 
 ### File Watcher
 
-When `configuration.watchInitializationJson()` is true, `ExpectationFileWatcher` monitors the initialization JSON file for changes:
+When `configuration.watchInitializationJson()` is true, `ExpectationFileWatcher` monitors the initialization JSON and OpenAPI files for changes:
 
 - Uses `FileWatcher` which polls every 5 seconds using a `ScheduledExecutorService`
 - Detects changes by comparing file content hashes (`Arrays.hashCode(Files.readAllBytes(path))`)

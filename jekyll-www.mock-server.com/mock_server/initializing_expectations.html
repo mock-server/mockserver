@@ -10,15 +10,16 @@ sitemap:
   lastmod: 2019-11-10T08:00:00+01:00
 ---
 
-<p>To ensure expectations are available as soon as MockServer is started it is possible to use an expectation initializer, there are three options:</p>
+<p>To ensure expectations are available as soon as MockServer is started it is possible to use an expectation initializer, there are four options:</p>
 
 <ul>
     <li><strong><a href="#expectation_initializer_class">initializer class</a></strong> loaded from the classpath to construct an array of expectations</li>
     <li><strong><a href="#expectation_initializer_json">initializer JSON file</a></strong> loaded from the filesystem containing a serialised array of expectations</li>
+    <li><strong><a href="#expectation_initializer_openapi">initializer OpenAPI file</a></strong> loaded from the filesystem containing an OpenAPI v3 specification (YAML or JSON)</li>
     <li><strong><a href="#maven_plugin_expectation_initializer_class">maven plugin initializer class</a></strong> loaded from the classpath to add expectations using the MockServerClient</li>
 </ul>
 
-<p><strong>Note:</strong> all three options require the class or file to be available to the MockServer, i.e. in the local classpath or filesystem.  To remotely initialise the MockServer a client is required to connect to the MockServer after it has started and submit one or more expectations.</p>
+<p><strong>Note:</strong> all four options require the class or file to be available to the MockServer, i.e. in the local classpath or filesystem.  To remotely initialise the MockServer a client is required to connect to the MockServer after it has started and submit one or more expectations.</p>
 
 <a id="expectation_initializer_class" class="anchor" href="#expectation_initializer_class">&nbsp</a>
 
@@ -107,10 +108,10 @@ int mockServerPort = new ClientAndServer().getLocalPort();</code></pre>
 
 <a id="expectation_initializer_json_file_watcher" class="anchor" href="#expectation_initializer_json_file_watcher">&nbsp;</a>
 
-<h2>Expectation Initializer JSON File Watcher</h2>
+<h2>Expectation Initializer File Watcher</h2>
 
-<p>If a JSON expectation initializer is specified a file watcher can be enabled that watches for changes in the expectation initializer and updates the expectations when the file is modified.  Changes are detected at most after 5 seconds if the file contents has changed.</p>
-<p>If enabled the initialization json file will be watched for changes, any changes found will result in expectations being created, remove or updated by matching against their key.</p>
+<p>If a JSON expectation initializer or OpenAPI initializer is specified, a file watcher can be enabled that watches for changes in the initialization files and updates the expectations when a file is modified.  Changes are detected at most after 5 seconds if the file contents has changed.</p>
+<p>If enabled the initialization JSON and OpenAPI files will be watched for changes, any changes found will result in expectations being created, removed or updated by matching against their key.</p>
 <p>If duplicate keys exist only the first duplicate key in the file will be processed and all duplicates except the first duplicate will be ignored.</p>
 <p>The order of expectations in the file is the order in which they are created if they are new, however, re-ordering existing expectations does not change the order they are matched against incoming requests.</p>
 
@@ -124,6 +125,33 @@ java -jar ~/Downloads/mockserver-netty-{{ site.mockserver_version }}-no-dependen
 -Dmockserver.watchInitializationJson=true \
 -Dmockserver.initializationJsonPath=mockserverInitialization.json \
 -jar ~/Downloads/mockserver-netty-{{ site.mockserver_version }}-no-dependencies.jar -serverPort 1080,1081 -logLevel INFO</code></pre>
+
+<a id="expectation_initializer_openapi" class="anchor" href="#expectation_initializer_openapi">&nbsp;</a>
+
+<h2>Expectation Initializer OpenAPI</h2>
+
+<p>MockServer expectations can be initialized when the MockServer starts, using an OpenAPI v3 specification file (YAML or JSON), by specifying the <strong>initializationOpenAPIPath</strong> configuration property as described in the <a href="/mock_server/configuration_properties.html#button_configuration_initialization_openapi_path">Configuration Properties</a> page, for example:</p>
+<pre><code class="code">java -Dmockserver.initializationOpenAPIPath=<span class="string_literal">"/config/petstore.yaml"</span> -jar ~/Downloads/mockserver-netty-{{ site.mockserver_version }}-no-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -logLevel INFO</code></pre>
+
+<p>MockServer will generate an expectation for each operation defined in the OpenAPI spec, with example responses derived from the schema definitions.</p>
+
+<p><strong>initializationOpenAPIPath</strong> supports:</p>
+
+<ul>
+    <li>relative or absolute paths</li>
+    <li>both filesystem and classpath locations</li>
+    <li>YAML (.yaml, .yml) and JSON (.json) OpenAPI v3 specifications</li>
+    <li>multiple files by using glob patterns (see <a href="#expectation_initializer_json_glob_patterns">glob patterns</a>)</li>
+</ul>
+
+<p>This can also be used with environment variables, which is particularly useful with Docker:</p>
+
+<pre class="prettyprint lang-javascript code"><code class="code">MOCKSERVER_INITIALIZATION_OPENAPI_PATH=/config/petstore.yaml \
+java -jar ~/Downloads/mockserver-netty-{{ site.mockserver_version }}-no-dependencies.jar -serverPort 1080,1081 -logLevel INFO</code></pre>
+
+<p>Both <strong>initializationJsonPath</strong> and <strong>initializationOpenAPIPath</strong> can be used together. JSON expectations are loaded first, followed by OpenAPI expectations.</p>
+
+<p>The file watcher (<strong>watchInitializationJson</strong>) also monitors OpenAPI files for changes when enabled.</p>
 
 {% include_subpage _includes/clustering.html %}
 

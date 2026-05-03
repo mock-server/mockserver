@@ -283,7 +283,7 @@ The only difference between the two servlets is a single boolean flag: `ProxySer
 | Step | Condition | Class |
 |------|-----------|-------|
 | File persistence | `configuration.persistExpectations()` | `ExpectationFileSystemPersistence` |
-| Expectation loading | `initializationJsonPath` or `initializationClass` set | `ExpectationInitializerLoader` |
+| Expectation loading | `initializationJsonPath`, `initializationOpenAPIPath`, or `initializationClass` set | `ExpectationInitializerLoader` |
 | JSON file watching | `watchInitializationJson` enabled | `ExpectationFileWatcher` |
 | Memory monitoring | `outputMemoryUsageCsv` enabled | `MemoryMonitoring` |
 

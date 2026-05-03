@@ -156,6 +156,105 @@ public class ExpectationInitializerIntegrationTest {
     }
 
     @Test
+    public void shouldLoadExpectationsFromOpenAPIPath() throws Exception {
+        // given
+        String initializationOpenAPIPath = ConfigurationProperties.initializationOpenAPIPath();
+        ClientAndServer mockServer = null;
+
+        try {
+            // when
+            String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example.json";
+            ConfigurationProperties.initializationOpenAPIPath(specUrlOrPayload);
+            mockServer = new ClientAndServer();
+
+            // then
+            Expectation[] activeExpectations = mockServer.retrieveActiveExpectations(null);
+            assertThat(activeExpectations.length, equalTo(4));
+            assertThat(activeExpectations[0], equalTo(
+                when(specUrlOrPayload, "listPets")
+                    .thenRespond(
+                        response()
+                            .withStatusCode(200)
+                            .withHeader("x-next", "some_string_value")
+                            .withHeader("content-type", "application/json")
+                            .withBody(json("[ {" + NEW_LINE +
+                                "  \"id\" : 0," + NEW_LINE +
+                                "  \"name\" : \"some_string_value\"," + NEW_LINE +
+                                "  \"tag\" : \"some_string_value\"" + NEW_LINE +
+                                "} ]"))
+                    )
+            ));
+
+            // then - verify HTTP request works
+            assertThat(
+                httpClient.sendRequest(
+                    request()
+                        .withMethod("GET")
+                        .withHeader(HOST.toString(), "localhost:" + mockServer.getLocalPort())
+                        .withPath("/v1/pets")
+                ).get(10, TimeUnit.SECONDS).getBodyAsString(),
+                is("[ {" + NEW_LINE +
+                    "  \"id\" : 0," + NEW_LINE +
+                    "  \"name\" : \"some_string_value\"," + NEW_LINE +
+                    "  \"tag\" : \"some_string_value\"" + NEW_LINE +
+                    "} ]")
+            );
+        } finally {
+            ConfigurationProperties.initializationOpenAPIPath(initializationOpenAPIPath);
+            stopQuietly(mockServer);
+        }
+    }
+
+    @Test
+    public void shouldLoadExpectationsFromBothJsonAndOpenAPIPath() throws Exception {
+        // given
+        String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
+        String initializationOpenAPIPath = ConfigurationProperties.initializationOpenAPIPath();
+        ClientAndServer mockServer = null;
+
+        try {
+            // when
+            ConfigurationProperties.initializationJsonPath("org/mockserver/netty/integration/mock/initializer/initializerJson.json");
+            ConfigurationProperties.initializationOpenAPIPath("org/mockserver/openapi/openapi_petstore_example.json");
+            mockServer = new ClientAndServer();
+
+            // then - should have both JSON expectations and OpenAPI expectations
+            Expectation[] activeExpectations = mockServer.retrieveActiveExpectations(null);
+            assertThat(activeExpectations.length, equalTo(6));
+
+            // verify JSON-loaded expectation
+            assertThat(
+                httpClient.sendRequest(
+                    request()
+                        .withMethod("GET")
+                        .withHeader(HOST.toString(), "localhost:" + mockServer.getLocalPort())
+                        .withPath("/simpleFirst")
+                ).get(10, TimeUnit.SECONDS).getBodyAsString(),
+                is("some first response")
+            );
+
+            // verify OpenAPI-loaded expectation
+            assertThat(
+                httpClient.sendRequest(
+                    request()
+                        .withMethod("GET")
+                        .withHeader(HOST.toString(), "localhost:" + mockServer.getLocalPort())
+                        .withPath("/v1/pets")
+                ).get(10, TimeUnit.SECONDS).getBodyAsString(),
+                is("[ {" + NEW_LINE +
+                    "  \"id\" : 0," + NEW_LINE +
+                    "  \"name\" : \"some_string_value\"," + NEW_LINE +
+                    "  \"tag\" : \"some_string_value\"" + NEW_LINE +
+                    "} ]")
+            );
+        } finally {
+            ConfigurationProperties.initializationJsonPath(initializationJsonPath);
+            ConfigurationProperties.initializationOpenAPIPath(initializationOpenAPIPath);
+            stopQuietly(mockServer);
+        }
+    }
+
+    @Test
     public void shouldLoadExpectationsFromInitializerClass() throws Exception {
         // given
         String initializationClass = ConfigurationProperties.initializationClass();

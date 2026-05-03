@@ -122,9 +122,9 @@ public class HttpState {
         if (configuration.persistExpectations()) {
             this.expectationFileSystemPersistence = new ExpectationFileSystemPersistence(configuration, mockServerLogger, requestMatchers);
         }
-        if (isNotBlank(configuration.initializationJsonPath()) || isNotBlank(configuration.initializationClass())) {
+        if (isNotBlank(configuration.initializationJsonPath()) || isNotBlank(configuration.initializationOpenAPIPath()) || isNotBlank(configuration.initializationClass())) {
             ExpectationInitializerLoader expectationInitializerLoader = new ExpectationInitializerLoader(configuration, mockServerLogger, requestMatchers);
-            if (isNotBlank(configuration.initializationJsonPath()) && configuration.watchInitializationJson()) {
+            if ((isNotBlank(configuration.initializationJsonPath()) || isNotBlank(configuration.initializationOpenAPIPath())) && configuration.watchInitializationJson()) {
                 this.expectationFileWatcher = new ExpectationFileWatcher(configuration, mockServerLogger, requestMatchers, expectationInitializerLoader);
             }
         }

@@ -30,6 +30,10 @@ public class OpenAPIParser {
 
     public static final String OPEN_API_LOAD_ERROR = "Unable to load API spec";
 
+    public static void clearCache(String specUrlOrPayload) {
+        openAPILRUCache.delete(specUrlOrPayload);
+    }
+
     /**
      * Helper function that checks if the provided string is a reference to an API specification file
      * @param specUrlOrPayload - string that might contain an API specification file reference

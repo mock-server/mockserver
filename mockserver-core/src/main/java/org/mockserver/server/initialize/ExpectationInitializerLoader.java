@@ -12,6 +12,8 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.mock.RequestMatchers;
 import org.mockserver.mock.listeners.MockServerMatcherNotifier;
 import org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause;
+import org.mockserver.openapi.OpenAPIConverter;
+import org.mockserver.openapi.OpenAPIParser;
 import org.mockserver.serialization.ExpectationSerializer;
 
 import java.lang.reflect.Constructor;
@@ -30,14 +32,17 @@ import static org.slf4j.event.Level.*;
 public class ExpectationInitializerLoader {
 
     private static final LRUCache<String, List<String>> EXPANDED_INITIALIZATION_JSON_PATHS = new LRUCache<>(new MockServerLogger(LRUCache.class), 10, TimeUnit.HOURS.toMillis(1));
+    private static final LRUCache<String, List<String>> EXPANDED_INITIALIZATION_OPENAPI_PATHS = new LRUCache<>(new MockServerLogger(LRUCache.class), 10, TimeUnit.HOURS.toMillis(1));
     private final Configuration configuration;
     private final ExpectationSerializer expectationSerializer;
+    private final OpenAPIConverter openAPIConverter;
     private final MockServerLogger mockServerLogger;
     private final RequestMatchers requestMatchers;
 
     public ExpectationInitializerLoader(Configuration configuration, MockServerLogger mockServerLogger, RequestMatchers requestMatchers) {
         this.configuration = configuration;
         this.expectationSerializer = new ExpectationSerializer(mockServerLogger);
+        this.openAPIConverter = new OpenAPIConverter(mockServerLogger);
         this.mockServerLogger = mockServerLogger;
         this.requestMatchers = requestMatchers;
         addExpectationsFromInitializer();
@@ -56,8 +61,22 @@ public class ExpectationInitializerLoader {
         }
     }
 
+    public static List<String> expandedInitializationOpenAPIPaths(String initializationOpenAPIPath) {
+        if (isNotBlank(initializationOpenAPIPath)) {
+            List<String> expandedPaths = EXPANDED_INITIALIZATION_OPENAPI_PATHS.get(initializationOpenAPIPath);
+            if (expandedPaths == null) {
+                expandedPaths = FilePath.expandFilePathGlobs(initializationOpenAPIPath);
+                EXPANDED_INITIALIZATION_OPENAPI_PATHS.put(initializationOpenAPIPath, expandedPaths);
+            }
+            return expandedPaths;
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
     private void addExpectationsFromInitializer() {
         retrieveExpectationsFromJson();
+        retrieveExpectationsFromOpenAPI();
         for (Expectation expectation : retrieveExpectationsFromInitializerClass()) {
             requestMatchers.add(expectation, new Cause("", Cause.Type.CLASS_INITIALISER));
         }
@@ -114,6 +133,56 @@ public class ExpectationInitializerLoader {
 
     private Expectation[] retrieveExpectationsFromJson() {
         return retrieveExpectationsFromFile("loading JSON initialization file:{}", "exception while loading JSON initialization file, ignoring file:{}", "loaded expectations:{}from file:{}", Cause.Type.FILE_INITIALISER).toArray(new Expectation[0]);
+    }
+
+    private Expectation[] retrieveExpectationsFromOpenAPI() {
+        return retrieveExpectationsFromOpenAPIFile("loading OpenAPI initialization file:{}", "exception while loading OpenAPI initialization file, ignoring file:{}", "loaded expectations:{}from OpenAPI file:{}", Cause.Type.FILE_INITIALISER).toArray(new Expectation[0]);
+    }
+
+    public List<Expectation> retrieveExpectationsFromOpenAPIFile(String initialLogMessage, String exceptionLogMessage, String completedLogMessage, Cause.Type causeType) {
+        List<String> initializationOpenAPIPaths = ExpectationInitializerLoader.expandedInitializationOpenAPIPaths(configuration.initializationOpenAPIPath());
+        return initializationOpenAPIPaths
+            .stream()
+            .flatMap(initializationOpenAPIPath -> {
+                List<Expectation> expectations = Collections.emptyList();
+                if (isNotBlank(initializationOpenAPIPath)) {
+                    if (isNotBlank(initialLogMessage) && MockServerLogger.isEnabled(INFO)) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setType(SERVER_CONFIGURATION)
+                                .setLogLevel(INFO)
+                                .setMessageFormat(initialLogMessage)
+                                .setArguments(initializationOpenAPIPath)
+                        );
+                    }
+                    try {
+                        OpenAPIParser.clearCache(initializationOpenAPIPath);
+                        expectations = openAPIConverter.buildExpectations(initializationOpenAPIPath, null);
+                    } catch (Throwable throwable) {
+                        if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setType(SERVER_CONFIGURATION)
+                                    .setLogLevel(WARN)
+                                    .setMessageFormat(exceptionLogMessage)
+                                    .setArguments(initializationOpenAPIPath)
+                                    .setThrowable(throwable)
+                            );
+                        }
+                    }
+                }
+                if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(TRACE)
+                            .setMessageFormat(completedLogMessage)
+                            .setArguments(expectations, initializationOpenAPIPath)
+                    );
+                }
+                requestMatchers.update(expectations.toArray(new Expectation[0]), new Cause(initializationOpenAPIPath, causeType));
+                return expectations.stream();
+            })
+            .collect(Collectors.toList());
     }
 
     public List<Expectation> retrieveExpectationsFromFile(String initialLogMessage, String expectationLogMessage, String completedLogMessage, Cause.Type causeType) {
@@ -180,6 +249,7 @@ public class ExpectationInitializerLoader {
     public Expectation[] loadExpectations() {
         final Expectation[] expectationsFromInitializerClass = retrieveExpectationsFromInitializerClass();
         final Expectation[] expectationsFromJson = retrieveExpectationsFromJson();
-        return ArrayUtils.addAll(expectationsFromInitializerClass, expectationsFromJson);
+        final Expectation[] expectationsFromOpenAPI = retrieveExpectationsFromOpenAPI();
+        return ArrayUtils.addAll(ArrayUtils.addAll(expectationsFromInitializerClass, expectationsFromJson), expectationsFromOpenAPI);
     }
 }

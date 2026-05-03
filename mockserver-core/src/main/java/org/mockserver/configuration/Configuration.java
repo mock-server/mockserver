@@ -84,6 +84,7 @@ public class Configuration {
     // mock initialization
     private String initializationClass;
     private String initializationJsonPath;
+    private String initializationOpenAPIPath;
     private Boolean watchInitializationJson;
 
     // mock persistence
@@ -960,6 +961,25 @@ public class Configuration {
      */
     public Configuration initializationJsonPath(String initializationJsonPath) {
         this.initializationJsonPath = initializationJsonPath;
+        return this;
+    }
+
+    public String initializationOpenAPIPath() {
+        if (initializationOpenAPIPath == null) {
+            return ConfigurationProperties.initializationOpenAPIPath();
+        }
+        return initializationOpenAPIPath;
+    }
+
+    /**
+     * <p>The path to the OpenAPI spec file used to initialize expectations in MockServer at startup, if set MockServer will load this file and create expectations for each operation when it starts.</p>
+     * <p>The file can be a YAML (.yaml, .yml) or JSON (.json) OpenAPI v3 specification.</p>
+     * <p>To watch multiple files use file globs as documented here: https://mock-server.com/mock_server/initializing_expectations.html#expectation_initializer_json_glob_patterns</p>
+     *
+     * @param initializationOpenAPIPath path to the OpenAPI spec file used to initialize expectations in MockServer at startup
+     */
+    public Configuration initializationOpenAPIPath(String initializationOpenAPIPath) {
+        this.initializationOpenAPIPath = initializationOpenAPIPath;
         return this;
     }
 
