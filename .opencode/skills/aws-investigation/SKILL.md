@@ -11,7 +11,7 @@ Investigate AWS infrastructure issues affecting Buildkite build agents. Covers E
 ## Prerequisites
 
 - **AWS CLI** installed (`brew install awscli`)
-- **AWS SSO profile** `mockserver-build` configured (SSO region: `eu-west-1`)
+- **AWS SSO profile** `mockserver-build` configured (SSO region: `eu-west-2`)
 - **Active SSO session**: `aws sso login --profile mockserver-build`
 - **Corporate TLS proxy** (if applicable): `export AWS_CA_BUNDLE=$NODE_EXTRA_CA_CERTS` (only if `NODE_EXTRA_CA_CERTS` is set)
 - **macOS + Python 3.14 + Homebrew**: if you get `pyexpat` symbol errors, `export DYLD_LIBRARY_PATH=/opt/homebrew/opt/expat/lib`

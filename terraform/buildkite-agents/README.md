@@ -78,7 +78,7 @@ buildkite-agents/
 3. **AWS SSO profile** `mockserver-build` configured:
    ```bash
    aws configure sso --profile mockserver-build
-   # SSO region: eu-west-1
+    # SSO region: eu-west-2
    # Default region: eu-west-2
    ```
 4. **Buildkite agent token** — from https://buildkite.com/organizations/mockserver/agents
