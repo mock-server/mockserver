@@ -90,8 +90,8 @@ public class HttpRequestSerializationErrorsTest {
                 "" + NEW_LINE +
                 " schema validation errors:" + NEW_LINE +
                 "" + NEW_LINE +
-                "  JsonParseException - Unrecognized token 'requestBytes': was expecting (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')" + NEW_LINE +
-                "   at [Source: (String)\"requestBytes\"; line: 1, column: 13]"));
+                "  JsonParseException - Unrecognized token 'requestBytes': was expecting (JSON String, Number (or 'NaN'/'+INF'/'-INF'), Array, Object or token 'null', 'true' or 'false')" + NEW_LINE +
+                "   at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 13]"));
         }
     }
 
@@ -103,8 +103,8 @@ public class HttpRequestSerializationErrorsTest {
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
             // then
-            assertThat(iae.getMessage(), is("com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'requestBytes': was expecting (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')" + NEW_LINE +
-                " at [Source: (String)\"requestBytes\"; line: 1, column: 13]"));
+            assertThat(iae.getMessage(), is("com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'requestBytes': was expecting (JSON String, Number (or 'NaN'/'+INF'/'-INF'), Array, Object or token 'null', 'true' or 'false')" + NEW_LINE +
+                " at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 13]"));
         }
     }
 

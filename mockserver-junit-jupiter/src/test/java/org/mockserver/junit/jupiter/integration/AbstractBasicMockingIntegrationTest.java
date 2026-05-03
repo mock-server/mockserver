@@ -1785,7 +1785,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             "" + NEW_LINE +
             " schema validation errors:" + NEW_LINE +
             "" + NEW_LINE +
-            "  12 errors:\n" +
+            "  13 errors:\n" +
             "   - $.httpError: is missing, but is required, if specifying action of type Error\n" +
             "   - $.httpForward: is missing, but is required, if specifying action of type Forward\n" +
             "   - $.httpForwardClassCallback: is missing, but is required, if specifying action of type ForwardClassCallback\n" +
@@ -1797,6 +1797,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             "   - $.httpResponseObjectCallback: is missing, but is required, if specifying action of type ResponseObjectCallback\n" +
             "   - $.httpResponseTemplate: is missing, but is required, if specifying action of type ResponseTemplate\n" +
             "   - $.incorrectField: is not defined in the schema and the schema does not allow additional properties\n" +
+            "   - $: should be valid to one and only one schema, but 0 are valid\n" +
             "   - oneOf of the following must be specified [httpError, httpForward, httpForwardClassCallback, httpForwardObjectCallback, httpForwardTemplate, httpOverrideForwardedRequest, httpResponse, httpResponseClassCallback, httpResponseObjectCallback, httpResponseTemplate]" + NEW_LINE +
             "  " + NEW_LINE +
             "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  ")));
@@ -1829,10 +1830,12 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             "" + NEW_LINE +
             " schema validation errors:" + NEW_LINE +
             "" + NEW_LINE +
-            "  4 errors:\n" +
+            "  6 errors:\n" +
             "   - $.keepAlive: string found, boolean expected\n" +
             "   - $.method: boolean found, string expected\n" +
+            "   - $.method: should be valid to one and only one schema, but 0 are valid\n" +
             "   - $.path: integer found, string expected\n" +
+            "   - $.path: should be valid to one and only one schema, but 0 are valid\n" +
             "   - $.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher" + NEW_LINE +
             "  " + NEW_LINE +
             "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  ")));

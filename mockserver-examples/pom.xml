@@ -19,7 +19,7 @@
         <!-- highest jersey version is 3.0 due to Java 1.8 version -->
         <jersey.version>3.1.1</jersey.version>
         <!-- highest jetty version is 9.4 due to Java 1.8 version -->
-        <jetty.version>9.4.57.v20241219</jetty.version>
+        <jetty.version>9.4.58.v20250814</jetty.version>
         <google-http-client.version>1.45.0</google-http-client.version>
     </properties>
 
@@ -53,7 +53,7 @@
                 <!-- Conflicting versions in swagger-parser and spring-boot-starter-webflux -->
                 <groupId>org.yaml</groupId>
                 <artifactId>snakeyaml</artifactId>
-                <version>2.0</version>
+                <version>2.4</version>
             </dependency>
             <dependency>
                 <!-- Conflicting versions in spring-boot-starter-webflux and spring-context / spring-webmvc -->

@@ -542,8 +542,9 @@ public class JsonSchemaHttpResponseValidatorIntegrationTest {
         assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +
                 "    \"headers\" : [ \"invalidValueOne\", \"invalidValueTwo\" ]" + NEW_LINE +
                 "  }"),
-            is("3 errors:" + NEW_LINE +
+            is("4 errors:" + NEW_LINE +
                 " - $.headers: array found, object expected" + NEW_LINE +
+                " - $.headers: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
                 " - $.headers[0]: string found, object expected" + NEW_LINE +
                 " - $.headers[1]: string found, object expected" + NEW_LINE +
                 NEW_LINE +

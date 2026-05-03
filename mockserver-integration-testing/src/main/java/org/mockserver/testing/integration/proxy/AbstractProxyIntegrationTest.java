@@ -970,10 +970,12 @@ public abstract class AbstractProxyIntegrationTest {
             "" + NEW_LINE +
             " schema validation errors:" + NEW_LINE +
             "" + NEW_LINE +
-            "  4 errors:\n" +
+            "  6 errors:\n" +
             "   - $.keepAlive: string found, boolean expected\n" +
             "   - $.method: boolean found, string expected\n" +
+            "   - $.method: should be valid to one and only one schema, but 0 are valid\n" +
             "   - $.path: integer found, string expected\n" +
+            "   - $.path: should be valid to one and only one schema, but 0 are valid\n" +
             "   - $.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher" + NEW_LINE +
             "  " + NEW_LINE +
             "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  ")));
@@ -1047,10 +1049,11 @@ public abstract class AbstractProxyIntegrationTest {
             "" + NEW_LINE +
             " schema validation errors:" + NEW_LINE +
             "" + NEW_LINE +
-            "  4 errors:\n" +
+            "  5 errors:\n" +
             "   - $.expectationIds: is missing but it is required\n" +
             "   - $.httpRequest: is not defined in the schema and the schema does not allow additional properties\n" +
             "   - $.httpRequests: is missing, but is required, if specifying action of type Requests\n" +
+            "   - $: should be valid to one and only one schema, but 0 are valid\n" +
             "   - oneOf of the following must be specified [httpError, httpForward, httpForwardClassCallback, httpForwardObjectCallback, httpForwardTemplate, httpOverrideForwardedRequest, httpResponse, httpResponseClassCallback, httpResponseObjectCallback, httpResponseTemplate]" + NEW_LINE +
             "  " + NEW_LINE +
             "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  ")));

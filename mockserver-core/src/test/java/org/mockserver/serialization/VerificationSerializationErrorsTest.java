@@ -76,8 +76,8 @@ public class VerificationSerializationErrorsTest {
                 "" + NEW_LINE +
                 " schema validation errors:" + NEW_LINE +
                 "" + NEW_LINE +
-                "  JsonParseException - Unrecognized token 'requestBytes': was expecting (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')" + NEW_LINE +
-                "   at [Source: (String)\"requestBytes\"; line: 1, column: 13]"));
+                "  JsonParseException - Unrecognized token 'requestBytes': was expecting (JSON String, Number (or 'NaN'/'+INF'/'-INF'), Array, Object or token 'null', 'true' or 'false')" + NEW_LINE +
+                "   at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 13]"));
         }
     }
 
@@ -115,7 +115,7 @@ public class VerificationSerializationErrorsTest {
                 " schema validation errors:" + NEW_LINE +
                 "" + NEW_LINE +
                 "  1 error:" + NEW_LINE +
-                "   - $: should be valid to one and only one of schema, but more than one are valid: {\"required\":[\"expectationId\"]}{\"required\":[\"httpRequest\"]}" + NEW_LINE +
+                "   - $: should be valid to one and only one schema, but 2 are valid" + NEW_LINE +
                 "  " + NEW_LINE +
                 "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  " )));
         }

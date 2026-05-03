@@ -62,7 +62,8 @@ public class HttpRequestSerializerIntegrationTest {
             "" + NEW_LINE +
             " schema validation errors:" + NEW_LINE +
             "" + NEW_LINE +
-            "  1 error:" + NEW_LINE +
+            "  3 errors:" + NEW_LINE +
+            "   - $.headers.someHea derName: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
             "   - $.headers: invalid header format, the following are valid examples: " + NEW_LINE +
             "    " + NEW_LINE +
             "       {" + NEW_LINE +
@@ -94,6 +95,7 @@ public class HttpRequestSerializerIntegrationTest {
             "               }" + NEW_LINE +
             "           ]" + NEW_LINE +
             "       }" + NEW_LINE +
+            "   - $.headers: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
             "  " + NEW_LINE +
             "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  "));
     }
@@ -118,7 +120,8 @@ public class HttpRequestSerializerIntegrationTest {
             "" + NEW_LINE +
             " schema validation errors:" + NEW_LINE +
             "" + NEW_LINE +
-            "  1 error:" + NEW_LINE +
+            "  3 errors:" + NEW_LINE +
+            "   - $.pathParameters.path_somePara meterName: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
             "   - $.pathParameters: invalid parameter format, the following are valid examples: " + NEW_LINE +
             "    " + NEW_LINE +
             "       {" + NEW_LINE +
@@ -150,6 +153,7 @@ public class HttpRequestSerializerIntegrationTest {
             "               }" + NEW_LINE +
             "           ]" + NEW_LINE +
             "       }" + NEW_LINE +
+            "   - $.pathParameters: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
             "  " + NEW_LINE +
             "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  "));
     }
@@ -174,7 +178,8 @@ public class HttpRequestSerializerIntegrationTest {
             "" + NEW_LINE +
             " schema validation errors:" + NEW_LINE +
             "" + NEW_LINE +
-            "  1 error:" + NEW_LINE +
+            "  3 errors:" + NEW_LINE +
+            "   - $.queryStringParameters.somePara meterName: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
             "   - $.queryStringParameters: invalid parameter format, the following are valid examples: " + NEW_LINE +
             "    " + NEW_LINE +
             "       {" + NEW_LINE +
@@ -206,6 +211,7 @@ public class HttpRequestSerializerIntegrationTest {
             "               }" + NEW_LINE +
             "           ]" + NEW_LINE +
             "       }" + NEW_LINE +
+            "   - $.queryStringParameters: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
             "  " + NEW_LINE +
             "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  "));
     }
@@ -230,7 +236,8 @@ public class HttpRequestSerializerIntegrationTest {
             "" + NEW_LINE +
             " schema validation errors:" + NEW_LINE +
             "" + NEW_LINE +
-            "  1 error:" + NEW_LINE +
+            "  3 errors:" + NEW_LINE +
+            "   - $.cookies.someCoo kieName: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
             "   - $.cookies: invalid cookie format, the following are valid examples: " + NEW_LINE +
             "    " + NEW_LINE +
             "       {" + NEW_LINE +
@@ -254,6 +261,7 @@ public class HttpRequestSerializerIntegrationTest {
             "               \"format\": \"ipv4\"" + NEW_LINE +
             "           }" + NEW_LINE +
             "       }" + NEW_LINE +
+            "   - $.cookies: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
             "  " + NEW_LINE +
             "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  "));
     }

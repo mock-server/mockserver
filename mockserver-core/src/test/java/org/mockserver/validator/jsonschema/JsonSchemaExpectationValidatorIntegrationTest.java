@@ -711,11 +711,13 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
             "      \"values\" : [ 10 ]" + NEW_LINE +
             "    } ]" + NEW_LINE +
             "  }" + NEW_LINE +
-            "}"), is("5 errors:" + NEW_LINE +
+            "}"), is("7 errors:" + NEW_LINE +
             " - $.httpRequest.headers: array found, object expected" + NEW_LINE +
+            " - $.httpRequest.headers: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
             " - $.httpRequest.headers[0].name: integer found, string expected" + NEW_LINE +
             " - $.httpRequest.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher" + NEW_LINE +
             " - $.httpResponse.headers: array found, object expected" + NEW_LINE +
+            " - $.httpResponse.headers: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
             " - $.httpResponse.headers[0].values[0]: integer found, string expected" + NEW_LINE +
             NEW_LINE +
             OPEN_API_SPECIFICATION_URL));
@@ -770,8 +772,10 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
             "      }" + NEW_LINE +
             "    }" + NEW_LINE +
             "  }" + NEW_LINE +
-            "}"), is("5 errors:" + NEW_LINE +
+            "}"), is("7 errors:" + NEW_LINE +
             " - $.httpOverrideForwardedRequest.httpRequest.socketAddress.port: string found, integer expected" + NEW_LINE +
+            " - $.httpOverrideForwardedRequest.httpRequest: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
+            " - $.httpOverrideForwardedRequest: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
             " - $.httpRequest.keepAlive: string found, boolean expected" + NEW_LINE +
             " - $.httpRequest.secure: string found, boolean expected" + NEW_LINE +
             " - $.httpRequest.socketAddress.port: string found, integer expected" + NEW_LINE +
@@ -801,11 +805,13 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
             "      \"value\" : 10" + NEW_LINE +
             "    } ]" + NEW_LINE +
             "  }" + NEW_LINE +
-            "}"), is("5 errors:" + NEW_LINE +
+            "}"), is("7 errors:" + NEW_LINE +
             " - $.httpRequest.cookies: array found, object expected" + NEW_LINE +
+            " - $.httpRequest.cookies: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
             " - $.httpRequest.cookies[0].name: integer found, string expected" + NEW_LINE +
             " - $.httpRequest.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher" + NEW_LINE +
             " - $.httpResponse.cookies: array found, object expected" + NEW_LINE +
+            " - $.httpResponse.cookies: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
             " - $.httpResponse.cookies[0].value: integer found, string expected" + NEW_LINE +
             NEW_LINE +
             OPEN_API_SPECIFICATION_URL));
@@ -830,8 +836,9 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
             "    \"statusCode\" : 304," + NEW_LINE +
             "    \"body\" : 50," + NEW_LINE +
             "  }" + NEW_LINE +
-            "}"), is("4 errors:" + NEW_LINE +
+            "}"), is("5 errors:" + NEW_LINE +
             " - $.httpRequest.queryStringParameters: array found, object expected" + NEW_LINE +
+            " - $.httpRequest.queryStringParameters: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
             " - $.httpRequest.queryStringParameters[0].name: integer found, string expected" + NEW_LINE +
             " - $.httpRequest.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher" + NEW_LINE +
             " - $.httpResponse.body: should match one of its valid types: {" + NEW_LINE +
@@ -977,13 +984,16 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
             "      \"value\" : \"someCookieValue\"" + NEW_LINE +
             "    } ]" + NEW_LINE +
             "  }" + NEW_LINE +
-            "}"), is("7 errors:" + NEW_LINE +
+            "}"), is("10 errors:" + NEW_LINE +
             " - $.httpRequest.headers: array found, object expected" + NEW_LINE +
+            " - $.httpRequest.headers: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
             " - $.httpRequest.headers[0].values[0]: integer found, string expected" + NEW_LINE +
             " - $.httpRequest.queryStringParameters: array found, object expected" + NEW_LINE +
+            " - $.httpRequest.queryStringParameters: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
             " - $.httpRequest.queryStringParameters[0].name: integer found, string expected" + NEW_LINE +
             " - $.httpRequest.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher" + NEW_LINE +
             " - $.httpResponse.cookies: array found, object expected" + NEW_LINE +
+            " - $.httpResponse.cookies: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
             " - $.httpResponse.cookies[0].name: integer found, string expected" + NEW_LINE +
             NEW_LINE +
             OPEN_API_SPECIFICATION_URL));
@@ -1022,7 +1032,7 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                 "  }" + NEW_LINE +
                 "}"),
             is(
-                "11 errors:" + NEW_LINE +
+                "12 errors:" + NEW_LINE +
                     " - $.httpError: is missing, but is required, if specifying action of type Error" + NEW_LINE +
                     " - $.httpForward: is missing, but is required, if specifying action of type Forward" + NEW_LINE +
                     " - $.httpForwardClassCallback: is missing, but is required, if specifying action of type ForwardClassCallback" + NEW_LINE +
@@ -1033,6 +1043,7 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                     " - $.httpResponseClassCallback: is missing, but is required, if specifying action of type ResponseClassCallback" + NEW_LINE +
                     " - $.httpResponseObjectCallback: is missing, but is required, if specifying action of type ResponseObjectCallback" + NEW_LINE +
                     " - $.httpResponseTemplate: is missing, but is required, if specifying action of type ResponseTemplate" + NEW_LINE +
+                    " - $: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
                     " - oneOf of the following must be specified [httpError, httpForward, httpForwardClassCallback, httpForwardObjectCallback, httpForwardTemplate, httpOverrideForwardedRequest, httpResponse, httpResponseClassCallback, httpResponseObjectCallback, httpResponseTemplate]" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
@@ -1046,7 +1057,7 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                 "    \"invalidField\" : \"randomValue\"" + NEW_LINE +
                 "  }"),
             is(
-                "12 errors:" + NEW_LINE +
+                "13 errors:" + NEW_LINE +
                     " - $.httpError: is missing, but is required, if specifying action of type Error" + NEW_LINE +
                     " - $.httpForward: is missing, but is required, if specifying action of type Forward" + NEW_LINE +
                     " - $.httpForwardClassCallback: is missing, but is required, if specifying action of type ForwardClassCallback" + NEW_LINE +
@@ -1058,6 +1069,7 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                     " - $.httpResponseObjectCallback: is missing, but is required, if specifying action of type ResponseObjectCallback" + NEW_LINE +
                     " - $.httpResponseTemplate: is missing, but is required, if specifying action of type ResponseTemplate" + NEW_LINE +
                     " - $.invalidField: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
+                    " - $: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
                     " - oneOf of the following must be specified [httpError, httpForward, httpForwardClassCallback, httpForwardObjectCallback, httpForwardTemplate, httpOverrideForwardedRequest, httpResponse, httpResponseClassCallback, httpResponseObjectCallback, httpResponseTemplate]" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
@@ -1129,12 +1141,14 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                 "    \"unlimited\" : false" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}"),
-            is("7 errors:" + NEW_LINE +
+            is("9 errors:" + NEW_LINE +
                 " - $.httpRequest.headers: array found, object expected" + NEW_LINE +
+                " - $.httpRequest.headers: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
                 " - $.httpRequest.headers[0]: string found, object expected" + NEW_LINE +
                 " - $.httpRequest.headers[1]: string found, object expected" + NEW_LINE +
                 " - $.httpRequest.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher" + NEW_LINE +
                 " - $.httpResponse.headers: array found, object expected" + NEW_LINE +
+                " - $.httpResponse.headers: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
                 " - $.httpResponse.headers[0]: string found, object expected" + NEW_LINE +
                 " - $.httpResponse.headers[1]: string found, object expected" + NEW_LINE +
                 NEW_LINE +

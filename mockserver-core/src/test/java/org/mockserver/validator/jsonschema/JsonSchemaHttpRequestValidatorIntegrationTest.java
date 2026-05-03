@@ -534,9 +534,11 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
                 "    \"path\" : false" + NEW_LINE +
                 "  }"),
             is(
-                "2 errors:" + NEW_LINE +
+                "4 errors:" + NEW_LINE +
                     " - $.method: integer found, string expected" + NEW_LINE +
+                    " - $.method: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
                     " - $.path: boolean found, string expected" + NEW_LINE +
+                    " - $.path: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
             ));
@@ -548,8 +550,9 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
         assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +
                 "    \"headers\" : [ \"invalidValueOne\", \"invalidValueTwo\" ]" + NEW_LINE +
                 "  }"),
-            is("3 errors:" + NEW_LINE +
+            is("4 errors:" + NEW_LINE +
                 " - $.headers: array found, object expected" + NEW_LINE +
+                " - $.headers: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
                 " - $.headers[0]: string found, object expected" + NEW_LINE +
                 " - $.headers[1]: string found, object expected" + NEW_LINE +
                 NEW_LINE +
