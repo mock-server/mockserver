@@ -14,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.serialization.ObjectMapperFactory;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,12 +31,17 @@ public class JsonStringMatcher extends BodyMatcher<String> {
     private final String matcher;
     private JsonNode matcherJsonNode;
     private final MatchType matchType;
+    private final boolean matchNumbersAsStrings;
 
     JsonStringMatcher(MockServerLogger mockServerLogger, String matcher, MatchType matchType) {
+        this(mockServerLogger, matcher, matchType, false);
+    }
+
+    JsonStringMatcher(MockServerLogger mockServerLogger, String matcher, MatchType matchType, boolean matchNumbersAsStrings) {
         this.mockServerLogger = mockServerLogger;
         this.matcher = matcher;
-
         this.matchType = matchType;
+        this.matchNumbersAsStrings = matchNumbersAsStrings;
     }
 
     public boolean matches(final MatchDifference context, String matched) {
@@ -59,6 +65,9 @@ public class JsonStringMatcher extends BodyMatcher<String> {
                 }
                 final Difference diffListener = new Difference();
                 Configuration diffConfig = Configuration.empty().withDifferenceListener(diffListener).withOptions(options);
+                if (matchNumbersAsStrings) {
+                    diffConfig = diffConfig.withTolerance(BigDecimal.ZERO);
+                }
 
                 try {
                     if (matcherJsonNode == null) {

@@ -1046,6 +1046,30 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
+    public void shouldParseJsonWithJsonBodyWithMatchNumbersAsStrings() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"body\" : {" + NEW_LINE +
+            "            \"type\" : \"JSON\"," + NEW_LINE +
+            "            \"json\" : \"{\\\"value\\\": 1}\"," + NEW_LINE +
+            "            \"matchNumbersAsStrings\" : true" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setBody(new JsonBodyDTO(new JsonBody("{\"value\": 1}", null, JsonBody.DEFAULT_JSON_CONTENT_TYPE, MatchType.ONLY_MATCHING_FIELDS, true)))
+            ), expectationDTO);
+    }
+
+    @Test
     public void shouldParseJsonWithJsonBodyUsingJsonProperty() throws IOException {
         // given
         String json = ("{" + NEW_LINE +

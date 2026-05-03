@@ -23,26 +23,32 @@ public class JsonBody extends BodyWithContentType<String> {
     public static final MediaType DEFAULT_JSON_CONTENT_TYPE = MediaType.APPLICATION_JSON_UTF_8;
     private final String json;
     private final MatchType matchType;
+    private final boolean matchNumbersAsStrings;
     private final byte[] rawBytes;
     private static ObjectMapper objectMapper;
     private JsonNode jsonNode;
 
     public JsonBody(String json) {
-        this(json, null, DEFAULT_JSON_CONTENT_TYPE, DEFAULT_MATCH_TYPE);
+        this(json, null, DEFAULT_JSON_CONTENT_TYPE, DEFAULT_MATCH_TYPE, false);
     }
 
     public JsonBody(String json, MatchType matchType) {
-        this(json, null, DEFAULT_JSON_CONTENT_TYPE, matchType);
+        this(json, null, DEFAULT_JSON_CONTENT_TYPE, matchType, false);
     }
 
     public JsonBody(String json, Charset charset, MatchType matchType) {
-        this(json, null, (charset != null ? DEFAULT_JSON_CONTENT_TYPE.withCharset(charset) : null), matchType);
+        this(json, null, (charset != null ? DEFAULT_JSON_CONTENT_TYPE.withCharset(charset) : null), matchType, false);
     }
 
     public JsonBody(String json, byte[] rawBytes, MediaType contentType, MatchType matchType) {
+        this(json, rawBytes, contentType, matchType, false);
+    }
+
+    public JsonBody(String json, byte[] rawBytes, MediaType contentType, MatchType matchType, boolean matchNumbersAsStrings) {
         super(Type.JSON, contentType);
         this.json = json;
         this.matchType = matchType;
+        this.matchNumbersAsStrings = matchNumbersAsStrings;
 
         if (rawBytes == null && json != null) {
             this.rawBytes = json.getBytes(determineCharacterSet(contentType, DEFAULT_TEXT_HTTP_CHARACTER_SET));
@@ -57,6 +63,10 @@ public class JsonBody extends BodyWithContentType<String> {
 
     public static JsonBody json(String json, MatchType matchType) {
         return new JsonBody(json, matchType);
+    }
+
+    public static JsonBody json(String json, MatchType matchType, boolean matchNumbersAsStrings) {
+        return new JsonBody(json, null, DEFAULT_JSON_CONTENT_TYPE, matchType, matchNumbersAsStrings);
     }
 
     public static JsonBody json(String json, Charset charset) {
@@ -136,6 +146,10 @@ public class JsonBody extends BodyWithContentType<String> {
         return matchType;
     }
 
+    public boolean isMatchNumbersAsStrings() {
+        return matchNumbersAsStrings;
+    }
+
     @Override
     public String toString() {
         return json;
@@ -158,13 +172,14 @@ public class JsonBody extends BodyWithContentType<String> {
         JsonBody jsonBody = (JsonBody) o;
         return Objects.equals(json, jsonBody.json) &&
             matchType == jsonBody.matchType &&
+            matchNumbersAsStrings == jsonBody.matchNumbersAsStrings &&
             Arrays.equals(rawBytes, jsonBody.rawBytes);
     }
 
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            int result = Objects.hash(super.hashCode(), json, matchType);
+            int result = Objects.hash(super.hashCode(), json, matchType, matchNumbersAsStrings);
             hashCode = 31 * result + Arrays.hashCode(rawBytes);
         }
         return hashCode;

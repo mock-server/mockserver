@@ -69,7 +69,11 @@ public class HttpRequestToJavaSerializer implements ToJavaSerializer<HttpRequest
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                     output.append(".withBody(");
                     JsonBody jsonBody = (JsonBody) request.getBody();
-                    output.append("new JsonBody(\"").append(StringEscapeUtils.escapeJava(jsonBody.getValue())).append("\", JsonBodyMatchType.").append(jsonBody.getMatchType()).append(")");
+                    if (jsonBody.isMatchNumbersAsStrings()) {
+                        output.append("JsonBody.json(\"").append(StringEscapeUtils.escapeJava(jsonBody.getValue())).append("\", JsonBodyMatchType.").append(jsonBody.getMatchType()).append(", true)");
+                    } else {
+                        output.append("new JsonBody(\"").append(StringEscapeUtils.escapeJava(jsonBody.getValue())).append("\", JsonBodyMatchType.").append(jsonBody.getMatchType()).append(")");
+                    }
                     output.append(")");
                 } else if (request.getBody() instanceof JsonPathBody) {
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);

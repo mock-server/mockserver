@@ -770,6 +770,8 @@ components:
               enum:
                 - STRICT
                 - ONLY_MATCHING_FIELDS
+            matchNumbersAsStrings:
+              type: boolean
         - type: object
           description: "json matching fields body matcher"
           additionalProperties: true

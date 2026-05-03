@@ -33,7 +33,8 @@ public class JsonBodyDTOSerializer extends StdSerializer<JsonBodyDTO> {
         boolean optionalNonDefault = jsonBodyDTO.getOptional() != null && jsonBodyDTO.getOptional();
         boolean contentTypeNonDefault = jsonBodyDTO.getContentType() != null && !jsonBodyDTO.getContentType().equals(JsonBody.DEFAULT_JSON_CONTENT_TYPE.toString());
         boolean matchTypeNonDefault = jsonBodyDTO.getMatchType() != JsonBody.DEFAULT_MATCH_TYPE;
-        if (serialiseDefaultValues || notNonDefault || optionalNonDefault || contentTypeNonDefault || matchTypeNonDefault) {
+        boolean matchNumbersAsStringsNonDefault = jsonBodyDTO.isMatchNumbersAsStrings();
+        if (serialiseDefaultValues || notNonDefault || optionalNonDefault || contentTypeNonDefault || matchTypeNonDefault || matchNumbersAsStringsNonDefault) {
             jgen.writeStartObject();
             if (notNonDefault) {
                 jgen.writeBooleanField("not", jsonBodyDTO.getNot());
@@ -61,6 +62,9 @@ public class JsonBodyDTOSerializer extends StdSerializer<JsonBodyDTO> {
             }
             if (matchTypeNonDefault) {
                 jgen.writeStringField("matchType", jsonBodyDTO.getMatchType().name());
+            }
+            if (matchNumbersAsStringsNonDefault) {
+                jgen.writeBooleanField("matchNumbersAsStrings", true);
             }
             jgen.writeEndObject();
         } else {

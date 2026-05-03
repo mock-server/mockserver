@@ -87,4 +87,16 @@ public class JsonBodyDTOSerializerTest {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new JsonBodyDTO(new JsonBody("{fieldOne: \"valueOne\", \"fieldTwo\": \"valueTwo\"}", MatchType.STRICT)).withOptional(true)),
             is("{\"optional\":true,\"type\":\"JSON\",\"json\":{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"},\"rawBytes\":\"e2ZpZWxkT25lOiAidmFsdWVPbmUiLCAiZmllbGRUd28iOiAidmFsdWVUd28ifQ==\",\"matchType\":\"STRICT\"}"));
     }
+
+    @Test
+    public void shouldSerializeJsonBodyDTOWithMatchNumbersAsStrings() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new JsonBodyDTO(new JsonBody("{\"value\":1}", null, null, MatchType.ONLY_MATCHING_FIELDS, true))),
+            is("{\"type\":\"JSON\",\"json\":{\"value\":1},\"rawBytes\":\"eyJ2YWx1ZSI6MX0=\",\"matchNumbersAsStrings\":true}"));
+    }
+
+    @Test
+    public void shouldNotSerializeJsonBodyDTOWithMatchNumbersAsStringsFalse() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new JsonBodyDTO(new JsonBody("{\"value\":1}", null, null, MatchType.ONLY_MATCHING_FIELDS, false))),
+            is("{\"value\":1}"));
+    }
 }

@@ -69,6 +69,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
         Charset charset = null;
         boolean subString = false;
         MatchType matchType = JsonBody.DEFAULT_MATCH_TYPE;
+        boolean matchNumbersAsStrings = false;
         Parameters parameters = null;
         Map<String, ParameterStyle> parameterStyles = null;
         Map<String, String> namespacePrefixes = null;
@@ -141,6 +142,9 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                                 );
                             }
                         }
+                    }
+                    if (key.equalsIgnoreCase("matchNumbersAsStrings")) {
+                        matchNumbersAsStrings = Boolean.parseBoolean(String.valueOf(entry.getValue()));
                     }
                     if (key.equalsIgnoreCase("subString")) {
                         try {
@@ -256,13 +260,13 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         }
                     case JSON:
                         if (contentType != null && isNotBlank(contentType.toString())) {
-                            result = new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, contentType, matchType), not);
+                            result = new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, contentType, matchType, matchNumbersAsStrings), not);
                             break;
                         } else if (charset != null) {
-                            result = new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, JsonBody.DEFAULT_JSON_CONTENT_TYPE.withCharset(charset), matchType), not);
+                            result = new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, JsonBody.DEFAULT_JSON_CONTENT_TYPE.withCharset(charset), matchType, matchNumbersAsStrings), not);
                             break;
                         } else {
-                            result = new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, JsonBody.DEFAULT_JSON_CONTENT_TYPE, matchType), not);
+                            result = new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, JsonBody.DEFAULT_JSON_CONTENT_TYPE, matchType, matchNumbersAsStrings), not);
                             break;
                         }
                     case JSON_SCHEMA:

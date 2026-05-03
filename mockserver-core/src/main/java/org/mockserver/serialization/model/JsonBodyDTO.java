@@ -11,6 +11,7 @@ public class JsonBodyDTO extends BodyWithContentTypeDTO {
 
     private final String json;
     private final MatchType matchType;
+    private final boolean matchNumbersAsStrings;
     private final byte[] rawBytes;
 
     public JsonBodyDTO(JsonBody jsonBody) {
@@ -21,6 +22,7 @@ public class JsonBodyDTO extends BodyWithContentTypeDTO {
         super(Body.Type.JSON, not, jsonBody);
         json = jsonBody.getValue();
         matchType = jsonBody.getMatchType();
+        matchNumbersAsStrings = jsonBody.isMatchNumbersAsStrings();
         rawBytes = jsonBody.getRawBytes();
     }
 
@@ -32,11 +34,15 @@ public class JsonBodyDTO extends BodyWithContentTypeDTO {
         return matchType;
     }
 
+    public boolean isMatchNumbersAsStrings() {
+        return matchNumbersAsStrings;
+    }
+
     public byte[] getRawBytes() {
         return rawBytes;
     }
 
     public JsonBody buildObject() {
-        return (JsonBody) new JsonBody(getJson(), getRawBytes(), getMediaType(), getMatchType()).withOptional(getOptional());
+        return (JsonBody) new JsonBody(getJson(), getRawBytes(), getMediaType(), getMatchType(), isMatchNumbersAsStrings()).withOptional(getOptional());
     }
 }

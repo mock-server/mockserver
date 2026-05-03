@@ -620,6 +620,67 @@ public class JsonStringMatcherTest {
     }
 
     @Test
+    public void shouldNotMatchIntegerAndDoubleByDefault() {
+        assertFalse(new JsonStringMatcher(new MockServerLogger(), "{\"value\":1}", MatchType.ONLY_MATCHING_FIELDS).matches(null, "{\"value\":1.0}"));
+        assertFalse(new JsonStringMatcher(new MockServerLogger(), "{\"value\":1.0}", MatchType.ONLY_MATCHING_FIELDS).matches(null, "{\"value\":1}"));
+        assertFalse(new JsonStringMatcher(new MockServerLogger(), "{\"value\":1}", MatchType.STRICT).matches(null, "{\"value\":1.0}"));
+    }
+
+    @Test
+    public void shouldMatchIntegerAndDoubleWithMatchNumbersAsStrings() {
+        assertTrue(new JsonStringMatcher(new MockServerLogger(), "{\"value\":1}", MatchType.ONLY_MATCHING_FIELDS, true).matches(null, "{\"value\":1.0}"));
+        assertTrue(new JsonStringMatcher(new MockServerLogger(), "{\"value\":1.0}", MatchType.ONLY_MATCHING_FIELDS, true).matches(null, "{\"value\":1}"));
+        assertTrue(new JsonStringMatcher(new MockServerLogger(), "{\"value\":1}", MatchType.STRICT, true).matches(null, "{\"value\":1.0}"));
+        assertTrue(new JsonStringMatcher(new MockServerLogger(), "{\"value\":1.0}", MatchType.STRICT, true).matches(null, "{\"value\":1}"));
+    }
+
+    @Test
+    public void shouldMatchIdenticalNumbersWithMatchNumbersAsStrings() {
+        assertTrue(new JsonStringMatcher(new MockServerLogger(), "{\"value\":1}", MatchType.ONLY_MATCHING_FIELDS, true).matches(null, "{\"value\":1}"));
+        assertTrue(new JsonStringMatcher(new MockServerLogger(), "{\"value\":1.5}", MatchType.ONLY_MATCHING_FIELDS, true).matches(null, "{\"value\":1.5}"));
+    }
+
+    @Test
+    public void shouldNotMatchDifferentNumbersWithMatchNumbersAsStrings() {
+        assertFalse(new JsonStringMatcher(new MockServerLogger(), "{\"value\":1}", MatchType.ONLY_MATCHING_FIELDS, true).matches(null, "{\"value\":2}"));
+        assertFalse(new JsonStringMatcher(new MockServerLogger(), "{\"value\":1.0}", MatchType.ONLY_MATCHING_FIELDS, true).matches(null, "{\"value\":1.1}"));
+    }
+
+    @Test
+    public void shouldMatchNestedIntegerAndDoubleWithMatchNumbersAsStrings() {
+        assertTrue(new JsonStringMatcher(new MockServerLogger(), "{\"outer\":{\"value\":1}}", MatchType.ONLY_MATCHING_FIELDS, true).matches(null, "{\"outer\":{\"value\":1.0}}"));
+    }
+
+    @Test
+    public void shouldMatchArrayNumbersWithMatchNumbersAsStrings() {
+        assertTrue(new JsonStringMatcher(new MockServerLogger(), "{\"values\":[1,2,3]}", MatchType.ONLY_MATCHING_FIELDS, true).matches(null, "{\"values\":[1.0,2.0,3.0]}"));
+    }
+
+    @Test
+    public void shouldMatchNegativeNumbersWithMatchNumbersAsStrings() {
+        assertTrue(new JsonStringMatcher(new MockServerLogger(), "{\"value\":-1}", MatchType.ONLY_MATCHING_FIELDS, true).matches(null, "{\"value\":-1.0}"));
+        assertFalse(new JsonStringMatcher(new MockServerLogger(), "{\"value\":-1}", MatchType.ONLY_MATCHING_FIELDS, true).matches(null, "{\"value\":-2}"));
+    }
+
+    @Test
+    public void shouldMatchZeroWithMatchNumbersAsStrings() {
+        assertTrue(new JsonStringMatcher(new MockServerLogger(), "{\"value\":0}", MatchType.ONLY_MATCHING_FIELDS, true).matches(null, "{\"value\":0.0}"));
+        assertTrue(new JsonStringMatcher(new MockServerLogger(), "{\"value\":0.0}", MatchType.ONLY_MATCHING_FIELDS, true).matches(null, "{\"value\":0}"));
+    }
+
+    @Test
+    public void shouldMatchScientificNotationWithMatchNumbersAsStrings() {
+        assertTrue(new JsonStringMatcher(new MockServerLogger(), "{\"value\":100}", MatchType.ONLY_MATCHING_FIELDS, true).matches(null, "{\"value\":1e2}"));
+        assertTrue(new JsonStringMatcher(new MockServerLogger(), "{\"value\":1e2}", MatchType.ONLY_MATCHING_FIELDS, true).matches(null, "{\"value\":100.0}"));
+    }
+
+    @Test
+    public void shouldNotMatchStringNumberAgainstNumericWithMatchNumbersAsStrings() {
+        assertFalse(new JsonStringMatcher(new MockServerLogger(), "{\"value\":\"1\"}", MatchType.ONLY_MATCHING_FIELDS, true).matches(null, "{\"value\":1}"));
+        assertFalse(new JsonStringMatcher(new MockServerLogger(), "{\"value\":1}", MatchType.ONLY_MATCHING_FIELDS, true).matches(null, "{\"value\":\"1\"}"));
+    }
+
+    @Test
     public void showHaveCorrectEqualsBehaviour() {
         MockServerLogger mockServerLogger = new MockServerLogger();
         assertEquals(new JsonStringMatcher(mockServerLogger, "some_value", MatchType.ONLY_MATCHING_FIELDS), new JsonStringMatcher(mockServerLogger, "some_value", MatchType.ONLY_MATCHING_FIELDS));

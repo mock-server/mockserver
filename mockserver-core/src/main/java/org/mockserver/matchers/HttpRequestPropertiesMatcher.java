@@ -154,7 +154,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                     break;
                 case JSON:
                     JsonBody jsonBody = (JsonBody) body;
-                    bodyMatcher = new JsonStringMatcher(mockServerLogger, jsonBody.getValue(), jsonBody.getMatchType());
+                    bodyMatcher = new JsonStringMatcher(mockServerLogger, jsonBody.getValue(), jsonBody.getMatchType(), jsonBody.isMatchNumbersAsStrings());
                     break;
                 case JSON_SCHEMA:
                     JsonSchemaBody jsonSchemaBody = (JsonSchemaBody) body;

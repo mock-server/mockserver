@@ -113,4 +113,16 @@ public class JsonBodySerializerTest {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(json("{fieldOne: \"valueOne\", \"fieldTwo\": \"valueTwo\"}", MatchType.STRICT).withOptional(true)),
             is("{\"optional\":true,\"type\":\"JSON\",\"json\":{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"},\"matchType\":\"STRICT\"}"));
     }
+
+    @Test
+    public void shouldSerializeJsonBodyWithMatchNumbersAsStrings() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(json("{\"value\":1}", MatchType.ONLY_MATCHING_FIELDS, true)),
+            is("{\"type\":\"JSON\",\"json\":{\"value\":1},\"matchNumbersAsStrings\":true}"));
+    }
+
+    @Test
+    public void shouldNotSerializeJsonBodyWithMatchNumbersAsStringsFalse() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(json("{\"value\":1}", MatchType.ONLY_MATCHING_FIELDS, false)),
+            is("{\"value\":1}"));
+    }
 }

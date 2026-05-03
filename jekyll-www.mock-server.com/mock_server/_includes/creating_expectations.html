@@ -214,6 +214,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
                     <li><strong><a href="#button_match_request_by_body_with_json_ignoring_extra_fields">ONLY_MATCHING_FIELDS</a></strong> only matches fields provided in the request matcher</li>
                 </ul>
             </li>
+            <li><strong><a href="#button_match_request_by_body_with_json_lax_numbers">matchNumbersAsStrings</a></strong> (optional, default <strong>false</strong>) if <strong>true</strong>, numeric values are compared by numeric value regardless of type, so <strong>1</strong>, <strong>1.0</strong> and <strong>1.00</strong> are all considered equal. This is useful when different languages or serializers produce different numeric representations for the same value (e.g. Java sends <strong>1.0</strong> while Groovy sends <strong>1</strong>).</li>
             <li><strong><a href="#button_match_request_by_body_with_json_placeholders">JSONUnit placeholders</a></strong> to allow fields or values to be ignored or matched by type or pattern, for example:
                 <ul>
                     <li><strong>${json-unit.ignore-element}</strong> ignore a field</li>

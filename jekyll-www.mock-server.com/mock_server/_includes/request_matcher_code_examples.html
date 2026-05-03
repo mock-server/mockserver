@@ -2915,6 +2915,52 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
+<button id="button_match_request_by_body_with_json_lax_numbers" class="accordion">match request by body with json matching numbers regardless of type</button>
+<div class="panel">
+    <p>By default, JSON body matching treats <strong>1</strong> and <strong>1.0</strong> as different values because they have different numeric types (integer vs double). When <strong>matchNumbersAsStrings</strong> is set to <strong>true</strong>, numbers are compared by numeric value so <strong>1</strong>, <strong>1.0</strong> and <strong>1.00</strong> are all considered equal. This is useful when different languages or serializers produce different numeric representations for the same value.</p>
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withBody(
+                json("{" + System.lineSeparator() +
+                        "    \"id\": 1," + System.lineSeparator() +
+                        "    \"price\": 12.5" + System.lineSeparator() +
+                        "}",
+                    MatchType.ONLY_MATCHING_FIELDS,
+                    true // matchNumbersAsStrings
+                )
+            )
+    )
+    .respond(
+        response()
+            .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+            .withBody("some_response_body")
+    );</code></pre>
+        <p>This expectation will match requests containing <strong>{"id": 1.0, "price": 12.50}</strong> as well as <strong>{"id": 1, "price": 12.5}</strong>.</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "body": {
+            "type": "JSON",
+            "json": {
+                "id": 1,
+                "price": 12.5
+            },
+            "matchNumbersAsStrings": true
+        }
+    },
+    "httpResponse": {
+        "statusCode": 202,
+        "body": "some_response_body"
+    }
+}'</code></pre>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
 <button id="button_match_request_by_body_with_json_schema" class="accordion">match request by body with json schema</button>
 <div class="panel">
     <p>For details of the full json schema supported please see <a target="_blank" href="https://json-schema.org/">json-schema.org</a>.</p>
