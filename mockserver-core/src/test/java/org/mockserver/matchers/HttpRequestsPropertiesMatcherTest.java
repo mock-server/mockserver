@@ -4916,7 +4916,7 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByDefaultSecuritySchemeInHeaderWithMultiSchemesIncludingAPIKeyWithOperationOverride() {
-        // given
+        // given - operation security overrides global security per OpenAPI spec
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
@@ -4948,26 +4948,18 @@ public class HttpRequestsPropertiesMatcherTest {
                 )
         ));
 
-        // then
-        assertTrue(httpRequestsPropertiesMatcher.matches(
+        // then - only operation-level ApiKeyAuth should be accepted, not global BasicAuth/BearerAuth
+        assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
                 .withHeader("Authorization", "basic " + UUIDService.getUUID())
         ));
-        assertTrue(httpRequestsPropertiesMatcher.matches(
+        assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
                 .withHeader("Authorization", "bearer " + UUIDService.getUUID())
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
                 .withHeader("X-API-Key", UUIDService.getUUID())
-        ));
-        assertFalse(httpRequestsPropertiesMatcher.matches(
-            request()
-                .withHeader("Authorization", "bearer")
-        ));
-        assertFalse(httpRequestsPropertiesMatcher.matches(
-            request()
-                .withHeader("Authorization", "wrong_scheme " + UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5370,7 +5362,7 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByDefaultSecuritySchemeInQueryStringParameterWithMultiSchemesIncludingAPIKeyWithOperationOverride() {
-        // given
+        // given - operation security overrides global security per OpenAPI spec
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
@@ -5404,26 +5396,18 @@ public class HttpRequestsPropertiesMatcherTest {
                 )
         ));
 
-        // then
-        assertTrue(httpRequestsPropertiesMatcher.matches(
+        // then - only operation-level ApiKeyAuth should be accepted, not global BasicAuth/BearerAuth
+        assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
                 .withQueryStringParameter("Authorization", "basic " + UUID.randomUUID())
         ));
-        assertTrue(httpRequestsPropertiesMatcher.matches(
+        assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
                 .withQueryStringParameter("Authorization", "bearer " + UUID.randomUUID())
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
                 .withQueryStringParameter("X-API-Key", UUID.randomUUID().toString())
-        ));
-        assertFalse(httpRequestsPropertiesMatcher.matches(
-            request()
-                .withQueryStringParameter("Authorization", "bearer")
-        ));
-        assertFalse(httpRequestsPropertiesMatcher.matches(
-            request()
-                .withQueryStringParameter("Authorization", "wrong_scheme " + UUID.randomUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5826,7 +5810,7 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByDefaultSecuritySchemeInCookieWithMultiSchemesIncludingAPIKeyWithOperationOverride() {
-        // given
+        // given - operation security overrides global security per OpenAPI spec
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
@@ -5860,12 +5844,12 @@ public class HttpRequestsPropertiesMatcherTest {
                 )
         ));
 
-        // then
-        assertTrue(httpRequestsPropertiesMatcher.matches(
+        // then - only operation-level ApiKeyAuth should be accepted, not global BasicAuth/BearerAuth
+        assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
                 .withCookie("Authorization", "basic " + UUID.randomUUID())
         ));
-        assertTrue(httpRequestsPropertiesMatcher.matches(
+        assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
                 .withCookie("Authorization", "bearer " + UUID.randomUUID())
         ));
@@ -5875,18 +5859,100 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("Authorization", "bearer")
-        ));
-        assertFalse(httpRequestsPropertiesMatcher.matches(
-            request()
-                .withCookie("Authorization", "wrong_scheme " + UUID.randomUUID())
-        ));
-        assertFalse(httpRequestsPropertiesMatcher.matches(
-            request()
                 .withCookie("X-API-Key", "")
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
+        ));
+    }
+
+    // EMPTY SECURITY LIST (OPERATION DISABLES GLOBAL SECURITY — issue #1315)
+
+    @Test
+    public void shouldMatchWhenOperationSecurityIsEmptyListOverridingGlobalSecurity() {
+        // given - empty security list at operation level means "no security required"
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "security:" + NEW_LINE +
+                    "  - BearerAuth: []" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/login\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: login" + NEW_LINE +
+                    "      security: []" + NEW_LINE +
+                    "  \"/logout\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: logout" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    BearerAuth:" + NEW_LINE +
+                    "      type: apiKey" + NEW_LINE +
+                    "      in: header" + NEW_LINE +
+                    "      name: Authorization" + NEW_LINE
+                )
+                .withOperationId("login")
+        ));
+
+        // then - /login with security: [] should NOT require Authorization header
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withMethod("POST")
+                .withPath("/login")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withMethod("POST")
+                .withPath("/login")
+                .withHeader("Authorization", "Bearer token123")
+        ));
+    }
+
+    @Test
+    public void shouldRequireGlobalSecurityWhenOperationDoesNotOverride() {
+        // given - /logout does not override security, so global BearerAuth applies
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "security:" + NEW_LINE +
+                    "  - BearerAuth: []" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/login\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: login" + NEW_LINE +
+                    "      security: []" + NEW_LINE +
+                    "  \"/logout\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: logout" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    BearerAuth:" + NEW_LINE +
+                    "      type: apiKey" + NEW_LINE +
+                    "      in: header" + NEW_LINE +
+                    "      name: Authorization" + NEW_LINE
+                )
+                .withOperationId("logout")
+        ));
+
+        // then - /logout should require Authorization header from global security
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withMethod("POST")
+                .withPath("/logout")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withMethod("POST")
+                .withPath("/logout")
+                .withHeader("Authorization", "Bearer token123")
         ));
     }
 

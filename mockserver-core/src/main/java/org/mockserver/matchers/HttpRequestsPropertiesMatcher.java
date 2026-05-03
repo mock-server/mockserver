@@ -207,12 +207,16 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                 httpRequest.getHeaders().withKeyMatchStyle(KeyMatchStyle.MATCHING_KEY);
             }
         }
-        // security schemes
+        // security schemes — per OpenAPI spec, operation-level security overrides global security
         Map<String, Set<String>> headerRequirements = new HashMap<>();
         Map<String, Set<String>> queryStringParameterRequirements = new HashMap<>();
         Map<String, Set<String>> cookieRequirements = new HashMap<>();
-        buildSecurityValues(openAPI, headerRequirements, queryStringParameterRequirements, cookieRequirements, openAPI.getSecurity());
-        buildSecurityValues(openAPI, headerRequirements, queryStringParameterRequirements, cookieRequirements, methodOperationPair.getRight().getSecurity());
+        List<SecurityRequirement> operationSecurity = methodOperationPair.getRight().getSecurity();
+        if (operationSecurity != null) {
+            buildSecurityValues(openAPI, headerRequirements, queryStringParameterRequirements, cookieRequirements, operationSecurity);
+        } else {
+            buildSecurityValues(openAPI, headerRequirements, queryStringParameterRequirements, cookieRequirements, openAPI.getSecurity());
+        }
         if (!headerRequirements.isEmpty()) {
             if (headerRequirements.keySet().size() > 1) {
                 for (Map.Entry<String, Set<String>> headerMatchEntry : headerRequirements.entrySet()) {
