@@ -134,6 +134,10 @@ terraform/**/.terraform.lock.hcl
 /.tmp/*
 !/.tmp/.gitkeep
 
+# Buildkite build log downloads #
+##################################
+build-*/
+
 # docker build - corporate CA certificate (local only) #
 #########################################################
 docker_build/maven/corporate-root-ca.pem
