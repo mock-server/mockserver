@@ -611,6 +611,65 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
+<button id="button_match_request_by_compound_path_segment" class="accordion">match request by compound path segment (multiple values in one segment)</button>
+<div class="panel">
+    <p>To match a path segment containing multiple values separated by delimiters (e.g. <code>/2024-01-15/report</code>), use a single path parameter with a regex value to match the entire compound segment.</p>
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            // matches paths like /2024-01-15/report or /val1-val2-val3/report
+            .withPath("/{compound}/report")
+            .withPathParameters(
+                param("compound", "[^/]+-[^/]+-[^/]+")
+            )
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+// matches paths like /2024-01-15/report or /val1-val2-val3/report
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/{compound}/report",
+        "pathParameters": {
+            "compound": ["[^/]+-[^/]+-[^/]+"]
+        }
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/{compound}/report",
+        "pathParameters": {
+            "compound": ["[^/]+-[^/]+-[^/]+"]
+        }
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+}'</code></pre>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
 <button id="button_match_request_by_method_regex" class="accordion">match request by method regex</button>
 <div class="panel">
     <p>For details of the full regex syntax supported please see <a target="_blank" href="https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html">the JDK documentation</a>.</p>
