@@ -20,7 +20,9 @@ import org.apache.http.util.EntityUtils;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.httpclient.NettyHttpClient;
@@ -65,6 +67,9 @@ import static org.mockserver.verify.VerificationTimes.exactly;
  * @author jamesdbloom
  */
 public abstract class AbstractProxyIntegrationTest {
+
+    @Rule
+    public Timeout defaultTimeout = Timeout.seconds(600);
 
     protected static String servletContext = "";
     private static EventLoopGroup clientEventLoopGroup;

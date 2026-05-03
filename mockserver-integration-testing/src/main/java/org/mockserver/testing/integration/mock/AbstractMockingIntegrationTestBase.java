@@ -9,6 +9,8 @@ import io.netty.handler.codec.http2.HttpConversionUtil;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.rules.Timeout;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.httpclient.NettyHttpClient;
@@ -38,6 +40,9 @@ import static org.slf4j.event.Level.WARN;
  * @author jamesdbloom
  */
 public abstract class AbstractMockingIntegrationTestBase {
+
+    @Rule
+    public Timeout defaultTimeout = Timeout.seconds(600);
 
     protected static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(AbstractMockingIntegrationTestBase.class);
     protected static MockServerClient mockServerClient;

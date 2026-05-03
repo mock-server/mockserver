@@ -8,6 +8,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Timeout;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.echo.http.EchoServer;
@@ -37,6 +38,7 @@ import static org.slf4j.event.Level.WARN;
 /**
  * @author jamesdbloom
  */
+@Timeout(600)
 public abstract class AbstractMockingIntegrationTestBase {
 
     private static final Configuration CONFIGURATION = configuration();

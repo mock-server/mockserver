@@ -834,6 +834,7 @@
                 <configuration>
                     <!-- allow debugging tests -->
                     <!--<forkCount>0</forkCount>-->
+                    <forkedProcessTimeoutInSeconds>1800</forkedProcessTimeoutInSeconds>
                     <includes>
                         <include>**/*Test.java</include>
                     </includes>
@@ -860,6 +861,7 @@
                 <configuration>
                     <!-- allow debugging tests -->
                     <!--<forkCount>0</forkCount>-->
+                    <forkedProcessTimeoutInSeconds>1800</forkedProcessTimeoutInSeconds>
                     <includes>
                         <include>**/*IntegrationTest.java</include>
                     </includes>

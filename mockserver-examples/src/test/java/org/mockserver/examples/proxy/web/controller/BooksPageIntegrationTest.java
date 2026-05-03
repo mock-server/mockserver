@@ -3,7 +3,9 @@ package org.mockserver.examples.proxy.web.controller;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.mockserver.examples.proxy.model.Book;
 import org.mockserver.examples.proxy.web.controller.pageobjects.BookPage;
 import org.mockserver.examples.proxy.web.controller.pageobjects.BooksPage;
@@ -35,6 +37,9 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
  * @author jamesdbloom
  */
 public abstract class BooksPageIntegrationTest {
+
+    @Rule
+    public Timeout defaultTimeout = Timeout.seconds(600);
 
     private static ClientAndServer proxy;
     private static ClientAndServer mockServer;
