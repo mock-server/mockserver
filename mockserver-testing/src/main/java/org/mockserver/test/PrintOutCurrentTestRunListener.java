@@ -12,8 +12,27 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class PrintOutCurrentTestRunListener extends RunListener {
+
+    static {
+        Logger rootLogger = Logger.getLogger("");
+        TestLogCaptureHandler handler = TestLogCaptureHandler.getInstance();
+        handler.setLevel(Level.ALL);
+        boolean alreadyRegistered = false;
+        for (Handler h : rootLogger.getHandlers()) {
+            if (h == handler) {
+                alreadyRegistered = true;
+                break;
+            }
+        }
+        if (!alreadyRegistered) {
+            rootLogger.addHandler(handler);
+        }
+    }
 
     private static final String MODE = System.getProperty("mockserver.testOutput", "verbose");
     private static final String NEW_LINE = System.getProperty("line.separator");
@@ -33,7 +52,8 @@ public class PrintOutCurrentTestRunListener extends RunListener {
     @Override
     public void testStarted(Description description) {
         switchClassIfNeeded(description);
-        START_TIMES.put(description.getMethodName(), System.currentTimeMillis());
+        TestLogCaptureHandler.startCapture();
+        START_TIMES.put(description.getDisplayName(), System.currentTimeMillis());
         if ("verbose".equals(MODE)) {
             System.out.print("STARTED: " + description.getMethodName() + NEW_LINE);
         }
@@ -41,10 +61,11 @@ public class PrintOutCurrentTestRunListener extends RunListener {
 
     @Override
     public void testFinished(Description description) {
-        if (FAILED_TESTS.contains(description.getMethodName())) {
+        if (FAILED_TESTS.contains(description.getDisplayName())) {
             return;
         }
-        Long startTime = START_TIMES.get(description.getMethodName());
+        TestLogCaptureHandler.stopAndDiscard();
+        Long startTime = START_TIMES.remove(description.getDisplayName());
         Long duration = startTime != null ? System.currentTimeMillis() - startTime : null;
         classPassCount.incrementAndGet();
         if ("verbose".equals(MODE)) {
@@ -59,30 +80,51 @@ public class PrintOutCurrentTestRunListener extends RunListener {
 
     @Override
     public void testFailure(Failure failure) {
-        FAILED_TESTS.add(failure.getDescription().getMethodName());
+        String capturedLogs = TestLogCaptureHandler.stopAndDrain();
+        String displayName = failure.getDescription().getDisplayName();
+        String methodName = failure.getDescription().getMethodName();
+        if (methodName == null) {
+            methodName = displayName;
+        }
+        FAILED_TESTS.add(displayName);
         classFailCount.incrementAndGet();
-        Long startTime = START_TIMES.get(failure.getDescription().getMethodName());
+        Long startTime = START_TIMES.remove(displayName);
         Long duration = startTime != null ? System.currentTimeMillis() - startTime : null;
+        String logBlock = "";
+        if (!capturedLogs.isEmpty()) {
+            logBlock = "  --- Captured logs for " + methodName + " ---" + NEW_LINE
+                + capturedLogs
+                + "  --- End captured logs ---" + NEW_LINE;
+        }
         if ("verbose".equals(MODE)) {
-            System.out.print("FAILED: " + failure.getDescription().getMethodName() + NEW_LINE);
+            System.out.print("FAILED: " + methodName + NEW_LINE);
+            if (!logBlock.isEmpty()) {
+                System.out.print(logBlock);
+            }
         } else if ("quiet".equals(MODE)) {
             System.out.print("F");
             if (dotCount.incrementAndGet() % DOTS_PER_LINE == 0) {
                 System.out.print(NEW_LINE);
             }
-            System.out.print(NEW_LINE + "  FAILED: " + failure.getDescription().getMethodName()
+            System.out.print(NEW_LINE + "  FAILED: " + methodName
                 + (duration != null ? " duration: " + duration : "") + NEW_LINE);
             if (failure.getMessage() != null) {
                 System.out.print("  " + failure.getMessage() + NEW_LINE);
             }
             System.out.print(indent(failure.getTrace()));
+            if (!logBlock.isEmpty()) {
+                System.out.print(logBlock);
+            }
         } else if ("summary".equals(MODE)) {
-            String msg = "  FAILED: " + failure.getDescription().getMethodName()
+            String msg = "  FAILED: " + methodName
                 + (duration != null ? " duration: " + duration : "") + NEW_LINE;
             if (failure.getMessage() != null) {
                 msg += "  " + failure.getMessage() + NEW_LINE;
             }
             msg += indent(failure.getTrace());
+            if (!logBlock.isEmpty()) {
+                msg += logBlock;
+            }
             classFailureMessages.add(msg);
         }
     }

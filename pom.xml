@@ -71,6 +71,9 @@
         <skipShade>false</skipShade>
         <shade.install.phase>package</shade.install.phase>
         <mockserver.testOutput>verbose</mockserver.testOutput>
+        <mockserver.testLogLevel>ERROR</mockserver.testLogLevel>
+        <disableXmlReport>true</disableXmlReport>
+        <redirectTestOutputToFile>false</redirectTestOutputToFile>
         <deploy.plugin.repository.url>https://oss.sonatype.org/content/repositories/snapshots/</deploy.plugin.repository.url>
         <release.arguments/>
         <javadoc.additional.parameters/>
@@ -874,10 +877,11 @@
                         <exclude>**/*IntegrationTest.java</exclude>
                     </excludes>
                     <systemPropertyVariables>
-                        <mockserver.logLevel>ERROR</mockserver.logLevel>
+                        <mockserver.logLevel>${mockserver.testLogLevel}</mockserver.logLevel>
                     </systemPropertyVariables>
                     <argLine>-Duser.language=en -Duser.country=GB -Dmockserver.testOutput=${mockserver.testOutput}</argLine>
-                    <disableXmlReport>true</disableXmlReport>
+                    <disableXmlReport>${disableXmlReport}</disableXmlReport>
+                    <redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
                     <properties>
                         <property>
                             <name>listener</name>
@@ -898,12 +902,13 @@
                         <include>**/*IntegrationTest.java</include>
                     </includes>
                     <systemPropertyVariables>
-                        <mockserver.logLevel>ERROR</mockserver.logLevel>
+                        <mockserver.logLevel>${mockserver.testLogLevel}</mockserver.logLevel>
                         <project.version>${project.version}</project.version>
                         <project.basedir>${project.basedir}</project.basedir>
                     </systemPropertyVariables>
                     <argLine>-Duser.language=en -Duser.country=GB -Dmockserver.testOutput=${mockserver.testOutput}</argLine>
-                    <disableXmlReport>true</disableXmlReport>
+                    <disableXmlReport>${disableXmlReport}</disableXmlReport>
+                    <redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
                     <properties>
                         <property>
                             <name>listener</name>

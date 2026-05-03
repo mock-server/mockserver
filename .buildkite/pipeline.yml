@@ -8,4 +8,17 @@ steps:
     command: "docker run -v $(pwd):/build/mockserver -w /build/mockserver -a stdout -a stderr -e BUILDKITE_BRANCH=$BUILDKITE_BRANCH mockserver/mockserver:maven /build/mockserver/scripts/buildkite_quick_build.sh"
     artifact_paths:
       - "**/*.log"
+      - "**/target/surefire-reports/TEST-*.xml"
+      - "**/target/surefire-reports/*-output.txt"
+      - "**/target/failsafe-reports/TEST-*.xml"
+      - "**/target/failsafe-reports/*-output.txt"
     timeout_in_minutes: 60
+
+  - wait: ~
+    continue_on_failure: true
+
+  - label: ":junit: annotate test results"
+    plugins:
+      - junit-annotate#v2.4.1:
+          artifacts: "**/target/*-reports/TEST-*.xml"
+          always-annotate: true
