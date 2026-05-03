@@ -28,6 +28,7 @@ Comprehensive internal documentation is maintained in `docs/`. **Always consult 
 | [docs/code/netty-pipeline.md](docs/code/netty-pipeline.md) | Before modifying Netty handlers, protocol detection, or TLS |
 | [docs/code/request-processing.md](docs/code/request-processing.md) | Before modifying mock matching, proxy forwarding, or action dispatch |
 | [docs/code/event-system.md](docs/code/event-system.md) | Before modifying event logging, verification, or persistence |
+| [docs/code/memory-management.md](docs/code/memory-management.md) | Before modifying maxLogEntries, maxExpectations, ring buffer sizing, or memory defaults |
 | [docs/code/dashboard-ui.md](docs/code/dashboard-ui.md) | Before modifying the dashboard UI or WebSocket communication |
 | [docs/code/domain-model.md](docs/code/domain-model.md) | Before modifying domain model, matchers, codecs, or configuration |
 | [docs/code/tls-and-security.md](docs/code/tls-and-security.md) | Before modifying TLS, mTLS, certificates, or authentication |
@@ -44,6 +45,17 @@ Comprehensive internal documentation is maintained in `docs/`. **Always consult 
 | [docs/gaps-and-recommendations.md](docs/gaps-and-recommendations.md) | For improvement opportunities and known gaps |
 
 When making changes to the project, **update the relevant docs/ file** if the change affects architecture, dependencies, build process, CI/CD, infrastructure, or deployment.
+
+### Consumer Documentation
+
+The consumer-facing documentation lives in `jekyll-www.mock-server.com/` and is published to https://www.mock-server.com. **Always consider consumer docs when making changes:**
+
+1. **Read for context** — before changing behaviour, check the consumer docs to understand what users have been told to expect. Key pages:
+   - `jekyll-www.mock-server.com/mock_server/configuration_properties.html` — all configuration properties with defaults and examples
+   - `jekyll-www.mock-server.com/mock_server/_includes/running_docker_container.html` — Docker usage examples
+   - `jekyll-www.mock-server.com/mock_server/_includes/performance_configuration.html` — performance tuning
+2. **Update when behaviour changes** — if you change defaults, add properties, modify behaviour, or fix bugs that affect user-visible behaviour, update the consumer docs to match. Keep changes simple and clear — assume users have limited context.
+3. **User-friendly language** — consumer docs should explain *what* a setting does and *why* a user might change it, not internal implementation details. Include practical guidance (e.g., "each HTTP request generates 2-3 log entries") rather than code-level details.
 
 ### AWS Accounts
 

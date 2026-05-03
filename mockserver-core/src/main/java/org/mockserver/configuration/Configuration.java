@@ -286,7 +286,7 @@ public class Configuration {
      * Maximum number of expectations stored in memory.  Expectations are stored in a circular queue so once this limit is reach the oldest and lowest priority expectations are overwritten
      * </p>
      * <p>
-     * The default maximum depends on the available memory in the JVM with an upper limit of 5000
+     * The default maximum depends on the available memory in the JVM with an upper limit of 15000
      * </p>
      *
      * @param maxExpectations maximum number of expectations to store
@@ -308,7 +308,7 @@ public class Configuration {
      * Maximum number of log entries stored in memory.  Log entries are stored in a circular queue so once this limit is reach the oldest log entries are overwritten
      * </p>
      * <p>
-     * The default maximum depends on the available memory in the JVM with an upper limit of 60000
+     * The default maximum depends on the available memory in the JVM with an upper limit of 100000
      * </p>
      *
      * @param maxLogEntries maximum number of expectations to store
@@ -1896,13 +1896,13 @@ public class Configuration {
     }
 
     private int nextPowerOfTwo(int value) {
-        for (int i = 0; i < 16; i++) {
-            double powOfTwo = Math.pow(2, i);
+        for (int i = 0; i < 30; i++) {
+            int powOfTwo = 1 << i;
             if (powOfTwo > value) {
-                return (int) powOfTwo;
+                return powOfTwo;
             }
         }
-        return (int) Math.pow(2, 16);
+        return 1 << 30;
     }
 
 }

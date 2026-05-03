@@ -361,7 +361,7 @@ public class ConfigurationProperties {
     }
 
     public static int maxExpectations() {
-        return readIntegerProperty(MOCKSERVER_MAX_EXPECTATIONS, "MOCKSERVER_MAX_EXPECTATIONS", Math.min((int) (heapAvailableInKB() / 75), 5000));
+        return readIntegerProperty(MOCKSERVER_MAX_EXPECTATIONS, "MOCKSERVER_MAX_EXPECTATIONS", Math.min((int) (heapAvailableInKB() / 10), 15000));
     }
 
     /**
@@ -369,7 +369,7 @@ public class ConfigurationProperties {
      * Maximum number of expectations stored in memory.  Expectations are stored in a circular queue so once this limit is reach the oldest and lowest priority expectations are overwritten
      * </p>
      * <p>
-     * The default maximum depends on the available memory in the JVM with an upper limit of 5000
+     * The default maximum depends on the available memory in the JVM with an upper limit of 15000
      * </p>
      *
      * @param count maximum number of expectations to store
@@ -379,7 +379,7 @@ public class ConfigurationProperties {
     }
 
     public static int maxLogEntries() {
-        return readIntegerProperty(MOCKSERVER_MAX_LOG_ENTRIES, "MOCKSERVER_MAX_LOG_ENTRIES", Math.min((int) (heapAvailableInKB() / 80), 60000));
+        return readIntegerProperty(MOCKSERVER_MAX_LOG_ENTRIES, "MOCKSERVER_MAX_LOG_ENTRIES", Math.min((int) (heapAvailableInKB() / 8), 100000));
     }
 
     /**
@@ -387,7 +387,7 @@ public class ConfigurationProperties {
      * Maximum number of log entries stored in memory.  Log entries are stored in a circular queue so once this limit is reach the oldest log entries are overwritten.
      * </p>
      * <p>
-     * The default maximum depends on the available memory in the JVM with an upper limit of 60000, but can be overridden using defaultMaxLogEntries
+     * The default maximum depends on the available memory in the JVM with an upper limit of 100000, but can be overridden using defaultMaxLogEntries
      * </p>
      *
      * @param count maximum number of expectations to store

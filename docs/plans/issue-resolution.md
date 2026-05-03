@@ -607,10 +607,9 @@ These are confirmed thread-safety bugs in the current codebase. All involve shar
 
 ### #1285: Max log entries capped too low
 
-**Status**: Configuration issue — P3
-**Root cause**: Default `maxLogEntries` cap is 60,000. On small containers, the formula `heapAvailableInKB() / 80` can produce very low values (e.g., 460 entries for a 256MB container).
-**Files**: `mockserver-core/.../configuration/ConfigurationProperties.java:381-396`
-**Fix**: Increase the minimum floor for `maxLogEntries` (e.g., minimum 1000). Document how to override with `MOCKSERVER_MAX_LOG_ENTRIES`.
+**Status**: Fixed
+**Root cause**: Per-entry memory estimates (80 KB per log entry, 75 KB per expectation) were 10-16x too conservative. A field-level analysis showed typical entries use 4-10 KB.
+**Fix**: Reduced divisors (80→8 for log entries, 75→10 for expectations), raised caps (60,000→100,000 for log entries, 5,000→15,000 for expectations), fixed `nextPowerOfTwo` ceiling. Added comprehensive memory analysis documentation in `docs/code/memory-management.md`.
 
 ---
 
