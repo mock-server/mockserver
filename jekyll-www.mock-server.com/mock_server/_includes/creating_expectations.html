@@ -214,10 +214,13 @@ mockServerClient("localhost", 1080).mockAnyResponse({
                     <li><strong><a href="#button_match_request_by_body_with_json_ignoring_extra_fields">ONLY_MATCHING_FIELDS</a></strong> only matches fields provided in the request matcher</li>
                 </ul>
             </li>
-            <li><strong><a href="#button_match_request_by_body_with_json_placeholders">JSONUnit placeholders</a></strong> to allow fields or values to be ignored or matched by type for example:
+            <li><strong><a href="#button_match_request_by_body_with_json_placeholders">JSONUnit placeholders</a></strong> to allow fields or values to be ignored or matched by type or pattern, for example:
                 <ul>
                     <li><strong>${json-unit.ignore-element}</strong> ignore a field</li>
                     <li><strong>${json-unit.any-boolean}</strong> match a field as any boolean</li>
+                    <li><strong>${json-unit.any-string}</strong> match a field as any string</li>
+                    <li><strong>${json-unit.any-number}</strong> match a field as any number</li>
+                    <li><strong>${json-unit.regex}<em>pattern</em></strong> match a field by regex, e.g. <strong>${json-unit.regex}[a-z]+</strong></li>
                 </ul>
                 see <a target="_blank"href="https://github.com/lukas-krecan/JsonUnit">JSONUnit documentation</a> for full details
             </li>
