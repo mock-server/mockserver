@@ -242,7 +242,7 @@ These are run by `maven-invoker-plugin` 3.5.1 (Maven variants, `parallelThreads=
 
 ## Container Integration Tests
 
-Located in `container_integration_tests/`, these tests verify MockServer behaviour when running as a Docker container or Kubernetes pod. **These are NOT run in CI** — they are only invoked by `local_quick_build.sh` and `local_online_build.sh`.
+Located in `container_integration_tests/`, these tests verify MockServer behaviour when running as a Docker container or Kubernetes pod. **These are NOT run in CI** — they are only invoked by `local_quick_build.sh` and `local_online_build.sh`. Estimated runtime is ~5-10 minutes (with pre-built JAR).
 
 ### Running Container Integration Tests
 
@@ -335,6 +335,62 @@ sequenceDiagram
 
     R->>R: Print PASSED/FAILED summary
 ```
+
+### Docker Image Variant Coverage
+
+There are 5 production Docker image variants. Only the main nonroot variant is tested:
+
+| Variant | Dockerfile | Base Image | Tested? |
+|---------|-----------|------------|---------|
+| Main (nonroot) | `docker/Dockerfile` | `distroless/java17:nonroot` | YES (built as `integration_testing` image) |
+| Root | `docker/root/Dockerfile` | `distroless/java17` | NO |
+| Snapshot (debug) | `docker/snapshot/Dockerfile` | `distroless/java17:debug-nonroot` | NO |
+| Root Snapshot | `docker/root-snapshot/Dockerfile` | `distroless/java17` | NO |
+| Local build | `docker/local/Dockerfile` | `distroless/java17:nonroot` | NO |
+
+The integration tests always build with `--build-arg source=copy` (local JAR). The default `source=download` mode (downloads from Sonatype) used by real users is never tested.
+
+### What Docker Features Are Tested
+
+- Basic container startup and HTTP API responsiveness
+- Environment variable handling (`MOCKSERVER_SERVER_PORT`, `SERVER_PORT`, `PROXY_REMOTE_HOST`, `PROXY_REMOTE_PORT`, `MOCKSERVER_LOG_LEVEL`, `MOCKSERVER_INITIALIZATION_JSON_PATH`, `MOCKSERVER_PROPERTY_FILE`, `MOCKSERVER_PERSIST_EXPECTATIONS`, `MOCKSERVER_PERSISTED_EXPECTATIONS_PATH`)
+- Volume mounts for configuration files and persisted state
+- Command-line argument passing (`-serverPort`)
+- Multi-container networking (bridge network between client and server)
+- HTTP/2 support (via `nghttp` in the forward-with-override test)
+
+### What Docker Features Are NOT Tested
+
+| Feature | Status |
+|---------|--------|
+| Health checks | No `HEALTHCHECK` instruction in any Dockerfile. `MOCKSERVER_LIVENESS_HTTP_GET_PATH` exists but is disabled by default. |
+| Graceful shutdown (signal handling) | No test verifies `docker stop` drains connections or persists state. |
+| Multi-arch (ARM64) | CI builds `linux/amd64,linux/arm64` but integration tests only run on native arch. |
+| JVM options (`JVM_OPTIONS` env var) | Supported by Helm chart but never tested via Docker Compose. |
+| `/libs/*` classpath extension | Entrypoint includes `/libs/*` on classpath for custom JARs but no test mounts into `/libs/`. |
+| Custom TLS certificates | Forward-with-override uses HTTPS via `nghttp` but no test exercises custom certs or mTLS. |
+| Resource limits / memory constraints | No test verifies behaviour under memory pressure. |
+
+### What Helm Features Are Tested
+
+The 4 Helm tests cover basic deployment, custom image tags, custom server port, and inter-service proxy forwarding. All use the same validation pattern: create expectation via PUT, verify response via GET.
+
+### What Helm Features Are NOT Tested
+
+| Feature | In Chart? | Tested? |
+|---------|-----------|---------|
+| Ingress (`ingress.yaml`, 52 lines) | YES | NO |
+| Service types (ClusterIP, LoadBalancer) | YES | NO (only NodePort) |
+| Resource limits | YES | NO |
+| ConfigMap (`app.config.enabled`) | YES | NO |
+| Probes (readiness/liveness) | YES (hardcoded) | Implicit only (via `--wait`) |
+| Affinity / tolerations / node selectors | YES | NO |
+| Pod annotations / security context | YES | NO |
+| Replica count >1 | YES | NO |
+| `helm test` hook (`service-test.yaml`) | YES | NO (never invoked) |
+| `helm lint` / `helm template` | N/A | NO (not run anywhere) |
+| `mockserver-config` chart | YES (separate chart) | NO (zero tests) |
+| `mountedLibsConfigMapName` | YES | NO |
 
 ## Performance Tests
 
