@@ -184,6 +184,7 @@ public class NettySslContextFactory {
             // re-create x509 and private key if SAN list has been updated and dynamic update has not been disabled
             || configuration.rebuildServerTLSContext() && !configuration.preventCertificateDynamicUpdate()) {
             try {
+                new CertificateConfigurationValidator(configuration, mockServerLogger).validate();
                 keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
                 mockServerLogger.logEvent(
                     new LogEntry()
@@ -211,17 +212,20 @@ public class NettySslContextFactory {
                 } else {
                     sslContextBuilder.trustManager(InsecureTrustManagerFactory.INSTANCE);
                 }
-                serverSslContext = sslContextBuilder.build();
                 serverSslContext = sslServerContextBuilderCustomizer
                     .apply(sslContextBuilder)
                     .build();
                 configuration.rebuildServerTLSContext(false);
-            } catch (Throwable throwable) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(Level.ERROR)
-                        .setMessageFormat("exception creating SSL context for server" + throwable.getMessage())
-                        .setThrowable(throwable)
+            } catch (Error error) {
+                throw error;
+            } catch (Exception exception) {
+                throw new RuntimeException(
+                    "Exception creating SSL context for server"
+                        + " with privateKeyPath=\"" + configuration.privateKeyPath() + "\""
+                        + " and x509CertificatePath=\"" + configuration.x509CertificatePath() + "\""
+                        + " and certificateAuthorityCertificate=\"" + configuration.certificateAuthorityCertificate() + "\""
+                        + (exception.getMessage() != null ? " - " + exception.getMessage() : ""),
+                    exception
                 );
             }
         }

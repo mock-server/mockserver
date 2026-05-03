@@ -433,23 +433,39 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
                     .setThrowable(throwable)
             );
         } else if (sslHandshakeException(throwable)) {
-            if (throwable.getMessage().contains("certificate_unknown") || throwable.getMessage().toLowerCase().contains("unknown_ca")) {
+            String message = throwable.getMessage() != null ? throwable.getMessage() : "";
+            String messageLower = message.toLowerCase();
+            String certInfo = " Configured x509CertificatePath=\"" + configuration.x509CertificatePath()
+                + "\" certificateAuthorityCertificate=\"" + configuration.certificateAuthorityCertificate() + "\".";
+            if (messageLower.contains("certificate_unknown") || messageLower.contains("unknown_ca")) {
                 if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.WARN)
-                            .setMessageFormat("TLS handshake failure:" + NEW_LINE + NEW_LINE + " Client does not trust MockServer Certificate Authority for:{}See http://mock-server.com/mock_server/HTTPS_TLS.html to enable the client to trust MocksServer Certificate Authority." + NEW_LINE)
+                            .setMessageFormat("TLS handshake failure:" + NEW_LINE + NEW_LINE + " Client does not trust MockServer Certificate Authority for:{}See https://mock-server.com/mock_server/HTTPS_TLS.html to enable the client to trust MockServer Certificate Authority." + certInfo + NEW_LINE)
                             .setArguments(ctx.channel())
                             .setThrowable(throwable)
                     );
                 }
-            } else if (!throwable.getMessage().contains("close_notify during handshake")) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(Level.ERROR)
-                        .setMessageFormat("TLS handshake failure while a client attempted to connect to " + ctx.channel())
-                        .setThrowable(throwable)
-                );
+            } else if (!message.contains("close_notify during handshake")) {
+                String diagnosticHint;
+                if (messageLower.contains("bad_certificate")) {
+                    diagnosticHint = "the certificate was rejected by the client - check expiry and chain.";
+                } else if (messageLower.contains("handshake_failure")) {
+                    diagnosticHint = "TLS protocol or cipher mismatch.";
+                } else if (messageLower.contains("no_certificate")) {
+                    diagnosticHint = "client did not send a certificate (mTLS may be required).";
+                } else {
+                    diagnosticHint = "unknown cause.";
+                }
+                if (mockServerLogger != null) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(Level.ERROR)
+                            .setMessageFormat("TLS handshake failure while a client attempted to connect to " + ctx.channel() + " - " + diagnosticHint + certInfo)
+                            .setThrowable(throwable)
+                    );
+                }
             }
         }
         closeOnFlush(ctx.channel());

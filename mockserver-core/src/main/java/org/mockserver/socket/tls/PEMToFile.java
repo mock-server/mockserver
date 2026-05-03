@@ -136,8 +136,8 @@ public class PEMToFile {
     }
 
     private static X509Certificate x509FromPEM(InputStream inputStream) {
-        try {
-            return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(inputStream);
+        try (InputStream is = inputStream) {
+            return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(is);
         } catch (Exception e) {
             throw new RuntimeException("Exception creating X509 from PEM", e);
         }
@@ -161,10 +161,10 @@ public class PEMToFile {
 
     @SuppressWarnings("unchecked")
     private static List<X509Certificate> x509ChainFromPEM(InputStream inputStream) {
-        try {
+        try (InputStream is = inputStream) {
             return (List<X509Certificate>) CertificateFactory
                 .getInstance("X.509")
-                .generateCertificates(inputStream)
+                .generateCertificates(is)
                 .stream()
                 .filter(certificate -> certificate instanceof X509Certificate)
                 .collect(Collectors.toList());

@@ -55,6 +55,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
 
     private PrivateKey privateKey;
     private X509Certificate x509Certificate;
+    private List<X509Certificate> x509CertificateChain;
     private PrivateKey certificateAuthorityPrivateKey;
     private X509Certificate certificateAuthorityX509Certificate;
 
@@ -203,7 +204,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
      */
     @Override
     public void buildAndSavePrivateKeyAndX509Certificate() {
-        if (customPrivateKeyAndCertificateProvided()) {
+        if (shouldGenerateCertificates()) {
             try {
                 if (dynamicallyUpdateCertificateAuthority()) {
                     buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
@@ -256,7 +257,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
      * load leaf private key
      */
     public PrivateKey privateKey() {
-        if (customPrivateKeyAndCertificateProvided()) {
+        if (shouldGenerateCertificates()) {
             return privateKey;
         } else {
             return privateKeyFromPEMFile(configuration.privateKeyPath());
@@ -275,10 +276,14 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
      * load leaf certificate
      */
     public X509Certificate x509Certificate() {
-        if (customPrivateKeyAndCertificateProvided()) {
+        if (shouldGenerateCertificates()) {
             return x509Certificate;
         } else {
-            return x509FromPEMFile(configuration.x509CertificatePath());
+            List<X509Certificate> chain = x509ChainFromPEMFile(configuration.x509CertificatePath());
+            if (chain.isEmpty()) {
+                throw new RuntimeException("The file '" + configuration.x509CertificatePath() + "' does not contain any valid PEM-encoded certificates");
+            }
+            return chain.get(0);
         }
     }
 
@@ -349,10 +354,10 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
     }
 
     public boolean certificateNotYetCreated() {
-        return customPrivateKeyAndCertificateProvided() && x509Certificate == null;
+        return shouldGenerateCertificates() && x509Certificate == null;
     }
 
-    private boolean customPrivateKeyAndCertificateProvided() {
+    private boolean shouldGenerateCertificates() {
         return isBlank(configuration.privateKeyPath()) || isBlank(configuration.x509CertificatePath());
     }
 
@@ -383,7 +388,15 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
     @Override
     public List<X509Certificate> certificateChain() {
         final List<X509Certificate> result = new ArrayList<>();
-        result.add(x509Certificate());
+        if (shouldGenerateCertificates()) {
+            result.add(x509Certificate());
+        } else {
+            List<X509Certificate> chain = x509ChainFromPEMFile(configuration.x509CertificatePath());
+            if (chain.isEmpty()) {
+                throw new RuntimeException("The file '" + configuration.x509CertificatePath() + "' does not contain any valid PEM-encoded certificates");
+            }
+            result.addAll(chain);
+        }
         result.add(certificateAuthorityX509Certificate());
         return result;
     }

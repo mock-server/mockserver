@@ -1503,6 +1503,7 @@ public class ConfigurationProperties {
      * @param certificateAuthorityPrivateKey location of the PEM file containing the certificate authority private key
      */
     public static void certificateAuthorityPrivateKey(String certificateAuthorityPrivateKey) {
+        fileExists(certificateAuthorityPrivateKey);
         setProperty(MOCKSERVER_CERTIFICATE_AUTHORITY_PRIVATE_KEY, certificateAuthorityPrivateKey);
     }
 
@@ -1586,6 +1587,7 @@ public class ConfigurationProperties {
      * @param trustCertificateChain File system path or classpath location of custom mTLS (TLS client authentication) X.509 Certificate Chain for Trusting (i.e. signature verification of) Client X.509 Certificates
      */
     public static void tlsMutualAuthenticationCertificateChain(String trustCertificateChain) {
+        fileExists(trustCertificateChain);
         setProperty(MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN, "" + trustCertificateChain);
     }
 

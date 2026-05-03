@@ -67,12 +67,35 @@ Custom CA certificates can be loaded from PEM files via configuration.
 | Class | Package | Purpose |
 |-------|---------|---------|
 | `KeyAndCertificateFactory` | `o.m.socket.tls` | Interface for cert generation |
-| `BCKeyAndCertificateFactory` | `o.m.socket.tls.bouncycastle` | BouncyCastle implementation: generates CA + leaf X.509 certs, supports dynamic SANs, reads custom PEM certs |
+| `BCKeyAndCertificateFactory` | `o.m.socket.tls.bouncycastle` | BouncyCastle implementation: generates CA + leaf X.509 certs, supports dynamic SANs, reads custom PEM certs (including intermediate chains) |
 | `KeyAndCertificateFactoryFactory` | `o.m.socket.tls` | Factory with pluggable supplier |
-| `NettySslContextFactory` | `o.m.socket.tls` | Creates and caches Netty `SslContext` for server and client sides; supports mTLS, HTTP/2 ALPN |
+| `NettySslContextFactory` | `o.m.socket.tls` | Creates and caches Netty `SslContext` for server and client sides; supports mTLS, HTTP/2 ALPN; throws on failure instead of returning null |
+| `CertificateConfigurationValidator` | `o.m.socket.tls` | Validates TLS certificate configuration at startup: key/cert pairing, CA chain verification, expiry, file existence |
 | `KeyStoreFactory` | `o.m.socket.tls` | Creates JKS `KeyStore` and `SSLContext` for non-Netty use |
 | `SniHandler` | `o.m.socket.tls` | Extends Netty's `AbstractSniHandler`; extracts SNI hostname, provisions certificate, negotiates ALPN |
-| `PEMToFile` | `o.m.socket.tls` | PEM format utilities (read/write private keys and X.509 chains) |
+| `PEMToFile` | `o.m.socket.tls` | PEM format utilities (read/write private keys and X.509 chains); properly closes InputStreams |
+
+### Startup Certificate Validation
+
+When custom TLS certificates are configured (`privateKeyPath` and `x509CertificatePath`), `CertificateConfigurationValidator` runs eagerly during `NettySslContextFactory.createServerSslContext()` and performs these checks:
+
+| Check | Behaviour on Failure |
+|-------|---------------------|
+| Both `privateKeyPath` and `x509CertificatePath` must be set together | **Hard failure** with message naming both properties |
+| Private key file must be valid PEM | **Hard failure** |
+| Certificate file must be valid PEM | **Hard failure** |
+| Certificate must not be expired or not-yet-valid | **Hard failure** with expiry/notBefore date |
+| Private key must match certificate (sign-verify challenge) | **Hard failure** |
+| Leaf certificate must be signed by configured CA | **Hard failure** |
+| CA certificate file must be valid PEM (when non-default) | **Hard failure** |
+| CA private key file must be valid PEM (when non-default) | **Hard failure** |
+| Certificate should include `serverAuth` EKU | **WARN log** (not hard failure) |
+
+Validation only runs when custom certs are provided. Default/auto-generated certificate deployments are unaffected.
+
+### Intermediate CA Chain Support
+
+When `x509CertificatePath` contains multiple PEM-encoded certificates, `BCKeyAndCertificateFactory` loads the full chain using `PEMToFile.x509ChainFromPEMFile()`. The first certificate is the leaf; subsequent certificates are intermediates. The full chain `[leaf, intermediate₁, ..., intermediateₙ, CA]` is sent during TLS handshake.
 
 ### SSL Context Caching
 
