@@ -41,7 +41,7 @@ Build process, releases, dependencies, and the documentation website.
 | [Release Process](operations/release-process.md) | End-to-end release workflow with Mermaid diagrams |
 | [Dependencies](operations/dependencies.md) | Complete dependency inventory with versions |
 | [Website](operations/website.md) | Jekyll documentation site structure and publishing |
-| [Testing](testing.md) | Test categories, running tests, container integration tests |
+| [Testing](testing.md) | Test frameworks, module inventory, architecture, configuration, coverage gaps, CI execution |
 | [OpenCode Configuration](operations/opencode-configuration.md) | AI harness: config, agents, rules, skills, commands, plugins |
 
 ### Other
@@ -77,7 +77,7 @@ mockserver/
     ├── code/                   #   Code architecture (9 docs)
     ├── infrastructure/         #   AWS, CI/CD, Docker, Helm (4 docs)
     ├── operations/             #   Build, release, deps, website (5 docs)
-    └── testing.md              #   Test categories, CI, container tests
+    └── testing.md              #   Test frameworks, architecture, config, coverage, CI
 ```
 
 ## Key Links
