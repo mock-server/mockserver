@@ -76,17 +76,68 @@ kubectl -n mockserver logs -l app=mockserver,release=mockserver
 
 ### Detailed MockServer Configuration
 
-If a configmap called `mockserver-config` exists in the same namespace this will be mapped into the MockServer container under the `mountPath` `/config`.
-This configmap can be used to configure MockServer by containing a `mockserver.properties` file and other related configuration files such as a:
+There are two ways to provide MockServer configuration (properties file, expectation initialization JSON, TLS certificates, etc.):
+
+1. **Inline configuration** (recommended) — provide configuration directly in `values.yaml`
+2. **External ConfigMap** — create a ConfigMap separately (manually, via CI, or using the example [mockserver-config](https://github.com/mock-server/mockserver/tree/master/helm/mockserver-config) chart)
+
+Both approaches mount configuration into the container at `/config`. See [MockServer Configuration](https://www.mock-server.com/mock_server/configuration_properties.html) for details of all configuration options.
+
+#### Option 1: Inline Configuration (single chart install)
+
+Set `app.config.enabled=true` and provide configuration content directly in values. This creates a ConfigMap as part of the main chart — no separate chart or manual ConfigMap creation is needed.
+
+Using `--set`:
+
+```bash
+helm upgrade --install --create-namespace --namespace mockserver \
+  --set app.config.enabled=true \
+  --set app.config.properties="mockserver.initializationJsonPath=/config/initializerJson.json" \
+  --set app.config.initializerJson='[{"httpRequest":{"path":"/example"},"httpResponse":{"body":"response"}}]' \
+  mockserver helm/mockserver
+```
+
+Or using a `values.yaml` file (recommended for complex configuration):
+
+```yaml
+app:
+  config:
+    enabled: true
+    properties: |
+      mockserver.initializationJsonPath=/config/initializerJson.json
+      mockserver.enableCORSForAPI=true
+      mockserver.enableCORSForAllResponses=true
+    initializerJson: |
+      [
+        {
+          "httpRequest": { "path": "/example" },
+          "httpResponse": { "body": "some response" }
+        }
+      ]
+```
+
+```bash
+helm upgrade --install --create-namespace --namespace mockserver -f values.yaml mockserver helm/mockserver
+```
+
+The following inline config values are supported:
+- `app.config.enabled` (default: false) - set `true` to create a ConfigMap from inline values
+- `app.config.properties` (default: "") - content of `mockserver.properties`
+- `app.config.initializerJson` (default: "") - content of `initializerJson.json`
+- `app.config.extraFiles` (default: {}) - map of additional filenames to content (e.g. TLS certificates)
+
+#### Option 2: External ConfigMap
+
+If a ConfigMap called `mockserver-config` (or a custom name) exists in the same namespace, it will be mounted into the MockServer container at `/config`.
+This ConfigMap can contain a `mockserver.properties` file and other related configuration files such as:
 - [json expectation initialization](https://www.mock-server.com/mock_server/initializing_expectations.html), or
 - custom [TLS CA, X.509 Certificate or Private Key](https://www.mock-server.com/mock_server/HTTPS_TLS.html#configuration)
-The `mockserver.properties` file should load these additional files from the directory `/config` which is the `mountPath` for the configmap. 
 
-See [MockServer Configuration](https://www.mock-server.com/mock_server/configuration_properties.html) for details of all configuration options. 
-  
-The mapping of the configuration configmap can be configured as follows: 
-- `app.mountedConfigMapName` (default: mockserver-config) - name of the configuration configmap (in the same namespace) to mount
-- `app.propertiesFileName` (default: mockserver.properties) - path of the property file in the configmap
+The `mockserver.properties` file should load these additional files from the directory `/config` which is the `mountPath` for the ConfigMap.
+
+The mapping of the configuration ConfigMap can be configured as follows:
+- `app.mountedConfigMapName` (default: mockserver-config) - name of the configuration ConfigMap (in the same namespace) to mount
+- `app.propertiesFileName` (default: mockserver.properties) - path of the property file in the ConfigMap
 
 For example:
 
@@ -94,7 +145,7 @@ For example:
 helm upgrade --install --create-namespace --namespace mockserver --set app.mountedConfigMapName=other-mockserver-config --set app.propertiesFileName=other-mockserver.properties mockserver helm/mockserver
 ```
 
-An example of a helm chart to configure MockServer is [helm/mockserver-config](https://github.com/mock-server/mockserver/tree/master/helm/mockserver-config)
+An example of a helm chart to create this ConfigMap is [helm/mockserver-config](https://github.com/mock-server/mockserver/tree/master/helm/mockserver-config)
 
 ### Extending MockServer Classpath
 

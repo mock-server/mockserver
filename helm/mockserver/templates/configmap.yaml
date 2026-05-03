@@ -1,0 +1,25 @@
+{{- if .Values.app.config.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.app.mountedConfigMapName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "chart.name" . }}
+    chart: {{ template "chart.name_version" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+data:
+{{- if .Values.app.config.properties }}
+  {{ .Values.app.propertiesFileName }}: |
+{{ .Values.app.config.properties | indent 4 }}
+{{- end }}
+{{- if .Values.app.config.initializerJson }}
+  initializerJson.json: |
+{{ .Values.app.config.initializerJson | indent 4 }}
+{{- end }}
+{{- range $key, $value := .Values.app.config.extraFiles }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+{{- end }}
+{{- end }}

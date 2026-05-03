@@ -11,6 +11,16 @@ app:
   readOnlyRootFilesystem: false
   serviceAccountName: default
   runAsUser: 65534
+  config:
+    enabled: false
+    # properties: |
+    #   mockserver.initializationJsonPath=/config/initializerJson.json
+    # initializerJson: |
+    #   [{"httpRequest": {"path": "/example"}, "httpResponse": {"body": "response"}}]
+    # extraFiles: {}
+    properties: ""
+    initializerJson: ""
+    extraFiles: {}
 
 image:
   repository: mockserver

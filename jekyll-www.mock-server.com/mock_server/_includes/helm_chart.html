@@ -102,26 +102,77 @@ helm repo update</code></pre>
 
 <h2>Detailed MockServer Configuration</h2>
 
-<p>If a configmap called <strong>mockserver-config</strong> exists in the same namespace this will be mapped into the MockServer container under the <strong>mountPath</strong> <strong>/config</strong>.</p>
-<p>This configmap can be used to configure MockServer by containing a <strong>mockserver.properties</strong> file and other related configuration files such as a:</p>
+<p>There are two ways to provide MockServer configuration (properties file, expectation initialization JSON, TLS certificates, etc.):</p>
+<ol>
+    <li><strong>Inline configuration</strong> (recommended) &mdash; provide configuration directly in <span class="keyword">values.yaml</span></li>
+    <li><strong>External ConfigMap</strong> &mdash; create a ConfigMap separately (manually, via CI, or using the example <a target="_blank" href="https://github.com/mock-server/mockserver/tree/master/helm/mockserver-config">mockserver-config</a> chart)</li>
+</ol>
+<p>Both approaches mount configuration into the container at <strong>/config</strong>. See <a href="/mock_server/configuration_properties.html">MockServer Configuration</a> for details of all configuration options.</p>
+
+<a id="inline_configuration" class="anchor" href="#inline_configuration">&nbsp</a>
+
+<h3>Option 1: Inline Configuration (single chart install)</h3>
+
+<p>Set <span class="keyword">app.config.enabled=true</span> and provide configuration content directly in values. This creates a ConfigMap as part of the main chart &mdash; no separate chart or manual ConfigMap creation is needed.</p>
+
+<p>Using <span class="keyword">--set</span>:</p>
+
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver \
+  --set app.config.enabled=true \
+  --set app.config.properties="mockserver.initializationJsonPath=/config/initializerJson.json" \
+  --set app.config.initializerJson='[{"httpRequest":{"path":"/example"},"httpResponse":{"body":"response"}}]' \
+  mockserver helm/mockserver</code></pre>
+
+<p>Or using a <span class="keyword">values.yaml</span> file (recommended for complex configuration):</p>
+
+<pre class="prettyprint code"><code class="code">app:
+  config:
+    enabled: true
+    properties: |
+      mockserver.initializationJsonPath=/config/initializerJson.json
+      mockserver.enableCORSForAPI=true
+      mockserver.enableCORSForAllResponses=true
+    initializerJson: |
+      [
+        {
+          "httpRequest": { "path": "/example" },
+          "httpResponse": { "body": "some response" }
+        }
+      ]</code></pre>
+
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver -f values.yaml mockserver helm/mockserver</code></pre>
+
+<p>The following inline config values are supported:</p>
+<ul>
+    <li><span class="keyword">app.config.enabled</span> (default: false) - set <span class="keyword">true</span> to create a ConfigMap from inline values</li>
+    <li><span class="keyword">app.config.properties</span> (default: "") - content of <span class="keyword">mockserver.properties</span></li>
+    <li><span class="keyword">app.config.initializerJson</span> (default: "") - content of <span class="keyword">initializerJson.json</span></li>
+    <li><span class="keyword">app.config.extraFiles</span> (default: {}) - map of additional filenames to content (e.g. TLS certificates)</li>
+</ul>
+
+<a id="external_configmap" class="anchor" href="#external_configmap">&nbsp</a>
+
+<h3>Option 2: External ConfigMap</h3>
+
+<p>If a ConfigMap called <strong>mockserver-config</strong> (or a custom name) exists in the same namespace, it will be mounted into the MockServer container under the <strong>mountPath</strong> <strong>/config</strong>.</p>
+<p>This ConfigMap can be used to configure MockServer by containing a <strong>mockserver.properties</strong> file and other related configuration files such as:</p>
 <ul>
     <li><a href="/mock_server/initializing_expectations.html">json expectation initialization</a>, or</li>
     <li>custom <a href="/mock_server/HTTPS_TLS.html#configuration">TLS CA, X.509 Certificate or Private Key</a></li>
 </ul>
-<p>The <strong>mockserver.properties</strong> file should load these additional files from the directory <strong>/config</strong> which is the <strong>mountPath</strong> for the configmap.</p>
-<p>See <a href="/mock_server/configuration_properties.html">MockServer Configuration</a> for details of all configuration options.</p>
+<p>The <strong>mockserver.properties</strong> file should load these additional files from the directory <strong>/config</strong> which is the <strong>mountPath</strong> for the ConfigMap.</p>
 
-<p>The mapping of the configuration configmap can be configured as follows:</p>
+<p>The mapping of the configuration ConfigMap can be configured as follows:</p>
 <ul>
-    <li><span class="keyword">app.mountedConfigMapName</span> (default: mockserver-config) - name of the configuration configmap (in the same namespace) to mount</li>
-    <li><span class="keyword">app.propertiesFileName</span> (default: mockserver.properties) - name of the property file in the configmap</li>
+    <li><span class="keyword">app.mountedConfigMapName</span> (default: mockserver-config) - name of the configuration ConfigMap (in the same namespace) to mount</li>
+    <li><span class="keyword">app.propertiesFileName</span> (default: mockserver.properties) - name of the property file in the ConfigMap</li>
 </ul>
 
 For example:
 
-<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.mountedConfigMapName=other-mockserver-config --set app.propertiesFileNamem=other-mockserver.properties mockserver helm/mockserver</code></pre>
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.mountedConfigMapName=other-mockserver-config --set app.propertiesFileName=other-mockserver.properties mockserver helm/mockserver</code></pre>
 
-An example of a helm chart to configure MockServer is <a target="_blank"href="https://github.com/mock-server/mockserver/tree/master/helm/mockserver-config">helm/mockserver-config</a>
+An example of a helm chart to create this ConfigMap is <a target="_blank" href="https://github.com/mock-server/mockserver/tree/master/helm/mockserver-config">helm/mockserver-config</a>
 
 <a id="helm_extend_classpath" class="anchor" href="#helm_extend_classpath">&nbsp</a>
 

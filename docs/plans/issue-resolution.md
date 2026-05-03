@@ -19,9 +19,9 @@ As of May 2026, MockServer had 184 open GitHub issues. This document provides a 
 
 | Category | Count (original) | Closed | Remaining |
 |----------|-----------------|--------|-----------|
-| Total open issues | 184 | 28 | 156 |
+| Total open issues | 184 | 29 | 155 |
 | Confirmed bugs | 42 | 0 | 42 |
-| Feature requests | 48 | 0 | 48 |
+| Feature requests | 48 | 1 | 47 |
 | Dependency/CVE reports | 18 | 9 | 9 |
 | Already resolved / out of scope | 12 | 9 | 3 |
 | Duplicates | 14 | 6 | 8 |
@@ -706,7 +706,7 @@ These are legitimate feature requests, not bugs. Listed by perceived value.
 | #1509 | Terser DSL | API design enhancement |
 | #1494 | Minimize mockserver-client-java dependencies | Reduce transitive dependencies |
 | #1483 | OpenAPI spec callbacks | Extend OpenAPI support |
-| #1272 | Add configmap to Helm chart | Already exists; verify |
+| ~~#1272~~ | Add configmap to Helm chart | **Resolved** — inline ConfigMap template added |
 | #1307 | YAML initialization file support | Add alongside JSON |
 
 ### Low Value / Niche

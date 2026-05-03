@@ -2,7 +2,7 @@
 
 ## Charts Overview
 
-MockServer provides two Helm charts:
+MockServer provides two Helm charts. The main `mockserver` chart can optionally create its own ConfigMap via inline configuration, or mount an externally-created ConfigMap:
 
 ```mermaid
 graph LR
@@ -10,20 +10,23 @@ graph LR
         DEP[Deployment]
         SVC[Service]
         ING[Ingress]
-        CM_REF[ConfigMap ref]
+        CM_INLINE[ConfigMap<br/><i>inline, optional</i>]
+        CM_REF[ConfigMap volume mount]
     end
 
-    subgraph "mockserver-config chart"
-        CM[ConfigMap<br/>mockserver.properties<br/>initializerJson.json]
+    subgraph "mockserver-config chart (legacy)"
+        CM_EXT[ConfigMap<br/>mockserver.properties<br/>initializerJson.json]
     end
 
-    CM_REF -->|mounts| CM
+    CM_INLINE -->|when app.config.enabled| CM_REF
+    CM_EXT -->|external| CM_REF
+    CM_REF -->|mounts /config| DEP
 ```
 
 | Chart | Path | Version | Purpose |
 |-------|------|---------|---------|
-| `mockserver` | `helm/mockserver/` | 5.15.0 | Main deployment chart |
-| `mockserver-config` | `helm/mockserver-config/` | 5.15.0 | Configuration ConfigMap |
+| `mockserver` | `helm/mockserver/` | 5.15.0 | Main deployment chart (includes optional ConfigMap) |
+| `mockserver-config` | `helm/mockserver-config/` | 5.15.0 | Example external ConfigMap chart (for reference) |
 
 ## mockserver Chart
 
@@ -34,6 +37,7 @@ graph LR
 | `deployment.yaml` | Single-replica Deployment with ConfigMap volume mount |
 | `service.yaml` | Service (NodePort/LoadBalancer/ClusterIP) |
 | `ingress.yaml` | Optional Ingress resource |
+| `configmap.yaml` | Optional ConfigMap for inline configuration (when `app.config.enabled`) |
 | `service-test.yaml` | Helm test pod (curl readiness check) |
 | `_helpers.tpl` | Template helper functions |
 | `NOTES.txt` | Post-install instructions |
@@ -51,6 +55,11 @@ app:
   readOnlyRootFilesystem: false
   serviceAccountName: default
   runAsUser: 65534
+  config:
+    enabled: false
+    properties: ""
+    initializerJson: ""
+    extraFiles: {}
 image:
   repository: mockserver
   snapshot: false
@@ -115,7 +124,7 @@ graph TB
 helm repo add mockserver https://www.mock-server.com
 helm repo update
 
-# Install with defaults
+# Install with defaults (no configuration)
 helm install mockserver mockserver/mockserver
 
 # Install with custom values
@@ -123,14 +132,25 @@ helm install mockserver mockserver/mockserver \
   --set app.serverPort=1080 \
   --set service.type=ClusterIP
 
-# Install config chart first
+# Install with inline configuration (single chart — recommended)
+helm install mockserver mockserver/mockserver \
+  --set app.config.enabled=true \
+  --set app.config.properties="mockserver.initializationJsonPath=/config/initializerJson.json" \
+  --set app.config.initializerJson='[{"httpRequest":{"path":"/example"},"httpResponse":{"body":"response"}}]'
+
+# Or using a values.yaml file for complex config
+helm install mockserver mockserver/mockserver -f my-values.yaml
+
+# Legacy: install external config chart first, then main chart
 helm install mockserver-config mockserver/mockserver-config
 helm install mockserver mockserver/mockserver
 ```
 
-## mockserver-config Chart
+## mockserver-config Chart (Legacy / Example)
 
-Provides a ConfigMap containing:
+The separate `mockserver-config` chart is retained as a reference example. For new deployments, use the inline `app.config` values in the main chart instead (see above).
+
+This chart provides a ConfigMap containing:
 
 - `mockserver.properties` — server configuration
 - `initializerJson.json` — pre-loaded expectations

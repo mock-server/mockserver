@@ -75,7 +75,7 @@ spec:
             - name: JVM_OPTIONS
               value: {{ .Values.app.jvmOptions | quote }}
 {{- end }}
-{{- if .Values.app.mountConfigMap }}
+{{- if or .Values.app.config.enabled .Values.app.mountConfigMap }}
             - name: MOCKSERVER_PROPERTY_FILE
               value: /config/{{ .Values.app.propertiesFileName }}
 {{- end }}
