@@ -215,12 +215,20 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
                 pipeline.addFirst(channelHandler);
             }
         }
-        pipeline.addFirst(socksInitialRequestDecoder);
+        if (isSslEnabledUpstream(ctx.channel())) {
+            pipeline.addAfter("SslHandler#0", null, socksInitialRequestDecoder);
+        } else {
+            pipeline.addFirst(socksInitialRequestDecoder);
+        }
 
         setProxyingRequest(ctx, Boolean.TRUE);
 
         // re-unify (with SOCKS5 enabled)
-        ctx.pipeline().fireChannelRead(msg.readBytes(actualReadableBytes()));
+        if (isSslEnabledUpstream(ctx.channel())) {
+            pipeline.context("SslHandler#0").fireChannelRead(msg.readBytes(actualReadableBytes()));
+        } else {
+            ctx.pipeline().fireChannelRead(msg.readBytes(actualReadableBytes()));
+        }
     }
 
     private boolean isTls(ByteBuf buf) {

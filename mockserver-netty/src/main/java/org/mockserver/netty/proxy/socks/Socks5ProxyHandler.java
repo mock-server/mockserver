@@ -97,7 +97,7 @@ public class Socks5ProxyHandler extends SocksProxyHandler<Socks5Message> {
     }
 
     private void handleCommandRequest(ChannelHandlerContext ctx, final Socks5CommandRequest commandRequest) {
-        if (commandRequest.type().equals(Socks5CommandType.CONNECT)) { // IN HERE
+        if (commandRequest.type().equals(Socks5CommandType.CONNECT)) {
             forwardConnection(ctx, new Socks5ConnectHandler(configuration, mockServerLogger, server, commandRequest.dstAddr(), commandRequest.dstPort()), commandRequest.dstAddr(), commandRequest.dstPort());
             ctx.fireChannelRead(commandRequest);
         } else {
