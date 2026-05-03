@@ -63,7 +63,7 @@ Model Context Protocol servers connect external tools to opencode. Consider:
 - **Buildkite MCP** — if one becomes available, it would give the LLM direct access to build data without shell commands
 - **GitHub MCP** — available but adds many tokens to context; the `gh` CLI (already permitted) is more efficient
 
-**Action:** Add Context7 for doc search. Monitor for a Buildkite MCP server.
+**Action:** ~~Add Context7 for doc search.~~ Declined — security concern with third-party MCP servers we don't control. Monitor for a Buildkite MCP server.
 
 ### Model Per Agent — Configured
 Per-agent models are now set in `opencode.jsonc` with a 4-tier cost/quality strategy:

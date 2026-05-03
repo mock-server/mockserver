@@ -64,6 +64,6 @@ If unit tests already passed earlier in this conversation for the exact same cha
 
 ## Test Quality
 
-- **New tests:** Follow existing test patterns in the module. Use JUnit 5 (Jupiter) for new tests.
+- **New tests:** Follow existing test patterns in the module. Use JUnit 5 (Jupiter) only in `mockserver-junit-jupiter`; all other modules use JUnit 4.
 - **Flaky tests:** Never just re-run — investigate root cause. Common causes: port contention, timing-dependent assertions, shared mutable state.
 - Descriptive test names that explain the expected behavior.

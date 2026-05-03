@@ -176,6 +176,7 @@ When the user asks for a code review:
 | AWS infrastructure | `debugger` (with `aws-investigation` skill) |
 | Task decomposition | `taskify-agent` |
 | Design council seat | `council-seat` |
+| GitHub issue review | Direct skill (no subagent) |
 
 ## Convention-Based Skill Invocation
 

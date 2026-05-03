@@ -18,9 +18,9 @@ flowchart TB
     subgraph Harness[".opencode/"]
         direction TB
         AG["agents/<br/><i>12 sub-agent prompts</i>"]
-        RU["rules/<br/><i>5 guardrail files</i>"]
-        SK["skills/<br/><i>8 workflow definitions</i>"]
-        CM["commands/<br/><i>9 slash commands</i>"]
+        RU["rules/<br/><i>6 guardrail files</i>"]
+        SK["skills/<br/><i>10 workflow definitions</i>"]
+        CM["commands/<br/><i>11 slash commands</i>"]
         PL["plugins/<br/><i>2 session plugins</i>"]
     end
 
@@ -42,9 +42,9 @@ flowchart TB
 | 1 | [Config](#building-block-1-config) | `opencode.jsonc` | Root configuration: models, permissions, agent definitions |
 | 2 | [Model Strategy](#building-block-2-model-strategy) | `opencode.jsonc` (agent entries) | Right model for the right task |
 | 3 | [Agents](#building-block-3-agents) | `.opencode/agents/*.md` | 12 specialist sub-agents with least-privilege access |
-| 4 | [Rules](#building-block-4-rules) | `.opencode/rules/*.md` | Guardrails always enforced |
-| 5 | [Skills](#building-block-5-skills) | `.opencode/skills/*/SKILL.md` | Reusable multi-step workflows |
-| 6 | [Commands](#building-block-6-commands) | `.opencode/commands/*.md` | Slash shortcuts with guaranteed routing |
+| 4 | [Rules](#building-block-4-rules) | `.opencode/rules/*.md` | 6 guardrails always enforced |
+| 5 | [Skills](#building-block-5-skills) | `.opencode/skills/*/SKILL.md` | 10 reusable multi-step workflows |
+| 6 | [Commands](#building-block-6-commands) | `.opencode/commands/*.md` | 11 slash shortcuts with guaranteed routing |
 | 7 | [Plugins & Tools](#building-block-7-plugins--tools) | `.opencode/plugins/*.ts` | Session hooks and external integrations |
 
 ---
@@ -270,6 +270,7 @@ Rules are mandatory constraints loaded into sessions. They encode what experienc
 | `testing-policy.md` | 69 | Yes | Maven module mapping, test commands, quality standards |
 | `tmp-directory.md` | 75 | Yes | Use `.tmp/` at repo root, never `/tmp/` |
 | `report-formatting.md` | 36 | Yes | Subagent JSON → report template formatting convention |
+| `coding-principles.md` | 29 | Yes | Think before coding, simplicity first, surgical changes |
 
 ### git-safety.md — Banned Commands
 
@@ -341,6 +342,8 @@ A skill is a self-contained multi-step workflow — a runbook the agent executes
 | `browser-auth` | SKILL.md | No | "navigate to buildkite", "extract token from browser" |
 | `dockerhub-credentials` | SKILL.md | No | "docker hub token", "configure docker hub" |
 | `terraform-tfvars` | SKILL.md | No | "create tfvars", "deploy buildkite agents" |
+| `docker-build-push` | SKILL.md | No | "build docker image", "push maven image", "rebuild CI image" |
+| `issue-review` | SKILL.md | No | "review issue", "triage issue", "is this a bug" |
 
 ### Skill Anatomy
 
@@ -407,6 +410,8 @@ Commands are slash shortcuts that map user-friendly invocations to specific agen
 | `/design-council` | (default) | No | Convene parallel design council debate |
 | `/excalidraw` | (default) | No | Generate .excalidraw architecture diagrams |
 | `/codeql-scan` | (default) | No | Run CodeQL security scan on Java code |
+| `/issue-review` | (default) | No | Review, classify, and resolve a GitHub issue |
+| `/commit` | (default) | No | Commit changes following full pre-commit workflow |
 
 ### Command File Anatomy
 
@@ -565,23 +570,28 @@ mockserver/
     │   ├── simplifier.md
     │   ├── taskify-agent.md
     │   └── test-runner.md
-    ├── rules/                               # 5 guardrail files
+    ├── rules/                               # 6 guardrail files
+    │   ├── coding-principles.md
     │   ├── commit-workflow.md
     │   ├── git-safety.md
     │   ├── report-formatting.md
     │   ├── testing-policy.md
     │   └── tmp-directory.md
-    ├── skills/                              # 8 skill workflows
+    ├── skills/                              # 10 skill workflows
     │   ├── aws-investigation/
     │   │   ├── SKILL.md
     │   │   └── report-template.md
     │   ├── browser-auth/
+    │   │   └── SKILL.md
+    │   ├── docker-build-push/
     │   │   └── SKILL.md
     │   ├── dockerhub-credentials/
     │   │   └── SKILL.md
     │   ├── ideate/
     │   │   ├── SKILL.md
     │   │   └── spec-template.md
+    │   ├── issue-review/
+    │   │   └── SKILL.md
     │   ├── pipeline-investigation/
     │   │   ├── SKILL.md
     │   │   └── report-template.md
@@ -591,12 +601,14 @@ mockserver/
     │   │   └── SKILL.md
     │   └── terraform-tfvars/
     │       └── SKILL.md
-    ├── commands/                             # 9 slash commands
+    ├── commands/                             # 11 slash commands
     │   ├── aws-investigation.md
     │   ├── codebase-change-report.md
     │   ├── codeql-scan.md
+    │   ├── commit.md
     │   ├── design-council.md
     │   ├── excalidraw.md
+    │   ├── issue-review.md
     │   ├── pipeline-investigation.md
     │   ├── review-code.md
     │   ├── review-spec.md
