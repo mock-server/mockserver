@@ -426,16 +426,9 @@ Main distribution config: `PriceClass_All`, HTTP/2+3, TLSv1.2_2021 minimum, cust
 3. Invalidate CloudFront cache
 4. See [Release Process](../operations/release-process.md) for full details
 
-### IAM (Legacy)
+### IAM
 
-| Resource | Details | Status |
-|----------|---------|--------|
-| User `Administrator` | Created 2017-04-01, last console login 2019-06-07, no access keys | **Unused** — candidate for deletion |
-| User `APIAdministrator` | Created 2017-04-01, never logged in, has active access key (created 2017) | **Security risk** — should rotate or delete |
-| Role `EC2DomainJoin` | Created 2020-02-10, never used | **Unused** — candidate for deletion |
-| Role `ecsInstanceRole` | Created 2017-04-01 | Legacy ECS role (no ECS clusters exist) |
-| Role `ecsServiceRole` | Created 2017-04-01 | Legacy ECS role (no ECS clusters exist) |
-| Role `google_assistant` | Created 2017-07-16, never used | **Unused** — candidate for deletion |
+All legacy IAM users, groups, and roles have been deleted (2026-05-03). Only SSO-managed roles remain (`AWSReservedSSO_AdministratorAccess_*`).
 
 ### Other Resources
 
@@ -465,22 +458,17 @@ Main distribution config: `PriceClass_All`, HTTP/2+3, TLSv1.2_2021 minimum, cust
 | VPC `vpc-e78d579e` | `10.0.0.0/16`, 1 subnet (us-east-1d), 3 security groups, non-default | Unused — candidate for deletion |
 | 8 CloudWatch Log Groups | Buildkite agent logs in us-east-1, no retention set, ~2.5 MB total | Orphaned — candidate for deletion |
 | ECR repo `jamesdbloom_two` | Created 2017, us-east-1 | Likely unused — verify before deletion |
-| IAM user `Administrator` | Last login 2019-06-07, no access keys | Unused — candidate for deletion |
-| IAM user `APIAdministrator` | Active access key from 2017, never logged in | **Security risk** — rotate or delete key |
-| IAM roles `EC2DomainJoin`, `ecsInstanceRole`, `ecsServiceRole`, `google_assistant` | Legacy roles, never or rarely used | Candidates for deletion |
 
 ## Recommendations
 
 | # | Action | Impact | Effort |
 |---|--------|--------|--------|
-| 1 | Rotate or delete `APIAdministrator` access key (active since 2017) | **Security** — eliminate 8-year-old credential | Trivial |
-| 2 | Delete unused IAM users/roles in website account | Reduce attack surface | Trivial |
-| 3 | Delete 8 orphaned CloudWatch log groups in website account (us-east-1) | Clean up legacy Buildkite remnants | Trivial |
-| 4 | Set retention on eu-west-2 `/buildkite/*` log groups (build account) | Prevent unbounded log growth | Trivial |
-| 5 | Run `terraform apply` to create build-secrets resources | Enable GitHub Actions OIDC + Docker Hub secret | Low |
-| 6 | Delete unused VPCs in both accounts | Reduce clutter | Low |
-| 7 | Delete unused DynamoDB table and ECR repo | Reduce clutter | Trivial |
-| 8 | Tag `mockserver-terraform-state` bucket | Improve resource identification | Trivial |
+| 1 | Delete 8 orphaned CloudWatch log groups in website account (us-east-1) | Clean up legacy Buildkite remnants | Trivial |
+| 2 | Set retention on eu-west-2 `/buildkite/*` log groups (build account) | Prevent unbounded log growth | Trivial |
+| 3 | Run `terraform apply` to create build-secrets resources | Enable GitHub Actions OIDC + Docker Hub secret | Low |
+| 4 | Delete unused VPCs in both accounts | Reduce clutter | Low |
+| 5 | Delete unused DynamoDB table and ECR repo | Reduce clutter | Trivial |
+| 6 | Tag `mockserver-terraform-state` bucket | Improve resource identification | Trivial |
 
 ## AWS CLI Operations
 
@@ -529,4 +517,5 @@ aws autoscaling set-desired-capacity \
 | Date | Action |
 |------|--------|
 | 2026-05-03 | Legacy CloudFormation stack `buildkite` deleted from us-east-1. Full resource audit of account 814548061024 completed. All legacy orphaned resources in us-east-1 cleaned up: 17 S3 buckets (including 2 logging buckets with 120K+ objects), 25 CloudWatch log groups, and EC2 key pair `mockserver-buildkite`. |
-| 2026-05-03 | Website account 014848309742 SSO configured (separate IAM Identity Center instance `d-9c674c1c64`). Full audit completed: 19 S3 buckets (1 current + 18 versioned archives), 19 CloudFront distributions, 5 Route53 hosted zones, 3 ACM certificates, 2 legacy IAM users (1 with active 2017 access key), 4 legacy IAM roles, 1 unused VPC, 8 orphaned CloudWatch log groups, 1 legacy ECR repo. Monthly cost ~$3.87. Build account monthly cost ~$7.78. |
+| 2026-05-03 | Website account 014848309742 SSO configured (separate IAM Identity Center instance `d-9c674c1c64`). Full audit completed: 19 S3 buckets (1 current + 18 versioned archives), 19 CloudFront distributions, 5 Route53 hosted zones, 3 ACM certificates. Monthly cost ~$3.87. Build account monthly cost ~$7.78. |
+| 2026-05-03 | Website account security cleanup: deleted legacy IAM access key (active since 2017), 2 IAM users (`Administrator`, `APIAdministrator`), IAM group `Administrators`, and 4 unused IAM roles (`EC2DomainJoin`, `ecsInstanceRole`, `ecsServiceRole`, `google_assistant`). |
