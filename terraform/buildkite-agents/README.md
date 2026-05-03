@@ -11,7 +11,7 @@ flowchart TB
         BK_QUEUE[Job Queue<br/>'default']
     end
 
-    subgraph "AWS eu-west-2 — Account 814548061024"
+    subgraph "AWS eu-west-2"
         subgraph "VPC (auto-created)"
             subgraph "AutoScaling Group"
                 EC2_1[EC2 Spot t3.large<br/>Buildkite Agent]
@@ -24,7 +24,7 @@ flowchart TB
     end
 
     BK_API -->|queue depth| SCALER
-    SCALER -->|set desired 0–2| EC2_1 & EC2_2
+    SCALER -->|set desired 0–10| EC2_1 & EC2_2
     EC2_1 & EC2_2 -->|poll for jobs| BK_QUEUE
     EC2_1 & EC2_2 -->|read token| SSM
     EC2_1 & EC2_2 -->|read secrets| S3_SECRETS
@@ -42,7 +42,7 @@ sequenceDiagram
 
     loop Every 60 seconds
         Lambda->>BK: Check job queue depth
-        Lambda->>ASG: Set desired capacity (0–2)
+        Lambda->>ASG: Set desired capacity (0–10)
     end
 
     BK->>Agent: Job available
@@ -58,17 +58,18 @@ sequenceDiagram
 
 ```
 buildkite-agents/
-├── bootstrap/           # One-time state backend setup
-│   ├── main.tf          #   S3 bucket + DynamoDB table
-│   └── README.md        #   Bootstrap instructions
-├── main.tf              # Elastic CI Stack module
-├── backend.tf           # S3 remote state configuration
-├── variables.tf         # Input variables
-├── outputs.tf           # Outputs (ASG name, VPC ID)
-├── versions.tf          # Terraform + provider versions
-├── terraform.tfvars.example  # Example variable values
-├── run.sh               # Wrapper script (auth + plan/apply)
-└── README.md            # This file
+├── bootstrap/               # One-time state backend setup
+│   ├── main.tf              #   S3 bucket
+│   └── README.md            #   Bootstrap instructions
+├── main.tf                  # Elastic CI Stack module
+├── backend.tf               # S3 remote state configuration
+├── build-secrets.tf         # Docker Hub secret + GitHub OIDC
+├── variables.tf             # Input variables
+├── outputs.tf               # Outputs (ASG name, VPC ID)
+├── versions.tf              # Terraform + provider versions
+├── terraform.tfvars.example # Example variable values
+├── run.sh                   # Wrapper script (auth + plan/apply)
+└── README.md                # This file
 ```
 
 ## Prerequisites
@@ -91,7 +92,7 @@ buildkite-agents/
 ./run.sh bootstrap
 ```
 
-This creates the S3 bucket and DynamoDB table used for remote state. Uses `import` blocks so it's safe to re-run against existing resources. See [bootstrap/README.md](bootstrap/) for details.
+This creates the S3 bucket used for remote state. Uses `import` blocks so it's safe to re-run against existing resources. See [bootstrap/README.md](bootstrap/) for details.
 
 ### 2. Configure Variables
 
@@ -130,7 +131,7 @@ Commands:
   plan       Run terraform plan (default)
   apply      Run terraform apply
   destroy    Run terraform destroy
-  bootstrap  Initialise the S3 state bucket and DynamoDB lock table
+  bootstrap  Initialise the S3 state bucket
   init       Run terraform init
 ```
 
@@ -155,7 +156,7 @@ flowchart LR
 | `region` | `string` | `eu-west-2` | AWS region |
 | `instance_types` | `string` | `t3.large` | EC2 instance types (comma-separated) |
 | `min_size` | `number` | `0` | Minimum instances (0 = scale to zero) |
-| `max_size` | `number` | `2` | Maximum instances |
+| `max_size` | `number` | `10` | Maximum instances |
 | `on_demand_percentage` | `number` | `0` | % on-demand vs spot (0 = all spot) |
 
 ## Outputs

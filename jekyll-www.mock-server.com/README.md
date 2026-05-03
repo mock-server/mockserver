@@ -27,7 +27,7 @@ rm -rf _site
 # 4.
 open _site
 # 5.
-copy to https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq/?region=us-east-1
+copy to main website S3 bucket (see ~/mockserver-aws-ids.md)
 ```
 
 # slack

@@ -40,7 +40,7 @@ The release process is a **manual 13-step process** executed entirely from a dev
 | No GitHub Releases created | No release notes visible on GitHub |
 | Versioned website requires AWS console work | Creating S3 buckets, CloudFront distributions, Route53 records manually |
 | Website infrastructure not in Terraform | 17 versioned sites + main site all manually provisioned |
-| Cross-account access not configured | Buildkite agents cannot access website account (`014848309742`) |
+| Cross-account access not configured | Buildkite agents cannot access website account (`website account`) |
 
 ### Release Artifacts
 
@@ -116,7 +116,7 @@ flowchart TD
         NOTIFY[notify.sh]
     end
 
-    subgraph Credentials[AWS Secrets Manager — 814548061024]
+    subgraph Credentials[AWS Secrets Manager — build account]
         S1[mockserver-release/sonatype]
         S2[mockserver-release/gpg-key]
         S3[mockserver-release/github-token]
@@ -128,8 +128,8 @@ flowchart TD
     end
 
     subgraph Infra[Infrastructure — Terraform]
-        TF_BK[terraform/buildkite-agents/<br/>Account 814548061024<br/>Build agents, IAM, secrets]
-        TF_WEB[terraform/website/<br/>Account 014848309742<br/>S3, CloudFront, Route53, ACM]
+        TF_BK[terraform/buildkite-agents/<br/>Account build account<br/>Build agents, IAM, secrets]
+        TF_WEB[terraform/website/<br/>Account website account<br/>S3, CloudFront, Route53, ACM]
     end
 
     BK --> Scripts
@@ -202,9 +202,9 @@ scripts/
 └── release-pipeline.yml                # New: release pipeline
 
 terraform/
-├── buildkite-agents/                   # Existing: build agent infra (814548061024)
+├── buildkite-agents/                   # Existing: build agent infra (build account)
 │   └── build-secrets.tf                # Modified: add release secrets + IAM policy
-└── website/                            # NEW: website infra (014848309742)
+└── website/                            # NEW: website infra (website account)
     ├── main.tf                         # AWS provider, module config
     ├── variables.tf                    # Domain, version list, etc.
     ├── versions.tf                     # Terraform + provider version constraints
@@ -766,9 +766,9 @@ Depends on Maven Central sync completing (runs after `wait-for-central.sh`) beca
 5. Upload chart and index to S3:
    ```bash
    aws s3 cp "helm/charts/mockserver-$RELEASE_VERSION.tgz" \
-     "s3://aws-website-mockserver-nb9hq/" --profile mockserver-website
+     "s3://${WEBSITE_BUCKET}/" --profile mockserver-website
    aws s3 cp "helm/charts/index.yaml" \
-     "s3://aws-website-mockserver-nb9hq/" --profile mockserver-website
+     "s3://${WEBSITE_BUCKET}/" --profile mockserver-website
    ```
 6. `git add -A && git commit -m "release: add Helm chart $RELEASE_VERSION" && git push origin master`
 
@@ -779,7 +779,7 @@ Depends on Maven Central sync completing (runs after `wait-for-central.sh`) beca
 3. Upload to S3:
    ```bash
    aws s3 sync ".tmp/javadoc/$RELEASE_VERSION" \
-     "s3://aws-website-mockserver-nb9hq/versions/$RELEASE_VERSION/" \
+     "s3://${WEBSITE_BUCKET}/versions/$RELEASE_VERSION/" \
      --profile mockserver-website
    ```
 4. `git checkout master`
@@ -824,13 +824,13 @@ Uses the SwaggerHub Registry REST API (previously documented as "no API availabl
    ```
 4. Sync to S3:
    ```bash
-   aws s3 sync _site/ s3://aws-website-mockserver-nb9hq/ \
+   aws s3 sync _site/ s3://${WEBSITE_BUCKET}/ \
      --delete --profile mockserver-website
    ```
 5. Invalidate CloudFront cache:
    ```bash
    aws cloudfront create-invalidation \
-     --distribution-id E3R1W2C7JJIMNR \
+     --distribution-id "$DISTRIBUTION_ID" \
      --paths "/*" --profile mockserver-website
    ```
 
@@ -843,7 +843,7 @@ Instead of manually creating AWS resources via the Console, this uses Terraform.
    ```hcl
    versioned_sites = {
      # ... existing entries ...
-     "5-16" = { bucket_name = "aws-website-mockserver-5-16", region = "eu-west-2" }
+      "5-16" = { bucket_name = "<bucket-name>", region = "eu-west-2" }
    }
    ```
 3. `terraform -chdir=terraform/website plan` — show what will be created (new S3 bucket, CloudFront distribution, Route53 A record)
@@ -851,8 +851,8 @@ Instead of manually creating AWS resources via the Console, this uses Terraform.
 5. `terraform -chdir=terraform/website apply`
 6. Build the Jekyll site and sync to the new bucket:
    ```bash
-   aws s3 sync jekyll-www.mock-server.com/_site/ \
-     "s3://aws-website-mockserver-${SUBDOMAIN}/" --profile mockserver-website
+    aws s3 sync jekyll-www.mock-server.com/_site/ \
+      "s3://<bucket-name>/" --profile mockserver-website
    ```
 7. Update `scripts/s3_buckets.md` with the new bucket entry
 8. Update `README.md` version table with the new documentation link
@@ -908,7 +908,7 @@ For rolling back a failed release:
 
 ## Secret Management
 
-All release credentials are stored in AWS Secrets Manager in the build agent account (`814548061024`).
+All release credentials are stored in AWS Secrets Manager in the build agent account (`build account`).
 
 | Secret Name | Contents | Used By |
 |---|---|---|
@@ -938,7 +938,7 @@ All release credentials are stored in AWS Secrets Manager in the build agent acc
 
 ### Overview
 
-A new Terraform module at `terraform/website/` manages all website infrastructure in account `014848309742`. This replaces manual AWS Console work for:
+A new Terraform module at `terraform/website/` manages all website infrastructure in account `website account`. This replaces manual AWS Console work for:
 - The main website (S3 bucket, CloudFront distribution, Route53 record)
 - All versioned documentation sites (17 existing + new ones)
 - ACM certificates
@@ -996,36 +996,12 @@ All 17 existing versioned sites have inconsistent bucket naming (random suffixes
 ```hcl
 import {
   to = aws_s3_bucket.versioned["5-13"]
-  id = "aws-website-mockserver-5-13"
+  id = "<bucket-name>"  # See ~/mockserver-aws-ids.md for bucket names
 }
-import {
-  to = aws_s3_bucket.versioned["5-9"]
-  id = "aws-website-mockserver--ad01b"
-}
-# ... all 17 versioned sites from scripts/s3_buckets.md
+# ... all 17 versioned sites
 ```
 
-The existing sites (from `scripts/s3_buckets.md`):
-
-| Key | Bucket Name | Domain | Region |
-|-----|-------------|--------|--------|
-| main | `aws-website-mockserver-nb9hq` | `mock-server.com` / `www.mock-server.com` | `us-east-1` |
-| `5-13` | `aws-website-mockserver-5-13` | `5-13.mock-server.com` | `eu-west-2` |
-| `5-12` | `aws-website-mockserver-5-12` | `5-12.mock-server.com` | `eu-west-2` |
-| `5-11` | `aws-website-mockserver-5-11` | `5-11.mock-server.com` | `eu-west-2` |
-| `5-10` | `aws-website-mockserver-5-10` | `5-10.mock-server.com` | `eu-west-2` |
-| `5-9` | `aws-website-mockserver--ad01b` | `5-9.mock-server.com` | `eu-west-2` |
-| `5-8` | `aws-website-mockserver--8001a` | `5-8.mock-server.com` | `eu-west-2` |
-| `5-7` | `aws-website-mockserver--c89db` | `5-7.mock-server.com` | `eu-west-2` |
-| `5-6` | `aws-website-mockserver----f10aa` | `5-6.mock-server.com` | `eu-west-2` |
-| `5-5` | `aws-website-mockserver----9684b` | `5-5.mock-server.com` | `us-east-1` |
-| `5-4` | `aws-website-mockserver----mz777` | `5-4.mock-server.com` | `us-east-1` |
-| `5-3` | `aws-website-mockserver----l2i8l` | `5-3.mock-server.com` | `us-east-1` |
-| `5-2` | `aws-website-mockserver----azamg` | `5-2.mock-server.com` | `us-east-1` |
-| `5-1` | `aws-website-mockserver----pknro` | `5-1.mock-server.com` | `us-east-1` |
-| `5-0` | `aws-website-mockserver--8hyll` | `5-0.mock-server.com` | `us-east-1` |
-| `4-0` | `aws-website-mockserver--mp81c` | `4-0.mock-server.com` | `us-east-1` |
-| `4-1` | `aws-website-mockserver--r4wey` | `4-1.mock-server.com` | `us-east-1` |
+The existing version-to-domain mapping is in `scripts/s3_buckets.md`. Bucket names and regions are in `~/mockserver-aws-ids.md`.
 
 ### Adding a New Versioned Site at Release Time
 
@@ -1034,17 +1010,17 @@ Adding a new versioned site is a two-step process:
 1. Add the new entry to the `versioned_sites` variable in `terraform.tfvars`
 2. Run `terraform apply` — Terraform creates the S3 bucket, CloudFront distribution, and Route53 record
 
-New versions use a predictable naming convention: `aws-website-mockserver-{major}-{minor}` (e.g., `aws-website-mockserver-5-16`), all in `eu-west-2`.
+New versions follow the naming convention documented in `~/mockserver-aws-ids.md`, all in `eu-west-2`.
 
 ### Prerequisites for Website Terraform
 
 | # | Prerequisite | Notes |
 |---|---|---|
-| 1 | SSO access to account `014848309742` | Currently not configured — needs SSO portal setup |
-| 2 | S3 backend for Terraform state | Create in `014848309742` (or use `814548061024` with cross-account) |
-| 3 | Inventory of existing CloudFront distribution IDs | Run `aws cloudfront list-distributions` in `014848309742` |
+| 1 | SSO access to account `website account` | Currently not configured — needs SSO portal setup |
+| 2 | S3 backend for Terraform state | Create in `website account` (or use `build account` with cross-account) |
+| 3 | Inventory of existing CloudFront distribution IDs | Run `aws cloudfront list-distributions` in `website account` |
 | 4 | ACM certificate ID | Discover for import — likely a wildcard cert `*.mock-server.com` |
-| 5 | Route53 hosted zone ID | Run `aws route53 list-hosted-zones` in `014848309742` |
+| 5 | Route53 hosted zone ID | Run `aws route53 list-hosted-zones` in `website account` |
 
 ---
 
@@ -1085,7 +1061,7 @@ resource "aws_secretsmanager_secret" "swaggerhub" {
 
 resource "aws_secretsmanager_secret" "aws_website" {
   name        = "mockserver-release/aws-website"
-  description = "AWS credentials for website account (014848309742) S3/CloudFront"
+  description = "AWS credentials for website account (website account) S3/CloudFront"
 }
 
 resource "aws_iam_policy" "release_secrets" {
@@ -1191,8 +1167,8 @@ gantt
 | 12 | Install Ruby, Bundler, Jekyll in CI image | Phase 3 | For website build in pipeline |
 | 13 | Create SwaggerHub API key, store in AWS SM | Phase 5 | SwaggerHub account settings |
 | 14 | Create npm automation token, store in AWS SM | Phase 4 | `npm token create` |
-| 15 | Configure SSO access to website account (`014848309742`) | Phase 6 | AWS SSO portal |
-| 16 | Inventory existing CloudFront distribution IDs | Phase 6 | `aws cloudfront list-distributions` in `014848309742` |
+| 15 | Configure SSO access to website account (`website account`) | Phase 6 | AWS SSO portal |
+| 16 | Inventory existing CloudFront distribution IDs | Phase 6 | `aws cloudfront list-distributions` in `website account` |
 | 17 | Discover ACM certificate ID and Route53 hosted zone ID | Phase 6 | For Terraform import |
 | 18 | Create AWS credentials for website account, store in AWS SM | Phase 3 | For cross-account S3/CF access from CI |
 

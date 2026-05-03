@@ -10,9 +10,9 @@ This document identifies missing documentation, undocumented areas, and recommen
 
 **Status:** ~~The AWS infrastructure is managed manually or via a CloudFormation stack whose template is not stored in this repository.~~
 
-**Resolution:** Buildkite agent infrastructure is now managed by Terraform in `terraform/buildkite-agents/`, using the official [Buildkite Elastic CI Stack for AWS](https://github.com/buildkite/terraform-buildkite-elastic-ci-stack-for-aws) module. State is stored remotely in S3 with DynamoDB locking. See [AWS Infrastructure](infrastructure/aws-infrastructure.md) for details.
+**Resolution:** Buildkite agent infrastructure is now managed by Terraform in `terraform/buildkite-agents/`, using the official [Buildkite Elastic CI Stack for AWS](https://github.com/buildkite/terraform-buildkite-elastic-ci-stack-for-aws) module. State is stored remotely in S3 with native file locking. See [AWS Infrastructure](infrastructure/aws-infrastructure.md) for details.
 
-**Remaining:** Website infrastructure (S3, CloudFront, Route53 in account `014848309742`) is still manually provisioned. Consider adding Terraform definitions for these resources.
+**Remaining:** Website infrastructure (S3, CloudFront, Route53) is still manually provisioned. Consider adding Terraform definitions for these resources.
 
 ### ~~1b. DynamoDB Locking Reference~~ (Resolved)
 

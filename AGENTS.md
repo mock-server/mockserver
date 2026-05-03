@@ -59,10 +59,12 @@ The consumer-facing documentation lives in `jekyll-www.mock-server.com/` and is 
 
 ### AWS Accounts
 
-| Account ID | Purpose | CLI Profile | SSO Portal |
-|------------|---------|-------------|------------|
-| 814548061024 | Pipeline build agents and infrastructure | `mockserver-build` | `d-9c674c6f2f.awsapps.com` |
-| 014848309742 | Website (S3, CloudFront, DNS, TLS) | `mockserver-website` | `d-9c674c1c64.awsapps.com` |
+| Purpose | CLI Profile |
+|---------|-------------|
+| Pipeline build agents and infrastructure | `mockserver-build` |
+| Website (S3, CloudFront, DNS, TLS) | `mockserver-website` |
+
+Account IDs, SSO portal URLs, and resource identifiers are in `~/mockserver-aws-ids.md` (not committed to the repo).
 
 ### AWS Prerequisites
 
@@ -71,7 +73,7 @@ To investigate or manage AWS infrastructure:
 1. **Install AWS CLI**: `brew install awscli`
 2. **Configure SSO profiles**:
    - Build: `aws configure sso --profile mockserver-build` (SSO region: `eu-west-2`, default region: `eu-west-2`)
-   - Website: `aws configure sso --profile mockserver-website` (SSO region: `eu-west-2`, default region: `eu-west-2`)
+   - Website: `aws configure sso --profile mockserver-website` (SSO region: `eu-west-2`, default region: `us-east-1`)
 3. **Authenticate**: `aws sso login --profile mockserver-build` and/or `aws sso login --profile mockserver-website`
 4. **Corporate TLS proxy**: if behind a TLS inspection proxy, set `AWS_CA_BUNDLE` to your corporate root CA PEM file (e.g. `export AWS_CA_BUNDLE=$NODE_EXTRA_CA_CERTS`)
 5. **macOS + Python 3.14 + Homebrew**: if you get `pyexpat` symbol errors, set `export DYLD_LIBRARY_PATH=/opt/homebrew/opt/expat/lib`

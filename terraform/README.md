@@ -9,12 +9,12 @@ graph TB
         BA["buildkite-agents/"]
     end
 
-    BA --> |provisions| AWS["AWS eu-west-2<br/>Account 814548061024"]
+    BA --> |provisions| AWS["AWS eu-west-2<br/>Build Agent Account"]
 
     subgraph AWS
         direction TB
         VPC[VPC + Subnets]
-        ASG[AutoScaling Group<br/>Spot t3.large, 0–2 instances]
+        ASG[AutoScaling Group<br/>Spot t3.large, 0–10 instances]
         SCALER[Lambda Autoscaler]
         AGENT[Buildkite Agents]
     end
@@ -34,7 +34,7 @@ graph TB
 
 - [Terraform](https://www.terraform.io/downloads) >= 1.5
 - [AWS CLI](https://aws.amazon.com/cli/) with SSO profile `mockserver-build`
-- AWS account `814548061024`
+- AWS build agent account (see `~/mockserver-aws-ids.md`)
 
 ## Quick Start
 
@@ -42,11 +42,10 @@ Each module has a `run.sh` wrapper that handles AWS authentication and runs Terr
 
 ## State Management
 
-All modules store state remotely in S3 with DynamoDB locking:
+All modules store state remotely in S3 with native file locking:
 
-| Resource | Name | Region |
-|----------|------|--------|
-| S3 Bucket | `mockserver-terraform-state` | `eu-west-2` |
-| DynamoDB Table | `mockserver-terraform-locks` | `eu-west-2` |
+| Resource | Region |
+|----------|--------|
+| S3 Bucket (see `~/mockserver-aws-ids.md`) | `eu-west-2` |
 
 The state backend is bootstrapped via `buildkite-agents/bootstrap/`. See the [bootstrap README](buildkite-agents/bootstrap/) for details.

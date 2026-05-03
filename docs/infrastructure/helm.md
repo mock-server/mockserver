@@ -179,7 +179,7 @@ Static defaults are in `helm/mockserver-config/static/`:
 
 The Helm chart repository is hosted on S3 alongside the website:
 
-- **Bucket:** `aws-website-mockserver-nb9hq`
+- **Bucket:** Main website S3 bucket (see `~/mockserver-aws-ids.md`)
 - **Index:** `helm/charts/index.yaml`
 - **Charts:** `helm/charts/mockserver-*.tgz` (versions 5.3.0 through 5.15.0)
 

@@ -156,8 +156,8 @@ bundle exec jekyll build
 ## Deployment
 
 1. Build: `bundle exec jekyll build`
-2. Upload `_site/` contents to S3 bucket `aws-website-mockserver-nb9hq`
-3. Invalidate CloudFront cache (`/*` pattern) for distribution `E3R1W2C7JJIMNR`
+2. Upload `_site/` contents to the main website S3 bucket (see `~/mockserver-aws-ids.md`)
+3. Invalidate CloudFront cache (`/*` pattern) for the main distribution (see `~/mockserver-aws-ids.md`)
 
 See [AWS Infrastructure](../infrastructure/aws-infrastructure.md) and [Release Process](release-process.md) for details.
 

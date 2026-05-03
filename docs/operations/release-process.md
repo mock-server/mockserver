@@ -135,20 +135,22 @@ git checkout master
 cd jekyll-www.mock-server.com
 rm -rf _site
 bundle exec jekyll build
-# Upload _site/ to S3 bucket aws-website-mockserver-nb9hq
-# Invalidate CloudFront cache (distribution E3R1W2C7JJIMNR, path /*)
+# Upload _site/ to the main website S3 bucket (see ~/mockserver-aws-ids.md)
+# Invalidate CloudFront cache for main distribution (see ~/mockserver-aws-ids.md, path /*)
 ```
 
 ### 12. Create Versioned Website Copy (Major/Minor Releases)
 
 For significant releases, create a versioned copy of the documentation:
 
-1. Create new S3 bucket (clone permissions from existing)
-2. Enable ACLs, set object ownership to "Object writer"
-3. Turn off "Block all public access"
-4. Upload built `_site/` to new bucket
-5. Create CloudFront distribution (copy existing settings, set default root object to `index.html`)
+1. Create new S3 bucket with public access **blocked** (all 4 flags)
+2. Enable server-side encryption (AES-256)
+3. Upload built `_site/` to new bucket
+4. Create CloudFront distribution with OAC (copy existing settings, set default root object to `index.html`)
+5. Set bucket policy to allow only the new CloudFront distribution via `cloudfront.amazonaws.com` service principal
 6. Create Route53 A record aliased to new CloudFront distribution
+
+See `~/mockserver-aws-ids.md` for the OAC ID to attach to the new distribution.
 
 ### 13. Update Homebrew
 
