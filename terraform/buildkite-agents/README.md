@@ -63,7 +63,7 @@ buildkite-agents/
 │   └── README.md            #   Bootstrap instructions
 ├── main.tf                  # Elastic CI Stack module
 ├── backend.tf               # S3 remote state configuration
-├── build-secrets.tf         # Docker Hub secret + GitHub OIDC
+├── build-secrets.tf         # Docker Hub secret + Buildkite agent IAM policy
 ├── variables.tf             # Input variables
 ├── outputs.tf               # Outputs (ASG name, VPC ID)
 ├── versions.tf              # Terraform + provider versions

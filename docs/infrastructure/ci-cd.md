@@ -8,21 +8,25 @@ MockServer uses two CI/CD systems:
 graph LR
     subgraph "Buildkite"
         BK[Primary CI<br/>Build & Test]
+        BK_MAVEN[Docker Push<br/>Maven CI Image]
+        BK_RELEASE[Docker Push<br/>Release Image]
     end
 
     subgraph "GitHub Actions"
-        GA1[Docker Image Build<br/>Multi-arch push]
-        GA2[CodeQL Analysis<br/>Security scanning]
-        GA3[Maven CI Image Build<br/>Build image push]
+        GA[CodeQL Analysis<br/>Security scanning]
     end
 
     BK -->|runs on| EC2[AWS EC2 Agents]
-    GA1 -->|pushes to| DH[Docker Hub]
-    GA2 -->|reports to| GH[GitHub Security]
-    GA3 -->|pushes to| DH
+    BK_MAVEN -->|pushes to| DH[Docker Hub]
+    BK_RELEASE -->|pushes to| DH
+    GA -->|reports to| GH[GitHub Security]
 ```
 
-## Buildkite Pipeline
+## Buildkite Pipelines
+
+Three pipelines run on Buildkite, all using the same EC2 Spot agent pool (`default` queue).
+
+### CI Build Pipeline
 
 **File:** `.buildkite/pipeline.yml`
 
@@ -43,7 +47,7 @@ sequenceDiagram
     Maven-->>BK: Collect **/*.log artifacts
 ```
 
-### Step 1: Update Docker Image
+#### Step 1: Update Docker Image
 
 ```yaml
 - label: "update docker image"
@@ -52,7 +56,7 @@ sequenceDiagram
 
 Pulls the latest `mockserver/mockserver:maven` build image to ensure the CI environment is current.
 
-### Step 2: Build
+#### Step 2: Build
 
 ```yaml
 - label: "build"
@@ -73,6 +77,47 @@ Runs the full Maven build inside the `mockserver/mockserver:maven` Docker image:
 - JVM memory: `-Xms2048m -Xmx8192m`
 - Collects all `.log` files as build artifacts
 
+### Maven CI Image Push Pipeline
+
+**File:** `.buildkite/docker-push-maven.yml`
+
+**Trigger:** Manual (via Buildkite UI or API)
+
+Builds and pushes `mockserver/mockserver:maven` — the Docker image used by the CI build pipeline. Run this when:
+- `docker_build/maven/Dockerfile` or `docker_build/maven/settings.xml` change
+- Monthly, to pick up base OS security updates
+- After upgrading Maven or JDK versions
+
+```mermaid
+flowchart LR
+    TRIGGER[Manual trigger] --> LOGIN[Docker Hub login<br/>via Secrets Manager]
+    LOGIN --> BUILD[docker buildx build<br/>linux/amd64]
+    BUILD --> PUSH[Push to Docker Hub<br/>mockserver/mockserver:maven]
+```
+
+Docker Hub credentials are fetched from AWS Secrets Manager (`mockserver-build/dockerhub`) by `.buildkite/scripts/docker-login.sh`.
+
+### Release Image Push Pipeline
+
+**File:** `.buildkite/docker-push-release.yml`
+
+**Trigger:** Manual (during release process, step 7)
+
+Builds and pushes the production MockServer Docker image as a multi-arch image (`linux/amd64` + `linux/arm64` via QEMU).
+
+Set the `RELEASE_TAG` environment variable when triggering the build (e.g., `mockserver-5.15.0`). If triggered from a git tag, `BUILDKITE_TAG` is used as fallback.
+
+Two Docker tags are pushed:
+- `mockserver/mockserver:mockserver-X.Y.Z` (full tag)
+- `mockserver/mockserver:X.Y.Z` (short tag)
+
+```mermaid
+flowchart LR
+    TRIGGER[Manual trigger<br/>RELEASE_TAG=mockserver-X.Y.Z] --> LOGIN[Docker Hub login<br/>via Secrets Manager]
+    LOGIN --> BUILD[docker buildx build<br/>linux/amd64 + linux/arm64]
+    BUILD --> PUSH["Push to Docker Hub<br/>:mockserver-X.Y.Z + :X.Y.Z"]
+```
+
 ### Build Docker Image
 
 The `mockserver/mockserver:maven` image is defined in `docker_build/maven/Dockerfile`:
@@ -83,50 +128,28 @@ The `mockserver/mockserver:maven` image is defined in `docker_build/maven/Docker
 - Dependencies: Pre-fetched by running a throwaway build during image creation
 - Corporate CA: Optional certificate injection for TLS proxy environments (see [Docker](docker.md#maven-ci-image))
 
-## GitHub Actions
+### Docker Hub Authentication
 
-### Docker Image Build & Push
+All Docker push pipelines authenticate to Docker Hub using credentials stored in AWS Secrets Manager (`mockserver-build/dockerhub`). The secret is a JSON object:
 
-**File:** `.github/workflows/build-docker-image.yml`
-
-**Triggers:**
-- Push of `mockserver-*` tags (e.g., `mockserver-5.15.0`)
-- Manual `workflow_dispatch` with custom tag override
-
-```mermaid
-flowchart TD
-    T{Trigger} -->|Tag push| AUTO[Auto-generate tags<br/>mockserver-X.Y.Z + X.Y.Z]
-    T -->|Manual dispatch| MANUAL[Use provided tags]
-
-    AUTO --> QEMU[Setup QEMU<br/>Multi-arch support]
-    MANUAL --> QEMU
-
-    QEMU --> BUILDX[Setup Docker Buildx]
-    BUILDX --> LOGIN[Login to Docker Hub]
-    LOGIN --> BUILD[Build & Push<br/>linux/amd64 + linux/arm64]
-    BUILD --> DH[Docker Hub<br/>mockserver/mockserver]
+```json
+{"username": "...", "token": "..."}
 ```
 
-**Tag generation:** From a git tag like `mockserver-5.15.0`, two Docker tags are created:
-- `mockserver/mockserver:mockserver-5.15.0`
-- `mockserver/mockserver:5.15.0`
+The shared script `.buildkite/scripts/docker-login.sh` fetches the secret and runs `docker login`. Buildkite agent EC2 instances have IAM permissions to read this secret (via `managed_policy_arns` in `terraform/buildkite-agents/main.tf`).
 
-**Platforms:** `linux/amd64` and `linux/arm64` (via QEMU emulation)
+### Creating Buildkite Pipelines
 
-**Dockerfile:** `docker/Dockerfile` (see [Docker documentation](docker.md))
+Each pipeline YAML file needs a corresponding pipeline configuration in the Buildkite web UI:
 
-### Maven CI Image Build & Push
+1. Go to https://buildkite.com/organizations/mockserver/pipelines
+2. Create a new pipeline
+3. Set the "Steps" to upload the appropriate YAML file:
+   - CI build: `buildkite-agent pipeline upload .buildkite/pipeline.yml` (default)
+   - Maven CI image: `buildkite-agent pipeline upload .buildkite/docker-push-maven.yml`
+   - Release image: `buildkite-agent pipeline upload .buildkite/docker-push-release.yml`
 
-**File:** `.github/workflows/build-maven-ci-image.yml`
-
-**Triggers:**
-- Push to `master` when `docker_build/maven/**` changes
-- Monthly schedule (1st of month, 06:00 UTC) for base OS security updates
-- Manual `workflow_dispatch`
-
-Builds and pushes the `mockserver/mockserver:maven` CI image to Docker Hub. This is the image used by the Buildkite pipeline to compile and test the project. The image is built for `linux/amd64` only (matching the Buildkite EC2 agents).
-
-**Docker Hub credentials** are stored as GitHub Actions secrets (`DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`). AWS Secrets Manager infrastructure for centralised credential management is provisioned in `terraform/buildkite-agents/build-secrets.tf` for future use.
+## GitHub Actions
 
 ### CodeQL Security Analysis
 
@@ -140,25 +163,6 @@ Builds and pushes the `mockserver/mockserver:maven` CI image to Docker Hub. This
 **Languages scanned:** Java, JavaScript
 
 **Process:** Uses GitHub's CodeQL autobuild to compile Java sources, then runs static analysis queries to detect security vulnerabilities.
-
-### GitHub Actions Versions
-
-| Workflow | Action | Version |
-|----------|--------|---------|
-| `build-maven-ci-image.yml` | `actions/checkout` | `v4` |
-| `build-maven-ci-image.yml` | `docker/setup-buildx-action` | `v3` |
-| `build-maven-ci-image.yml` | `docker/login-action` | `v3` |
-| `build-maven-ci-image.yml` | `docker/build-push-action` | `v5` |
-| `build-docker-image.yml` | `actions/checkout` | `v3` |
-| `build-docker-image.yml` | `docker/metadata-action` | `v4` |
-| `build-docker-image.yml` | `docker/setup-qemu-action` | `v2` |
-| `build-docker-image.yml` | `docker/setup-buildx-action` | `v2` |
-| `build-docker-image.yml` | `docker/login-action` | `v2` |
-| `build-docker-image.yml` | `docker/build-push-action` | `v4` |
-| `codeql-analysis.yml` | `actions/checkout` | `v3` |
-| `codeql-analysis.yml` | `github/codeql-action/*` | `v2` |
-
-Note: `build-maven-ci-image.yml` uses newer action versions than the other workflows.
 
 ## Build Agent Infrastructure
 

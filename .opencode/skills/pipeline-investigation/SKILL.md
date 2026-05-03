@@ -166,7 +166,7 @@ curl -sLH "Authorization: Bearer $TOKEN" \
 
 ### Step 8: Check GitHub Actions (Secondary CI)
 
-If the Buildkite build passed but related GitHub Actions failed (Docker builds, CodeQL):
+If the Buildkite build passed but related GitHub Actions failed (CodeQL):
 
 ```bash
 gh run list --repo mock-server/mockserver --limit 10 --json status,conclusion,name,headBranch,createdAt

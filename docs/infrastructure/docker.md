@@ -98,16 +98,14 @@ Uses environment variables (`MOCKSERVER_*`) for configuration.
 
 ## Multi-Architecture Build
 
-Production images are built for both `linux/amd64` and `linux/arm64` using GitHub Actions:
+Production images are built for both `linux/amd64` and `linux/arm64` using Buildkite with QEMU emulation on x86_64 agents:
 
 ```bash
-# Automated via GitHub Actions on tag push
-# Manual trigger:
-gh workflow run build-docker-image.yml \
-  -f tag="mockserver/mockserver:5.15.0,mockserver/mockserver:latest"
+# Triggered via Buildkite docker-push-release pipeline
+# Set RELEASE_TAG=mockserver-X.Y.Z environment variable when triggering
 ```
 
-See [CI/CD](ci-cd.md) for full GitHub Actions workflow details.
+See [CI/CD](ci-cd.md) for full pipeline details.
 
 ## Local Docker Operations
 
@@ -242,14 +240,14 @@ The Dockerfile supports injecting a corporate root CA certificate at build time:
 - **Placeholder:** `docker_build/maven/corporate-root-ca.pem.example` (empty, committed to git)
 - **Real cert:** `docker_build/maven/corporate-root-ca.pem` (gitignored, local only)
 - If the cert file has content, it is added to the OS trust store (`update-ca-certificates`) and the Java truststore (`keytool`)
-- In CI (GitHub Actions), the empty placeholder is used — no corporate CA is needed
+- In CI (Buildkite), the empty placeholder is used — no corporate CA is needed
 
 ### Automated Build
 
-The Maven CI image is automatically built and pushed to Docker Hub by the GitHub Actions workflow `.github/workflows/build-maven-ci-image.yml`:
+The Maven CI image is built and pushed to Docker Hub by the Buildkite pipeline `.buildkite/docker-push-maven.yml`:
 
-- **Triggers:** changes to `docker_build/maven/**` on `master`, monthly schedule, manual dispatch
-- **Auth:** `DOCKERHUB_USERNAME` / `DOCKERHUB_TOKEN` GitHub secrets
+- **Trigger:** Manual (via Buildkite UI or API)
+- **Auth:** Docker Hub credentials from AWS Secrets Manager (`mockserver-build/dockerhub`)
 - **Tag:** `mockserver/mockserver:maven`
 
 See [CI/CD](ci-cd.md) for details.

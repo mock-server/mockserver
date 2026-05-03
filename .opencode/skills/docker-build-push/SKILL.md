@@ -14,7 +14,7 @@ description: >
 ## Overview
 
 The `mockserver/mockserver:maven` image is the CI build environment used by Buildkite.
-It is normally built automatically by GitHub Actions (`.github/workflows/build-maven-ci-image.yml`),
+It is normally built and pushed by the Buildkite pipeline `.buildkite/docker-push-maven.yml`,
 but sometimes needs to be built and pushed manually — e.g. when bootstrapping, when
 the pipeline isn't set up yet, or when testing Dockerfile changes.
 

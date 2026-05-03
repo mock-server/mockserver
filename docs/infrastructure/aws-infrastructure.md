@@ -181,10 +181,11 @@ flowchart TB
 
 | Resource | Purpose |
 |----------|---------|
-| EC2 Instance Role | Buildkite agent permissions (SSM, S3 secrets, CloudWatch) |
+| EC2 Instance Role | Buildkite agent permissions (SSM, S3 secrets, Secrets Manager, CloudWatch) |
 | Scaler Lambda Role | ASG scaling + CloudWatch Logs |
 | AZ Rebalance Suspender Role | ASG process management |
 | Instance Profile | Attached to EC2 instances |
+| IAM Policy (`buildkite-read-dockerhub-secret`) | Allows agents to read Docker Hub credentials from Secrets Manager |
 | Service-linked roles | AutoScaling, EC2Spot, Organizations, SSO, Support, TrustedAdvisor, ResourceExplorer |
 
 #### Security
@@ -196,17 +197,6 @@ flowchart TB
 | Root MFA | Enabled |
 | IAM users | None (SSO-only access) |
 | Password policy | Not set (no IAM users exist) |
-
-#### Build Secrets (Terraform-defined, not yet applied)
-
-The following resources are defined in `terraform/buildkite-agents/build-secrets.tf` but have **not yet been applied** to AWS:
-
-| Resource | Purpose |
-|----------|---------|
-| OIDC Provider | GitHub Actions federation (`token.actions.githubusercontent.com`) |
-| IAM Role | GitHub Actions role (reads Docker Hub secret) |
-
-These will be created on the next `terraform apply`.
 
 ### Scaling Behaviour
 
@@ -257,7 +247,7 @@ terraform/
     │   └── README.md        #   Bootstrap instructions
     ├── main.tf              # Elastic CI Stack module
     ├── backend.tf           # S3 remote state configuration
-    ├── build-secrets.tf     # Docker Hub secret + GitHub OIDC
+    ├── build-secrets.tf     # Docker Hub secret + Buildkite agent IAM policy
     ├── variables.tf         # Input variables
     ├── outputs.tf           # Outputs (ASG name, VPC ID)
     ├── versions.tf          # Terraform + provider versions
@@ -401,9 +391,7 @@ Main distribution config: `PriceClass_All`, HTTP/2+3, TLSv1.2_2021 minimum, redi
 
 ## Recommendations
 
-| # | Action | Impact | Effort |
-|---|--------|--------|--------|
-| 1 | Run `terraform apply` to create build-secrets resources | Enable GitHub Actions OIDC + Docker Hub secret | Low |
+No outstanding recommendations. All infrastructure is current.
 
 ## AWS CLI Operations
 

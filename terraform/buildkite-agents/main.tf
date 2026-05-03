@@ -11,11 +11,12 @@ module "buildkite_stack" {
   buildkite_agent_token = var.buildkite_agent_token
   buildkite_queue       = "default"
 
-  instance_types      = var.instance_types
-  min_size            = var.min_size
-  max_size            = var.max_size
+  instance_types       = var.instance_types
+  min_size             = var.min_size
+  max_size             = var.max_size
   on_demand_percentage = var.on_demand_percentage
 
-  agents_per_instance          = 1
-  associate_public_ip_address  = true
+  agents_per_instance         = 1
+  associate_public_ip_address = true
+  managed_policy_arns         = [aws_iam_policy.read_dockerhub_secret.arn]
 }

@@ -458,7 +458,7 @@ These are confirmed thread-safety bugs in the current codebase. All involve shar
 **Status**: Confirmed bug — P2
 **Duplicates**: #1887 is related to #1868 (different architecture)
 **Root cause**: Dockerfiles hardcode `netty-tcnative-boringssl-static` for `linux-x86_64` architecture. The `.so` file is always `libnetty_tcnative_linux_x86_64.so` regardless of target platform. s390x is not in the CI platform list.
-**Files**: `docker/Dockerfile:23,49`, `.github/workflows/build-docker-image.yml:46,55`
+**Files**: `docker/Dockerfile:23,49`, `.buildkite/scripts/docker-push-release.sh`
 **Fix**: Use Docker `TARGETARCH` build arg to select the correct native library per platform. Add s390x to CI platforms if netty-tcnative supports it.
 
 ### #1593: Add shell to Docker container

@@ -11,8 +11,7 @@ description: >
 # Store Docker Hub Credentials in AWS Secrets Manager
 
 This skill guides you through creating (or rotating) Docker Hub credentials and storing
-them in AWS Secrets Manager (`mockserver-build/dockerhub`) for use by GitHub Actions
-and Buildkite pipelines.
+them in AWS Secrets Manager (`mockserver-build/dockerhub`) for use by Buildkite pipelines.
 
 ## Prerequisites
 
@@ -100,18 +99,6 @@ aws secretsmanager get-secret-value \
 
 This should print the username and first 10 characters of the token.
 
-## Step 6: Update GitHub Actions Secrets (if needed)
-
-The GitHub Actions workflows currently use `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`
-as repository secrets. If you are rotating credentials, also update these:
-
-1. Navigate to: `https://github.com/mock-server/mockserver/settings/secrets/actions`
-2. Update `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` with the new values
-
-In the future, the GitHub Actions workflows can be migrated to fetch credentials from
-AWS Secrets Manager via OIDC federation (the Terraform in `build-secrets.tf` provisions
-the required IAM role), eliminating the need for GitHub Actions secrets.
-
 ## Troubleshooting
 
 | Problem | Cause | Fix |
@@ -126,5 +113,5 @@ the required IAM role), eliminating the need for GitHub Actions secrets.
 - **Never** commit Docker Hub tokens to the repository
 - **Never** log the full token value in CI output
 - The secret in AWS Secrets Manager is encrypted at rest using the default KMS key
-- Access is scoped: only the `github-actions-mockserver` IAM role can read the secret
+- Access is scoped: only the Buildkite agent EC2 instance role can read the secret (via `buildkite-read-dockerhub-secret` IAM policy)
 - Rotate the token if it may have been exposed

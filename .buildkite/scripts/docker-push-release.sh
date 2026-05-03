@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ -z "${RELEASE_TAG:-}" ]]; then
+  RELEASE_TAG="${BUILDKITE_TAG:-}"
+fi
+
+if [[ -z "$RELEASE_TAG" ]]; then
+  echo "Error: RELEASE_TAG environment variable is required (e.g. mockserver-5.15.0)"
+  echo "Set it via Buildkite build environment or trigger the build from a git tag."
+  exit 1
+fi
+
+FULL_TAG="$RELEASE_TAG"
+SHORT_TAG="${RELEASE_TAG#mockserver-}"
+
+if [[ "$FULL_TAG" == "$SHORT_TAG" ]]; then
+  echo "Error: RELEASE_TAG must start with 'mockserver-' (e.g. mockserver-5.15.0)"
+  exit 1
+fi
+
+echo "--- :info: Building release image"
+echo "Full tag:  mockserver/mockserver:${FULL_TAG}"
+echo "Short tag: mockserver/mockserver:${SHORT_TAG}"
+
+.buildkite/scripts/docker-login.sh
+
+echo "--- :docker: Building multi-arch image"
+docker buildx create --use --name multiarch 2>/dev/null || docker buildx use multiarch
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  --push \
+  --tag "mockserver/mockserver:${FULL_TAG}" \
+  --tag "mockserver/mockserver:${SHORT_TAG}" \
+  --file docker/Dockerfile \
+  .

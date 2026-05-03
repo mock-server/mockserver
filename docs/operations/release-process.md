@@ -90,15 +90,15 @@ Same process as step 4, without `npm audit fix`.
 
 ```mermaid
 flowchart LR
-    CHECK[Verify JAR on Maven Central] --> GHA[Re-run GitHub Actions]
-    GHA --> DH[Docker Hub<br/>mockserver/mockserver]
+    CHECK[Verify JAR on Maven Central] --> BK[Trigger Buildkite<br/>docker-push-release]
+    BK --> DH[Docker Hub<br/>mockserver/mockserver]
 ```
 
 1. Verify the release JAR is available:
    ```bash
    curl -v https://oss.sonatype.org/service/local/artifact/maven/redirect\?r\=releases\&g\=org.mock-server\&a\=mockserver-netty\&c\=shaded\&e\=jar\&v\=RELEASE
    ```
-2. Re-run the GitHub Actions Docker build workflow
+2. Trigger the Buildkite `docker-push-release` pipeline with `RELEASE_TAG=mockserver-X.Y.Z`
 
 ### 8. Update Helm Chart
 
