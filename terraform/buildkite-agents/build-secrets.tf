@@ -3,6 +3,11 @@ resource "aws_secretsmanager_secret" "dockerhub" {
   description = "Docker Hub credentials for pushing mockserver CI and release images"
 }
 
+resource "aws_secretsmanager_secret" "buildkite_api_token" {
+  name        = "mockserver-build/buildkite-api-token"
+  description = "Buildkite API token for Terraform pipeline management (GraphQL + REST scopes)"
+}
+
 resource "aws_iam_policy" "read_dockerhub_secret" {
   name        = "buildkite-read-dockerhub-secret"
   description = "Allow Buildkite agents to read Docker Hub credentials from Secrets Manager"

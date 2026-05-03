@@ -138,16 +138,15 @@ All Docker push pipelines authenticate to Docker Hub using credentials stored in
 
 The shared script `.buildkite/scripts/docker-login.sh` fetches the secret and runs `docker login`. Buildkite agent EC2 instances have IAM permissions to read this secret (via `managed_policy_arns` in `terraform/buildkite-agents/main.tf`).
 
-### Creating Buildkite Pipelines
+### Managing Buildkite Pipelines
 
-Each pipeline YAML file needs a corresponding pipeline configuration in the Buildkite web UI:
+Pipelines are managed via Terraform in `terraform/buildkite-pipelines/`. To add a new pipeline:
 
-1. Go to https://buildkite.com/organizations/mockserver/pipelines
-2. Create a new pipeline
-3. Set the "Steps" to upload the appropriate YAML file:
-   - CI build: `buildkite-agent pipeline upload .buildkite/pipeline.yml` (default)
-   - Maven CI image: `buildkite-agent pipeline upload .buildkite/docker-push-maven.yml`
-   - Release image: `buildkite-agent pipeline upload .buildkite/docker-push-release.yml`
+1. Create the pipeline YAML in `.buildkite/`
+2. Add an entry to `local.pipelines` in `terraform/buildkite-pipelines/pipelines.tf`
+3. Run `terraform apply` in `terraform/buildkite-pipelines/`
+
+The Buildkite API token is stored in AWS Secrets Manager (`mockserver-build/buildkite-api-token`).
 
 ## GitHub Actions
 

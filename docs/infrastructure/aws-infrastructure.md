@@ -160,7 +160,8 @@ flowchart TB
 | Resource | Type | Purpose |
 |----------|------|---------|
 | SSM Parameter | SecureString | Buildkite agent registration token |
-| Secrets Manager Secret | String | Docker Hub credentials for CI image push |
+| Secrets Manager Secret (`mockserver-build/dockerhub`) | JSON | Docker Hub credentials for CI image push |
+| Secrets Manager Secret (`mockserver-build/buildkite-api-token`) | String | Buildkite API token for Terraform pipeline management |
 
 #### CloudWatch Log Groups (eu-west-2)
 

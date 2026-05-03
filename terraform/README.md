@@ -7,14 +7,16 @@ graph TB
     subgraph "terraform/"
         direction TB
         BA["buildkite-agents/"]
+        BP["buildkite-pipelines/"]
     end
 
-    BA --> |provisions| AWS["AWS eu-west-2<br/>Build Agent Account"]
+    BA -->|provisions| AWS["AWS eu-west-2<br/>Build Agent Account"]
+    BP -->|manages| BK["Buildkite<br/>Pipeline Definitions"]
 
     subgraph AWS
         direction TB
         VPC[VPC + Subnets]
-        ASG[AutoScaling Group<br/>Spot t3.large, 0–10 instances]
+        ASG[AutoScaling Group<br/>Spot instances, 0–10]
         SCALER[Lambda Autoscaler]
         AGENT[Buildkite Agents]
     end
@@ -26,9 +28,10 @@ graph TB
 
 ## Modules
 
-| Directory | Purpose | Region |
-|-----------|---------|--------|
-| [`buildkite-agents/`](buildkite-agents/) | Buildkite CI build agent cluster | `eu-west-2` |
+| Directory | Purpose | Provider |
+|-----------|---------|----------|
+| [`buildkite-agents/`](buildkite-agents/) | Buildkite CI build agent cluster | AWS (`eu-west-2`) |
+| [`buildkite-pipelines/`](buildkite-pipelines/) | Buildkite pipeline definitions | Buildkite + AWS |
 
 ## Prerequisites
 
@@ -38,7 +41,7 @@ graph TB
 
 ## Quick Start
 
-Each module has a `run.sh` wrapper that handles AWS authentication and runs Terraform. See the individual module READMEs for details.
+The `buildkite-agents` module has a `run.sh` wrapper that handles AWS authentication and runs Terraform. See the individual module READMEs for details.
 
 ## State Management
 
