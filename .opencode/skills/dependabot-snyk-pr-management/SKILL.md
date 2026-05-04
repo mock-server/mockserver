@@ -1,4 +1,10 @@
-# Skill: Dependabot and Snyk PR Management
+---
+name: dependabot-snyk-pr-management
+description: Interact with Dependabot and Snyk pull requests for dependency upgrades and security fixes. Documents Dependabot commands, Java 11 compatibility checks, safe merge workflows, and troubleshooting. Use when managing dependency upgrade PRs or security fix PRs.
+
+---
+
+# Dependabot and Snyk PR Management
 
 Interact with Dependabot and Snyk pull requests for dependency upgrades and security fixes.
 
@@ -10,9 +16,21 @@ Use when:
 - Investigating failed dependency upgrade PRs
 - Reviewing security vulnerability PRs from Snyk or Dependabot
 
+## Safety Rules
+
+**IMPORTANT:** Before merging, rebasing, or closing any PR:
+1. Verify PR author is `app/dependabot` or a Snyk bot
+2. Check CI status (all checks must pass for merge)
+3. Verify Java 11 compatibility (see section below)
+4. Review changed dependencies and scope
+5. Never use `git add .` — stage explicit files only
+6. Never force-push to bot-owned branches without explicit user approval
+
 ## Dependabot Commands
 
 Dependabot responds to commands in PR comments. All commands are invoked via `@dependabot <command>`.
+
+**Response behavior:** Dependabot reacts with 👍 and may take several minutes to process the command.
 
 ### Common Commands
 
@@ -20,7 +38,7 @@ Dependabot responds to commands in PR comments. All commands are invoked via `@d
 |---------|---------|-------------|
 | `@dependabot rebase` | Rebase PR onto latest base branch | When PR is behind master or needs to pick up recent fixes |
 | `@dependabot recreate` | Close and recreate PR from scratch | When PR is in a bad state or has conflicts |
-| `@dependabot merge` | Merge PR (if all checks pass) | To auto-merge a passing PR |
+| `@dependabot merge` | Merge PR (if all checks pass) | To auto-merge via Dependabot (alternative: `gh pr merge --auto`) |
 | `@dependabot squash and merge` | Squash and merge PR | Preferred for dependency bumps to keep history clean |
 | `@dependabot cancel merge` | Cancel a previously requested merge | If you change your mind |
 | `@dependabot close` | Close PR without merging | To reject an upgrade |
@@ -28,7 +46,11 @@ Dependabot responds to commands in PR comments. All commands are invoked via `@d
 | `@dependabot ignore this dependency` | Never upgrade this dependency | For permanently pinned dependencies |
 | `@dependabot ignore this major version` | Skip this major version | When major version requires code changes |
 | `@dependabot ignore this minor version` | Skip this minor version | When minor version has issues |
-| `@dependabot unignore this dependency` | Remove ignore rule | Re-enable upgrades for a dependency |
+| `@dependabot ignore this patch version` | Skip this patch version | When patch version has issues |
+| `@dependabot show <dep> ignore conditions` | Show current ignore rules for dependency | Before removing ignore rules |
+| `@dependabot unignore <dep>` | Remove all ignore rules for dependency | Re-enable upgrades for a specific dependency |
+
+**Note:** Ignore commands create repository-level preferences. For team visibility, **also update `.github/dependabot.yml`** when adding permanent ignore rules.
 
 ### Example Usage
 
@@ -37,8 +59,12 @@ Dependabot responds to commands in PR comments. All commands are invoked via `@d
 gh pr comment <PR_NUMBER> --body "@dependabot rebase"
 ```
 
-**Merge a Dependabot PR (squash):**
+**Merge a Dependabot PR (preferred: use GitHub native merge):**
 ```bash
+# Preferred: GitHub native merge with auto-merge when checks pass
+gh pr merge <PR_NUMBER> --squash --auto
+
+# Alternative: delegate to Dependabot
 gh pr comment <PR_NUMBER> --body "@dependabot squash and merge"
 ```
 
@@ -87,6 +113,7 @@ Snyk creates PRs to fix security vulnerabilities. These PRs are created by the S
    - Check the Snyk PR description for CVE details
    - Review the severity (critical, high, medium, low)
    - Check if the fix is a direct or transitive dependency upgrade
+   - **Check Java 11 compatibility** (see section below)
 
 2. **Test the fix:**
    - Snyk PRs trigger the same CI checks as any PR
@@ -94,7 +121,8 @@ Snyk creates PRs to fix security vulnerabilities. These PRs are created by the S
    - Run local tests if needed
 
 3. **Merge or close:**
-   - If tests pass: merge via GitHub UI or `gh pr merge`
+   - If tests pass and Java 11 compatible: `gh pr merge <PR_NUMBER> --squash`
+   - If Java 17+ required: close and document workaround (pin old version or accept vulnerability)
    - If tests fail: investigate failure (may need code changes)
    - If false positive: close and mark as ignored in Snyk UI
 
@@ -102,7 +130,7 @@ Snyk creates PRs to fix security vulnerabilities. These PRs are created by the S
 
 Snyk bot does **not** respond to comments like Dependabot. To manage Snyk PRs:
 
-**Merge:**
+**Merge (preferred):**
 ```bash
 gh pr merge <PR_NUMBER> --squash
 ```
@@ -112,36 +140,36 @@ gh pr merge <PR_NUMBER> --squash
 gh pr close <PR_NUMBER>
 ```
 
-**Rebase manually (if needed):**
-```bash
-gh pr comment <PR_NUMBER> --body "Rebasing onto latest master"
-git fetch origin pull/<PR_NUMBER>/head:snyk-fix
-git checkout snyk-fix
-git pull --rebase origin master
-git push --force-with-lease origin snyk-fix:snyk/<branch-name>
-```
+**Rebase:**
+
+Snyk PRs **cannot** be safely rebased via git commands because:
+- Snyk bot owns the branch on the Snyk fork
+- Force pushing to bot-owned branches can cause sync conflicts
+- The PR cannot be updated from external forks without special permissions
+
+**Safe alternatives:**
+1. Use GitHub UI "Update branch" button (if available)
+2. Close the PR and wait for Snyk to create a new one
+3. Ask Snyk to recreate via Snyk UI: Project Settings → Integrations → GitHub → Re-test
 
 ## Dependabot Configuration
 
-Dependabot is configured in `.github/dependabot.yml`. Key settings:
+Dependabot is configured in `.github/dependabot.yml`. **Always check that file for the complete, authoritative configuration.**
 
-```yaml
-version: 2
-updates:
-  - package-ecosystem: "maven"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    open-pull-request-limit: 10
-    reviewers:
-      - "jamesdbloom"
-    ignore:
-      # Java 17+ dependencies blocked (Java 11 compatibility)
-      - dependency-name: "org.springframework:*"
-        versions: ["6.x"]
-      - dependency-name: "jakarta.*:*"
-        versions: ["9.x", "10.x"]
-```
+**Key ecosystems:**
+- **Maven** (`/`) - Java dependencies, weekly schedule Monday, 10 PR limit
+- **npm** (`/.opencode`) - OpenCode config dependencies, weekly schedule Monday, 5 PR limit  
+- **GitHub Actions** (`/`) - Workflow dependencies, weekly schedule Monday, 5 PR limit
+
+**Java 11 compatibility blocks:**
+
+The configuration blocks major version upgrades for dependencies requiring Java 17+ or Jakarta namespace migration using `update-types: ["version-update:semver-major"]`. See the `ignore` section in `.github/dependabot.yml` for the complete list, which includes:
+
+- **Spring Framework/Boot** - Blocks 6.x+ (requires Java 17)
+- **Tomcat, Jetty** - Blocks 10.x+ (requires Java 17 or Jakarta namespace)
+- **Servlet** - Blocks major versions (Jakarta `javax.*` → `jakarta.*` migration)
+- **Prometheus** - Blocks major versions (API redesign from `simpleclient` to `prometheus-metrics`)
+- **json-schema-validator, Checkstyle, json-unit, json-path** - Blocks major versions (API breaks)
 
 ## Common Scenarios
 
@@ -174,18 +202,24 @@ gh pr comment <PR_NUMBER> --body "@dependabot rebase"
 
 **Problem:** Many Dependabot PRs have passed checks and are ready to merge.
 
-**Solution:**
+**Solution (SAFE - requires checks and confirmation):**
 ```bash
-# List all open Dependabot PRs
-gh pr list --author app/dependabot --state open --json number,title
+# List all open Dependabot PRs with passing checks
+gh pr list --author app/dependabot --state open --json number,title,statusCheckRollup \
+  --jq '.[] | select(.statusCheckRollup | all(.conclusion == "SUCCESS" or .conclusion == null)) | {number: .number, title: .title}'
 
-# Merge each passing PR
-for pr in $(gh pr list --author app/dependabot --state open --json number --jq '.[].number'); do
-  gh pr comment $pr --body "@dependabot squash and merge"
-done
+# Review the list, then merge each individually:
+gh pr merge <PR_NUMBER> --squash --auto
+
+# Alternative: ask Dependabot to merge (after verifying checks)
+gh pr comment <PR_NUMBER> --body "@dependabot squash and merge"
 ```
 
-**Note:** Only do this if you've verified all checks are passing and upgrades are safe.
+**WARNING:** Do NOT use a blind loop. Always verify:
+- All checks are passing
+- Java 11 compatibility
+- No breaking changes
+- PR scope is reasonable
 
 ### Scenario 4: Dependabot PR Has Merge Conflicts
 
@@ -197,7 +231,7 @@ done
 gh pr comment <PR_NUMBER> --body "@dependabot recreate"
 ```
 
-If recreate fails, you may need to manually resolve conflicts or close the PR.
+If recreate fails, close the PR and wait for Dependabot to create a new one.
 
 ### Scenario 5: Block a Major Version Upgrade
 
@@ -205,36 +239,43 @@ If recreate fails, you may need to manually resolve conflicts or close the PR.
 
 **Solution:**
 ```bash
+# Ignore this major version
 gh pr comment <PR_NUMBER> --body "@dependabot ignore this major version"
 ```
 
-This tells Dependabot to skip this major version but continue proposing minor/patch updates.
+Then **update `.github/dependabot.yml`** for team visibility:
+```yaml
+ignore:
+  - dependency-name: "org.springframework:*"
+    update-types: ["version-update:semver-major"]
+```
 
 ### Scenario 6: Snyk PR Fixes Critical CVE
 
 **Problem:** Snyk creates PR to fix CVE-2024-12345 (critical severity).
 
 **Solution:**
-1. Review the CVE and verify severity
-2. Check if tests pass
-3. Merge immediately if safe:
+1. **Check Java 11 compatibility first**
+2. Review the CVE and verify severity
+3. Check if tests pass
+4. Merge immediately if safe:
    ```bash
    gh pr merge <PR_NUMBER> --squash --auto
    ```
-4. If tests fail, investigate and fix before merging
+5. If tests fail or Java 17+ required, investigate before merging
 
 ## Java 11 Compatibility Requirements
 
-MockServer targets Java 11 as the minimum supported version. When reviewing Dependabot PRs, **always check for Java 17+ dependencies:**
+MockServer targets Java 11 as the minimum supported version. When reviewing Dependabot PRs, **always check for Java 17+ dependencies.**
 
-### Blocked Upgrades (Java 17+ required)
+See `../../../docs/operations/dependencies.md` for the complete list of version ceilings.
 
-| Dependency | Max Version (Java 11) | Blocked Version | Reason |
-|------------|----------------------|-----------------|---------|
-| `org.springframework:*` | 5.x | 6.x+ | Requires Java 17 |
-| `jakarta.*:*` | 8.x | 9.x+ | Requires Java 17 |
-| `org.eclipse.jetty:*` | 9.x | 10.x+, 12.x+ | Requires Java 17 |
-| `org.apache.tomcat:*` | 9.x | 10.x+ | Requires Java 17 |
+### Quick Check: Is This PR Java 11 Compatible?
+
+```bash
+# Check the PR diff for blocked dependencies
+gh pr diff <PR_NUMBER> | grep -E "(springframework|jakarta|jetty|tomcat\.embed|prometheus|json-schema-validator|checkstyle|json-unit|jsonpath)"
+```
 
 ### How to Handle Java 17+ PRs
 
@@ -250,14 +291,12 @@ If Dependabot proposes a Java 17+ dependency:
    gh pr comment <PR_NUMBER> --body "@dependabot ignore this major version"
    ```
 
-3. **Update `.github/dependabot.yml` if needed:**
+3. **Update `.github/dependabot.yml`:**
    ```yaml
    ignore:
-     - dependency-name: "org.springframework:*"
-       versions: ["6.x", "7.x"]
+     - dependency-name: "<dependency-pattern>"
+       update-types: ["version-update:semver-major"]
    ```
-
-See `docs/operations/dependencies.md` for the full list of Java 11 compatibility constraints.
 
 ## Troubleshooting
 
@@ -265,31 +304,29 @@ See `docs/operations/dependencies.md` for the full list of Java 11 compatibility
 
 **Symptoms:** Comment posted but Dependabot doesn't respond.
 
-**Causes:**
-- Typo in command (must be exact: `@dependabot rebase`, not `@dependabot please rebase`)
-- Command not supported for this PR type (e.g., non-Dependabot PR)
-- Dependabot bot disabled for repository
+**Causes & Solutions:**
+- **Typo in command** - Must be exact: `@dependabot rebase`, not `@dependabot please rebase`
+- **Delayed processing** - Wait 2-5 minutes; check for Dependabot's 👍 reaction
+- **Wrong PR type** - Verify PR author is `app/dependabot`
+- **Dependabot disabled** - Check GitHub repository settings → Security → Dependabot
 
-**Solution:**
-- Check command syntax (case-sensitive, exact match)
-- Verify PR author is `app/dependabot`
-- Check GitHub repository settings → Dependabot
+**Debugging:**
+1. Check for Dependabot's thumbs-up reaction on your comment
+2. Look for Dependabot's response comment (may take minutes)
+3. Check the PR's "Dependabot commands and options" section
+4. Verify the command is supported for this PR type (single-dependency vs grouped update)
 
 ### Dependabot Rebase Creates Conflicts
 
 **Symptoms:** Dependabot comments "I couldn't rebase due to conflicts."
 
 **Solution:**
-1. Try `@dependabot recreate` instead (creates fresh PR)
-2. If recreate fails, manually rebase:
-   ```bash
-   gh pr checkout <PR_NUMBER>
-   git pull --rebase origin master
-   # Resolve conflicts
-   git add .
-   git rebase --continue
-   git push --force-with-lease
-   ```
+```bash
+# Try recreate instead (creates fresh PR from latest base)
+gh pr comment <PR_NUMBER> --body "@dependabot recreate"
+```
+
+If recreate also fails, close the PR and wait for Dependabot to create a new one on its next run.
 
 ### Snyk PR Tests Fail After Upgrade
 
@@ -298,23 +335,29 @@ See `docs/operations/dependencies.md` for the full list of Java 11 compatibility
 **Causes:**
 - Breaking change in upgraded dependency
 - Transitive dependency incompatibility
+- Java 17+ requirement
 - Test needs updating for new API
 
 **Solution:**
-1. Review the Snyk PR diff to see what changed
+1. Review the Snyk PR diff:
+   ```bash
+   gh pr diff <PR_NUMBER>
+   ```
 2. Check release notes for breaking changes
-3. Run tests locally to debug:
+3. Check Java compatibility (see section above)
+4. Run tests locally to debug:
    ```bash
    gh pr checkout <PR_NUMBER>
    ./mvnw clean test
    ```
-4. Either:
+5. Either:
    - Fix the code to work with the new version, OR
-   - Close the Snyk PR and manually pin the old version
+   - Close the Snyk PR and document the decision (pin old version, accept risk, etc.)
 
 ## Reference
 
 - [Dependabot commands documentation](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/managing-pull-requests-for-dependency-updates#managing-dependabot-pull-requests-with-comment-commands)
 - [Snyk GitHub integration](https://docs.snyk.io/integrate-with-snyk/git-repositories-scms-integrations-with-snyk/snyk-github-integration)
-- [MockServer Java 11 compatibility policy](../../AGENTS.md#java-compatibility-policy)
-- [Dependency management guide](../../docs/operations/dependencies.md)
+- [MockServer Java 11 compatibility policy](../../../AGENTS.md#java-compatibility-policy)
+- [Dependency management guide](../../../docs/operations/dependencies.md)
+- [Dependabot configuration file](../../../.github/dependabot.yml)
