@@ -3,6 +3,7 @@ package org.mockserver.model;
 import junit.framework.TestCase;
 import org.junit.Test;
 
+import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -381,20 +382,74 @@ public class HttpRequestTest {
 
     @Test
     public void parsesIpv6AndIpv4HostPort() {
+        // IPv6 with port - brackets should be stripped
         String[] hostParts = HttpRequest.splitHostPort("[::1]:32890");
-        assertEquals("[::1]", hostParts[0]);
+        assertEquals("::1", hostParts[0]);
         assertEquals("32890", hostParts[1]);
+        
+        // Hostname with port
         hostParts = HttpRequest.splitHostPort("localhost:32890");
         assertEquals("localhost", hostParts[0]);
         assertEquals("32890", hostParts[1]);
+        
+        // IPv4 with port
         hostParts = HttpRequest.splitHostPort("127.0.0.1:32890");
         assertEquals("127.0.0.1", hostParts[0]);
         assertEquals("32890", hostParts[1]);
+        
+        // IPv4 without port
         hostParts = HttpRequest.splitHostPort("127.0.0.1");
         assertEquals("127.0.0.1", hostParts[0]);
         assertEquals(1, hostParts.length);
+        
+        // IPv6 without port - brackets should be stripped
         hostParts = HttpRequest.splitHostPort("[::1]");
-        assertEquals("[::1]", hostParts[0]);
+        assertEquals("::1", hostParts[0]);
         assertEquals(1, hostParts.length);
+        
+        // Full IPv6 address with port
+        hostParts = HttpRequest.splitHostPort("[2001:db8::1]:8080");
+        assertEquals("2001:db8::1", hostParts[0]);
+        assertEquals("8080", hostParts[1]);
+    }
+
+    @Test
+    public void shouldParseIpv6SocketAddressFromHostHeader() {
+        // Given
+        HttpRequest request = request()
+            .withHeader("Host", "[::1]:8080");
+        
+        // When
+        InetSocketAddress socketAddress = request.socketAddressFromHostHeader();
+        
+        // Then
+        assertEquals("0:0:0:0:0:0:0:1", socketAddress.getAddress().getHostAddress());
+        assertEquals(8080, socketAddress.getPort());
+    }
+
+    @Test
+    public void shouldParseIpv6SocketAddressWithoutPort() {
+        // Given
+        HttpRequest request = request()
+            .withSecure(true)
+            .withHeader("Host", "[2001:db8::1]");
+        
+        // When
+        InetSocketAddress socketAddress = request.socketAddressFromHostHeader();
+        
+        // Then
+        assertEquals("2001:db8:0:0:0:0:0:1", socketAddress.getAddress().getHostAddress());
+        assertEquals(443, socketAddress.getPort());  // Default HTTPS port
+    }
+
+    @Test
+    public void shouldParseIpv6WithSocketAddress() {
+        // Given - When
+        HttpRequest request = request()
+            .withSocketAddress(false, "[::1]:9090", null);
+        
+        // Then
+        assertEquals("::1", request.getSocketAddress().getHost());
+        assertEquals(Integer.valueOf(9090), request.getSocketAddress().getPort());
     }
 }

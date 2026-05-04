@@ -215,12 +215,13 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     public static String[] splitHostPort(String hostPort) {
         boolean isIpV6 = hostPort.matches("\\[(.*)].*");
         if (isIpV6) {
-            int endOfHost = hostPort.indexOf(']') + 1;
+            int endOfHost = hostPort.indexOf(']');
+            String host = hostPort.substring(1, endOfHost);  // Strip [ and ]
             int startOfPort = hostPort.indexOf(':', endOfHost);
             if (startOfPort > 0) {
-                return new String[] { hostPort.substring(0, endOfHost), hostPort.substring(startOfPort + 1) };
+                return new String[] { host, hostPort.substring(startOfPort + 1) };
             } else {
-                return new String[] {hostPort};
+                return new String[] { host };
             }
         } else {
             return hostPort.split(":");

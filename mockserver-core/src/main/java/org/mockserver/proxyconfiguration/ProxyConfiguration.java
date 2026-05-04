@@ -68,9 +68,9 @@ public class ProxyConfiguration extends ObjectWithJsonToString {
     }
 
     public static ProxyConfiguration proxyConfiguration(Type type, String address, String username, String password) {
-        String[] addressParts = address.split(":");
+        String[] addressParts = org.mockserver.model.HttpRequest.splitHostPort(address);
         if (addressParts.length != 2) {
-            throw new IllegalArgumentException("Proxy address must be in the format <host>:<ip>, for example 127.0.0.1:9090 or localhost:9090");
+            throw new IllegalArgumentException("Proxy address must be in the format <host>:<port>, for example 127.0.0.1:9090, localhost:9090, or [::1]:9090");
         } else {
             try {
                 return proxyConfiguration(type, new InetSocketAddress(addressParts[0], Integer.parseInt(addressParts[1])), username, password);
