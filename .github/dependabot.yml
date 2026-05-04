@@ -19,6 +19,12 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "org.eclipse.jetty:*"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "io.prometheus:*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "com.networknt:json-schema-validator"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "com.puppycrawl.tools:checkstyle"
+        update-types: ["version-update:semver-major"]
       # Block servlet namespace migration
       - dependency-name: "javax.servlet:*"
         update-types: ["version-update:semver-major"]

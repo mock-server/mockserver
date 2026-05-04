@@ -347,14 +347,19 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                         return false;
                     }
 
-                    boolean combinedResultAreTrue = combinedResultAreTrue(matchDifferenceCount.getFailures() == 0, request.isNot(), this.httpRequest.isNot(), not);
+                    boolean combinedResultAreTrue = applyNotOperators(
+                        matchDifferenceCount.getFailures() == 0,
+                        request.isNot(),
+                        this.httpRequest.isNot(),
+                        not
+                    );
                     if (!controlPlaneMatcher && combinedResultAreTrue) {
                         // ensure actions have path parameters available to them
                         request.withPathParameters(pathParameters);
                     }
                     return combinedResultAreTrue;
                 } else {
-                    return combinedResultAreTrue(true, this.httpRequest.isNot(), not);
+                    return applyNotOperators(true, false, this.httpRequest.isNot(), not);
                 }
             }
         }
@@ -394,20 +399,42 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
             matchDifferenceCount.incrementFailures();
         }
         if (matcher != null && !matcher.isBlank() && configuration.matchersFailFast()) {
-            return combinedResultAreTrue(matchDifferenceCount.getFailures() != 0, matchDifferenceCount.getHttpRequest().isNot(), this.httpRequest.isNot(), not);
+            return applyNotOperators(
+                matchDifferenceCount.getFailures() != 0,
+                matchDifferenceCount.getHttpRequest().isNot(),
+                this.httpRequest.isNot(),
+                not
+            );
         }
         return false;
     }
 
     /**
-     * true for odd number of false inputs
+     * Apply NOT operators sequentially to the base match result.
+     * Each NOT flag independently negates the result.
+     * 
+     * @param baseMatches the base matching result (before any NOT operations)
+     * @param requestNot whether the request has NOT flag
+     * @param expectationNot whether the expectation has NOT flag
+     * @param bodyNot whether the body matcher has NOT flag
+     * @return the final result after applying all NOT operations
      */
-    private static boolean combinedResultAreTrue(boolean... inputs) {
-        int count = 0;
-        for (boolean input : inputs) {
-            count += (input ? 1 : 0);
+    private static boolean applyNotOperators(boolean baseMatches, boolean requestNot, boolean expectationNot, boolean bodyNot) {
+        boolean result = baseMatches;
+        
+        // Apply each NOT flag sequentially
+        // Order matters for clarity, but mathematically NOT is commutative
+        if (bodyNot) {
+            result = !result;
         }
-        return count % 2 != 0;
+        if (expectationNot) {
+            result = !result;
+        }
+        if (requestNot) {
+            result = !result;
+        }
+        
+        return result;
     }
 
     private boolean bodyMatches(MatchDifference context, HttpRequest request) {
