@@ -241,7 +241,7 @@ Understanding how Buildkite schedules builds is critical for diagnosing "stuck" 
 - **ASG max_size** limits the total number of agents. The Lambda scaler cannot add instances beyond this limit. Check the current max with:
   ```bash
   DYLD_LIBRARY_PATH=/opt/homebrew/opt/expat/lib aws autoscaling describe-auto-scaling-groups \
-    --auto-scaling-group-names buildkite-mockserver-e40b8a59-asg \
+    --auto-scaling-group-names "$(cd terraform/buildkite-agents && terraform output -raw auto_scaling_group_name 2>/dev/null || aws autoscaling describe-auto-scaling-groups --profile mockserver-build --region eu-west-2 --query 'AutoScalingGroups[?contains(Tags[?Key==`Name`].Value, `buildkite-mockserver`)].AutoScalingGroupName' --output text | head -1)" \
     --region eu-west-2 --profile mockserver-build \
     --query 'AutoScalingGroups[0].{MinSize:MinSize,MaxSize:MaxSize,DesiredCapacity:DesiredCapacity}'
   ```

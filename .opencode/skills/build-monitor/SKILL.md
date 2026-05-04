@@ -68,7 +68,7 @@ If any check fails, **stop and report** — do not start monitoring.
 | `interval` | 10 minutes | Time between checks |
 | `duration` | 90 minutes | Total monitoring duration |
 | `branch` | `master` | Branch to monitor (ignore other branches) |
-| `auto_fix` | `true` | Automatically fix, review, commit, and push |
+| `auto_fix` | **user approval required** | **CRITICAL:** Automatically fix, review, commit, and push — **NEVER default to true** — require explicit user approval before any commit/push |
 
 Calculate total checks: `duration / interval` (e.g., 90/10 = 9 checks).
 
@@ -202,7 +202,17 @@ The reviewer will return PASS or NEEDS_WORK. If NEEDS_WORK, address the feedback
 
 #### 6. Commit and Push
 
-Follow the commit workflow:
+**CRITICAL SAFETY RULE:** NEVER commit or push without explicit user approval. This skill can investigate and suggest fixes, but commits and pushes MUST be explicitly requested by the user.
+
+**Before proceeding, ASK THE USER:**
+"I've prepared a fix for build #{number}. The changes are:
+```
+{git diff --stat output}
+```
+
+May I commit and push this fix to master? (yes/no)"
+
+**If yes, follow the commit workflow:**
 
 **a. Classify changed files:**
 

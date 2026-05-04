@@ -75,9 +75,23 @@ then ask about what the expectation should DO, not how expectations work.
 Start from the user's initial input and ask questions to understand the
 problem, NOT the solution.
 
-**IMPORTANT**: Use the `question` tool for every question in this
-phase. Do NOT list questions as text output — use the tool so the user gets
-a structured, interactive experience with selectable options.
+**NOTE**: The `question` tool is referenced in this skill but is not currently available in all environments. If the tool is unavailable, ask questions as numbered lists and request the user to answer each question. Example:
+
+```
+I need to understand the problem better. Please answer these questions:
+
+1. What is the pain point? (Select one)
+   a) Feature is missing
+   b) Feature is slow
+   c) Feature is broken
+   d) Other (please describe)
+
+2. Who is affected? (Select all that apply)
+   a) End users
+   b) Developers
+   c) Operators/SRE
+   d) Other (please describe)
+```
 
 Ask one round at a time (1-2 questions per call). Wait
 for answers before asking the next round. Frame options based on what you
@@ -125,7 +139,7 @@ Only ask this round if the answers aren't already clear from rounds 1-4.
 
 ### Question Rules
 
-1. **Always use the `question` tool.** Never dump a list of questions as plain text.
+1. **Use structured questions.** If the `question` tool is available, use it. Otherwise, present numbered questions with lettered options for the user to select.
 2. **Ask, don't assume.** If the user says "we need caching", ask "what problem does the caching solve?"
 3. **Challenge solution-shaped inputs.** Redirect to the problem first. "That's one way to approach it — let's first make sure we agree on the problem."
 4. **Accept uncertainty.** "I don't know yet" is better than a guess.
@@ -151,7 +165,7 @@ The statement must be:
 - **Testable**: Someone could determine whether the problem is solved
 - **Bounded**: Makes clear what is and isn't included
 
-Present the problem statement, then use the `question` tool to gate:
+Present the problem statement, then ask for confirmation (using the `question` tool if available, or numbered text questions otherwise):
 - Option 1: "Agreed — proceed to specification"
 - Option 2: "Needs changes — let me clarify"
 

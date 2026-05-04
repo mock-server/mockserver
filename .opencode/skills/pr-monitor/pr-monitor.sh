@@ -102,9 +102,7 @@ check_and_merge_prs() {
     
     for pr_number in $PRS_TO_MONITOR; do
         local pr_data
-        pr_data=$(gh pr view "$pr_number" --json state,mergedAt,statusCheckRollup,title 2>&1)
-        
-        if [ $? -ne 0 ]; then
+        if ! pr_data=$(gh pr view "$pr_number" --json state,mergedAt,statusCheckRollup,title,author 2>&1); then
             echo "  PR #$pr_number: ⚠️  ERROR - Cannot fetch: $pr_data"
             all_done=false
             continue
@@ -113,6 +111,16 @@ check_and_merge_prs() {
         local state=$(echo "$pr_data" | jq -r '.state')
         local merged_at=$(echo "$pr_data" | jq -r '.mergedAt')
         local title=$(echo "$pr_data" | jq -r '.title')
+        local author_login=$(echo "$pr_data" | jq -r '.author.login')
+        
+        # SAFETY CHECK: Only auto-merge bot PRs (Dependabot/Snyk)
+        if [[ "$author_login" != "app/dependabot" && "$author_login" != "snyk-bot" ]]; then
+            echo "  PR #$pr_number: ⚠️  SKIPPED - Not a bot PR (author: $author_login)"
+            echo "             $title"
+            echo "             Manual PRs are not auto-merged for safety"
+            prs_closed=$((prs_closed + 1))
+            continue
+        fi
         
         if [ "$state" = "MERGED" ] || [ "$merged_at" != "null" ]; then
             echo "  PR #$pr_number: ✅ MERGED - $title"

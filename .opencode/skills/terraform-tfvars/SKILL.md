@@ -83,8 +83,14 @@ cp terraform/buildkite-agents/terraform.tfvars.example \
 ```
 
 Then set `buildkite_agent_token` in `terraform/buildkite-agents/terraform.tfvars`.
-Keep the other values from the template unless you intentionally want to override
-capacity or instance mix.
+
+**CRITICAL COST REQUIREMENT:** Verify `min_size = 0` (MUST always be zero):
+```bash
+grep min_size terraform/buildkite-agents/terraform.tfvars
+# Should show: min_size = 0
+```
+
+If `min_size` is not `0`, agents run 24/7 incurring unnecessary cost. The Lambda autoscaler handles all scaling based on queue depth — pre-created agents are never needed.
 
 Minimal required change:
 
@@ -102,7 +108,7 @@ buildkite_agent_token = "<TOKEN_VALUE>"
 | `buildkite_agent_token` | `terraform.tfvars` | Buildkite agent registration token (sensitive) |
 | `region` | `variables.tf` / `terraform.tfvars` | AWS region for the agent stack |
 | `instance_types` | `variables.tf` / `terraform.tfvars` | EC2 instance types (comma-separated) |
-| `min_size` | `variables.tf` / `terraform.tfvars` | Minimum ASG size (`0` allows scale-to-zero) |
+| `min_size` | `variables.tf` / `terraform.tfvars` | **CRITICAL: MUST be `0`** for scale-to-zero cost control — NEVER set to non-zero |
 | `max_size` | `variables.tf` / `terraform.tfvars` | Maximum ASG size |
 | `on_demand_percentage` | `variables.tf` / `terraform.tfvars` | Spot/On-Demand mix |
 

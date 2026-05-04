@@ -86,7 +86,7 @@ aws secretsmanager put-secret-value \
 
 ## Step 5: Verify Storage
 
-Confirm the secret was stored correctly:
+Confirm the secret was stored correctly by checking the JSON structure (not the token value):
 
 ```bash
 aws secretsmanager get-secret-value \
@@ -94,10 +94,10 @@ aws secretsmanager get-secret-value \
     --profile mockserver-build \
     --region eu-west-2 \
     --query 'SecretString' \
-    --output text | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'Username: {d[\"username\"]}, Token: {d[\"token\"][:10]}...')"
+    --output text | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'✓ Secret contains username: {\"username\" in d}'); print(f'✓ Secret contains token: {\"token\" in d}'); print(f'✓ Username: {d.get(\"username\", \"MISSING\")}'); print(f'✓ Token length: {len(d.get(\"token\", \"\"))} chars')"
 ```
 
-This should print the username and first 10 characters of the token.
+**SECURITY:** Never print any part of the token value (not even the first N characters). Verify by checking the JSON structure and token length only.
 
 ## Troubleshooting
 

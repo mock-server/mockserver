@@ -53,7 +53,7 @@ This MUST include `authorityKeyIdentifier` because the CA and leaf share the
 same subject DN -- without AKI, Java's trust manager treats the leaf as self-signed.
 
 ```bash
-cat > /tmp/leaf-ext.cnf << 'EOF'
+cat > .tmp/leaf-ext.cnf << 'EOF'
 [v3_leaf]
 basicConstraints = critical,CA:FALSE
 keyUsage = critical,digitalSignature,keyEncipherment
@@ -74,17 +74,17 @@ cd "$CERT_DIR"
 
 openssl req -new -newkey rsa:2048 -nodes -keyout leaf-key.pem \
   -subj "/C=UK/L=London/O=MockServer/CN=www.mockserver.com" \
-  -out /tmp/leaf.csr
+  -out .tmp/leaf.csr
 
-openssl x509 -req -in /tmp/leaf.csr \
+openssl x509 -req -in .tmp/leaf.csr \
   -CA ca.pem -CAkey ca-key.pem -CAcreateserial \
   -out leaf-cert.pem -days 1825 \
-  -extfile /tmp/leaf-ext.cnf -extensions v3_leaf
+  -extfile .tmp/leaf-ext.cnf -extensions v3_leaf
 
 openssl pkcs8 -topk8 -inform PEM -in leaf-key.pem -out leaf-key-pkcs8.pem -nocrypt
 cat leaf-cert.pem > leaf-cert-chain.pem
 cat ca.pem >> leaf-cert-chain.pem
-rm -f ca.srl /tmp/leaf.csr
+rm -f ca.srl .tmp/leaf.csr
 ```
 
 ### EC leaf (`tls/ec/` directory)
@@ -95,17 +95,17 @@ cd "$CERT_DIR"
 
 openssl req -new -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -nodes -keyout leaf-key.pem \
   -subj "/C=UK/L=London/O=MockServer/CN=www.mockserver.com" \
-  -out /tmp/leaf-ec.csr
+  -out .tmp/leaf-ec.csr
 
-openssl x509 -req -in /tmp/leaf-ec.csr \
+openssl x509 -req -in .tmp/leaf-ec.csr \
   -CA ca.pem -CAkey ca-key.pem -CAcreateserial \
   -out leaf-cert.pem -days 1825 \
-  -extfile /tmp/leaf-ext.cnf -extensions v3_leaf
+  -extfile .tmp/leaf-ext.cnf -extensions v3_leaf
 
 openssl pkcs8 -topk8 -inform PEM -in leaf-key.pem -out leaf-key-pkcs8.pem -nocrypt
 cat leaf-cert.pem > leaf-cert-chain.pem
 cat ca.pem >> leaf-cert-chain.pem
-rm -f ca.srl /tmp/leaf-ec.csr
+rm -f ca.srl .tmp/leaf-ec.csr
 ```
 
 ### RSA leaf (`tls/separateca/` directory)
@@ -116,17 +116,17 @@ cd "$CERT_DIR"
 
 openssl req -new -newkey rsa:2048 -nodes -keyout leaf-key.pem \
   -subj "/C=UK/L=London/O=MockServer/CN=www.mockserver.com" \
-  -out /tmp/leaf-sep.csr
+  -out .tmp/leaf-sep.csr
 
-openssl x509 -req -in /tmp/leaf-sep.csr \
+openssl x509 -req -in .tmp/leaf-sep.csr \
   -CA ca.pem -CAkey ca-key.pem -CAcreateserial \
   -out leaf-cert.pem -days 1825 \
-  -extfile /tmp/leaf-ext.cnf -extensions v3_leaf
+  -extfile .tmp/leaf-ext.cnf -extensions v3_leaf
 
 openssl pkcs8 -topk8 -inform PEM -in leaf-key.pem -out leaf-key-pkcs8.pem -nocrypt
 cat leaf-cert.pem > leaf-cert-chain.pem
 cat ca.pem >> leaf-cert-chain.pem
-rm -f ca.srl /tmp/leaf-sep.csr
+rm -f ca.srl .tmp/leaf-sep.csr
 ```
 
 ## Step 4: Verify
@@ -151,7 +151,7 @@ Then run the affected tests:
 ## Step 5: Clean Up
 
 ```bash
-rm -f /tmp/leaf-ext.cnf
+rm -f .tmp/leaf-ext.cnf
 ```
 
 ## Important: Do NOT Use cfssl for Leaf Certs
