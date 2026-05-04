@@ -91,6 +91,15 @@ Build agents run on EC2 instances in an AutoScaling Group, managed by a Lambda-b
 
 The scaler runs every minute. Treat values in Terraform and live AWS state as authoritative; avoid hard-coding instance types or capacity numbers in prompts.
 
+#### Critical Cost Requirement: Scale to Zero
+
+**IMPORTANT**: `min_size` MUST always be `0` in `terraform/buildkite-agents/terraform.tfvars`. This ensures:
+- **Zero idle cost** — no agents run when builds are not queued
+- Agents launch only when builds are queued (Lambda scaler sets desired capacity based on queue depth)
+- Agents self-terminate when idle (ASG scales back to 0)
+
+**NEVER** change `min_size` to a non-zero value. Pre-created agents are expensive and unnecessary. The Lambda autoscaler handles all scaling based on real-time demand.
+
 ## Git Policy
 
 - NEVER commit or push without explicit user request
