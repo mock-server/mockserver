@@ -29,7 +29,7 @@
                 <!-- Conflicting versions in swagger-parser and jersey-media-json-jackson -->
                 <groupId>jakarta.activation</groupId>
                 <artifactId>jakarta.activation-api</artifactId>
-                <version>2.1.3</version>
+                <version>2.1.4</version>
             </dependency>
             <dependency>
                 <!-- Conflicting versions in swagger-parser and jersey-media-json-jackson -->
@@ -53,7 +53,7 @@
                 <!-- Conflicting versions in swagger-parser and spring-boot-starter-webflux -->
                 <groupId>org.yaml</groupId>
                 <artifactId>snakeyaml</artifactId>
-                <version>2.4</version>
+                <version>2.6</version>
             </dependency>
             <dependency>
                 <!-- Conflicting versions in spring-boot-starter-webflux and spring-context / spring-webmvc -->
@@ -77,7 +77,7 @@
                 <!-- Conflicting versions in okhttp and okio (both from okhttp) -->
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-stdlib-common</artifactId>
-                <version>1.9.25</version>
+                <version>2.0.21</version>
             </dependency>
             <dependency>
                 <!-- Conflicting versions in okhttp and okio (both from okhttp) -->
