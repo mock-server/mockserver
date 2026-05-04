@@ -1705,7 +1705,7 @@ public class ConfigurationProperties {
         InetSocketAddress inetSocketAddress = null;
         String proxy = readPropertyHierarchically(PROPERTIES, key, environmentVariableKey, "");
         if (isNotBlank(proxy)) {
-            String[] proxyParts = proxy.split(":");
+            String[] proxyParts = org.mockserver.model.HttpRequest.splitHostPort(proxy);
             if (proxyParts.length > 1) {
                 try {
                     inetSocketAddress = new InetSocketAddress(proxyParts[0], Integer.parseInt(proxyParts[1]));
