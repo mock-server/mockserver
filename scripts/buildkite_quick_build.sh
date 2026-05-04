@@ -2,9 +2,26 @@
 
 set -euo pipefail
 
+MVN_PID=""
+
 cleanup() {
-    echo "Build cancelled or interrupted (caught signal)"
-    exit 143
+    if [ -n "$MVN_PID" ] && kill -0 "$MVN_PID" 2>/dev/null; then
+        echo "Build cancelled or interrupted - forwarding SIGTERM to Maven (PID $MVN_PID)"
+        kill -TERM "$MVN_PID" 2>/dev/null || true
+        
+        echo "Waiting up to 30s for Maven to flush Surefire reports gracefully..."
+        local i=0
+        while [ $i -lt 30 ] && kill -0 "$MVN_PID" 2>/dev/null; do
+            sleep 1
+            i=$((i + 1))
+        done
+        
+        if kill -0 "$MVN_PID" 2>/dev/null; then
+            echo "Maven did not exit within 30s - sending SIGKILL"
+            kill -KILL "$MVN_PID" 2>/dev/null || true
+            wait "$MVN_PID" 2>/dev/null || true
+        fi
+    fi
 }
 
 trap cleanup SIGTERM SIGINT
@@ -26,7 +43,9 @@ else
 fi
 
 set +e
-./mvnw -T 1C clean install ${1:-} -Djava.security.egd=file:/dev/./urandom -Dmockserver.testOutput=quiet -DdisableXmlReport=false -DredirectTestOutputToFile=true -Dmockserver.testLogLevel=INFO
+./mvnw -T 1C clean install ${1:-} -Djava.security.egd=file:/dev/./urandom -Dmockserver.testOutput=quiet -DdisableXmlReport=false -DredirectTestOutputToFile=true -Dmockserver.testLogLevel=INFO &
+MVN_PID=$!
+wait $MVN_PID
 MVN_EXIT=$?
 set -e
 
