@@ -58,21 +58,36 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-    START([New Connection<br/>First bytes arrive]) --> SOCKS4{SOCKS4?<br/>byte 0 == 0x04}
-    SOCKS4 -->|Yes| EN_S4[enableSocks4<br/>Add SOCKS4 decoders]
-    SOCKS4 -->|No| SOCKS5{SOCKS5?<br/>byte 0 == 0x05}
-    SOCKS5 -->|Yes| EN_S5[enableSocks5<br/>Add SOCKS5 decoders]
-    SOCKS5 -->|No| TLS{TLS?<br/>SslHandler.isEncrypted}
-    TLS -->|Yes| EN_TLS[enableTls<br/>Add SniHandler]
-    TLS -->|No| H2{HTTP/2?<br/>ALPN negotiated h2}
-    H2 -->|Yes| SW_H2[switchToHttp2<br/>Add HTTP/2 pipeline]
-    H2 -->|No| HTTP{HTTP?<br/>GET/POST/PUT/...}
-    HTTP -->|Yes| SW_HTTP[switchToHttp<br/>Add HTTP/1.1 pipeline]
-    HTTP -->|No| PROXY{PROXIED_<br/>prefix?}
-    PROXY -->|Yes| SW_PROXY[switchToProxyConnected<br/>Internal relay setup]
-    PROXY -->|No| ASSUME{Config:<br/>assumeAllRequestsAreHttp?}
+    START(["New Connection
+First bytes arrive"]) --> SOCKS4{"SOCKS4?
+byte 0 == 0x04"}
+    SOCKS4 -->|Yes| EN_S4["enableSocks4
+Add SOCKS4 decoders"]
+    SOCKS4 -->|No| SOCKS5{"SOCKS5?
+byte 0 == 0x05"}
+    SOCKS5 -->|Yes| EN_S5["enableSocks5
+Add SOCKS5 decoders"]
+    SOCKS5 -->|No| TLS{"TLS?
+SslHandler.isEncrypted"}
+    TLS -->|Yes| EN_TLS["enableTls
+Add SniHandler"]
+    TLS -->|No| H2{"HTTP/2?
+ALPN negotiated h2"}
+    H2 -->|Yes| SW_H2["switchToHttp2
+Add HTTP/2 pipeline"]
+    H2 -->|No| HTTP{"HTTP?
+GET/POST/PUT/..."}
+    HTTP -->|Yes| SW_HTTP["switchToHttp
+Add HTTP/1.1 pipeline"]
+    HTTP -->|No| PROXY{"PROXIED_
+prefix?"}
+    PROXY -->|Yes| SW_PROXY["switchToProxyConnected
+Internal relay setup"]
+    PROXY -->|No| ASSUME{"Config:
+assumeAllRequestsAreHttp?"}
     ASSUME -->|Yes| SW_HTTP
-    ASSUME -->|No| SW_BIN[switchToBinaryRequestProxying<br/>Raw binary handler]
+    ASSUME -->|No| SW_BIN["switchToBinaryRequestProxying
+Raw binary handler"]
 
     EN_TLS -->|Re-fire decrypted bytes| START
     EN_S4 -->|Re-fire bytes| START
@@ -117,7 +132,8 @@ graph LR
 
 ```mermaid
 graph LR
-    SSL[SslHandler] --> H2C[HttpToHttp2ConnectionHandler<br/><i>with InboundHttp2ToHttpAdapter</i>]
+    SSL[SslHandler] --> H2C["HttpToHttp2ConnectionHandler
+with InboundHttp2ToHttpAdapter"]
     H2C --> F[CallbackWebSocketServerHandler]
     F --> G[DashboardWebSocketHandler]
     G --> H[MockServerHttpServerCodec]
@@ -131,7 +147,8 @@ HTTP/2 frames are converted to HTTP/1.1 objects via `InboundHttp2ToHttpAdapter`,
 ```mermaid
 graph LR
     SNI[SniHandler] -->|replaces self with| SSL[SslHandler]
-    SSL -->|decrypted bytes re-enter| PU[PortUnificationHandler<br/><i>detects inner protocol</i>]
+    SSL -->|decrypted bytes re-enter| PU["PortUnificationHandler
+detects inner protocol"]
 ```
 
 `SniHandler` (in `mockserver-core`) extends Netty's `AbstractSniHandler`. It extracts the hostname from the TLS ClientHello SNI extension, dynamically generates a certificate with that hostname as a Subject Alternative Name, and negotiates ALPN (HTTP/1.1 or HTTP/2).
@@ -159,8 +176,8 @@ When HTTP CONNECT or SOCKS tunneling is established, MockServer uses a **self-lo
 ```mermaid
 sequenceDiagram
     participant C as Client
-    participant H as HttpConnectHandler<br/>(or SocksConnectHandler)
-    participant MS as MockServer<br/>(loopback)
+    participant H as HttpConnectHandler / SocksConnectHandler
+    participant MS as MockServer (loopback)
     participant PU as PortUnificationHandler
 
     C->>H: CONNECT target.com:443
@@ -234,14 +251,17 @@ Once the relay is established, two handler pairs shuttle data:
 ```mermaid
 graph LR
     subgraph "Client-facing pipeline"
-        UPR[UpstreamProxyRelayHandler<br/><i>reads requests from client</i>]
+        UPR["UpstreamProxyRelayHandler
+reads requests from client"]
     end
 
     subgraph "MockServer-facing pipeline"
-        DPR[DownstreamProxyRelayHandler<br/><i>reads responses from MockServer</i>]
+        DPR["DownstreamProxyRelayHandler
+reads responses from MockServer"]
     end
 
-    UPR -->|writes requests to| MS[MockServer<br/>Internal Channel]
+    UPR -->|writes requests to| MS["MockServer
+Internal Channel"]
     MS -->|responses flow to| DPR
     DPR -->|writes responses to| CLIENT[Client Channel]
 ```

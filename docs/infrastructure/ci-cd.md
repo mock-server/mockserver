@@ -7,13 +7,17 @@ MockServer uses two CI/CD systems:
 ```mermaid
 graph LR
     subgraph "Buildkite"
-        BK[Primary CI<br/>Build & Test]
-        BK_MAVEN[Docker Push<br/>Maven CI Image]
-        BK_RELEASE[Docker Push<br/>Release Image]
+        BK["Primary CI
+Build & Test"]
+        BK_MAVEN["Docker Push
+Maven CI Image"]
+        BK_RELEASE["Docker Push
+Release Image"]
     end
 
     subgraph "GitHub Actions"
-        GA[CodeQL Analysis<br/>Security scanning]
+        GA["CodeQL Analysis
+Security scanning"]
     end
 
     BK -->|runs on| EC2[AWS EC2 Agents]
@@ -90,9 +94,12 @@ Builds and pushes `mockserver/mockserver:maven` — the Docker image used by the
 
 ```mermaid
 flowchart LR
-    TRIGGER[Manual trigger] --> LOGIN[Docker Hub login<br/>via Secrets Manager]
-    LOGIN --> BUILD[docker buildx build<br/>linux/amd64]
-    BUILD --> PUSH[Push to Docker Hub<br/>mockserver/mockserver:maven]
+    TRIGGER[Manual trigger] --> LOGIN["Docker Hub login
+via Secrets Manager"]
+    LOGIN --> BUILD["docker buildx build
+linux/amd64"]
+    BUILD --> PUSH["Push to Docker Hub
+mockserver/mockserver:maven"]
 ```
 
 Docker Hub credentials are fetched from AWS Secrets Manager (`mockserver-build/dockerhub`) by `.buildkite/scripts/docker-login.sh`.
@@ -113,9 +120,13 @@ Two Docker tags are pushed:
 
 ```mermaid
 flowchart LR
-    TRIGGER[Manual trigger<br/>RELEASE_TAG=mockserver-X.Y.Z] --> LOGIN[Docker Hub login<br/>via Secrets Manager]
-    LOGIN --> BUILD[docker buildx build<br/>linux/amd64 + linux/arm64]
-    BUILD --> PUSH["Push to Docker Hub<br/>:mockserver-X.Y.Z + :X.Y.Z"]
+    TRIGGER["Manual trigger
+RELEASE_TAG=mockserver-X.Y.Z"] --> LOGIN["Docker Hub login
+via Secrets Manager"]
+    LOGIN --> BUILD["docker buildx build
+linux/amd64 + linux/arm64"]
+    BUILD --> PUSH["Push to Docker Hub
+:mockserver-X.Y.Z + :X.Y.Z"]
 ```
 
 ### Build Docker Image

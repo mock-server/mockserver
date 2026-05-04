@@ -10,29 +10,40 @@ MockServer is a multi-module Maven project that provides an HTTP(S) mock server 
 graph TB
     subgraph "Client Layer"
         JC[mockserver-client-java]
-        NC[mockserver-client-node<br/><i>separate repo</i>]
+        NC["mockserver-client-node
+separate repo"]
     end
 
     subgraph "Server Layer"
-        MN[mockserver-netty<br/><i>Standalone server</i>]
-        MW[mockserver-war<br/><i>WAR deployment</i>]
-        MPW[mockserver-proxy-war<br/><i>WAR proxy</i>]
+        MN["mockserver-netty
+Standalone server"]
+        MW["mockserver-war
+WAR deployment"]
+        MPW["mockserver-proxy-war
+WAR proxy"]
     end
 
     subgraph "Integration Layer"
-        JR[mockserver-junit-rule<br/><i>JUnit 4</i>]
-        JJ[mockserver-junit-jupiter<br/><i>JUnit 5</i>]
-        STL[mockserver-spring-test-listener<br/><i>Spring</i>]
+        JR["mockserver-junit-rule
+JUnit 4"]
+        JJ["mockserver-junit-jupiter
+JUnit 5"]
+        STL["mockserver-spring-test-listener
+Spring"]
     end
 
     subgraph "Core Layer"
-        MC[mockserver-core<br/><i>Domain model, matching, TLS</i>]
+        MC["mockserver-core
+Domain model, matching, TLS"]
     end
 
     subgraph "Test Infrastructure"
-        MT[mockserver-testing<br/><i>Test utilities</i>]
-        MIT[mockserver-integration-testing<br/><i>Integration tests</i>]
-        ME[mockserver-examples<br/><i>Examples</i>]
+        MT["mockserver-testing
+Test utilities"]
+        MIT["mockserver-integration-testing
+Integration tests"]
+        ME["mockserver-examples
+Examples"]
     end
 
     JC --> MC

@@ -15,13 +15,19 @@ Both are stored in bounded circular data structures that evict the oldest entrie
 graph TB
     subgraph "JVM Heap"
         subgraph "Log Entry Storage"
-            RB[LMAX Disruptor Ring Buffer<br/><i>Pre-allocated LogEntry slots<br/>Size: nextPowerOfTwo(maxLogEntries)</i>]
-            EL[CircularConcurrentLinkedDeque<br/><i>Persistent event store<br/>Max size: maxLogEntries</i>]
+            RB["LMAX Disruptor Ring Buffer
+            Pre-allocated LogEntry slots
+            Size: nextPowerOfTwo(maxLogEntries)"]
+            EL["CircularConcurrentLinkedDeque
+            Persistent event store
+            Max size: maxLogEntries"]
         end
         subgraph "Expectation Storage"
-            PQ[CircularPriorityQueue<br/><i>Max size: maxExpectations</i>]
+            PQ["CircularPriorityQueue
+            Max size: maxExpectations"]
         end
-        OTHER[Netty buffers, thread stacks,<br/>class metadata, GC overhead]
+        OTHER["Netty buffers, thread stacks,
+        class metadata, GC overhead"]
     end
 
     RB -->|"cloneAndClear()"| EL
@@ -97,22 +103,34 @@ Each `LogEntry` holds references to the HTTP request, response, expectation, and
 
 ```mermaid
 graph LR
-    LE[LogEntry<br/><i>~112 B shell</i>]
-    LE --> ID[id: String<br/><i>UUID, ~112 B</i>]
-    LE --> CID[correlationId: String<br/><i>UUID, ~112 B</i>]
-    LE --> TS[timestamp: String<br/><i>lazy, ~86 B</i>]
-    LE --> MF[messageFormat: String<br/><i>~78 B</i>]
-    LE --> ARGS[arguments: Object array<br/><i>shallow clones of req/resp</i>]
+    LE["LogEntry
+    ~112 B shell"]
+    LE --> ID["id: String
+    UUID, ~112 B"]
+    LE --> CID["correlationId: String
+    UUID, ~112 B"]
+    LE --> TS["timestamp: String
+    lazy, ~86 B"]
+    LE --> MF["messageFormat: String
+    ~78 B"]
+    LE --> ARGS["arguments: Object array
+    shallow clones of req/resp"]
     LE --> REQ["httpRequests: RequestDefinition[]"]
     LE --> RESP[httpResponse: HttpResponse]
     LE --> EXP[expectation: Expectation]
 
-    REQ --> HR[HttpRequest<br/><i>~108 B shell</i>]
-    HR --> METHOD[method: NottableString<br/><i>~176 B</i>]
-    HR --> PATH[path: NottableString<br/><i>~200 B</i>]
-    HR --> HDRS[headers: Headers<br/><i>~3 KB for 6 headers</i>]
-    HR --> BODY[body: Body<br/><i>variable</i>]
-    HR --> SA[socketAddress<br/><i>~116 B</i>]
+    REQ --> HR["HttpRequest
+    ~108 B shell"]
+    HR --> METHOD["method: NottableString
+    ~176 B"]
+    HR --> PATH["path: NottableString
+    ~200 B"]
+    HR --> HDRS["headers: Headers
+    ~3 KB for 6 headers"]
+    HR --> BODY["body: Body
+    variable"]
+    HR --> SA["socketAddress
+    ~116 B"]
 
     RESP --> SC[statusCode: Integer]
     RESP --> RP[reasonPhrase: String]

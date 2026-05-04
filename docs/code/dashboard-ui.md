@@ -7,21 +7,27 @@ The MockServer dashboard is a React single-page application (SPA) that receives 
 ```mermaid
 graph TB
     subgraph "Browser"
-        REACT[React SPA<br/><i>Redux store</i>]
+        REACT["React SPA
+Redux store"]
         WS_C[WebSocket Client]
     end
 
     subgraph "MockServer (Netty)"
-        DH[DashboardHandler<br/><i>Static file serving</i>]
-        DWSH[DashboardWebSocketHandler<br/><i>Real-time data push</i>]
-        EL[MockServerEventLog<br/><i>Disruptor ring buffer</i>]
-        RM[RequestMatchers<br/><i>Active expectations</i>]
+        DH["DashboardHandler
+Static file serving"]
+        DWSH["DashboardWebSocketHandler
+Real-time data push"]
+        EL["MockServerEventLog
+Disruptor ring buffer"]
+        RM["RequestMatchers
+Active expectations"]
     end
 
     REACT -->|GET /mockserver/dashboard/*| DH
     DH -->|index.html, JS, CSS| REACT
 
-    REACT -->|WebSocket upgrade<br/>/_mockserver_ui_websocket| DWSH
+    REACT -->|"WebSocket upgrade
+/_mockserver_ui_websocket"| DWSH
     WS_C <-->|JSON messages| DWSH
 
     EL -->|MockServerLogListener| DWSH
@@ -62,7 +68,7 @@ sequenceDiagram
     PU->>DWSH: channelRead() detects upgrade URI
 
     DWSH->>DWSH: upgradeChannel()
-    Note over DWSH: 1. WebSocket handshake<br/>2. Register in clientRegistry<br/>3. Register as log listener<br/>4. Register as matcher listener<br/>5. Start throttle scheduler (1/sec)
+    Note over DWSH: 1. WebSocket handshake 2. Register in clientRegistry 3. Register as log listener 4. Register as matcher listener 5. Start throttle scheduler (1/sec)
 
     DWSH-->>B: WebSocket handshake OK
 
@@ -160,17 +166,25 @@ For each connected client, assembles four data categories (limited to 100 items 
 
 ```mermaid
 flowchart TD
-    SU[sendUpdate] --> AE[Active Expectations<br/><i>From RequestMatchers</i>]
-    SU --> LM[Log Messages<br/><i>From EventLog, reverse order,<br/>grouped by correlationId</i>]
-    SU --> RR[Recorded Requests<br/><i>RECEIVED_REQUEST entries</i>]
-    SU --> PR[Proxied Requests<br/><i>FORWARDED_REQUEST entries<br/>with request + response</i>]
+    SU[sendUpdate] --> AE["Active Expectations
+From RequestMatchers"]
+    SU --> LM["Log Messages
+From EventLog, reverse order,
+grouped by correlationId"]
+    SU --> RR["Recorded Requests
+RECEIVED_REQUEST entries"]
+    SU --> PR["Proxied Requests
+FORWARDED_REQUEST entries
+with request + response"]
 
-    AE --> JSON[Serialize to JSON<br/><i>Custom dashboard ObjectMapper</i>]
+    AE --> JSON["Serialize to JSON
+Custom dashboard ObjectMapper"]
     LM --> JSON
     RR --> JSON
     PR --> JSON
 
-    JSON --> SEND[Send via TextWebSocketFrame<br/><i>Throttled: max 1/sec</i>]
+    JSON --> SEND["Send via TextWebSocketFrame
+Throttled: max 1/sec"]
 ```
 
 ### Dashboard Model Classes

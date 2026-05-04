@@ -116,6 +116,9 @@ Use `/commit` for commits so the full workflow in `.opencode/rules/commit-workfl
 - **Always use Mermaid** for diagrams in markdown files. Never use ASCII art for flowcharts, sequence diagrams, or architecture diagrams.
 - Use `flowchart`, `sequenceDiagram`, `graph`, or `classDiagram` as appropriate.
 - Keep diagrams concise — if a diagram needs more than ~15 nodes, split it into multiple diagrams.
+- **NEVER use HTML tags in Mermaid diagrams** — GitHub's Mermaid renderer does not support `<br/>`, `<i>`, `<b>`, or any other HTML markup. Use actual line breaks inside quoted node labels instead:
+  - ❌ WRONG: `A[Node Label<br/><i>Description</i>]`
+  - ✅ CORRECT: `A["Node Label\nDescription"]` or with actual newlines in quoted strings
 
 ## Code Navigation
 

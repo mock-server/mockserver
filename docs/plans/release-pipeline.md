@@ -47,13 +47,21 @@ The release process is a **manual 13-step process** executed entirely from a dev
 ```mermaid
 graph TD
     REL([Release X.Y.Z])
-    REL --> MC[Maven Central<br/>11 modules x 3-4 JARs each]
-    REL --> DH[Docker Hub<br/>linux/amd64 + linux/arm64]
-    REL --> NPM[npm Registry<br/>mockserver-node<br/>mockserver-client-node]
-    REL --> HELM[S3 Helm Repo<br/>Helm chart .tgz]
-    REL --> DOCS[S3/CloudFront<br/>Website + Javadoc]
-    REL --> SWAGGER[SwaggerHub<br/>OpenAPI spec]
-    REL --> BREW[Homebrew<br/>Formula PR]
+    REL --> MC["Maven Central
+11 modules x 3-4 JARs each"]
+    REL --> DH["Docker Hub
+linux/amd64 + linux/arm64"]
+    REL --> NPM["npm Registry
+mockserver-node
+mockserver-client-node"]
+    REL --> HELM["S3 Helm Repo
+Helm chart .tgz"]
+    REL --> DOCS["S3/CloudFront
+Website + Javadoc"]
+    REL --> SWAGGER["SwaggerHub
+OpenAPI spec"]
+    REL --> BREW["Homebrew
+Formula PR"]
 ```
 
 ### Required Credentials
@@ -87,8 +95,12 @@ graph TD
 ```mermaid
 flowchart TD
     subgraph Orchestration
-        BK[Buildkite Pipeline<br/>.buildkite/release-pipeline.yml<br/>TOTP block step + approval gates]
-        LOCAL[Local Script<br/>scripts/release.sh<br/>interactive prompts]
+        BK["Buildkite Pipeline
+.buildkite/release-pipeline.yml
+TOTP block step + approval gates"]
+        LOCAL["Local Script
+scripts/release.sh
+interactive prompts"]
     end
 
     subgraph Scripts[Shared Scripts — scripts/ci/release/*.sh]
@@ -128,8 +140,12 @@ flowchart TD
     end
 
     subgraph Infra[Infrastructure — Terraform]
-        TF_BK[terraform/buildkite-agents/<br/>Account build account<br/>Build agents, IAM, secrets]
-        TF_WEB[terraform/website/<br/>Account website account<br/>S3, CloudFront, Route53, ACM]
+        TF_BK["terraform/buildkite-agents/
+Account build account
+Build agents, IAM, secrets"]
+        TF_WEB["terraform/website/
+Account website account
+S3, CloudFront, Route53, ACM"]
     end
 
     BK --> Scripts
@@ -1211,8 +1227,11 @@ gantt
 
 ```mermaid
 flowchart LR
-    BK[Buildkite<br/>Build + Test + Stage] -->|webhook| GHA[GitHub Actions<br/>Docker + Helm + Docs]
-    BK -->|REST API| OSSRH[Sonatype OSSRH<br/>Close + Release]
+    BK["Buildkite
+Build + Test + Stage"] -->|webhook| GHA["GitHub Actions
+Docker + Helm + Docs"]
+    BK -->|REST API| OSSRH["Sonatype OSSRH
+Close + Release"]
 ```
 
 Use Buildkite for the Maven build and GitHub Actions for publishing.

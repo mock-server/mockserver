@@ -72,9 +72,12 @@ The project comprises 11 Maven modules:
 ```mermaid
 graph LR
     subgraph "Profiles"
-        KM[kill_mockserver_instances<br/><i>Auto-activates on Unix</i>]
-        DJ[disable-java8-doclint<br/><i>Auto-activates on JDK 8+</i>]
-        RL[release<br/><i>Manual activation</i>]
+        KM["kill_mockserver_instances
+Auto-activates on Unix"]
+        DJ["disable-java8-doclint
+Auto-activates on JDK 8+"]
+        RL["release
+Manual activation"]
     end
 
     KM -->|clean phase| STOP["scripts/stop_MockServer.sh"]
@@ -121,10 +124,14 @@ The `mockserver-netty` module produces multiple artifacts:
 graph TD
     MN[mockserver-netty]
     MN --> JAR[Standard JAR]
-    MN --> FAT[jar-with-dependencies<br/><i>Fat JAR with all deps</i>]
-    MN --> SHADED[Shaded JAR<br/><i>Relocated packages</i>]
-    MN --> BREW[brew-tar<br/><i>Homebrew tarball</i>]
-    MN --> DEB[Debian Package<br/><i>.deb with init.d</i>]
+    MN --> FAT["jar-with-dependencies
+Fat JAR with all deps"]
+    MN --> SHADED["Shaded JAR
+Relocated packages"]
+    MN --> BREW["brew-tar
+Homebrew tarball"]
+    MN --> DEB["Debian Package
+.deb with init.d"]
 ```
 
 | Artifact | Classifier | Description |

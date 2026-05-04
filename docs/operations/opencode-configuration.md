@@ -11,17 +11,24 @@ The harness is code. It is versioned alongside the codebase it describes. Any en
 ```mermaid
 flowchart TB
     subgraph Root["Repository Root"]
-        CONFIG["opencode.jsonc<br/><i>models, permissions, agents</i>"]
-        AGENTS_MD["AGENTS.md<br/><i>global instructions</i>"]
+        CONFIG["opencode.jsonc
+models, permissions, agents"]
+        AGENTS_MD["AGENTS.md
+global instructions"]
     end
 
     subgraph Harness[".opencode/"]
         direction TB
-        AG["agents/<br/><i>12 sub-agent prompts</i>"]
-        RU["rules/<br/><i>7 guardrail files</i>"]
-        SK["skills/<br/><i>11 workflow definitions</i>"]
-        CM["commands/<br/><i>11 slash commands</i>"]
-        PL["plugins/<br/><i>2 session plugins</i>"]
+        AG["agents/
+12 sub-agent prompts"]
+        RU["rules/
+7 guardrail files"]
+        SK["skills/
+11 workflow definitions"]
+        CM["commands/
+11 slash commands"]
+        PL["plugins/
+2 session plugins"]
     end
 
     CONFIG -->|"loads"| AGENTS_MD
@@ -319,7 +326,9 @@ flowchart TD
     K -->|No| L[Fix issues]
     L --> B
 
-    K -->|Yes| M["Adversarial review<br/>(review-cheap agent,<br/>different model)"]
+    K -->|Yes| M["Adversarial review
+(review-cheap agent,
+different model)"]
     M -->|PASS| N[Commit]
     M -->|FAIL| L
 
@@ -490,9 +499,12 @@ For non-trivial decisions that cross domains, the `/design-council` command conv
 
 ```mermaid
 flowchart TD
-    CEO["CEO (invoking agent)"] -->|"fan out"| S1["Seat 1<br/>Perspective A"]
-    CEO -->|"fan out"| S2["Seat 2<br/>Perspective B"]
-    CEO -->|"fan out"| S3["Seat 3<br/>Perspective C"]
+    CEO["CEO (invoking agent)"] -->|"fan out"| S1["Seat 1
+Perspective A"]
+    CEO -->|"fan out"| S2["Seat 2
+Perspective B"]
+    CEO -->|"fan out"| S3["Seat 3
+Perspective C"]
 
     S1 -->|"verdict"| CEO
     S2 -->|"verdict"| CEO

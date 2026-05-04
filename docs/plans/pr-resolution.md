@@ -196,19 +196,31 @@ For each PR, once Buildkite results are available:
 
 ```mermaid
 flowchart TD
-    A[Check Buildkite result<br/>on pr/N-rebased branch] --> B{CI passed?}
-    B -->|Yes| C[Code review<br/>review-cheap subagent]
-    B -->|No| D{Build failure or<br/>test failure?}
-    D -->|Build failure| E[Fix compilation issue<br/>push updated branch]
-    D -->|Test failure| F{Test related to<br/>PR changes?}
-    F -->|Yes| G[PR has a bug<br/>comment on PR asking<br/>contributor to fix]
-    F -->|No| H[Pre-existing flaky test<br/>proceed with review]
+    A["Check Buildkite result
+on pr/N-rebased branch"] --> B{CI passed?}
+    B -->|Yes| C["Code review
+review-cheap subagent"]
+    B -->|No| D{"Build failure or
+test failure?"}
+    D -->|Build failure| E["Fix compilation issue
+push updated branch"]
+    D -->|Test failure| F{"Test related to
+PR changes?"}
+    F -->|Yes| G["PR has a bug
+comment on PR asking
+contributor to fix"]
+    F -->|No| H["Pre-existing flaky test
+proceed with review"]
     H --> C
     C --> I{Review passed?}
-    I -->|Yes| J[Merge rebased branch<br/>to master]
-    I -->|No| K[Comment findings<br/>on original PR]
-    J --> L[Close original PR<br/>with merge comment]
-    J --> M[Delete pr/N-rebased<br/>branch]
+    I -->|Yes| J["Merge rebased branch
+to master"]
+    I -->|No| K["Comment findings
+on original PR"]
+    J --> L["Close original PR
+with merge comment"]
+    J --> M["Delete pr/N-rebased
+branch"]
 ```
 
 ### Cleanup

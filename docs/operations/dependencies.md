@@ -24,7 +24,7 @@ All managed dependency versions are declared in the root `pom.xml`:
 |----------|---------|
 | `maven.compiler.source/target` | `11` (Java 11) |
 | `netty.version` | `4.1.132.Final` |
-| `jackson.version` | `2.14.2` |
+| `jackson.version` | `2.19.0` |
 | `slf4j.version` | `2.0.6` |
 | `spring.version` | `5.3.26` |
 | `spring-web.version` | `5.3.25` |
@@ -50,7 +50,7 @@ graph TB
     end
 
     subgraph "Serialisation"
-        JACKSON[Jackson 2.14.2]
+        JACKSON[Jackson 2.19.0]
         SNAKEYAML[SnakeYAML 2.0]
     end
 
@@ -70,7 +70,8 @@ graph TB
     subgraph "Templating"
         VELOCITY[Velocity 2.3]
         MUSTACHE[JMustache 1.15]
-        NASHORN[Nashorn 15.4<br/><i>Java 11+ only</i>]
+        NASHORN["Nashorn 15.4
+Java 11+ only"]
     end
 
     subgraph "Utilities"
@@ -123,10 +124,10 @@ graph TB
 
 | GroupId | ArtifactId | Version | Purpose |
 |---------|-----------|---------|---------|
-| `com.fasterxml.jackson.core` | `jackson-core` | 2.14.2 | JSON streaming |
-| `com.fasterxml.jackson.core` | `jackson-annotations` | 2.14.2 | JSON annotations |
-| `com.fasterxml.jackson.core` | `jackson-databind` | 2.14.2 | JSON object mapping |
-| `com.fasterxml.jackson.dataformat` | `jackson-dataformat-yaml` | 2.14.2 | YAML support |
+| `com.fasterxml.jackson.core` | `jackson-core` | 2.19.0 | JSON streaming |
+| `com.fasterxml.jackson.core` | `jackson-annotations` | 2.19.0 | JSON annotations |
+| `com.fasterxml.jackson.core` | `jackson-databind` | 2.19.0 | JSON object mapping |
+| `com.fasterxml.jackson.dataformat` | `jackson-dataformat-yaml` | 2.19.0 | YAML support |
 | `org.yaml` | `snakeyaml` | 2.0 | YAML parsing |
 | `jakarta.xml.bind` | `jakarta.xml.bind-api` | 3.0.1 | XML binding API |
 | `com.sun.xml.bind` | `jaxb-impl` | 4.0.2 | XML binding implementation |
@@ -221,8 +222,8 @@ These are explicitly managed to resolve version conflicts or CVEs:
 | `com.sun.activation` | `jakarta.activation` | 2.0.1 | Conflict (jakarta.xml.bind vs jaxb-core) |
 | `commons-beanutils` | `commons-beanutils` | 1.9.4 | Conflict (velocity-tools vs commons-digester3) |
 | `commons-logging` | `commons-logging` | 1.2 | Conflict (beanutils vs digester3 vs swagger) |
-| `com.fasterxml.jackson.datatype` | `jackson-datatype-jsr310` | 2.14.2 | Conflict (swagger-parser 2.1.22 pulls 2.16.2) |
-| `com.fasterxml.jackson.dataformat` | `jackson-dataformat-yaml` | 2.14.2 | Conflict (swagger-parser vs swagger-core) |
+| `com.fasterxml.jackson.datatype` | `jackson-datatype-jsr310` | 2.19.0 | Conflict (swagger-parser 2.1.22 pulls newer version) |
+| `com.fasterxml.jackson.dataformat` | `jackson-dataformat-yaml` | 2.19.0 | Conflict (swagger-parser vs swagger-core) |
 
 ## Build Plugins
 

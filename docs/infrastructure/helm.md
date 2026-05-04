@@ -10,12 +10,15 @@ graph LR
         DEP[Deployment]
         SVC[Service]
         ING[Ingress]
-        CM_INLINE[ConfigMap<br/><i>inline, optional</i>]
+        CM_INLINE["ConfigMap
+inline, optional"]
         CM_REF[ConfigMap volume mount]
     end
 
     subgraph "mockserver-config chart (legacy)"
-        CM_EXT[ConfigMap<br/>mockserver.properties<br/>initializerJson.json]
+        CM_EXT["ConfigMap
+mockserver.properties
+initializerJson.json"]
     end
 
     CM_INLINE -->|when app.config.enabled| CM_REF
@@ -97,16 +100,22 @@ releasenameOverride: ""
 
 ```mermaid
 graph TB
-    ING[Ingress<br/><i>optional</i>] --> SVC[Service<br/>NodePort :1080]
+    ING["Ingress
+optional"] --> SVC["Service
+NodePort :1080"]
     SVC --> POD[Pod]
 
     subgraph POD
-        CONT[MockServer Container<br/>Port 1080]
-        VOL_PROPS["/config/<br/>mockserver.properties"]
-        VOL_LIBS["/libs/<br/>additional JARs"]
+        CONT["MockServer Container
+Port 1080"]
+        VOL_PROPS["/config/
+mockserver.properties"]
+        VOL_LIBS["/libs/
+additional JARs"]
     end
 
-    CM[ConfigMap<br/>mockserver-config] -->|volume mount| VOL_PROPS
+    CM["ConfigMap
+mockserver-config"] -->|volume mount| VOL_PROPS
     CM -->|volume mount| VOL_LIBS
     CONT --> VOL_PROPS
     CONT --> VOL_LIBS

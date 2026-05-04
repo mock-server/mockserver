@@ -15,7 +15,8 @@ graph TB
         BIN[Binary]
     end
 
-    PU[Port Unification Handler<br/><i>Protocol detection on first bytes</i>]
+    PU["Port Unification Handler
+Protocol detection on first bytes"]
 
     HTTP --> PU
     HTTPS --> PU
@@ -24,18 +25,24 @@ graph TB
     S5 --> PU
     BIN --> PU
 
-    PU --> PIPELINE[Netty Channel Pipeline<br/><i>Dynamically assembled per-protocol</i>]
+    PU --> PIPELINE["Netty Channel Pipeline
+Dynamically assembled per-protocol"]
 
-    PIPELINE --> CODEC[MockServerHttpServerCodec<br/><i>Netty HTTP ↔ MockServer model</i>]
+    PIPELINE --> CODEC["MockServerHttpServerCodec
+Netty HTTP ↔ MockServer model"]
     CODEC --> HANDLER[HttpRequestHandler]
 
     HANDLER --> CP{Control Plane?}
-    CP -->|Yes| STATE[HttpState<br/><i>REST API handler</i>]
+    CP -->|Yes| STATE["HttpState
+REST API handler"]
     CP -->|No| ACTION[HttpActionHandler]
 
-    ACTION --> MATCH{Expectation<br/>matched?}
-    MATCH -->|Yes| DISPATCH[Action Dispatcher<br/><i>10 action types</i>]
-    MATCH -->|No, proxy mode| FWD[Forward to<br/>original destination]
+    ACTION --> MATCH{"Expectation
+matched?"}
+    MATCH -->|Yes| DISPATCH["Action Dispatcher
+10 action types"]
+    MATCH -->|No, proxy mode| FWD["Forward to
+original destination"]
     MATCH -->|No, mock mode| NF[404 Not Found]
 
     DISPATCH --> RESP[Response]
@@ -44,11 +51,13 @@ graph TB
     DISPATCH --> CALLBACK[Callback]
     DISPATCH --> ERROR[Error]
 
-    STATE --> LOG[MockServerEventLog<br/><i>LMAX Disruptor ring buffer</i>]
+    STATE --> LOG["MockServerEventLog
+LMAX Disruptor ring buffer"]
     ACTION --> LOG
 
     LOG --> VERIFY[Verification Engine]
-    LOG --> DASH[Dashboard WebSocket<br/><i>Real-time UI push</i>]
+    LOG --> DASH["Dashboard WebSocket
+Real-time UI push"]
     LOG --> PERSIST[File Persistence]
 ```
 
@@ -57,30 +66,44 @@ graph TB
 ```mermaid
 graph TB
     subgraph "Client Layer"
-        JC[mockserver-client-java<br/><i>Java client API</i>]
+        JC["mockserver-client-java
+Java client API"]
     end
 
     subgraph "Server Layer"
-        MN[mockserver-netty<br/><i>Netty server + CLI</i>]
-        MW[mockserver-war<br/><i>Servlet WAR</i>]
-        MPW[mockserver-proxy-war<br/><i>Proxy WAR</i>]
+        MN["mockserver-netty
+Netty server + CLI"]
+        MW["mockserver-war
+Servlet WAR"]
+        MPW["mockserver-proxy-war
+Proxy WAR"]
     end
 
     subgraph "Integration Layer"
-        CAS[ClientAndServer<br/><i>Embedded server+client</i>]
-        JR[mockserver-junit-rule<br/><i>JUnit 4 Rule</i>]
-        JJ[mockserver-junit-jupiter<br/><i>JUnit 5 Extension</i>]
-        STL[mockserver-spring-test-listener<br/><i>Spring TestListener</i>]
+        CAS["ClientAndServer
+Embedded server+client"]
+        JR["mockserver-junit-rule
+JUnit 4 Rule"]
+        JJ["mockserver-junit-jupiter
+JUnit 5 Extension"]
+        STL["mockserver-spring-test-listener
+Spring TestListener"]
     end
 
     subgraph "Core Layer"
-        MC[mockserver-core<br/><i>Domain model, matching,<br/>TLS, templates, codecs,<br/>event log, action handlers</i>]
+        MC["mockserver-core
+Domain model, matching,
+TLS, templates, codecs,
+event log, action handlers"]
     end
 
     subgraph "Test & Example Infrastructure"
-        MT[mockserver-testing<br/><i>Shared test utilities</i>]
-        MIT[mockserver-integration-testing<br/><i>Integration test base classes</i>]
-        MEX[mockserver-examples<br/><i>Usage examples</i>]
+        MT["mockserver-testing
+Shared test utilities"]
+        MIT["mockserver-integration-testing
+Integration test base classes"]
+        MEX["mockserver-examples
+Usage examples"]
     end
 
     JC --> MC

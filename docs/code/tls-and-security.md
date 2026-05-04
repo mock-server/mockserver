@@ -7,19 +7,25 @@ MockServer dynamically generates TLS certificates using BouncyCastle, enabling t
 ```mermaid
 graph TB
     subgraph "Certificate Generation"
-        KCF[KeyAndCertificateFactory<br/><i>Interface</i>]
-        BCF[BCKeyAndCertificateFactory<br/><i>BouncyCastle implementation</i>]
+        KCF["KeyAndCertificateFactory
+Interface"]
+        BCF["BCKeyAndCertificateFactory
+BouncyCastle implementation"]
         KCF -.-> BCF
     end
 
     subgraph "SSL Context"
-        NSCF[NettySslContextFactory<br/><i>Creates & caches SslContext</i>]
-        KSF[KeyStoreFactory<br/><i>JKS KeyStore + SSLContext</i>]
+        NSCF["NettySslContextFactory
+Creates & caches SslContext"]
+        KSF["KeyStoreFactory
+JKS KeyStore + SSLContext"]
     end
 
     subgraph "Netty Pipeline"
-        SNI[SniHandler<br/><i>SNI extraction + ALPN</i>]
-        SSL[SslHandler<br/><i>Netty built-in</i>]
+        SNI["SniHandler
+SNI extraction + ALPN"]
+        SSL["SslHandler
+Netty built-in"]
     end
 
     BCF -->|provides certs| NSCF
@@ -42,12 +48,12 @@ sequenceDiagram
     C->>SNI: TLS ClientHello (SNI: api.example.com)
     SNI->>SNI: Extract hostname from SNI extension
     SNI->>BCF: Add SAN: api.example.com
-    BCF->>BCF: Generate leaf certificate<br/>signed by MockServer CA
+    BCF->>BCF: Generate leaf certificate signed by MockServer CA
     BCF-->>NSCF: Private key + certificate chain
-    NSCF->>NSCF: Build SslContext<br/>(server-side, with ALPN)
+    NSCF->>NSCF: Build SslContext (server-side, with ALPN)
     NSCF-->>SNI: SslContext
     SNI->>SNI: Replace self with SslHandler
-    SNI->>SNI: Store ALPN result on channel<br/>(HTTP_1_1 or HTTP_2)
+    SNI->>SNI: Store ALPN result on channel (HTTP_1_1 or HTTP_2)
     SNI-->>C: TLS ServerHello + Certificate
 ```
 
@@ -131,12 +137,16 @@ Control plane endpoints (`/mockserver/expectation`, `/mockserver/verify`, etc.) 
 
 ```mermaid
 flowchart TD
-    REQ([Control Plane Request]) --> AUTH{Authentication<br/>configured?}
+    REQ([Control Plane Request]) --> AUTH{"Authentication
+configured?"}
     AUTH -->|No| ALLOW([Proceed])
     AUTH -->|Yes| TYPE{Auth type?}
-    TYPE -->|mTLS| MTLS[Validate client<br/>certificate chain]
-    TYPE -->|JWT| JWT[Validate Bearer token<br/><i>nimbus-jose-jwt</i>]
-    TYPE -->|Both| CHAIN[mTLS AND JWT<br/>both must pass]
+    TYPE -->|mTLS| MTLS["Validate client
+certificate chain"]
+    TYPE -->|JWT| JWT["Validate Bearer token
+nimbus-jose-jwt"]
+    TYPE -->|Both| CHAIN["mTLS AND JWT
+both must pass"]
     MTLS -->|Pass| ALLOW
     MTLS -->|Fail| DENY([401/403])
     JWT -->|Pass| ALLOW

@@ -7,17 +7,33 @@ MockServer provides multiple Docker image variants for different use cases:
 ```mermaid
 graph TB
     subgraph "Production Images"
-        MAIN["docker/Dockerfile<br/><b>Main (nonroot)</b><br/>gcr.io/distroless/java17:nonroot"]
-        ROOT["docker/root/Dockerfile<br/><b>Root</b><br/>gcr.io/distroless/java17"]
-        SNAP["docker/snapshot/Dockerfile<br/><b>Snapshot (debug)</b><br/>gcr.io/distroless/java17:debug-nonroot"]
-        RSNAP["docker/root-snapshot/Dockerfile<br/><b>Root Snapshot</b><br/>gcr.io/distroless/java17"]
-        LOCAL["docker/local/Dockerfile<br/><b>Local Build</b><br/>gcr.io/distroless/java17:nonroot"]
+        MAIN["docker/Dockerfile
+Main (nonroot)
+gcr.io/distroless/java17:nonroot"]
+        ROOT["docker/root/Dockerfile
+Root
+gcr.io/distroless/java17"]
+        SNAP["docker/snapshot/Dockerfile
+Snapshot (debug)
+gcr.io/distroless/java17:debug-nonroot"]
+        RSNAP["docker/root-snapshot/Dockerfile
+Root Snapshot
+gcr.io/distroless/java17"]
+        LOCAL["docker/local/Dockerfile
+Local Build
+gcr.io/distroless/java17:nonroot"]
     end
 
     subgraph "Build Images"
-        MVN["docker_build/maven/Dockerfile<br/><b>Maven CI</b><br/>Ubuntu 24.04 + JDK 21 + Maven 3.9"]
-        GRUNT["docker_build/grunt/Dockerfile<br/><b>Grunt/Frontend</b><br/>Ubuntu 20.04 + Chrome + Node"]
-        PERF["docker_build/performance/Dockerfile<br/><b>Performance</b><br/>locustio/locust"]
+        MVN["docker_build/maven/Dockerfile
+Maven CI
+Ubuntu 24.04 + JDK 21 + Maven 3.9"]
+        GRUNT["docker_build/grunt/Dockerfile
+Grunt/Frontend
+Ubuntu 20.04 + Chrome + Node"]
+        PERF["docker_build/performance/Dockerfile
+Performance
+locustio/locust"]
     end
 ```
 
@@ -36,17 +52,21 @@ graph TB
 ```mermaid
 flowchart TD
     subgraph "Build Stage (selectable)"
-        DL["'download' stage<br/>Downloads JAR from Sonatype"]
-        CP["'copy' stage<br/>Uses local JAR"]
+        DL["'download' stage
+Downloads JAR from Sonatype"]
+        CP["'copy' stage
+Uses local JAR"]
     end
 
     DL -->|default| INT[Intermediate Stage]
     CP -->|ARG source=copy| INT
 
-    INT --> RT[Runtime Stage<br/>distroless/java17:nonroot]
+    INT --> RT["Runtime Stage
+distroless/java17:nonroot"]
 
     RT --> EXPOSE["EXPOSE 1080"]
-    RT --> ENTRY["ENTRYPOINT java -cp mockserver-netty-jar-with-dependencies.jar<br/>org.mockserver.cli.Main"]
+    RT --> ENTRY["ENTRYPOINT java -cp mockserver-netty-jar-with-dependencies.jar
+org.mockserver.cli.Main"]
 ```
 
 The main Dockerfile supports two source modes via the `source` build ARG:

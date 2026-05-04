@@ -26,20 +26,30 @@ The MockServer documentation website at `https://www.mock-server.com` is a Jekyl
 ```mermaid
 graph TD
     ROOT["jekyll-www.mock-server.com/"]
-    ROOT --> LAYOUTS["_layouts/<br/>default.html, page.html"]
-    ROOT --> INCLUDES["_includes/<br/>head, header, footer"]
-    ROOT --> SASS["_sass/<br/>accordion, prettify, styles"]
-    ROOT --> PLUGINS["_plugins/<br/>IncludeSubPage.rb"]
-    ROOT --> CSS["css/<br/>main.scss, yahoo-pure-min"]
-    ROOT --> SCRIPTS["scripts/<br/>accordion.js, analytics, toggle_menu"]
+    ROOT --> LAYOUTS["_layouts/
+default.html, page.html"]
+    ROOT --> INCLUDES["_includes/
+head, header, footer"]
+    ROOT --> SASS["_sass/
+accordion, prettify, styles"]
+    ROOT --> PLUGINS["_plugins/
+IncludeSubPage.rb"]
+    ROOT --> CSS["css/
+main.scss, yahoo-pure-min"]
+    ROOT --> SCRIPTS["scripts/
+accordion.js, analytics, toggle_menu"]
     ROOT --> IMAGES["images/"]
     ROOT --> INDEX["index.html"]
 
-    ROOT --> MOCK["mock_server/<br/><i>Main documentation</i>"]
-    ROOT --> PROXY["proxy/<br/><i>Proxy documentation</i>"]
-    ROOT --> WHERE["where/<br/><i>Distribution channels</i>"]
+    ROOT --> MOCK["mock_server/
+Main documentation"]
+    ROOT --> PROXY["proxy/
+Proxy documentation"]
+    ROOT --> WHERE["where/
+Distribution channels"]
 
-    MOCK --> MOCK_INC["_includes/<br/>23 sub-include files"]
+    MOCK --> MOCK_INC["_includes/
+23 sub-include files"]
 ```
 
 ## Content Sections

@@ -8,32 +8,48 @@ MockServer uses two AWS accounts for different purposes:
 graph TB
     subgraph "Build Agent Account"
         direction TB
-        TF["Terraform<br/>buildkite-agents/"]
+        TF["Terraform
+buildkite-agents/"]
         ASG["AutoScaling Group"]
         SCALER["Lambda Autoscaler"]
-        AZ_LAMBDA["Lambda AZ Rebalance<br/>Suspender"]
-        EC2["EC2 Spot t3.large<br/>0–10 agents"]
-        SSM["SSM Parameter Store<br/>Agent Token"]
+        AZ_LAMBDA["Lambda AZ Rebalance
+Suspender"]
+        EC2["EC2 Spot t3.large
+0–10 agents"]
+        SSM["SSM Parameter Store
+Agent Token"]
         S3_SECRETS["S3 Secrets Bucket"]
         S3_STATE["S3 State Bucket"]
-        VPC["VPC 10.0.0.0/16<br/>2 public subnets"]
-        VPCE["VPC Endpoints<br/>SSM, SSM Messages, EC2 Messages"]
+        VPC["VPC 10.0.0.0/16
+2 public subnets"]
+        VPCE["VPC Endpoints
+SSM, SSM Messages, EC2 Messages"]
         IGW["Internet Gateway"]
         LT["Launch Template"]
-        CW["CloudWatch Logs<br/>/buildkite/* + Lambda logs"]
-        EB["EventBridge Rule<br/>rate(1 minute)"]
+        CW["CloudWatch Logs
+/buildkite/* + Lambda logs"]
+        EB["EventBridge Rule
+rate(1 minute)"]
     end
 
     subgraph "Website Account"
         direction TB
-        S3[S3 Bucket<br/>Current Website]
-        S3V["17 Versioned S3 Buckets<br/>4-0 through 5-14"]
-        S3P["S3 Bucket<br/>jamesdbloom.com"]
-        CDN[CloudFront Distribution<br/>Main Site]
-        CDNV["17 Versioned CloudFront<br/>Distributions"]
-        CDNP["CloudFront Distribution<br/>jamesdbloom.com"]
-        R53[Route53<br/>mock-server.com + 4 other zones]
-        ACM[ACM Certificates<br/>mock-server.com + wildcard]
+        S3["S3 Bucket
+Current Website"]
+        S3V["17 Versioned S3 Buckets
+4-0 through 5-14"]
+        S3P["S3 Bucket
+jamesdbloom.com"]
+        CDN["CloudFront Distribution
+Main Site"]
+        CDNV["17 Versioned CloudFront
+Distributions"]
+        CDNP["CloudFront Distribution
+jamesdbloom.com"]
+        R53["Route53
+mock-server.com + 4 other zones"]
+        ACM["ACM Certificates
+mock-server.com + wildcard"]
     end
 
     TF -->|provisions| ASG
@@ -77,27 +93,35 @@ All active resources are in `eu-west-2`, managed by Terraform in `terraform/buil
 flowchart TB
     subgraph "Buildkite Cloud"
         BK_API[Buildkite API]
-        BK_QUEUE[Job Queue<br/>'default']
+        BK_QUEUE["Job Queue
+'default'"]
     end
 
     subgraph "AWS eu-west-2"
         subgraph "VPC 10.0.0.0/16"
             subgraph "Public Subnet eu-west-2a — 10.0.1.0/24"
-                EC2_1[EC2 Spot t3.large<br/>Buildkite Agent]
+                EC2_1["EC2 Spot t3.large
+Buildkite Agent"]
             end
             subgraph "Public Subnet eu-west-2b — 10.0.2.0/24"
-                EC2_2[EC2 Spot t3.large<br/>Buildkite Agent]
+                EC2_2["EC2 Spot t3.large
+Buildkite Agent"]
             end
-            VPCE[VPC Endpoints<br/>SSM · SSM Messages · EC2 Messages]
+            VPCE["VPC Endpoints
+SSM · SSM Messages · EC2 Messages"]
         end
         IGW[Internet Gateway]
-        ASG[AutoScaling Group<br/>0–10 instances]
-        SCALER[Lambda Autoscaler<br/>Runs every minute]
+        ASG["AutoScaling Group
+0–10 instances"]
+        SCALER["Lambda Autoscaler
+Runs every minute"]
         AZ_LAMBDA[Lambda AZ Rebalance Suspender]
-        SSM[SSM Parameter Store<br/>Agent Token]
-        S3_SECRETS[S3 Secrets Bucket]
+        SSM["SSM Parameter Store
+Agent Token"]
+        S3_SECRETS["S3 Secrets Bucket"]
         S3_LOGS[S3 Secrets Logging Bucket]
-        EB[EventBridge Schedule<br/>rate 1 min]
+        EB["EventBridge Schedule
+rate 1 min"]
     end
 
     BK_API -->|queue depth| SCALER
@@ -231,7 +255,7 @@ sequenceDiagram
     Docker->>Docker: mvnw clean install
     Docker-->>BK: Upload artifacts (*.log)
 
-    Note over Agent,ASG: When idle, agents self-terminate<br/>ASG scales back to 0
+    Note over Agent,ASG: When idle, agents self-terminate. ASG scales back to 0
 ```
 
 ## Infrastructure as Code (Terraform)
@@ -301,7 +325,8 @@ The `run.sh` wrapper handles AWS SSO authentication and environment workarounds 
 
 ```mermaid
 flowchart LR
-    A[run.sh] --> B{AWS SSO<br/>authenticated?}
+    A[run.sh] --> B{"AWS SSO
+authenticated?"}
     B -->|Yes| D[terraform init]
     B -->|No| C[Prompt: aws sso login]
     C --> B
@@ -320,7 +345,8 @@ flowchart LR
 flowchart LR
     USER[User Browser] -->|HTTPS| CF[CloudFront]
     CF -->|Origin| S3[S3 Bucket]
-    DNS[Route53<br/>www.mock-server.com] -->|A record alias| CF
+    DNS["Route53
+www.mock-server.com"] -->|A record alias| CF
 ```
 
 ### AWS Organization and SSO

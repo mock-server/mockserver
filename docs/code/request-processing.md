@@ -11,14 +11,19 @@ The decision is made per-request in `HttpActionHandler.processAction()`:
 
 ```mermaid
 flowchart TD
-    REQ([Incoming HTTP Request]) --> LOG_RX[Log RECEIVED_REQUEST<br/><i>via Disruptor</i>]
+    REQ([Incoming HTTP Request]) --> LOG_RX["Log RECEIVED_REQUEST
+via Disruptor"]
     LOG_RX --> MATCH[RequestMatchers.firstMatchingExpectation]
 
-    MATCH -->|Expectation found| DISPATCH[Dispatch to Action Handler<br/><i>based on Action.Type</i>]
-    MATCH -->|No match| PROXY{Channel in<br/>proxy mode?}
+    MATCH -->|Expectation found| DISPATCH["Dispatch to Action Handler
+based on Action.Type"]
+    MATCH -->|No match| PROXY{"Channel in
+proxy mode?"}
 
-    PROXY -->|Yes| LOOP{Loop<br/>detected?}
-    LOOP -->|No| AUTH{Proxy auth<br/>required?}
+    PROXY -->|Yes| LOOP{"Loop
+detected?"}
+    LOOP -->|No| AUTH{"Proxy auth
+required?"}
     AUTH -->|Pass| FWD[Forward via NettyHttpClient]
     AUTH -->|Fail| R407[407 Proxy Auth Required]
     LOOP -->|Yes| R404A[404 + loop warning]
@@ -137,7 +142,7 @@ sequenceDiagram
         alt Match found
             M-->>RM: true
             RM->>RM: postProcess(expectation)
-            Note over RM: Decrement Times counter<br/>Remove if Times exhausted<br/>Remove if TTL expired
+            Note over RM: Decrement Times counter. Remove if Times exhausted. Remove if TTL expired
             RM-->>AH: Expectation
         else No match
             M-->>RM: false

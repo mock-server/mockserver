@@ -90,8 +90,10 @@ Same process as step 4, without `npm audit fix`.
 
 ```mermaid
 flowchart LR
-    CHECK[Verify JAR on Maven Central] --> BK[Trigger Buildkite<br/>docker-push-release]
-    BK --> DH[Docker Hub<br/>mockserver/mockserver]
+    CHECK[Verify JAR on Maven Central] --> BK["Trigger Buildkite
+docker-push-release"]
+    BK --> DH["Docker Hub
+mockserver/mockserver"]
 ```
 
 1. Verify the release JAR is available:
@@ -169,13 +171,21 @@ HOMEBREW_GITHUB_API_TOKEN=<token> \
 graph LR
     REL([Release X.Y.Z])
 
-    REL --> MC[Maven Central<br/>JARs, POMs, Sources, Javadoc]
-    REL --> DH[Docker Hub<br/>Multi-arch images]
-    REL --> NPM[npm Registry<br/>mockserver-node<br/>mockserver-client-node]
-    REL --> S3_HELM[S3/Helm Repo<br/>Helm chart .tgz]
-    REL --> S3_DOCS[S3/CloudFront<br/>Website + Javadoc]
-    REL --> SWAGGER[SwaggerHub<br/>OpenAPI spec]
-    REL --> BREW[Homebrew<br/>Formula PR]
+    REL --> MC["Maven Central
+JARs, POMs, Sources, Javadoc"]
+    REL --> DH["Docker Hub
+Multi-arch images"]
+    REL --> NPM["npm Registry
+mockserver-node
+mockserver-client-node"]
+    REL --> S3_HELM["S3/Helm Repo
+Helm chart .tgz"]
+    REL --> S3_DOCS["S3/CloudFront
+Website + Javadoc"]
+    REL --> SWAGGER["SwaggerHub
+OpenAPI spec"]
+    REL --> BREW["Homebrew
+Formula PR"]
 ```
 
 ## Cleaning Up a Failed Release

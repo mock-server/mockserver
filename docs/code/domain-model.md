@@ -343,11 +343,15 @@ Central registry configuring Jackson `ObjectMapper` with all custom serializers,
 
 ```mermaid
 flowchart LR
-    SPEC[OpenAPI Spec<br/><i>URL, file, or inline</i>] --> PARSER[OpenAPIParser<br/><i>Swagger Parser + LRU cache</i>]
-    PARSER --> CONV[OpenAPIConverter<br/><i>Spec → Expectations</i>]
+    SPEC["OpenAPI Spec
+URL, file, or inline"] --> PARSER["OpenAPIParser
+Swagger Parser + LRU cache"]
+    PARSER --> CONV["OpenAPIConverter
+Spec → Expectations"]
     CONV --> EXP[Expectation[]]
     
-    CONV --> EB[ExampleBuilder<br/><i>Schema → example values</i>]
+    CONV --> EB["ExampleBuilder
+Schema → example values"]
     EB --> RESP[Example HttpResponse]
 ```
 

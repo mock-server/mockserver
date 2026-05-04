@@ -7,14 +7,21 @@ All events in MockServer -- received requests, matched expectations, forwarded r
 ```mermaid
 graph TB
     subgraph "Producers (Netty I/O threads)"
-        P1[HttpActionHandler<br/><i>RECEIVED_REQUEST</i>]
-        P2[HttpActionHandler<br/><i>EXPECTATION_RESPONSE</i>]
-        P3[HttpActionHandler<br/><i>FORWARDED_REQUEST</i>]
-        P4[HttpActionHandler<br/><i>NO_MATCH_RESPONSE</i>]
-        P5[HttpState<br/><i>CREATED_EXPECTATION, CLEARED, etc.</i>]
+        P1["HttpActionHandler
+RECEIVED_REQUEST"]
+        P2["HttpActionHandler
+EXPECTATION_RESPONSE"]
+        P3["HttpActionHandler
+FORWARDED_REQUEST"]
+        P4["HttpActionHandler
+NO_MATCH_RESPONSE"]
+        P5["HttpState
+CREATED_EXPECTATION, CLEARED, etc."]
     end
 
-    RB[LMAX Disruptor<br/>Ring Buffer<br/><i>Pre-allocated LogEntry slots</i>]
+    RB["LMAX Disruptor
+Ring Buffer
+Pre-allocated LogEntry slots"]
 
     P1 --> RB
     P2 --> RB
@@ -24,7 +31,8 @@ graph TB
 
     subgraph "Single Consumer Thread"
         PROC[processLogEntry]
-        PROC --> STORE[CircularConcurrentLinkedDeque<br/><i>Bounded event store</i>]
+        PROC --> STORE["CircularConcurrentLinkedDeque
+Bounded event store"]
         PROC --> NOTIFY[notifyListeners]
         PROC --> SLF4J[SLF4J / Console output]
     end
@@ -32,8 +40,10 @@ graph TB
     RB --> PROC
 
     subgraph "Listeners"
-        DASH[DashboardWebSocketHandler<br/><i>Real-time UI push</i>]
-        PERSIST[ExpectationFileSystemPersistence<br/><i>File persistence</i>]
+        DASH["DashboardWebSocketHandler
+Real-time UI push"]
+        PERSIST["ExpectationFileSystemPersistence
+File persistence"]
     end
 
     NOTIFY --> DASH
@@ -71,7 +81,7 @@ sequenceDiagram
 
     IO->>IO: Create LogEntry with event data
     IO->>RB: tryPublishEvent(logEntry)
-    Note over RB: logEntry.translateTo(slot, seq)<br/>Copies fields into pre-allocated slot<br/>Clears the original logEntry
+    Note over RB: logEntry.translateTo(slot, seq). Copies fields into pre-allocated slot. Clears the original logEntry
     RB->>CT: Event available
     CT->>CT: processLogEntry(slot)
     CT->>CT: clone = slot.cloneAndClear()
@@ -166,7 +176,7 @@ sequenceDiagram
     EL->>RB: Publish RUNNABLE
     RB->>RB: Consumer thread runs verification logic
     
-    Note over RB: 1. Filter log by request matcher<br/>2. Count matching entries<br/>3. Check VerificationTimes.matches(count)
+    Note over RB: 1. Filter log by request matcher 2. Count matching entries 3. Check VerificationTimes.matches(count)
     
     alt Count matches
         RB->>EL: Log VERIFICATION_PASSED
@@ -196,7 +206,7 @@ sequenceDiagram
     participant EL as MockServerEventLog
 
     C->>EL: verify(VerificationSequence)
-    Note over EL: Consumer thread:<br/>1. Retrieve all received requests<br/>2. Walk forward through list<br/>3. For each expected request,<br/>   find next match after last position<br/>4. If any expected request not found<br/>   in order, report failure
+    Note over EL: Consumer thread: 1. Retrieve all received requests 2. Walk forward through list 3. For each expected request, find next match after last position 4. If any expected request not found in order, report failure
 ```
 
 Verification can be done by request matcher or by expectation ID.
@@ -257,7 +267,7 @@ sequenceDiagram
 
     AH->>RM: add/remove expectation
     RM->>FP: updated(matchers, cause)
-    Note over FP: Skip if cause is FILE_INITIALISER<br/>and path matches persistence path
+    Note over FP: Skip if cause is FILE_INITIALISER and path matches persistence path
     FP->>FP: Acquire ReentrantLock + FileLock
     FP->>FS: Write JSON array of active expectations
     FP->>FP: Release locks
