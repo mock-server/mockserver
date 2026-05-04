@@ -1,4 +1,8 @@
 steps:
+  - label: ":lint-roller: opencode config"
+    command: "./scripts/validate_opencode_config.sh"
+    timeout_in_minutes: 2
+
   - label: ":docker: update docker image"
     command: "docker pull mockserver/mockserver:maven"
 

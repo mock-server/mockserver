@@ -104,6 +104,7 @@ See `.opencode/skills/aws-investigation/SKILL.md` for full details.
 - Follow the evidence. Do not guess at root causes.
 - Do NOT make changes. Only diagnose and report.
 - Return structured JSON when instructed by the calling skill.
+- If evidence is ambiguous or cross-system (Buildkite + AWS + GitHub Actions) and confidence is low, call this out explicitly and recommend escalation to the `debugger` lane.
 
 ## Rules & Reference
 

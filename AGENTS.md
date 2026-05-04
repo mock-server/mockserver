@@ -80,16 +80,16 @@ To investigate or manage AWS infrastructure:
 
 ### Buildkite Agent Infrastructure
 
-Build agents run on EC2 Spot instances in an AutoScaling Group, managed by a Lambda-based autoscaler. Infrastructure is managed by Terraform in `terraform/buildkite-agents/`. See [docs/infrastructure/aws-infrastructure.md](docs/infrastructure/aws-infrastructure.md) for full details.
+Build agents run on EC2 instances in an AutoScaling Group, managed by a Lambda-based autoscaler. Infrastructure is managed by Terraform in `terraform/buildkite-agents/`. See [docs/infrastructure/aws-infrastructure.md](docs/infrastructure/aws-infrastructure.md) for full details.
 
 | Property | Current (Terraform) | Legacy (CloudFormation) |
 |----------|---------------------|------------------------|
 | Region | `eu-west-2` | `us-east-1` |
-| Instance Type | `t3.large` (Spot) | `t3.large` (On-Demand) |
+| Capacity and instance type | Defined by `instance_types`, `min_size`, `max_size`, and `on_demand_percentage` in `terraform/buildkite-agents/` | Inspect live values via AWS CLI |
 | IaC in repo | Yes (`terraform/`) | No |
-| Scaling | 0–10 instances, Lambda-based | 0–2 instances, Lambda-based |
+| Scaling behavior | Lambda scaler adjusts desired capacity from Buildkite queue depth | Lambda scaler adjusts desired capacity from queue depth |
 
-The scaler runs every minute, scales 0-10 instances based on Buildkite job queue depth. `MIN_SIZE=0` means agents scale to zero when idle.
+The scaler runs every minute. Treat values in Terraform and live AWS state as authoritative; avoid hard-coding instance types or capacity numbers in prompts.
 
 ## Git Policy
 
@@ -101,26 +101,15 @@ The scaler runs every minute, scales 0-10 instances based on Buildkite job queue
 
 ### Parallel Session Safety
 
-Multiple opencode sessions may run concurrently on the same repository. You MUST:
-
-- **Only commit files you changed in THIS session.** Never stage files modified by another session.
-- **Never use `git add .` or `git add -A`.** Always stage files by explicit path.
-- **Re-read files before editing.** Another session may have modified them since you last read.
-- **Check `git status` before committing.** If unexpected changes appear, stop and ask the user.
-- **Pull before push.** Run `git pull --rebase` before pushing — another session may have pushed.
-
-See `.opencode/rules/commit-workflow.md` for the full parallel session safety rules.
+Multiple opencode sessions may run concurrently on the same repository. Follow `.opencode/rules/commit-workflow.md` and keep these non-negotiables:
+- Stage explicit paths only (never `git add .` or `git add -A`)
+- Re-read files before editing and check `git status` before commit
+- Commit only files changed in this session
+- Run `git pull --rebase` before push
 
 ## Pre-Commit Workflow
 
-Before every commit, follow the full workflow in `.opencode/rules/commit-workflow.md`:
-
-1. **Classify** changed files by category (java, terraform, bash, docs, etc.)
-2. **Validate** per category (Java → `mvnw test`, Terraform → `fmt`/`validate`/`plan`, Bash → `bash -n`, etc.)
-3. **Adversarial review** using `review-cheap` subagent (different model, fresh context)
-4. Only then commit
-
-See `.opencode/rules/commit-workflow.md` for the full workflow and skip conditions.
+Use `/commit` for commits so the full workflow in `.opencode/rules/commit-workflow.md` is enforced (classify -> validate -> adversarial review -> commit). Skip steps only when the user explicitly requests it.
 
 ## Diagrams and Formatting
 
@@ -182,7 +171,7 @@ When the user asks for a code review:
 
 ## Convention-Based Skill Invocation
 
-Skills whose description contains `MUST be launched as a Task subagent with subagent_type "<type>"` MUST be launched via the Task tool with the specified `subagent_type`. NEVER load them directly with the `skill` tool.
+Follow `.opencode/rules/report-formatting.md`: any skill description containing `MUST be launched as a Task subagent with subagent_type "<type>"` MUST be routed via Task using that subagent type. NEVER load it directly with the `skill` tool.
 
 ## Research-First Problem Solving
 

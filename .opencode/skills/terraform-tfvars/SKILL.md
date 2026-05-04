@@ -82,31 +82,32 @@ cp terraform/buildkite-agents/terraform.tfvars.example \
    terraform/buildkite-agents/terraform.tfvars
 ```
 
-Then fill in the token value. The complete file should look like:
+Then set `buildkite_agent_token` in `terraform/buildkite-agents/terraform.tfvars`.
+Keep the other values from the template unless you intentionally want to override
+capacity or instance mix.
+
+Minimal required change:
 
 ```hcl
 # NEVER commit this file — it is gitignored.
 # Token retrieved from AWS SSM: /buildkite/buildkite/agent-token (us-east-1)
 
 buildkite_agent_token = "<TOKEN_VALUE>"
-
-region               = "eu-west-2"
-instance_types       = "t3.large"
-min_size             = 0
-max_size             = 2
-on_demand_percentage = 0
 ```
 
 ### Variable Reference
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `buildkite_agent_token` | *(required)* | Buildkite agent registration token (sensitive) |
-| `region` | `eu-west-2` | AWS region for the agent stack |
-| `instance_types` | `t3.large` | EC2 instance type for agents |
-| `min_size` | `0` | Minimum ASG size (0 = scale to zero when idle) |
-| `max_size` | `2` | Maximum ASG size |
-| `on_demand_percentage` | `0` | 0 = all Spot instances, 100 = all On-Demand |
+| Variable | Source of truth | Description |
+|----------|-----------------|-------------|
+| `buildkite_agent_token` | `terraform.tfvars` | Buildkite agent registration token (sensitive) |
+| `region` | `variables.tf` / `terraform.tfvars` | AWS region for the agent stack |
+| `instance_types` | `variables.tf` / `terraform.tfvars` | EC2 instance types (comma-separated) |
+| `min_size` | `variables.tf` / `terraform.tfvars` | Minimum ASG size (`0` allows scale-to-zero) |
+| `max_size` | `variables.tf` / `terraform.tfvars` | Maximum ASG size |
+| `on_demand_percentage` | `variables.tf` / `terraform.tfvars` | Spot/On-Demand mix |
+
+Read current defaults from `terraform/buildkite-agents/variables.tf` and current
+overrides from `terraform/buildkite-agents/terraform.tfvars.example`.
 
 ## Deploy
 

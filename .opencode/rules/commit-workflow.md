@@ -33,6 +33,8 @@ A commit may contain files from multiple categories. Run ALL applicable validati
 
 ## Step 2: Run Category-Specific Validations
 
+Validation principle: prefer executable verification over static inspection. When a file can be executed, built, rendered, or planned, run that command and use its output as evidence.
+
 ### Java changes (`java`)
 1. Identify affected Maven modules from file paths (see testing-policy.md for module mapping)
 2. Run unit tests: `./mvnw test -pl <module1>,<module2>`
@@ -49,11 +51,13 @@ A commit may contain files from multiple categories. Run ALL applicable validati
 ### Bash script changes (`bash`)
 1. Run `bash -n <script>` for each changed script to verify syntax
 2. Verify the script is executable (`chmod +x` if needed)
+3. Execute each changed script using the safest available runtime mode (`--help`, `--version`, `--dry-run`, or equivalent)
+4. If no safe runtime mode exists, run the script with benign inputs in an isolated context or stop and ask the user for an explicit skip
 
 ### Docker changes (`docker`)
-1. Review the Dockerfile for syntax errors and best practice violations (FROM, COPY, RUN ordering, multi-stage builds, no secrets in layers)
+1. Build every changed Dockerfile with `docker build` (or `docker buildx build`) using the correct context
 2. If `hadolint` is available, run `hadolint <Dockerfile>`
-3. If the Dockerfile is for a CI/build image (e.g. under `docker_build/`), run `docker build` to verify the image builds successfully
+3. Run a basic smoke command from the built image when feasible (`--version`, startup help, or a short health command)
 4. If the build uses an optional corporate CA cert, verify the placeholder file exists and the real cert file is in `.gitignore`
 
 ### Helm changes (`helm`)
@@ -66,7 +70,7 @@ A commit may contain files from multiple categories. Run ALL applicable validati
 
 ### Config changes (`config`)
 1. Validate YAML/JSON syntax if applicable
-2. No further tests required
+2. Run command-level verification when a tool-specific check exists (for example `jq` for JSON transforms, `yamllint` when available, or app-specific validation commands)
 
 ### Website changes (`website`)
 1. Run `bundle exec jekyll build` if Jekyll files changed

@@ -66,7 +66,7 @@ Model Context Protocol servers connect external tools to opencode. Consider:
 **Action:** ~~Add Context7 for doc search.~~ Declined — security concern with third-party MCP servers we don't control. Monitor for a Buildkite MCP server.
 
 ### Model Per Agent — Configured
-Per-agent models are now set in `opencode.jsonc` with a 4-tier cost/quality strategy:
+Per-agent models are now set in `opencode.jsonc` with a 5-tier cost/quality strategy:
 
 | Tier | Model | Cost | Agents |
 |------|-------|------|--------|
@@ -95,9 +95,10 @@ Opencode tracks file changes during agent operations, enabling `/undo` and `/red
 
 ### Skill Permissions — Configured
 Agents that have no reason to load skills now have `"skill": false` in their tool config:
-- `test-runner`, `code-reviewer`, `security-auditor`, `debugger`, `council-seat` — these are focused agents that should never load skills (they read code or run commands, not orchestrate workflows)
+- `test-runner`, `code-reviewer`, `security-auditor`, `council-seat` — these are focused agents that should never load skills (they read code or run commands, not orchestrate workflows)
 
 Agents that need skills retain access:
+- `debugger` — can load structured investigation skills such as `aws-investigation`
 - `pipeline-investigator` — loads the `pipeline-investigation` skill
 - `review-cheap`, `review-final` — load review skills (`review-code`, `review-spec`)
 - `implementer`, `simplifier`, `docs-writer`, `taskify-agent` — may load skills as part of their workflows

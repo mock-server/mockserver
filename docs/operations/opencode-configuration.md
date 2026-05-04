@@ -18,8 +18,8 @@ flowchart TB
     subgraph Harness[".opencode/"]
         direction TB
         AG["agents/<br/><i>12 sub-agent prompts</i>"]
-        RU["rules/<br/><i>6 guardrail files</i>"]
-        SK["skills/<br/><i>10 workflow definitions</i>"]
+        RU["rules/<br/><i>7 guardrail files</i>"]
+        SK["skills/<br/><i>11 workflow definitions</i>"]
         CM["commands/<br/><i>11 slash commands</i>"]
         PL["plugins/<br/><i>2 session plugins</i>"]
     end
@@ -42,8 +42,8 @@ flowchart TB
 | 1 | [Config](#building-block-1-config) | `opencode.jsonc` | Root configuration: models, permissions, agent definitions |
 | 2 | [Model Strategy](#building-block-2-model-strategy) | `opencode.jsonc` (agent entries) | Right model for the right task |
 | 3 | [Agents](#building-block-3-agents) | `.opencode/agents/*.md` | 12 specialist sub-agents with least-privilege access |
-| 4 | [Rules](#building-block-4-rules) | `.opencode/rules/*.md` | 6 guardrails always enforced |
-| 5 | [Skills](#building-block-5-skills) | `.opencode/skills/*/SKILL.md` | 10 reusable multi-step workflows |
+| 4 | [Rules](#building-block-4-rules) | `.opencode/rules/*.md` | 7 guardrails always enforced |
+| 5 | [Skills](#building-block-5-skills) | `.opencode/skills/*/SKILL.md` | 11 reusable multi-step workflows |
 | 6 | [Commands](#building-block-6-commands) | `.opencode/commands/*.md` | 11 slash shortcuts with guaranteed routing |
 | 7 | [Plugins & Tools](#building-block-7-plugins--tools) | `.opencode/plugins/*.ts` | Session hooks and external integrations |
 
@@ -77,12 +77,14 @@ The root configuration file `opencode.jsonc` controls the entire system. Every s
   // File watcher excludes (saves tokens, avoids indexing build artifacts)
   "watcher": {
     "ignore": [
-      "vendor/**", "node_modules/**", ".git/**", ".tmp/**",
-      "target/**",        // Maven build output
+      "vendor/**", "**/node_modules/**", ".git/**", ".tmp/**",
+      "**/target/**",     // Maven build output in all modules
       ".idea/**",         // IntelliJ project files
       "*.class", "*.jar", // Java bytecode and archives
-      "_site/**",         // Jekyll generated site
-      ".sass-cache/**"    // Jekyll SCSS cache
+      "**/_site/**",      // Jekyll generated site
+      "**/.sass-cache/**",// Jekyll SCSS cache
+      "terraform/**/.terraform/**",
+      "build-*/**"        // Downloaded Buildkite logs
     ]
   },
 
@@ -93,6 +95,10 @@ The root configuration file `opencode.jsonc` controls the entire system. Every s
       "git push --force*": "deny",
       "git reset --hard*": "deny",
       "git clean -fd*": "deny",
+      "rm -rf .": "deny",
+      "rm -rf ..": "deny",
+      "rm -rf ~": "deny",
+      "rm -rf /": "deny",
       "rm -rf /*": "deny"
     }
   },
@@ -108,9 +114,9 @@ The root configuration file `opencode.jsonc` controls the entire system. Every s
 |---------|-------|-----------|
 | `default_agent: "plan"` | Start read-only | Prevents accidental modifications; forces deliberate switch to build mode |
 | `compaction.prune: true` | Auto-prune old context | MockServer's codebase is large; long investigation sessions would otherwise hit context limits |
-| `watcher.ignore` includes `target/**` | Skip Maven output | `target/` contains thousands of `.class` files that would waste indexing tokens |
-| `watcher.ignore` includes `_site/**` | Skip Jekyll output | Generated HTML should never be edited directly |
-| Permission deny-list | 4 destructive patterns | Defence in depth — these are also blocked by `git-safety.md` rules, but config-level denial is a harder guarantee |
+| `watcher.ignore` includes `**/target/**` | Skip Maven output | Module `target/` directories contain thousands of generated files |
+| `watcher.ignore` includes `**/_site/**` | Skip Jekyll output | Generated HTML should never be edited directly |
+| Permission deny-list | 8 destructive patterns | Defence in depth — these are also blocked by `git-safety.md` rules, but config-level denial is a harder guarantee |
 
 ### AGENTS.md — The Global Instruction File
 
@@ -200,7 +206,7 @@ Each sub-agent is a configured AI persona with a specific model, system prompt, 
 | **security-auditor** | Standard | Security-focused Java/Netty audits | - | - | Y | - |
 | **review-final** | Independent | Authoritative binding PASS/BLOCK verdict | - | - | Y | Y |
 | **review-cheap** | Budget | Non-authoritative intermediate review | - | - | Y | Y |
-| **debugger** | Independent | Investigates issues using logs, CI, AWS | - | - | Y | - |
+| **debugger** | Independent | Investigates issues using logs, CI, AWS | - | - | Y | Y |
 | **pipeline-investigator** | Independent | Buildkite pipeline failure analysis | - | - | Y | Y |
 | **test-runner** | Fast | Runs Maven tests, reports results | - | - | Y | - |
 | **council-seat** | Fast | Design council parallel debate seat | - | - | - | - |
@@ -219,13 +225,13 @@ flowchart TD
     subgraph ReadBash["Read + Bash Only"]
         CR2["code-reviewer"]
         SA2["security-auditor"]
-        DB2["debugger"]
         TR2["test-runner"]
     end
 
     subgraph ReadBashSkill["Read + Bash + Skill"]
         RF2["review-final"]
         RC2["review-cheap"]
+        DB2["debugger"]
         PI2["pipeline-investigator"]
     end
 
@@ -240,7 +246,7 @@ flowchart TD
 ```
 
 - **Code reviewers** cannot write or edit files — they can only read and report. This prevents a reviewer from "fixing" code instead of reporting issues.
-- **The debugger** has skill disabled — it uses bash directly to run AWS CLI, `gh`, and other investigation tools rather than loading skill workflows.
+- **The debugger** can load skills for structured investigations (for example `aws-investigation`) while still using bash for ad-hoc probing.
 - **Council seats** have no bash, write, edit, or skill access — they can only read code and emit a verdict. This prevents a debate participant from taking unilateral action.
 - **Test runner** cannot write files — it runs `mvn test` and reports results, nothing more.
 
@@ -266,11 +272,12 @@ Rules are mandatory constraints loaded into sessions. They encode what experienc
 | Rule | Lines | Always Loaded | Purpose |
 |------|------:|:------------:|---------|
 | `git-safety.md` | 56 | Yes | Blocks 11 destructive git commands without confirmation |
-| `commit-workflow.md` | 129 | Yes | 4-step pre-commit workflow with adversarial review |
+| `commit-workflow.md` | 133 | Yes | 4-step pre-commit workflow with adversarial review |
 | `testing-policy.md` | 69 | Yes | Maven module mapping, test commands, quality standards |
 | `tmp-directory.md` | 75 | Yes | Use `.tmp/` at repo root, never `/tmp/` |
 | `report-formatting.md` | 36 | Yes | Subagent JSON → report template formatting convention |
 | `coding-principles.md` | 29 | Yes | Think before coding, simplicity first, surgical changes |
+| `aws-ids-file.md` | 31 | Yes | Require `~/mockserver-aws-ids.md` before AWS operations |
 
 ### git-safety.md — Banned Commands
 
@@ -344,6 +351,7 @@ A skill is a self-contained multi-step workflow — a runbook the agent executes
 | `terraform-tfvars` | SKILL.md | No | "create tfvars", "deploy buildkite agents" |
 | `docker-build-push` | SKILL.md | No | "build docker image", "push maven image", "rebuild CI image" |
 | `issue-review` | SKILL.md | No | "review issue", "triage issue", "is this a bug" |
+| `build-monitor` | SKILL.md | No | "monitor builds", "watch pipeline", "continuous monitoring" |
 
 ### Skill Anatomy
 
@@ -395,7 +403,7 @@ This separation ensures:
 
 ## Building Block 6: Commands
 
-Commands are slash shortcuts that map user-friendly invocations to specific agents and skills. They enforce routing at the **framework level** — before the AI makes a decision.
+Commands are slash shortcuts that map user-friendly invocations to specific agents and, when needed, skills. They enforce routing at the **framework level** — before the AI makes a decision.
 
 ### Command Catalogue
 
@@ -403,13 +411,13 @@ Commands are slash shortcuts that map user-friendly invocations to specific agen
 |---------|-------|:-------:|---------|
 | `/aws-investigation` | `debugger` | Yes | Investigate AWS infrastructure issues |
 | `/pipeline-investigation` | `pipeline-investigator` | Yes | Investigate Buildkite pipeline failures |
-| `/review-code` | `general` | Yes | Deep code audit |
-| `/review-spec` | `general` | Yes | Critical review of spec/design document |
-| `/codebase-change-report` | `general` | Yes | Generate report of recent changes |
-| `/update-architecture-docs` | `general` | Yes | Review and update architecture docs |
-| `/design-council` | (default) | No | Convene parallel design council debate |
-| `/excalidraw` | (default) | No | Generate .excalidraw architecture diagrams |
-| `/codeql-scan` | (default) | No | Run CodeQL security scan on Java code |
+| `/review-code` | `review-final` | Yes | Deep code audit |
+| `/review-spec` | `review-final` | Yes | Critical review of spec/design document |
+| `/codebase-change-report` | `docs-writer` | Yes | Generate report of recent changes |
+| `/update-architecture-docs` | `docs-writer` | Yes | Review and update architecture docs |
+| `/design-council` | `general` | Yes | Convene parallel design council debate |
+| `/excalidraw` | `general` | Yes | Generate .excalidraw architecture diagrams |
+| `/codeql-scan` | `security-auditor` | Yes | Run CodeQL security scan on Java code |
 | `/issue-review` | (default) | No | Review, classify, and resolve a GitHub issue |
 | `/commit` | (default) | No | Commit changes following full pre-commit workflow |
 
@@ -439,7 +447,7 @@ Routing is the single biggest practical failure mode of multi-agent setups. Mock
 |-------|-----------|---------|
 | **Convention** | Skill descriptions contain routing markers | `MUST be launched as a Task subagent with subagent_type "debugger"` |
 | **Framework** | Command files hardcode the target agent | `agent: pipeline-investigator` in frontmatter |
-| **Permission** | Read-only agents cannot load skills | `debugger` has `"skill": false` in config |
+| **Permission** | Read-only agents can be skill-disabled by role | `code-reviewer` has `"skill": false` in config |
 
 ---
 
@@ -570,18 +578,21 @@ mockserver/
     │   ├── simplifier.md
     │   ├── taskify-agent.md
     │   └── test-runner.md
-    ├── rules/                               # 6 guardrail files
+    ├── rules/                               # 7 guardrail files
+    │   ├── aws-ids-file.md
     │   ├── coding-principles.md
     │   ├── commit-workflow.md
     │   ├── git-safety.md
     │   ├── report-formatting.md
     │   ├── testing-policy.md
     │   └── tmp-directory.md
-    ├── skills/                              # 10 skill workflows
+    ├── skills/                              # 11 skill workflows
     │   ├── aws-investigation/
     │   │   ├── SKILL.md
     │   │   └── report-template.md
     │   ├── browser-auth/
+    │   │   └── SKILL.md
+    │   ├── build-monitor/
     │   │   └── SKILL.md
     │   ├── docker-build-push/
     │   │   └── SKILL.md
@@ -632,3 +643,4 @@ When modifying the opencode configuration:
 - **Changing model assignments**: Update the `model` field in the agent's entry in `opencode.jsonc`. No other files need to change.
 - **Adding a command**: Create a markdown file in `.opencode/commands/` with YAML frontmatter specifying the target agent.
 - **Adding a plugin**: Create the TypeScript file in `.opencode/plugins/`. Ensure `@opencode-ai/plugin` is in `.opencode/package.json`.
+- **Validation**: Run `./scripts/validate_opencode_config.sh` to catch broken command→skill references, command→agent mismatches, subagent-routing drift, and hardcoded infrastructure literals.
