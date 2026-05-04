@@ -3,8 +3,8 @@
 set -euo pipefail
 
 cleanup() {
-    echo "Build cancelled or interrupted - exiting gracefully"
-    exit 0
+    echo "Build cancelled or interrupted"
+    exit 143
 }
 
 trap cleanup SIGTERM SIGINT
