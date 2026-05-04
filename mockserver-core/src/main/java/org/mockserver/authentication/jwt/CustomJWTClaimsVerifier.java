@@ -34,18 +34,6 @@ public class CustomJWTClaimsVerifier extends DefaultJWTClaimsVerifier<SecurityCo
             }
         }
 
-        if (exactMatchClaims != null && !exactMatchClaims.getClaims().isEmpty()) {
-            for (Map.Entry<String, Object> entry : exactMatchClaims.getClaims().entrySet()) {
-                String claimName = entry.getKey();
-                Object expectedValue = entry.getValue();
-                Object actualValue = claimsSet.getClaim(claimName);
-                
-                if (!expectedValue.equals(actualValue)) {
-                    throw new BadJWTException("JWT " + claimName + " claim has value " + actualValue + ", must be " + expectedValue);
-                }
-            }
-        }
-
         if (requiredClaims != null && !requiredClaims.isEmpty()) {
             Set<String> missingClaims = new HashSet<>();
             for (String requiredClaim : requiredClaims) {
@@ -57,6 +45,18 @@ public class CustomJWTClaimsVerifier extends DefaultJWTClaimsVerifier<SecurityCo
                 List<String> sorted = new ArrayList<>(missingClaims);
                 sorted.sort(String::compareTo);
                 throw new BadJWTException("JWT missing required claims: " + sorted);
+            }
+        }
+
+        if (exactMatchClaims != null && !exactMatchClaims.getClaims().isEmpty()) {
+            for (Map.Entry<String, Object> entry : exactMatchClaims.getClaims().entrySet()) {
+                String claimName = entry.getKey();
+                Object expectedValue = entry.getValue();
+                Object actualValue = claimsSet.getClaim(claimName);
+                
+                if (!expectedValue.equals(actualValue)) {
+                    throw new BadJWTException("JWT " + claimName + " claim has value " + actualValue + ", must be " + expectedValue);
+                }
             }
         }
 
