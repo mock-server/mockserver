@@ -180,9 +180,12 @@ mockServerClient("localhost", 1080).retrieveActiveExpectations({
         & <a href="/mock_server/getting_started.html#error_action">error</a>)
     </li>
     <li>returning responses</li>
+    <li><strong>forwarded requests and responses when MockServer is used as a proxy</strong> - both the request sent to the destination server and the actual response received are logged</li>
     <li>clearing logs, expectations & recorded requests</li>
     <li>resetting logs, expectations & recorded requests</li>
 </ul>
+
+<p><strong>Note:</strong> When MockServer is used as a proxy (forwarding requests to destination servers), the logs include both the original request <em>and</em> the actual response received from the destination server. These are logged with type <code>FORWARDED_REQUEST</code> and can be filtered in the <a href="/mock_server/mockserver_ui.html">dashboard</a> or retrieved programmatically.</p>
 
 <p>It is possible to retrieve the recorded log messages, as show below in the code examples.</p>
 

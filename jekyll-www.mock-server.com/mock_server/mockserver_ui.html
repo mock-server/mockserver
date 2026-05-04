@@ -46,7 +46,9 @@ sitemap:
 
 <h2>Logs</h2>
 
-<p>The logs section list all the logs events recorded by MockServer, including errors, request matching, exception creation, deletion, etc, as shown below:</p>
+<p>The logs section lists all log events recorded by MockServer, including errors, request matching, expectation creation, deletion, <strong>and forwarded requests with their responses when used as a proxy</strong>, as shown below:</p>
+
+<p><strong>Proxy Mode:</strong> When MockServer forwards requests to destination servers (proxy mode), log entries with type <code>FORWARDED_REQUEST</code> include both the request sent to the destination server and the actual response received. This makes it easy to see what responses your upstream services are returning.</p>
 
 <img class="ui_image" src="/images/LogMessageUISection.png" alt="Log Message UI Section">
 
@@ -82,6 +84,16 @@ sitemap:
 
 <h2>Proxied Requests</h2>
 
-<p>The proxied requests section shows request that have been proxied the corresponding response returned.</p>
+<p>The proxied requests section shows requests that have been proxied and <strong>the corresponding responses returned from the destination server</strong>.</p>
+
+<p>This section is particularly useful when using MockServer as a proxy to:</p>
+<ul>
+    <li>View the actual request sent to the destination server</li>
+    <li><strong>View the actual response received from the destination server</strong> (including status code, headers, and body)</li>
+    <li>Debug connectivity issues to upstream services</li>
+    <li>Inspect request/response pairs for creating expectations</li>
+</ul>
+
+<p><strong>Note:</strong> These proxied requests and responses are also visible in the <a href="#ui_logs_section">Logs</a> section with type <code>FORWARDED_REQUEST</code>, where you can see additional details about the forwarding process.</p>
 
 <img class="ui_image_half_width" src="/images/ProxiedRequestUISection.png" alt="Proxied Requests UI Section">
