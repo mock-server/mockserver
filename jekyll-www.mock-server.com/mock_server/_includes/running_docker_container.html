@@ -106,6 +106,59 @@ For example to add all jar files in the current directory, map <strong>$(pwd)</s
 
 <pre><code class="code">docker run -v $(pwd):/libs -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1080</span>  mockserver/mockserver -serverPort <span class="numeric_literal">1080</span></code></pre>
 
+<a id="docker_healthcheck" class="anchor" href="#docker_healthcheck">&nbsp;</a>
+
+<h2>Docker Health Checks</h2>
+
+<p>MockServer Docker images are based on <a target="_blank" href="https://github.com/GoogleContainerTools/distroless">distroless</a> containers, which do not include shell utilities like <code>curl</code> or <code>wget</code>. This means traditional HTTP-based health checks cannot be run inside the container.</p>
+
+<p>To configure health checks for MockServer containers, use one of the following approaches:</p>
+
+<h3>TCP-Based Health Check (Recommended)</h3>
+
+<p>Check if the port is accepting connections:</p>
+
+<pre class="prettyprint lang-yaml code"><code class="code">version: "2.4"
+services:
+  mockserver:
+    image: mockserver/mockserver:{{ site.mockserver_version }}
+    ports:
+      - "1080:1080"
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 1 bash -c ':> /dev/tcp/localhost/1080' || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s</code></pre>
+
+<h3>External HTTP Health Check</h3>
+
+<p>Use a separate container or external monitoring tool to check the liveness endpoint:</p>
+
+<pre class="prettyprint lang-yaml code"><code class="code">version: "2.4"
+services:
+  mockserver:
+    image: mockserver/mockserver:{{ site.mockserver_version }}
+    ports:
+      - "1080:1080"
+    environment:
+      MOCKSERVER_LIVENESS_HTTP_GET_PATH: "/liveness/probe"
+  
+  # Separate healthcheck container
+  healthcheck:
+    image: curlimages/curl:latest
+    depends_on:
+      - mockserver
+    command: >
+      sh -c "while true; do
+        curl -f http://mockserver:1080/liveness/probe || exit 1;
+        sleep 10;
+      done"</code></pre>
+
+<p>Alternatively, configure your orchestration platform (Kubernetes, ECS, etc.) to perform HTTP health checks externally rather than inside the container.</p>
+
+<p>For more information on the liveness endpoint configuration, see <a href="/mock_server/configuration_properties.html#liveness_configuration">liveness configuration properties</a>.</p>
+
 <a id="docker_compose" class="anchor" href="#docker_compose">&nbsp;</a>
 
 <h2>Docker Compose</h2>

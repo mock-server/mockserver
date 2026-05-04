@@ -21,6 +21,10 @@ sitemap:
     <li>authenticate all REST API i.e. control plane requests using JWT</li>
 </ul>
 
+<p><strong>Important:</strong> MockServer does not currently support HTTP proxy authentication (Proxy-Authenticate / Proxy-Authorization headers). The authentication mechanisms described on this page secure the <strong>control plane</strong> (expectation management, verification, retrieval, etc.), not the data plane when MockServer is used as an HTTP proxy. If you need to test proxy authentication, you must use a different proxy server that supports it.</p>
+
+<p><strong>Common confusion:</strong> The <code>MockServerClient.withProxyConfiguration()</code> method configures how the <em>client</em> connects to MockServer through an upstream proxy—it does not add authentication to MockServer itself. See the <a href="/mock_server/mockserver_clients.html">client documentation</a> for details.</p>
+
 <a id="control_plane_authentication" class="anchor" href="#control_plane_authentication">&nbsp;</a>
 
 <h2>Control Plane Authentication</h2>
