@@ -3,8 +3,40 @@ updates:
   - package-ecosystem: "maven"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "java"
+    ignore:
+      # Java 11 compatibility - block upgrades requiring Java 17+
+      - dependency-name: "org.springframework:*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "org.apache.tomcat.embed:*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "org.eclipse.jetty:*"
+        update-types: ["version-update:semver-major"]
+      # Block servlet namespace migration
+      - dependency-name: "javax.servlet:*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "npm"
+    directory: "/.opencode"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "npm"
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
