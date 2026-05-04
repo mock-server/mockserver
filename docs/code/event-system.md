@@ -201,6 +201,47 @@ sequenceDiagram
 
 Verification can be done by request matcher or by expectation ID.
 
+**Request matcher count verification** filters `RECEIVED_REQUEST` entries. **Expectation ID verification** retrieves entries matching `expectationLogPredicate` (includes `EXPECTATION_RESPONSE`, `FORWARDED_REQUEST`). **Sequence verification** scans recorded requests in order rather than counting.
+
+### Verification in Parallel Testing
+
+**Common issue (#1713):** When running tests in parallel, verification may intermittently fail even though requests were sent successfully.
+
+**Root causes:**
+
+1. **Async application under test** — If your application sends requests asynchronously (e.g., fire-and-forget, background workers), calling `verify()` before the application has actually sent the request will fail. Verification operations are serialized through the same ring buffer as request recording (FIFO order), so once a request has reached MockServer and been published to the ring buffer, subsequent verification calls will see it.
+2. **Log eviction** — The event log is bounded by `maxLogEntries` (default: `min(free heap KB / 8, 100000)`). In high-throughput parallel testing, old entries may be evicted before verification runs.
+3. **Cross-test interference** — If multiple tests share the same MockServer instance, requests from other tests may inflate the count or interfere with sequence verification.
+
+**Solutions:**
+
+- **Increase `maxLogEntries`** if running many parallel tests that generate thousands of requests:
+  ```java
+  ConfigurationProperties.maxLogEntries(200_000);
+  ```
+- **Use separate MockServer instances per test** (different ports or separate containers) to isolate event logs
+- **Use unique test identifiers** if sharing an instance:
+  - Unique paths per test: `/test/{testId}/...`
+  - Unique headers or query parameters in matchers
+  - Avoid broad matchers like only `path("/api")` in parallel tests
+- **Be careful with `clear()` / `reset()`** — they affect all tests sharing the instance
+- **Retry verification with backoff** if testing asynchronous systems where you need to wait for the application to send requests:
+  ```java
+  // Wait for application under test to send request, not for MockServer to process it
+  Awaitility.await()
+      .atMost(Duration.ofSeconds(5))
+      .pollInterval(Duration.ofMillis(100))
+      .untilAsserted(() -> mockServerClient.verify(request, VerificationTimes.once()));
+  ```
+- **Debug by retrieving recorded requests** — if verification fails, check what was actually recorded:
+  ```java
+  // Retrieves recorded requests (not the full event log)
+  HttpRequest[] recorded = mockServerClient.retrieveRecordedRequests(null);
+  System.out.println("Recorded requests: " + Arrays.toString(recorded));
+  ```
+
+See consumer documentation at [/mock_server/verification.html#how_verification_works](https://www.mock-server.com/mock_server/verification.html#how_verification_works) for user-facing guidance.
+
 ## Persistence System
 
 ### File Persistence

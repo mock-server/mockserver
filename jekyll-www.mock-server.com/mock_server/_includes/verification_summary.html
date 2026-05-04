@@ -1,9 +1,45 @@
-<p>MockServer supports verification of requests is has received, including both proxied requests and requests that have matched an expectation.</p>
+<p>MockServer supports verification of requests it has received, including both proxied requests and requests that have matched an expectation.</p>
 <p>Verification can be specified as follows:</p>
 <ul>
     <li>a <a href="/mock_server/getting_started.html#request_matchers"><strong>request matcher</strong></a> and a condition indicating the number of times the request should be matched</li>
 	<li>a sequence of <a href="/mock_server/getting_started.html#request_matchers"><strong>request matchers</strong></a> that is matched in order</li>
 </ul>
+
+<a id="how_verification_works" class="anchor" href="#how_verification_works">&nbsp;</a>
+
+<h3>How Verification Works</h3>
+
+<p>MockServer records all received requests in an in-memory event log (separate from application logs). Verification checks this event log:</p>
+
+<p><strong>For request matcher count verification:</strong> MockServer filters the event log to find all <code>RECEIVED_REQUEST</code> entries matching your request matcher, counts them, and compares the count against your constraint (<code>atLeast(n)</code>, <code>exactly(n)</code>, etc.). Returns HTTP 202 if the count matches, or HTTP 406 with an error message if it does not.</p>
+
+<p><strong>For expectation ID verification:</strong> MockServer retrieves all events associated with the specified expectation ID (including <code>EXPECTATION_RESPONSE</code> and <code>FORWARDED_REQUEST</code> entries) and verifies the count.</p>
+
+<p><strong>For sequence verification:</strong> MockServer scans recorded requests in order, checking that each expected request appears after the previous match. This is not a simple count comparison—order matters.</p>
+
+<p><strong>Important notes for parallel testing:</strong></p>
+<ul>
+    <li>The event log size is bounded by the <code>maxLogEntries</code> configuration property (default: minimum of free heap KB / 8 and 100,000 entries—see <a href="/mock_server/configuration_properties.html">configuration</a>). When this limit is reached, the oldest entries are evicted. If you run many parallel tests generating thousands of requests, consider increasing this value.</li>
+    <li>Event recording uses an asynchronous ring buffer. However, verification operations are serialized through the same ring buffer in FIFO order, so a request that has reached MockServer and been recorded will be visible to subsequent verification calls. Intermittent failures are more commonly caused by:
+        <ul>
+            <li>Your application under test sending requests asynchronously—ensure the application has completed sending before you verify</li>
+            <li>Cross-test interference—one test's requests appearing in another test's verification</li>
+            <li>Log eviction due to high request volume exceeding <code>maxLogEntries</code></li>
+        </ul>
+    </li>
+    <li><strong>Best practices for parallel tests:</strong>
+        <ul>
+            <li>Use separate MockServer instances (different ports or containers) per test for complete isolation</li>
+            <li>If sharing an instance, use unique paths per test (e.g., <code>/test/{testId}/...</code>) or unique headers/query parameters in matchers</li>
+            <li>Avoid broad matchers like only <code>path("/api")</code> in parallel tests</li>
+            <li>Be careful with <code>clear()</code> or <code>reset()</code>—they affect all tests sharing the instance</li>
+            <li>If verification fails intermittently because your system under test is asynchronous, use retry-with-backoff to wait for requests to arrive (not to wait for MockServer to process already-received requests)</li>
+        </ul>
+    </li>
+    <li>To retrieve recorded requests for debugging, use <code>PUT /mockserver/retrieve?type=REQUESTS</code> or <code>mockServerClient.retrieveRecordedRequests(null)</code>.</li>
+</ul>
+
+<p>For more details on the internal architecture, see the <a href="https://github.com/mock-server/mockserver/blob/master/docs/code/event-system.md#verification" target="_blank">Event System documentation</a>.</p>
 
 <h3>Verifying Repeating Requests</h3>
 
