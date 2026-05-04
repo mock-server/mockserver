@@ -30,11 +30,17 @@ Please see: [Change Log](https://github.com/mock-server/mockserver/blob/master/c
         <td>Backlog</td>
         <td><a href="https://trello.com/b/dsfTCP46/mockserver" target="_blank"><img height="20px" src="http://mock-server.com/images/trello_badge-md.png" alt="Trello Backlog"></a></td>
     </tr>
+    <tr>
+        <td>Security</td>
+        <td><a href="https://github.com/mock-server/mockserver/blob/master/SECURITY.md"><img height="20px" src="http://mock-server.com/images/GitHub_Logo-md.png" alt="Security Policy"></a></td>
+    </tr>
 </table>
 
 ### Requirements
 
 MockServer requires **Java 11+**. Java 11 is the minimum supported version to maximise compatibility — approximately 23% of Java projects still run on Java 11.
+
+**Security Note:** MockServer is a **development and testing tool only**. See [SECURITY.md](SECURITY.md) for important security considerations.
 
 ### Versions
 

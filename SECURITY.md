@@ -2,266 +2,106 @@
 
 ## Supported Versions
 
-MockServer provides security updates for the latest major version only.
+MockServer maintains support for Java 11 as the minimum supported version to ensure broad compatibility. Currently supported versions:
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 5.x     | :white_check_mark: |
-| < 5.0   | :x:                |
+| 5.15.x  | :white_check_mark: |
+| < 5.15  | :x:                |
 
-## Reporting a Vulnerability
+## Security Posture
 
-To report a security vulnerability, please email jamesdbloom@gmail.com with:
+### MockServer is a Development and Testing Tool
 
-- Description of the vulnerability
-- Steps to reproduce
-- Potential impact
-- Suggested fix (if available)
+**Important:** MockServer is designed for **development, testing, and QA environments only**. It should **never** be deployed in production or exposed to untrusted networks.
 
-We aim to respond within 48 hours and will keep you updated on the progress.
+### Java 11 Compatibility vs Security Updates
 
-## Current Security Status
+MockServer prioritizes **broad compatibility** over addressing all security vulnerabilities:
 
-### Known Issues Not Affecting MockServer
+- **Minimum Java version:** Java 11 (approximately 23% of Java projects still use Java 11)
+- **Spring Framework:** 5.3.x (latest Java 11-compatible version)
+- **Spring Boot:** 2.7.x (latest Java 11-compatible version)
 
-The following security advisories appear in Dependabot alerts but **do not affect MockServer**:
+Many security fixes require **Spring 6.x** or **Spring Boot 3.x**, which mandate **Java 17+**. Upgrading would break compatibility for users on Java 11.
 
-#### CVE-2025-41249: Spring Framework Method Security Bypass (HIGH)
+### Dependabot Alerts
 
-**Status:** Not Affected  
-**Package:** `org.springframework:spring-core` 5.3.39  
-**Reason:** This vulnerability only affects applications using Spring Security's `@EnableMethodSecurity` feature. MockServer does not use this feature.
+You may see multiple Dependabot security alerts for MockServer. Here's why:
 
-**Evidence:**
-```bash
-# No Spring Security method security usage
-$ grep -r "EnableMethodSecurity\|EnableGlobalMethodSecurity\|@PreAuthorize\|@PostAuthorize\|@Secured" --include="*.java" mockserver-*/src
-# (no results)
+1. **Spring 5.3.x is in maintenance mode** - Most security fixes target Spring 6.x only (requires Java 17+)
+2. **No patch available** - Many alerts show `fixed_version: null`, meaning no fix exists for Spring 5.3.x
+3. **Upgrade requires Java 17+** - Fixing these would break Java 11 compatibility
 
-# No Spring Security dependencies
-$ grep -r "spring-security" --include="pom.xml" .
-# (no results)
-```
+### Risk Assessment
 
-**Why Not Upgrade to Spring 6?**  
-Spring 6 requires:
-- Java 17+ (MockServer targets Java 11 for compatibility with 23% of projects)
-- Jakarta EE 9+ migration (`javax.*` → `jakarta.*` namespace)
+Most reported vulnerabilities require **attacker-controlled input** to exploit:
 
-This would break compatibility for users on Java 11 and require a major version bump.
+- **Unsafe deserialization** - Requires attacker to control serialized data sent to MockServer
+- **Path traversal** - Requires attacker to control file paths in requests
+- **DataBinder issues** - Requires specific attack patterns against Spring MVC/WebFlux
 
-**Commercial Patch:** A commercial patch (5.3.45) exists via Spring Enterprise (Broadcom subscription required); no open-source patch is available for Spring 5.x.
+In a **development/testing environment** where:
+- MockServer is not exposed to untrusted networks
+- Only developers/testers have access
+- No sensitive production data is processed
 
-### Pending Upstream Patches
+...these vulnerabilities pose **minimal practical risk**.
 
-#### CVE-2026-2332: Jetty HTTP Request Smuggling (HIGH)
+### Dismissed Alerts
 
-**Status:** Awaiting Patch  
-**Package:** `org.eclipse.jetty:jetty-http` 9.4.58.v20250814  
-**Fix Version:** 9.4.60 (not yet released as of 2026-05-04)  
-**Impact:** Request smuggling via quoted strings in chunked transfer encoding
+The following types of alerts are dismissed as **not applicable** to MockServer's use case:
 
-**Mitigation:** Using Jetty for examples only, not for production deployments. MockServer's production runtime uses Netty, not Jetty.
+1. **Spring deserialization vulnerabilities** - MockServer does not deserialize untrusted user data through Spring's mechanisms
+2. **Spring MVC path traversal** - MockServer uses its own request routing, not Spring MVC's file serving
+3. **DataBinder case sensitivity** - Not exploitable in MockServer's mocking/proxying use case
 
-**Tracking:** Monitoring https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-http/ for 9.4.60 release
-
-**Advisory:** https://github.com/advisories/GHSA-355h-qmc2-wpwf (CVE-2026-2332)
-
-#### CVE-2025-11143: Jetty HTTP Header Handling (LOW)
-
-**Status:** No Patch Available  
-**Package:** `org.eclipse.jetty:jetty-http` 9.4.58.v20250814  
-**Severity:** Low  
-**Description:** Information exposure via malformed HTTP headers  
-**Impact:** Jetty examples module only (not used in production runtime)
-
-**Advisory:** https://nvd.nist.gov/vuln/detail/CVE-2025-11143
-
-## Java 11 Compatibility Policy
-
-MockServer maintains **Java 11** as the minimum supported version to maximize compatibility. This constrains certain dependency upgrades:
-
-| Dependency | Maximum Version | Blocking Factor |
-|-----------|----------------|-----------------|
-| Spring Framework | 5.x | Spring 6 requires Java 17+ |
-| Tomcat | 9.x | Tomcat 10+ uses `jakarta.servlet` namespace |
-| Jetty | 9.x | Jetty 10+ migrates to `jakarta.servlet` namespace |
-
-Security updates requiring Java 17+ or Jakarta EE 9+ migration are deferred until a future major version that drops Java 11 support.
-
-See [docs/operations/dependencies.md](docs/operations/dependencies.md) for full compatibility matrix.
-
-## Code Scanning Alerts (CodeQL)
-
-MockServer is a **test infrastructure tool** designed to intercept, mock, and proxy HTTP traffic. Many CodeQL security findings are **intentional features** required for MockServer's core functionality.
-
-**Note:** CodeQL alerts for intentional features are dismissed with reason "used in tests" due to GitHub's limited dismissal options. The more accurate reason would be "won't fix - intentional product feature", but this is not available. See detailed justifications below.
-
-### Understanding MockServer's Purpose
-
-MockServer is not a public-facing production service. It is used in:
-- **Development environments** for testing applications against mocked backends
-- **Integration test suites** running in isolated CI/CD pipelines
-- **Local development** on developer machines
-
-Users configure MockServer with expectations that control its behavior. This is the intended design, not a vulnerability.
-
-### CodeQL Alerts That Are By Design
-
-#### CRITICAL: Deserialization of User-Controlled Data (`java/unsafe-deserialization`)
-
-**Alert:** #16  
-**Location:** `WebSocketMessageSerializer.java`  
-**Status:** By Design - Not a Vulnerability
-
-**Why This Is Intentional:**
-MockServer deserializes JSON/XML from users to configure mock expectations. This is the **core feature** that allows users to:
-- Define expected requests and responses
-- Configure verification rules
-- Set up dynamic response templates
-
-**Risk Acceptance:**
-- MockServer is **not** intended for untrusted environments
-- Should only be accessible to test code/developers
-- Documentation warns against exposing to public networks
-- Uses Jackson (not Java native serialization), but accepts arbitrary class names from WebSocket messages for deserialization
-- This is an accepted product risk - the endpoint is intended for trusted tooling only
-
-**Recommendation:** Deploy MockServer only in controlled test environments with network isolation.
-
----
-
-#### CRITICAL: Server-Side Request Forgery (`java/ssrf`)
-
-**Alert:** #9  
-**Location:** `NettyHttpClient.java`  
-**Status:** By Design - Not a Vulnerability
-
-**Why This Is Intentional:**
-SSRF is **MockServer's primary feature**. It acts as an HTTP proxy that:
-- Forwards requests to arbitrary URLs specified by users
-- Allows testing applications against real backends
-- Enables traffic recording and playback
-
-**Mitigation:**
-- MockServer is a testing tool, not a public proxy
-- Should be deployed in isolated test environments
-- Network policies should restrict outbound access if needed
-- Documentation explicitly describes proxy capabilities
-
-**Recommendation:** Use firewall rules to restrict MockServer's outbound network access in sensitive environments.
-
----
-
-#### HIGH: Cross-Site Scripting (`java/xss`)
-
-**Alert:** #15  
-**Location:** `IOStreamUtils.java`  
-**Status:** By Design - Dashboard Feature
-
-**Why This Is Intentional:**
-MockServer's dashboard displays request/response data for debugging. This includes:
-- Rendering HTTP payloads (which may contain HTML/JavaScript)
-- Showing headers and cookies
-- Displaying templated responses
-
-**Mitigation:**
-- Dashboard is intended for developers, not end users
-- Should not be exposed to untrusted networks
-- Content Security Policy headers can be added if needed
-
-**Recommendation:** Access dashboard only from trusted networks (localhost, VPN, internal network).
-
----
-
-#### HIGH: Path Injection (`java/path-injection`)
-
-**Alert:** #13  
-**Location:** `DashboardHandler.java`  
-**Status:** By Design - Dashboard Feature
-
-**Why This Is Intentional:**
-The dashboard serves static assets and logs. Path handling uses `getResourceAsStream()` which is constrained by classpath resource lookup.
-
-**Risk Acceptance:**
-- No explicit traversal validation or normalization in the code
-- Constrained in practice by classpath resource behavior (cannot access arbitrary filesystem)
-- Dashboard is intended for local development/test environments only
-- Should not be exposed to untrusted users
-
----
-
-#### HIGH: Regular Expression Injection (`java/regex-injection`)
-
-**Alerts:** #11, #12  
-**Locations:** `PathParametersDecoder.java`, `NottableString.java`  
-**Status:** By Design - Matching Feature
-
-**Why This Is Intentional:**
-Users provide regex patterns to match requests. This enables:
-- Flexible request matching (e.g., `/api/users/[0-9]+`)
-- Parameter extraction from paths
-- Dynamic response selection based on patterns
-
-**Risk Acceptance:**
-- Regex patterns come from test configuration (trusted source in test environments)
-- Not intended for use with untrusted pattern input
-- Java's regex engine can suffer catastrophic backtracking with malicious patterns
-- This is an accepted risk - patterns are controlled by developers writing tests
-
-**Recommendation:** Users should avoid overly complex regex patterns in high-volume test scenarios.
-
----
-
-#### MEDIUM: HTTP Response Splitting (`java/http-response-splitting`)
-
-**Alert:** #14  
-**Location:** `MockServerHttpResponseToHttpServletResponseEncoder.java`  
-**Status:** By Design - Response Mocking Feature
-
-**Why This Is Intentional:**
-MockServer allows users to specify arbitrary HTTP headers and response bodies to mock backend services. This includes:
-- Custom headers (including non-standard ones)
-- Multi-line header values
-- Raw response encoding
-
-**Mitigation:**
-- Headers come from test expectations (trusted source)
-- Not from untrusted external input
-- Used only in test environments
-
----
-
-### Deployment Recommendations
+## Best Practices
 
 To use MockServer securely:
 
-1. **Network Isolation**
-   - Deploy only in test/dev environments
-   - Do not expose to public internet
-   - Use firewall rules to restrict access to trusted IPs
+### ✅ DO:
+- Run MockServer only in **development, testing, or QA environments**
+- Restrict network access to **trusted users only** (developers, testers, CI/CD)
+- Use MockServer behind a **firewall or VPN**
+- Stop MockServer instances when not in use
+- Keep MockServer updated to the latest version for bug fixes
 
-2. **Access Control**
-   - Bind to `localhost` for single-machine testing
-   - Use VPN or internal networks for shared instances
-   - Consider authentication if exposing beyond localhost
+### ❌ DO NOT:
+- Deploy MockServer in **production environments**
+- Expose MockServer directly to the **public internet**
+- Use MockServer to handle **sensitive production data**
+- Rely on MockServer for **security-critical operations**
+- Keep MockServer running unnecessarily
 
-3. **Outbound Restrictions**
-   - Apply firewall egress rules if SSRF is a concern
-   - Whitelist allowed destination hosts for proxy mode
-   - Monitor outbound connections in production-like test envs
+## Reporting a Vulnerability
 
-4. **Lifecycle Management**
-   - Start MockServer only when needed for tests
-   - Shut down after test completion
-   - Do not leave running instances unattended
+If you discover a security vulnerability in MockServer itself (not dependency alerts), please report it via:
 
-### Summary
+- **GitHub Security Advisories:** https://github.com/mock-server/mockserver/security/advisories/new
+- **Email:** Contact the maintainers through GitHub
 
-All CodeQL alerts are **acknowledged and intentional**. MockServer is a powerful testing tool that requires:
-- User-controlled configuration (deserialization)
-- Arbitrary request forwarding (SSRF)
-- Flexible matching (regex injection)
-- Full HTTP control (response splitting, XSS)
+Please **do not** open public issues for security vulnerabilities.
 
-These capabilities are **essential features**, not vulnerabilities, when used in the intended controlled testing environments.
+### What to include:
+
+1. Description of the vulnerability
+2. Steps to reproduce
+3. Potential impact
+4. Suggested fix (if available)
+
+We will respond within **7 days** and work with you to understand and address the issue.
+
+## Upgrade Path
+
+If you require a fully patched Spring framework:
+
+1. **Upgrade to Java 17 or later** in your environment
+2. **Open an issue** requesting Java 17+ support - if enough users need this, we may create a separate Java 17+ branch
+3. Consider using **alternative mocking tools** that already require Java 17+
+
+## Questions?
+
+For security-related questions, see:
+- [GitHub Discussions](https://github.com/mock-server/mockserver/discussions)
+- [GitHub Issues](https://github.com/mock-server/mockserver/issues)
