@@ -175,8 +175,8 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
         // signers name
         X500Name issuerName = new X500Name("CN=" + ROOT_COMMON_NAME + ", O=" + ORGANISATION + ", L=" + LOCALITY + ", ST=" + STATE + ", C=" + COUNTRY);
 
-        // serial
-        BigInteger serial = BigInteger.valueOf(new Random().nextInt(Integer.MAX_VALUE));
+        // serial (RFC 5280 recommends unpredictable serials)
+        BigInteger serial = new BigInteger(64, new SecureRandom());
 
         // create the certificate - version 3 (with subjects name same as issues as self signed)
         X509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(issuerName, serial, NOT_BEFORE, NOT_AFTER, issuerName, publicKey);
@@ -298,8 +298,8 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
         // subjects name - the same as we are self signed.
         X500Name subject = new X500Name("CN=" + domain + ", O=" + ORGANISATION + ", L=" + LOCALITY + ", ST=" + STATE + ", C=" + COUNTRY);
 
-        // serial
-        BigInteger serial = BigInteger.valueOf(new Random().nextInt(Integer.MAX_VALUE));
+        // serial (RFC 5280 recommends unpredictable serials)
+        BigInteger serial = new BigInteger(64, new SecureRandom());
 
         // create the certificate - version 3
         X509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(issuer, serial, NOT_BEFORE, NOT_AFTER, subject, publicKey);
