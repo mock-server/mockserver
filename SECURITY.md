@@ -34,7 +34,12 @@ The following security advisories appear in Dependabot alerts but **do not affec
 
 **Evidence:**
 ```bash
-$ grep -r "EnableMethodSecurity" --include="*.java" mockserver-*/src
+# No Spring Security method security usage
+$ grep -r "EnableMethodSecurity\|EnableGlobalMethodSecurity\|@PreAuthorize\|@PostAuthorize\|@Secured" --include="*.java" mockserver-*/src
+# (no results)
+
+# No Spring Security dependencies
+$ grep -r "spring-security" --include="pom.xml" .
 # (no results)
 ```
 
@@ -60,7 +65,7 @@ This would break compatibility for users on Java 11 and require a major version 
 
 **Tracking:** Monitoring https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-http/ for 9.4.60 release
 
-**Advisory:** https://github.com/advisories/GHSA-xxxx (CVE-2026-2332)
+**Advisory:** https://github.com/advisories/GHSA-355h-qmc2-wpwf (CVE-2026-2332)
 
 #### CVE-2025-11143: Jetty HTTP Header Handling (LOW)
 
@@ -90,6 +95,8 @@ See [docs/operations/dependencies.md](docs/operations/dependencies.md) for full 
 
 MockServer is a **test infrastructure tool** designed to intercept, mock, and proxy HTTP traffic. Many CodeQL security findings are **intentional features** required for MockServer's core functionality.
 
+**Note:** CodeQL alerts for intentional features are dismissed with reason "used in tests" due to GitHub's limited dismissal options. The more accurate reason would be "won't fix - intentional product feature", but this is not available. See detailed justifications below.
+
 ### Understanding MockServer's Purpose
 
 MockServer is not a public-facing production service. It is used in:
@@ -113,11 +120,12 @@ MockServer deserializes JSON/XML from users to configure mock expectations. This
 - Configure verification rules
 - Set up dynamic response templates
 
-**Mitigation:**
+**Risk Acceptance:**
 - MockServer is **not** intended for untrusted environments
 - Should only be accessible to test code/developers
 - Documentation warns against exposing to public networks
-- Uses Jackson (not Java native serialization) with type validation
+- Uses Jackson (not Java native serialization), but accepts arbitrary class names from WebSocket messages for deserialization
+- This is an accepted product risk - the endpoint is intended for trusted tooling only
 
 **Recommendation:** Deploy MockServer only in controlled test environments with network isolation.
 
@@ -173,12 +181,13 @@ MockServer's dashboard displays request/response data for debugging. This includ
 **Status:** By Design - Dashboard Feature
 
 **Why This Is Intentional:**
-The dashboard serves static assets and logs. Path handling is constrained to the dashboard's resource directory.
+The dashboard serves static assets and logs. Path handling uses `getResourceAsStream()` which is constrained by classpath resource lookup.
 
-**Mitigation:**
-- Path traversal is validated against allowed resource paths
-- Dashboard serves only bundled static assets
-- No access to arbitrary filesystem locations
+**Risk Acceptance:**
+- No explicit traversal validation or normalization in the code
+- Constrained in practice by classpath resource behavior (cannot access arbitrary filesystem)
+- Dashboard is intended for local development/test environments only
+- Should not be exposed to untrusted users
 
 ---
 
@@ -194,10 +203,11 @@ Users provide regex patterns to match requests. This enables:
 - Parameter extraction from paths
 - Dynamic response selection based on patterns
 
-**Mitigation:**
-- Regex patterns come from test code (trusted source)
-- Not from untrusted external input
-- Java's regex engine has ReDoS protections (backtracking limits)
+**Risk Acceptance:**
+- Regex patterns come from test configuration (trusted source in test environments)
+- Not intended for use with untrusted pattern input
+- Java's regex engine can suffer catastrophic backtracking with malicious patterns
+- This is an accepted risk - patterns are controlled by developers writing tests
 
 **Recommendation:** Users should avoid overly complex regex patterns in high-volume test scenarios.
 

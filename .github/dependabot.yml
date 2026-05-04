@@ -13,6 +13,8 @@ updates:
       # Java 11 compatibility - block upgrades requiring Java 17+
       - dependency-name: "org.springframework:*"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "org.springframework.boot:*"
+        update-types: ["version-update:semver-major"]
       - dependency-name: "org.apache.tomcat.embed:*"
         update-types: ["version-update:semver-major"]
       - dependency-name: "org.eclipse.jetty:*"
