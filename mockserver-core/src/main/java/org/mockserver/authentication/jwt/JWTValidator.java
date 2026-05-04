@@ -106,7 +106,7 @@ public class JWTValidator {
             if (this.matchingClaims != null) {
                 this.matchingClaims.forEach(matchingClaimsBuilder::claim);
             }
-            jwtProcessor.setJWTClaimsSetVerifier(new DefaultJWTClaimsVerifier<>(
+            jwtProcessor.setJWTClaimsSetVerifier(new CustomJWTClaimsVerifier(
                 this.expectedAudience,
                 matchingClaimsBuilder.build(),
                 this.requiredClaims

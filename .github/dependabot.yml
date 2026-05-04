@@ -25,6 +25,10 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "com.puppycrawl.tools:checkstyle"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "net.javacrumbs.json-unit:json-unit-core"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "com.jayway.jsonpath:json-path"
+        update-types: ["version-update:semver-major"]
       # Block servlet namespace migration
       - dependency-name: "javax.servlet:*"
         update-types: ["version-update:semver-major"]
