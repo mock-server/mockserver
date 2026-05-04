@@ -55,7 +55,7 @@
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF8</project.build.sourceEncoding>
         <slf4j.version>2.0.17</slf4j.version>
-        <jackson.version>2.18.6</jackson.version>
+        <jackson.version>2.19.0</jackson.version>
         <velocity.version>2.4.1</velocity.version>
         <netty.version>4.1.132.Final</netty.version>
         <httpcomponents.version>4.4.1</httpcomponents.version>
