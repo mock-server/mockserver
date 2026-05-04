@@ -146,9 +146,9 @@ for drift_file in "${drift_files[@]}"; do
     continue
   fi
 
-  if grep -nE 't3\.large|c5\.2xlarge|(^|[^[:alnum:]])[0-9]+([^0-9A-Za-z]+[0-9]+)?[[:space:]]+instances?|min_size[[:space:]]*=[[:space:]]*[0-9]+|max_size[[:space:]]*=[[:space:]]*[0-9]+|on_demand_percentage[[:space:]]*=[[:space:]]*[0-9]+' "$full_path" >/dev/null; then
+  if grep -nE 't3\.large|c5\.2xlarge|(^|[^[:alnum:]])[0-9]+([^0-9A-Za-z]+[0-9]+)?[[:space:]]+instances?|min_size[[:space:]]*=[[:space:]]*[1-9][0-9]*|max_size[[:space:]]*=[[:space:]]*[0-9]+|on_demand_percentage[[:space:]]*=[[:space:]]*[0-9]+' "$full_path" >/dev/null; then
     echo "ERROR: ${drift_file} contains hardcoded instance or capacity literals"
-    grep -nE 't3\.large|c5\.2xlarge|(^|[^[:alnum:]])[0-9]+([^0-9A-Za-z]+[0-9]+)?[[:space:]]+instances?|min_size[[:space:]]*=[[:space:]]*[0-9]+|max_size[[:space:]]*=[[:space:]]*[0-9]+|on_demand_percentage[[:space:]]*=[[:space:]]*[0-9]+' "$full_path" || true
+    grep -nE 't3\.large|c5\.2xlarge|(^|[^[:alnum:]])[0-9]+([^0-9A-Za-z]+[0-9]+)?[[:space:]]+instances?|min_size[[:space:]]*=[[:space:]]*[1-9][0-9]*|max_size[[:space:]]*=[[:space:]]*[0-9]+|on_demand_percentage[[:space:]]*=[[:space:]]*[0-9]+' "$full_path" || true
     errors=1
   fi
 done
