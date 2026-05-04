@@ -99,7 +99,23 @@
 
     <dependencyManagement>
         <dependencies>
-            <!-- mockserver -->
+            <!-- mockserver modules - all published artifacts -->
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>mockserver-client-java</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>mockserver-client-java</artifactId>
+                <version>${project.version}</version>
+                <classifier>shaded</classifier>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>mockserver-client-java-no-dependencies</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>mockserver-core</artifactId>
@@ -107,14 +123,34 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>mockserver-war</artifactId>
-                <classifier>classes</classifier>
+                <artifactId>mockserver-junit-jupiter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>mockserver-proxy-war</artifactId>
-                <classifier>classes</classifier>
+                <artifactId>mockserver-junit-jupiter</artifactId>
+                <version>${project.version}</version>
+                <classifier>shaded</classifier>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>mockserver-junit-jupiter-no-dependencies</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>mockserver-junit-rule</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>mockserver-junit-rule</artifactId>
+                <version>${project.version}</version>
+                <classifier>shaded</classifier>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>mockserver-junit-rule-no-dependencies</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -124,8 +160,60 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>mockserver-client-java</artifactId>
+                <artifactId>mockserver-netty</artifactId>
                 <version>${project.version}</version>
+                <classifier>shaded</classifier>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>mockserver-netty</artifactId>
+                <version>${project.version}</version>
+                <classifier>jar-with-dependencies</classifier>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>mockserver-netty-no-dependencies</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>mockserver-proxy-war</artifactId>
+                <version>${project.version}</version>
+                <type>war</type>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>mockserver-proxy-war</artifactId>
+                <version>${project.version}</version>
+                <classifier>classes</classifier>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>mockserver-spring-test-listener</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>mockserver-spring-test-listener</artifactId>
+                <version>${project.version}</version>
+                <classifier>shaded</classifier>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>mockserver-spring-test-listener-no-dependencies</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>mockserver-war</artifactId>
+                <version>${project.version}</version>
+                <type>war</type>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>mockserver-war</artifactId>
+                <version>${project.version}</version>
+                <classifier>classes</classifier>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
@@ -771,6 +859,35 @@
 
     <build>
         <plugins>
+            <!-- flatten POM for consumers (BOM generation) -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <inherited>false</inherited>
+                <configuration>
+                    <flattenMode>bom</flattenMode>
+                    <pomElements>
+                        <dependencyManagement>expand</dependencyManagement>
+                    </pomElements>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>flatten</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>flatten-clean</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- compile with correct warnings -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
