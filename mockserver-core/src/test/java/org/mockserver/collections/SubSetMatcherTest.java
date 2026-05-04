@@ -313,4 +313,74 @@ public class SubSetMatcherTest {
         );
     }
 
+    @Test
+    public void shouldContainSubsetWithPositiveAndNottedKeys() {
+        // Issue #1974: notted parameters should not count toward required matches
+        // Expectation: name=John AND NOT age
+        // Request: name=John (no age parameter)
+        // Should match because: 1 positive match (name) >= 1 required (name), and age is not present
+        assertTrue(containsSubset(null, null, regexStringMatcher,
+            Arrays.asList(
+                new ImmutableEntry(regexStringMatcher, "name", "John"),
+                new ImmutableEntry(regexStringMatcher, "!age", ".*")
+            ),
+            new ArrayList<>(Arrays.asList(
+                new ImmutableEntry(regexStringMatcher, "name", "John")
+            )))
+        );
+    }
+
+    @Test
+    public void shouldContainSubsetWithMultiplePositiveAndNottedKeys() {
+        // Expectation: name=John AND city=London AND NOT age AND NOT country
+        // Request: name=John, city=London (no age or country)
+        // Should match because: 2 positive matches >= 2 required, and age/country not present
+        assertTrue(containsSubset(null, null, regexStringMatcher,
+            Arrays.asList(
+                new ImmutableEntry(regexStringMatcher, "name", "John"),
+                new ImmutableEntry(regexStringMatcher, "city", "London"),
+                new ImmutableEntry(regexStringMatcher, "!age", ".*"),
+                new ImmutableEntry(regexStringMatcher, "!country", ".*")
+            ),
+            new ArrayList<>(Arrays.asList(
+                new ImmutableEntry(regexStringMatcher, "name", "John"),
+                new ImmutableEntry(regexStringMatcher, "city", "London")
+            )))
+        );
+    }
+
+    @Test
+    public void shouldContainSubsetWithOptionalAndNottedKeys() {
+        // Expectation: name=John AND ?age AND NOT country
+        // Request: name=John (no age or country)
+        // Should match: 1 positive match >= 1 required, age optional, country not present
+        assertTrue(containsSubset(null, null, regexStringMatcher,
+            Arrays.asList(
+                new ImmutableEntry(regexStringMatcher, "name", "John"),
+                new ImmutableEntry(regexStringMatcher, "?age", ".*"),
+                new ImmutableEntry(regexStringMatcher, "!country", ".*")
+            ),
+            new ArrayList<>(Arrays.asList(
+                new ImmutableEntry(regexStringMatcher, "name", "John")
+            )))
+        );
+    }
+
+    @Test
+    public void shouldNotContainSubsetWhenNottedKeyIsPresent() {
+        // Expectation: name=John AND NOT age
+        // Request: name=John, age=25
+        // Should NOT match because age is present (notted key found)
+        assertFalse(containsSubset(null, null, regexStringMatcher,
+            Arrays.asList(
+                new ImmutableEntry(regexStringMatcher, "name", "John"),
+                new ImmutableEntry(regexStringMatcher, "!age", ".*")
+            ),
+            new ArrayList<>(Arrays.asList(
+                new ImmutableEntry(regexStringMatcher, "name", "John"),
+                new ImmutableEntry(regexStringMatcher, "age", "25")
+            )))
+        );
+    }
+
 }
