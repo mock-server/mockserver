@@ -2,6 +2,13 @@
 
 set -euo pipefail
 
+cleanup() {
+    echo "Build cancelled or interrupted - exiting gracefully"
+    exit 0
+}
+
+trap cleanup SIGTERM SIGINT
+
 echo "whoami: $(whoami)"
 
 echo
