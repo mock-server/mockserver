@@ -389,7 +389,11 @@ public class ExpectationFileWatcherTest {
             Retries.tryWaitForSuccess(() -> assertThat(expectationsUpdatedCount.get(), equalTo(2)), 150, 100, MILLISECONDS);
             System.out.println("update processed in: " + (System.currentTimeMillis() - updatedFileTime) + "ms");
 
-            // then
+            // then - wait for all expectations to be loaded
+            Retries.tryWaitForSuccess(() -> {
+                List<Expectation> expectationsList = requestMatchers.retrieveActiveExpectations(null);
+                assertThat(expectationsList.size(), equalTo(4));
+            }, 150, 100, MILLISECONDS);
             List<Expectation> expectationsList = requestMatchers.retrieveActiveExpectations(null);
             assertThat(expectationsList.size(), equalTo(4));
             assertThat(expectationsList, containsInAnyOrder(
