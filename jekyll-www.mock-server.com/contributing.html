@@ -1,0 +1,208 @@
+---
+title: Contributing & Developer Documentation
+layout: page
+pageOrder: 11
+section: 'General'
+subsection: true
+sitemap:
+  priority: 0.6
+  changefreq: 'monthly'
+  lastmod: 2026-05-04T08:00:00+01:00
+---
+
+<p>MockServer is an open-source project that welcomes contributions and encourages users to understand its internals.</p>
+
+<p>Whether you're looking to contribute code, report issues effectively, or simply understand how MockServer works under the hood, the developer documentation on GitHub provides comprehensive technical details about the codebase, infrastructure, and operations.</p>
+
+<a id="developer_documentation" class="anchor" href="#developer_documentation">&nbsp;</a>
+
+<h2>Developer Documentation on GitHub</h2>
+
+<p>The <a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/tree/master/docs">docs/ directory on GitHub</a> contains detailed internal documentation organized into four main areas:</p>
+
+<a id="code_architecture" class="anchor" href="#code_architecture">&nbsp;</a>
+
+<h3>Code Architecture</h3>
+
+<p>Deep-dive documentation of MockServer's codebase, from high-level module structure down to individual subsystems:</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Document</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/blob/master/docs/code/overview.md">Code Overview</a></td>
+            <td>Module hierarchy, dependency graph, package layout</td>
+        </tr>
+        <tr>
+            <td><a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/blob/master/docs/code/netty-pipeline.md">Netty Pipeline</a></td>
+            <td>Port unification, protocol detection, channel handlers, relay pattern</td>
+        </tr>
+        <tr>
+            <td><a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/blob/master/docs/code/request-processing.md">Request Processing</a></td>
+            <td>Mock matching, proxy forwarding, action dispatch, WAR bridge</td>
+        </tr>
+        <tr>
+            <td><a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/blob/master/docs/code/event-system.md">Event System</a></td>
+            <td>LMAX Disruptor ring buffer, verification, persistence, observers</td>
+        </tr>
+        <tr>
+            <td><a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/blob/master/docs/code/dashboard-ui.md">Dashboard UI</a></td>
+            <td>React SPA, Redux state, WebSocket communication, data assembly</td>
+        </tr>
+        <tr>
+            <td><a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/blob/master/docs/code/domain-model.md">Domain Model</a></td>
+            <td>Model hierarchy, matchers, codecs, OpenAPI support, configuration</td>
+        </tr>
+        <tr>
+            <td><a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/blob/master/docs/code/tls-and-security.md">TLS &amp; Security</a></td>
+            <td>BouncyCastle CA, SNI, mTLS, JWT auth, control plane security</td>
+        </tr>
+        <tr>
+            <td><a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/blob/master/docs/code/client-and-integrations.md">Client &amp; Integrations</a></td>
+            <td>MockServerClient, JUnit 4/5, Spring, WebSocket callbacks</td>
+        </tr>
+        <tr>
+            <td><a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/blob/master/docs/code/memory-management.md">Memory Management</a></td>
+            <td>Log entry and expectation memory analysis, default limit calculation, tuning guide</td>
+        </tr>
+        <tr>
+            <td><a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/blob/master/docs/code/metrics.md">Metrics &amp; Monitoring</a></td>
+            <td>Prometheus metrics, memory monitoring, CSV export</td>
+        </tr>
+    </tbody>
+</table>
+
+<a id="infrastructure" class="anchor" href="#infrastructure">&nbsp;</a>
+
+<h3>Infrastructure</h3>
+
+<p>Documentation covering AWS accounts, CI/CD pipelines, container images, and Kubernetes deployment:</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Document</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/blob/master/docs/infrastructure/aws-infrastructure.md">AWS Infrastructure</a></td>
+            <td>AWS accounts, Terraform IaC, EC2 agents, S3 hosting, CloudFront CDN</td>
+        </tr>
+        <tr>
+            <td><a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/blob/master/docs/infrastructure/ci-cd.md">CI/CD</a></td>
+            <td>Buildkite pipelines and GitHub Actions workflows</td>
+        </tr>
+        <tr>
+            <td><a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/blob/master/docs/infrastructure/docker.md">Docker</a></td>
+            <td>Docker images, variants, multi-arch builds, and Compose examples</td>
+        </tr>
+        <tr>
+            <td><a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/blob/master/docs/infrastructure/helm.md">Helm &amp; Kubernetes</a></td>
+            <td>Helm charts, deployment templates, and Kind-based testing</td>
+        </tr>
+    </tbody>
+</table>
+
+<a id="operations" class="anchor" href="#operations">&nbsp;</a>
+
+<h3>Operations</h3>
+
+<p>Documentation about the build process, releases, dependencies, and the documentation website:</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Document</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/blob/master/docs/operations/build-system.md">Build System</a></td>
+            <td>Maven configuration, profiles, plugins, and build scripts</td>
+        </tr>
+        <tr>
+            <td><a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/blob/master/docs/operations/release-process.md">Release Process</a></td>
+            <td>End-to-end release workflow with diagrams</td>
+        </tr>
+        <tr>
+            <td><a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/blob/master/docs/operations/dependencies.md">Dependencies</a></td>
+            <td>Complete dependency inventory with versions</td>
+        </tr>
+        <tr>
+            <td><a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/blob/master/docs/operations/website.md">Website</a></td>
+            <td>Jekyll documentation site structure and publishing</td>
+        </tr>
+        <tr>
+            <td><a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/blob/master/docs/testing.md">Testing</a></td>
+            <td>Test frameworks, module inventory, architecture, configuration, coverage gaps, CI execution</td>
+        </tr>
+    </tbody>
+</table>
+
+<a id="additional_resources" class="anchor" href="#additional_resources">&nbsp;</a>
+
+<h3>Additional Resources</h3>
+
+<table>
+    <thead>
+        <tr>
+            <th>Document</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/blob/master/docs/architecture.md">Architecture</a></td>
+            <td>High-level architecture overview</td>
+        </tr>
+        <tr>
+            <td><a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/blob/master/docs/gaps-and-recommendations.md">Gaps &amp; Recommendations</a></td>
+            <td>Review of missing documentation and improvement areas</td>
+        </tr>
+    </tbody>
+</table>
+
+<a id="contributing_code" class="anchor" href="#contributing_code">&nbsp;</a>
+
+<h2>Contributing Code</h2>
+
+<p>If you're interested in contributing to MockServer:</p>
+
+<ol>
+    <li><strong>Start with the documentation</strong> — Read the <a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/blob/master/docs/README.md">documentation index</a> to understand the codebase structure</li>
+    <li><strong>Review the architecture</strong> — Understand the module hierarchy and dependencies in the <a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/blob/master/docs/code/overview.md">Code Overview</a></li>
+    <li><strong>Check the issue tracker</strong> — Browse <a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/issues">open issues</a> for good first contributions</li>
+    <li><strong>Follow conventions</strong> — Match the existing code style, test patterns, and commit message format used in the project</li>
+    <li><strong>Submit a pull request</strong> — Include tests and ensure all CI checks pass</li>
+</ol>
+
+<a id="reporting_issues" class="anchor" href="#reporting_issues">&nbsp;</a>
+
+<h2>Reporting Issues</h2>
+
+<p>To report bugs or request features:</p>
+
+<ol>
+    <li><strong>Check existing issues</strong> — Search the <a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/issues">issue tracker</a> to avoid duplicates</li>
+    <li><strong>Provide details</strong> — Include MockServer version, configuration, minimal reproduction steps, and expected vs actual behavior</li>
+    <li><strong>Enable debug logging</strong> — Use the <a href="/mock_server/debugging_issues.html">debugging features</a> to gather diagnostic information</li>
+    <li><strong>Submit on GitHub</strong> — Create a <a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/issues/new">new issue</a> with all the relevant details</li>
+</ol>
+
+<a id="community" class="anchor" href="#community">&nbsp;</a>
+
+<h2>Community</h2>
+
+<ul>
+    <li><strong>GitHub</strong> — <a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver">Source code and issue tracker</a></li>
+    <li><strong>Trello</strong> — <a target="_blank" rel="noopener noreferrer" href="https://trello.com/b/dsfTCP46/mockserver">Public roadmap and backlog</a></li>
+    <li><strong>Examples</strong> — <a target="_blank" rel="noopener noreferrer" href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples">Code examples on GitHub</a></li>
+</ul>
