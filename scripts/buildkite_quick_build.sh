@@ -2,6 +2,13 @@
 
 set -euo pipefail
 
+cleanup() {
+    echo "Build cancelled or interrupted (caught signal)"
+    exit 143
+}
+
+trap cleanup SIGTERM SIGINT
+
 echo "whoami: $(whoami)"
 
 echo
@@ -18,4 +25,11 @@ else
     echo "BRANCH: ${CURRENT_BRANCH:-}"
 fi
 
+set +e
 ./mvnw -T 1C clean install ${1:-} -Djava.security.egd=file:/dev/./urandom -Dmockserver.testOutput=quiet -DdisableXmlReport=false -DredirectTestOutputToFile=true -Dmockserver.testLogLevel=INFO
+MVN_EXIT=$?
+set -e
+
+trap - SIGTERM SIGINT
+
+exit $MVN_EXIT
