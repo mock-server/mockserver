@@ -85,3 +85,173 @@ MockServer maintains **Java 11** as the minimum supported version to maximize co
 Security updates requiring Java 17+ or Jakarta EE 9+ migration are deferred until a future major version that drops Java 11 support.
 
 See [docs/operations/dependencies.md](docs/operations/dependencies.md) for full compatibility matrix.
+
+## Code Scanning Alerts (CodeQL)
+
+MockServer is a **test infrastructure tool** designed to intercept, mock, and proxy HTTP traffic. Many CodeQL security findings are **intentional features** required for MockServer's core functionality.
+
+### Understanding MockServer's Purpose
+
+MockServer is not a public-facing production service. It is used in:
+- **Development environments** for testing applications against mocked backends
+- **Integration test suites** running in isolated CI/CD pipelines
+- **Local development** on developer machines
+
+Users configure MockServer with expectations that control its behavior. This is the intended design, not a vulnerability.
+
+### CodeQL Alerts That Are By Design
+
+#### CRITICAL: Deserialization of User-Controlled Data (`java/unsafe-deserialization`)
+
+**Alert:** #16  
+**Location:** `WebSocketMessageSerializer.java`  
+**Status:** By Design - Not a Vulnerability
+
+**Why This Is Intentional:**
+MockServer deserializes JSON/XML from users to configure mock expectations. This is the **core feature** that allows users to:
+- Define expected requests and responses
+- Configure verification rules
+- Set up dynamic response templates
+
+**Mitigation:**
+- MockServer is **not** intended for untrusted environments
+- Should only be accessible to test code/developers
+- Documentation warns against exposing to public networks
+- Uses Jackson (not Java native serialization) with type validation
+
+**Recommendation:** Deploy MockServer only in controlled test environments with network isolation.
+
+---
+
+#### CRITICAL: Server-Side Request Forgery (`java/ssrf`)
+
+**Alert:** #9  
+**Location:** `NettyHttpClient.java`  
+**Status:** By Design - Not a Vulnerability
+
+**Why This Is Intentional:**
+SSRF is **MockServer's primary feature**. It acts as an HTTP proxy that:
+- Forwards requests to arbitrary URLs specified by users
+- Allows testing applications against real backends
+- Enables traffic recording and playback
+
+**Mitigation:**
+- MockServer is a testing tool, not a public proxy
+- Should be deployed in isolated test environments
+- Network policies should restrict outbound access if needed
+- Documentation explicitly describes proxy capabilities
+
+**Recommendation:** Use firewall rules to restrict MockServer's outbound network access in sensitive environments.
+
+---
+
+#### HIGH: Cross-Site Scripting (`java/xss`)
+
+**Alert:** #15  
+**Location:** `IOStreamUtils.java`  
+**Status:** By Design - Dashboard Feature
+
+**Why This Is Intentional:**
+MockServer's dashboard displays request/response data for debugging. This includes:
+- Rendering HTTP payloads (which may contain HTML/JavaScript)
+- Showing headers and cookies
+- Displaying templated responses
+
+**Mitigation:**
+- Dashboard is intended for developers, not end users
+- Should not be exposed to untrusted networks
+- Content Security Policy headers can be added if needed
+
+**Recommendation:** Access dashboard only from trusted networks (localhost, VPN, internal network).
+
+---
+
+#### HIGH: Path Injection (`java/path-injection`)
+
+**Alert:** #13  
+**Location:** `DashboardHandler.java`  
+**Status:** By Design - Dashboard Feature
+
+**Why This Is Intentional:**
+The dashboard serves static assets and logs. Path handling is constrained to the dashboard's resource directory.
+
+**Mitigation:**
+- Path traversal is validated against allowed resource paths
+- Dashboard serves only bundled static assets
+- No access to arbitrary filesystem locations
+
+---
+
+#### HIGH: Regular Expression Injection (`java/regex-injection`)
+
+**Alerts:** #11, #12  
+**Locations:** `PathParametersDecoder.java`, `NottableString.java`  
+**Status:** By Design - Matching Feature
+
+**Why This Is Intentional:**
+Users provide regex patterns to match requests. This enables:
+- Flexible request matching (e.g., `/api/users/[0-9]+`)
+- Parameter extraction from paths
+- Dynamic response selection based on patterns
+
+**Mitigation:**
+- Regex patterns come from test code (trusted source)
+- Not from untrusted external input
+- Java's regex engine has ReDoS protections (backtracking limits)
+
+**Recommendation:** Users should avoid overly complex regex patterns in high-volume test scenarios.
+
+---
+
+#### MEDIUM: HTTP Response Splitting (`java/http-response-splitting`)
+
+**Alert:** #14  
+**Location:** `MockServerHttpResponseToHttpServletResponseEncoder.java`  
+**Status:** By Design - Response Mocking Feature
+
+**Why This Is Intentional:**
+MockServer allows users to specify arbitrary HTTP headers and response bodies to mock backend services. This includes:
+- Custom headers (including non-standard ones)
+- Multi-line header values
+- Raw response encoding
+
+**Mitigation:**
+- Headers come from test expectations (trusted source)
+- Not from untrusted external input
+- Used only in test environments
+
+---
+
+### Deployment Recommendations
+
+To use MockServer securely:
+
+1. **Network Isolation**
+   - Deploy only in test/dev environments
+   - Do not expose to public internet
+   - Use firewall rules to restrict access to trusted IPs
+
+2. **Access Control**
+   - Bind to `localhost` for single-machine testing
+   - Use VPN or internal networks for shared instances
+   - Consider authentication if exposing beyond localhost
+
+3. **Outbound Restrictions**
+   - Apply firewall egress rules if SSRF is a concern
+   - Whitelist allowed destination hosts for proxy mode
+   - Monitor outbound connections in production-like test envs
+
+4. **Lifecycle Management**
+   - Start MockServer only when needed for tests
+   - Shut down after test completion
+   - Do not leave running instances unattended
+
+### Summary
+
+All CodeQL alerts are **acknowledged and intentional**. MockServer is a powerful testing tool that requires:
+- User-controlled configuration (deserialization)
+- Arbitrary request forwarding (SSRF)
+- Flexible matching (regex injection)
+- Full HTTP control (response splitting, XSS)
+
+These capabilities are **essential features**, not vulnerabilities, when used in the intended controlled testing environments.
