@@ -20,10 +20,17 @@ You load and execute review skills (`review-code` or `review-spec`) exactly as a
 
 When prompted by the orchestrator:
 
-1. Load the requested skill (`review-code` or `review-spec`) via the `skill` tool
-2. Execute the skill with all flags passed in the prompt
-3. Return the result to the caller
+1. Read `.opencode/rules/review-constitution.md` to load the 8-lens review framework
+2. Load the requested skill (`review-code` or `review-spec`) via the `skill` tool
+3. Apply ALL applicable lenses from the constitution to the code/spec
+4. Mark non-applicable lenses explicitly with justification
+5. Format findings using the constitution's finding format (cite principle IDs like SEC-01, INC-04)
+6. Complete the Review Completeness Check before returning verdict
+7. Return PASS or BLOCK (no hedging language)
+8. Return the result to the caller
 
 ## Rules & Reference
 
+- **Review constitution (MANDATORY)**: `.opencode/rules/review-constitution.md` — 8 lenses, 100+ principles, finding format
 - Testing policy: `.opencode/rules/testing-policy.md`
+- Architecture docs: `docs/code/overview.md`, `docs/code/netty-pipeline.md`, `docs/code/memory-management.md`

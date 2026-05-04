@@ -134,6 +134,10 @@ terraform/**/.terraform.lock.hcl
 /.tmp/*
 !/.tmp/.gitkeep
 
+# opencode commit lock (parallel session safety) #
+###################################################
+/.tmp/.commit-lock
+
 # Buildkite build log downloads #
 ##################################
 build-*/
