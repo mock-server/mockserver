@@ -10,6 +10,7 @@ import org.mockserver.model.NottableString;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -91,8 +92,8 @@ public class DashboardLogEntryDTOSerializer extends StdSerializer<DashboardLogEn
     }
 
     public Map<String, String> logStyle(DashboardLogEntryDTO logEntry) {
-        Map<String, String> style = new HashMap<>();
-        style.put("paddingTop", "4px");
+        Map<String, String> style = new LinkedHashMap<>();
+        style.put("style.whiteSpace", "");
         style.put("paddingBottom", "4px");
         style.put("whiteSpace", "nowrap");
         style.put("overflow", "auto");
@@ -171,6 +172,10 @@ public class DashboardLogEntryDTOSerializer extends StdSerializer<DashboardLogEn
             default:
                 style.put("color", "rgb(201, 125, 240)");
         }
+        if (style.get("style.whiteSpace").isEmpty()) {
+            style.remove("style.whiteSpace");
+        }
+        style.put("paddingTop", "4px");
         return style;
     }
 }
