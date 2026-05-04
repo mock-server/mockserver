@@ -58,15 +58,15 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-    START([New Connection<br/>First bytes arrive]) --> SOCKS4{SOCKS4?<br/><i>byte[0]==0x04</i>}
+    START([New Connection<br/>First bytes arrive]) --> SOCKS4{SOCKS4?<br/>byte 0 == 0x04}
     SOCKS4 -->|Yes| EN_S4[enableSocks4<br/>Add SOCKS4 decoders]
-    SOCKS4 -->|No| SOCKS5{SOCKS5?<br/><i>byte[0]==0x05</i>}
+    SOCKS4 -->|No| SOCKS5{SOCKS5?<br/>byte 0 == 0x05}
     SOCKS5 -->|Yes| EN_S5[enableSocks5<br/>Add SOCKS5 decoders]
-    SOCKS5 -->|No| TLS{TLS?<br/><i>SslHandler.isEncrypted</i>}
+    SOCKS5 -->|No| TLS{TLS?<br/>SslHandler.isEncrypted}
     TLS -->|Yes| EN_TLS[enableTls<br/>Add SniHandler]
-    TLS -->|No| H2{HTTP/2?<br/><i>ALPN negotiated h2</i>}
+    TLS -->|No| H2{HTTP/2?<br/>ALPN negotiated h2}
     H2 -->|Yes| SW_H2[switchToHttp2<br/>Add HTTP/2 pipeline]
-    H2 -->|No| HTTP{HTTP?<br/><i>GET/POST/PUT/...</i>}
+    H2 -->|No| HTTP{HTTP?<br/>GET/POST/PUT/...}
     HTTP -->|Yes| SW_HTTP[switchToHttp<br/>Add HTTP/1.1 pipeline]
     HTTP -->|No| PROXY{PROXIED_<br/>prefix?}
     PROXY -->|Yes| SW_PROXY[switchToProxyConnected<br/>Internal relay setup]
