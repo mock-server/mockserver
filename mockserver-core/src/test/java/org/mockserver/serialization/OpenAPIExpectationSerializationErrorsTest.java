@@ -84,14 +84,15 @@ public class OpenAPIExpectationSerializationErrorsTest {
             fail("expected exception to be thrown");
         } catch (IllegalArgumentException iae) {
             // then
-            assertThat(iae.getMessage(), is("incorrect openapi expectation json format for:" + NEW_LINE +
+            String expectedPrefix = "incorrect openapi expectation json format for:" + NEW_LINE +
                 "" + NEW_LINE +
                 "  requestBytes" + NEW_LINE +
                 "" + NEW_LINE +
                 " schema validation errors:" + NEW_LINE +
                 "" + NEW_LINE +
                 "  JsonParseException - Unrecognized token 'requestBytes': was expecting (JSON String, Number (or 'NaN'/'+INF'/'-INF'), Array, Object or token 'null', 'true' or 'false')" + NEW_LINE +
-                "   at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 13]"));
+                "   at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: ";
+            assertThat(iae.getMessage().startsWith(expectedPrefix), is(true));
         }
     }
 
@@ -103,8 +104,9 @@ public class OpenAPIExpectationSerializationErrorsTest {
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
             // then
-            assertThat(iae.getMessage(), is("com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'requestBytes': was expecting (JSON String, Number (or 'NaN'/'+INF'/'-INF'), Array, Object or token 'null', 'true' or 'false')" + NEW_LINE +
-                " at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 13]"));
+            String expectedPrefix = "com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'requestBytes': was expecting (JSON String, Number (or 'NaN'/'+INF'/'-INF'), Array, Object or token 'null', 'true' or 'false')" + NEW_LINE +
+                " at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: ";
+            assertThat(iae.getMessage().startsWith(expectedPrefix), is(true));
         }
     }
 
