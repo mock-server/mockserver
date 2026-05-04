@@ -2,10 +2,15 @@
 # NEVER commit terraform.tfvars — it is gitignored.
 
 # Get your agent token from: https://buildkite.com/organizations/mockserver/agents
-# buildkite_agent_token = "your-token-here"
+# Or retrieve from AWS SSM Parameter Store (see .opencode/skills/terraform-tfvars/)
+buildkite_agent_token = "your-token-here"
 
 region               = "eu-west-2"
-instance_types       = "c5.2xlarge"
+instance_types       = "c5.2xlarge,c5.xlarge,c5a.2xlarge,c5a.xlarge,m5.2xlarge,m5.xlarge"
 min_size             = 0
-max_size             = 2
-on_demand_percentage = 0
+max_size             = 10
+on_demand_percentage = 20
+
+# Email address for infrastructure alerts (SNS notifications)
+# Leave empty ("") to skip email subscription
+alert_email = "your-email@example.com"

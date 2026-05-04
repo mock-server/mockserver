@@ -14,14 +14,18 @@ flowchart TB
     subgraph "AWS eu-west-2"
         subgraph "VPC (auto-created)"
             subgraph "AutoScaling Group"
-                EC2_1[EC2 Spot t3.large<br/>Buildkite Agent]
-                EC2_2[EC2 Spot t3.large<br/>Buildkite Agent]
+                EC2_1[EC2 c5.2xlarge<br/>Buildkite Agent<br/>20% on-demand / 80% spot]
+                EC2_2[EC2 c5.xlarge<br/>Buildkite Agent<br/>20% on-demand / 80% spot]
             end
         end
         SCALER[Lambda Autoscaler<br/>Runs every minute]
         SSM[SSM Parameter Store<br/>Agent Token]
         S3_SECRETS[S3 Secrets Bucket]
+        CW_ALARMS[CloudWatch Alarms<br/>Capacity gaps, scaler errors]
+        SNS[SNS Topic<br/>Email alerts]
     end
+    
+    CW_ALARMS -->|alert| SNS
 
     BK_API -->|queue depth| SCALER
     SCALER -->|set desired 0–10| EC2_1 & EC2_2
@@ -62,10 +66,11 @@ buildkite-agents/
 │   ├── main.tf              #   S3 bucket
 │   └── README.md            #   Bootstrap instructions
 ├── main.tf                  # Elastic CI Stack module
+├── monitoring.tf            # CloudWatch alarms, SNS notifications, dashboard
 ├── backend.tf               # S3 remote state configuration
 ├── build-secrets.tf         # Docker Hub secret + Buildkite agent IAM policy
 ├── variables.tf             # Input variables
-├── outputs.tf               # Outputs (ASG name, VPC ID)
+├── outputs.tf               # Outputs (ASG name, VPC ID, dashboard URL)
 ├── versions.tf              # Terraform + provider versions
 ├── terraform.tfvars.example # Example variable values
 ├── run.sh                   # Wrapper script (auth + plan/apply)
@@ -154,10 +159,11 @@ flowchart LR
 |----------|------|---------|-------------|
 | `buildkite_agent_token` | `string` | *(required)* | Buildkite agent registration token |
 | `region` | `string` | `eu-west-2` | AWS region |
-| `instance_types` | `string` | `t3.large` | EC2 instance types (comma-separated) |
+| `instance_types` | `string` | `c5.2xlarge,c5.xlarge,...` | EC2 instance types (diversified for reliability) |
 | `min_size` | `number` | `0` | Minimum instances (0 = scale to zero) |
 | `max_size` | `number` | `10` | Maximum instances |
-| `on_demand_percentage` | `number` | `0` | % on-demand vs spot (0 = all spot) |
+| `on_demand_percentage` | `number` | `20` | % on-demand vs spot (20 = 20% on-demand fallback) |
+| `alert_email` | `string` | `""` | Email address for infrastructure alerts |
 
 ## Outputs
 
@@ -165,10 +171,36 @@ flowchart LR
 |--------|-------------|
 | `auto_scaling_group_name` | Name of the agent AutoScaling Group |
 | `vpc_id` | VPC ID where agents run |
+| `lambda_scaler_arn` | ARN of the Lambda autoscaler function |
+| `dashboard_url` | CloudWatch Dashboard URL for agent monitoring |
+| `sns_topic_arn` | SNS topic ARN for infrastructure alerts |
+
+## Monitoring and Alerts
+
+The infrastructure includes CloudWatch alarms and SNS email notifications for:
+
+- **ASG capacity gap**: Desired capacity not met for 5+ minutes (EC2 launch failures or Spot unavailability)
+- **Lambda scaler errors**: Autoscaler function errors
+- **Lambda scaler not invoked**: EventBridge schedule broken
+- **ASG launch failures**: EventBridge rule captures failed EC2 launches
+
+**CloudWatch Dashboard**: View real-time agent capacity, scaler health, and recent logs via the dashboard URL output.
+
+**Email Alerts**: Set `alert_email` in `terraform.tfvars` to receive SNS notifications. You'll need to confirm the subscription via email after first apply.
 
 ## Cost
 
-With `min_size = 0` and `on_demand_percentage = 0` (100% spot):
-- **Idle cost:** $0 (scales to zero when no builds queued)
-- **Build cost:** ~$0.02/hr per agent (spot t3.large)
+Current configuration (`min_size = 0`, `on_demand_percentage = 20`, diversified instance types):
+- **Idle cost:** ~$0 (scales to zero when no builds queued) + minimal CloudWatch alarm costs
+- **Build cost:** ~$0.03–0.10/hr per agent (20% on-demand, 80% spot, c5/m5 family)
+- **Monitoring cost:** <$1/month (alarms + dashboard + SNS)
 - Agents take 2–3 minutes to launch from cold start
+
+## Reliability Improvements
+
+The infrastructure is designed to handle EC2 Spot capacity fluctuations:
+
+1. **Diversified instance types**: Multiple instance families and sizes (c5, c5a, m5)
+2. **On-demand fallback**: 20% on-demand capacity ensures builds can start even when Spot is unavailable
+3. **On-demand base**: Always launches at least 1 on-demand instance when scaling up
+4. **Proactive monitoring**: Alerts notify you of capacity issues before builds are blocked

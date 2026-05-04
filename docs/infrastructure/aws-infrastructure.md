@@ -14,8 +14,9 @@ buildkite-agents/"]
         SCALER["Lambda Autoscaler"]
         AZ_LAMBDA["Lambda AZ Rebalance
 Suspender"]
-        EC2["EC2 Spot t3.large
-0–10 agents"]
+        EC2["EC2 c5/m5 instances
+0–10 agents
+20% on-demand / 80% spot"]
         SSM["SSM Parameter Store
 Agent Token"]
         S3_SECRETS["S3 Secrets Bucket"]
@@ -100,12 +101,14 @@ flowchart TB
     subgraph "AWS eu-west-2"
         subgraph "VPC 10.0.0.0/16"
             subgraph "Public Subnet eu-west-2a — 10.0.1.0/24"
-                EC2_1["EC2 Spot t3.large
-Buildkite Agent"]
+                EC2_1["EC2 c5/m5
+Buildkite Agent
+20% on-demand / 80% spot"]
             end
             subgraph "Public Subnet eu-west-2b — 10.0.2.0/24"
-                EC2_2["EC2 Spot t3.large
-Buildkite Agent"]
+                EC2_2["EC2 c5/m5
+Buildkite Agent
+20% on-demand / 80% spot"]
             end
             VPCE["VPC Endpoints
 SSM · SSM Messages · EC2 Messages"]
@@ -141,9 +144,9 @@ rate 1 min"]
 
 | Resource | Details |
 |----------|---------|
-| AutoScaling Group | Min 0, Max 10, 100% Spot, `t3.large`, AZRebalance suspended |
-| Launch Template | t3.large, 250 GiB gp3 root volume, delete-on-termination |
-| EC2 Instances | 0–10 Spot instances (ephemeral), scale to zero when idle |
+| AutoScaling Group | Min 0, Max 10, 20% on-demand / 80% Spot, diversified instance types (c5, c5a, m5), on-demand base capacity 1, AZRebalance suspended |
+| Launch Template | c5.2xlarge (primary), 250 GiB gp3 root volume, delete-on-termination |
+| EC2 Instances | 0–10 mixed on-demand + Spot instances (ephemeral), scale to zero when idle |
 
 #### Networking
 
@@ -230,9 +233,10 @@ rate 1 min"]
 - **Agents per instance:** 1
 - **Scaling frequency:** Every 60 seconds
 - **Scale trigger:** Buildkite job queue depth
-- **Instance type:** `t3.large` (100% Spot)
+- **Instance types:** Diversified (c5.2xlarge, c5.xlarge, c5a.2xlarge, c5a.xlarge, m5.2xlarge, m5.xlarge)
+- **Capacity mix:** 20% on-demand, 80% Spot, with on-demand base capacity of 1
 - **Idle cost:** $0 (scales to zero)
-- **Build cost:** ~$0.02/hr per agent (spot pricing)
+- **Build cost:** ~$0.03–0.10/hr per agent (mixed on-demand/spot pricing)
 
 ### Build Flow
 
@@ -271,10 +275,11 @@ terraform/
     │   ├── main.tf          #   S3 bucket
     │   └── README.md        #   Bootstrap instructions
     ├── main.tf              # Elastic CI Stack module
+    ├── monitoring.tf        # CloudWatch alarms, SNS notifications, dashboard
     ├── backend.tf           # S3 remote state configuration
     ├── build-secrets.tf     # Docker Hub secret + Buildkite agent IAM policy
     ├── variables.tf         # Input variables
-    ├── outputs.tf           # Outputs (ASG name, VPC ID)
+    ├── outputs.tf           # Outputs (ASG name, VPC ID, dashboard URL)
     ├── versions.tf          # Terraform + provider versions
     ├── terraform.tfvars.example  # Example variable values
     ├── run.sh               # Wrapper script (auth + plan/apply)
@@ -287,9 +292,11 @@ terraform/
 |----------|-------|
 | Terraform module | `buildkite/elastic-ci-stack-for-aws/buildkite` ~0.7.x |
 | Region | `eu-west-2` |
-| Instance type | `t3.large` (Spot) |
+| Instance types | Diversified (c5, c5a, m5 families) |
+| Capacity | 20% on-demand / 80% Spot, base capacity 1 on-demand |
 | Scaling | 0–10 instances |
 | State backend | S3 in `eu-west-2` (native lockfile) |
+| Monitoring | CloudWatch alarms, SNS email alerts, dashboard |
 
 ### State Backend
 
@@ -303,10 +310,11 @@ The bootstrap (`terraform/buildkite-agents/bootstrap/`) uses `import` blocks, ma
 |----------|------|---------|-------------|
 | `buildkite_agent_token` | `string` | *(required)* | Buildkite agent registration token |
 | `region` | `string` | `eu-west-2` | AWS region |
-| `instance_types` | `string` | `t3.large` | EC2 instance types (comma-separated) |
+| `instance_types` | `string` | `c5.2xlarge,c5.xlarge,...` | EC2 instance types (diversified) |
+| `alert_email` | `string` | `""` | Email address for infrastructure alerts |
 | `min_size` | `number` | `0` | Minimum instances (0 = scale to zero) |
 | `max_size` | `number` | `10` | Maximum instances |
-| `on_demand_percentage` | `number` | `0` | % on-demand vs spot (0 = all spot) |
+| `on_demand_percentage` | `number` | `20` | % on-demand vs spot (20 = 20% on-demand fallback) |
 
 ### Quick Start
 

@@ -33,3 +33,9 @@ variable "on_demand_percentage" {
   type        = number
   default     = 0
 }
+
+variable "alert_email" {
+  description = "Email address for infrastructure alerts (SNS notifications)"
+  type        = string
+  default     = ""
+}
