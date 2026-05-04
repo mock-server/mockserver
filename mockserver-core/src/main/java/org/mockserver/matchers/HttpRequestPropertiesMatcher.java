@@ -29,6 +29,22 @@ import static org.mockserver.matchers.MatchDifference.Field.*;
 import static org.mockserver.model.NottableString.string;
 
 /**
+ * Matches HTTP request properties against expectation criteria.
+ * <p>
+ * <strong>Null/Blank Matcher Behavior:</strong> When a specific matcher (e.g., method, path, headers)
+ * is null or blank, it matches <em>all</em> values for that property. This allows expectations to
+ * match broadly without specifying every field. For example:
+ * </p>
+ * <ul>
+ *   <li>No method matcher → matches any HTTP method (GET, POST, etc.)</li>
+ *   <li>No path matcher → matches any request path</li>
+ *   <li>No header matcher → matches requests with any headers</li>
+ * </ul>
+ * <p>
+ * This "filter" behavior improves UX: unspecified fields act as wildcards, so users can create
+ * simple expectations without boilerplate "match anything" patterns.
+ * </p>
+ *
  * @author jamesdbloom
  */
 @SuppressWarnings("rawtypes")

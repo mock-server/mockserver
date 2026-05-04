@@ -21,6 +21,11 @@ public class HttpContentLengthRemover extends MessageToMessageEncoder<DefaultHtt
             defaultHttpMessage.headers().remove(HttpHeaderNames.CONTENT_LENGTH);
         }
         ReferenceCountUtil.retain(defaultHttpMessage);
-        out.add(defaultHttpMessage);
+        try {
+            out.add(defaultHttpMessage);
+        } catch (Throwable t) {
+            ReferenceCountUtil.release(defaultHttpMessage);
+            throw t;
+        }
     }
 }
