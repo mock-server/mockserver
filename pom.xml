@@ -63,8 +63,8 @@
         <!-- highest Spring 5.x version (EOL); Spring 6 requires Jakarta EE 9+ (javax→jakarta namespace) -->
         <spring.version>5.3.39</spring.version>
         <spring-web.version>5.3.39</spring-web.version>
-        <mockito.version>4.11.0</mockito.version>
-        <hamcrest.version>2.2</hamcrest.version>
+        <mockito.version>5.18.0</mockito.version>
+        <hamcrest.version>3.0</hamcrest.version>
         <xmlunit.version>2.10.0</xmlunit.version>
         <skipTests>false</skipTests>
         <skipAssembly>false</skipAssembly>
@@ -77,7 +77,7 @@
         <deploy.plugin.repository.url>https://oss.sonatype.org/content/repositories/snapshots/</deploy.plugin.repository.url>
         <release.arguments/>
         <javadoc.additional.parameters/>
-        <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
+        <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
         <!-- also update in docker -->
         <!-- TODO(jamesdbloom) consider automating using `NETTY_TC_NATIVE_VERSION=$(./mvnw help:evaluate -Dexpression=netty-tcnative-boringssl-static.version -q -DforceStdout)` -->
         <netty-tcnative-boringssl-static.version>2.0.75.Final</netty-tcnative-boringssl-static.version>
@@ -144,7 +144,7 @@
             <dependency>
                 <groupId>com.lmax</groupId>
                 <artifactId>disruptor</artifactId>
-                <version>3.4.4</version>
+                <version>4.0.0</version>
             </dependency>
 
             <!-- http -->
@@ -428,7 +428,7 @@
             <dependency>
                 <groupId>org.mozilla</groupId>
                 <artifactId>rhino</artifactId>
-                <version>1.7.15</version>
+                <version>1.8.0</version>
             </dependency>
 
             <!-- xml -->
@@ -503,13 +503,18 @@
             <!-- prometheus -->
             <dependency>
                 <groupId>io.prometheus</groupId>
-                <artifactId>simpleclient</artifactId>
-                <version>0.16.0</version>
+                <artifactId>prometheus-metrics-core</artifactId>
+                <version>1.3.6</version>
             </dependency>
             <dependency>
                 <groupId>io.prometheus</groupId>
-                <artifactId>simpleclient_httpserver</artifactId>
-                <version>0.16.0</version>
+                <artifactId>prometheus-metrics-exposition-formats</artifactId>
+                <version>1.3.6</version>
+            </dependency>
+            <dependency>
+                <groupId>io.prometheus</groupId>
+                <artifactId>prometheus-metrics-model</artifactId>
+                <version>1.3.6</version>
             </dependency>
 
             <!-- spring -->
@@ -647,7 +652,7 @@
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>exec-maven-plugin</artifactId>
-                        <version>3.1.0</version>
+                        <version>3.5.0</version>
                         <inherited>false</inherited>
                         <configuration>
                             <workingDirectory>${basedir}</workingDirectory>
@@ -686,7 +691,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
-                        <version>3.2.1</version>
+                        <version>3.3.1</version>
                         <executions>
                             <execution>
                                 <id>attach-sources</id>
@@ -700,7 +705,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.5.0</version>
+                        <version>3.12.0</version>
                         <configuration>
                             <failOnError>false</failOnError>
                             <doclint>none</doclint>
@@ -735,7 +740,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>3.0.1</version>
+                        <version>3.2.8</version>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
@@ -750,7 +755,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-release-plugin</artifactId>
-                        <version>2.5.3</version>
+                        <version>3.3.1</version>
                         <configuration>
                             <autoVersionSubmodules>true</autoVersionSubmodules>
                             <useReleaseProfile>false</useReleaseProfile>
@@ -770,7 +775,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.10.1</version>
+                <version>3.14.0</version>
                 <configuration>
                     <fork>false</fork>
                     <source>${maven.compiler.source}</source>
@@ -799,7 +804,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>templating-maven-plugin</artifactId>
-                <version>1.0.0</version>
+                <version>3.0.0</version>
                 <executions>
                     <execution>
                         <id>generate-version-class</id>
@@ -813,7 +818,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.3.0</version>
+                <version>3.4.2</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -827,7 +832,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-clean-plugin</artifactId>
-                <version>3.2.0</version>
+                <version>3.4.1</version>
                 <configuration>
                     <verbose>false</verbose>
                     <filesets>
@@ -929,12 +934,12 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>3.2.1</version>
+                <version>3.6.0</version>
                 <dependencies>
                     <dependency>
                         <groupId>com.puppycrawl.tools</groupId>
                         <artifactId>checkstyle</artifactId>
-                        <version>9.3</version>
+                        <version>10.26.1</version>
                     </dependency>
                 </dependencies>
                 <configuration>
@@ -958,7 +963,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <version>3.2.1</version>
+                <version>3.6.2</version>
                 <configuration>
                     <rules>
                         <dependencyConvergence/>

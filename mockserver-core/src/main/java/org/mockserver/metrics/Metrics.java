@@ -1,6 +1,7 @@
 package org.mockserver.metrics;
 
-import io.prometheus.client.Gauge;
+import io.prometheus.metrics.core.metrics.Gauge;
+import io.prometheus.metrics.model.registry.PrometheusRegistry;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -27,7 +28,7 @@ public class Metrics {
     public Metrics(Configuration configuration) {
         metricsEnabled = configuration.metricsEnabled();
         if (metricsEnabled && additionalMetricsRegistered.compareAndSet(false, true)) {
-            new BuildInfoCollector().register();
+            PrometheusRegistry.defaultRegistry.register(new BuildInfoCollector());
             Arrays.stream(Name.values()).forEach(Metrics::getOrCreate);
         }
     }
@@ -37,7 +38,7 @@ public class Metrics {
             Gauge gauge = metrics.get(name);
             if (gauge == null) {
                 try {
-                    gauge = Gauge.build()
+                    gauge = Gauge.builder()
                         .name(name.name().toLowerCase())
                         .help(name.description)
                         .register();

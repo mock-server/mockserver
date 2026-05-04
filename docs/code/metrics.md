@@ -134,5 +134,6 @@ All metrics are Prometheus `Gauge` type. The `Metrics.Name` enum defines 17 gaug
 
 | GroupId | ArtifactId | Version | Purpose |
 |---------|-----------|---------|---------|
-| `io.prometheus` | `simpleclient` | 0.16.0 | Prometheus client library (Gauge, Collector, CollectorRegistry) |
-| `io.prometheus` | `simpleclient_httpserver` | 0.16.0 | Prometheus text format exposition |
+| `io.prometheus` | `prometheus-metrics-core` | 1.3.6 | Prometheus client library (Gauge, MultiCollector, PrometheusRegistry) |
+| `io.prometheus` | `prometheus-metrics-exposition-formats` | 1.3.6 | Prometheus exposition format writers |
+| `io.prometheus` | `prometheus-metrics-model` | 1.3.6 | Prometheus metric snapshots and labels |

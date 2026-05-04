@@ -184,8 +184,9 @@ graph TB
 |---------|-----------|---------|---------|
 | `org.slf4j` | `slf4j-api` | 2.0.6 | Logging facade |
 | `org.slf4j` | `slf4j-jdk14` | 2.0.6 | JDK logging binding (optional) |
-| `io.prometheus` | `simpleclient` | 0.16.0 | Prometheus metrics |
-| `io.prometheus` | `simpleclient_httpserver` | 0.16.0 | Prometheus HTTP endpoint |
+| `io.prometheus` | `prometheus-metrics-core` | 1.3.6 | Prometheus metrics (Gauge, MultiCollector, PrometheusRegistry) |
+| `io.prometheus` | `prometheus-metrics-exposition-formats` | 1.3.6 | Prometheus exposition format writers |
+| `io.prometheus` | `prometheus-metrics-model` | 1.3.6 | Prometheus metric snapshots and labels |
 
 ### Spring Framework
 
