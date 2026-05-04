@@ -77,7 +77,7 @@
 <pre><code class="code xml"> &lt;<span class="element">plugin</span>&gt;
     &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.apache.maven.plugins</span>&lt;/<span class="element">groupId</span>&gt;
     &lt;<span class="element">artifactId</span>&gt;<span class="element_value">maven-surefire-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
-    &lt;<span class="element">version</span>&gt;<span class="element_value">2.17</span>&lt;/<span class="element">version</span>&gt;
+    &lt;<span class="element">version</span>&gt;<span class="element_value">3.5.5</span>&lt;/<span class="element">version</span>&gt;
     &lt;<span class="element">configuration</span>&gt;
         &lt;<span class="element">properties</span>&gt;
             &lt;<span class="element">property</span>&gt;
@@ -110,7 +110,7 @@
 
 <pre><code class="code">mvnw org.mock-server:mockserver-maven-plugin:{{ site.mockserver_version }}:stopForked -DserverPort=1080</code></pre>
 
-<p>The <strong>stopForked</strong> goal does assumes that MockServer is running on the same physical machine as it uses 127.0.0.1 to communicate with MockServer stop socket.</p>
+<p>The <strong>stopForked</strong> goal assumes that MockServer is running on the same physical machine as it uses 127.0.0.1 to communicate with MockServer stop socket.</p>
 
 <p>The Maven plugin has the following goals:</p>
 
@@ -201,8 +201,8 @@
     <span class="this_value">mockServer</span>.stop();
 }</code></pre>
 
-<p>The <a target="_blank"href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example test called
-	<a target="_blank"href="https://github.com/mock-server/mockserver/blob/master/mockserver-examples/src/test/java/org/mockserver/examples/proxy/web/controller/BooksPageIntegrationTest.java">BookPageIntegrationTest</a> that demonstrates a fully working example.</p>
+<p>The <a target="_blank" href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example test called
+	<a target="_blank" href="https://github.com/mock-server/mockserver/blob/master/mockserver-examples/src/test/java/org/mockserver/examples/proxy/web/controller/BooksPageIntegrationTest.java">BookPageIntegrationTest</a> that demonstrates a fully working example.</p>
 
 <a id="junit_rule" class="anchor" href="#junit_rule">&nbsp;</a>
 
@@ -435,7 +435,7 @@ public class ExampleSpringTestListenerTestWithPortInjection {
 	<li><a href="#running_from_command_line_using_homebrew">using homebrew</a> i.e. <strong>brew install mockserver && mockserver</strong></li>
 	<li><a href="#running_from_command_line_using_java">using java directly</a> i.e. <strong>java -jar mockserver-netty-{{ site.mockserver_version }}-no-dependencies.jar</strong></li>
 	<li><a href="#running_from_command_line_using_maven_plugin">using maven plugin</a> i.e. <strong>mvn org.mock-server:mockserver-maven-plugin:{{ site.mockserver_version }}:runForked</strong></li>
-	<li><a href="#docker_container">using docker</a> i.e. <strong>docker run -d --rm -p mockserver/mockserver</strong></li>
+	<li><a href="#docker_container">using docker</a> i.e. <strong>docker run -d --rm -p 1080:1080 mockserver/mockserver</strong></li>
 </ul>
 
 <a id="running_from_command_line_using_homebrew" class="anchor" href="#running_from_command_line_using_homebrew">&nbsp;</a>
@@ -615,7 +615,7 @@ i.e. java -jar ./mockserver-jetty-shaded.jar -serverPort <span class="numeric_li
 
 <h2>Build & Run From Source</h2>
 
-<p>MockServer is written in Java and built using maven.  The maven wrapper is used so maven does not need to be installed but Java JDK 8 or higher does need to be installed.</p>
+<p>MockServer is written in Java and built using maven.  The maven wrapper is used so maven does not need to be installed but Java JDK 11 or higher must be installed.</p>
 
 <p>First clone the repository as follows:</p>
 

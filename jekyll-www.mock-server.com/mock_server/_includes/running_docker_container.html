@@ -38,7 +38,7 @@ In addition it is possible to <a href="#docker_container_customization">customis
 
 <h3>No Interactive Shell</h3>
 
-<p>MockServer uses <a target="_blank"href="https://github.com/GoogleContainerTools/distroless">distroless</a> as its based container for both size and security and so does not contain an interactive shell.  This minimises the likelihood of vulnerabilities and to reduces the attack surface by ensuring only the JVM and MockServer code is inside the container.</p>
+<p>MockServer uses <a target="_blank" href="https://github.com/GoogleContainerTools/distroless">distroless</a> as its based container for both size and security and so does not contain an interactive shell.  This minimises the likelihood of vulnerabilities and to reduces the attack surface by ensuring only the JVM and MockServer code is inside the container.</p>
 
 <a id="docker_detailed_configuration" class="anchor" href="#docker_detailed_configuration">&nbsp;</a>
 
@@ -72,11 +72,7 @@ In addition it is possible to <a href="#docker_container_customization">customis
 
 <h3>Modifying Default Command</h3>
 
-<p>By default when the MockServer container runs it executes a bash script passing three command line options, as follows</p>
-
-<pre><code class="code">-logLevel <span class="string_literal">INFO</span> -serverPort <span class="numeric_literal">1080</span></code></pre>
-
-<p>This can be modified to change the command line options passed to the MockServer for example:</p>
+<p>The MockServer container entrypoint accepts command line arguments. For example, to override the default server port:</p>
 
 <pre><code class="code">docker run --rm --name mockserver -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1090</span> mockserver/mockserver <em>-logLevel <span class="string_literal">INFO</span> -serverPort <span class="numeric_literal">1090</span> -proxyRemotePort <span class="numeric_literal">443</span> -proxyRemoteHost <span class="string_literal">mock-server.com</span></em></code></pre>
 
@@ -91,7 +87,7 @@ For example to add configuration files in the current directory, such as <strong
 
 <p>See <a href="/mock_server/configuration_properties.html">MockServer Configuration</a> for details of all configuration options.</p>
 
-As the <a target="_blank"href="https://github.com/mock-server/mockserver/blob/master/docker/Dockerfile">Docker image is based from <strong>gcr.io/distroless/java:11</strong></a> and the user <strong>nonroot</strong> is used, we need to configure permissions in order to allow the user in the container read/write files in mounted volumes:
+As the <a target="_blank" href="https://github.com/mock-server/mockserver/blob/master/docker/Dockerfile">Docker image is based from <strong>gcr.io/distroless/java17:nonroot</strong></a> and the user <strong>nonroot</strong> is used, we need to configure permissions in order to allow the user in the container read/write files in mounted volumes:
 
 <pre><code class="code">chmod o+r $(pwd)/mockserver.properties</code></pre>
 
@@ -112,31 +108,15 @@ For example to add all jar files in the current directory, map <strong>$(pwd)</s
 
 <p>MockServer Docker images are based on <a target="_blank" href="https://github.com/GoogleContainerTools/distroless">distroless</a> containers, which do not include shell utilities like <code>curl</code> or <code>wget</code>. This means traditional HTTP-based health checks cannot be run inside the container.</p>
 
-<p>To configure health checks for MockServer containers, use one of the following approaches:</p>
+<p>To configure health checks for MockServer containers, use the following approach:</p>
 
-<h3>TCP-Based Health Check (Recommended)</h3>
+<p><strong>Note:</strong> The MockServer Docker image is based on distroless Java (no shell, no system utilities). Health checks must be performed externally or using platform-specific mechanisms.</p>
 
-<p>Check if the port is accepting connections:</p>
-
-<pre class="prettyprint lang-yaml code"><code class="code">version: "2.4"
-services:
-  mockserver:
-    image: mockserver/mockserver:{{ site.mockserver_version }}
-    ports:
-      - "1080:1080"
-    healthcheck:
-      test: ["CMD-SHELL", "timeout 1 bash -c ':> /dev/tcp/localhost/1080' || exit 1"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-      start_period: 5s</code></pre>
-
-<h3>External HTTP Health Check</h3>
+<h3>HTTP Liveness Endpoint (Recommended)</h3>
 
 <p>Use a separate container or external monitoring tool to check the liveness endpoint:</p>
 
-<pre class="prettyprint lang-yaml code"><code class="code">version: "2.4"
-services:
+<pre class="prettyprint lang-yaml code"><code class="code">services:
   mockserver:
     image: mockserver/mockserver:{{ site.mockserver_version }}
     ports:
@@ -167,8 +147,7 @@ services:
 
 <p>The MockServer container uses an <span class="keyword">entrypoint</span>, so it is possible to configure the MockServer by specifying the command line flags using by specifying the <span class="keyword">command</span>, as follows:</p>
 
-<pre class="prettyprint lang-java code"><code class="code">version: "2.4"
-services:
+<pre class="prettyprint lang-yaml code"><code class="code">services:
   mockServer:
     image: mockserver/mockserver:{{ site.mockserver_version }}
     command: -logLevel DEBUG -serverPort 1090 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com
@@ -177,8 +156,7 @@ services:
 
 <p>It is also possible to configure the MockServer by setting <span class="keyword">environment</span> variables, as follows:</p>
 
-<pre class="prettyprint lang-java code"><code class="code">version: "2.4"
-services:
+<pre class="prettyprint lang-yaml code"><code class="code">services:
   mockServer:
     image: mockserver/mockserver:{{ site.mockserver_version }}
     ports:
@@ -189,8 +167,7 @@ services:
 
 <p>It is also possible to configure the MockServer by mounting a volume containing a properties file or JSON expectation initializer, as follows:</p>
 
-<pre class="prettyprint lang-java code"><code class="code">version: "2.4"
-services:
+<pre class="prettyprint lang-yaml code"><code class="code">services:
   mockServer:
     image: mockserver/mockserver:{{ site.mockserver_version }}
     ports:
@@ -205,8 +182,7 @@ services:
 
 <p>To initialise MockServer using an OpenAPI specification file, mount the file and set the <strong>MOCKSERVER_INITIALIZATION_OPENAPI_PATH</strong> environment variable:</p>
 
-<pre class="prettyprint lang-java code"><code class="code">version: "2.4"
-services:
+<pre class="prettyprint lang-yaml code"><code class="code">services:
   mockServer:
     image: mockserver/mockserver:{{ site.mockserver_version }}
     ports:

@@ -24,7 +24,7 @@ sitemap:
 
 <p style="width: 59%; margin-top: 0; padding-top: 0;"><img src="../images/system_under_test_with_mockserver_cropped.png" alt="Mocking service dependencies with MockServer" style="max-width:100%;"></p>
 
-<p>For example code see the <a target="_blank"href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples">code examples folder</a> in the git repository.</p>
+<p>For example code see the <a target="_blank" href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples">code examples folder</a> in the git repository.</p>
 
 <a id="start_mockserver" class="anchor" href="#start_mockserver">&nbsp;</a>
 
@@ -37,6 +37,10 @@ sitemap:
 <h2>1. Setup Expectations</h2>
 
 {% include_subpage _includes/creating_expectations.html %}
+
+<h2>2. Run Your Test Scenarios</h2>
+
+<p>With MockServer running and expectations configured, execute your application or test suite. Your application should make requests to MockServer (on the configured port) instead of the real dependencies. MockServer will match incoming requests against the configured expectations and return the specified responses.</p>
 
 <a id="verify_requests" class="anchor" href="#verify_requests">&nbsp;</a>
 

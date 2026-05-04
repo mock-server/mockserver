@@ -516,7 +516,7 @@ public class ConfigurationProperties {
     /**
      * Maximum time allowed in milliseconds for any future to wait, for example when waiting for a response over a web socket callback.
      * <p>
-     * Default is 60,000 ms
+     * Default is 90,000 ms
      *
      * @param milliseconds maximum time allowed in milliseconds
      */

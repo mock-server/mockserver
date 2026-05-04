@@ -47,7 +47,7 @@ helm repo update</code></pre>
 
 <pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver mockserver helm/mockserver</code></pre>
 
-<p>The commands above will install MockServer into a <strong>namespace</strong> called <span class="keyword">mockserver</span> with default configuration (as per the embedded <a target="_blank"href="https://github.com/mock-server/mockserver/blob/master/helm/mockserver/values.yaml">values.yaml</a>).</p>
+<p>The commands above will install MockServer into a <strong>namespace</strong> called <span class="keyword">mockserver</span> with default configuration (as per the embedded <a target="_blank" href="https://github.com/mock-server/mockserver/blob/master/helm/mockserver/values.yaml">values.yaml</a>).</p>
 <p>MockServer will then be available on domain name <span class="keyword">mockserver.mockserver.svc.cluster.local</span>, as long as the namespace you are calling from isn't prevented (by network policy) to call the <span class="keyword">mockserver</span> namespace.</p>
 
 <a id="logs" class="anchor" href="#logs">&nbsp</a>
@@ -194,7 +194,7 @@ For example:
 
 <h2>MockServer URL</h2>
 
-<h3>Local Kubernetes Cluster (i.e. <a target="_blank"href="https://github.com/kubernetes/minikube">minikube</a>, <a target="_blank" href="https://microk8s.io">microk8s</a>)</h3>
+<h3>Local Kubernetes Cluster (i.e. <a target="_blank" href="https://github.com/kubernetes/minikube">minikube</a>, <a target="_blank" href="https://microk8s.io">microk8s</a>)</h3>
 
 <p>If the <span class="keyword">service</span> type hasn't been modified the following will provide the MockServer URL from outside the cluster.</p>
 
@@ -211,7 +211,7 @@ echo http://$MOCKSERVER_HOST</code></pre>
 
 <p><a target="_blank" href="https://www.docker.com/products/docker-desktop">Docker for Desktop</a> automatically exposes <strong>LoadBalancer</strong> services.</p>
 
-<p>On MacOS Docker for Desktop runs inside <a target="_blank"href="https://github.com/moby/hyperkit">Hyperkit</a> so the node IP address is not reachable, therefore the only way to call services is via the exposed <strong>LoadBalancer</strong> service added by Docker for Desktop.</p>
+<p>On MacOS Docker for Desktop runs inside <a target="_blank" href="https://github.com/moby/hyperkit">Hyperkit</a> so the node IP address is not reachable, therefore the only way to call services is via the exposed <strong>LoadBalancer</strong> service added by Docker for Desktop.</p>
 
 <p>To ensure that Docker for Desktop exposes MockServer update the service type to <strong>LoadBalancer</strong> using <strong>--set service.type=LoadBalancer</strong> and set the exposed port using <strong>--set service.port=1080</strong>, as follows:</p>
 
