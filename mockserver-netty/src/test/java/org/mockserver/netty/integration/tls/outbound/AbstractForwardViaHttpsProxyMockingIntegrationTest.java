@@ -4,7 +4,6 @@ import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.SslContextBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
@@ -430,7 +429,6 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
     }
 
     @Test
-    @Ignore
     public void shouldForwardOverriddenRequestToHTTP2() {
         // when
         mockServerClient

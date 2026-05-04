@@ -2,7 +2,6 @@ package org.mockserver.serialization;
 
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.text.StringEscapeUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
@@ -75,7 +74,6 @@ public class ExpectationSerializerIntegrationTest {
     }
 
     @Test
-    @Ignore
     public void shouldAllowSingleOpenAPIObjectForArray() {
         // given
         String specUrlOrPayload = "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json";
@@ -132,7 +130,6 @@ public class ExpectationSerializerIntegrationTest {
     }
 
     @Test
-    @Ignore
     public void shouldAllowMixedExpectationTypesForArray() {
         // given
         String specUrlOrPayload = "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json";
