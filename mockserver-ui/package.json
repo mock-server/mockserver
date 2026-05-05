@@ -1,0 +1,57 @@
+{
+  "name": "mockserver-ui",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": "./dashboard",
+  "devDependencies": {
+    "babel-core": "^7.0.0-bridge.0",
+    "chai": "^4.3.6",
+    "enzyme": "^3.11.0",
+    "enzyme-adapter-react-16": "^1.15.6",
+    "expect": "23.6.0",
+    "fetch-mock": "7.2.5",
+    "jest": "^23.6.0",
+    "jest-cli": "^23.6.0",
+    "jsdom": "^16.7.0",
+    "react-scripts": "^2.1.1",
+    "react-test-renderer": "16.6.1",
+    "redux-devtools": "^3.7.0",
+    "redux-logger": "^3.0.6",
+    "redux-mock-store": "1.5.3",
+    "sinon": "^7.1.1"
+  },
+  "dependencies": {
+    "classnames": "^2.3.2",
+    "code-prettify": "^0.1.0",
+    "humps": "^2.0.1",
+    "lodash": "^4.17.21",
+    "material-design-icons": "^3.0.1",
+    "material-ui": "^0.20.0",
+    "normalizr": "^3.6.2",
+    "prop-types": "^15.8.1",
+    "query-string": "^6.14.1",
+    "react": "^16.14.0",
+    "react-autobind": "^1.0.6",
+    "react-dom": "^16.14.0",
+    "react-json-view": "^1.21.3",
+    "react-redux": "^5.0.6",
+    "react-router-dom": "^4.2.2",
+    "react-virtual-list": "^2.2.4",
+    "redux": "^4.2.0",
+    "redux-form": "^7.4.3",
+    "redux-form-material-ui": "^4.3.3",
+    "redux-thunk": "^2.4.2"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
+}
