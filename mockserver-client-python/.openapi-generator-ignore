@@ -21,3 +21,9 @@
 #docs/*.md
 # Then explicitly reverse the ignore rule for a single file:
 #!docs/README.md
+
+# Prevent CI files from being regenerated (monorepo uses its own CI)
+.travis.yml
+.github/**
+.gitlab-ci.yml
+git_push.sh

@@ -520,6 +520,6 @@ Confirm Buildkite pipelines trigger correctly for at least:
 
 ## Remaining Open Questions
 
-1. Regenerate stale Python/Ruby clients during migration or follow-up?
-2. Modernize UI during migration or as separate project?
+1. ~~Regenerate stale Python/Ruby clients during migration or follow-up?~~ **Resolved**: Python client regenerated during migration (OpenAPI Generator 7.22.0, Python 3.9+, pydantic v2). Ruby client TBD.
+2. ~~Modernize UI during migration or as separate project?~~ **Resolved**: UI modernized during migration (Phase 4).
 3. Introduce Nx/Turborepo now or after baseline monorepo is stable?
