@@ -29,6 +29,13 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "com.jayway.jsonpath:json-path"
         update-types: ["version-update:semver-major"]
+      # Block Jakarta EE 9+ (requires Java 17+)
+      - dependency-name: "jakarta.xml.bind:*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "jakarta.activation:*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "jakarta.validation:*"
+        update-types: ["version-update:semver-major"]
       # Block servlet namespace migration
       - dependency-name: "javax.servlet:*"
         update-types: ["version-update:semver-major"]
