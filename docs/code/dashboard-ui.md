@@ -2,13 +2,13 @@
 
 ## Architecture Overview
 
-The MockServer dashboard is a React single-page application (SPA) that receives real-time updates via WebSocket. The frontend is pre-compiled with Webpack and served as static resources from the Java classpath.
+The MockServer dashboard is a React single-page application (SPA) that receives real-time updates via WebSocket. The frontend is built with Vite and served as static resources from the Java classpath. During the Maven build, the `build-ui` profile in `mockserver-netty` uses `frontend-maven-plugin` to install Node, run `npm ci` and `npm run build`, then copies the output to the classpath.
 
 ```mermaid
 graph TB
     subgraph "Browser"
-        REACT["React SPA
-Redux store"]
+        REACT["React 18 SPA
+Zustand store"]
         WS_C[WebSocket Client]
     end
 
@@ -24,7 +24,7 @@ Active expectations"]
     end
 
     REACT -->|GET /mockserver/dashboard/*| DH
-    DH -->|index.html, JS, CSS| REACT
+    DH -->|index.html, JS| REACT
 
     REACT -->|"WebSocket upgrade
 /_mockserver_ui_websocket"| DWSH
@@ -48,17 +48,15 @@ sequenceDiagram
     HRH->>DH: renderDashboard(ctx, request)
     DH->>DH: Load /org/mockserver/dashboard/index.html from classpath
     DH-->>B: index.html
-    B->>HRH: GET /mockserver/dashboard/static/js/main.defc53a6.chunk.js
+    B->>HRH: GET /mockserver/dashboard/assets/index-*.js
     DH-->>B: JavaScript bundle
-    B->>HRH: GET /mockserver/dashboard/static/css/main.66fded09.chunk.css
-    DH-->>B: CSS bundle
 ```
 
 ### 2. WebSocket Connection
 
 ```mermaid
 sequenceDiagram
-    participant B as Browser (React/Redux)
+    participant B as Browser (React/Zustand)
     participant PU as PortUnificationHandler
     participant DWSH as DashboardWebSocketHandler
     participant EL as MockServerEventLog
@@ -98,56 +96,59 @@ The `DashboardWebSocketHandler` implements both `MockServerLogListener` and `Moc
 
 | Component | Technology |
 |-----------|-----------|
-| Framework | React |
-| State management | Redux |
-| Build tool | Webpack (pre-compiled) |
-| Service worker | Workbox (offline caching) |
-| Font | Averia Sans Libre |
+| Framework | React 18 |
+| State management | Zustand |
+| Build tool | Vite |
+| UI library | MUI v6 |
+| Language | TypeScript |
+| Testing | Vitest + React Testing Library |
 
-### Redux Store
+### Zustand Store
 
-```javascript
+```typescript
 {
-  entities: {
-    activeExpectations: [],   // Currently active expectations
-    proxiedRequests: [],      // Forwarded request+response pairs
-    recordedRequests: [],     // All received requests
-    logMessages: []           // Log entries (grouped by correlationId)
-  }
+  logMessages: [],           // Log entries (grouped by correlationId)
+  activeExpectations: [],    // Currently active expectations
+  recordedRequests: [],      // All received requests
+  proxiedRequests: [],       // Forwarded request+response pairs
+  connectionStatus: 'disconnected',
+  error: null,
+  filterEnabled: false,
+  filterExpanded: false,
+  autoScroll: true,
+  logSearch: '',
+  expectationSearch: '',
+  receivedSearch: '',
+  proxiedSearch: '',
 }
 ```
 
-### Redux Actions
+### WebSocket Hook
 
-| Action | Purpose |
-|--------|---------|
-| `CONNECT_SOCKET` | Initiate WebSocket connection |
-| `SEND_MESSAGE` | Send filter to server |
-| `MESSAGE_RECEIVED` | Received data update from server |
-| `DISCONNECT_SOCKET` | Close WebSocket |
+The `useWebSocket` hook manages the WebSocket lifecycle:
 
-### WebSocket Middleware
-
-The Redux middleware manages the WebSocket lifecycle:
-
-```javascript
-new WebSocket((secure ? "wss" : "ws") + "://" + host + ":" + port + "/_mockserver_ui_websocket")
+```typescript
+const url = `${protocol}://${host}:${port}/_mockserver_ui_websocket`;
+const ws = new WebSocket(url);
 ```
 
-- `onopen`: Sends the current filter (serialized `HttpRequest`)
-- `onmessage`: Parses JSON, dispatches `MESSAGE_RECEIVED` to update all four entity arrays
-- `onclose`: Triggers reconnection
+- `onopen`: Sends the current filter (serialized `HttpRequest`), resets reconnect counter
+- `onmessage`: Parses JSON, calls `applyMessage()` to update all four entity arrays
+- `onclose`: Triggers reconnection with exponential backoff (max 10 retries)
+- `onerror`: Sets error status in store
 
-### UI Panels
+### UI Components
 
-The dashboard displays four data panels:
+The dashboard displays four data panels in a 2x2 grid:
 
-| Panel | Data Source | Content |
-|-------|------------|---------|
-| Active Expectations | `activeExpectations` | Currently registered expectations with matchers and actions |
-| Proxied Requests | `proxiedRequests` | Forwarded requests with their responses |
-| Recorded Requests | `recordedRequests` | All received HTTP requests |
-| Log Messages | `logMessages` | Grouped log entries with color-coded types |
+| Panel | Component | Data Source | Content |
+|-------|-----------|------------|---------|
+| Log Messages | `LogPanel` | `logMessages` | Grouped log entries with color-coded types |
+| Active Expectations | `ExpectationPanel` | `activeExpectations` | Currently registered expectations with matchers and actions |
+| Received Requests | `RequestPanel` | `recordedRequests` | All received HTTP requests |
+| Proxied Requests | `RequestPanel` | `proxiedRequests` | Forwarded requests with their responses |
+
+Additional components: `AppBar` (connection status, theme toggle, clear/reset), `FilterPanel` (request filter with debounce), `Panel` (shared panel wrapper with search, badge count, auto-scroll).
 
 ### Filtering
 
@@ -272,20 +273,29 @@ MockServer has two distinct WebSocket systems:
 | Pipeline impact | Keeps all handlers | Removes downstream handlers |
 | Max clients | 100 (CircularHashMap) | Bounded by configuration |
 
-## Static Resources
+## Build Integration
+
+The UI is built from source during the Maven build via the `build-ui` profile in `mockserver-netty/pom.xml`:
+
+| Step | Plugin | Phase | Action |
+|------|--------|-------|--------|
+| Install Node | `frontend-maven-plugin` | `generate-resources` | Downloads Node v22.14.0 |
+| Install dependencies | `frontend-maven-plugin` | `generate-resources` | Runs `npm ci` |
+| Build UI | `frontend-maven-plugin` | `generate-resources` | Runs `npm run build` (tsc + vite) |
+| Copy to classpath | `maven-resources-plugin` | `process-resources` | Copies `mockserver-ui/build/` to `target/classes/org/mockserver/dashboard/` |
+
+The profile auto-activates when `../../mockserver-ui/package.json` exists. To skip the UI build: `./mvnw ... -P!build-ui`.
+
+### Static Resources
 
 All frontend files are bundled in the JAR at `/org/mockserver/dashboard/`:
 
 | File | Type | Purpose |
 |------|------|---------|
 | `index.html` | HTML | SPA entry point |
-| `static/js/runtime~main.26e8d0d9.js` | JS | Webpack runtime |
-| `static/js/2.d40871cb.chunk.js` | JS | Vendor chunk (React, Redux) |
-| `static/js/main.defc53a6.chunk.js` | JS | Application code |
-| `static/css/main.66fded09.chunk.css` | CSS | Styles |
-| `AveriaSansLibre-Regular.woff2` | Font | Custom font |
-| `service-worker.js` | JS | Offline caching |
-| `asset-manifest.json` | JSON | Webpack asset manifest |
+| `assets/index-*.js` | JS | Application bundle (React, MUI, Zustand, all components) |
+| `apple-touch-icon.png` | PNG | Touch icon |
+| `favicon.ico` | ICO | Browser favicon |
 
 ## Opening the Dashboard
 
