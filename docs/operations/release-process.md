@@ -48,7 +48,7 @@ Deploys the next SNAPSHOT version to Sonatype snapshots repository.
 
 1. Update `changelog.md`
 2. Update `README.md`
-3. Clean build artifacts: `./mvnw clean && rm -rf jekyll-www.mock-server.com/_site`
+3. Clean build artifacts: `cd mockserver && ./mvnw clean && cd .. && rm -rf jekyll-www.mock-server.com/_site`
 4. Update `jekyll-www.mock-server.com/_config.yml` with new version numbers
 5. Find-and-replace version references across the codebase:
    - Release version (e.g., `5.15.0`)
@@ -56,35 +56,32 @@ Deploys the next SNAPSHOT version to Sonatype snapshots repository.
    - SNAPSHOT version (e.g., `5.15.1-SNAPSHOT` → `5.16.1-SNAPSHOT`)
 6. Commit and push
 
-### 4. Update mockserver-node (Separate Repository)
+### 4. Update mockserver-node (Monorepo)
 
 ```bash
-git pull --rebase
+cd mockserver-node
 rm -rf package-lock.json node_modules
 # Update version references
 nvm use v16.14.1
 npm i && npm audit fix
 grunt
-git add -A && git commit -m "upgraded to MockServer X.Y.Z"
-git push origin master && git tag mockserver-X.Y.Z && git push origin --tags
 npm login
 npm publish --access=public --otp=****
+cd ..
 ```
 
-### 5. Update mockserver-client-node (Separate Repository)
+### 5. Update mockserver-client-node (Monorepo)
 
-Same process as step 4, without `npm audit fix`.
+Same process as step 4, but in `mockserver-client-node/` and without `npm audit fix`.
 
-### 6. Update mockserver-maven-plugin (Separate Repository)
+### 6. Update mockserver-maven-plugin (Monorepo)
 
-1. Update parent POM, jar-with-dependencies, and integration-testing versions from SNAPSHOT to RELEASE
+1. Update parent POM, jar-with-dependencies, and integration-testing versions from SNAPSHOT to RELEASE in `mockserver-maven-plugin/pom.xml`
 2. Deploy snapshot: `./scripts/local_deploy_snapshot.sh`
-3. Commit and push
-4. Release: `./scripts/local_release.sh`
-5. Close and release on Sonatype
-6. Update versions back to new SNAPSHOT
-7. Deploy new snapshot
-8. Commit and push
+3. Release: `./scripts/local_release.sh`
+4. Close and release on Sonatype
+5. Update versions back to new SNAPSHOT
+6. Deploy new snapshot
 
 ### 7. Update Docker Image
 
@@ -119,7 +116,7 @@ helm repo index .
 ```bash
 git checkout mockserver-X.Y.Z
 export JAVA_HOME=$(/usr/libexec/java_home -v 1.8)
-./mvnw javadoc:aggregate -P release \
+cd mockserver && ./mvnw javadoc:aggregate -P release \
   -DreportOutputDirectory='/path/to/javadoc/X.Y.Z'
 # Upload to S3 bucket under /versions/X.Y.Z/
 git checkout master

@@ -1,6 +1,6 @@
 MockServer &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Easily%20mock%20any%20system%20you%20integrate%20with%20via%20HTTP%20or%20HTTPS%2C%20or%20analysis%20and%20debug%20systems%20via%20HTTP%20or%20HTTPS%20by%20simple%20transparent%20proxying%20that%20allows%20easy%20inspection%20or%20modification%20of%20in%20flight%20requests&url=http://mock-server.com&hashtags=mock,proxy,http,testing,debug,developers) [![Build status](https://badge.buildkite.com/3b6803f4fe98cb5ed7bf18292a1434f800b53d8fecb92811d8.svg?branch=master&style=square&theme=slack)](https://buildkite.com/mockserver/mockserver) 
-[![GitHub license](https://img.shields.io/github/license/mock-server/mockserver.svg)](https://github.com/mock-server/mockserver/blob/master/LICENSE.md) 
-[![GitHub stars](https://img.shields.io/github/stars/mock-server/mockserver.svg)](https://github.com/mock-server/mockserver/stargazers)&nbsp;<a href="https://trello.com/b/dsfTCP46/mockserver"><img height="20px" width="47px" src="http://mock-server.com/images/trello_badge.png" alt="Trello Backlog"></a>&nbsp;&nbsp;<a height="40px" width="66px" href="https://join-mock-server-slack.herokuapp.com"><img height="40px" src="http://mock-server.com/images/slack-logo-slim.png" alt="Join Slack"></a>
+[![GitHub license](https://img.shields.io/github/license/mock-server/mockserver-monorepo.svg)](https://github.com/mock-server/mockserver-monorepo/blob/master/LICENSE.md) 
+[![GitHub stars](https://img.shields.io/github/stars/mock-server/mockserver-monorepo.svg)](https://github.com/mock-server/mockserver-monorepo/stargazers)&nbsp;<a href="https://trello.com/b/dsfTCP46/mockserver"><img height="20px" width="47px" src="http://mock-server.com/images/trello_badge.png" alt="Trello Backlog"></a>&nbsp;&nbsp;<a height="40px" width="66px" href="https://join-mock-server-slack.herokuapp.com"><img height="40px" src="http://mock-server.com/images/slack-logo-slim.png" alt="Join Slack"></a>
 =====
 
 ### Documentation
@@ -9,7 +9,7 @@ For usage guide please see: [www.mock-server.com](http://www.mock-server.com/)
 
 ### Change Log
 
-Please see: [Change Log](https://github.com/mock-server/mockserver/blob/master/changelog.md)
+Please see: [Change Log](https://github.com/mock-server/mockserver-monorepo/blob/master/changelog.md)
 
 ### Community
 
@@ -20,11 +20,11 @@ Please see: [Change Log](https://github.com/mock-server/mockserver/blob/master/c
     </tr>
     <tr>
         <td>Feature Requests</td>
-        <td><a href="https://github.com/mock-server/mockserver/issues"><img height="20px" src="http://mock-server.com/images/GitHub_Logo-md.png" alt="GitHub Issues"></a></td>
+        <td><a href="https://github.com/mock-server/mockserver-monorepo/issues"><img height="20px" src="http://mock-server.com/images/GitHub_Logo-md.png" alt="GitHub Issues"></a></td>
     </tr>
     <tr> 
         <td>Issues / Bugs</td>
-        <td><a href="https://github.com/mock-server/mockserver/issues"><img height="20px" src="http://mock-server.com/images/GitHub_Logo-md.png" alt="GitHub Issues"></a></td>
+        <td><a href="https://github.com/mock-server/mockserver-monorepo/issues"><img height="20px" src="http://mock-server.com/images/GitHub_Logo-md.png" alt="GitHub Issues"></a></td>
     </tr>
     <tr>
         <td>Backlog</td>
@@ -32,7 +32,7 @@ Please see: [Change Log](https://github.com/mock-server/mockserver/blob/master/c
     </tr>
     <tr>
         <td>Security</td>
-        <td><a href="https://github.com/mock-server/mockserver/blob/master/SECURITY.md"><img height="20px" src="http://mock-server.com/images/GitHub_Logo-md.png" alt="Security Policy"></a></td>
+        <td><a href="https://github.com/mock-server/mockserver-monorepo/blob/master/SECURITY.md"><img height="20px" src="http://mock-server.com/images/GitHub_Logo-md.png" alt="Security Policy"></a></td>
     </tr>
 </table>
 

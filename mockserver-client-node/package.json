@@ -10,10 +10,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mock-server/mockserver-client-node.git"
+    "url": "https://github.com/mock-server/mockserver-monorepo.git",
+    "directory": "mockserver-client-node"
   },
   "bugs": {
-    "url": "https://github.com/mock-server/mockserver-client-node/issues"
+    "url": "https://github.com/mock-server/mockserver-monorepo/issues"
   },
   "license": "Apache-2.0",
   "engines": {

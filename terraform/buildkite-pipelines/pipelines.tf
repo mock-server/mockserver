@@ -1,5 +1,5 @@
 locals {
-  repository = "https://github.com/mock-server/mockserver.git"
+  repository = "https://github.com/mock-server/mockserver-monorepo.git"
 
   pipelines = {
     "pipeline" = {

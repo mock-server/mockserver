@@ -275,7 +275,7 @@ To use MockServer securely:
 
 If you discover a security vulnerability in MockServer itself (not dependency alerts), please report it via:
 
-- **GitHub Security Advisories:** https://github.com/mock-server/mockserver/security/advisories/new
+- **GitHub Security Advisories:** https://github.com/mock-server/mockserver-monorepo/security/advisories/new
 - **Email:** Contact the maintainers through GitHub
 
 Please **do not** open public issues for security vulnerabilities.
@@ -300,5 +300,5 @@ If you require a fully patched Spring framework:
 ## Questions?
 
 For security-related questions, see:
-- [GitHub Discussions](https://github.com/mock-server/mockserver/discussions)
-- [GitHub Issues](https://github.com/mock-server/mockserver/issues)
+- [GitHub Discussions](https://github.com/mock-server/mockserver-monorepo/discussions)
+- [GitHub Issues](https://github.com/mock-server/mockserver-monorepo/issues)

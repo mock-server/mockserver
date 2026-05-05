@@ -140,7 +140,7 @@ curl -X PUT 'localhost:1080/mockserver/verify' \
 curl -X PUT 'localhost:1080/mockserver/verify' \
 -d '{
   "httpRequest": {
-    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
+    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
   },
   "times": {
     "atLeast": 2,
@@ -155,7 +155,7 @@ curl -X PUT 'localhost:1080/mockserver/verify' \
 curl -X PUT 'localhost:1080/mockserver/verify' \
 -d '{
   "httpRequest": {
-    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
+    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
     "operationId": "showPetById"
   },
   "times": {
@@ -250,7 +250,7 @@ curl -X PUT "http://localhost:1080/mockserver/clear" -d '{
 
 ```bash
 curl -X PUT "http://localhost:1080/mockserver/clear" -d '{
-    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
+    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
     "operationId": "showPetById"
 }'
 ```
@@ -275,7 +275,7 @@ curl -X PUT "http://localhost:1080/mockserver/clear?type=log" -d '{
 
 ```bash
 curl -X PUT "http://localhost:1080/mockserver/clear?type=log" -d '{
-    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
+    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
     "operationId": "showPetById"
 }'
 ```
@@ -726,7 +726,7 @@ NOT JSON
 ```bash
 curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
-  "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
+  "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
 }'
 ```
 
@@ -738,7 +738,7 @@ NOT JSON
 curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
-    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
+    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
     "operationId": "showPetById"
   },
   "httpResponse": {
@@ -768,7 +768,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation' \
 ```bash
 curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
-  "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
+  "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
 }'
 ```
 
@@ -778,7 +778,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation' \
 curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
-    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
+    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
     "operationId": "showPetById"
   },
   "httpResponse": {
@@ -809,7 +809,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation' \
   "id": "630a6e5b-9d61-4668-a18f-a0d3df558583",
   "priority": 0,
   "httpRequest": {
-    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
+    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
     "operationId": "showPetById"
   },
   "httpResponse": {

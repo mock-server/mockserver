@@ -23,7 +23,7 @@ dev = [
 
 [project.urls]
 Homepage = "https://www.mock-server.com"
-Repository = "https://github.com/mock-server/mockserver"
+Repository = "https://github.com/mock-server/mockserver-monorepo"
 Documentation = "https://www.mock-server.com/mock_server/getting_started.html"
 
 [build-system]

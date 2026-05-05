@@ -18,9 +18,9 @@
     <url>https://www.mock-server.com</url>
 
     <scm>
-        <url>https://github.com/mock-server/mockserver-maven-plugin.git</url>
-        <connection>scm:git:https://github.com/mock-server/mockserver-maven-plugin.git</connection>
-        <developerConnection>scm:git:git@github.com:mock-server/mockserver-maven-plugin.git</developerConnection>
+        <url>https://github.com/mock-server/mockserver-monorepo.git</url>
+        <connection>scm:git:https://github.com/mock-server/mockserver-monorepo.git</connection>
+        <developerConnection>scm:git:git@github.com:mock-server/mockserver-monorepo.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 

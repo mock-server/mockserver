@@ -23,9 +23,9 @@
     </licenses>
 
     <scm>
-        <url>https://github.com/mock-server/mockserver.git</url>
-        <connection>scm:git:https://github.com/mock-server/mockserver.git</connection>
-        <developerConnection>scm:git:git@github.com:mock-server/mockserver.git</developerConnection>
+        <url>https://github.com/mock-server/mockserver-monorepo.git</url>
+        <connection>scm:git:https://github.com/mock-server/mockserver-monorepo.git</connection>
+        <developerConnection>scm:git:git@github.com:mock-server/mockserver-monorepo.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 

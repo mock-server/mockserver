@@ -36,7 +36,7 @@ fi
 
 - **Owner:** `mock-server`
 - **Repo:** `mockserver`
-- **API Base:** `https://api.github.com/repos/mock-server/mockserver`
+- **API Base:** `https://api.github.com/repos/mock-server/mockserver-monorepo`
 
 ## Step 1: Fetch All Open PRs
 
@@ -46,7 +46,7 @@ Fetch all open PRs with full metadata. Paginate if there are more than 100:
 # Using GITHUB_TOKEN
 curl -sH "Authorization: token $GITHUB_TOKEN" \
   -H "Accept: application/vnd.github.v3+json" \
-  "https://api.github.com/repos/mock-server/mockserver/pulls?state=open&per_page=100&page=1" \
+  "https://api.github.com/repos/mock-server/mockserver-monorepo/pulls?state=open&per_page=100&page=1" \
   | jq '[.[] | {
     number,
     title,
@@ -65,7 +65,7 @@ curl -sH "Authorization: token $GITHUB_TOKEN" \
 
 ```bash
 # Using gh CLI (if authenticated to github.com)
-gh pr list --repo mock-server/mockserver --state open --limit 100 \
+gh pr list --repo mock-server/mockserver-monorepo --state open --limit 100 \
   --json number,title,author,createdAt,updatedAt,headRefName,baseRefName,isDraft,labels,mergeable,reviewDecision
 ```
 
@@ -77,7 +77,7 @@ For each PR, fetch merge status and review details:
 # Merge status (requires individual PR fetch for mergeable field)
 curl -sH "Authorization: token $GITHUB_TOKEN" \
   -H "Accept: application/vnd.github.v3+json" \
-  "https://api.github.com/repos/mock-server/mockserver/pulls/{number}" \
+  "https://api.github.com/repos/mock-server/mockserver-monorepo/pulls/{number}" \
   | jq '{number, mergeable, mergeable_state, rebaseable, maintainer_can_modify, changed_files, additions, deletions}'
 ```
 
@@ -85,7 +85,7 @@ curl -sH "Authorization: token $GITHUB_TOKEN" \
 # Reviews
 curl -sH "Authorization: token $GITHUB_TOKEN" \
   -H "Accept: application/vnd.github.v3+json" \
-  "https://api.github.com/repos/mock-server/mockserver/pulls/{number}/reviews" \
+  "https://api.github.com/repos/mock-server/mockserver-monorepo/pulls/{number}/reviews" \
   | jq '[.[] | {user: .user.login, state, submitted_at}]'
 ```
 
@@ -93,7 +93,7 @@ curl -sH "Authorization: token $GITHUB_TOKEN" \
 # CI status checks
 curl -sH "Authorization: token $GITHUB_TOKEN" \
   -H "Accept: application/vnd.github.v3+json" \
-  "https://api.github.com/repos/mock-server/mockserver/commits/{head_sha}/status" \
+  "https://api.github.com/repos/mock-server/mockserver-monorepo/commits/{head_sha}/status" \
   | jq '{state, total_count, statuses: [.statuses[] | {context, state, description}]}'
 ```
 
@@ -101,7 +101,7 @@ curl -sH "Authorization: token $GITHUB_TOKEN" \
 # Check runs (GitHub Actions)
 curl -sH "Authorization: token $GITHUB_TOKEN" \
   -H "Accept: application/vnd.github.v3+json" \
-  "https://api.github.com/repos/mock-server/mockserver/commits/{head_sha}/check-runs" \
+  "https://api.github.com/repos/mock-server/mockserver-monorepo/commits/{head_sha}/check-runs" \
   | jq '{total_count, check_runs: [.check_runs[] | {name, status, conclusion}]}'
 ```
 
@@ -113,7 +113,7 @@ Determine if each PR is up-to-date with its base branch:
 # Compare base branch with PR head
 curl -sH "Authorization: token $GITHUB_TOKEN" \
   -H "Accept: application/vnd.github.v3+json" \
-  "https://api.github.com/repos/mock-server/mockserver/compare/{base_ref}...{head_sha}" \
+  "https://api.github.com/repos/mock-server/mockserver-monorepo/compare/{base_ref}...{head_sha}" \
   | jq '{behind_by, ahead_by, status}'
 ```
 
@@ -161,7 +161,7 @@ Compare PRs for potential duplicates using these signals:
 # Get files changed per PR
 curl -sH "Authorization: token $GITHUB_TOKEN" \
   -H "Accept: application/vnd.github.v3+json" \
-  "https://api.github.com/repos/mock-server/mockserver/pulls/{number}/files" \
+  "https://api.github.com/repos/mock-server/mockserver-monorepo/pulls/{number}/files" \
   | jq '[.[] | .filename]'
 ```
 
@@ -181,7 +181,7 @@ Produce a structured report with these sections:
 
 **Generated:** {date}
 **Open PRs:** {count}
-**Repository:** mock-server/mockserver
+**Repository:** mock-server/mockserver-monorepo
 
 ## Summary
 

@@ -2,7 +2,7 @@
 
 ## Issues
 
-If you have any problems, please [check the project issues](https://github.com/mock-server/mockserver/issues?state=open) and avoid opening issues that have already been fixed. When you open an issue please provide:
+If you have any problems, please [check the project issues](https://github.com/mock-server/mockserver-monorepo/issues?state=open) and avoid opening issues that have already been fixed. When you open an issue please provide:
 
 - MockServer version
 - How you are running MockServer (Maven plugin, Docker, JAR, etc.)
@@ -80,4 +80,4 @@ Pull requests are welcome. Please:
 
 ## Feature Requests
 
-Feature requests are submitted to [GitHub issues](https://github.com/mock-server/mockserver/issues?state=open).
+Feature requests are submitted to [GitHub issues](https://github.com/mock-server/mockserver-monorepo/issues?state=open).
