@@ -34,13 +34,14 @@ AWS accounts, CI/CD pipelines, container images, and Kubernetes deployment.
 
 ### Operations
 
-Build process, releases, dependencies, and the documentation website.
+Build process, releases, dependencies, security scanning, and the documentation website.
 
 | Document | Description |
 |----------|-------------|
 | [Build System](operations/build-system.md) | Maven configuration, profiles, plugins, and build scripts |
 | [Release Process](operations/release-process.md) | End-to-end release workflow with Mermaid diagrams |
 | [Dependencies](operations/dependencies.md) | Complete dependency inventory with versions |
+| [Snyk Security](operations/snyk-security.md) | Vulnerability scanning, CLI usage, Java 11 constraints, triage workflow |
 | [Website](operations/website.md) | Jekyll documentation site structure and publishing |
 | [Testing](testing.md) | Test frameworks, module inventory, architecture, configuration, coverage gaps, CI execution |
 | [OpenCode Configuration](operations/opencode-configuration.md) | AI harness: config, agents, rules, skills, commands, plugins |
@@ -77,7 +78,7 @@ mockserver/
 └── docs/                       # This documentation (you are here)
     ├── code/                   #   Code architecture (9 docs)
     ├── infrastructure/         #   AWS, CI/CD, Docker, Helm (4 docs)
-    ├── operations/             #   Build, release, deps, website (5 docs)
+    ├── operations/             #   Build, release, deps, security, website (6 docs)
     └── testing.md              #   Test frameworks, architecture, config, coverage, CI
 ```
 
@@ -90,3 +91,4 @@ mockserver/
 - **Helm Chart Repo:** https://www.mock-server.com/mockserver-5.15.0.tgz
 - **SwaggerHub API:** https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi
 - **Buildkite:** https://buildkite.com/mockserver/mockserver
+- **Snyk:** https://app.snyk.io/org/mockserver/projects

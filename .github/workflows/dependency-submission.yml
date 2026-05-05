@@ -1,4 +1,4 @@
-name: Maven Dependency Submission
+name: Automatic Dependency Submission
 
 on:
   push:
@@ -16,31 +16,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Submit Maven dependencies with retry
-        uses: nick-fields/retry@v3
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
         with:
-          timeout_minutes: 10
-          max_attempts: 5
-          retry_wait_seconds: 15
-          exponential_backoff: true
-          retry_on: error
-          on_retry_command: |
-            echo "::warning::Dependency submission failed. Retrying (attempt ${{ github.run_attempt }})..."
-          command: |
-            # Download the CLI version of maven-dependency-submission-action
-            curl -fsSL https://github.com/actions/maven-dependency-submission-action/releases/latest/download/maven-dependency-submission-linux-x64 -o /tmp/maven-dependency-submission
-            chmod +x /tmp/maven-dependency-submission
-            
-            # Run it with the same parameters as the GitHub action
-            /tmp/maven-dependency-submission \
-              --token "$GITHUB_TOKEN" \
-              --repository "$GITHUB_REPOSITORY" \
-              --branch-ref "$GITHUB_REF" \
-              --sha "$GITHUB_SHA" \
-              --directory "$GITHUB_WORKSPACE"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_REF: ${{ github.ref }}
-          GITHUB_SHA: ${{ github.sha }}
-          GITHUB_WORKSPACE: ${{ github.workspace }}
+          distribution: 'temurin'
+          java-version: '11'
+          cache: 'maven'
+
+      - name: Submit Maven dependencies
+        uses: advanced-security/maven-dependency-submission-action@v4
+        with:
+          directory: ${{ github.workspace }}
