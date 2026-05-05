@@ -529,7 +529,7 @@
             <dependency>
                 <groupId>com.sun.xml.bind</groupId>
                 <artifactId>jaxb-impl</artifactId>
-                <version>4.0.6</version>
+                <version>4.0.7</version>
             </dependency>
             <dependency>
                 <groupId>org.xmlunit</groupId>
