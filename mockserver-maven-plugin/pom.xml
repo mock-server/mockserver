@@ -4,6 +4,7 @@
         <groupId>org.mock-server</groupId>
         <artifactId>mockserver</artifactId>
         <version>5.15.1-SNAPSHOT</version>
+        <relativePath>../mockserver/pom.xml</relativePath>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
