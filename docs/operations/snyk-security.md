@@ -4,6 +4,32 @@
 
 MockServer uses [Snyk](https://snyk.io) for continuous security vulnerability scanning of Maven dependencies. Snyk automatically scans pull requests and reports vulnerabilities before they are merged.
 
+## ⚠️ Java 11 Compatibility Constraint
+
+**Critical limitation:** MockServer targets **Java 11** as the minimum supported JVM version. This architectural decision (documented in `AGENTS.md`) blocks many security vulnerability fixes that require Java 17+.
+
+### Why Java 11?
+
+Approximately 23% of Java projects still use Java 11 (as of 2026). Supporting Java 11 maximizes MockServer's compatibility and adoption.
+
+### Consequence: Blocked Security Fixes
+
+Many modern dependency versions require Java 17+ (class file version 61.0):
+- ❌ Spring Framework 6.x (fixes available, but requires Java 17+)
+- ❌ Spring Boot 3.x (fixes available, but requires Java 17+)
+- ❌ Jetty 10.x/12.x (fixes available, but requires Java 17+)
+- ❌ Jakarta EE 9+ (fixes available, but requires Java 17+)
+- ❌ OkHttp 5.x (fixes available, but requires Java 17+)
+
+**All Snyk vulnerabilities in MockServer are due to this constraint.** The vulnerabilities cannot be fixed without breaking Java 11 compatibility.
+
+### Mitigation
+
+- Most vulnerable dependencies are **test-only** (`mockserver-examples`, `mockserver-spring-test-listener`)
+- Not shipped in production artifacts (`mockserver-netty` JAR, Docker images)
+- All vulnerabilities are tracked in the `.snyk` policy file with documented reasons
+- Expiration dates trigger periodic review (currently: 2026-06-16)
+
 ## Integration Points
 
 ### PR Status Checks
