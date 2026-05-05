@@ -7,10 +7,6 @@ require 'socket'
 require 'timeout'
 
 RSpec.describe 'Integration', :integration do
-  def self.running_in_docker?
-    File.exist?('/.dockerenv') || File.exist?('/run/.containerenv')
-  end
-
   def self.find_free_port
     server = TCPServer.new('127.0.0.1', 0)
     port = server.addr[1]
@@ -19,30 +15,34 @@ RSpec.describe 'Integration', :integration do
   end
 
   def self.start_mockserver_container
-    container_name = 'mockserver-ruby-integration'
-    in_docker = running_in_docker?
+    if ENV['MOCKSERVER_HOST'] && ENV['MOCKSERVER_PORT']
+      @mockserver_host = ENV['MOCKSERVER_HOST']
+      @mockserver_port = ENV['MOCKSERVER_PORT'].to_i
+      @external_mockserver = true
 
-    if in_docker
-      @mockserver_host = container_name
-      @mockserver_port = 1080
-      output = `docker run -d --name #{container_name} mockserver/mockserver:latest 2>&1`
-      raise "Failed to start container: #{output}" unless $?.success?
+      deadline = Time.now + 30
+      loop do
+        uri = URI("http://#{@mockserver_host}:#{@mockserver_port}/mockserver/status")
+        req = Net::HTTP::Put.new(uri)
+        resp = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
+        break if resp.code == '200'
+      rescue StandardError
+        raise "MockServer did not start within 30s" if Time.now > deadline
 
-      container_id = output.strip
-
-      my_id = Socket.gethostname
-      network_id = `docker inspect #{my_id} --format '{{range .NetworkSettings.Networks}}{{.NetworkID}}{{end}}'`.strip
-      unless network_id.empty?
-        `docker network connect #{network_id} #{container_name} 2>&1`
+        sleep 0.5
+        retry
       end
-    else
-      @mockserver_port = find_free_port
-      @mockserver_host = 'localhost'
-      output = `docker run -d --name #{container_name} -p #{@mockserver_port}:1080 mockserver/mockserver:latest 2>&1`
-      raise "Failed to start container: #{output}" unless $?.success?
-
-      container_id = output.strip
+      return nil
     end
+
+    @external_mockserver = false
+    @mockserver_port = find_free_port
+    @mockserver_host = 'localhost'
+    container_name = "mockserver-ruby-integration-#{@mockserver_port}"
+    output = `docker run -d --name #{container_name} -p #{@mockserver_port}:1080 mockserver/mockserver:latest 2>&1`
+    raise "Failed to start container: #{output}" unless $?.success?
+
+    container_id = output.strip
 
     deadline = Time.now + 30
     loop do
@@ -61,7 +61,9 @@ RSpec.describe 'Integration', :integration do
   end
 
   def self.stop_mockserver_container(container_id)
-    system("docker rm -f #{container_id} >/dev/null 2>&1")
+    return if @external_mockserver
+
+    system("docker rm -f #{container_id} >/dev/null 2>&1") if container_id
   end
 
   def self.mockserver_host
@@ -79,12 +81,14 @@ RSpec.describe 'Integration', :integration do
   end
 
   before(:context) do
-    skip 'Docker not available' unless system('docker', 'info', out: File::NULL, err: File::NULL)
+    unless ENV['MOCKSERVER_HOST']
+      skip 'Docker not available' unless system('docker', 'info', out: File::NULL, err: File::NULL)
+    end
     self.class.container_id = self.class.start_mockserver_container
   end
 
   after(:context) do
-    self.class.stop_mockserver_container(self.class.container_id) if self.class.container_id
+    self.class.stop_mockserver_container(self.class.container_id)
   end
 
   let(:host) { self.class.mockserver_host }

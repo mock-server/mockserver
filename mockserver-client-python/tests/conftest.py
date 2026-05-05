@@ -8,10 +8,6 @@ import urllib.request
 import pytest
 
 
-def _running_in_docker():
-    return os.path.exists("/.dockerenv") or os.path.exists("/run/.containerenv")
-
-
 def _find_free_port():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(("", 0))
@@ -34,49 +30,39 @@ def _wait_for_mockserver(host, port, timeout=30):
 
 @pytest.fixture(scope="session")
 def mockserver_url():
+    env_host = os.environ.get("MOCKSERVER_HOST")
+    env_port = os.environ.get("MOCKSERVER_PORT")
+
+    if env_host and env_port:
+        host = env_host
+        port = int(env_port)
+        _wait_for_mockserver(host, port)
+        yield host, port
+        return
+
     if not shutil.which("docker"):
         pytest.skip("Docker is not available")
 
-    container_name = "mockserver-python-integration"
-    in_docker = _running_in_docker()
+    port = _find_free_port()
+    host = "localhost"
+    container_name = f"mockserver-python-integration-{port}"
 
-    if in_docker:
-        host = container_name
-        port = 1080
-        docker_args = [
-            "docker", "run", "-d",
-            "--name", container_name,
-            "mockserver/mockserver:latest",
-        ]
-        my_id = socket.gethostname()
-        network_proc = subprocess.run(
-            ["docker", "inspect", my_id, "--format", "{{range .NetworkSettings.Networks}}{{.NetworkID}}{{end}}"],
-            capture_output=True, text=True,
-        )
-        network_id = network_proc.stdout.strip() if network_proc.returncode == 0 else ""
-    else:
-        port = _find_free_port()
-        host = "localhost"
-        docker_args = [
+    proc = subprocess.run(
+        [
             "docker", "run", "-d",
             "--name", container_name,
             "-p", f"{port}:1080",
             "mockserver/mockserver:latest",
-        ]
-        network_id = ""
-
-    proc = subprocess.run(docker_args, capture_output=True, text=True)
+        ],
+        capture_output=True,
+        text=True,
+    )
     if proc.returncode != 0:
         pytest.skip(f"Failed to start MockServer container: {proc.stderr}")
 
     container_id = proc.stdout.strip()
 
     try:
-        if in_docker and network_id:
-            subprocess.run(
-                ["docker", "network", "connect", network_id, container_name],
-                capture_output=True, text=True,
-            )
         _wait_for_mockserver(host, port)
         yield host, port
     finally:

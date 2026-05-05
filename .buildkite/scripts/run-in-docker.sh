@@ -9,6 +9,7 @@ DOCKER_ARGS=()
 COMMAND_ARGS=()
 WORKDIR="/build"
 MEMORY=""
+NETWORK=""
 DOCKER_SOCKET=false
 ENV_VARS=()
 VOLUMES=()
@@ -27,6 +28,7 @@ Options:
   -s, --docker-socket      Mount Docker socket into container
   -e, --env KEY=VALUE      Pass environment variable to container
   -v, --volume SRC:DST     Additional volume mount
+  --network NAME           Docker network to connect to
   -h, --help               Show this help
 
 Examples:
@@ -44,6 +46,7 @@ while [[ $# -gt 0 ]]; do
     -s|--docker-socket) DOCKER_SOCKET=true; shift ;;
     -e|--env)     ENV_VARS+=("$2"); shift 2 ;;
     -v|--volume)  VOLUMES+=("$2"); shift 2 ;;
+    --network)    NETWORK="$2"; shift 2 ;;
     -h|--help)    usage ;;
     --)           shift; COMMAND_ARGS=("$@"); break ;;
     *)            COMMAND_ARGS=("$@"); break ;;
@@ -66,6 +69,10 @@ DOCKER_ARGS+=(-w "$WORKDIR")
 
 if [[ -n "$MEMORY" ]]; then
   DOCKER_ARGS+=(--memory="$MEMORY" --memory-swap="$MEMORY")
+fi
+
+if [[ -n "$NETWORK" ]]; then
+  DOCKER_ARGS+=(--network "$NETWORK")
 fi
 
 if [[ "$DOCKER_SOCKET" == "true" ]]; then

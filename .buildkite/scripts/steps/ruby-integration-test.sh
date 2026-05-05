@@ -2,9 +2,26 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+NETWORK_NAME="mockserver-ruby-$$"
+MOCKSERVER_NAME="mockserver-ruby-server-$$"
 
-exec "$SCRIPT_DIR/../run-in-docker.sh" \
+cleanup() {
+  docker rm -f "$MOCKSERVER_NAME" 2>/dev/null || true
+  docker network rm "$NETWORK_NAME" 2>/dev/null || true
+}
+trap cleanup EXIT
+
+docker network create "$NETWORK_NAME"
+
+docker run -d \
+  --name "$MOCKSERVER_NAME" \
+  --network "$NETWORK_NAME" \
+  mockserver/mockserver:latest
+
+"$SCRIPT_DIR/../run-in-docker.sh" \
   -i ruby:3.3 \
   -w /build/mockserver-client-ruby \
-  -s \
-  -- bash -c 'apt-get update -qq && apt-get install -y -qq docker.io >/dev/null 2>&1 && bundle install && bundle exec rspec --tag integration -f documentation'
+  -e "MOCKSERVER_HOST=$MOCKSERVER_NAME" \
+  -e "MOCKSERVER_PORT=1080" \
+  --network "$NETWORK_NAME" \
+  -- bash -c 'bundle install && bundle exec rspec --tag integration -f documentation'
