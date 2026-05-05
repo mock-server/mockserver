@@ -4,10 +4,12 @@ set -euo pipefail
 
 echo "whoami: $(whoami)"
 
+cd mockserver
+
 echo
 java -version
 echo
-mockserver/mvnw -version
+./mvnw -version
 echo
 export MAVEN_OPTS="${MAVEN_OPTS:-} -Xms2048m -Xmx8192m"
 export JAVA_OPTS="${JAVA_OPTS:-} -Xms2048m -Xmx8192m"
@@ -18,4 +20,4 @@ else
     echo "BRANCH: ${CURRENT_BRANCH:-}"
 fi
 
-mockserver/mvnw -T 1C clean deploy ${1:-} -Djava.security.egd=file:/dev/./urandom -Dmockserver.testOutput=quiet -DdisableXmlReport=false -DredirectTestOutputToFile=true -Dmockserver.testLogLevel=INFO
+./mvnw -T 1C clean deploy ${1:-} -Djava.security.egd=file:/dev/./urandom -Dmockserver.testOutput=quiet -DdisableXmlReport=false -DredirectTestOutputToFile=true -Dmockserver.testLogLevel=INFO

@@ -51,6 +51,7 @@ jobs:
 
     - name: Build with Maven
       if: matrix.language == 'java'
+      working-directory: mockserver
       run: ./mvnw -B clean compile -DskipTests -Dmaven.javadoc.skip=true
       env:
         MAVEN_OPTS: -Xmx2048m

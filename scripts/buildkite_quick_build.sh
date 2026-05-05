@@ -11,10 +11,12 @@ log_debug "User: $(whoami)"
 log_debug "Memory: $(free -h 2>/dev/null | grep Mem || echo 'free command not available')"
 log_debug "Disk: $(df -h /build/mockserver 2>/dev/null | tail -1 || echo 'df command not available')"
 
+cd mockserver
+
 echo
 java -version
 echo
-mockserver/mvnw -version
+./mvnw -version
 echo
 export MAVEN_OPTS="${MAVEN_OPTS:-} -Xms4096m -Xmx12288m"
 export JAVA_OPTS="${JAVA_OPTS:-} -Xms4096m -Xmx12288m"
@@ -27,7 +29,7 @@ fi
 
 log_debug "Starting Maven build (foreground)..."
 set +e
-mockserver/mvnw -T 1C clean install ${1:-} -Djava.security.egd=file:/dev/./urandom -Dmockserver.testOutput=quiet -DdisableXmlReport=false -DredirectTestOutputToFile=true -Dmockserver.testLogLevel=INFO
+./mvnw -T 1C clean install ${1:-} -Djava.security.egd=file:/dev/./urandom -Dmockserver.testOutput=quiet -DdisableXmlReport=false -DredirectTestOutputToFile=true -Dmockserver.testLogLevel=INFO
 MVN_EXIT=$?
 log_debug "Maven exited with code=$MVN_EXIT"
 set -e
