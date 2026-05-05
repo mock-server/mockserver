@@ -11,6 +11,7 @@ export {
   Expectation,
   ExpectationId,
   HttpRequest,
+  HttpRequestAndHttpResponse,
   HttpResponse,
   KeyToMultiValue,
   OpenAPIExpectation,

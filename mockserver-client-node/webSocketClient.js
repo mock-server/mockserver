@@ -74,6 +74,7 @@
                     var clientId;
                     var clientIdHandler;
                     var requestHandler;
+                    var requestAndResponseHandler;
                     var webSocketLocation = (tls ? "wss" : "ws") + "://" + host + ":" + port + contextPath + "/_mockserver_callback_websocket";
 
                     var client = new WebSocketClient({
@@ -109,6 +110,12 @@
                                     var request = JSON.parse(payload.value);
                                     var response = requestHandler(request);
                                     connection.sendUTF(JSON.stringify(response));
+                                } else if (payload.type === "org.mockserver.model.HttpRequestAndHttpResponse") {
+                                    var requestAndResponse = JSON.parse(payload.value);
+                                    if (requestAndResponseHandler) {
+                                        var responseResult = requestAndResponseHandler(requestAndResponse);
+                                        connection.sendUTF(JSON.stringify(responseResult));
+                                    }
                                 } else if (payload.type === "org.mockserver.serialization.model.WebSocketClientIdDTO") {
                                     var registration = JSON.parse(payload.value);
                                     if (registration.clientId) {
@@ -129,6 +136,9 @@
                     deferred.resolve({
                         requestCallback: function requestCallback(callback) {
                             requestHandler = callback;
+                        },
+                        requestAndResponseCallback: function requestAndResponseCallback(callback) {
+                            requestAndResponseHandler = callback;
                         },
                         clientIdCallback: function clientIdCallback(callback) {
                             clientIdHandler = callback;

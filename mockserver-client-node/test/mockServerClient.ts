@@ -1,6 +1,6 @@
 import {mockServerClient} from '../index';
 import {MockServerClient, RequestResponse} from '../mockServerClient';
-import {Expectation, HttpOverrideForwardedRequest, HttpResponse, RequestDefinition} from '../mockServer';
+import {Expectation, HttpOverrideForwardedRequest, HttpRequest, HttpResponse, RequestDefinition} from '../mockServer';
 
 const client: MockServerClient = mockServerClient('mockhttp', 1080);
 
@@ -92,6 +92,14 @@ async function test() {
     requestResponse = await client.mockWithCallback(requestDefinition, (request) => httpResponse);
     requestResponse = await client.mockWithCallback(requestDefinition, (request) => httpResponse, 10);
     requestResponse = await client.mockWithCallback(requestDefinition, (request) => httpResponse, 10, 10, {unlimited: true}, "some_id");
+
+    requestResponse = await client.mockWithForwardCallback(requestDefinition, (request) => request);
+    requestResponse = await client.mockWithForwardCallback(requestDefinition, (request) => request, 10);
+    requestResponse = await client.mockWithForwardCallback(requestDefinition, (request) => request, 10, 10, {unlimited: true}, "some_id");
+
+    requestResponse = await client.mockWithForwardAndResponseCallback(requestDefinition, (request) => request, (request, response) => response);
+    requestResponse = await client.mockWithForwardAndResponseCallback(requestDefinition, (request) => request, (request, response) => response, 10);
+    requestResponse = await client.mockWithForwardAndResponseCallback(requestDefinition, (request) => request, (request, response) => response, 10, 10, {unlimited: true}, "some_id");
 
     requestResponse = await client.mockSimpleResponse('some/path', {});
     requestResponse = await client.mockSimpleResponse('some/path', {}, 500);

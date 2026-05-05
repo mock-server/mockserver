@@ -1528,6 +1528,88 @@
             });
         },
 
+        'should create expectation with forward method callback': function (test) {
+            // when
+            client.mockWithForwardCallback({
+                'method': 'GET',
+                'path': '/somePath'
+            }, function (request) {
+                return {
+                    'method': request.method,
+                    'path': request.path,
+                    'headers': request.headers
+                };
+            }, 1, 10, {
+                timeUnit: "HOURS",
+                timeToLive: 1
+            }, "some_id")
+                .then(function () {
+
+                    // then - matching request
+                    sendRequest("GET", "localhost", mockServerPort, "/somePath", "", {'Vary': uuid})
+                        .then(function (response) {
+
+                            test.ok(response.statusCode);
+
+                            // then - matching request, but no times remaining
+                            sendRequest("GET", "localhost", mockServerPort, "/somePath", "", {'Vary': uuid})
+                                .then(function (error) {
+                                    test.ok(false, "failed with the following error \n" + JSON.stringify(error));
+                                    test.done();
+                                }, function (error) {
+                                    test.equal(error, "404 Not Found");
+                                    test.done();
+                                });
+                        }, function (error) {
+                            test.ok(false, "failed with the following error \n" + JSON.stringify(error));
+                            test.done();
+                        });
+                }, function (error) {
+                    test.ok(false, "failed with the following error \n" + JSON.stringify(error));
+                    test.done();
+                });
+        },
+
+        'should create expectation with forward and response method callback': function (test) {
+            // when
+            client.mockWithForwardAndResponseCallback({
+                'method': 'GET',
+                'path': '/somePath'
+            }, function (request) {
+                return {
+                    'method': request.method,
+                    'path': request.path,
+                    'headers': request.headers
+                };
+            }, function (request, response) {
+                return {
+                    'statusCode': 200,
+                    'body': 'overridden'
+                };
+            }, 1, 10, {
+                timeUnit: "HOURS",
+                timeToLive: 1
+            }, "some_id")
+                .then(function () {
+
+                    // then - matching request
+                    sendRequest("GET", "localhost", mockServerPort, "/somePath", "", {'Vary': uuid})
+                        .then(function (response) {
+
+                            test.equal(response.statusCode, 200);
+                            test.equal(response.body, 'overridden');
+
+                            test.done();
+                        }, function (error) {
+                            test.ok(false, "failed with the following error \n" + JSON.stringify(error));
+                            test.done();
+                        });
+                }, function (error) {
+                    test.ok(false, "failed with the following error \n" + JSON.stringify(error));
+                    test.done();
+                });
+        },
+
         'should update default headers for simple response expectation': function (test) {
             // when
             client.setDefaultHeaders([

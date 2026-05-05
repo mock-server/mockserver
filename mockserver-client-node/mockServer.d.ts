@@ -309,8 +309,8 @@ export interface Ports {
  * verification sequence
  */
 export type HttpRequestAndHttpResponse = {
-    httpRequest?: HttpRequest[];
-    httpResponse?: HttpResponse[];
+    httpRequest?: HttpRequest;
+    httpResponse?: HttpResponse;
     timestamp?: string;
 };
 
