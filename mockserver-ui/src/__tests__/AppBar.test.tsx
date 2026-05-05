@@ -77,20 +77,17 @@ describe('AppBar', () => {
     expect(props.onClearServer).toHaveBeenCalledOnce();
   });
 
-  it('clears UI only without calling server', async () => {
+  it('calls onClearLogs when clear server logs is clicked', async () => {
     const user = userEvent.setup();
-    useDashboardStore.setState({
-      logMessages: [{ key: 'l', value: {} }],
-    });
     const { props } = renderAppBar();
 
     const clearButton = screen.getAllByRole('button').find(
       (b) => b.querySelector('[data-testid="DeleteSweepIcon"]'),
     );
     await user.click(clearButton!);
-    await user.click(screen.getByText('Clear UI only'));
+    await user.click(screen.getByText('Clear server logs'));
 
-    expect(useDashboardStore.getState().logMessages).toEqual([]);
+    expect(props.onClearLogs).toHaveBeenCalledOnce();
     expect(props.onClearServer).not.toHaveBeenCalled();
   });
 });

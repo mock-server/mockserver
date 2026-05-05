@@ -24,8 +24,17 @@ export default function CopyButton({ text, size = 'small' }: CopyButtonProps) {
 
   return (
     <Tooltip title={copied ? 'Copied!' : 'Copy'}>
-      <IconButton size={size} onClick={handleCopy} sx={{ opacity: 0.6, '&:hover': { opacity: 1 } }}>
-        {copied ? <CheckIcon fontSize="inherit" /> : <ContentCopyIcon fontSize="inherit" />}
+      <IconButton
+        size={size}
+        onClick={handleCopy}
+        sx={{
+          opacity: 0.6,
+          '&:hover': { opacity: 1 },
+          p: '2px',
+          '& .MuiSvgIcon-root': { fontSize: '0.875rem' },
+        }}
+      >
+        {copied ? <CheckIcon /> : <ContentCopyIcon />}
       </IconButton>
     </Tooltip>
   );

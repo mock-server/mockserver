@@ -2,7 +2,6 @@ import Box from '@mui/material/Box';
 import type { JsonListItem as JsonListItemType } from '../types';
 import JsonViewer from './JsonViewer';
 import DescriptionDisplay from './DescriptionDisplay';
-import CopyButton from './CopyButton';
 
 interface JsonListItemProps {
   item: JsonListItemType;
@@ -32,9 +31,6 @@ export default function JsonListItem({ item, index }: JsonListItemProps) {
         {item.description && <DescriptionDisplay description={item.description} />}
       </Box>
       <JsonViewer data={item.value} collapsed={1} enableClipboard={true} />
-      <Box className="copy-btn" sx={{ position: 'absolute', top: 4, right: 4, opacity: 0 }}>
-        <CopyButton text={JSON.stringify(item.value, null, 2)} />
-      </Box>
     </Box>
   );
 }

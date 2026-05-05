@@ -51,9 +51,6 @@ function getInitialTheme(): ThemeMode {
   try {
     const stored = globalThis.localStorage?.getItem('mockserver-theme');
     if (stored === 'dark' || stored === 'light') return stored;
-    if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: light)').matches) {
-      return 'light';
-    }
   } catch {
     // localStorage may not be available in test/SSR environments
   }

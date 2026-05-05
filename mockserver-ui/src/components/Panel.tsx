@@ -62,6 +62,7 @@ export default function Panel({
           </Typography>
         </Badge>
         <TextField
+          id={`${title.toLowerCase().replace(/\s+/g, '-')}-search`}
           size="small"
           placeholder="Search..."
           value={searchValue}

@@ -16,7 +16,6 @@ import type { RequestFilter } from './types';
 export default function App() {
   const themeMode = useDashboardStore((s) => s.themeMode);
   const error = useDashboardStore((s) => s.error);
-  const clearUI = useDashboardStore((s) => s.clearUI);
   const theme = useMemo(() => buildTheme(themeMode), [themeMode]);
 
   const params = useConnectionParams();
@@ -45,13 +44,13 @@ export default function App() {
         logSearchInputRef.current?.focus();
       },
       onClear: () => {
-        clearUI();
+        void clearServer('all');
       },
       onToggleFilter: () => {
         useDashboardStore.getState().toggleFilterExpanded();
       },
     }),
-    [clearUI],
+    [clearServer],
   );
 
   useKeyboardShortcuts(shortcutHandlers);

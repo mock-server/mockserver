@@ -14,7 +14,6 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import PauseIcon from '@mui/icons-material/Pause';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import LayersClearIcon from '@mui/icons-material/LayersClear';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { useState } from 'react';
@@ -46,7 +45,6 @@ export default function AppBar({ onClearServer, onClearLogs, onClearExpectations
   const toggleTheme = useDashboardStore((s) => s.toggleThemeMode);
   const autoScroll = useDashboardStore((s) => s.autoScroll);
   const toggleAutoScroll = useDashboardStore((s) => s.toggleAutoScroll);
-  const clearUI = useDashboardStore((s) => s.clearUI);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   return (
@@ -90,15 +88,6 @@ export default function AppBar({ onClearServer, onClearLogs, onClearExpectations
           open={Boolean(anchorEl)}
           onClose={() => setAnchorEl(null)}
         >
-          <MenuItem
-            onClick={() => {
-              clearUI();
-              setAnchorEl(null);
-            }}
-          >
-            <ListItemIcon><DeleteOutlineIcon fontSize="small" /></ListItemIcon>
-            <ListItemText>Clear UI only</ListItemText>
-          </MenuItem>
           <MenuItem
             onClick={() => {
               void onClearLogs();

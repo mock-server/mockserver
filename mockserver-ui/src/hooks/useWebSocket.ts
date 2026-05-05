@@ -19,8 +19,15 @@ export function useWebSocket(params: ConnectionParams) {
   const connect = useCallback(
     (filter: RequestFilter) => {
       lastFilterRef.current = filter;
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
       if (socketRef.current) {
+        socketRef.current.onclose = null;
+        socketRef.current.onerror = null;
         socketRef.current.close();
+        socketRef.current = null;
       }
 
       setConnectionStatus('connecting');
@@ -113,12 +120,17 @@ export function useWebSocket(params: ConnectionParams) {
         const response = await fetch(url, { method: 'PUT' });
         if (!response.ok) {
           setError(`Clear failed: ${response.status} ${response.statusText}`);
+          return;
+        }
+        useDashboardStore.getState().clearUI();
+        if (type === 'all') {
+          connect(lastFilterRef.current);
         }
       } catch {
         setError('Failed to clear server');
       }
     },
-    [params, setError],
+    [params, setError, connect],
   );
 
   useEffect(() => {

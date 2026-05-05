@@ -21,7 +21,7 @@ export default function JsonViewer({
   return (
     <Box sx={{ position: 'relative', display: 'inline-block', width: '100%' }}>
       {enableClipboard && (
-        <Box sx={{ position: 'absolute', top: 0, right: 0, zIndex: 1 }}>
+        <Box className="copy-btn" sx={{ position: 'absolute', top: 0, right: 0, zIndex: 1, opacity: 0 }}>
           <CopyButton text={JSON.stringify(data, null, 2)} />
         </Box>
       )}
@@ -31,7 +31,7 @@ export default function JsonViewer({
         collapsed={collapsed}
         displayObjectSize={false}
         displayDataTypes={false}
-        enableClipboard={enableClipboard}
+        enableClipboard={false}
       />
     </Box>
   );
