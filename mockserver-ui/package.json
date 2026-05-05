@@ -1,57 +1,43 @@
 {
   "name": "mockserver-ui",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "homepage": "./dashboard",
-  "devDependencies": {
-    "babel-core": "^7.0.0-bridge.0",
-    "chai": "^4.3.6",
-    "enzyme": "^3.11.0",
-    "enzyme-adapter-react-16": "^1.15.6",
-    "expect": "23.6.0",
-    "fetch-mock": "7.2.5",
-    "jest": "^23.6.0",
-    "jest-cli": "^23.6.0",
-    "jsdom": "^16.7.0",
-    "react-scripts": "^2.1.1",
-    "react-test-renderer": "16.6.1",
-    "redux-devtools": "^3.7.0",
-    "redux-logger": "^3.0.6",
-    "redux-mock-store": "1.5.3",
-    "sinon": "^7.1.1"
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "classnames": "^2.3.2",
-    "code-prettify": "^0.1.0",
-    "humps": "^2.0.1",
-    "lodash": "^4.17.21",
-    "material-design-icons": "^3.0.1",
-    "material-ui": "^0.20.0",
-    "normalizr": "^3.6.2",
-    "prop-types": "^15.8.1",
-    "query-string": "^6.14.1",
-    "react": "^16.14.0",
-    "react-autobind": "^1.0.6",
-    "react-dom": "^16.14.0",
-    "react-json-view": "^1.21.3",
-    "react-redux": "^5.0.6",
-    "react-router-dom": "^4.2.2",
-    "react-virtual-list": "^2.2.4",
-    "redux": "^4.2.0",
-    "redux-form": "^7.4.3",
-    "redux-form-material-ui": "^4.3.3",
-    "redux-thunk": "^2.4.2"
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^6.4.0",
+    "@mui/material": "^6.4.0",
+    "@uiw/react-json-view": "^2.0.0-alpha.30",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^5.0.0"
   },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.0",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "jsdom": "^25.0.0",
+    "typescript": "~5.7.0",
+    "vite": "^6.0.0",
+    "vitest": "^3.0.0"
   },
   "browserslist": [
     ">0.2%",
     "not dead",
-    "not ie <= 11",
     "not op_mini all"
   ]
 }
