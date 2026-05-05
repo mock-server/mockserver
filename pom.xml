@@ -642,7 +642,7 @@
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-engine</artifactId>
-                <version>5.12.2</version>
+                <version>6.0.3</version>
             </dependency>
             <dependency>
                 <groupId>org.mockito</groupId>
