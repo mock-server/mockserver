@@ -1,0 +1,162 @@
+# Snyk (https://snyk.io) policy file
+
+version: v1.25.0
+
+# Ignore rules for vulnerabilities that cannot be fixed due to Java 11 compatibility constraint
+# MockServer maintains Java 11 as minimum supported version (see AGENTS.md)
+# Spring Framework 6.x, Jetty 10+/12+, and other Jakarta EE 9+ libraries require Java 17+
+
+ignore:
+  # Spring Framework 5.3.39 vulnerabilities - fixes only available in Spring 6.x (requires Java 17+)
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-12008931:
+    - '*':
+        reason: 'Spring 6.x required for fix, but Spring 6.x requires Java 17+. MockServer targets Java 11.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-12817817:
+    - '*':
+        reason: 'Spring 6.x required for fix, but Spring 6.x requires Java 17+. MockServer targets Java 11.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-16109618:
+    - '*':
+        reason: 'Spring 6.x required for fix, but Spring 6.x requires Java 17+. MockServer targets Java 11.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-8230365:
+    - '*':
+        reason: 'Spring 6.x required for fix, but Spring 6.x requires Java 17+. MockServer targets Java 11.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-15701755:
+    - '*':
+        reason: 'Spring 6.x required for fix, but Spring 6.x requires Java 17+. MockServer targets Java 11.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-16109615:
+    - '*':
+        reason: 'Spring 6.x required for fix, but Spring 6.x requires Java 17+. MockServer targets Java 11.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-8230366:
+    - '*':
+        reason: 'Spring 6.x required for fix, but Spring 6.x requires Java 17+. MockServer targets Java 11.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-8230364:
+    - '*':
+        reason: 'Spring 6.x required for fix, but Spring 6.x requires Java 17+. MockServer targets Java 11.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-16109603:
+    - '*':
+        reason: 'Spring 6.x required for fix, but Spring 6.x requires Java 17+. MockServer targets Java 11.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-15701756:
+    - '*':
+        reason: 'Spring 6.x required for fix, but Spring 6.x requires Java 17+. MockServer targets Java 11.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-8230368:
+    - '*':
+        reason: 'Spring 6.x required for fix, but Spring 6.x requires Java 17+. MockServer targets Java 11.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-8384234:
+    - '*':
+        reason: 'Spring 6.x required for fix, but Spring 6.x requires Java 17+. MockServer targets Java 11.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-15701845:
+    - '*':
+        reason: 'Spring 6.x required for fix, but Spring 6.x requires Java 17+. MockServer targets Java 11.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-8230373:
+    - '*':
+        reason: 'Spring 6.x required for fix, but Spring 6.x requires Java 17+. MockServer targets Java 11.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-7945490:
+    - '*':
+        reason: 'Spring 6.x required for fix, but Spring 6.x requires Java 17+. MockServer targets Java 11.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-7945491:
+    - '*':
+        reason: 'Spring 6.x required for fix, but Spring 6.x requires Java 17+. MockServer targets Java 11.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-16109604:
+    - '*':
+        reason: 'Spring 6.x required for fix, but Spring 6.x requires Java 17+. MockServer targets Java 11. Spring WebFlux only used in test dependencies (mockserver-examples), not production.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-8230367:
+    - '*':
+        reason: 'Spring 6.x required for fix, but Spring 6.x requires Java 17+. MockServer targets Java 11. Spring WebFlux only used in test dependencies (mockserver-examples), not production.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-15701844:
+    - '*':
+        reason: 'Spring 6.x required for fix, but Spring 6.x requires Java 17+. MockServer targets Java 11. Spring WebFlux only used in test dependencies (mockserver-examples), not production.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-8230372:
+    - '*':
+        reason: 'Spring 6.x required for fix, but Spring 6.x requires Java 17+. MockServer targets Java 11. Spring WebFlux only used in test dependencies (mockserver-examples), not production.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  # Jetty 9.4.x vulnerabilities - fixes only available in Jetty 12.x (requires Java 17+)
+  SNYK-JAVA-ORGECLIPSEJETTY-16061843:
+    - '*':
+        reason: 'Jetty 12.x required for fix, but Jetty 12.x requires Java 17+. MockServer targets Java 11. Jetty only used in test dependencies (mockserver-examples), not production.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  SNYK-JAVA-ORGECLIPSEJETTY-15426540:
+    - '*':
+        reason: 'Jetty 12.x required for fix, but Jetty 12.x requires Java 17+. MockServer targets Java 11. Jetty only used in test dependencies (mockserver-examples), not production.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  # Spring Boot 2.7.x vulnerabilities - fixes only available in Spring Boot 3.x (requires Java 17+)
+  SNYK-JAVA-ORGSPRINGFRAMEWORKBOOT-16191022:
+    - '*':
+        reason: 'Spring Boot 3.x required for fix, but Spring Boot 3.x requires Java 17+. MockServer targets Java 11. Spring Boot only used in test dependencies (mockserver-examples), not production.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  SNYK-JAVA-ORGSPRINGFRAMEWORKBOOT-16201011:
+    - '*':
+        reason: 'Spring Boot 3.x required for fix, but Spring Boot 3.x requires Java 17+. MockServer targets Java 11. Spring Boot only used in test dependencies (mockserver-examples), not production.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  SNYK-JAVA-ORGSPRINGFRAMEWORKBOOT-16191649:
+    - '*':
+        reason: 'Spring Boot 3.x required for fix, but Spring Boot 3.x requires Java 17+. MockServer targets Java 11. Spring Boot only used in test dependencies (mockserver-examples), not production.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  SNYK-JAVA-ORGSPRINGFRAMEWORKBOOT-16198880:
+    - '*':
+        reason: 'Spring Boot 3.x required for fix, but Spring Boot 3.x requires Java 17+. MockServer targets Java 11. Spring Boot only used in test dependencies (mockserver-examples), not production.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  # Reactor Netty - only used in Spring Boot examples, not production
+  SNYK-JAVA-IOPROJECTREACTORNETTY-10770514:
+    - '*':
+        reason: 'Fix requires Spring Boot 3.x which requires Java 17+. MockServer targets Java 11. Reactor Netty only used in test dependencies (mockserver-examples), not production.'
+        expires: 2026-12-31T00:00:00.000Z
+  
+  # OkHttp Kotlin stdlib - low severity information exposure
+  SNYK-JAVA-ORGJETBRAINSKOTLIN-2393744:
+    - '*':
+        reason: 'OkHttp 5.x required for fix, but OkHttp 5.x requires Java 17+. MockServer targets Java 11. Low severity information exposure in Kotlin stdlib.'
+        expires: 2026-12-31T00:00:00.000Z
+
+# Patch rules
+patch: {}
+
+# Exclusion rules for paths that should not be scanned
+exclude:
+  # Exclude example projects - these are for demonstration only and not shipped in production
+  mockserver-examples:
+    - '**'

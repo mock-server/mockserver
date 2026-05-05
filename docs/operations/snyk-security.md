@@ -141,16 +141,51 @@ flowchart TD
 
 **Mitigation:** The vulnerable Jetty dependency is isolated to the examples module which is not shipped in production artifacts. Users should not run the examples module in production environments.
 
-## Snyk Configuration File
+## Snyk Policy File
 
-MockServer does not currently use a `.snyk` policy file. To ignore specific vulnerabilities:
+**File:** `.snyk`
+
+MockServer uses a Snyk policy file to document vulnerabilities that cannot be fixed due to Java 11 compatibility constraints.
+
+### Policy Structure
+
+The `.snyk` file contains:
+- **Ignore rules** for vulnerabilities where fixes require Java 17+
+- **Expiration dates** (set to end of 2026) to trigger periodic review
+- **Documented reasons** explaining the Java 11 constraint
+
+### Adding New Ignores
+
+To ignore a new vulnerability:
 
 ```bash
-# Ignore a specific vulnerability
-snyk ignore --id=SNYK-JAVA-ORGSPRINGFRAMEWORK-12008931 --reason="Not exploitable in MockServer context"
+# Interactive - prompts for reason and expiration
+snyk ignore --id=SNYK-JAVA-ORGSPRINGFRAMEWORK-12008931
+
+# Command line - specify all parameters
+snyk ignore --id=SNYK-JAVA-ORGSPRINGFRAMEWORK-12008931 \
+  --reason="Spring 6.x required for fix, but Spring 6.x requires Java 17+. MockServer targets Java 11." \
+  --expires="2026-12-31"
 ```
 
-This creates a `.snyk` file with ignore policies.
+Or manually edit the `.snyk` file following the existing format.
+
+### Testing with Policy
+
+```bash
+# Test with policy file (default location: .snyk)
+snyk test --maven-aggregate-project
+
+# Specify custom policy location
+snyk test --policy-path=.snyk
+```
+
+### Policy Review Process
+
+The expiration dates in the policy file trigger automatic Snyk notifications when they approach. This ensures:
+- Regular review of ignored vulnerabilities
+- Re-evaluation when Java 11 usage statistics change
+- Updates when backports become available
 
 ## Integration with Dependabot
 
