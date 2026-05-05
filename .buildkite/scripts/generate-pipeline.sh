@@ -13,33 +13,57 @@ if [ -n "${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-}" ]; then
 else
   CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD 2>/dev/null || git diff --name-only HEAD~1..HEAD)
 fi
-PIPELINES_UPLOADED=0
 
-upload_if_changed() {
+TRIGGERS=""
+
+trigger_if_changed() {
   local path_regex="$1"
-  local pipeline_file="$2"
+  local pipeline_slug="$2"
+  local label="$3"
   if printf '%s\n' "$CHANGED_FILES" | grep -qE -- "$path_regex"; then
-    echo "--- :pipeline: Uploading ${pipeline_file} (matched ${path_regex})"
-    buildkite-agent pipeline upload "$pipeline_file"
-    PIPELINES_UPLOADED=$((PIPELINES_UPLOADED + 1))
+    echo "--- :pipeline: Triggering ${label} (matched ${path_regex})"
+    TRIGGERS="${TRIGGERS}  - trigger: \"${pipeline_slug}\"
+    label: \":pipeline: ${label}\"
+    async: false
+    build:
+      message: \"\${BUILDKITE_MESSAGE}\"
+      commit: \"\${BUILDKITE_COMMIT}\"
+      branch: \"\${BUILDKITE_BRANCH}\"
+"
   fi
 }
 
-upload_if_changed "^(mockserver/|mockserver-ui/)" ".buildkite/pipeline-java.yml"
-upload_if_changed "^mockserver-ui/" ".buildkite/pipeline-ui.yml"
-upload_if_changed "^(mockserver-node/|mockserver-client-node/)" ".buildkite/pipeline-node.yml"
-upload_if_changed "^mockserver-client-python/" ".buildkite/pipeline-python.yml"
-upload_if_changed "^mockserver-client-ruby/" ".buildkite/pipeline-ruby.yml"
-upload_if_changed "^mockserver-maven-plugin/" ".buildkite/pipeline-maven-plugin.yml"
-upload_if_changed "^mockserver-performance-test/" ".buildkite/pipeline-perf-test.yml"
+trigger_if_changed "^(mockserver/|mockserver-ui/)" "mockserver-java" "MockServer Java"
+trigger_if_changed "^mockserver-ui/" "mockserver-ui" "MockServer UI"
+trigger_if_changed "^(mockserver-node/|mockserver-client-node/)" "mockserver-node" "MockServer Node"
+trigger_if_changed "^mockserver-client-python/" "mockserver-python" "MockServer Python"
+trigger_if_changed "^mockserver-client-ruby/" "mockserver-ruby" "MockServer Ruby"
+trigger_if_changed "^mockserver-maven-plugin/" "mockserver-maven-plugin" "MockServer Maven Plugin"
+trigger_if_changed "^mockserver-performance-test/" "mockserver-performance-test" "MockServer Performance Test"
+trigger_if_changed "^container_integration_tests/" "mockserver-container-tests" "MockServer Container Tests"
+trigger_if_changed "^jekyll-www.mock-server.com/" "mockserver-website" "MockServer Website"
+trigger_if_changed "^docker_build/maven/" "mockserver-build-image" "MockServer Build Image"
 
 if printf '%s\n' "$CHANGED_FILES" | grep -qE -- "^(\.buildkite/|\.github/|terraform/|docker/|scripts/|helm/|docs/|AGENTS\.md|opencode\.jsonc|\.opencode/)"; then
-  echo "--- :pipeline: Uploading pipeline-infra.yml (infra changes)"
-  buildkite-agent pipeline upload ".buildkite/pipeline-infra.yml"
-  PIPELINES_UPLOADED=$((PIPELINES_UPLOADED + 1))
+  echo "--- :pipeline: Triggering MockServer Infra (infra changes)"
+  TRIGGERS="${TRIGGERS}  - trigger: \"mockserver-infra\"
+    label: \":pipeline: MockServer Infra\"
+    async: false
+    build:
+      message: \"\${BUILDKITE_MESSAGE}\"
+      commit: \"\${BUILDKITE_COMMIT}\"
+      branch: \"\${BUILDKITE_BRANCH}\"
+"
 fi
 
-if [ "$PIPELINES_UPLOADED" -eq 0 ]; then
-  echo "--- :pipeline: No project-specific changes detected, uploading default pipeline"
-  buildkite-agent pipeline upload ".buildkite/pipeline-default.yml"
+if [ -z "$TRIGGERS" ]; then
+  echo "--- :pipeline: No project-specific changes detected"
+  cat <<EOF | buildkite-agent pipeline upload
+steps:
+  - label: ":white_check_mark: no project changes detected"
+    command: "echo 'No project-specific files changed — skipping build'"
+    timeout_in_minutes: 1
+EOF
+else
+  printf "steps:\n%s" "$TRIGGERS" | buildkite-agent pipeline upload
 fi

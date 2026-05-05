@@ -1,22 +1,21 @@
 steps:
   - label: ":react: UI lint and typecheck"
-    commands:
-      - "cd mockserver-ui"
-      - "npm ci"
-      - "npm run lint"
-      - "npm run typecheck"
+    command: "cd mockserver-ui && npm ci && npm run lint && npm run typecheck"
+    plugins:
+      - docker#v5.13.0:
+          image: "node:22"
     timeout_in_minutes: 10
 
   - label: ":jest: UI tests"
-    commands:
-      - "cd mockserver-ui"
-      - "npm ci"
-      - "npm test"
+    command: "cd mockserver-ui && npm ci && npm test"
+    plugins:
+      - docker#v5.13.0:
+          image: "node:22"
     timeout_in_minutes: 10
 
   - label: ":package: UI build"
-    commands:
-      - "cd mockserver-ui"
-      - "npm ci"
-      - "npm run build"
+    command: "cd mockserver-ui && npm ci && npm run build"
+    plugins:
+      - docker#v5.13.0:
+          image: "node:22"
     timeout_in_minutes: 10

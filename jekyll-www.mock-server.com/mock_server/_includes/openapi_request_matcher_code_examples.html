@@ -1,4 +1,4 @@
-<p>The following code examples show how to match request using an Open API specification.  For more examples see the <a target="_blank" href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples">code examples folder</a> in the git repository.</p>
+<p>The following code examples show how to match request using an Open API specification.  For more examples see the <a target="_blank" href="https://github.com/mock-server/mockserver-monorepo/tree/master/mockserver/mockserver-examples">code examples folder</a> in the git repository.</p>
 <p>For brevity static imports have not been included in the Java code examples so please add the following static imports if copying this code</p>
 <pre class="prettyprint lang-java code"><code class="code">import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;</code></pre>
@@ -10,7 +10,7 @@ import static org.mockserver.model.HttpResponse.response;</code></pre>
 <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
     .when(
         openAPI(
-            "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
+            "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
         )
     )
     .respond(
@@ -23,7 +23,7 @@ import static org.mockserver.model.HttpResponse.response;</code></pre>
         <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080).mockAnyResponse({
     "httpRequest": {
-        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
+        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
     },
     "httpResponse": {
         "body": "some_response_body"
@@ -42,7 +42,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest": {
-        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
+        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
     },
     "httpResponse": {
         "body": "some_response_body"
@@ -58,7 +58,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
     .when(
         openAPI(
-            "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
+            "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
             "showPetById"
         )
     )
@@ -72,7 +72,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080).mockAnyResponse({
     "httpRequest": {
-        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
+        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
         "operationId": "showPetById"
     },
     "httpResponse": {
@@ -92,7 +92,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest": {
-        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
+        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
         "operationId": "showPetById"
     },
     "httpResponse": {
@@ -983,7 +983,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080).mockAnyResponse({
     "httpRequest":{
-        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
+        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
         "operationId": "showPetById"
     },
     "httpResponse":{
@@ -1007,7 +1007,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest":{
-        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
+        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
         "operationId": "showPetById"
     },
     "httpResponse":{
@@ -1047,7 +1047,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     "id": "630a6e5b-9d61-4668-a18f-a0d3df558583",
     "priority": 0,
     "httpRequest":{
-        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
+        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
         "operationId": "showPetById"
     },
     "httpResponse":{
@@ -1076,7 +1076,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     "id": "630a6e5b-9d61-4668-a18f-a0d3df558583",
     "priority": 0,
     "httpRequest":{
-        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
+        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
         "operationId": "showPetById"
     },
     "httpResponse":{

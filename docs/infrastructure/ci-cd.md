@@ -31,13 +31,62 @@ Dependency graph"]
 
 ## Buildkite Pipelines
 
-Three pipelines run on Buildkite, all using the same EC2 Spot agent pool (`default` queue).
+The monorepo uses a path-based pipeline orchestrator that dynamically triggers separate child pipelines based on changed files. Each child pipeline appears individually in the Buildkite dashboard, giving per-project visibility. All pipelines use the same EC2 Spot agent pool (`default` queue).
+
+### Pipeline Orchestrator
+
+**File:** `.buildkite/scripts/generate-pipeline.sh`
+
+The orchestrator runs as the first step of every build (via the main "MockServer" pipeline). It determines which files changed in the commit and emits Buildkite `trigger` steps to launch the appropriate child pipelines:
+
+```mermaid
+flowchart TD
+    PUSH[Push / PR] --> ORCHESTRATOR["MockServer pipeline
+generate-pipeline.sh"]
+    ORCHESTRATOR --> DIFF["Compute changed files
+git diff against base"]
+    DIFF --> MATCH{"Match changed paths
+against rules"}
+    MATCH -->|mockserver/ or mockserver-ui/| JAVA["trigger: mockserver-java"]
+    MATCH -->|mockserver-ui/| UI["trigger: mockserver-ui"]
+    MATCH -->|mockserver-node/ or mockserver-client-node/| NODE["trigger: mockserver-node"]
+    MATCH -->|mockserver-client-python/| PYTHON["trigger: mockserver-python"]
+    MATCH -->|mockserver-client-ruby/| RUBY["trigger: mockserver-ruby"]
+    MATCH -->|mockserver-maven-plugin/| MAVEN_PLUGIN["trigger: mockserver-maven-plugin"]
+    MATCH -->|mockserver-performance-test/| PERF["trigger: mockserver-performance-test"]
+    MATCH -->|container_integration_tests/| CONTAINER["trigger: mockserver-container-tests"]
+    MATCH -->|jekyll-www.mock-server.com/| WEBSITE["trigger: mockserver-website"]
+    MATCH -->|.buildkite/ .github/ terraform/ etc.| INFRA["trigger: mockserver-infra"]
+    MATCH -->|no match| DEFAULT["inline: no-op step"]
+```
+
+### Buildkite Pipelines
+
+All pipelines are managed via Terraform in `terraform/buildkite-pipelines/pipelines.tf`. Only the main orchestrator pipeline triggers from GitHub webhooks; all child pipelines have `trigger_mode = "none"` and are triggered by the orchestrator.
+
+| Pipeline (Buildkite slug) | Pipeline File | Trigger | What It Builds |
+|---|---|---|---|
+| `mockserver` | `pipeline.yml` | GitHub push/PR | Orchestrator — triggers child pipelines |
+| `mockserver-java` | `pipeline-java.yml` | Orchestrator | Full Maven build and test |
+| `mockserver-ui` | `pipeline-ui.yml` | Orchestrator | UI lint, typecheck, test, build |
+| `mockserver-node` | `pipeline-node.yml` | Orchestrator | Node.js lint and typecheck |
+| `mockserver-python` | `pipeline-python.yml` | Orchestrator | Python unit + integration tests |
+| `mockserver-ruby` | `pipeline-ruby.yml` | Orchestrator | Ruby unit + integration tests |
+| `mockserver-maven-plugin` | `pipeline-maven-plugin.yml` | Orchestrator | Maven plugin build and test |
+| `mockserver-performance-test` | `pipeline-perf-test.yml` | Orchestrator | Perf test script validation |
+| `mockserver-container-tests` | `pipeline-container-tests.yml` | Orchestrator | Shell script validation |
+| `mockserver-website` | `pipeline-website.yml` | Orchestrator | Jekyll site build |
+| `mockserver-infra` | `pipeline-infra.yml` | Orchestrator | Infrastructure validation |
+| `mockserver-build-image` | `docker-push-maven.yml` | Manual | Build/push maven CI image |
+| `mockserver-release-image` | `docker-push-release.yml` | Manual | Build/push release image |
+
+A single commit can trigger multiple child pipelines if it changes files in multiple areas. For example, a commit touching both `mockserver/` and `mockserver-ui/` triggers both `mockserver-java` and `mockserver-ui` pipelines.
 
 ### CI Build Pipeline
 
-**File:** `.buildkite/pipeline.yml`
+**File:** `.buildkite/pipeline-java.yml`
 
-The pipeline has two sequential steps (separated by an explicit `- wait` directive):
+Triggered by the orchestrator when files change in `mockserver/` or `mockserver-ui/`. The pipeline has two sequential steps (separated by an explicit `- wait` directive):
 
 ```mermaid
 sequenceDiagram
@@ -154,11 +203,12 @@ The shared script `.buildkite/scripts/docker-login.sh` fetches the secret and ru
 
 ### Managing Buildkite Pipelines
 
-Pipelines are managed via Terraform in `terraform/buildkite-pipelines/`. To add a new pipeline:
+Pipelines are managed via Terraform in `terraform/buildkite-pipelines/`. The Terraform stack includes all 13 pipelines (orchestrator, 10 child pipelines, and 2 Docker image push pipelines), each pointing to `mock-server/mockserver-monorepo.git`. To add a new pipeline:
 
 1. Create the pipeline YAML in `.buildkite/`
 2. Add an entry to `local.pipelines` in `terraform/buildkite-pipelines/pipelines.tf`
-3. Run `terraform apply` in `terraform/buildkite-pipelines/`
+3. Add a `trigger_if_changed` call in `.buildkite/scripts/generate-pipeline.sh`
+4. Run `terraform apply` in `terraform/buildkite-pipelines/`
 
 The Buildkite API token is stored in AWS Secrets Manager (`mockserver-build/buildkite-api-token`).
 

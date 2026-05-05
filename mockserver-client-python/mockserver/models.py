@@ -123,10 +123,23 @@ def _serialize_key_multi_values(items: list[KeyToMultiValue] | None) -> list[dic
     return [item.to_dict() for item in items]
 
 
-def _deserialize_key_multi_values(data: list | None) -> list[KeyToMultiValue] | None:
+def _deserialize_key_multi_values(data: list | dict | None) -> list[KeyToMultiValue] | None:
     if data is None:
         return None
-    return [KeyToMultiValue.from_dict(item) for item in data]
+    if isinstance(data, dict):
+        return [
+            KeyToMultiValue(name=k, values=v if isinstance(v, list) else [v])
+            for k, v in data.items()
+        ]
+    result = []
+    for item in data:
+        if isinstance(item, dict):
+            result.append(KeyToMultiValue.from_dict(item))
+        elif isinstance(item, str):
+            result.append(KeyToMultiValue(name=item, values=[]))
+        else:
+            result.append(KeyToMultiValue.from_dict(item))
+    return result
 
 
 @dataclass

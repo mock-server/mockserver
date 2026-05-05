@@ -21,7 +21,7 @@ public class OpenAPIRequestMatcherExamples {
         new MockServerClient("localhost", 1080)
             .when(
                 openAPI(
-                    "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
+                    "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
                 )
             )
             .respond(
@@ -34,7 +34,7 @@ public class OpenAPIRequestMatcherExamples {
         new MockServerClient("localhost", 1080)
             .when(
                 openAPI(
-                    "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
+                    "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
                     "showPetById"
                 )
             )
@@ -297,7 +297,7 @@ public class OpenAPIRequestMatcherExamples {
             .upsert(
                 new Expectation(
                     openAPI(
-                        "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
+                        "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
                         "showPetById"
                     ),
                     Times.once(),

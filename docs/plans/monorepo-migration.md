@@ -496,17 +496,28 @@ done
 
 ## Final Validation
 
-Run a representative end-to-end validation on migration branch:
+### Local validation results
 
-```bash
-cd mockserver && ./mvnw clean verify && cd ..
-cd mockserver-ui && npm test -- --watchAll=false && npm run build && cd ..
-cd mockserver-node && npm test && cd ..
-cd mockserver-client-node && npm test && cd ..
-./mockserver/mvnw -f mockserver-maven-plugin/pom.xml clean verify
-```
+| Component | Validation | Result |
+|-----------|-----------|--------|
+| Java (all 11 modules) | `cd mockserver && ./mvnw clean verify` | PASS |
+| UI tests | `cd mockserver-ui && npx vitest run` | 107 tests PASS |
+| UI build | `cd mockserver-ui && npm run build` | PASS |
+| Node client | `cd mockserver-client-node && npx tsc --noEmit && npx eslint .` | PASS |
+| Node launcher | `cd mockserver-node && npx tsc --noEmit && npx eslint .` | PASS |
+| Python unit tests | `cd mockserver-client-python && pytest --ignore=tests/test_integration.py` | 438 PASS |
+| Python integration tests | `cd mockserver-client-python && pytest -m integration` | 22 PASS |
+| Ruby unit tests | `cd mockserver-client-ruby && bundle exec rspec --tag '~integration'` | 312 PASS |
+| Ruby integration tests | `cd mockserver-client-ruby && bundle exec rspec --tag integration` | 21 PASS |
+| Container scripts | `bash -n` syntax check on all shell scripts | PASS |
+| Performance test | Syntax validation | PASS |
+| Maven plugin | Not migrated to monorepo | N/A |
 
-Confirm Buildkite pipelines trigger correctly for at least:
+### Buildkite pipeline state
+
+`terraform apply` completed successfully — MockServer pipeline updated with monorepo description and emoji. All 3 pipelines (MockServer, Build Image, Release Image) are in sync with `terraform/buildkite-pipelines/pipelines.tf`.
+
+Confirm pipelines trigger correctly for at least:
 
 - Java-only change
 - UI-only change
@@ -520,7 +531,8 @@ Confirm Buildkite pipelines trigger correctly for at least:
 
 ## Remaining Open Questions
 
-1. ~~Regenerate stale Python/Ruby clients during migration or follow-up?~~ **Resolved**: Python client replaced with hand-written idiomatic library (v6.0.0, dataclasses, WebSocket callbacks, 434 tests). Ruby client TBD.
+1. ~~Regenerate stale Python/Ruby clients during migration or follow-up?~~ **Resolved**: Python client replaced with hand-written idiomatic library (v6.0.0, dataclasses, WebSocket callbacks, 438 tests). Ruby client rewritten with idiomatic Ruby (v2.0.0, 312 unit tests, 21 integration tests).
 2. ~~Modernize UI during migration or as separate project?~~ **Resolved**: UI modernized during migration (Phase 4).
 3. Introduce Nx/Turborepo now or after baseline monorepo is stable?
-4. Review `KeyToMultiValue.to_dict()` serialization consistency — currently always emits `name`/`values` (server-required) while other models use `_strip_none()`. Investigate whether a unified pattern (e.g., separate required vs optional field handling) can make this consistent across all models.
+4. ~~Review `KeyToMultiValue.to_dict()` serialization consistency~~ **Resolved**: Both Python and Ruby clients now handle both dict-format (`{"name": ["value"]}`) and list-format (`[{"name": ..., "values": ...}]`) header deserialization, matching what MockServer returns for recorded requests vs expectations.
+5. ~~Run `terraform apply` in `terraform/buildkite-pipelines/` to sync pipeline state~~ **Done**: Pipeline updated with monorepo description/emoji, all 3 pipelines in sync.

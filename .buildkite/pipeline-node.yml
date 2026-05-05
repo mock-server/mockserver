@@ -1,15 +1,14 @@
 steps:
   - label: ":node: client-node lint and typecheck"
-    commands:
-      - "cd mockserver-client-node"
-      - "npm ci"
-      - "npx grunt jshint"
-      - "npx grunt ts"
+    command: "cd mockserver-client-node && npm ci && npx grunt jshint && npx grunt ts"
+    plugins:
+      - docker#v5.13.0:
+          image: "node:22"
     timeout_in_minutes: 10
 
   - label: ":node: node launcher lint"
-    commands:
-      - "cd mockserver-node"
-      - "npm ci"
-      - "npx grunt jshint"
+    command: "cd mockserver-node && npm ci && npx grunt jshint"
+    plugins:
+      - docker#v5.13.0:
+          image: "node:22"
     timeout_in_minutes: 10

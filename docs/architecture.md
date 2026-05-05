@@ -11,7 +11,7 @@ graph TB
     subgraph "Client Layer"
         JC[mockserver-client-java]
         NC["mockserver-client-node
-separate repo"]
+monorepo: mockserver-client-node/"]
     end
 
     subgraph "Server Layer"

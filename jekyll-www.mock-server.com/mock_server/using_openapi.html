@@ -70,10 +70,10 @@ sitemap:
 
 <a id="generate_expectation_from_openapi_example" class="anchor" href="#generate_expectation_from_openapi_example">&nbsp;</a>
 
-<p>If an <a target="_blank" href="https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json">OpenAPI specification</a> is submitted with operation filtering as follows:</p>
+<p>If an <a target="_blank" href="https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json">OpenAPI specification</a> is submitted with operation filtering as follows:</p>
 
 <pre class="prettyprint lang-java code"><code class="code">{
-    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
+    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
     "operationsAndResponses": {
         "showPetById": "200",
         "createPets": "500"
@@ -85,7 +85,7 @@ sitemap:
 <pre class="prettyprint lang-java code"><code class="code">{
   "priority": 0,
   "httpRequest": {
-    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
+    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
     "operationId": "showPetById"
   },
   "httpResponse": {
@@ -111,7 +111,7 @@ sitemap:
 <pre class="prettyprint lang-java code"><code class="code">{
   "priority": 0,
   "httpRequest": {
-    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
+    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
     "operationId": "createPets"
   },
   "httpResponse": {
@@ -143,7 +143,7 @@ sitemap:
 <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
     .upsert(
         openAPIExpectation(
-            "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
+            "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
         )
     );</code></pre>
     </div>
@@ -151,7 +151,7 @@ sitemap:
     <div class="panel">
         <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080).openAPIExpectation({
-    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
+    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
 }).then(
     function () {
         console.log("expectation created");
@@ -165,7 +165,7 @@ mockServerClient("localhost", 1080).openAPIExpectation({
     <button class="accordion inner">REST API</button>
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/openapi" -d '{
-    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
+    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
 }'</code></pre>
         <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
@@ -180,7 +180,7 @@ operationsAndResponses.put("createPets", "500");
 new MockServerClient("localhost", 1080)
     .upsert(
         openAPIExpectation(
-            "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
+            "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
             operationsAndResponses
         )
     );</code></pre>
@@ -189,7 +189,7 @@ new MockServerClient("localhost", 1080)
     <div class="panel">
         <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080).openAPIExpectation({
-    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
+    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
     "operationsAndResponses": {
         "showPetById": "200",
         "createPets": "500"
@@ -207,7 +207,7 @@ mockServerClient("localhost", 1080).openAPIExpectation({
     <button class="accordion inner">REST API</button>
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/openapi" -d '{
-    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
+    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
     "operationsAndResponses": {
         "showPetById": "200",
         "createPets": "500"

@@ -47,7 +47,7 @@ helm repo update</code></pre>
 
 <pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver mockserver helm/mockserver</code></pre>
 
-<p>The commands above will install MockServer into a <strong>namespace</strong> called <span class="keyword">mockserver</span> with default configuration (as per the embedded <a target="_blank" href="https://github.com/mock-server/mockserver/blob/master/helm/mockserver/values.yaml">values.yaml</a>).</p>
+<p>The commands above will install MockServer into a <strong>namespace</strong> called <span class="keyword">mockserver</span> with default configuration (as per the embedded <a target="_blank" href="https://github.com/mock-server/mockserver-monorepo/blob/master/helm/mockserver/values.yaml">values.yaml</a>).</p>
 <p>MockServer will then be available on domain name <span class="keyword">mockserver.mockserver.svc.cluster.local</span>, as long as the namespace you are calling from isn't prevented (by network policy) to call the <span class="keyword">mockserver</span> namespace.</p>
 
 <a id="logs" class="anchor" href="#logs">&nbsp</a>
@@ -105,7 +105,7 @@ helm repo update</code></pre>
 <p>There are two ways to provide MockServer configuration (properties file, expectation initialization JSON, TLS certificates, etc.):</p>
 <ol>
     <li><strong>Inline configuration</strong> (recommended) &mdash; provide configuration directly in <span class="keyword">values.yaml</span></li>
-    <li><strong>External ConfigMap</strong> &mdash; create a ConfigMap separately (manually, via CI, or using the example <a target="_blank" href="https://github.com/mock-server/mockserver/tree/master/helm/mockserver-config">mockserver-config</a> chart)</li>
+    <li><strong>External ConfigMap</strong> &mdash; create a ConfigMap separately (manually, via CI, or using the example <a target="_blank" href="https://github.com/mock-server/mockserver-monorepo/tree/master/helm/mockserver-config">mockserver-config</a> chart)</li>
 </ol>
 <p>Both approaches mount configuration into the container at <strong>/config</strong>. See <a href="/mock_server/configuration_properties.html">MockServer Configuration</a> for details of all configuration options.</p>
 
@@ -172,7 +172,7 @@ For example:
 
 <pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.mountedConfigMapName=other-mockserver-config --set app.propertiesFileName=other-mockserver.properties mockserver helm/mockserver</code></pre>
 
-An example of a helm chart to create this ConfigMap is <a target="_blank" href="https://github.com/mock-server/mockserver/tree/master/helm/mockserver-config">helm/mockserver-config</a>
+An example of a helm chart to create this ConfigMap is <a target="_blank" href="https://github.com/mock-server/mockserver-monorepo/tree/master/helm/mockserver-config">helm/mockserver-config</a>
 
 <a id="helm_extend_classpath" class="anchor" href="#helm_extend_classpath">&nbsp</a>
 

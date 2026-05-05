@@ -1,8 +1,18 @@
 steps:
-  - label: ":python: Python client tests"
-    commands:
-      - "cd mockserver-client-python"
-      - "python3 -m venv .venv"
-      - ".venv/bin/pip install -e '.[dev]'"
-      - ".venv/bin/pytest"
+  - label: ":python: Python client unit tests"
+    command: "cd mockserver-client-python && pip install -e '.[dev]' && pytest -m 'not integration'"
+    plugins:
+      - docker#v5.13.0:
+          image: "python:3.12"
+    timeout_in_minutes: 10
+
+  - label: ":python: Python client integration tests"
+    command: |
+      apt-get update -qq && apt-get install -y -qq docker.io >/dev/null 2>&1
+      cd mockserver-client-python && pip install -e '.[dev]' && pytest -m integration -v
+    plugins:
+      - docker#v5.13.0:
+          image: "python:3.12"
+          volumes:
+            - "/var/run/docker.sock:/var/run/docker.sock"
     timeout_in_minutes: 10

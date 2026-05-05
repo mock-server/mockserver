@@ -21,7 +21,7 @@ public class OpenAPIExpectationExamples {
         new MockServerClient("localhost", 1080)
             .upsert(
                 openAPIExpectation(
-                    "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
+                    "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
                 )
             );
     }
@@ -42,7 +42,7 @@ public class OpenAPIExpectationExamples {
         new MockServerClient("localhost", 1080)
             .upsert(
                 openAPIExpectation(
-                    "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
+                    "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
                     operationsAndResponses
                 )
             );

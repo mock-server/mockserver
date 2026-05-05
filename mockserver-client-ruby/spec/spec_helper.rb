@@ -15,6 +15,14 @@ RSpec.configure do |config|
   config.shared_context_metadata_behavior = :apply_to_host_groups
   config.order = :random
   Kernel.srand config.seed
+
+  config.before(:context, :integration) do
+    WebMock.allow_net_connect!
+  end
+
+  config.after(:context, :integration) do
+    WebMock.disable_net_connect!
+  end
 end
 
 WebMock.disable_net_connect!

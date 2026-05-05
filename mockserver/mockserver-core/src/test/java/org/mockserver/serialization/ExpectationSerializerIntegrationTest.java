@@ -76,7 +76,7 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldAllowSingleOpenAPIObjectForArray() {
         // given
-        String specUrlOrPayload = "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json";
+        String specUrlOrPayload = "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json";
         String requestBytes = ("{" + NEW_LINE +
             "    \"specUrlOrPayload\": \"" + specUrlOrPayload + "\"," + NEW_LINE +
             "    \"operationsAndResponses\": {" + NEW_LINE +
@@ -132,7 +132,7 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldAllowMixedExpectationTypesForArray() {
         // given
-        String specUrlOrPayload = "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json";
+        String specUrlOrPayload = "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json";
         String requestBytes = ("[ {" + NEW_LINE +
             "    \"specUrlOrPayload\": \"" + specUrlOrPayload + "\"," + NEW_LINE +
             "    \"operationsAndResponses\": {" + NEW_LINE +

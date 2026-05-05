@@ -39,7 +39,7 @@
     <li>To retrieve recorded requests for debugging, use <code>PUT /mockserver/retrieve?type=REQUESTS</code> or <code>mockServerClient.retrieveRecordedRequests(null)</code>.</li>
 </ul>
 
-<p>For more details on the internal architecture, see the <a href="https://github.com/mock-server/mockserver/blob/master/docs/code/event-system.md#verification" target="_blank">Event System documentation</a>.</p>
+<p>For more details on the internal architecture, see the <a href="https://github.com/mock-server/mockserver-monorepo/blob/master/docs/code/event-system.md#verification" target="_blank">Event System documentation</a>.</p>
 
 <h3>Verifying Repeating Requests</h3>
 
@@ -181,7 +181,7 @@ mockServerClient("localhost", 1080)
     <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
     .verify(
         openAPI(
-            "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
+            "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
         ),
         VerificationTimes.atLeast(2)
     );</code></pre>
@@ -192,7 +192,7 @@ mockServerClient("localhost", 1080)
 mockServerClient("localhost", 1080)
     .verify(
         {
-            'specUrlOrPayload': 'https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json'
+            'specUrlOrPayload': 'https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json'
         }, 2)
     .then(
         function () {
@@ -208,7 +208,7 @@ mockServerClient("localhost", 1080)
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/verify" -d '{
     "httpRequest": {
-        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
+        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
     },
     "times": {
         "atLeast": 2

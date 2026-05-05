@@ -56,36 +56,44 @@ Build process, releases, dependencies, security scanning, and the documentation 
 ## Quick Reference
 
 ```
-mockserver/
-├── mockserver-core/            # Core domain model, matching, serialisation
-├── mockserver-client-java/     # Java client library
-├── mockserver-netty/           # Netty-based HTTP server (main artifact)
-├── mockserver-war/             # WAR-packaged mock server
-├── mockserver-proxy-war/       # WAR-packaged proxy
-├── mockserver-junit-rule/      # JUnit 4 integration
-├── mockserver-junit-jupiter/   # JUnit 5 integration
-├── mockserver-spring-test-listener/ # Spring test integration
-├── mockserver-testing/         # Shared test utilities
-├── mockserver-integration-testing/ # Integration test infrastructure
-├── mockserver-examples/        # Usage examples & Docker Compose samples
-├── docker/                     # Production Docker images (5 variants)
-├── docker_build/               # CI build Docker images
-├── helm/                       # Helm charts (mockserver + mockserver-config)
-├── terraform/                  # Terraform IaC (Buildkite agents)
-├── jekyll-www.mock-server.com/ # Jekyll documentation website
-├── container_integration_tests/# Docker & Helm integration tests
-├── scripts/                    # Build, deploy, and utility scripts
-└── docs/                       # This documentation (you are here)
-    ├── code/                   #   Code architecture (9 docs)
-    ├── infrastructure/         #   AWS, CI/CD, Docker, Helm (4 docs)
-    ├── operations/             #   Build, release, deps, security, website (6 docs)
-    └── testing.md              #   Test frameworks, architecture, config, coverage, CI
+mockserver-monorepo/
+├── mockserver/                     # Java server (multi-module Maven project)
+│   ├── mockserver-core/            # Core domain model, matching, serialisation
+│   ├── mockserver-client-java/     # Java client library
+│   ├── mockserver-netty/           # Netty-based HTTP server (main artifact)
+│   ├── mockserver-war/             # WAR-packaged mock server
+│   ├── mockserver-proxy-war/       # WAR-packaged proxy
+│   ├── mockserver-junit-rule/      # JUnit 4 integration
+│   ├── mockserver-junit-jupiter/   # JUnit 5 integration
+│   ├── mockserver-spring-test-listener/ # Spring test integration
+│   ├── mockserver-testing/         # Shared test utilities
+│   ├── mockserver-integration-testing/ # Integration test infrastructure
+│   └── mockserver-examples/        # Usage examples & Docker Compose samples
+├── mockserver-ui/                  # React dashboard UI (Vite + TypeScript)
+├── mockserver-node/                # Node.js MockServer launcher (npm)
+├── mockserver-client-node/         # Node.js/browser client library (npm)
+├── mockserver-client-python/       # Python client library (PyPI)
+├── mockserver-client-ruby/         # Ruby client library (RubyGems)
+├── mockserver-maven-plugin/        # Maven plugin for starting/stopping MockServer
+├── mockserver-performance-test/    # Locust-based performance tests
+├── container_integration_tests/    # Docker & Helm integration tests
+├── jekyll-www.mock-server.com/     # Jekyll documentation website
+├── helm/                           # Helm charts (mockserver + mockserver-config)
+├── docker/                         # Production Docker images (5 variants)
+├── docker_build/                   # CI build Docker images
+├── terraform/                      # Terraform IaC (Buildkite agents + pipelines)
+├── scripts/                        # Build, deploy, and utility scripts
+└── docs/                           # This documentation (you are here)
+    ├── code/                       #   Code architecture (9 docs)
+    ├── infrastructure/             #   AWS, CI/CD, Docker, Helm (4 docs)
+    ├── operations/                 #   Build, release, deps, security, website (6 docs)
+    └── testing.md                  #   Test frameworks, architecture, config, coverage, CI
 ```
 
 ## Key Links
 
 - **Website:** https://www.mock-server.com
-- **GitHub:** https://github.com/mock-server/mockserver
+- **GitHub:** https://github.com/mock-server/mockserver-monorepo
 - **Docker Hub:** https://hub.docker.com/r/mockserver/mockserver
 - **Maven Central:** `org.mock-server:mockserver-netty`
 - **Helm Chart Repo:** https://www.mock-server.com/mockserver-5.15.0.tgz

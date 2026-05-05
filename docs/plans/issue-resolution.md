@@ -430,8 +430,8 @@ These are confirmed thread-safety bugs in the current codebase. All involve shar
 ### #1375: TypeError in browser client
 
 **Status**: Out of scope
-**Root cause**: The `mockserver-client-node` npm package lives in a separate repository (`github.com/mock-server/mockserver-client-node`), not in this codebase.
-**Fix**: Close with reference to the correct repository.
+**Root cause**: The `mockserver-client-node` npm package is in the monorepo subdirectory `mockserver-client-node/`.
+**Fix**: Investigate and fix in the `mockserver-client-node/` directory.
 
 ---
 

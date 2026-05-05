@@ -26,3 +26,15 @@ steps:
       - junit-annotate#v2.4.1:
           artifacts: "**/target/*-reports/TEST-*.xml"
           always-annotate: true
+
+  - wait
+
+  - label: ":nexus: deploy snapshot to Sonatype"
+    if: "build.branch == 'master'"
+    command: ".buildkite/scripts/deploy-snapshot.sh"
+    timeout_in_minutes: 30
+
+  - label: ":docker: build and push :latest"
+    if: "build.branch == 'master'"
+    command: ".buildkite/scripts/docker-push-latest.sh"
+    timeout_in_minutes: 15

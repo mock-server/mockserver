@@ -1,6 +1,25 @@
 # Build System
 
-## Maven Configuration
+## Monorepo Build Landscape
+
+The monorepo contains multiple projects with different build tools:
+
+| Directory | Build Tool | Build Command (from repo root) |
+|-----------|-----------|-------------------------------|
+| `mockserver/` | Maven (`./mvnw`) | `cd mockserver && ./mvnw clean install` |
+| `mockserver-ui/` | Vite + npm | `cd mockserver-ui && npm ci && npm run build` |
+| `mockserver-node/` | Grunt + npm | `cd mockserver-node && npm ci && npx grunt` |
+| `mockserver-client-node/` | npm + TypeScript | `cd mockserver-client-node && npm ci && npm test` |
+| `mockserver-client-python/` | pip + pytest | `cd mockserver-client-python && pip install -e '.[dev]' && pytest` |
+| `mockserver-client-ruby/` | Bundler + RSpec | `cd mockserver-client-ruby && bundle install && bundle exec rspec` |
+| `mockserver-maven-plugin/` | Maven | `cd mockserver && ./mvnw clean install -DskipTests && ./mvnw -f ../mockserver-maven-plugin/pom.xml clean verify` |
+| `mockserver-performance-test/` | Locust (Python) | `cd mockserver-performance-test && python3 -m py_compile locustfile.py` |
+
+CI builds are orchestrated by `.buildkite/scripts/generate-pipeline.sh` which selects pipelines based on changed files. See [CI/CD](../infrastructure/ci-cd.md) for details.
+
+## Java Server Build (mockserver/)
+
+### Maven Configuration
 
 MockServer uses Maven 3.9.0 via the Maven Wrapper (`mvnw`). The project targets Java 11 source/target compatibility.
 
@@ -24,7 +43,11 @@ The project comprises 11 Maven modules:
 
 ### Quick Reference
 
+All Maven commands run from within the `mockserver/` directory:
+
 ```bash
+cd mockserver
+
 # Full build (clean + compile + test + package)
 ./mvnw clean install
 

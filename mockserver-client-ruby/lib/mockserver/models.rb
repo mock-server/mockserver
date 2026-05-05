@@ -134,7 +134,19 @@ module MockServer
   def self.deserialize_key_multi_values(data)
     return nil if data.nil?
 
-    data.map { |item| KeyToMultiValue.from_hash(item) }
+    if data.is_a?(Hash)
+      return data.map { |k, v| KeyToMultiValue.new(name: k, values: v.is_a?(Array) ? v : [v]) }
+    end
+
+    data.map do |item|
+      if item.is_a?(Hash)
+        KeyToMultiValue.from_hash(item)
+      elsif item.is_a?(String)
+        KeyToMultiValue.new(name: item, values: [])
+      else
+        KeyToMultiValue.from_hash(item)
+      end
+    end
   end
 
   # -------------------------------------------------------------------

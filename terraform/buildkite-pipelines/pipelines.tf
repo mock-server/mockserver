@@ -9,6 +9,76 @@ locals {
       emoji       = ":pipeline:"
       trigger     = "code"
     }
+    "java" = {
+      name        = "MockServer Java"
+      description = "Java server build and test (all Maven modules)"
+      file        = ".buildkite/pipeline-java.yml"
+      emoji       = ":maven:"
+      trigger     = "none"
+    }
+    "ui" = {
+      name        = "MockServer UI"
+      description = "Dashboard React SPA — lint, test, build"
+      file        = ".buildkite/pipeline-ui.yml"
+      emoji       = ":react:"
+      trigger     = "none"
+    }
+    "node" = {
+      name        = "MockServer Node"
+      description = "Node.js client and launcher — lint and typecheck"
+      file        = ".buildkite/pipeline-node.yml"
+      emoji       = ":node:"
+      trigger     = "none"
+    }
+    "python" = {
+      name        = "MockServer Python"
+      description = "Python client — unit and integration tests"
+      file        = ".buildkite/pipeline-python.yml"
+      emoji       = ":python:"
+      trigger     = "none"
+    }
+    "ruby" = {
+      name        = "MockServer Ruby"
+      description = "Ruby client — unit and integration tests"
+      file        = ".buildkite/pipeline-ruby.yml"
+      emoji       = ":ruby:"
+      trigger     = "none"
+    }
+    "maven-plugin" = {
+      name        = "MockServer Maven Plugin"
+      description = "Maven plugin build and test"
+      file        = ".buildkite/pipeline-maven-plugin.yml"
+      emoji       = ":maven:"
+      trigger     = "none"
+    }
+    "perf-test" = {
+      name        = "MockServer Performance Test"
+      description = "Performance test validation"
+      file        = ".buildkite/pipeline-perf-test.yml"
+      emoji       = ":chart_with_upwards_trend:"
+      trigger     = "none"
+    }
+    "container-tests" = {
+      name        = "MockServer Container Tests"
+      description = "Container integration test script validation"
+      file        = ".buildkite/pipeline-container-tests.yml"
+      emoji       = ":docker:"
+      trigger     = "none"
+    }
+    "website" = {
+      name        = "MockServer Website"
+      description = "Jekyll documentation site build"
+      file        = ".buildkite/pipeline-website.yml"
+      emoji       = ":jekyll:"
+      trigger     = "none"
+    }
+    "infra" = {
+      name        = "MockServer Infra"
+      description = "Infrastructure, CI/CD, and shared config validation"
+      file        = ".buildkite/pipeline-infra.yml"
+      emoji       = ":terraform:"
+      trigger     = "none"
+    }
     "docker-push-maven" = {
       name        = "MockServer Build Image"
       description = "Build and push mockserver/mockserver:maven CI image"

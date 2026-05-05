@@ -22,7 +22,7 @@ This document identifies missing documentation, undocumented areas, and recommen
 
 ### 2. No Automated Release Pipeline
 
-**Status:** The release process is a manual 13-step checklist (`scripts/release_steps.md`) spanning 6+ repositories, 4 registries, and multiple AWS services. There is significant risk of human error, inconsistency, or partial releases.
+**Status:** The release process is a manual 13-step checklist (`scripts/release_steps.md`) spanning 7 artifact registries and multiple AWS services. All source code is now in the monorepo, but the release process still has significant risk of human error, inconsistency, or partial releases.
 
 **Impact:** Releases are slow, error-prone, and cannot be delegated. The process includes force-push recovery steps, suggesting failures are not uncommon.
 

@@ -1,5 +1,53 @@
 # Code Architecture Overview
 
+## Monorepo Structure
+
+MockServer is organized as a monorepo containing the Java server, client libraries, UI, plugins, and infrastructure.
+
+```
+mockserver-monorepo/
+├── mockserver/                     # Java server (multi-module Maven project)
+│   ├── mockserver-core/            # Core domain model, matching, serialisation
+│   ├── mockserver-client-java/     # Java client library
+│   ├── mockserver-netty/           # Netty-based HTTP server (main artifact)
+│   ├── mockserver-war/             # WAR-packaged mock server
+│   ├── mockserver-proxy-war/       # WAR-packaged proxy
+│   ├── mockserver-junit-rule/      # JUnit 4 integration
+│   ├── mockserver-junit-jupiter/   # JUnit 5 integration
+│   ├── mockserver-spring-test-listener/ # Spring test integration
+│   ├── mockserver-testing/         # Shared test utilities
+│   ├── mockserver-integration-testing/ # Integration test infrastructure
+│   └── mockserver-examples/        # Usage examples
+├── mockserver-ui/                  # React dashboard UI (Vite + TypeScript)
+├── mockserver-node/                # Node.js MockServer launcher (npm)
+├── mockserver-client-node/         # Node.js/browser client library (npm)
+├── mockserver-client-python/       # Python client library (PyPI)
+├── mockserver-client-ruby/         # Ruby client library (RubyGems)
+├── mockserver-maven-plugin/        # Maven plugin for starting/stopping MockServer
+├── mockserver-performance-test/    # Locust-based performance tests
+├── container_integration_tests/    # Docker & Helm integration tests
+├── jekyll-www.mock-server.com/     # Jekyll documentation website
+├── helm/                           # Helm charts (mockserver + mockserver-config)
+├── docker/                         # Production Docker images (5 variants)
+├── docker_build/                   # CI build Docker images
+├── terraform/                      # Terraform IaC (Buildkite agents + pipelines)
+├── scripts/                        # Build, deploy, and utility scripts
+└── docs/                           # Internal documentation
+```
+
+| Directory | Tech Stack | Build Tool |
+|-----------|-----------|------------|
+| `mockserver/` | Java 11+, Netty 4.1 | Maven (`./mvnw`) |
+| `mockserver-ui/` | React, TypeScript | Vite (`npm`) |
+| `mockserver-node/` | Node.js | Grunt (`npm`) |
+| `mockserver-client-node/` | TypeScript | npm |
+| `mockserver-client-python/` | Python 3.9+ | pip/pytest |
+| `mockserver-client-ruby/` | Ruby 3.0+ | Bundler/RSpec |
+| `mockserver-maven-plugin/` | Java 11+ | Maven |
+| `mockserver-performance-test/` | Python (Locust) | pip |
+
+The rest of this document focuses on the Java server architecture within `mockserver/`.
+
 ## High-Level Architecture
 
 MockServer is a multi-module Maven project providing an HTTP(S) mock server and proxy. Every incoming connection -- regardless of protocol -- enters through a single Netty port and is dynamically routed by a port unification handler.

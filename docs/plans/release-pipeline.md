@@ -30,7 +30,7 @@ The release process is a **manual 13-step process** executed entirely from a dev
 |---------|--------|
 | 13 manual steps across 7 platforms | Error-prone, takes hours, requires deep tribal knowledge |
 | Hardcoded JDK path in `local_release.sh` | Only works on one specific developer's machine |
-| SCM URL mismatch (`jamesdbloom/mockservice` vs `mock-server/mockserver`) | Fragile Git tag/push during release |
+| SCM URL mismatch (`jamesdbloom/mockservice` vs `mock-server/mockserver-monorepo`) | Fragile Git tag/push during release |
 | Tests skipped during release (`-DskipTests`) | Releases trust that the last manual build passed |
 | GPG key managed on a single laptop | Bus-factor = 1, key rotation is manual |
 | Docker image timing dependency on Maven Central sync | Release step 7 may fail and need manual retry hours later |
@@ -169,7 +169,7 @@ Every step from `scripts/release_steps.md` maps to a script. The table shows whe
 | 3 | Update repo versions | `update-versions.sh` | Yes | Yes | Changelog, README, _config.yml, find-and-replace |
 | 4 | Update mockserver-node | `update-node-repos.sh mockserver-node` | Local-only | Yes | npm OTP required interactively |
 | 5 | Update mockserver-client-node | `update-node-repos.sh mockserver-client-node` | Local-only | Yes | npm OTP required interactively |
-| 6 | Update mockserver-maven-plugin | `update-maven-plugin.sh` | Yes | Yes | Full release cycle on separate repo |
+| 6 | Update mockserver-maven-plugin | `update-maven-plugin.sh` | Yes | Yes | Full release cycle on monorepo subdir |
 | 7 | Docker image | `publish-docker.sh` | Yes | Yes | |
 | 8 | Helm chart | `publish-helm.sh` | Yes | Yes | |
 | 9 | Javadoc | `publish-javadoc.sh` | Yes | Yes | |
@@ -740,7 +740,7 @@ These steps are **local-only** because npm publish requires an interactive OTP c
 
 This performs a full release cycle on the separate `mockserver-maven-plugin` repository:
 
-1. Clone `mock-server/mockserver-maven-plugin` to `.tmp/release/mockserver-maven-plugin`
+1. Build from the monorepo's `mockserver-maven-plugin/` directory
 2. Update 3 version references from SNAPSHOT to RELEASE:
    - Parent POM version
    - `jar-with-dependencies` dependency version
@@ -943,7 +943,7 @@ All release credentials are stored in AWS Secrets Manager in the build agent acc
 
 | Change | File | Detail |
 |---|---|---|
-| Fix SCM URL | `pom.xml` | `jamesdbloom/mockservice` → `mock-server/mockserver` |
+| Fix SCM URL | `pom.xml` | `jamesdbloom/mockservice` → `mock-server/mockserver-monorepo` |
 | Remove maven-release-plugin | `pom.xml` | No longer needed — replaced by `versions:set` + explicit git operations |
 | Retain `release` profile | `pom.xml` | GPG signing (`maven-gpg-plugin`), source JAR, Javadoc JAR generation still needed |
 | Retain `versions-maven-plugin` | `pom.xml` | Already available transitively; may need explicit declaration for `versions:set` |
@@ -1174,7 +1174,7 @@ gantt
 | 3 | Export GPG key, base64 encode, store in AWS SM | Phase 1 | `gpg --export-secret-keys --armor KEY_ID \| base64` |
 | 4 | Create `release-managers` team in Buildkite with only you | Phase 1 | Buildkite UI → Organization → Teams |
 | 5 | Create `release` pipeline in Buildkite (private) | Phase 1 | Points to `.buildkite/release-pipeline.yml` |
-| 6 | Fix SCM URL in `pom.xml` | Phase 1 | `jamesdbloom/mockservice` → `mock-server/mockserver` |
+| 6 | Fix SCM URL in `pom.xml` | Phase 1 | `jamesdbloom/mockservice` → `mock-server/mockserver-monorepo` |
 | 7 | Apply Terraform to create secrets + grant agent IAM access | Phase 1 | `terraform/buildkite-agents/build-secrets.tf` |
 | 8 | Install `oathtool`, `jq`, `xmllint` in Maven CI Docker image | Phase 1 | `docker_build/maven/Dockerfile` |
 | 9 | Create GitHub PAT (`contents:write`), store in AWS SM | Phase 3 | For `gh release create` |

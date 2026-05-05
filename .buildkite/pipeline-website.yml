@@ -1,0 +1,9 @@
+steps:
+  - label: ":jekyll: validate Jekyll site"
+    command: "cd jekyll-www.mock-server.com && bundle install && bundle exec jekyll build"
+    plugins:
+      - docker#v5.13.0:
+          image: "jekyll/builder:latest"
+          environment:
+            - "JEKYLL_ENV=production"
+    timeout_in_minutes: 10

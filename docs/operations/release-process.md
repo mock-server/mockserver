@@ -2,7 +2,7 @@
 
 ## Overview
 
-MockServer releases are a manual 13-step process spanning multiple repositories, registries, and hosting platforms.
+MockServer releases are a manual 13-step process spanning multiple registries and hosting platforms.
 
 ```mermaid
 flowchart TD
