@@ -440,7 +440,7 @@
             <dependency>
                 <groupId>org.openjdk.nashorn</groupId>
                 <artifactId>nashorn-core</artifactId>
-                <version>15.6</version>
+                <version>15.7</version>
             </dependency>
             <dependency>
                 <groupId>org.ow2.asm</groupId>
