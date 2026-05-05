@@ -1,16 +1,83 @@
-### Issues
+# Contributing to MockServer
 
-If you have any problems, please [check the project issues](https://github.com/mock-server/mockserver/issues?state=open) and avoid opening issues that have already been fixed.  When you open an issue please provide the following information:
+## Issues
+
+If you have any problems, please [check the project issues](https://github.com/mock-server/mockserver/issues?state=open) and avoid opening issues that have already been fixed. When you open an issue please provide:
+
 - MockServer version
-- How your running the MockServer (i.e maven plugin, docker, etc)
-- MockServer log output, at INFO level (or higher)
+- How you are running MockServer (Maven plugin, Docker, JAR, etc.)
+- MockServer log output at INFO level (or higher)
 - What the error is
 - What you are trying to do
 
-### Contributions
+## Repository Structure
 
-Pull requests are, of course, very welcome! Please read our [contributing to the project](https://github.com/mock-server/mockserver/wiki/Contributing-to-the-project) guide first. Then head over to the [open issues](https://github.com/mock-server/mockserver/issues?state=open) to see what we need help with. Make sure you let us know if you intend to work on something. Also check out <a href="https://trello.com/b/dsfTCP46/mockserver" target="_blank"><img height="20px" src="http://mock-server.com/images/trello_badge-md.png" alt="Trello Backlog"></a> to see what is already in the backlog.
+This is a monorepo containing several projects:
 
-### Feature Requests
+| Directory | Language | Description |
+|-----------|----------|-------------|
+| `mockserver/` | Java | Main MockServer (Netty HTTP server, 11 Maven modules) |
+| `mockserver-ui/` | TypeScript | Dashboard React SPA |
+| `mockserver-maven-plugin/` | Java | Maven plugin for starting/stopping MockServer |
+| `mockserver-node/` | JavaScript | Node.js launcher |
+| `mockserver-client-node/` | JavaScript | Node.js/browser API client |
+| `mockserver-client-python/` | Python | Python API client |
+| `mockserver-client-ruby/` | Ruby | Ruby API client |
+| `mockserver-performance-test/` | Python | Locust performance tests |
 
-Feature requests are submitted to [github issues](https://github.com/mock-server/mockserver/issues?state=open).  Once accepted they will be added to the <a href="https://trello.com/b/dsfTCP46/mockserver" target="_blank">backlog</a>.  Please check out <a href="https://trello.com/b/dsfTCP46/mockserver" target="_blank"><img height="20px" src="http://mock-server.com/images/trello_badge-md.png" alt="Trello Backlog"></a> to see what is already in the backlog.
+## Building
+
+### Java (main server)
+
+```bash
+cd mockserver && ./mvnw clean install
+```
+
+### UI
+
+```bash
+cd mockserver-ui && npm ci && npm run build
+```
+
+### Node.js client
+
+```bash
+cd mockserver-client-node && npm ci && npx grunt
+```
+
+### Python client
+
+```bash
+cd mockserver-client-python
+python3 -m venv .venv
+.venv/bin/pip install -e '.[dev]'
+.venv/bin/pytest
+```
+
+### Ruby client
+
+```bash
+cd mockserver-client-ruby
+bundle install
+bundle exec rspec
+```
+
+### Maven plugin
+
+```bash
+cd mockserver && ./mvnw clean install -DskipTests
+./mvnw -f ../mockserver-maven-plugin/pom.xml clean verify
+```
+
+## Contributions
+
+Pull requests are welcome. Please:
+
+1. Open an issue first to discuss what you plan to change
+2. Follow existing code conventions in the module you are changing
+3. Add tests for any new functionality
+4. Ensure all tests pass before submitting
+
+## Feature Requests
+
+Feature requests are submitted to [GitHub issues](https://github.com/mock-server/mockserver/issues?state=open).

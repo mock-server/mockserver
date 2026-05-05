@@ -39,6 +39,9 @@ Run `git status --short` to see all changed, staged, and untracked files. From t
 | `config` | `.gitignore`, `*.yml`, `*.yaml`, `*.json` (non-terraform) |
 | `helm` | `helm/**`, `Chart.yaml`, `values.yaml` |
 | `website` | `jekyll-www.mock-server.com/**` |
+| `npm` | `package.json`, `package-lock.json`, `*.js`, `*.ts`, `*.tsx`, `*.jsx` (in `mockserver-ui/`, `mockserver-client-node/`, `mockserver-node/`) |
+| `python` | `*.py`, `pyproject.toml`, `requirements*.txt` (in `mockserver-client-python/`) |
+| `ruby` | `*.rb`, `Gemfile`, `Gemfile.lock`, `*.gemspec` (in `mockserver-client-ruby/`) |
 
 A commit may contain files from multiple categories. Run ALL applicable validations.
 
@@ -48,7 +51,7 @@ Validation principle: prefer executable verification over static inspection. Whe
 
 ### Java changes (`java`)
 1. Identify affected Maven modules from file paths (see testing-policy.md for module mapping)
-2. Run unit tests: `./mvnw test -pl <module1>,<module2>`
+2. Run unit tests: `cd mockserver && ./mvnw test -pl <module1>,<module2>`
 3. If tests fail, fix before committing
 4. If tests already passed earlier in this conversation for the exact same changes (no further edits since), skip re-running
 
@@ -87,6 +90,24 @@ Validation principle: prefer executable verification over static inspection. Whe
 ### Website changes (`website`)
 1. Run `bundle exec jekyll build` if Jekyll files changed
 2. Verify no broken links in generated output
+
+### npm/Node.js changes (`npm`)
+1. Identify affected package from file path (`mockserver-ui/`, `mockserver-client-node/`, or `mockserver-node/`)
+2. Run validation for the affected package:
+   - `mockserver-ui/`: `cd mockserver-ui && npm ci && npm run lint && npm run typecheck && npm test`
+   - `mockserver-client-node/`: `cd mockserver-client-node && npm ci && npx grunt jshint && npx grunt ts`
+   - `mockserver-node/`: `cd mockserver-node && npm ci && npx grunt jshint`
+3. If tests or lint fail, fix before committing
+
+### Python changes (`python`)
+1. Run tests: `cd mockserver-client-python && python3 -m venv .venv && .venv/bin/pip install -e '.[dev]' && .venv/bin/pytest`
+2. If tests fail, fix before committing
+3. If tests already passed earlier in this conversation for the exact same changes, skip re-running
+
+### Ruby changes (`ruby`)
+1. Run tests: `cd mockserver-client-ruby && bundle install && bundle exec rspec`
+2. If tests fail, fix before committing
+3. If tests already passed earlier in this conversation for the exact same changes, skip re-running
 
 ## Step 3: Adversarial Code Review (MANDATORY for all commits)
 

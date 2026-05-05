@@ -185,7 +185,7 @@ If the investigator identifies a code issue:
 For Java changes, run the specific failing test:
 
 ```bash
-./mvnw test -pl {module} -Dtest={TestClassName}#{testMethodName} -Djava.security.egd=file:/dev/./urandom
+cd mockserver && ./mvnw test -pl {module} -Dtest={TestClassName}#{testMethodName} -Djava.security.egd=file:/dev/./urandom
 ```
 
 Note: Full integration tests require the Docker CI image and may not run locally. Unit tests should run.

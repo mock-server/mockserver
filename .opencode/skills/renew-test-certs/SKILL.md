@@ -23,9 +23,9 @@ Three sets of leaf certificates exist, each signed by their own CA:
 
 | Directory | Key Type | CA Valid Until |
 |-----------|----------|---------------|
-| `mockserver-netty/src/test/resources/org/mockserver/netty/integration/tls/` | RSA 2048 | Feb 2028 |
-| `mockserver-netty/src/test/resources/org/mockserver/netty/integration/tls/ec/` | ECDSA P-256 | Feb 2028 |
-| `mockserver-netty/src/test/resources/org/mockserver/netty/integration/tls/separateca/` | RSA 2048 | Feb 2028 |
+| `mockserver/mockserver-netty/src/test/resources/org/mockserver/netty/integration/tls/` | RSA 2048 | Feb 2028 |
+| `mockserver/mockserver-netty/src/test/resources/org/mockserver/netty/integration/tls/ec/` | ECDSA P-256 | Feb 2028 |
+| `mockserver/mockserver-netty/src/test/resources/org/mockserver/netty/integration/tls/separateca/` | RSA 2048 | Feb 2028 |
 
 Each directory contains:
 - `ca.pem` / `ca-key.pem` / `ca-key-pkcs8.pem` -- CA certificate and keys (long-lived, do NOT regenerate unless expired)
@@ -37,9 +37,9 @@ Each directory contains:
 
 ```bash
 for dir in \
-  mockserver-netty/src/test/resources/org/mockserver/netty/integration/tls \
-  mockserver-netty/src/test/resources/org/mockserver/netty/integration/tls/ec \
-  mockserver-netty/src/test/resources/org/mockserver/netty/integration/tls/separateca; do
+  mockserver/mockserver-netty/src/test/resources/org/mockserver/netty/integration/tls \
+  mockserver/mockserver-netty/src/test/resources/org/mockserver/netty/integration/tls/ec \
+  mockserver/mockserver-netty/src/test/resources/org/mockserver/netty/integration/tls/separateca; do
   echo "=== $dir ==="
   echo -n "  CA:   "; openssl x509 -in "$dir/ca.pem" -noout -enddate
   echo -n "  Leaf: "; openssl x509 -in "$dir/leaf-cert.pem" -noout -enddate
@@ -69,7 +69,7 @@ EOF
 ### RSA leaf (root `tls/` directory)
 
 ```bash
-CERT_DIR="mockserver-netty/src/test/resources/org/mockserver/netty/integration/tls"
+CERT_DIR="mockserver/mockserver-netty/src/test/resources/org/mockserver/netty/integration/tls"
 cd "$CERT_DIR"
 
 openssl req -new -newkey rsa:2048 -nodes -keyout leaf-key.pem \
@@ -90,7 +90,7 @@ rm -f ca.srl .tmp/leaf.csr
 ### EC leaf (`tls/ec/` directory)
 
 ```bash
-CERT_DIR="mockserver-netty/src/test/resources/org/mockserver/netty/integration/tls/ec"
+CERT_DIR="mockserver/mockserver-netty/src/test/resources/org/mockserver/netty/integration/tls/ec"
 cd "$CERT_DIR"
 
 openssl req -new -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -nodes -keyout leaf-key.pem \
@@ -111,7 +111,7 @@ rm -f ca.srl .tmp/leaf-ec.csr
 ### RSA leaf (`tls/separateca/` directory)
 
 ```bash
-CERT_DIR="mockserver-netty/src/test/resources/org/mockserver/netty/integration/tls/separateca"
+CERT_DIR="mockserver/mockserver-netty/src/test/resources/org/mockserver/netty/integration/tls/separateca"
 cd "$CERT_DIR"
 
 openssl req -new -newkey rsa:2048 -nodes -keyout leaf-key.pem \
@@ -142,7 +142,7 @@ openssl x509 -in leaf-cert.pem -noout -text | grep -A2 "Authority Key"
 Then run the affected tests:
 
 ```bash
-./mvnw -pl mockserver-netty verify \
+cd mockserver && ./mvnw -pl mockserver-netty verify \
   -Dtest=none \
   -Dit.test="CustomPrivateKeyAndCertificateWithECKeysMockingIntegrationTest,ClientAuthenticationCustomPrivateKeyAndCertificateMockingIntegrationTest,ClientAuthenticationAdditionalCertificateChainMockingIntegrationTest,ForwardWithCustomClientCertificateIntegrationTest" \
   -Djava.security.egd=file:/dev/urandom
@@ -190,5 +190,5 @@ These test classes use the leaf certificates and will fail when they expire:
 ## Regenerating CA Certificates
 
 If the CA certificates themselves expire (Feb 2028), follow the instructions in:
-- `mockserver-netty/src/test/resources/org/mockserver/netty/integration/tls/generate_custom_certificates.md`
-- `mockserver-netty/src/test/resources/org/mockserver/netty/integration/tls/ec/generate_custom_certificates.md`
+- `mockserver/mockserver-netty/src/test/resources/org/mockserver/netty/integration/tls/generate_custom_certificates.md`
+- `mockserver/mockserver-netty/src/test/resources/org/mockserver/netty/integration/tls/ec/generate_custom_certificates.md`
