@@ -1,21 +1,12 @@
 steps:
   - label: ":react: UI lint and typecheck"
-    command: "cd mockserver-ui && npm ci && npm run lint && npm run typecheck"
-    plugins:
-      - docker#v5.13.0:
-          image: "node:22"
+    command: ".buildkite/scripts/steps/ui-lint.sh"
     timeout_in_minutes: 10
 
   - label: ":jest: UI tests"
-    command: "cd mockserver-ui && npm ci && npm test"
-    plugins:
-      - docker#v5.13.0:
-          image: "node:22"
+    command: ".buildkite/scripts/steps/ui-test.sh"
     timeout_in_minutes: 10
 
   - label: ":package: UI build"
-    command: "cd mockserver-ui && npm ci && npm run build"
-    plugins:
-      - docker#v5.13.0:
-          image: "node:22"
+    command: ".buildkite/scripts/steps/ui-build.sh"
     timeout_in_minutes: 10

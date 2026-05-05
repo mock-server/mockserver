@@ -1,7 +1,4 @@
 steps:
   - label: ":chart_with_upwards_trend: perf test lint"
-    command: "cd mockserver-performance-test && python3 -m py_compile locustfile.py && bash -n scripts/runLocust.sh && bash -n runAll.sh"
-    plugins:
-      - docker#v5.13.0:
-          image: "python:3.12"
+    command: ".buildkite/scripts/steps/perf-test-lint.sh"
     timeout_in_minutes: 5

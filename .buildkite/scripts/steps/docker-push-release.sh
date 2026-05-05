@@ -25,9 +25,18 @@ echo "Short tag: mockserver/mockserver:${SHORT_TAG}"
 
 .buildkite/scripts/docker-login.sh
 
-echo "--- :docker: Building multi-arch image"
+DOCKER_CMD="docker buildx build --platform linux/amd64,linux/arm64 --push --tag mockserver/mockserver:${FULL_TAG} --tag mockserver/mockserver:${SHORT_TAG} --file docker/Dockerfile ."
+
+echo "┌──────────────────────────────────────────────────────────────────"
+echo "│ 🐳 Docker Command (copy to reproduce locally):"
+echo "│"
+echo "│   $DOCKER_CMD"
+echo "│"
+echo "└──────────────────────────────────────────────────────────────────"
+echo ""
+
 docker buildx create --use --name multiarch 2>/dev/null || docker buildx use multiarch
-docker buildx build \
+exec docker buildx build \
   --platform linux/amd64,linux/arm64 \
   --push \
   --tag "mockserver/mockserver:${FULL_TAG}" \

@@ -1,13 +1,4 @@
 steps:
   - label: ":bash: validate container integration test scripts"
-    command: |
-      set -euo pipefail
-      errors=0
-      for script in container_integration_tests/*.sh; do
-        if [ -f "$script" ]; then
-          echo "Checking $script..."
-          bash -n "$script" || errors=$((errors + 1))
-        fi
-      done
-      exit $errors
+    command: ".buildkite/scripts/steps/container-tests-validate.sh"
     timeout_in_minutes: 5

@@ -1,20 +1,11 @@
 steps:
   - label: ":docker: Build maven CI image"
-    command: |
-      touch docker_build/maven/corporate-root-ca.pem
-      docker buildx create --use --name builder 2>/dev/null || docker buildx use builder
-      docker buildx build \
-        --platform linux/amd64 \
-        --load \
-        --tag mockserver/mockserver:maven \
-        docker_build/maven
+    command: ".buildkite/scripts/steps/maven-image-build.sh"
     timeout_in_minutes: 30
 
   - wait
 
   - label: ":docker: Push maven CI image"
     if: "build.branch == 'master'"
-    command: |
-      .buildkite/scripts/docker-login.sh
-      docker push mockserver/mockserver:maven
+    command: ".buildkite/scripts/steps/maven-image-push.sh"
     timeout_in_minutes: 10

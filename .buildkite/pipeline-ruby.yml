@@ -1,18 +1,8 @@
 steps:
   - label: ":ruby: Ruby client unit tests"
-    command: "cd mockserver-client-ruby && bundle install && bundle exec rspec --tag '~integration'"
-    plugins:
-      - docker#v5.13.0:
-          image: "ruby:3.3"
+    command: ".buildkite/scripts/steps/ruby-unit-test.sh"
     timeout_in_minutes: 10
 
   - label: ":ruby: Ruby client integration tests"
-    command: |
-      apt-get update -qq && apt-get install -y -qq docker.io >/dev/null 2>&1
-      cd mockserver-client-ruby && bundle install && bundle exec rspec --tag integration -f documentation
-    plugins:
-      - docker#v5.13.0:
-          image: "ruby:3.3"
-          volumes:
-            - "/var/run/docker.sock:/var/run/docker.sock"
+    command: ".buildkite/scripts/steps/ruby-integration-test.sh"
     timeout_in_minutes: 10

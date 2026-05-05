@@ -5,7 +5,7 @@ steps:
   - wait
 
   - label: ":maven: maven-plugin build"
-    command: "docker run --memory=8g --memory-swap=8g -v $(pwd):/build/mockserver -w /build/mockserver -a stdout -a stderr mockserver/mockserver:maven bash -c 'cd mockserver && ./mvnw clean install -DskipTests && ./mvnw -f ../mockserver-maven-plugin/pom.xml clean verify'"
+    command: ".buildkite/scripts/steps/maven-plugin-build.sh"
     artifact_paths:
       - "mockserver-maven-plugin/target/surefire-reports/TEST-*.xml"
     timeout_in_minutes: 45
