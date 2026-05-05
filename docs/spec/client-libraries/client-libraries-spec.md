@@ -152,11 +152,11 @@ flowchart LR
 
 | ID | Requirement | Priority |
 |----|-------------|----------|
-| FR-01 | Each client MUST provide hand-written domain model classes for: `HttpRequest`, `HttpResponse`, `HttpForward`, `HttpOverrideForwardedRequest`, `HttpError`, `HttpTemplate`, `HttpClassCallback`, `HttpObjectCallback`, `Expectation`, `Times`, `TimeToLive`, `Delay`, `Verification`, `VerificationTimes`, `VerificationSequence`, `Ports`, `KeyToMultiValue`, `KeyToValue`, `Body`, `BodyWithContentType`, `ConnectionOptions`, `ExpectationId`, `OpenAPIExpectation`, `OpenAPIDefinition`, `RequestDefinition`, `SocketAddress` | MUST |
+| FR-01 | Each client MUST provide hand-written domain model classes for: `HttpRequest`, `HttpResponse`, `HttpForward`, `HttpOverrideForwardedRequest`, `HttpError`, `HttpTemplate`, `HttpClassCallback`, `HttpObjectCallback`, `Expectation`, `Times`, `TimeToLive`, `Delay`, `Verification`, `VerificationTimes`, `VerificationSequence`, `Ports`, `KeyToMultiValue`, `Body`, `ConnectionOptions`, `ExpectationId`, `OpenAPIExpectation`, `OpenAPIDefinition`, `RequestDefinition`, `SocketAddress`. Note: `KeyToValue` and `BodyWithContentType` from the Java API are not needed — `KeyToMultiValue` covers both single and multi-value headers/params, and `Body` handles content types directly. | MUST |
 | FR-02 | Domain models MUST support serialization to JSON matching the MockServer REST API format (camelCase keys, same field names as the OpenAPI spec) | MUST |
 | FR-03 | Domain models MUST support deserialization from JSON responses | MUST |
 | FR-04 | Python models MUST use `dataclasses` or `attrs` with type hints | MUST |
-| FR-05 | Ruby models MUST use `Data` (Ruby 3.2+) or `Struct` with keyword arguments | MUST |
+| FR-05 | Ruby models MUST use plain classes with `attr_accessor` and keyword-argument constructors to support mutable builder patterns (e.g., `with_header`, `with_body` returning `self`) | MUST |
 | FR-06 | Domain models MUST provide static factory methods matching the Java API naming where idiomatic (e.g., `HttpRequest.request()`, `HttpResponse.response()`, `HttpResponse.not_found_response()`) | MUST |
 
 ### Client API — Expectations
@@ -352,5 +352,5 @@ flowchart LR
 - Q: Python concurrency model? -> A: asyncio primary with sync wrapper
 - Q: Language versions? -> A: Python 3.9+, Ruby 3.0+
 - Q: Delivery approach? -> A: Spec first, then implement language by language
-- Q: Domain model approach? -> A: Hand-written idiomatic models (dataclasses for Python, Struct/Data for Ruby)
+- Q: Domain model approach? -> A: Hand-written idiomatic models (dataclasses for Python, plain classes with attr_accessor for Ruby — Struct/Data rejected because models need mutable builder pattern)
 - Q: JavaScript upgrade approach — how much can change? -> A: Public API surface (method names, signatures, return types, domain object shapes) must be preserved exactly. Internals can be fully rewritten. New forward callback methods are additive only.
