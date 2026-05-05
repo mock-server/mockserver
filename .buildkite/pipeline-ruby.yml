@@ -1,0 +1,7 @@
+steps:
+  - label: ":ruby: Ruby client tests"
+    commands:
+      - "cd mockserver-client-ruby"
+      - "bundle install"
+      - "bundle exec rspec"
+    timeout_in_minutes: 10

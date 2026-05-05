@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: "maven"
-    directory: "/"
+    directory: "/mockserver"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -39,6 +39,68 @@ updates:
       # Block servlet namespace migration
       - dependency-name: "javax.servlet:*"
         update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "maven"
+    directory: "/mockserver-maven-plugin"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "java"
+      - "maven-plugin"
+
+  - package-ecosystem: "npm"
+    directory: "/mockserver-ui"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "npm"
+      - "ui"
+
+  - package-ecosystem: "npm"
+    directory: "/mockserver-client-node"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "npm"
+
+  - package-ecosystem: "npm"
+    directory: "/mockserver-node"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "npm"
+
+  - package-ecosystem: "pip"
+    directory: "/mockserver-client-python"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "python"
+
+  - package-ecosystem: "bundler"
+    directory: "/mockserver-client-ruby"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "ruby"
 
   - package-ecosystem: "npm"
     directory: "/.opencode"

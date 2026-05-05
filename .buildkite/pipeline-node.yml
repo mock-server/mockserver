@@ -1,0 +1,15 @@
+steps:
+  - label: ":node: client-node lint and typecheck"
+    commands:
+      - "cd mockserver-client-node"
+      - "npm ci"
+      - "npx grunt jshint"
+      - "npx grunt ts"
+    timeout_in_minutes: 10
+
+  - label: ":node: node launcher lint"
+    commands:
+      - "cd mockserver-node"
+      - "npm ci"
+      - "npx grunt jshint"
+    timeout_in_minutes: 10
