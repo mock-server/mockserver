@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Box from '@mui/material/Box';
 import Collapse from '@mui/material/Collapse';
 import IconButton from '@mui/material/IconButton';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import type { LogGroup as LogGroupType } from '../types';
-import LogEntry from './LogEntry';
+import LogEntry, { entryToText } from './LogEntry';
+import CopyButton from './CopyButton';
 
 interface LogGroupProps {
   group: LogGroupType;
@@ -14,13 +15,25 @@ interface LogGroupProps {
 export default function LogGroup({ group }: LogGroupProps) {
   const [open, setOpen] = useState(false);
 
+  const groupText = useMemo(() => {
+    const parts = [entryToText(group.group.value)];
+    for (const item of group.value) {
+      parts.push(entryToText(item.value));
+    }
+    return parts.filter(Boolean).join('\n\n');
+  }, [group]);
+
   return (
     <Box
       sx={{
+        position: 'relative',
         borderLeft: 2,
         borderColor: 'rgb(222, 147, 95)',
+        borderBottom: 1,
+        borderBottomColor: 'divider',
+        '&:last-child': { borderBottom: 0 },
+        '&:hover .group-copy-btn': { opacity: 1 },
         ml: 0.5,
-        mb: 0.5,
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
@@ -35,6 +48,9 @@ export default function LogGroup({ group }: LogGroupProps) {
           <LogEntry entry={group.group.value} />
         </Box>
       </Box>
+      <Box className="group-copy-btn" sx={{ position: 'absolute', top: 2, right: 2, opacity: 0 }}>
+        <CopyButton text={groupText} />
+      </Box>
       <Collapse in={open}>
         <Box
           sx={{
@@ -48,7 +64,7 @@ export default function LogGroup({ group }: LogGroupProps) {
           }}
         >
           {group.value.map((item) => (
-            <LogEntry key={item.key} entry={item.value} indent />
+            <LogEntry key={item.key} entry={item.value} indent divider />
           ))}
         </Box>
       </Collapse>

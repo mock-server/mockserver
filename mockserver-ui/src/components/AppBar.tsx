@@ -49,8 +49,8 @@ export default function AppBar({ onClearServer, onClearLogs, onClearExpectations
 
   return (
     <MuiAppBar position="static" elevation={0} sx={{ borderBottom: 1, borderColor: 'divider' }}>
-      <Toolbar variant="dense" sx={{ gap: 1 }}>
-        <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem' }}>
+      <Toolbar variant="dense" sx={{ gap: 1, minHeight: 36 }}>
+        <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '0.9rem' }}>
           MockServer
         </Typography>
         <Chip

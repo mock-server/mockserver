@@ -26,8 +26,8 @@ describe('RequestPanel', () => {
       />,
     );
 
-    const badge = document.querySelector('.MuiBadge-badge');
-    expect(badge).toHaveTextContent('2');
+    const chip = document.querySelector('.MuiChip-label');
+    expect(chip).toHaveTextContent('2');
   });
 
   it('filters by search term', async () => {
@@ -68,7 +68,7 @@ describe('RequestPanel', () => {
     );
 
     expect(screen.getByText('Proxied Requests')).toBeInTheDocument();
-    const badge = document.querySelector('.MuiBadge-badge');
-    expect(badge).toHaveTextContent('1');
+    const chip = document.querySelector('.MuiChip-label');
+    expect(chip).toHaveTextContent('1');
   });
 });

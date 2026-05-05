@@ -59,7 +59,7 @@ describe('ExpectationPanel', () => {
     });
 
     render(<ExpectationPanel />);
-    const badge = document.querySelector('.MuiBadge-badge');
-    expect(badge).toHaveTextContent('3');
+    const chip = document.querySelector('.MuiChip-label');
+    expect(chip).toHaveTextContent('3');
   });
 });

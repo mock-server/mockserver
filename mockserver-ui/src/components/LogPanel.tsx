@@ -41,7 +41,7 @@ export default function LogPanel() {
           isLogGroup(message) ? (
             <LogGroup key={message.key} group={message} />
           ) : (
-            <LogEntry key={message.key} entry={message.value} />
+            <LogEntry key={message.key} entry={message.value} divider collapsible />
           ),
         )
       )}

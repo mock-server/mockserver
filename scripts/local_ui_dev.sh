@@ -2,6 +2,10 @@
 
 set -e
 
+for cmd in lsof curl java; do
+  command -v "$cmd" >/dev/null 2>&1 || { echo "ERROR: $cmd is required but not installed"; exit 1; }
+done
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
@@ -71,9 +75,47 @@ echo ""
 check_port() {
   local port=$1
   local name=$2
-  if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1 ; then
-    echo "ERROR: Port $port is already in use (needed for $name)"
-    echo "Please free the port and try again"
+  local pids
+  pids=$(lsof -Pi :$port -sTCP:LISTEN -t 2>/dev/null || true)
+  if [ -z "$pids" ]; then
+    return 0
+  fi
+
+  echo ""
+  echo "⚠  Port $port ($name) is already in use:"
+  echo ""
+  lsof -Pi :$port -sTCP:LISTEN 2>/dev/null | head -20
+  echo ""
+
+  if [ -t 0 ]; then
+    read -r -p "Kill these processes and continue? [y/N] " answer
+    if [[ "$answer" =~ ^[Yy]$ ]]; then
+      for pid in $pids; do
+        echo "  Killing PID $pid..."
+        kill "$pid" 2>/dev/null || true
+      done
+      sleep 1
+      local remaining
+      remaining=$(lsof -Pi :$port -sTCP:LISTEN -t 2>/dev/null || true)
+      if [ -n "$remaining" ]; then
+        echo "  Processes still running, sending SIGKILL..."
+        for pid in $remaining; do
+          kill -9 "$pid" 2>/dev/null || true
+        done
+        sleep 1
+      fi
+      if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
+        echo "ERROR: Could not free port $port"
+        exit 1
+      fi
+      echo "  ✓ Port $port freed"
+    else
+      echo "Aborted."
+      exit 1
+    fi
+  else
+    echo "ERROR: Port $port is in use and stdin is not a terminal (cannot prompt)."
+    echo "Free the port manually and try again."
     exit 1
   fi
 }
@@ -114,20 +156,21 @@ else
   echo "✓ UI dependencies already installed"
 fi
 
+MOCKSERVER_LOG="$REPO_ROOT/mockserver-dev.log"
 echo "→ Starting MockServer on port $MOCKSERVER_PORT..."
-java -jar $MOCKSERVER_JAR -serverPort $MOCKSERVER_PORT -logLevel INFO > /dev/null 2>&1 &
+java -jar $MOCKSERVER_JAR -serverPort $MOCKSERVER_PORT -logLevel INFO > "$MOCKSERVER_LOG" 2>&1 &
 MOCKSERVER_PID=$!
 
 wait_for_service() {
   local url=$1
   local name=$2
-  local timeout=30
+  local timeout=60
   local elapsed=0
   
   echo "  Waiting for $name to start..."
   until curl -s "$url" > /dev/null 2>&1; do
     if [ $elapsed -ge $timeout ]; then
-      echo "ERROR: $name failed to start within ${timeout}s"
+      echo "ERROR: $name failed to start within 30s"
       return 1
     fi
     sleep 0.5
@@ -198,6 +241,7 @@ echo "✓ Development Environment Ready"
 echo "========================================"
 echo ""
 echo "MockServer:     http://localhost:$MOCKSERVER_PORT"
+echo "MockServer Log: $MOCKSERVER_LOG"
 echo "UI Dashboard:   http://localhost:$MOCKSERVER_PORT/mockserver/dashboard"
 echo "UI Dev Server:  $UI_URL"
 echo ""

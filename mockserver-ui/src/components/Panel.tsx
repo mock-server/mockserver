@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
-import Badge from '@mui/material/Badge';
+import Chip from '@mui/material/Chip';
 import InputAdornment from '@mui/material/InputAdornment';
 import SearchIcon from '@mui/icons-material/Search';
 import { useDashboardStore } from '../store';
@@ -49,18 +49,19 @@ export default function Panel({
           display: 'flex',
           alignItems: 'center',
           gap: 1,
-          px: 1.5,
-          py: 0.75,
+          px: 1,
+          py: 0.25,
           borderBottom: 1,
           borderColor: 'divider',
           flexShrink: 0,
         }}
       >
-        <Badge badgeContent={count} color="primary" max={999} showZero={false}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 600, pr: 1 }}>
-            {title}
-          </Typography>
-        </Badge>
+        <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: '0.79rem' }}>
+          {title}
+        </Typography>
+        {count > 0 && (
+          <Chip label={count > 999 ? '999+' : count} color="primary" size="small" sx={{ height: 18, fontSize: '0.65rem', '& .MuiChip-label': { px: 0.75 } }} />
+        )}
         <TextField
           id={`${title.toLowerCase().replace(/\s+/g, '-')}-search`}
           size="small"
@@ -77,7 +78,7 @@ export default function Panel({
               ),
             },
           }}
-          sx={{ ml: 'auto', maxWidth: 220 }}
+          sx={{ ml: 'auto', maxWidth: 200, '& .MuiInputBase-root': { height: 28, fontSize: '0.75rem' }, '& .MuiSvgIcon-root': { fontSize: '0.875rem' } }}
         />
       </Box>
       <Box

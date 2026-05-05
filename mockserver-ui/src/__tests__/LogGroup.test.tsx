@@ -9,6 +9,7 @@ const mockGroup: LogGroupType = {
   group: {
     key: 'group1_summary',
     value: {
+      description: { json: false, first: '10:00:00', second: 'FORWARDED_REQUEST' },
       messageParts: [{ key: 'summary_msg', value: 'request matched expectation' }],
       style: { color: 'rgb(117, 185, 186)' },
     },
@@ -50,5 +51,30 @@ describe('LogGroup', () => {
 
     expect(screen.getByText('checking headers')).toBeVisible();
     expect(screen.getByText('checking path')).toBeVisible();
+  });
+
+  it('renders group copy button', () => {
+    const { container } = render(<LogGroup group={mockGroup} />);
+    const groupCopyBtn = container.querySelector('.group-copy-btn button');
+    expect(groupCopyBtn).toBeInTheDocument();
+  });
+
+  it('renders group copy button for description-only header', () => {
+    const descOnlyGroup: LogGroupType = {
+      key: 'g2',
+      group: {
+        key: 'g2_summary',
+        value: {
+          description: { json: false, first: '10:05:00', second: 'NO_MATCH_RESPONSE' },
+        },
+      },
+      value: [
+        { key: 'c1', value: { messageParts: [{ key: 'c1_msg', value: 'no match found' }] } },
+      ],
+    };
+
+    const { container } = render(<LogGroup group={descOnlyGroup} />);
+    const groupCopyBtn = container.querySelector('.group-copy-btn button');
+    expect(groupCopyBtn).toBeInTheDocument();
   });
 });
