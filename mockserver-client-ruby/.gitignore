@@ -1,0 +1,52 @@
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+Thumbs.db
+
+# Ruby #
+########
+*.gem
+*.rbc
+Gemfile.lock
+.ruby-version
+.ruby-gemset
+.rvmrc
+/.config
+/coverage/
+/InstalledFiles
+/pkg/
+/spec/reports/
+/spec/examples.txt
+/test/tmp/
+/test/version_tmp/
+/tmp/
+## Specific to RubyMotion:
+.dat*
+.repl_history
+build/
+## Documentation cache and generated files:
+/.yardoc/
+/_yardoc/
+/doc/
+/rdoc/
+## Environment normalization:
+/.bundle/
+/vendor/bundle
+/lib/bundler/man/
+
+# JetBrains config files #
+##########################
+.idea
+*.iml
+
+# Eclipse config files #
+########################
+.project
+.classpath
+.settings
