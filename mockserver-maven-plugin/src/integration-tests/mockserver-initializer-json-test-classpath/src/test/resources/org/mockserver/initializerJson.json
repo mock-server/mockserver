@@ -1,0 +1,19 @@
+[
+  {
+    "httpRequest": {
+      "path": "/test_initializer_path",
+      "body": "test_initializer_request_body"
+    },
+    "httpResponse": {
+      "body": "test_initializer_response_body"
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/test_initializer_path_two"
+    },
+    "httpResponse": {
+      "body": "test_initializer_response_body_two"
+    }
+  }
+]
