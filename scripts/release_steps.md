@@ -9,7 +9,7 @@
 3. update repo
     4. update changelog
     5. update README
-    6. ./mvnw clean && rm -rf jekyll-www.mock-server.com/_site
+    6. cd mockserver && ./mvnw clean && cd .. && rm -rf jekyll-www.mock-server.com/_site
     8. update jekyll-www.mock-server.com/_config.yml to new mockserver versions
     9. find and replace maven / npm version references include 5.15.x, 5.15.0 and 5.15.1-SNAPSHOT (to new SNAPSHOT version)
     10. find and replace swagger version references (i.e. in website code example documentation) - 5.15.x mentioned in item above
@@ -65,7 +65,7 @@
 9. add javaDoc
     1. git checkout mockserver-5.15.0
     2. export JAVA_HOME=`/usr/libexec/java_home -v 1.8` or export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home
-    3. ./mvnw javadoc:aggregate -P release -DreportOutputDirectory='/Users/jamesbloom/git/mockserver/javadoc/5.15.0'
+    3. cd mockserver && ./mvnw javadoc:aggregate -P release -DreportOutputDirectory='/Users/jamesbloom/git/mockserver/javadoc/5.15.0'
     4. open javadoc output dir && open S3 console for main website bucket /versions/ (see ~/mockserver-aws-ids.md)
     5. upload as public to main website S3 bucket /versions/
     6. git checkout master
