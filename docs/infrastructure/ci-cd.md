@@ -16,14 +16,17 @@ Release Image"]
     end
 
     subgraph "GitHub Actions"
-        GA["CodeQL Analysis
+        GA_CODEQL["CodeQL Analysis
 Security scanning"]
+        GA_DEPS["Dependency Submission
+Dependency graph"]
     end
 
     BK -->|runs on| EC2[AWS EC2 Agents]
     BK_MAVEN -->|pushes to| DH[Docker Hub]
     BK_RELEASE -->|pushes to| DH
-    GA -->|reports to| GH[GitHub Security]
+    GA_CODEQL -->|reports to| GH_SEC[GitHub Security]
+    GA_DEPS -->|submits to| GH_DEP[GitHub Dependency Graph]
 ```
 
 ## Buildkite Pipelines
@@ -161,6 +164,8 @@ The Buildkite API token is stored in AWS Secrets Manager (`mockserver-build/buil
 
 ## GitHub Actions
 
+Two workflows run on GitHub Actions, both triggered automatically on push and pull requests.
+
 ### CodeQL Security Analysis
 
 **File:** `.github/workflows/codeql-analysis.yml`
@@ -172,7 +177,81 @@ The Buildkite API token is stored in AWS Secrets Manager (`mockserver-build/buil
 
 **Languages scanned:** Java, JavaScript
 
-**Process:** Uses GitHub's CodeQL autobuild to compile Java sources, then runs static analysis queries to detect security vulnerabilities.
+**Process:**
+
+```mermaid
+flowchart LR
+    TRIGGER[Push/PR/Schedule] --> CHECKOUT[Checkout code]
+    CHECKOUT --> SETUP_JDK[Set up JDK 11]
+    SETUP_JDK --> INIT[Initialize CodeQL]
+    INIT --> BUILD[Maven compile
+skip tests]
+    BUILD --> ANALYZE[CodeQL Analysis]
+    ANALYZE --> REPORT[Report to GitHub Security]
+```
+
+The workflow:
+1. Checks out the repository
+2. Sets up JDK 11 (Temurin distribution)
+3. Initializes CodeQL for Java and JavaScript
+4. For Java: Runs `./mvnw clean compile -DskipTests -Dmaven.javadoc.skip=true` (CodeQL autobuild)
+5. For JavaScript: Analyzes source files directly (no build required)
+6. Performs CodeQL static analysis to detect security vulnerabilities
+7. Uploads results to GitHub Security tab
+
+**Results:** Vulnerabilities appear in the repository's Security tab under "Code scanning alerts".
+
+### Maven Dependency Submission
+
+**File:** `.github/workflows/dependency-submission.yml`
+
+**Triggers:**
+- Push to `master`
+- Pull requests targeting `master`
+
+**Process:**
+
+```mermaid
+flowchart LR
+    TRIGGER[Push/PR] --> CHECKOUT[Checkout code]
+    CHECKOUT --> RETRY{Retry wrapper
+5 attempts}
+    RETRY --> DOWNLOAD[Download
+maven-dependency-submission CLI]
+    DOWNLOAD --> ANALYZE[Analyze Maven deps
+via depgraph-maven-plugin]
+    ANALYZE --> SUBMIT[Submit to
+Dependency Graph API]
+    SUBMIT -->|Success| DONE[Complete]
+    SUBMIT -->|HTTP 502| WAIT[Wait with
+exponential backoff]
+    WAIT --> RETRY
+```
+
+The workflow:
+1. Checks out the repository
+2. Downloads the official `maven-dependency-submission-action` CLI
+3. Wraps execution with retry logic (5 attempts, exponential backoff: 15s → 30s → 60s → 120s → 240s)
+4. Runs Maven with `depgraph-maven-plugin` to generate complete dependency graph (including transitive dependencies)
+5. Submits the dependency snapshot to GitHub's Dependency Graph API
+6. On HTTP 502 errors (transient API failures), retries with exponential backoff
+
+**Total retry window:** ~7 minutes
+
+**Powers:**
+- Dependency insights in the repository (Insights → Dependency graph)
+- Dependabot vulnerability alerts for transitive dependencies
+- Dependency review in pull requests (shows dependency changes and known vulnerabilities)
+
+**Why custom workflow?** GitHub's built-in "Automatic Dependency Submission" has no retry logic and frequently fails on HTTP 502 errors. This custom workflow uses the same CLI tool but wraps it with resilient retry handling.
+
+**Setup required:**
+1. Disable GitHub's automatic dependency submission to prevent conflicts:
+   - Go to `Settings → Code security → Dependency graph`
+   - Find "Automatic dependency submission"
+   - Change to **Disabled**
+
+**Note:** GitHub will still send email notifications on complete workflow failure (after all 5 retries are exhausted).
 
 ## Build Agent Infrastructure
 
