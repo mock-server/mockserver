@@ -1,0 +1,6 @@
+{
+	"projectName": "mockserver-client",
+    "packageName": "mockserver",
+    "pythonPackageName": "mockserver",
+    "packageVersion": "5.3.0"
+}
