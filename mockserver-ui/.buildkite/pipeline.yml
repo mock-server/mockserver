@@ -1,8 +1,0 @@
-steps:
-  - label: "update docker image"
-    command: "docker pull mockserver/mockserver:grunt"
-
-  - wait
-
-  - label: "build"
-    command: "docker run -v $(pwd):/build/mockserver-ui -w /build/mockserver-ui -a stdout -a stderr -e BUILDKITE_BRANCH=$BUILDKITE_BRANCH mockserver/mockserver:grunt /build/mockserver-ui/scripts/local_quick_build.sh"
