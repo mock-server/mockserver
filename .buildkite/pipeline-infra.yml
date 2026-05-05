@@ -1,0 +1,17 @@
+steps:
+  - label: ":lint-roller: opencode config"
+    command: "./scripts/validate_opencode_config.sh"
+    timeout_in_minutes: 2
+
+  - label: ":bash: validate shell scripts"
+    command: |
+      set -euo pipefail
+      errors=0
+      for script in scripts/*.sh .buildkite/scripts/*.sh; do
+        if [ -f "$script" ]; then
+          echo "Checking $script..."
+          bash -n "$script" || errors=$((errors + 1))
+        fi
+      done
+      exit $errors
+    timeout_in_minutes: 5

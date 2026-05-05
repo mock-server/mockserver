@@ -169,8 +169,8 @@ curl -sLH "Authorization: Bearer $TOKEN" \
 If the Buildkite build passed but related GitHub Actions failed (CodeQL):
 
 ```bash
-gh run list --repo mock-server/mockserver --limit 10 --json status,conclusion,name,headBranch,createdAt
-gh run view {run_id} --repo mock-server/mockserver --log-failed
+gh run list --repo mock-server/mockserver-monorepo --limit 10 --json status,conclusion,name,headBranch,createdAt
+gh run view {run_id} --repo mock-server/mockserver-monorepo --log-failed
 ```
 
 ### Step 9: Additional Investigation

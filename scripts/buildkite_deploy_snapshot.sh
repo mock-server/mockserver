@@ -4,6 +4,8 @@ set -euo pipefail
 
 echo "whoami: $(whoami)"
 
+cd mockserver
+
 echo
 java -version
 echo

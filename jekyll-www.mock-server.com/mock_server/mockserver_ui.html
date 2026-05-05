@@ -7,19 +7,23 @@ subsection: true
 sitemap:
   priority: 0.7
   changefreq: 'monthly'
-  lastmod: 2019-11-10T08:00:00+01:00
+  lastmod: 2026-05-05T12:00:00+01:00
 ---
 
-<p>MockServer has a UI that can be used to view the internal state within MockServer, including:</p>
+<p>MockServer has a real-time dashboard that displays the internal state of MockServer, including:</p>
 
 <ul>
-    <li><strong><a href="#ui_logs_section">logs</a></strong></li>
-    <li><strong><a href="#ui_active_expectations_section">active expectations</a></strong></li>
-    <li><strong><a href="#ui_requests_received_section">requests received</a></strong></li>
-    <li><strong><a href="#ui_proxied_requests_section">proxied requests</a></strong></li>
+    <li><strong><a href="#ui_logs_section">log messages</a></strong> — all events recorded by MockServer, grouped by request</li>
+    <li><strong><a href="#ui_active_expectations_section">active expectations</a></strong> — currently registered expectations with matchers and actions</li>
+    <li><strong><a href="#ui_requests_received_section">received requests</a></strong> — all HTTP requests received by MockServer</li>
+    <li><strong><a href="#ui_proxied_requests_section">proxied requests</a></strong> — forwarded requests and the responses returned from destination servers</li>
 </ul>
 
-<p>The UI is available for all <a href="/mock_server/getting_started.html#start_mockserver">versions of MockServer</a> except the deployable WAR</p>
+<p>The dashboard updates in real time via WebSocket — any changes to expectations, new requests, or log events appear automatically without refreshing the page.</p>
+
+<p>The UI is available for all <a href="/mock_server/getting_started.html#start_mockserver">versions of MockServer</a> except the deployable WAR.</p>
+
+<img class="ui_image" src="/images/MockServerDashboard.png" alt="MockServer Dashboard">
 
 <a id="launch_ui" class="anchor" href="#launch_ui">&nbsp;</a>
 
@@ -27,73 +31,172 @@ sitemap:
 
 <h3>Browser</h3>
 
-<p>The UI can be opened in any browser using the URL</p>
+<p>Open the dashboard in any browser:</p>
 <span class="ui_link"><strong>http(s)://&lt;host&gt;:&lt;port&gt;/mockserver/dashboard</strong></span>
 
-<p>For example if MockServer is running on <strong>localhost</strong> on port <strong>1080</strong> use <strong>http://localhost:1080/mockserver/dashboard</strong></p>
+<p>For example, if MockServer is running on <strong>localhost</strong> on port <strong>1080</strong>:</p>
+<p><strong>http://localhost:1080/mockserver/dashboard</strong></p>
 
 <h3>MockServerClient or ClientAndServer</h3>
 
-<p>The UI can be opened by using the <span class="keyword">openUI()</span> function on the <span class="this_value">MockServerClient</span> or <span class="this_value">ClientAndServer</span>.</p>
+<p>The UI can be opened programmatically using the <span class="keyword">openUI()</span> method:</p>
 
-<p>The UI is launched using the default browser which the JVM determines from the operating system.</p>
+<p>The <span class="keyword">openUI()</span> method pauses for 1 second after launching the browser to allow the UI to start collecting logs. This ensures logs are visible even if MockServer is shutdown quickly by a test shutdown function (After, AfterClass, AfterAll, etc.). The pause period can be configured using <span class="keyword">openUI(TimeUnit timeUnit, long pause)</span>.</p>
 
-<p>The <span class="keyword">openUI()</span> method pauses for 1 second after launching the browser to allow the UI to launch and start collecting logs, this ensures that the log are visible in the UI even if MockServer is shutdown quickly by a test shutdown function, such as After, AfterClass, AfterAll, etc. The pause period can be configured using the method <span class="keyword">openUI(TimeUnit timeUnit, long pause)</span>.</p>
+<p>To simplify debugging when multiple MockServer instances are created, if the <a href="/mock_server/debugging_issues.html#logging-levels">logLevel</a> is set to <span class="string_literal">DEBUG</span> and the <strong><a href="/mock_server/configuration_properties.html#button_configuration_launch_ui__debug">launchUIForLogLevelDebug</a></strong> configuration property is enabled (default: false), the <span class="this_value">ClientAndServer</span> constructor will automatically launch the UI.</p>
 
-<p>To simplify debugging request matching when multiple instances of MockServer are created if the <a href="/mock_server/debugging_issues.html#logging-levels">logLevel</a> is set to <span class="string_literal">DEBUG</span> and the <strong><a href="/mock_server/configuration_properties.html#button_configuration_launch_ui__debug">launchUIForLogLevelDebug</a></strong> configuration property is enabled (default: false) the <span class="this_value">ClientAndServer</span> constructor or static factor methods will launch the UI so that it is possible to see all logs events for every instance of MockServer.</p>
+<a id="ui_overview_section" class="anchor" href="#ui_overview_section">&nbsp;</a>
+
+<h2>Dashboard Overview</h2>
+
+<p>The dashboard is a four-panel layout with a title bar at the top:</p>
+
+<table class="table">
+    <thead>
+        <tr><th>Area</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><strong>Title Bar</strong></td><td>Shows connection status, keyboard shortcuts, and action buttons (auto-scroll, dark/light mode, clear/reset)</td></tr>
+        <tr><td><strong>Request Filter</strong></td><td>Collapsible filter panel — filter all panels by HTTP method, path, headers, query parameters, or cookies</td></tr>
+        <tr><td><strong>Log Messages</strong> (top-left)</td><td>All log events, grouped by request correlation ID, with color-coded types</td></tr>
+        <tr><td><strong>Active Expectations</strong> (top-right)</td><td>Currently registered expectations in priority order</td></tr>
+        <tr><td><strong>Received Requests</strong> (bottom-left)</td><td>All HTTP requests received, most recent first</td></tr>
+        <tr><td><strong>Proxied Requests</strong> (bottom-right)</td><td>Forwarded requests with their actual responses from destination servers</td></tr>
+    </tbody>
+</table>
+
+<a id="ui_features_section" class="anchor" href="#ui_features_section">&nbsp;</a>
+
+<h2>Features</h2>
+
+<h3>Collapsible Items</h3>
+
+<p>All items in every panel are collapsed by default, showing a one-line summary (e.g. method and path for requests, timestamp and type for log entries). Click any row to expand it and see the full JSON details. This keeps the dashboard compact and lets you focus on the items you care about.</p>
+
+<h3>Search</h3>
+
+<p>Each panel has its own search box that filters items by matching any part of the item's content. For example, searching for <code>POST</code> in the Received Requests panel will show only POST requests. The search covers all fields including headers, paths, and response bodies.</p>
+
+<h3>Copy to Clipboard</h3>
+
+<p>Hover over any item to reveal a copy button. Clicking it copies the full content of that item to your clipboard as text. For grouped log entries (e.g. FORWARDED_REQUEST), the copy button copies the entire group including all child entries.</p>
+
+<h3>Keyboard Shortcuts</h3>
+
+<table class="table">
+    <thead>
+        <tr><th>Shortcut</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>⌘K</code> / <code>Ctrl+K</code></td><td>Focus the Log Messages search box</td></tr>
+        <tr><td><code>⌘L</code> / <code>Ctrl+L</code></td><td>Reset the server (clear all logs, expectations, and requests)</td></tr>
+        <tr><td><code>Esc</code></td><td>Toggle the Request Filter panel</td></tr>
+    </tbody>
+</table>
+
+<h3>Dark and Light Mode</h3>
+
+<p>The dashboard defaults to dark mode. Click the sun/moon icon in the title bar to switch between dark and light themes. Your preference is saved in the browser's local storage.</p>
+
+<h3>Auto-Scroll</h3>
+
+<p>By default, panels auto-scroll to show the most recent items as they arrive. Click the pause/play button in the title bar to toggle auto-scroll.</p>
+
+<h3>Clear and Reset</h3>
+
+<p>Click the clear icon (broom) in the title bar to access three options:</p>
+
+<ul>
+    <li><strong>Clear server logs</strong> — removes all log messages while keeping expectations and request history</li>
+    <li><strong>Clear server expectations</strong> — removes all active expectations while keeping logs and request history</li>
+    <li><strong>Reset server (all)</strong> — clears everything: logs, expectations, received requests, and proxied requests</li>
+</ul>
+
+<a id="ui_request_filter_section" class="anchor" href="#ui_request_filter_section">&nbsp;</a>
+
+<h2>Request Filter</h2>
+
+<p>The Request Filter panel (toggled with <code>Esc</code> or by clicking the filter icon) lets you filter all four panels by request properties:</p>
+
+<ul>
+    <li><strong>Method</strong> — HTTP method (GET, POST, PUT, DELETE, etc.)</li>
+    <li><strong>Path</strong> — request path (supports exact match)</li>
+    <li><strong>Headers</strong> — filter by request headers (name/value pairs)</li>
+    <li><strong>Query String Parameters</strong> — filter by query parameters (name/value pairs)</li>
+    <li><strong>Cookies</strong> — filter by cookies (name/value pairs)</li>
+</ul>
+
+<p>The filter is sent to the MockServer backend via WebSocket, so filtering happens server-side and only matching data is sent to the browser.</p>
 
 <a id="ui_logs_section" class="anchor" href="#ui_logs_section">&nbsp;</a>
 
-<h2>Logs</h2>
+<h2>Log Messages</h2>
 
-<p>The logs section lists all log events recorded by MockServer, including errors, request matching, expectation creation, deletion, <strong>and forwarded requests with their responses when used as a proxy</strong>, as shown below:</p>
+<p>The Log Messages panel lists all log events recorded by MockServer. Events are displayed in reverse chronological order (most recent first) and are color-coded by type:</p>
 
-<p><strong>Proxy Mode:</strong> When MockServer forwards requests to destination servers (proxy mode), log entries with type <code>FORWARDED_REQUEST</code> include both the request sent to the destination server and the actual response received. This makes it easy to see what responses your upstream services are returning.</p>
+<table class="table">
+    <thead>
+        <tr><th>Log Type</th><th>Meaning</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>RECEIVED_REQUEST</code></td><td>An HTTP request was received by MockServer</td></tr>
+        <tr><td><code>EXPECTATION_MATCHED</code></td><td>A request matched an active expectation</td></tr>
+        <tr><td><code>EXPECTATION_NOT_MATCHED</code></td><td>A request did not match an expectation (with a "because" reason)</td></tr>
+        <tr><td><code>EXPECTATION_RESPONSE</code></td><td>A response was returned from a matched expectation</td></tr>
+        <tr><td><code>NO_MATCH_RESPONSE</code></td><td>No expectation matched — a default 404 response was returned</td></tr>
+        <tr><td><code>FORWARDED_REQUEST</code></td><td>A request was forwarded to a destination server (includes the response received)</td></tr>
+        <tr><td><code>CREATED_EXPECTATION</code></td><td>A new expectation was registered</td></tr>
+        <tr><td><code>REMOVED_EXPECTATION</code></td><td>An expectation was removed (expired or explicitly deleted)</td></tr>
+        <tr><td><code>VERIFICATION</code></td><td>A verification request was processed</td></tr>
+        <tr><td><code>VERIFICATION_FAILED</code></td><td>A verification check failed</td></tr>
+        <tr><td><code>INFO</code> / <code>WARN</code> / <code>ERROR</code></td><td>General server log messages</td></tr>
+    </tbody>
+</table>
 
-<img class="ui_image" src="/images/LogMessageUISection.png" alt="Log Message UI Section">
+<p>Related log events (e.g. request received → expectation matched → response sent) are grouped together by correlation ID and displayed with an orange left border. Click the expand button to see all related events within a group.</p>
 
-<p>To simplify the process of understand how each request is handled and which expectation have or have not been matched all logs events for a single request are grouped together.</p>
+<p>Standalone log entries (e.g. INFO messages like certificate loading) are also collapsible — click to expand and see the full message. A grey summary is shown on the header line when collapsed.</p>
 
-<p>In addition, to simplify the process or understand why a given expectation has or has not been matched a <strong>because</strong> section is shown for any <strong>EXPECTATION_NOT_MATCHED</strong> this can be expanded to show the full details of which properties did or did not match.</p>
-<p>When <a href="/mock_server/debugging_issues.html#logging-levels">logLevel</a> is set to <span class="string_literal">DEBUG</span>:</p>
-<ul>
-    <li>a detailed reason will be included (see white text in image below)</li>
-    <li><a href="/mock_server/clearing_and_resetting.html">clear</a> does not delete logs from the event log, this allows the UI to continue to display logs that would have otherwise been deleted to improve the ability to debug issues</li>
-</ul>
-
-<img class="ui_image" src="/images/LogMessageUIExpectationNotMatched.png" alt="Log Message UI Expectation Not Matched">
+<p>The <strong>because</strong> section in <code>EXPECTATION_NOT_MATCHED</code> entries can be expanded to show which properties matched and which did not, making it easy to debug why a request was not matched.</p>
 
 <a id="ui_active_expectations_section" class="anchor" href="#ui_active_expectations_section">&nbsp;</a>
 
 <h2>Active Expectations</h2>
 
-<p>The active expectations section shows all active expectations in the order they are applied, taking into account all factors such as when the expectation was created, its <strong>priority</strong>, its <strong>timeToLive</strong> and its <strong>times</strong></p>
-
-<img class="ui_image_half_width" src="/images/ActiveExpectationsUISection.png" alt="Active Expectations UI Section">
+<p>The Active Expectations panel shows all currently active expectations in the order they are applied, taking into account <strong>priority</strong>, <strong>timeToLive</strong>, and <strong>times</strong>. Each expectation is collapsed by default showing its ID, method, and path. Click to expand and see the full expectation definition including request matchers, actions, and timing constraints.</p>
 
 <a id="ui_requests_received_section" class="anchor" href="#ui_requests_received_section">&nbsp;</a>
 
 <h2>Received Requests</h2>
 
-<p>The received request section shows all request received in the order were received.</p>
-<p>The list includes request that are matched against an expectation, requests that are proxied and request that are not proxied or matched against any expectation.</p>
+<p>The Received Requests panel shows all HTTP requests received by MockServer in reverse chronological order (most recent first). Each request shows its method and path. Click to expand and see the full request details including headers, query parameters, and body.</p>
 
-<img class="ui_image_half_width" src="/images/ReceivedRequestsUISection.png" alt="Received Requests UI Section">
+<p>This includes requests that matched an expectation, requests that were proxied, and requests that received a default 404 response.</p>
 
 <a id="ui_proxied_requests_section" class="anchor" href="#ui_proxied_requests_section">&nbsp;</a>
 
 <h2>Proxied Requests</h2>
 
-<p>The proxied requests section shows requests that have been proxied and <strong>the corresponding responses returned from the destination server</strong>.</p>
+<p>The Proxied Requests panel shows requests that were forwarded to a destination server along with the actual response received. Each item shows the method and path. Click to expand and see:</p>
 
-<p>This section is particularly useful when using MockServer as a proxy to:</p>
 <ul>
-    <li>View the actual request sent to the destination server</li>
-    <li><strong>View the actual response received from the destination server</strong> (including status code, headers, and body)</li>
-    <li>Debug connectivity issues to upstream services</li>
-    <li>Inspect request/response pairs for creating expectations</li>
+    <li>The full request sent to the destination server</li>
+    <li>The actual response received from the destination server (status code, headers, and body)</li>
 </ul>
 
-<p><strong>Note:</strong> These proxied requests and responses are also visible in the <a href="#ui_logs_section">Logs</a> section with type <code>FORWARDED_REQUEST</code>, where you can see additional details about the forwarding process.</p>
+<p>This is useful when using MockServer as a proxy to debug connectivity issues, inspect request/response pairs, or create expectations based on real traffic.</p>
 
-<img class="ui_image_half_width" src="/images/ProxiedRequestUISection.png" alt="Proxied Requests UI Section">
+<a id="ui_real_time_updates" class="anchor" href="#ui_real_time_updates">&nbsp;</a>
+
+<h2>Real-Time Updates</h2>
+
+<p>The dashboard connects to MockServer via WebSocket and receives updates automatically. The connection status is shown in the title bar as a coloured chip:</p>
+
+<ul>
+    <li><strong style="color: green;">Connected</strong> — actively receiving updates</li>
+    <li><strong style="color: orange;">Connecting</strong> — attempting to establish a connection</li>
+    <li><strong style="color: red;">Error</strong> — connection failed (will auto-retry with exponential backoff)</li>
+    <li><strong>Disconnected</strong> — not connected to MockServer</li>
+</ul>
+
+<p>Updates are throttled to at most one per second to prevent UI flooding during high-traffic scenarios.</p>

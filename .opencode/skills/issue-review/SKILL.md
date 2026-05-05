@@ -36,13 +36,13 @@ Extract the issue number from the user's input (URL or number).
 
 **URL Pattern:**
 ```
-https://github.com/mock-server/mockserver/issues/{number}
+https://github.com/mock-server/mockserver-monorepo/issues/{number}
 ```
 
 Fetch the full issue with comments:
 
 ```bash
-gh issue view {number} --repo mock-server/mockserver --json number,title,body,author,createdAt,updatedAt,state,labels,comments,assignees
+gh issue view {number} --repo mock-server/mockserver-monorepo --json number,title,body,author,createdAt,updatedAt,state,labels,comments,assignees
 ```
 
 Read the issue carefully. Extract:
@@ -64,12 +64,12 @@ Before deep investigation, check if the issue is outdated:
 
 ```bash
 # Current released version
-gh release list --repo mock-server/mockserver --limit 1 --json tagName,publishedAt
+gh release list --repo mock-server/mockserver-monorepo --limit 1 --json tagName,publishedAt
 ```
 
 ```bash
 # Version from pom.xml (development version — target the project version, not parent/plugin)
-grep -m1 'SNAPSHOT' pom.xml | sed 's/.*<version>\(.*\)<\/version>.*/\1/'
+grep -m1 'SNAPSHOT' mockserver/pom.xml | sed 's/.*<version>\(.*\)<\/version>.*/\1/'
 ```
 
 If the issue was filed against a version more than 2 major versions old, check whether the affected code has been significantly rewritten. If so, the issue may no longer apply.
@@ -81,7 +81,7 @@ Search for commits and PRs that may have already addressed this issue:
 Extract the issue creation date for use in `--since` filters:
 
 ```bash
-ISSUE_DATE=$(gh issue view {number} --repo mock-server/mockserver --json createdAt --jq '.createdAt[:10]')
+ISSUE_DATE=$(gh issue view {number} --repo mock-server/mockserver-monorepo --json createdAt --jq '.createdAt[:10]')
 ```
 
 ```bash
@@ -93,7 +93,7 @@ git log --all --oneline --grep="fix.*{keyword}" --since="$ISSUE_DATE"
 
 ```bash
 # Search closed PRs
-gh pr list --repo mock-server/mockserver --state closed --search "{keywords from issue title}" --json number,title,mergedAt --limit 10
+gh pr list --repo mock-server/mockserver-monorepo --state closed --search "{keywords from issue title}" --json number,title,mergedAt --limit 10
 ```
 
 ```bash
@@ -132,7 +132,7 @@ Review the user's configuration against the documentation:
 
 ```bash
 # Check if the configuration property exists and what it does
-grep -rl "{property_name}" --include="*.java" mockserver-core/src/main/java/org/mockserver/configuration/
+grep -rl "{property_name}" --include="*.java" mockserver/mockserver-core/src/main/java/org/mockserver/configuration/
 ```
 
 ```bash
@@ -159,7 +159,7 @@ If the issue includes reproduction steps and can be verified via unit test:
 
 ```bash
 # Run a specific test
-./mvnw test -pl {module} -Dtest="{TestClass}#{testMethod}"
+cd mockserver && ./mvnw test -pl {module} -Dtest="{TestClass}#{testMethod}"
 ```
 
 ### 3c: Classify
@@ -234,7 +234,7 @@ grep -rl "{feature_keyword}" jekyll-www.mock-server.com/ --include="*.html" --in
 
 ```bash
 # Search the codebase for existing support
-grep -rl "{feature_keyword}" --include="*.java" mockserver-core/src/main/java/
+grep -rl "{feature_keyword}" --include="*.java" mockserver/mockserver-core/src/main/java/
 ```
 
 Common cases where the feature already exists:
@@ -298,7 +298,7 @@ Read the project's module overview at `docs/code/overview.md` to understand modu
 
 ```bash
 # Run tests for affected modules
-./mvnw test -pl {affected_modules}
+cd mockserver && ./mvnw test -pl {affected_modules}
 ```
 
 If tests fail, fix the code and re-run until all tests pass.
@@ -309,7 +309,7 @@ Verify the fix doesn't break other behaviour:
 
 ```bash
 # Run the full test suite for the affected module
-./mvnw test -pl {module}
+cd mockserver && ./mvnw test -pl {module}
 ```
 
 After all tests pass, proceed to Step 7.
@@ -355,7 +355,7 @@ If the review returns **BLOCK**, fix the issues, re-run validations, and re-run 
 If the adversarial review caused code changes, re-run all affected tests:
 
 ```bash
-./mvnw test -pl {affected_modules}
+cd mockserver && ./mvnw test -pl {affected_modules}
 ```
 
 ### 7f: Commit
@@ -385,7 +385,7 @@ Close the issue with a clear, helpful message that explains the resolution.
 ### For ALREADY_FIXED issues:
 
 ```bash
-gh issue close {number} --repo mock-server/mockserver --comment "$(cat <<'EOF'
+gh issue close {number} --repo mock-server/mockserver-monorepo --comment "$(cat <<'EOF'
 This issue has been resolved. The fix was included in commit {sha} ({brief description}).
 
 If you are still experiencing this issue, please ensure you are using MockServer version {version} or later. If the problem persists on the latest version, please open a new issue with updated reproduction steps.
@@ -396,7 +396,7 @@ EOF
 ### For BUG fixes:
 
 ```bash
-gh issue close {number} --repo mock-server/mockserver --comment "$(cat <<'EOF'
+gh issue close {number} --repo mock-server/mockserver-monorepo --comment "$(cat <<'EOF'
 Fixed in commit {sha}.
 
 **Root cause:** {one-line explanation of what was wrong}
@@ -410,7 +410,7 @@ EOF
 ### For USER_ERROR with improvements:
 
 ```bash
-gh issue close {number} --repo mock-server/mockserver --comment "$(cat <<'EOF'
+gh issue close {number} --repo mock-server/mockserver-monorepo --comment "$(cat <<'EOF'
 Thank you for reporting this. After investigation, this turned out to be a configuration issue rather than a bug — {brief explanation of the correct usage}.
 
 However, your report highlighted that {the error message / documentation} could be clearer. We've made the following improvements in commit {sha}:
@@ -426,7 +426,7 @@ EOF
 ### For USER_ERROR without improvements needed:
 
 ```bash
-gh issue close {number} --repo mock-server/mockserver --comment "$(cat <<'EOF'
+gh issue close {number} --repo mock-server/mockserver-monorepo --comment "$(cat <<'EOF'
 Thank you for reporting this. After investigation, this appears to be a {configuration/usage} issue rather than a bug.
 
 **What's happening:** {explanation of the observed behaviour}
@@ -442,7 +442,7 @@ EOF
 ### For FEATURE_REQUEST — already exists:
 
 ```bash
-gh issue close {number} --repo mock-server/mockserver --comment "$(cat <<'EOF'
+gh issue close {number} --repo mock-server/mockserver-monorepo --comment "$(cat <<'EOF'
 Thank you for the feature request. MockServer already supports this — {brief explanation of how to achieve it}.
 
 {Example configuration or API call showing the existing approach}
@@ -457,7 +457,7 @@ EOF
 ### For FEATURE_REQUEST — declined:
 
 ```bash
-gh issue close {number} --repo mock-server/mockserver --comment "$(cat <<'EOF'
+gh issue close {number} --repo mock-server/mockserver-monorepo --comment "$(cat <<'EOF'
 Thank you for the feature request. After careful evaluation, we've decided not to add this feature.
 
 **Reason:** {explanation — e.g., "This would add a second way to achieve {X}, which is already possible via {existing approach}. Adding another mechanism would increase the API surface area without new capability, making MockServer harder to learn and maintain."}
@@ -474,7 +474,7 @@ EOF
 ### For FEATURE_REQUEST — needs design:
 
 ```bash
-gh issue close {number} --repo mock-server/mockserver --comment "$(cat <<'EOF'
+gh issue close {number} --repo mock-server/mockserver-monorepo --comment "$(cat <<'EOF'
 Thank you for the feature request. This is an interesting idea that would benefit from further design discussion before implementation.
 
 **What we found:** {summary of investigation — what exists today, what the gap is}

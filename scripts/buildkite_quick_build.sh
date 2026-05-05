@@ -11,6 +11,8 @@ log_debug "User: $(whoami)"
 log_debug "Memory: $(free -h 2>/dev/null | grep Mem || echo 'free command not available')"
 log_debug "Disk: $(df -h /build/mockserver 2>/dev/null | tail -1 || echo 'df command not available')"
 
+cd mockserver
+
 echo
 java -version
 echo

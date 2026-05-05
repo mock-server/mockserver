@@ -26,4 +26,4 @@ jobs:
       - name: Submit Maven dependencies
         uses: advanced-security/maven-dependency-submission-action@v4
         with:
-          directory: ${{ github.workspace }}
+          directory: ${{ github.workspace }}/mockserver

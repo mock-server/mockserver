@@ -4,7 +4,8 @@ set -e
 
 export MAVEN_OPTS="$MAVEN_OPTS -Xmx2048m"
 export JAVA_OPTS="$JAVA_OPTS -Xmx2048m"
-current_directory=${PWD}
+
+cd mockserver
 
 function printModule {
     echo
@@ -16,13 +17,18 @@ function printModule {
 
 function runSubModule {
     printModule "$1"
-    cd $1
-    ./mvnw install -Dmaven-invoker-parallel-threads=2 -Djava.security.egd=file:/dev/./urandom
-    cd $current_directory
+    ./mvnw install -pl "$1" -Dmaven-invoker-parallel-threads=2 -Djava.security.egd=file:/dev/./urandom
 }
 
-MODULE_LIST="mockserver-core mockserver-client-java mockserver-integration-testing mockserver-netty mockserver-war mockserver-proxy-war mockserver-maven-plugin mockserver-maven-plugin-integration-tests mockserver-examples"
+MODULE_LIST="mockserver-testing mockserver-core mockserver-client-java mockserver-integration-testing mockserver-netty mockserver-war mockserver-proxy-war mockserver-junit-rule mockserver-junit-jupiter mockserver-spring-test-listener mockserver-examples"
 
 for module in $MODULE_LIST; do
-    (runSubModule $module);
+    (runSubModule "$module");
 done
+
+cd ..
+
+if [[ -d mockserver-maven-plugin ]]; then
+    printModule "mockserver-maven-plugin"
+    (cd mockserver-maven-plugin && ./mvnw install -Dmaven-invoker-parallel-threads=2 -Djava.security.egd=file:/dev/./urandom)
+fi

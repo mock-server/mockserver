@@ -1,12 +1,12 @@
 locals {
-  repository = "https://github.com/mock-server/mockserver.git"
+  repository = "https://github.com/mock-server/mockserver-monorepo.git"
 
   pipelines = {
     "pipeline" = {
       name        = "MockServer"
-      description = "CI build and test"
+      description = "Monorepo CI — path-based pipeline orchestrator"
       file        = ".buildkite/pipeline.yml"
-      emoji       = ":maven:"
+      emoji       = ":pipeline:"
       trigger     = "code"
     }
     "docker-push-maven" = {

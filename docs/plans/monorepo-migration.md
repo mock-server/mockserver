@@ -520,6 +520,7 @@ Confirm Buildkite pipelines trigger correctly for at least:
 
 ## Remaining Open Questions
 
-1. Regenerate stale Python/Ruby clients during migration or follow-up?
-2. Modernize UI during migration or as separate project?
+1. ~~Regenerate stale Python/Ruby clients during migration or follow-up?~~ **Resolved**: Python client replaced with hand-written idiomatic library (v6.0.0, dataclasses, WebSocket callbacks, 434 tests). Ruby client TBD.
+2. ~~Modernize UI during migration or as separate project?~~ **Resolved**: UI modernized during migration (Phase 4).
 3. Introduce Nx/Turborepo now or after baseline monorepo is stable?
+4. Review `KeyToMultiValue.to_dict()` serialization consistency — currently always emits `name`/`values` (server-required) while other models use `_strip_none()`. Investigate whether a unified pattern (e.g., separate required vs optional field handling) can make this consistent across all models.

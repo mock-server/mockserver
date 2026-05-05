@@ -1,0 +1,41 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+
+# Ruby
+*.gem
+*.rbc
+Gemfile.lock
+.ruby-version
+.ruby-gemset
+.rvmrc
+/.config/
+/coverage/
+/InstalledFiles
+/pkg/
+/spec/reports/
+/spec/examples.txt
+/tmp/
+.dat*
+.repl_history
+build/
+/.yardoc/
+/_yardoc/
+/doc/
+/rdoc/
+/.bundle/
+/vendor/bundle
+/lib/bundler/man/
+
+# JetBrains
+.idea/
+*.iml
+
+# Eclipse
+.project
+.classpath
+.settings/

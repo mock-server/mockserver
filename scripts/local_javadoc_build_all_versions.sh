@@ -15,7 +15,7 @@ for ITEM in $COMMIT_LIST; do
 	VERSION=$(echo $ITEM | cut -d'-' -f 1)
     COMMIT=$(echo $ITEM | cut -d'-' -f 2)
     runCommand "git checkout $COMMIT"
-	runCommand "./mvnw javadoc:aggregate -DreportOutputDirectory='/Users/jamesbloom/git/mockserver/javadoc/$VERSION'"
+	runCommand "(cd mockserver && ./mvnw javadoc:aggregate -DreportOutputDirectory='/Users/jamesbloom/git/mockserver/javadoc/$VERSION')"
 done
 
 runCommand "git checkout master"

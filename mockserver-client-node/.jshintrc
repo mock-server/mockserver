@@ -1,0 +1,26 @@
+{
+  "curly": true,
+  "eqeqeq": true,
+  "immed": true,
+  "latedef": true,
+  "newcap": true,
+  "noarg": true,
+  "sub": true,
+  "undef": true,
+  "boss": true,
+  "eqnull": true,
+  "node": true,
+  "globals": {
+    "window": true,
+    "WebSocket": true,
+    "XMLHttpRequest": true,
+    "HttpRequest": true,
+    "jasmine": true,
+    "expect": true,
+    "describe": true,
+    "beforeEach": true,
+    "afterEach": true,
+    "it": true,
+    "navigator": true
+  }
+}

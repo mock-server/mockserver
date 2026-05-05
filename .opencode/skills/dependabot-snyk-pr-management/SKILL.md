@@ -157,7 +157,7 @@ Snyk PRs **cannot** be safely rebased via git commands because:
 Dependabot is configured in `.github/dependabot.yml`. **Always check that file for the complete, authoritative configuration.**
 
 **Key ecosystems:**
-- **Maven** (`/`) - Java dependencies, weekly schedule Monday, 10 PR limit
+- **Maven** (`/mockserver`) - Java dependencies, weekly schedule Monday, 10 PR limit
 - **npm** (`/.opencode`) - OpenCode config dependencies, weekly schedule Monday, 5 PR limit  
 - **GitHub Actions** (`/`) - Workflow dependencies, weekly schedule Monday, 5 PR limit
 
@@ -348,7 +348,7 @@ If recreate also fails, close the PR and wait for Dependabot to create a new one
 4. Run tests locally to debug:
    ```bash
    gh pr checkout <PR_NUMBER>
-   ./mvnw clean test
+    cd mockserver && ./mvnw clean test
    ```
 5. Either:
    - Fix the code to work with the new version, OR

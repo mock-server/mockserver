@@ -1,0 +1,4 @@
+steps:
+  - label: ":white_check_mark: no project changes detected"
+    command: "echo 'No project-specific files changed — skipping build'"
+    timeout_in_minutes: 1

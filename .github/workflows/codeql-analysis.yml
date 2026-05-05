@@ -24,7 +24,7 @@ jobs:
       matrix:
         # Override automatic language detection by changing the below list
         # Supported options are ['csharp', 'cpp', 'go', 'java', 'javascript', 'python']
-        language: ['java', 'javascript']
+        language: ['java', 'javascript', 'python', 'ruby']
         # Learn more...
         # https://docs.github.com/en/github/finding-security-vulnerabilities-and-errors-in-your-code/configuring-code-scanning#overriding-automatic-language-detection
 
@@ -51,6 +51,7 @@ jobs:
 
     - name: Build with Maven
       if: matrix.language == 'java'
+      working-directory: mockserver
       run: ./mvnw -B clean compile -DskipTests -Dmaven.javadoc.skip=true
       env:
         MAVEN_OPTS: -Xmx2048m

@@ -1,0 +1,55 @@
+[
+  {
+    "httpRequest": {
+      "path": "/not_simple"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "body": "some not simple response"
+    },
+    "times": {
+      "unlimited": true
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/simple"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "body": "some simple POST response"
+    },
+    "times": {
+      "unlimited": true
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/forward"
+    },
+    "httpOverrideForwardedRequest": {
+      "httpRequest": {
+        "headers": {
+          "host": [ "127.0.0.1:1080" ]
+        },
+        "path": "/simple"
+      }
+    },
+    "times": {
+      "unlimited": true
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/simple"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "body": "some simple response"
+    },
+    "times": {
+      "unlimited": true
+    }
+  }
+]

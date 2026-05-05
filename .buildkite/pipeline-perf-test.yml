@@ -1,0 +1,8 @@
+steps:
+  - label: ":chart_with_upwards_trend: perf test lint"
+    commands:
+      - "cd mockserver-performance-test"
+      - "python3 -m py_compile locustfile.py"
+      - "bash -n scripts/runLocust.sh"
+      - "bash -n runAll.sh"
+    timeout_in_minutes: 5

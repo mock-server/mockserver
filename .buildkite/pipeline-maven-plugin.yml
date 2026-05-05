@@ -1,0 +1,20 @@
+steps:
+  - label: ":docker: update docker image"
+    command: "docker pull mockserver/mockserver:maven"
+
+  - wait
+
+  - label: ":maven: maven-plugin build"
+    command: "docker run --memory=8g --memory-swap=8g -v $(pwd):/build/mockserver -w /build/mockserver -a stdout -a stderr mockserver/mockserver:maven bash -c 'cd mockserver && ./mvnw clean install -DskipTests && ./mvnw -f ../mockserver-maven-plugin/pom.xml clean verify'"
+    artifact_paths:
+      - "mockserver-maven-plugin/target/surefire-reports/TEST-*.xml"
+    timeout_in_minutes: 45
+
+  - wait: ~
+    continue_on_failure: true
+
+  - label: ":junit: annotate test results"
+    plugins:
+      - junit-annotate#v2.4.1:
+          artifacts: "mockserver-maven-plugin/target/surefire-reports/TEST-*.xml"
+          always-annotate: true

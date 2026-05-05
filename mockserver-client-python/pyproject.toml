@@ -1,0 +1,35 @@
+[project]
+name = "mockserver-client"
+version = "6.0.0"
+description = "Python client for MockServer with WebSocket callback support"
+authors = [
+  {name = "James Bloom", email = "jamesdbloom@gmail.com"},
+]
+license = { text = "Apache 2.0" }
+readme = "README.md"
+keywords = ["MockServer", "HTTP Mock", "Proxy", "Testing", "API", "WebSocket", "Callback"]
+requires-python = ">=3.9"
+
+dependencies = [
+  "websockets >= 12.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest >= 7.0",
+  "pytest-asyncio >= 0.21",
+  "pytest-cov >= 4.0",
+]
+
+[project.urls]
+Homepage = "https://www.mock-server.com"
+Repository = "https://github.com/mock-server/mockserver-monorepo"
+Documentation = "https://www.mock-server.com/mock_server/getting_started.html"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
