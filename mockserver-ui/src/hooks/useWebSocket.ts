@@ -11,10 +11,27 @@ export function useWebSocket(params: ConnectionParams) {
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectCountRef = useRef(0);
   const lastFilterRef = useRef<RequestFilter>({});
+  const connectRef = useRef<(filter: RequestFilter) => void>(() => {});
 
   const applyMessage = useDashboardStore((s) => s.applyMessage);
   const setConnectionStatus = useDashboardStore((s) => s.setConnectionStatus);
   const setError = useDashboardStore((s) => s.setError);
+
+  const scheduleReconnect = useCallback(
+    (filter: RequestFilter) => {
+      if (reconnectCountRef.current >= MAX_RECONNECT_ATTEMPTS) {
+        setError('Max reconnection attempts reached. Refresh the page to retry.');
+        return;
+      }
+      reconnectCountRef.current += 1;
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+      const delay = RECONNECT_DELAY_MS * Math.min(reconnectCountRef.current, 5);
+      reconnectTimerRef.current = setTimeout(() => {
+        connectRef.current(filter);
+      }, delay);
+    },
+    [setError],
+  );
 
   const connect = useCallback(
     (filter: RequestFilter) => {
@@ -63,24 +80,12 @@ export function useWebSocket(params: ConnectionParams) {
         setConnectionStatus('error');
       };
     },
-    [params, applyMessage, setConnectionStatus, setError],
+    [params, applyMessage, setConnectionStatus, setError, scheduleReconnect],
   );
 
-  const scheduleReconnect = useCallback(
-    (filter: RequestFilter) => {
-      if (reconnectCountRef.current >= MAX_RECONNECT_ATTEMPTS) {
-        setError('Max reconnection attempts reached. Refresh the page to retry.');
-        return;
-      }
-      reconnectCountRef.current += 1;
-      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
-      const delay = RECONNECT_DELAY_MS * Math.min(reconnectCountRef.current, 5);
-      reconnectTimerRef.current = setTimeout(() => {
-        connect(filter);
-      }, delay);
-    },
-    [connect, setError],
-  );
+  useEffect(() => {
+    connectRef.current = connect;
+  }, [connect]);
 
   const sendFilter = useCallback(
     (filter: RequestFilter) => {

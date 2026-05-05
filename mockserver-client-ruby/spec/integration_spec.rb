@@ -7,6 +7,10 @@ require 'socket'
 require 'timeout'
 
 RSpec.describe 'Integration', :integration do
+  def self.running_in_docker?
+    File.exist?('/.dockerenv') || File.exist?('/run/.containerenv')
+  end
+
   def self.find_free_port
     server = TCPServer.new('127.0.0.1', 0)
     port = server.addr[1]
@@ -14,16 +18,35 @@ RSpec.describe 'Integration', :integration do
     port
   end
 
-  def self.start_mockserver_container(port)
-    container_name = "mockserver-ruby-integration-#{port}"
-    output = `docker run -d --name #{container_name} -p #{port}:1080 mockserver/mockserver:latest 2>&1`
-    raise "Failed to start container: #{output}" unless $?.success?
+  def self.start_mockserver_container
+    container_name = 'mockserver-ruby-integration'
+    in_docker = running_in_docker?
 
-    container_id = output.strip
+    if in_docker
+      @mockserver_host = container_name
+      @mockserver_port = 1080
+      output = `docker run -d --name #{container_name} mockserver/mockserver:latest 2>&1`
+      raise "Failed to start container: #{output}" unless $?.success?
+
+      container_id = output.strip
+
+      my_id = Socket.gethostname
+      network_id = `docker inspect #{my_id} --format '{{range .NetworkSettings.Networks}}{{.NetworkID}}{{end}}'`.strip
+      unless network_id.empty?
+        `docker network connect #{network_id} #{container_name} 2>&1`
+      end
+    else
+      @mockserver_port = find_free_port
+      @mockserver_host = 'localhost'
+      output = `docker run -d --name #{container_name} -p #{@mockserver_port}:1080 mockserver/mockserver:latest 2>&1`
+      raise "Failed to start container: #{output}" unless $?.success?
+
+      container_id = output.strip
+    end
 
     deadline = Time.now + 30
     loop do
-      uri = URI("http://localhost:#{port}/mockserver/status")
+      uri = URI("http://#{@mockserver_host}:#{@mockserver_port}/mockserver/status")
       req = Net::HTTP::Put.new(uri)
       resp = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
       break if resp.code == '200'
@@ -41,7 +64,14 @@ RSpec.describe 'Integration', :integration do
     system("docker rm -f #{container_id} >/dev/null 2>&1")
   end
 
-  MOCKSERVER_PORT = find_free_port
+  def self.mockserver_host
+    @mockserver_host
+  end
+
+  def self.mockserver_port
+    @mockserver_port
+  end
+
   @container_id = nil
 
   class << self
@@ -50,15 +80,16 @@ RSpec.describe 'Integration', :integration do
 
   before(:context) do
     skip 'Docker not available' unless system('docker', 'info', out: File::NULL, err: File::NULL)
-    self.class.container_id = self.class.start_mockserver_container(MOCKSERVER_PORT)
+    self.class.container_id = self.class.start_mockserver_container
   end
 
   after(:context) do
     self.class.stop_mockserver_container(self.class.container_id) if self.class.container_id
   end
 
-  let(:port) { MOCKSERVER_PORT }
-  let(:client) { MockServer::Client.new('localhost', port) }
+  let(:host) { self.class.mockserver_host }
+  let(:port) { self.class.mockserver_port }
+  let(:client) { MockServer::Client.new(host, port) }
 
   before do
     client.reset
@@ -68,8 +99,8 @@ RSpec.describe 'Integration', :integration do
     client.close
   end
 
-  def make_request(port, method, path, body: nil, headers: {})
-    uri = URI("http://localhost:#{port}#{path}")
+  def make_request(host, port, method, path, body: nil, headers: {})
+    uri = URI("http://#{host}:#{port}#{path}")
     klass = case method.upcase
             when 'GET'    then Net::HTTP::Get
             when 'POST'   then Net::HTTP::Post
@@ -89,7 +120,7 @@ RSpec.describe 'Integration', :integration do
     end
 
     it 'works with block form' do
-      MockServer::Client.new('localhost', port) do |c|
+      MockServer::Client.new(host, port) do |c|
         expect(c.has_started?).to be true
       end
     end
@@ -138,7 +169,7 @@ RSpec.describe 'Integration', :integration do
         MockServer::HttpResponse.response(body: 'world', status_code: 200)
       )
 
-      resp = make_request(port, 'GET', '/api/hello')
+      resp = make_request(host, port, 'GET', '/api/hello')
       expect(resp.code).to eq('200')
       expect(resp.body).to eq('world')
     end
@@ -154,7 +185,7 @@ RSpec.describe 'Integration', :integration do
         MockServer::HttpResponse.response(body: '{"result":"created"}', status_code: 201)
       )
 
-      resp = make_request(port, 'POST', '/api/data',
+      resp = make_request(host, port, 'POST', '/api/data',
                           body: '{"key":"value"}',
                           headers: { 'Content-Type' => 'application/json' })
       expect(resp.code).to eq('201')
@@ -162,7 +193,7 @@ RSpec.describe 'Integration', :integration do
     end
 
     it 'returns 404 for unmatched requests' do
-      resp = make_request(port, 'GET', '/no-such-path')
+      resp = make_request(host, port, 'GET', '/no-such-path')
       expect(resp.code).to eq('404')
     end
 
@@ -173,7 +204,7 @@ RSpec.describe 'Integration', :integration do
         MockServer::HttpResponse.response(status_code: 204)
       )
 
-      resp = make_request(port, 'DELETE', '/api/resource')
+      resp = make_request(host, port, 'DELETE', '/api/resource')
       expect(resp.code).to eq('204')
     end
 
@@ -188,7 +219,7 @@ RSpec.describe 'Integration', :integration do
         )
       )
 
-      resp = make_request(port, 'GET', '/with-headers')
+      resp = make_request(host, port, 'GET', '/with-headers')
       expect(resp['X-Custom']).to eq('test-value')
     end
 
@@ -200,11 +231,11 @@ RSpec.describe 'Integration', :integration do
         MockServer::HttpResponse.response(body: 'first', status_code: 200)
       )
 
-      resp1 = make_request(port, 'GET', '/once-only')
+      resp1 = make_request(host, port, 'GET', '/once-only')
       expect(resp1.code).to eq('200')
       expect(resp1.body).to eq('first')
 
-      resp2 = make_request(port, 'GET', '/once-only')
+      resp2 = make_request(host, port, 'GET', '/once-only')
       expect(resp2.code).to eq('404')
     end
   end
@@ -217,7 +248,7 @@ RSpec.describe 'Integration', :integration do
         MockServer::HttpResponse.response(status_code: 200)
       )
 
-      make_request(port, 'GET', '/verify-me')
+      make_request(host, port, 'GET', '/verify-me')
 
       expect {
         client.verify(
@@ -247,7 +278,7 @@ RSpec.describe 'Integration', :integration do
         MockServer::HttpResponse.response(status_code: 200)
       )
 
-      3.times { make_request(port, 'GET', '/multi') }
+      3.times { make_request(host, port, 'GET', '/multi') }
 
       expect {
         client.verify(
@@ -264,8 +295,8 @@ RSpec.describe 'Integration', :integration do
         MockServer::HttpResponse.response(status_code: 200)
       )
 
-      make_request(port, 'GET', '/seq')
-      make_request(port, 'POST', '/seq')
+      make_request(host, port, 'GET', '/seq')
+      make_request(host, port, 'POST', '/seq')
 
       expect {
         client.verify_sequence(
@@ -278,7 +309,7 @@ RSpec.describe 'Integration', :integration do
 
   describe 'retrieval' do
     it 'retrieves recorded requests' do
-      make_request(port, 'GET', '/record-me')
+      make_request(host, port, 'GET', '/record-me')
 
       requests = client.retrieve_recorded_requests(request: MockServer::HttpRequest.request(path: '/record-me'))
       expect(requests.length).to be >= 1
@@ -287,7 +318,7 @@ RSpec.describe 'Integration', :integration do
     end
 
     it 'retrieves log messages' do
-      make_request(port, 'GET', '/log-test')
+      make_request(host, port, 'GET', '/log-test')
 
       logs = client.retrieve_log_messages
       expect(logs.length).to be > 0
@@ -300,7 +331,7 @@ RSpec.describe 'Integration', :integration do
         MockServer::HttpResponse.response(body: 'matched', status_code: 200)
       )
 
-      make_request(port, 'GET', '/req-resp')
+      make_request(host, port, 'GET', '/req-resp')
 
       pairs = client.retrieve_recorded_requests_and_responses(
         request: MockServer::HttpRequest.request(path: '/req-resp')
@@ -319,7 +350,7 @@ RSpec.describe 'Integration', :integration do
         MockServer::HttpResponse.response(body: 'fluent', status_code: 200)
       )
 
-      resp = make_request(port, 'GET', '/fluent-id')
+      resp = make_request(host, port, 'GET', '/fluent-id')
       expect(resp.code).to eq('200')
       expect(resp.body).to eq('fluent')
     end
@@ -337,7 +368,7 @@ RSpec.describe 'Integration', :integration do
         MockServer::HttpResponse.response(body: 'low-priority', status_code: 200)
       )
 
-      resp = make_request(port, 'GET', '/priority-test')
+      resp = make_request(host, port, 'GET', '/priority-test')
       expect(resp.code).to eq('200')
       expect(resp.body).to eq('high-priority')
     end
