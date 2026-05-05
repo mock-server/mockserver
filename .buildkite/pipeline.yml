@@ -1,0 +1,13 @@
+steps:
+  - label: "update MockServer docker image"
+    command: "docker pull mockserver/mockserver:mockserver-snapshot"
+
+  - wait
+
+  - label: "update performance docker image"
+    command: "docker pull mockserver/mockserver:performance"
+
+  - wait
+
+  - label: "performance test"
+    command: "./scripts/runAll.sh"
