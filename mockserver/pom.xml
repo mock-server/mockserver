@@ -23,9 +23,9 @@
     </licenses>
 
     <scm>
-        <url>https://github.com/jamesdbloom/mockservice.git</url>
-        <connection>scm:git:https://github.com/jamesdbloom/mockservice.git</connection>
-        <developerConnection>scm:git:git@github.com:jamesdbloom/mockservice.git</developerConnection>
+        <url>https://github.com/mock-server/mockserver.git</url>
+        <connection>scm:git:https://github.com/mock-server/mockserver.git</connection>
+        <developerConnection>scm:git:git@github.com:mock-server/mockserver.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
@@ -754,7 +754,7 @@
                                     <goal>exec</goal>
                                 </goals>
                                 <configuration>
-                                    <executable>scripts/stop_MockServer.sh</executable>
+                                    <executable>../scripts/stop_MockServer.sh</executable>
                                 </configuration>
                             </execution>
                         </executions>

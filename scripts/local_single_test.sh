@@ -8,8 +8,8 @@ export JAVA_HOME=`/usr/libexec/java_home -v 12`
 echo
 java -version
 echo
-./mvnw -version
+mockserver/mvnw -version
 echo
 
 # to run from specific test use argument in quotes "ExpectationFileWatcherIntegrationTest" or "ExpectationFileWatcherIntegrationTest#shouldDetectModifiedInitialiserJsonOnAdd"
-./mvnw -T 1C -Dtest="none" -Dit.test="$1" clean install -DskipAssembly=true -DfailIfNoTests=false
+mockserver/mvnw -T 1C -Dtest="none" -Dit.test="$1" clean install -DskipAssembly=true -DfailIfNoTests=false

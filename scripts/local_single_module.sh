@@ -8,8 +8,8 @@ export JAVA_HOME=`/usr/libexec/java_home -v 12`
 echo
 java -version
 echo
-./mvnw -version
+mockserver/mvnw -version
 echo
 
 # to run from specific module use argument in quotes "mockserver-netty"
-./mvnw -T 1C clean install -DskipAssembly=true -pl="$1"
+mockserver/mvnw -T 1C clean install -DskipAssembly=true -pl="$1"

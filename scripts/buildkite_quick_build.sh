@@ -14,7 +14,7 @@ log_debug "Disk: $(df -h /build/mockserver 2>/dev/null | tail -1 || echo 'df com
 echo
 java -version
 echo
-./mvnw -version
+mockserver/mvnw -version
 echo
 export MAVEN_OPTS="${MAVEN_OPTS:-} -Xms4096m -Xmx12288m"
 export JAVA_OPTS="${JAVA_OPTS:-} -Xms4096m -Xmx12288m"
@@ -27,7 +27,7 @@ fi
 
 log_debug "Starting Maven build (foreground)..."
 set +e
-./mvnw -T 1C clean install ${1:-} -Djava.security.egd=file:/dev/./urandom -Dmockserver.testOutput=quiet -DdisableXmlReport=false -DredirectTestOutputToFile=true -Dmockserver.testLogLevel=INFO
+mockserver/mvnw -T 1C clean install ${1:-} -Djava.security.egd=file:/dev/./urandom -Dmockserver.testOutput=quiet -DdisableXmlReport=false -DredirectTestOutputToFile=true -Dmockserver.testLogLevel=INFO
 MVN_EXIT=$?
 log_debug "Maven exited with code=$MVN_EXIT"
 set -e

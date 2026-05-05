@@ -8,10 +8,10 @@ export JAVA_HOME=`/usr/libexec/java_home -v 17`
 echo
 java -version
 echo
-./mvnw -version
+mockserver/mvnw -version
 echo
 
 # to run from specific module use argument in quotes "-rf mockserver-war"
-./mvnw -T 3C clean install ${1:-} -Djava.security.egd=file:/dev/urandom
+mockserver/mvnw -T 3C clean install ${1:-} -Djava.security.egd=file:/dev/urandom
 
 SKIP_JAVA_BUILD=true container_integration_tests/integration_tests.sh
