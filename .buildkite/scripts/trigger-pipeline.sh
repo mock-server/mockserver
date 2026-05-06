@@ -16,6 +16,9 @@ API_BASE="https://api.buildkite.com/v2/organizations/${ORG}/pipelines/${PIPELINE
 POLL_INTERVAL=10
 TIMEOUT=3600
 
+RESPONSE_FILE=$(mktemp /tmp/bk-response-XXXXXX.json)
+trap 'rm -f "$RESPONSE_FILE"' EXIT
+
 echo "--- :aws: Fetching Buildkite API token from Secrets Manager"
 BUILDKITE_API_TOKEN=$(aws secretsmanager get-secret-value \
   --secret-id "$SECRET_ID" --region "$REGION" --query SecretString --output text)
@@ -26,8 +29,13 @@ if [ -z "$BUILDKITE_API_TOKEN" ]; then
   exit 1
 fi
 
-ENV_VARS="{}"
+IS_PR="false"
 if [ -n "${BUILDKITE_PULL_REQUEST:-}" ] && [ "$BUILDKITE_PULL_REQUEST" != "false" ]; then
+  IS_PR="true"
+fi
+
+ENV_VARS="{}"
+if [ "$IS_PR" = "true" ]; then
   ENV_VARS=$(jq -n \
     --arg pr "$BUILDKITE_PULL_REQUEST" \
     --arg base "${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-master}" \
@@ -35,18 +43,61 @@ if [ -n "${BUILDKITE_PULL_REQUEST:-}" ] && [ "$BUILDKITE_PULL_REQUEST" != "false
     '{BUILDKITE_PULL_REQUEST: $pr, BUILDKITE_PULL_REQUEST_BASE_BRANCH: $base, BUILDKITE_PULL_REQUEST_REPO: $repo}')
 fi
 
-PAYLOAD=$(jq -n \
-  --arg commit "$BUILDKITE_COMMIT" \
-  --arg branch "$BUILDKITE_BRANCH" \
-  --arg message "${BUILDKITE_MESSAGE:-}" \
-  --argjson env "$ENV_VARS" \
-  '{commit: $commit, branch: $branch, message: $message, env: $env}')
+JQ_ARGS=(
+  --arg commit "$BUILDKITE_COMMIT"
+  --arg branch "$BUILDKITE_BRANCH"
+  --arg message "${BUILDKITE_MESSAGE:-}"
+  --argjson env "$ENV_VARS"
+)
+
+if [ "$IS_PR" = "true" ]; then
+  JQ_ARGS+=(
+    --argjson pr_id "$BUILDKITE_PULL_REQUEST"
+    --arg pr_base "${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-master}"
+    --arg pr_repo "${BUILDKITE_PULL_REQUEST_REPO:-}"
+  )
+  PAYLOAD=$(jq -n "${JQ_ARGS[@]}" '{
+    commit: $commit,
+    branch: $branch,
+    message: $message,
+    env: $env,
+    ignore_pipeline_branch_filters: true,
+    pull_request_id: $pr_id,
+    pull_request_base_branch: $pr_base,
+    pull_request_repository: (if $pr_repo == "" then null else $pr_repo end)
+  } | with_entries(select(.value != null))')
+else
+  PAYLOAD=$(jq -n "${JQ_ARGS[@]}" '{
+    commit: $commit,
+    branch: $branch,
+    message: $message,
+    env: $env,
+    ignore_pipeline_branch_filters: true
+  }')
+fi
 
 echo "--- :buildkite: Creating build on ${LABEL} (${PIPELINE_SLUG})"
-RESPONSE=$(curl -sSf --max-time 30 --connect-timeout 10 -X POST "$API_BASE" \
+if [ "$IS_PR" = "true" ]; then
+  echo "    PR #${BUILDKITE_PULL_REQUEST} -> ${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-master}"
+fi
+
+HTTP_CODE=$(curl -sS --max-time 30 --connect-timeout 10 -o "$RESPONSE_FILE" -w '%{http_code}' \
+  -X POST "$API_BASE" \
   -H "Authorization: Bearer ${BUILDKITE_API_TOKEN}" \
   -H "Content-Type: application/json" \
   -d "$PAYLOAD")
+
+if ! [[ "$HTTP_CODE" =~ ^[0-9]+$ ]] || [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+  echo "^^^ +++"
+  echo ":x: Buildkite API returned HTTP ${HTTP_CODE} creating build on ${LABEL}"
+  echo "    Request payload:"
+  echo "$PAYLOAD" | jq 'del(.env)' 2>/dev/null || echo "$PAYLOAD"
+  echo "    Response:"
+  cat "$RESPONSE_FILE" 2>/dev/null
+  exit 1
+fi
+
+RESPONSE=$(cat "$RESPONSE_FILE")
 
 BUILD_NUMBER=$(echo "$RESPONSE" | jq -r '.number')
 BUILD_URL=$(echo "$RESPONSE" | jq -r '.web_url')
