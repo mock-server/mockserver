@@ -26,7 +26,7 @@
         };
 
         var downloadCACert = function (tls, caCertPath, callback) {
-            // https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem
+            // https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem
 
             var dest = "CertificateAuthorityCertificate.pem";
             if (!fs.existsSync('./' + dest)) {
@@ -34,7 +34,7 @@
                     protocol: 'https:',
                     method: 'GET',
                     host: "raw.githubusercontent.com",
-                    path: "/mock-server/mockserver/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem",
+                    path: "/mock-server/mockserver-monorepo/master/mockserver/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem",
                     port: 443,
                 };
                 var req = require('https').request(options);
