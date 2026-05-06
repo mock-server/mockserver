@@ -7,7 +7,7 @@ steps:
   - label: ":maven: maven-plugin build"
     command: ".buildkite/scripts/steps/maven-plugin-build.sh"
     artifact_paths:
-      - "mockserver-maven-plugin/target/surefire-reports/TEST-*.xml"
+      - "mockserver-maven-plugin/**/TEST-*.xml"
     timeout_in_minutes: 45
 
   - wait: ~
@@ -16,5 +16,6 @@ steps:
   - label: ":junit: annotate test results"
     plugins:
       - junit-annotate#v2.4.1:
-          artifacts: "mockserver-maven-plugin/target/surefire-reports/TEST-*.xml"
+          artifacts: "mockserver-maven-plugin/**/TEST-*.xml"
           always-annotate: true
+          fail-build-on-error: false

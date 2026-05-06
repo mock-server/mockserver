@@ -16,6 +16,7 @@ steps:
       - "**/target/surefire-reports/*-output.txt"
       - "**/target/failsafe-reports/TEST-*.xml"
       - "**/target/failsafe-reports/*-output.txt"
+      - "mockserver/mockserver-netty/target/mockserver-netty-*-shaded.jar"
     timeout_in_minutes: 60
 
   - wait: ~
