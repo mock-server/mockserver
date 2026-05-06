@@ -23,14 +23,9 @@ resource "aws_secretsmanager_secret" "rubygems" {
   description = "RubyGems API key for publishing mockserver-client Ruby gem"
 }
 
-moved {
-  from = aws_iam_policy.read_dockerhub_secret
-  to   = aws_iam_policy.read_build_secrets
-}
-
-resource "aws_iam_policy" "read_build_secrets" {
-  name        = "buildkite-read-build-secrets"
-  description = "Allow Buildkite agents to read build and release credentials from Secrets Manager"
+resource "aws_iam_policy" "read_dockerhub_secret" {
+  name        = "buildkite-read-dockerhub-secret"
+  description = "Allow Buildkite agents to read Docker Hub credentials from Secrets Manager"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -38,6 +33,7 @@ resource "aws_iam_policy" "read_build_secrets" {
       Effect = "Allow"
       Action = "secretsmanager:GetSecretValue"
       Resource = [
+        aws_secretsmanager_secret.buildkite_api_token.arn,
         aws_secretsmanager_secret.dockerhub.arn,
         aws_secretsmanager_secret.sonatype.arn,
         aws_secretsmanager_secret.pypi.arn,

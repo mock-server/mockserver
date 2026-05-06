@@ -19,5 +19,5 @@ module "buildkite_stack" {
 
   agents_per_instance         = 1
   associate_public_ip_address = true
-  managed_policy_arns         = [aws_iam_policy.read_build_secrets.arn]
+  managed_policy_arns         = [aws_iam_policy.read_dockerhub_secret.arn]
 }

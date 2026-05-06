@@ -37,7 +37,7 @@ The monorepo uses a path-based pipeline orchestrator that dynamically triggers s
 
 **File:** `.buildkite/scripts/generate-pipeline.sh`
 
-The orchestrator runs as the first step of every build (via the main "MockServer" pipeline). It determines which files changed in the commit and emits Buildkite `trigger` steps to launch the appropriate child pipelines:
+The orchestrator runs as the first step of every build (via the main "MockServer" pipeline). It determines which files changed in the commit and emits Buildkite `command` steps that use the Buildkite REST API to create child builds. Each command step runs `.buildkite/scripts/trigger-pipeline.sh`, which fetches a Buildkite API token from AWS Secrets Manager, creates the child build via the REST API, and polls until completion. This approach bypasses Buildkite's `trigger` step permission model, which requires the build author to be a Buildkite organization member (blocking bot-authored PRs like Dependabot).
 
 ```mermaid
 flowchart TD
@@ -47,16 +47,16 @@ generate-pipeline.sh"]
 git diff against base"]
     DIFF --> MATCH{"Match changed paths
 against rules"}
-    MATCH -->|mockserver/ or mockserver-ui/| JAVA["trigger: mockserver-java"]
-    MATCH -->|mockserver-ui/| UI["trigger: mockserver-ui"]
-    MATCH -->|mockserver-node/ or mockserver-client-node/| NODE["trigger: mockserver-node"]
-    MATCH -->|mockserver-client-python/| PYTHON["trigger: mockserver-python"]
-    MATCH -->|mockserver-client-ruby/| RUBY["trigger: mockserver-ruby"]
-    MATCH -->|mockserver-maven-plugin/| MAVEN_PLUGIN["trigger: mockserver-maven-plugin"]
-    MATCH -->|mockserver-performance-test/| PERF["trigger: mockserver-performance-test"]
-    MATCH -->|container_integration_tests/| CONTAINER["trigger: mockserver-container-tests"]
-    MATCH -->|jekyll-www.mock-server.com/| WEBSITE["trigger: mockserver-website"]
-    MATCH -->|.buildkite/ .github/ terraform/ etc.| INFRA["trigger: mockserver-infra"]
+    MATCH -->|mockserver/ or mockserver-ui/| JAVA["command: trigger-pipeline.sh mockserver-java"]
+    MATCH -->|mockserver-ui/| UI["command: trigger-pipeline.sh mockserver-ui"]
+    MATCH -->|mockserver-node/ or mockserver-client-node/| NODE["command: trigger-pipeline.sh mockserver-node"]
+    MATCH -->|mockserver-client-python/| PYTHON["command: trigger-pipeline.sh mockserver-python"]
+    MATCH -->|mockserver-client-ruby/| RUBY["command: trigger-pipeline.sh mockserver-ruby"]
+    MATCH -->|mockserver-maven-plugin/| MAVEN_PLUGIN["command: trigger-pipeline.sh mockserver-maven-plugin"]
+    MATCH -->|mockserver-performance-test/| PERF["command: trigger-pipeline.sh mockserver-performance-test"]
+    MATCH -->|container_integration_tests/| CONTAINER["command: trigger-pipeline.sh mockserver-container-tests"]
+    MATCH -->|jekyll-www.mock-server.com/| WEBSITE["command: trigger-pipeline.sh mockserver-website"]
+    MATCH -->|.buildkite/ .github/ terraform/ etc.| INFRA["command: trigger-pipeline.sh mockserver-infra"]
     MATCH -->|no match| DEFAULT["inline: no-op step"]
 ```
 

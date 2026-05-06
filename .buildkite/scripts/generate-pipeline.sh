@@ -14,7 +14,7 @@ else
   CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD 2>/dev/null || git diff --name-only HEAD~1..HEAD)
 fi
 
-TRIGGERS=""
+STEPS=""
 
 trigger_if_changed() {
   local path_regex="$1"
@@ -22,13 +22,11 @@ trigger_if_changed() {
   local label="$3"
   if printf '%s\n' "$CHANGED_FILES" | grep -qE -- "$path_regex"; then
     echo "--- :pipeline: Triggering ${label} (matched ${path_regex})"
-    TRIGGERS="${TRIGGERS}  - trigger: \"${pipeline_slug}\"
-    label: \":pipeline: ${label}\"
-    async: false
-    build:
-      message: \"\${BUILDKITE_MESSAGE}\"
-      commit: \"\${BUILDKITE_COMMIT}\"
-      branch: \"\${BUILDKITE_BRANCH}\"
+    STEPS="${STEPS}  - label: \":pipeline: ${label}\"
+    command: \".buildkite/scripts/trigger-pipeline.sh ${pipeline_slug} '${label}'\"
+    timeout_in_minutes: 60
+    agents:
+      queue: default
 "
   fi
 }
@@ -46,17 +44,15 @@ trigger_if_changed "^docker_build/maven/" "mockserver-build-image" "MockServer B
 
 if printf '%s\n' "$CHANGED_FILES" | grep -qE -- "^(\.buildkite/|\.github/|terraform/|docker/|scripts/|helm/|docs/|AGENTS\.md|opencode\.jsonc|\.opencode/)"; then
   echo "--- :pipeline: Triggering MockServer Infra (infra changes)"
-  TRIGGERS="${TRIGGERS}  - trigger: \"mockserver-infra\"
-    label: \":pipeline: MockServer Infra\"
-    async: false
-    build:
-      message: \"\${BUILDKITE_MESSAGE}\"
-      commit: \"\${BUILDKITE_COMMIT}\"
-      branch: \"\${BUILDKITE_BRANCH}\"
+  STEPS="${STEPS}  - label: \":pipeline: MockServer Infra\"
+    command: \".buildkite/scripts/trigger-pipeline.sh mockserver-infra 'MockServer Infra'\"
+    timeout_in_minutes: 60
+    agents:
+      queue: default
 "
 fi
 
-if [ -z "$TRIGGERS" ]; then
+if [ -z "$STEPS" ]; then
   echo "--- :pipeline: No project-specific changes detected"
   cat <<EOF | buildkite-agent pipeline upload
 steps:
@@ -65,5 +61,5 @@ steps:
     timeout_in_minutes: 1
 EOF
 else
-  printf "steps:\n%s" "$TRIGGERS" | buildkite-agent pipeline upload
+  printf "steps:\n%s" "$STEPS" | buildkite-agent pipeline upload
 fi
