@@ -1,21 +1,21 @@
 # mockserver-node 
 
-> Node module and grunt plugin to start and stop [MockServer](http://mock-server.com/) and [MockServer](http://mock-server.com/) proxy
+> Node module and grunt plugin to start and stop [MockServer](https://mock-server.com/) and [MockServer](https://mock-server.com/) proxy
 
-[![Build status](https://badge.buildkite.com/84d4f1ca00ee6639c1825ea31f0dcd50bd73088571813a219b.svg?style=square&theme=slack)](https://buildkite.com/mockserver/mockserver-node) [![Dependency Status](https://david-dm.org/mock-server/mockserver-node.png)](https://david-dm.org/mock-server/mockserver-node) [![devDependency Status](https://david-dm.org/mock-server/mockserver-node/dev-status.png)](https://david-dm.org/mock-server/mockserver-node#info=devDependencies)
+[![Build status](https://badge.buildkite.com/84d4f1ca00ee6639c1825ea31f0dcd50bd73088571813a219b.svg?style=square&theme=slack)](https://buildkite.com/mockserver/mockserver-node)
 
 [![NPM](https://nodei.co/npm/mockserver-node.png?downloads=true&stars=true)](https://nodei.co/npm/mockserver-node/) 
 
 # Community
 
-* Backlog:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://trello.com/b/dsfTCP46/mockserver" target="_blank"><img height="20px" src="http://mock-server.com/images/trello_badge-md.png" alt="Trello Backlog"></a>
-* Freature Requests:&nbsp;&nbsp;<a href="https://github.com/mock-server/mockserver-monorepo/issues"><img height="20px" src="http://mock-server.com/images/GitHub_Logo-md.png" alt="Github Issues"></a>
-* Issues / Bugs:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://github.com/mock-server/mockserver-monorepo/issues"><img height="20px" src="http://mock-server.com/images/GitHub_Logo-md.png" alt="Github Issues"></a>
-* Chat:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://join-mock-server-slack.herokuapp.com" target="_blank"><img height="20px" src="http://mock-server.com/images/slack-logo-slim-md.png" alt="Join Slack"></a>
+* Backlog:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://trello.com/b/dsfTCP46/mockserver" target="_blank"><img height="20px" src="https://mock-server.com/images/trello_badge-md.png" alt="Trello Backlog"></a>
+* Feature Requests:&nbsp;&nbsp;&nbsp;<a href="https://github.com/mock-server/mockserver-monorepo/issues"><img height="20px" src="https://mock-server.com/images/GitHub_Logo-md.png" alt="Github Issues"></a>
+* Issues / Bugs:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://github.com/mock-server/mockserver-monorepo/issues"><img height="20px" src="https://mock-server.com/images/GitHub_Logo-md.png" alt="Github Issues"></a>
+* Discussions:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://github.com/mock-server/mockserver-monorepo/discussions"><img height="20px" src="https://mock-server.com/images/GitHub_Logo-md.png" alt="GitHub Discussions"></a>
 
 ## Getting Started
 
-This node module can be used to start and stop [MockServer](http://mock-server.com/) and the [MockServer](http://mock-server.com/) proxy as a node module or as a Grunt plugin.  More information about the [MockServer](http://mock-server.com/) can be found at [mock-server.com](http://mock-server.com/). 
+This node module can be used to start and stop [MockServer](https://mock-server.com/) and the [MockServer](https://mock-server.com/) proxy as a node module or as a Grunt plugin.  More information about the [MockServer](https://mock-server.com/) can be found at [mock-server.com](https://mock-server.com/). 
 
 You may install this plugin / node module with the following command:
 
@@ -122,7 +122,7 @@ This value specifies the artifact version of MockServer to download.
 Type: `Boolean`
 Default value: `false`
 
-This value indicates whether the MockServer logs should be written to the console.  In addition to logging additional output from the grunt task this options also sets the logging level of the MockServer to [**DEBUG**](http://www.mock-server.com/mock_server/debugging_issues.html). At **DEBUG** all matcher results, including when specific matchers fail (such as HeaderMatcher) are written to the log. The MockServer logs are written to ```mockserver.log``` in the current directory.  
+This value indicates whether the MockServer logs should be written to the console.  In addition to logging additional output from the grunt task this options also sets the logging level of the MockServer to [**DEBUG**](https://www.mock-server.com/mock_server/debugging_issues.html). At **DEBUG** all matcher results, including when specific matchers fail (such as HeaderMatcher) are written to the log. The MockServer logs are written to ```mockserver.log``` in the current directory.  
 
 **Note:** It is also possible to use the ```--verbose``` command line switch to enabled verbose level logging from the command line.
 
@@ -130,7 +130,7 @@ This value indicates whether the MockServer logs should be written to the consol
 Type: `Boolean`
 Default value: `false`
 
-This value sets the logging level of the MockServer to [**TRACE**](http://www.mock-server.com/mock_server/debugging_issues.html). At **TRACE** level (in addition to **INFO** level information) all matcher results, including when specific matchers fail (such as HeaderMatcher) are written to the log. The MockServer logs are written to ```mockserver.log``` in the current directory. 
+This value sets the logging level of the MockServer to [**TRACE**](https://www.mock-server.com/mock_server/debugging_issues.html). At **TRACE** level (in addition to **INFO** level information) all matcher results, including when specific matchers fail (such as HeaderMatcher) are written to the log. The MockServer logs are written to ```mockserver.log``` in the current directory. 
 
 #### options.javaDebugPort
 Type: `Integer`
@@ -175,6 +175,4 @@ All notable and significant changes are detailed in the [MockServer changelog](h
 
 ---
 
-Task submitted by [James D Bloom](http://blog.jamesdbloom.com)
-
-[![Analytics](https://ga-beacon.appspot.com/UA-32687194-4/mockserver-node/README.md)](https://github.com/igrigorik/ga-beacon)
+Task submitted by [James D Bloom](https://blog.jamesdbloom.com)

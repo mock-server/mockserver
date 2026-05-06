@@ -1,23 +1,23 @@
 # mockserver-client-node 
 
-> Communicate with a [MockServer](http://mock-server.com/) from any node or grunt build
+> Communicate with a [MockServer](https://mock-server.com/) from any node or grunt build
 
-[![Build status](https://badge.buildkite.com/368c3b69e959f29725d8ab582f8d75dedddceee196d39b6d28.svg?style=square&theme=slack)](https://buildkite.com/mockserver/mockserver-client-node) [![Dependency Status](https://david-dm.org/mock-server/mockserver-client-node.png)](https://david-dm.org/mock-server/mockserver-client-node) [![devDependency Status](https://david-dm.org/mock-server/mockserver-client-node/dev-status.png)](https://david-dm.org/mock-server/mockserver-client-node#info=devDependencies)
+[![Build status](https://badge.buildkite.com/368c3b69e959f29725d8ab582f8d75dedddceee196d39b6d28.svg?style=square&theme=slack)](https://buildkite.com/mockserver/mockserver-client-node)
 
 [![NPM](https://nodei.co/npm/mockserver-client.png?downloads=true&stars=true)](https://nodei.co/npm/mockserver-client/) 
 
 # Community
 
-* Backlog:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://trello.com/b/dsfTCP46/mockserver" target="_blank"><img height="20px" src="http://mock-server.com/images/trello_badge-md.png" alt="Trello Backlog"></a>
-* Freature Requests:&nbsp;&nbsp;<a href="https://github.com/mock-server/mockserver-monorepo/issues"><img height="20px" src="http://mock-server.com/images/GitHub_Logo-md.png" alt="Github Issues"></a>
-* Issues / Bugs:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://github.com/mock-server/mockserver-monorepo/issues"><img height="20px" src="http://mock-server.com/images/GitHub_Logo-md.png" alt="Github Issues"></a>
-* Chat:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://join-mock-server-slack.herokuapp.com" target="_blank"><img height="20px" src="http://mock-server.com/images/slack-logo-slim-md.png" alt="Join Slack"></a>
+* Backlog:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://trello.com/b/dsfTCP46/mockserver" target="_blank"><img height="20px" src="https://mock-server.com/images/trello_badge-md.png" alt="Trello Backlog"></a>
+* Feature Requests:&nbsp;&nbsp;&nbsp;<a href="https://github.com/mock-server/mockserver-monorepo/issues"><img height="20px" src="https://mock-server.com/images/GitHub_Logo-md.png" alt="Github Issues"></a>
+* Issues / Bugs:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://github.com/mock-server/mockserver-monorepo/issues"><img height="20px" src="https://mock-server.com/images/GitHub_Logo-md.png" alt="Github Issues"></a>
+* Discussions:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://github.com/mock-server/mockserver-monorepo/discussions"><img height="20px" src="https://mock-server.com/images/GitHub_Logo-md.png" alt="GitHub Discussions"></a>
 
 ## Getting Started
 
-[MockServer](http://mock-server.com/) allows you to mock any system you integrate with via HTTP or HTTPS (i.e. (REST) services, web sites, etc). Please note that it is a third party project that needs java.
+[MockServer](https://mock-server.com/) allows you to mock any system you integrate with via HTTP or HTTPS (i.e. (REST) services, web sites, etc). Please note that it is a third party project that needs java.
 
-This npm module allows any grunt or node project to easily communicate with a running [MockServer](http://mock-server.com/) instance.
+This npm module allows any grunt or node project to easily communicate with a running [MockServer](https://mock-server.com/) instance.
 
 As an addition to this module for communicating with a running MockServer there is a second project that can be used to start and stop a MockServer called [mockserver-node](https://www.npmjs.org/package/mockserver-node).
 
@@ -156,6 +156,4 @@ All notable and significant changes are detailed in the [MockServer changelog](h
 
 ---
 
-Task submitted by [James D Bloom](http://blog.jamesdbloom.com)
-
-[![Analytics](https://ga-beacon.appspot.com/UA-32687194-4/mockserver-client-node/README.md)](https://github.com/igrigorik/ga-beacon)
+Task submitted by [James D Bloom](https://blog.jamesdbloom.com)

@@ -10,13 +10,16 @@ graph TB
         BP["buildkite-pipelines/"]
     end
 
-    BA -->|provisions| AWS["AWS eu-west-2<br/>Build Agent Account"]
-    BP -->|manages| BK["Buildkite<br/>Pipeline Definitions"]
+    BA -->|provisions| AWS["AWS eu-west-2
+Build Agent Account"]
+    BP -->|manages| BK["Buildkite
+Pipeline Definitions"]
 
     subgraph AWS
         direction TB
         VPC[VPC + Subnets]
-        ASG[AutoScaling Group<br/>Spot instances, 0–10]
+        ASG["AutoScaling Group
+Spot instances, 0-10"]
         SCALER[Lambda Autoscaler]
         AGENT[Buildkite Agents]
     end

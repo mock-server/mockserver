@@ -1,15 +1,11 @@
-[MockServer](http://www.mock-server.com)
+[MockServer](https://www.mock-server.com)
 ==========
-
-### Dependencies
-
-* [java](https://registry.hub.docker.com/u/library/java/)
 
 ### Installation
 
-1. Install [Docker](https://www.docker.io/).
+1. Install [Docker](https://www.docker.com/).
 
-2. Download [trusted build](https://hub.docker.com/r/mockserver/mockserver) from public [Docker Registry](https://index.docker.io/): `docker pull mockserver/mockserver`
+2. Download [trusted build](https://hub.docker.com/r/mockserver/mockserver) from public [Docker Registry](https://hub.docker.com/): `docker pull mockserver/mockserver`
 
 ### Usage
 
@@ -69,23 +65,23 @@ MockServer is for mocking of any system you integrate with via HTTP or HTTPS (i.
 
 MockServer supports:
 
-* mocking of any HTTP / HTTPS response when any request is matched ([learn more](http://www.mock-server.com/#what-is-mockserver))
-* recording requests and responses to analyse how a system behaves ([learn more](http://www.mock-server.com/#what-is-mockserver))
-* verifying which requests and responses have been sent as part of a test ([learn more](http://www.mock-server.com/#what-is-mockserver))
+* mocking of any HTTP / HTTPS response when any request is matched ([learn more](https://www.mock-server.com/#what-is-mockserver))
+* recording requests and responses to analyse how a system behaves ([learn more](https://www.mock-server.com/#what-is-mockserver))
+* verifying which requests and responses have been sent as part of a test ([learn more](https://www.mock-server.com/#what-is-mockserver))
 
 This docker container will (by default) run an instance of the MockServer on the following port:
 
 * serverPort **1080**
 
-For information on how to use the MockServer please see http://www.mock-server.com
+For information on how to use the MockServer please see https://www.mock-server.com
 
 ### Issues
 
-If you have any problems, please [check the project issues](https://github.com/mock-server/mockserver/issues?state=open).
+If you have any problems, please [check the project issues](https://github.com/mock-server/mockserver-monorepo/issues?state=open).
 
 ### Contributions
 
-Pull requests are, of course, very welcome! Please read our [contributing to the project](https://github.com/mock-server/mockserver/wiki/Contributing-to-the-project) guide first. Then head over to the [open issues](https://github.com/mock-server/mockserver/issues?state=open) to see what we need help with. Make sure you let us know if you intend to work on something. Also, check out the [milestones](https://github.com/mock-server/mockserver/issues/milestones) to see what is planned for future releases.
+Pull requests are, of course, very welcome! Please read our [contributing to the project](../CONTRIBUTING.md) guide first. Then head over to the [open issues](https://github.com/mock-server/mockserver-monorepo/issues?state=open) to see what we need help with. Make sure you let us know if you intend to work on something.
 
 ### Maintainers
-* [James D Bloom](http://blog.jamesdbloom.com)
+* [James D Bloom](https://blog.jamesdbloom.com)
