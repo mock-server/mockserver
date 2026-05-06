@@ -62,7 +62,7 @@
     "client"
   ],
   "dependencies": {
-    "browser-or-node": "~2.1.1",
+    "browser-or-node": "~3.0.0",
     "q": "~2.0.3",
     "websocket": "~1.0.34"
   }
