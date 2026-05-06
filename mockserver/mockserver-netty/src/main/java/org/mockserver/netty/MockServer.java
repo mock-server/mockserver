@@ -23,6 +23,7 @@ import javax.annotation.Nullable;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -38,6 +39,7 @@ import static org.mockserver.proxyconfiguration.ProxyConfiguration.proxyConfigur
 public class MockServer extends LifeCycle {
 
     private InetSocketAddress remoteSocket;
+    private volatile org.mockserver.netty.mcp.McpSessionManager mcpSessionManager;
 
     /**
      * Start the instance using the ports provided
@@ -180,6 +182,8 @@ public class MockServer extends LifeCycle {
                     .withRequiredClaims(configuration.controlPlaneJWTAuthenticationRequiredClaims())
             );
         }
+        MockServerUnificationInitializer initializer = new MockServerUnificationInitializer(configuration, MockServer.this, httpState, new HttpActionHandler(configuration, getEventLoopGroup(), httpState, proxyConfigurations, nettyClientSslContextFactory), nettyServerSslContextFactory);
+        this.mcpSessionManager = initializer.getMcpSessionManager();
         serverServerBootstrap = new ServerBootstrap()
             .group(bossGroup, workerGroup)
             .option(ChannelOption.SO_BACKLOG, 1024)
@@ -187,7 +191,7 @@ public class MockServer extends LifeCycle {
             .childOption(ChannelOption.AUTO_READ, true)
             .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
             .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
-            .childHandler(new MockServerUnificationInitializer(configuration, MockServer.this, httpState, new HttpActionHandler(configuration, getEventLoopGroup(), httpState, proxyConfigurations, nettyClientSslContextFactory), nettyServerSslContextFactory))
+            .childHandler(initializer)
             .childAttr(REMOTE_SOCKET, remoteSocket)
             .childAttr(PROXYING, remoteSocket != null);
 
@@ -205,6 +209,14 @@ public class MockServer extends LifeCycle {
             throw throwable;
         }
         startedServer(getLocalPorts());
+    }
+
+    @Override
+    public CompletableFuture<String> stopAsync() {
+        if (mcpSessionManager != null) {
+            mcpSessionManager.shutdown();
+        }
+        return super.stopAsync();
     }
 
     public InetSocketAddress getRemoteAddress() {

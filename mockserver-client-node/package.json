@@ -51,8 +51,15 @@
   },
   "keywords": [
     "mockserver",
-    "client",
-    "gruntplugin"
+    "mock",
+    "HTTP",
+    "HTTPS",
+    "testing",
+    "proxy",
+    "api",
+    "mcp",
+    "ai",
+    "client"
   ],
   "dependencies": {
     "browser-or-node": "~2.1.1",

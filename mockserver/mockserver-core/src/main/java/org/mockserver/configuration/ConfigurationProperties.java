@@ -49,6 +49,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_DETAILED_MATCH_FAILURES = "mockserver.detailedMatchFailures";
     private static final String MOCKSERVER_LAUNCH_UI_FOR_LOG_LEVEL_DEBUG = "mockserver.launchUIForLogLevelDebug";
     private static final String MOCKSERVER_METRICS_ENABLED = "mockserver.metricsEnabled";
+    private static final String MOCKSERVER_MCP_ENABLED = "mockserver.mcpEnabled";
 
     // memory usage
     private static final String MOCKSERVER_MAX_EXPECTATIONS = "mockserver.maxExpectations";
@@ -351,6 +352,19 @@ public class ConfigurationProperties {
      */
     public static void metricsEnabled(boolean enable) {
         setProperty(MOCKSERVER_METRICS_ENABLED, "" + enable);
+    }
+
+    public static boolean mcpEnabled() {
+        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_MCP_ENABLED, "MOCKSERVER_MCP_ENABLED", "" + true));
+    }
+
+    /**
+     * Enable or disable the MCP (Model Context Protocol) endpoint, default is true
+     *
+     * @param enable enable MCP endpoint
+     */
+    public static void mcpEnabled(boolean enable) {
+        setProperty(MOCKSERVER_MCP_ENABLED, "" + enable);
     }
 
     // memory usage

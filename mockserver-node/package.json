@@ -42,8 +42,14 @@
     },
     "keywords": [
         "mockserver",
-        "gruntplugin",
-        "grunt"
+        "mock",
+        "HTTP",
+        "HTTPS",
+        "testing",
+        "proxy",
+        "api",
+        "mcp",
+        "ai"
     ],
     "dependencies": {
         "follow-redirects": "~1.15.2",

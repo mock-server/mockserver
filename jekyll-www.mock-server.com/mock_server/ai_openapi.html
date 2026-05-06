@@ -1,0 +1,151 @@
+---
+title: OpenAPI Specification for AI Integration
+shortTitle: OpenAPI for AI
+layout: page
+pageOrder: 4
+section: 'AI Integration'
+subsection: true
+sitemap:
+  priority: 0.8
+  changefreq: 'monthly'
+  lastmod: 2026-05-06T00:00:00+00:00
+---
+
+<p>MockServer's REST API is fully documented via an <strong>OpenAPI 3.0 specification</strong>. This specification can be used as a fallback for AI tools that do not support the <a href="/mock_server/ai_mcp_setup.html">Model Context Protocol (MCP)</a>, or as supplementary reference material when working with any AI assistant.</p>
+
+<h2>OpenAPI Spec Locations</h2>
+
+<p>The OpenAPI specification is available from two locations:</p>
+
+<h3>From a Running Instance</h3>
+
+<p>Any running MockServer instance serves its OpenAPI specification at:</p>
+
+<pre class="prettyprint code"><code class="code">GET http://localhost:1080/mockserver/openapi.yaml</code></pre>
+
+<p>This always reflects the exact API version of the running server.</p>
+
+<h3>Published Specification</h3>
+
+<p>The latest published specification is also available at:</p>
+
+<pre class="prettyprint code"><code class="code">https://www.mock-server.com/mockserver-openapi.yaml</code></pre>
+
+<p>And on SwaggerHub:</p>
+
+<pre class="prettyprint code"><code class="code">https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi</code></pre>
+
+<h2>Using with ChatGPT Actions</h2>
+
+<p>You can configure a <strong>Custom GPT</strong> in ChatGPT to interact with MockServer using the OpenAPI specification. This enables ChatGPT to create expectations, verify requests, and manage your MockServer instance through the ChatGPT interface.</p>
+
+<h3>Setup Steps</h3>
+
+<ol>
+    <li>
+        <p>Open <a target="_blank" href="https://chat.openai.com">ChatGPT</a> and navigate to <strong>My GPTs &gt; Create a GPT</strong></p>
+    </li>
+    <li>
+        <p>In the <strong>Configure</strong> tab, scroll down to <strong>Actions</strong> and click <strong>Create new action</strong></p>
+    </li>
+    <li>
+        <p>In the <strong>Schema</strong> field, paste the contents of the MockServer OpenAPI specification. You can retrieve it with:</p>
+        <pre class="prettyprint code"><code class="code">curl -s http://localhost:1080/mockserver/openapi.yaml</code></pre>
+    </li>
+    <li>
+        <p>Set the <strong>Server URL</strong> to your MockServer instance (e.g., <code class="code inline">http://localhost:1080</code>)</p>
+    </li>
+    <li>
+        <p>Set <strong>Authentication</strong> to <strong>None</strong> (or configure as appropriate if you have <a href="/mock_server/control_plane_authorisation.html">control plane authentication</a> enabled)</p>
+    </li>
+    <li>
+        <p>Save the GPT. You can now ask it to create mocks, verify requests, and manage MockServer.</p>
+    </li>
+</ol>
+
+<p><strong>Note:</strong> ChatGPT Actions require your MockServer instance to be accessible from the internet. For local development, consider using a tunnelling service or the <a href="/mock_server/ai_mcp_setup.html">MCP integration</a> instead.</p>
+
+<h2>Using as LLM Context</h2>
+
+<p>For AI assistants that don't support MCP or ChatGPT Actions, you can use the OpenAPI specification as reference material by pasting it directly into a conversation.</p>
+
+<h3>Steps</h3>
+
+<ol>
+    <li>
+        <p>Download the specification:</p>
+        <pre class="prettyprint code"><code class="code">curl -s http://localhost:1080/mockserver/openapi.yaml &gt; mockserver-openapi.yaml</code></pre>
+    </li>
+    <li>
+        <p>Paste the specification content into your AI assistant's chat, or attach it as a file if your AI tool supports file uploads.</p>
+    </li>
+    <li>
+        <p>Ask the assistant to use the specification as a reference. For example:</p>
+        <blockquote>
+        <p><em>"Using the MockServer OpenAPI spec I've provided, write a curl command to create an expectation that returns a 201 response for POST /api/users with a JSON body containing an id field."</em></p>
+        </blockquote>
+    </li>
+</ol>
+
+<p>The AI assistant can then generate accurate API calls based on the specification, including correct endpoints, request formats, and parameter types.</p>
+
+<h2>MCP vs OpenAPI for AI Integration</h2>
+
+<p>Both MCP and OpenAPI can be used to connect AI assistants to MockServer, but they have different strengths:</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Feature</th>
+            <th>MCP</th>
+            <th>OpenAPI</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>Communication</strong></td>
+            <td>Bidirectional, real-time</td>
+            <td>Reference-only (AI generates API calls)</td>
+        </tr>
+        <tr>
+            <td><strong>Tool invocation</strong></td>
+            <td>AI calls tools directly through the protocol</td>
+            <td>AI generates curl/HTTP commands for the user to execute</td>
+        </tr>
+        <tr>
+            <td><strong>Real-time state</strong></td>
+            <td>Resources provide live server state (expectations, requests, logs)</td>
+            <td>No live state — must manually query the API</td>
+        </tr>
+        <tr>
+            <td><strong>Setup complexity</strong></td>
+            <td>One-time configuration in your AI tool</td>
+            <td>Paste spec into each conversation or configure ChatGPT Action</td>
+        </tr>
+        <tr>
+            <td><strong>AI tool compatibility</strong></td>
+            <td>Cursor, Claude Code, Windsurf, Cline, Continue, OpenCode</td>
+            <td>Any AI assistant (ChatGPT, Gemini, Copilot, etc.)</td>
+        </tr>
+        <tr>
+            <td><strong>Feedback loop</strong></td>
+            <td>AI receives tool results and can react immediately</td>
+            <td>AI generates commands; user must report results back</td>
+        </tr>
+        <tr>
+            <td><strong>Best for</strong></td>
+            <td>Interactive development and debugging workflows</td>
+            <td>One-off queries, AI tools without MCP support, documentation</td>
+        </tr>
+    </tbody>
+</table>
+
+<p><strong>Recommendation:</strong> Use <a href="/mock_server/ai_mcp_setup.html">MCP</a> when your AI tool supports it. The bidirectional communication enables a much more interactive workflow where the AI can create expectations, check results, and iterate — all without you having to copy-paste commands. Use OpenAPI as a fallback for AI tools that do not support MCP yet.</p>
+
+<h2>Related Pages</h2>
+
+<ul>
+    <li><a href="/mock_server/ai_mcp_setup.html"><strong>MCP Setup</strong></a> — connect AI assistants via the Model Context Protocol</li>
+    <li><a href="/mock_server/ai_mcp_tools.html"><strong>MCP Tools Reference</strong></a> — full documentation of all MCP tools</li>
+    <li><a href="/mock_server/using_openapi.html"><strong>Using OpenAPI Specifications</strong></a> — how MockServer uses OpenAPI specs for request matching and expectation generation</li>
+</ul>

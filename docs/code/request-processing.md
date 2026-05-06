@@ -11,8 +11,9 @@ The decision is made per-request in `HttpActionHandler.processAction()`:
 
 ```mermaid
 flowchart TD
-    REQ([Incoming HTTP Request]) --> LOG_RX["Log RECEIVED_REQUEST
-via Disruptor"]
+    REQ([Incoming HTTP Request]) --> MCP_CHK{"MCP request?\n/mockserver/mcp"}
+    MCP_CHK -->|Yes| MCP["McpStreamableHttpHandler\nJSON-RPC 2.0 over HTTP"]
+    MCP_CHK -->|No| LOG_RX["Log RECEIVED_REQUEST\nvia Disruptor"]
     LOG_RX --> MATCH[RequestMatchers.firstMatchingExpectation]
 
     MATCH -->|Expectation found| DISPATCH["Dispatch to Action Handler
@@ -107,6 +108,15 @@ The retrieve and clear endpoints accept type parameters:
 | `ALL` | Clear both expectations and logs (default) |
 
 Clear also supports clearing by `ExpectationId` (not just `RequestDefinition`).
+
+### Pre-HttpRequestHandler Routes
+
+Before a request reaches `HttpRequestHandler`, the Netty pipeline may intercept it at an earlier stage:
+
+| Route | Handler | Description |
+|-------|---------|-------------|
+| `/mockserver/mcp` | `McpStreamableHttpHandler` | MCP (Model Context Protocol) server endpoint (Streamable HTTP transport with JSON-RPC 2.0). Intercepted in the pipeline before `MockServerHttpServerCodec`. Only active when `mcpEnabled=true`. |
+| `/_mockserver_callback_websocket` | `CallbackWebSocketServerHandler` | WebSocket upgrade for object/closure callbacks |
 
 ### Non-Control-Plane Routes (in HttpRequestHandler)
 

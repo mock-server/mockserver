@@ -251,3 +251,11 @@ response = (
 ## License
 
 Apache 2.0
+
+## AI Assistant Integration
+
+MockServer includes a built-in [MCP](https://modelcontextprotocol.io) (Model Context Protocol) server that enables AI coding assistants to create expectations, verify requests, and debug HTTP traffic programmatically.
+
+- **MCP Endpoint:** `http://localhost:1080/mockserver/mcp`
+- **AI Documentation:** [llms.txt](https://www.mock-server.com/llms.txt)
+- **Setup Guide:** [AI Integration](https://www.mock-server.com/mock_server/ai_mcp_setup.html)

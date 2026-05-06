@@ -76,8 +76,9 @@ Protocol detection on first bytes"]
     PU --> PIPELINE["Netty Channel Pipeline
 Dynamically assembled per-protocol"]
 
-    PIPELINE --> CODEC["MockServerHttpServerCodec
-Netty HTTP ↔ MockServer model"]
+    PIPELINE --> MCP_CHK{"MCP request?\n/mockserver/mcp"}
+    MCP_CHK -->|Yes| MCP_HANDLER["McpStreamableHttpHandler\nJSON-RPC 2.0 over HTTP"]
+    MCP_CHK -->|No| CODEC["MockServerHttpServerCodec\nNetty HTTP ↔ MockServer model"]
     CODEC --> HANDLER[HttpRequestHandler]
 
     HANDLER --> CP{Control Plane?}
@@ -218,6 +219,12 @@ Matched expectations produce one of 10 action types across two categories (respo
 
 See: [Request Processing, Mocking & Proxying](request-processing.md)
 
+### 6. MCP Integration (Model Context Protocol)
+
+MockServer exposes its control-plane capabilities via the Model Context Protocol, enabling AI agents and LLM-based tools to interact with MockServer programmatically. The MCP server uses Streamable HTTP transport on the `/mockserver/mcp` endpoint and provides tools (e.g., create expectations, verify requests) and resources (e.g., active expectations, recorded requests) that map to existing `HttpState` operations. MCP is enabled by default and can be disabled via `mcpEnabled=false`.
+
+See: [Client & Integrations — MCP](client-and-integrations.md#mcp-model-context-protocol-integration)
+
 ## Package Map
 
 | Package | Module | Purpose | Doc Reference |
@@ -229,6 +236,7 @@ See: [Request Processing, Mocking & Proxying](request-processing.md)
 | `org.mockserver.netty.responsewriter` | netty | Netty response writing | [Request Processing](request-processing.md) |
 | `org.mockserver.lifecycle` | netty | Server lifecycle management | [Netty Pipeline](netty-pipeline.md) |
 | `org.mockserver.dashboard` | netty | Dashboard UI handlers & serializers | [Dashboard UI](dashboard-ui.md) |
+| `org.mockserver.netty.mcp` | netty | MCP (Model Context Protocol) server handler | [Client & Integrations](client-and-integrations.md) |
 | `org.mockserver.integration` | netty | `ClientAndServer` combined class | [Client & Integrations](client-and-integrations.md) |
 | `org.mockserver.mock` | core | Expectation management, HttpState | [Request Processing](request-processing.md) |
 | `org.mockserver.mock.action.http` | core | Action handlers (10 types) | [Request Processing](request-processing.md) |

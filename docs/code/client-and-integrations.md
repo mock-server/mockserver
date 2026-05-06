@@ -385,3 +385,65 @@ graph TB
 | `LocalCallbackRegistry` | core | In-JVM callback storage |
 | `MockServerServlet` | war | Servlet bridge for WAR deployment |
 | `ProxyServlet` | proxy-war | Proxy servlet for WAR deployment |
+
+## MCP (Model Context Protocol) Integration
+
+MockServer exposes its control-plane capabilities via the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP), enabling AI agents and LLM-based tools to interact with MockServer programmatically.
+
+### Protocol Details
+
+| Property | Value |
+|----------|-------|
+| Transport | Streamable HTTP (POST for JSON-RPC, DELETE for session termination) |
+| MCP version | `2025-03-26` |
+| Endpoint path | `/mockserver/mcp` |
+| Session management | Sessions created by `initialize` JSON-RPC request; tracked via `Mcp-Session-Id` header |
+| Enable/disable | `mcpEnabled` configuration property (default: `true`) |
+
+### Available Tools
+
+MCP tools map to MockServer control-plane operations:
+
+| Tool | Description |
+|------|-------------|
+| `create_expectation` | Create a mock expectation (high-level, simplified parameters) |
+| `create_forward_expectation` | Create a forwarding proxy expectation |
+| `create_expectation_from_openapi` | Create expectations from an OpenAPI/Swagger specification |
+| `verify_request` | Verify that requests matching criteria were received a specific number of times |
+| `verify_request_sequence` | Verify that requests were received in a specific order |
+| `retrieve_recorded_requests` | Retrieve requests that MockServer has received |
+| `retrieve_request_responses` | Retrieve request/response pairs |
+| `clear_expectations` | Clear expectations and/or logs matching a request |
+| `reset` | Reset all MockServer state |
+| `get_status` | Check MockServer running status and bound ports |
+| `debug_request_mismatch` | Diagnose why a request did not match any expectation |
+| `stop_server` | Stop the MockServer instance |
+| `raw_expectation` | Full expectation JSON passthrough |
+| `raw_retrieve` | Full retrieve parameters passthrough |
+| `raw_verify` | Full verification JSON passthrough |
+
+### Available Resources
+
+MCP resources provide read-only access to MockServer state:
+
+| Resource URI | Description |
+|--------------|-------------|
+| `mockserver://expectations` | All currently active expectations |
+| `mockserver://requests` | All recorded requests |
+| `mockserver://logs` | Current MockServer log messages |
+| `mockserver://configuration` | Current MockServer configuration properties |
+
+### Authentication
+
+The MCP endpoint enforces the same control-plane authentication (mTLS and/or JWT) as the REST API. See [TLS & Security — MCP Endpoint Authentication](tls-and-security.md#mcp-endpoint-authentication).
+
+### Key Classes
+
+| Class | Module | Role |
+|-------|--------|------|
+| `McpStreamableHttpHandler` | netty | Netty channel handler; intercepts `/mockserver/mcp` requests, handles JSON-RPC 2.0, auth, session management |
+| `McpToolRegistry` | netty | Defines and implements 15 MCP tools (high-level and low-level) by delegating to `HttpState` |
+| `McpResourceRegistry` | netty | Implements 4 MCP resource reads by querying `HttpState` |
+| `McpSessionManager` | netty | Singleton session store with LRU eviction, TTL, and executor lifecycle |
+| `McpSession` | netty | Session state: ID, initialization flag, last-accessed timestamp |
+| `JsonRpcMessage` | netty | JSON-RPC 2.0 request/response/error/notification types |

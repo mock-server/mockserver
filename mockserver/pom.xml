@@ -9,8 +9,9 @@
 
     <name>MockServer</name>
     <description>A simple server to support mocking responses from any server / service that uses HTTP. The expectations
-        that configure how the MockServer will respond and to incoming requests can be setup using any language that can
-        create JSON. In simple client is provided to make this easy in Java.
+        that configure how the MockServer will respond to incoming requests can be setup using any language that can
+        create JSON. A simple client is provided to make this easy in Java. MockServer includes a built-in MCP
+        (Model Context Protocol) server for AI coding assistant integration.
     </description>
     <url>https://www.mock-server.com</url>
 

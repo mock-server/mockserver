@@ -64,6 +64,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
     private HttpActionHandler httpActionHandler;
     private DashboardHandler dashboardHandler;
     private MetricsHandler metricsHandler;
+    private OpenAPISpecHandler openAPISpecHandler;
 
     public HttpRequestHandler(Configuration configuration, LifeCycle server, HttpState httpState, HttpActionHandler httpActionHandler) {
         super(false);
@@ -76,6 +77,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
         this.httpActionHandler = httpActionHandler;
         this.dashboardHandler = new DashboardHandler();
         this.metricsHandler = new MetricsHandler(configuration);
+        this.openAPISpecHandler = new OpenAPISpecHandler();
     }
 
     private static boolean isProxyingRequest(ChannelHandlerContext ctx) {
@@ -142,6 +144,21 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
                 } else if (request.getMethod().getValue().equals("GET") && request.getPath().getValue().startsWith(PATH_PREFIX + "/dashboard")) {
 
                     dashboardHandler.renderDashboard(ctx, request);
+
+                } else if (request.getMethod().getValue().equals("GET") && request.getPath().getValue().equals(PATH_PREFIX + "/openapi.yaml")) {
+
+                    if (httpState.getControlPlaneAuthenticationHandler() != null) {
+                        try {
+                            if (!httpState.getControlPlaneAuthenticationHandler().controlPlaneRequestAuthenticated(request)) {
+                                responseWriter.writeResponse(request, UNAUTHORIZED, "Unauthorized for control plane", MediaType.create("text", "plain").toString());
+                                return;
+                            }
+                        } catch (org.mockserver.authentication.AuthenticationException e) {
+                            responseWriter.writeResponse(request, UNAUTHORIZED, "Unauthorized for control plane", MediaType.create("text", "plain").toString());
+                            return;
+                        }
+                    }
+                    openAPISpecHandler.renderOpenAPISpec(ctx, request);
 
                 } else if (configuration.metricsEnabled() && request.getMethod().getValue().equals("GET") && request.getPath().getValue().matches(PATH_PREFIX + "/metrics")) {
 

@@ -32,6 +32,7 @@ public class Configuration {
     private Boolean detailedMatchFailures;
     private Boolean launchUIForLogLevelDebug;
     private Boolean metricsEnabled;
+    private Boolean mcpEnabled;
 
     // memory usage
     private Integer maxExpectations;
@@ -272,6 +273,18 @@ public class Configuration {
      */
     public Configuration metricsEnabled(Boolean metricsEnabled) {
         this.metricsEnabled = metricsEnabled;
+        return this;
+    }
+
+    public Boolean mcpEnabled() {
+        if (mcpEnabled == null) {
+            return ConfigurationProperties.mcpEnabled();
+        }
+        return mcpEnabled;
+    }
+
+    public Configuration mcpEnabled(Boolean mcpEnabled) {
+        this.mcpEnabled = mcpEnabled;
         return this;
     }
 

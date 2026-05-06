@@ -1,0 +1,21 @@
+<a id="mcp_configuration" class="anchor" href="#mcp_configuration">&nbsp;</a>
+
+<h2>MCP (Model Context Protocol) Configuration:</h2>
+
+<button id="button_configuration_mcp_enabled" class="accordion title"><strong>Enable MCP Endpoint</strong></button>
+<div class="panel title">
+    <p>Enable or disable the MCP (Model Context Protocol) endpoint at <span class="inline_code">/mockserver/mcp</span>.</p>
+    <p>When enabled, MockServer exposes a JSON-RPC 2.0 endpoint implementing the MCP Streamable HTTP transport, allowing AI coding assistants to interact with MockServer programmatically — creating expectations, verifying requests, retrieving traffic, and debugging mismatches.</p>
+    <p>The MCP endpoint enforces the same control plane authentication (mTLS and/or JWT) as the REST API.</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">true</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.mcpEnabled(boolean enable)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.mcpEnabled=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_MCP_ENABLED=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.mcpEnabled=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.mcpEnabled="false"</code></pre>
+</div>

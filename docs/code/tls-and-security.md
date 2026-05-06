@@ -163,6 +163,10 @@ Authentication is configured in `MockServer.createServerBootstrap()` and validat
 | `controlPlaneJWTAuthenticationJWKSource` | JWT handler | Validates Bearer token using JWK source |
 | Both configured | Chained handler | Both mTLS and JWT must succeed |
 
+### MCP Endpoint Authentication
+
+The MCP endpoint (`/mockserver/mcp`) enforces the same control-plane authentication as all other control-plane routes. When `controlPlaneTLSMutualAuthenticationCAChain` and/or `controlPlaneJWTAuthenticationJWKSource` are configured, MCP requests must satisfy the same mTLS and/or JWT requirements. Unauthenticated MCP requests receive a `401 Unauthorized` response with a JSON-RPC error body. This ensures that enabling MCP does not widen the attack surface of a secured MockServer instance.
+
 ### Authentication Classes
 
 | Class | Package | Purpose |

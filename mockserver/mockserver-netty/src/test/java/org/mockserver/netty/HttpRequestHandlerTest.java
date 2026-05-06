@@ -397,6 +397,67 @@ public class HttpRequestHandlerTest {
     }
 
     @Test
+    public void shouldReturnOpenAPISpec() {
+        // given
+        HttpRequest openAPIRequest = request("/mockserver/openapi.yaml").withMethod("GET");
+
+        // when
+        embeddedChannel.writeInbound(openAPIRequest);
+
+        // then
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(200));
+        assertThat(httpResponse.getFirstHeader("content-type"), is("application/yaml; charset=utf-8"));
+        assertThat(httpResponse.getBodyAsString(), containsString("openapi: 3.0.0"));
+        assertThat(httpResponse.getBodyAsString(), containsString("MockServer API"));
+        assertThat(httpResponse.getBodyAsString(), containsString("/mockserver/expectation"));
+    }
+
+    @Test
+    public void shouldRejectOpenAPISpecWhenAuthEnabled() {
+        // given
+        httpStateHandler.setControlPlaneAuthenticationHandler(request -> false);
+        HttpRequest openAPIRequest = request("/mockserver/openapi.yaml").withMethod("GET");
+
+        // when
+        embeddedChannel.writeInbound(openAPIRequest);
+
+        // then
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(401));
+        assertThat(httpResponse.getBodyAsString(), containsString("Unauthorized for control plane"));
+    }
+
+    @Test
+    public void shouldAllowOpenAPISpecWhenAuthSucceeds() {
+        // given
+        httpStateHandler.setControlPlaneAuthenticationHandler(request -> true);
+        HttpRequest openAPIRequest = request("/mockserver/openapi.yaml").withMethod("GET");
+
+        // when
+        embeddedChannel.writeInbound(openAPIRequest);
+
+        // then
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(200));
+        assertThat(httpResponse.getBodyAsString(), containsString("openapi: 3.0.0"));
+    }
+
+    @Test
+    public void shouldAllowOpenAPISpecWhenNoAuth() {
+        // given - no auth handler set (default)
+        HttpRequest openAPIRequest = request("/mockserver/openapi.yaml").withMethod("GET");
+
+        // when
+        embeddedChannel.writeInbound(openAPIRequest);
+
+        // then
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(200));
+        assertThat(httpResponse.getBodyAsString(), containsString("openapi: 3.0.0"));
+    }
+
+    @Test
     public void shouldProxyRequestsWhenNotProxying() {
         // given
         HttpRequest request = request("request_one");

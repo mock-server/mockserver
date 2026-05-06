@@ -1,0 +1,49 @@
+# MockServer
+
+> MockServer is an open-source HTTP(S) mock server and proxy for integration testing. It enables easy mocking of any system you integrate with via HTTP or HTTPS, supports request matching with JSON, XPath, regex, and JSON Schema, and acts as a recording proxy for introspection of traffic between services. Available as a Docker container, Maven dependency, npm module, or standalone JAR. Clients are available in Java, JavaScript/TypeScript, Python, and Ruby.
+
+## Getting Started
+- [Getting Started](https://www.mock-server.com/mock_server/getting_started.html): Quick start guide covering starting MockServer, creating expectations, running tests, and verifying requests
+- [Running MockServer](https://www.mock-server.com/where/running_mock_server.html): How to run MockServer via Docker, Maven plugin, JUnit, npm, Homebrew, or standalone JAR
+
+## Creating Expectations
+- [Creating Expectations](https://www.mock-server.com/mock_server/creating_expectations.html): How to set up request matchers and response actions including literal responses, templated responses, class/closure callbacks, forwards, and errors
+- [OpenAPI Expectations](https://www.mock-server.com/mock_server/using_openapi.html): Generate expectations from OpenAPI/Swagger specifications
+
+## Verification
+- [Verifying Requests](https://www.mock-server.com/mock_server/verification.html): Verify that requests were received, including exact counts and sequence verification
+
+## Configuration
+- [Configuration Properties](https://www.mock-server.com/mock_server/configuration_properties.html): All configuration properties with defaults, including memory limits, logging, TLS, and performance tuning
+
+## Client Libraries
+- [Java Client](https://www.mock-server.com/mock_server/mockserver_clients.html): Java client library (Maven: org.mock-server:mockserver-client-java)
+- [JavaScript/TypeScript Client](https://www.npmjs.com/package/mockserver-client): Node.js client (npm: mockserver-client)
+- [Python Client](https://pypi.org/project/mockserver-client/): Python client (pip: mockserver-client)
+- [Ruby Client](https://rubygems.org/gems/mockserver-client): Ruby client (gem: mockserver-client)
+
+## REST API
+- [REST API (OpenAPI Spec)](https://www.mock-server.com/mockserver-openapi.yaml): Full OpenAPI 3.0 specification for MockServer's control plane API
+- [REST API on SwaggerHub](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi): Interactive API explorer
+
+## AI Integration
+- [MCP Setup](https://www.mock-server.com/mock_server/ai_mcp_setup.html): Connect AI coding assistants (Cursor, Claude Code, Windsurf, Cline, OpenCode) to MockServer via Model Context Protocol (MCP) at /mockserver/mcp
+- [MCP Tools Reference](https://www.mock-server.com/mock_server/ai_mcp_tools.html): Complete reference for all MCP tools including create_expectation, verify_request, retrieve_recorded_requests, debug_request_mismatch, and more
+- [Debugging with AI](https://www.mock-server.com/mock_server/ai_debugging.html): Use AI assistants to debug HTTP traffic issues, diagnose request mismatches, and inspect recorded request-response pairs
+- [OpenAPI for AI](https://www.mock-server.com/mock_server/ai_openapi.html): Use MockServer's OpenAPI spec as a fallback for AI tools that don't support MCP
+
+## Docker
+- [Docker Container](https://www.mock-server.com/where/docker.html): Run MockServer as a Docker container with environment variable configuration
+
+## Proxying
+- [Proxying Overview](https://www.mock-server.com/proxy/getting_started.html): Use MockServer as a recording proxy to capture and inspect HTTP traffic between services
+
+## TLS / HTTPS
+- [TLS Configuration](https://www.mock-server.com/mock_server/HTTPS_TLS.html): Configure TLS/HTTPS including custom certificates, mTLS, and CA certificate chains
+
+## Optional
+- [Performance Tuning](https://www.mock-server.com/mock_server/performance.html): Optimize MockServer for high-throughput scenarios
+- [Control Plane Auth](https://www.mock-server.com/mock_server/control_plane_authorisation.html): Secure the control plane API with mTLS or JWT authentication
+- [Response Templates](https://www.mock-server.com/mock_server/response_templates.html): Use Mustache or Velocity templates for dynamic responses
+- [Clearing & Resetting](https://www.mock-server.com/mock_server/clearing_and_resetting.html): Clear specific expectations/logs or reset all state
+- [Debugging Issues](https://www.mock-server.com/mock_server/debugging_issues.html): Troubleshoot common issues including request matching failures

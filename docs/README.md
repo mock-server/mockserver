@@ -11,11 +11,11 @@ Deep-dive documentation of MockServer's codebase, from high-level module structu
 | Document | Level | Description |
 |----------|-------|-------------|
 | [Code Overview](code/overview.md) | High | Module hierarchy, dependency graph, package layout |
-| [Netty Pipeline](code/netty-pipeline.md) | Medium | Port unification, protocol detection, channel handlers, relay pattern |
+| [Netty Pipeline](code/netty-pipeline.md) | Medium | Port unification, protocol detection, channel handlers, MCP handler, relay pattern |
 | [Request Processing](code/request-processing.md) | Medium | Mock matching, proxy forwarding, action dispatch, WAR bridge |
 | [Event System](code/event-system.md) | Medium | LMAX Disruptor ring buffer, verification, persistence, observers |
 | [Dashboard UI](code/dashboard-ui.md) | Medium | React SPA, Redux state, WebSocket communication, data assembly |
-| [Domain Model](code/domain-model.md) | Low | Model hierarchy, matchers, codecs, OpenAPI support, configuration |
+| [Domain Model](code/domain-model.md) | Low | Model hierarchy, matchers, codecs, OpenAPI support, configuration (incl. MCP) |
 | [TLS & Security](code/tls-and-security.md) | Low | BouncyCastle CA, SNI, mTLS, JWT auth, control plane security |
 | [Client & Integrations](code/client-and-integrations.md) | Low | MockServerClient, JUnit 4/5, Spring, WebSocket callbacks |
 | [Memory Management](code/memory-management.md) | Medium | Log entry and expectation memory analysis, default limit calculation, tuning guide |

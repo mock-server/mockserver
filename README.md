@@ -21,6 +21,10 @@ For usage guide please see: [www.mock-server.com](https://www.mock-server.com/)
 
 Architecture, code structure, infrastructure, and operations documentation is available in the [docs/](docs/README.md) directory.
 
+### AI Integration
+
+MockServer includes a built-in [MCP](https://modelcontextprotocol.io) server for AI coding assistant integration at `/mockserver/mcp`. See [llms.txt](https://www.mock-server.com/llms.txt) and [AI Integration docs](https://www.mock-server.com/mock_server/ai_mcp_setup.html).
+
 ### Change Log
 
 Please see: [Change Log](https://github.com/mock-server/mockserver-monorepo/blob/master/changelog.md)

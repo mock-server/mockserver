@@ -1,0 +1,629 @@
+---
+title: MCP Tools Reference
+shortTitle: MCP Tools Reference
+layout: page
+pageOrder: 2
+section: 'AI Integration'
+subsection: true
+sitemap:
+  priority: 0.8
+  changefreq: 'monthly'
+  lastmod: 2026-05-06T00:00:00+00:00
+---
+
+<p>MockServer's MCP server exposes a comprehensive set of tools that AI assistants can use to interact with MockServer. Tools are divided into <strong>high-level tools</strong> (simplified parameters for common tasks) and <strong>low-level tools</strong> (full JSON passthrough for advanced use cases).</p>
+
+<h2>Tool Overview</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Tool</th>
+            <th>Description</th>
+            <th>Level</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td><a href="#create_expectation"><code>create_expectation</code></a></td><td>Create a mock expectation</td><td>High</td></tr>
+        <tr><td><a href="#verify_request"><code>verify_request</code></a></td><td>Verify a request was received N times</td><td>High</td></tr>
+        <tr><td><a href="#verify_request_sequence"><code>verify_request_sequence</code></a></td><td>Verify requests were received in order</td><td>High</td></tr>
+        <tr><td><a href="#retrieve_recorded_requests"><code>retrieve_recorded_requests</code></a></td><td>Get recorded requests</td><td>High</td></tr>
+        <tr><td><a href="#retrieve_request_responses"><code>retrieve_request_responses</code></a></td><td>Get request-response pairs</td><td>High</td></tr>
+        <tr><td><a href="#clear_expectations"><code>clear_expectations</code></a></td><td>Clear matching expectations and/or logs</td><td>High</td></tr>
+        <tr><td><a href="#reset"><code>reset</code></a></td><td>Reset all MockServer state</td><td>High</td></tr>
+        <tr><td><a href="#get_status"><code>get_status</code></a></td><td>Server status and ports</td><td>High</td></tr>
+        <tr><td><a href="#create_forward_expectation"><code>create_forward_expectation</code></a></td><td>Create a forwarding proxy expectation</td><td>High</td></tr>
+        <tr><td><a href="#debug_request_mismatch"><code>debug_request_mismatch</code></a></td><td>Diagnose why a request did not match</td><td>High</td></tr>
+        <tr><td><a href="#stop_server"><code>stop_server</code></a></td><td>Stop the MockServer instance</td><td>High</td></tr>
+        <tr><td><a href="#create_expectation_from_openapi"><code>create_expectation_from_openapi</code></a></td><td>Generate expectations from an OpenAPI spec</td><td>High</td></tr>
+        <tr><td><a href="#raw_expectation"><code>raw_expectation</code></a></td><td>Full expectation JSON passthrough</td><td>Low</td></tr>
+        <tr><td><a href="#raw_retrieve"><code>raw_retrieve</code></a></td><td>Full retrieve parameters</td><td>Low</td></tr>
+        <tr><td><a href="#raw_verify"><code>raw_verify</code></a></td><td>Full verification JSON</td><td>Low</td></tr>
+    </tbody>
+</table>
+
+<a id="high_level_tools" class="anchor" href="#high_level_tools">&nbsp;</a>
+
+<h2>High-Level Tools</h2>
+
+<a id="create_expectation" class="anchor" href="#create_expectation">&nbsp;</a>
+
+<h3>create_expectation</h3>
+
+<p>Create a mock expectation that matches incoming requests and returns a specified response.</p>
+
+<table>
+    <thead>
+        <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>method</code></td><td>string</td><td>Yes</td><td>HTTP method to match (GET, POST, PUT, DELETE, etc.)</td></tr>
+        <tr><td><code>path</code></td><td>string</td><td>Yes</td><td>URL path to match (e.g. <code>/api/users</code>)</td></tr>
+        <tr><td><code>statusCode</code></td><td>integer</td><td>No</td><td>HTTP status code to return. Defaults to 200.</td></tr>
+        <tr><td><code>responseBody</code></td><td>string or object</td><td>No</td><td>Response body to return. Strings are sent as-is; objects are serialised as JSON.</td></tr>
+        <tr><td><code>responseHeaders</code></td><td>object</td><td>No</td><td>Response headers as key-value pairs</td></tr>
+        <tr><td><code>times</code></td><td>integer</td><td>No</td><td>Number of times the expectation should be used. Defaults to unlimited.</td></tr>
+        <tr><td><code>timeToLive</code></td><td>string</td><td>No</td><td>How long the expectation remains active, in format <code>&lt;number&gt; &lt;UNIT&gt;</code> (e.g. <code>"60 SECONDS"</code>). Defaults to unlimited.</td></tr>
+    </tbody>
+</table>
+
+<p><strong>Example request:</strong></p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "create_expectation",
+    "arguments": {
+      "method": "GET",
+      "path": "/api/users",
+      "statusCode": 200,
+      "responseBody": "{\"users\": [{\"id\": 1, \"name\": \"Alice\"}]}",
+      "responseHeaders": {
+        "content-type": "application/json"
+      }
+    }
+  }
+}</code></pre>
+
+<p><strong>Example response:</strong></p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"status\":\"created\",\"count\":1}"
+      }
+    ],
+    "isError": false
+  }
+}</code></pre>
+
+<a id="verify_request" class="anchor" href="#verify_request">&nbsp;</a>
+
+<h3>verify_request</h3>
+
+<p>Verify that a specific request was received by MockServer a certain number of times.</p>
+
+<table>
+    <thead>
+        <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>method</code></td><td>string</td><td>No</td><td>HTTP method to match</td></tr>
+        <tr><td><code>path</code></td><td>string</td><td>Yes</td><td>URL path to match</td></tr>
+        <tr><td><code>atLeast</code></td><td>integer</td><td>No</td><td>Minimum number of times the request must have been received</td></tr>
+        <tr><td><code>atMost</code></td><td>integer</td><td>No</td><td>Maximum number of times the request must have been received</td></tr>
+    </tbody>
+</table>
+
+<p><strong>Example request:</strong></p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "verify_request",
+    "arguments": {
+      "method": "POST",
+      "path": "/api/orders",
+      "atLeast": 1,
+      "atMost": 3
+    }
+  }
+}</code></pre>
+
+<p><strong>Example response:</strong></p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Verification passed"
+      }
+    ],
+    "isError": false
+  }
+}</code></pre>
+
+<a id="verify_request_sequence" class="anchor" href="#verify_request_sequence">&nbsp;</a>
+
+<h3>verify_request_sequence</h3>
+
+<p>Verify that a sequence of requests was received in the specified order.</p>
+
+<table>
+    <thead>
+        <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>requests</code></td><td>array</td><td>Yes</td><td>Ordered array of request matchers, each with optional <code>method</code> and <code>path</code> fields</td></tr>
+    </tbody>
+</table>
+
+<p><strong>Example request:</strong></p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "verify_request_sequence",
+    "arguments": {
+      "requests": [
+        { "method": "POST", "path": "/api/login" },
+        { "method": "GET", "path": "/api/profile" },
+        { "method": "POST", "path": "/api/logout" }
+      ]
+    }
+  }
+}</code></pre>
+
+<a id="retrieve_recorded_requests" class="anchor" href="#retrieve_recorded_requests">&nbsp;</a>
+
+<h3>retrieve_recorded_requests</h3>
+
+<p>Retrieve requests that have been recorded by MockServer.</p>
+
+<table>
+    <thead>
+        <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>method</code></td><td>string</td><td>No</td><td>Filter by HTTP method</td></tr>
+        <tr><td><code>path</code></td><td>string</td><td>No</td><td>Filter by URL path</td></tr>
+        <tr><td><code>limit</code></td><td>integer</td><td>No</td><td>Maximum number of requests to return</td></tr>
+    </tbody>
+</table>
+
+<p><strong>Example request:</strong></p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "method": "tools/call",
+  "params": {
+    "name": "retrieve_recorded_requests",
+    "arguments": {
+      "path": "/api/payments",
+      "limit": 10
+    }
+  }
+}</code></pre>
+
+<p><strong>Example response:</strong></p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "[{\"method\": \"POST\", \"path\": \"/api/payments\", \"headers\": {\"content-type\": [\"application/json\"]}, \"body\": {\"amount\": 99.99}}]"
+      }
+    ],
+    "isError": false
+  }
+}</code></pre>
+
+<a id="retrieve_request_responses" class="anchor" href="#retrieve_request_responses">&nbsp;</a>
+
+<h3>retrieve_request_responses</h3>
+
+<p>Retrieve request-response pairs recorded by MockServer, useful for understanding the full HTTP conversation.</p>
+
+<table>
+    <thead>
+        <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>method</code></td><td>string</td><td>No</td><td>Filter by HTTP method</td></tr>
+        <tr><td><code>path</code></td><td>string</td><td>No</td><td>Filter by URL path</td></tr>
+        <tr><td><code>limit</code></td><td>integer</td><td>No</td><td>Maximum number of pairs to return</td></tr>
+    </tbody>
+</table>
+
+<p><strong>Example request:</strong></p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 5,
+  "method": "tools/call",
+  "params": {
+    "name": "retrieve_request_responses",
+    "arguments": {
+      "path": "/api/users",
+      "limit": 5
+    }
+  }
+}</code></pre>
+
+<a id="clear_expectations" class="anchor" href="#clear_expectations">&nbsp;</a>
+
+<h3>clear_expectations</h3>
+
+<p>Clear expectations and/or recorded requests and logs that match the specified request matcher.</p>
+
+<table>
+    <thead>
+        <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>method</code></td><td>string</td><td>No</td><td>HTTP method to match</td></tr>
+        <tr><td><code>path</code></td><td>string</td><td>No</td><td>URL path to match</td></tr>
+        <tr><td><code>type</code></td><td>string</td><td>No</td><td>What to clear: <code>ALL</code>, <code>LOG</code>, or <code>EXPECTATIONS</code>. Defaults to <code>ALL</code>.</td></tr>
+    </tbody>
+</table>
+
+<p><strong>Example request:</strong></p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 6,
+  "method": "tools/call",
+  "params": {
+    "name": "clear_expectations",
+    "arguments": {
+      "path": "/api/users",
+      "type": "EXPECTATIONS"
+    }
+  }
+}</code></pre>
+
+<a id="reset" class="anchor" href="#reset">&nbsp;</a>
+
+<h3>reset</h3>
+
+<p>Reset MockServer by clearing all expectations, recorded requests, and logs. This tool takes no parameters.</p>
+
+<p><strong>Example request:</strong></p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 7,
+  "method": "tools/call",
+  "params": {
+    "name": "reset",
+    "arguments": {}
+  }
+}</code></pre>
+
+<a id="get_status" class="anchor" href="#get_status">&nbsp;</a>
+
+<h3>get_status</h3>
+
+<p>Retrieve the status of MockServer, including which ports it is listening on. This tool takes no parameters.</p>
+
+<p><strong>Example request:</strong></p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 8,
+  "method": "tools/call",
+  "params": {
+    "name": "get_status",
+    "arguments": {}
+  }
+}</code></pre>
+
+<p><strong>Example response:</strong></p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 8,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"ports\": [1080]}"
+      }
+    ],
+    "isError": false
+  }
+}</code></pre>
+
+<a id="create_forward_expectation" class="anchor" href="#create_forward_expectation">&nbsp;</a>
+
+<h3>create_forward_expectation</h3>
+
+<p>Create a forwarding proxy expectation that forwards matching requests to a destination host.</p>
+
+<table>
+    <thead>
+        <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>path</code></td><td>string</td><td>Yes</td><td>URL path to match for forwarding</td></tr>
+        <tr><td><code>host</code></td><td>string</td><td>Yes</td><td>Destination host to forward to</td></tr>
+        <tr><td><code>port</code></td><td>integer</td><td>No</td><td>Destination port. Defaults to 443.</td></tr>
+        <tr><td><code>scheme</code></td><td>string</td><td>No</td><td>Protocol scheme: <code>HTTP</code> or <code>HTTPS</code>. Defaults to <code>HTTPS</code>.</td></tr>
+    </tbody>
+</table>
+
+<p><strong>Example request:</strong></p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 9,
+  "method": "tools/call",
+  "params": {
+    "name": "create_forward_expectation",
+    "arguments": {
+      "path": "/api/.*",
+      "host": "api.example.com",
+      "port": 443,
+      "scheme": "HTTPS"
+    }
+  }
+}</code></pre>
+
+<a id="debug_request_mismatch" class="anchor" href="#debug_request_mismatch">&nbsp;</a>
+
+<h3>debug_request_mismatch</h3>
+
+<p>Diagnose why a request did not match any expectation. This tool compares the provided request details against active expectations and returns detailed mismatch information.</p>
+
+<table>
+    <thead>
+        <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>method</code></td><td>string</td><td>No</td><td>HTTP method of the failing request</td></tr>
+        <tr><td><code>path</code></td><td>string</td><td>Yes</td><td>URL path of the failing request</td></tr>
+        <tr><td><code>headers</code></td><td>object</td><td>No</td><td>Headers of the failing request</td></tr>
+        <tr><td><code>body</code></td><td>string</td><td>No</td><td>Body of the failing request</td></tr>
+    </tbody>
+</table>
+
+<p><strong>Example request:</strong></p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 10,
+  "method": "tools/call",
+  "params": {
+    "name": "debug_request_mismatch",
+    "arguments": {
+      "method": "POST",
+      "path": "/api/users",
+      "headers": {
+        "content-type": "application/xml"
+      },
+      "body": "&lt;user&gt;&lt;name&gt;Alice&lt;/name&gt;&lt;/user&gt;"
+    }
+  }
+}</code></pre>
+
+<a id="stop_server" class="anchor" href="#stop_server">&nbsp;</a>
+
+<h3>stop_server</h3>
+
+<p>Stop the MockServer instance. This tool takes no parameters. Use with caution as the server will shut down immediately.</p>
+
+<p><strong>Example request:</strong></p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 15,
+  "method": "tools/call",
+  "params": {
+    "name": "stop_server",
+    "arguments": {}
+  }
+}</code></pre>
+
+<a id="create_expectation_from_openapi" class="anchor" href="#create_expectation_from_openapi">&nbsp;</a>
+
+<h3>create_expectation_from_openapi</h3>
+
+<p>Generate mock expectations from an <a target="_blank" href="https://swagger.io/docs/specification/basic-structure/">OpenAPI v3</a> specification. MockServer will create one expectation per operation in the specification, using example responses where available.</p>
+
+<table>
+    <thead>
+        <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>specUrlOrPayload</code></td><td>string</td><td>Yes</td><td>URL, file path, or inline OpenAPI specification (JSON or YAML)</td></tr>
+        <tr><td><code>operationsAndResponses</code></td><td>object</td><td>No</td><td>Map of <code>operationId</code> to status code to control which operations and responses are mocked</td></tr>
+    </tbody>
+</table>
+
+<p><strong>Example request:</strong></p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 11,
+  "method": "tools/call",
+  "params": {
+    "name": "create_expectation_from_openapi",
+    "arguments": {
+      "specUrlOrPayload": "https://petstore3.swagger.io/api/v3/openapi.json",
+      "operationsAndResponses": {
+        "findPetsByStatus": "200",
+        "getPetById": "200"
+      }
+    }
+  }
+}</code></pre>
+
+<a id="low_level_tools" class="anchor" href="#low_level_tools">&nbsp;</a>
+
+<h2>Low-Level Tools</h2>
+
+<p>Low-level tools accept the full MockServer JSON format, giving you complete control over all options. Use these when the high-level tools do not expose a parameter you need.</p>
+
+<a id="raw_expectation" class="anchor" href="#raw_expectation">&nbsp;</a>
+
+<h3>raw_expectation</h3>
+
+<p>Create an expectation using the full MockServer expectation JSON format. This is a passthrough to the <code class="code inline">PUT /mockserver/expectation</code> REST API.</p>
+
+<table>
+    <thead>
+        <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>expectation</code></td><td>object</td><td>Yes</td><td>Full expectation JSON as defined in the <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi">REST API specification</a></td></tr>
+    </tbody>
+</table>
+
+<p><strong>Example request:</strong></p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 12,
+  "method": "tools/call",
+  "params": {
+    "name": "raw_expectation",
+    "arguments": {
+      "expectation": {
+        "httpRequest": {
+          "method": "GET",
+          "path": "/api/users",
+          "queryStringParameters": {
+            "page": ["1"],
+            "limit": ["10"]
+          }
+        },
+        "httpResponse": {
+          "statusCode": 200,
+          "headers": {
+            "content-type": ["application/json"]
+          },
+          "body": "{\"users\": [], \"total\": 0}"
+        },
+        "times": {
+          "remainingTimes": 5,
+          "unlimited": false
+        }
+      }
+    }
+  }
+}</code></pre>
+
+<a id="raw_retrieve" class="anchor" href="#raw_retrieve">&nbsp;</a>
+
+<h3>raw_retrieve</h3>
+
+<p>Retrieve recorded data using the full MockServer retrieve JSON format. This is a passthrough to the <code class="code inline">PUT /mockserver/retrieve</code> REST API.</p>
+
+<table>
+    <thead>
+        <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>requestDefinition</code></td><td>object</td><td>No</td><td>Request matcher JSON to filter results</td></tr>
+        <tr><td><code>type</code></td><td>string</td><td>No</td><td>Type of data to retrieve: <code>REQUESTS</code>, <code>REQUEST_RESPONSES</code>, <code>RECORDED_EXPECTATIONS</code>, <code>ACTIVE_EXPECTATIONS</code>, or <code>LOGS</code></td></tr>
+        <tr><td><code>format</code></td><td>string</td><td>No</td><td>Response format: <code>JSON</code>, <code>JAVA</code>, or <code>LOG_ENTRIES</code></td></tr>
+    </tbody>
+</table>
+
+<p><strong>Example request:</strong></p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 13,
+  "method": "tools/call",
+  "params": {
+    "name": "raw_retrieve",
+    "arguments": {
+      "requestDefinition": {
+        "path": "/api/.*",
+        "method": "POST"
+      },
+      "type": "REQUEST_RESPONSES",
+      "format": "JSON"
+    }
+  }
+}</code></pre>
+
+<a id="raw_verify" class="anchor" href="#raw_verify">&nbsp;</a>
+
+<h3>raw_verify</h3>
+
+<p>Verify requests using the full MockServer verification JSON format. This is a passthrough to the <code class="code inline">PUT /mockserver/verify</code> REST API.</p>
+
+<table>
+    <thead>
+        <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>verification</code></td><td>object</td><td>Yes</td><td>Full verification JSON as defined in the <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi">REST API specification</a></td></tr>
+    </tbody>
+</table>
+
+<p><strong>Example request:</strong></p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 14,
+  "method": "tools/call",
+  "params": {
+    "name": "raw_verify",
+    "arguments": {
+      "verification": {
+        "httpRequest": {
+          "method": "POST",
+          "path": "/api/orders",
+          "body": {
+            "type": "JSON_SCHEMA",
+            "jsonSchema": "{\"type\": \"object\", \"required\": [\"orderId\"]}"
+          }
+        },
+        "times": {
+          "atLeast": 1,
+          "atMost": 5
+        }
+      }
+    }
+  }
+}</code></pre>
+
+<a id="resources" class="anchor" href="#resources">&nbsp;</a>
+
+<h2>MCP Resources</h2>
+
+<p>In addition to tools, MockServer's MCP server exposes <strong>resources</strong> that AI assistants can read for context. Resources provide real-time visibility into MockServer's current state.</p>
+
+<table>
+    <thead>
+        <tr><th>Resource URI</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>mockserver://expectations</code></td><td>All currently active expectations configured on the server</td></tr>
+        <tr><td><code>mockserver://requests</code></td><td>All recorded requests received by MockServer</td></tr>
+        <tr><td><code>mockserver://logs</code></td><td>Server logs including request matching, expectation creation, and errors</td></tr>
+        <tr><td><code>mockserver://configuration</code></td><td>Current MockServer configuration properties</td></tr>
+    </tbody>
+</table>
+
+<p>Resources are read-only and are updated in real time. AI assistants can use these to understand the current state of MockServer before taking actions. For example, an assistant might read <code class="code inline">mockserver://expectations</code> to see what mocks are already configured before creating a new one.</p>

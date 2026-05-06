@@ -1,0 +1,142 @@
+---
+title: MCP Setup - Connect AI Assistants
+shortTitle: MCP Setup
+layout: page
+pageOrder: 1
+section: 'AI Integration'
+subsection: true
+sitemap:
+  priority: 0.8
+  changefreq: 'monthly'
+  lastmod: 2026-05-06T00:00:00+00:00
+---
+
+<p>MockServer includes a built-in <strong>MCP (Model Context Protocol)</strong> server that enables AI coding assistants to programmatically create mock expectations, verify requests, retrieve recorded traffic, and debug HTTP issues — all through natural language conversations.</p>
+
+<h2>Prerequisites</h2>
+
+<p>You need a running MockServer instance. The quickest way to start one is with Docker:</p>
+
+<pre class="prettyprint code"><code class="code">docker run -d --rm -p 1080:1080 mockserver/mockserver</code></pre>
+
+<p>Alternatively, see <a href="/mock_server/running_mock_server.html">Running MockServer</a> for other ways to start MockServer (Java API, Maven plugin, npm, etc.).</p>
+
+<h2>MCP Endpoint</h2>
+
+<p>The MCP server is available at the following URL on any running MockServer instance — no additional configuration is required:</p>
+
+<pre class="prettyprint code"><code class="code">http://localhost:1080/mockserver/mcp</code></pre>
+
+<p>The endpoint supports the <strong>Streamable HTTP</strong> transport as defined by the <a target="_blank" href="https://modelcontextprotocol.io/specification">MCP specification</a>. If your MockServer is running on a different host or port, adjust the URL accordingly.</p>
+
+<h2>Configuring Your AI Assistant</h2>
+
+<p>Choose your AI coding assistant below and follow the configuration instructions.</p>
+
+<a id="cursor" class="anchor" href="#cursor">&nbsp;</a>
+
+<h3>Cursor</h3>
+
+<p>Create a <code class="code inline">.cursor/mcp.json</code> file in your project root:</p>
+
+<pre class="prettyprint code"><code class="code">{
+  "mcpServers": {
+    "mockserver": {
+      "type": "streamable-http",
+      "url": "http://localhost:1080/mockserver/mcp"
+    }
+  }
+}</code></pre>
+
+<p>Restart Cursor to pick up the new configuration.</p>
+
+<a id="claude-code" class="anchor" href="#claude-code">&nbsp;</a>
+
+<h3>Claude Code</h3>
+
+<p>Run the following command in your terminal:</p>
+
+<pre class="prettyprint code"><code class="code">claude mcp add mockserver --transport streamable-http http://localhost:1080/mockserver/mcp</code></pre>
+
+<p>Claude Code will automatically detect the MCP server on the next conversation.</p>
+
+<a id="windsurf" class="anchor" href="#windsurf">&nbsp;</a>
+
+<h3>Windsurf</h3>
+
+<p>Create a <code class="code inline">.windsurf/mcp.json</code> file in your project root:</p>
+
+<pre class="prettyprint code"><code class="code">{
+  "mcpServers": {
+    "mockserver": {
+      "type": "streamable-http",
+      "url": "http://localhost:1080/mockserver/mcp"
+    }
+  }
+}</code></pre>
+
+<p>Restart Windsurf to pick up the new configuration.</p>
+
+<a id="cline" class="anchor" href="#cline">&nbsp;</a>
+
+<h3>Cline</h3>
+
+<p>Create a <code class="code inline">.cline/mcp_settings.json</code> file in your project root:</p>
+
+<pre class="prettyprint code"><code class="code">{
+  "mcpServers": {
+    "mockserver": {
+      "type": "streamable-http",
+      "url": "http://localhost:1080/mockserver/mcp"
+    }
+  }
+}</code></pre>
+
+<p>Cline will detect the new MCP server automatically.</p>
+
+<a id="continue" class="anchor" href="#continue">&nbsp;</a>
+
+<h3>Continue</h3>
+
+<p>Add the following to your <code class="code inline">.continue/config.yaml</code> file:</p>
+
+<pre class="prettyprint code"><code class="code">mcpServers:
+  - name: mockserver
+    type: streamable-http
+    url: http://localhost:1080/mockserver/mcp</code></pre>
+
+<p>Restart Continue to pick up the new configuration.</p>
+
+<a id="opencode" class="anchor" href="#opencode">&nbsp;</a>
+
+<h3>OpenCode</h3>
+
+<p>Add the following to your <code class="code inline">.opencode/config.toml</code> file:</p>
+
+<pre class="prettyprint code"><code class="code">[mcpServers.mockserver]
+type = "streamable-http"
+url = "http://localhost:1080/mockserver/mcp"</code></pre>
+
+<p>OpenCode will detect the new MCP server on the next session.</p>
+
+<h2>Quick Test</h2>
+
+<p>Once configured, verify the integration by asking your AI assistant:</p>
+
+<blockquote>
+<p><em>"Create a mock that returns 200 OK for GET /api/health"</em></p>
+</blockquote>
+
+<p>The assistant should use the <code class="code inline">create_expectation</code> MCP tool to configure the expectation on your running MockServer instance. You can verify it worked by running:</p>
+
+<pre class="prettyprint code"><code class="code">curl -v http://localhost:1080/api/health</code></pre>
+
+<p>You should see a <code class="code inline">200 OK</code> response.</p>
+
+<h2>Next Steps</h2>
+
+<ul>
+    <li><a href="/mock_server/ai_mcp_tools.html"><strong>MCP Tools Reference</strong></a> — full documentation of all available MCP tools, parameters, and example requests</li>
+    <li><a href="/mock_server/ai_debugging.html"><strong>Debugging with AI</strong></a> — workflows for using AI assistants to debug HTTP traffic</li>
+    <li><a href="/mock_server/ai_openapi.html"><strong>OpenAPI for AI</strong></a> — using MockServer's OpenAPI spec as a fallback for AI tools without MCP support</li>
+</ul>

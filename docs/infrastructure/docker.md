@@ -78,6 +78,8 @@ It also bundles `netty-tcnative-boringssl-static` native library for TLS perform
 
 **Exposed port:** 1080
 
+> **MCP endpoint:** When `mcpEnabled=true` (via system property or `mockserver.properties`), the MCP (Model Context Protocol) endpoint is available at `/mockserver/mcp` on the same port. AI agents can connect using HTTP+SSE transport.
+
 **Entry point:** `java -Dfile.encoding=UTF-8 -cp /mockserver-netty-jar-with-dependencies.jar:/libs/* -Dmockserver.propertyFile=/config/mockserver.properties org.mockserver.cli.Main`
 
 ### Build Images

@@ -7,6 +7,7 @@ import org.mockserver.configuration.Configuration;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.mock.HttpState;
 import org.mockserver.mock.action.http.HttpActionHandler;
+import org.mockserver.netty.mcp.McpSessionManager;
 import org.mockserver.netty.unification.PortUnificationHandler;
 import org.mockserver.socket.tls.NettySslContextFactory;
 
@@ -17,6 +18,7 @@ public class MockServerUnificationInitializer extends ChannelHandlerAdapter {
     private final HttpState httpState;
     private final HttpActionHandler actionHandler;
     private final NettySslContextFactory nettySslContextFactory;
+    private final McpSessionManager mcpSessionManager;
 
     public MockServerUnificationInitializer(Configuration configuration, LifeCycle server, HttpState httpState, HttpActionHandler actionHandler, NettySslContextFactory nettySslContextFactory) {
         this.configuration = configuration;
@@ -24,10 +26,15 @@ public class MockServerUnificationInitializer extends ChannelHandlerAdapter {
         this.httpState = httpState;
         this.actionHandler = actionHandler;
         this.nettySslContextFactory = nettySslContextFactory;
+        this.mcpSessionManager = new McpSessionManager(httpState.getMockServerLogger());
+    }
+
+    public McpSessionManager getMcpSessionManager() {
+        return mcpSessionManager;
     }
 
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) {
-        ctx.pipeline().replace(this, null, new PortUnificationHandler(configuration, server, httpState, actionHandler, nettySslContextFactory));
+        ctx.pipeline().replace(this, null, new PortUnificationHandler(configuration, server, httpState, actionHandler, nettySslContextFactory, mcpSessionManager));
     }
 }

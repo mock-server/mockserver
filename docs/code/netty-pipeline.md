@@ -112,7 +112,9 @@ graph LR
     D --> E[HttpObjectAggregator]
     E --> F[CallbackWebSocketServerHandler]
     F --> G[DashboardWebSocketHandler]
-    G --> H[MockServerHttpServerCodec]
+    G --> MCP["McpStreamableHttpHandler
+(conditional)"]
+    MCP --> H[MockServerHttpServerCodec]
     H --> I[HttpRequestHandler]
 ```
 
@@ -125,6 +127,7 @@ graph LR
 | HttpObjectAggregator | Netty built-in | Aggregates HTTP chunks into `FullHttpRequest` |
 | CallbackWebSocketServerHandler | `o.m.netty.websocketregistry` | Intercepts `/_mockserver_callback_websocket` |
 | DashboardWebSocketHandler | `o.m.dashboard` | Intercepts `/_mockserver_ui_websocket` |
+| McpStreamableHttpHandler | `o.m.netty.mcp` | Intercepts `/mockserver/mcp` for MCP (Model Context Protocol) Streamable HTTP transport. Only added when `ConfigurationProperties.mcpEnabled()` is true. POST requests are offloaded to a dedicated executor (`McpSessionManager.getExecutor()`) to avoid blocking the Netty event loop during blocking tool calls (e.g., `Future.get()`) |
 | MockServerHttpServerCodec | `o.m.codec` | Converts Netty HTTP ↔ MockServer model |
 | HttpRequestHandler | `o.m.netty` | Main request processing |
 
@@ -136,11 +139,13 @@ graph LR
 with InboundHttp2ToHttpAdapter"]
     H2C --> F[CallbackWebSocketServerHandler]
     F --> G[DashboardWebSocketHandler]
-    G --> H[MockServerHttpServerCodec]
+    G --> MCP["McpStreamableHttpHandler
+(conditional)"]
+    MCP --> H[MockServerHttpServerCodec]
     H --> I[HttpRequestHandler]
 ```
 
-HTTP/2 frames are converted to HTTP/1.1 objects via `InboundHttp2ToHttpAdapter`, allowing the same `HttpRequestHandler` to process both protocols uniformly.
+HTTP/2 frames are converted to HTTP/1.1 objects via `InboundHttp2ToHttpAdapter`, allowing the same `HttpRequestHandler` to process both protocols uniformly. When MCP is enabled (`ConfigurationProperties.mcpEnabled()`), the `McpStreamableHttpHandler` is also inserted in the HTTP/2 pipeline.
 
 #### TLS Pipeline
 

@@ -1,0 +1,156 @@
+---
+title: Debugging HTTP Traffic with AI Assistants
+shortTitle: Debugging with AI
+layout: page
+pageOrder: 3
+section: 'AI Integration'
+subsection: true
+sitemap:
+  priority: 0.8
+  changefreq: 'monthly'
+  lastmod: 2026-05-06T00:00:00+00:00
+---
+
+<p>One of the most powerful uses of MockServer's MCP integration is <strong>AI-assisted HTTP debugging</strong>. By combining MockServer's traffic recording capabilities with an AI assistant's ability to analyse data and suggest fixes, you can quickly diagnose and resolve HTTP integration issues.</p>
+
+<h2>Overview</h2>
+
+<p>The debugging workflow follows four steps:</p>
+
+<ol>
+    <li><a href="#step1">Set up a forwarding proxy</a> to capture traffic</li>
+    <li><a href="#step2">Send traffic through MockServer</a></li>
+    <li><a href="#step3">Retrieve recorded request-response pairs</a> for analysis</li>
+    <li><a href="#step4">Diagnose mismatches</a> when requests don't match expectations</li>
+</ol>
+
+<p>Throughout this workflow, your AI assistant uses MockServer's MCP tools to interact with the server — you describe the problem in natural language and the assistant handles the API calls.</p>
+
+<a id="step1" class="anchor" href="#step1">&nbsp;</a>
+
+<h2>Step 1: Set Up a Forwarding Proxy</h2>
+
+<p>Ask your AI assistant to configure MockServer as a forwarding proxy. This records all traffic while passing requests through to the real destination.</p>
+
+<p><strong>Example prompt:</strong></p>
+
+<blockquote>
+<p><em>"Set up MockServer to proxy all requests to /api/* to api.example.com on port 443 over HTTPS"</em></p>
+</blockquote>
+
+<p>The AI assistant will use the <a href="/mock_server/ai_mcp_tools.html#create_forward_expectation"><code class="code inline">create_forward_expectation</code></a> tool:</p>
+
+<pre class="prettyprint code"><code class="code">{
+  "name": "create_forward_expectation",
+  "arguments": {
+    "path": "/api/.*",
+    "host": "api.example.com",
+    "port": 443,
+    "scheme": "HTTPS"
+  }
+}</code></pre>
+
+<p>Now any request sent to <code class="code inline">http://localhost:1080/api/...</code> will be forwarded to <code class="code inline">https://api.example.com/api/...</code> and both the request and response will be recorded.</p>
+
+<a id="step2" class="anchor" href="#step2">&nbsp;</a>
+
+<h2>Step 2: Send Traffic Through MockServer</h2>
+
+<p>Configure your application or test to send requests through MockServer instead of directly to the destination. This typically means changing the base URL in your application configuration:</p>
+
+<pre class="prettyprint code"><code class="code"># Before (direct)
+API_BASE_URL=https://api.example.com
+
+# After (through MockServer)
+API_BASE_URL=http://localhost:1080</code></pre>
+
+<p>Then run your application or test scenario as normal. MockServer will forward all requests and record the traffic.</p>
+
+<a id="step3" class="anchor" href="#step3">&nbsp;</a>
+
+<h2>Step 3: Retrieve Recorded Traffic</h2>
+
+<p>Ask your AI assistant to retrieve the recorded request-response pairs for analysis.</p>
+
+<p><strong>Example prompt:</strong></p>
+
+<blockquote>
+<p><em>"Show me all requests and responses to /api/payments"</em></p>
+</blockquote>
+
+<p>The assistant will use the <a href="/mock_server/ai_mcp_tools.html#retrieve_request_responses"><code class="code inline">retrieve_request_responses</code></a> tool to fetch the recorded data, then present it in a readable format with analysis of status codes, response times, headers, and body content.</p>
+
+<a id="step4" class="anchor" href="#step4">&nbsp;</a>
+
+<h2>Step 4: Diagnose Mismatches</h2>
+
+<p>When a request doesn't match an expectation you've configured, the <a href="/mock_server/ai_mcp_tools.html#debug_request_mismatch"><code class="code inline">debug_request_mismatch</code></a> tool provides detailed information about why the match failed.</p>
+
+<p><strong>Example prompt:</strong></p>
+
+<blockquote>
+<p><em>"Why didn't my POST to /api/users match the mock I set up?"</em></p>
+</blockquote>
+
+<p>The assistant will use the tool to compare your request against active expectations and report the specific fields that didn't match — such as a missing header, incorrect content type, or a path mismatch.</p>
+
+<h2>Example AI Prompts for Common Debugging Scenarios</h2>
+
+<p>Here are practical prompts you can use with your AI assistant for common debugging tasks:</p>
+
+<h3>"Why is my API call returning 500?"</h3>
+
+<p>The assistant will:</p>
+<ol>
+    <li>Use <code class="code inline">retrieve_request_responses</code> to find the failing request and its response</li>
+    <li>Analyse the response body for error details</li>
+    <li>Check whether the request matched a mock or was forwarded to a real server</li>
+    <li>Suggest fixes based on the error details</li>
+</ol>
+
+<h3>"Show me all requests to /api/payments in the last 5 minutes"</h3>
+
+<p>The assistant will:</p>
+<ol>
+    <li>Use <code class="code inline">retrieve_recorded_requests</code> filtered by the path</li>
+    <li>Present the requests in chronological order with method, headers, and body</li>
+    <li>Highlight any unusual patterns (e.g., repeated requests, missing headers)</li>
+</ol>
+
+<h3>"Why didn't my request match the mock I set up?"</h3>
+
+<p>The assistant will:</p>
+<ol>
+    <li>Read the <code class="code inline">mockserver://expectations</code> resource to see active expectations</li>
+    <li>Use <code class="code inline">debug_request_mismatch</code> with the request details</li>
+    <li>Report exactly which fields mismatched (e.g., "expected content-type application/json but received text/plain")</li>
+    <li>Suggest corrections to either the expectation or the request</li>
+</ol>
+
+<h3>"Set up a proxy to capture traffic between my service and the payment API"</h3>
+
+<p>The assistant will:</p>
+<ol>
+    <li>Use <code class="code inline">create_forward_expectation</code> to set up forwarding</li>
+    <li>Confirm the proxy is active</li>
+    <li>Explain how to point your service at MockServer</li>
+    <li>Offer to retrieve and analyse the captured traffic after you run your test</li>
+</ol>
+
+<h2>Tips for Effective AI-Assisted Debugging</h2>
+
+<ul>
+    <li><strong>Be specific about paths and methods.</strong> Instead of "check my API calls", say "show me POST requests to /api/orders". This helps the assistant construct precise queries.</li>
+    <li><strong>Start with <code class="code inline">reset</code>.</strong> Before a debugging session, ask the assistant to reset MockServer so you have a clean slate without noise from previous tests.</li>
+    <li><strong>Use forwarding proxies for live debugging.</strong> Rather than creating mock responses, set up forwarding to capture real traffic. This lets you see actual server responses.</li>
+    <li><strong>Ask follow-up questions.</strong> After the assistant shows you recorded traffic, ask questions like "why does request #3 have a different response?" or "what's different about the headers on the failed request?"</li>
+    <li><strong>Combine with verification.</strong> After fixing an issue, ask the assistant to set up a <code class="code inline">verify_request</code> check so you can confirm the fix works: "Verify that POST /api/orders is called exactly once with a valid Authorization header."</li>
+</ul>
+
+<h2>Related Pages</h2>
+
+<ul>
+    <li><a href="/mock_server/ai_mcp_setup.html"><strong>MCP Setup</strong></a> — how to connect your AI assistant to MockServer</li>
+    <li><a href="/mock_server/ai_mcp_tools.html"><strong>MCP Tools Reference</strong></a> — full documentation of all MCP tools</li>
+    <li><a href="/mock_server/debugging_issues.html"><strong>Logging &amp; Debugging</strong></a> — traditional (non-AI) debugging approaches</li>
+</ul>

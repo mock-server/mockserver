@@ -138,6 +138,10 @@ public class HttpState {
         }
     }
 
+    public AuthenticationHandler getControlPlaneAuthenticationHandler() {
+        return controlPlaneAuthenticationHandler;
+    }
+
     public void setControlPlaneAuthenticationHandler(AuthenticationHandler controlPlaneAuthenticationHandler) {
         this.controlPlaneAuthenticationHandler = controlPlaneAuthenticationHandler;
     }

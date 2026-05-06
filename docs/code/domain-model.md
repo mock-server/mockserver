@@ -367,4 +367,14 @@ Two complementary configuration mechanisms:
 | `ConfigurationProperties` | Static (system properties) | `mockserver.properties` file + JVM system properties, ~1850 lines |
 | `ClientConfiguration` | Client subset | Timeout, TLS, JWT settings |
 
-Configuration properties cover: logging, memory usage, scalability, socket settings, HTTP parsing, CORS, template restrictions, initialization/persistence, verification, proxy settings, TLS (forward, control plane), ring buffer sizing.
+Configuration properties cover: logging, memory usage, scalability, socket settings, HTTP parsing, CORS, template restrictions, initialization/persistence, verification, proxy settings, TLS (forward, control plane), ring buffer sizing, MCP.
+
+### MCP Configuration
+
+The Model Context Protocol endpoint is controlled by a single property:
+
+| Property | Type | Default | Source |
+|----------|------|---------|--------|
+| `mcpEnabled` | `boolean` | `true` | `Configuration` / `ConfigurationProperties` / system property `mockserver.mcpEnabled` |
+
+When `mcpEnabled` is `true` (the default), MockServer registers the `McpStreamableHttpHandler` in the Netty pipeline to serve MCP requests at `/mockserver/mcp`. When `false`, no MCP handler is registered and requests to that path are handled normally by `HttpRequestHandler`.
