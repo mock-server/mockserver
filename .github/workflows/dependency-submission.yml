@@ -3,11 +3,10 @@ name: Automatic Dependency Submission
 on:
   push:
     branches: [master]
-  pull_request:
-    branches: [master]
 
 permissions:
-  contents: write
+  contents: read
+  dependency-graph: write
 
 jobs:
   submit-maven:
