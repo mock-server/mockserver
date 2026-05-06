@@ -1,5 +1,5 @@
 # mockserver-performance-test
-Performance Test Suite for MockServer http://mock-server.com
+Performance Test Suite for MockServer https://mock-server.com
 
 Current MockServer results are (all figures are in **milliseconds**):
 
