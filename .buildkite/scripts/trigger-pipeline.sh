@@ -17,7 +17,22 @@ POLL_INTERVAL=10
 TIMEOUT=3600
 
 RESPONSE_FILE=$(mktemp /tmp/bk-response-XXXXXX.json)
-trap 'rm -f "$RESPONSE_FILE"' EXIT
+CHILD_BUILD_NUMBER=""
+
+cleanup() {
+  if [ -n "$CHILD_BUILD_NUMBER" ] && [ -n "${BUILDKITE_API_TOKEN:-}" ]; then
+    echo "--- :no_entry_sign: Cancelling ${LABEL} child build #${CHILD_BUILD_NUMBER}"
+    CANCEL_CODE=$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' -X PUT \
+      "${API_BASE}/${CHILD_BUILD_NUMBER}/cancel" \
+      -H "Authorization: Bearer ${BUILDKITE_API_TOKEN}" 2>/dev/null) || true
+    if [ -n "$CANCEL_CODE" ] && [ "$CANCEL_CODE" -ge 300 ] 2>/dev/null; then
+      echo ":warning: Cancel API returned HTTP ${CANCEL_CODE} for child build #${CHILD_BUILD_NUMBER}"
+    fi
+  fi
+  rm -f "$RESPONSE_FILE"
+}
+trap cleanup EXIT
+trap 'exit 1' TERM INT
 
 echo "--- :aws: Fetching Buildkite API token from Secrets Manager"
 BUILDKITE_API_TOKEN=$(aws secretsmanager get-secret-value \
@@ -99,7 +114,8 @@ fi
 
 RESPONSE=$(cat "$RESPONSE_FILE")
 
-BUILD_NUMBER=$(echo "$RESPONSE" | jq -r '.number')
+CHILD_BUILD_NUMBER=$(echo "$RESPONSE" | jq -r '.number')
+BUILD_NUMBER="$CHILD_BUILD_NUMBER"
 BUILD_URL=$(echo "$RESPONSE" | jq -r '.web_url')
 BUILD_API_URL="${API_BASE}/${BUILD_NUMBER}"
 
@@ -130,18 +146,21 @@ while true; do
   case "$STATE" in
     passed)
       echo ":white_check_mark: ${LABEL} build #${BUILD_NUMBER} passed"
+      CHILD_BUILD_NUMBER=""
       exit 0
       ;;
     failed|canceled|cancelled)
       echo "^^^ +++"
       echo ":x: ${LABEL} build #${BUILD_NUMBER} ${STATE}"
       echo "    ${BUILD_URL}"
+      CHILD_BUILD_NUMBER=""
       exit 1
       ;;
     not_run|skipped|broken)
       echo "^^^ +++"
       echo ":x: ${LABEL} build #${BUILD_NUMBER} ${STATE}"
       echo "    ${BUILD_URL}"
+      CHILD_BUILD_NUMBER=""
       exit 1
       ;;
     blocked)

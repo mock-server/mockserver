@@ -105,6 +105,9 @@ resource "buildkite_pipeline" "pipeline" {
   default_branch = "master"
   emoji          = each.value.emoji
 
+  cancel_intermediate_builds = true
+  skip_intermediate_builds   = true
+
   steps = "steps:\n  - label: \":pipeline:\"\n    command: \"buildkite-agent pipeline upload ${each.value.file}\"\n"
 
   provider_settings = {

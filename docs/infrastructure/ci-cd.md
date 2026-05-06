@@ -82,6 +82,8 @@ All pipelines are managed via Terraform in `terraform/buildkite-pipelines/pipeli
 
 A single commit can trigger multiple child pipelines if it changes files in multiple areas. For example, a commit touching both `mockserver/` and `mockserver-ui/` triggers both `mockserver-java` and `mockserver-ui` pipelines.
 
+All pipelines have `cancel_intermediate_builds` and `skip_intermediate_builds` enabled. When a new build arrives for the same branch (e.g. Dependabot rebases a PR), Buildkite automatically cancels any running builds and skips queued builds for that branch. Additionally, `trigger-pipeline.sh` cancels child builds when the parent job is terminated, preventing orphaned child builds from consuming agent capacity.
+
 ### CI Build Pipeline
 
 **File:** `.buildkite/pipeline-java.yml`
