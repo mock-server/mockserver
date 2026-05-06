@@ -24,4 +24,4 @@ docker run -d \
   -e "MOCKSERVER_HOST=$MOCKSERVER_NAME" \
   -e "MOCKSERVER_PORT=1080" \
   --network "$NETWORK_NAME" \
-  -- bash -c 'pip install -e ".[dev]" && pytest -m integration -v'
+  -- bash -c 'pip install -e ".[dev]" && pytest -m integration -v --junitxml=test-reports/integration.xml'

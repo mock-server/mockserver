@@ -1,8 +1,21 @@
 steps:
   - label: ":ruby: Ruby client unit tests"
     command: ".buildkite/scripts/steps/ruby-unit-test.sh"
+    artifact_paths:
+      - "mockserver-client-ruby/test-reports/*.xml"
     timeout_in_minutes: 10
 
   - label: ":ruby: Ruby client integration tests"
     command: ".buildkite/scripts/steps/ruby-integration-test.sh"
+    artifact_paths:
+      - "mockserver-client-ruby/test-reports/*.xml"
     timeout_in_minutes: 10
+
+  - wait: ~
+    continue_on_failure: true
+
+  - label: ":junit: annotate test results"
+    plugins:
+      - junit-annotate#v2.4.1:
+          artifacts: "mockserver-client-ruby/test-reports/*.xml"
+          always-annotate: true

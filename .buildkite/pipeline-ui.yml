@@ -5,7 +5,20 @@ steps:
 
   - label: ":jest: UI tests"
     command: ".buildkite/scripts/steps/ui-test.sh"
+    artifact_paths:
+      - "mockserver-ui/test-reports/*.xml"
     timeout_in_minutes: 10
+
+  - wait: ~
+    continue_on_failure: true
+
+  - label: ":junit: annotate test results"
+    plugins:
+      - junit-annotate#v2.4.1:
+          artifacts: "mockserver-ui/test-reports/*.xml"
+          always-annotate: true
+
+  - wait
 
   - label: ":package: UI build"
     command: ".buildkite/scripts/steps/ui-build.sh"

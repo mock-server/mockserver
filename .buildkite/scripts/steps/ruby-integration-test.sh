@@ -24,4 +24,4 @@ docker run -d \
   -e "MOCKSERVER_HOST=$MOCKSERVER_NAME" \
   -e "MOCKSERVER_PORT=1080" \
   --network "$NETWORK_NAME" \
-  -- bash -c 'bundle install && bundle exec rspec --tag integration -f documentation'
+  -- bash -c 'bundle install && bundle exec rspec --tag integration -f documentation --format RspecJunitFormatter --out test-reports/integration.xml'

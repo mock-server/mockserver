@@ -1,8 +1,21 @@
 steps:
   - label: ":python: Python client unit tests"
     command: ".buildkite/scripts/steps/python-unit-test.sh"
+    artifact_paths:
+      - "mockserver-client-python/test-reports/*.xml"
     timeout_in_minutes: 10
 
   - label: ":python: Python client integration tests"
     command: ".buildkite/scripts/steps/python-integration-test.sh"
+    artifact_paths:
+      - "mockserver-client-python/test-reports/*.xml"
     timeout_in_minutes: 10
+
+  - wait: ~
+    continue_on_failure: true
+
+  - label: ":junit: annotate test results"
+    plugins:
+      - junit-annotate#v2.4.1:
+          artifacts: "mockserver-client-python/test-reports/*.xml"
+          always-annotate: true
