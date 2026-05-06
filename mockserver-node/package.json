@@ -52,7 +52,7 @@
         "ai"
     ],
     "dependencies": {
-        "follow-redirects": "~1.15.2",
+        "follow-redirects": "~1.16.0",
         "glob": "~8.1.0",
         "q": "~2.0.3"
     }
