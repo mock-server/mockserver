@@ -19,7 +19,7 @@ class IncludeSubPageTag < Liquid::Tag
   end
 
   def read_file(file, context)
-    File.read(file, file_read_opts(context))
+    File.read(file, **file_read_opts(context))
   end
 
   def render(context)
@@ -55,7 +55,7 @@ class IncludeSubPageAbsoluteTag < Liquid::Tag
   end
 
   def read_file(file, context)
-    File.read(file, file_read_opts(context))
+    File.read(file, **file_read_opts(context))
   end
 
   def render(context)

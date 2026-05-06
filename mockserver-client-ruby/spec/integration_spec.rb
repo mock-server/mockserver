@@ -6,47 +6,17 @@ require 'json'
 require 'socket'
 require 'timeout'
 
-RSpec.describe 'Integration', :integration do
-  def self.find_free_port
-    server = TCPServer.new('127.0.0.1', 0)
-    port = server.addr[1]
-    server.close
-    port
-  end
+MOCKSERVER_STATE = { host: nil, port: nil, container_id: nil, external: false }
 
-  def self.start_mockserver_container
-    if ENV['MOCKSERVER_HOST'] && ENV['MOCKSERVER_PORT']
-      @mockserver_host = ENV['MOCKSERVER_HOST']
-      @mockserver_port = ENV['MOCKSERVER_PORT'].to_i
-      @external_mockserver = true
-
-      deadline = Time.now + 30
-      loop do
-        uri = URI("http://#{@mockserver_host}:#{@mockserver_port}/mockserver/status")
-        req = Net::HTTP::Put.new(uri)
-        resp = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
-        break if resp.code == '200'
-      rescue StandardError
-        raise "MockServer did not start within 30s" if Time.now > deadline
-
-        sleep 0.5
-        retry
-      end
-      return nil
-    end
-
-    @external_mockserver = false
-    @mockserver_port = find_free_port
-    @mockserver_host = 'localhost'
-    container_name = "mockserver-ruby-integration-#{@mockserver_port}"
-    output = `docker run -d --name #{container_name} -p #{@mockserver_port}:1080 mockserver/mockserver:latest 2>&1`
-    raise "Failed to start container: #{output}" unless $?.success?
-
-    container_id = output.strip
+def start_mockserver_container
+  if ENV['MOCKSERVER_HOST'] && ENV['MOCKSERVER_PORT']
+    MOCKSERVER_STATE[:host] = ENV['MOCKSERVER_HOST']
+    MOCKSERVER_STATE[:port] = ENV['MOCKSERVER_PORT'].to_i
+    MOCKSERVER_STATE[:external] = true
 
     deadline = Time.now + 30
     loop do
-      uri = URI("http://#{@mockserver_host}:#{@mockserver_port}/mockserver/status")
+      uri = URI("http://#{MOCKSERVER_STATE[:host]}:#{MOCKSERVER_STATE[:port]}/mockserver/status")
       req = Net::HTTP::Put.new(uri)
       resp = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
       break if resp.code == '200'
@@ -56,43 +26,56 @@ RSpec.describe 'Integration', :integration do
       sleep 0.5
       retry
     end
-
-    container_id
+    return
   end
 
-  def self.stop_mockserver_container(container_id)
-    return if @external_mockserver
+  server = TCPServer.new('127.0.0.1', 0)
+  port = server.addr[1]
+  server.close
 
-    system("docker rm -f #{container_id} >/dev/null 2>&1") if container_id
+  MOCKSERVER_STATE[:port] = port
+  MOCKSERVER_STATE[:host] = 'localhost'
+  container_name = "mockserver-ruby-integration-#{port}"
+  output = `docker run -d --name #{container_name} -p #{port}:1080 mockserver/mockserver:latest 2>&1`
+  raise "Failed to start container: #{output}" unless $?.success?
+
+  MOCKSERVER_STATE[:container_id] = output.strip
+
+  deadline = Time.now + 30
+  loop do
+    uri = URI("http://localhost:#{port}/mockserver/status")
+    req = Net::HTTP::Put.new(uri)
+    resp = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
+    break if resp.code == '200'
+  rescue StandardError
+    raise "MockServer did not start within 30s" if Time.now > deadline
+
+    sleep 0.5
+    retry
   end
+end
 
-  def self.mockserver_host
-    @mockserver_host
-  end
+def stop_mockserver_container
+  return if MOCKSERVER_STATE[:external]
 
-  def self.mockserver_port
-    @mockserver_port
-  end
+  cid = MOCKSERVER_STATE[:container_id]
+  system("docker rm -f #{cid} >/dev/null 2>&1") if cid
+end
 
-  @container_id = nil
-
-  class << self
-    attr_accessor :container_id
-  end
-
+RSpec.describe 'Integration', :integration do
   before(:context) do
     unless ENV['MOCKSERVER_HOST']
       skip 'Docker not available' unless system('docker', 'info', out: File::NULL, err: File::NULL)
     end
-    self.class.container_id = self.class.start_mockserver_container
+    start_mockserver_container
   end
 
   after(:context) do
-    self.class.stop_mockserver_container(self.class.container_id)
+    stop_mockserver_container
   end
 
-  let(:host) { self.class.mockserver_host }
-  let(:port) { self.class.mockserver_port }
+  let(:host) { MOCKSERVER_STATE[:host] }
+  let(:port) { MOCKSERVER_STATE[:port] }
   let(:client) { MockServer::Client.new(host, port) }
 
   before do
