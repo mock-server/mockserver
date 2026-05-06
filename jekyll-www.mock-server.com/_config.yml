@@ -13,7 +13,7 @@ sitemap:
         - "/css/main.scss"
 mockserver_version: 5.15.0
 mockserver_api_version: 5.15.x
-mockserver_snapshot_version: 5.15.1-SNAPSHOT
+mockserver_snapshot_version: 5.16.0-SNAPSHOT
 
 # Author
 author:

@@ -59,12 +59,14 @@ This document identifies missing documentation, undocumented areas, and recommen
 
 | Location | Example |
 |----------|---------|
-| `pom.xml` | `5.15.1-SNAPSHOT` |
+| `pom.xml` | `5.16.0-SNAPSHOT` |
 | `_config.yml` | `5.15.0` |
 | `Chart.yaml` | `5.15.0` |
 | `values.yaml` | image tag defaults |
-| `Dockerfiles` | `VERSION=RELEASE` or `5.15.1-SNAPSHOT` |
-| `release_steps.md` | `5.15.0`, `5.15.1-SNAPSHOT` |
+| `Dockerfiles` | `VERSION=RELEASE` or `5.16.0-SNAPSHOT` |
+| `release_steps.md` | `5.16.0`, `5.16.0-SNAPSHOT` |
+| `mockserver-client-python/pyproject.toml` | `5.16.0` |
+| `mockserver-client-ruby/lib/mockserver/version.rb` | `5.16.0` |
 
 **Recommendation:**
 - Document all locations that need version updates during release (add to `docs/operations/release-process.md`)

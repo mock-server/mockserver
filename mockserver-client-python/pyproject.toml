@@ -1,14 +1,27 @@
 [project]
 name = "mockserver-client"
-version = "6.0.0"
-description = "Python client for MockServer with WebSocket callback support"
+version = "5.16.0"
+description = "Official Python client for MockServer — create expectations, verify requests, and register dynamic callbacks via WebSocket"
 authors = [
   {name = "James Bloom", email = "jamesdbloom@gmail.com"},
 ]
-license = { text = "Apache 2.0" }
+license = "Apache-2.0"
 readme = "README.md"
 keywords = ["MockServer", "HTTP Mock", "Proxy", "Testing", "API", "WebSocket", "Callback"]
 requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Internet :: WWW/HTTP",
+]
 
 dependencies = [
   "websockets >= 12.0",
@@ -25,6 +38,8 @@ dev = [
 Homepage = "https://www.mock-server.com"
 Repository = "https://github.com/mock-server/mockserver-monorepo"
 Documentation = "https://www.mock-server.com/mock_server/getting_started.html"
+Changelog = "https://www.mock-server.com/mock_server/changelog.html"
+"Bug Tracker" = "https://github.com/mock-server/mockserver-monorepo/issues"
 
 [build-system]
 requires = ["setuptools"]

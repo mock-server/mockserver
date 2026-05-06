@@ -22,7 +22,7 @@ After evaluating four options (Buildkite pipeline, GitHub Actions, Hybrid, OpenC
 
 ## Current State
 
-The release process is a **manual 13-step process** executed entirely from a developer's Mac, spanning 7 artifact registries and 3+ Git repositories. Every step requires human intervention. There is no CI/CD pipeline for releases.
+The release process is a **manual 15-step process** executed entirely from a developer's Mac, spanning 9 artifact registries and 3+ Git repositories. Every step requires human intervention. There is no CI/CD pipeline for releases.
 
 ### Current Pain Points
 
@@ -62,6 +62,10 @@ Website + Javadoc"]
 OpenAPI spec"]
     REL --> BREW["Homebrew
 Formula PR"]
+    REL --> PYPI["PyPI
+mockserver-client"]
+    REL --> GEMS["RubyGems
+mockserver-client"]
 ```
 
 ### Required Credentials
@@ -76,6 +80,8 @@ Formula PR"]
 | AWS credentials | Developer's `~/.aws/` | S3 uploads (website, Helm, Javadoc) |
 | GitHub PAT | Developer's env var | Homebrew formula PR |
 | SwaggerHub API key | Developer's browser session | OpenAPI spec publish |
+| PyPI API token | AWS Secrets Manager (`mockserver-build/pypi`) | Python package publish |
+| RubyGems API key | AWS Secrets Manager (`mockserver-build/rubygems`) | Ruby gem publish |
 
 ---
 
@@ -177,6 +183,8 @@ Every step from `scripts/release_steps.md` maps to a script. The table shows whe
 | 11 | Website | `publish-website.sh` | Yes | Yes | Jekyll build + S3 sync + CF invalidation |
 | 12 | Versioned website | `create-versioned-site.sh` | Yes (optional) | Yes | Terraform apply for new S3/CF/Route53 |
 | 13 | Homebrew | `update-homebrew.sh` | Local-only | Yes | Requires local `brew` installation |
+| 14 | Python client to PyPI | `publish-pypi.sh` | Yes | Yes | Fetches token from AWS Secrets Manager |
+| 15 | Ruby client to RubyGems | `publish-rubygems.sh` | Yes | Yes | Fetches API key from AWS Secrets Manager |
 | — | GitHub Release | `github-release.sh` | Yes | Yes | |
 | — | Cleanup failed release | `cleanup-failed-release.sh` | Local-only | Yes | |
 | — | Notify | `notify.sh` | Yes | Yes | |
@@ -187,7 +195,7 @@ Every step from `scripts/release_steps.md` maps to a script. The table shows whe
 
 ```
 scripts/
-├── release.sh                          # Local orchestrator — runs all 13 steps sequentially
+├── release.sh                          # Local orchestrator — runs all 15 steps sequentially
 ├── ci/
 │   └── release/
 │       ├── common.sh                   # Shared: env detection, credential loading, logging
@@ -209,6 +217,8 @@ scripts/
 │       ├── publish-website.sh          # Jekyll build + S3 sync + CloudFront invalidation
 │       ├── create-versioned-site.sh    # Terraform apply for new versioned site (S3 + CF + Route53)
 │       ├── update-homebrew.sh          # brew bump-formula-pr (local-only)
+│       ├── publish-pypi.sh             # Build + twine upload to PyPI (token from AWS SM)
+│       ├── publish-rubygems.sh         # gem build + gem push to RubyGems (key from AWS SM)
 │       ├── github-release.sh           # gh release create with changelog extract
 │       ├── cleanup-failed-release.sh   # Revert git, delete tag, drop staging repo
 │       └── notify.sh                   # Success/failure notification
@@ -936,6 +946,8 @@ All release credentials are stored in AWS Secrets Manager in the build agent acc
 | `mockserver-release/swaggerhub` | `{"api_key": "..."}` | update-swaggerhub |
 | `mockserver-release/aws-website` | `{"access_key_id": "...", "secret_access_key": "..."}` | publish-website, publish-javadoc, publish-helm, create-versioned-site |
 | `mockserver-build/dockerhub` | `{"username": "...", "password": "..."}` | publish-docker (already exists) |
+| `mockserver-build/pypi` | `{"token": "pypi-..."}` | publish-pypi |
+| `mockserver-build/rubygems` | `{"api_key": "..."}` | publish-rubygems |
 
 ---
 
@@ -1080,6 +1092,16 @@ resource "aws_secretsmanager_secret" "aws_website" {
   description = "AWS credentials for website account (website account) S3/CloudFront"
 }
 
+resource "aws_secretsmanager_secret" "pypi" {
+  name        = "mockserver-build/pypi"
+  description = "PyPI API token for publishing mockserver-client Python package"
+}
+
+resource "aws_secretsmanager_secret" "rubygems" {
+  name        = "mockserver-build/rubygems"
+  description = "RubyGems API key for publishing mockserver-client Ruby gem"
+}
+
 resource "aws_iam_policy" "release_secrets" {
   name = "buildkite-release-secrets"
   policy = jsonencode({
@@ -1096,6 +1118,8 @@ resource "aws_iam_policy" "release_secrets" {
         aws_secretsmanager_secret.swaggerhub.arn,
         aws_secretsmanager_secret.aws_website.arn,
         aws_secretsmanager_secret.dockerhub.arn,
+        aws_secretsmanager_secret.pypi.arn,
+        aws_secretsmanager_secret.rubygems.arn,
       ]
     }]
   })

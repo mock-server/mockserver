@@ -3,14 +3,14 @@
     <parent>
         <groupId>org.mock-server</groupId>
         <artifactId>mockserver</artifactId>
-        <version>5.15.1-SNAPSHOT</version>
+        <version>5.16.0-SNAPSHOT</version>
         <relativePath>../mockserver/pom.xml</relativePath>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>mockserver-maven-plugin</artifactId>
-    <version>5.15.1-SNAPSHOT</version>
+    <version>5.16.0-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <name>MockServer Maven Plugin</name>
@@ -113,7 +113,7 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>mockserver-netty</artifactId>
-            <version>5.15.1-SNAPSHOT</version>
+            <version>5.16.0-SNAPSHOT</version>
             <classifier>jar-with-dependencies</classifier>
             <scope>compile</scope>
         </dependency>
@@ -223,7 +223,7 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>mockserver-integration-testing</artifactId>
-            <version>5.15.1-SNAPSHOT</version>
+            <version>5.16.0-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>

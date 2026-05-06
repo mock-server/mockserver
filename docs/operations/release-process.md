@@ -2,7 +2,7 @@
 
 ## Overview
 
-MockServer releases are a manual 13-step process spanning multiple registries and hosting platforms.
+MockServer releases are a manual 15-step process spanning multiple registries and hosting platforms.
 
 ```mermaid
 flowchart TD
@@ -19,7 +19,9 @@ flowchart TD
     SWAGGER --> WEBSITE[11. Update www.mock-server.com]
     WEBSITE --> VERSIONED[12. Create versioned website copy]
     VERSIONED --> HOMEBREW[13. Update Homebrew]
-    HOMEBREW --> DONE([Release Complete])
+    HOMEBREW --> PYTHON[14. Publish Python client to PyPI]
+    PYTHON --> RUBY[15. Publish Ruby client to RubyGems]
+    RUBY --> DONE([Release Complete])
 ```
 
 ## Step Details
@@ -51,10 +53,14 @@ Deploys the next SNAPSHOT version to Sonatype snapshots repository.
 3. Clean build artifacts: `cd mockserver && ./mvnw clean && cd .. && rm -rf jekyll-www.mock-server.com/_site`
 4. Update `jekyll-www.mock-server.com/_config.yml` with new version numbers
 5. Find-and-replace version references across the codebase:
-   - Release version (e.g., `5.15.0`)
-   - API version (e.g., `5.15.x`)
-   - SNAPSHOT version (e.g., `5.15.1-SNAPSHOT` → `5.16.1-SNAPSHOT`)
-6. Commit and push
+   - Release version (e.g., `5.16.0`)
+   - API version (e.g., `5.16.x`)
+   - SNAPSHOT version (e.g., `5.16.0-SNAPSHOT` → `5.16.1-SNAPSHOT`)
+6. Update client library versions:
+   - `mockserver-client-python/pyproject.toml` — `version` field
+   - `mockserver-client-ruby/lib/mockserver/version.rb` — `VERSION` constant
+   - `mockserver-client-ruby/README.md` — gem version reference
+7. Commit and push
 
 ### 4. Update mockserver-node (Monorepo)
 
@@ -183,7 +189,36 @@ Website + Javadoc"]
 OpenAPI spec"]
     REL --> BREW["Homebrew
 Formula PR"]
+    REL --> PYPI["PyPI
+mockserver-client"]
+    REL --> GEMS["RubyGems
+mockserver-client"]
 ```
+
+### 14. Publish Python Client to PyPI
+
+Prerequisites:
+- `build` and `twine` installed: `pip install build twine`
+- AWS SSO session active: `aws sso login --profile mockserver-build`
+- PyPI API token stored in AWS Secrets Manager (`mockserver-build/pypi`)
+
+```bash
+./scripts/release_python.sh
+```
+
+The script fetches the PyPI token from Secrets Manager, builds the package, verifies it, and uploads to PyPI. The published package will appear at https://pypi.org/project/mockserver-client/.
+
+### 15. Publish Ruby Client to RubyGems
+
+Prerequisites:
+- AWS SSO session active: `aws sso login --profile mockserver-build`
+- RubyGems API key stored in AWS Secrets Manager (`mockserver-build/rubygems`)
+
+```bash
+./scripts/release_ruby.sh
+```
+
+The script fetches the RubyGems API key from Secrets Manager, builds the gem, and pushes to RubyGems. The published gem will appear at https://rubygems.org/gems/mockserver-client.
 
 ## Cleaning Up a Failed Release
 

@@ -11,27 +11,30 @@
     5. update README
     6. cd mockserver && ./mvnw clean && cd .. && rm -rf jekyll-www.mock-server.com/_site
     8. update jekyll-www.mock-server.com/_config.yml to new mockserver versions
-    9. find and replace maven / npm version references include 5.15.x, 5.15.0 and 5.15.1-SNAPSHOT (to new SNAPSHOT version)
-    10. find and replace swagger version references (i.e. in website code example documentation) - 5.15.x mentioned in item above
-    11. find and replace SNAPSHOT version references - 5.15.1-SNAPSHOT mentioned in item above
-    12. git add -A && git commit -m "updates after a release" && git push origin master
+    9. find and replace maven / npm version references include 5.16.x, 5.16.0 and 5.16.0-SNAPSHOT (to new SNAPSHOT version)
+    10. find and replace swagger version references (i.e. in website code example documentation) - 5.16.x mentioned in item above
+    11. find and replace SNAPSHOT version references - 5.16.0-SNAPSHOT mentioned in item above
+    12. update `mockserver-client-python/pyproject.toml` version field
+    13. update `mockserver-client-ruby/lib/mockserver/version.rb` VERSION constant
+    14. update `mockserver-client-ruby/README.md` gem version reference
+    15. git add -A && git commit -m "updates after a release" && git push origin master
 4. update mockserver-node
     1. git pull --rebase 
     2. rm -rf package-lock.json node_modules
-    2. find and replace MockServer version both 5.15.0 and 5.15.x
+    2. find and replace MockServer version both 5.16.0 and 5.16.x
     3. nvm use v16.14.1
     4. npm i &&  npm audit fix
     5. grunt
-    6. git add -A && git commit -m "upgraded to MockServer 5.15.0" && git push origin master && git tag mockserver-5.15.0 && git push origin --tags
+    6. git add -A && git commit -m "upgraded to MockServer 5.16.0" && git push origin master && git tag mockserver-5.16.0 && git push origin --tags
     11. npm login
     12. npm publish --access=public --otp=****
 5. update mockserver-client-node
     1. rm -rf package-lock.json node_modules
-    2. find and replace MockServer version both 5.15.0 and 5.15.x
+    2. find and replace MockServer version both 5.16.0 and 5.16.x
     3. nvm use v16.14.1
     4. npm i
     5. grunt
-    6. git add -A && git commit -m "upgraded to MockServer 5.15.0" && git push origin master && git tag mockserver-5.15.0 && git push origin --tags
+    6. git add -A && git commit -m "upgraded to MockServer 5.16.0" && git push origin master && git tag mockserver-5.16.0 && git push origin --tags
     9. npm login (not required if done recently)
     10. npm publish --access=public --otp=****
 6. update mockserver-maven-plugin
@@ -39,7 +42,7 @@
     2. update jar-with-dependencies SNAPSHOT version to RELEASE version
     3. update integration-testing SNAPSHOT version to RELEASE version
     4. ./scripts/local_deploy_snapshot.sh
-    5. git add -A && git commit -m "upgraded to MockServer 5.15.0" && git push origin master
+    5. git add -A && git commit -m "upgraded to MockServer 5.16.0" && git push origin master
     6. ./scripts/local_release.sh
     7. release on Maven https://oss.sonatype.org/index.html#stagingRepositories
     8. close -> release (auto drop)
@@ -57,15 +60,15 @@
     2. cd helm
     3. helm package ./mockserver/
     4. cd ~/git/mockserver/mockserver/helm/charts
-    5. mv /Users/jamesbloom/git/mockserver/mockserver/helm/mockserver-5.15.0.tgz .
+    5. mv /Users/jamesbloom/git/mockserver/mockserver/helm/mockserver-5.16.0.tgz .
     6. helm repo index .
     7. open . && open S3 console for main website bucket (see ~/mockserver-aws-ids.md)
     8. upload new chart and index.yaml to main website S3 bucket
     9. git add -A && git commit -m "added new heml chart release" && git pull --rebase && git push origin master
 9. add javaDoc
-    1. git checkout mockserver-5.15.0
+    1. git checkout mockserver-5.16.0
     2. export JAVA_HOME=`/usr/libexec/java_home -v 1.8` or export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home
-    3. cd mockserver && ./mvnw javadoc:aggregate -P release -DreportOutputDirectory='/Users/jamesbloom/git/mockserver/javadoc/5.15.0'
+    3. cd mockserver && ./mvnw javadoc:aggregate -P release -DreportOutputDirectory='/Users/jamesbloom/git/mockserver/javadoc/5.16.0'
     4. open javadoc output dir && open S3 console for main website bucket /versions/ (see ~/mockserver-aws-ids.md)
     5. upload as public to main website S3 bucket /versions/
     6. git checkout master
@@ -74,7 +77,7 @@
     2. login to https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi
     3. create new version
     4. publish version
-    5. update references to 5.x.x (i.e. 5.15.x) to correct version
+    5. update references to 5.x.x (i.e. 5.16.x) to correct version
 11. update www.mock-server.com
     1. find and replace MockServer version
     2. upload to S3
@@ -102,11 +105,18 @@
     2. delete https://github.com/jamesdbloom/homebrew-core
     3. rename forked repos if they exist i.e. https://github.com/jamesdbloom/homebrew-core-1 to https://github.com/jamesdbloom/homebrew-core
     4. git -C "$(brew --repo homebrew/core)" checkout master
-    5. git -C "$(brew --repo homebrew/core)" branch -D bump-mockserver-5.15.0
+    5. git -C "$(brew --repo homebrew/core)" branch -D bump-mockserver-5.16.0
     6. git -C "$(brew --repo homebrew/core)" reset --hard HEAD
     7. brew update
     8. HOMEBREW_GITHUB_API_TOKEN=<token value> **Note:** use personal access token as password (due to lack of 2FA) - if expired create new token with full repo access only
-    9. brew bump-formula-pr --strict mockserver --url="https://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/5.15.0/mockserver-netty-5.15.0-brew-tar.tar"
+    9. brew bump-formula-pr --strict mockserver --url="https://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/5.16.0/mockserver-netty-5.16.0-brew-tar.tar"
+14. publish Python client to PyPI
+    1. ensure `build` and `twine` are installed: `pip install build twine`
+    2. ensure AWS SSO session is active: `aws sso login --profile mockserver-build`
+    3. ./scripts/release_python.sh
+15. publish Ruby client to RubyGems
+    1. ensure AWS SSO session is active: `aws sso login --profile mockserver-build`
+    2. ./scripts/release_ruby.sh
 
 ## Cleanup Failed Release Steps
 
@@ -114,6 +124,6 @@
     1. git reset --hard 4fa8917c8
     2. git push --force
 2. delete tags
-    1. git tag -d mockserver-5.15.0
-    2. git push origin :refs/tags/mockserver-5.15.0
+    1. git tag -d mockserver-5.16.0
+    2. git push origin :refs/tags/mockserver-5.16.0
 3. drop staging repository https://oss.sonatype.org/#stagingRepositories
