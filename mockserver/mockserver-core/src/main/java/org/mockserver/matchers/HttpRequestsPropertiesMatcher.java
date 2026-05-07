@@ -40,6 +40,7 @@ import static org.mockserver.openapi.OpenAPIParser.OPEN_API_LOAD_ERROR;
 import static org.mockserver.openapi.OpenAPIParser.buildOpenAPI;
 import static org.slf4j.event.Level.ERROR;
 import static org.slf4j.event.Level.TRACE;
+import static org.slf4j.event.Level.WARN;
 
 public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
 
@@ -445,10 +446,20 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
             if (contentType.equals("multipart/form-data")) {
                 logEntries.add(
                     new LogEntry()
-                        .setLogLevel(ERROR)
-                        .setMessageFormat("multipart form data is not supported on requestBody, skipping operation:{}method:{}in open api:{}")
+                        .setLogLevel(WARN)
+                        .setMessageFormat("multipart form data is not supported on requestBody, matching on path and method only for operation:{}method:{}in open api:{}")
                         .setArguments(methodOperationPair.getRight().getOperationId(), methodOperationPair.getLeft(), openAPIDefinition)
                 );
+                try {
+                    addRequestMatcher(openAPIDefinition, methodOperationPair, httpRequest, contentType);
+                } catch (Throwable throwable) {
+                    logEntries.add(
+                        new LogEntry()
+                            .setLogLevel(ERROR)
+                            .setMessageFormat("exception while creating adding request matcher for operation:{}method:{}in open api:{}")
+                            .setArguments(methodOperationPair.getRight().getOperationId(), methodOperationPair.getLeft(), openAPIDefinition)
+                    );
+                }
                 return;
             }
             if (!contentType.equals("*/*") && required) {
@@ -523,7 +534,7 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                     break;
                 }
             }
-        } else {
+        } else if (httpRequestPropertiesMatchers == null) {
             result = true;
         }
         return result;

@@ -29,6 +29,7 @@ import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.XmlBody.xml;
 import static org.slf4j.event.Level.ERROR;
+import static org.slf4j.event.Level.WARN;
 
 /**
  * @author jamesdbloom
@@ -2857,15 +2858,74 @@ public class HttpRequestsPropertiesMatcherTest {
                 "                  type: string" + NEW_LINE);
         httpRequestsPropertiesMatcher.apply(requestDefinition, logEntries);
 
-        // then
-        assertThat(httpRequestsPropertiesMatcher.getHttpRequestPropertiesMatchers().size(), equalTo(1));
+        // then - multipart/form-data adds a path+method matcher (without body schema), plus the XML one
+        assertThat(httpRequestsPropertiesMatcher.getHttpRequestPropertiesMatchers().size(), equalTo(2));
         assertThat(logEntries.size(), equalTo(1));
         assertThat(logEntries.get(0), equalTo(
             new LogEntry()
                 .setEpochTime(logEntries.get(0).getEpochTime())
-                .setLogLevel(ERROR)
-                .setMessageFormat("multipart form data is not supported on requestBody, skipping operation:{}method:{}in open api:{}")
+                .setLogLevel(WARN)
+                .setMessageFormat("multipart form data is not supported on requestBody, matching on path and method only for operation:{}method:{}in open api:{}")
                 .setArguments("someOperation", "POST", requestDefinition)
+        ));
+    }
+
+    @Test
+    public void shouldMatchByPathAndMethodWhenOnlyMultipartFormData() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        required: true" + NEW_LINE +
+                    "        content:" + NEW_LINE +
+                    "          multipart/form-data:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                file:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE +
+                    "                  format: binary" + NEW_LINE)
+        ));
+
+        // then - should match correct path and method
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            null,
+            request()
+                .withMethod("POST")
+                .withPath("/somePath")
+        ));
+
+        // then - should NOT match wrong path and wrong method
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            null,
+            request()
+                .withMethod("GET")
+                .withPath("/idontexist")
+        ));
+
+        // then - should NOT match wrong path with correct method
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            null,
+            request()
+                .withMethod("POST")
+                .withPath("/idontexist")
+        ));
+
+        // then - should NOT match wrong method with correct path
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            null,
+            request()
+                .withMethod("GET")
+                .withPath("/somePath")
         ));
     }
 
