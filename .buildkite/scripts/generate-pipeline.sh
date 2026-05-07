@@ -14,34 +14,7 @@ else
   CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD 2>/dev/null || git diff --name-only HEAD~1..HEAD)
 fi
 
-IS_PR="false"
-if [ -n "${BUILDKITE_PULL_REQUEST:-}" ] && [ "$BUILDKITE_PULL_REQUEST" != "false" ]; then
-  IS_PR="true"
-fi
-
-COMMIT="${BUILDKITE_COMMIT:-HEAD}"
-BRANCH="${BUILDKITE_BRANCH:-master}"
-
 STEPS=""
-
-add_trigger() {
-  local pipeline_slug="$1"
-  local label="$2"
-  STEPS="${STEPS}  - trigger: ${pipeline_slug}
-    label: \":pipeline: ${label}\"
-    build:
-      message: \${BUILDKITE_MESSAGE}
-      commit: ${COMMIT}
-      branch: ${BRANCH}
-"
-  if [ "$IS_PR" = "true" ]; then
-    STEPS="${STEPS}      env:
-        BUILDKITE_PULL_REQUEST: \"${BUILDKITE_PULL_REQUEST}\"
-        BUILDKITE_PULL_REQUEST_BASE_BRANCH: \"${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-master}\"
-        BUILDKITE_PULL_REQUEST_REPO: \"${BUILDKITE_PULL_REQUEST_REPO:-}\"
-"
-  fi
-}
 
 trigger_if_changed() {
   local path_regex="$1"
@@ -49,7 +22,12 @@ trigger_if_changed() {
   local label="$3"
   if printf '%s\n' "$CHANGED_FILES" | grep -qE -- "$path_regex"; then
     echo "--- :pipeline: Triggering ${label} (matched ${path_regex})"
-    add_trigger "$pipeline_slug" "$label"
+    STEPS="${STEPS}  - label: \":pipeline: ${label}\"
+    command: \".buildkite/scripts/trigger-pipeline.sh ${pipeline_slug} '${label}'\"
+    timeout_in_minutes: 60
+    agents:
+      queue: default
+"
   fi
 }
 
@@ -66,7 +44,12 @@ trigger_if_changed "^docker_build/maven/" "mockserver-build-image" "MockServer B
 
 if printf '%s\n' "$CHANGED_FILES" | grep -qE -- "^(\.buildkite/|\.github/|terraform/|docker/|scripts/|helm/|docs/|AGENTS\.md|opencode\.jsonc|\.opencode/)"; then
   echo "--- :pipeline: Triggering MockServer Infra (infra changes)"
-  add_trigger "mockserver-infra" "MockServer Infra"
+  STEPS="${STEPS}  - label: \":pipeline: MockServer Infra\"
+    command: \".buildkite/scripts/trigger-pipeline.sh mockserver-infra 'MockServer Infra'\"
+    timeout_in_minutes: 60
+    agents:
+      queue: default
+"
 fi
 
 if [ -z "$STEPS" ]; then
