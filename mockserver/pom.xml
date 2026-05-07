@@ -63,7 +63,7 @@
         <httpcomponents.version>4.4.1</httpcomponents.version>
         <bouncycastle.version>1.84</bouncycastle.version>
         <!-- highest Spring 5.x version (EOL); Spring 6 requires Jakarta EE 9+ (javax→jakarta namespace) -->
-        <spring.version>5.3.39</spring.version>
+        <spring.version>7.0.7</spring.version>
         <spring-web.version>5.3.39</spring-web.version>
         <mockito.version>5.23.0</mockito.version>
         <hamcrest.version>3.0</hamcrest.version>
