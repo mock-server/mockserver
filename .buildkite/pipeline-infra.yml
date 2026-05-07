@@ -6,3 +6,7 @@ steps:
   - label: ":bash: validate shell scripts"
     command: ".buildkite/scripts/steps/infra-validate-scripts.sh"
     timeout_in_minutes: 5
+
+  - label: ":docker: validate Dockerfile sync"
+    command: ".buildkite/scripts/steps/docker-validate-sync.sh"
+    timeout_in_minutes: 5

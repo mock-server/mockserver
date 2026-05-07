@@ -27,6 +27,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertTrue;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.HttpRequest.request;
@@ -136,6 +137,67 @@ public class MainTest {
             assertThat("mockServerClient.hasStarted", mockServerClient.hasStarted(), is(true));
             assertThat("response.getBodyAsString", response.getBodyAsString(), is("port_forwarded_response"));
         } finally {
+            stopQuietly(mockServerClient);
+        }
+    }
+
+    @Test
+    public void shouldStartMockServerFromSystemProperty() {
+        final int freePort = PortFactory.findFreePort();
+        MockServerClient mockServerClient = new MockServerClient("127.0.0.1", freePort);
+
+        try {
+            System.setProperty("mockserver.serverPort", String.valueOf(freePort));
+
+            Main.main();
+
+            assertThat("mockServerClient.hasStarted", mockServerClient.hasStarted(), is(true));
+        } finally {
+            System.clearProperty("mockserver.serverPort");
+            stopQuietly(mockServerClient);
+        }
+    }
+
+    @Test
+    public void shouldPreferCliArgOverSystemProperty() {
+        final int cliPort = PortFactory.findFreePort();
+        final int sysPropPort = PortFactory.findFreePort();
+        MockServerClient mockServerClient = new MockServerClient("127.0.0.1", cliPort);
+
+        try {
+            System.setProperty("mockserver.serverPort", String.valueOf(sysPropPort));
+
+            Main.main("-serverPort", String.valueOf(cliPort));
+
+            assertThat("mockServerClient.hasStarted", mockServerClient.hasStarted(), is(true));
+
+            MockServerClient wrongPortClient = new MockServerClient("127.0.0.1", sysPropPort);
+            boolean sysPropPortRunning;
+            try {
+                sysPropPortRunning = wrongPortClient.hasStarted();
+            } catch (Exception e) {
+                sysPropPortRunning = false;
+            }
+            assertTrue("server should NOT be running on system property port", !sysPropPortRunning);
+        } finally {
+            System.clearProperty("mockserver.serverPort");
+            stopQuietly(mockServerClient);
+        }
+    }
+
+    @Test
+    public void shouldStartMockServerFromPropertiesFile() {
+        final int freePort = PortFactory.findFreePort();
+        MockServerClient mockServerClient = new MockServerClient("127.0.0.1", freePort);
+
+        try {
+            ConfigurationProperties.PROPERTIES.setProperty("mockserver.serverPort", String.valueOf(freePort));
+
+            Main.main();
+
+            assertThat("mockServerClient.hasStarted", mockServerClient.hasStarted(), is(true));
+        } finally {
+            ConfigurationProperties.PROPERTIES.remove("mockserver.serverPort");
             stopQuietly(mockServerClient);
         }
     }

@@ -35,6 +35,11 @@ steps:
     command: ".buildkite/scripts/steps/java-deploy-snapshot.sh"
     timeout_in_minutes: 30
 
+  - label: ":docker: container integration tests"
+    if: "build.branch == 'master'"
+    command: ".buildkite/scripts/steps/container-tests-run.sh"
+    timeout_in_minutes: 30
+
   - label: ":docker: build and push :latest"
     if: "build.branch == 'master'"
     command: ".buildkite/scripts/steps/java-docker-push-latest.sh"

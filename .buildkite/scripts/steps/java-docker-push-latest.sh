@@ -28,7 +28,7 @@ docker build --tag "$SMOKE_TAG" docker/local
 echo "--- :test_tube: Running smoke test"
 docker run -d --name "$SMOKE_CONTAINER" -p 0:1080 "$SMOKE_TAG"
 
-SMOKE_PORT=$(docker port "$SMOKE_CONTAINER" 1080 | head -1 | cut -d: -f2)
+SMOKE_PORT=$(docker port "$SMOKE_CONTAINER" 1080 | head -1 | awk -F: '{print $NF}')
 echo "MockServer container started on port $SMOKE_PORT"
 
 DEADLINE=$((SECONDS + 30))
@@ -70,6 +70,61 @@ fi
 echo "Smoke test PASSED: MockServer starts, accepts expectations, and serves mock responses"
 
 docker rm -f "$SMOKE_CONTAINER" 2>/dev/null || true
+
+echo "--- :test_tube: Running env var port override smoke test"
+ENVVAR_CONTAINER="mockserver-envvar-$$"
+
+cleanup_envvar() {
+  docker rm -f "$ENVVAR_CONTAINER" 2>/dev/null || true
+  docker rmi "$SMOKE_TAG" 2>/dev/null || true
+}
+trap cleanup_envvar EXIT
+
+docker run -d --name "$ENVVAR_CONTAINER" -e MOCKSERVER_SERVER_PORT=1234 -p 0:1234 "$SMOKE_TAG"
+
+ENVVAR_PORT=$(docker port "$ENVVAR_CONTAINER" 1234 | head -1 | awk -F: '{print $NF}')
+echo "MockServer container started with MOCKSERVER_SERVER_PORT=1234 on host port $ENVVAR_PORT"
+
+DEADLINE=$((SECONDS + 30))
+STATUS=""
+while [ $SECONDS -lt $DEADLINE ]; do
+  STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "http://localhost:${ENVVAR_PORT}/mockserver/status" 2>/dev/null || true)
+  if [ "$STATUS" = "200" ]; then
+    echo "MockServer responded with 200 OK on overridden port"
+    break
+  fi
+  sleep 1
+done
+
+if [ "$STATUS" != "200" ]; then
+  echo "Env var smoke test FAILED: MockServer did not start on port 1234 within 30s (last status: $STATUS)"
+  echo "Container logs:"
+  docker logs "$ENVVAR_CONTAINER" 2>&1 | tail -30
+  exit 1
+fi
+
+EXPECTATION_RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
+  "http://localhost:${ENVVAR_PORT}/mockserver/expectation" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "httpRequest": {"method": "GET", "path": "/envvar-test"},
+    "httpResponse": {"statusCode": 200, "body": "ok"}
+  }' 2>/dev/null || true)
+
+if [ "$EXPECTATION_RESPONSE" != "201" ]; then
+  echo "Env var smoke test FAILED: could not create expectation (status: $EXPECTATION_RESPONSE)"
+  exit 1
+fi
+
+MOCK_RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${ENVVAR_PORT}/envvar-test" 2>/dev/null || true)
+if [ "$MOCK_RESPONSE" != "200" ]; then
+  echo "Env var smoke test FAILED: mock did not respond correctly on overridden port (status: $MOCK_RESPONSE)"
+  exit 1
+fi
+
+echo "Env var smoke test PASSED: MOCKSERVER_SERVER_PORT correctly overrides default port"
+
+docker rm -f "$ENVVAR_CONTAINER" 2>/dev/null || true
 docker rmi "$SMOKE_TAG" 2>/dev/null || true
 trap - EXIT
 
