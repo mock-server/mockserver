@@ -37,7 +37,7 @@ The monorepo uses a path-based pipeline orchestrator that dynamically triggers s
 
 **File:** `.buildkite/scripts/generate-pipeline.sh`
 
-The orchestrator runs as the first step of every build (via the main "MockServer" pipeline). It determines which files changed in the commit and emits Buildkite `command` steps that use the Buildkite REST API to create child builds. Each command step runs `.buildkite/scripts/trigger-pipeline.sh`, which fetches a Buildkite API token from AWS Secrets Manager, creates the child build via the REST API, and polls until completion. This approach bypasses Buildkite's `trigger` step permission model, which requires the build author to be a Buildkite organization member (blocking bot-authored PRs like Dependabot).
+The orchestrator runs as the first step of every build (via the main "MockServer" pipeline). It determines which files changed in the commit and emits native Buildkite `trigger` steps that create child builds on the appropriate pipelines. Trigger steps are synchronous by default (`async: false`), so the parent build waits for each child to complete and inherits its pass/fail status — without consuming an agent while waiting.
 
 ```mermaid
 flowchart TD
@@ -47,16 +47,16 @@ generate-pipeline.sh"]
 git diff against base"]
     DIFF --> MATCH{"Match changed paths
 against rules"}
-    MATCH -->|mockserver/ or mockserver-ui/| JAVA["command: trigger-pipeline.sh mockserver-java"]
-    MATCH -->|mockserver-ui/| UI["command: trigger-pipeline.sh mockserver-ui"]
-    MATCH -->|mockserver-node/ or mockserver-client-node/| NODE["command: trigger-pipeline.sh mockserver-node"]
-    MATCH -->|mockserver-client-python/| PYTHON["command: trigger-pipeline.sh mockserver-python"]
-    MATCH -->|mockserver-client-ruby/| RUBY["command: trigger-pipeline.sh mockserver-ruby"]
-    MATCH -->|mockserver-maven-plugin/| MAVEN_PLUGIN["command: trigger-pipeline.sh mockserver-maven-plugin"]
-    MATCH -->|mockserver-performance-test/| PERF["command: trigger-pipeline.sh mockserver-performance-test"]
-    MATCH -->|container_integration_tests/| CONTAINER["command: trigger-pipeline.sh mockserver-container-tests"]
-    MATCH -->|jekyll-www.mock-server.com/| WEBSITE["command: trigger-pipeline.sh mockserver-website"]
-    MATCH -->|.buildkite/ .github/ terraform/ etc.| INFRA["command: trigger-pipeline.sh mockserver-infra"]
+    MATCH -->|mockserver/ or mockserver-ui/| JAVA["trigger: mockserver-java"]
+    MATCH -->|mockserver-ui/| UI["trigger: mockserver-ui"]
+    MATCH -->|mockserver-node/ or mockserver-client-node/| NODE["trigger: mockserver-node"]
+    MATCH -->|mockserver-client-python/| PYTHON["trigger: mockserver-python"]
+    MATCH -->|mockserver-client-ruby/| RUBY["trigger: mockserver-ruby"]
+    MATCH -->|mockserver-maven-plugin/| MAVEN_PLUGIN["trigger: mockserver-maven-plugin"]
+    MATCH -->|mockserver-performance-test/| PERF["trigger: mockserver-performance-test"]
+    MATCH -->|container_integration_tests/| CONTAINER["trigger: mockserver-container-tests"]
+    MATCH -->|jekyll-www.mock-server.com/| WEBSITE["trigger: mockserver-website"]
+    MATCH -->|.buildkite/ .github/ terraform/ etc.| INFRA["trigger: mockserver-infra"]
     MATCH -->|no match| DEFAULT["inline: no-op step"]
 ```
 
@@ -82,7 +82,7 @@ All pipelines are managed via Terraform in `terraform/buildkite-pipelines/pipeli
 
 A single commit can trigger multiple child pipelines if it changes files in multiple areas. For example, a commit touching both `mockserver/` and `mockserver-ui/` triggers both `mockserver-java` and `mockserver-ui` pipelines.
 
-All pipelines have `cancel_intermediate_builds` and `skip_intermediate_builds` enabled. When a new build arrives for the same branch (e.g. Dependabot rebases a PR), Buildkite automatically cancels any running builds and skips queued builds for that branch. Additionally, `trigger-pipeline.sh` cancels child builds when the parent job is terminated, preventing orphaned child builds from consuming agent capacity.
+All pipelines have `cancel_intermediate_builds` and `skip_intermediate_builds` enabled. When a new build arrives for the same branch (e.g. Dependabot rebases a PR), Buildkite automatically cancels any running builds and skips queued builds for that branch. Native trigger steps automatically cancel child builds when the parent build is cancelled.
 
 ### CI Build Pipeline
 
@@ -212,7 +212,7 @@ Pipelines are managed via Terraform in `terraform/buildkite-pipelines/`. The Ter
 3. Add a `trigger_if_changed` call in `.buildkite/scripts/generate-pipeline.sh`
 4. Run `terraform apply` in `terraform/buildkite-pipelines/`
 
-The Buildkite API token is stored in AWS Secrets Manager (`mockserver-build/buildkite-api-token`).
+The Buildkite API token is stored in AWS Secrets Manager (`mockserver-build/buildkite-api-token`) and is used by the Terraform Buildkite provider for pipeline management.
 
 ## GitHub Actions
 
