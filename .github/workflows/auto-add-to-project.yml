@@ -1,0 +1,17 @@
+name: Auto-add issues to project
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  add-to-project:
+    name: Add issue to MockServer Roadmap
+    runs-on: ubuntu-latest
+    steps:
+      # PROJECT_TOKEN must be a classic PAT with 'project' scope,
+      # stored in the repository's Actions secrets.
+      - uses: actions/add-to-project@v1.0.2
+        with:
+          project-url: https://github.com/orgs/mock-server/projects/1
+          github-token: ${{ secrets.PROJECT_TOKEN }}

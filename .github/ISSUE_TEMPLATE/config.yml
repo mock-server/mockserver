@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or Support Request
+    url: https://github.com/mock-server/mockserver-monorepo/discussions
+    about: Ask questions and get help from the community
+  - name: Documentation
+    url: https://www.mock-server.com
+    about: Check the documentation for usage guides and configuration

@@ -1,0 +1,22 @@
+name: Welcome first-time contributors
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  welcome:
+    name: Welcome
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/first-interaction@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          issue-message: |
+            Thanks for opening your first issue! We appreciate your contribution to MockServer.
+
+            A maintainer will review this shortly. In the meantime:
+            - Check the [documentation](https://www.mock-server.com) for guides and configuration
+            - Review the [project board](https://github.com/orgs/mock-server/projects/1) for related issues

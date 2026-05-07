@@ -119,7 +119,7 @@ Distribution channels"]
 
 ### Where (`where/`)
 
-Distribution channel pages: `docker.html`, `downloads.html`, `github.html`, `kubernetes.html`, `maven_central.html`, `npm.html`, `slack.html`, `trello.html`
+Distribution channel pages: `docker.html`, `downloads.html`, `github.html`, `kubernetes.html`, `maven_central.html`, `npm.html`, `slack.html`, `trello.html` (auto-redirects to GitHub Projects after 3 seconds)
 
 ## Layouts
 

@@ -80,4 +80,4 @@ Pull requests are welcome. Please:
 
 ## Feature Requests
 
-Feature requests are submitted to [GitHub issues](https://github.com/mock-server/mockserver-monorepo/issues?state=open).
+Feature requests are submitted to [GitHub issues](https://github.com/mock-server/mockserver-monorepo/issues?state=open) and tracked on the [project roadmap](https://github.com/orgs/mock-server/projects/1).

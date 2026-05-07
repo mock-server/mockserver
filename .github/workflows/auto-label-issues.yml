@@ -1,0 +1,35 @@
+name: Auto-label issues
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  auto-label:
+    name: Auto-label from template
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Label bug reports
+        if: contains(github.event.issue.body, 'Describe the issue') && contains(github.event.issue.body, 'MockServer Log')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['bug']
+            });
+      - name: Label feature requests
+        if: contains(github.event.issue.body, 'Describe the feature request') && contains(github.event.issue.body, 'The solution you')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['enhancement']
+            });

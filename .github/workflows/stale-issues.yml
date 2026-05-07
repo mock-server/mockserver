@@ -1,0 +1,48 @@
+name: Manage stale issues
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  stale:
+    name: Close stale issues
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        with:
+          stale-issue-message: >
+            This issue has been automatically marked as stale because it has not had
+            recent activity. It will be closed if no further activity occurs within
+            150 days. If this issue is still relevant, please comment to keep it open.
+          close-issue-message: >
+            This issue was automatically closed because it has been inactive for
+            450 days. If you believe this issue is still relevant, please open a new
+            issue and reference this one.
+          days-before-stale: 300
+          days-before-close: 150
+          stale-issue-label: stale
+          exempt-issue-labels: 'priority:high,in progress,next'
+          operations-per-run: 30
+          disable-pr: true
+
+  need-more-info:
+    name: Close issues needing more information
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        with:
+          close-issue-message: >
+            This issue was automatically closed because more information was requested
+            but no response was received within 70 days. If you have the requested
+            information, please open a new issue and include it.
+          days-before-stale: -1
+          days-before-close: 70
+          only-labels: 'need_more_information'
+          close-issue-label: 'wontfix'
+          operations-per-run: 30
+          disable-pr: true
