@@ -1032,7 +1032,7 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                 "  }" + NEW_LINE +
                 "}"),
             is(
-                "12 errors:" + NEW_LINE +
+                "14 errors:" + NEW_LINE +
                     " - $.httpError: is missing, but is required, if specifying action of type Error" + NEW_LINE +
                     " - $.httpForward: is missing, but is required, if specifying action of type Forward" + NEW_LINE +
                     " - $.httpForwardClassCallback: is missing, but is required, if specifying action of type ForwardClassCallback" + NEW_LINE +
@@ -1043,6 +1043,8 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                     " - $.httpResponseClassCallback: is missing, but is required, if specifying action of type ResponseClassCallback" + NEW_LINE +
                     " - $.httpResponseObjectCallback: is missing, but is required, if specifying action of type ResponseObjectCallback" + NEW_LINE +
                     " - $.httpResponseTemplate: is missing, but is required, if specifying action of type ResponseTemplate" + NEW_LINE +
+                    " - $.httpSseResponse: is missing, but is required, if specifying action of type SseResponse" + NEW_LINE +
+                    " - $.httpWebSocketResponse: is missing, but is required, if specifying action of type WebSocketResponse" + NEW_LINE +
                     " - $: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
                     " - oneOf of the following must be specified [httpError, httpForward, httpForwardClassCallback, httpForwardObjectCallback, httpForwardTemplate, httpOverrideForwardedRequest, httpResponse, httpResponseClassCallback, httpResponseObjectCallback, httpResponseTemplate]" + NEW_LINE +
                     NEW_LINE +
@@ -1057,7 +1059,7 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                 "    \"invalidField\" : \"randomValue\"" + NEW_LINE +
                 "  }"),
             is(
-                "13 errors:" + NEW_LINE +
+                "15 errors:" + NEW_LINE +
                     " - $.httpError: is missing, but is required, if specifying action of type Error" + NEW_LINE +
                     " - $.httpForward: is missing, but is required, if specifying action of type Forward" + NEW_LINE +
                     " - $.httpForwardClassCallback: is missing, but is required, if specifying action of type ForwardClassCallback" + NEW_LINE +
@@ -1068,6 +1070,8 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                     " - $.httpResponseClassCallback: is missing, but is required, if specifying action of type ResponseClassCallback" + NEW_LINE +
                     " - $.httpResponseObjectCallback: is missing, but is required, if specifying action of type ResponseObjectCallback" + NEW_LINE +
                     " - $.httpResponseTemplate: is missing, but is required, if specifying action of type ResponseTemplate" + NEW_LINE +
+                    " - $.httpSseResponse: is missing, but is required, if specifying action of type SseResponse" + NEW_LINE +
+                    " - $.httpWebSocketResponse: is missing, but is required, if specifying action of type WebSocketResponse" + NEW_LINE +
                     " - $.invalidField: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
                     " - $: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
                     " - oneOf of the following must be specified [httpError, httpForward, httpForwardClassCallback, httpForwardObjectCallback, httpForwardTemplate, httpOverrideForwardedRequest, httpResponse, httpResponseClassCallback, httpResponseObjectCallback, httpResponseTemplate]" + NEW_LINE +

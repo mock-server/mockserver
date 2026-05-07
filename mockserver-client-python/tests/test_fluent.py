@@ -15,7 +15,9 @@ from mockserver.models import (
     HttpOverrideForwardedRequest,
     HttpRequest,
     HttpResponse,
+    HttpSseResponse,
     HttpTemplate,
+    HttpWebSocketResponse,
     Times,
 )
 
@@ -176,6 +178,44 @@ class TestForwardTypeError:
     async def test_forward_with_int_raises(self, chain):
         with pytest.raises(TypeError, match="Expected HttpForward"):
             await chain.forward(42)
+
+
+class TestRespondWithSse:
+    @pytest.mark.asyncio
+    async def test_with_http_sse_response(self, chain, mock_client):
+        sse_response = HttpSseResponse(status_code=200)
+        result = await chain.respond_with_sse(sse_response)
+        assert chain._expectation.http_sse_response is sse_response
+        mock_client.upsert.assert_called_once_with(chain._expectation)
+
+    @pytest.mark.asyncio
+    async def test_with_invalid_type_raises(self, chain):
+        with pytest.raises(TypeError, match="Expected HttpSseResponse"):
+            await chain.respond_with_sse("not an sse response")
+
+    @pytest.mark.asyncio
+    async def test_with_dict_raises(self, chain):
+        with pytest.raises(TypeError, match="Expected HttpSseResponse"):
+            await chain.respond_with_sse({"status_code": 200})
+
+
+class TestRespondWithWebSocket:
+    @pytest.mark.asyncio
+    async def test_with_http_websocket_response(self, chain, mock_client):
+        ws_response = HttpWebSocketResponse(subprotocol="graphql-ws")
+        result = await chain.respond_with_websocket(ws_response)
+        assert chain._expectation.http_websocket_response is ws_response
+        mock_client.upsert.assert_called_once_with(chain._expectation)
+
+    @pytest.mark.asyncio
+    async def test_with_invalid_type_raises(self, chain):
+        with pytest.raises(TypeError, match="Expected HttpWebSocketResponse"):
+            await chain.respond_with_websocket("not a ws response")
+
+    @pytest.mark.asyncio
+    async def test_with_dict_raises(self, chain):
+        with pytest.raises(TypeError, match="Expected HttpWebSocketResponse"):
+            await chain.respond_with_websocket({"subprotocol": "test"})
 
 
 class TestChaining:

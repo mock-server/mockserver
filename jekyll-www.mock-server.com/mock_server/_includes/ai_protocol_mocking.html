@@ -1,0 +1,430 @@
+<p>MockServer can mock AI protocol servers — including <strong>MCP (Model Context Protocol)</strong> servers and <strong>A2A (Agent-to-Agent Protocol)</strong> agents — enabling you to test AI clients against predictable mock services without running real AI infrastructure.</p>
+
+<p>This is distinct from MockServer's built-in <a href="/mock_server/ai_mcp_setup.html">MCP control plane</a> (which lets AI assistants <em>control</em> MockServer). These features let you <em>mock other people's</em> MCP and A2A servers.</p>
+
+<h2>SSE Streaming Responses</h2>
+
+<p>Server-Sent Events (SSE) responses stream events to clients over a long-lived HTTP connection. This is the transport used by MCP's Streamable HTTP protocol and many other AI APIs.</p>
+
+<button id="button_sse_basic" class="accordion">SSE response with multiple events</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/events"
+    },
+    "httpSseResponse": {
+        "statusCode": 200,
+        "events": [
+            {
+                "event": "message",
+                "data": "hello world",
+                "id": "1"
+            },
+            {
+                "event": "update",
+                "data": "second event",
+                "id": "2"
+            }
+        ],
+        "closeConnection": true
+    }
+}'</code></pre>
+    </div>
+</div>
+
+<button id="button_sse_delay" class="accordion">SSE response with delays between events</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/events"
+    },
+    "httpSseResponse": {
+        "statusCode": 200,
+        "events": [
+            {
+                "event": "message",
+                "data": "first event",
+                "id": "1"
+            },
+            {
+                "event": "message",
+                "data": "delayed event",
+                "id": "2",
+                "delay": {
+                    "timeUnit": "MILLISECONDS",
+                    "value": 500
+                }
+            }
+        ],
+        "closeConnection": true
+    }
+}'</code></pre>
+        <p>Each event is sent after the specified delay, enabling realistic simulation of streaming APIs.</p>
+    </div>
+</div>
+
+<button id="button_sse_multiline" class="accordion">SSE response with multi-line data</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/events"
+    },
+    "httpSseResponse": {
+        "statusCode": 200,
+        "events": [
+            {
+                "event": "message",
+                "data": "line 1\nline 2\nline 3",
+                "id": "1"
+            }
+        ],
+        "closeConnection": true
+    }
+}'</code></pre>
+        <p>Multi-line data is automatically split into multiple <code>data:</code> lines per the SSE specification.</p>
+    </div>
+</div>
+
+<h2>WebSocket Mocking</h2>
+
+<p>Mock WebSocket endpoints that perform the upgrade handshake and send a sequence of text or binary messages. Useful for testing clients that connect to WebSocket APIs (GraphQL subscriptions, real-time feeds, etc.).</p>
+
+<button id="button_ws_basic" class="accordion">WebSocket response with text messages</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withMethod("GET")
+            .withPath("/ws")
+    )
+    .respondWithWebSocket(
+        webSocketResponse()
+            .withMessage(webSocketMessage("hello"))
+            .withMessage(webSocketMessage("world"))
+            .withCloseConnection(true)
+    );</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/ws"
+    },
+    "httpWebSocketResponse": {
+        "messages": [
+            {"text": "hello"},
+            {"text": "world"}
+        ],
+        "closeConnection": true
+    }
+}'</code></pre>
+    </div>
+</div>
+
+<button id="button_ws_delay" class="accordion">WebSocket response with delays</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/ws"
+    },
+    "httpWebSocketResponse": {
+        "messages": [
+            {"text": "immediate"},
+            {"text": "delayed", "delay": {"timeUnit": "MILLISECONDS", "value": 500}}
+        ],
+        "closeConnection": true
+    }
+}'</code></pre>
+    </div>
+</div>
+
+<button id="button_ws_subprotocol" class="accordion">WebSocket with subprotocol (e.g. GraphQL)</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/graphql"
+    },
+    "httpWebSocketResponse": {
+        "subprotocol": "graphql-ws",
+        "messages": [
+            {"text": "{\"type\": \"connection_ack\"}"},
+            {"text": "{\"type\": \"next\", \"payload\": {\"data\": {\"newMessage\": \"hello\"}}}"}
+        ],
+        "closeConnection": true
+    }
+}'</code></pre>
+        <p>The <code>subprotocol</code> field is included in the WebSocket handshake response, allowing clients that require specific subprotocols (like <code>graphql-ws</code> or <code>graphql-transport-ws</code>) to connect successfully.</p>
+    </div>
+</div>
+
+<h2>JSON-RPC Body Matching</h2>
+
+<p>Match HTTP requests containing JSON-RPC 2.0 bodies by method name. This is the foundation for mocking any JSON-RPC based protocol (MCP, A2A, language servers, etc.).</p>
+
+<button id="button_jsonrpc_basic" class="accordion">match JSON-RPC request by method</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withMethod("POST")
+            .withPath("/rpc")
+            .withBody(jsonRpc("tools/list"))
+    )
+    .respond(
+        response()
+            .withStatusCode(200)
+            .withBody("{\"jsonrpc\": \"2.0\", \"result\": {\"tools\": []}, \"id\": 1}")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/rpc",
+        "body": {
+            "type": "JSON_RPC",
+            "method": "tools/list"
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "{\"jsonrpc\": \"2.0\", \"result\": {\"tools\": []}, \"id\": 1}"
+    }
+}'</code></pre>
+    </div>
+</div>
+
+<button id="button_jsonrpc_params" class="accordion">match JSON-RPC request with params schema validation</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/rpc",
+        "body": {
+            "type": "JSON_RPC",
+            "method": "tools/call",
+            "paramsSchema": "{\"type\": \"object\", \"properties\": {\"name\": {\"type\": \"string\"}}, \"required\": [\"name\"]}"
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "{\"jsonrpc\": \"2.0\", \"result\": {\"content\": [{\"type\": \"text\", \"text\": \"result\"}]}, \"id\": 1}"
+    }
+}'</code></pre>
+        <p>The <code>paramsSchema</code> field is a JSON Schema that validates the <code>params</code> field of the JSON-RPC request. The request only matches if the params are valid according to the schema.</p>
+    </div>
+</div>
+
+<h2>MCP Server Mocking</h2>
+
+<p>The <code>McpMockBuilder</code> generates a complete set of expectations to make MockServer behave as a mock <a target="_blank" href="https://modelcontextprotocol.io">MCP (Model Context Protocol)</a> server. This enables testing MCP clients without running a real MCP server.</p>
+
+<p>The builder handles all protocol details: <code>initialize</code>, <code>ping</code>, <code>tools/list</code>, <code>tools/call</code>, <code>resources/list</code>, <code>resources/read</code>, <code>prompts/list</code>, <code>prompts/get</code>, and <code>notifications/initialized</code>. JSON-RPC response IDs are automatically echoed from the request.</p>
+
+<button id="button_mcp_tools" class="accordion">mock MCP server with tools</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">import static org.mockserver.client.McpMockBuilder.mcpMock;
+
+MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
+
+mcpMock("/mcp")
+    .withServerName("TestMCP")
+    .withServerVersion("1.0.0")
+    .withTool("get_weather")
+        .withDescription("Get weather for a city")
+        .withInputSchema("{\"type\": \"object\", \"properties\": {\"city\": {\"type\": \"string\"}}, \"required\": [\"city\"]}")
+        .respondingWith("72F and sunny")
+        .and()
+    .withTool("search")
+        .withDescription("Search the knowledge base")
+        .respondingWith("No results found")
+        .and()
+    .applyTo(mockServerClient);</code></pre>
+    </div>
+</div>
+
+<button id="button_mcp_resources" class="accordion">mock MCP server with resources</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
+
+mcpMock("/mcp")
+    .withServerName("ConfigServer")
+    .withResource("config://app")
+        .withName("App Configuration")
+        .withDescription("Application configuration")
+        .withMimeType("application/json")
+        .withContent("{\"debug\": true, \"logLevel\": \"info\"}")
+        .and()
+    .withResource("docs://readme")
+        .withName("README")
+        .withMimeType("text/plain")
+        .withContent("Welcome to the application")
+        .and()
+    .applyTo(mockServerClient);</code></pre>
+    </div>
+</div>
+
+<button id="button_mcp_prompts" class="accordion">mock MCP server with prompts</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
+
+mcpMock("/mcp")
+    .withServerName("PromptServer")
+    .withPrompt("code_review")
+        .withDescription("Review code changes for issues")
+        .withArgument("language", "Programming language", true)
+        .withArgument("style", "Review style (brief/detailed)", false)
+        .respondingWith("user", "Please review the following code for bugs and style issues")
+        .and()
+    .applyTo(mockServerClient);</code></pre>
+    </div>
+</div>
+
+<button id="button_mcp_full" class="accordion">complete MCP server mock with all capabilities</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
+
+mcpMock("/mcp")
+    .withServerName("FullMCPServer")
+    .withServerVersion("2.0.0")
+    .withProtocolVersion("2025-03-26")
+    .withTool("calculator")
+        .withDescription("Basic arithmetic calculator")
+        .withInputSchema("{\"type\": \"object\", \"properties\": {\"expression\": {\"type\": \"string\"}}, \"required\": [\"expression\"]}")
+        .respondingWith("42")
+        .and()
+    .withTool("failing_tool")
+        .withDescription("A tool that always fails")
+        .respondingWith("Something went wrong", true)
+        .and()
+    .withResource("config://app")
+        .withName("App Config")
+        .withContent("{\"version\": \"1.0\"}")
+        .and()
+    .withPrompt("summarize")
+        .withDescription("Summarize text")
+        .respondingWith("user", "Please summarize the following text concisely")
+        .and()
+    .applyTo(mockServerClient);</code></pre>
+        <p>This creates expectations for all MCP methods: <code>initialize</code>, <code>ping</code>, <code>notifications/initialized</code>, <code>tools/list</code>, <code>tools/call</code> (per tool), <code>resources/list</code>, <code>resources/read</code> (per resource), <code>prompts/list</code>, and <code>prompts/get</code> (per prompt).</p>
+    </div>
+</div>
+
+<h2>A2A Agent Mocking</h2>
+
+<p>The <code>A2aMockBuilder</code> generates expectations to make MockServer behave as a mock <a target="_blank" href="https://google.github.io/A2A/">A2A (Agent-to-Agent Protocol)</a> agent. This enables testing A2A clients that discover and communicate with agents.</p>
+
+<p>The builder handles: Agent Card discovery (<code>GET /.well-known/agent.json</code>), <code>tasks/send</code>, <code>tasks/get</code>, and <code>tasks/cancel</code>.</p>
+
+<button id="button_a2a_basic" class="accordion">mock A2A agent with skills</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">import static org.mockserver.client.A2aMockBuilder.a2aMock;
+
+MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
+
+a2aMock("/agent")
+    .withAgentName("TranslationAgent")
+    .withAgentDescription("Translates text between languages")
+    .withAgentVersion("1.0.0")
+    .withSkill("translate")
+        .withName("Translation")
+        .withDescription("Translates text between any two languages")
+        .withTag("translation")
+        .withTag("language")
+        .withExample("Translate 'hello' to Spanish")
+        .and()
+    .withDefaultTaskResponse("Translation complete: Hola")
+    .applyTo(mockServerClient);</code></pre>
+    </div>
+</div>
+
+<button id="button_a2a_handlers" class="accordion">mock A2A agent with custom task handlers</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
+
+a2aMock("/agent")
+    .withAgentName("SmartAgent")
+    .withSkill("translate")
+        .withName("Translation")
+        .and()
+    .withSkill("summarize")
+        .withName("Summarization")
+        .and()
+    .onTaskSend()
+        .matchingMessage("translate.*")
+        .respondingWith("Translated: Bonjour le monde")
+        .and()
+    .onTaskSend()
+        .matchingMessage("summarize.*")
+        .respondingWith("Summary: Brief overview of the content")
+        .and()
+    .onTaskSend()
+        .matchingMessage("fail.*")
+        .respondingWith("Unable to process request", true)
+        .and()
+    .applyTo(mockServerClient);</code></pre>
+        <p>Custom task handlers use regex pattern matching on the message text. Handlers with more specific patterns should be added first. The default <code>tasks/send</code> handler matches any message that doesn't match a custom handler.</p>
+    </div>
+</div>
+
+<button id="button_a2a_workflow" class="accordion">complete A2A agent workflow</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
+
+// Create the mock A2A agent
+a2aMock("/agent")
+    .withAgentName("TestAgent")
+    .withAgentVersion("1.0.0")
+    .withAgentUrl("http://localhost:1080/agent")
+    .withAgentCardPath("/.well-known/agent.json")
+    .withSkill("process")
+        .withName("Data Processing")
+        .withDescription("Process data")
+        .and()
+    .withDefaultTaskResponse("Processing complete")
+    .applyTo(mockServerClient);
+
+// Client workflow:
+// 1. GET /.well-known/agent.json   → discovers agent card with skills
+// 2. POST /agent (tasks/send)      → sends message, gets completed task
+// 3. POST /agent (tasks/get)       → retrieves task status
+// 4. POST /agent (tasks/cancel)    → cancels a running task</code></pre>
+    </div>
+</div>

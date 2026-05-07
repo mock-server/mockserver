@@ -327,6 +327,10 @@ components:
           $ref: "#/components/schemas/HttpOverrideForwardedRequest"
         httpError:
           $ref: "#/components/schemas/HttpError"
+        httpSseResponse:
+          $ref: "#/components/schemas/HttpSseResponse"
+        httpWebSocketResponse:
+          $ref: "#/components/schemas/HttpWebSocketResponse"
         times:
           $ref: "#/components/schemas/Times"
         timeToLive:
@@ -352,6 +356,10 @@ components:
             - httpOverrideForwardedRequest
         - required:
             - httpError
+        - required:
+            - httpSseResponse
+        - required:
+            - httpWebSocketResponse
     ExpectationId:
       description: "pointer to existing expectation"
       type: object
@@ -606,6 +614,59 @@ components:
           type: boolean
         responseBytes:
           type: string
+    HttpSseResponse:
+      description: "SSE response to return"
+      type: object
+      additionalProperties: false
+      properties:
+        delay:
+          $ref: "#/components/schemas/Delay"
+        headers:
+          $ref: "#/components/schemas/Headers"
+        statusCode:
+          type: integer
+        events:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              event:
+                type: string
+              data:
+                type: string
+              id:
+                type: string
+              retry:
+                type: integer
+              delay:
+                $ref: "#/components/schemas/Delay"
+        closeConnection:
+          type: boolean
+    HttpWebSocketResponse:
+      description: "WebSocket response to return"
+      type: object
+      additionalProperties: false
+      properties:
+        delay:
+          $ref: "#/components/schemas/Delay"
+        subprotocol:
+          type: string
+        messages:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              text:
+                type: string
+              binary:
+                type: string
+                format: byte
+              delay:
+                $ref: "#/components/schemas/Delay"
+        closeConnection:
+          type: boolean
     Times:
       description: "number of responses"
       type: object
@@ -887,6 +948,19 @@ components:
               enum:
                 - XPATH
             xpath:
+              type: string
+        - type: object
+          description: "JSON-RPC body matcher"
+          additionalProperties: false
+          properties:
+            not:
+              type: boolean
+            type:
+              enum:
+                - JSON_RPC
+            method:
+              type: string
+            paramsSchema:
               type: string
     BodyWithContentType:
       description: "response body"

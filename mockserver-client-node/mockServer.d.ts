@@ -34,6 +34,8 @@ export type Expectation = {
   httpForwardObjectCallback?: HttpObjectCallback;
   httpOverrideForwardedRequest?: HttpOverrideForwardedRequest;
   httpError?: HttpError;
+  httpSseResponse?: HttpSseResponse;
+  httpWebSocketResponse?: HttpWebSocketResponse;
   times?: Times;
   timeToLive?: TimeToLive;
 };
@@ -201,6 +203,13 @@ export type Body =
   | { not?: boolean; type?: "XML"; xml?: string; contentType?: string }
   | { not?: boolean; type?: "XML_SCHEMA"; xmlSchema?: string }
   | { not?: boolean; type?: "XPATH"; xpath?: string }
+  | {
+      type: 'JSON_RPC';
+      method: string;
+      paramsSchema?: string;
+      not?: boolean;
+      optional?: boolean;
+    }
   | ({ not?: boolean; type?: "BINARY"; base64Bytes?: string; contentType?: string } & {
       not?: boolean;
       type?: "JSON";
@@ -254,6 +263,35 @@ export type BodyWithContentType =
 export interface Delay {
   timeUnit?: string;
   value?: number;
+}
+
+export interface SseEvent {
+  event?: string;
+  data?: string;
+  id?: string;
+  retry?: number;
+  delay?: Delay;
+}
+
+export interface HttpSseResponse {
+  statusCode?: number;
+  headers?: KeyToMultiValue;
+  events?: SseEvent[];
+  closeConnection?: boolean;
+  delay?: Delay;
+}
+
+export interface WebSocketMessage {
+  text?: string;
+  binary?: string;
+  delay?: Delay;
+}
+
+export interface HttpWebSocketResponse {
+  subprotocol?: string;
+  messages?: WebSocketMessage[];
+  closeConnection?: boolean;
+  delay?: Delay;
 }
 
 /**

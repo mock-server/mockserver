@@ -38,6 +38,8 @@ public class Expectation extends ObjectWithJsonToString {
     private HttpClassCallback httpForwardClassCallback;
     private HttpObjectCallback httpForwardObjectCallback;
     private HttpOverrideForwardedRequest httpOverrideForwardedRequest;
+    private HttpSseResponse httpSseResponse;
+    private HttpWebSocketResponse httpWebSocketResponse;
     private HttpError httpError;
 
     /**
@@ -363,6 +365,14 @@ public class Expectation extends ObjectWithJsonToString {
         return httpOverrideForwardedRequest;
     }
 
+    public HttpSseResponse getHttpSseResponse() {
+        return httpSseResponse;
+    }
+
+    public HttpWebSocketResponse getHttpWebSocketResponse() {
+        return httpWebSocketResponse;
+    }
+
     public HttpError getHttpError() {
         return httpError;
     }
@@ -388,6 +398,10 @@ public class Expectation extends ObjectWithJsonToString {
             action = getHttpForwardObjectCallback();
         } else if (httpOverrideForwardedRequest != null) {
             action = getHttpOverrideForwardedRequest();
+        } else if (httpSseResponse != null) {
+            action = getHttpSseResponse();
+        } else if (httpWebSocketResponse != null) {
+            action = getHttpWebSocketResponse();
         } else if (httpError != null) {
             action = getHttpError();
         }
@@ -493,6 +507,24 @@ public class Expectation extends ObjectWithJsonToString {
         return this;
     }
 
+    public Expectation thenRespondWithSse(HttpSseResponse httpSseResponse) {
+        if (httpSseResponse != null) {
+            validationErrors("an SSE response", httpSseResponse.getType());
+            this.httpSseResponse = httpSseResponse;
+            this.hashCode = 0;
+        }
+        return this;
+    }
+
+    public Expectation thenRespondWithWebSocket(HttpWebSocketResponse httpWebSocketResponse) {
+        if (httpWebSocketResponse != null) {
+            validationErrors("a WebSocket response", httpWebSocketResponse.getType());
+            this.httpWebSocketResponse = httpWebSocketResponse;
+            this.hashCode = 0;
+        }
+        return this;
+    }
+
     public Expectation thenError(HttpError httpError) {
         if (httpError != null) {
             validationErrors("an error", httpError.getType());
@@ -529,6 +561,12 @@ public class Expectation extends ObjectWithJsonToString {
         }
         if (actionType != Action.Type.FORWARD_REPLACE && httpOverrideForwardedRequest != null) {
             throw new IllegalArgumentException("It is not possible to set " + actionDescription + " once a forward replace has been set");
+        }
+        if (actionType != Action.Type.SSE_RESPONSE && httpSseResponse != null) {
+            throw new IllegalArgumentException("It is not possible to set " + actionDescription + " once an SSE response has been set");
+        }
+        if (actionType != Action.Type.WEBSOCKET_RESPONSE && httpWebSocketResponse != null) {
+            throw new IllegalArgumentException("It is not possible to set " + actionDescription + " once a WebSocket response has been set");
         }
         if (actionType != Action.Type.ERROR && httpError != null) {
             throw new IllegalArgumentException("It is not possible to set " + actionDescription + " callback once an error has been set");
@@ -574,6 +612,8 @@ public class Expectation extends ObjectWithJsonToString {
             .thenForward(httpForwardClassCallback)
             .thenForward(httpForwardObjectCallback)
             .thenForward(httpOverrideForwardedRequest)
+            .thenRespondWithSse(httpSseResponse)
+            .thenRespondWithWebSocket(httpWebSocketResponse)
             .thenError(httpError);
     }
 
@@ -608,13 +648,15 @@ public class Expectation extends ObjectWithJsonToString {
             Objects.equals(httpForwardClassCallback, that.httpForwardClassCallback) &&
             Objects.equals(httpForwardObjectCallback, that.httpForwardObjectCallback) &&
             Objects.equals(httpOverrideForwardedRequest, that.httpOverrideForwardedRequest) &&
+            Objects.equals(httpSseResponse, that.httpSseResponse) &&
+            Objects.equals(httpWebSocketResponse, that.httpWebSocketResponse) &&
             Objects.equals(httpError, that.httpError);
     }
 
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(priority, httpRequest, times, timeToLive, httpResponse, httpResponseTemplate, httpResponseClassCallback, httpResponseObjectCallback, httpForward, httpForwardTemplate, httpForwardClassCallback, httpForwardObjectCallback, httpOverrideForwardedRequest, httpError);
+            hashCode = Objects.hash(priority, httpRequest, times, timeToLive, httpResponse, httpResponseTemplate, httpResponseClassCallback, httpResponseObjectCallback, httpForward, httpForwardTemplate, httpForwardClassCallback, httpForwardObjectCallback, httpOverrideForwardedRequest, httpSseResponse, httpWebSocketResponse, httpError);
         }
         return hashCode;
     }

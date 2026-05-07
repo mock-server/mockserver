@@ -64,6 +64,8 @@ public class HttpActionHandler {
     private HttpForwardClassCallbackActionHandler httpForwardClassCallbackActionHandler;
     private HttpForwardObjectCallbackActionHandler httpForwardObjectCallbackActionHandler;
     private HttpOverrideForwardedRequestActionHandler httpOverrideForwardedRequestCallbackActionHandler;
+    private HttpSseResponseActionHandler httpSseResponseActionHandler;
+    private HttpWebSocketResponseActionHandler httpWebSocketResponseActionHandler;
     private HttpErrorActionHandler httpErrorActionHandler;
 
     // forwarding
@@ -166,6 +168,86 @@ public class HttpActionHandler {
                         writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous);
                         expectationPostProcessor.run();
                     }), synchronous, action.getDelay());
+                    break;
+                }
+                case SSE_RESPONSE: {
+                    if (ctx == null) {
+                        writeResponseActionResponse(
+                            response().withStatusCode(501).withBody("SSE streaming is not supported in WAR deployments"),
+                            responseWriter, request, action, synchronous
+                        );
+                        expectationPostProcessor.run();
+                        break;
+                    }
+                    scheduler.schedule(() -> {
+                        try {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setType(EXPECTATION_RESPONSE)
+                                    .setLogLevel(Level.INFO)
+                                    .setCorrelationId(request.getLogCorrelationId())
+                                    .setHttpRequest(request)
+                                    .setExpectationId(action.getExpectationId())
+                                    .setMessageFormat("returning SSE response for request:{}for action:{}from expectation:{}")
+                                    .setArguments(request, action, action.getExpectationId())
+                            );
+                            getHttpSseResponseActionHandler().handle((HttpSseResponse) action, ctx, request);
+                            expectationPostProcessor.run();
+                        } catch (Throwable throwable) {
+                            if (MockServerLogger.isEnabled(Level.INFO)) {
+                                mockServerLogger.logEvent(
+                                    new LogEntry()
+                                        .setType(WARN)
+                                        .setLogLevel(Level.INFO)
+                                        .setCorrelationId(request.getLogCorrelationId())
+                                        .setHttpRequest(request)
+                                        .setMessageFormat(throwable.getMessage())
+                                        .setThrowable(throwable)
+                                );
+                            }
+                            ctx.close();
+                        }
+                    }, synchronous, action.getDelay());
+                    break;
+                }
+                case WEBSOCKET_RESPONSE: {
+                    if (ctx == null) {
+                        writeResponseActionResponse(
+                            response().withStatusCode(501).withBody("WebSocket mocking is not supported in WAR deployments"),
+                            responseWriter, request, action, synchronous
+                        );
+                        expectationPostProcessor.run();
+                        break;
+                    }
+                    scheduler.schedule(() -> {
+                        try {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setType(EXPECTATION_RESPONSE)
+                                    .setLogLevel(Level.INFO)
+                                    .setCorrelationId(request.getLogCorrelationId())
+                                    .setHttpRequest(request)
+                                    .setExpectationId(action.getExpectationId())
+                                    .setMessageFormat("returning WebSocket response for request:{}for action:{}from expectation:{}")
+                                    .setArguments(request, action, action.getExpectationId())
+                            );
+                            getHttpWebSocketResponseActionHandler().handle((HttpWebSocketResponse) action, ctx, request);
+                            expectationPostProcessor.run();
+                        } catch (Throwable throwable) {
+                            if (MockServerLogger.isEnabled(Level.INFO)) {
+                                mockServerLogger.logEvent(
+                                    new LogEntry()
+                                        .setType(WARN)
+                                        .setLogLevel(Level.INFO)
+                                        .setCorrelationId(request.getLogCorrelationId())
+                                        .setHttpRequest(request)
+                                        .setMessageFormat(throwable.getMessage())
+                                        .setThrowable(throwable)
+                                );
+                            }
+                            ctx.close();
+                        }
+                    }, synchronous, action.getDelay());
                     break;
                 }
                 case ERROR: {
@@ -569,6 +651,20 @@ public class HttpActionHandler {
             httpOverrideForwardedRequestCallbackActionHandler = new HttpOverrideForwardedRequestActionHandler(mockServerLogger, httpClient);
         }
         return httpOverrideForwardedRequestCallbackActionHandler;
+    }
+
+    private HttpSseResponseActionHandler getHttpSseResponseActionHandler() {
+        if (httpSseResponseActionHandler == null) {
+            httpSseResponseActionHandler = new HttpSseResponseActionHandler(mockServerLogger, scheduler);
+        }
+        return httpSseResponseActionHandler;
+    }
+
+    private HttpWebSocketResponseActionHandler getHttpWebSocketResponseActionHandler() {
+        if (httpWebSocketResponseActionHandler == null) {
+            httpWebSocketResponseActionHandler = new HttpWebSocketResponseActionHandler(mockServerLogger, scheduler);
+        }
+        return httpWebSocketResponseActionHandler;
     }
 
     private HttpErrorActionHandler getHttpErrorActionHandler() {

@@ -209,6 +209,26 @@
           "type": "string"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "not": {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "JSON_RPC"
+          ]
+        },
+        "method": {
+          "type": "string"
+        },
+        "paramsSchema": {
+          "type": "string"
+        }
+      }
     }
   ]
 }

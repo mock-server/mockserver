@@ -1,7 +1,12 @@
 package org.mockserver.templates.engine.model;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mockserver.model.*;
+import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.BodyDTO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -27,6 +32,11 @@ public class HttpRequestTemplateObject extends RequestDefinition {
     private String localAddress = null;
     private String remoteAddress = null;
     private Boolean keepAlive = null;
+    private String jsonRpcId = null;
+    private String jsonRpcRawId = null;
+    private String jsonRpcMethod = null;
+    private static final Logger LOGGER = LoggerFactory.getLogger(HttpRequestTemplateObject.class);
+    private static final ObjectMapper JSON_OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
 
     public HttpRequestTemplateObject(HttpRequest httpRequest) {
         if (httpRequest != null) {
@@ -51,6 +61,7 @@ public class HttpRequestTemplateObject extends RequestDefinition {
             remoteAddress = httpRequest.getRemoteAddress();
             keepAlive = httpRequest.isKeepAlive();
             setNot(httpRequest.getNot());
+            extractJsonRpcFields(httpRequest);
         }
     }
 
@@ -107,6 +118,40 @@ public class HttpRequestTemplateObject extends RequestDefinition {
         return keepAlive;
     }
 
+    public String getJsonRpcId() {
+        return jsonRpcId;
+    }
+
+    public String getJsonRpcRawId() {
+        return jsonRpcRawId;
+    }
+
+    public String getJsonRpcMethod() {
+        return jsonRpcMethod;
+    }
+
+    private void extractJsonRpcFields(HttpRequest httpRequest) {
+        try {
+            String bodyString = httpRequest.getBodyAsString();
+            if (bodyString != null && !bodyString.isEmpty() && bodyString.trim().startsWith("{")) {
+                JsonNode root = JSON_OBJECT_MAPPER.readTree(bodyString);
+                if (root.has("jsonrpc") && root.has("method")) {
+                    JsonNode idNode = root.get("id");
+                    if (idNode != null) {
+                        jsonRpcId = idNode.isTextual() ? idNode.asText() : idNode.toString();
+                        jsonRpcRawId = idNode.toString();
+                    }
+                    JsonNode methodNode = root.get("method");
+                    if (methodNode != null) {
+                        jsonRpcMethod = methodNode.asText();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.trace("failed to extract JSON-RPC fields from request body", e);
+        }
+    }
+
     public HttpRequestTemplateObject shallowClone() {
         return this;
     }
@@ -136,13 +181,16 @@ public class HttpRequestTemplateObject extends RequestDefinition {
             Objects.equals(secure, that.secure) &&
             Objects.equals(localAddress, that.localAddress) &&
             Objects.equals(remoteAddress, that.remoteAddress) &&
-            Objects.equals(keepAlive, that.keepAlive);
+            Objects.equals(keepAlive, that.keepAlive) &&
+            Objects.equals(jsonRpcId, that.jsonRpcId) &&
+            Objects.equals(jsonRpcRawId, that.jsonRpcRawId) &&
+            Objects.equals(jsonRpcMethod, that.jsonRpcMethod);
     }
 
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(super.hashCode(), method, path, pathParameters, queryStringParameters, cookies, headers, body, secure, localAddress, remoteAddress, keepAlive);
+            hashCode = Objects.hash(super.hashCode(), method, path, pathParameters, queryStringParameters, cookies, headers, body, secure, localAddress, remoteAddress, keepAlive, jsonRpcId, jsonRpcRawId, jsonRpcMethod);
         }
         return hashCode;
     }

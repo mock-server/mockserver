@@ -1,0 +1,37 @@
+{
+  "title": "WebSocket response to return",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "delay": {
+      "$ref": "#/definitions/delay"
+    },
+    "subprotocol": {
+      "type": "string"
+    },
+    "messages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "binary": {
+            "type": "string",
+            "format": "byte"
+          },
+          "delay": {
+            "$ref": "#/definitions/delay"
+          }
+        }
+      }
+    },
+    "closeConnection": {
+      "type": "boolean"
+    }
+  },
+  "definitions": {
+  }
+}

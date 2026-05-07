@@ -24,6 +24,8 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
     private HttpClassCallbackDTO httpForwardClassCallback;
     private HttpObjectCallbackDTO httpForwardObjectCallback;
     private HttpOverrideForwardedRequestDTO httpOverrideForwardedRequest;
+    private HttpSseResponseDTO httpSseResponse;
+    private HttpWebSocketResponseDTO httpWebSocketResponse;
     private HttpErrorDTO httpError;
     private org.mockserver.serialization.model.TimesDTO times;
     private TimeToLiveDTO timeToLive;
@@ -77,6 +79,14 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
             if (httpOverrideForwardedRequest != null) {
                 this.httpOverrideForwardedRequest = new HttpOverrideForwardedRequestDTO(httpOverrideForwardedRequest);
             }
+            HttpSseResponse httpSseResponse = expectation.getHttpSseResponse();
+            if (httpSseResponse != null) {
+                this.httpSseResponse = new HttpSseResponseDTO(httpSseResponse);
+            }
+            HttpWebSocketResponse httpWebSocketResponse = expectation.getHttpWebSocketResponse();
+            if (httpWebSocketResponse != null) {
+                this.httpWebSocketResponse = new HttpWebSocketResponseDTO(httpWebSocketResponse);
+            }
             HttpError httpError = expectation.getHttpError();
             if (httpError != null) {
                 this.httpError = new HttpErrorDTO(httpError);
@@ -106,6 +116,8 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
         HttpClassCallback httpForwardClassCallback = null;
         HttpObjectCallback httpForwardObjectCallback = null;
         HttpOverrideForwardedRequest httpOverrideForwardedRequest = null;
+        HttpSseResponse httpSseResponse = null;
+        HttpWebSocketResponse httpWebSocketResponse = null;
         HttpError httpError = null;
         Times times;
         TimeToLive timeToLive;
@@ -140,6 +152,12 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
         if (this.httpOverrideForwardedRequest != null) {
             httpOverrideForwardedRequest = this.httpOverrideForwardedRequest.buildObject();
         }
+        if (this.httpSseResponse != null) {
+            httpSseResponse = this.httpSseResponse.buildObject();
+        }
+        if (this.httpWebSocketResponse != null) {
+            httpWebSocketResponse = this.httpWebSocketResponse.buildObject();
+        }
         if (this.httpError != null) {
             httpError = this.httpError.buildObject();
         }
@@ -169,6 +187,8 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
             .thenForward(httpForwardClassCallback)
             .thenForward(httpForwardObjectCallback)
             .thenForward(httpOverrideForwardedRequest)
+            .thenRespondWithSse(httpSseResponse)
+            .thenRespondWithWebSocket(httpWebSocketResponse)
             .thenError(httpError);
     }
 
@@ -277,6 +297,24 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
 
     public ExpectationDTO setHttpOverrideForwardedRequest(HttpOverrideForwardedRequestDTO httpOverrideForwardedRequest) {
         this.httpOverrideForwardedRequest = httpOverrideForwardedRequest;
+        return this;
+    }
+
+    public HttpSseResponseDTO getHttpSseResponse() {
+        return httpSseResponse;
+    }
+
+    public ExpectationDTO setHttpSseResponse(HttpSseResponseDTO httpSseResponse) {
+        this.httpSseResponse = httpSseResponse;
+        return this;
+    }
+
+    public HttpWebSocketResponseDTO getHttpWebSocketResponse() {
+        return httpWebSocketResponse;
+    }
+
+    public ExpectationDTO setHttpWebSocketResponse(HttpWebSocketResponseDTO httpWebSocketResponse) {
+        this.httpWebSocketResponse = httpWebSocketResponse;
         return this;
     }
 

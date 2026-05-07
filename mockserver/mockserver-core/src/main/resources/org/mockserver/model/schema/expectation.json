@@ -42,6 +42,12 @@
     "httpError": {
       "$ref": "#/definitions/httpError"
     },
+    "httpSseResponse": {
+      "$ref": "#/definitions/httpSseResponse"
+    },
+    "httpWebSocketResponse": {
+      "$ref": "#/definitions/httpWebSocketResponse"
+    },
     "times": {
       "$ref": "#/definitions/times"
     },
@@ -102,6 +108,16 @@
     {
       "required": [
         "httpError"
+      ]
+    },
+    {
+      "required": [
+        "httpSseResponse"
+      ]
+    },
+    {
+      "required": [
+        "httpWebSocketResponse"
       ]
     }
   ],

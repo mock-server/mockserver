@@ -55,6 +55,12 @@ class SyncForwardChainExpectation:
     ) -> list[Expectation]:
         return self._run(self._async_chain.forward_with_delay(forward, delay))
 
+    def respond_with_sse(self, sse_response) -> list[Expectation]:
+        return self._run(self._async_chain.respond_with_sse(sse_response))
+
+    def respond_with_websocket(self, websocket_response) -> list[Expectation]:
+        return self._run(self._async_chain.respond_with_websocket(websocket_response))
+
     def error(self, error: HttpError) -> list[Expectation]:
         return self._run(self._async_chain.error(error))
 

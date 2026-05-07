@@ -65,6 +65,7 @@ public abstract class Body<T> extends Not {
         XML,
         XML_SCHEMA,
         XPATH,
+        JSON_RPC,
         LOG_EVENT,
     }
 

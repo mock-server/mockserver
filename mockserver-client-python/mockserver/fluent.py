@@ -11,7 +11,9 @@ from mockserver.models import (
     HttpObjectCallback,
     HttpOverrideForwardedRequest,
     HttpResponse,
+    HttpSseResponse,
     HttpTemplate,
+    HttpWebSocketResponse,
 )
 
 if TYPE_CHECKING:
@@ -90,6 +92,22 @@ class ForwardChainExpectation:
     ) -> list[Expectation]:
         forward.delay = delay
         self._expectation.http_forward = forward
+        return await self._client.upsert(self._expectation)
+
+    async def respond_with_sse(self, sse_response: HttpSseResponse) -> list[Expectation]:
+        if not isinstance(sse_response, HttpSseResponse):
+            raise TypeError(
+                f"Expected HttpSseResponse, got {type(sse_response).__name__}"
+            )
+        self._expectation.http_sse_response = sse_response
+        return await self._client.upsert(self._expectation)
+
+    async def respond_with_websocket(self, websocket_response: HttpWebSocketResponse) -> list[Expectation]:
+        if not isinstance(websocket_response, HttpWebSocketResponse):
+            raise TypeError(
+                f"Expected HttpWebSocketResponse, got {type(websocket_response).__name__}"
+            )
+        self._expectation.http_websocket_response = websocket_response
         return await self._client.upsert(self._expectation)
 
     async def error(self, error: HttpError) -> list[Expectation]:

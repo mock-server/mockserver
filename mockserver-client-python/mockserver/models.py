@@ -52,6 +52,8 @@ _FIELD_MAP = {
     "request_modifier": "requestModifier",
     "response_modifier": "responseModifier",
     "maximum_number_of_request_to_return_in_verification_failure": "maximumNumberOfRequestToReturnInVerificationFailure",
+    "http_sse_response": "httpSseResponse",
+    "http_websocket_response": "httpWebSocketResponse",
 }
 
 
@@ -97,20 +99,27 @@ def _serialize_body(body: Body | str | dict | None) -> Any:
         return body
     if isinstance(body, dict):
         return body
-    if isinstance(body, Body):
+    if hasattr(body, "to_dict"):
         return body.to_dict()
     return body
 
 
-_BODY_TYPES = {"STRING", "JSON", "REGEX", "XML", "BINARY", "JSON_SCHEMA", "JSON_PATH", "XPATH", "XML_SCHEMA"}
+_BODY_TYPES = {"STRING", "JSON", "REGEX", "XML", "BINARY", "JSON_SCHEMA", "JSON_PATH", "XPATH", "XML_SCHEMA", "JSON_RPC"}
 
 
-def _deserialize_body(data: Any) -> Body | str | dict | None:
+def _deserialize_body(data: Any) -> Body | JsonRpcBody | str | dict | None:
     if data is None:
         return None
     if isinstance(data, str):
         return data
     if isinstance(data, dict):
+        if data.get("type") == "JSON_RPC":
+            return JsonRpcBody(
+                method=data.get("method", ""),
+                params_schema=data.get("paramsSchema"),
+                not_body=data.get("not", False),
+                optional=data.get("optional", False),
+            )
         if data.get("type") in _BODY_TYPES:
             return Body.from_dict(data)
         return data
@@ -302,6 +311,24 @@ class Body:
         )
 
 
+@dataclass
+class JsonRpcBody:
+    method: str = ""
+    params_schema: str | None = None
+    not_body: bool = False
+    optional: bool = False
+
+    def to_dict(self) -> dict:
+        result: dict = {"type": "JSON_RPC", "method": self.method}
+        if self.params_schema is not None:
+            result["paramsSchema"] = self.params_schema
+        if self.not_body:
+            result["not"] = True
+        if self.optional:
+            result["optional"] = True
+        return result
+
+
 def _body_string(value: str) -> Body:
     return Body(type="STRING", string=value)
 
@@ -322,11 +349,16 @@ def _body_xml(value: str) -> Body:
     return Body(type="XML", string=value)
 
 
+def _body_json_rpc(method: str, params_schema: str | None = None) -> JsonRpcBody:
+    return JsonRpcBody(method=method, params_schema=params_schema)
+
+
 Body.string = staticmethod(_body_string)
 Body.json = staticmethod(_body_json)
 Body.regex = staticmethod(_body_regex)
 Body.exact = staticmethod(_body_exact)
 Body.xml = staticmethod(_body_xml)
+Body.json_rpc = staticmethod(_body_json_rpc)
 
 
 @dataclass
@@ -695,6 +727,146 @@ class HttpError:
 
 
 @dataclass
+class SseEvent:
+    event: str | None = None
+    data: str | None = None
+    id: str | None = None
+    retry: int | None = None
+    delay: Delay | None = None
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        if self.event is not None:
+            result["event"] = self.event
+        if self.data is not None:
+            result["data"] = self.data
+        if self.id is not None:
+            result["id"] = self.id
+        if self.retry is not None:
+            result["retry"] = self.retry
+        if self.delay is not None:
+            result["delay"] = self.delay.to_dict()
+        return result
+
+    @classmethod
+    def from_dict(cls, data: dict) -> SseEvent:
+        if data is None:
+            return None
+        return cls(
+            event=data.get("event"),
+            data=data.get("data"),
+            id=data.get("id"),
+            retry=data.get("retry"),
+            delay=Delay.from_dict(data.get("delay")),
+        )
+
+
+@dataclass
+class HttpSseResponse:
+    status_code: int | None = None
+    headers: list[KeyToMultiValue] | None = None
+    events: list[SseEvent] | None = None
+    close_connection: bool | None = None
+    delay: Delay | None = None
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        if self.status_code is not None:
+            result["statusCode"] = self.status_code
+        if self.headers is not None:
+            result["headers"] = _serialize_key_multi_values(self.headers)
+        if self.events is not None:
+            result["events"] = [e.to_dict() if hasattr(e, 'to_dict') else e for e in self.events]
+        if self.close_connection is not None:
+            result["closeConnection"] = self.close_connection
+        if self.delay is not None:
+            result["delay"] = self.delay.to_dict()
+        return result
+
+    @classmethod
+    def from_dict(cls, data: dict) -> HttpSseResponse:
+        if data is None:
+            return None
+        events_data = data.get("events")
+        events = None
+        if events_data is not None:
+            events = [SseEvent.from_dict(e) if isinstance(e, dict) else e for e in events_data]
+        return cls(
+            status_code=data.get("statusCode"),
+            headers=_deserialize_key_multi_values(data.get("headers")),
+            events=events,
+            close_connection=data.get("closeConnection"),
+            delay=Delay.from_dict(data.get("delay")),
+        )
+
+
+@dataclass
+class WebSocketMessage:
+    text: str | None = None
+    binary: bytes | None = None
+    delay: Delay | None = None
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        if self.text is not None:
+            result["text"] = self.text
+        if self.binary is not None:
+            import base64
+            result["binary"] = base64.b64encode(self.binary).decode("utf-8")
+        if self.delay is not None:
+            result["delay"] = self.delay.to_dict()
+        return result
+
+    @classmethod
+    def from_dict(cls, data: dict) -> WebSocketMessage:
+        if data is None:
+            return None
+        import base64
+        binary_data = data.get("binary")
+        binary = base64.b64decode(binary_data) if binary_data is not None else None
+        return cls(
+            text=data.get("text"),
+            binary=binary,
+            delay=Delay.from_dict(data.get("delay")),
+        )
+
+
+@dataclass
+class HttpWebSocketResponse:
+    subprotocol: str | None = None
+    messages: list[WebSocketMessage] | None = None
+    close_connection: bool | None = None
+    delay: Delay | None = None
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        if self.subprotocol is not None:
+            result["subprotocol"] = self.subprotocol
+        if self.messages is not None:
+            result["messages"] = [m.to_dict() if hasattr(m, 'to_dict') else m for m in self.messages]
+        if self.close_connection is not None:
+            result["closeConnection"] = self.close_connection
+        if self.delay is not None:
+            result["delay"] = self.delay.to_dict()
+        return result
+
+    @classmethod
+    def from_dict(cls, data: dict) -> HttpWebSocketResponse:
+        if data is None:
+            return None
+        messages_data = data.get("messages")
+        messages = None
+        if messages_data is not None:
+            messages = [WebSocketMessage.from_dict(m) if isinstance(m, dict) else m for m in messages_data]
+        return cls(
+            subprotocol=data.get("subprotocol"),
+            messages=messages,
+            close_connection=data.get("closeConnection"),
+            delay=Delay.from_dict(data.get("delay")),
+        )
+
+
+@dataclass
 class HttpOverrideForwardedRequest:
     http_request: HttpRequest | None = None
     http_response: HttpResponse | None = None
@@ -778,6 +950,8 @@ class Expectation:
     http_forward_object_callback: HttpObjectCallback | None = None
     http_override_forwarded_request: HttpOverrideForwardedRequest | None = None
     http_error: HttpError | None = None
+    http_sse_response: HttpSseResponse | None = None
+    http_websocket_response: HttpWebSocketResponse | None = None
     times: Times | None = None
     time_to_live: TimeToLive | None = None
 
@@ -796,6 +970,8 @@ class Expectation:
             "httpForwardObjectCallback": self.http_forward_object_callback.to_dict() if self.http_forward_object_callback else None,
             "httpOverrideForwardedRequest": self.http_override_forwarded_request.to_dict() if self.http_override_forwarded_request else None,
             "httpError": self.http_error.to_dict() if self.http_error else None,
+            "httpSseResponse": self.http_sse_response.to_dict() if self.http_sse_response else None,
+            "httpWebSocketResponse": self.http_websocket_response.to_dict() if self.http_websocket_response else None,
             "times": self.times.to_dict() if self.times else None,
             "timeToLive": self.time_to_live.to_dict() if self.time_to_live else None,
         })
@@ -818,6 +994,8 @@ class Expectation:
             http_forward_object_callback=HttpObjectCallback.from_dict(data.get("httpForwardObjectCallback")),
             http_override_forwarded_request=HttpOverrideForwardedRequest.from_dict(data.get("httpOverrideForwardedRequest")),
             http_error=HttpError.from_dict(data.get("httpError")),
+            http_sse_response=HttpSseResponse.from_dict(data.get("httpSseResponse")) if data.get("httpSseResponse") else None,
+            http_websocket_response=HttpWebSocketResponse.from_dict(data.get("httpWebSocketResponse")) if data.get("httpWebSocketResponse") else None,
             times=Times.from_dict(data.get("times")),
             time_to_live=TimeToLive.from_dict(data.get("timeToLive")),
         )

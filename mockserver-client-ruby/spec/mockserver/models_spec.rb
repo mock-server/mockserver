@@ -1105,6 +1105,137 @@ RSpec.describe 'MockServer models' do
   end
 
   # -------------------------------------------------------------------
+  # SseEvent — falsy value handling
+  # -------------------------------------------------------------------
+  describe MockServer::SseEvent do
+    it 'serializes retry of 0' do
+      event = MockServer::SseEvent.new(event: 'ping', retry_ms: 0)
+      h = event.to_h
+      expect(h).to have_key('retry')
+      expect(h['retry']).to eq(0)
+    end
+
+    it 'serializes empty string data' do
+      event = MockServer::SseEvent.new(data: '')
+      h = event.to_h
+      expect(h).to have_key('data')
+      expect(h['data']).to eq('')
+    end
+
+    it 'omits nil fields' do
+      event = MockServer::SseEvent.new
+      h = event.to_h
+      expect(h).not_to have_key('event')
+      expect(h).not_to have_key('data')
+      expect(h).not_to have_key('id')
+      expect(h).not_to have_key('retry')
+    end
+
+    it 'round-trips correctly' do
+      original = MockServer::SseEvent.new(event: 'msg', data: 'hello', id: '1', retry_ms: 5000)
+      roundtrip = MockServer::SseEvent.from_hash(original.to_h)
+      expect(roundtrip.to_h).to eq(original.to_h)
+    end
+  end
+
+  # -------------------------------------------------------------------
+  # HttpSseResponse — falsy value handling
+  # -------------------------------------------------------------------
+  describe MockServer::HttpSseResponse do
+    it 'serializes status_code of 0' do
+      resp = MockServer::HttpSseResponse.new(status_code: 0)
+      h = resp.to_h
+      expect(h).to have_key('statusCode')
+      expect(h['statusCode']).to eq(0)
+    end
+
+    it 'serializes close_connection of false' do
+      resp = MockServer::HttpSseResponse.new(close_connection: false)
+      h = resp.to_h
+      expect(h).to have_key('closeConnection')
+      expect(h['closeConnection']).to eq(false)
+    end
+
+    it 'omits nil fields' do
+      resp = MockServer::HttpSseResponse.new
+      h = resp.to_h
+      expect(h).not_to have_key('statusCode')
+      expect(h).not_to have_key('closeConnection')
+    end
+
+    it 'round-trips correctly' do
+      original = MockServer::HttpSseResponse.new(
+        status_code: 200,
+        close_connection: true,
+        events: [MockServer::SseEvent.new(event: 'test', data: 'data')]
+      )
+      roundtrip = MockServer::HttpSseResponse.from_hash(original.to_h)
+      expect(roundtrip.to_h).to eq(original.to_h)
+    end
+  end
+
+  # -------------------------------------------------------------------
+  # WebSocketMessage — falsy value handling
+  # -------------------------------------------------------------------
+  describe MockServer::WebSocketMessage do
+    it 'serializes empty string text' do
+      msg = MockServer::WebSocketMessage.new(text: '')
+      h = msg.to_h
+      expect(h).to have_key('text')
+      expect(h['text']).to eq('')
+    end
+
+    it 'omits nil fields' do
+      msg = MockServer::WebSocketMessage.new
+      h = msg.to_h
+      expect(h).not_to have_key('text')
+      expect(h).not_to have_key('binary')
+    end
+
+    it 'round-trips correctly' do
+      original = MockServer::WebSocketMessage.new(text: 'hello')
+      roundtrip = MockServer::WebSocketMessage.from_hash(original.to_h)
+      expect(roundtrip.to_h).to eq(original.to_h)
+    end
+  end
+
+  # -------------------------------------------------------------------
+  # HttpWebSocketResponse — falsy value handling
+  # -------------------------------------------------------------------
+  describe MockServer::HttpWebSocketResponse do
+    it 'serializes close_connection of false' do
+      resp = MockServer::HttpWebSocketResponse.new(close_connection: false)
+      h = resp.to_h
+      expect(h).to have_key('closeConnection')
+      expect(h['closeConnection']).to eq(false)
+    end
+
+    it 'serializes empty string subprotocol' do
+      resp = MockServer::HttpWebSocketResponse.new(subprotocol: '')
+      h = resp.to_h
+      expect(h).to have_key('subprotocol')
+      expect(h['subprotocol']).to eq('')
+    end
+
+    it 'omits nil fields' do
+      resp = MockServer::HttpWebSocketResponse.new
+      h = resp.to_h
+      expect(h).not_to have_key('subprotocol')
+      expect(h).not_to have_key('closeConnection')
+    end
+
+    it 'round-trips correctly' do
+      original = MockServer::HttpWebSocketResponse.new(
+        subprotocol: 'graphql-ws',
+        close_connection: true,
+        messages: [MockServer::WebSocketMessage.new(text: 'hi')]
+      )
+      roundtrip = MockServer::HttpWebSocketResponse.from_hash(original.to_h)
+      expect(roundtrip.to_h).to eq(original.to_h)
+    end
+  end
+
+  # -------------------------------------------------------------------
   # OpenAPIDefinition
   # -------------------------------------------------------------------
   describe MockServer::OpenAPIDefinition do

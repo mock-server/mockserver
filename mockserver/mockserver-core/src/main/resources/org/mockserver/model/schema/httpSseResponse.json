@@ -1,0 +1,45 @@
+{
+  "title": "SSE response to return",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "delay": {
+      "$ref": "#/definitions/delay"
+    },
+    "headers": {
+      "$ref": "#/definitions/keyToMultiValue"
+    },
+    "statusCode": {
+      "type": "integer"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "event": {
+            "type": "string"
+          },
+          "data": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "retry": {
+            "type": "integer"
+          },
+          "delay": {
+            "$ref": "#/definitions/delay"
+          }
+        }
+      }
+    },
+    "closeConnection": {
+      "type": "boolean"
+    }
+  },
+  "definitions": {
+  }
+}

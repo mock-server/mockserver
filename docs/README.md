@@ -20,6 +20,7 @@ Deep-dive documentation of MockServer's codebase, from high-level module structu
 | [Client & Integrations](code/client-and-integrations.md) | Low | MockServerClient, JUnit 4/5, Spring, WebSocket callbacks |
 | [Memory Management](code/memory-management.md) | Medium | Log entry and expectation memory analysis, default limit calculation, tuning guide |
 | [Metrics & Monitoring](code/metrics.md) | Low | Prometheus metrics, memory monitoring, CSV export |
+| [AI Protocol Mocking](code/ai-protocol-mocking.md) | Medium | SSE streaming, JSON-RPC matching, MCP and A2A mock builders |
 
 ### Infrastructure
 
@@ -87,7 +88,7 @@ mockserver-monorepo/
 ├── terraform/                      # Terraform IaC (Buildkite agents + pipelines)
 ├── scripts/                        # Build, deploy, and utility scripts
 └── docs/                           # This documentation (you are here)
-    ├── code/                       #   Code architecture (9 docs)
+    ├── code/                       #   Code architecture (11 docs)
     ├── infrastructure/             #   AWS, CI/CD, Docker, Helm (4 docs)
     ├── operations/                 #   Build, release, deps, security, website (6 docs)
     └── testing.md                  #   Test frameworks, architecture, config, coverage, CI

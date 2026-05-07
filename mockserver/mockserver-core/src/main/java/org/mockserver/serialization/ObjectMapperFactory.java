@@ -235,6 +235,8 @@ public class ObjectMapperFactory {
             new XmlSchemaBodyDTOSerializer(),
             new XPathBodySerializer(),
             new XPathBodyDTOSerializer(),
+            new JsonRpcBodySerializer(),
+            new JsonRpcBodyDTOSerializer(),
             new LogEntryBodySerializer(),
             new LogEntryBodyDTOSerializer(),
             // condition

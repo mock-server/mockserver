@@ -184,6 +184,10 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                     XmlSchemaBody xmlSchemaBody = (XmlSchemaBody) body;
                     bodyMatcher = new XmlSchemaMatcher(mockServerLogger, xmlSchemaBody.getValue());
                     break;
+                case JSON_RPC:
+                    JsonRpcBody jsonRpcBody = (JsonRpcBody) body;
+                    bodyMatcher = new JsonRpcMatcher(mockServerLogger, jsonRpcBody.getMethod(), jsonRpcBody.getParamsSchema());
+                    break;
                 case BINARY:
                     BinaryBody binaryBody = (BinaryBody) body;
                     bodyMatcher = new BinaryMatcher(mockServerLogger, binaryBody.getValue());
@@ -509,6 +513,8 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                 bodyMatcher instanceof XmlSchemaMatcher
             ) {
                 // xml body matcher
+                bodyMatches = matches(BODY, context, bodyMatcher, request.getBodyAsString());
+            } else if (bodyMatcher instanceof JsonRpcMatcher) {
                 bodyMatches = matches(BODY, context, bodyMatcher, request.getBodyAsString());
             } else if (bodyMatcher instanceof JsonStringMatcher ||
                 bodyMatcher instanceof JsonSchemaMatcher ||

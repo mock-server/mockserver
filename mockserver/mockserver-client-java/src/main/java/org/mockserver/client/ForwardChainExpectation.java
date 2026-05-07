@@ -274,6 +274,16 @@ public class ForwardChainExpectation {
         return mockServerClient.upsert(expectation);
     }
 
+    public Expectation[] respondWithSse(final HttpSseResponse httpSseResponse) {
+        expectation.thenRespondWithSse(httpSseResponse);
+        return mockServerClient.upsert(expectation);
+    }
+
+    public Expectation[] respondWithWebSocket(final HttpWebSocketResponse httpWebSocketResponse) {
+        expectation.thenRespondWithWebSocket(httpWebSocketResponse);
+        return mockServerClient.upsert(expectation);
+    }
+
     @SuppressWarnings("rawtypes")
     private <T extends HttpMessage> String registerWebSocketClient(ExpectationCallback<T> expectationCallback, ExpectationForwardAndResponseCallback expectationForwardResponseCallback) {
         try {

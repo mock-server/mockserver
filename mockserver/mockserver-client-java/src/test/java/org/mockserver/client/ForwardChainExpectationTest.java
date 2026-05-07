@@ -24,7 +24,11 @@ import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverriddenRequest;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.HttpSseResponse.sseResponse;
 import static org.mockserver.model.HttpTemplate.template;
+import static org.mockserver.model.HttpWebSocketResponse.webSocketResponse;
+import static org.mockserver.model.SseEvent.sseEvent;
+import static org.mockserver.model.WebSocketMessage.webSocketMessage;
 
 @SuppressWarnings({"unused", "rawtypes"})
 public class ForwardChainExpectationTest {
@@ -155,6 +159,37 @@ public class ForwardChainExpectationTest {
         // then
         assertThat(upsertedExpectations, is(new Expectation[]{mockExpectation}));
         verify(mockExpectation).thenError(same(error));
+        verify(mockAbstractClient).upsert(mockExpectation);
+    }
+
+    @Test
+    public void shouldSetSseResponse() {
+        // given
+        HttpSseResponse sseResponse = sseResponse()
+            .withStatusCode(200)
+            .withEvent(sseEvent().withData("some_data"));
+
+        // when
+        Expectation[] upsertedExpectations = forwardChainExpectation.respondWithSse(sseResponse);
+
+        // then
+        assertThat(upsertedExpectations, is(new Expectation[]{mockExpectation}));
+        verify(mockExpectation).thenRespondWithSse(same(sseResponse));
+        verify(mockAbstractClient).upsert(mockExpectation);
+    }
+
+    @Test
+    public void shouldSetWebSocketResponse() {
+        // given
+        HttpWebSocketResponse wsResponse = webSocketResponse()
+            .withMessage(webSocketMessage().withText("some_message"));
+
+        // when
+        Expectation[] upsertedExpectations = forwardChainExpectation.respondWithWebSocket(wsResponse);
+
+        // then
+        assertThat(upsertedExpectations, is(new Expectation[]{mockExpectation}));
+        verify(mockExpectation).thenRespondWithWebSocket(same(wsResponse));
         verify(mockAbstractClient).upsert(mockExpectation);
     }
 

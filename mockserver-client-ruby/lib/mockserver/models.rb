@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'base64'
 require 'json'
 require 'set'
 
@@ -39,6 +40,8 @@ module MockServer
     'http_forward_object_callback'   => 'httpForwardObjectCallback',
     'http_override_forwarded_request' => 'httpOverrideForwardedRequest',
     'http_error'                     => 'httpError',
+    'http_sse_response'              => 'httpSseResponse',
+    'http_websocket_response'        => 'httpWebSocketResponse',
     'template_type'                  => 'templateType',
     'base64_bytes'                   => 'base64Bytes',
     'not_body'                       => 'not',
@@ -61,7 +64,7 @@ module MockServer
   # Known Body type strings used to distinguish Body objects from plain hashes
   # during deserialization.
   BODY_TYPES = Set.new(%w[
-    STRING JSON REGEX XML BINARY JSON_SCHEMA JSON_PATH XPATH XML_SCHEMA
+    STRING JSON REGEX XML BINARY JSON_SCHEMA JSON_PATH XPATH XML_SCHEMA JSON_RPC
   ]).freeze
 
   # -------------------------------------------------------------------
@@ -106,6 +109,7 @@ module MockServer
     return body if body.is_a?(String)
     return body if body.is_a?(Hash)
     return body.to_h if body.is_a?(Body)
+    return body.to_h if body.is_a?(JsonRpcBody)
 
     body
   end
@@ -116,6 +120,9 @@ module MockServer
     return data if data.is_a?(String)
 
     if data.is_a?(Hash)
+      if data['type'] == 'JSON_RPC'
+        return JsonRpcBody.from_hash(data)
+      end
       return Body.from_hash(data) if BODY_TYPES.include?(data['type'])
 
       return data
@@ -335,6 +342,40 @@ module MockServer
 
     def self.xml(value)
       new(type: 'XML', string: value)
+    end
+
+    def self.json_rpc(method_name, params_schema: nil)
+      JsonRpcBody.new(method_name: method_name, params_schema: params_schema)
+    end
+  end
+
+  class JsonRpcBody
+    attr_accessor :method_name, :params_schema, :not_body, :optional
+
+    def initialize(method_name:, params_schema: nil, not_body: false, optional: false)
+      @method_name = method_name
+      @params_schema = params_schema
+      @not_body = not_body
+      @optional = optional
+    end
+
+    def to_h
+      result = { 'type' => 'JSON_RPC', 'method' => @method_name }
+      result['paramsSchema'] = @params_schema if @params_schema
+      result['not'] = true if @not_body
+      result['optional'] = true if @optional
+      result
+    end
+
+    def self.from_hash(data)
+      return nil if data.nil?
+
+      new(
+        method_name:   data['method'] || '',
+        params_schema: data['paramsSchema'],
+        not_body:      data.fetch('not', false),
+        optional:      data.fetch('optional', false)
+      )
     end
   end
 
@@ -840,20 +881,155 @@ module MockServer
     end
   end
 
+  class SseEvent
+    attr_accessor :event, :data, :id, :retry, :delay
+
+    def initialize(event: nil, data: nil, id: nil, retry_ms: nil, delay: nil)
+      @event = event
+      @data = data
+      @id = id
+      @retry = retry_ms
+      @delay = delay
+    end
+
+    def to_h
+      result = {}
+      result['event'] = @event unless @event.nil?
+      result['data'] = @data unless @data.nil?
+      result['id'] = @id unless @id.nil?
+      result['retry'] = @retry unless @retry.nil?
+      result['delay'] = @delay.to_h if @delay
+      result
+    end
+
+    def self.from_hash(data)
+      return nil if data.nil?
+
+      new(
+        event:    data['event'],
+        data:     data['data'],
+        id:       data['id'],
+        retry_ms: data['retry'],
+        delay:    Delay.from_hash(data['delay'])
+      )
+    end
+  end
+
+  class HttpSseResponse
+    attr_accessor :status_code, :headers, :events, :close_connection, :delay
+
+    def initialize(status_code: nil, headers: nil, events: nil, close_connection: nil, delay: nil)
+      @status_code = status_code
+      @headers = headers
+      @events = events
+      @close_connection = close_connection
+      @delay = delay
+    end
+
+    def to_h
+      result = {}
+      result['statusCode'] = @status_code unless @status_code.nil?
+      result['headers'] = MockServer.serialize_key_multi_values(@headers) if @headers
+      result['events'] = @events&.map(&:to_h) if @events
+      result['closeConnection'] = @close_connection unless @close_connection.nil?
+      result['delay'] = @delay.to_h if @delay
+      result
+    end
+
+    def self.from_hash(data)
+      return nil if data.nil?
+
+      events_data = data['events']
+      events = events_data&.map { |e| SseEvent.from_hash(e) }
+      new(
+        status_code:      data['statusCode'],
+        headers:          MockServer.deserialize_key_multi_values(data['headers']),
+        events:           events,
+        close_connection: data['closeConnection'],
+        delay:            Delay.from_hash(data['delay'])
+      )
+    end
+  end
+
+  class WebSocketMessage
+    attr_accessor :text, :binary, :delay
+
+    def initialize(text: nil, binary: nil, delay: nil)
+      @text = text
+      @binary = binary
+      @delay = delay
+    end
+
+    def to_h
+      result = {}
+      result['text'] = @text unless @text.nil?
+      result['binary'] = Base64.strict_encode64(@binary) unless @binary.nil?
+      result['delay'] = @delay.to_h if @delay
+      result
+    end
+
+    def self.from_hash(data)
+      return nil if data.nil?
+
+      binary_data = data['binary']
+      binary = binary_data ? Base64.strict_decode64(binary_data) : nil
+      new(
+        text:   data['text'],
+        binary: binary,
+        delay:  Delay.from_hash(data['delay'])
+      )
+    end
+  end
+
+  class HttpWebSocketResponse
+    attr_accessor :subprotocol, :messages, :close_connection, :delay
+
+    def initialize(subprotocol: nil, messages: nil, close_connection: nil, delay: nil)
+      @subprotocol = subprotocol
+      @messages = messages
+      @close_connection = close_connection
+      @delay = delay
+    end
+
+    def to_h
+      result = {}
+      result['subprotocol'] = @subprotocol unless @subprotocol.nil?
+      result['messages'] = @messages&.map(&:to_h) if @messages
+      result['closeConnection'] = @close_connection unless @close_connection.nil?
+      result['delay'] = @delay.to_h if @delay
+      result
+    end
+
+    def self.from_hash(data)
+      return nil if data.nil?
+
+      messages_data = data['messages']
+      messages = messages_data&.map { |m| WebSocketMessage.from_hash(m) }
+      new(
+        subprotocol:      data['subprotocol'],
+        messages:         messages,
+        close_connection: data['closeConnection'],
+        delay:            Delay.from_hash(data['delay'])
+      )
+    end
+  end
+
   class Expectation
     attr_accessor :id, :priority, :http_request, :http_response,
                   :http_response_template, :http_response_class_callback,
                   :http_response_object_callback, :http_forward,
                   :http_forward_template, :http_forward_class_callback,
                   :http_forward_object_callback, :http_override_forwarded_request,
-                  :http_error, :times, :time_to_live
+                  :http_error, :times, :time_to_live,
+                  :http_sse_response, :http_websocket_response
 
     def initialize(id: nil, priority: nil, http_request: nil, http_response: nil,
                    http_response_template: nil, http_response_class_callback: nil,
                    http_response_object_callback: nil, http_forward: nil,
                    http_forward_template: nil, http_forward_class_callback: nil,
                    http_forward_object_callback: nil, http_override_forwarded_request: nil,
-                   http_error: nil, times: nil, time_to_live: nil)
+                   http_error: nil, times: nil, time_to_live: nil,
+                   http_sse_response: nil, http_websocket_response: nil)
       @id = id
       @priority = priority
       @http_request = http_request
@@ -869,6 +1045,8 @@ module MockServer
       @http_error = http_error
       @times = times
       @time_to_live = time_to_live
+      @http_sse_response = http_sse_response
+      @http_websocket_response = http_websocket_response
     end
 
     def to_h
@@ -886,6 +1064,8 @@ module MockServer
         'httpForwardObjectCallback'    => @http_forward_object_callback&.to_h,
         'httpOverrideForwardedRequest' => @http_override_forwarded_request&.to_h,
         'httpError'                    => @http_error&.to_h,
+        'httpSseResponse'              => @http_sse_response&.to_h,
+        'httpWebSocketResponse'        => @http_websocket_response&.to_h,
         'times'                        => @times&.to_h,
         'timeToLive'                   => @time_to_live&.to_h
       })
@@ -908,6 +1088,8 @@ module MockServer
         http_forward_object_callback:    HttpObjectCallback.from_hash(data['httpForwardObjectCallback']),
         http_override_forwarded_request: HttpOverrideForwardedRequest.from_hash(data['httpOverrideForwardedRequest']),
         http_error:                      HttpError.from_hash(data['httpError']),
+        http_sse_response:               HttpSseResponse.from_hash(data['httpSseResponse']),
+        http_websocket_response:         HttpWebSocketResponse.from_hash(data['httpWebSocketResponse']),
         times:                           Times.from_hash(data['times']),
         time_to_live:                    TimeToLive.from_hash(data['timeToLive'])
       )

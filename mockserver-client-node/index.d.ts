@@ -13,9 +13,13 @@ export {
   HttpRequest,
   HttpRequestAndHttpResponse,
   HttpResponse,
+  HttpSseResponse,
+  HttpWebSocketResponse,
   KeyToMultiValue,
   OpenAPIExpectation,
   RequestDefinition,
+  SseEvent,
   Times,
   TimeToLive,
+  WebSocketMessage,
 } from  './mockServer';

@@ -48,6 +48,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
         fieldNameToType.put("xml".toLowerCase(), Body.Type.XML);
         fieldNameToType.put("xmlSchema".toLowerCase(), Body.Type.XML_SCHEMA);
         fieldNameToType.put("xpath".toLowerCase(), Body.Type.XPATH);
+        fieldNameToType.put("jsonRpc".toLowerCase(), Body.Type.JSON_RPC);
     }
 
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(BodyDTODeserializer.class);
@@ -73,6 +74,10 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
         Parameters parameters = null;
         Map<String, ParameterStyle> parameterStyles = null;
         Map<String, String> namespacePrefixes = null;
+        String jsonRpcMethod = null;
+        String jsonRpcParamsSchema = null;
+        String methodFieldValue = null;
+        String paramsSchemaFieldValue = null;
         if (currentToken == JsonToken.START_OBJECT) {
             @SuppressWarnings("unchecked") Map<Object, Object> body = (Map<Object, Object>) ctxt.readValue(jsonParser, Map.class);
             for (Map.Entry<Object, Object> entry : body.entrySet()) {
@@ -90,6 +95,20 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                                         .setThrowable(iae)
                                 );
                             }
+                        }
+                    }
+                    if (key.equalsIgnoreCase("jsonRpc") && entry.getValue() instanceof Map) {
+                        type = Body.Type.JSON_RPC;
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> jsonRpcMap = (Map<String, Object>) entry.getValue();
+                        if (jsonRpcMap.containsKey("method")) {
+                            jsonRpcMethod = String.valueOf(jsonRpcMap.get("method"));
+                        }
+                        if (jsonRpcMap.containsKey("paramsSchema")) {
+                            if (jsonBodyObjectWriter == null) {
+                                jsonBodyObjectWriter = buildObjectMapperWithoutRemovingEmptyValues().writerWithDefaultPrettyPrinter();
+                            }
+                            jsonRpcParamsSchema = jsonBodyObjectWriter.writeValueAsString(jsonRpcMap.get("paramsSchema"));
                         }
                     }
                     if (containsIgnoreCase(key, "string", "regex", "json", "jsonSchema", "jsonPath", "xml", "xmlSchema", "xpath", "base64Bytes") && type != Body.Type.PARAMETERS) {
@@ -237,6 +256,19 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                             }
                         }
                     }
+                    if (key.equalsIgnoreCase("method") && entry.getValue() instanceof String) {
+                        methodFieldValue = String.valueOf(entry.getValue());
+                    }
+                    if (key.equalsIgnoreCase("paramsSchema")) {
+                        if (entry.getValue() instanceof String) {
+                            paramsSchemaFieldValue = String.valueOf(entry.getValue());
+                        } else if (entry.getValue() instanceof Map) {
+                            if (jsonBodyObjectWriter == null) {
+                                jsonBodyObjectWriter = buildObjectMapperWithoutRemovingEmptyValues().writerWithDefaultPrettyPrinter();
+                            }
+                            paramsSchemaFieldValue = jsonBodyObjectWriter.writeValueAsString(entry.getValue());
+                        }
+                    }
                     if (key.equalsIgnoreCase("parameters")) {
                         if (objectMapper == null) {
                             objectMapper = ObjectMapperFactory.createObjectMapper();
@@ -308,6 +340,12 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         break;
                     case XPATH:
                         result = new XPathBodyDTO(new XPathBody(valueJsonValue, namespacePrefixes), not);
+                        break;
+                    case JSON_RPC:
+                        result = new JsonRpcBodyDTO(new JsonRpcBody(
+                            jsonRpcMethod != null ? jsonRpcMethod : methodFieldValue,
+                            jsonRpcParamsSchema != null ? jsonRpcParamsSchema : paramsSchemaFieldValue
+                        ), not);
                         break;
                 }
             } else if (body.size() > 0) {

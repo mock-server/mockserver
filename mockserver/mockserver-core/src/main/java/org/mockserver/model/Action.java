@@ -64,6 +64,8 @@ public abstract class Action<T extends Action> extends ObjectWithJsonToString {
         RESPONSE_TEMPLATE(Direction.RESPONSE),
         RESPONSE_CLASS_CALLBACK(Direction.RESPONSE),
         RESPONSE_OBJECT_CALLBACK(Direction.RESPONSE),
+        SSE_RESPONSE(Direction.RESPONSE),
+        WEBSOCKET_RESPONSE(Direction.RESPONSE),
         ERROR(Direction.RESPONSE);
 
         public final Direction direction;

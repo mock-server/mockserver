@@ -103,5 +103,15 @@ module MockServer
       @expectation.http_error = error
       @client.upsert(@expectation)
     end
+
+    def respond_with_sse(sse_response)
+      @expectation.http_sse_response = sse_response
+      @client.upsert(@expectation)
+    end
+
+    def respond_with_websocket(websocket_response)
+      @expectation.http_websocket_response = websocket_response
+      @client.upsert(@expectation)
+    end
   end
 end
