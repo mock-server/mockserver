@@ -4,13 +4,16 @@ on:
   issues:
     types: [opened]
 
+permissions: {}
+
 jobs:
   add-to-project:
     name: Add issue to MockServer Roadmap
     runs-on: ubuntu-latest
+    environment: project-automation
     steps:
       # PROJECT_TOKEN must be a classic PAT with 'project' scope,
-      # stored in the repository's Actions secrets.
+      # stored in the 'project-automation' environment's secrets.
       - uses: actions/add-to-project@v1.0.2
         with:
           project-url: https://github.com/orgs/mock-server/projects/1
