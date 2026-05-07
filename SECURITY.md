@@ -297,6 +297,12 @@ If you require a fully patched Spring framework:
 2. **Open an issue** requesting Java 17+ support - if enough users need this, we may create a separate Java 17+ branch
 3. Consider using **alternative mocking tools** that already require Java 17+
 
+## Further Reading
+
+For a consolidated overview of all security scanning and tooling (CodeQL, Dependabot, Snyk, AI security review, and SNAPSHOT security policy), see [docs/operations/security.md](docs/operations/security.md).
+
+For details on how AI-assisted development is governed, including adversarial code review by independent AI models, see [docs/operations/ai-assisted-development.md](docs/operations/ai-assisted-development.md).
+
 ## Questions?
 
 For security-related questions, see:

@@ -96,7 +96,7 @@ classDiagram
         <<abstract>>
         +shouldForwardRequestInHTTPS()
         +shouldCallbackToSpecifiedClass()
-        ...~150 test methods
+        ...~123 test methods
     }
 
     class AbstractExtendedSameJVMMockingIntegrationTest {
@@ -211,7 +211,7 @@ The `mockserver-integration-testing` module provides shared abstract test base c
 |-------|---------|
 | `AbstractMockingIntegrationTestBase` | Base class with common setup/teardown (MockServerClient, EchoServer, NettyHttpClient) |
 | `AbstractBasicMockingIntegrationTest` | Basic mocking test cases (~50 methods) |
-| `AbstractExtendedMockingIntegrationTest` | Extended mocking with all action types (~150 methods) |
+| `AbstractExtendedMockingIntegrationTest` | Extended mocking with all action types (~123 methods) |
 | `AbstractExtendedSameJVMMockingIntegrationTest` | Same-JVM callback testing |
 | `AbstractBasicMockingSameJVMIntegrationTest` | Basic tests for same-JVM scenarios |
 | `AbstractProxyIntegrationTest` | Proxy mode integration tests |
@@ -523,7 +523,16 @@ Test resources are located in `src/test/resources/` across modules:
 
 ## Test Coverage Tooling
 
-**No test coverage tooling is configured.** There is no JaCoCo, Cobertura, Clover, or any other coverage plugin in any `pom.xml` file. Coverage is unmeasured.
+**JaCoCo** (`jacoco-maven-plugin`) is configured in the parent `mockserver/pom.xml` with four execution goals:
+
+| Goal | Phase | Purpose |
+|------|-------|---------|
+| `prepare-agent` | `initialize` | Instruments classes for unit test coverage |
+| `prepare-agent-integration` | `pre-integration-test` | Instruments classes for integration test coverage |
+| `report` | `verify` | Generates per-module unit test coverage report |
+| `report-integration` | `verify` | Generates per-module integration test coverage report |
+
+Reports are generated in each module's `target/site/jacoco/` directory. See [AI-Assisted Development](operations/ai-assisted-development.md#code-coverage-unit-tests-jacoco) for current coverage numbers by module.
 
 ## Known Issues
 

@@ -41,6 +41,8 @@ Comprehensive internal documentation is maintained in `docs/`. **Always consult 
 | [docs/operations/website.md](docs/operations/website.md) | Before modifying the Jekyll documentation site |
 | [docs/operations/dependencies.md](docs/operations/dependencies.md) | Before adding, removing, or upgrading dependencies |
 | [docs/operations/release-process.md](docs/operations/release-process.md) | When performing or automating releases |
+| [docs/operations/ai-assisted-development.md](docs/operations/ai-assisted-development.md) | For understanding the AI development approach, adversarial review, and testing backstop |
+| [docs/operations/security.md](docs/operations/security.md) | For the consolidated security scanning overview (CodeQL, Dependabot, Snyk, AI review) |
 | [docs/operations/opencode-configuration.md](docs/operations/opencode-configuration.md) | Before modifying opencode config, agents, rules, skills, or commands |
 | [docs/gaps-and-recommendations.md](docs/gaps-and-recommendations.md) | For improvement opportunities and known gaps |
 
