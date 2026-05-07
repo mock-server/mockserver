@@ -2,11 +2,13 @@
 
 ## Overview
 
-As of May 2026, MockServer had 184 open GitHub issues. This document provides a systematic analysis of every open issue, grouping them by category, identifying duplicates, issues already fixed, legitimate bugs, feature requests, and issues caused by documentation gaps. Each issue includes an investigation summary and proposed resolution path.
+As of May 2026, MockServer has 214 open GitHub issues. This document provides a systematic analysis of every open issue, grouping them by category, identifying duplicates, issues already fixed, legitimate bugs, feature requests, and issues caused by documentation gaps. Each issue includes an investigation summary and proposed resolution path.
+
+The original triage covered 184 issues. Since then, 70 Trello cards were migrated as GitHub issues (#2099–#2168) and 35 additional community issues were filed. This updated report covers all 214 issues.
 
 ## Completed Work
 
-28 issues were closed as part of this triage:
+28 issues were closed as part of the initial triage:
 
 - **6 duplicates** closed with cross-references to the primary issue
 - **7 already resolved / out of scope** closed with explanatory comments
@@ -17,19 +19,25 @@ As of May 2026, MockServer had 184 open GitHub issues. This document provides a 
 
 ## Summary Statistics
 
-| Category | Count (original) | Closed | Remaining |
-|----------|-----------------|--------|-----------|
-| Total open issues | 184 | 29 | 155 |
-| Confirmed bugs | 42 | 0 | 42 |
-| Feature requests | 48 | 1 | 47 |
-| Dependency/CVE reports | 18 | 9 | 9 |
-| Already resolved / out of scope | 12 | 9 | 3 |
-| Duplicates | 14 | 6 | 8 |
-| Documentation gaps | 8 | 0 | 8 |
-| Questions / support requests | 15 | 2 | 13 |
-| Blocked by design decisions | 5 | 0 | 5 |
-| Needs more information | 8 | 0 | 8 |
-| "Is this project dead?" | 4 | 4 | 0 |
+| Category | Count (original 184) | Closed (original) | New issues (105) | Updated Total | Closeable Now | Remaining |
+|----------|---------------------|-------------------|-----------------|---------------|---------------|-----------|
+| Total open issues | 184 | 29 | 105 | 260 | 46 | 214 |
+| Confirmed bugs | 42 | 0 | 19 | 61 | 0 | 61 |
+| Feature requests | 48 | 1 | 55 | 102 | 0 | 102 |
+| Dependency/CVE reports | 18 | 9 | 0 | 18 | 0 | 9 |
+| Already resolved / out of scope | 12 | 9 | 17 | 29 | 17 | 3 |
+| Duplicates | 14 | 6 | 2 | 16 | 2 | 10 |
+| Documentation gaps | 8 | 0 | 5 | 13 | 0 | 13 |
+| Questions / support requests | 15 | 2 | 4 | 19 | 0 | 17 |
+| Blocked by design decisions | 5 | 0 | 0 | 5 | 0 | 5 |
+| Needs more information | 8 | 0 | 0 | 8 | 0 | 8 |
+| "Is this project dead?" | 4 | 4 | 0 | 4 | 0 | 0 |
+| Stale (no demand, can close) | 0 | 0 | 14 | 14 | 14 | 0 |
+| Invalid (user error, can close) | 0 | 0 | 13 | 13 | 13 | 0 |
+
+### Issues Recommended for Immediate Closure (46 total)
+
+See [Category 17: Issues to Close Immediately](#category-17-issues-to-close-immediately-46-total) for the full list.
 
 ## Priority Classification
 
@@ -79,10 +87,10 @@ These are confirmed thread-safety bugs in the current codebase. All involve shar
 
 ### #1644: Memory leak in LRUCache
 
-**Status**: Confirmed bug — P1
-**Root cause**: `LRUCache` uses `ConcurrentHashMap` + `ConcurrentLinkedQueue` but compound operations (containsKey → remove, poll → remove) are not atomic. The `queue` and `map` can desynchronize, causing orphan entries. Static fields `allCachesEnabled` and `maxSizeOverride` are not `volatile`. The `Entry.expiryInMillis` is a non-volatile `long` mutated from multiple threads.
+**Status**: Fixed on master — P1
+**Root cause**: `LRUCache` uses `ConcurrentHashMap` + `ConcurrentLinkedQueue` but compound operations (containsKey → remove, poll → remove) are not atomic. The fix (using `WeakHashMap` for allCaches) is already on master but unreleased.
 **Files**: `mockserver-core/.../cache/LRUCache.java:15,47-99`
-**Fix**: Replace with Guava's `Cache` or Caffeine. At minimum, make static fields `volatile` and wrap compound operations in synchronized blocks.
+**Fix**: Already fixed — `allCaches` now uses `Collections.synchronizedSet(Collections.newSetFromMap(new WeakHashMap<>()))`. Needs release.
 
 ---
 
@@ -118,12 +126,17 @@ These are confirmed thread-safety bugs in the current codebase. All involve shar
 **Fix**: Implementing full HTTP/2 proxy support is a significant effort. Short-term: add a timeout to `Http2SettingsHandler` future to prevent indefinite hangs. Document that HTTP/2 proxying is not supported.
 **Documentation**: Add a clear note that HTTP/2 proxying is not supported and requests are downgraded to HTTP/1.1.
 
+### #1640: HTTP/2 frame error since 5.15
+
+**Status**: Confirmed bug — P1
+**Root cause**: The error `Frame type(80) length(4740180) exceeds MAX_FRAME_SIZE(16384)` indicates HTTP/2 frame parsing failure. Frame type 80 (0x50 = 'P') suggests the client is sending HTTP/1.1 but the server expects HTTP/2 frames, or vice versa. Something in 5.15 broke HTTP/2 proxy protocol detection.
+**Files**: `mockserver-netty/.../unification/PortUnificationHandler.java`
+**Fix**: Check the HTTP/2 codec configuration in Netty pipeline setup, particularly the protocol detection and negotiation.
+
 ### #1473: Invalid `content-encoding: .*` added to request header
 
-**Status**: Confirmed bug — P2
-**Root cause**: The `Accept-Encoding` header is unconditionally replaced with `gzip,deflate` on all forwarded requests, regardless of what the client originally sent. The `.*` pattern may come from a matcher value being serialized as a header.
-**Files**: `mockserver-core/.../mappers/MockServerHttpRequestToFullHttpRequest.java:112,126`
-**Fix**: Preserve the original `Accept-Encoding` header from the client request instead of overriding it.
+**Status**: Fixed in 5.15 — **CLOSE**
+**Root cause**: The `Accept-Encoding` header was unconditionally replaced with `gzip,deflate` on all forwarded requests. Confirmed fixed by commenter ThaDaVos in 5.15.0.
 
 ### #1733: Content-Length added to requests that didn't have it
 
@@ -160,9 +173,9 @@ These are confirmed thread-safety bugs in the current codebase. All involve shar
 ### #1837: Client doesn't support TLS 1.3
 
 **Status**: Confirmed bug — P2
-**Root cause**: Default TLS protocols are `"TLSv1,TLSv1.1,TLSv1.2"` — TLSv1.3 is absent. Also includes deprecated TLSv1 and TLSv1.1.
+**Root cause**: Default TLS protocols are `"TLSv1,TLSv1.1,TLSv1.2"` — TLSv1.3 is absent. Also includes deprecated TLSv1 and TLSv1.1. Additionally sets `System.setProperty("https.protocols", ...)` globally affecting all HTTP clients in the JVM.
 **Files**: `mockserver-core/.../configuration/ConfigurationProperties.java:1378`
-**Fix**: Update default to `"TLSv1.2,TLSv1.3"`. Drop TLSv1 and TLSv1.1 from defaults.
+**Fix**: Update default to `"TLSv1.2,TLSv1.3"`. Drop TLSv1 and TLSv1.1 from defaults. Remove global system property side-effect.
 **Documentation**: Document the `MOCKSERVER_TLS_PROTOCOLS` / `mockserver.tlsProtocols` property more prominently. Clarify how to enable TLS 1.3.
 
 ### #1833: Failed to initialize server-side SSL context
@@ -174,9 +187,29 @@ These are confirmed thread-safety bugs in the current codebase. All involve shar
 
 ### #1739: `javax.security.cert.CertificateException` under JDK 17
 
-**Status**: Known issue — P2
-**Root cause**: JDK 17 restricts access to `com.sun.security.cert.internal.x509.X509V1CertImpl`. MockServer's BouncyCastle-based certificate handling may trigger this when older code paths are used.
-**Fix**: The project already uses BouncyCastle 1.84, which should work with JDK 17. This may be resolved in the current codebase. Needs verification with JDK 17 test run.
+**Status**: Fixed on master — P2
+**Root cause**: JDK 17 removed `com.sun.security.cert.internal.x509.X509V1CertImpl`. Fix in `JDKCertificateToMockServerX509Certificate.java` now uses `java.security.cert.CertificateFactory`. High community demand (15+ comments). Needs release.
+**Fix**: Already fixed on master. Ship in next release.
+
+### #1792: `withClientCertificateChain()` not serialized
+
+**Status**: Confirmed bug — P2
+**Root cause**: The client certificate chain field is populated server-side via `JDKCertificateToMockServerX509Certificate` but is silently dropped during expectation serialization — the JSON schema for expectations doesn't include `clientCertificateChain` in the request definition.
+**Files**: `mockserver-core/.../serialization/` (expectation JSON schema), `mockserver-core/.../matchers/` (request matching)
+**Fix**: Add `clientCertificateChain` to the expectation JSON schema and implement matching logic for it in the request matcher.
+
+### #1972: `clientCertificateChain` breaks expectations
+
+**Status**: Confirmed bug — P2
+**Root cause**: When `clientCertificateChain` is set on the request matcher, the serialized JSON includes it but expectation schema validation fails because the field isn't in the schema. This interferes with the two-step expectation creation flow.
+**Files**: `mockserver-core/.../serialization/` (schema validation)
+**Fix**: Add `clientCertificateChain` to the expectation JSON schema, or exclude it from validation.
+
+### #1973: `retrieveRecordedRequests` missing `clientCertificateChain`
+
+**Status**: Confirmed bug — P2
+**Root cause**: The serializer for `HttpRequestDTO` does serialize `clientCertificateChain`, but the retrieve endpoint filtering or DTO mapping drops it during retrieval.
+**Fix**: Ensure the retrieve API serialization path includes `clientCertificateChain` in the response.
 
 ---
 
@@ -185,16 +218,15 @@ These are confirmed thread-safety bugs in the current codebase. All involve shar
 ### #1896: Wrong JSON schema dialect for OpenAPI specs
 
 **Status**: Confirmed bug — P2
-**Root cause**: MockServer defaults to JSON Schema draft-07 (with a comment about TLS issues downloading draft-2019-09). OpenAPI 3.0.x uses a modified subset of draft-05, and OpenAPI 3.1.x uses draft-2020-12. Neither matches draft-07. OpenAPI schemas extracted from operations don't have a `$schema` property, so the validator always falls back to draft-07.
+**Root cause**: MockServer defaults to JSON Schema draft-07 (with a comment about TLS issues downloading draft-2019-09). OpenAPI 3.0.x uses a modified subset of draft-04 (where `exclusiveMinimum` is boolean, not number), and OpenAPI 3.1.x uses draft-2020-12. Neither matches draft-07. OpenAPI schemas extracted from operations don't have a `$schema` property, so the validator always falls back to draft-07.
 **Files**: `mockserver-core/.../validator/jsonschema/JsonSchemaValidator.java:38-39,80-103`
 **Fix**: Detect the OpenAPI version from the spec and use the appropriate JSON Schema dialect. For OpenAPI 3.0.x, handle `nullable` as a keyword. For OpenAPI 3.1.x, use draft-2020-12.
 
 ### #1806: Only 1 expectation per operation even with multiple responses
 
-**Status**: Confirmed bug — P2
-**Root cause**: `OpenAPIConverter.buildExpectations()` uses `.map()` to create exactly one `Expectation` per operation, and `buildHttpResponse()` uses `.findFirst()` to select only the first response entry.
-**Files**: `mockserver-core/.../openapi/OpenAPIConverter.java:38-63,65-69`
-**Fix**: Use `flatMap` across both operations and responses to produce one expectation per response code per operation.
+**Status**: Documented behavior — close as docs-adequate
+**Root cause**: This is documented behavior. The docs state that if multiple response bodies are specified for an operation, the first is used by default, controllable via `operationsAndResponses`. A comment in the issue already explains this.
+**Fix**: Close with documentation reference.
 
 ### #1315: Security override in operation not working
 
@@ -206,9 +238,9 @@ These are confirmed thread-safety bugs in the current codebase. All involve shar
 ### #1776: Unable to match path params with OpenAPI expectations
 
 **Status**: Partially confirmed — P2
-**Root cause**: Path parameter extraction in `PathParametersDecoder` throws `IllegalArgumentException` when path segment counts differ. Edge cases with trailing slashes, encoded characters, or complex path styles may fail.
+**Root cause**: Path parameter extraction in `PathParametersDecoder` throws `IllegalArgumentException` when path segment counts differ. OpenAPI 3.1.0 specs may fail where 3.0.x works due to schema differences.
 **Files**: `mockserver-core/.../codec/PathParametersDecoder.java:69-91`
-**Fix**: Make path segment matching more lenient. Handle trailing slashes and encoded characters.
+**Fix**: Make path segment matching more lenient. Handle trailing slashes, encoded characters, and OpenAPI 3.1.0 schema format.
 
 ### #1839: SEVERE exception validating JSON for pathparameters
 
@@ -239,16 +271,34 @@ These are confirmed thread-safety bugs in the current codebase. All involve shar
 
 ### #1940: Header expectation from OpenAPI URL failing for String type
 
-**Status**: Needs investigation — P3
-**Root cause**: No test cases exist for OpenAPI specs loaded from URLs with header matching. Schema serialization may produce different output when loaded from URLs due to `$ref` resolution differences.
-**Fix**: Add URL-based OpenAPI test cases. Investigate schema serialization differences.
-
-### #1793: OpenAPI with JSON spec containing comments fails
-
 **Status**: Confirmed bug — P3
-**Root cause**: JSON does not support comments. If users have JSON with comments (JSONC), the parser will fail. YAML specs support comments natively.
-**Fix**: Consider using a lenient JSON parser that strips comments, or document that JSON specs must not contain comments.
-**Documentation**: Clarify that JSON OpenAPI specs must be valid JSON without comments. Recommend YAML for specs that need comments.
+**Root cause**: When matching a header against an OpenAPI schema with `type:string`, MockServer attempts to parse the header value as JSON, which fails. Header values should be treated as strings, not JSON.
+**Fix**: When validating header/query parameter values against OpenAPI schemas with `type:string`, skip JSON parsing. Wrap the value in quotes or treat directly as a string.
+
+### #1423: OpenAPI multipart/form-data matching (NEW)
+
+**Status**: Confirmed bug — P2
+**Root cause**: When `contentType` is `multipart/form-data`, `HttpRequestsPropertiesMatcher.handleRequestBody()` returns early without adding a matcher. When `httpRequestPropertiesMatchers` is empty, the `matches()` method returns true for all requests — creating a catch-all expectation.
+**Files**: `mockserver-core/.../matchers/HttpRequestsPropertiesMatcher.java:445`
+**Fix**: Two fixes needed: (1) When multipart/form-data is encountered, still add a matcher for the path/method/headers so it doesn't become a catch-all. (2) When `httpRequestPropertiesMatchers` is empty, `matches()` should return false instead of true.
+
+### #1825: OpenAPI XML body generates JSON_SCHEMA matcher (NEW)
+
+**Status**: Confirmed bug — P2
+**Root cause**: When importing an OpenAPI spec with `application/xml` content type, MockServer generates a `JSON_SCHEMA` body matcher even for XML bodies. The content-type regex also has escaped slashes (`application\\/xml`).
+**Fix**: When generating expectations from OpenAPI specs with XML content types, either skip body schema validation, use an XML-appropriate matcher, or at minimum don't apply `JSON_SCHEMA` to XML bodies.
+
+### #1700: OpenAPI spec on SwaggerHub prevents SDK generation (NEW)
+
+**Status**: Confirmed bug — P2
+**Root cause**: MockServer's OpenAPI spec published on SwaggerHub has validation issues that prevent SDK generation. Multiple languages affected. Version 5.10.x works. Likely introduced a schema issue between 5.10.x and 5.11.x.
+**Fix**: Validate the MockServer OpenAPI spec against the OpenAPI 3.0 specification, fix schema issues preventing code generation.
+
+### #2118: XmlSchemaBody requires local XSD (NEW)
+
+**Status**: Confirmed bug — P2
+**Root cause**: `XmlSchemaBody` validation fails when XSD uses `xs:import` to reference external schemas — requires all schemas to be local/inline. The `XmlSchemaValidator` doesn't resolve remote schema imports.
+**Fix**: Enhance `XmlSchemaValidator` to support a schema resolver that can fetch imported schemas from URLs or relative paths. May need `LSResourceResolver` implementation.
 
 ---
 
@@ -292,21 +342,21 @@ These are confirmed thread-safety bugs in the current codebase. All involve shar
 ### #1757: MockServerClient.verify false positive
 
 **Status**: Confirmed bug — P2
-**Root cause**: `LogEntry.matches()` returns true for log entries with null/empty HTTP requests, potentially inflating match counts during verification.
+**Root cause**: `LogEntry.matches()` returns true for log entries with null/empty HTTP requests, potentially inflating match counts during verification. Also possible race condition with concurrent request logging.
 **Files**: `mockserver-core/.../log/model/LogEntry.java:193-206`
 **Fix**: `LogEntry.matches()` should return false when `httpRequests` is null or empty, not true.
 
 ### #1789: Incorrect verify response text when atLeast is not met
 
 **Status**: Confirmed bug — P3
-**Root cause**: The verification failure message doesn't include the actual count of matched requests. It says "Request not found at least N times" without saying how many were found.
+**Root cause**: The verification failure message doesn't include the actual count of matched requests. It says "Request not found at least N times" without saying how many were found. The word "other" is misleading.
 **Files**: `mockserver-core/.../log/MockServerEventLog.java:493-517`
 **Fix**: Include the actual match count in the failure message: "Request found M times but expected at least N times".
 
 ### #1734: retrieveRecordedRequests doesn't return all requests with body matcher
 
 **Status**: Probable user confusion — P3
-**Root cause**: When users specify a body as a plain string (not explicitly `json()`), it creates an `ExactStringMatcher` requiring exact character-by-character match. Users expect semantic comparison.
+**Root cause**: When users specify a body as a plain string (not explicitly `json()`), it creates an `ExactStringMatcher` requiring exact character-by-character match. Users expect semantic comparison. Performance regression in 5.14+ with many expectations.
 **Documentation**: Clarify that `withBody("json string")` uses exact string matching. Users should use `withBody(json("..."))` for semantic JSON matching in retrieval filters.
 
 ### #1524: verify not working correctly after update to 5.14.0
@@ -323,10 +373,10 @@ These are confirmed thread-safety bugs in the current codebase. All involve shar
 **Fix**: Attempt exact string matching first (which already happens), but improve logging to explain why the regex attempt failed. Consider escaping regex metacharacters when the value is clearly not intended as a regex.
 **Documentation**: Document that path patterns like `/api/{id}` need regex escaping or should use `regex("/api/[^/]+")` explicitly.
 
-### #1496: ONLY_MATCHING_FIELDS failing where STRICT is not
+### #1496: ONLY_MATCHING_FIELDS failing where STRICT is not (NEW)
 
 **Status**: Confirmed bug — P2
-**Root cause**: The combination of `IGNORING_ARRAY_ORDER` + `IGNORING_EXTRA_ARRAY_ITEMS` in ONLY_MATCHING_FIELDS mode can cause JsonUnit's subset matching to fail differently than strict comparison, especially for arrays of objects with partial matches.
+**Root cause**: The combination of `IGNORING_ARRAY_ORDER` + `IGNORING_EXTRA_ARRAY_ITEMS` in ONLY_MATCHING_FIELDS mode can cause JsonUnit's subset matching to fail differently than strict comparison, especially with json-unit placeholders in arrays.
 **Files**: `mockserver-core/.../matchers/JsonStringMatcher.java:52-57`
 **Fix**: Investigate if upgrading JsonUnit (within 2.x series) fixes the subset matching edge cases. Add targeted test cases.
 
@@ -337,19 +387,31 @@ These are confirmed thread-safety bugs in the current codebase. All involve shar
 **Files**: `mockserver-core/.../serialization/ObjectMapperFactory.java`, `mockserver-core/.../serialization/serializers/body/JsonBodySerializer.java`
 **Fix**: Enable `DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS` and `JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN` in the ObjectMapper. Requires testing for broader impact.
 
-### #1829: Body did not match for XML request
-
-**Status**: Probable bug — P2
-**Root cause**: XML matching uses `ElementSelectors.byName` which requires elements at the same position. Different element ordering or namespace prefixes cause matches to fail. The `checkForSimilar()` mode does not ignore element order. Additionally, the `DiffBuilder` reuse creates thread-safety issues (see #1796).
-**Fix**: Consider adding an option for order-independent XML matching. Fix the thread-safety issue (see #1796). Document that XML matching requires same element ordering.
-
 ### #1893: Upgrading from 5.11.2 to 5.13.0+ fails to load JSON expectations
 
 **Status**: Confirmed bug — P2
-**Root cause**: Schema validation in `ExpectationSerializer.deserialize()` runs before parsing. If the schema changed between versions (new required fields, stricter validation), previously valid JSON fails validation and throws `IllegalArgumentException` for the entire array.
-**Files**: `mockserver-core/.../serialization/ExpectationSerializer.java:127-148`, `mockserver-core/.../serialization/deserializers/body/BodyDTODeserializer.java`
-**Fix**: Make schema validation more lenient for backward compatibility. Consider a version migration path. At minimum, validate individual expectations rather than failing the entire array.
-**Documentation**: Provide a migration guide for expectations format changes between versions.
+**Root cause**: JSON initialization fails with 403 because `json-schema-validator` tries to fetch `http://json-schema.org/draft-07/schema` remotely. In environments without internet access, this fails.
+**Files**: `mockserver-core/.../serialization/ExpectationSerializer.java:127-148`, `mockserver-core/.../validator/jsonschema/JsonSchemaValidator.java`
+**Fix**: Configure json-schema-validator to use locally bundled meta-schemas instead of fetching them over HTTP. Provide a custom URIFetcher or URISchemeFactory.
+
+### #1696: Verify by expectation ID fails after Times consumed (NEW)
+
+**Status**: Confirmed bug — P2
+**Root cause**: After a `Times.exactly(1)` expectation is consumed and removed, verify by expectation ID fails with "No expectation found". The verify logic checks active expectations rather than the recorded request log.
+**Fix**: Verify by expectation ID should check the recorded request log (not active expectations) since expectations with `remainingTimes` can be consumed. The log should retain the expectation ID association.
+
+### #1477: Clear log not working (NEW)
+
+**Status**: Confirmed bug — P2
+**Root cause**: `PUT /mockserver/clear?type=log` marks logs as `deleted=true` rather than actually removing them. The verify endpoint and UI don't properly filter out deleted entries.
+**Files**: `mockserver-core/.../log/model/LogEntry.java:56`
+**Fix**: Either actually remove entries from the event log when clearing, or ensure all query paths (verify, UI, retrieve) properly filter out deleted entries.
+
+### #2106: retrieveRecordedExpectations inconsistent JSON body (NEW)
+
+**Status**: Confirmed bug — P2
+**Root cause**: `retrieveRecordedExpectations` sometimes returns body as string type instead of JSON type. The recorded expectations lose the JSON body type metadata during retrieval.
+**Fix**: Ensure body type (JSON vs STRING) is correctly preserved through the recording and retrieval pipeline.
 
 ---
 
@@ -357,11 +419,9 @@ These are confirmed thread-safety bugs in the current codebase. All involve shar
 
 ### #1911: Mustache template unable to access `body.<field>`
 
-**Status**: Confirmed bug — P2
-**Root cause**: `HttpRequestTemplateObject.getBody()` returns a `String` representation of the body. Mustache's dot notation (`{{ request.body.field }}`) cannot traverse into a string.
-**Files**: `mockserver-core/.../templates/engine/model/HttpRequestTemplateObject.java:46,80-82`
-**Fix**: Parse JSON bodies into a `Map<String, Object>` and expose it alongside the string representation, enabling `{{ request.body.fieldName }}` access.
-**Documentation**: Currently users must use `{{#jsonPath}}$.fieldName{{/jsonPath}}` as a workaround. Document this prominently.
+**Status**: Not a bug — documentation gap
+**Root cause**: `HttpRequestTemplateObject.getBody()` returns a `String` representation of the body. Mustache's dot notation (`{{ request.body.field }}`) cannot traverse into a string. Users must use `{{#jsonPath}}$.fieldName{{/jsonPath}}`.
+**Documentation**: Document this prominently — body is always a string in templates and `jsonPath` must be used for JSON fields.
 
 ### #1840: No multi-line MUSTACHE templates in initializerJson.json
 
@@ -433,6 +493,13 @@ These are confirmed thread-safety bugs in the current codebase. All involve shar
 **Root cause**: The `mockserver-client-node` npm package is in the monorepo subdirectory `mockserver-client-node/`.
 **Fix**: Investigate and fix in the `mockserver-client-node/` directory.
 
+### #1691: PortFactory.findFreePort race condition (NEW)
+
+**Status**: Confirmed bug — P2
+**Root cause**: `PortFactory.findFreePort()` opens `ServerSocket`s to find free ports, then closes them all and sleeps 250ms before returning. Between close and actual bind, another process can take the port, causing flaky "Address already in use" errors. Reported by Spring Boot team.
+**Files**: `mockserver-core/.../integration/ClientAndServer.java`, `mockserver-core/.../PortFactory.java`
+**Fix**: Start MockServer with port 0 (let OS assign), then read the actual port after binding. Alternatively, keep the ServerSocket open and pass it to MockServer for reuse.
+
 ---
 
 ## Category 8: Docker & Container (P2)
@@ -453,10 +520,17 @@ These are confirmed thread-safety bugs in the current codebase. All involve shar
 **Fix**: Add a `HEALTHCHECK` instruction using Java-based health check (since no shell is available). Enable `MOCKSERVER_LIVENESS_HTTP_GET_PATH=/liveness` by default in Docker images. Add `HEALTHCHECK CMD ["java", "-cp", "...", "HealthCheck"]` or similar.
 **Documentation**: Document how to configure healthchecks with `MOCKSERVER_LIVENESS_HTTP_GET_PATH`.
 
+### #1568: ARM Docker image missing ARM binaries (NEW)
+
+**Status**: Confirmed bug — P2
+**Root cause**: Docker ARM64 image contains x86_64 binaries only. The Dockerfile now conditionally downloads the correct `netty-tcnative` per `TARGETARCH`, but the base image (`gcr.io/distroless/java17:nonroot`) may not have proper ARM support. Should use `gcr.io/distroless/java17-debian11:nonroot` for true multiarch.
+**Files**: `docker/Dockerfile:49`
+**Fix**: Change base image to `gcr.io/distroless/java17-debian11:nonroot`. Verify multi-arch build pipeline produces distinct layers per architecture.
+
 ### #1868 / #1887: Docker on ARM (Raspberry Pi) / s390x
 
 **Status**: Confirmed bug — P2
-**Duplicates**: #1887 is related to #1868 (different architecture)
+**Duplicates**: #1736, #1868 are duplicates of #1568 (ARM Docker). #1887 is related but distinct (s390x).
 **Root cause**: Dockerfiles hardcode `netty-tcnative-boringssl-static` for `linux-x86_64` architecture. The `.so` file is always `libnetty_tcnative_linux_x86_64.so` regardless of target platform. s390x is not in the CI platform list.
 **Files**: `docker/Dockerfile:23,49`, `.buildkite/scripts/docker-push-release.sh`
 **Fix**: Use Docker `TARGETARCH` build arg to select the correct native library per platform. Add s390x to CI platforms if netty-tcnative supports it.
@@ -472,6 +546,19 @@ These are confirmed thread-safety bugs in the current codebase. All involve shar
 **Status**: Likely resolved (base image update) — check
 **Root cause**: glibc vulnerability in the base image. Distroless images are rebuilt periodically by Google.
 **Fix**: Verify current base image is not affected. Pin base image digest to a known-good version.
+
+### #2097: Latest Docker image broken (SLF4J + EPERM) (NEW)
+
+**Status**: Confirmed bug — P1
+**Root cause**: Two critical issues in latest Docker image: (1) SLF4J provider `org.slf4j.jul.JULServiceProvider` not found — classpath/packaging issue, and (2) JVM can't create GC threads due to EPERM — image may have switched to a restricted user without proper capabilities. Regression from recent image build.
+**Files**: `docker/Dockerfile`, image build pipeline
+**Fix**: Fix the Docker image build: (1) ensure `slf4j-jdk14` is on the classpath, (2) investigate user/capability changes that prevent thread creation.
+
+### #1771: Docker JS template error (JDK17 nashorn removed) (NEW)
+
+**Status**: Fixed on master — needs release
+**Root cause**: JDK17 removed `jdk.nashorn`. The codebase now uses `org.openjdk.nashorn` (standalone dependency) but the published Docker image (5.15.0) doesn't include it.
+**Fix**: Already fixed on master. Needs release.
 
 ---
 
@@ -506,10 +593,14 @@ These are confirmed thread-safety bugs in the current codebase. All involve shar
 
 ### #1600: Container HTTP check timeout on startup
 
-**Status**: Confirmed issue — P3
-**Root cause**: No `startupProbe`. Probes use `tcpSocket` (not HTTP). Probe parameters are hardcoded with no values overrides.
-**Files**: `helm/mockserver/templates/deployment.yaml:47-60`
-**Fix**: Add a `startupProbe` with longer timeout. Set `MOCKSERVER_LIVENESS_HTTP_GET_PATH` and use `httpGet` probes. Make probe parameters configurable via values.yaml.
+**Status**: Not a MockServer issue — TestContainers API — **CLOSE**
+**Root cause**: As commenter bedla noted, the `waitingFor()` call in `MockServerContainer` is a standard TestContainers pattern. Users can override the wait strategy after construction. The real issue is ARM performance (#1568).
+
+### #2162: Helm chart: roll if ConfigMap changed (NEW)
+
+**Status**: Enhancement — P3
+**Root cause**: Standard Helm pattern — pods don't restart when ConfigMap content changes.
+**Fix**: Add annotation `checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}` to pod template in deployment.yaml.
 
 ---
 
@@ -518,29 +609,29 @@ These are confirmed thread-safety bugs in the current codebase. All involve shar
 ### #1885: Configuration ignored
 
 **Status**: Confirmed bug — P2
-**Root cause**: `readPropertyHierarchically()` uses a `propertyCache` that returns the first-read value forever. Properties files and environment variables are only read once at class load time. Changes after initialization are never picked up.
+**Root cause**: `readPropertyHierarchically()` uses a `propertyCache` that returns the first-read value forever. Properties files and environment variables are only read once at class load time. Changes after initialization are never picked up. Additionally, `detailedMatchFailures` config only affects DEBUG level, not INFO level log messages.
 **Files**: `mockserver-core/.../configuration/ConfigurationProperties.java:1837-1853`
-**Fix**: Either remove the cache, add a TTL, or provide a `reload()` method. Document the initialization-time-only behavior.
+**Fix**: Either remove the cache, add a TTL, or provide a `reload()` method. Also fix `detailedMatchFailures` to affect INFO-level log messages.
 **Documentation**: Document that configuration properties are read once at startup and cannot be changed at runtime via files/env vars (only via API/programmatic calls).
 
 ### #1715: Multiple initialization JSON files in different directories
 
 **Status**: Limitation — P3
-**Root cause**: `initializationJsonPath` accepts a single path/glob pattern. There's no separator for specifying multiple independent directories.
-**Fix**: Support semicolon-separated paths (e.g., `/dir1/*.json;/dir2/*.json`). Or document workarounds using glob patterns with common parent directories.
+**Root cause**: `initializationJsonPath` accepts a single path/glob pattern. Brace expansion (`{dir1,dir2}`) doesn't work because `StringUtils.substringBefore(filePath, '*')` extracts `{local,shared}` as a literal directory name.
+**Fix**: Improve the starting directory extraction to handle brace expansion. Expand braces before finding the start directory.
 
 ### #1571: ClassNotFoundException for callback class
 
 **Status**: Confirmed bug — P2
-**Root cause**: Callback handlers use the system classloader or the handler's classloader, not `Thread.currentThread().getContextClassLoader()`. In Spring Boot fat JARs or application servers with custom classloader hierarchies, callback classes may not be found.
+**Root cause**: Callback handlers use the system classloader or the handler's classloader, not `Thread.currentThread().getContextClassLoader()`. In Spring Boot fat JARs or application servers with custom classloader hierarchies, callback classes may not be found. Additionally, the Helm chart unconditionally mounts a ConfigMap to `/libs`, overriding JARs baked into the image.
 **Files**: `mockserver-core/.../mock/action/http/HttpResponseClassCallbackActionHandler.java:40`, `mockserver-core/.../mock/action/http/HttpForwardClassCallbackActionHandler.java:32`
-**Fix**: Try `Thread.currentThread().getContextClassLoader()` first, then fall back to system classloader. Apply consistently across all callback handlers.
+**Fix**: Try `Thread.currentThread().getContextClassLoader()` first, then fall back to system classloader. Condition the Helm chart `/libs` mount on `mountedLibsConfigMapName` being set.
 
 ### #1636: mockWithCallback doesn't work on 5.15.0
 
-**Status**: Probable configuration issue — P3
-**Root cause**: The callback handler creates two instances and logs warnings for the interface that doesn't match. If the action type (RESPONSE vs FORWARD callback) doesn't match the interface the class implements, the callback silently doesn't execute.
-**Documentation**: Clarify the distinction between response callbacks and forward callbacks in documentation.
+**Status**: Confirmed bug — P2
+**Root cause**: The Node.js client `mockWithCallback` function establishes a WebSocket connection for callbacks. Something broke between 5.5.1 and 5.15.0 in the WebSocket callback handling. Multiple users confirm the issue.
+**Fix**: Debug the WebSocket callback registration in `mockserver-client-node`. Compare 5.5.1 and current versions.
 
 ### #1634: Can't load log handler StandardOutConsoleHandler
 
@@ -557,8 +648,8 @@ These are confirmed thread-safety bugs in the current codebase. All involve shar
 ### #1659: StackOverflow with @JsonTest and 5.15.0
 
 **Status**: Confirmed bug — P2
-**Root cause**: MockServer's custom Jackson serializers have `static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper()` fields. When Spring Boot's `@JsonTest` auto-configures Jackson and triggers class loading of MockServer serializers, the static initializers recursively call `ObjectMapperFactory.createObjectMapper()`, potentially causing a stack overflow or configuration loop.
-**Fix**: Break the circular static initialization. Use lazy initialization for the ObjectMapper in serializers, or use a shared singleton that doesn't trigger recursive initialization.
+**Root cause**: Circular SLF4J/JUL logging bridge. When `SLF4J-over-JUL` is used alongside `JUL-to-SLF4J` bridge, logging calls loop infinitely. Introduced in 5.15.0.
+**Fix**: Remove the circular SLF4J bridge configuration. Add a check to prevent circular bridge installation.
 
 ### #1693: UI websocket returns 404 with path prefix
 
@@ -569,15 +660,13 @@ These are confirmed thread-safety bugs in the current codebase. All involve shar
 
 ### #1823: Dashboard logs not showing over HTTP
 
-**Status**: Related to #1693 — P3
-**Root cause**: Dashboard relies entirely on WebSocket for log updates. If the WebSocket connection fails (due to path prefix issues, TLS-terminating proxies, or HTTP/1.0), no logs appear. There is no HTTP polling fallback.
-**Fix**: Fix the WebSocket path prefix issue (#1693). Consider adding an HTTP polling fallback for environments where WebSocket is not available. Fix the TLS detection for `ws://` vs `wss://` URL construction when behind a TLS-terminating proxy.
+**Status**: Stale — needs more info — P3
+**Root cause**: Insufficient information. User on JDK 8 + Spring Boot 2.5.6. Could be network/proxy issue, WebSocket issue, or browser compatibility. No follow-up since Dec 2023.
 
 ### #1478: attemptToProxyIfNoMatchingExpectation not working
 
-**Status**: Configuration issue — P3
-**Root cause**: The `potentiallyHttpProxy` check requires the `Host` header to NOT match any local address. When testing locally, `localhost` is in the local addresses set, so the proxy attempt is skipped. Additionally, the proxy timeout is only 1 second.
-**Documentation**: Document that `attemptToProxyIfNoMatchingExpectation` only works when the `Host` header differs from local addresses. Document the 1-second timeout limitation.
+**Status**: User error — **CLOSE**
+**Root cause**: User sets `ConfigurationProperties` on the client side (Java code) but runs MockServer in Docker. `ConfigurationProperties` only affects the local JVM — it doesn't propagate to the Docker container. User needs `MOCKSERVER_ATTEMPT_TO_PROXY_IF_NO_MATCHING_EXPECTATION=false` environment variable on the container.
 
 ---
 
@@ -586,9 +675,9 @@ These are confirmed thread-safety bugs in the current codebase. All involve shar
 ### #1847: Memory leak from reset not removing subscribers
 
 **Status**: Confirmed bug — P2
-**Root cause**: `HttpState.reset()` clears matchers and log entries but does NOT clear listeners from `MockServerMatcherNotifier.listeners` and `MockServerEventLogNotifier.listeners`. `MemoryMonitoring` registers but never unregisters.
+**Root cause**: `HttpState.reset()` clears matchers and log entries but does NOT clear listeners from `MockServerMatcherNotifier.listeners` and `MockServerEventLogNotifier.listeners`. `MemoryMonitoring` registers but never unregisters. `MockServerEventBus.subscribers` is also never cleared on reset.
 **Files**: `mockserver-core/.../mock/HttpState.java:216-244`, `mockserver-core/.../mock/listeners/MockServerMatcherNotifier.java`, `mockserver-core/.../memory/MemoryMonitoring.java`
-**Fix**: Clear listener lists during reset, or use `WeakReference` for listener registration.
+**Fix**: Clear listener lists and event bus subscribers during reset, or use `WeakReference` for listener registration.
 
 ### #1874: Expectation listed as active after timeToLive expired
 
@@ -610,6 +699,18 @@ These are confirmed thread-safety bugs in the current codebase. All involve shar
 **Status**: Fixed
 **Root cause**: Per-entry memory estimates (80 KB per log entry, 75 KB per expectation) were 10-16x too conservative. A field-level analysis showed typical entries use 4-10 KB.
 **Fix**: Reduced divisors (80→8 for log entries, 75→10 for expectations), raised caps (60,000→100,000 for log entries, 5,000→15,000 for expectations), fixed `nextPowerOfTwo` ceiling. Added comprehensive memory analysis documentation in `docs/code/memory-management.md`.
+
+### #1501: Freezes with large responses (NEW)
+
+**Status**: Confirmed bug — P2
+**Root cause**: Serving 23MB responses every 2-3 seconds causes memory pressure and/or Netty buffer exhaustion. The event log also grows rapidly. Could be GC pressure, Netty buffer leaks, or the Disruptor-based log filling and blocking.
+**Fix**: Investigate Netty buffer management for large responses, check if event log growth causes backpressure. May need configurable response body size limits for logging.
+
+### #1543: Resource leak with ExpectationCallbacks (NEW)
+
+**Status**: Confirmed bug — P2
+**Root cause**: Each `ExpectationCallback` opens a WebSocket connection. When expectations are replaced or exceed `maxWebSocketExpectations`, old WebSocket connections are not properly closed, causing "Too many open files" after ~600 callbacks. `reset()` causes `ConcurrentModificationException`.
+**Fix**: Ensure WebSocket connections are properly closed when expectations are removed or replaced. Fix the `ConcurrentModificationException` in `reset()` path.
 
 ---
 
@@ -669,7 +770,7 @@ The following issues were closed because the referenced dependencies have been u
 
 ---
 
-## Category 13: Feature Requests (Enhancement)
+## Category 13: Feature Requests — Existing (Enhancement)
 
 These are legitimate feature requests, not bugs. Listed by perceived value.
 
@@ -678,7 +779,6 @@ These are legitimate feature requests, not bugs. Listed by perceived value.
 | Issue | Feature | Assessment |
 |-------|---------|------------|
 | #1936 | gRPC support | Significant effort; Netty already supports HTTP/2 which gRPC uses |
-| #1965 | Change request scheme in forward modifier | Small change to `HttpRequestModifier` |
 | #1960 | Custom MockServerLogger | Requires interface extraction; medium effort |
 | #1937 | Show expectation IDs in dashboard non-match logs | Small UI enhancement |
 | #1883 | Publish expectations JSON Schema for IDE support | Extract from internal validator; medium effort |
@@ -691,7 +791,7 @@ These are legitimate feature requests, not bugs. Listed by perceived value.
 | Issue | Feature | Assessment |
 |-------|---------|------------|
 | #1879 | Enforce matching all query parameters | Add a strict query matching mode |
-| #1878 | Ignore specific JSON keys in body matching | Extend JSON matcher with key exclusion |
+| #1878 | Ignore specific JSON keys in body matching | **Already works** — `ONLY_MATCHING_FIELDS` + `${json-unit.ignore}` |
 | #1850 | Extract current expectations via API | **Already exists** — close as resolved |
 | #1900 | Create expectations over HTTPS | **Already works** — close as resolved |
 | #1782 | Send default Host header for forwarded requests | Related to #1897 |
@@ -714,7 +814,7 @@ These are legitimate feature requests, not bugs. Listed by perceived value.
 |-------|---------|------------|
 | #1802 | Allocate multiple ports at once | Small API addition |
 | #1798 | Add MockServer Browser Admin to README | Documentation change |
-| #1794 | OAuth2/OIDC Resource Server | Significant scope |
+| #1794 | OAuth2/OIDC Resource Server | **Already works** — standard expectation setup |
 | #1785 | Add swagger endpoint to mock server | Medium effort |
 | #1765 | Access to RequestMatcher class | API exposure |
 | #1754 | Increase max message size with Jackson 2.15 | Configuration change |
@@ -730,6 +830,132 @@ These are legitimate feature requests, not bugs. Listed by perceived value.
 | #1345 | Cross-type value comparison | JSON matching enhancement |
 | #1333 | Complex parameter path placeholders | Matcher enhancement |
 | #1330 | Regex in JSON request body | Matcher enhancement |
+
+---
+
+## Category 13b: Feature Requests — Trello Migration & New (Enhancement)
+
+These are enhancement requests from Trello card migration (#2099–#2168) and recent community issues. They are wishlist items, not confirmed bugs.
+
+### Dashboard UI Enhancements
+
+| Issue | Feature | Complexity |
+|-------|---------|------------|
+| #2103 | CRUD for expectations in dashboard UI (create, read, update, delete) with download/save | Large |
+| #2125 | Log and expectations dump/load into UI | Large |
+| #2132 | Dynamic UI item limit (set in UI and config properties) | Medium |
+| #2144 | Filter on more than just request matcher in dashboard (expectation ID, type, response) | Medium |
+| #2145 | Modify request or response directly in dashboard UI | Large |
+
+### OpenAPI Enhancements
+
+| Issue | Feature | Complexity |
+|-------|---------|------------|
+| #2102 | OpenAPI validation proxy (validate proxied traffic against spec) | Large |
+| #2129 | Object support for path parameters (OpenAPI 3 style serialization) | Large |
+| #2130 | Label (.) and matrix (;) path parameter styles | Large |
+| #1906 | OpenAPI parameter serialization styles (form, simple) with explode | Large |
+| #1809 | Configurable root context path prefix for OpenAPI specs | Medium |
+| #2159 | Select specific named example from OpenAPI spec responses | Medium |
+| #2160 | Accept YAML (not just JSON) for OpenAPI spec submission via API | Small |
+| #2166 | Validate mock responses conform to OpenAPI spec schema | Large |
+
+### Docker & Distribution
+
+| Issue | Feature | Complexity |
+|-------|---------|------------|
+| #1534 | Publish Docker images to AWS ECR Public | Medium |
+| #2099 | Add Docker HEALTHCHECK instruction | Small |
+| #2113 | Windows-based Docker image | Medium |
+| #2114 | ARM64 Docker image for Raspberry Pi and ARM servers | Medium |
+| #2152 | Apply for Docker Official Image status | Large |
+| #2164 | Docker image variant with JavaScript engine (GraalJS) for JS templates | Medium |
+
+### Protocol Extensions
+
+| Issue | Feature | Complexity |
+|-------|---------|------------|
+| #1936 | gRPC protocol support | Large |
+| #2107 | IPv6 support | Large |
+| #2112 | HTTP chunked transfer encoding in responses | Medium |
+| #2115 | Streaming/SSE endpoint support | Large |
+| #2133 | Binary mocking (pluggable format: JMS, SMTP, etc.) | Large |
+| #2156 | UDP protocol support (DNS, SNMP, etc.) | Large |
+
+### Proxy & Forwarding
+
+| Issue | Feature | Complexity |
+|-------|---------|------------|
+| #2116 | Apache-style ProxyPass with path rewriting | Medium |
+| #2117 | Configure nonProxyHosts (hosts that bypass proxy) | Medium |
+| #2158 | Auto-adjust Host header when forwarding | Medium |
+| #2165 | Template response for forwarded requests (modify downstream response) | Medium |
+
+### Record & Replay
+
+| Issue | Feature | Complexity |
+|-------|---------|------------|
+| #2139 | Save recorded requests for record-and-replay workflows | Medium |
+| #2140 | Export proxied requests/responses as HAR file | Medium |
+
+### Client Libraries (Node/Ruby/Python)
+
+| Issue | Feature | Complexity |
+|-------|---------|------------|
+| #2049 | Add `forwardWithCallback()` to Node.js client | Medium |
+| #2050 | Review `base_url` fix in Ruby client during regeneration | Small |
+| #2051 | Ensure Ruby client compatibility with modern Rails (7/8) | Medium |
+| #2093 | Export `MockServerClient` type from Node.js `index.d.ts` | Small |
+| #2147 | Simplify/improve verification error messages in JS client | Small |
+
+### Matching Extensions
+
+| Issue | Feature | Complexity |
+|-------|---------|------------|
+| #2100 | MultipartBody matching support | Large |
+| #2134 | Custom matchers (class, closure, protobuf schema) | Large |
+| #2148 | Strict/exact matching mode (no extra headers/params/cookies allowed) | Large |
+
+### Observability & Configuration
+
+| Issue | Feature | Complexity |
+|-------|---------|------------|
+| #2109 | Prometheus metrics endpoint | Medium |
+| #2126 | API endpoint to output current applied configuration | Medium |
+| #2153 | Improve metrics system (retrieve API option, documentation) | Small |
+
+### Testing & Internal
+
+| Issue | Feature | Complexity |
+|-------|---------|------------|
+| #2104 | Refactor `LogEventRequestAndResponse` to use concrete `HttpRequest` type | Small |
+| #2105 | Investigate unifying JSON serialization between REST API and persistence | Large |
+| #2108 | Java Platform Module System (JPMS) support | Large |
+| #2110 | GraalVM JavaScript engine for templates (replace Nashorn) | Medium |
+| #2111 | Add tests for `logCorrelationId` grouping | Medium |
+| #2131 | TLS performance improvement (remove locking in SslContextFactory) | Medium |
+
+### Multi-Action Expectations
+
+| Issue | Feature | Complexity |
+|-------|---------|------------|
+| #2136 | Multiple actions per expectation (response, forward, callback in sequence) | Large |
+| #2137 | Callback after expectation action completed (post-action hooks) | Medium |
+| #2161 | Zero or more responses per action (drop connection, rotating responses) | Large |
+
+### Other Enhancements
+
+| Issue | Feature | Complexity |
+|-------|---------|------------|
+| #1831 | Early response before consuming request body | Large |
+| #1886 | s390x platform support for Docker image | Large |
+| #1928 | Documentation expansion panels UX improvement | Small |
+| #2101 | Full mTLS example with self-generated CA and certs | Medium |
+| #2121 | Verification of forwarded request responses | Medium |
+| #2122 | Probabilistic matching (match percentage for chaos testing) | Medium |
+| #2142 | OAuth2 flows as example expectation files | Small |
+| #2163 | Request/response body from file path (filesystem or classpath) | Medium |
+| #2162 | Helm chart: roll pods on ConfigMap change | Small |
 
 ---
 
@@ -765,38 +991,90 @@ All four issues were closed with comments confirming active development: depende
 ### #1908: Delay timeUnit accepts any string
 
 **Status**: Confirmed bug — P3
-**Root cause**: Invalid `timeUnit` strings silently result in `null`, causing delays to be silently skipped.
-**Fix**: Add validation in `DelayDTO.buildObject()` to reject invalid `timeUnit` values.
-
-### #1932: MockServer returns status code '0 U'
-
-**Status**: Needs investigation — P3
-**Root cause**: Likely a malformed response from an upstream server being proxied, or a response template setting `statusCode` to 0.
-**Fix**: Add validation to reject status code 0. Default to 200 if statusCode is null or invalid.
+**Root cause**: Invalid `timeUnit` strings silently result in `null`, causing NPE when the delay is applied via `ScheduledThreadPoolExecutor.schedule()`.
+**Fix**: Add validation in `DelayDTO.buildObject()` to reject invalid `timeUnit` values with a clear error message. Add null-check in `Scheduler.schedule()` as safety net.
 
 ### #1959: 500 Internal Server Error with latest Docker image
 
-**Status**: Needs more information — P3
-**Root cause**: Multiple possible causes. Without a stack trace, cannot diagnose.
-**Fix**: Request stack trace from reporter. Check Docker image version alignment.
+**Status**: Confirmed bug — P3
+**Root cause**: LZMA content-encoding triggers internal server error. Regression from 5.11.1. Dual `Content-Encoding` headers with LZMA may confuse the decompression pipeline.
+**Fix**: Investigate body decompression handling for LZMA encoding. Add better error handling for unsupported/malformed compressed bodies.
 
 ### #1949: Convert duplicate header values into one
 
-**Status**: Feature request — P3
-**Root cause**: MockServer correctly preserves multiple header values per RFC 7230. Merging into comma-separated values is an optional optimization.
-**Fix**: Add optional header consolidation, but not for `Set-Cookie` (per RFC 6265).
+**Status**: Feature request / Bug — P3
+**Root cause**: `KeysToMultiValues` uses `LinkedHashMultimap` (Set-based) which deduplicates identical header values. HTTP allows duplicate header values. Should use `ArrayListMultimap`.
+**Fix**: Change `LinkedHashMultimap` to `ArrayListMultimap` in `KeysToMultiValues.java` to preserve duplicate values. Breaking change requiring careful testing.
 
-### #1736: MockServer randomly times out on Mac M1
+### #1778: netty-tcnative in shaded jar conflicts with mixed netty versions
 
-**Status**: Needs investigation — P3
-**Root cause**: May be related to the x86_64 native library in ARM Docker images (#1868) or to JVM performance on Apple Silicon.
-**Fix**: Verify with native ARM build. Check if the netty-tcnative library architecture mismatch causes TLS handshake delays.
+**Status**: Confirmed bug — P2
+**Root cause**: The `mockserver-netty-no-dependencies` shaded JAR includes native `.so`/`.jnilib`/`.dll` files from `netty-tcnative` that cannot be properly shaded/relocated.
+**Fix**: Exclude netty-tcnative native resources from the shaded JAR via Maven shade plugin configuration filters.
 
-### #1763: Running MockServer crashes on Android
+### #1830: Broken Slack signup link (Heroku) (NEW)
 
-**Status**: Out of scope — P3
-**Root cause**: MockServer is not designed for Android. The JDK dependencies (Netty, BouncyCastle, JUL logging) may not be compatible with Android's runtime.
-**Fix**: Close as not supported. Suggest alternatives for Android testing.
+**Status**: Confirmed bug — P3
+**Root cause**: The Slack signup page (`join-mock-server-slack.herokuapp.com`) no longer exists — Heroku removed free tier.
+**Fix**: Remove or update the Slack signup link in README and documentation. Consider using GitHub Discussions.
+
+---
+
+## Category 17: Issues to Close Immediately (46 total)
+
+These issues should be closed with an explanatory comment. They fall into three groups: already implemented, invalid/user error, and stale with no demand.
+
+### Already Implemented (can close with "already shipped" comment)
+
+| Issue | Title | Reason |
+|-------|-------|--------|
+| #2124 | Log out successful use of properties file | Already implemented in `ConfigurationProperties.java:1829` |
+| #2135 | Control plane API authentication | Already implemented (JWT + mTLS auth) |
+| #2143 | Support Server-Sent-Events | Already implemented (`HttpSseResponse`, `thenRespondWithSse()`) |
+| #2151 | Migrate to Jakarta JAXB | Already done (jakarta.xml.bind imports in codebase) |
+| #2155 | Update expectations by ID via client | Already implemented (`MockServerClient.upsert()`) |
+| #2167 | Support HTTP/2 & ALPN | Already implemented (PortUnificationHandler, ALPN, Http2Connection) |
+| #2168 | Support mocking WebSockets | Already implemented (`HttpWebSocketResponse`, `thenRespondWithWebSocket()`) |
+
+### Invalid / User Error / Out of Scope
+
+| Issue | Title | Reason |
+|-------|-------|--------|
+| #1478 | attemptToProxyIfNoMatchingExpectation not working | User error — setting ConfigurationProperties on client side, not Docker container |
+| #1479 | Class loading problem upgrading WAR 5.11.2→5.14.0 | Java 8 unsupported; MockServer requires Java 11+ |
+| #1600 | Container HTTP check timeout on startup | TestContainers API issue, not MockServer (confirmed by commenter) |
+| #1656 | Warnings on deploying mockserver as WAR on JBoss | JBoss jandex bug (fixed in jandex 2.4.1.Final) |
+| #1763 | Running MockServer crashes on Android | Android not supported (no `java.lang.management`) |
+| #1784 | Importing OpenAPI spec into Postman not showing body | About MockServer's own API spec, not mock functionality |
+| #1793 | OpenAPI with JSON spec containing comments fails | JSON doesn't support comments; use YAML instead |
+| #1829 | Body did not match for XML request | User's curl has unescaped quotes in JSON payload |
+| #1932 | MockServer returns status code '0 U' | HTTP status 0 is invalid (RFC 7231); could add validation but not a bug |
+| #1965 | Change request scheme in forward modifier | Already supported via `withSecure(true)` |
+
+### Stale (old items with no external demand)
+
+| Issue | Title | Reason |
+|-------|-------|--------|
+| #1473 | Invalid content-encoding: .* added to header | Fixed in 5.15.0 (confirmed by commenter) |
+| #1645 | How to subscribe to Slack channel? | Broken community links — stale since Jan 2023 |
+| #2119 | Add progress indication for JAR download in mockserver-node | Trello migration, no demand |
+| #2120 | Delete corrupted JAR file in mockserver-node | Trello migration, no demand |
+| #2123 | Fix servlet tests to not poll for MockServer stopped | Trello migration, internal test task |
+| #2127 | Replace mockserver-client-node tests with TypeScript | Trello migration, internal dev task |
+| #2128 | Investigate timing issue with plugin in forked mode | Trello migration, vague, no details |
+| #2138 | Close browser window for UI from MockServerClient | Trello migration, very niche |
+| #2141 | Create Postman examples file | Trello migration, low priority |
+| #2149 | Binary bundle for mockserver-node | Trello migration, Docker is preferred |
+| #2150 | Fix logging bindings for plugin | Trello migration, vague |
+| #2154 | Java 9 modules | Trello migration, duplicate of #2108 |
+| #2157 | Get added to OpenAPI mocks pages | Trello migration, marketing task |
+
+### Duplicates (can close with cross-reference)
+
+| Issue | Duplicate Of | Reason |
+|-------|-------------|--------|
+| #1736 | #1568 | ARM Docker timeouts — same root cause as ARM binary issue |
+| #1868 | #1568 | ARM Docker exec format error — same root cause |
 
 ---
 
@@ -810,9 +1088,11 @@ All four issues were closed with comments confirming active development: depende
 | #1864 (imagePullSecrets) | ~~#1681~~ | **Closed** |
 | #1602 (Spring Boot 3) | ~~#1828~~ | **Closed** |
 | #1966 (json-schema-validator) | ~~#1980~~ | **Closed** |
-| #1868 (ARM Docker) | #1887 (s390x — related but distinct) | Open |
+| #1568 (ARM Docker) | #1736, #1868 | **Close #1736 and #1868** |
+| #1568 (ARM Docker) | #1887 (s390x — related but distinct) | Open |
 | #1933 (HTTP/2) | #1803 (related but distinct trigger) | Open |
 | #1974 (NottableString NOT) | #1639 (related but distinct scenario) | Open |
+| #2108 (JPMS support) | #2154 (Java 9 modules) | **Close #2154** |
 
 ---
 
@@ -821,9 +1101,9 @@ All four issues were closed with comments confirming active development: depende
 Based on the issue analysis, the following documentation gaps should be addressed:
 
 1. **Spring Boot compatibility matrix** (#1602, #1828): Document supported Spring Boot versions and why Spring Boot 3 is not supported
-2. **HTTP/2 proxy limitations** (#1933, #1803): Document that HTTP/2 proxying is not supported
+2. **HTTP/2 proxy limitations** (#1933, #1803, #1640): Document that HTTP/2 proxying is not supported and requests are downgraded to HTTP/1.1
 3. **TLS 1.3 configuration** (#1837): Document how to enable TLS 1.3
-4. **Docker healthcheck setup** (#1895, #1751): Document `MOCKSERVER_LIVENESS_HTTP_GET_PATH` usage
+4. **Docker healthcheck setup** (#1895, #1751, #2099): Document `MOCKSERVER_LIVENESS_HTTP_GET_PATH` usage
 5. **Memory tuning guide** (#1741, #1285): Document `MOCKSERVER_MAX_EXPECTATIONS`, `MOCKSERVER_MAX_LOG_ENTRIES`, heap sizing
 6. **JSON body matching modes** (#1734, #1870): Clarify `withBody("string")` vs `withBody(json("..."))` behavior
 7. **Regex vs literal path matching** (#1505): Document that `{` and `}` are regex metacharacters
@@ -831,8 +1111,13 @@ Based on the issue analysis, the following documentation gaps should be addresse
 9. **Version migration guide** (#1893, #1273): Document breaking changes between versions
 10. **`@MockServerSettings` implicit `@ExtendWith`** (#1977): Warn against double registration
 11. **Verification timing** (#1524): Document async nature of log processing
-12. **`attemptToProxyIfNoMatchingExpectation`** (#1478): Document Host header requirements
+12. **`attemptToProxyIfNoMatchingExpectation`** (#1478): Document Host header requirements and Docker env var usage
 13. **Configuration property lifecycle** (#1885): Document that properties are read once at startup
+14. **TLS passthrough proxy** (#1464): Document that MockServer performs MITM for HTTPS proxying; TLS passthrough is not supported
+15. **Callback with initializer JSON** (#1567): Document which expectation types (including `httpResponseClassCallback`) are supported in JSON initialization files
+16. **Proxy mode architecture** (#1811): Clarify that mock+proxy share a single port and `proxyRemotePort` is the upstream target
+17. **TrustStore configuration** (#2146): Add code examples for programmatic TrustStore configuration with MockServer's dynamic TLS certificates
+18. **Strict query parameter matching** (#1879): Document how to enforce all query parameters using `KeyMatchStyle.MATCHING_KEY`
 
 ---
 
@@ -843,49 +1128,90 @@ Based on the issue analysis, the following documentation gaps should be addresse
 2. Fix `XmlStringMatcher` thread-safety (#1796)
 3. Fix Velocity template tool thread-safety (#1750, #1773)
 4. Fix `responseInProgress` flag thread-safety (#1834)
-5. Fix `LRUCache` thread-safety (#1644)
+5. Fix `LRUCache` thread-safety (#1644) — already fixed, verify
 
 ### Phase 2: Security & Docker (P1)
-6. Update Docker base images and pin digests (#1956, #1857)
-7. Fix ARM native library in Docker (#1868)
-8. Update remaining vulnerable dependencies (#1981, #1894, #1873, #1822)
-9. Fix binary body corruption in forwarding (#1910)
+6. Fix broken Docker image (SLF4J + EPERM) (#2097)
+7. Update Docker base images and pin digests (#1956, #1857)
+8. Fix ARM native library in Docker (#1568, #1736, #1868)
+9. Update remaining vulnerable dependencies (#1981, #1894, #1873, #1822)
+10. Fix binary body corruption in forwarding (#1910)
 
-### Phase 3: Core Functionality Fixes (P1-P2)
-10. Fix NottableString negation logic (#1974, #1639)
-11. Fix verify false positive (#1757)
-12. Fix duplicate query parameters (#1866)
-13. Fix proxy 421 misdirected request (#1897)
-14. Fix expectation TTL display (#1874)
-15. Fix WebSocket path prefix (#1693)
+### Phase 3: Immediate Closures & Cleanup
+11. Close 17 already-implemented issues (#2124, #2135, #2143, #2151, #2155, #2167, #2168, #1478, #1479, #1600, #1656, #1763, #1784, #1793, #1829, #1932, #1965)
+12. Close 13 stale issues (#1473, #1645, #2119, #2120, #2123, #2127, #2128, #2138, #2141, #2149, #2150, #2154, #2157)
+13. Close 2 duplicates (#1736, #1868) with cross-references to #1568
+14. Ship next release to publish fixes already on master (#1739, #1771, #1644)
 
-### Phase 4: OpenAPI & Schema Fixes (P2)
-16. Fix OpenAPI multiple responses per operation (#1806)
-17. Fix OpenAPI security override (#1315)
-18. Fix JSON schema dialect selection (#1896)
-19. Fix example `$ref` resolution (#1474)
-20. Add ByteArraySchema handler (#1788)
+### Phase 4: Core Functionality Fixes (P1-P2)
+15. Fix NottableString negation logic (#1974, #1639)
+16. Fix verify false positive (#1757)
+17. Fix duplicate query parameters (#1866)
+18. Fix proxy 421 misdirected request (#1897)
+19. Fix expectation TTL display (#1874)
+20. Fix WebSocket path prefix (#1693)
+21. Fix clear log not removing entries (#1477)
+22. Fix verify by expectation ID after Times consumed (#1696)
+23. Fix PortFactory.findFreePort race condition (#1691)
 
-### Phase 5: Integration & Configuration Fixes (P2)
-21. Fix Spring TestExecutionListener nested classes (#1979)
-22. Fix MockServer double-start (#1977)
-23. Add JUnit 5 field injection (#1621)
-24. Fix callback classloader (#1571)
-25. Fix configuration caching (#1885)
+### Phase 5: OpenAPI & Schema Fixes (P2)
+24. Fix OpenAPI multipart/form-data catch-all (#1423)
+25. Fix OpenAPI security override (#1315)
+26. Fix JSON schema dialect selection (#1896)
+27. Fix OpenAPI XML body matcher (#1825)
+28. Fix example `$ref` resolution (#1474)
+29. Add ByteArraySchema handler (#1788)
+30. Fix XmlSchemaBody remote XSD imports (#2118)
 
-### Phase 6: Helm Chart Improvements (P2-P3)
-26. Add imagePullSecrets (#1864, #1681)
-27. Fix chart naming for sub-charts (#1752)
-28. Add PVC support (#1779)
-29. Add custom pod labels (#1884)
-30. Add configurable probes and startupProbe (#1600)
+### Phase 6: TLS & Client Certificate Fixes (P2)
+31. Fix `withClientCertificateChain` serialization (#1792, #1972)
+32. Fix `retrieveRecordedRequests` missing clientCertificateChain (#1973)
+33. Fix TLS 1.3 defaults (#1837)
+34. Fix SSL context double-build (#1833)
 
-### Phase 7: Documentation & Cleanup
-31. Write all documentation improvements listed above
-32. Close resolved/out-of-scope issues
-33. Close duplicate issues with cross-references
-34. Address "is this project dead" issues
+### Phase 7: Integration & Configuration Fixes (P2)
+35. Fix Spring TestExecutionListener nested classes (#1979)
+36. Fix MockServer double-start (#1977)
+37. Add JUnit 5 field injection (#1621)
+38. Fix callback classloader (#1571)
+39. Fix configuration caching (#1885)
+40. Fix Node.js mockWithCallback (#1636)
+41. Fix StackOverflow with @JsonTest (#1659)
 
-### Phase 8: Feature Requests (as capacity allows)
-35. Evaluate and implement high-value feature requests
-36. Triage remaining feature requests
+### Phase 8: Memory & Performance Fixes (P2)
+42. Fix memory leak from reset not removing subscribers (#1847)
+43. Fix WebSocket connection leak in ExpectationCallbacks (#1543)
+44. Fix freezes with large responses (#1501)
+45. Fix recorded expectations JSON body inconsistency (#2106)
+
+### Phase 9: Helm Chart Improvements (P2-P3)
+46. Add imagePullSecrets (#1864, #1681)
+47. Fix chart naming for sub-charts (#1752)
+48. Add PVC support (#1779)
+49. Add custom pod labels (#1884)
+50. Add ConfigMap rollout annotation (#2162)
+
+### Phase 10: Documentation & Cleanup
+51. Write all 18 documentation improvements listed above
+52. Close resolved/out-of-scope issues
+53. Close duplicate issues with cross-references
+54. Update broken community links (#1830, #1645)
+
+### Phase 11: High-Value Feature Requests (as capacity allows)
+55. Docker HEALTHCHECK (#2099)
+56. Prometheus metrics endpoint (#2109)
+57. TypeScript export fix for Node client (#2093)
+58. INFO log verbosity reduction (#1694, #1510)
+59. Expectation IDs in dashboard logs (#1937)
+60. Terser DSL (#1509)
+61. OpenAPI named example selection (#1520, #2159)
+62. Record and replay workflow (#2139, #2140)
+
+### Phase 12: Large Feature Requests (as capacity allows)
+63. MultipartBody matching (#2100)
+64. gRPC support (#1936)
+65. Dashboard UI CRUD (#2103)
+66. Custom matchers (#2134)
+67. Strict matching mode (#2148)
+68. HTTP chunked/streaming support (#2112, #2115)
+69. Remaining enhancement backlog
