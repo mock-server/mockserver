@@ -43,6 +43,12 @@ sitemap:
     <li>Configure <a href="#button_configuration_trusted_tls_certs_group_for_proxied_reqs">trust store</a> and <a href="#button_configuration_forward_proxy_certificate_chain">client X.509</a> used during forwarded and proxied requests to endpoints requiring mTLS</li>
 </ul>
 
+<a id="tls_mitm_proxy" class="anchor" href="#tls_mitm_proxy">&nbsp;</a>
+
+<h3>TLS Termination (No Passthrough)</h3>
+
+<p><strong>Note:</strong> when proxying HTTPS traffic, MockServer performs man-in-the-middle (MITM) TLS termination. It decrypts incoming TLS connections, inspects the HTTP request content for expectation matching, and then re-encrypts traffic when forwarding to the upstream server. MockServer does <strong>not</strong> support TLS passthrough (where encrypted traffic is forwarded without decryption). This is by design — MockServer needs to inspect request content to match expectations, record requests for verification, and apply response actions.</p>
+
 <a id="verify_trust_chain" class="anchor" href="#verify_trust_chain">&nbsp;</a>
 
 <h2>Ensure MockServer Certificates Are Trusted</h2>
@@ -161,6 +167,35 @@ public class ExampleTestClass {
         // test system
     }
 }</code></pre>
+
+<h3>Java Custom TrustStore (Programmatic)</h3>
+
+<p>If you cannot modify the JVM's default SSLSocketFactory, you can programmatically create a custom TrustStore that trusts MockServer's dynamically generated certificates and use it with a specific HTTP client:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">import org.mockserver.logging.MockServerLogger;
+import org.mockserver.socket.tls.KeyStoreFactory;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.security.KeyStore;
+
+KeyStoreFactory keyStoreFactory = new KeyStoreFactory(new MockServerLogger());
+KeyStore trustStore = keyStoreFactory.loadOrCreateKeyStore();
+
+TrustManagerFactory trustManagerFactory =
+    TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+trustManagerFactory.init(trustStore);
+
+SSLContext sslContext = SSLContext.getInstance("TLS");
+sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
+
+HttpsURLConnection connection =
+    (HttpsURLConnection) new URL("https://localhost:1080/some/path").openConnection();
+connection.setSSLSocketFactory(sslContext.getSocketFactory());</code></pre>
+
+<p>This approach is useful when you need to trust MockServer's certificates for a specific connection without affecting other HTTPS connections in the JVM.</p>
 
 <h3>Java Keytool</h3>
 

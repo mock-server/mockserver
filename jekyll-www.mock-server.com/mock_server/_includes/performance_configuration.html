@@ -1,5 +1,56 @@
 <a id="performance_configuration" class="anchor" href="#performance_configuration">&nbsp;</a>
 
+<a id="memory_tuning" class="anchor" href="#memory_tuning">&nbsp;</a>
+
+<h2>Memory Tuning Guide</h2>
+
+<p>MockServer stores expectations and log entries in memory using ring buffers. The two most important settings that affect memory usage are <a href="#button_configuration_max_expectations">maxExpectations</a> and <a href="#button_configuration_request_log_size">maxLogEntries</a>. Each HTTP request processed by MockServer generates 2-3 log entries (the request itself, the expectation match result, and the response).</p>
+
+<p>Both settings have automatic defaults based on available JVM heap space. The table below provides recommended values if you want to override the defaults for different heap sizes:</p>
+
+<table>
+    <tr>
+        <th>JVM Heap Size</th>
+        <th>maxExpectations</th>
+        <th>maxLogEntries</th>
+        <th>Approx HTTP Requests Retained</th>
+    </tr>
+    <tr>
+        <td>256 MB</td>
+        <td>1,000</td>
+        <td>5,000</td>
+        <td>~1,500 - 2,500</td>
+    </tr>
+    <tr>
+        <td>512 MB</td>
+        <td>2,000</td>
+        <td>15,000</td>
+        <td>~5,000 - 7,500</td>
+    </tr>
+    <tr>
+        <td>1 GB</td>
+        <td>5,000</td>
+        <td>40,000</td>
+        <td>~13,000 - 20,000</td>
+    </tr>
+</table>
+
+<p>These are conservative estimates assuming typical request/response sizes of 1-5 KB. Large request or response bodies will consume more memory per entry.</p>
+
+<p><strong>Tips for reducing memory usage:</strong></p>
+<ul>
+    <li>Set <a href="#button_configuration_performance_log_level">logLevel</a> to <span class="inline_code">WARN</span> or higher to reduce log entries generated per request</li>
+    <li>Disable logging entirely with <a href="#button_configuration_performance_disable_logging">disableLogging</a> if you do not need request recording or verification</li>
+    <li>Use <a href="#button_configuration_log_memory_statistics">outputMemoryUsageCsv</a> to monitor actual heap usage and tune values accordingly</li>
+</ul>
+
+<p>Docker example with memory-constrained settings:</p>
+<pre class="code" style="padding: 2px;"><code class="code">docker run -d --rm -p 1080:1080 \
+  --env MOCKSERVER_MAX_EXPECTATIONS=1000 \
+  --env MOCKSERVER_MAX_LOG_ENTRIES=5000 \
+  --env MOCKSERVER_LOG_LEVEL=WARN \
+  mockserver/mockserver</code></pre>
+
 <h2>Scalability Configuration:</h2>
 
 <button id="button_configuration_nio_event_loop_thread_count" class="accordion title"><strong>Number of Event Loop Threads</strong></button>

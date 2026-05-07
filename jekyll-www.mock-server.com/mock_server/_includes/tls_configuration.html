@@ -65,6 +65,29 @@
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.proactivelyInitialiseTLS="true"</code></pre>
 </div>
 
+<h4>TLS Protocol Versions</h4>
+
+<button id="button_configuration_tls_protocols" class="accordion title"><strong>TLS Protocol Versions</strong></button>
+<div class="panel title">
+    <p>Comma separated list of TLS protocol versions to enable for both inbound and outbound TLS connections.</p>
+    <p>The default value is <span class="this_value">TLSv1,TLSv1.1,TLSv1.2</span> which includes TLSv1 and TLSv1.1 for backward compatibility. These older protocols are deprecated and considered insecure by most security standards.</p>
+    <p>To enable <strong>TLS 1.3</strong>, add <span class="inline_code">TLSv1.3</span> to the list. To use only modern protocols, set the value to <span class="inline_code">TLSv1.2,TLSv1.3</span>.</p>
+    <p><strong>Note:</strong> TLS 1.3 requires Java 11 or later. MockServer's default includes TLSv1 and TLSv1.1 for backward compatibility but you should restrict protocols to TLSv1.2 and TLSv1.3 in production-like environments.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">TLSv1,TLSv1.1,TLSv1.2</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.tlsProtocols("TLSv1.2,TLSv1.3")</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.tlsProtocols=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_TLS_PROTOCOLS=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.tlsProtocols=...</code></pre>
+    <p>Example (enable TLS 1.2 and 1.3 only):</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.tlsProtocols="TLSv1.2,TLSv1.3"</code></pre>
+    <p>Example (Docker environment variable):</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_TLS_PROTOCOLS="TLSv1.2,TLSv1.3"</code></pre>
+</div>
+
 <h4>Dynamic Inbound Private Key & X.509</h4>
 
 <button id="button_configuration_prevent_dynamic_tls_update" class="accordion title"><strong>Prevent Dynamic Inbound X.509 Update</strong></button>

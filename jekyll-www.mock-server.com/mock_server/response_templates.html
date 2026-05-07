@@ -42,6 +42,26 @@ lastmod: 2019-11-10T08:00:00+01:00
     </li>
 </ul>
 
+<a id="templates_in_json_files" class="anchor" href="#templates_in_json_files">&nbsp;</a>
+
+<h2>Templates in JSON Initializer Files</h2>
+
+<p>When defining response templates in JSON expectation initializer files (loaded via <span class="inline_code">MOCKSERVER_INITIALIZATION_JSON_PATH</span>), newlines within template strings must be represented as <span class="inline_code">\\n</span> because JSON does not support multi-line string values. For example:</p>
+
+<pre class="prettyprint lang-json code"><code class="code">{
+  "httpRequest": {
+    "path": "/some/path"
+  },
+  "httpResponseTemplate": {
+    "templateType": "MUSTACHE",
+    "template": "{ 'statusCode': 200, 'body': 'line1\\nline2' }"
+  }
+}</code></pre>
+
+<p>Complex multi-line templates can become difficult to read and maintain in JSON format. For templates with significant logic or formatting, consider using a class-based <span class="inline_code">ExpectationInitializer</span> instead. A Java class initializer allows you to define templates as normal multi-line strings and provides full IDE support for editing and debugging.</p>
+
+<p>See <a href="/mock_server/initializing_expectations.html">initializing expectations</a> for details on both JSON and class-based initializers.</p>
+
 <a id="response_template_testing" class="anchor" href="#response_template_testing">&nbsp;</a>
 
 <h2>Response Template Testing</h2>

@@ -283,6 +283,8 @@
     &lt;version&gt;{{ site.mockserver_version }}&lt;/version&gt;
 &lt;/dependency&gt;</code></pre>
 
+<p><strong>Warning:</strong> <span class="annotation">@MockServerSettings</span> already includes <span class="annotation">@ExtendWith(MockServerExtension.class)</span> internally. Do <strong>not</strong> add both annotations to the same test class — doing so will cause MockServer to start twice, resulting in port conflicts or unexpected behaviour. Use <span class="annotation">@ExtendWith(MockServerExtension.class)</span> alone for default settings, or <span class="annotation">@MockServerSettings</span> alone when you need to configure ports or other options.</p>
+
 <p>The following code examples show how to use the <strong>MockServerExtension</strong> Test Extension.</p>
 <button id="button_test_extension_specific_ports" class="accordion">configure specific ports</button>
 <div class="panel"><pre class="prettyprint lang-java code"><code class="code">@ExtendWith(MockServerExtension.class)

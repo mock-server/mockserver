@@ -47,3 +47,65 @@ sitemap:
 <h2>3. Verify Requests</h2>
 
 {% include_subpage _includes/verification_summary.html %}
+
+<a id="spring_boot_compatibility" class="anchor" href="#spring_boot_compatibility">&nbsp;</a>
+
+<h2>Spring Boot Compatibility</h2>
+
+<p>MockServer targets <strong>Java 11</strong> as the minimum supported version and uses the <span class="inline_code">javax</span> namespace throughout. This means MockServer is compatible with <strong>Spring Boot 2.x</strong> (which uses Spring Framework 5.x) but is <strong>not compatible with Spring Boot 3.x</strong> (which uses Spring Framework 6.x).</p>
+
+<p>Spring Boot 3 requires Java 17+ and migrated from the <span class="inline_code">javax</span> namespace to the <span class="inline_code">jakarta</span> namespace. If your project uses Spring Boot 3, you can still use MockServer as a standalone Docker container or process, but the Spring Test Execution Listener and JUnit integrations that depend on Spring classpath integration are not supported.</p>
+
+<table>
+    <tr>
+        <th>Spring Boot Version</th>
+        <th>Spring Framework</th>
+        <th>Namespace</th>
+        <th>MockServer Compatible</th>
+    </tr>
+    <tr>
+        <td>2.x</td>
+        <td>5.x</td>
+        <td><span class="inline_code">javax</span></td>
+        <td>Yes</td>
+    </tr>
+    <tr>
+        <td>3.x</td>
+        <td>6.x</td>
+        <td><span class="inline_code">jakarta</span></td>
+        <td>No (use Docker or standalone)</td>
+    </tr>
+</table>
+
+<a id="upgrading" class="anchor" href="#upgrading">&nbsp;</a>
+
+<h2>Upgrading MockServer</h2>
+
+<p>When upgrading MockServer between versions, be aware of the following changes that may affect your setup:</p>
+
+<ul>
+    <li><strong>Java 11 minimum (since 5.14.0)</strong> - MockServer requires Java 11 or later. If you are running on Java 8, you must upgrade your JVM before upgrading MockServer.</li>
+    <li><strong>JSON Schema validator version change</strong> - the underlying JSON Schema validation library was updated in recent versions. If you use JSON Schema body matchers with custom schemas, verify they still validate correctly after upgrading.</li>
+    <li><strong>Expectation JSON format</strong> - the JSON format for expectations has evolved between major versions. If you use JSON expectation initializer files (<span class="inline_code">MOCKSERVER_INITIALIZATION_JSON_PATH</span>), test your initializer files against the new version before deploying. Fields that were previously accepted may be rejected or interpreted differently.</li>
+</ul>
+
+<p>It is recommended to run your full test suite after upgrading to catch any compatibility issues early.</p>
+
+<a id="http2_proxy_limitations" class="anchor" href="#http2_proxy_limitations">&nbsp;</a>
+
+<h2>HTTP/2 Proxy Limitations</h2>
+
+<p>MockServer can accept HTTP/2 connections and serve mock responses over HTTP/2. However, when MockServer is used as a <strong>proxy</strong> and forwards requests to downstream services, HTTP/2 requests are <strong>downgraded to HTTP/1.1</strong>. This means:</p>
+
+<ul>
+    <li><strong>Mocking with HTTP/2</strong> - works correctly. Clients can connect to MockServer using HTTP/2 and receive mock responses.</li>
+    <li><strong>Proxying with HTTP/2</strong> - the forwarded request to the downstream service will be sent as HTTP/1.1, regardless of the original protocol version. The response returned to the client will also be HTTP/1.1.</li>
+</ul>
+
+<p>If your tests require end-to-end HTTP/2 proxying (including HTTP/2 to the upstream server), this is not currently supported. Consider using MockServer in mock mode instead of proxy mode for HTTP/2 endpoints.</p>
+
+<a id="single_port_architecture" class="anchor" href="#single_port_architecture">&nbsp;</a>
+
+<h2>Single Port Architecture</h2>
+
+<p>MockServer serves both mock and proxy traffic on the same port (default 1080). There is no separate port for proxying. The <span class="inline_code">proxyRemotePort</span> and <span class="inline_code">proxyRemoteHost</span> settings specify the upstream target server that unmatched requests are forwarded to — they do not open a separate listening port. All expectations, proxy forwarding, and protocol support (HTTP, HTTPS, SOCKS) share the single <span class="inline_code">serverPort</span>.</p>

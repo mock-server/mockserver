@@ -41,6 +41,12 @@
 
 <p>For more details on the internal architecture, see the <a href="https://github.com/mock-server/mockserver-monorepo/blob/master/docs/code/event-system.md#verification" target="_blank">Event System documentation</a>.</p>
 
+<a id="verification_timing" class="anchor" href="#verification_timing">&nbsp;</a>
+
+<h3>Verification Timing</h3>
+
+<p><strong>Note:</strong> MockServer processes log entries asynchronously using a ring buffer. When calling <code>verify()</code> immediately after sending requests, there may be a brief delay before log entries are available for verification. If verification fails unexpectedly right after requests are sent, add a small delay (e.g., 100ms) before retrying. This is most commonly needed in high-throughput scenarios or when the system under test sends requests asynchronously.</p>
+
 <h3>Verifying Repeating Requests</h3>
 
 <p>Verify that a request has been received by MockServer a specific number of times using a <strong>Verification</strong></p>

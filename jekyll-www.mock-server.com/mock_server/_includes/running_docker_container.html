@@ -135,7 +135,55 @@ For example to add all jar files in the current directory, map <strong>$(pwd)</s
         sleep 10;
       done"</code></pre>
 
-<p>Alternatively, configure your orchestration platform (Kubernetes, ECS, etc.) to perform HTTP health checks externally rather than inside the container.</p>
+<p>Alternatively, configure your orchestration platform to perform HTTP health checks externally rather than inside the container.</p>
+
+<h3>Kubernetes Liveness and Readiness Probes</h3>
+
+<p>In Kubernetes, use <span class="inline_code">httpGet</span> probes that connect to the MockServer container from outside:</p>
+
+<pre class="prettyprint lang-yaml code"><code class="code">containers:
+  - name: mockserver
+    image: mockserver/mockserver:{{ site.mockserver_version }}
+    ports:
+      - containerPort: 1080
+    env:
+      - name: MOCKSERVER_LIVENESS_HTTP_GET_PATH
+        value: "/liveness/probe"
+    livenessProbe:
+      httpGet:
+        path: /liveness/probe
+        port: 1080
+      initialDelaySeconds: 10
+      periodSeconds: 5
+    readinessProbe:
+      httpGet:
+        path: /liveness/probe
+        port: 1080
+      initialDelaySeconds: 5
+      periodSeconds: 5</code></pre>
+
+<h3>Amazon ECS Health Check</h3>
+
+<p>For ECS task definitions, configure the health check command to call MockServer from outside the container using the ECS agent:</p>
+
+<pre class="prettyprint lang-json code"><code class="code">{
+  "containerDefinitions": [{
+    "name": "mockserver",
+    "image": "mockserver/mockserver:{{ site.mockserver_version }}",
+    "environment": [
+      { "name": "MOCKSERVER_LIVENESS_HTTP_GET_PATH", "value": "/liveness/probe" }
+    ],
+    "healthCheck": {
+      "command": ["CMD-SHELL", "curl -f http://localhost:1080/liveness/probe || exit 1"],
+      "interval": 10,
+      "timeout": 5,
+      "retries": 3,
+      "startPeriod": 10
+    }
+  }]
+}</code></pre>
+
+<p><strong>Note:</strong> The ECS <span class="inline_code">CMD-SHELL</span> health check runs on the host, not inside the distroless container, so <span class="inline_code">curl</span> is available.</p>
 
 <p>For more information on the liveness endpoint configuration, see <a href="/mock_server/configuration_properties.html#liveness_configuration">liveness configuration properties</a>.</p>
 

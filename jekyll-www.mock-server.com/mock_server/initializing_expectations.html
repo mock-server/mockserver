@@ -70,6 +70,8 @@ int mockServerPort = new ClientAndServer().getLocalPort();</code></pre>
     <li>multiple files by using glob patterns that can expand a wildcard pattern into a list of paths that match the given pattern using characters such as *, **, ?, [] and {}, for more details see <a href="#expectation_initializer_json_glob_patterns">glob patterns</a></li>
 </ul>
 
+<p><strong>Supported action types in JSON initializer files:</strong> <span class="inline_code">httpResponse</span>, <span class="inline_code">httpResponseTemplate</span>, <span class="inline_code">httpForward</span>, <span class="inline_code">httpForwardTemplate</span>, <span class="inline_code">httpForwardClassCallback</span>, <span class="inline_code">httpResponseClassCallback</span>, <span class="inline_code">httpOverrideForwardedRequest</span>, and <span class="inline_code">httpError</span>. WebSocket-based object callbacks (<span class="inline_code">httpResponseObjectCallback</span> and <span class="inline_code">httpForwardObjectCallback</span>) are <strong>not</strong> supported in JSON initialization files because they require an active WebSocket connection from a running client.</p>
+
 <p>The JSON file should contain an array of serialised expectations, for example:</p>
 
 <pre class="prettyprint lang-java code"><code class="code">[

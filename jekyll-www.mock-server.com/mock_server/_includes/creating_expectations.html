@@ -171,6 +171,15 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </li>
 </ul>
 
+<a id="path_matching_curly_braces" class="anchor" href="#path_matching_curly_braces">&nbsp;</a>
+
+<p><strong>Note:</strong> path values containing <span class="inline_code">{</span> or <span class="inline_code">}</span> characters (such as <span class="inline_code">/api/{id}</span>) are interpreted as <strong>regex patterns</strong>, not literal strings. This is a common source of unexpected matching behaviour when path templates are used. To match literal curly braces in a path, use one of the following approaches:</p>
+
+<ul>
+    <li>Use an explicit regex matcher and escape the braces: <span class="inline_code">withPath(regex("/api/\\{id\\}"))</span></li>
+    <li>Use an exact string matcher: <span class="inline_code">withPath(exact("/api/{id}"))</span></li>
+</ul>
+
 <a id="request_key_to_multivalue_matchers" class="anchor" href="#request_key_to_multivalue_matchers">&nbsp;</a>
 
 <p>Matching for <strong>key to multiple values</strong> supports multiple values for each key for headers, query parameters and path parameters</p>
@@ -190,6 +199,16 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </li>
 </ul>
 
+<p><strong>Note:</strong> for query parameters, the default <strong>sub set</strong> matching mode means that extra query parameters not specified in the matcher are allowed and do not cause a match failure. To enforce strict matching where <strong>only</strong> the specified query parameters are allowed (and any additional parameters cause a mismatch), use <span class="inline_code">KeyMatchStyle.MATCHING_KEY</span> on the request matcher. For example:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">request()
+    .withPath("/some/path")
+    .withQueryStringParameters(
+        new Parameters(
+            param("key", "value")
+        ).withKeyMatchStyle(KeyMatchStyle.MATCHING_KEY)
+    )</code></pre>
+
 <a id="request_key_to_value_matchers" class="anchor" href="#request_key_to_value_matchers">&nbsp;</a>
 
 <p>Matching for <strong>key to single value</strong> supports a single value for each key for cookies</p>
@@ -200,6 +219,17 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 </ul>
 
 <a id="request_body_matchers" class="anchor" href="#request_body_matchers">&nbsp;</a>
+
+<a id="body_matching_string_vs_json" class="anchor" href="#body_matching_string_vs_json">&nbsp;</a>
+
+<p><strong>Important:</strong> when matching JSON bodies, there is a significant difference between plain string matching and semantic JSON matching:</p>
+
+<ul>
+    <li><span class="inline_code">withBody("{\"key\": \"value\"}")</span> performs a <strong>character-by-character string comparison</strong>. This means whitespace, key ordering, and formatting must match exactly. For example, <span class="inline_code">{"key":"value"}</span> would <strong>not</strong> match <span class="inline_code">{"key": "value"}</span> because of the missing space.</li>
+    <li><span class="inline_code">withBody(json("{\"key\": \"value\"}"))</span> performs a <strong>semantic JSON comparison</strong>. This ignores whitespace and (with <span class="inline_code">ONLY_MATCHING_FIELDS</span>) allows additional fields. Use this for matching JSON payloads.</li>
+</ul>
+
+<p>If your expectations are not matching JSON requests as expected, ensure you are using <span class="inline_code">json()</span> rather than passing the JSON string directly.</p>
 
 <p>Matching for <strong>bodies</strong> can be done using:</p>
 

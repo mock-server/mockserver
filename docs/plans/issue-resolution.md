@@ -2,11 +2,26 @@
 
 ## Overview
 
-As of May 2026, MockServer has 214 open GitHub issues. This document provides a systematic analysis of every open issue, grouping them by category, identifying duplicates, issues already fixed, legitimate bugs, feature requests, and issues caused by documentation gaps. Each issue includes an investigation summary and proposed resolution path.
+As of May 2026, MockServer has **129 open GitHub issues** (down from 214 after triage). This document provides a systematic analysis of every open issue, grouping them by category, identifying duplicates, issues already fixed, legitimate bugs, feature requests, and issues caused by documentation gaps. Each issue includes an investigation summary and proposed resolution path.
 
-The original triage covered 184 issues. Since then, 70 Trello cards were migrated as GitHub issues (#2099–#2168) and 35 additional community issues were filed. This updated report covers all 214 issues.
+The original triage covered 184 issues. Since then, 70 Trello cards were migrated as GitHub issues (#2099–#2168) and 35 additional community issues were filed. Two rounds of triage closed 124 issues total (28 in round 1, 96 in round 2) and created 11 enhancement cluster tracking issues (#2170–#2180).
 
 ## Completed Work
+
+### Round 2: May 2026 (current)
+
+96 issues closed and 11 tracking issues created:
+
+- **7 already implemented** closed (#2124, #2135, #2143, #2151, #2155, #2167, #2168)
+- **10 invalid / user error** closed (#1478, #1479, #1600, #1656, #1763, #1784, #1793, #1829, #1932, #1965)
+- **13 stale** closed (#1473, #1645, #2119, #2120, #2123, #2127, #2128, #2138, #2141, #2149, #2150, #2154, #2157)
+- **2 duplicates** closed (#1736, #1868 → #1568)
+- **51 enhancements** consolidated into 11 cluster tracking issues (#2170–#2180)
+- **13 questions** answered and closed (#1464, #1567, #1811, #2146, #1468, #1732, #1741, #1794, #1806, #1878, #1879, #1927, #1830)
+- **18 documentation improvements** written across 11 Jekyll pages
+- **75 bugs** labeled with priority:high/medium/low and project board Priority field updated
+
+### Round 1: May 2026 (initial)
 
 28 issues were closed as part of the initial triage:
 
