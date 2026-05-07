@@ -402,3 +402,5 @@ docker run -v $(pwd):/build/mockserver \
   mockserver/mockserver:maven \
   /build/mockserver/scripts/buildkite_quick_build.sh
 ```
+
+<!-- test: validate native Buildkite trigger steps work for PRs -->

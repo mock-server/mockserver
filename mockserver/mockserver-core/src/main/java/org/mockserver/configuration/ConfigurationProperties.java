@@ -1883,4 +1883,5 @@ public class ConfigurationProperties {
             return propertyValue;
         }
     }
+
 }
