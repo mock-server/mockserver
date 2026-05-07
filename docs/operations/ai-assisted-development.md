@@ -123,21 +123,22 @@ Ultimately, the strongest defence against AI-generated errors is MockServer's ex
 | Test source files (core Java modules) | **~435** |
 | Modules with tests | **11** |
 
-### Code Coverage (Unit Tests, JaCoCo)
+### Code Coverage (JaCoCo — All Maven Tests)
 
-Coverage is measured by JaCoCo and reported per module. These figures reflect **unit tests only**; integration tests (which exercise cross-module interactions, TLS, proxying, and end-to-end request flows) add significant additional coverage.
+Coverage is measured by JaCoCo across both unit tests and integration tests, with cross-module coverage merged (e.g., integration tests in `mockserver-netty` that exercise `mockserver-core` classes are counted towards core's coverage).
 
 | Module | Instruction Coverage | Line Coverage | Branch Coverage |
 |--------|--------------------:|-------------:|----------------:|
-| mockserver-core | 71.1% | 60.4% | 49.9% |
-| mockserver-netty | 65.4% | 51.4% | 59.1% |
-| mockserver-client-java | 46.5% | 39.2% | 75.8% |
-| mockserver-junit-jupiter | 89.4% | 63.2% | 25.0% |
+| mockserver-junit-jupiter | 97.2% | 73.7% | 5.9% |
+| mockserver-war | 91.8% | 84.2% | 25.0% |
 | mockserver-spring-test-listener | 91.7% | 75.0% | 23.8% |
-| mockserver-junit-rule | 63.8% | 65.2% | 64.3% |
-| mockserver-war | 69.3% | 47.4% | 59.1% |
-| mockserver-proxy-war | 72.4% | 57.9% | 56.8% |
-| **Overall (excl. examples)** | **69.3%** | **58.6%** | -- |
+| mockserver-proxy-war | 89.9% | 78.9% | 28.6% |
+| mockserver-netty | 77.8% | 61.6% | 45.2% |
+| mockserver-client-java | 76.9% | 63.4% | 46.9% |
+| mockserver-core | 73.3% | 64.3% | 46.2% |
+| mockserver-junit-rule | 70.2% | 73.9% | 53.8% |
+| mockserver-testing | 59.4% | 46.4% | 60.7% |
+| **Overall (excl. examples)** | **74.1%** | **63.9%** | **46.1%** |
 
 ### Test Architecture
 
