@@ -36,6 +36,12 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "jakarta.validation:*"
         update-types: ["version-update:semver-major"]
+      # Block java-uuid-generator 5.x (major version bump)
+      - dependency-name: "com.fasterxml.uuid:java-uuid-generator"
+        update-types: ["version-update:semver-major"]
+      # Block JUnit 6.x (major version bump)
+      - dependency-name: "org.junit.jupiter:*"
+        update-types: ["version-update:semver-major"]
       # Block frontend-maven-plugin 2.x (requires Java 17+)
       - dependency-name: "com.github.eirslett:frontend-maven-plugin"
         update-types: ["version-update:semver-major"]
@@ -53,6 +59,18 @@ updates:
       - "dependencies"
       - "java"
       - "maven-plugin"
+    ignore:
+      # Java 11 compatibility - mirror /mockserver ignore rules
+      - dependency-name: "org.springframework:*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "org.springframework.boot:*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "io.prometheus:*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "com.puppycrawl.tools:checkstyle"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "com.networknt:json-schema-validator"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "npm"
     directory: "/mockserver-ui"
