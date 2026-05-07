@@ -26,7 +26,13 @@ sitemap:
     <li>use an <strong>expectation id</strong> to clear matching items</li>
 </ul>
 
-<p>When <a href="/mock_server/debugging_issues.html#logging-levels">logLevel</a> is set to <span class="string_literal">DEBUG</span> using <strong>clear</strong> does not delete logs from the event log, instead they are marked as deleted to ensure <a href="/mock_server/verification.html">verification</a> continues to work correctly.  This allows the <a href="/mock_server/mockserver_ui.html">UI</a> to continue to display logs that would have otherwise been deleted to improve the ability to debug issues.</p>
+<p><strong>How clearing works:</strong> when <a href="/mock_server/debugging_issues.html#logging-levels">logLevel</a> is <span class="string_literal">INFO</span> or lower (the default), cleared log entries are <em>soft-deleted</em> rather than physically removed. This means:</p>
+<ul>
+    <li><strong>Verification works correctly</strong> &mdash; the <a href="/mock_server/verification.html">verify</a> endpoint ignores cleared entries, so verifying a request after clearing will behave as if the logs were fully removed</li>
+    <li><strong>Retrieve works correctly</strong> &mdash; the retrieve endpoint for requests, recorded expectations, and log messages filters out cleared entries</li>
+    <li><strong>UI may still show cleared entries</strong> &mdash; the <a href="/mock_server/mockserver_ui.html">UI</a> can display soft-deleted entries (marked as deleted) to help debug issues</li>
+</ul>
+<p>If you want cleared log entries to be physically removed from memory, set the log level to <span class="string_literal">WARN</span> or higher.</p>
 
 <button id="button_client_clear_all_logs" class="accordion">clear all recorded requests and logs</button>
 <div class="panel">
