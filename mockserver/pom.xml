@@ -80,7 +80,7 @@
         <release.arguments/>
         <javadoc.additional.parameters/>
         <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
-        <jacoco-maven-plugin.version>0.8.13</jacoco-maven-plugin.version>
+        <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
         <!-- also update in docker -->
         <!-- TODO(jamesdbloom) consider automating using `NETTY_TC_NATIVE_VERSION=$(./mvnw help:evaluate -Dexpression=netty-tcnative-boringssl-static.version -q -DforceStdout)` -->
         <netty-tcnative-boringssl-static.version>2.0.77.Final</netty-tcnative-boringssl-static.version>
