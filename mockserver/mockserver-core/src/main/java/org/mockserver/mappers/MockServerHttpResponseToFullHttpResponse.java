@@ -1,9 +1,11 @@
 package org.mockserver.mappers;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http2.HttpConversionUtil;
+import org.mockserver.codec.BodyContentEncodingEncoder;
 import org.mockserver.codec.BodyDecoderEncoder;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -18,8 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.*;
 
 /**
  * @author jamesdbloom
@@ -89,7 +90,16 @@ public class MockServerHttpResponseToFullHttpResponse {
     }
 
     private ByteBuf getBody(HttpResponse httpResponse) {
-        return bodyDecoderEncoder.bodyToByteBuf(httpResponse.getBody(), httpResponse.getFirstHeader(CONTENT_TYPE.toString()));
+        ByteBuf bodyByteBuf = bodyDecoderEncoder.bodyToByteBuf(httpResponse.getBody(), httpResponse.getFirstHeader(CONTENT_TYPE.toString()));
+        String contentEncoding = httpResponse.getFirstHeader(CONTENT_ENCODING.toString());
+        if (isNotBlank(contentEncoding) && bodyByteBuf.readableBytes() > 0) {
+            byte[] decodedBody = new byte[bodyByteBuf.readableBytes()];
+            bodyByteBuf.readBytes(decodedBody);
+            bodyByteBuf.release();
+            byte[] reEncoded = BodyContentEncodingEncoder.encodeBody(decodedBody, contentEncoding);
+            return Unpooled.copiedBuffer(reEncoded);
+        }
+        return bodyByteBuf;
     }
 
     private void setHeaders(HttpResponse httpResponse, DefaultHttpResponse response, ByteBuf body) {

@@ -1,8 +1,10 @@
 package org.mockserver.mappers;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http2.HttpConversionUtil;
+import org.mockserver.codec.BodyContentEncodingEncoder;
 import org.mockserver.codec.BodyDecoderEncoder;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -89,7 +91,16 @@ public class MockServerHttpRequestToFullHttpRequest {
     }
 
     private ByteBuf getBody(HttpRequest httpRequest) {
-        return bodyDecoderEncoder.bodyToByteBuf(httpRequest.getBody(), httpRequest.getFirstHeader(CONTENT_TYPE.toString()));
+        ByteBuf bodyByteBuf = bodyDecoderEncoder.bodyToByteBuf(httpRequest.getBody(), httpRequest.getFirstHeader(CONTENT_TYPE.toString()));
+        String contentEncoding = httpRequest.getFirstHeader(CONTENT_ENCODING.toString());
+        if (isNotBlank(contentEncoding) && bodyByteBuf.readableBytes() > 0) {
+            byte[] decodedBody = new byte[bodyByteBuf.readableBytes()];
+            bodyByteBuf.readBytes(decodedBody);
+            bodyByteBuf.release();
+            byte[] reEncoded = BodyContentEncodingEncoder.encodeBody(decodedBody, contentEncoding);
+            return Unpooled.copiedBuffer(reEncoded);
+        }
+        return bodyByteBuf;
     }
 
     private void setCookies(HttpRequest httpRequest, FullHttpRequest request) {

@@ -10,10 +10,15 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 import org.mockserver.proxyconfiguration.ProxyConfiguration;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.InflaterInputStream;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
@@ -352,6 +357,77 @@ public class MockServerHttpToNettyHttpRequestEncoderBasicMappingTest {
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
         assertThat(fullHttpRequest.content().toString(StandardCharsets.UTF_8), is(""));
+    }
+
+    @Test
+    public void shouldReCompressBodyWithGzipContentEncoding() throws IOException {
+        // given
+        httpRequest
+            .withBody("test-data")
+            .withHeader("Content-Encoding", "gzip");
+
+        // when
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
+
+        // then
+        FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
+        byte[] compressedBody = new byte[fullHttpRequest.content().readableBytes()];
+        fullHttpRequest.content().readBytes(compressedBody);
+        assertThat(gzipDecompress(compressedBody), is("test-data".getBytes(UTF_8)));
+    }
+
+    @Test
+    public void shouldReCompressBodyWithDeflateContentEncoding() throws IOException {
+        // given
+        httpRequest
+            .withBody("test-data")
+            .withHeader("Content-Encoding", "deflate");
+
+        // when
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
+
+        // then
+        FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
+        byte[] compressedBody = new byte[fullHttpRequest.content().readableBytes()];
+        fullHttpRequest.content().readBytes(compressedBody);
+        assertThat(deflateDecompress(compressedBody), is("test-data".getBytes(UTF_8)));
+    }
+
+    @Test
+    public void shouldNotCompressBodyWithoutContentEncoding() {
+        // given
+        httpRequest.withBody("test-data");
+
+        // when
+        new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger, null).encode(null, httpRequest, output);
+
+        // then
+        FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
+        assertThat(fullHttpRequest.content().toString(StandardCharsets.UTF_8), is("test-data"));
+    }
+
+    private byte[] gzipDecompress(byte[] data) throws IOException {
+        try (GZIPInputStream gis = new GZIPInputStream(new ByteArrayInputStream(data));
+             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[1024];
+            int len;
+            while ((len = gis.read(buffer)) != -1) {
+                baos.write(buffer, 0, len);
+            }
+            return baos.toByteArray();
+        }
+    }
+
+    private byte[] deflateDecompress(byte[] data) throws IOException {
+        try (InflaterInputStream iis = new InflaterInputStream(new ByteArrayInputStream(data));
+             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[1024];
+            int len;
+            while ((len = iis.read(buffer)) != -1) {
+                baos.write(buffer, 0, len);
+            }
+            return baos.toByteArray();
+        }
     }
 
 }
