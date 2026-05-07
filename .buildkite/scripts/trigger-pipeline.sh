@@ -13,26 +13,9 @@ SECRET_ID="${BUILDKITE_API_TOKEN_SECRET_ID:-mockserver-build/buildkite-api-token
 REGION="${AWS_REGION:-eu-west-2}"
 ORG="mockserver"
 API_BASE="https://api.buildkite.com/v2/organizations/${ORG}/pipelines/${PIPELINE_SLUG}/builds"
-POLL_INTERVAL=10
-TIMEOUT=3600
 
 RESPONSE_FILE=$(mktemp /tmp/bk-response-XXXXXX.json)
-CHILD_BUILD_NUMBER=""
-
-cleanup() {
-  if [ -n "$CHILD_BUILD_NUMBER" ] && [ -n "${BUILDKITE_API_TOKEN:-}" ]; then
-    echo "--- :no_entry_sign: Cancelling ${LABEL} child build #${CHILD_BUILD_NUMBER}"
-    CANCEL_CODE=$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' -X PUT \
-      "${API_BASE}/${CHILD_BUILD_NUMBER}/cancel" \
-      -H "Authorization: Bearer ${BUILDKITE_API_TOKEN}" 2>/dev/null) || true
-    if [ -n "$CANCEL_CODE" ] && [ "$CANCEL_CODE" -ge 300 ] 2>/dev/null; then
-      echo ":warning: Cancel API returned HTTP ${CANCEL_CODE} for child build #${CHILD_BUILD_NUMBER}"
-    fi
-  fi
-  rm -f "$RESPONSE_FILE"
-}
-trap cleanup EXIT
-trap 'exit 1' TERM INT
+trap 'rm -f "$RESPONSE_FILE"' EXIT
 
 echo "--- :aws: Fetching Buildkite API token from Secrets Manager"
 BUILDKITE_API_TOKEN=$(aws secretsmanager get-secret-value \
@@ -114,62 +97,8 @@ fi
 
 RESPONSE=$(cat "$RESPONSE_FILE")
 
-CHILD_BUILD_NUMBER=$(echo "$RESPONSE" | jq -r '.number')
-BUILD_NUMBER="$CHILD_BUILD_NUMBER"
+BUILD_NUMBER=$(echo "$RESPONSE" | jq -r '.number')
 BUILD_URL=$(echo "$RESPONSE" | jq -r '.web_url')
-BUILD_API_URL="${API_BASE}/${BUILD_NUMBER}"
 
-echo "--- :buildkite: ${LABEL} build #${BUILD_NUMBER}"
+echo ":white_check_mark: ${LABEL} build #${BUILD_NUMBER} created"
 echo "    ${BUILD_URL}"
-
-ELAPSED=0
-while true; do
-  if [ "$ELAPSED" -ge "$TIMEOUT" ]; then
-    echo "^^^ +++"
-    echo ":x: Timed out after ${TIMEOUT}s waiting for ${LABEL} build #${BUILD_NUMBER}"
-    exit 1
-  fi
-
-  sleep "$POLL_INTERVAL"
-  ELAPSED=$((ELAPSED + POLL_INTERVAL))
-
-  STATE=$(curl -sS --max-time 30 --connect-timeout 10 "${BUILD_API_URL}" \
-    -H "Authorization: Bearer ${BUILDKITE_API_TOKEN}" | jq -r '.state')
-
-  if [ -z "$STATE" ] || [ "$STATE" = "null" ]; then
-    echo "^^^ +++"
-    echo ":x: Failed to fetch build state for ${LABEL} build #${BUILD_NUMBER}"
-    echo "    ${BUILD_URL}"
-    exit 1
-  fi
-
-  case "$STATE" in
-    passed)
-      echo ":white_check_mark: ${LABEL} build #${BUILD_NUMBER} passed"
-      CHILD_BUILD_NUMBER=""
-      exit 0
-      ;;
-    failed|canceled|cancelled)
-      echo "^^^ +++"
-      echo ":x: ${LABEL} build #${BUILD_NUMBER} ${STATE}"
-      echo "    ${BUILD_URL}"
-      CHILD_BUILD_NUMBER=""
-      exit 1
-      ;;
-    not_run|skipped|broken)
-      echo "^^^ +++"
-      echo ":x: ${LABEL} build #${BUILD_NUMBER} ${STATE}"
-      echo "    ${BUILD_URL}"
-      CHILD_BUILD_NUMBER=""
-      exit 1
-      ;;
-    blocked)
-      echo ":hourglass: ${LABEL} build #${BUILD_NUMBER} is blocked — waiting..."
-      ;;
-    running|scheduled|creating|canceling)
-      ;;
-    *)
-      echo ":warning: Unknown state '${STATE}' for ${LABEL} build #${BUILD_NUMBER}"
-      ;;
-  esac
-done
