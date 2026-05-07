@@ -501,6 +501,26 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
                     "             \"type\": \"string\"" + NEW_LINE +
                     "           }" + NEW_LINE +
                     "         }" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"object\"," + NEW_LINE +
+                    "         \"additionalProperties\": false," + NEW_LINE +
+                    "         \"properties\": {" + NEW_LINE +
+                    "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"type\": {" + NEW_LINE +
+                    "             \"enum\": [" + NEW_LINE +
+                    "               \"JSON_RPC\"" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"method\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"paramsSchema\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "         }" + NEW_LINE +
                     "       }" + NEW_LINE +
                     "     ]" + NEW_LINE +
                     "   }" + NEW_LINE +
