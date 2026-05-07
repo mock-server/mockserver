@@ -13,7 +13,7 @@ jobs:
     name: Close stale issues
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/stale@v9
+      - uses: actions/stale@v10
         with:
           stale-issue-message: >
             This issue has been automatically marked as stale because it has not had
@@ -34,7 +34,7 @@ jobs:
     name: Close issues needing more information
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/stale@v9
+      - uses: actions/stale@v10
         with:
           close-issue-message: >
             This issue was automatically closed because more information was requested
