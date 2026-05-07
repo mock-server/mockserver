@@ -1,0 +1,247 @@
+openapi: 3.0.0
+info:
+  description: Spec testing $ref in examples (#1474)
+  version: 1.0.0
+  title: Reusable Examples Test
+
+paths:
+  /tasks:
+    get:
+      operationId: listTasks
+      summary: Get a list of tasks (array schema example with $ref items)
+      responses:
+        "200":
+          description: Success - a list of tasks
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/taskListResponse"
+
+  /task:
+    get:
+      operationId: getTask
+      summary: Get a single task (inline schema example as single $ref)
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      attributes:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          name:
+                            type: string
+                    example:
+                      $ref: '#/components/examples/firstTaskExample/value'
+
+  /task-media-type-example:
+    get:
+      operationId: getTaskMediaTypeExample
+      summary: Get a task (media type example with $ref)
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  status:
+                    type: string
+              example:
+                $ref: '#/components/examples/firstTaskExample/value'
+
+  /task-media-type-array-example:
+    get:
+      operationId: getTaskMediaTypeArrayExample
+      summary: Get tasks (media type example with $ref items in array)
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+              example:
+                - $ref: '#/components/examples/firstTaskExample/value'
+                - $ref: '#/components/examples/secondTaskExample/value'
+
+  /task-nested-ref:
+    get:
+      operationId: getTaskNestedRef
+      summary: Get a task (nested $ref inside example object)
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  wrapper:
+                    type: object
+                    properties:
+                      inner:
+                        type: object
+                example:
+                  wrapper:
+                    inner:
+                      $ref: '#/components/examples/firstTaskExample/value'
+
+  /task-mixed:
+    get:
+      operationId: getTaskMixed
+      summary: Get tasks (mixed inline and $ref in same array example)
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/taskMixedResponse"
+
+  /task-deep-nested:
+    get:
+      operationId: getTaskDeepNested
+      summary: Get a task (deeply nested $ref several levels deep)
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  level1:
+                    type: object
+                    properties:
+                      level2:
+                        type: object
+                example:
+                  level1:
+                    level2:
+                      items:
+                        - $ref: '#/components/examples/firstTaskExample/value'
+
+  /task-duplicate-ref:
+    get:
+      operationId: getTaskDuplicateRef
+      summary: Get tasks (same $ref used multiple times in one example)
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tasks:
+                    type: array
+                    items:
+                      type: object
+                example:
+                  tasks:
+                    - $ref: '#/components/examples/firstTaskExample/value'
+                    - $ref: '#/components/examples/firstTaskExample/value'
+
+  /task-unresolvable:
+    get:
+      operationId: getTaskUnresolvable
+      summary: Get a task (unresolvable $ref falls back to literal)
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                    example:
+                      - $ref: '#/components/examples/nonExistentExample/value'
+
+components:
+  examples:
+    firstTaskExample:
+      value:
+        attributes:
+          taskStatus:
+            code: 2006
+            description: "Pending"
+          createdTime: "2019-10-10T20:20:20Z"
+          lastUpdatedTime: "2019-10-11T20:20:20Z"
+      summary: First task example
+
+    secondTaskExample:
+      value:
+        attributes:
+          taskStatus:
+            code: 1000
+            description: "Completed"
+          createdTime: "2019-10-10T20:20:20Z"
+          lastUpdatedTime: "2019-10-11T21:20:20Z"
+      summary: Second task example
+
+  schemas:
+    taskSingleResponse:
+      title: taskSingleResponse
+      type: object
+      properties:
+        attributes:
+          type: object
+          properties:
+            taskStatus:
+              type: object
+              properties:
+                code:
+                  type: integer
+                description:
+                  type: string
+            createdTime:
+              type: string
+            lastUpdatedTime:
+              type: string
+
+    taskListResponse:
+      title: taskListResponse
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/taskSingleResponse"
+          example:
+            - $ref: '#/components/examples/firstTaskExample/value'
+            - $ref: '#/components/examples/secondTaskExample/value'
+
+    taskMixedResponse:
+      title: taskMixedResponse
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/taskSingleResponse"
+          example:
+            - attributes:
+                taskStatus:
+                  code: 9999
+                  description: "Inline"
+                createdTime: "2020-01-01T00:00:00Z"
+                lastUpdatedTime: "2020-01-02T00:00:00Z"
+            - $ref: '#/components/examples/secondTaskExample/value'

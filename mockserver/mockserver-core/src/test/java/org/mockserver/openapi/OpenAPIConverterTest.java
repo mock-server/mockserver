@@ -556,6 +556,352 @@ public class OpenAPIConverterTest {
         }
     }
 
+    @Test
+    public void shouldResolveReusableExampleRefsInArrayExample() {
+        // given - issue #1474 (array schema example with $ref items)
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example_with_reusable_examples.yaml";
+
+        // when
+        List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
+            specUrlOrPayload,
+            ImmutableMap.of("listTasks", "200")
+        );
+
+        // then
+        assertThat(actualExpectations.size(), is(1));
+        assertThat(actualExpectations.get(0), is(
+            when(specUrlOrPayload, "listTasks")
+                .thenRespond(
+                    response()
+                        .withStatusCode(200)
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("{" + NEW_LINE +
+                            "  \"data\" : [ {" + NEW_LINE +
+                            "    \"attributes\" : {" + NEW_LINE +
+                            "      \"taskStatus\" : {" + NEW_LINE +
+                            "        \"code\" : 2006," + NEW_LINE +
+                            "        \"description\" : \"Pending\"" + NEW_LINE +
+                            "      }," + NEW_LINE +
+                            "      \"createdTime\" : \"2019-10-10T20:20:20Z\"," + NEW_LINE +
+                            "      \"lastUpdatedTime\" : \"2019-10-11T20:20:20Z\"" + NEW_LINE +
+                            "    }" + NEW_LINE +
+                            "  }, {" + NEW_LINE +
+                            "    \"attributes\" : {" + NEW_LINE +
+                            "      \"taskStatus\" : {" + NEW_LINE +
+                            "        \"code\" : 1000," + NEW_LINE +
+                            "        \"description\" : \"Completed\"" + NEW_LINE +
+                            "      }," + NEW_LINE +
+                            "      \"createdTime\" : \"2019-10-10T20:20:20Z\"," + NEW_LINE +
+                            "      \"lastUpdatedTime\" : \"2019-10-11T21:20:20Z\"" + NEW_LINE +
+                            "    }" + NEW_LINE +
+                            "  } ]" + NEW_LINE +
+                            "}"))
+                )
+        ));
+    }
+
+    @Test
+    public void shouldResolveReusableExampleRefInSchemaExample() {
+        // given - issue #1474 (inline schema example as single $ref)
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example_with_reusable_examples.yaml";
+
+        // when
+        List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
+            specUrlOrPayload,
+            ImmutableMap.of("getTask", "200")
+        );
+
+        // then
+        assertThat(actualExpectations.size(), is(1));
+        assertThat(actualExpectations.get(0), is(
+            when(specUrlOrPayload, "getTask")
+                .thenRespond(
+                    response()
+                        .withStatusCode(200)
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("{" + NEW_LINE +
+                            "  \"data\" : {" + NEW_LINE +
+                            "    \"attributes\" : {" + NEW_LINE +
+                            "      \"taskStatus\" : {" + NEW_LINE +
+                            "        \"code\" : 2006," + NEW_LINE +
+                            "        \"description\" : \"Pending\"" + NEW_LINE +
+                            "      }," + NEW_LINE +
+                            "      \"createdTime\" : \"2019-10-10T20:20:20Z\"," + NEW_LINE +
+                            "      \"lastUpdatedTime\" : \"2019-10-11T20:20:20Z\"" + NEW_LINE +
+                            "    }" + NEW_LINE +
+                            "  }" + NEW_LINE +
+                            "}"))
+                )
+        ));
+    }
+
+    @Test
+    public void shouldResolveReusableExampleRefInMediaTypeExample() {
+        // given - issue #1474 (media type example with single $ref)
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example_with_reusable_examples.yaml";
+
+        // when
+        List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
+            specUrlOrPayload,
+            ImmutableMap.of("getTaskMediaTypeExample", "200")
+        );
+
+        // then
+        assertThat(actualExpectations.size(), is(1));
+        assertThat(actualExpectations.get(0), is(
+            when(specUrlOrPayload, "getTaskMediaTypeExample")
+                .thenRespond(
+                    response()
+                        .withStatusCode(200)
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("{" + NEW_LINE +
+                            "  \"attributes\" : {" + NEW_LINE +
+                            "    \"taskStatus\" : {" + NEW_LINE +
+                            "      \"code\" : 2006," + NEW_LINE +
+                            "      \"description\" : \"Pending\"" + NEW_LINE +
+                            "    }," + NEW_LINE +
+                            "    \"createdTime\" : \"2019-10-10T20:20:20Z\"," + NEW_LINE +
+                            "    \"lastUpdatedTime\" : \"2019-10-11T20:20:20Z\"" + NEW_LINE +
+                            "  }" + NEW_LINE +
+                            "}"))
+                )
+        ));
+    }
+
+    @Test
+    public void shouldResolveReusableExampleRefsInMediaTypeArrayExample() {
+        // given - issue #1474 (media type example with $ref items in array)
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example_with_reusable_examples.yaml";
+
+        // when
+        List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
+            specUrlOrPayload,
+            ImmutableMap.of("getTaskMediaTypeArrayExample", "200")
+        );
+
+        // then
+        assertThat(actualExpectations.size(), is(1));
+        assertThat(actualExpectations.get(0), is(
+            when(specUrlOrPayload, "getTaskMediaTypeArrayExample")
+                .thenRespond(
+                    response()
+                        .withStatusCode(200)
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("[ {" + NEW_LINE +
+                            "  \"attributes\" : {" + NEW_LINE +
+                            "    \"taskStatus\" : {" + NEW_LINE +
+                            "      \"code\" : 2006," + NEW_LINE +
+                            "      \"description\" : \"Pending\"" + NEW_LINE +
+                            "    }," + NEW_LINE +
+                            "    \"createdTime\" : \"2019-10-10T20:20:20Z\"," + NEW_LINE +
+                            "    \"lastUpdatedTime\" : \"2019-10-11T20:20:20Z\"" + NEW_LINE +
+                            "  }" + NEW_LINE +
+                            "}, {" + NEW_LINE +
+                            "  \"attributes\" : {" + NEW_LINE +
+                            "    \"taskStatus\" : {" + NEW_LINE +
+                            "      \"code\" : 1000," + NEW_LINE +
+                            "      \"description\" : \"Completed\"" + NEW_LINE +
+                            "    }," + NEW_LINE +
+                            "    \"createdTime\" : \"2019-10-10T20:20:20Z\"," + NEW_LINE +
+                            "    \"lastUpdatedTime\" : \"2019-10-11T21:20:20Z\"" + NEW_LINE +
+                            "  }" + NEW_LINE +
+                            "} ]"))
+                )
+        ));
+    }
+
+    @Test
+    public void shouldResolveNestedReusableExampleRef() {
+        // given - issue #1474 (nested $ref inside example object)
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example_with_reusable_examples.yaml";
+
+        // when
+        List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
+            specUrlOrPayload,
+            ImmutableMap.of("getTaskNestedRef", "200")
+        );
+
+        // then
+        assertThat(actualExpectations.size(), is(1));
+        assertThat(actualExpectations.get(0), is(
+            when(specUrlOrPayload, "getTaskNestedRef")
+                .thenRespond(
+                    response()
+                        .withStatusCode(200)
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("{" + NEW_LINE +
+                            "  \"wrapper\" : {" + NEW_LINE +
+                            "    \"inner\" : {" + NEW_LINE +
+                            "      \"attributes\" : {" + NEW_LINE +
+                            "        \"taskStatus\" : {" + NEW_LINE +
+                            "          \"code\" : 2006," + NEW_LINE +
+                            "          \"description\" : \"Pending\"" + NEW_LINE +
+                            "        }," + NEW_LINE +
+                            "        \"createdTime\" : \"2019-10-10T20:20:20Z\"," + NEW_LINE +
+                            "        \"lastUpdatedTime\" : \"2019-10-11T20:20:20Z\"" + NEW_LINE +
+                            "      }" + NEW_LINE +
+                            "    }" + NEW_LINE +
+                            "  }" + NEW_LINE +
+                            "}"))
+                )
+        ));
+    }
+
+    @Test
+    public void shouldResolveMixedInlineAndReusableExampleRefs() {
+        // given - issue #1474 (mixed inline data and $ref in same array example)
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example_with_reusable_examples.yaml";
+
+        // when
+        List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
+            specUrlOrPayload,
+            ImmutableMap.of("getTaskMixed", "200")
+        );
+
+        // then
+        assertThat(actualExpectations.size(), is(1));
+        assertThat(actualExpectations.get(0), is(
+            when(specUrlOrPayload, "getTaskMixed")
+                .thenRespond(
+                    response()
+                        .withStatusCode(200)
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("{" + NEW_LINE +
+                            "  \"data\" : [ {" + NEW_LINE +
+                            "    \"attributes\" : {" + NEW_LINE +
+                            "      \"taskStatus\" : {" + NEW_LINE +
+                            "        \"code\" : 9999," + NEW_LINE +
+                            "        \"description\" : \"Inline\"" + NEW_LINE +
+                            "      }," + NEW_LINE +
+                            "      \"createdTime\" : \"2020-01-01T00:00:00Z\"," + NEW_LINE +
+                            "      \"lastUpdatedTime\" : \"2020-01-02T00:00:00Z\"" + NEW_LINE +
+                            "    }" + NEW_LINE +
+                            "  }, {" + NEW_LINE +
+                            "    \"attributes\" : {" + NEW_LINE +
+                            "      \"taskStatus\" : {" + NEW_LINE +
+                            "        \"code\" : 1000," + NEW_LINE +
+                            "        \"description\" : \"Completed\"" + NEW_LINE +
+                            "      }," + NEW_LINE +
+                            "      \"createdTime\" : \"2019-10-10T20:20:20Z\"," + NEW_LINE +
+                            "      \"lastUpdatedTime\" : \"2019-10-11T21:20:20Z\"" + NEW_LINE +
+                            "    }" + NEW_LINE +
+                            "  } ]" + NEW_LINE +
+                            "}"))
+                )
+        ));
+    }
+
+    @Test
+    public void shouldResolveDeeplyNestedReusableExampleRef() {
+        // given - issue #1474 (deeply nested $ref several levels deep)
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example_with_reusable_examples.yaml";
+
+        // when
+        List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
+            specUrlOrPayload,
+            ImmutableMap.of("getTaskDeepNested", "200")
+        );
+
+        // then
+        assertThat(actualExpectations.size(), is(1));
+        assertThat(actualExpectations.get(0), is(
+            when(specUrlOrPayload, "getTaskDeepNested")
+                .thenRespond(
+                    response()
+                        .withStatusCode(200)
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("{" + NEW_LINE +
+                            "  \"level1\" : {" + NEW_LINE +
+                            "    \"level2\" : {" + NEW_LINE +
+                            "      \"items\" : [ {" + NEW_LINE +
+                            "        \"attributes\" : {" + NEW_LINE +
+                            "          \"taskStatus\" : {" + NEW_LINE +
+                            "            \"code\" : 2006," + NEW_LINE +
+                            "            \"description\" : \"Pending\"" + NEW_LINE +
+                            "          }," + NEW_LINE +
+                            "          \"createdTime\" : \"2019-10-10T20:20:20Z\"," + NEW_LINE +
+                            "          \"lastUpdatedTime\" : \"2019-10-11T20:20:20Z\"" + NEW_LINE +
+                            "        }" + NEW_LINE +
+                            "      } ]" + NEW_LINE +
+                            "    }" + NEW_LINE +
+                            "  }" + NEW_LINE +
+                            "}"))
+                )
+        ));
+    }
+
+    @Test
+    public void shouldHandleUnresolvableExampleRef() {
+        // given - issue #1474 (unresolvable $ref returns literal $ref object)
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example_with_reusable_examples.yaml";
+
+        // when
+        List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
+            specUrlOrPayload,
+            ImmutableMap.of("getTaskUnresolvable", "200")
+        );
+
+        // then
+        assertThat(actualExpectations.size(), is(1));
+        assertThat(actualExpectations.get(0), is(
+            when(specUrlOrPayload, "getTaskUnresolvable")
+                .thenRespond(
+                    response()
+                        .withStatusCode(200)
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("{" + NEW_LINE +
+                            "  \"data\" : [ {" + NEW_LINE +
+                            "    \"$ref\" : \"#/components/examples/nonExistentExample/value\"" + NEW_LINE +
+                            "  } ]" + NEW_LINE +
+                            "}"))
+                )
+        ));
+    }
+
+    @Test
+    public void shouldResolveDuplicateRefsInSameExample() {
+        // given - issue #1474 (same $ref used multiple times resolves all occurrences)
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example_with_reusable_examples.yaml";
+
+        // when
+        List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
+            specUrlOrPayload,
+            ImmutableMap.of("getTaskDuplicateRef", "200")
+        );
+
+        // then
+        assertThat(actualExpectations.size(), is(1));
+        assertThat(actualExpectations.get(0), is(
+            when(specUrlOrPayload, "getTaskDuplicateRef")
+                .thenRespond(
+                    response()
+                        .withStatusCode(200)
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("{" + NEW_LINE +
+                            "  \"tasks\" : [ {" + NEW_LINE +
+                            "    \"attributes\" : {" + NEW_LINE +
+                            "      \"taskStatus\" : {" + NEW_LINE +
+                            "        \"code\" : 2006," + NEW_LINE +
+                            "        \"description\" : \"Pending\"" + NEW_LINE +
+                            "      }," + NEW_LINE +
+                            "      \"createdTime\" : \"2019-10-10T20:20:20Z\"," + NEW_LINE +
+                            "      \"lastUpdatedTime\" : \"2019-10-11T20:20:20Z\"" + NEW_LINE +
+                            "    }" + NEW_LINE +
+                            "  }, {" + NEW_LINE +
+                            "    \"attributes\" : {" + NEW_LINE +
+                            "      \"taskStatus\" : {" + NEW_LINE +
+                            "        \"code\" : 2006," + NEW_LINE +
+                            "        \"description\" : \"Pending\"" + NEW_LINE +
+                            "      }," + NEW_LINE +
+                            "      \"createdTime\" : \"2019-10-10T20:20:20Z\"," + NEW_LINE +
+                            "      \"lastUpdatedTime\" : \"2019-10-11T20:20:20Z\"" + NEW_LINE +
+                            "    }" + NEW_LINE +
+                            "  } ]" + NEW_LINE +
+                            "}"))
+                )
+        ));
+    }
+
     private void shouldBuildPetStoreExpectations(String specUrlOrPayload, List<Expectation> actualExpectations) {
         assertThat(actualExpectations.size(), is(4));
         assertThat(actualExpectations.get(0), is(

@@ -1,6 +1,9 @@
 package org.mockserver.openapi;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.examples.Example;
 import io.swagger.v3.oas.models.headers.Header;
@@ -25,10 +28,13 @@ import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.OpenAPIDefinition.openAPI;
 import static org.mockserver.openapi.OpenAPIParser.buildOpenAPI;
 import static org.slf4j.event.Level.ERROR;
+import static org.slf4j.event.Level.WARN;
 
 public class OpenAPIConverter {
 
     private static final ObjectWriter OBJECT_WRITER = ObjectMapperFactory.createObjectMapper(new JsonNodeExampleSerializer()).writerWithDefaultPrettyPrinter();
+    private static final int MAX_REF_DEPTH = 100;
+    private static final int MAX_STRUCTURE_DEPTH = 1000;
     private final MockServerLogger mockServerLogger;
 
     public OpenAPIConverter(MockServerLogger mockServerLogger) {
@@ -78,9 +84,9 @@ public class OpenAPIConverter {
                     .ifPresent(stream -> stream
                         .forEach(entry -> {
                             Header value = entry.getValue();
-                            Example example = findExample(value);
-                            if (example != null) {
-                                response.withHeader(entry.getKey(), String.valueOf(example.getValue()));
+                            Object headerExample = findHeaderExample(value, openAPI);
+                            if (headerExample != null) {
+                                response.withHeader(entry.getKey(), String.valueOf(headerExample));
                             } else if (value.getSchema() != null) {
                                 org.mockserver.openapi.examples.models.Example generatedExample = ExampleBuilder.fromSchema(value.getSchema(), openAPI.getComponents() != null ? openAPI.getComponents().getSchemas() : null);
                                 if (generatedExample instanceof StringExample) {
@@ -103,31 +109,31 @@ public class OpenAPIConverter {
                         Optional
                             .ofNullable(contentType.getValue())
                             .ifPresent(mediaType -> {
-                                Object example = findExample(mediaType);
-                                if (example instanceof Example) {
+                                Object example = findExample(mediaType, openAPI);
+                                if (example != null) {
                                     if (isJsonContentType(contentType.getKey())) {
-                                        response.withBody(json(serialise(((Example) example).getValue())));
+                                        response.withBody(json(serialise(example)));
                                     } else {
-                                        response.withBody(String.valueOf(((Example) example).getValue()));
-                                    }
-                                } else if (example != null) {
-                                    if (isJsonContentType(contentType.getKey())) {
-                                        response.withBody(json(serialise(mediaType.getExample())));
-                                    } else {
-                                        response.withBody(serialise(mediaType.getExample()));
+                                        response.withBody(String.valueOf(example));
                                     }
                                 } else if (mediaType.getSchema() != null) {
-                                    org.mockserver.openapi.examples.models.Example generatedExample = ExampleBuilder.fromSchema(mediaType.getSchema(), openAPI.getComponents() != null ? openAPI.getComponents().getSchemas() : null);
-                                    if (generatedExample instanceof StringExample) {
+                                    Object schemaExample = resolveSchemaExample(mediaType.getSchema(), openAPI);
+                                    if (schemaExample != null) {
                                         if (isJsonContentType(contentType.getKey())) {
-                                            response.withBody(json(serialise(((StringExample) generatedExample).getValue())));
+                                            response.withBody(json(serialise(schemaExample)));
                                         } else {
-                                            response.withBody(((StringExample) generatedExample).getValue());
+                                            response.withBody(String.valueOf(schemaExample));
                                         }
                                     } else {
-                                        org.mockserver.openapi.examples.models.Example exampleFromSchema = ExampleBuilder.fromSchema(mediaType.getSchema(), openAPI.getComponents() != null ? openAPI.getComponents().getSchemas() : null);
-                                        if (exampleFromSchema != null) {
-                                            String serialise = serialise(exampleFromSchema);
+                                        org.mockserver.openapi.examples.models.Example generatedExample = ExampleBuilder.fromSchema(mediaType.getSchema(), openAPI.getComponents() != null ? openAPI.getComponents().getSchemas() : null);
+                                        if (generatedExample instanceof StringExample) {
+                                            if (isJsonContentType(contentType.getKey())) {
+                                                response.withBody(json(serialise(((StringExample) generatedExample).getValue())));
+                                            } else {
+                                                response.withBody(((StringExample) generatedExample).getValue());
+                                            }
+                                        } else if (generatedExample != null) {
+                                            String serialise = serialise(generatedExample);
                                             if (isJsonContentType(contentType.getKey())) {
                                                 response.withBody(json(serialise));
                                             } else {
@@ -142,28 +148,215 @@ public class OpenAPIConverter {
         return response;
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private Object resolveSchemaExample(io.swagger.v3.oas.models.media.Schema schema, OpenAPI openAPI) {
+        return resolveSchemaExample(schema, openAPI, Collections.newSetFromMap(new IdentityHashMap<>()));
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private Object resolveSchemaExample(io.swagger.v3.oas.models.media.Schema schema, OpenAPI openAPI, Set<io.swagger.v3.oas.models.media.Schema> activeStack) {
+        if (schema == null || !activeStack.add(schema)) {
+            return null;
+        }
+        try {
+            if (schema.getExample() != null) {
+                return resolveExampleRefs(schema.getExample(), openAPI);
+            }
+            if (schema.getProperties() != null) {
+                Map<String, io.swagger.v3.oas.models.media.Schema> properties = schema.getProperties();
+                Map<String, Object> result = new LinkedHashMap<>();
+                boolean hasAny = false;
+                for (Map.Entry<String, io.swagger.v3.oas.models.media.Schema> entry : properties.entrySet()) {
+                    Object propExample = resolveSchemaExample(entry.getValue(), openAPI, activeStack);
+                    if (propExample != null) {
+                        result.put(entry.getKey(), propExample);
+                        hasAny = true;
+                    }
+                }
+                return hasAny ? result : null;
+            }
+            if (schema instanceof io.swagger.v3.oas.models.media.ArraySchema) {
+                io.swagger.v3.oas.models.media.ArraySchema arraySchema = (io.swagger.v3.oas.models.media.ArraySchema) schema;
+                if (arraySchema.getItems() != null) {
+                    Object itemExample = resolveSchemaExample(arraySchema.getItems(), openAPI, activeStack);
+                    if (itemExample != null) {
+                        return Collections.singletonList(itemExample);
+                    }
+                }
+            }
+            return null;
+        } finally {
+            activeStack.remove(schema);
+        }
+    }
+
     public static boolean isJsonContentType(String contentType) {
         return org.mockserver.model.MediaType.parse(contentType).isJson();
     }
 
-    private Example findExample(Header value) {
-        Example example = null;
+    private Object findHeaderExample(Header value, OpenAPI openAPI) {
         if (value.getExample() instanceof Example) {
-            example = (Example) value.getExample();
+            Object resolved = resolveExampleRefs(((Example) value.getExample()).getValue(), openAPI);
+            return resolved != null ? resolved : ((Example) value.getExample()).getValue();
+        } else if (value.getExample() != null) {
+            return resolveExampleRefs(value.getExample(), openAPI);
         } else if (value.getExamples() != null && !value.getExamples().isEmpty()) {
-            example = value.getExamples().values().stream().findFirst().orElse(null);
+            Example example = value.getExamples().values().stream().findFirst().orElse(null);
+            if (example != null) {
+                Object resolved = resolveExampleRefs(example.getValue(), openAPI);
+                return resolved != null ? resolved : example.getValue();
+            }
+        }
+        return null;
+    }
+
+    private Object findExample(MediaType mediaType, OpenAPI openAPI) {
+        Object example = null;
+        if (mediaType.getExample() != null) {
+            Object raw = mediaType.getExample();
+            if (raw instanceof Example) {
+                example = ((Example) raw).getValue();
+            } else {
+                example = raw;
+            }
+        } else if (mediaType.getExamples() != null && !mediaType.getExamples().isEmpty()) {
+            Example namedExample = mediaType.getExamples().values().stream().findFirst().orElse(null);
+            if (namedExample != null) {
+                example = namedExample.getValue();
+            }
+        }
+        if (example != null) {
+            example = resolveExampleRefs(example, openAPI);
         }
         return example;
     }
 
-    private Object findExample(MediaType mediaType) {
-        Object example = null;
-        if (mediaType.getExample() != null) {
-            example = mediaType.getExample();
-        } else if (mediaType.getExamples() != null && !mediaType.getExamples().isEmpty()) {
-            example = mediaType.getExamples().values().stream().findFirst().orElse(null);
+    @SuppressWarnings("unchecked")
+    private Object resolveExampleRefs(Object value, OpenAPI openAPI) {
+        return resolveExampleRefs(value, openAPI, new HashSet<>(), 0, 0);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Object resolveExampleRefs(Object value, OpenAPI openAPI, Set<String> activeRefChain, int refDepth, int structureDepth) {
+        if (structureDepth > MAX_STRUCTURE_DEPTH) {
+            return value;
         }
-        return example;
+        if (value instanceof ObjectNode) {
+            ObjectNode node = (ObjectNode) value;
+            if (node.size() == 1 && node.has("$ref")) {
+                String ref = node.get("$ref").asText();
+                if (activeRefChain.contains(ref)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(WARN)
+                            .setMessageFormat("cyclic $ref detected for {} — returning literal value")
+                            .setArguments(ref)
+                    );
+                    return value;
+                }
+                if (refDepth >= MAX_REF_DEPTH) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(WARN)
+                            .setMessageFormat("$ref resolution exceeded maximum depth of {} for {} — returning literal value")
+                            .setArguments(MAX_REF_DEPTH, ref)
+                    );
+                    return value;
+                }
+                Object resolved = resolveRef(ref, openAPI);
+                if (resolved != null) {
+                    activeRefChain.add(ref);
+                    Object result = resolveExampleRefs(resolved, openAPI, activeRefChain, refDepth + 1, structureDepth + 1);
+                    activeRefChain.remove(ref);
+                    return result;
+                }
+            }
+            ObjectNode resolvedNode = node.objectNode();
+            node.fields().forEachRemaining(entry -> {
+                Object resolvedField = resolveExampleRefs(entry.getValue(), openAPI, activeRefChain, refDepth, structureDepth + 1);
+                if (resolvedField instanceof JsonNode) {
+                    resolvedNode.set(entry.getKey(), (JsonNode) resolvedField);
+                } else {
+                    resolvedNode.putPOJO(entry.getKey(), resolvedField);
+                }
+            });
+            return resolvedNode;
+        } else if (value instanceof ArrayNode) {
+            ArrayNode node = (ArrayNode) value;
+            ArrayNode resolvedNode = node.arrayNode();
+            for (JsonNode item : node) {
+                Object resolvedItem = resolveExampleRefs(item, openAPI, activeRefChain, refDepth, structureDepth + 1);
+                if (resolvedItem instanceof JsonNode) {
+                    resolvedNode.add((JsonNode) resolvedItem);
+                } else {
+                    resolvedNode.addPOJO(resolvedItem);
+                }
+            }
+            return resolvedNode;
+        } else if (value instanceof Map) {
+            Map<String, Object> map = (Map<String, Object>) value;
+            if (map.size() == 1 && map.containsKey("$ref")) {
+                String ref = String.valueOf(map.get("$ref"));
+                if (activeRefChain.contains(ref)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(WARN)
+                            .setMessageFormat("cyclic $ref detected for {} — returning literal value")
+                            .setArguments(ref)
+                    );
+                    return value;
+                }
+                if (refDepth >= MAX_REF_DEPTH) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(WARN)
+                            .setMessageFormat("$ref resolution exceeded maximum depth of {} for {} — returning literal value")
+                            .setArguments(MAX_REF_DEPTH, ref)
+                    );
+                    return value;
+                }
+                Object resolved = resolveRef(ref, openAPI);
+                if (resolved != null) {
+                    activeRefChain.add(ref);
+                    Object result = resolveExampleRefs(resolved, openAPI, activeRefChain, refDepth + 1, structureDepth + 1);
+                    activeRefChain.remove(ref);
+                    return result;
+                }
+            }
+            Map<String, Object> resolvedMap = new LinkedHashMap<>();
+            for (Map.Entry<String, Object> entry : map.entrySet()) {
+                resolvedMap.put(entry.getKey(), resolveExampleRefs(entry.getValue(), openAPI, activeRefChain, refDepth, structureDepth + 1));
+            }
+            return resolvedMap;
+        } else if (value instanceof List) {
+            List<Object> list = (List<Object>) value;
+            List<Object> resolvedList = new ArrayList<>(list.size());
+            for (Object item : list) {
+                resolvedList.add(resolveExampleRefs(item, openAPI, activeRefChain, refDepth, structureDepth + 1));
+            }
+            return resolvedList;
+        }
+        return value;
+    }
+
+    private Object resolveRef(String ref, OpenAPI openAPI) {
+        if (ref != null && ref.startsWith("#/components/examples/") && openAPI.getComponents() != null && openAPI.getComponents().getExamples() != null) {
+            String path = ref.substring("#/components/examples/".length());
+            String[] parts = path.split("/");
+            if (parts.length >= 1) {
+                Example componentExample = openAPI.getComponents().getExamples().get(parts[0]);
+                if (componentExample != null) {
+                    return componentExample.getValue();
+                }
+            }
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(WARN)
+                    .setMessageFormat("unable to resolve $ref {} in example")
+                    .setArguments(ref)
+            );
+        }
+        return null;
     }
 
     private String serialise(Object example) {
