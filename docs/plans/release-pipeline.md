@@ -6,41 +6,91 @@ After evaluating four options (Buildkite pipeline, GitHub Actions, Hybrid, OpenC
 
 **Key reasons:**
 1. Existing Buildkite infrastructure (build agents, Docker image, AWS integration)
-2. AWS Secrets Manager already integrated with the Buildkite stack
+2. AWS Secrets Manager already integrated with the Buildkite stack (5 secrets already provisioned)
 3. `block` steps with `allowed_teams` for access control
 4. TOTP verification gate against AWS for defense-in-depth security
 
-**Additional design decisions:**
+**Design decisions:**
 - **Replace maven-release-plugin** with explicit `mvn versions:set` + `git tag` for full transparency
+- **Use Central Portal Publisher API** for automated Maven Central publishing (not legacy OSSRH Nexus Staging API)
 - **Shared scripts** — every step is a standalone script callable from both Buildkite and locally
-- **Local orchestrator** — `scripts/release.sh` runs the same scripts as the pipeline, enabling full local releases
-- **Terraform for website** — all website infrastructure (S3, CloudFront, Route53) managed as IaC, including import of existing versioned sites
-- **Automate SwaggerHub** — use the SwaggerHub REST API instead of manual browser-based publishing
-- **Automate npm repos** — clone, build, tag, push via script (with interactive OTP prompt)
+- **Local orchestrator** — `scripts/release.sh` runs the same scripts as the pipeline
+- **Terraform for website** — all website infrastructure managed as IaC, with cross-account IAM role assumption
+- **In-monorepo subprojects** — `mockserver-maven-plugin/`, `mockserver-node/`, `mockserver-client-node/` are all in the monorepo; scripts work in-tree, no external cloning
+- **Resumable pipeline** — parallel publish steps can be re-run independently without rolling back Maven Central
+
+---
+
+## Adversarial Review of Previous Plan (v1)
+
+The previous plan (preserved in git history) had 15 issues identified during adversarial review. All have been addressed in this version:
+
+### Critical Issues (v1 Plan-Breaking)
+
+| # | Issue | Resolution |
+|---|-------|-----------|
+| 1 | `release-central.sh` used dead OSSRH Nexus Staging API (`/service/local/staging/...`) | Replaced with Central Portal Publisher API (`/api/v1/publisher/upload`, `/status`, `/deployment`) |
+| 2 | 6 submodule POMs use `repositoryId=ossrh` — credential mismatch with CI settings (`central-portal`) | POM cleanup task: migrate all 6 submodules to `repositoryId=central-portal` |
+| 3 | `deploy.plugin.repository.url` defaults to old OSSRH URL | POM cleanup task: update property to Central Portal releases URL |
+| 4 | Docker builds use OSSRH redirect API for JAR download | Docker image now uses CI-built JAR via `--build-arg source=copy`, not Maven Central download |
+
+### Significant Issues
+
+| # | Issue | Resolution |
+|---|-------|-----------|
+| 5 | SCM URL listed as prerequisite — already fixed | Removed from prerequisites |
+| 6 | Plan assumed cloning external repos for maven-plugin, node, client-node | All scripts work in-tree (monorepo paths) |
+| 7 | maven-release-plugin version stated as 2.5.3 — actually 3.3.1 | Corrected in pain points |
+| 8 | Node packages at 5.15.0 vs Java at 5.16.0-SNAPSHOT | Version sync handled in `update-versions.sh` including `package.json` file references |
+| 9 | IAM policy referenced undefined `dockerhub` resource | References existing resource from `build-secrets.tf` |
+| 10 | Docker tagging convention didn't match existing practice | Tags now follow existing convention: `mockserver-X.Y.Z` + `X.Y.Z` + `latest` |
+
+### Design Improvements
+
+| # | Issue | Resolution |
+|---|-------|-----------|
+| 11 | No idempotency/resumability | Parallel publish group can be retried; Maven Central step is atomic (deploy then publish) |
+| 12 | TOTP seed readable by agent | Accepted risk — defense-in-depth still valuable against Buildkite UI compromise |
+| 13 | Cross-account website access via static credentials | Changed to cross-account IAM role assumption |
+| 14 | `update-versions.sh` has no validation | Added `git diff --stat` review gate and dry-run mode |
+| 15 | 23-32 day estimate inflated | Reduced to 16-22 days given existing infrastructure |
 
 ---
 
 ## Current State
 
-The release process is a **manual 15-step process** executed entirely from a developer's Mac, spanning 9 artifact registries and 3+ Git repositories. Every step requires human intervention. There is no CI/CD pipeline for releases.
+The release process is a **manual 15-step process** executed entirely from a developer's Mac, spanning 9 artifact registries. Every step requires human intervention. There is no CI/CD pipeline for releases.
+
+### What Already Exists (Available Infrastructure)
+
+| Asset | Status | Notes |
+|-------|--------|-------|
+| Buildkite CI with path-based orchestrator | Working | 13 pipelines, EC2 Spot agents, Lambda scaler |
+| CI snapshot deployment to Central Portal | Working | `.buildkite/scripts/steps/java-deploy-snapshot.sh` |
+| Docker release image pipeline | Working | `.buildkite/docker-push-release.yml` (manual trigger) |
+| Docker latest image pipeline | Working | Auto-push on master merge |
+| Python release script | Working | `scripts/release_python.sh` (dual-mode credentials) |
+| Ruby release script | Working | `scripts/release_ruby.sh` (dual-mode credentials) |
+| 5 secrets in AWS SM | Provisioned | `dockerhub`, `buildkite-api-token`, `sonatype`, `pypi`, `rubygems` |
+| Buildkite agent IAM policy | Configured | Read access to all 5 secrets |
+| SCM URL in pom.xml | Fixed | Already points to `mock-server/mockserver-monorepo` |
+| All subprojects in monorepo | Done | `mockserver-maven-plugin/`, `mockserver-node/`, `mockserver-client-node/` |
 
 ### Current Pain Points
 
 | Problem | Impact |
 |---------|--------|
-| 13 manual steps across 7 platforms | Error-prone, takes hours, requires deep tribal knowledge |
-| Hardcoded JDK path in `local_release.sh` | Only works on one specific developer's machine |
-| SCM URL mismatch (`jamesdbloom/mockservice` vs `mock-server/mockserver-monorepo`) | Fragile Git tag/push during release |
-| Tests skipped during release (`-DskipTests`) | Releases trust that the last manual build passed |
-| GPG key managed on a single laptop | Bus-factor = 1, key rotation is manual |
-| Docker image timing dependency on Maven Central sync | Release step 7 may fail and need manual retry hours later |
-| `settings.xml` server ID mismatch | Documentation inconsistency causes credential confusion |
+| 15 manual steps across 9 platforms | Error-prone, takes hours, requires tribal knowledge |
+| Hardcoded JDK 1.8 path in `local_release.sh` | Only works on one developer's machine |
+| Tests skipped during release (`-DskipTests`) | Releases trust the last manual build passed |
+| GPG key on a single laptop | Bus-factor = 1 |
+| Docker image timing dependency on Maven Central sync | May fail and need manual retry hours later |
+| `repositoryId=ossrh` in 6 submodule POMs | Credential mismatch with new Central Portal |
+| `deploy.plugin.repository.url` points to dead OSSRH | Shaded JAR deploy would fail |
 | No rollback automation | Failed releases require manual `git reset --hard` + force push |
-| Maven release plugin 2.5.3 (from 2015) | Missing 8 years of bug fixes and improvements |
-| No GitHub Releases created | No release notes visible on GitHub |
-| Versioned website requires AWS console work | Creating S3 buckets, CloudFront distributions, Route53 records manually |
-| Website infrastructure not in Terraform | 17 versioned sites + main site all manually provisioned |
-| Cross-account access not configured | Buildkite agents cannot access website account (`website account`) |
+| No GitHub Releases created | No release notes on GitHub |
+| Website infrastructure not in Terraform | Manual AWS Console work for versioned sites |
+| `mockserver-node` hardcodes `oss.sonatype.org` in `index.js` | Download URL wrong for new Sonatype |
 
 ### Release Artifacts
 
@@ -70,18 +120,18 @@ mockserver-client"]
 
 ### Required Credentials
 
-| Credential | Current Location | Used By |
-|------------|-----------------|---------|
-| Sonatype OSSRH username/password | Developer's `~/.m2/settings.xml` | Maven deploy |
-| GPG private key + passphrase | Developer's local GPG keyring | Artifact signing |
-| Docker Hub token | GitHub repo secrets | Docker image push |
-| GitHub SSH key | Developer's `~/.ssh/` | Git tag push by maven-release-plugin |
-| npm credentials + TOTP | Developer's npm session | npm publish |
-| AWS credentials | Developer's `~/.aws/` | S3 uploads (website, Helm, Javadoc) |
-| GitHub PAT | Developer's env var | Homebrew formula PR |
-| SwaggerHub API key | Developer's browser session | OpenAPI spec publish |
-| PyPI API token | AWS Secrets Manager (`mockserver-build/pypi`) | Python package publish |
-| RubyGems API key | AWS Secrets Manager (`mockserver-build/rubygems`) | Ruby gem publish |
+| Credential | Current Location | Target Location |
+|------------|-----------------|-----------------|
+| Sonatype Central Portal token | AWS SM `mockserver-build/sonatype` | Same (already provisioned) |
+| GPG private key + passphrase | Developer's local keyring | AWS SM `mockserver-release/gpg-key` (new) |
+| Docker Hub token | AWS SM `mockserver-build/dockerhub` | Same (already provisioned) |
+| GitHub PAT | Developer's env var | AWS SM `mockserver-release/github-token` (new) |
+| npm token | Developer's npm session | AWS SM `mockserver-release/npm-token` (new) |
+| AWS website cross-account role | Not configured | IAM role in website account (new) |
+| SwaggerHub API key | Developer's browser session | AWS SM `mockserver-release/swaggerhub` (new) |
+| PyPI API token | AWS SM `mockserver-build/pypi` | Same (already provisioned) |
+| RubyGems API key | AWS SM `mockserver-build/rubygems` | Same (already provisioned) |
+| TOTP seed | Not configured | AWS SM `mockserver-release/totp-seed` (new) |
 
 ---
 
@@ -89,10 +139,12 @@ mockserver-client"]
 
 1. **Shared scripts** — every automatable step is a standalone script in `scripts/ci/release/`. Both the Buildkite pipeline and the local orchestrator call the same scripts.
 2. **Dual-mode credentials** — scripts detect CI vs. local and load secrets from AWS Secrets Manager accordingly (IAM role in CI, SSO profile locally).
-3. **TOTP gate** — the operator enters a 6-digit code; the pipeline verifies it against a seed stored in AWS Secrets Manager. Even a compromised Buildkite cannot silently publish.
-4. **Replace maven-release-plugin** — use `mvn versions:set` + explicit `git tag` + `git commit` + `git push` for full transparency and control. No SCM URL dependency, no plugin magic.
-5. **Terraform for website** — all website infrastructure (S3, CloudFront, Route53, ACM) managed as IaC in `terraform/website/`, including import of all existing versioned sites.
-6. **All 13 steps covered** — every step from `scripts/release_steps.md` has a corresponding script, even if some steps are local-only.
+3. **TOTP gate** — the operator enters a 6-digit code; the pipeline verifies it against a seed stored in AWS Secrets Manager. Even a compromised Buildkite UI cannot silently publish.
+4. **Replace maven-release-plugin** — use `mvn versions:set` + explicit `git tag` + `git commit` + `git push` for full transparency and control.
+5. **Central Portal Publisher API** — upload a deployment bundle, verify status, and publish via the new API at `central.sonatype.com/api/v1/publisher/`.
+6. **Cross-account IAM role** — Buildkite agents assume a role in the website account for S3/CloudFront operations. No static credentials.
+7. **In-tree operations** — all subprojects are in the monorepo; scripts operate on local directories, not external clones.
+8. **Resumable** — the parallel publish group (Docker, Helm, Javadoc, SwaggerHub, Website, GitHub Release) can be individually retried without rolling back earlier steps.
 
 ---
 
@@ -109,19 +161,20 @@ scripts/release.sh
 interactive prompts"]
     end
 
-    subgraph Scripts[Shared Scripts — scripts/ci/release/*.sh]
+    subgraph Scripts["Shared Scripts — scripts/ci/release/*.sh"]
         COMMON[common.sh]
         TOTP[verify-totp.sh]
         VAL[validate.sh]
         SETVER[set-release-version.sh]
         BUILD[build-and-test.sh]
-        STAGE[stage-to-central.sh]
-        RELMC[release-central.sh]
+        DEPLOY_REL[deploy-release.sh]
+        POLL[poll-central-portal.sh]
+        PUBLISH_CP[publish-central-portal.sh]
         WAIT[wait-for-central.sh]
         SNAP[deploy-snapshot.sh]
         UPDVER[update-versions.sh]
-        NODE[update-node-repos.sh]
-        MVNPLUGIN[update-maven-plugin.sh]
+        NODE[publish-npm.sh]
+        MVNPLUGIN[release-maven-plugin.sh]
         DOCKER[publish-docker.sh]
         HELM[publish-helm.sh]
         JAVADOC[publish-javadoc.sh]
@@ -129,34 +182,41 @@ interactive prompts"]
         WEBSITE[publish-website.sh]
         VSITE[create-versioned-site.sh]
         BREW[update-homebrew.sh]
+        PYPI[publish-pypi.sh]
+        GEMS[publish-rubygems.sh]
         GHREL[github-release.sh]
         CLEANUP[cleanup-failed-release.sh]
         NOTIFY[notify.sh]
     end
 
-    subgraph Credentials[AWS Secrets Manager — build account]
-        S1[mockserver-release/sonatype]
-        S2[mockserver-release/gpg-key]
-        S3[mockserver-release/github-token]
-        S4[mockserver-release/totp-seed]
-        S5[mockserver-release/npm-token]
-        S6[mockserver-release/swaggerhub]
-        S7[mockserver-release/aws-website]
-        S8[mockserver-build/dockerhub]
+    subgraph Credentials["AWS Secrets Manager — build account"]
+        S_EXIST["Already exist:
+mockserver-build/sonatype
+mockserver-build/dockerhub
+mockserver-build/pypi
+mockserver-build/rubygems
+mockserver-build/buildkite-api-token"]
+        S_NEW["New:
+mockserver-release/gpg-key
+mockserver-release/github-token
+mockserver-release/totp-seed
+mockserver-release/npm-token
+mockserver-release/swaggerhub
+mockserver-release/website-role"]
     end
 
-    subgraph Infra[Infrastructure — Terraform]
+    subgraph Infra["Infrastructure — Terraform"]
         TF_BK["terraform/buildkite-agents/
-Account build account
 Build agents, IAM, secrets"]
         TF_WEB["terraform/website/
-Account website account
-S3, CloudFront, Route53, ACM"]
+S3, CloudFront, Route53, ACM
+Cross-account IAM role"]
     end
 
     BK --> Scripts
     LOCAL --> Scripts
-    Scripts --> Credentials
+    Scripts --> S_EXIST
+    Scripts --> S_NEW
     VSITE --> TF_WEB
 ```
 
@@ -164,27 +224,30 @@ S3, CloudFront, Route53, ACM"]
 
 ## Step-by-Step Mapping
 
-Every step from `scripts/release_steps.md` maps to a script. The table shows where each step runs.
-
-| # | Release Step | Script | CI Pipeline? | Local? | Notes |
+| # | Release Step | Script | CI? | Local? | Notes |
 |---|---|---|---|---|---|
-| — | TOTP Authorization | `verify-totp.sh` | Yes (block step) | Yes (interactive) | |
+| — | TOTP Authorization | `verify-totp.sh` | Yes (block) | Yes | |
 | — | Validate inputs | `validate.sh` | Yes | Yes | |
-| 1 | Maven Central release | `set-release-version.sh` → `build-and-test.sh` → `stage-to-central.sh` → `release-central.sh` → `wait-for-central.sh` | Yes | Yes | |
+| 1a | Set release version | `set-release-version.sh` | Yes | Yes | Replaces maven-release-plugin |
+| 1b | Build & test | `build-and-test.sh` | Yes | Yes | Full test suite, unlike current `-DskipTests` |
+| 1c | Deploy to Central Portal | `deploy-release.sh` | Yes | Yes | `mvn deploy -P release` with GPG signing |
+| 1d | Poll deployment status | `poll-central-portal.sh` | Yes | Yes | Central Portal Publisher API status polling |
+| 1e | Publish on Central Portal | `publish-central-portal.sh` | Yes | Yes | POST to `/api/v1/publisher/deployment/<id>` |
+| 1f | Wait for Maven Central sync | `wait-for-central.sh` | Yes | Yes | Poll `repo1.maven.org` |
 | 2 | Deploy SNAPSHOT | `deploy-snapshot.sh` | Yes | Yes | |
-| 3 | Update repo versions | `update-versions.sh` | Yes | Yes | Changelog, README, _config.yml, find-and-replace |
-| 4 | Update mockserver-node | `update-node-repos.sh mockserver-node` | Local-only | Yes | npm OTP required interactively |
-| 5 | Update mockserver-client-node | `update-node-repos.sh mockserver-client-node` | Local-only | Yes | npm OTP required interactively |
-| 6 | Update mockserver-maven-plugin | `update-maven-plugin.sh` | Yes | Yes | Full release cycle on monorepo subdir |
-| 7 | Docker image | `publish-docker.sh` | Yes | Yes | |
-| 8 | Helm chart | `publish-helm.sh` | Yes | Yes | |
-| 9 | Javadoc | `publish-javadoc.sh` | Yes | Yes | |
-| 10 | SwaggerHub | `update-swaggerhub.sh` | Yes | Yes | Uses SwaggerHub REST API |
-| 11 | Website | `publish-website.sh` | Yes | Yes | Jekyll build + S3 sync + CF invalidation |
-| 12 | Versioned website | `create-versioned-site.sh` | Yes (optional) | Yes | Terraform apply for new S3/CF/Route53 |
-| 13 | Homebrew | `update-homebrew.sh` | Local-only | Yes | Requires local `brew` installation |
-| 14 | Python client to PyPI | `publish-pypi.sh` | Yes | Yes | Fetches token from AWS Secrets Manager |
-| 15 | Ruby client to RubyGems | `publish-rubygems.sh` | Yes | Yes | Fetches API key from AWS Secrets Manager |
+| 3 | Update repo versions | `update-versions.sh` | Yes | Yes | Includes Node package.json, Ruby version.rb, Python pyproject.toml |
+| 4 | Publish mockserver-node to npm | `publish-npm.sh mockserver-node` | Local-only | Yes | npm OTP required interactively |
+| 5 | Publish mockserver-client-node to npm | `publish-npm.sh mockserver-client-node` | Local-only | Yes | npm OTP required interactively |
+| 6 | Release mockserver-maven-plugin | `release-maven-plugin.sh` | Yes | Yes | In-tree release cycle |
+| 7 | Docker image | `publish-docker.sh` | Yes | Yes | Uses CI-built JAR, not Maven Central download |
+| 8 | Helm chart | `publish-helm.sh` | Yes | Yes | Cross-account IAM role |
+| 9 | Javadoc | `publish-javadoc.sh` | Yes | Yes | Cross-account IAM role |
+| 10 | SwaggerHub | `update-swaggerhub.sh` | Yes | Yes | SwaggerHub REST API |
+| 11 | Website | `publish-website.sh` | Yes | Yes | Cross-account IAM role |
+| 12 | Versioned website | `create-versioned-site.sh` | Yes (optional) | Yes | Terraform apply |
+| 13 | Homebrew | `update-homebrew.sh` | Local-only | Yes | Requires local `brew` |
+| 14 | Python client to PyPI | `publish-pypi.sh` | Yes | Yes | Reuses existing `release_python.sh` pattern |
+| 15 | Ruby client to RubyGems | `publish-rubygems.sh` | Yes | Yes | Reuses existing `release_ruby.sh` pattern |
 | — | GitHub Release | `github-release.sh` | Yes | Yes | |
 | — | Cleanup failed release | `cleanup-failed-release.sh` | Local-only | Yes | |
 | — | Notify | `notify.sh` | Yes | Yes | |
@@ -195,32 +258,33 @@ Every step from `scripts/release_steps.md` maps to a script. The table shows whe
 
 ```
 scripts/
-├── release.sh                          # Local orchestrator — runs all 15 steps sequentially
+├── release.sh                          # Local orchestrator
 ├── ci/
 │   └── release/
 │       ├── common.sh                   # Shared: env detection, credential loading, logging
 │       ├── verify-totp.sh              # TOTP verification against AWS seed
 │       ├── validate.sh                 # Version format, branch, dirty-tree checks
-│       ├── set-release-version.sh      # mvn versions:set + git tag + commit (replaces maven-release-plugin)
+│       ├── set-release-version.sh      # mvn versions:set + git tag + commit
 │       ├── build-and-test.sh           # ./mvnw clean install (WITH tests)
-│       ├── stage-to-central.sh         # GPG import + ./mvnw deploy -P release to OSSRH staging
-│       ├── release-central.sh          # OSSRH REST API: close staging repo + release/promote
+│       ├── deploy-release.sh           # GPG import + ./mvnw deploy -P release
+│       ├── poll-central-portal.sh      # Poll Central Portal Publisher API for VALIDATED status
+│       ├── publish-central-portal.sh   # POST to /api/v1/publisher/deployment/<id> to publish
 │       ├── wait-for-central.sh         # Poll repo1.maven.org until JAR available
-│       ├── deploy-snapshot.sh          # mvn versions:set to next SNAPSHOT + deploy
-│       ├── update-versions.sh          # Find-and-replace versions across repo, update changelog, commit+push
-│       ├── update-node-repos.sh        # Clone mockserver-node / mockserver-client-node, version bump, build, tag, npm publish
-│       ├── update-maven-plugin.sh      # Clone mockserver-maven-plugin, version bump, release cycle, re-SNAPSHOT
-│       ├── publish-docker.sh           # Docker buildx multi-arch build + push to Docker Hub
-│       ├── publish-helm.sh             # Helm package + update index + S3 sync
-│       ├── publish-javadoc.sh          # Javadoc generation from release tag + S3 upload
-│       ├── update-swaggerhub.sh        # SwaggerHub REST API: create version + publish
-│       ├── publish-website.sh          # Jekyll build + S3 sync + CloudFront invalidation
-│       ├── create-versioned-site.sh    # Terraform apply for new versioned site (S3 + CF + Route53)
+│       ├── deploy-snapshot.sh          # mvn versions:set to SNAPSHOT + deploy
+│       ├── update-versions.sh          # Version find-and-replace + validation
+│       ├── publish-npm.sh              # In-tree npm build + publish (interactive OTP)
+│       ├── release-maven-plugin.sh     # In-tree maven-plugin release cycle
+│       ├── publish-docker.sh           # Docker buildx multi-arch + push
+│       ├── publish-helm.sh             # Helm package + S3 sync (cross-account role)
+│       ├── publish-javadoc.sh          # Javadoc generation + S3 upload (cross-account role)
+│       ├── update-swaggerhub.sh        # SwaggerHub REST API
+│       ├── publish-website.sh          # Jekyll build + S3 sync + CF invalidation (cross-account role)
+│       ├── create-versioned-site.sh    # Terraform apply for new versioned site
 │       ├── update-homebrew.sh          # brew bump-formula-pr (local-only)
-│       ├── publish-pypi.sh             # Build + twine upload to PyPI (token from AWS SM)
-│       ├── publish-rubygems.sh         # gem build + gem push to RubyGems (key from AWS SM)
+│       ├── publish-pypi.sh             # Build + twine upload (reuses existing pattern)
+│       ├── publish-rubygems.sh         # gem build + gem push (reuses existing pattern)
 │       ├── github-release.sh           # gh release create with changelog extract
-│       ├── cleanup-failed-release.sh   # Revert git, delete tag, drop staging repo
+│       ├── cleanup-failed-release.sh   # Revert git, delete tag, drop Central Portal deployment
 │       └── notify.sh                   # Success/failure notification
 
 .buildkite/
@@ -228,21 +292,24 @@ scripts/
 └── release-pipeline.yml                # New: release pipeline
 
 terraform/
-├── buildkite-agents/                   # Existing: build agent infra (build account)
+├── buildkite-agents/                   # Existing: build agent infra
 │   └── build-secrets.tf                # Modified: add release secrets + IAM policy
+├── buildkite-pipelines/
+│   └── pipelines.tf                    # Modified: add release pipeline entry
 └── website/                            # NEW: website infra (website account)
-    ├── main.tf                         # AWS provider, module config
-    ├── variables.tf                    # Domain, version list, etc.
-    ├── versions.tf                     # Terraform + provider version constraints
-    ├── backend.tf                      # S3 remote state
-    ├── dns.tf                          # Route53 hosted zone + records
-    ├── acm.tf                          # ACM certificate (*.mock-server.com)
-    ├── main-site.tf                    # Main site: S3 bucket + CloudFront + Route53 A record
-    ├── versioned-sites.tf              # for_each over version list: S3 + CF + Route53 per version
-    ├── helm-repo.tf                    # Helm chart hosting configuration
-    ├── outputs.tf                      # CloudFront distribution IDs, bucket names
-    ├── import.tf                       # Import blocks for existing 17 versioned sites + main site
-    └── terraform.tfvars.example        # Example variables
+    ├── main.tf
+    ├── variables.tf
+    ├── versions.tf
+    ├── backend.tf
+    ├── dns.tf
+    ├── acm.tf
+    ├── main-site.tf
+    ├── versioned-sites.tf
+    ├── helm-repo.tf
+    ├── outputs.tf
+    ├── cross-account-role.tf           # IAM role for build account to assume
+    ├── import.tf
+    └── terraform.tfvars.example
 ```
 
 ---
@@ -262,25 +329,57 @@ is_ci() { [[ -n "${BUILDKITE:-}" ]]; }
 ```bash
 load_secret() {
   local secret_id="$1" key="$2"
+  local xtrace_state
+  xtrace_state=$(shopt -po xtrace 2>/dev/null || true)
   set +x
   local json
   if is_ci; then
     json=$(aws secretsmanager get-secret-value \
       --secret-id "$secret_id" \
+      --region eu-west-2 \
       --query SecretString --output text)
   else
     json=$(aws secretsmanager get-secret-value \
       --secret-id "$secret_id" \
+      --region eu-west-2 \
       --profile "${AWS_PROFILE:-mockserver-build}" \
       --query SecretString --output text)
   fi
   echo "$json" | jq -r ".$key"
-  set -x
+  eval "$xtrace_state"
 }
 ```
 
-In CI: the agent IAM role provides Secrets Manager access (no `--profile` needed).
-Locally: uses the operator's AWS SSO session (`aws sso login --profile mockserver-build`).
+This pattern already exists in `scripts/release_python.sh` and `scripts/release_ruby.sh` — `common.sh` centralises it.
+
+### Cross-Account Website Access
+
+```bash
+assume_website_role() {
+  local role_arn
+  role_arn=$(load_secret "mockserver-release/website-role" "role_arn")
+  local creds
+  creds=$(aws sts assume-role \
+    --role-arn "$role_arn" \
+    --role-session-name "mockserver-release-${RELEASE_VERSION}" \
+    --duration-seconds 3600 \
+    --output json)
+  export AWS_ACCESS_KEY_ID=$(echo "$creds" | jq -r '.Credentials.AccessKeyId')
+  export AWS_SECRET_ACCESS_KEY=$(echo "$creds" | jq -r '.Credentials.SecretAccessKey')
+  export AWS_SESSION_TOKEN=$(echo "$creds" | jq -r '.Credentials.SessionToken')
+}
+```
+
+### Central Portal Authentication
+
+```bash
+central_portal_auth_header() {
+  local username password
+  username=$(load_secret "mockserver-build/sonatype" "username")
+  password=$(load_secret "mockserver-build/sonatype" "password")
+  printf "%s:%s" "$username" "$password" | base64
+}
+```
 
 ### Version Variables
 
@@ -298,8 +397,8 @@ export RELEASE_VERSION NEXT_VERSION OLD_VERSION
 ### Utility Functions
 
 - `log_info`, `log_error`, `log_step` — structured logging
-- `require_cmd <command>` — fail fast if a required tool is missing
-- `require_env <var>` — fail fast if a required env var is unset
+- `require_cmd <command>` — fail fast if missing
+- `require_env <var>` — fail fast if unset
 - `confirm <prompt>` — interactive confirmation (skipped in CI)
 
 ---
@@ -316,22 +415,29 @@ sequenceDiagram
     participant AWS as AWS Secrets Manager
 
     Operator->>Buildkite: Trigger release pipeline
-    Buildkite->>Operator: Block step: "Enter TOTP code"
+    Buildkite->>Operator: Block step: Enter TOTP code
     Operator->>Operator: Open authenticator app
     Operator->>Buildkite: Enter 6-digit TOTP code
-    Buildkite->>Agent: Run verify-totp.sh (code in build meta-data)
+    Buildkite->>Agent: Run verify-totp.sh
     Agent->>AWS: GetSecretValue(mockserver-release/totp-seed)
-    AWS-->>Agent: TOTP shared secret (base32 seed)
-    Agent->>Agent: Generate expected TOTP from seed via oathtool
-    Agent->>Agent: Compare provided code against expected (±1 window for clock skew)
+    AWS-->>Agent: TOTP shared secret
+    Agent->>Agent: Generate expected TOTP via oathtool
+    Agent->>Agent: Compare (plus/minus 1 window for clock skew)
     Agent-->>Buildkite: Pass or Fail
 ```
 
+#### Known Limitation
+
+A compromised Buildkite agent EC2 instance could read the TOTP seed from Secrets Manager via its IAM role. This is accepted as a residual risk because:
+- The TOTP gate still prevents attacks via Buildkite UI compromise (most likely vector)
+- The agent IAM role requires EC2 instance identity — cannot be assumed from outside AWS
+- Combined with `block` step `allowed_teams`, this is defense-in-depth
+
 #### One-Time Setup
 
-1. Generate a TOTP seed: `python3 -c "import pyotp; print(pyotp.random_base32())"`
-2. Store in AWS Secrets Manager: `mockserver-release/totp-seed` with JSON `{"seed": "<base32-seed>"}`
-3. Register the same seed in an authenticator app (Google Authenticator, 1Password, etc.)
+1. Generate seed: `python3 -c "import pyotp; print(pyotp.random_base32())"`
+2. Store in AWS SM: `mockserver-release/totp-seed` with JSON `{"seed": "<base32-seed>"}`
+3. Register in authenticator app (1Password, Google Authenticator, etc.)
 
 #### `verify-totp.sh` Logic
 
@@ -359,12 +465,12 @@ fi
 
 | Layer | Control | What It Prevents |
 |---|---|---|
-| Pipeline visibility | Private pipeline in Buildkite | Unauthorized users cannot see or trigger the pipeline |
-| Build trigger | Only org members can trigger builds | Only the org admin can start a release |
-| Block step unblock | `allowed_teams: ["release-managers"]` | Only members of that team can approve release gates |
-| TOTP verification | Code verified against AWS Secrets Manager seed | Even if Buildkite is compromised, attacker cannot generate a valid TOTP code |
-| Secrets isolation | Release secrets in AWS, not Buildkite | Buildkite compromise does not expose credentials |
-| Agent IAM scoping | Agent role has only `secretsmanager:GetSecretValue` for release secrets | Agent cannot modify secrets or access unrelated resources |
+| Pipeline visibility | Private pipeline | Unauthorized trigger |
+| Block step unblock | `allowed_teams: ["release-managers"]` | Unauthorized approval |
+| TOTP verification | Code verified against AWS seed | Buildkite UI compromise |
+| Secrets isolation | All secrets in AWS SM, not Buildkite | Buildkite data breach |
+| Agent IAM scoping | Only `secretsmanager:GetSecretValue` | Agent cannot modify secrets |
+| Cross-account role | Explicit `sts:AssumeRole` trust policy | Limits website access |
 
 ### Threat Model
 
@@ -378,11 +484,98 @@ fi
 
 ---
 
+## Maven Central Publishing: Central Portal Publisher API
+
+### Why Central Portal API (Not Legacy OSSRH)
+
+The project's `distributionManagement` has been migrated to `central.sonatype.com`. The CI snapshot deployment already uses the Central Portal successfully. The old OSSRH system at `oss.sonatype.org` is deprecated.
+
+Sonatype provides an [OSSRH Staging API compatibility layer](https://central.sonatype.org/publish/publish-portal-ossrh-staging-api/) at `ossrh-staging-api.central.sonatype.com`, but the native Central Portal Publisher API is simpler and better documented.
+
+### Publishing Flow
+
+```mermaid
+sequenceDiagram
+    participant Script as deploy-release.sh
+    participant Maven as mvnw deploy -P release
+    participant CP as Central Portal
+    participant Poll as poll-central-portal.sh
+    participant Pub as publish-central-portal.sh
+    participant MC as Maven Central
+
+    Script->>Maven: deploy with GPG signing
+    Maven->>CP: Upload artifacts (via maven-deploy-plugin)
+    CP-->>Script: Deployment created (visible at central.sonatype.com/publishing)
+    Note over Script: Deployment ID extracted from API
+    Script->>Poll: Poll /api/v1/publisher/status
+    Poll->>CP: GET status?id=deployment-id
+    CP-->>Poll: VALIDATING then VALIDATED
+    Poll->>Pub: Validation passed
+    Pub->>CP: POST /api/v1/publisher/deployment/id
+    CP-->>Pub: 204 (publishing started)
+    Pub->>CP: Poll status until PUBLISHED
+    CP->>MC: Sync to Maven Central
+    MC-->>Pub: JAR available at repo1.maven.org
+```
+
+### Two Publishing Options
+
+The Central Portal supports two `publishingType` values when using `maven-deploy-plugin`:
+
+| Mode | Behaviour | Use Case |
+|------|-----------|----------|
+| `AUTOMATIC` | Validates and publishes automatically | Fast, no manual review |
+| `USER_MANAGED` (default) | Validates, waits for manual publish | Allows review before publish |
+
+The pipeline uses `USER_MANAGED` mode with an automated publish step after a review gate, giving both safety and automation:
+1. `mvn deploy` uploads artifacts — deployment enters `VALIDATING`
+2. Central Portal validates (GPG, POM, sources, javadoc) — `VALIDATED`
+3. Buildkite `block` step: operator reviews deployment at `central.sonatype.com/publishing`
+4. `publish-central-portal.sh` calls the publish API — `PUBLISHING` then `PUBLISHED`
+
+### Deployment State Machine
+
+The Central Portal deployment states are:
+
+| State | Meaning |
+|-------|---------|
+| `PENDING` | Uploaded, waiting for processing |
+| `VALIDATING` | Being processed by validation service |
+| `VALIDATED` | Passed validation, waiting for manual publish (USER_MANAGED) |
+| `PUBLISHING` | Being uploaded to Maven Central |
+| `PUBLISHED` | Successfully available on Maven Central |
+| `FAILED` | Error encountered (details in `errors` field) |
+
+### Fallback: OSSRH Staging API Compatibility
+
+If the native Publisher API proves problematic, the OSSRH Staging API compatibility layer at `ossrh-staging-api.central.sonatype.com` supports the `maven-deploy-plugin` with URL-only changes:
+- Replace `oss.sonatype.org` with `ossrh-staging-api.central.sonatype.com`
+- Use Central Portal user tokens (not legacy OSSRH tokens)
+- After deploy, call `POST /manual/upload/defaultRepository/<namespace>` to transfer to Central Portal
+
+---
+
+## POM Changes Required (Pre-Implementation)
+
+These changes must be made before the release pipeline scripts can work:
+
+| # | Change | File(s) | Detail |
+|---|--------|---------|--------|
+| 1 | Update `deploy.plugin.repository.url` | `mockserver/pom.xml` line 80 | `https://oss.sonatype.org/content/repositories/snapshots/` to `https://central.sonatype.com/repository/maven-releases/` |
+| 2 | Update `repositoryId` in 6 submodule release profiles | `mockserver-netty/pom.xml`, `mockserver-client-java/pom.xml`, `mockserver-junit-rule/pom.xml`, `mockserver-junit-jupiter/pom.xml`, `mockserver-spring-test-listener/pom.xml`, `mockserver-integration-testing/pom.xml` | `<repositoryId>ossrh</repositoryId>` to `<repositoryId>central-portal</repositoryId>` |
+| 3 | Update shaded JAR deploy URL in 6 submodule release profiles | Same 6 files | `<url>${deploy.plugin.repository.url}</url>` to Central Portal releases URL |
+| 4 | Remove maven-release-plugin from release profile | `mockserver/pom.xml` | No longer needed — replaced by `versions:set` + explicit git operations. Retain rest of `release` profile for GPG, source, javadoc |
+| 5 | Update `mockserver-maven-plugin` OSSRH references | `mockserver-maven-plugin/pom.xml` lines 39, 53 | Replace OSSRH snapshot URLs with Central Portal |
+| 6 | Update Docker REPOSITORY_URL | `docker/Dockerfile`, `docker/root/Dockerfile`, `docker/snapshot/Dockerfile`, `docker/root-snapshot/Dockerfile` | Use `repo1.maven.org` for releases, or `--build-arg source=copy` pattern |
+| 7 | Update `mockserver-node` artifact host | `mockserver-node/index.js` line 13, `Gruntfile.js` line 73 | `oss.sonatype.org` to Maven Central download URL |
+| 8 | Update settings files | `docker_build/maven/settings.xml`, integration test `settings.xml` (4 files) | Replace OSSRH snapshot URLs with Central Portal |
+
+---
+
 ## Buildkite Pipeline: `.buildkite/release-pipeline.yml`
 
 ```yaml
 steps:
-  # ─── Input & Authorization ─────────────────────────────────
   - input: "Release Parameters"
     fields:
       - text: "Release Version"
@@ -430,7 +623,6 @@ steps:
   - label: ":shield: Verify TOTP"
     command: "scripts/ci/release/verify-totp.sh"
 
-  # ─── Step 1a: Set Version + Build & Test ───────────────────
   - label: ":white_check_mark: Validate"
     command: "scripts/ci/release/validate.sh"
 
@@ -440,49 +632,50 @@ steps:
   - label: ":maven: Build & Test"
     command: "scripts/ci/release/build-and-test.sh"
     timeout_in_minutes: 60
+    artifact_paths:
+      - "mockserver/mockserver-netty/target/mockserver-netty-*-shaded.jar"
 
-  # ─── Gate: Review test results ─────────────────────────────
   - block: ":eyes: Review Build Results"
-    prompt: "Build and tests passed. Approve to stage to Maven Central."
+    prompt: "Build and tests passed. Approve to deploy to Central Portal."
     allowed_teams: ["release-managers"]
 
-  # ─── Step 1b: Stage + Release on Maven Central ────────────
-  - label: ":lock: Stage to Maven Central"
-    command: "scripts/ci/release/stage-to-central.sh"
+  - label: ":lock: Deploy Release to Central Portal"
+    command: "scripts/ci/release/deploy-release.sh"
     timeout_in_minutes: 30
 
-  - block: ":rocket: Approve Maven Central Release"
+  - label: ":hourglass: Poll Central Portal Validation"
+    command: "scripts/ci/release/poll-central-portal.sh"
+    timeout_in_minutes: 30
+
+  - block: ":rocket: Approve Maven Central Publication"
     prompt: |
-      Artifacts staged to Sonatype OSSRH.
-      Review at https://oss.sonatype.org/#stagingRepositories
-      Approve to close, release, and publish.
+      Artifacts validated on Central Portal.
+      Review at https://central.sonatype.com/publishing/deployments
+      Approve to publish to Maven Central.
     allowed_teams: ["release-managers"]
 
-  - label: ":java: Release on Maven Central"
-    command: "scripts/ci/release/release-central.sh"
+  - label: ":java: Publish on Central Portal"
+    command: "scripts/ci/release/publish-central-portal.sh"
     timeout_in_minutes: 30
 
-  - label: ":hourglass: Wait for Central Sync"
+  - label: ":hourglass: Wait for Maven Central Sync"
     command: "scripts/ci/release/wait-for-central.sh"
     timeout_in_minutes: 120
 
-  # ─── Step 2: Deploy SNAPSHOT ───────────────────────────────
   - label: ":arrows_counterclockwise: Deploy Next SNAPSHOT"
     command: "scripts/ci/release/deploy-snapshot.sh"
     timeout_in_minutes: 30
 
-  # ─── Step 3: Update Repo Versions ─────────────────────────
   - label: ":pencil: Update Versions"
     command: "scripts/ci/release/update-versions.sh"
     timeout_in_minutes: 15
 
   - wait
 
-  # ─── Steps 6-11 + GitHub Release: Parallel Publishing ─────
   - group: ":package: Publish & Update"
     steps:
-      - label: ":java: Update Maven Plugin (Step 6)"
-        command: "scripts/ci/release/update-maven-plugin.sh"
+      - label: ":java: Release Maven Plugin (Step 6)"
+        command: "scripts/ci/release/release-maven-plugin.sh"
         timeout_in_minutes: 60
 
       - label: ":docker: Docker Image (Step 7)"
@@ -505,32 +698,36 @@ steps:
         command: "scripts/ci/release/publish-website.sh"
         timeout_in_minutes: 15
 
+      - label: ":python: PyPI (Step 14)"
+        command: "scripts/ci/release/publish-pypi.sh"
+        timeout_in_minutes: 10
+
+      - label: ":gem: RubyGems (Step 15)"
+        command: "scripts/ci/release/publish-rubygems.sh"
+        timeout_in_minutes: 10
+
       - label: ":github: GitHub Release"
         command: "scripts/ci/release/github-release.sh"
         timeout_in_minutes: 10
 
   - wait
 
-  # ─── Step 12: Versioned Site (Optional) ───────────────────
   - label: ":globe_with_meridians: Create Versioned Site (Step 12)"
     command: "scripts/ci/release/create-versioned-site.sh"
     if: "build.meta_data('create-versioned-site') == 'yes'"
     timeout_in_minutes: 15
 
-  # ─── Notify ───────────────────────────────────────────────
   - wait
 
   - label: ":bell: Notify"
     command: "scripts/ci/release/notify.sh"
 ```
 
-**Steps 4 & 5** (npm repos with OTP) and **Step 13** (Homebrew with local `brew`) are local-only — they do not appear in the Buildkite pipeline.
+**Steps 4 & 5** (npm with OTP) and **Step 13** (Homebrew with local `brew`) are local-only.
 
 ---
 
 ## Local Orchestrator: `scripts/release.sh`
-
-The local script runs ALL 13 steps, calling the same shared scripts as the pipeline. Interactive prompts replace Buildkite `block` steps.
 
 ```bash
 #!/usr/bin/env bash
@@ -547,46 +744,39 @@ echo "Next SNAPSHOT: $NEXT_VERSION"
 echo "Old version:   $OLD_VERSION"
 echo
 
-# ── Authorization ──
 "$SCRIPT_DIR/verify-totp.sh"
 "$SCRIPT_DIR/validate.sh"
 
-# ── Step 1: Maven Central ──
 "$SCRIPT_DIR/set-release-version.sh"
 "$SCRIPT_DIR/build-and-test.sh"
-read -rp "Build passed. Stage to Maven Central? [y/N] " c; [[ "$c" == [yY] ]] || exit 1
-"$SCRIPT_DIR/stage-to-central.sh"
-read -rp "Staged. Review at https://oss.sonatype.org/#stagingRepositories — Release? [y/N] " c; [[ "$c" == [yY] ]] || exit 1
-"$SCRIPT_DIR/release-central.sh"
+read -rp "Build passed. Deploy to Central Portal? [y/N] " c; [[ "$c" == [yY] ]] || exit 1
+"$SCRIPT_DIR/deploy-release.sh"
+"$SCRIPT_DIR/poll-central-portal.sh"
+read -rp "Validated. Review at https://central.sonatype.com/publishing — Publish? [y/N] " c; [[ "$c" == [yY] ]] || exit 1
+"$SCRIPT_DIR/publish-central-portal.sh"
 "$SCRIPT_DIR/wait-for-central.sh"
 
-# ── Step 2: Deploy SNAPSHOT ──
 "$SCRIPT_DIR/deploy-snapshot.sh"
-
-# ── Step 3: Update repo versions ──
 "$SCRIPT_DIR/update-versions.sh"
 
-# ── Steps 4 & 5: npm repos (interactive — OTP required) ──
-"$SCRIPT_DIR/update-node-repos.sh" mockserver-node
-"$SCRIPT_DIR/update-node-repos.sh" mockserver-client-node
+"$SCRIPT_DIR/publish-npm.sh" mockserver-node
+"$SCRIPT_DIR/publish-npm.sh" mockserver-client-node
 
-# ── Step 6: Maven plugin ──
-"$SCRIPT_DIR/update-maven-plugin.sh"
+"$SCRIPT_DIR/release-maven-plugin.sh"
 
-# ── Steps 7-11 + GitHub Release: Parallel ──
 "$SCRIPT_DIR/publish-docker.sh" &
 "$SCRIPT_DIR/publish-helm.sh" &
 "$SCRIPT_DIR/publish-javadoc.sh" &
 "$SCRIPT_DIR/update-swaggerhub.sh" &
 "$SCRIPT_DIR/publish-website.sh" &
+"$SCRIPT_DIR/publish-pypi.sh" &
+"$SCRIPT_DIR/publish-rubygems.sh" &
 "$SCRIPT_DIR/github-release.sh" &
 wait
 
-# ── Step 12: Versioned site (optional) ──
 read -rp "Create versioned site? [y/N] " c
 [[ "$c" == [yY] ]] && "$SCRIPT_DIR/create-versioned-site.sh"
 
-# ── Step 13: Homebrew (local-only) ──
 read -rp "Update Homebrew? [y/N] " c
 [[ "$c" == [yY] ]] && "$SCRIPT_DIR/update-homebrew.sh"
 
@@ -595,37 +785,31 @@ echo "=== Release $RELEASE_VERSION complete ==="
 
 ---
 
-## Script Details — All 13 Steps
+## Script Details — All Steps
 
-### Step 1: Publish Release to Maven Central
+### Step 1a: Set Release Version — `set-release-version.sh`
 
-This step replaces the current `local_release.sh` (which uses `maven-release-plugin`) with explicit version management.
+Replaces `maven-release-plugin` with transparent, scriptable operations:
 
-#### `set-release-version.sh`
-
-Replaces `mvn release:prepare` with transparent, scriptable operations:
-
-1. `./mvnw versions:set -DnewVersion=$RELEASE_VERSION`
-2. `./mvnw versions:commit` (removes backup POMs)
-3. `git add -A && git commit -m "release: set version $RELEASE_VERSION"`
-4. `git tag mockserver-$RELEASE_VERSION`
-5. `git push origin master && git push origin mockserver-$RELEASE_VERSION`
+1. `cd mockserver && ./mvnw versions:set -DnewVersion=$RELEASE_VERSION && ./mvnw versions:commit`
+2. `git add -A && git commit -m "release: set version $RELEASE_VERSION"`
+3. `git tag mockserver-$RELEASE_VERSION`
+4. `git push origin master && git push origin mockserver-$RELEASE_VERSION`
 
 The tag format `mockserver-X.Y.Z` matches the existing convention (e.g., `mockserver-5.15.0`).
 
-#### `build-and-test.sh`
+### Step 1b: Build & Test — `build-and-test.sh`
 
 ```bash
-./mvnw -T 1C clean install \
+cd mockserver && ./mvnw -T 1C clean install \
   -Djava.security.egd=file:/dev/./urandom
 ```
 
 Unlike the current `local_release.sh` which skips tests, this runs the full test suite before any artifacts are published.
 
-#### `stage-to-central.sh`
+### Step 1c: Deploy Release — `deploy-release.sh`
 
-1. Fetch GPG key and passphrase from Secrets Manager
-2. Import GPG key into ephemeral keyring:
+1. Fetch GPG key from Secrets Manager and import into ephemeral keyring:
    ```bash
    GPG_KEY_B64=$(load_secret "mockserver-release/gpg-key" "key")
    GPG_PASSPHRASE=$(load_secret "mockserver-release/gpg-key" "passphrase")
@@ -633,438 +817,336 @@ Unlike the current `local_release.sh` which skips tests, this runs the full test
    echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
    gpgconf --reload gpg-agent
    ```
-3. Generate `settings.xml` with Sonatype credentials from Secrets Manager:
+2. Generate `settings.xml` with Sonatype credentials:
    ```bash
-   SONATYPE_USERNAME=$(load_secret "mockserver-release/sonatype" "username")
-   SONATYPE_PASSWORD=$(load_secret "mockserver-release/sonatype" "password")
+   SONATYPE_USERNAME=$(load_secret "mockserver-build/sonatype" "username")
+   SONATYPE_PASSWORD=$(load_secret "mockserver-build/sonatype" "password")
    ```
-4. Deploy to OSSRH staging:
+3. Deploy with GPG signing:
    ```bash
-   ./mvnw deploy -P release -DskipTests \
+   cd mockserver && ./mvnw deploy -P release -DskipTests \
      -Dgpg.passphrase="$GPG_PASSPHRASE" \
      -Dgpg.useagent=false \
      --settings /tmp/release-settings.xml
    ```
-5. Clean up GPG key and settings file
+4. Clean up GPG key and settings file
 
-#### `release-central.sh`
-
-Automates the Sonatype OSSRH UI steps (close + release) via the Nexus Staging REST API:
+### Step 1d: Poll Central Portal — `poll-central-portal.sh`
 
 ```bash
-# Find staging repo ID
-STAGING_REPO=$(curl -s -u "$USER:$PASS" \
-  "https://oss.sonatype.org/service/local/staging/profile_repositories" \
-  | xmllint --xpath "//stagingProfileRepository[type='open']/repositoryId/text()" -)
+AUTH=$(central_portal_auth_header)
+DEPLOYMENT_ID=$(buildkite-agent meta-data get deployment-id)
 
-# Close (triggers validation rules)
-curl -X POST -u "$USER:$PASS" \
-  -H "Content-Type: application/json" \
-  -d "{\"data\":{\"stagedRepositoryId\":\"$STAGING_REPO\",\"description\":\"Release $VERSION\"}}" \
-  "https://oss.sonatype.org/service/local/staging/bulk/close"
+MAX_ATTEMPTS=60
+ATTEMPT=0
+while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+  STATUS=$(curl -s -X POST \
+    -H "Authorization: Bearer $AUTH" \
+    "https://central.sonatype.com/api/v1/publisher/status?id=$DEPLOYMENT_ID" \
+    | jq -r '.deploymentState')
 
-# Poll until closed
-while [ "$(curl -s -u "$USER:$PASS" \
-  "https://oss.sonatype.org/service/local/staging/repository/$STAGING_REPO" \
-  | xmllint --xpath '//type/text()' -)" != "closed" ]; do
-  sleep 10
+  case "$STATUS" in
+    VALIDATED) echo "Deployment validated"; exit 0 ;;
+    FAILED) echo "Validation FAILED" >&2; exit 1 ;;
+    PENDING|VALIDATING) sleep 30 ;;
+    *) echo "Unexpected state: $STATUS" >&2; exit 1 ;;
+  esac
+  ATTEMPT=$((ATTEMPT + 1))
 done
-
-# Release (promote to Maven Central)
-curl -X POST -u "$USER:$PASS" \
-  -H "Content-Type: application/json" \
-  -d "{\"data\":{\"stagedRepositoryId\":\"$STAGING_REPO\",\"description\":\"Release $VERSION\",\"autoDropAfterRelease\":true}}" \
-  "https://oss.sonatype.org/service/local/staging/bulk/promote"
+echo "Timed out waiting for validation" >&2; exit 1
 ```
 
-#### `wait-for-central.sh`
+**Note on deployment ID capture:** When using `maven-deploy-plugin` with `USER_MANAGED` publishing type, the deployment appears at `central.sonatype.com/publishing/deployments`. The ID can be found via the OSSRH Staging API compatibility layer's search endpoint (`GET /manual/search/repositories`) or by querying the Central Portal deployments list. An alternative approach is to use the Central Portal Publisher API's bundle upload endpoint directly (bypassing `maven-deploy-plugin`), which returns the deployment ID in the response body.
 
-Polls Maven Central until the release JAR is available:
+### Step 1e: Publish on Central Portal — `publish-central-portal.sh`
 
 ```bash
-ARTIFACT_URL="https://repo1.maven.org/maven2/org/mock-server/mockserver-netty/$VERSION/mockserver-netty-$VERSION.jar"
-MAX_ATTEMPTS=120  # 2 hours at 60s intervals
+AUTH=$(central_portal_auth_header)
+DEPLOYMENT_ID=$(buildkite-agent meta-data get deployment-id)
+
+curl -s -X POST \
+  -H "Authorization: Bearer $AUTH" \
+  "https://central.sonatype.com/api/v1/publisher/deployment/$DEPLOYMENT_ID"
+
+MAX_ATTEMPTS=60
+ATTEMPT=0
+while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+  STATUS=$(curl -s -X POST \
+    -H "Authorization: Bearer $AUTH" \
+    "https://central.sonatype.com/api/v1/publisher/status?id=$DEPLOYMENT_ID" \
+    | jq -r '.deploymentState')
+  case "$STATUS" in
+    PUBLISHED) echo "Published to Maven Central"; exit 0 ;;
+    PUBLISHING) sleep 30 ;;
+    FAILED) echo "Publishing FAILED" >&2; exit 1 ;;
+    *) echo "Unexpected state: $STATUS" >&2; exit 1 ;;
+  esac
+  ATTEMPT=$((ATTEMPT + 1))
+done
+echo "Timed out waiting for publish" >&2; exit 1
+```
+
+### Step 1f: Wait for Central Sync — `wait-for-central.sh`
+
+```bash
+ARTIFACT_URL="https://repo1.maven.org/maven2/org/mock-server/mockserver-netty/$RELEASE_VERSION/mockserver-netty-$RELEASE_VERSION.jar"
+MAX_ATTEMPTS=120
+ATTEMPT=0
 
 while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
   HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$ARTIFACT_URL")
   if [ "$HTTP_CODE" = "200" ]; then
-    echo "Release $VERSION available on Maven Central"
+    echo "Release $RELEASE_VERSION available on Maven Central"
     exit 0
   fi
   sleep 60
+  ATTEMPT=$((ATTEMPT + 1))
 done
 echo "Timed out waiting for Central sync" >&2; exit 1
 ```
 
 ### Step 2: Deploy SNAPSHOT — `deploy-snapshot.sh`
 
-1. `./mvnw versions:set -DnewVersion=$NEXT_VERSION`
-2. `./mvnw versions:commit`
-3. `./mvnw -T 1C clean deploy -DskipTests` (to Sonatype snapshots repo)
-4. `git add -A && git commit -m "release: set next development version $NEXT_VERSION"`
-5. `git push origin master`
+1. `cd mockserver && ./mvnw versions:set -DnewVersion=$NEXT_VERSION && ./mvnw versions:commit`
+2. `./mvnw -T 1C clean deploy -DskipTests --settings .buildkite-settings.xml`
+3. `git add -A && git commit -m "release: set next development version $NEXT_VERSION" && git push origin master`
 
-### Step 3: Update Repo Versions — `update-versions.sh`
+### Step 3: Update Versions — `update-versions.sh`
 
-This is the most complex script. It automates the manual find-and-replace process from `release_steps.md` step 3.
+Automates the manual find-and-replace, with a validation step:
 
 **Operations:**
 
-1. **Changelog** — rename `## [Unreleased]` → `## [$RELEASE_VERSION] - $(date +%Y-%m-%d)`, insert new empty `## [Unreleased]` section above with standard subsections (Added, Changed, Fixed)
+1. **Changelog** — rename `## [Unreleased]` to `## [$RELEASE_VERSION] - $(date +%Y-%m-%d)`, insert new empty `## [Unreleased]` section
 2. **Jekyll config** — update `jekyll-www.mock-server.com/_config.yml`:
    - `mockserver_version: $RELEASE_VERSION`
-   - `mockserver_api_version: $MAJOR.$MINOR.x` (derived from `$RELEASE_VERSION`)
+   - `mockserver_api_version: $MAJOR.$MINOR.x`
    - `mockserver_snapshot_version: $NEXT_VERSION`
 3. **OpenAPI spec** — update version in `mockserver-core/src/main/resources/org/mockserver/openapi/mock-server-openapi-embedded-model.yaml`
-4. **Java configuration classes** — update hardcoded SwaggerHub version in:
-   - `mockserver-core/src/main/java/org/mockserver/configuration/Configuration.java`
-   - `mockserver-core/src/main/java/org/mockserver/configuration/ConfigurationProperties.java`
-5. **README.md** — add new row to the Previous Versions table, add Helm chart version to the chart list
-6. **Node examples** — update `package.json` version references in `mockserver-examples/node_examples/*/package.json`
+4. **Node packages** — update `mockserver-node/package.json` version field and `files` array (JAR filename with embedded version), `mockserver-client-node/package.json` version and `mockserver-node` dependency
+5. **Python package** — update `mockserver-client-python/pyproject.toml` version
+6. **Ruby package** — update `mockserver-client-ruby/lib/mockserver/version.rb` and `README.md`
 7. **General find-and-replace** across `*.html`, `*.md`, `*.yaml`, `*.yml`, `*.json`:
-   - `$OLD_VERSION` → `$RELEASE_VERSION` (e.g., `5.15.0` → `5.16.0`)
-   - Old API version → new API version (e.g., `5.15.x` → `5.16.x`)
-   - Old SNAPSHOT → new SNAPSHOT (e.g., `5.15.1-SNAPSHOT` → `5.16.1-SNAPSHOT`)
-   - Excludes: `changelog.md` (already handled), `node_modules/`, `.git/`, `target/`
-8. `./mvnw clean && rm -rf jekyll-www.mock-server.com/_site`
-9. `git add -A && git commit -m "release: update version references to $RELEASE_VERSION" && git push origin master`
+   - `$OLD_VERSION` to `$RELEASE_VERSION` (e.g., `5.15.0` to `5.16.0`)
+   - Old API version to new API version (e.g., `5.15.x` to `5.16.x`)
+   - Old SNAPSHOT to new SNAPSHOT (e.g., `5.15.1-SNAPSHOT` to `5.16.1-SNAPSHOT`)
+   - Excludes: `changelog.md`, `node_modules/`, `.git/`, `target/`, `helm/charts/`
+8. **Validation gate**: `git diff --stat` output displayed for review; in CI this is annotated in Buildkite, locally it's an interactive prompt
+9. `./mvnw clean && rm -rf jekyll-www.mock-server.com/_site`
+10. `git add -A && git commit -m "release: update version references to $RELEASE_VERSION" && git push origin master`
 
-### Steps 4 & 5: Update npm Repos — `update-node-repos.sh`
+### Steps 4 & 5: Publish npm Packages — `publish-npm.sh`
 
-Takes a repo name as argument: `mockserver-node` or `mockserver-client-node`.
+Takes a directory name as argument: `mockserver-node` or `mockserver-client-node`. Operates **in-tree** (no external cloning).
 
-1. Clone repo to `.tmp/release/<repo-name>`
-2. Find-and-replace version references (both `X.Y.Z` and `X.Y.x` patterns)
-3. `rm -rf package-lock.json node_modules`
-4. `nvm use v16.14.1 && npm i`
-5. If `mockserver-node`: also run `npm audit fix`
-6. `grunt`
-7. `git add -A && git commit -m "upgraded to MockServer $RELEASE_VERSION"`
-8. `git push origin master && git tag mockserver-$RELEASE_VERSION && git push origin --tags`
-9. **Interactive OTP prompt**: `read -rp "Enter npm OTP: " OTP`
-10. `npm publish --access=public --otp=$OTP`
+1. `cd <dir> && rm -rf package-lock.json node_modules`
+2. `nvm use v16.14.1 && npm i`
+3. If `mockserver-node`: also run `npm audit fix` and `grunt`
+4. If `mockserver-client-node`: run `grunt`
+5. `git add -A && git commit -m "release: publish $DIR $RELEASE_VERSION" && git push origin master`
+6. `git tag ${DIR}-$RELEASE_VERSION && git push origin --tags`
+7. **Interactive OTP prompt**: `read -rp "Enter npm OTP: " OTP`
+8. `npm publish --access=public --otp=$OTP`
 
-These steps are **local-only** because npm publish requires an interactive OTP code.
+**Local-only** because npm publish requires an interactive OTP code.
 
-### Step 6: Update mockserver-maven-plugin — `update-maven-plugin.sh`
+### Step 6: Release Maven Plugin — `release-maven-plugin.sh`
 
-This performs a full release cycle on the separate `mockserver-maven-plugin` repository:
+Operates in-tree on `mockserver-maven-plugin/`:
 
-1. Build from the monorepo's `mockserver-maven-plugin/` directory
-2. Update 3 version references from SNAPSHOT to RELEASE:
+1. Update 3 version references from SNAPSHOT to RELEASE:
    - Parent POM version
    - `jar-with-dependencies` dependency version
    - `integration-testing` dependency version
-3. `./mvnw deploy -DskipTests` (deploy intermediate snapshot)
-4. `git add -A && git commit -m "upgraded to MockServer $RELEASE_VERSION" && git push origin master`
-5. Set release version: `./mvnw versions:set -DnewVersion=$RELEASE_VERSION`
-6. `git add -A && git commit -m "release: set version $RELEASE_VERSION" && git tag mockserver-$RELEASE_VERSION`
-7. `git push origin master && git push origin --tags`
-8. Stage and release on Maven Central (reuses `stage-to-central.sh` and `release-central.sh` logic, adapted for the plugin repo's working directory)
-9. Update versions back to new SNAPSHOT
-10. `./mvnw deploy -DskipTests` (deploy new SNAPSHOT)
-11. `git add -A && git commit -m "release: set next development version" && git push origin master`
+2. `cd mockserver && ./mvnw clean install -DskipTests` (build core first)
+3. `cd ../mockserver-maven-plugin && ./mvnw clean verify`
+4. `git add -A && git commit -m "release: maven-plugin $RELEASE_VERSION"`
+5. Set version: `./mvnw versions:set -DnewVersion=$RELEASE_VERSION && ./mvnw versions:commit`
+6. `git add -A && git commit -m "release: set maven-plugin version $RELEASE_VERSION"`
+7. `git tag maven-plugin-$RELEASE_VERSION && git push origin master --tags`
+8. Deploy release: `./mvnw deploy -P release -DskipTests --settings ../mockserver/.buildkite-settings.xml`
+9. Update versions back to next SNAPSHOT, deploy SNAPSHOT
+10. `git add -A && git commit -m "release: set maven-plugin next version" && git push origin master`
 
 ### Step 7: Docker Image — `publish-docker.sh`
 
-```bash
-DOCKER_USER=$(load_secret "mockserver-build/dockerhub" "username")
-DOCKER_PASS=$(load_secret "mockserver-build/dockerhub" "password")
-echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+Uses the CI-built JAR from the build step (not Maven Central download), matching the existing `java-docker-push-latest.sh` pattern:
 
+```bash
+if is_ci; then
+  buildkite-agent artifact download "mockserver/mockserver-netty/target/mockserver-netty-*-shaded.jar" .
+  SHADED_JAR=$(ls mockserver/mockserver-netty/target/mockserver-netty-*-shaded.jar | head -1)
+  cp "$SHADED_JAR" docker/local/mockserver-netty-jar-with-dependencies.jar
+fi
+
+.buildkite/scripts/docker-login.sh
+
+docker buildx create --use --name multiarch 2>/dev/null || docker buildx use multiarch
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  --build-arg VERSION="$RELEASE_VERSION" \
+  --push \
+  --tag "mockserver/mockserver:mockserver-$RELEASE_VERSION" \
   --tag "mockserver/mockserver:$RELEASE_VERSION" \
   --tag "mockserver/mockserver:latest" \
-  --push \
-  docker/
+  docker/local
 ```
 
-Depends on Maven Central sync completing (runs after `wait-for-central.sh`) because the Dockerfile downloads the shaded JAR from Maven Central.
+Three tags match the existing convention: full tag (`mockserver-X.Y.Z`), short tag (`X.Y.Z`), and `latest`.
 
 ### Step 8: Helm Chart — `publish-helm.sh`
 
-1. Update version in `helm/mockserver/Chart.yaml` (both `version` and `appVersion`)
+1. Update `helm/mockserver/Chart.yaml` (version + appVersion)
 2. `helm package ./helm/mockserver/`
 3. `mv mockserver-$RELEASE_VERSION.tgz helm/charts/`
 4. `helm repo index helm/charts/`
-5. Upload chart and index to S3:
+5. Assume website role and sync to S3:
    ```bash
-   aws s3 cp "helm/charts/mockserver-$RELEASE_VERSION.tgz" \
-     "s3://${WEBSITE_BUCKET}/" --profile mockserver-website
-   aws s3 cp "helm/charts/index.yaml" \
-     "s3://${WEBSITE_BUCKET}/" --profile mockserver-website
+   assume_website_role
+   aws s3 cp "helm/charts/mockserver-$RELEASE_VERSION.tgz" "s3://${WEBSITE_BUCKET}/"
+   aws s3 cp "helm/charts/index.yaml" "s3://${WEBSITE_BUCKET}/"
    ```
 6. `git add -A && git commit -m "release: add Helm chart $RELEASE_VERSION" && git push origin master`
 
 ### Step 9: Javadoc — `publish-javadoc.sh`
 
-1. `git checkout mockserver-$RELEASE_VERSION` (checkout the release tag)
-2. `./mvnw javadoc:aggregate -P release -DreportOutputDirectory=.tmp/javadoc/$RELEASE_VERSION`
-3. Upload to S3:
+1. `git checkout mockserver-$RELEASE_VERSION`
+2. `cd mockserver && ./mvnw javadoc:aggregate -P release -DreportOutputDirectory=../.tmp/javadoc/$RELEASE_VERSION`
+3. Assume website role and upload:
    ```bash
-   aws s3 sync ".tmp/javadoc/$RELEASE_VERSION" \
-     "s3://${WEBSITE_BUCKET}/versions/$RELEASE_VERSION/" \
-     --profile mockserver-website
+   assume_website_role
+   aws s3 sync ".tmp/javadoc/$RELEASE_VERSION" "s3://${WEBSITE_BUCKET}/versions/$RELEASE_VERSION/"
    ```
 4. `git checkout master`
 
 ### Step 10: SwaggerHub — `update-swaggerhub.sh`
 
-Uses the SwaggerHub Registry REST API (previously documented as "no API available" — this was incorrect, the API exists):
+```bash
+SWAGGERHUB_KEY=$(load_secret "mockserver-release/swaggerhub" "api_key")
+SPEC_FILE="mockserver/mockserver-core/src/main/resources/org/mockserver/openapi/mock-server-openapi-embedded-model.yaml"
+API_VERSION="${RELEASE_VERSION%.*}.x"
 
-1. Load API key from Secrets Manager: `SWAGGERHUB_KEY=$(load_secret "mockserver-release/swaggerhub" "api_key")`
-2. Read the OpenAPI spec:
-   ```bash
-   SPEC_FILE="mockserver-core/src/main/resources/org/mockserver/openapi/mock-server-openapi-embedded-model.yaml"
-   ```
-3. Create new version on SwaggerHub:
-   ```bash
-   API_VERSION="${RELEASE_VERSION%.*}.x"  # e.g., 5.16.0 → 5.16.x
-   curl -X POST \
-     "https://api.swaggerhub.com/apis/jamesdbloom/mock-server-openapi?version=$API_VERSION" \
-     -H "Authorization: $SWAGGERHUB_KEY" \
-     -H "Content-Type: application/yaml" \
-     --data-binary "@$SPEC_FILE"
-   ```
-4. Publish the version:
-   ```bash
-   curl -X PUT \
-     "https://api.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/$API_VERSION/settings/lifecycle" \
-     -H "Authorization: $SWAGGERHUB_KEY" \
-     -H "Content-Type: application/json" \
-     -d '{"published": true}'
-   ```
+curl -X POST \
+  "https://api.swaggerhub.com/apis/jamesdbloom/mock-server-openapi?version=$API_VERSION" \
+  -H "Authorization: $SWAGGERHUB_KEY" \
+  -H "Content-Type: application/yaml" \
+  --data-binary "@$SPEC_FILE"
+
+curl -X PUT \
+  "https://api.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/$API_VERSION/settings/lifecycle" \
+  -H "Authorization: $SWAGGERHUB_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"published": true}'
+```
 
 ### Step 11: Website — `publish-website.sh`
 
-1. `cd jekyll-www.mock-server.com && rm -rf _site`
-2. `bundle exec jekyll build`
-3. Copy legacy URL pages (matching `local_generate_web_site.sh` behavior):
+1. `cd jekyll-www.mock-server.com && rm -rf _site && bundle exec jekyll build`
+2. Copy legacy URL pages (matching `local_generate_web_site.sh` behavior):
    ```bash
    cp _site/mock_server/mockserver_clients.html _site/
    cp _site/mock_server/running_mock_server.html _site/
    cp _site/mock_server/debugging_issues.html _site/
    cp _site/mock_server/creating_expectations.html _site/
    ```
-4. Sync to S3:
+3. Assume website role and sync + invalidate:
    ```bash
-   aws s3 sync _site/ s3://${WEBSITE_BUCKET}/ \
-     --delete --profile mockserver-website
-   ```
-5. Invalidate CloudFront cache:
-   ```bash
-   aws cloudfront create-invalidation \
-     --distribution-id "$DISTRIBUTION_ID" \
-     --paths "/*" --profile mockserver-website
+   assume_website_role
+   aws s3 sync _site/ "s3://${WEBSITE_BUCKET}/" --delete
+   aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths "/*"
    ```
 
 ### Step 12: Versioned Website — `create-versioned-site.sh`
 
-Instead of manually creating AWS resources via the Console, this uses Terraform.
+Instead of manually creating AWS resources via the Console, this uses Terraform:
 
 1. Derive the version subdomain: `SUBDOMAIN="${MAJOR}-${MINOR}"` (e.g., `5-16`)
-2. Add the new version to `terraform/website/terraform.tfvars`:
-   ```hcl
-   versioned_sites = {
-     # ... existing entries ...
-      "5-16" = { bucket_name = "<bucket-name>", region = "eu-west-2" }
-   }
-   ```
-3. `terraform -chdir=terraform/website plan` — show what will be created (new S3 bucket, CloudFront distribution, Route53 A record)
-4. Prompt for confirmation (locally) or controlled by Buildkite `block` step (CI)
+2. Add the new version to `terraform/website/terraform.tfvars`
+3. `terraform -chdir=terraform/website plan`
+4. Confirm (locally: interactive prompt; CI: controlled by pipeline flow)
 5. `terraform -chdir=terraform/website apply`
-6. Build the Jekyll site and sync to the new bucket:
-   ```bash
-    aws s3 sync jekyll-www.mock-server.com/_site/ \
-      "s3://<bucket-name>/" --profile mockserver-website
-   ```
-7. Update `scripts/s3_buckets.md` with the new bucket entry
-8. Update `README.md` version table with the new documentation link
-9. `git add -A && git commit -m "release: add versioned site ${SUBDOMAIN}.mock-server.com" && git push origin master`
+6. Build Jekyll site and sync to new bucket
+7. Update README.md version table
+8. `git add -A && git commit -m "release: add versioned site ${SUBDOMAIN}.mock-server.com" && git push origin master`
 
 ### Step 13: Homebrew — `update-homebrew.sh` (Local-Only)
 
-This step requires a local Homebrew installation and cannot run in the CI Docker container.
+```bash
+GITHUB_TOKEN=$(load_secret "mockserver-release/github-token" "token")
+brew doctor
+brew update
+HOMEBREW_GITHUB_API_TOKEN="$GITHUB_TOKEN" \
+  brew bump-formula-pr --strict mockserver \
+  --url="https://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/$RELEASE_VERSION/mockserver-netty-$RELEASE_VERSION-brew-tar.tar"
+```
 
-1. `brew doctor`
-2. Delete and reset Homebrew fork:
-   ```bash
-   # Fork management
-   gh repo delete jamesdbloom/homebrew-core --yes 2>/dev/null || true
-   ```
-3. `brew update`
-4. Create the PR:
-   ```bash
-   GITHUB_TOKEN=$(load_secret "mockserver-release/github-token" "token")
-   HOMEBREW_GITHUB_API_TOKEN="$GITHUB_TOKEN" \
-     brew bump-formula-pr --strict mockserver \
-     --url="https://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/$RELEASE_VERSION/mockserver-netty-$RELEASE_VERSION-brew-tar.tar"
-   ```
+### Steps 14 & 15: PyPI and RubyGems
+
+These reuse the existing patterns from `scripts/release_python.sh` and `scripts/release_ruby.sh`, centralised into `publish-pypi.sh` and `publish-rubygems.sh` that source `common.sh`.
 
 ### GitHub Release — `github-release.sh`
 
-1. Extract the `## [$RELEASE_VERSION]` section from `changelog.md` into a temp file
-2. Create the release:
-   ```bash
-   GITHUB_TOKEN=$(load_secret "mockserver-release/github-token" "token")
-   gh release create "mockserver-$RELEASE_VERSION" \
-     --title "MockServer $RELEASE_VERSION" \
-     --notes-file /tmp/changelog-extract.md \
-     --latest
-   ```
+```bash
+GITHUB_TOKEN=$(load_secret "mockserver-release/github-token" "token")
+CHANGELOG_EXTRACT=$(sed -n "/## \[$RELEASE_VERSION\]/,/## \[/p" changelog.md | head -n -1)
+echo "$CHANGELOG_EXTRACT" > /tmp/changelog-extract.md
 
-### Cleanup Failed Release — `cleanup-failed-release.sh`
+GITHUB_TOKEN="$GITHUB_TOKEN" gh release create "mockserver-$RELEASE_VERSION" \
+  --title "MockServer $RELEASE_VERSION" \
+  --notes-file /tmp/changelog-extract.md \
+  --latest
+```
+
+### Cleanup — `cleanup-failed-release.sh`
 
 For rolling back a failed release:
 
-1. `git reset --hard $PRE_RELEASE_COMMIT`
-2. `git push --force`
-3. `git tag -d mockserver-$RELEASE_VERSION && git push origin :refs/tags/mockserver-$RELEASE_VERSION`
-4. Drop Sonatype staging repository via REST API:
-   ```bash
-   curl -X POST -u "$USER:$PASS" \
-     -H "Content-Type: application/json" \
-     -d "{\"data\":{\"stagedRepositoryId\":\"$STAGING_REPO\",\"description\":\"Drop failed release\"}}" \
-     "https://oss.sonatype.org/service/local/staging/bulk/drop"
-   ```
+```bash
+AUTH=$(central_portal_auth_header)
+DEPLOYMENT_ID="${1:-$(buildkite-agent meta-data get deployment-id 2>/dev/null || echo '')}"
+
+if [[ -n "$DEPLOYMENT_ID" ]]; then
+  curl -s -X DELETE \
+    -H "Authorization: Bearer $AUTH" \
+    "https://central.sonatype.com/api/v1/publisher/deployment/$DEPLOYMENT_ID"
+  echo "Dropped Central Portal deployment $DEPLOYMENT_ID"
+fi
+
+git reset --hard "${PRE_RELEASE_COMMIT}"
+git push --force
+git tag -d "mockserver-$RELEASE_VERSION" 2>/dev/null || true
+git push origin ":refs/tags/mockserver-$RELEASE_VERSION" 2>/dev/null || true
+```
 
 ---
 
 ## Secret Management
 
-All release credentials are stored in AWS Secrets Manager in the build agent account (`build account`).
-
-| Secret Name | Contents | Used By |
-|---|---|---|
-| `mockserver-release/sonatype` | `{"username": "...", "password": "..."}` | stage-to-central, release-central, update-maven-plugin |
-| `mockserver-release/gpg-key` | `{"key": "<base64-encoded-private-key>", "passphrase": "..."}` | stage-to-central, update-maven-plugin |
-| `mockserver-release/github-token` | `{"token": "ghp_..."}` | github-release, update-homebrew |
-| `mockserver-release/totp-seed` | `{"seed": "<base32-seed>"}` | verify-totp |
-| `mockserver-release/npm-token` | `{"token": "..."}` | update-node-repos |
-| `mockserver-release/swaggerhub` | `{"api_key": "..."}` | update-swaggerhub |
-| `mockserver-release/aws-website` | `{"access_key_id": "...", "secret_access_key": "..."}` | publish-website, publish-javadoc, publish-helm, create-versioned-site |
-| `mockserver-build/dockerhub` | `{"username": "...", "password": "..."}` | publish-docker (already exists) |
-| `mockserver-build/pypi` | `{"token": "pypi-..."}` | publish-pypi |
-| `mockserver-build/rubygems` | `{"api_key": "..."}` | publish-rubygems |
-
----
-
-## POM Changes Required
-
-| Change | File | Detail |
-|---|---|---|
-| Fix SCM URL | `pom.xml` | `jamesdbloom/mockservice` → `mock-server/mockserver-monorepo` |
-| Remove maven-release-plugin | `pom.xml` | No longer needed — replaced by `versions:set` + explicit git operations |
-| Retain `release` profile | `pom.xml` | GPG signing (`maven-gpg-plugin`), source JAR, Javadoc JAR generation still needed |
-| Retain `versions-maven-plugin` | `pom.xml` | Already available transitively; may need explicit declaration for `versions:set` |
+| Secret Name | Contents | Status | Used By |
+|---|---|---|---|
+| `mockserver-build/sonatype` | `{"username": "...", "password": "..."}` | **Exists** | deploy-release, deploy-snapshot, Central Portal API auth |
+| `mockserver-build/dockerhub` | `{"username": "...", "token": "..."}` | **Exists** | publish-docker |
+| `mockserver-build/pypi` | `{"token": "pypi-..."}` | **Exists** | publish-pypi |
+| `mockserver-build/rubygems` | `{"api_key": "..."}` | **Exists** | publish-rubygems |
+| `mockserver-build/buildkite-api-token` | `{"token": "..."}` | **Exists** | Pipeline management |
+| `mockserver-release/gpg-key` | `{"key": "<base64>", "passphrase": "..."}` | **New** | deploy-release, release-maven-plugin |
+| `mockserver-release/github-token` | `{"token": "ghp_..."}` | **New** | github-release, update-homebrew |
+| `mockserver-release/totp-seed` | `{"seed": "<base32>"}` | **New** | verify-totp |
+| `mockserver-release/npm-token` | `{"token": "..."}` | **New** | publish-npm |
+| `mockserver-release/swaggerhub` | `{"api_key": "..."}` | **New** | update-swaggerhub |
+| `mockserver-release/website-role` | `{"role_arn": "arn:aws:iam::role/..."}` | **New** | All website/S3/CloudFront operations |
 
 ---
 
-## Terraform: Website Infrastructure
+## Terraform Changes
 
-### Overview
+### Build Secrets (`terraform/buildkite-agents/build-secrets.tf`)
 
-A new Terraform module at `terraform/website/` manages all website infrastructure in account `website account`. This replaces manual AWS Console work for:
-- The main website (S3 bucket, CloudFront distribution, Route53 record)
-- All versioned documentation sites (17 existing + new ones)
-- ACM certificates
-- Helm chart hosting
-
-### Approach
-
-- **Separate state** from `terraform/buildkite-agents/` (different account, different concerns)
-- **Import all existing resources** — 17 versioned sites + main site + CloudFront distributions + Route53 records
-- **`for_each` pattern** for versioned sites — adding a new version is adding a string to a map variable
-
-### `versioned-sites.tf` Pattern
+Add new secrets and extend the IAM policy:
 
 ```hcl
-variable "versioned_sites" {
-  type = map(object({
-    bucket_name = string
-    region      = string
-  }))
-}
-
-resource "aws_s3_bucket" "versioned" {
-  for_each = var.versioned_sites
-  bucket   = each.value.bucket_name
-}
-
-resource "aws_cloudfront_distribution" "versioned" {
-  for_each = var.versioned_sites
-  origin {
-    domain_name = aws_s3_bucket.versioned[each.key].bucket_regional_domain_name
-    origin_id   = "S3-${each.value.bucket_name}"
-  }
-  default_root_object = "index.html"
-  aliases             = ["${each.key}.mock-server.com"]
-  # ... standard CloudFront config matching existing distributions
-}
-
-resource "aws_route53_record" "versioned" {
-  for_each = var.versioned_sites
-  zone_id  = aws_route53_zone.mock_server.zone_id
-  name     = "${each.key}.mock-server.com"
-  type     = "A"
-  alias {
-    name                   = aws_cloudfront_distribution.versioned[each.key].domain_name
-    zone_id                = aws_cloudfront_distribution.versioned[each.key].hosted_zone_id
-    evaluate_target_health = false
-  }
-}
-```
-
-### Import Strategy
-
-All 17 existing versioned sites have inconsistent bucket naming (random suffixes for older sites, predictable names for newer ones). Import blocks map each to the correct Terraform resource:
-
-```hcl
-import {
-  to = aws_s3_bucket.versioned["5-13"]
-  id = "<bucket-name>"  # See ~/mockserver-aws-ids.md for bucket names
-}
-# ... all 17 versioned sites
-```
-
-The existing version-to-domain mapping is in `scripts/s3_buckets.md`. Bucket names and regions are in `~/mockserver-aws-ids.md`.
-
-### Adding a New Versioned Site at Release Time
-
-Adding a new versioned site is a two-step process:
-
-1. Add the new entry to the `versioned_sites` variable in `terraform.tfvars`
-2. Run `terraform apply` — Terraform creates the S3 bucket, CloudFront distribution, and Route53 record
-
-New versions follow the naming convention documented in `~/mockserver-aws-ids.md`, all in `eu-west-2`.
-
-### Prerequisites for Website Terraform
-
-| # | Prerequisite | Notes |
-|---|---|---|
-| 1 | SSO access to account `website account` | Currently not configured — needs SSO portal setup |
-| 2 | S3 backend for Terraform state | Create in `website account` (or use `build account` with cross-account) |
-| 3 | Inventory of existing CloudFront distribution IDs | Run `aws cloudfront list-distributions` in `website account` |
-| 4 | ACM certificate ID | Discover for import — likely a wildcard cert `*.mock-server.com` |
-| 5 | Route53 hosted zone ID | Run `aws route53 list-hosted-zones` in `website account` |
-
----
-
-## Terraform: Build Secrets IAM Changes
-
-Add to `terraform/buildkite-agents/build-secrets.tf` to grant the Buildkite agent IAM role access to release secrets:
-
-```hcl
-resource "aws_secretsmanager_secret" "sonatype" {
-  name        = "mockserver-release/sonatype"
-  description = "Sonatype OSSRH credentials for Maven Central publishing"
-}
-
 resource "aws_secretsmanager_secret" "gpg_key" {
   name        = "mockserver-release/gpg-key"
-  description = "GPG private key and passphrase for artifact signing"
+  description = "GPG private key and passphrase for Maven Central artifact signing"
 }
 
 resource "aws_secretsmanager_secret" "github_token" {
@@ -1087,130 +1169,239 @@ resource "aws_secretsmanager_secret" "swaggerhub" {
   description = "SwaggerHub API key for publishing OpenAPI spec"
 }
 
-resource "aws_secretsmanager_secret" "aws_website" {
-  name        = "mockserver-release/aws-website"
-  description = "AWS credentials for website account (website account) S3/CloudFront"
+resource "aws_secretsmanager_secret" "website_role" {
+  name        = "mockserver-release/website-role"
+  description = "IAM role ARN for cross-account website access"
 }
+```
 
-resource "aws_secretsmanager_secret" "pypi" {
-  name        = "mockserver-build/pypi"
-  description = "PyPI API token for publishing mockserver-client Python package"
-}
+Extend the existing IAM policy to include new secrets and STS assume-role:
 
-resource "aws_secretsmanager_secret" "rubygems" {
-  name        = "mockserver-build/rubygems"
-  description = "RubyGems API key for publishing mockserver-client Ruby gem"
-}
-
+```hcl
 resource "aws_iam_policy" "release_secrets" {
   name = "buildkite-release-secrets"
   policy = jsonencode({
     Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = "secretsmanager:GetSecretValue"
+        Resource = [
+          aws_secretsmanager_secret.gpg_key.arn,
+          aws_secretsmanager_secret.github_token.arn,
+          aws_secretsmanager_secret.totp_seed.arn,
+          aws_secretsmanager_secret.npm_token.arn,
+          aws_secretsmanager_secret.swaggerhub.arn,
+          aws_secretsmanager_secret.website_role.arn,
+        ]
+      },
+      {
+        Effect   = "Allow"
+        Action   = "sts:AssumeRole"
+        Resource = "arn:aws:iam::role/mockserver-release-website"
+      }
+    ]
+  })
+}
+```
+
+### Release Pipeline (`terraform/buildkite-pipelines/pipelines.tf`)
+
+Add entry for the release pipeline:
+
+```hcl
+"release" = {
+  name        = "MockServer Release"
+  description = "Automated release pipeline for MockServer"
+  file        = ".buildkite/release-pipeline.yml"
+  trigger     = "none"
+  visibility  = "private"
+}
+```
+
+### Website Infrastructure (`terraform/website/`)
+
+New Terraform module for all website resources, using cross-account IAM role:
+
+#### `cross-account-role.tf`
+
+```hcl
+resource "aws_iam_role" "release_website" {
+  name = "mockserver-release-website"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
     Statement = [{
-      Effect = "Allow"
-      Action = "secretsmanager:GetSecretValue"
-      Resource = [
-        aws_secretsmanager_secret.sonatype.arn,
-        aws_secretsmanager_secret.gpg_key.arn,
-        aws_secretsmanager_secret.github_token.arn,
-        aws_secretsmanager_secret.totp_seed.arn,
-        aws_secretsmanager_secret.npm_token.arn,
-        aws_secretsmanager_secret.swaggerhub.arn,
-        aws_secretsmanager_secret.aws_website.arn,
-        aws_secretsmanager_secret.dockerhub.arn,
-        aws_secretsmanager_secret.pypi.arn,
-        aws_secretsmanager_secret.rubygems.arn,
-      ]
+      Effect    = "Allow"
+      Principal = { AWS = var.build_account_agent_role_arn }
+      Action    = "sts:AssumeRole"
     }]
   })
 }
 
-# Attach to the Buildkite agent instance role
-# (The Elastic CI Stack module exposes the role via outputs)
+resource "aws_iam_role_policy" "release_website" {
+  name = "website-access"
+  role = aws_iam_role.release_website.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["s3:PutObject", "s3:GetObject", "s3:DeleteObject", "s3:ListBucket"]
+        Resource = concat(
+          [for b in values(aws_s3_bucket.versioned) : b.arn],
+          [for b in values(aws_s3_bucket.versioned) : "${b.arn}/*"],
+          [aws_s3_bucket.main.arn, "${aws_s3_bucket.main.arn}/*"]
+        )
+      },
+      {
+        Effect   = "Allow"
+        Action   = "cloudfront:CreateInvalidation"
+        Resource = concat(
+          [for d in values(aws_cloudfront_distribution.versioned) : d.arn],
+          [aws_cloudfront_distribution.main.arn]
+        )
+      }
+    ]
+  })
+}
 ```
+
+#### `versioned-sites.tf` Pattern
+
+```hcl
+variable "versioned_sites" {
+  type = map(object({
+    bucket_name = string
+    region      = string
+  }))
+}
+
+resource "aws_s3_bucket" "versioned" {
+  for_each = var.versioned_sites
+  bucket   = each.value.bucket_name
+}
+
+resource "aws_cloudfront_distribution" "versioned" {
+  for_each = var.versioned_sites
+  origin {
+    domain_name = aws_s3_bucket.versioned[each.key].bucket_regional_domain_name
+    origin_id   = "S3-${each.value.bucket_name}"
+  }
+  default_root_object = "index.html"
+  aliases             = ["${each.key}.mock-server.com"]
+}
+
+resource "aws_route53_record" "versioned" {
+  for_each = var.versioned_sites
+  zone_id  = aws_route53_zone.mock_server.zone_id
+  name     = "${each.key}.mock-server.com"
+  type     = "A"
+  alias {
+    name                   = aws_cloudfront_distribution.versioned[each.key].domain_name
+    zone_id                = aws_cloudfront_distribution.versioned[each.key].hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+```
+
+#### Import Strategy
+
+All 17+ existing versioned sites have inconsistent bucket naming. Import blocks map each to the correct Terraform resource:
+
+```hcl
+import {
+  to = aws_s3_bucket.versioned["5-13"]
+  id = "<bucket-name>"
+}
+```
+
+Bucket names and IDs are in `~/mockserver-aws-ids.md`. The existing version-to-domain mapping is in `scripts/s3_buckets.md`.
 
 ---
 
 ## Docker CI Image Changes
 
-The `mockserver/mockserver:maven` image (`docker_build/maven/Dockerfile`) needs additional tools for the release pipeline:
+The `mockserver/mockserver:maven` image (`docker_build/maven/Dockerfile`) needs additional tools:
 
 | Tool | Purpose | Install Method |
 |---|---|---|
 | `oathtool` | TOTP verification | `apt-get install oathtool` |
-| `jq` | JSON parsing for Secrets Manager responses | `apt-get install jq` |
-| AWS CLI v2 | Secrets Manager access, S3 sync, CloudFront invalidation | Official installer |
+| `jq` | JSON parsing for Secrets Manager responses | `apt-get install jq` (verify if already present) |
+| AWS CLI v2 | Secrets Manager access, S3 sync, STS assume-role, CloudFront invalidation | Official installer |
 | Docker Buildx + QEMU | Multi-arch Docker image builds | Docker official packages |
 | Helm | Helm chart packaging | Helm install script |
 | `gh` (GitHub CLI) | GitHub Release creation | GitHub official deb package |
 | Ruby + Bundler + Jekyll | Website build | `apt-get install ruby-dev` + `gem install bundler jekyll` |
-| `xmllint` | OSSRH REST API XML parsing | `apt-get install libxml2-utils` |
 
 ---
 
 ## Phased Implementation
 
-| Phase | Steps Covered | Deliverables | Effort |
+| Phase | Steps | Deliverables | Effort |
 |---|---|---|---|
-| **Phase 1: Core Pipeline** | 1, 2, TOTP, validate | `common.sh`, `verify-totp.sh`, `validate.sh`, `set-release-version.sh`, `build-and-test.sh`, `stage-to-central.sh`, `release-central.sh`, `wait-for-central.sh`, `deploy-snapshot.sh`, pipeline YAML (core steps), POM fixes (SCM URL, remove maven-release-plugin) | 5-7 days |
-| **Phase 2: Version Updates** | 3 | `update-versions.sh` (find-and-replace logic for changelog, README, _config.yml, OpenAPI spec, Java classes, examples) | 2-3 days |
-| **Phase 3: Publishing** | 7, 8, 9, 11 | `publish-docker.sh`, `publish-helm.sh`, `publish-javadoc.sh`, `publish-website.sh`, Docker CI image updates | 3-4 days |
-| **Phase 4: External Repos** | 4, 5, 6 | `update-node-repos.sh`, `update-maven-plugin.sh` | 3-4 days |
-| **Phase 5: SwaggerHub + GitHub Release** | 10, GH Release | `update-swaggerhub.sh`, `github-release.sh` | 1-2 days |
-| **Phase 6: Website Terraform** | 12 | `terraform/website/` module, import all existing sites, `create-versioned-site.sh` | 5-7 days |
-| **Phase 7: Homebrew + Cleanup + Orchestrator** | 13, cleanup, notify | `update-homebrew.sh`, `cleanup-failed-release.sh`, `notify.sh`, local orchestrator `scripts/release.sh` | 1-2 days |
-| **Phase 8: Secrets + IAM** | Infrastructure | Store all secrets in AWS SM, update agent IAM policy (Terraform), TOTP seed setup, `release-managers` team in Buildkite | 2-3 days |
+| **Phase 1: POM Cleanup** | Pre-req | Fix `deploy.plugin.repository.url`, `repositoryId=ossrh` in 6 submodules, Docker REPOSITORY_URL, settings.xml files, mockserver-node host | 1-2 days |
+| **Phase 2: Core Pipeline** | 1, 2, TOTP, validate | `common.sh`, `verify-totp.sh`, `validate.sh`, `set-release-version.sh`, `build-and-test.sh`, `deploy-release.sh`, `poll-central-portal.sh`, `publish-central-portal.sh`, `wait-for-central.sh`, `deploy-snapshot.sh` | 4-5 days |
+| **Phase 3: Version Updates** | 3 | `update-versions.sh` with validation gate | 2-3 days |
+| **Phase 4: Publishing** | 7, 8, 9, 11, 14, 15 | `publish-docker.sh`, `publish-helm.sh`, `publish-javadoc.sh`, `publish-website.sh`, `publish-pypi.sh`, `publish-rubygems.sh`, Docker CI image updates | 3-4 days |
+| **Phase 5: External Repos & Plugin** | 4, 5, 6 | `publish-npm.sh`, `release-maven-plugin.sh` | 2-3 days |
+| **Phase 6: SwaggerHub + GitHub Release** | 10, GH Release | `update-swaggerhub.sh`, `github-release.sh` | 1-2 days |
+| **Phase 7: Website Terraform** | 12 | `terraform/website/` module, import existing sites, `create-versioned-site.sh`, cross-account IAM role | 4-5 days |
+| **Phase 8: Secrets + Orchestrator** | Infrastructure | Store new secrets, TOTP seed setup, `release-managers` team, `scripts/release.sh`, `update-homebrew.sh`, `cleanup-failed-release.sh`, `notify.sh` | 2-3 days |
 
-**Total estimated effort: 23-32 days**
+**Total estimated effort: 16-22 days** (reduced from 23-32 in v1 due to existing infrastructure)
 
-### Suggested Order
-
-Phase 8 (secrets/IAM) and Phase 6 (website Terraform) can proceed in parallel with Phase 1. The recommended critical path is:
+### Critical Path
 
 ```mermaid
 gantt
     title Release Pipeline Implementation
     dateFormat  YYYY-MM-DD
     section Foundation
-    Phase 8 Secrets + IAM          :p8, 2026-01-01, 3d
-    Phase 1 Core Pipeline          :p1, 2026-01-01, 7d
-    section Version Updates
-    Phase 2 Version Updates        :p2, after p1, 3d
+    Phase 1 POM Cleanup            :p1, 2026-06-01, 2d
+    Phase 8 Secrets + IAM          :p8, 2026-06-01, 3d
+    section Core
+    Phase 2 Core Pipeline          :p2, after p1, 5d
+    section Updates
+    Phase 3 Version Updates        :p3, after p2, 3d
     section Publishing
-    Phase 3 Publishing             :p3, after p2, 4d
-    Phase 5 SwaggerHub + GH       :p5, after p2, 2d
+    Phase 4 Publishing             :p4, after p3, 4d
+    Phase 6 SwaggerHub + GH       :p6, after p3, 2d
     section External
-    Phase 4 External Repos         :p4, after p3, 4d
+    Phase 5 npm + Plugin           :p5, after p4, 3d
     section Infrastructure
-    Phase 6 Website Terraform      :p6, 2026-01-01, 7d
+    Phase 7 Website Terraform      :p7, 2026-06-01, 5d
     section Wrap-up
-    Phase 7 Homebrew + Orchestrator:p7, after p4, 2d
+    Orchestrator + Homebrew        :p9, after p5, 2d
 ```
+
+Phase 7 (website Terraform) and Phase 8 (secrets) can proceed in parallel with all other phases.
 
 ---
 
 ## Prerequisites Checklist
 
-| # | Task | When Needed | Notes |
+| # | Task | When | Status |
 |---|---|---|---|
-| 1 | Generate TOTP seed, store in AWS SM, register in authenticator app | Phase 1 | `python3 -c "import pyotp; print(pyotp.random_base32())"` |
-| 2 | Store Sonatype OSSRH credentials in AWS SM | Phase 1 | From `~/.m2/settings.xml` |
-| 3 | Export GPG key, base64 encode, store in AWS SM | Phase 1 | `gpg --export-secret-keys --armor KEY_ID \| base64` |
-| 4 | Create `release-managers` team in Buildkite with only you | Phase 1 | Buildkite UI → Organization → Teams |
-| 5 | Create `release` pipeline in Buildkite (private) | Phase 1 | Points to `.buildkite/release-pipeline.yml` |
-| 6 | Fix SCM URL in `pom.xml` | Phase 1 | `jamesdbloom/mockservice` → `mock-server/mockserver-monorepo` |
-| 7 | Apply Terraform to create secrets + grant agent IAM access | Phase 1 | `terraform/buildkite-agents/build-secrets.tf` |
-| 8 | Install `oathtool`, `jq`, `xmllint` in Maven CI Docker image | Phase 1 | `docker_build/maven/Dockerfile` |
-| 9 | Create GitHub PAT (`contents:write`), store in AWS SM | Phase 3 | For `gh release create` |
-| 10 | Store Docker Hub credentials in AWS SM (already exists) | Phase 3 | Verify `mockserver-build/dockerhub` has correct values |
-| 11 | Install AWS CLI v2, `helm`, `gh`, Docker Buildx/QEMU in CI image | Phase 3 | `docker_build/maven/Dockerfile` |
-| 12 | Install Ruby, Bundler, Jekyll in CI image | Phase 3 | For website build in pipeline |
-| 13 | Create SwaggerHub API key, store in AWS SM | Phase 5 | SwaggerHub account settings |
-| 14 | Create npm automation token, store in AWS SM | Phase 4 | `npm token create` |
-| 15 | Configure SSO access to website account (`website account`) | Phase 6 | AWS SSO portal |
-| 16 | Inventory existing CloudFront distribution IDs | Phase 6 | `aws cloudfront list-distributions` in `website account` |
-| 17 | Discover ACM certificate ID and Route53 hosted zone ID | Phase 6 | For Terraform import |
-| 18 | Create AWS credentials for website account, store in AWS SM | Phase 3 | For cross-account S3/CF access from CI |
+| 1 | Fix `deploy.plugin.repository.url` in pom.xml | Phase 1 | Pending |
+| 2 | Migrate `repositoryId=ossrh` to `central-portal` in 6 submodule POMs | Phase 1 | Pending |
+| 3 | Update Docker REPOSITORY_URL in 4 Dockerfiles | Phase 1 | Pending |
+| 4 | Update `mockserver-node` artifact download host | Phase 1 | Pending |
+| 5 | Update settings.xml files (Docker, integration tests) | Phase 1 | Pending |
+| 6 | Generate TOTP seed, store in AWS SM, register in app | Phase 2 | Pending |
+| 7 | Export GPG key, base64 encode, store in AWS SM | Phase 2 | Pending |
+| 8 | Create `release-managers` team in Buildkite | Phase 2 | Pending |
+| 9 | Create release pipeline in Buildkite (private) | Phase 2 | Pending |
+| 10 | Install `oathtool` in Maven CI Docker image | Phase 2 | Pending |
+| 11 | Create GitHub PAT (`contents:write`), store in AWS SM | Phase 4 | Pending |
+| 12 | Install Helm, `gh`, Ruby+Jekyll in CI image | Phase 4 | Pending |
+| 13 | Create SwaggerHub API key, store in AWS SM | Phase 6 | Pending |
+| 14 | Create npm automation token, store in AWS SM | Phase 5 | Pending |
+| 15 | Configure SSO access to website account | Phase 7 | Pending |
+| 16 | Inventory existing CloudFront distribution IDs | Phase 7 | Pending |
+| 17 | Create cross-account IAM role in website account | Phase 7 | Pending |
+| 18 | Store website role ARN in AWS SM | Phase 7 | Pending |
+
+**Already done:** SCM URL in pom.xml (already points to monorepo).
 
 ---
 
@@ -1218,14 +1409,14 @@ gantt
 
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
-| Website account SSO access not available | Medium | Blocks Phase 6 | Configure SSO access early; Phase 6 can proceed last |
-| Existing CloudFront distribution IDs unknown | Medium | Blocks Phase 6 import | Run discovery commands before starting Phase 6 |
-| npm automation token may not bypass OTP | Medium | Steps 4/5 remain fully interactive | Investigate `npm token create --cidr`; fallback is local-only |
-| SwaggerHub API may have restrictions for this account | Low | Step 10 remains manual | Test API access early; fallback is manual browser publishing |
-| `mockserver-maven-plugin` repo structure may differ | Low | Step 6 script needs adjustment | Clone and inspect repo structure before Phase 4 |
-| Agent IAM role attachment requires module output access | Low | Blocks Phase 8 | Check Elastic CI Stack module outputs for role ARN/name |
-| Docker CI image rebuild may break existing CI builds | Medium | CI downtime | Test image changes on a branch first; tag with separate label |
-| Cross-account S3 access from CI agents | Medium | Blocks Steps 8, 9, 11 | Use static credentials in Secrets Manager (planned); or set up cross-account IAM role |
+| Central Portal Publisher API returns unexpected errors | Medium | Blocks Phase 2 | Test API early with a test namespace; fallback to OSSRH Staging API compatibility layer at `ossrh-staging-api.central.sonatype.com` |
+| Deployment ID capture from `mvn deploy` output is fragile | Medium | Cannot poll/publish programmatically | Use OSSRH Staging API compatibility `/manual/search/repositories` endpoint as alternative; or switch to bundle upload via Publisher API |
+| Website account SSO access not available | Medium | Blocks Phase 7 | Phase 7 can proceed last; website publishing can remain manual initially |
+| npm automation token may not bypass OTP | Medium | Steps 4/5 remain interactive | Investigate `npm token create --cidr`; fallback is local-only (current design) |
+| SwaggerHub API restrictions | Low | Step 10 remains manual | Test API access early |
+| Docker CI image rebuild breaks CI | Medium | CI downtime | Test on branch, tag separately |
+| Cross-account IAM role trust policy misconfiguration | Low | Website access fails | Test with `aws sts assume-role` before pipeline deployment |
+| GPG key import fails in CI Docker container | Medium | Cannot sign artifacts | Test GPG import in Maven CI image; ensure `gpg-agent` is available |
 
 ---
 
@@ -1241,22 +1432,13 @@ gantt
 
 **Disadvantages:**
 - No existing build infrastructure (no pre-warmed Maven cache)
-- GitHub Actions runners have less memory than the Buildkite `t3.large` instances
-- Would need to duplicate all CI configuration between Buildkite and GitHub Actions
-- `block` steps (human approval) are not natively supported — would need `environment` protection rules
-- Harder to integrate with AWS Secrets Manager (would need OIDC federation, which exists but scoped to the other account)
+- GitHub Actions runners have less memory than the Buildkite EC2 instances
+- Would need to duplicate CI configuration between Buildkite and GitHub Actions
+- `block` steps (human approval) not natively supported — needs `environment` protection rules
+- Harder to integrate with AWS Secrets Manager (would need OIDC federation)
 - No TOTP verification mechanism comparable to Buildkite `block` step + AWS verification
 
 ### Option C: Hybrid — Buildkite Build + GitHub Actions Publish
-
-```mermaid
-flowchart LR
-    BK["Buildkite
-Build + Test + Stage"] -->|webhook| GHA["GitHub Actions
-Docker + Helm + Docs"]
-    BK -->|REST API| OSSRH["Sonatype OSSRH
-Close + Release"]
-```
 
 Use Buildkite for the Maven build and GitHub Actions for publishing.
 
