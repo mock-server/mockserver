@@ -50,6 +50,7 @@ public class ExampleBuilder {
     public static final float SAMPLE_FLOAT_PROPERTY_VALUE = 1.1f;
     public static final double SAMPLE_DOUBLE_PROPERTY_VALUE = 1.1f;
     public static final boolean SAMPLE_BOOLEAN_PROPERTY_VALUE = true;
+    public static final String SAMPLE_BYTE_PROPERTY_VALUE = "c29tZV9ieXRlX3ZhbHVl";
     public static final String SAMPLE_DATE_PROPERTY_VALUE = "2018-11-13";
     public static final String SAMPLE_TIME_PROPERTY_VALUE = "20:20:39+00:00";
     public static final String SAMPLE_DATETIME_PROPERTY_VALUE = SAMPLE_DATE_PROPERTY_VALUE + "T" + SAMPLE_TIME_PROPERTY_VALUE;
@@ -139,6 +140,12 @@ public class ExampleBuilder {
                 }
 
                 output = new StringExample(defaultValue == null ? SAMPLE_UUID_PROPERTY_VALUE : defaultValue.toString());
+            }
+        } else if (property instanceof ByteArraySchema) {
+            if (example != null) {
+                output = new StringExample(example.toString());
+            } else {
+                output = new StringExample(SAMPLE_BYTE_PROPERTY_VALUE);
             }
         } else if (property instanceof StringSchema) {
             if (example != null) {
