@@ -18,7 +18,9 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
  */
 public class HttpResponseClassCallbackActionHandler {
 
-    private static ClassLoader contextClassLoader = ClassLoader.getSystemClassLoader();
+    private static ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader() != null
+        ? Thread.currentThread().getContextClassLoader()
+        : ClassLoader.getSystemClassLoader();
 
     public static void setContextClassLoader(ClassLoader contextClassLoader) {
         HttpResponseClassCallbackActionHandler.contextClassLoader = contextClassLoader;
