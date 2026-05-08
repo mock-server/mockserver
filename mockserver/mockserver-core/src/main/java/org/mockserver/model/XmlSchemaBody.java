@@ -10,10 +10,16 @@ import java.util.Objects;
 public class XmlSchemaBody extends Body<String> {
     private int hashCode;
     private final String xmlSchema;
+    private final String sourceUri;
 
     public XmlSchemaBody(String xmlSchema) {
+        this(xmlSchema, null);
+    }
+
+    public XmlSchemaBody(String xmlSchema, String sourceUri) {
         super(Type.XML_SCHEMA);
         this.xmlSchema = xmlSchema;
+        this.sourceUri = sourceUri;
     }
 
     public static XmlSchemaBody xmlSchema(String xmlSchema) {
@@ -21,11 +27,28 @@ public class XmlSchemaBody extends Body<String> {
     }
 
     public static XmlSchemaBody xmlSchemaFromResource(String xmlSchemaPath) {
-        return new XmlSchemaBody(FileReader.readFileFromClassPathOrPath(xmlSchemaPath));
+        String sourceUri = resolveSourceUri(xmlSchemaPath);
+        return new XmlSchemaBody(FileReader.readFileFromClassPathOrPath(xmlSchemaPath), sourceUri);
+    }
+
+    private static String resolveSourceUri(String path) {
+        java.net.URL resource = XmlSchemaBody.class.getClassLoader().getResource(path);
+        if (resource != null) {
+            return resource.toExternalForm();
+        }
+        java.io.File file = new java.io.File(path);
+        if (file.exists()) {
+            return file.toURI().toString();
+        }
+        return null;
     }
 
     public String getValue() {
         return xmlSchema;
+    }
+
+    public String getSourceUri() {
+        return sourceUri;
     }
 
     @Override

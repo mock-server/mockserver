@@ -34,11 +34,18 @@ public class MockServerExtension implements ParameterResolver, BeforeAllCallback
 
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        if (clientAndServer == null) {
+            ensureStarted(extensionContext);
+        }
         return clientAndServer;
     }
 
     @Override
     public void beforeAll(ExtensionContext context) {
+        ensureStarted(context);
+    }
+
+    private void ensureStarted(ExtensionContext context) {
         ExtensionContext.Store store = context.getStore(NAMESPACE);
         ClientAndServer existing = store.get(CLIENT_KEY, ClientAndServer.class);
         if (existing != null) {

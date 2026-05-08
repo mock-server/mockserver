@@ -31,15 +31,20 @@ public class XmlSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStri
     private final Schema schema;
 
     public XmlSchemaValidator(MockServerLogger mockServerLogger, String schema) {
+        this(mockServerLogger, schema, null);
+    }
+
+    public XmlSchemaValidator(MockServerLogger mockServerLogger, String schema, String sourceUri) {
         this.mockServerLogger = mockServerLogger;
         try {
             if (schemaFactory == null) {
                 schemaFactory = buildSchemaFactory();
             }
             if (schema.trim().endsWith(">") || isBlank(schema)) {
-                this.schema = schemaFactory.newSchema(new StreamSource(new StringReader(schema)));
+                this.schema = schemaFactory.newSchema(new StreamSource(new StringReader(schema), sourceUri));
             } else if (schema.trim().endsWith(".xsd")) {
-                this.schema = schemaFactory.newSchema(new StreamSource(FileReader.openReaderToFileFromClassPathOrPath(schema)));
+                String systemId = resolveSchemaUri(schema);
+                this.schema = schemaFactory.newSchema(new StreamSource(FileReader.openReaderToFileFromClassPathOrPath(schema), systemId));
             } else {
                 throw new IllegalArgumentException("Schema must either be a path reference to a *.xsd file or an xml string");
             }
@@ -53,6 +58,18 @@ public class XmlSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStri
             );
             throw new RuntimeException(StringFormatter.formatLogMessage("exception parsing schema{}", schema), e);
         }
+    }
+
+    private static String resolveSchemaUri(String schemaPath) {
+        java.net.URL resource = XmlSchemaValidator.class.getClassLoader().getResource(schemaPath);
+        if (resource != null) {
+            return resource.toExternalForm();
+        }
+        java.io.File file = new java.io.File(schemaPath);
+        if (file.exists()) {
+            return file.toURI().toString();
+        }
+        return schemaPath;
     }
 
     private SchemaFactory buildSchemaFactory() throws SAXNotRecognizedException, SAXNotSupportedException {

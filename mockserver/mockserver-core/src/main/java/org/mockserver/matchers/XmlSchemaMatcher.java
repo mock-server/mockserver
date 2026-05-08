@@ -18,9 +18,13 @@ public class XmlSchemaMatcher extends BodyMatcher<String> {
     private XmlSchemaValidator xmlSchemaValidator;
 
     XmlSchemaMatcher(MockServerLogger mockServerLogger, String matcher) {
+        this(mockServerLogger, matcher, null);
+    }
+
+    XmlSchemaMatcher(MockServerLogger mockServerLogger, String matcher, String sourceUri) {
         this.mockServerLogger = mockServerLogger;
         this.matcher = matcher;
-        xmlSchemaValidator = new XmlSchemaValidator(mockServerLogger, matcher);
+        xmlSchemaValidator = new XmlSchemaValidator(mockServerLogger, matcher, sourceUri);
     }
 
     protected String[] fieldsExcludedFromEqualsAndHashCode() {

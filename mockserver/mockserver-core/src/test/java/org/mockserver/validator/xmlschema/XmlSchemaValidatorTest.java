@@ -19,6 +19,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.XmlSchemaBody.xmlSchemaFromResource;
+import org.mockserver.model.XmlSchemaBody;
 
 /**
  * @author jamesdbloom
@@ -71,7 +72,8 @@ public class XmlSchemaValidatorTest {
             "</ParentType>";
 
         // when
-        XmlSchemaValidator xmlSchemaValidator = new XmlSchemaValidator(new MockServerLogger(), xmlSchemaFromResource("org/mockserver/validator/xmlschema/parent.xsd").getValue());
+        XmlSchemaBody schemaBody = xmlSchemaFromResource("org/mockserver/validator/xmlschema/parent.xsd");
+        XmlSchemaValidator xmlSchemaValidator = new XmlSchemaValidator(new MockServerLogger(), schemaBody.getValue(), schemaBody.getSourceUri());
 
         // then
         assertThat(xmlSchemaValidator.isValid(xml), CoreMatchers.is(""));

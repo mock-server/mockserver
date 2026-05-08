@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
 
-    <xs:include schemaLocation="src/test/resources/org/mockserver/validator/xmlschema/embedded.xsd"/>
+    <xs:include schemaLocation="embedded.xsd"/>
 
     <xs:element name="ParentType">
         <xs:complexType>
