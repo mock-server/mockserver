@@ -36,10 +36,38 @@ public class AbstractSchemaSerializer<T extends Schema> extends StdSerializer<T>
         ObjectNode jsonNodes = OBJECT_MAPPER.convertValue(schema, ObjectNode.class);
         recurse(jsonNodes, node -> {
             if (node instanceof ObjectNode) {
-                ((ObjectNode) node).remove(fieldsToRemove);
+                ObjectNode objectNode = (ObjectNode) node;
+                JsonNode typesNode = objectNode.get("types");
+                if (typesNode != null && typesNode.isArray() && typesNode.size() == 1 && !objectNode.has("type")) {
+                    objectNode.put("type", typesNode.get(0).asText());
+                }
+                normalizeExclusiveBounds(objectNode);
+                objectNode.remove(fieldsToRemove);
             }
         });
         jgen.writeObject(jsonNodes);
+    }
+
+    private static void normalizeExclusiveBounds(ObjectNode node) {
+        normalizeExclusiveBound(node, "exclusiveMinimum", "minimum");
+        normalizeExclusiveBound(node, "exclusiveMaximum", "maximum");
+    }
+
+    private static void normalizeExclusiveBound(ObjectNode node, String exclusiveField, String boundField) {
+        JsonNode exclusiveNode = node.get(exclusiveField);
+        if (exclusiveNode != null && exclusiveNode.isBoolean()) {
+            if (exclusiveNode.booleanValue()) {
+                JsonNode boundNode = node.get(boundField);
+                if (boundNode != null && boundNode.isNumber()) {
+                    node.set(exclusiveField, boundNode);
+                    node.remove(boundField);
+                } else {
+                    node.remove(exclusiveField);
+                }
+            } else {
+                node.remove(exclusiveField);
+            }
+        }
     }
 
     private void recurse(JsonNode node, Consumer<JsonNode> jsonNodeCallable) {

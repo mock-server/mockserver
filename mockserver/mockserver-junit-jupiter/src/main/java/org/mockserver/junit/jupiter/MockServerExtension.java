@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Optional;
 
 public class MockServerExtension implements ParameterResolver, BeforeAllCallback, AfterAllCallback {
+    private static final ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace.create(MockServerExtension.class);
+    private static final String CLIENT_KEY = "clientAndServer";
+    private static final String OWNER_KEY = "ownerExtension";
     protected static ClientAndServer perTestSuiteClientAndServer;
     protected ClientAndServer customClientAndServer;
     protected ClientAndServer clientAndServer;
@@ -36,6 +39,12 @@ public class MockServerExtension implements ParameterResolver, BeforeAllCallback
 
     @Override
     public void beforeAll(ExtensionContext context) {
+        ExtensionContext.Store store = context.getStore(NAMESPACE);
+        ClientAndServer existing = store.get(CLIENT_KEY, ClientAndServer.class);
+        if (existing != null) {
+            clientAndServer = existing;
+            return;
+        }
         List<Integer> ports = new ArrayList<>();
         Optional<MockServerSettings> mockServerSettingsOptional = retrieveAnnotationFromTestClass(context);
         if (mockServerSettingsOptional.isPresent()) {
@@ -46,6 +55,8 @@ public class MockServerExtension implements ParameterResolver, BeforeAllCallback
             }
         }
         clientAndServer = instantiateClient(ports);
+        store.put(CLIENT_KEY, clientAndServer);
+        store.put(OWNER_KEY, this);
     }
 
     ClientAndServer instantiateClient(List<Integer> ports) {
@@ -66,8 +77,11 @@ public class MockServerExtension implements ParameterResolver, BeforeAllCallback
 
     @Override
     public void afterAll(ExtensionContext extensionContext) {
-        if (!perTestSuite && clientAndServer.isRunning()) {
+        ExtensionContext.Store store = extensionContext.getStore(NAMESPACE);
+        if (!perTestSuite && this == store.get(OWNER_KEY) && clientAndServer != null && clientAndServer.isRunning()) {
             clientAndServer.stop();
+            store.remove(CLIENT_KEY);
+            store.remove(OWNER_KEY);
         }
     }
 

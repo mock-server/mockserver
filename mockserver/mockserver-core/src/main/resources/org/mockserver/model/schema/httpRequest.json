@@ -43,7 +43,7 @@
       "type": "string"
     },
     "clientCertificateChain": {
-      "additionalProperties": false,
+      "type": "array",
       "items": {
         "type": "object",
         "additionalProperties": false,

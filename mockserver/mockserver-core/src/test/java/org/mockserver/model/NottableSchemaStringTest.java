@@ -53,4 +53,22 @@ public class NottableSchemaStringTest {
         assertThat(nottableString.getValue(), is("{ \"type\": \"string\" }"));
     }
 
+    @Test
+    public void shouldMatchNonJsonStringWhenTypeIsNull() {
+        NottableSchemaString schema = schemaString("{ \"maxLength\": 10 }");
+        assertThat(schema.matches("fr-FR"), is(true));
+    }
+
+    @Test
+    public void shouldNotMatchNonJsonStringExceedingMaxLengthWhenTypeIsNull() {
+        NottableSchemaString schema = schemaString("{ \"maxLength\": 3 }");
+        assertThat(schema.matches("fr-FR"), is(false));
+    }
+
+    @Test
+    public void shouldMatchStringTypeExplicitly() {
+        NottableSchemaString schema = schemaString("{ \"type\": \"string\", \"maxLength\": 10 }");
+        assertThat(schema.matches("fr-FR"), is(true));
+    }
+
 }

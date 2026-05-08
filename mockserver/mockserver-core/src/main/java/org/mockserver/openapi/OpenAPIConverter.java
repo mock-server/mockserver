@@ -7,7 +7,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.examples.Example;
 import io.swagger.v3.oas.models.headers.Header;
+import io.swagger.v3.oas.models.media.ComposedSchema;
 import io.swagger.v3.oas.models.media.MediaType;
+import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -161,6 +163,45 @@ public class OpenAPIConverter {
         try {
             if (schema.getExample() != null) {
                 return resolveExampleRefs(schema.getExample(), openAPI);
+            }
+            if (schema instanceof ComposedSchema) {
+                ComposedSchema composedSchema = (ComposedSchema) schema;
+                if (composedSchema.getAllOf() != null) {
+                    Map<String, Object> merged = new LinkedHashMap<>();
+                    for (Schema<?> subSchema : composedSchema.getAllOf()) {
+                        Object subExample = resolveSchemaExample(subSchema, openAPI, activeStack);
+                        if (subExample instanceof Map) {
+                            merged.putAll((Map<String, Object>) subExample);
+                        }
+                    }
+                    if (composedSchema.getProperties() != null) {
+                        Map<String, Schema> ownProperties = composedSchema.getProperties();
+                        for (Map.Entry<String, Schema> entry : ownProperties.entrySet()) {
+                            Object propExample = resolveSchemaExample(entry.getValue(), openAPI, activeStack);
+                            if (propExample == null) {
+                                return null;
+                            }
+                            merged.put(entry.getKey(), propExample);
+                        }
+                    }
+                    return merged.isEmpty() ? null : merged;
+                }
+                if (composedSchema.getAnyOf() != null) {
+                    for (Schema<?> subSchema : composedSchema.getAnyOf()) {
+                        Object subExample = resolveSchemaExample(subSchema, openAPI, activeStack);
+                        if (subExample != null) {
+                            return subExample;
+                        }
+                    }
+                }
+                if (composedSchema.getOneOf() != null) {
+                    for (Schema<?> subSchema : composedSchema.getOneOf()) {
+                        Object subExample = resolveSchemaExample(subSchema, openAPI, activeStack);
+                        if (subExample != null) {
+                            return subExample;
+                        }
+                    }
+                }
             }
             if (schema.getProperties() != null) {
                 Map<String, io.swagger.v3.oas.models.media.Schema> properties = schema.getProperties();

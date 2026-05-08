@@ -14,6 +14,8 @@ import org.mockserver.serialization.model.OpenAPIDefinitionDTO;
 import org.mockserver.serialization.model.RequestDefinitionDTO;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXCEPTION;
@@ -40,7 +42,10 @@ public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDef
             Boolean keepAlive = null;
             Boolean secure = null;
             Protocol protocol = null;
+            List<X509Certificate> clientCertificateChain = null;
             SocketAddress socketAddress = null;
+            String localAddress = null;
+            String remoteAddress = null;
             String specUrlOrPayload = null;
             String operationId = null;
             while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
@@ -117,6 +122,22 @@ public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDef
                             }
                             break;
                         }
+                        case "clientCertificateChain": {
+                            jsonParser.nextToken();
+                            X509Certificate[] certs = ctxt.readValue(jsonParser, X509Certificate[].class);
+                            clientCertificateChain = certs != null ? Arrays.asList(certs) : null;
+                            break;
+                        }
+                        case "localAddress": {
+                            jsonParser.nextToken();
+                            localAddress = ctxt.readValue(jsonParser, String.class);
+                            break;
+                        }
+                        case "remoteAddress": {
+                            jsonParser.nextToken();
+                            remoteAddress = ctxt.readValue(jsonParser, String.class);
+                            break;
+                        }
                         case "specUrlOrPayload": {
                             jsonParser.nextToken();
                             JsonNode potentiallyJsonField = ctxt.readValue(jsonParser, JsonNode.class);
@@ -152,7 +173,10 @@ public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDef
                     .setKeepAlive(keepAlive)
                     .setSecure(secure)
                     .setProtocol(protocol)
+                    .setClientCertificateChain(clientCertificateChain)
                     .setSocketAddress(socketAddress)
+                    .setLocalAddress(localAddress)
+                    .setRemoteAddress(remoteAddress)
                     .setNot(not);
             }
         }

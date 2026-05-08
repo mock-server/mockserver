@@ -337,7 +337,6 @@ public class ExampleBuilder {
                 }
             }
         } else if (property instanceof ComposedSchema) {
-            // validate resolved validators if true send back the first property if false the actual code
             ComposedSchema composedSchema = (ComposedSchema) property;
             if (composedSchema.getAllOf() != null) {
                 List<Schema> models = composedSchema.getAllOf();
@@ -345,9 +344,18 @@ public class ExampleBuilder {
                 List<Example> innerExamples = new ArrayList<>();
                 if (models != null) {
                     for (Schema im : models) {
-                        Example innerExample = fromProperty(property.getType(), im, definitions, processedModels, modelsStartedProcessing, location);
+                        Example innerExample = fromProperty(im.getType(), im, definitions, processedModels, modelsStartedProcessing, location);
                         if (innerExample != null) {
                             innerExamples.add(innerExample);
+                        }
+                    }
+                }
+                if (composedSchema.getProperties() != null) {
+                    Map<String, Schema> ownProperties = composedSchema.getProperties();
+                    for (Map.Entry<String, Schema> entry : ownProperties.entrySet()) {
+                        Example propExample = fromProperty(entry.getKey(), entry.getValue(), definitions, processedModels, modelsStartedProcessing, location);
+                        if (propExample != null) {
+                            ex.put(entry.getKey(), propExample);
                         }
                     }
                 }

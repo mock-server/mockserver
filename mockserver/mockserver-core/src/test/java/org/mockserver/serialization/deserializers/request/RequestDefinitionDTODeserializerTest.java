@@ -11,8 +11,12 @@ import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.*;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 
 import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -431,6 +435,44 @@ public class RequestDefinitionDTODeserializerTest {
         assertEquals(new HttpRequestDTO()
                 .setPath(string("somePath")),
             requestDefinitionDTO);
+    }
+
+    @Test
+    public void shouldDeserializeClientCertificateChain() throws JsonProcessingException {
+        String requestBytes = "{" + NEW_LINE +
+            "  \"path\" : \"somePath\"," + NEW_LINE +
+            "  \"clientCertificateChain\" : [ {" + NEW_LINE +
+            "    \"issuerDistinguishedName\" : \"CN=Test CA\"," + NEW_LINE +
+            "    \"subjectDistinguishedName\" : \"CN=Test Client\"," + NEW_LINE +
+            "    \"serialNumber\" : \"12345\"," + NEW_LINE +
+            "    \"signatureAlgorithmName\" : \"SHA256WithRSA\"" + NEW_LINE +
+            "  } ]," + NEW_LINE +
+            "  \"localAddress\" : \"127.0.0.1:1080\"," + NEW_LINE +
+            "  \"remoteAddress\" : \"192.168.1.1:54321\"" + NEW_LINE +
+            "}";
+
+        HttpRequestDTO requestDefinitionDTO = (HttpRequestDTO) ObjectMapperFactory.createObjectMapper().readValue(requestBytes, RequestDefinitionDTO.class);
+
+        assertNotNull(requestDefinitionDTO.getClientCertificateChain());
+        assertEquals(1, requestDefinitionDTO.getClientCertificateChain().size());
+        assertEquals("CN=Test CA", requestDefinitionDTO.getClientCertificateChain().get(0).getIssuerDistinguishedName());
+        assertEquals("CN=Test Client", requestDefinitionDTO.getClientCertificateChain().get(0).getSubjectDistinguishedName());
+        assertEquals("12345", requestDefinitionDTO.getClientCertificateChain().get(0).getSerialNumber());
+        assertEquals("SHA256WithRSA", requestDefinitionDTO.getClientCertificateChain().get(0).getSignatureAlgorithmName());
+        assertEquals("127.0.0.1:1080", requestDefinitionDTO.getLocalAddress());
+        assertEquals("192.168.1.1:54321", requestDefinitionDTO.getRemoteAddress());
+    }
+
+    @Test
+    public void shouldDeserializeNullClientCertificateChain() throws JsonProcessingException {
+        String requestBytes = "{" + NEW_LINE +
+            "  \"path\" : \"somePath\"," + NEW_LINE +
+            "  \"clientCertificateChain\" : null" + NEW_LINE +
+            "}";
+
+        HttpRequestDTO requestDefinitionDTO = (HttpRequestDTO) ObjectMapperFactory.createObjectMapper().readValue(requestBytes, RequestDefinitionDTO.class);
+
+        assertNull(requestDefinitionDTO.getClientCertificateChain());
     }
 
     @Test

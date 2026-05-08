@@ -39,10 +39,13 @@ public class MockServerTestExecutionListener extends AbstractTestExecutionListen
     }
 
     private static List<Field> findMockServerFields(Class<?> classToCheck) {
-        if (Object.class.equals(classToCheck)) {
+        if (classToCheck == null || Object.class.equals(classToCheck)) {
             return new ArrayList<>();
         }
         List<Field> fields = findMockServerFields(classToCheck.getSuperclass());
+        if (fields.isEmpty()) {
+            fields = findMockServerFields(classToCheck.getEnclosingClass());
+        }
         for (Field field : classToCheck.getDeclaredFields()) {
             if (MockServerClient.class.equals(field.getType())) {
                 fields.add(field);
@@ -59,7 +62,14 @@ public class MockServerTestExecutionListener extends AbstractTestExecutionListen
     }
 
     private static boolean isMockServerTest(TestContext testContext) {
-        return AnnotatedElementUtils.findMergedAnnotation(testContext.getTestClass(), MockServerTest.class) != null;
+        Class<?> testClass = testContext.getTestClass();
+        while (testClass != null && !Object.class.equals(testClass)) {
+            if (AnnotatedElementUtils.findMergedAnnotation(testClass, MockServerTest.class) != null) {
+                return true;
+            }
+            testClass = testClass.getEnclosingClass();
+        }
+        return false;
     }
 
 }

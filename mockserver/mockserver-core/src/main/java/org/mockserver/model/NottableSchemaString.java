@@ -163,9 +163,16 @@ public class NottableSchemaString extends NottableString {
     public boolean matches(MockServerLogger mockServerLogger, MatchDifference context, String json) {
         if (schemaJsonNode != null) {
             try {
-                // allow for string values without quotes to be validated as json strings
-                if (isNotBlank(type) && type.equals("string") && isNotBlank(json) && !json.startsWith("\"") && !json.endsWith("\"")) {
-                    json = "\"" + json + "\"";
+                if (isNotBlank(json) && !json.startsWith("\"") && !json.endsWith("\"")) {
+                    if (isNotBlank(type) && type.equals("string")) {
+                        json = "\"" + json + "\"";
+                    } else if (type == null) {
+                        try {
+                            OBJECT_MAPPER.readTree(json);
+                        } catch (IOException e) {
+                            json = "\"" + json + "\"";
+                        }
+                    }
                 }
                 String validationErrors = validate(json);
                 boolean result = isNot() != validationErrors.isEmpty();
