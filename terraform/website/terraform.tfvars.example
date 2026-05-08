@@ -1,0 +1,25 @@
+domain                      = "mock-server.com"
+main_bucket_name            = "REPLACE_WITH_MAIN_BUCKET_NAME"
+build_account_agent_role_arn = "arn:aws:iam::REPLACE_WITH_BUILD_ACCOUNT_ID:role/buildkite-agent"
+zone_id                     = "REPLACE_WITH_ROUTE53_ZONE_ID"
+acm_certificate_arn         = "arn:aws:acm:us-east-1:REPLACE_WITH_ACCOUNT_ID:certificate/REPLACE_WITH_CERT_ID"
+
+versioned_sites = {
+  "4-0"  = { bucket_name = "REPLACE_WITH_BUCKET_NAME" }
+  "4-1"  = { bucket_name = "REPLACE_WITH_BUCKET_NAME" }
+  "5-0"  = { bucket_name = "REPLACE_WITH_BUCKET_NAME" }
+  "5-1"  = { bucket_name = "REPLACE_WITH_BUCKET_NAME" }
+  "5-2"  = { bucket_name = "REPLACE_WITH_BUCKET_NAME" }
+  "5-3"  = { bucket_name = "REPLACE_WITH_BUCKET_NAME" }
+  "5-4"  = { bucket_name = "REPLACE_WITH_BUCKET_NAME" }
+  "5-5"  = { bucket_name = "REPLACE_WITH_BUCKET_NAME" }
+  "5-6"  = { bucket_name = "REPLACE_WITH_BUCKET_NAME" }
+  "5-7"  = { bucket_name = "REPLACE_WITH_BUCKET_NAME" }
+  "5-8"  = { bucket_name = "REPLACE_WITH_BUCKET_NAME" }
+  "5-9"  = { bucket_name = "REPLACE_WITH_BUCKET_NAME" }
+  "5-10" = { bucket_name = "REPLACE_WITH_BUCKET_NAME" }
+  "5-11" = { bucket_name = "REPLACE_WITH_BUCKET_NAME" }
+  "5-12" = { bucket_name = "REPLACE_WITH_BUCKET_NAME" }
+  "5-13" = { bucket_name = "REPLACE_WITH_BUCKET_NAME" }
+  "5-14" = { bucket_name = "REPLACE_WITH_BUCKET_NAME" }
+}
