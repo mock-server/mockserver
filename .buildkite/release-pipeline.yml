@@ -1,0 +1,146 @@
+steps:
+  - input: "Release Parameters"
+    fields:
+      - text: "Release Version"
+        key: "release-version"
+        hint: "e.g., 5.16.0"
+        required: true
+        format: "[0-9]+\\.[0-9]+\\.[0-9]+"
+      - text: "Next SNAPSHOT Version"
+        key: "next-version"
+        hint: "e.g., 5.16.1-SNAPSHOT"
+        required: true
+      - text: "Previous Version"
+        key: "old-version"
+        hint: "e.g., 5.15.0 (for find-and-replace)"
+        required: true
+      - select: "Release Type"
+        key: "release-type"
+        default: "full"
+        options:
+          - label: "Full Release (all steps)"
+            value: "full"
+          - label: "Maven Central Only"
+            value: "maven-only"
+          - label: "Docker Image Only (re-publish)"
+            value: "docker-only"
+      - select: "Create Versioned Site?"
+        key: "create-versioned-site"
+        default: "no"
+        options:
+          - label: "No"
+            value: "no"
+          - label: "Yes (major/minor release)"
+            value: "yes"
+
+  - block: ":lock: TOTP Authorization"
+    prompt: "Enter your TOTP code to authorize this release"
+    allowed_teams: ["release-managers"]
+    fields:
+      - text: "TOTP Code"
+        key: "totp-code"
+        hint: "6-digit code from your authenticator app"
+        required: true
+        format: "[0-9]{6}"
+
+  - label: ":shield: Verify TOTP"
+    command: "scripts/ci/release/verify-totp.sh"
+
+  - label: ":white_check_mark: Validate"
+    command: "scripts/ci/release/validate.sh"
+
+  - label: ":git: Set Release Version"
+    command: "scripts/ci/release/set-release-version.sh"
+
+  - label: ":maven: Build & Test"
+    command: "scripts/ci/release/build-and-test.sh"
+    timeout_in_minutes: 60
+    artifact_paths:
+      - "mockserver/mockserver-netty/target/mockserver-netty-*-shaded.jar"
+
+  - block: ":eyes: Review Build Results"
+    prompt: "Build and tests passed. Approve to deploy to Central Portal."
+    allowed_teams: ["release-managers"]
+
+  - label: ":lock: Deploy Release to Central Portal"
+    command: "scripts/ci/release/deploy-release.sh"
+    timeout_in_minutes: 30
+
+  - label: ":hourglass: Poll Central Portal Validation"
+    command: "scripts/ci/release/poll-central-portal.sh"
+    timeout_in_minutes: 30
+
+  - block: ":rocket: Approve Maven Central Publication"
+    prompt: |
+      Artifacts validated on Central Portal.
+      Review at https://central.sonatype.com/publishing/deployments
+      Approve to publish to Maven Central.
+    allowed_teams: ["release-managers"]
+
+  - label: ":java: Publish on Central Portal"
+    command: "scripts/ci/release/publish-central-portal.sh"
+    timeout_in_minutes: 30
+
+  - label: ":hourglass: Wait for Maven Central Sync"
+    command: "scripts/ci/release/wait-for-central.sh"
+    timeout_in_minutes: 120
+
+  - label: ":arrows_counterclockwise: Deploy Next SNAPSHOT"
+    command: "scripts/ci/release/deploy-snapshot.sh"
+    timeout_in_minutes: 30
+
+  - label: ":pencil: Update Versions"
+    command: "scripts/ci/release/update-versions.sh"
+    timeout_in_minutes: 15
+
+  - wait
+
+  - group: ":package: Publish & Update"
+    steps:
+      - label: ":java: Release Maven Plugin (Step 6)"
+        command: "scripts/ci/release/release-maven-plugin.sh"
+        timeout_in_minutes: 60
+
+      - label: ":docker: Docker Image (Step 7)"
+        command: "scripts/ci/release/publish-docker.sh"
+        timeout_in_minutes: 45
+
+      - label: ":helm: Helm Chart (Step 8)"
+        command: "scripts/ci/release/publish-helm.sh"
+        timeout_in_minutes: 15
+
+      - label: ":book: Javadoc (Step 9)"
+        command: "scripts/ci/release/publish-javadoc.sh"
+        timeout_in_minutes: 15
+
+      - label: ":swagger: SwaggerHub (Step 10)"
+        command: "scripts/ci/release/update-swaggerhub.sh"
+        timeout_in_minutes: 10
+
+      - label: ":globe_with_meridians: Website (Step 11)"
+        command: "scripts/ci/release/publish-website.sh"
+        timeout_in_minutes: 15
+
+      - label: ":python: PyPI (Step 14)"
+        command: "scripts/ci/release/publish-pypi.sh"
+        timeout_in_minutes: 10
+
+      - label: ":gem: RubyGems (Step 15)"
+        command: "scripts/ci/release/publish-rubygems.sh"
+        timeout_in_minutes: 10
+
+      - label: ":github: GitHub Release"
+        command: "scripts/ci/release/github-release.sh"
+        timeout_in_minutes: 10
+
+  - wait
+
+  - label: ":globe_with_meridians: Create Versioned Site (Step 12)"
+    command: "scripts/ci/release/create-versioned-site.sh"
+    if: "build.meta_data('create-versioned-site') == 'yes'"
+    timeout_in_minutes: 15
+
+  - wait
+
+  - label: ":bell: Notify"
+    command: "scripts/ci/release/notify.sh"

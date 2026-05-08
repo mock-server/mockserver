@@ -100,6 +100,13 @@ locals {
       emoji       = ":broom:"
       trigger     = "none"
     }
+    "release" = {
+      name        = "MockServer Release"
+      description = "Automated release pipeline for MockServer"
+      file        = ".buildkite/release-pipeline.yml"
+      emoji       = ":rocket:"
+      trigger     = "none"
+    }
   }
 }
 

@@ -23,9 +23,39 @@ resource "aws_secretsmanager_secret" "rubygems" {
   description = "RubyGems API key for publishing mockserver-client Ruby gem"
 }
 
-resource "aws_iam_policy" "read_dockerhub_secret" {
-  name        = "buildkite-read-dockerhub-secret"
-  description = "Allow Buildkite agents to read Docker Hub credentials from Secrets Manager"
+resource "aws_secretsmanager_secret" "gpg_key" {
+  name        = "mockserver-release/gpg-key"
+  description = "GPG private key and passphrase for Maven Central artifact signing"
+}
+
+resource "aws_secretsmanager_secret" "github_token" {
+  name        = "mockserver-release/github-token"
+  description = "GitHub PAT for creating releases and Homebrew PRs"
+}
+
+resource "aws_secretsmanager_secret" "totp_seed" {
+  name        = "mockserver-release/totp-seed"
+  description = "TOTP shared secret for release authorization"
+}
+
+resource "aws_secretsmanager_secret" "npm_token" {
+  name        = "mockserver-release/npm-token"
+  description = "npm automation token for publishing packages"
+}
+
+resource "aws_secretsmanager_secret" "swaggerhub" {
+  name        = "mockserver-release/swaggerhub"
+  description = "SwaggerHub API key for publishing OpenAPI spec"
+}
+
+resource "aws_secretsmanager_secret" "website_role" {
+  name        = "mockserver-release/website-role"
+  description = "IAM role ARN for cross-account website access"
+}
+
+resource "aws_iam_policy" "read_build_secrets" {
+  name        = "buildkite-read-build-secrets"
+  description = "Allow Buildkite agents to read build credentials from Secrets Manager"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -40,5 +70,33 @@ resource "aws_iam_policy" "read_dockerhub_secret" {
         aws_secretsmanager_secret.rubygems.arn,
       ]
     }]
+  })
+}
+
+resource "aws_iam_policy" "read_release_secrets" {
+  name        = "buildkite-read-release-secrets"
+  description = "Allow Buildkite agents to read release credentials from Secrets Manager"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = "secretsmanager:GetSecretValue"
+        Resource = [
+          aws_secretsmanager_secret.gpg_key.arn,
+          aws_secretsmanager_secret.github_token.arn,
+          aws_secretsmanager_secret.totp_seed.arn,
+          aws_secretsmanager_secret.npm_token.arn,
+          aws_secretsmanager_secret.swaggerhub.arn,
+          aws_secretsmanager_secret.website_role.arn,
+        ]
+      },
+      {
+        Effect   = "Allow"
+        Action   = "sts:AssumeRole"
+        Resource = "arn:aws:iam::*:role/mockserver-release-website"
+      }
+    ]
   })
 }

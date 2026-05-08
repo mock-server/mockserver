@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/common.sh"
+
+require_cmd bundle
+require_cmd jekyll
+require_cmd aws
+
+log_step "Publishing website for $RELEASE_VERSION"
+
+cd "$REPO_ROOT/jekyll-www.mock-server.com"
+
+log_info "Building Jekyll site"
+rm -rf _site
+bundle exec jekyll build
+
+log_info "Copying legacy URL pages"
+cp _site/mock_server/mockserver_clients.html _site/ 2>/dev/null || true
+cp _site/mock_server/running_mock_server.html _site/ 2>/dev/null || true
+cp _site/mock_server/debugging_issues.html _site/ 2>/dev/null || true
+cp _site/mock_server/creating_expectations.html _site/ 2>/dev/null || true
+
+log_info "Assuming website role"
+cd "$REPO_ROOT"
+assume_website_role
+
+WEBSITE_BUCKET="${WEBSITE_BUCKET:-www.mock-server.com}"
+DISTRIBUTION_ID="${DISTRIBUTION_ID:-}"
+
+log_info "Syncing to S3"
+aws s3 sync "$REPO_ROOT/jekyll-www.mock-server.com/_site/" "s3://$WEBSITE_BUCKET/" --delete
+
+if [[ -n "$DISTRIBUTION_ID" ]]; then
+  log_info "Invalidating CloudFront cache"
+  aws cloudfront create-invalidation \
+    --distribution-id "$DISTRIBUTION_ID" \
+    --paths "/*"
+fi
+
+log_info "Website published for $RELEASE_VERSION"
