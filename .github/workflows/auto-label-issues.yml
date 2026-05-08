@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Label bug reports
         if: contains(github.event.issue.body, 'Describe the issue') && contains(github.event.issue.body, 'MockServer Log')
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             await github.rest.issues.addLabels({
@@ -24,7 +24,7 @@ jobs:
             });
       - name: Label feature requests
         if: contains(github.event.issue.body, 'Describe the feature request') && contains(github.event.issue.body, 'The solution you')
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             await github.rest.issues.addLabels({
