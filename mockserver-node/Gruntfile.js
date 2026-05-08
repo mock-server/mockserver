@@ -70,8 +70,8 @@ module.exports = function (grunt) {
 
     grunt.registerTask('download_jar', 'Download latest MockServer jar version', function () {
         var done = this.async();
-        var artifactoryHost = 'oss.sonatype.org';
-        var artifactoryPath = '/content/repositories/releases/org/mock-server/mockserver-netty/';
+        var artifactoryHost = 'repo1.maven.org';
+        var artifactoryPath = '/maven2/org/mock-server/mockserver-netty/';
         require('./downloadJar').downloadJar('5.15.0', artifactoryHost, artifactoryPath).then(function () {
             done(true);
         }, function () {

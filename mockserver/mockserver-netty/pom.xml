@@ -578,7 +578,7 @@
                                 </goals>
                                 <inherited>false</inherited>
                                 <configuration>
-                                    <repositoryId>ossrh</repositoryId>
+                                    <repositoryId>central-portal</repositoryId>
                                     <url>${deploy.plugin.repository.url}</url>
                                     <file>${project.build.directory}/${project.artifactId}-${project.version}-shaded.jar</file>
                                     <generatePom>false</generatePom>

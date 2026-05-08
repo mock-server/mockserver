@@ -11,9 +11,8 @@ ARG source=download
 FROM alpine as download
 
 RUN apk add --update openssl ca-certificates bash wget
-ARG REPOSITORY=snapshots
 ARG VERSION=5.16.0-SNAPSHOT
-ARG REPOSITORY_URL=https://oss.sonatype.org/service/local/artifact/maven/redirect?r=${REPOSITORY}&g=org.mock-server&a=mockserver-netty&c=jar-with-dependencies&e=jar&v=${VERSION}
+ARG REPOSITORY_URL=https://central.sonatype.com/repository/maven-snapshots/org/mock-server/mockserver-netty/${VERSION}/mockserver-netty-${VERSION}-jar-with-dependencies.jar
 RUN wget --max-redirect=10 -O mockserver-netty-jar-with-dependencies.jar "$REPOSITORY_URL"
 ARG TARGETARCH=amd64
 ARG NETTY_TCNATIVE=2.0.77.Final

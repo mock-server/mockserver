@@ -77,7 +77,7 @@
         <mockserver.testArgLine/>
         <disableXmlReport>true</disableXmlReport>
         <redirectTestOutputToFile>false</redirectTestOutputToFile>
-        <deploy.plugin.repository.url>https://oss.sonatype.org/content/repositories/snapshots/</deploy.plugin.repository.url>
+        <deploy.plugin.repository.url>https://central.sonatype.com/repository/maven-releases/</deploy.plugin.repository.url>
         <release.arguments/>
         <javadoc.additional.parameters/>
         <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>

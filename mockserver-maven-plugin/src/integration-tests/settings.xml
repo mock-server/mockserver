@@ -9,9 +9,9 @@
             </activation>
             <repositories>
                 <repository>
-                    <id>sonatype-nexus-snapshots</id>
-                    <name>sonatype-nexus-snapshots</name>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+                    <id>central-portal-snapshots</id>
+                    <name>central-portal-snapshots</name>
+                    <url>https://central.sonatype.com/repository/maven-snapshots/</url>
                     <layout>default</layout>
                     <releases>
                         <enabled>false</enabled>
@@ -23,9 +23,9 @@
             </repositories>
             <pluginRepositories>
                 <pluginRepository>
-                    <id>sonatype-nexus-snapshots</id>
-                    <name>sonatype-nexus-snapshots</name>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+                    <id>central-portal-snapshots</id>
+                    <name>central-portal-snapshots</name>
+                    <url>https://central.sonatype.com/repository/maven-snapshots/</url>
                     <layout>default</layout>
                     <releases>
                         <enabled>false</enabled>

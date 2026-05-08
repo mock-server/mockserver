@@ -10,8 +10,8 @@ module.exports = (function () {
 
     var mockServer;
     var logLevel;
-    var artifactoryHost = 'oss.sonatype.org';
-    var artifactoryPath = '/content/repositories/releases/org/mock-server/mockserver-netty/';
+    var artifactoryHost = 'repo1.maven.org';
+    var artifactoryPath = '/maven2/org/mock-server/mockserver-netty/';
     var mockServerVersion = '5.15.0';
     var Q = require('q');
     var http = require('http');
