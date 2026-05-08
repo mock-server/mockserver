@@ -148,8 +148,9 @@ public class MockServerHttpResponseToFullHttpResponse {
     private void setCookies(HttpResponse httpResponse, DefaultHttpResponse response) {
         if (httpResponse.getCookieMap() != null) {
             for (Map.Entry<NottableString, NottableString> cookie : httpResponse.getCookieMap().entrySet()) {
-                if (httpResponse.cookieHeaderDoesNotAlreadyExists(cookie.getKey().getValue(), cookie.getValue().getValue())) {
-                    response.headers().add(SET_COOKIE, io.netty.handler.codec.http.cookie.ServerCookieEncoder.LAX.encode(new DefaultCookie(cookie.getKey().getValue(), cookie.getValue().getValue())));
+                String cookieValue = cookie.getValue().toString();
+                if (httpResponse.cookieHeaderDoesNotAlreadyExists(cookie.getKey().getValue(), cookieValue)) {
+                    response.headers().add(SET_COOKIE, io.netty.handler.codec.http.cookie.ServerCookieEncoder.LAX.encode(new DefaultCookie(cookie.getKey().getValue(), cookieValue)));
                 }
             }
         }

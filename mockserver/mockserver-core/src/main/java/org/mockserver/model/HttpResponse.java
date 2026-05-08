@@ -493,7 +493,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
         for (String setCookieHeader : setCookieHeaders) {
             String existingCookieName = ClientCookieDecoder.LAX.decode(setCookieHeader).name();
             String existingCookieValue = ClientCookieDecoder.LAX.decode(setCookieHeader).value();
-            if (existingCookieName.equalsIgnoreCase(cookieValue.getName().getValue()) && existingCookieValue.equalsIgnoreCase(cookieValue.getValue().getValue())) {
+            if (existingCookieName.equalsIgnoreCase(cookieValue.getName().getValue()) && existingCookieValue.equalsIgnoreCase(cookieValue.getValue().toString())) {
                 return false;
             }
         }

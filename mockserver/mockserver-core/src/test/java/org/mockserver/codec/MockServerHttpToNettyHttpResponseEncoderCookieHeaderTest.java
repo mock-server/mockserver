@@ -35,6 +35,22 @@ public class MockServerHttpToNettyHttpResponseEncoderCookieHeaderTest {
     }
 
     @Test
+    public void shouldNotDuplicateCookieWithExclamationMarkPrefix() {
+        String cookieHeader = "FB_LB=!Yiprk9o9b/b/Ay5BcqRyIblXE4VujvL/mPRJLyVoJNFv6FtJtw4rXC4XRXxi0xEEDIWuHEs1V1Kdrw==; path=/; Httponly; Secure; SameSite=none";
+        httpResponse.withHeaders(
+            new Header("Set-Cookie", cookieHeader)
+        );
+        httpResponse.withCookies(
+            new Cookie("FB_LB", "!Yiprk9o9b/b/Ay5BcqRyIblXE4VujvL/mPRJLyVoJNFv6FtJtw4rXC4XRXxi0xEEDIWuHEs1V1Kdrw==")
+        );
+
+        mockServerResponseEncoder.encode(null, httpResponse, output);
+
+        HttpHeaders headers = ((FullHttpResponse) output.get(0)).headers();
+        assertThat(headers.getAll("Set-Cookie"), containsInAnyOrder(cookieHeader));
+    }
+
+    @Test
     public void shouldOnlyMapACookieIfThereIsNoSetCookieHeader() {
         // given
         // - an HttpResponse
