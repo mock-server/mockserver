@@ -302,13 +302,6 @@
                                 </relocation>
                             </relocations>
                             <filters>
-                                <!-- exclude duplicate SLF4J bindings -->
-                                <filter>
-                                    <artifact>*:*</artifact>
-                                    <excludes>
-                                        <exclude>org/slf4j/jul/**</exclude>
-                                    </excludes>
-                                </filter>
                                 <!-- exclude manifest signature files -->
                                 <filter>
                                     <artifact>*:*</artifact>
