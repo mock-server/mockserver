@@ -202,17 +202,35 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
 
                 } else {
 
-                    try {
-                        httpActionHandler.processAction(request, responseWriter, ctx, getLocalAddresses(ctx), isProxyingRequest(ctx), false);
-                    } catch (Throwable throwable) {
-                        mockServerLogger.logEvent(
-                            new LogEntry()
-                                .setLogLevel(Level.ERROR)
-                                .setHttpRequest(request)
-                                .setMessageFormat("exception processing request:{}error:{}")
-                                .setArguments(request, throwable.getMessage())
-                                .setThrowable(throwable)
-                        );
+                    if (configuration.tlsMutualAuthenticationRequired() && !isSslEnabledUpstream(ctx.channel())) {
+                        HttpResponse upgradeResponse = response()
+                            .withStatusCode(426)
+                            .withReasonPhrase("Upgrade Required")
+                            .withHeader("Upgrade", "TLS/1.2, HTTP/1.1")
+                            .withHeader("Connection", "Upgrade");
+                        if (MockServerLogger.isEnabled(Level.INFO)) {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setLogLevel(Level.INFO)
+                                    .setHttpRequest(request)
+                                    .setMessageFormat("no tls for data plane request:{}returning response:{}")
+                                    .setArguments(request, upgradeResponse)
+                            );
+                        }
+                        responseWriter.writeResponse(request, upgradeResponse, false);
+                    } else {
+                        try {
+                            httpActionHandler.processAction(request, responseWriter, ctx, getLocalAddresses(ctx), isProxyingRequest(ctx), false);
+                        } catch (Throwable throwable) {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setLogLevel(Level.ERROR)
+                                    .setHttpRequest(request)
+                                    .setMessageFormat("exception processing request:{}error:{}")
+                                    .setArguments(request, throwable.getMessage())
+                                    .setThrowable(throwable)
+                            );
+                        }
                     }
 
                 }

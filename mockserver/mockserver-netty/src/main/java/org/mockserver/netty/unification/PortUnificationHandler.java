@@ -315,7 +315,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
             addLastIfNotPresent(pipeline, new HttpContentDecompressor());
             addLastIfNotPresent(pipeline, httpContentLengthRemover);
             addLastIfNotPresent(pipeline, new HttpObjectAggregator(Integer.MAX_VALUE));
-            if (configuration.tlsMutualAuthenticationRequired() && !isSslEnabledUpstream(ctx.channel())) {
+            if (configuration.tlsMutualAuthenticationRequired() && configuration.controlPlaneTLSMutualAuthenticationRequired() && !isSslEnabledUpstream(ctx.channel())) {
                 HttpResponse httpResponse = response()
                     .withStatusCode(426)
                     .withHeader("Upgrade", "TLS/1.2, HTTP/1.1")
@@ -332,7 +332,6 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
                     .channel()
                     .writeAndFlush(mockServerHttpResponseToFullHttpResponse
                         .mapMockServerResponseToNettyResponse(
-                            // Upgrade Required
                             httpResponse
                         ).get(0)
                     )
