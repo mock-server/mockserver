@@ -71,10 +71,10 @@ org.mockserver.cli.Main"]
 
 The main Dockerfile supports two source modes via the `source` build ARG:
 
-- **`download`** (default): Downloads `mockserver-netty-jar-with-dependencies.jar` from Sonatype
-- **`copy`**: Copies a locally-built JAR
+- **`download`** (default): Downloads `mockserver-netty-jar-with-dependencies.jar` from Sonatype and `netty-tcnative-boringssl-static` from Maven Central
+- **`copy`**: Copies a locally-built JAR from the Docker context; downloads `netty-tcnative-boringssl-static` from Maven Central
 
-It also bundles `netty-tcnative-boringssl-static` native library for TLS performance.
+Both modes download `netty-tcnative-boringssl-static` from Maven Central (`repo1.maven.org`) for TLS performance.
 
 **Exposed port:** 1080
 

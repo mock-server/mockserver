@@ -7,39 +7,32 @@
 
 ARG source=download
 
-# build image
+# build image — downloads snapshot artifacts from Sonatype, tcnative from Maven Central
 FROM alpine as download
 
-# download jar
 RUN apk add --update openssl ca-certificates bash wget
-# REPOSITORY is releases or snapshots
 ARG REPOSITORY=snapshots
-# VERSION is LATEST or RELEASE or x.x.x
 ARG VERSION=5.16.0-SNAPSHOT
-# see: https://oss.sonatype.org/nexus-restlet1x-plugin/default/docs/path__artifact_maven_redirect.html
 ARG REPOSITORY_URL=https://oss.sonatype.org/service/local/artifact/maven/redirect?r=${REPOSITORY}&g=org.mock-server&a=mockserver-netty&c=jar-with-dependencies&e=jar&v=${VERSION}
 RUN wget --max-redirect=10 -O mockserver-netty-jar-with-dependencies.jar "$REPOSITORY_URL"
-# add netty-tcnative-boringssl so file
 ARG TARGETARCH=amd64
-ARG NETTY_TCNATIVE=2.0.75.Final
+ARG NETTY_TCNATIVE=2.0.77.Final
 RUN if [ "$TARGETARCH" = "amd64" ]; \
-    then wget --max-redirect=10 -O netty-tcnative-boringssl-static.jar "https://oss.sonatype.org/service/local/artifact/maven/redirect?r=releases&g=io.netty&a=netty-tcnative-boringssl-static&c=linux-x86_64&e=jar&v=$NETTY_TCNATIVE"; \
-    else wget --max-redirect=10 -O netty-tcnative-boringssl-static.jar "https://oss.sonatype.org/service/local/artifact/maven/redirect?r=releases&g=io.netty&a=netty-tcnative-boringssl-static&c=linux-aarch_64&e=jar&v=$NETTY_TCNATIVE"; \
+    then wget -O netty-tcnative-boringssl-static.jar "https://repo1.maven.org/maven2/io/netty/netty-tcnative-boringssl-static/$NETTY_TCNATIVE/netty-tcnative-boringssl-static-$NETTY_TCNATIVE-linux-x86_64.jar"; \
+    else wget -O netty-tcnative-boringssl-static.jar "https://repo1.maven.org/maven2/io/netty/netty-tcnative-boringssl-static/$NETTY_TCNATIVE/netty-tcnative-boringssl-static-$NETTY_TCNATIVE-linux-aarch_64.jar"; \
     fi
 RUN unzip netty-tcnative-boringssl-static.jar
 
-# build image
+# build image — copies JAR from context, downloads tcnative from Maven Central
 FROM alpine as copy
 
-# copy jar
+RUN apk add --update ca-certificates wget
 COPY mockserver-netty-jar-with-dependencies.jar .
-# add netty-tcnative-boringssl so file
-RUN apk add --update openssl ca-certificates bash wget
 ARG TARGETARCH=amd64
-ARG NETTY_TCNATIVE=2.0.75.Final
+ARG NETTY_TCNATIVE=2.0.77.Final
 RUN if [ "$TARGETARCH" = "amd64" ]; \
-    then wget --max-redirect=10 -O netty-tcnative-boringssl-static.jar "https://oss.sonatype.org/service/local/artifact/maven/redirect?r=releases&g=io.netty&a=netty-tcnative-boringssl-static&c=linux-x86_64&e=jar&v=$NETTY_TCNATIVE"; \
-    else wget --max-redirect=10 -O netty-tcnative-boringssl-static.jar "https://oss.sonatype.org/service/local/artifact/maven/redirect?r=releases&g=io.netty&a=netty-tcnative-boringssl-static&c=linux-aarch_64&e=jar&v=$NETTY_TCNATIVE"; \
+    then wget -O netty-tcnative-boringssl-static.jar "https://repo1.maven.org/maven2/io/netty/netty-tcnative-boringssl-static/$NETTY_TCNATIVE/netty-tcnative-boringssl-static-$NETTY_TCNATIVE-linux-x86_64.jar"; \
+    else wget -O netty-tcnative-boringssl-static.jar "https://repo1.maven.org/maven2/io/netty/netty-tcnative-boringssl-static/$NETTY_TCNATIVE/netty-tcnative-boringssl-static-$NETTY_TCNATIVE-linux-aarch_64.jar"; \
     fi
 RUN unzip netty-tcnative-boringssl-static.jar
 

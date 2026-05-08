@@ -35,7 +35,7 @@ All managed dependency versions are declared in the root `pom.xml`:
 | `xmlunit.version` | `2.9.1` |
 | `httpcomponents.version` | `4.4.1` |
 | `maven-surefire-plugin.version` | `2.22.2` |
-| `netty-tcnative-boringssl-static.version` | `2.0.75.Final` |
+| `netty-tcnative-boringssl-static.version` | `2.0.77.Final` |
 
 ## Dependency Map
 
@@ -45,7 +45,7 @@ graph TB
 
     subgraph "Network"
         NETTY[Netty 4.1.132]
-        TCNATIVE[tcnative-boringssl 2.0.75]
+        TCNATIVE[tcnative-boringssl 2.0.77]
         APACHE_HTTP[HttpClient 4.5.14]
     end
 
@@ -113,7 +113,7 @@ Java 11+ only"]
 | `io.netty` | `netty-transport` | 4.1.132.Final | Transport layer |
 | `io.netty` | `netty-transport-native-unix-common` | 4.1.132.Final | Unix native transport |
 | `io.netty` | `netty-resolver` | 4.1.132.Final | DNS resolver |
-| `io.netty` | `netty-tcnative-boringssl-static` | 2.0.75.Final | Native TLS (BoringSSL) |
+| `io.netty` | `netty-tcnative-boringssl-static` | 2.0.77.Final | Native TLS (BoringSSL) |
 | `javax.servlet` | `javax.servlet-api` | 4.0.1 | Servlet API |
 | `org.apache.httpcomponents` | `httpclient` | 4.5.14 | Apache HTTP client |
 | `org.apache.tomcat.embed` | `tomcat-embed-core` | 9.0.117 | Embedded Tomcat |

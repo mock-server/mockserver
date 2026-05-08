@@ -17,7 +17,7 @@ function build_docker() {
     runCommand "(cd ${SCRIPT_DIR}/../mockserver && ./mvnw -DskipTests=true package)"
   fi
   if [[ "${SKIP_DOCKER_BUILD_MOCKSERVER:-}" != "true" ]]; then
-    runCommand "cp ${SCRIPT_DIR}/../mockserver/mockserver-netty/target/mockserver-netty-*-SNAPSHOT-jar-with-dependencies.jar ${SCRIPT_DIR}/../docker/mockserver-netty-jar-with-dependencies.jar"
+    runCommand "cp ${SCRIPT_DIR}/../mockserver/mockserver-netty/target/mockserver-netty-*-jar-with-dependencies.jar ${SCRIPT_DIR}/../docker/mockserver-netty-jar-with-dependencies.jar"
     runCommand "docker build --no-cache -t mockserver/mockserver:integration_testing --build-arg source=copy ${SCRIPT_DIR}/../docker"
     runCommand "rm ${SCRIPT_DIR}/../docker/mockserver-netty-jar-with-dependencies.jar"
   fi
