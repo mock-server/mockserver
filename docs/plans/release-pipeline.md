@@ -1382,26 +1382,28 @@ Phase 7 (website Terraform) and Phase 8 (secrets) can proceed in parallel with a
 
 | # | Task | When | Status |
 |---|---|---|---|
-| 1 | Fix `deploy.plugin.repository.url` in pom.xml | Phase 1 | Pending |
-| 2 | Migrate `repositoryId=ossrh` to `central-portal` in 6 submodule POMs | Phase 1 | Pending |
-| 3 | Update Docker REPOSITORY_URL in 4 Dockerfiles | Phase 1 | Pending |
-| 4 | Update `mockserver-node` artifact download host | Phase 1 | Pending |
-| 5 | Update settings.xml files (Docker, integration tests) | Phase 1 | Pending |
-| 6 | Generate TOTP seed, store in AWS SM, register in app | Phase 2 | Pending |
-| 7 | Export GPG key, base64 encode, store in AWS SM | Phase 2 | Pending |
-| 8 | Create `release-managers` team in Buildkite | Phase 2 | Pending |
-| 9 | Create release pipeline in Buildkite (private) | Phase 2 | Pending |
-| 10 | Install `oathtool` in Maven CI Docker image | Phase 2 | Pending |
-| 11 | Create GitHub PAT (`contents:write`), store in AWS SM | Phase 4 | Pending |
-| 12 | Install Helm, `gh`, Ruby+Jekyll in CI image | Phase 4 | Pending |
-| 13 | Create SwaggerHub API key, store in AWS SM | Phase 6 | Pending |
-| 14 | Create npm automation token, store in AWS SM | Phase 5 | Pending |
-| 15 | Configure SSO access to website account | Phase 7 | Pending |
-| 16 | Inventory existing CloudFront distribution IDs | Phase 7 | Pending |
-| 17 | Create cross-account IAM role in website account | Phase 7 | Pending |
-| 18 | Store website role ARN in AWS SM | Phase 7 | Pending |
+| 1 | Fix `deploy.plugin.repository.url` in pom.xml | Phase 1 | **Done** |
+| 2 | Migrate `repositoryId=ossrh` to `central-portal` in 6 submodule POMs | Phase 1 | **Done** |
+| 3 | Update Docker REPOSITORY_URL in 4 Dockerfiles | Phase 1 | **Done** |
+| 4 | Update `mockserver-node` artifact download host | Phase 1 | **Done** |
+| 5 | Update settings.xml files (Docker, integration tests) | Phase 1 | **Done** |
+| 6 | Generate TOTP seed, store in AWS SM, register in app | Phase 2 | **DEFERRED** (secrets) |
+| 7 | Export GPG key, base64 encode, store in AWS SM | Phase 2 | **DEFERRED** (secrets) |
+| 8 | Create `release-managers` team in Buildkite | Phase 2 | **DEFERRED** (secrets) |
+| 9 | Create release pipeline in Buildkite (private) | Phase 2 | **Done** (Terraform + YAML) |
+| 10 | Install `oathtool` in Maven CI Docker image | Phase 2 | **Done** |
+| 11 | Create GitHub PAT (`contents:write`), store in AWS SM | Phase 4 | **DEFERRED** (secrets) |
+| 12 | Install Helm, `gh`, Ruby+Jekyll in CI image | Phase 4 | **Done** |
+| 13 | Create SwaggerHub API key, store in AWS SM | Phase 6 | **DEFERRED** (secrets) |
+| 14 | Create npm automation token, store in AWS SM | Phase 5 | **DEFERRED** (secrets) |
+| 15 | Configure SSO access to website account | Phase 7 | **DEFERRED** (secrets) |
+| 16 | Inventory existing CloudFront distribution IDs | Phase 7 | Pending (need `~/mockserver-aws-ids.md`) |
+| 17 | Create cross-account IAM role in website account | Phase 7 | **Done** (Terraform) |
+| 18 | Store website role ARN in AWS SM | Phase 7 | **DEFERRED** (secrets) |
 
 **Already done:** SCM URL in pom.xml (already points to monorepo).
+
+**DEFERRED items** require manual credential/secret creation and storage. These should be completed before the first release run.
 
 ---
 

@@ -1,8 +1,45 @@
 # Release Process
 
-## Overview
+## Automated Release Pipeline
 
-MockServer releases are a manual 15-step process spanning multiple registries and hosting platforms.
+The release process has been automated via a Buildkite pipeline and shared scripts. See [Release Pipeline Plan](../plans/release-pipeline.md) for the full design.
+
+### Quick Start
+
+**Via Buildkite (recommended):**
+1. Trigger the "MockServer Release" pipeline in Buildkite
+2. Enter release version, next SNAPSHOT version, and previous version
+3. Enter TOTP code when prompted
+4. Approve gates at each stage
+
+**Via local orchestrator:**
+```bash
+./scripts/release.sh 5.16.0 5.16.1-SNAPSHOT 5.15.0
+```
+
+### Key files
+- `scripts/ci/release/` — 25 standalone release scripts
+- `scripts/release.sh` — local orchestrator
+- `.buildkite/release-pipeline.yml` — Buildkite pipeline with approval gates
+- `terraform/buildkite-agents/build-secrets.tf` — AWS Secrets Manager secrets
+- `terraform/website/` — website infrastructure (S3, CloudFront, cross-account IAM)
+
+### Deferred setup (secrets)
+Before the first release, store credentials in AWS Secrets Manager:
+- `mockserver-release/gpg-key` — GPG private key + passphrase
+- `mockserver-release/github-token` — GitHub PAT
+- `mockserver-release/totp-seed` — TOTP shared secret
+- `mockserver-release/npm-token` — npm automation token
+- `mockserver-release/swaggerhub` — SwaggerHub API key
+- `mockserver-release/website-role` — Cross-account IAM role ARN
+
+---
+
+## Legacy Manual Process
+
+The legacy manual process is documented below for reference.
+
+MockServer releases were a manual 15-step process spanning multiple registries and hosting platforms.
 
 ```mermaid
 flowchart TD
