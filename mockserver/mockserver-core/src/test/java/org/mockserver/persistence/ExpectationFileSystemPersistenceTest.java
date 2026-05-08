@@ -10,11 +10,16 @@ import org.mockserver.mock.RequestMatchers;
 import org.mockserver.mock.listeners.MockServerMatcherNotifier;
 import org.mockserver.scheduler.Scheduler;
 
+import org.mockserver.matchers.TimeToLive;
+import org.mockserver.matchers.Times;
+
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -580,6 +585,43 @@ public class ExpectationFileSystemPersistenceTest {
             ConfigurationProperties.persistExpectations(false);
             ConfigurationProperties.initializationJsonPath(initializationJsonPath);
             ConfigurationProperties.watchInitializationJson(false);
+            if (expectationFileSystemPersistence != null) {
+                expectationFileSystemPersistence.stop();
+            }
+        }
+    }
+
+    @Test
+    public void shouldPersistExpectationsWithFiniteTimeToLiveIncludingEndDate() throws Exception {
+        String persistedExpectationsPath = ConfigurationProperties.persistedExpectationsPath();
+        ConfigurationProperties.persistExpectations(true);
+        ExpectationFileSystemPersistence expectationFileSystemPersistence = null;
+        try {
+            File persistedExpectations = File.createTempFile("persistedExpectations", ".json");
+            ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
+
+            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(configuration(), mockServerLogger, requestMatchers);
+            requestMatchers.add(new Expectation(
+                request()
+                    .withPath("/finiteTtl"),
+                Times.unlimited(),
+                TimeToLive.exactly(SECONDS, 300L),
+                0
+            )
+                .withId("finite")
+                .thenRespond(
+                    response()
+                        .withBody("some response")
+                ), API);
+            MILLISECONDS.sleep(1500);
+
+            String fileContents = new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8);
+            assertThat(fileContents, containsString("\"timeUnit\" : \"SECONDS\""));
+            assertThat(fileContents, containsString("\"timeToLive\" : 300"));
+            assertThat(fileContents, containsString("\"endDate\""));
+        } finally {
+            ConfigurationProperties.persistedExpectationsPath(persistedExpectationsPath);
+            ConfigurationProperties.persistExpectations(false);
             if (expectationFileSystemPersistence != null) {
                 expectationFileSystemPersistence.stop();
             }

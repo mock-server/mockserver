@@ -9,7 +9,8 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.mock.RequestMatchers;
 import org.mockserver.mock.listeners.MockServerMatcherListener;
 import org.mockserver.mock.listeners.MockServerMatcherNotifier;
-import org.mockserver.serialization.serializers.response.TimeToLiveSerializer;
+import org.mockserver.serialization.model.ExpectationDTO;
+import org.mockserver.serialization.serializers.response.TimeToLiveDTOPersistenceSerializer;
 import org.slf4j.event.Level;
 
 import java.io.FileOutputStream;
@@ -43,7 +44,7 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
         if (configuration.persistExpectations()) {
             this.mockServerLogger = mockServerLogger;
             this.requestMatchers = requestMatchers;
-            this.objectWriter = createObjectMapper(true, false, new TimeToLiveSerializer());
+            this.objectWriter = createObjectMapper(true, false, new TimeToLiveDTOPersistenceSerializer());
             this.filePath = Paths.get(configuration.persistedExpectationsPath());
             try {
                 Files.createFile(filePath);
@@ -134,7 +135,11 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
     public String serialize(Expectation... expectations) {
         try {
             if (expectations != null && expectations.length > 0) {
-                return objectWriter.writeValueAsString(expectations);
+                ExpectationDTO[] expectationDTOs = new ExpectationDTO[expectations.length];
+                for (int i = 0; i < expectations.length; i++) {
+                    expectationDTOs[i] = new ExpectationDTO(expectations[i]);
+                }
+                return objectWriter.writeValueAsString(expectationDTOs);
             } else {
                 return "[]";
             }
