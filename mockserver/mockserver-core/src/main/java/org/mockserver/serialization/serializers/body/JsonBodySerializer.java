@@ -2,6 +2,7 @@ package org.mockserver.serialization.serializers.body;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
@@ -44,7 +45,13 @@ public class JsonBodySerializer extends StdSerializer<JsonBody> {
                 jgen.writeStringField("contentType", jsonBody.getContentType());
             }
             jgen.writeStringField("type", jsonBody.getType().name());
-            jgen.writeObjectField("json", OBJECT_MAPPER.readTree(jsonBody.getValue()));
+            JsonNode jsonNode = OBJECT_MAPPER.readTree(jsonBody.getValue());
+            if (jsonNode.isValueNode()) {
+                jgen.writeFieldName("json");
+                jgen.writeRawValue(jsonBody.getValue());
+            } else {
+                jgen.writeObjectField("json", jsonNode);
+            }
             if (matchTypeNonDefault) {
                 jgen.writeStringField("matchType", jsonBody.getMatchType().name());
             }
@@ -53,7 +60,12 @@ public class JsonBodySerializer extends StdSerializer<JsonBody> {
             }
             jgen.writeEndObject();
         } else {
-            jgen.writeObject(OBJECT_MAPPER.readTree(jsonBody.getValue()));
+            JsonNode defaultJsonNode = OBJECT_MAPPER.readTree(jsonBody.getValue());
+            if (defaultJsonNode.isValueNode()) {
+                jgen.writeRawValue(jsonBody.getValue());
+            } else {
+                jgen.writeObject(defaultJsonNode);
+            }
         }
     }
 }

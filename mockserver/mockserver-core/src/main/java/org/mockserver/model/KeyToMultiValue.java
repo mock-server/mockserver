@@ -72,7 +72,7 @@ public class KeyToMultiValue extends ObjectWithJsonToString {
     }
 
     private void addValue(final NottableString value) {
-        if (values != null && !values.contains(value)) {
+        if (values != null) {
             values.add(value);
         }
         this.hashCode = Objects.hash(name, values);
@@ -84,11 +84,7 @@ public class KeyToMultiValue extends ObjectWithJsonToString {
 
     private void addNottableValues(final List<NottableString> values) {
         if (this.values != null) {
-            for (NottableString value : values) {
-                if (!this.values.contains(value)) {
-                    this.values.add(value);
-                }
-            }
+            this.values.addAll(values);
         }
     }
 

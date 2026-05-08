@@ -128,15 +128,6 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
 
         // then
         // match expectation send to echo server via proxy
-        HttpRequest httpRequestMatchExpectation = request()
-            .withSecure(false)
-            .withPath(calculatePath("echo"))
-            .withMethod("POST")
-            .withHeaders(
-
-                header("x-test", "test_headers_and_body")
-            )
-            .withBody("an_example_body_http");
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -146,38 +137,35 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
                 )
                 .withBody("an_example_body_http"),
             makeRequest(
-                httpRequestMatchExpectation,
+                request()
+                    .withSecure(false)
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
                 getHeadersToRemove()
             )
         );
         // don't match expectation and forward to proxy
-        HttpRequest httpRequestDontMatchExpectation = request()
-            .withSecure(true)
-            .withPath(calculatePath("echo_no_match"))
-            .withMethod("POST")
-            .withHeaders(
-                header("x-test", "test_headers_and_body")
-            )
-            .withBody("an_example_body_http");
         assertEquals(
             response()
                 .withStatusCode(NOT_FOUND_404.code())
                 .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
             makeRequest(
-                httpRequestDontMatchExpectation,
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo_no_match"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
                 getHeadersToRemove()
             )
         );
         // forward from mockserver to proxy then to echo server using header
-        HttpRequest httpRequestProxy = request()
-            .withSecure(true)
-            .withPath(calculatePath("echo_proxy_host"))
-            .withMethod("POST")
-            .withHeaders(
-                header("Host", "127.0.0.1:" + secureEchoServer.getPort()),
-                header("x-test", "test_headers_and_body")
-            )
-            .withBody("an_example_body_http");
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -187,15 +175,37 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
                 )
                 .withBody("an_example_body_http"),
             makeRequest(
-                httpRequestProxy,
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo_proxy_host"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("Host", "127.0.0.1:" + secureEchoServer.getPort()),
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
                 getHeadersToRemove()
             )
         );
         // and - verify sent via proxy to echo server
         getProxyClient()
             .verify(
-                httpRequestMatchExpectation.withSecure(true),
-                httpRequestProxy
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo_proxy_host"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http")
             );
     }
 

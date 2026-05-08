@@ -4,7 +4,15 @@
   "additionalProperties": false,
   "properties": {
     "timeUnit": {
-      "type": "string"
+      "enum": [
+        "DAYS",
+        "HOURS",
+        "MINUTES",
+        "SECONDS",
+        "MILLISECONDS",
+        "MICROSECONDS",
+        "NANOSECONDS"
+      ]
     },
     "value": {
       "type": "integer"

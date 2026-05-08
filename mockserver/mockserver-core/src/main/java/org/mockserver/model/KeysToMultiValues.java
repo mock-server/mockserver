@@ -46,7 +46,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
         multimap.clear();
         for (String name : entries.keySet()) {
             for (String value : entries.get(name)) {
-                withEntry(name, value);
+                multimap.put(NottableString.string(name, false), NottableString.string(value, false));
             }
         }
         return k;
