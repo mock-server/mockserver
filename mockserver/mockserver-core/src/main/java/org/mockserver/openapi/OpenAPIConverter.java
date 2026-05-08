@@ -122,7 +122,7 @@ public class OpenAPIConverter {
                                         if (isJsonContentType(contentType.getKey())) {
                                             response.withBody(json(serialise(schemaExample)));
                                         } else {
-                                            response.withBody(String.valueOf(schemaExample));
+                                            response.withBody(serialise(schemaExample));
                                         }
                                     } else {
                                         org.mockserver.openapi.examples.models.Example generatedExample = ExampleBuilder.fromSchema(mediaType.getSchema(), openAPI.getComponents() != null ? openAPI.getComponents().getSchemas() : null);
@@ -165,15 +165,14 @@ public class OpenAPIConverter {
             if (schema.getProperties() != null) {
                 Map<String, io.swagger.v3.oas.models.media.Schema> properties = schema.getProperties();
                 Map<String, Object> result = new LinkedHashMap<>();
-                boolean hasAny = false;
                 for (Map.Entry<String, io.swagger.v3.oas.models.media.Schema> entry : properties.entrySet()) {
                     Object propExample = resolveSchemaExample(entry.getValue(), openAPI, activeStack);
-                    if (propExample != null) {
-                        result.put(entry.getKey(), propExample);
-                        hasAny = true;
+                    if (propExample == null) {
+                        return null;
                     }
+                    result.put(entry.getKey(), propExample);
                 }
-                return hasAny ? result : null;
+                return result.isEmpty() ? null : result;
             }
             if (schema instanceof io.swagger.v3.oas.models.media.ArraySchema) {
                 io.swagger.v3.oas.models.media.ArraySchema arraySchema = (io.swagger.v3.oas.models.media.ArraySchema) schema;
