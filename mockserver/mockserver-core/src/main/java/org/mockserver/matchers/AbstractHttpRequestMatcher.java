@@ -26,7 +26,7 @@ public abstract class AbstractHttpRequestMatcher extends NotMatcher<RequestDefin
     protected final MockServerLogger mockServerLogger;
     private int hashCode;
     private boolean isBlank = false;
-    private boolean responseInProgress = false;
+    private volatile boolean responseInProgress = false;
     private MockServerMatcherNotifier.Cause source;
     protected boolean controlPlaneMatcher;
     protected Expectation expectation;

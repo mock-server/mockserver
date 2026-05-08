@@ -227,9 +227,11 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                 if (httpRequestMatcher.matches(MockServerLogger.isEnabled(DEBUG) ? new MatchDifference(configuration.detailedMatchFailures(), httpRequest) : null, httpRequest)) {
                     matchingExpectation = httpRequestMatcher.getExpectation();
                     httpRequestMatcher.setResponseInProgress(true);
-                    if (matchingExpectation.decrementRemainingMatches()) {
-                        remainingMatchesDecremented = true;
+                    if (!matchingExpectation.consumeMatch()) {
+                        httpRequestMatcher.setResponseInProgress(false);
+                        return null;
                     }
+                    remainingMatchesDecremented = matchingExpectation.getTimes() != null && !matchingExpectation.getTimes().isUnlimited();
                 } else if (!httpRequestMatcher.isResponseInProgress() && !httpRequestMatcher.isActive()) {
                     scheduler.submit(() -> removeHttpRequestMatcher(httpRequestMatcher, UUIDService.getUUID()));
                 }

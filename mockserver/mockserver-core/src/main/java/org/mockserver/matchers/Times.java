@@ -3,6 +3,7 @@ package org.mockserver.matchers;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author jamesdbloom
@@ -25,14 +26,18 @@ public class Times extends ObjectWithReflectiveEqualsHashCodeToString {
         public final boolean decrement() {
             return false;
         }
+
+        public final boolean decrementAndCheckGreaterThanZero() {
+            return true;
+        }
     };
 
     private int hashCode;
-    private int remainingTimes;
+    private final AtomicInteger remainingTimes;
     private final boolean unlimited;
 
     private Times(int remainingTimes, boolean unlimited) {
-        this.remainingTimes = remainingTimes;
+        this.remainingTimes = new AtomicInteger(remainingTimes);
         this.unlimited = unlimited;
     }
 
@@ -49,7 +54,7 @@ public class Times extends ObjectWithReflectiveEqualsHashCodeToString {
     }
 
     public int getRemainingTimes() {
-        return remainingTimes;
+        return remainingTimes.get();
     }
 
     public boolean isUnlimited() {
@@ -57,15 +62,22 @@ public class Times extends ObjectWithReflectiveEqualsHashCodeToString {
     }
 
     public boolean greaterThenZero() {
-        return unlimited || remainingTimes > 0;
+        return unlimited || remainingTimes.get() > 0;
     }
 
     public boolean decrement() {
         if (!unlimited) {
-            remainingTimes--;
+            remainingTimes.decrementAndGet();
             return true;
         }
         return false;
+    }
+
+    public boolean decrementAndCheckGreaterThanZero() {
+        if (unlimited) {
+            return true;
+        }
+        return remainingTimes.decrementAndGet() >= 0;
     }
 
     @SuppressWarnings("MethodDoesntCallSuperMethod")
@@ -73,7 +85,7 @@ public class Times extends ObjectWithReflectiveEqualsHashCodeToString {
         if (unlimited) {
             return Times.unlimited();
         } else {
-            return Times.exactly(remainingTimes);
+            return Times.exactly(remainingTimes.get());
         }
     }
 
@@ -89,14 +101,14 @@ public class Times extends ObjectWithReflectiveEqualsHashCodeToString {
             return false;
         }
         Times times = (Times) o;
-        return remainingTimes == times.remainingTimes &&
+        return remainingTimes.get() == times.remainingTimes.get() &&
             unlimited == times.unlimited;
     }
 
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(remainingTimes, unlimited);
+            hashCode = Objects.hash(remainingTimes.get(), unlimited);
         }
         return hashCode;
     }

@@ -593,6 +593,13 @@ public class Expectation extends ObjectWithJsonToString {
         return false;
     }
 
+    public boolean consumeMatch() {
+        if (times != null) {
+            return times.decrementAndCheckGreaterThanZero();
+        }
+        return true;
+    }
+
     @SuppressWarnings("PointlessNullCheck")
     public boolean contains(HttpRequest httpRequest) {
         return httpRequest != null && this.httpRequest.equals(httpRequest);
