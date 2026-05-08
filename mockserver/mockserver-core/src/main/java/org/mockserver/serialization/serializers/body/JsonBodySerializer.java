@@ -1,24 +1,23 @@
 package org.mockserver.serialization.serializers.body;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import org.mockserver.log.model.LogEntry;
-import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.JsonBody;
 import org.mockserver.serialization.ObjectMapperFactory;
 
 import java.io.IOException;
-
-import static org.mockserver.log.model.LogEntry.LogMessageType.EXCEPTION;
 
 /**
  * @author jamesdbloom
  */
 public class JsonBodySerializer extends StdSerializer<JsonBody> {
 
-    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper()
+        .copy()
+        .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
     private final boolean serialiseDefaultValues;
 
     public JsonBodySerializer(boolean serialiseDefaultValues) {
@@ -45,17 +44,7 @@ public class JsonBodySerializer extends StdSerializer<JsonBody> {
                 jgen.writeStringField("contentType", jsonBody.getContentType());
             }
             jgen.writeStringField("type", jsonBody.getType().name());
-            try {
-                jgen.writeObjectField("json", OBJECT_MAPPER.readTree(jsonBody.getValue()));
-            } catch (Throwable throwable) {
-                new MockServerLogger().logEvent(
-                    new LogEntry()
-                        .setType(EXCEPTION)
-                        .setMessageFormat("exception:{} while deserialising jsonBody with json:{}")
-                        .setArguments(throwable.getMessage(), jsonBody.getValue())
-                        .setThrowable(throwable)
-                );
-            }
+            jgen.writeObjectField("json", OBJECT_MAPPER.readTree(jsonBody.getValue()));
             if (matchTypeNonDefault) {
                 jgen.writeStringField("matchType", jsonBody.getMatchType().name());
             }
