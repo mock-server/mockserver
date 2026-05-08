@@ -49,7 +49,8 @@ export function useWebSocket(params: ConnectionParams) {
 
       setConnectionStatus('connecting');
       const protocol = params.secure ? 'wss' : 'ws';
-      const url = `${protocol}://${params.host}:${params.port}/_mockserver_ui_websocket`;
+      const basePath = window.location.pathname.replace(/\/mockserver\/dashboard\/?$/, '').replace(/\/+$/, '');
+      const url = `${protocol}://${params.host}:${params.port}${basePath}/_mockserver_ui_websocket`;
 
       const ws = new WebSocket(url);
       socketRef.current = ws;
