@@ -18,8 +18,7 @@ java -version
 echo
 ./mvnw -version
 echo
-export MAVEN_OPTS="${MAVEN_OPTS:-} -Xms2048m -Xmx6144m -Dmockserver.maxLogEntries=10000 -Dmockserver.maxExpectations=5000"
-export JAVA_OPTS="${JAVA_OPTS:-} -Xms2048m -Xmx6144m -Dmockserver.maxLogEntries=10000 -Dmockserver.maxExpectations=5000"
+export MAVEN_OPTS="${MAVEN_OPTS:-} -Xms2048m -Xmx6144m"
 
 if test "${BUILDKITE_BRANCH:-}" = "master"; then
     echo "BRANCH: MASTER"
@@ -29,7 +28,7 @@ fi
 
 log_debug "Starting Maven build (foreground)..."
 set +e
-./mvnw -T 1C clean install ${1:-} -Djava.security.egd=file:/dev/./urandom -Dmockserver.testOutput=quiet -DdisableXmlReport=false -DredirectTestOutputToFile=true -Dmockserver.testLogLevel=INFO
+./mvnw -T 1C clean install ${1:-} -Djava.security.egd=file:/dev/./urandom -Dmockserver.testOutput=quiet -DdisableXmlReport=false -DredirectTestOutputToFile=true -Dmockserver.testLogLevel=INFO "-Dmockserver.testArgLine=-Dmockserver.maxLogEntries=10000 -Dmockserver.maxExpectations=5000"
 MVN_EXIT=$?
 log_debug "Maven exited with code=$MVN_EXIT"
 set -e
