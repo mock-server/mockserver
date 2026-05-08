@@ -8,10 +8,13 @@ import io.netty.handler.codec.http.HttpVersion;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.mappers.FullHttpRequestToMockServerHttpRequest;
 import org.mockserver.model.*;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
@@ -343,6 +346,46 @@ public class NettyHttpToMockServerHttpRequestDecoderTest {
         // then
         Body body = ((HttpRequest) output.get(0)).getBody();
         assertThat(body, is(binary("some_random_bytes".getBytes(UTF_8), MediaType.JPEG)));
+    }
+
+    @Test
+    public void shouldPreserveTransferEncodingAndRemoveContentLength() {
+        // given
+        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, "/uri", Unpooled.wrappedBuffer("hello".getBytes(UTF_8)));
+        fullHttpRequest.headers().add("content-length", "5");
+
+        FullHttpRequestToMockServerHttpRequest mapper = new FullHttpRequestToMockServerHttpRequest(
+            configuration(), new MockServerLogger(), false, null, null
+        );
+
+        List<Header> preservedHeaders = Collections.singletonList(
+            new Header("transfer-encoding", "chunked")
+        );
+
+        // when
+        HttpRequest result = mapper.mapFullHttpRequestToMockServerRequest(fullHttpRequest, preservedHeaders, null, null, null);
+
+        // then
+        assertThat(result.containsHeader("transfer-encoding", "chunked"), is(true));
+        assertThat(result.getFirstHeader("content-length"), is(""));
+    }
+
+    @Test
+    public void shouldKeepContentLengthWhenNoTransferEncodingPreserved() {
+        // given
+        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, "/uri", Unpooled.wrappedBuffer("hello".getBytes(UTF_8)));
+        fullHttpRequest.headers().add("content-length", "5");
+
+        FullHttpRequestToMockServerHttpRequest mapper = new FullHttpRequestToMockServerHttpRequest(
+            configuration(), new MockServerLogger(), false, null, null
+        );
+
+        // when
+        HttpRequest result = mapper.mapFullHttpRequestToMockServerRequest(fullHttpRequest, null, null, null, null);
+
+        // then
+        assertThat(result.getFirstHeader("content-length"), is("5"));
+        assertThat(result.getFirstHeader("transfer-encoding"), is(""));
     }
 
 }

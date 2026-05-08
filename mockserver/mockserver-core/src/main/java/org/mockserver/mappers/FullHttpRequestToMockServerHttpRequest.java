@@ -21,8 +21,7 @@ import java.security.cert.Certificate;
 import java.util.List;
 import java.util.Set;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
-import static io.netty.handler.codec.http.HttpHeaderNames.COOKIE;
+import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
 
 /**
@@ -110,10 +109,22 @@ public class FullHttpRequestToMockServerHttpRequest {
     }
 
     private void setHeaders(HttpRequest httpRequest, FullHttpRequest fullHttpResponse, List<Header> preservedHeaders) {
+        boolean hasPreservedTransferEncoding = false;
+        if (preservedHeaders != null) {
+            for (Header preservedHeader : preservedHeaders) {
+                if (TRANSFER_ENCODING.toString().equalsIgnoreCase(preservedHeader.getName().getValue())) {
+                    hasPreservedTransferEncoding = true;
+                    break;
+                }
+            }
+        }
         HttpHeaders httpHeaders = fullHttpResponse.headers();
         if (!httpHeaders.isEmpty()) {
             Headers headers = new Headers();
             for (String headerName : httpHeaders.names()) {
+                if (hasPreservedTransferEncoding && headerName.equalsIgnoreCase(CONTENT_LENGTH.toString())) {
+                    continue;
+                }
                 headers.withEntry(headerName, httpHeaders.getAll(headerName));
             }
             httpRequest.withHeaders(headers);
