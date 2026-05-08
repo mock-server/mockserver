@@ -12,12 +12,14 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http2.*;
 import io.netty.handler.logging.LogLevel;
+import io.netty.handler.ssl.ApplicationProtocolNames;
 import io.netty.handler.ssl.SslHandler;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.Protocol;
 import org.mockserver.netty.unification.PortUnificationHandler;
 import org.slf4j.event.Level;
 
@@ -89,7 +91,14 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
 
                                         sslHandler.handshakeFuture().addListener(handshakeFuture -> {
                                             if (handshakeFuture.isSuccess()) {
-                                                boolean http2EnabledDownstream = HTTP_2.equals(getALPNProtocol(mockServerLogger, proxyClientCtx));
+                                                Protocol negotiated = getALPNProtocol(mockServerLogger, proxyClientCtx);
+                                                if (negotiated == null) {
+                                                    String alpn = sslHandler.applicationProtocol();
+                                                    if (alpn != null && alpn.equalsIgnoreCase(ApplicationProtocolNames.HTTP_2)) {
+                                                        negotiated = Protocol.HTTP_2;
+                                                    }
+                                                }
+                                                boolean http2EnabledDownstream = HTTP_2.equals(negotiated);
                                                 configurePipelines(pipelineToMockServer, pipelineToProxyClient, mockServerCtx, proxyClientCtx, http2EnabledDownstream);
                                             } else {
                                                 if (MockServerLogger.isEnabled(TRACE)) {
