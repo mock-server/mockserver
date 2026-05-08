@@ -11,7 +11,9 @@ sitemap:
   lastmod: 2019-11-10T08:00:00+01:00
 ---
 
-<p>MockServer supports <a target="_blank" href="https://swagger.io/docs/specification/basic-structure/"><strong>OpenAPI v3</strong></a> specifications in either JSON or YAML format.</p>
+<p>MockServer supports <a target="_blank" href="https://swagger.io/docs/specification/basic-structure/"><strong>OpenAPI v3.0</strong></a> specifications in either JSON or YAML format.</p>
+
+<p><strong>Note:</strong> MockServer uses the <a target="_blank" href="https://github.com/swagger-api/swagger-parser">swagger-parser</a> library which supports <strong>OpenAPI 3.0.x</strong>. OpenAPI 3.1 specifications may not be fully supported &mdash; in particular, features introduced in 3.1 (such as <span class="inline_code">$ref</span> siblings, <span class="inline_code">type</span> as an array, and the <span class="inline_code">webhooks</span> top-level key) may cause parsing errors. If you encounter validation errors, ensure your specification conforms to OpenAPI 3.0.x.</p>
 
 <p>OpenAPI specifications can be used in <a href="/mock_server/getting_started.html#request_openapi_matchers"><strong>request matchers</strong></a> for</p>
 <ul>

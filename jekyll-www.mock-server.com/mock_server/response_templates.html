@@ -253,6 +253,7 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
         </table>
     </li>
     <li><strong>body</strong>
+        <p><code class="inline_code">request.body</code> returns the <strong>raw request body as a string</strong>. To access individual fields within a JSON body, use <a href="#jsonpath_section">JsonPath</a> (Mustache), <code class="inline_code">$json.parse()</code> (Velocity), or <code class="inline_code">JSON.parse()</code> (JavaScript) as shown in the examples below.</p>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
@@ -832,6 +833,8 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
   "statusCode" : 200,
   "body" : "{'headers': ['1:host', '2:content-type']}"
 }</code></pre>
+
+<a id="jsonpath_section" class="anchor" href="#jsonpath_section">&nbsp;</a>
 
 <h4>JsonPath</h4>
 

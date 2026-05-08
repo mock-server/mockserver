@@ -220,6 +220,41 @@ connection.setSSLSocketFactory(sslContext.getSocketFactory());</code></pre>
 
 <p><strong>Note:</strong> if a request is received with a Host header for a hostname not seen before the first request will fail validation because the TLS connection has already been established before the Host header can be read, any subsequent requests with that hostname will pass hostname validation.</p>
 
+<a id="tls_troubleshooting" class="anchor" href="#tls_troubleshooting">&nbsp;</a>
+
+<h2>TLS Troubleshooting</h2>
+
+<p>The following are common TLS-related issues and their solutions:</p>
+
+<h3>SSL Context Initialization Failure</h3>
+
+<p>If you see an error like <code class="inline_code">javax.net.ssl.SSLException: java.lang.RuntimeException: Unexpected error: java.security.InvalidAlgorithmParameterException: the trustAnchors parameter must be non-empty</code>, this means the JVM's trust store is empty or misconfigured. This is common in minimal Docker images or Linux systems where the CA certificates package is not installed.</p>
+
+<p><strong>Solution:</strong></p>
+<pre class="prettyprint code"><code class="code"># Debian/Ubuntu
+apt-get install -y ca-certificates-java
+update-ca-certificates -f
+
+# Alpine
+apk add --no-cache ca-certificates java-cacerts</code></pre>
+
+<h3>Certificate Not Trusted</h3>
+
+<p>If your HTTP client rejects MockServer's certificate, ensure the MockServer CA certificate is trusted. See <a href="#verify_trust_chain">Ensure MockServer Certificates Are Trusted</a> above for multiple approaches (OS trust store, JVM keytool, programmatic SSLContext).</p>
+
+<h3>First Request Fails with New Hostname</h3>
+
+<p>When MockServer receives a request with a Host header for a hostname it has not seen before, the first request may fail TLS hostname validation. This is because the TLS handshake completes before MockServer can read the Host header and regenerate its certificate. Subsequent requests with that hostname will succeed. To avoid this, pre-configure the expected hostnames using the <a href="#button_configuration_ssl_subject_alternative_name_domains">sslSubjectAlternativeNameDomains</a> configuration property.</p>
+
+<h3>Connection Reset or Broken Pipe</h3>
+
+<p>If you see "Connection reset" or "Broken pipe" errors during TLS connections, common causes include:</p>
+<ul>
+    <li><strong>Expired test certificates:</strong> MockServer's dynamically generated certificates have a limited validity period. If you are using custom CA certificates for testing, ensure they have not expired.</li>
+    <li><strong>Protocol mismatch:</strong> Ensure the client and MockServer agree on a TLS protocol version. MockServer supports TLS 1.2 and TLS 1.3 by default. Use the <span class="inline_code">tlsProtocols</span> configuration property to adjust supported protocols.</li>
+    <li><strong>Corporate TLS inspection proxies:</strong> If your network uses a TLS inspection proxy, you may need to add the proxy's CA certificate to the JVM trust store, or configure the <span class="inline_code">JAVA_OPTS</span> with <span class="inline_code">-Djavax.net.ssl.trustStore</span> pointing to a trust store that includes both the proxy CA and MockServer CA certificates.</li>
+</ul>
+
 <a id="configuration" class="anchor" href="#configuration">&nbsp;</a>
 
 {% include_subpage _includes/tls_configuration.html %}
