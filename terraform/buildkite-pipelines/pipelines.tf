@@ -93,7 +93,22 @@ locals {
       emoji       = ":docker:"
       trigger     = "none"
     }
+    "cleanup" = {
+      name        = "MockServer Cleanup"
+      description = "Cancel and delete Buildkite builds for closed/merged PRs"
+      file        = ".buildkite/pipeline-cleanup.yml"
+      emoji       = ":broom:"
+      trigger     = "none"
+    }
   }
+}
+
+resource "buildkite_pipeline_schedule" "cleanup_daily" {
+  pipeline_id = buildkite_pipeline.pipeline["cleanup"].id
+  label       = "Daily closed PR cleanup"
+  cronline    = "0 6 * * *"
+  branch      = "master"
+  message     = "Scheduled: clean up closed PR builds"
 }
 
 resource "buildkite_pipeline" "pipeline" {

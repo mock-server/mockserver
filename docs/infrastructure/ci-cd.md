@@ -128,18 +128,20 @@ Buildkite Pipeline Triggers can receive GitHub webhooks directly with HMAC-SHA25
 
 #### Setup
 
-1. Create pipeline `mockserver-cleanup` in Buildkite pointing to `.buildkite/pipeline-cleanup.yml`
-2. In Buildkite pipeline settings → Triggers → New Trigger → GitHub:
-   - Set a webhook secret for signature verification
+Steps 1 and 4 are managed by Terraform (`terraform/buildkite-pipelines/pipelines.tf`). Steps 2 and 3 require manual setup because Buildkite Pipeline Triggers don't have a Terraform resource yet (the feature is in public preview).
+
+1. **Pipeline + schedule** (Terraform): Run `terraform apply` in `terraform/buildkite-pipelines/` to create the `mockserver-cleanup` pipeline and its daily schedule.
+2. **Pipeline Trigger** (Buildkite UI): Go to the [cleanup pipeline settings](https://buildkite.com/mockserver/mockserver-cleanup/settings) → Triggers → New Trigger → GitHub:
+   - Description: `GitHub PR closed/merged`
+   - Branch: `master`, Commit: `HEAD`
+   - Security: check "Validate webhook deliveries", enter a secret (`openssl rand -hex 32`)
    - Copy the trigger URL (`https://webhook.buildkite.com/deliver/bktr_...`)
-3. In GitHub repo → Settings → Webhooks → Add webhook:
-   - Paste the Buildkite trigger URL
+3. **GitHub webhook** (GitHub UI): Go to [repo webhook settings](https://github.com/mock-server/mockserver-monorepo/settings/hooks) → Add webhook:
+   - Payload URL: paste the Buildkite trigger URL from step 2
    - Content type: `application/json`
    - Secret: same as step 2
-   - Events: select "Pull requests" only
-4. In Buildkite pipeline settings → Schedules:
-   - Cron: `0 6 * * *` (daily at 06:00 UTC)
-   - Branch: `master`
+   - Events: select "Let me select individual events" → check only "Pull requests"
+4. **Daily schedule** (Terraform): Created automatically by step 1 — runs at 06:00 UTC daily as a safety net.
 
 ### CI Build Pipeline
 
