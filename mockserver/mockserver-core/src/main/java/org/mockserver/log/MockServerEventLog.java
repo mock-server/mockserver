@@ -510,6 +510,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             retrieveRequests(verification, logCorrelationId, httpRequests -> {
                 try {
                     if (!verification.getTimes().matches(httpRequests.size())) {
+                        final int matchedCount = httpRequests.size();
                         boolean matchByExpectationId = verification.getExpectationId() != null;
                         retrieveAllRequests(matchByExpectationId, allRequests -> {
                             String failureMessage;
@@ -519,7 +520,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                                 String serializedAllRequestInLog = allRequests.size() == 1 ? requestDefinitionSerializer.serialize(true, allRequests.get(0)) : requestDefinitionSerializer.serialize(true, allRequests);
                                 failureMessage = "Request not found " + verification.getTimes() + ", expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
                             } else {
-                                failureMessage = "Request not found " + verification.getTimes() + ", expected:<" + serializedRequestToBeVerified + "> but was not found, found " + allRequests.size() + " other requests";
+                                failureMessage = "Request not found " + verification.getTimes() + ", expected:<" + serializedRequestToBeVerified + "> but was found " + matchedCount + " time" + (matchedCount == 1 ? "" : "s") + " among " + allRequests.size() + " total requests";
                             }
                             final Object[] arguments = new Object[]{verification.getHttpRequest(), allRequests.size() == 1 ? allRequests.get(0) : allRequests};
                             if (MockServerLogger.isEnabled(Level.INFO)) {

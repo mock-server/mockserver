@@ -1580,7 +1580,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), equalTo("Request not found at least 4 times, expected:<{" + NEW_LINE +
                 "  \"path\" : \"" + calculatePath("some_path") + "\"" + NEW_LINE +
-                "}> but was not found, found 3 other requests"));
+                "}> but was found 3 times among 3 total requests"));
         }
     }
 

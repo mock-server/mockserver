@@ -399,7 +399,7 @@ public class MockServerEventLogRequestLogEntryVerificationTest {
                 ),
                 is("Request not found at least 2 times, expected:<{" + NEW_LINE +
                     "  \"path\" : \"some_other_path\"" + NEW_LINE +
-                    "}> but was not found, found 3 other requests"));
+                    "}> but was found 1 time among 3 total requests"));
         } finally {
             ConfigurationProperties.maximumNumberOfRequestToReturnInVerificationFailure(originalMaximumNumberOfRequestToReturnInVerificationFailure);
         }
@@ -439,7 +439,7 @@ public class MockServerEventLogRequestLogEntryVerificationTest {
             ),
             is("Request not found at least 2 times, expected:<{" + NEW_LINE +
                 "  \"path\" : \"some_other_path\"" + NEW_LINE +
-                "}> but was not found, found 3 other requests"));
+                "}> but was found 1 time among 3 total requests"));
     }
 
     @Test
