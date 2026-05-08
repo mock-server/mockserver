@@ -13,21 +13,40 @@ Build & Test"]
 Maven CI Image"]
         BK_RELEASE["Docker Push
 Release Image"]
+        BK_CLEANUP["PR Cleanup
+Cancel & Delete"]
     end
 
     subgraph "GitHub Actions"
         GA_CODEQL["CodeQL Analysis
 Security scanning"]
-        GA_DEPS["Dependency Submission
-Dependency graph"]
+    end
+
+    subgraph "GitHub Built-in"
+        GH_DEP["Dependency Graph
+Auto-indexed"]
     end
 
     BK -->|runs on| EC2[AWS EC2 Agents]
     BK_MAVEN -->|pushes to| DH[Docker Hub]
     BK_RELEASE -->|pushes to| DH
+    BK_CLEANUP -->|triggered by| GH_WH[GitHub Webhook]
     GA_CODEQL -->|reports to| GH_SEC[GitHub Security]
-    GA_DEPS -->|submits to| GH_DEP[GitHub Dependency Graph]
 ```
+
+### CI Security Model
+
+All custom CI pipelines run on Buildkite with self-managed EC2 agents. This keeps secrets (API tokens, Docker Hub credentials, AWS credentials) within the Buildkite/AWS boundary and avoids exposing them as GitHub Actions secrets.
+
+**Principle:** Use Buildkite for any pipeline that needs secrets or performs actions. Use GitHub Actions only for read-only analysis that requires no secrets (e.g., CodeQL). Use Buildkite Pipeline Triggers to react to GitHub events without giving GitHub access to CI credentials.
+
+| Concern | Approach |
+|---|---|
+| Build & test | Buildkite (EC2 agents, secrets in AWS Secrets Manager) |
+| Docker push | Buildkite (Docker Hub credentials in AWS Secrets Manager) |
+| GitHub event reactions | Buildkite Pipeline Triggers (GitHub webhook → Buildkite, no secrets in GitHub) |
+| Security scanning | GitHub Actions CodeQL (read-only, no secrets needed) |
+| Dependency graph | GitHub built-in (auto-indexed from manifests, no workflow needed) |
 
 ## Buildkite Pipelines
 
@@ -79,10 +98,48 @@ All pipelines are managed via Terraform in `terraform/buildkite-pipelines/pipeli
 | `mockserver-infra` | `pipeline-infra.yml` | Orchestrator | Infrastructure validation |
 | `mockserver-build-image` | `docker-push-maven.yml` | Manual | Build/push maven CI image |
 | `mockserver-release-image` | `docker-push-release.yml` | Manual | Build/push release image |
+| `mockserver-cleanup` | `pipeline-cleanup.yml` | GitHub webhook + scheduled | Clean up builds for closed PRs |
 
 A single commit can trigger multiple child pipelines if it changes files in multiple areas. For example, a commit touching both `mockserver/` and `mockserver-ui/` triggers both `mockserver-java` and `mockserver-ui` pipelines.
 
 All pipelines have `cancel_intermediate_builds` and `skip_intermediate_builds` enabled. When a new build arrives for the same branch (e.g. Dependabot rebases a PR), Buildkite automatically cancels any running builds and skips queued builds for that branch. Native trigger steps automatically cancel child builds when the parent build is cancelled.
+
+### Closed PR Build Cleanup
+
+**File:** `.buildkite/pipeline-cleanup.yml`
+
+When a PR is closed or merged, its Buildkite builds are no longer needed. The cleanup pipeline cancels any running builds and deletes all builds for the closed PR's branch across all child pipelines. This keeps the Buildkite dashboard clean — only builds for open PRs and master are visible.
+
+The cleanup pipeline operates in two modes:
+
+1. **Webhook-triggered (primary):** A Buildkite Pipeline Trigger receives GitHub `pull_request:closed` webhooks directly. The webhook payload is available to the build step via `buildkite-agent meta-data get buildkite:webhook`. This provides immediate cleanup when a PR is closed.
+2. **Scheduled sweep (safety net):** A daily cron schedule sweeps all pipelines for builds on branches whose PRs are no longer open on GitHub. This catches anything missed by the webhook.
+
+#### Why Buildkite Pipeline Triggers instead of GitHub Actions
+
+Buildkite Pipeline Triggers can receive GitHub webhooks directly with HMAC-SHA256 signature verification. This avoids storing a Buildkite API token as a GitHub Actions secret, keeping all CI credentials within the Buildkite/AWS boundary:
+
+| Approach | Secrets exposed to GitHub | Event-driven | Complexity |
+|---|---|---|---|
+| **Buildkite Pipeline Trigger** | None (webhook URL only) | Yes | Low |
+| GitHub Actions workflow | Buildkite API token | Yes | Low |
+| AWS Lambda webhook receiver | None | Yes | High |
+| Buildkite scheduled sweep only | None | No (polling) | Low |
+
+#### Setup
+
+1. Create pipeline `mockserver-cleanup` in Buildkite pointing to `.buildkite/pipeline-cleanup.yml`
+2. In Buildkite pipeline settings → Triggers → New Trigger → GitHub:
+   - Set a webhook secret for signature verification
+   - Copy the trigger URL (`https://webhook.buildkite.com/deliver/bktr_...`)
+3. In GitHub repo → Settings → Webhooks → Add webhook:
+   - Paste the Buildkite trigger URL
+   - Content type: `application/json`
+   - Secret: same as step 2
+   - Events: select "Pull requests" only
+4. In Buildkite pipeline settings → Schedules:
+   - Cron: `0 6 * * *` (daily at 06:00 UTC)
+   - Branch: `master`
 
 ### CI Build Pipeline
 

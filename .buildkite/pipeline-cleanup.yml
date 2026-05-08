@@ -1,0 +1,30 @@
+# Cleans up Buildkite builds for closed/merged GitHub PRs.
+#
+# Triggered two ways:
+#   1. GitHub webhook (pull_request:closed) via Buildkite Pipeline Trigger
+#      - Cleans up builds for the specific closed PR branch
+#   2. Scheduled (e.g. daily cron) as a safety net
+#      - Sweeps all pipelines for builds on branches whose PRs are closed
+#
+# Setup:
+#   1. Create pipeline "mockserver-cleanup" in Buildkite with this YAML
+#   2. Add a GitHub-type Pipeline Trigger in Buildkite pipeline settings:
+#      - Go to Pipeline Settings → Triggers → New Trigger → GitHub
+#      - Set a webhook secret for signature verification
+#      - Copy the trigger URL (https://webhook.buildkite.com/deliver/bktr_...)
+#   3. Register the trigger URL as a GitHub webhook:
+#      - Go to GitHub repo → Settings → Webhooks → Add webhook
+#      - Paste the Buildkite trigger URL
+#      - Content type: application/json
+#      - Secret: same as configured in step 2
+#      - Events: select "Pull requests" only
+#   4. Optionally add a Buildkite schedule (Pipeline Settings → Schedules):
+#      - Cron: 0 6 * * * (daily at 06:00 UTC)
+#      - Branch: master
+#
+steps:
+  - label: ":broom: Clean up closed PR builds"
+    command: ".buildkite/scripts/cleanup-closed-pr-builds.sh"
+    timeout_in_minutes: 10
+    agents:
+      queue: default
