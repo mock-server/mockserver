@@ -99,4 +99,34 @@ public class JsonBodyDTOSerializerTest {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new JsonBodyDTO(new JsonBody("{\"value\":1}", null, null, MatchType.ONLY_MATCHING_FIELDS, false))),
             is("{\"value\":1}"));
     }
+
+    @Test
+    public void shouldSerializeJsonBodyDTOWithStringPrimitive() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new JsonBodyDTO(new JsonBody("\"test\""))),
+            is("\"test\""));
+    }
+
+    @Test
+    public void shouldSerializeJsonBodyDTOWithStringPrimitiveAndNonDefaultFields() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new JsonBodyDTO(new JsonBody("\"test\"", MatchType.STRICT))),
+            is("{\"type\":\"JSON\",\"json\":\"test\",\"rawBytes\":\"InRlc3Qi\",\"matchType\":\"STRICT\"}"));
+    }
+
+    @Test
+    public void shouldSerializeJsonBodyDTOWithNumberPrimitive() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new JsonBodyDTO(new JsonBody("42"))),
+            is("42"));
+    }
+
+    @Test
+    public void shouldSerializeJsonBodyDTOWithBooleanPrimitive() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new JsonBodyDTO(new JsonBody("true"))),
+            is("true"));
+    }
+
+    @Test
+    public void shouldSerializeJsonBodyDTOWithNullPrimitive() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new JsonBodyDTO(new JsonBody("null"))),
+            is("null"));
+    }
 }

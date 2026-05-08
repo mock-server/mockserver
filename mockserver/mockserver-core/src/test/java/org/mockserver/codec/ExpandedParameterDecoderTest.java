@@ -1080,6 +1080,24 @@ public class ExpandedParameterDecoderTest {
     }
 
     @Test
+    public void shouldPreserveEncodedQuestionMarkInQueryParameterValues() {
+        Parameters parameters = new ExpandedParameterDecoder(configuration, mockServerLogger)
+            .retrieveQueryParameters("/?redirect=http%3A%2F%2Fexample.com%3Ffoo%3Dbar", true);
+        assertThat(parameters.getEntries(), containsInAnyOrder(
+            param("redirect", "http://example.com?foo=bar")
+        ));
+    }
+
+    @Test
+    public void shouldPreserveEncodedExclamationMarkInQueryParameterValues() {
+        Parameters parameters = new ExpandedParameterDecoder(configuration, mockServerLogger)
+            .retrieveQueryParameters("/?msg=hello%21world", true);
+        assertThat(parameters.getEntries(), containsInAnyOrder(
+            param("msg", "hello!world")
+        ));
+    }
+
+    @Test
     public void shouldPreserveDuplicateFormParameterValues() {
         List<Parameter> actual = new ExpandedParameterDecoder(configuration, mockServerLogger)
             .retrieveFormParameters("q=1&q=1&q=2", false).getEntries();

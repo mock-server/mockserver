@@ -1053,6 +1053,19 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
     }
 
     @Test
+    public void shouldValidateInvalidDelayTimeUnit() {
+        assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"statusCode\" : 200," + NEW_LINE +
+            "    \"delay\" : {" + NEW_LINE +
+            "      \"timeUnit\" : \"INVALID\"," + NEW_LINE +
+            "      \"value\" : 1" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}"), org.hamcrest.Matchers.containsString("$.httpResponse.delay.timeUnit"));
+    }
+
+    @Test
     public void shouldValidateInvalidExtraField() {
         // when
         assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +
