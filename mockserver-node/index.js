@@ -171,7 +171,13 @@ module.exports = (function () {
             }, 100, deferred, options && options.verbose); // wait for 10 seconds
           },
           function (err) {
-            if (err && err.code === "ECONNREFUSED") {
+            if ((err && err.code === "ECONNREFUSED") || err === 404) {
+              try {
+                if (mockServer) {
+                  mockServer.kill();
+                }
+              } catch (e) {
+              }
               deferred.resolve();
             } else {
               deferred.reject(err);

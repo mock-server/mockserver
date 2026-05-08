@@ -18,8 +18,8 @@ java -version
 echo
 ./mvnw -version
 echo
-export MAVEN_OPTS="${MAVEN_OPTS:-} -Xms4096m -Xmx12288m"
-export JAVA_OPTS="${JAVA_OPTS:-} -Xms4096m -Xmx12288m"
+export MAVEN_OPTS="${MAVEN_OPTS:-} -Xms2048m -Xmx5120m"
+export JAVA_OPTS="${JAVA_OPTS:-} -Xms2048m -Xmx5120m"
 
 if test "${BUILDKITE_BRANCH:-}" = "master"; then
     echo "BRANCH: MASTER"

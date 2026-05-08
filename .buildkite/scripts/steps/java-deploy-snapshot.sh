@@ -23,7 +23,7 @@ fi
 echo "--- :nexus: Deploying snapshot to Central Portal"
 exec "$SCRIPT_DIR/../run-in-docker.sh" \
   -i mockserver/mockserver:maven \
-  -m 14g \
+  -m 7g \
   -w /build/mockserver \
   -e "SONATYPE_USERNAME=$SONATYPE_USERNAME" \
   -e "SONATYPE_PASSWORD=$SONATYPE_PASSWORD" \

@@ -24,7 +24,7 @@ Logs the full docker run command at the start for easy local reproduction.
 Options:
   -i, --image IMAGE        Docker image to use (required)
   -w, --workdir DIR        Working directory inside container (default: /build)
-  -m, --memory SIZE        Memory limit (e.g. 14g)
+  -m, --memory SIZE        Memory limit (e.g. 7g)
   -s, --docker-socket      Mount Docker socket into container
   -e, --env KEY=VALUE      Pass environment variable to container
   -v, --volume SRC:DST     Additional volume mount

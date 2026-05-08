@@ -59,9 +59,7 @@ See [Dependencies](dependencies.md) for the full inventory and version ceilings.
 
 ### Maven Dependency Graph Submission
 
-A separate GitHub Actions workflow submits the full Maven dependency tree to the GitHub Dependency Graph API on every push to `master`. This enables Dependabot vulnerability alerts for **transitive dependencies** -- not just direct dependencies declared in `pom.xml`.
-
-**Workflow:** [`.github/workflows/dependency-submission.yml`](../../.github/workflows/dependency-submission.yml)
+GitHub's built-in dependency graph automatically indexes all manifest files (`pom.xml`, `package.json`, `Gemfile`, `requirements.txt`) and their transitive dependencies. This enables Dependabot vulnerability alerts for the full dependency tree -- currently tracking 2000+ packages including 347 Maven dependencies.
 
 ## Vulnerability Scanning: Snyk
 

@@ -255,55 +255,14 @@ The workflow:
 
 ### Maven Dependency Submission
 
-**File:** `.github/workflows/dependency-submission.yml`
-
-**Triggers:**
-- Push to `master`
-- Pull requests targeting `master`
-
-**Process:**
-
-```mermaid
-flowchart LR
-    TRIGGER[Push/PR] --> CHECKOUT[Checkout code]
-    CHECKOUT --> RETRY{Retry wrapper
-5 attempts}
-    RETRY --> DOWNLOAD[Download
-maven-dependency-submission CLI]
-    DOWNLOAD --> ANALYZE[Analyze Maven deps
-via depgraph-maven-plugin]
-    ANALYZE --> SUBMIT[Submit to
-Dependency Graph API]
-    SUBMIT -->|Success| DONE[Complete]
-    SUBMIT -->|HTTP 502| WAIT[Wait with
-exponential backoff]
-    WAIT --> RETRY
-```
-
-The workflow:
-1. Checks out the repository
-2. Downloads the official `maven-dependency-submission-action` CLI
-3. Wraps execution with retry logic (5 attempts, exponential backoff: 15s → 30s → 60s → 120s → 240s)
-4. Runs Maven with `depgraph-maven-plugin` to generate complete dependency graph (including transitive dependencies)
-5. Submits the dependency snapshot to GitHub's Dependency Graph API
-6. On HTTP 502 errors (transient API failures), retries with exponential backoff
-
-**Total retry window:** ~7 minutes
+GitHub's built-in dependency graph automatically indexes all manifest files (`pom.xml`, `package.json`, `Gemfile`, `requirements.txt`) and their transitive dependencies. No custom workflow is needed.
 
 **Powers:**
 - Dependency insights in the repository (Insights → Dependency graph)
 - Dependabot vulnerability alerts for transitive dependencies
 - Dependency review in pull requests (shows dependency changes and known vulnerabilities)
 
-**Why custom workflow?** GitHub's built-in "Automatic Dependency Submission" has no retry logic and frequently fails on HTTP 502 errors. This custom workflow uses the same CLI tool but wraps it with resilient retry handling.
-
-**Setup required:**
-1. Disable GitHub's automatic dependency submission to prevent conflicts:
-   - Go to `Settings → Code security → Dependency graph`
-   - Find "Automatic dependency submission"
-   - Change to **Disabled**
-
-**Note:** GitHub will still send email notifications on complete workflow failure (after all 5 retries are exhausted).
+**Note:** A custom `dependency-submission.yml` workflow was previously used but was removed because it never worked (the workflow failed on every run due to a GitHub-level configuration issue). The built-in dependency graph provides equivalent coverage.
 
 ## Build Agent Infrastructure
 
