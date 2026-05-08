@@ -16,11 +16,9 @@ public class LogEventRequestAndResponseDTO extends ObjectWithJsonToString implem
 
     public LogEventRequestAndResponseDTO(LogEventRequestAndResponse httpRequestAndHttpResponse) {
         if (httpRequestAndHttpResponse != null) {
-            RequestDefinition httpRequest = httpRequestAndHttpResponse.getHttpRequest();
-            if (httpRequest instanceof HttpRequest) {
-                this.httpRequest = new HttpRequestDTO((HttpRequest) httpRequest);
-            } else if (httpRequest instanceof OpenAPIDefinition) {
-                this.httpRequest = new OpenAPIDefinitionDTO((OpenAPIDefinition) httpRequest);
+            HttpRequest httpRequest = httpRequestAndHttpResponse.getHttpRequest();
+            if (httpRequest != null) {
+                this.httpRequest = new HttpRequestDTO(httpRequest);
             }
             HttpResponse httpResponse = httpRequestAndHttpResponse.getHttpResponse();
             if (httpResponse != null) {
@@ -32,10 +30,10 @@ public class LogEventRequestAndResponseDTO extends ObjectWithJsonToString implem
 
     @Override
     public LogEventRequestAndResponse buildObject() {
-        RequestDefinition httpRequest = null;
+        HttpRequest httpRequest = null;
         HttpResponse httpResponse = null;
         if (this.httpRequest != null) {
-            httpRequest = this.httpRequest.buildObject();
+            httpRequest = (HttpRequest) this.httpRequest.buildObject();
         }
         if (this.httpResponse != null) {
             httpResponse = this.httpResponse.buildObject();

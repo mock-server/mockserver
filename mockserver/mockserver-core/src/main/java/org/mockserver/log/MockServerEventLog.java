@@ -12,6 +12,7 @@ import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.listeners.MockServerEventLogNotifier;
 import org.mockserver.model.ExpectationId;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.model.LogEventRequestAndResponse;
 import org.mockserver.model.RequestDefinition;
 import org.mockserver.scheduler.Scheduler;
@@ -76,7 +77,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     private static final Function<LogEntry, Expectation> logEntryToExpectation = LogEntry::getExpectation;
     private static final Function<LogEntry, LogEventRequestAndResponse> logEntryToHttpRequestAndHttpResponse =
         logEntry -> new LogEventRequestAndResponse()
-            .withHttpRequest(logEntry.getHttpRequest())
+            .withHttpRequest((HttpRequest) logEntry.getHttpRequest())
             .withHttpResponse(logEntry.getHttpResponse())
             .withTimestamp(logEntry.getTimestamp());
     private static final String[] EXCLUDED_FIELDS = {"id", "disruptor"};
