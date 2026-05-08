@@ -25,6 +25,7 @@ import org.slf4j.event.Level;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
@@ -154,6 +155,23 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         eventLog.add(logEntry);
         notifyListeners(this, false);
         writeToSystemOut(logger, logEntry);
+    }
+
+    private void drainDisruptor() {
+        if (asynchronousEventProcessing) {
+            CountDownLatch latch = new CountDownLatch(1);
+            disruptor.publishEvent(new LogEntry()
+                .setType(RUNNABLE)
+                .setConsumer(latch::countDown)
+            );
+            try {
+                if (!latch.await(2, SECONDS)) {
+                    logger.warn("disruptor drain timed out after 2 seconds before verification, results may be incomplete");
+                }
+            } catch (InterruptedException ignore) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     public void stop() {
@@ -475,6 +493,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     }
 
     public void verify(Verification verification, Consumer<String> resultConsumer) {
+        drainDisruptor();
         final String logCorrelationId = UUIDService.getUUID();
         if (verification != null) {
             if (MockServerLogger.isEnabled(Level.INFO)) {
@@ -554,6 +573,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     }
 
     public void verify(VerificationSequence verificationSequence, Consumer<String> resultConsumer) {
+        drainDisruptor();
         if (verificationSequence != null) {
             final String logCorrelationId = UUIDService.getUUID();
             if (MockServerLogger.isEnabled(Level.INFO)) {

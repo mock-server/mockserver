@@ -566,4 +566,33 @@ public class MockServerEventLogRequestLogEntryVerificationTest {
             ),
             is("Request not found exactly 0 times, expected:<{ }> but was:<{ }>"));
     }
+
+    @Test
+    public void shouldPassVerificationWhenRequestLoggedConcurrently() throws Exception {
+        // given
+        HttpRequest httpRequest = new HttpRequest().withPath("some_path");
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+
+        // when
+        new Thread(() -> {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException ignore) {
+            }
+            mockServerEventLog.add(
+                new LogEntry()
+                    .setHttpRequest(httpRequest)
+                    .setType(RECEIVED_REQUEST)
+            );
+        }).start();
+
+        Thread.sleep(100);
+
+        // then
+        assertThat(verify(verification().withRequest(httpRequest).withTimes(exactly(2))), is(""));
+    }
 }
