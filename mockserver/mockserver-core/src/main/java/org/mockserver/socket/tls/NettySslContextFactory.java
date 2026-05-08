@@ -50,7 +50,8 @@ public class NettySslContextFactory {
     private final MockServerLogger mockServerLogger;
     private final KeyAndCertificateFactory keyAndCertificateFactory;
     private final Map<String, SslContext> clientSslContexts = new ConcurrentHashMap<>();
-    private SslContext serverSslContext = null;
+    private volatile SslContext serverSslContext;
+    private final Object sslContextLock = new Object();
     private Function<SslContextBuilder, SslContext> instanceClientSslContextBuilderFunction = clientSslContextBuilderFunction;
     private final boolean forServer;
 
@@ -87,12 +88,18 @@ public class NettySslContextFactory {
         return this;
     }
 
-    public synchronized SslContext createClientSslContext(boolean forwardProxyClient, boolean enableHttp2) {
+    public SslContext createClientSslContext(boolean forwardProxyClient, boolean enableHttp2) {
         String key = "forwardProxyClient=" + forwardProxyClient + ",enableHttp2=" + enableHttp2;
         SslContext clientSslContext = clientSslContexts.get(key);
-        if (clientSslContext == null || configuration.rebuildTLSContext()) {
+        if (clientSslContext != null && !configuration.rebuildTLSContext()) {
+            return clientSslContext;
+        }
+        synchronized (sslContextLock) {
+            clientSslContext = clientSslContexts.get(key);
+            if (clientSslContext != null && !configuration.rebuildTLSContext()) {
+                return clientSslContext;
+            }
             try {
-                // create x509 and private key if none exist yet
                 if (keyAndCertificateFactory.certificateNotYetCreated()) {
                     keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
                 }
@@ -177,12 +184,18 @@ public class NettySslContextFactory {
         return x509Certificates.toArray(new X509Certificate[0]);
     }
 
-    public synchronized SslContext createServerSslContext() {
-        if (serverSslContext == null
-            // create x509 and private key if none exist yet
-            || keyAndCertificateFactory.certificateNotYetCreated()
-            // re-create x509 and private key if SAN list has been updated and dynamic update has not been disabled
-            || (configuration.rebuildServerTLSContext() && !configuration.preventCertificateDynamicUpdate())) {
+    public SslContext createServerSslContext() {
+        if (serverSslContext != null
+            && !keyAndCertificateFactory.certificateNotYetCreated()
+            && !(configuration.rebuildServerTLSContext() && !configuration.preventCertificateDynamicUpdate())) {
+            return serverSslContext;
+        }
+        synchronized (sslContextLock) {
+            if (serverSslContext != null
+                && !keyAndCertificateFactory.certificateNotYetCreated()
+                && !(configuration.rebuildServerTLSContext() && !configuration.preventCertificateDynamicUpdate())) {
+                return serverSslContext;
+            }
             try {
                 new CertificateConfigurationValidator(configuration, mockServerLogger).validate();
                 keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();

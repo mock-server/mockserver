@@ -123,8 +123,8 @@ public class Configuration {
 
     // TLS
     private Boolean proactivelyInitialiseTLS;
-    private boolean rebuildTLSContext;
-    private boolean rebuildServerTLSContext;
+    private volatile boolean rebuildTLSContext;
+    private volatile boolean rebuildServerTLSContext;
     private String tlsProtocols;
 
     // inbound - dynamic CA
