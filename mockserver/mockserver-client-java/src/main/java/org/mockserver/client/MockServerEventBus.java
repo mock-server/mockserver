@@ -3,6 +3,9 @@ package org.mockserver.client;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * A publish/subscribe communication channel between {@link MockServerClient} and {@link ForwardChainExpectation} instances
  *
@@ -12,7 +15,9 @@ final class MockServerEventBus {
     private final Multimap<EventType, SubscriberHandler> subscribers = LinkedListMultimap.create();
 
     void publish(EventType event) {
-        for (SubscriberHandler subscriber : subscribers.get(event)) {
+        List<SubscriberHandler> handlers = new ArrayList<>(subscribers.get(event));
+        subscribers.clear();
+        for (SubscriberHandler subscriber : handlers) {
             subscriber.handle();
         }
     }

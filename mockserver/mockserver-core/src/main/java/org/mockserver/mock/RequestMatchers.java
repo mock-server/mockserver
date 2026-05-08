@@ -373,12 +373,23 @@ public class RequestMatchers extends MockServerMatcherNotifier {
 
     public List<Expectation> retrieveActiveExpectations(RequestDefinition requestDefinition) {
         if (requestDefinition == null) {
-            return httpRequestMatchers.stream().map(HttpRequestMatcher::getExpectation).collect(Collectors.toList());
+            return httpRequestMatchers.stream()
+                .filter(httpRequestMatcher -> {
+                    if (!httpRequestMatcher.isResponseInProgress() && !httpRequestMatcher.isActive()) {
+                        scheduler.submit(() -> removeHttpRequestMatcher(httpRequestMatcher, UUIDService.getUUID()));
+                        return false;
+                    }
+                    return true;
+                })
+                .map(HttpRequestMatcher::getExpectation)
+                .collect(Collectors.toList());
         } else {
             List<Expectation> expectations = new ArrayList<>();
             HttpRequestMatcher requestMatcher = matcherBuilder.transformsToMatcher(requestDefinition);
             getHttpRequestMatchersCopy().forEach(httpRequestMatcher -> {
-                if (requestMatcher.matches(httpRequestMatcher.getExpectation().getHttpRequest())) {
+                if (!httpRequestMatcher.isResponseInProgress() && !httpRequestMatcher.isActive()) {
+                    scheduler.submit(() -> removeHttpRequestMatcher(httpRequestMatcher, UUIDService.getUUID()));
+                } else if (requestMatcher.matches(httpRequestMatcher.getExpectation().getHttpRequest())) {
                     expectations.add(httpRequestMatcher.getExpectation());
                 }
             });
@@ -388,12 +399,22 @@ public class RequestMatchers extends MockServerMatcherNotifier {
 
     public List<HttpRequestMatcher> retrieveRequestMatchers(RequestDefinition requestDefinition) {
         if (requestDefinition == null) {
-            return httpRequestMatchers.stream().collect(Collectors.toList());
+            return httpRequestMatchers.stream()
+                .filter(httpRequestMatcher -> {
+                    if (!httpRequestMatcher.isResponseInProgress() && !httpRequestMatcher.isActive()) {
+                        scheduler.submit(() -> removeHttpRequestMatcher(httpRequestMatcher, UUIDService.getUUID()));
+                        return false;
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList());
         } else {
             List<HttpRequestMatcher> httpRequestMatchers = new ArrayList<>();
             HttpRequestMatcher requestMatcher = matcherBuilder.transformsToMatcher(requestDefinition);
             getHttpRequestMatchersCopy().forEach(httpRequestMatcher -> {
-                if (requestMatcher.matches(httpRequestMatcher.getExpectation().getHttpRequest())) {
+                if (!httpRequestMatcher.isResponseInProgress() && !httpRequestMatcher.isActive()) {
+                    scheduler.submit(() -> removeHttpRequestMatcher(httpRequestMatcher, UUIDService.getUUID()));
+                } else if (requestMatcher.matches(httpRequestMatcher.getExpectation().getHttpRequest())) {
                     httpRequestMatchers.add(httpRequestMatcher);
                 }
             });

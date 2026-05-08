@@ -4118,6 +4118,35 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
+    public void shouldRemoveExpiredTimeToLiveFromActiveExpectations() throws InterruptedException {
+        // when
+        mockServerClient
+            .when(
+                request().withPath(calculatePath("some_path")),
+                unlimited(),
+                TimeToLive.exactly(SECONDS, 2L)
+            )
+            .respond(
+                response().withBody("some_body")
+            );
+
+        // then - expectation should be active before expiry
+        assertThat(
+            mockServerClient.retrieveActiveExpectations(null).length,
+            equalTo(1)
+        );
+
+        // when - wait for TTL to expire
+        MILLISECONDS.sleep(2500);
+
+        // then - expired expectation should be removed from active list without requiring a request
+        assertThat(
+            mockServerClient.retrieveActiveExpectations(null).length,
+            equalTo(0)
+        );
+    }
+
+    @Test
     public void shouldNotReturnResponseForMatchingBodyWithNotOperator() {
         // when
         mockServerClient

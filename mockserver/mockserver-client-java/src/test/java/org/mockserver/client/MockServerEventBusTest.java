@@ -79,4 +79,42 @@ public class MockServerEventBusTest {
 		verify(subscriber, never()).handle();
 		verify(secondSubscriber).handle();
 	}
+
+	@Test
+	public void shouldClearSubscribersAfterPublish() {
+		// given
+		bus.subscribe(subscriber, RESET, STOP);
+
+		// when
+		bus.publish(RESET);
+
+		// then
+		verify(subscriber, times(1)).handle();
+
+		// when - publish again
+		bus.publish(RESET);
+
+		// then - subscriber should not be called again (was cleared)
+		verify(subscriber, times(1)).handle();
+	}
+
+	@Test
+	public void shouldClearAllSubscribersAfterPublish() {
+		// given
+		bus.subscribe(subscriber, RESET);
+		bus.subscribe(secondSubscriber, STOP);
+
+		// when
+		bus.publish(RESET);
+
+		// then - RESET subscriber called, STOP subscriber not called
+		verify(subscriber, times(1)).handle();
+		verify(secondSubscriber, never()).handle();
+
+		// when - publish STOP (all subscribers were cleared by previous publish)
+		bus.publish(STOP);
+
+		// then - secondSubscriber should not be called (was cleared)
+		verify(secondSubscriber, never()).handle();
+	}
 }
