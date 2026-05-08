@@ -10,6 +10,7 @@ printMessage "Start: \"${SCRIPT_DIR/\//}\""
 
 function integration_test() {
   runCommand "rm -rf ${SCRIPT_DIR}/config"
+  runCommand "mkdir -p ${SCRIPT_DIR}/config && chmod 777 ${SCRIPT_DIR}/config"
   start-up
   TEST_EXIT_CODE=0
   sleep 3
