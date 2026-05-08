@@ -329,4 +329,15 @@ public class HeadersTest {
         assertFalse(headers.containsEntry(string("name_three"), string("value_three_other")));
     }
 
+    @Test
+    public void shouldPreserveDuplicateHeaderValues() {
+        Headers headers = new Headers();
+        headers.withEntries(
+            header("Set-Cookie", "a=1", "a=1", "b=2")
+        );
+        assertThat(headers.getEntries(), is(Arrays.asList(
+            header("Set-Cookie", "a=1", "a=1", "b=2")
+        )));
+    }
+
 }

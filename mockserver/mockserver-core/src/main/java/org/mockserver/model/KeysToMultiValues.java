@@ -1,6 +1,6 @@
 package org.mockserver.model;
 
-import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -20,11 +20,11 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     private final K k = (K) this;
 
     protected KeysToMultiValues() {
-        multimap = LinkedHashMultimap.create();
+        multimap = LinkedListMultimap.create();
     }
 
     protected KeysToMultiValues(Multimap<NottableString, NottableString> multimap) {
-        this.multimap = LinkedHashMultimap.create(multimap);
+        this.multimap = LinkedListMultimap.create(multimap);
     }
 
     public abstract T build(final NottableString name, final Collection<NottableString> values);

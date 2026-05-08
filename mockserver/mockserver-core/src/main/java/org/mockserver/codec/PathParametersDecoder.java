@@ -83,7 +83,16 @@ public class PathParametersDecoder {
                     while (pathParameterValue.find()) {
                         parameterValues.add(pathParameterValue.group(1));
                     }
-                    parsedParameters.withEntry(parameterName, parameterValues);
+                    List<String> existingValues = parsedParameters.getValues(parameterName);
+                    List<String> newValues = new ArrayList<>();
+                    for (String value : parameterValues) {
+                        if (!existingValues.contains(value)) {
+                            newValues.add(value);
+                        }
+                    }
+                    if (!newValues.isEmpty()) {
+                        parsedParameters.withEntry(parameterName, newValues);
+                    }
                 }
             }
         }

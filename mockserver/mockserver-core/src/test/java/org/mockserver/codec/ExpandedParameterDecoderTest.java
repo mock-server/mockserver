@@ -1070,4 +1070,22 @@ public class ExpandedParameterDecoderTest {
         )));
     }
 
+    @Test
+    public void shouldPreserveDuplicateQueryParameterValues() {
+        Parameters parameters = new ExpandedParameterDecoder(configuration, mockServerLogger)
+            .retrieveQueryParameters("/?q=1&q=1&q=2", true);
+        assertThat(parameters.getEntries(), containsInAnyOrder(
+            param("q", "1", "1", "2")
+        ));
+    }
+
+    @Test
+    public void shouldPreserveDuplicateFormParameterValues() {
+        List<Parameter> actual = new ExpandedParameterDecoder(configuration, mockServerLogger)
+            .retrieveFormParameters("q=1&q=1&q=2", false).getEntries();
+        assertThat(actual, containsInAnyOrder(
+            param("q", "1", "1", "2")
+        ));
+    }
+
 }
