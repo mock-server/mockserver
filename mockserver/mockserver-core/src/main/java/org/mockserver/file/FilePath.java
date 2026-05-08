@@ -53,12 +53,12 @@ public class FilePath {
 
     public static List<String> expandFilePathGlobs(String filePath) {
         if (isNotBlank(filePath) && filePath.contains(".")) {
-            if (filePath.contains("*") || filePath.contains("?")) {
+            if (filePath.contains("*") || filePath.contains("?") || filePath.contains("{")) {
                 List<String> expandedFilePaths = new ArrayList<>();
                 PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:" + filePath);
                 Finder finder = new Finder(filePath, pathMatcher);
                 try {
-                    String startingDir = filePath.contains("/") ? StringUtils.substringBeforeLast(StringUtils.substringBefore(filePath, "*"), "/") : ".";
+                    String startingDir = filePath.contains("/") ? findStartingDirectory(filePath) : ".";
                     if (new File(startingDir).exists()) {
                         Files.walkFileTree(
                             new File(startingDir).toPath(),
@@ -100,6 +100,18 @@ public class FilePath {
         } else {
             return Collections.emptyList();
         }
+    }
+
+    private static String findStartingDirectory(String filePath) {
+        int firstGlob = filePath.length();
+        for (char c : new char[]{'*', '?', '{'}) {
+            int idx = filePath.indexOf(c);
+            if (idx >= 0 && idx < firstGlob) {
+                firstGlob = idx;
+            }
+        }
+        String beforeGlob = filePath.substring(0, firstGlob);
+        return beforeGlob.contains("/") ? StringUtils.substringBeforeLast(beforeGlob, "/") : ".";
     }
 
     public static class Finder extends SimpleFileVisitor<Path> {
