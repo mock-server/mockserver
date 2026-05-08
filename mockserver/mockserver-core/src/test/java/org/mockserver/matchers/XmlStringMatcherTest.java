@@ -3,6 +3,13 @@ package org.mockserver.matchers;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
 import static junit.framework.TestCase.*;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.NotMatcher.notMatcher;
@@ -256,5 +263,30 @@ public class XmlStringMatcherTest {
     public void showHaveCorrectEqualsBehaviour() {
         MockServerLogger mockServerLogger = new MockServerLogger();
         assertEquals(new XmlStringMatcher(mockServerLogger, "some_value"), new XmlStringMatcher(mockServerLogger, "some_value"));
+    }
+
+    @Test
+    public void shouldMatchCorrectlyUnderConcurrency() throws ExecutionException, InterruptedException {
+        XmlStringMatcher matcherOne = new XmlStringMatcher(new MockServerLogger(), "<a>1</a>");
+        XmlStringMatcher matcherTwo = new XmlStringMatcher(new MockServerLogger(), "<a>2</a>");
+
+        ExecutorService executor = Executors.newFixedThreadPool(30);
+        try {
+            List<Future<Boolean>> futures = new ArrayList<>();
+            for (int i = 0; i < 200; i++) {
+                futures.add(executor.submit(() -> {
+                    assertTrue("matcherOne should match <a>1</a>", matcherOne.matches("<a>1</a>"));
+                    assertFalse("matcherOne should NOT match <a>2</a>", matcherOne.matches("<a>2</a>"));
+                    assertTrue("matcherTwo should match <a>2</a>", matcherTwo.matches("<a>2</a>"));
+                    assertFalse("matcherTwo should NOT match <a>1</a>", matcherTwo.matches("<a>1</a>"));
+                    return true;
+                }));
+            }
+            for (Future<Boolean> future : futures) {
+                future.get();
+            }
+        } finally {
+            executor.shutdownNow();
+        }
     }
 }

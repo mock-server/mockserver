@@ -20,10 +20,10 @@ import static org.mockserver.model.NottableString.string;
  * @author jamesdbloom
  */
 public class XmlStringMatcher extends BodyMatcher<String> {
-    private static final String[] EXCLUDED_FIELDS = {"mockServerLogger", "diffBuilder"};
+    private static final String[] EXCLUDED_FIELDS = {"mockServerLogger"};
     private final MockServerLogger mockServerLogger;
-    private DiffBuilder diffBuilder;
     private NottableString matcher = string("THIS SHOULD NEVER MATCH");
+    private boolean validMatcher;
 
     XmlStringMatcher(MockServerLogger mockServerLogger, final String matcher) {
         this(mockServerLogger, string(matcher));
@@ -33,13 +33,8 @@ public class XmlStringMatcher extends BodyMatcher<String> {
         this.mockServerLogger = mockServerLogger;
         try {
             this.matcher = matcher;
-            this.diffBuilder = DiffBuilder.compare(Input.fromString(this.matcher.getValue()))
-                .ignoreComments()
-                .ignoreWhitespace()
-                .normalizeWhitespace()
-                .checkForSimilar()
-                .withNodeMatcher(new DefaultNodeMatcher(ElementSelectors.byName))
-                .withDifferenceEvaluator(DifferenceEvaluators.chain(new PlaceholderDifferenceEvaluator(), DifferenceEvaluators.Default));
+            Input.fromString(this.matcher.getValue()).build();
+            this.validMatcher = true;
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -50,6 +45,16 @@ public class XmlStringMatcher extends BodyMatcher<String> {
         }
     }
 
+    private DiffBuilder createDiffBuilder() {
+        return DiffBuilder.compare(Input.fromString(this.matcher.getValue()))
+            .ignoreComments()
+            .ignoreWhitespace()
+            .normalizeWhitespace()
+            .checkForSimilar()
+            .withNodeMatcher(new DefaultNodeMatcher(ElementSelectors.byName))
+            .withDifferenceEvaluator(DifferenceEvaluators.chain(new PlaceholderDifferenceEvaluator(), DifferenceEvaluators.Default));
+    }
+
     public boolean matches(String matched) {
         return matches(null, matched);
     }
@@ -57,9 +62,9 @@ public class XmlStringMatcher extends BodyMatcher<String> {
     public boolean matches(final MatchDifference context, String matched) {
         boolean result = false;
 
-        if (diffBuilder != null) {
+        if (validMatcher) {
             try {
-                Diff diff = diffBuilder.withTest(Input.fromString(matched)).build();
+                Diff diff = createDiffBuilder().withTest(Input.fromString(matched)).build();
                 result = !diff.hasDifferences();
 
                 if (!result && context != null) {
