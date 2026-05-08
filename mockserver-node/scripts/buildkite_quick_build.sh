@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-# install project npm modules
+npm ci
 
-npm cache verify
-npm install --no-optional
-
-# run project build
-
-grunt
+npx grunt

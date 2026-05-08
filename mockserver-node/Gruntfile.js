@@ -103,7 +103,8 @@ module.exports = function (grunt) {
         'nodeunit:grunt_stopped',
         'nodeunit:grunt_failure',
         'nodeunit:node_failure',
-        'nodeunit:node_started'
+        'nodeunit:node_started',
+        'nodeunit:node_stopped'
     ]);
 
     grunt.registerTask('default', ['exec:stop_existing_mockservers', 'deleted_jars', 'download_jar', 'jshint', 'test']);

@@ -12,7 +12,7 @@
 
                 var port = 1081;
 
-                test.expect(2);
+                test.expect(1);
                 mockserver
                     .stop_mockserver({serverPort: port})
                     .then(

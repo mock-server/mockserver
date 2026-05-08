@@ -9,12 +9,10 @@
 
     function checkFileExists(test, path) {
         try {
-            if (fs.existsSync(path)) {
-                test.ok(fs.existsSync(path), "check '" + file + "' exists");
-            }
+            test.ok(fs.existsSync(path), "check '" + path + "' exists");
         } catch(err) {
             console.error(err);
-            test.ok(false, "failed check if '" + file + "' exists");
+            test.ok(false, "failed check if '" + path + "' exists: " + err);
         }
     }
 
@@ -82,7 +80,7 @@
             'allow multiple system properties to be specified in single string': function (test) {
                 var port = 1082;
 
-                test.expect(2);
+                test.expect(3);
                 mockserver
                     .start_mockserver({
                         serverPort: port,
@@ -118,7 +116,7 @@
                                             }
                                         )
                                         .then(function () {
-                                            checkFileExists(test, '/tmp/' + port + '/PKCS8CertificateAuthorityPrivateKey.pem');
+                                            checkFileExists(test, './tmp/' + port + '/PKCS8CertificateAuthorityPrivateKey.pem');
                                             stopMockServer(test, port);
                                         });
                                 });
@@ -132,7 +130,7 @@
             'allow multiple system properties to be specified as array': function (test) {
                 var port = 1083;
 
-                test.expect(2);
+                test.expect(3);
                 mockserver
                     .start_mockserver({
                         serverPort: port,
@@ -168,7 +166,7 @@
                                             }
                                         )
                                         .then(function () {
-                                            checkFileExists(test, '/tmp/' + port + '/PKCS8CertificateAuthorityPrivateKey.pem');
+                                            checkFileExists(test, './tmp/' + port + '/PKCS8CertificateAuthorityPrivateKey.pem');
                                             stopMockServer(test, port);
                                         });
                                 });

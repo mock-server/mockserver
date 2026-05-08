@@ -1,4 +1,12 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-docker pull mockserver/mockserver:grunt
-docker run -v $(pwd):/build/mockserver-client-node -w /build/mockserver-client-node -a stdout -a stderr -e BUILDKITE_BRANCH=$BUILDKITE_BRANCH mockserver/mockserver:grunt /build/mockserver-client-node/scripts/buildkite_quick_build.sh
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+docker pull mockserver/mockserver:maven
+docker run --rm \
+  -v "$REPO_ROOT:/build" \
+  -w /build/mockserver-node \
+  -a stdout -a stderr \
+  mockserver/mockserver:maven bash -c \
+  '/build/.buildkite/scripts/install-nodejs.sh && /build/mockserver-node/scripts/buildkite_quick_build.sh'

@@ -6,3 +6,7 @@ steps:
   - label: ":node: node launcher lint"
     command: ".buildkite/scripts/steps/node-launcher-lint.sh"
     timeout_in_minutes: 10
+
+  - label: ":node: :java: node launcher integration tests"
+    command: ".buildkite/scripts/steps/node-launcher-test.sh"
+    timeout_in_minutes: 15
