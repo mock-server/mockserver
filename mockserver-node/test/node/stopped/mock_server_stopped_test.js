@@ -10,34 +10,39 @@
         'mock server has stopped': testCase({
             'should fail when attempting to setup expectation': function (test) {
 
-                var port = 1081;
+                var port = 1084;
 
                 test.expect(1);
                 mockserver
-                    .stop_mockserver({serverPort: port})
+                    .start_mockserver({serverPort: port})
+                    .then(function () {
+                        return mockserver.stop_mockserver({serverPort: port});
+                    })
                     .then(
                         function () {
-                            sendRequest("PUT", "localhost", port, "/expectation", {
-                                'httpRequest': {
-                                    'path': '/somePath'
-                                },
-                                'httpResponse': {
-                                    'statusCode': 201,
-                                    'body': JSON.stringify({name: 'first_body'})
-                                }
-                            }).then(
-                                function () {
-                                    test.ok(false, "allowed expectation to be setup");
-                                },
-                                function () {
-                                    test.ok(true, "did not allow expectation to be setup");
-                                })
-                                .then(function () {
-                                    test.done();
-                                });
+                            setTimeout(function () {
+                                sendRequest("PUT", "localhost", port, "/expectation", {
+                                    'httpRequest': {
+                                        'path': '/somePath'
+                                    },
+                                    'httpResponse': {
+                                        'statusCode': 201,
+                                        'body': JSON.stringify({name: 'first_body'})
+                                    }
+                                }).then(
+                                    function () {
+                                        test.ok(false, "allowed expectation to be setup");
+                                    },
+                                    function () {
+                                        test.ok(true, "did not allow expectation to be setup");
+                                    })
+                                    .then(function () {
+                                        test.done();
+                                    });
+                            }, 500);
                         },
                         function (error) {
-                            test.ok(false, "should start without error: \"" + error + "\"");
+                            test.ok(false, "should stop without error: \"" + error + "\"");
                             test.done();
                         }
                     );

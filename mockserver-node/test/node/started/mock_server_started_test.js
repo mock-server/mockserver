@@ -67,7 +67,7 @@
                                                 test.ok(false, "failed to match expectation");
                                             })
                                         .then(function () {
-                                            test.done();
+                                            stopMockServer(test, port);
                                         });
                                 });
                         },
