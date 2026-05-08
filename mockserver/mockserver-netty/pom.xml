@@ -412,6 +412,13 @@
                                         <exclude>draftv4/**</exclude>
                                     </excludes>
                                 </filter>
+                                <!-- exclude netty-tcnative native libraries that cannot be shaded -->
+                                <filter>
+                                    <artifact>io.netty:netty-tcnative-boringssl-static</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/native/**</exclude>
+                                    </excludes>
+                                </filter>
                                 <!-- excluded duplicated content in META-INF and other static files -->
                                 <filter>
                                     <artifact>*:*</artifact>
