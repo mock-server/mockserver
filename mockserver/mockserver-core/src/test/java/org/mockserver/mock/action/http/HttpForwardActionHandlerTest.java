@@ -12,6 +12,7 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsSame.sameInstance;
 import static org.mockito.Mockito.*;
@@ -54,6 +55,36 @@ public class HttpForwardActionHandlerTest {
         // then
         assertThat(actualHttpResponse, is(sameInstance(responseFuture)));
         verify(mockHttpClient).sendRequest(httpRequest.withSecure(false), new InetSocketAddress(httpForward.getHost(), httpForward.getPort()));
+    }
+
+    @Test
+    public void shouldUpdateHostHeaderToForwardTarget() {
+        CompletableFuture<HttpResponse> responseFuture = new CompletableFuture<>();
+        HttpRequest httpRequest = request().withHeader("Host", "localhost:1080");
+        HttpForward httpForward = forward()
+            .withHost("api.example.com")
+            .withPort(443)
+            .withScheme(HttpForward.Scheme.HTTPS);
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), any(InetSocketAddress.class))).thenReturn(responseFuture);
+
+        httpForwardActionHandler.handle(httpForward, httpRequest);
+
+        assertThat(httpRequest.getHeader("Host"), contains("api.example.com"));
+    }
+
+    @Test
+    public void shouldIncludePortInHostHeaderForNonDefaultPort() {
+        CompletableFuture<HttpResponse> responseFuture = new CompletableFuture<>();
+        HttpRequest httpRequest = request().withHeader("Host", "localhost:1080");
+        HttpForward httpForward = forward()
+            .withHost("api.example.com")
+            .withPort(8443)
+            .withScheme(HttpForward.Scheme.HTTPS);
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), any(InetSocketAddress.class))).thenReturn(responseFuture);
+
+        httpForwardActionHandler.handle(httpForward, httpRequest);
+
+        assertThat(httpRequest.getHeader("Host"), contains("api.example.com:8443"));
     }
 
     @Test
