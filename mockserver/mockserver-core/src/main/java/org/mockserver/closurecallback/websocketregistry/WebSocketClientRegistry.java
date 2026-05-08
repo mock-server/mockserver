@@ -41,7 +41,11 @@ public class WebSocketClientRegistry {
     public WebSocketClientRegistry(Configuration configuration, MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
         this.webSocketMessageSerializer = new WebSocketMessageSerializer(mockServerLogger);
-        this.clientRegistry = Collections.synchronizedMap(new CircularHashMap<>(configuration.maxWebSocketExpectations()));
+        this.clientRegistry = Collections.synchronizedMap(new CircularHashMap<>(configuration.maxWebSocketExpectations(), channel -> {
+            if (channel != null && channel.isOpen()) {
+                channel.close();
+            }
+        }));
         this.responseCallbackRegistry = new CircularHashMap<>(configuration.maxWebSocketExpectations());
         this.forwardCallbackRegistry = new CircularHashMap<>(configuration.maxWebSocketExpectations());
         this.metrics = new Metrics(configuration);
