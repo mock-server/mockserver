@@ -595,17 +595,17 @@
             <dependency>
                 <groupId>io.prometheus</groupId>
                 <artifactId>prometheus-metrics-core</artifactId>
-                <version>1.3.6</version>
+                <version>1.6.1</version>
             </dependency>
             <dependency>
                 <groupId>io.prometheus</groupId>
                 <artifactId>prometheus-metrics-exposition-formats</artifactId>
-                <version>1.3.6</version>
+                <version>1.6.1</version>
             </dependency>
             <dependency>
                 <groupId>io.prometheus</groupId>
                 <artifactId>prometheus-metrics-model</artifactId>
-                <version>1.3.6</version>
+                <version>1.6.1</version>
             </dependency>
 
             <!-- spring -->
