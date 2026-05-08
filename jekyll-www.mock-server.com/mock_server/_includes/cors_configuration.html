@@ -37,7 +37,7 @@
 <button id="button_configuration_cors_allow_origin" class="accordion title"><strong>CORS Allow Origin Value</strong></button>
 <div class="panel title">
     <p>The value used for CORS in the <span class="constant">access-control-allow-origin</span> header.</p>
-    <p><strong>Note:</strong> To ensure <span class="constant">access-control-allow-credentials</span> works correct, when <a href="#button_configuration_cors_allow_credentials">corsAllowCredentials</a> is <strong>true</strong> the CORS header <span class="constant">access-control-allow-origin</span> will set its value using the <span class="constant">origin</span> header on requests instead of <a href="#button_configuration_cors_allow_origin">corsAllowCredentials</a> property.</p>
+    <p><strong>Note:</strong> To ensure <span class="constant">access-control-allow-credentials</span> works correctly, when <a href="#button_configuration_cors_allow_credentials">corsAllowCredentials</a> is <strong>true</strong> the CORS header <span class="constant">access-control-allow-origin</span> will set its value using the <span class="constant">origin</span> header on requests instead of <a href="#button_configuration_cors_allow_origin">corsAllowOrigin</a> property.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.corsAllowOrigin(String corsAllowOrigin)</code></pre>
@@ -87,7 +87,7 @@
 <button id="button_configuration_cors_allow_credentials" class="accordion title"><strong>CORS Allow Credentials Value</strong></button>
 <div class="panel title">
     <p>The value used for CORS in the <span class="constant">access-control-allow-credentials</span> header.</p>
-    <p><strong>Note:</strong> To ensure <span class="constant">access-control-allow-credentials</span> works correct, when <a href="#button_configuration_cors_allow_credentials">corsAllowCredentials</a> is <strong>true</strong> the CORS header <span class="constant">access-control-allow-origin</span> will set its value using the <span class="constant">origin</span> header on requests instead of <a href="#button_configuration_cors_allow_origin">corsAllowCredentials</a> property.</p>
+    <p><strong>Note:</strong> To ensure <span class="constant">access-control-allow-credentials</span> works correctly, when <a href="#button_configuration_cors_allow_credentials">corsAllowCredentials</a> is <strong>true</strong> the CORS header <span class="constant">access-control-allow-origin</span> will set its value using the <span class="constant">origin</span> header on requests instead of <a href="#button_configuration_cors_allow_origin">corsAllowOrigin</a> property.</p>
     <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.corsAllowCredentials(boolean allow)</code></pre>
