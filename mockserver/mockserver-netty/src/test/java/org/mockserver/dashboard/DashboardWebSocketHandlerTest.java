@@ -3,6 +3,10 @@ package org.mockserver.dashboard;
 import com.google.common.base.Joiner;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.embedded.EmbeddedChannel;
+import io.netty.handler.codec.http.DefaultFullHttpRequest;
+import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
@@ -33,6 +37,7 @@ import static org.mockserver.log.model.LogEntry.LogMessageType.FORWARDED_REQUEST
 import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.netty.unification.PortUnificationHandler.http2Enabled;
 
 public class DashboardWebSocketHandlerTest {
 
@@ -1502,6 +1507,25 @@ public class DashboardWebSocketHandlerTest {
         for (String renderListSection : renderListSections) {
             assertThat(textWebSocketFrame.text(), contains ? containsString(renderListSection) : is(renderListSection));
         }
+    }
+
+    @Test
+    public void shouldRejectWebSocketUpgradeOverHttp2() {
+        // given
+        HttpState httpState = new HttpState(configuration(), new MockServerLogger(), new Scheduler(configuration(), new MockServerLogger()));
+        DashboardWebSocketHandler handler = new DashboardWebSocketHandler(httpState, true, false);
+        EmbeddedChannel channel = new EmbeddedChannel(handler);
+        http2Enabled(channel);
+        DefaultFullHttpRequest upgradeRequest = new DefaultFullHttpRequest(
+            HttpVersion.HTTP_1_1, HttpMethod.GET, "/_mockserver_ui_websocket"
+        );
+
+        // when
+        channel.writeInbound(upgradeRequest);
+
+        // then
+        FullHttpResponse response = channel.readOutbound();
+        assertThat(response.status().code(), is(501));
     }
 
     public static class MockChannelHandlerContext extends EmbeddedChannel {

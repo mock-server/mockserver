@@ -13,6 +13,10 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
+import io.netty.buffer.Unpooled;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpVersion;
 import org.mockserver.collections.CircularHashMap;
 import org.mockserver.dashboard.model.DashboardLogEntryDTO;
 import org.mockserver.dashboard.model.DashboardLogEntryDTOGroup;
@@ -45,6 +49,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.netty.unification.PortUnificationHandler.isHttp2Enabled;
 
 /**
  * @author jamesdbloom
@@ -126,8 +131,20 @@ public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter impl
         boolean release = true;
         try {
             if (msg instanceof FullHttpRequest && ((FullHttpRequest) msg).uri().equals(UPGRADE_CHANNEL_FOR_UI_WEB_SOCKET_URI)) {
-                upgradeChannel(ctx, (FullHttpRequest) msg);
-                ctx.channel().attr(CHANNEL_UPGRADED_FOR_UI_WEB_SOCKET).set(true);
+                if (isHttp2Enabled(ctx.channel())) {
+                    if (MockServerLogger.isEnabled(Level.TRACE)) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setLogLevel(Level.TRACE)
+                                .setMessageFormat("WebSocket upgrade not supported over HTTP/2 for dashboard connection:{}")
+                                .setArguments(ctx.channel().localAddress())
+                        );
+                    }
+                    ctx.channel().writeAndFlush(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_IMPLEMENTED, Unpooled.EMPTY_BUFFER));
+                } else {
+                    upgradeChannel(ctx, (FullHttpRequest) msg);
+                    ctx.channel().attr(CHANNEL_UPGRADED_FOR_UI_WEB_SOCKET).set(true);
+                }
             } else if (ctx.channel().attr(CHANNEL_UPGRADED_FOR_UI_WEB_SOCKET).get() != null &&
                 ctx.channel().attr(CHANNEL_UPGRADED_FOR_UI_WEB_SOCKET).get() &&
                 msg instanceof WebSocketFrame) {

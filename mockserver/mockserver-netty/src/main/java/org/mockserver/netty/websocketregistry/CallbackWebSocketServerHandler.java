@@ -4,6 +4,7 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.AttributeKey;
@@ -22,6 +23,7 @@ import org.slf4j.event.Level;
 import static com.google.common.net.HttpHeaders.HOST;
 import static org.mockserver.closurecallback.websocketclient.WebSocketClient.CLIENT_REGISTRATION_ID_HEADER;
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
+import static org.mockserver.netty.unification.PortUnificationHandler.isHttp2Enabled;
 import static org.mockserver.netty.unification.PortUnificationHandler.isSslEnabledUpstream;
 
 /**
@@ -46,8 +48,20 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
         boolean release = true;
         try {
             if (msg instanceof FullHttpRequest && ((FullHttpRequest) msg).uri().equals(UPGRADE_CHANNEL_FOR_CALLBACK_WEB_SOCKET_URI)) {
-                upgradeChannel(ctx, (FullHttpRequest) msg);
-                ctx.channel().attr(CHANNEL_UPGRADED_FOR_CALLBACK_WEB_SOCKET).set(true);
+                if (isHttp2Enabled(ctx.channel())) {
+                    if (MockServerLogger.isEnabled(Level.TRACE)) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setLogLevel(Level.TRACE)
+                                .setMessageFormat("WebSocket upgrade not supported over HTTP/2 for callback connection:{}")
+                                .setArguments(ctx.channel().localAddress())
+                        );
+                    }
+                    ctx.channel().writeAndFlush(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_IMPLEMENTED, Unpooled.EMPTY_BUFFER));
+                } else {
+                    upgradeChannel(ctx, (FullHttpRequest) msg);
+                    ctx.channel().attr(CHANNEL_UPGRADED_FOR_CALLBACK_WEB_SOCKET).set(true);
+                }
             } else if (ctx.channel().attr(CHANNEL_UPGRADED_FOR_CALLBACK_WEB_SOCKET).get() != null &&
                 ctx.channel().attr(CHANNEL_UPGRADED_FOR_CALLBACK_WEB_SOCKET).get() &&
                 msg instanceof WebSocketFrame) {
