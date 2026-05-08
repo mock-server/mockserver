@@ -351,6 +351,39 @@ public class MediaTypeTest {
     }
 
     @Test
+    public void shouldNotDetectBinaryContentTypeWithCharsetAsString() {
+        List<String> binaryWithCharset = Arrays.asList(
+            "application/octet-stream; charset=UTF-8",
+            "application/pdf; charset=utf-8",
+            "application/zip; charset=utf-8",
+            "image/png; charset=utf-8",
+            "video/mp4; charset=utf-8",
+            "audio/mpeg; charset=utf-8",
+            "application/binary; charset=utf-8",
+            "application/gzip; charset=utf-8",
+            "application/x-protobuf; charset=utf-8"
+        );
+        for (String contentType : binaryWithCharset) {
+            MediaType parse = MediaType.parse(contentType);
+            assertThat(contentType + " should not be string", parse.isString(), is(false));
+        }
+    }
+
+    @Test
+    public void shouldDetectUnknownContentTypeWithCharsetAsString() {
+        List<String> unknownWithCharset = Arrays.asList(
+            "application/java; charset=utf-8",
+            "application/encrypted; charset=utf-8",
+            "application/x-custom; charset=utf-8",
+            "application/vnd.example.custom; charset=utf-8"
+        );
+        for (String contentType : unknownWithCharset) {
+            MediaType parse = MediaType.parse(contentType);
+            assertThat(contentType + " should be string", parse.isString(), is(true));
+        }
+    }
+
+    @Test
     public void shouldDetectAsJson() {
         List<String> jsonContentTypes = Arrays.asList(
             "application/json",

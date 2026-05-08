@@ -284,6 +284,12 @@ public class MediaType extends ObjectWithJsonToString {
         });
     }
 
+    private static final String[] KNOWN_BINARY_SUBTYPES = new String[]{
+        "octet-stream", "binary", "pdf", "zip", "gzip", "tar",
+        "protobuf", "grpc", "thrift", "avro", "msgpack",
+        "pkcs", "pkix", "x509", "woff", "woff2"
+    };
+
     public boolean isString() {
         if (isBlank) {
             return true;
@@ -291,7 +297,7 @@ public class MediaType extends ObjectWithJsonToString {
         if (type == null && charset != null) {
             return true;
         }
-        return contentTypeContains(new String[]{
+        if (contentTypeContains(new String[]{
             "text",
             "json",
             "css",
@@ -304,7 +310,29 @@ public class MediaType extends ObjectWithJsonToString {
             "wsdl",
             "csv",
             "urlencoded"
-        });
+        })) {
+            return true;
+        }
+        if (charset != null && !isBinarySubtype()) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isBinarySubtype() {
+        if ("image".equalsIgnoreCase(type) || "audio".equalsIgnoreCase(type) || "video".equalsIgnoreCase(type)) {
+            return true;
+        }
+        if (subtype == null) {
+            return false;
+        }
+        String lower = subtype.toLowerCase();
+        for (String binary : KNOWN_BINARY_SUBTYPES) {
+            if (lower.contains(binary)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean contentTypeContains(String[] subStrings) {
