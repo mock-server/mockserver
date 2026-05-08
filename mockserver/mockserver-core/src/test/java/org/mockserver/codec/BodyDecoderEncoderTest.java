@@ -195,7 +195,7 @@ public class BodyDecoderEncoderTest {
         BodyWithContentType result = new BodyDecoderEncoder().byteBufToBody(byteBuf, MediaType.ANY_VIDEO_TYPE.withCharset(UTF_8).toString());
 
         // then
-        assertThat(result, is(exact("bytes", MediaType.ANY_VIDEO_TYPE.withCharset(UTF_8))));
+        assertThat(result, is(binary("bytes".getBytes(DEFAULT_TEXT_HTTP_CHARACTER_SET), MediaType.ANY_VIDEO_TYPE.withCharset(UTF_8))));
     }
 
     @Test

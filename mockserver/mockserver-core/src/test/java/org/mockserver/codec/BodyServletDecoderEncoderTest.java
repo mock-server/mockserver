@@ -177,7 +177,7 @@ public class BodyServletDecoderEncoderTest {
         BodyWithContentType result = new BodyServletDecoderEncoder(mockServerLogger).servletRequestToBody(servletRequest);
 
         // then
-        assertThat(result, is(exact("bytes", MediaType.ANY_VIDEO_TYPE.withCharset(UTF_8))));
+        assertThat(result, is(binary("bytes".getBytes(UTF_8), MediaType.ANY_VIDEO_TYPE.withCharset(UTF_8))));
     }
 
     @Test(expected = RuntimeException.class)

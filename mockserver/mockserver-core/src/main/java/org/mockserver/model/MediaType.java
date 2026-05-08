@@ -285,9 +285,13 @@ public class MediaType extends ObjectWithJsonToString {
     }
 
     public boolean isString() {
-        return isBlank || contentTypeContains(new String[]{
-            "utf-8",
-            "utf8",
+        if (isBlank) {
+            return true;
+        }
+        if (type == null && charset != null) {
+            return true;
+        }
+        return contentTypeContains(new String[]{
             "text",
             "json",
             "css",
@@ -304,9 +308,12 @@ public class MediaType extends ObjectWithJsonToString {
     }
 
     private boolean contentTypeContains(String[] subStrings) {
-        String contentType = toString().toLowerCase();
+        if (type == null || subtype == null) {
+            return false;
+        }
+        String typeAndSubtype = (type + "/" + subtype).toLowerCase();
         for (String subString : subStrings) {
-            if (contentType.contains(subString)) {
+            if (typeAndSubtype.contains(subString)) {
                 return true;
             }
         }
