@@ -1618,4 +1618,39 @@ public class MockServerClient implements Stoppable {
         );
         return httpResponse.getBodyAsString();
     }
+
+    public String retrieveMetrics() {
+        HttpResponse httpResponse = sendRequest(
+            request()
+                .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
+                .withPath(calculatePath("retrieve"))
+                .withQueryStringParameter("type", RetrieveType.METRICS.name())
+                .withBody("", StandardCharsets.UTF_8),
+            false
+        );
+        return httpResponse.getBodyAsString();
+    }
+
+    public String retrieveConfiguration() {
+        HttpResponse httpResponse = sendRequest(
+            request()
+                .withMethod("GET")
+                .withPath(calculatePath("configuration")),
+            false
+        );
+        return httpResponse.getBodyAsString();
+    }
+
+    public String updateConfiguration(String configurationJson) {
+        HttpResponse httpResponse = sendRequest(
+            request()
+                .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
+                .withPath(calculatePath("configuration"))
+                .withBody(configurationJson != null ? configurationJson : "", StandardCharsets.UTF_8),
+            false
+        );
+        return httpResponse.getBodyAsString();
+    }
 }

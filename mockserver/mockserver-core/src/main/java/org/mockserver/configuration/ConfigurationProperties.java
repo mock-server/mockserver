@@ -1769,57 +1769,61 @@ public class ConfigurationProperties {
 
         Properties properties = new Properties();
 
-        try (InputStream inputStream = ConfigurationProperties.class.getClassLoader().getResourceAsStream(propertyFile())) {
-            if (inputStream != null) {
-                try {
-                    properties.load(inputStream);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    if (MOCK_SERVER_LOGGER != null) {
-                        MOCK_SERVER_LOGGER.logEvent(
-                            new LogEntry()
-                                .setAlwaysLog(true)
-                                .setLogLevel(Level.ERROR)
-                                .setMessageFormat("exception loading property file [" + propertyFile() + "]")
-                                .setThrowable(e)
-                        );
+        if (propertyFile().endsWith(".json")) {
+            properties = readJsonPropertyFile();
+        } else {
+            try (InputStream inputStream = ConfigurationProperties.class.getClassLoader().getResourceAsStream(propertyFile())) {
+                if (inputStream != null) {
+                    try {
+                        properties.load(inputStream);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        if (MOCK_SERVER_LOGGER != null) {
+                            MOCK_SERVER_LOGGER.logEvent(
+                                new LogEntry()
+                                    .setAlwaysLog(true)
+                                    .setLogLevel(Level.ERROR)
+                                    .setMessageFormat("exception loading property file [" + propertyFile() + "]")
+                                    .setThrowable(e)
+                            );
+                        }
                     }
-                }
-            } else {
-                if (MOCK_SERVER_LOGGER != null && MockServerLogger.isEnabled(DEBUG)) {
-                    MOCK_SERVER_LOGGER.logEvent(
-                        new LogEntry()
-                            .setType(SERVER_CONFIGURATION)
-                            .setLogLevel(DEBUG)
-                            .setMessageFormat("property file not found on classpath using path [" + propertyFile() + "]")
-                    );
-                }
-                try {
-                    properties.load(new FileInputStream(propertyFile()));
-                } catch (FileNotFoundException e) {
+                } else {
                     if (MOCK_SERVER_LOGGER != null && MockServerLogger.isEnabled(DEBUG)) {
                         MOCK_SERVER_LOGGER.logEvent(
                             new LogEntry()
                                 .setType(SERVER_CONFIGURATION)
                                 .setLogLevel(DEBUG)
-                                .setMessageFormat("property file not found using path [" + propertyFile() + "]")
+                                .setMessageFormat("property file not found on classpath using path [" + propertyFile() + "]")
                         );
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    if (MOCK_SERVER_LOGGER != null) {
-                        MOCK_SERVER_LOGGER.logEvent(
-                            new LogEntry()
-                                .setAlwaysLog(true)
-                                .setLogLevel(Level.ERROR)
-                                .setMessageFormat("exception loading property file [" + propertyFile() + "]")
-                                .setThrowable(e)
-                        );
+                    try {
+                        properties.load(new FileInputStream(propertyFile()));
+                    } catch (FileNotFoundException e) {
+                        if (MOCK_SERVER_LOGGER != null && MockServerLogger.isEnabled(DEBUG)) {
+                            MOCK_SERVER_LOGGER.logEvent(
+                                new LogEntry()
+                                    .setType(SERVER_CONFIGURATION)
+                                    .setLogLevel(DEBUG)
+                                    .setMessageFormat("property file not found using path [" + propertyFile() + "]")
+                            );
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        if (MOCK_SERVER_LOGGER != null) {
+                            MOCK_SERVER_LOGGER.logEvent(
+                                new LogEntry()
+                                    .setAlwaysLog(true)
+                                    .setLogLevel(Level.ERROR)
+                                    .setMessageFormat("exception loading property file [" + propertyFile() + "]")
+                                    .setThrowable(e)
+                            );
+                        }
                     }
                 }
+            } catch (IOException ioe) {
+                // ignore
             }
-        } catch (IOException ioe) {
-            // ignore
         }
 
         if (!properties.isEmpty()) {
@@ -1844,6 +1848,67 @@ public class ConfigurationProperties {
             }
         }
 
+        return properties;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Properties readJsonPropertyFile() {
+        Properties properties = new Properties();
+        InputStream inputStream = ConfigurationProperties.class.getClassLoader().getResourceAsStream(propertyFile());
+        try {
+            if (inputStream == null) {
+                try {
+                    inputStream = new FileInputStream(propertyFile());
+                } catch (FileNotFoundException e) {
+                    if (MOCK_SERVER_LOGGER != null && MockServerLogger.isEnabled(DEBUG)) {
+                        MOCK_SERVER_LOGGER.logEvent(
+                            new LogEntry()
+                                .setType(SERVER_CONFIGURATION)
+                                .setLogLevel(DEBUG)
+                                .setMessageFormat("JSON property file not found using path [" + propertyFile() + "]")
+                        );
+                    }
+                    return properties;
+                }
+            }
+            com.fasterxml.jackson.databind.ObjectMapper objectMapper = org.mockserver.serialization.ObjectMapperFactory.createObjectMapper();
+            Map<String, Object> jsonMap = objectMapper.readValue(inputStream, Map.class);
+            for (Map.Entry<String, Object> entry : jsonMap.entrySet()) {
+                String key = "mockserver." + entry.getKey();
+                Object value = entry.getValue();
+                if (value != null) {
+                    if (value instanceof Collection) {
+                        properties.setProperty(key, Joiner.on(",").join((Collection<?>) value));
+                    } else if (value instanceof Map) {
+                        Map<?, ?> mapValue = (Map<?, ?>) value;
+                        properties.setProperty(key, mapValue.entrySet().stream()
+                            .map(e -> e.getKey() + "=" + e.getValue())
+                            .collect(Collectors.joining(",")));
+                    } else {
+                        properties.setProperty(key, String.valueOf(value));
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            if (MOCK_SERVER_LOGGER != null) {
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setAlwaysLog(true)
+                        .setLogLevel(Level.ERROR)
+                        .setMessageFormat("exception loading JSON property file [" + propertyFile() + "]")
+                        .setThrowable(e)
+                );
+            }
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    // ignore
+                }
+            }
+        }
         return properties;
     }
 

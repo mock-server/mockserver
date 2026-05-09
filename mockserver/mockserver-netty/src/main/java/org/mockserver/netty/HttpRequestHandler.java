@@ -23,7 +23,10 @@ import org.mockserver.netty.responsewriter.NettyResponseWriter;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.Base64Converter;
+import org.mockserver.serialization.ConfigurationSerializer;
+import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.PortBindingSerializer;
+import org.mockserver.serialization.model.ConfigurationDTO;
 import org.slf4j.event.Level;
 
 import java.net.BindException;
@@ -65,6 +68,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
     private DashboardHandler dashboardHandler;
     private MetricsHandler metricsHandler;
     private OpenAPISpecHandler openAPISpecHandler;
+    private ConfigurationSerializer configurationSerializer;
 
     public HttpRequestHandler(Configuration configuration, LifeCycle server, HttpState httpState, HttpActionHandler httpActionHandler) {
         super(false);
@@ -78,6 +82,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
         this.dashboardHandler = new DashboardHandler();
         this.metricsHandler = new MetricsHandler(configuration);
         this.openAPISpecHandler = new OpenAPISpecHandler();
+        this.configurationSerializer = new ConfigurationSerializer(mockServerLogger);
     }
 
     private static boolean isProxyingRequest(ChannelHandlerContext ctx) {
@@ -140,6 +145,45 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
 
                     ctx.writeAndFlush(response().withStatusCode(OK.code()));
                     new Scheduler.SchedulerThreadFactory("MockServer Stop").newThread(() -> server.stop()).start();
+
+                } else if (request.matches("GET", PATH_PREFIX + "/configuration", "/configuration")
+                    || request.matches("PUT", PATH_PREFIX + "/configuration", "/configuration")) {
+
+                    if (httpState.getControlPlaneAuthenticationHandler() != null) {
+                        try {
+                            if (!httpState.getControlPlaneAuthenticationHandler().controlPlaneRequestAuthenticated(request)) {
+                                responseWriter.writeResponse(request, UNAUTHORIZED, "Unauthorized for control plane", MediaType.create("text", "plain").toString());
+                                return;
+                            }
+                        } catch (org.mockserver.authentication.AuthenticationException e) {
+                            responseWriter.writeResponse(request, UNAUTHORIZED, "Unauthorized for control plane", MediaType.create("text", "plain").toString());
+                            return;
+                        }
+                    }
+                    if (request.getMethod().getValue().equals("GET")) {
+                        responseWriter.writeResponse(request, OK, configurationSerializer.serialize(configuration), "application/json");
+                    } else {
+                        try {
+                            ConfigurationDTO configurationDTO = ObjectMapperFactory.createObjectMapper().readValue(request.getBodyAsString(), ConfigurationDTO.class);
+                            synchronized (configuration) {
+                                configurationDTO.applyTo(configuration);
+                            }
+                            if (MockServerLogger.isEnabled(Level.INFO)) {
+                                mockServerLogger.logEvent(
+                                    new LogEntry()
+                                        .setLogLevel(Level.INFO)
+                                        .setCorrelationId(request.getLogCorrelationId())
+                                        .setHttpRequest(request)
+                                        .setMessageFormat("configuration updated via API")
+                                );
+                            }
+                            responseWriter.writeResponse(request, OK, configurationSerializer.serialize(configuration), "application/json");
+                        } catch (IllegalArgumentException e) {
+                            responseWriter.writeResponse(request, BAD_REQUEST, e.getMessage(), MediaType.create("text", "plain").toString());
+                        } catch (Exception e) {
+                            responseWriter.writeResponse(request, BAD_REQUEST, "Invalid configuration JSON", MediaType.create("text", "plain").toString());
+                        }
+                    }
 
                 } else if (request.getMethod().getValue().equals("GET") && request.getPath().getValue().startsWith(PATH_PREFIX + "/dashboard")) {
 

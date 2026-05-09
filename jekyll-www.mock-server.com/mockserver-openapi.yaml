@@ -134,9 +134,9 @@ paths:
           name: type
           schema:
             type: string
-            enum: [ "logs", "requests", "request_responses", "recorded_expectations", "active_expectations" ]
+            enum: [ "logs", "requests", "request_responses", "recorded_expectations", "active_expectations", "metrics" ]
           required: false
-          description: specifies the type of object that is retrieve, default if not specified is "requests", supported values are "logs", "requests", "recorded_expectations", "active_expectations"
+          description: specifies the type of object that is retrieve, default if not specified is "requests", supported values are "logs", "requests", "recorded_expectations", "active_expectations", "metrics"
       responses:
         '200':
           description: recorded requests or active expectations returned
@@ -277,6 +277,43 @@ paths:
               schema:
                 type: string
                 description: OpenAPI specification in YAML format
+  /mockserver/configuration:
+    get:
+      tags:
+        - control
+      summary: retrieve the current configuration
+      description: returns the current MockServer configuration as JSON
+      responses:
+        '200':
+          description: current configuration returned
+          content:
+            application/json:
+              schema:
+                type: object
+                description: JSON object containing all configuration properties and their current values
+    put:
+      tags:
+        - control
+      summary: update the current configuration
+      description: updates MockServer configuration properties at runtime, only non-null fields in the request body are applied
+      responses:
+        '200':
+          description: configuration updated successfully, returns the full updated configuration
+          content:
+            application/json:
+              schema:
+                type: object
+                description: JSON object containing all configuration properties and their current values after the update
+        '400':
+          description: incorrect request format
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: JSON object containing the configuration properties to update
+        description: configuration properties to update, only non-null fields are applied
+        required: true
   /mockserver/stop:
     put:
       tags:

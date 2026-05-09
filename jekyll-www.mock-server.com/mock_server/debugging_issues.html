@@ -22,6 +22,7 @@ lastmod: 2019-11-10T08:00:00+01:00
             <li><strong><a href="#retrieving_recorded_requests">recorded requests</a></strong></li>
             <li><strong><a href="#retrieving_recorded_request_responses">recorded requests and responses</a></strong></li>
             <li><strong><a href="#retrieving_recorded_logs">logs</a></strong></li>
+            <li><strong><a href="#retrieving_metrics">metrics</a></strong></li>
         </ul>
     </li>
     <li>Configurable <a href="#logging-levels">log level</a></li>
@@ -291,6 +292,60 @@ mockServerClient("localhost", 1080)
     );</code></pre>
             <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
         </div>
+    </div>
+</div>
+
+<a id="retrieving_metrics" class="anchor" href="#retrieving_metrics">&nbsp;</a>
+
+<h2>Retrieving Metrics</h2>
+
+<p>It is possible to retrieve MockServer metrics as a JSON object containing counts for each metric. Metrics must be enabled by setting <span class="inline_code"><strong>metricsEnabled</strong></span> to <span class="inline_code"><strong>true</strong></span>.</p>
+
+<p>The available metrics include request counts, expectation match counts, action counts, and WebSocket connection counts.</p>
+
+<button id="button_client_retrieve_metrics" class="accordion">retrieve metrics via REST API</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -X PUT "http://localhost:1080/mockserver/retrieve?type=METRICS"</code></pre>
+    </div>
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">String metrics = new MockServerClient("localhost", 1080)
+    .retrieveMetrics();</code></pre>
+    </div>
+</div>
+
+<p>Metrics are also available in <a href="https://prometheus.io/" target="_blank">Prometheus</a> format via the <span class="inline_code"><strong>GET /mockserver/metrics</strong></span> endpoint when metrics are enabled.</p>
+
+<a id="retrieving_configuration" class="anchor" href="#retrieving_configuration">&nbsp;</a>
+
+<h2>Retrieving & Updating Configuration</h2>
+
+<p>The current runtime configuration can be retrieved and updated via the REST API.</p>
+
+<button id="button_client_retrieve_configuration" class="accordion">retrieve and update configuration via REST API</button>
+<div class="panel">
+    <button class="accordion inner">Retrieve Configuration (REST API)</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -X GET "http://localhost:1080/mockserver/configuration"</code></pre>
+    </div>
+    <button class="accordion inner">Update Configuration (REST API)</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -X PUT "http://localhost:1080/mockserver/configuration" \
+  -H "Content-Type: application/json" \
+  -d '{"logLevel": "DEBUG", "maxExpectations": 5000}'</code></pre>
+        <p>Only the properties included in the request body are updated; all other properties retain their current values.</p>
+    </div>
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">// retrieve current configuration
+String config = new MockServerClient("localhost", 1080)
+    .retrieveConfiguration();
+
+// update configuration
+new MockServerClient("localhost", 1080)
+    .updateConfiguration("{\"logLevel\": \"DEBUG\"}");</code></pre>
     </div>
 </div>
 

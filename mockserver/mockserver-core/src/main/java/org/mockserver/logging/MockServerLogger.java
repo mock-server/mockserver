@@ -1,6 +1,7 @@
 package org.mockserver.logging;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.mock.HttpState;
@@ -61,6 +62,7 @@ public class MockServerLogger {
         }
     }
 
+    private final Configuration configuration;
     private final Logger logger;
     private HttpState httpStateHandler;
 
@@ -71,16 +73,31 @@ public class MockServerLogger {
 
     @VisibleForTesting
     public MockServerLogger(final Logger logger) {
+        this.configuration = null;
         this.logger = logger;
         this.httpStateHandler = null;
     }
 
     public MockServerLogger(final Class<?> loggerClass) {
+        this.configuration = null;
+        this.logger = LoggerFactory.getLogger(loggerClass);
+        this.httpStateHandler = null;
+    }
+
+    public MockServerLogger(final Configuration configuration, final Class<?> loggerClass) {
+        this.configuration = configuration;
         this.logger = LoggerFactory.getLogger(loggerClass);
         this.httpStateHandler = null;
     }
 
     public MockServerLogger(final @Nullable HttpState httpStateHandler) {
+        this.configuration = null;
+        this.logger = null;
+        this.httpStateHandler = httpStateHandler;
+    }
+
+    public MockServerLogger(final Configuration configuration, final @Nullable HttpState httpStateHandler) {
+        this.configuration = configuration;
         this.logger = null;
         this.httpStateHandler = httpStateHandler;
     }
@@ -95,13 +112,27 @@ public class MockServerLogger {
             || logEntry.getType() == FORWARDED_REQUEST
             || logEntry.getType() == EXPECTATION_RESPONSE
             || logEntry.isAlwaysLog()
-            || isEnabled(logEntry.getLogLevel())) {
+            || isEnabledForInstance(logEntry.getLogLevel())) {
             if (httpStateHandler != null) {
                 httpStateHandler.log(logEntry);
             } else {
                 writeToSystemOut(logger, logEntry);
             }
         }
+    }
+
+    public boolean isEnabledForInstance(final Level level) {
+        if (configuration != null) {
+            return isEnabled(level, configuration.logLevel());
+        }
+        return isEnabled(level, ConfigurationProperties.logLevel());
+    }
+
+    public boolean isDisableLogging() {
+        if (configuration != null) {
+            return configuration.disableLogging();
+        }
+        return ConfigurationProperties.disableLogging();
     }
 
     public static void writeToSystemOut(Logger logger, LogEntry logEntry) {

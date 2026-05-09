@@ -2099,6 +2099,39 @@ public class HttpStateTest {
     }
 
     @Test
+    public void shouldRetrieveMetrics() {
+        // given
+        Scheduler scheduler = mock(Scheduler.class);
+        HttpState metricsEnabledState = new HttpState(configuration().metricsEnabled(true), new MockServerLogger(), scheduler);
+
+        // when
+        HttpResponse response = metricsEnabledState
+            .retrieve(
+                request()
+                    .withQueryStringParameter("type", "metrics")
+            );
+
+        // then
+        assertThat(response.getStatusCode(), is(200));
+        assertThat(response.getBodyAsString(), containsString("REQUESTS_RECEIVED_COUNT"));
+        assertThat(response.getBodyAsString(), containsString("EXPECTATIONS_NOT_MATCHED_COUNT"));
+    }
+
+    @Test
+    public void shouldRetrieveEmptyMetricsWhenDisabled() {
+        // when
+        HttpResponse response = httpState
+            .retrieve(
+                request()
+                    .withQueryStringParameter("type", "metrics")
+            );
+
+        // then
+        assertThat(response.getStatusCode(), is(200));
+        assertThat(response.getBodyAsString(), is("{}"));
+    }
+
+    @Test
     public void shouldThrowExceptionForInvalidRetrieveType() {
         try {
             // when
@@ -2107,7 +2140,7 @@ public class HttpStateTest {
         } catch (Throwable throwable) {
             // then
             assertThat(throwable, instanceOf(IllegalArgumentException.class));
-            assertThat(throwable.getMessage(), is("\"invalid\" is not a valid value for \"type\" parameter, only the following values are supported [logs, requests, request_responses, recorded_expectations, active_expectations]"));
+            assertThat(throwable.getMessage(), is("\"invalid\" is not a valid value for \"type\" parameter, only the following values are supported [logs, requests, request_responses, recorded_expectations, active_expectations, metrics]"));
         }
     }
 

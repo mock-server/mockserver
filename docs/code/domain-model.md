@@ -364,10 +364,39 @@ Two complementary configuration mechanisms:
 | Class | Scope | Source |
 |-------|-------|--------|
 | `Configuration` | Instance (runtime POJO) | Programmatic, ~1900 lines |
-| `ConfigurationProperties` | Static (system properties) | `mockserver.properties` file + JVM system properties, ~1850 lines |
+| `ConfigurationProperties` | Static (system properties) | `mockserver.properties` or `mockserver.json` file + JVM system properties, ~1900 lines |
 | `ClientConfiguration` | Client subset | Timeout, TLS, JWT settings |
+| `ConfigurationDTO` | Serialization DTO | JSON API and JSON config file format, ~1100 lines |
+| `ConfigurationSerializer` | JSON codec | Serialize/deserialize `Configuration` via `ConfigurationDTO` |
 
 Configuration properties cover: logging, memory usage, scalability, socket settings, HTTP parsing, CORS, template restrictions, initialization/persistence, verification, proxy settings, TLS (forward, control plane), ring buffer sizing, MCP.
+
+### ConfigurationDTO
+
+`ConfigurationDTO` (`serialization/model/ConfigurationDTO.java`) is a Jackson-annotated DTO covering all ~85 configuration properties. It serves dual purpose:
+- **API response/request**: JSON schema for `GET/PUT /mockserver/configuration` endpoints
+- **JSON config file format**: The JSON produced by serializing a `Configuration` can be saved as a `mockserver.json` config file and loaded at startup
+
+Key methods:
+- `ConfigurationDTO(Configuration)`: Constructs DTO from live configuration (reads all getters including fallback defaults)
+- `buildObject()`: Creates a new `Configuration` from DTO values
+- `applyTo(Configuration target)`: Merges only non-null DTO fields into an existing `Configuration` (used by `PUT /mockserver/configuration`)
+
+### JSON Configuration File
+
+`ConfigurationProperties.readPropertyFile()` detects `.json` file extension and parses it using Jackson. JSON property names use camelCase without the `mockserver.` prefix (e.g., `logLevel` not `mockserver.logLevel`). The parsed values are converted to a `Properties` object with `mockserver.` prefixed keys, occupying the same precedence slot as `.properties` files.
+
+### Configuration API
+
+Runtime configuration is exposed via REST endpoints in `HttpRequestHandler`:
+- `GET /mockserver/configuration`: Returns current configuration as JSON
+- `PUT /mockserver/configuration`: Updates configuration at runtime (only non-null fields are applied)
+
+Client methods: `MockServerClient.retrieveConfiguration()`, `MockServerClient.updateConfiguration(String)`
+
+### Metrics Retrieval
+
+Metrics can be retrieved via the existing `PUT /mockserver/retrieve` endpoint with `type=METRICS`, returning a JSON map of metric names to counts. Client method: `MockServerClient.retrieveMetrics()`.
 
 ### MCP Configuration
 

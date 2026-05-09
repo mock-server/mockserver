@@ -10,6 +10,7 @@ import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.memory.MemoryMonitoring;
+import org.mockserver.metrics.Metrics;
 import org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause;
 import org.mockserver.model.*;
 import org.mockserver.openapi.OpenAPIConverter;
@@ -509,6 +510,34 @@ public class HttpState {
                                     .setHttpRequest(requestDefinition)
                                     .setMessageFormat("retrieved " + expectations.size() + " active expectations in " + format.name().toLowerCase() + " that match:{}")
                                     .setArguments(requestDefinition)
+                            );
+                        }
+                        httpResponseFuture.complete(response);
+                        break;
+                    }
+                    case METRICS: {
+                        if (!configuration.metricsEnabled()) {
+                            response.withBody("{}", MediaType.JSON_UTF_8);
+                        } else {
+                            StringBuilder metricsJson = new StringBuilder("{");
+                            Metrics.Name[] names = Metrics.Name.values();
+                            for (int i = 0; i < names.length; i++) {
+                                metricsJson.append("\"").append(names[i].name()).append("\":").append(Metrics.get(names[i]));
+                                if (i < names.length - 1) {
+                                    metricsJson.append(",");
+                                }
+                            }
+                            metricsJson.append("}");
+                            response.withBody(metricsJson.toString(), MediaType.JSON_UTF_8);
+                        }
+                        if (MockServerLogger.isEnabled(Level.INFO)) {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setType(RETRIEVED)
+                                    .setLogLevel(Level.INFO)
+                                    .setCorrelationId(logCorrelationId)
+                                    .setHttpRequest(requestDefinition)
+                                    .setMessageFormat("retrieved metrics")
                             );
                         }
                         httpResponseFuture.complete(response);

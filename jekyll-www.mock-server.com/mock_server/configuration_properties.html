@@ -89,6 +89,28 @@ mockserver.enableCORSForAPI=true
 # enable CORS for all responses
 mockserver.enableCORSForAllResponses=true</code></pre>
 
+<a id="json_property_file" class="anchor" href="#json_property_file">&nbsp;</a>
+
+<h3>JSON Configuration File</h3>
+
+<p>MockServer also supports configuration via a JSON file. To use a JSON configuration file, set the <span class="inline_code"><strong>mockserver.propertyFile</strong></span> system property or <span class="inline_code"><strong>MOCKSERVER_PROPERTY_FILE</strong></span> environment variable to a file path ending with <span class="inline_code"><strong>.json</strong></span>, for example:</p>
+
+<pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.propertyFile=/config/mockserver.json</code></pre>
+
+<p>The JSON format uses camelCase property names without the <span class="inline_code">mockserver.</span> prefix. An example JSON configuration file:</p>
+<pre class="prettyprint code"><code class="code">{
+  "logLevel": "INFO",
+  "maxSocketTimeout": 120000,
+  "dynamicallyCreateCertificateAuthorityCertificate": true,
+  "directoryToSaveDynamicSSLCertificate": ".",
+  "sslCertificateDomainName": "localhost",
+  "sslSubjectAlternativeNameDomains": ["www.example.com", "www.another.com"],
+  "sslSubjectAlternativeNameIps": ["127.0.0.1"],
+  "enableCORSForAPI": true,
+  "enableCORSForAllResponses": true
+}</code></pre>
+
+<p>The JSON property names are the camelCase equivalents of the <span class="inline_code">mockserver.*</span> property names listed below, with the <span class="inline_code">mockserver.</span> prefix removed. For example, <span class="inline_code">mockserver.maxExpectations</span> becomes <span class="inline_code">maxExpectations</span> in JSON. The complete list of supported JSON keys can be obtained by calling <span class="inline_code"><strong>GET /mockserver/configuration</strong></span>, which returns all properties with their current values. This output can be saved as a JSON configuration file and reloaded at startup.</p>
 
 <a id="configuration_properties" class="anchor" href="#configuration_properties">&nbsp;</a>
 

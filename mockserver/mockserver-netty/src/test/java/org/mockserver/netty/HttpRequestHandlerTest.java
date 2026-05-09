@@ -458,6 +458,99 @@ public class HttpRequestHandlerTest {
     }
 
     @Test
+    public void shouldReturnConfiguration() {
+        // given
+        HttpRequest configRequest = request("/mockserver/configuration").withMethod("GET");
+
+        // when
+        embeddedChannel.writeInbound(configRequest);
+
+        // then
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(200));
+        assertThat(httpResponse.getBodyAsString(), containsString("\"logLevel\""));
+        assertThat(httpResponse.getBodyAsString(), containsString("\"maxExpectations\""));
+    }
+
+    @Test
+    public void shouldUpdateConfiguration() {
+        // given
+        HttpRequest updateRequest = request("/mockserver/configuration")
+            .withMethod("PUT")
+            .withBody("{\"logLevel\":\"WARN\"}");
+
+        // when
+        embeddedChannel.writeInbound(updateRequest);
+
+        // then
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(200));
+        assertThat(httpResponse.getBodyAsString(), containsString("\"logLevel\" : \"WARN\""));
+    }
+
+    @Test
+    public void shouldRejectConfigurationWhenAuthEnabled() {
+        // given
+        httpStateHandler.setControlPlaneAuthenticationHandler(request -> false);
+        HttpRequest configRequest = request("/mockserver/configuration").withMethod("GET");
+
+        // when
+        embeddedChannel.writeInbound(configRequest);
+
+        // then
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(401));
+        assertThat(httpResponse.getBodyAsString(), containsString("Unauthorized for control plane"));
+    }
+
+    @Test
+    public void shouldRejectConfigurationUpdateWhenAuthEnabled() {
+        // given
+        httpStateHandler.setControlPlaneAuthenticationHandler(request -> false);
+        HttpRequest updateRequest = request("/mockserver/configuration")
+            .withMethod("PUT")
+            .withBody("{\"logLevel\":\"WARN\"}");
+
+        // when
+        embeddedChannel.writeInbound(updateRequest);
+
+        // then
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(401));
+    }
+
+    @Test
+    public void shouldReturnBadRequestForInvalidConfigurationUpdate() {
+        // given
+        HttpRequest updateRequest = request("/mockserver/configuration")
+            .withMethod("PUT")
+            .withBody("{invalid json}");
+
+        // when
+        embeddedChannel.writeInbound(updateRequest);
+
+        // then
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(400));
+    }
+
+    @Test
+    public void shouldReturnValidationErrorForInvalidConfigurationValues() {
+        // given
+        HttpRequest updateRequest = request("/mockserver/configuration")
+            .withMethod("PUT")
+            .withBody("{\"logLevel\": \"INVALID_LEVEL\"}");
+
+        // when
+        embeddedChannel.writeInbound(updateRequest);
+
+        // then
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(400));
+        assertThat(httpResponse.getBodyAsString(), containsString("Invalid logLevel"));
+    }
+
+    @Test
     public void shouldProxyRequestsWhenNotProxying() {
         // given
         HttpRequest request = request("request_one");
