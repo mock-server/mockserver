@@ -56,7 +56,7 @@ The monorepo uses a path-based pipeline orchestrator that dynamically triggers s
 
 **File:** `.buildkite/scripts/generate-pipeline.sh`
 
-The orchestrator runs as the first step of every build (via the main "MockServer" pipeline). It determines which files changed in the commit and emits native Buildkite `trigger` steps that create child builds on the appropriate pipelines. Trigger steps are synchronous by default (`async: false`), so the parent build waits for each child to complete and inherits its pass/fail status — without consuming an agent while waiting.
+The orchestrator runs as the first step of every build (via the main "MockServer" pipeline). It determines which files changed since the last successful build and emits command steps that call `trigger-pipeline.sh` to create child builds via the Buildkite API. For PRs, it diffs against the merge-base. For pushes to master, it queries the Buildkite API for the last successful build's commit SHA and diffs against it — this ensures that batch pushes with multiple commits correctly trigger all affected pipelines. If the base commit cannot be determined (API failure, first build, shallow clone), the orchestrator conservatively triggers all pipelines.
 
 ```mermaid
 flowchart TD
