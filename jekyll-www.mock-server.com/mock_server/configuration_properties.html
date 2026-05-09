@@ -520,6 +520,41 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.proxyAuthenticationPassword="p@ssw0rd"</code></pre>
 </div>
 
+<button id="button_configuration_no_proxy_hosts" class="accordion title"><strong>Hosts That Bypass Proxy</strong></button>
+<div class="panel title">
+    <p>Comma-separated list of hostnames that MockServer should not proxy to. When a request's Host header matches one of these hosts, MockServer will return a 404 instead of forwarding the request. This applies both to direct proxying and to upstream proxy bypass.</p>
+    <p>Supports exact hostnames (e.g. <span class="inline_code">example.com</span>), wildcard prefixes (e.g. <span class="inline_code">*.internal.corp</span>), and IP addresses (e.g. <span class="inline_code">192.168.1.1</span>).</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.noProxyHosts(String noProxyHosts)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.noProxyHosts=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_NO_PROXY_HOSTS=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.noProxyHosts=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.noProxyHosts="*.internal.corp,localhost,192.168.1.1"</code></pre>
+</div>
+
+<button id="button_configuration_forward_adjust_host_header" class="accordion title"><strong>Auto-Adjust Host Header When Forwarding</strong></button>
+<div class="panel title">
+    <p>If true (the default) the Host header will be automatically adjusted to match the target server when forwarding requests via <span class="inline_code">HttpOverrideForwardedRequest</span> or template-based forwards. This prevents HTTP 421 Misdirected Request errors when the target server validates Host headers.</p>
+    <p>If false the original Host header is preserved unless explicitly overridden in the request override.</p>
+    <p><strong>Note:</strong> When an explicit Host header is provided in the request override, it is always preserved regardless of this setting. Similarly, when a template explicitly sets the Host header to a value different from the original request, it is preserved. Header changes made via <span class="inline_code">requestModifier</span> are still subject to auto-adjustment. This setting only applies when the Host header is not explicitly overridden and a <span class="inline_code">socketAddress</span> is specified for routing.</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">true</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.forwardAdjustHostHeader(boolean enable)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.forwardAdjustHostHeader=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_FORWARD_ADJUST_HOST_HEADER=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.forwardAdjustHostHeader=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.forwardAdjustHostHeader="false"</code></pre>
+</div>
+
 <a id="liveness_configuration" class="anchor" href="#liveness_configuration">&nbsp;</a>
 
 <h2>Liveness Configuration:</h2>

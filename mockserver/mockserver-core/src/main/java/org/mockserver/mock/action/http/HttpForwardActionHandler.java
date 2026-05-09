@@ -1,5 +1,6 @@
 package org.mockserver.mock.action.http;
 
+import org.mockserver.configuration.Configuration;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Header;
@@ -13,8 +14,8 @@ import java.net.InetSocketAddress;
  */
 public class HttpForwardActionHandler extends HttpForwardAction {
 
-    public HttpForwardActionHandler(MockServerLogger logFormatter, NettyHttpClient httpClient) {
-        super(logFormatter, httpClient);
+    public HttpForwardActionHandler(MockServerLogger logFormatter, Configuration configuration, NettyHttpClient httpClient) {
+        super(logFormatter, configuration, httpClient);
     }
 
     public HttpForwardActionResult handle(HttpForward httpForward, HttpRequest httpRequest) {

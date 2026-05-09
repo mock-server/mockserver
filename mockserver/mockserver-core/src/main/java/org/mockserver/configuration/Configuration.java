@@ -106,6 +106,7 @@ public class Configuration {
     private String proxyAuthenticationUsername;
     private String proxyAuthenticationPassword;
     private String noProxyHosts;
+    private Boolean forwardAdjustHostHeader;
 
     // liveness
     private String livenessHttpGetPath;
@@ -1257,6 +1258,25 @@ public class Configuration {
      */
     public Configuration noProxyHosts(String noProxyHosts) {
         this.noProxyHosts = noProxyHosts;
+        return this;
+    }
+
+    public Boolean forwardAdjustHostHeader() {
+        if (forwardAdjustHostHeader == null) {
+            return ConfigurationProperties.forwardAdjustHostHeader();
+        }
+        return forwardAdjustHostHeader;
+    }
+
+    /**
+     * If true (the default) the Host header will be automatically adjusted to match the target server when forwarding requests.
+     * This prevents HTTP 421 Misdirected Request errors when the target server validates Host headers.
+     * If false the original Host header is preserved.
+     *
+     * @param forwardAdjustHostHeader enables automatic Host header adjustment for forwarded requests
+     */
+    public Configuration forwardAdjustHostHeader(Boolean forwardAdjustHostHeader) {
+        this.forwardAdjustHostHeader = forwardAdjustHostHeader;
         return this;
     }
 

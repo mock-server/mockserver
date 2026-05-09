@@ -620,7 +620,7 @@ public class HttpActionHandler {
 
     private HttpForwardActionHandler getHttpForwardActionHandler() {
         if (httpForwardActionHandler == null) {
-            httpForwardActionHandler = new HttpForwardActionHandler(mockServerLogger, httpClient);
+            httpForwardActionHandler = new HttpForwardActionHandler(mockServerLogger, configuration, httpClient);
         }
         return httpForwardActionHandler;
     }
@@ -634,21 +634,21 @@ public class HttpActionHandler {
 
     private HttpForwardClassCallbackActionHandler getHttpForwardClassCallbackActionHandler() {
         if (httpForwardClassCallbackActionHandler == null) {
-            httpForwardClassCallbackActionHandler = new HttpForwardClassCallbackActionHandler(mockServerLogger, httpClient);
+            httpForwardClassCallbackActionHandler = new HttpForwardClassCallbackActionHandler(mockServerLogger, configuration, httpClient);
         }
         return httpForwardClassCallbackActionHandler;
     }
 
     private HttpForwardObjectCallbackActionHandler getHttpForwardObjectCallbackActionHandler() {
         if (httpForwardObjectCallbackActionHandler == null) {
-            httpForwardObjectCallbackActionHandler = new HttpForwardObjectCallbackActionHandler(httpStateHandler, httpClient);
+            httpForwardObjectCallbackActionHandler = new HttpForwardObjectCallbackActionHandler(httpStateHandler, configuration, httpClient);
         }
         return httpForwardObjectCallbackActionHandler;
     }
 
     private HttpOverrideForwardedRequestActionHandler getHttpOverrideForwardedRequestCallbackActionHandler() {
         if (httpOverrideForwardedRequestCallbackActionHandler == null) {
-            httpOverrideForwardedRequestCallbackActionHandler = new HttpOverrideForwardedRequestActionHandler(mockServerLogger, httpClient);
+            httpOverrideForwardedRequestCallbackActionHandler = new HttpOverrideForwardedRequestActionHandler(mockServerLogger, configuration, httpClient);
         }
         return httpOverrideForwardedRequestCallbackActionHandler;
     }

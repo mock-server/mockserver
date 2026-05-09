@@ -16,14 +16,12 @@ import org.mockserver.templates.engine.velocity.VelocityTemplateEngine;
  */
 public class HttpForwardTemplateActionHandler extends HttpForwardAction {
 
-    private final Configuration configuration;
     private VelocityTemplateEngine velocityTemplateEngine;
     private JavaScriptTemplateEngine javascriptTemplateEngine;
     private MustacheTemplateEngine mustacheTemplateEngine;
 
     public HttpForwardTemplateActionHandler(MockServerLogger mockServerLogger, Configuration configuration, NettyHttpClient httpClient) {
-        super(mockServerLogger, httpClient);
-        this.configuration = configuration;
+        super(mockServerLogger, configuration, httpClient);
     }
 
     public HttpForwardActionResult handle(HttpTemplate httpTemplate, HttpRequest originalRequest) {
@@ -44,6 +42,12 @@ public class HttpForwardTemplateActionHandler extends HttpForwardAction {
         if (templateEngine != null) {
             HttpRequest templatedRequest = templateEngine.executeTemplate(httpTemplate.getTemplate(), originalRequest, HttpRequestDTO.class);
             if (templatedRequest != null) {
+                String originalHost = originalRequest.getFirstHeader("Host");
+                String templatedHost = templatedRequest.getFirstHeader("Host");
+                boolean templateExplicitlySetHost = templatedHost != null && !templatedHost.equals(originalHost);
+                if (!templateExplicitlySetHost) {
+                    adjustHostHeader(templatedRequest);
+                }
                 return sendRequest(templatedRequest, null, null);
             }
         }

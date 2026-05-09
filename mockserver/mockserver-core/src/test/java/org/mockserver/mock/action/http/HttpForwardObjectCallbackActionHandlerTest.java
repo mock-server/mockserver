@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.closurecallback.websocketregistry.WebSocketRequestCallback;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpState;
 import org.mockserver.model.HttpObjectCallback;
@@ -36,7 +37,7 @@ public class HttpForwardObjectCallbackActionHandlerTest {
         when(mockHttpStateHandler.getMockServerLogger()).thenReturn(new MockServerLogger());
 
         // when
-        new HttpForwardObjectCallbackActionHandler(mockHttpStateHandler, null).handle(mock(HttpActionHandler.class), httpObjectCallback, request, mockResponseWriter, true, null);
+        new HttpForwardObjectCallbackActionHandler(mockHttpStateHandler, Configuration.configuration(), null).handle(mock(HttpActionHandler.class), httpObjectCallback, request, mockResponseWriter, true, null);
 
         // then
         verify(mockWebSocketClientRegistry).registerForwardCallbackHandler(any(String.class), any(WebSocketRequestCallback.class));
@@ -57,7 +58,7 @@ public class HttpForwardObjectCallbackActionHandlerTest {
         when(mockWebSocketClientRegistry.sendClientMessage(eq("some_clientId"), any(HttpRequest.class), isNull())).thenReturn(false);
 
         // when
-        new HttpForwardObjectCallbackActionHandler(mockHttpStateHandler, null).handle(mockActionHandler, httpObjectCallback, request, mockResponseWriter, true, null);
+        new HttpForwardObjectCallbackActionHandler(mockHttpStateHandler, Configuration.configuration(), null).handle(mockActionHandler, httpObjectCallback, request, mockResponseWriter, true, null);
 
         // then
         verify(mockWebSocketClientRegistry).registerForwardCallbackHandler(any(String.class), any(WebSocketRequestCallback.class));

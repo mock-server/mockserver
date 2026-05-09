@@ -2,6 +2,7 @@ package org.mockserver.mock.action.http;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.action.ExpectationForwardCallback;
@@ -30,7 +31,7 @@ public class HttpForwardClassCallbackActionHandlerTest {
     @Before
     public void setupFixture() {
         mockHttpClient = mock(NettyHttpClient.class);
-        httpForwardClassCallbackActionHandler = new HttpForwardClassCallbackActionHandler(new MockServerLogger(), mockHttpClient);
+        httpForwardClassCallbackActionHandler = new HttpForwardClassCallbackActionHandler(new MockServerLogger(), Configuration.configuration(), mockHttpClient);
 
         openMocks(this);
     }

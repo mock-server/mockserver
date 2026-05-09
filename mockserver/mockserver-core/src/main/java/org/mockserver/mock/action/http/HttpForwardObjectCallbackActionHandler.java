@@ -1,5 +1,6 @@
 package org.mockserver.mock.action.http;
 
+import org.mockserver.configuration.Configuration;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.closurecallback.websocketregistry.LocalCallbackRegistry;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
@@ -32,8 +33,8 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
 
     private WebSocketClientRegistry webSocketClientRegistry;
 
-    public HttpForwardObjectCallbackActionHandler(HttpState httpStateHandler, NettyHttpClient httpClient) {
-        super(httpStateHandler.getMockServerLogger(), httpClient);
+    public HttpForwardObjectCallbackActionHandler(HttpState httpStateHandler, Configuration configuration, NettyHttpClient httpClient) {
+        super(httpStateHandler.getMockServerLogger(), configuration, httpClient);
         this.webSocketClientRegistry = httpStateHandler.getWebSocketClientRegistry();
     }
 

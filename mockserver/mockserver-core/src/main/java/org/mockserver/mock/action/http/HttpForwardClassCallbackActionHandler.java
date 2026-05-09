@@ -1,5 +1,6 @@
 package org.mockserver.mock.action.http;
 
+import org.mockserver.configuration.Configuration;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -18,8 +19,8 @@ import java.lang.reflect.InvocationTargetException;
  */
 public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
 
-    public HttpForwardClassCallbackActionHandler(MockServerLogger mockServerLogger, NettyHttpClient httpClient) {
-        super(mockServerLogger, httpClient);
+    public HttpForwardClassCallbackActionHandler(MockServerLogger mockServerLogger, Configuration configuration, NettyHttpClient httpClient) {
+        super(mockServerLogger, configuration, httpClient);
     }
 
     public HttpForwardActionResult handle(HttpClassCallback httpClassCallback, HttpRequest request) {

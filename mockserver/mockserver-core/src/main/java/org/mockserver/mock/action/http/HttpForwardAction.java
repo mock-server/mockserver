@@ -1,12 +1,14 @@
 package org.mockserver.mock.action.http;
 
+import org.mockserver.configuration.Configuration;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.model.Protocol;
+import org.mockserver.model.SocketAddress;
 import org.slf4j.event.Level;
 
 import javax.annotation.Nullable;
@@ -14,6 +16,7 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 
 /**
@@ -23,11 +26,13 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
 public abstract class HttpForwardAction {
 
     protected final MockServerLogger mockServerLogger;
+    protected final Configuration configuration;
     private final NettyHttpClient httpClient;
     private HopByHopHeaderFilter hopByHopHeaderFilter = new HopByHopHeaderFilter();
 
-    HttpForwardAction(MockServerLogger mockServerLogger, NettyHttpClient httpClient) {
+    HttpForwardAction(MockServerLogger mockServerLogger, Configuration configuration, NettyHttpClient httpClient) {
         this.mockServerLogger = mockServerLogger;
+        this.configuration = configuration;
         this.httpClient = httpClient;
     }
 
@@ -45,6 +50,19 @@ public abstract class HttpForwardAction {
             );
         }
         return notFoundFuture(request);
+    }
+
+    protected void adjustHostHeader(HttpRequest request) {
+        if (configuration != null && configuration.forwardAdjustHostHeader()) {
+            SocketAddress sa = request.getSocketAddress();
+            if (sa != null && isNotBlank(sa.getHost())) {
+                boolean defaultPort = (SocketAddress.Scheme.HTTPS.equals(sa.getScheme()) && sa.getPort() != null && sa.getPort() == 443)
+                    || (SocketAddress.Scheme.HTTP.equals(sa.getScheme()) && sa.getPort() != null && sa.getPort() == 80)
+                    || (sa.getPort() == null);
+                String hostHeader = defaultPort ? sa.getHost() : sa.getHost() + ":" + sa.getPort();
+                request.replaceHeader(new Header("Host", hostHeader));
+            }
+        }
     }
 
     HttpForwardActionResult notFoundFuture(HttpRequest httpRequest) {

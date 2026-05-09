@@ -122,6 +122,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_PROXY_AUTHENTICATION_USERNAME = "mockserver.proxyAuthenticationUsername";
     private static final String MOCKSERVER_PROXY_AUTHENTICATION_PASSWORD = "mockserver.proxyAuthenticationPassword";
     private static final String MOCKSERVER_NO_PROXY_HOSTS = "mockserver.noProxyHosts";
+    private static final String MOCKSERVER_FORWARD_ADJUST_HOST_HEADER = "mockserver.forwardAdjustHostHeader";
 
     // liveness
     private static final String MOCKSERVER_LIVENESS_HTTP_GET_PATH = "mockserver.livenessHttpGetPath";
@@ -1182,6 +1183,21 @@ public class ConfigurationProperties {
 
     public static String noProxyHosts() {
         return readPropertyHierarchically(PROPERTIES, MOCKSERVER_NO_PROXY_HOSTS, "MOCKSERVER_NO_PROXY_HOSTS", "");
+    }
+
+    public static boolean forwardAdjustHostHeader() {
+        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_FORWARD_ADJUST_HOST_HEADER, "MOCKSERVER_FORWARD_ADJUST_HOST_HEADER", "" + true));
+    }
+
+    /**
+     * If true (the default) the Host header will be automatically adjusted to match the target server when forwarding requests.
+     * This prevents HTTP 421 Misdirected Request errors when the target server validates Host headers.
+     * If false the original Host header is preserved.
+     *
+     * @param enable enables automatic Host header adjustment for forwarded requests
+     */
+    public static void forwardAdjustHostHeader(boolean enable) {
+        setProperty(MOCKSERVER_FORWARD_ADJUST_HOST_HEADER, "" + enable);
     }
 
     /**
