@@ -1,6 +1,14 @@
-# PR Monitor & Auto-Merge Skill
+---
+name: pr-monitor
+description: >
+  Monitors Dependabot and Snyk dependency upgrade PRs, automatically merging
+  them when builds pass. Handles Java 11 compatibility validation and provides
+  detailed status reporting. Use when the user says "monitor PRs", "watch builds",
+  "auto-merge PRs", "merge passing PRs", or "watch dependency PRs".
 
-**Triggers:** "monitor PRs", "watch builds", "auto-merge PRs", "merge passing PRs", "watch dependency PRs"
+---
+
+# PR Monitor & Auto-Merge Skill
 
 ## Purpose
 
