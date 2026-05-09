@@ -10,11 +10,13 @@ import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.DTO;
 import org.mockserver.templates.engine.TemplateEngine;
 import org.mockserver.templates.engine.TemplateFunctions;
 import org.mockserver.templates.engine.model.HttpRequestTemplateObject;
+import org.mockserver.templates.engine.model.HttpResponseTemplateObject;
 import org.mockserver.templates.engine.serializer.HttpTemplateOutputDeserializer;
 import org.mockserver.xml.XPathEvaluator;
 import org.slf4j.event.Level;
@@ -62,6 +64,15 @@ public class MustacheTemplateEngine implements TemplateEngine {
 
     @Override
     public <T> T executeTemplate(String template, HttpRequest request, Class<? extends DTO<T>> dtoClass) {
+        return executeTemplateInternal(template, request, null, dtoClass);
+    }
+
+    @Override
+    public <T> T executeTemplate(String template, HttpRequest request, HttpResponse response, Class<? extends DTO<T>> dtoClass) {
+        return executeTemplateInternal(template, request, response, dtoClass);
+    }
+
+    private <T> T executeTemplateInternal(String template, HttpRequest request, HttpResponse response, Class<? extends DTO<T>> dtoClass) {
         T result;
         try {
             validateTemplate(template);
@@ -69,6 +80,9 @@ public class MustacheTemplateEngine implements TemplateEngine {
             Template compiledTemplate = compiler.compile(template);
             Map<String, Object> data = new ConcurrentHashMap<>();
             data.put("request", new HttpRequestTemplateObject(request));
+            if (response != null) {
+                data.put("response", new HttpResponseTemplateObject(response));
+            }
             data.putAll(TemplateFunctions.BUILT_IN_FUNCTIONS);
             data.put("xPath", (Mustache.Lambda) (frag, out) -> evaluatedXPath(frag.execute(), request, out));
             data.put("jsonPath", (Mustache.Lambda) (frag, out) -> evaluateJsonPath(data, frag.execute(), request, out));

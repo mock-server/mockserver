@@ -7,11 +7,14 @@ import org.mockserver.model.*;
 import java.util.concurrent.TimeUnit;
 
 import static junit.framework.TestCase.assertEquals;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequestModifier.requestModifier;
 import static org.mockserver.model.HttpResponseModifier.responseModifier;
+import static org.mockserver.model.HttpTemplate.template;
 import static org.mockserver.model.Parameter.param;
 
 /**
@@ -207,6 +210,16 @@ public class HttpOverrideForwardedRequestToJavaSerializerTest {
                     .withDelay(TimeUnit.MILLISECONDS, 100)
             )
         );
+    }
+
+    @Test
+    public void shouldSerializeWithResponseTemplate() {
+        String serialized = new HttpOverrideForwardedRequestToJavaSerializer().serialize(1,
+            new HttpOverrideForwardedRequest()
+                .withResponseTemplate(template(HttpTemplate.TemplateType.JAVASCRIPT, "return response;"))
+        );
+
+        assertThat(serialized, containsString(".withResponseTemplate("));
     }
 
 }

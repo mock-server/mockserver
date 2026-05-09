@@ -12,6 +12,8 @@ public class HttpTemplate extends Action<HttpTemplate> {
     private final TemplateType templateType;
     private String template;
     private Type actionType;
+    private HttpResponse responseOverride;
+    private HttpResponseModifier responseModifier;
 
     public HttpTemplate(TemplateType type) {
         this.templateType = type;
@@ -45,6 +47,26 @@ public class HttpTemplate extends Action<HttpTemplate> {
 
     public String getTemplate() {
         return template;
+    }
+
+    public HttpResponse getResponseOverride() {
+        return responseOverride;
+    }
+
+    public HttpTemplate withResponseOverride(HttpResponse responseOverride) {
+        this.responseOverride = responseOverride;
+        this.hashCode = 0;
+        return this;
+    }
+
+    public HttpResponseModifier getResponseModifier() {
+        return responseModifier;
+    }
+
+    public HttpTemplate withResponseModifier(HttpResponseModifier responseModifier) {
+        this.responseModifier = responseModifier;
+        this.hashCode = 0;
+        return this;
     }
 
     public void withActionType(Type actionType) {
@@ -81,13 +103,15 @@ public class HttpTemplate extends Action<HttpTemplate> {
         HttpTemplate that = (HttpTemplate) o;
         return templateType == that.templateType &&
             Objects.equals(template, that.template) &&
-            actionType == that.actionType;
+            actionType == that.actionType &&
+            Objects.equals(responseOverride, that.responseOverride) &&
+            Objects.equals(responseModifier, that.responseModifier);
     }
 
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(super.hashCode(), templateType, template, actionType);
+            hashCode = Objects.hash(super.hashCode(), templateType, template, actionType, responseOverride, responseModifier);
         }
         return hashCode;
     }

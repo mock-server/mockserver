@@ -16,6 +16,7 @@ public class HttpOverrideForwardedRequest extends Action<HttpOverrideForwardedRe
     @JsonAlias("httpResponse")
     private HttpResponse responseOverride;
     private HttpResponseModifier responseModifier;
+    private HttpTemplate responseTemplate;
 
     /**
      * Static builder which will allow overriding proxied request with the specified request.
@@ -134,6 +135,21 @@ public class HttpOverrideForwardedRequest extends Action<HttpOverrideForwardedRe
         return this;
     }
 
+    public HttpTemplate getResponseTemplate() {
+        return responseTemplate;
+    }
+
+    /**
+     * Template to transform the response using request and response context
+     *
+     * @param responseTemplate the template to use for transforming the response
+     */
+    public HttpOverrideForwardedRequest withResponseTemplate(HttpTemplate responseTemplate) {
+        this.responseTemplate = responseTemplate;
+        this.hashCode = 0;
+        return this;
+    }
+
     @Override
     @JsonIgnore
     public Type getType() {
@@ -158,13 +174,14 @@ public class HttpOverrideForwardedRequest extends Action<HttpOverrideForwardedRe
         return Objects.equals(requestOverride, that.requestOverride) &&
             Objects.equals(requestModifier, that.requestModifier) &&
             Objects.equals(responseOverride, that.responseOverride) &&
-            Objects.equals(responseModifier, that.responseModifier);
+            Objects.equals(responseModifier, that.responseModifier) &&
+            Objects.equals(responseTemplate, that.responseTemplate);
     }
 
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(super.hashCode(), requestOverride, requestModifier, responseOverride, responseModifier);
+            hashCode = Objects.hash(super.hashCode(), requestOverride, requestModifier, responseOverride, responseModifier, responseTemplate);
         }
         return hashCode;
     }

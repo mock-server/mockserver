@@ -10,12 +10,14 @@ import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.DTO;
 import org.mockserver.templates.engine.TemplateEngine;
 import org.mockserver.templates.engine.TemplateFunctions;
 import org.mockserver.templates.engine.javascript.bindings.ScriptBindings;
 import org.mockserver.templates.engine.model.HttpRequestTemplateObject;
+import org.mockserver.templates.engine.model.HttpResponseTemplateObject;
 import org.mockserver.templates.engine.serializer.HttpTemplateOutputDeserializer;
 import org.slf4j.event.Level;
 
@@ -52,21 +54,37 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
 
     @Override
     public synchronized <T> T executeTemplate(String template, HttpRequest request, Class<? extends DTO<T>> dtoClass) {
+        return executeTemplateInternal(template, request, null, dtoClass, false);
+    }
+
+    @Override
+    public synchronized <T> T executeTemplate(String template, HttpRequest request, HttpResponse response, Class<? extends DTO<T>> dtoClass) {
+        return executeTemplateInternal(template, request, response, dtoClass, true);
+    }
+
+    private synchronized <T> T executeTemplateInternal(String template, HttpRequest request, HttpResponse response, Class<? extends DTO<T>> dtoClass, boolean includeResponse) {
         T result = null;
-        String script = wrapTemplate(template);
+        String script = includeResponse ? wrapTemplateWithResponse(template) : wrapTemplate(template);
         try {
             validateTemplate(template);
             if (engine != null) {
                 Compilable compilable = (Compilable) engine;
-                // HttpResponse handle(HttpRequest httpRequest) - ES6
-                CompiledScript compiledScript = compilable.compile(script + " function serialise(request) { return JSON.stringify(handle(JSON.parse(request)), null, 2); }");
+                String serialiseFunction = includeResponse
+                    ? " function serialise(request, response) { return JSON.stringify(handle(JSON.parse(request), JSON.parse(response)), null, 2); }"
+                    : " function serialise(request) { return JSON.stringify(handle(JSON.parse(request)), null, 2); }";
+                CompiledScript compiledScript = compilable.compile(script + serialiseFunction);
 
                 Bindings serialiseBindings = engine.createBindings();
                 engine.setBindings(new ScriptBindings(TemplateFunctions.BUILT_IN_FUNCTIONS), ScriptContext.ENGINE_SCOPE);
                 compiledScript.eval(serialiseBindings);
 
                 ScriptObjectMirror scriptObjectMirror = (ScriptObjectMirror) serialiseBindings.get("serialise");
-                Object stringifiedResponse = scriptObjectMirror.call(null, new HttpRequestTemplateObject(request));
+                Object stringifiedResponse;
+                if (includeResponse) {
+                    stringifiedResponse = scriptObjectMirror.call(null, new HttpRequestTemplateObject(request), new HttpResponseTemplateObject(response));
+                } else {
+                    stringifiedResponse = scriptObjectMirror.call(null, new HttpRequestTemplateObject(request));
+                }
 
                 JsonNode generatedObject = null;
                 try {
@@ -113,6 +131,10 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
 
     static String wrapTemplate(String template) {
         return "function handle(request) {" + indentAndToString(template)[0] + "}";
+    }
+
+    static String wrapTemplateWithResponse(String template) {
+        return "function handle(request, response) {" + indentAndToString(template)[0] + "}";
     }
 
     private void validateTemplate(String template) {

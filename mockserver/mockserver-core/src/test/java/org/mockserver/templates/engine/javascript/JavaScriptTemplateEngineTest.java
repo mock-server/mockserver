@@ -1130,6 +1130,33 @@ public class JavaScriptTemplateEngineTest {
     }
 
     @Test
+    public void shouldHandleResponseTemplateWithJavaScript() {
+        nashornAvailable();
+        String template = "return {" + NEW_LINE +
+            "    'statusCode': response.statusCode," + NEW_LINE +
+            "    'body': 'path=' + request.path + ',originalBody=' + response.body" + NEW_LINE +
+            "};";
+        HttpRequest request = request()
+            .withPath("/testPath")
+            .withMethod("GET");
+        HttpResponse httpResponse = response()
+            .withStatusCode(200)
+            .withBody("hello");
+
+        HttpResponse actualHttpResponse = new JavaScriptTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, httpResponse, HttpResponseDTO.class);
+
+        if (new ScriptEngineManager().getEngineByName("nashorn") != null) {
+            assertThat(actualHttpResponse, is(
+                response()
+                    .withStatusCode(200)
+                    .withBody("path=/testPath,originalBody=hello")
+            ));
+        } else {
+            assertThat(actualHttpResponse, nullValue());
+        }
+    }
+
+    @Test
     public void shouldRestrictGlobalContextMultipleHttpRequestsInParallel() throws InterruptedException, ExecutionException {
         // given
         nashornAvailable();

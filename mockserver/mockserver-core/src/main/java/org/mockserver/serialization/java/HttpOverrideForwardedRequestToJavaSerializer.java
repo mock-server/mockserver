@@ -36,6 +36,11 @@ public class HttpOverrideForwardedRequestToJavaSerializer implements ToJavaSeria
                 output.append(new HttpResponseModifierToJavaSerializer().serialize(numberOfSpacesToIndent + 2, httpForward.getResponseModifier()));
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(")");
             }
+            if (httpForward.getResponseTemplate() != null) {
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withResponseTemplate(");
+                output.append(new HttpTemplateToJavaSerializer().serialize(numberOfSpacesToIndent + 2, httpForward.getResponseTemplate()));
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(")");
+            }
             if (httpForward.getDelay() != null) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withDelay(");
                 output.append(new DelayToJavaSerializer().serialize(0, httpForward.getDelay()));

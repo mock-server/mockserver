@@ -11,6 +11,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpRequestModifier.requestModifier;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpResponseModifier.responseModifier;
+import static org.mockserver.model.HttpTemplate.template;
 
 /**
  * @author jamesdbloom
@@ -99,6 +100,22 @@ public class HttpOverrideForwardedRequestDTOTest {
         assertThat(httpObjectCallbackDTO.getRequestModifier(), is(nullValue()));
         assertThat(httpObjectCallbackDTO.getResponseOverride(), is(nullValue()));
         assertThat(httpObjectCallbackDTO.getResponseModifier(), is(nullValue()));
+    }
+
+    @Test
+    public void shouldBuildObjectWithResponseTemplate() {
+        // given
+        HttpTemplate responseTemplate = template(HttpTemplate.TemplateType.JAVASCRIPT, "return response;");
+
+        HttpOverrideForwardedRequest httpOverrideForwardedRequest = new HttpOverrideForwardedRequest()
+            .withResponseTemplate(responseTemplate);
+
+        // when
+        HttpOverrideForwardedRequest builtHttpOverrideForwardedRequest = new HttpOverrideForwardedRequestDTO(httpOverrideForwardedRequest).buildObject();
+
+        // then
+        assertThat(builtHttpOverrideForwardedRequest.getResponseTemplate().getTemplateType(), is(HttpTemplate.TemplateType.JAVASCRIPT));
+        assertThat(builtHttpOverrideForwardedRequest.getResponseTemplate().getTemplate(), is("return response;"));
     }
 
     @Test

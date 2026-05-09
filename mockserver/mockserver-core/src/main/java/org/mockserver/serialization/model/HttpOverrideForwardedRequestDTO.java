@@ -15,6 +15,7 @@ public class HttpOverrideForwardedRequestDTO extends ObjectWithReflectiveEqualsH
     @JsonAlias("httpResponse")
     private HttpResponseDTO responseOverride;
     private HttpResponseModifierDTO responseModifier;
+    private HttpTemplateDTO responseTemplate;
     private DelayDTO delay;
 
     public HttpOverrideForwardedRequestDTO(HttpOverrideForwardedRequest httpOverrideForwardedRequest) {
@@ -34,6 +35,10 @@ public class HttpOverrideForwardedRequestDTO extends ObjectWithReflectiveEqualsH
             HttpResponseModifier modifyHttpResponse = httpOverrideForwardedRequest.getResponseModifier();
             if (modifyHttpResponse != null) {
                 this.responseModifier = new HttpResponseModifierDTO(modifyHttpResponse);
+            }
+            HttpTemplate responseTemplateModel = httpOverrideForwardedRequest.getResponseTemplate();
+            if (responseTemplateModel != null) {
+                this.responseTemplate = new HttpTemplateDTO(responseTemplateModel);
             }
             delay = (httpOverrideForwardedRequest.getDelay() != null ? new DelayDTO(httpOverrideForwardedRequest.getDelay()) : null);
         }
@@ -59,11 +64,16 @@ public class HttpOverrideForwardedRequestDTO extends ObjectWithReflectiveEqualsH
         if (this.responseModifier != null) {
             modifyHttpResponse = this.responseModifier.buildObject();
         }
+        HttpTemplate responseTemplateModel = null;
+        if (this.responseTemplate != null) {
+            responseTemplateModel = this.responseTemplate.buildObject();
+        }
         return new HttpOverrideForwardedRequest()
             .withRequestOverride(overrideHttpRequest)
             .withRequestModifier(modifyHttpRequest)
             .withResponseOverride(overrideHttpResponse)
             .withResponseModifier(modifyHttpResponse)
+            .withResponseTemplate(responseTemplateModel)
             .withDelay((delay != null ? delay.buildObject() : null));
     }
 
@@ -100,6 +110,15 @@ public class HttpOverrideForwardedRequestDTO extends ObjectWithReflectiveEqualsH
 
     public HttpOverrideForwardedRequestDTO setResponseModifier(HttpResponseModifierDTO responseModifier) {
         this.responseModifier = responseModifier;
+        return this;
+    }
+
+    public HttpTemplateDTO getResponseTemplate() {
+        return responseTemplate;
+    }
+
+    public HttpOverrideForwardedRequestDTO setResponseTemplate(HttpTemplateDTO responseTemplate) {
+        this.responseTemplate = responseTemplate;
         return this;
     }
 

@@ -5,14 +5,15 @@ import org.junit.Test;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
-import org.mockserver.model.HttpTemplate;
+import org.mockserver.model.*;
+import org.mockserver.model.HttpTemplate.TemplateType;
 
 import javax.script.ScriptEngineManager;
+import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsSame.sameInstance;
 import static org.mockito.Mockito.*;
@@ -20,6 +21,8 @@ import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
+import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.HttpResponseModifier.responseModifier;
 import static org.mockserver.model.HttpTemplate.template;
 import static org.mockserver.templates.engine.javascript.JavaScriptTemplateEngineTest.nashornAvailable;
 
@@ -86,6 +89,77 @@ public class HttpForwardTemplateActionHandlerTest {
         // then
         verify(mockHttpClient).sendRequest(httpRequest, null);
         assertThat(actualHttpResponse, is(sameInstance(httpResponse)));
+    }
+
+    @Test
+    public void shouldApplyResponseOverrideToForwardedResponse() throws Exception {
+        CompletableFuture<HttpResponse> responseFuture = new CompletableFuture<>();
+        responseFuture.complete(response().withStatusCode(200).withBody("upstream"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), any())).thenReturn(responseFuture);
+
+        HttpTemplate tmpl = template(TemplateType.VELOCITY, "{" + NEW_LINE +
+            "    'path': \"$!request.path\"" + NEW_LINE +
+            "}")
+            .withResponseOverride(response().withStatusCode(201).withBody("overridden"));
+
+        HttpForwardActionResult result = httpForwardTemplateActionHandler
+            .handle(tmpl, request("/somePath").withMethod("GET"));
+
+        HttpResponse actualResponse = result.getHttpResponse().get();
+        assertThat(actualResponse.getStatusCode(), is(201));
+        assertThat(actualResponse.getBodyAsString(), is("overridden"));
+    }
+
+    @Test
+    public void shouldApplyResponseModifierToForwardedResponse() throws Exception {
+        CompletableFuture<HttpResponse> responseFuture = new CompletableFuture<>();
+        responseFuture.complete(response().withStatusCode(200).withBody("upstream")
+            .withHeader("X-Existing", "value"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), any())).thenReturn(responseFuture);
+
+        HttpTemplate tmpl = template(TemplateType.VELOCITY, "{" + NEW_LINE +
+            "    'path': \"$!request.path\"" + NEW_LINE +
+            "}")
+            .withResponseModifier(responseModifier()
+                .withHeaders(
+                    Collections.singletonList(new Header("X-Added", "new")),
+                    Collections.emptyList(),
+                    Collections.emptyList()
+                ));
+
+        HttpForwardActionResult result = httpForwardTemplateActionHandler
+            .handle(tmpl, request("/somePath").withMethod("GET"));
+
+        HttpResponse actualResponse = result.getHttpResponse().get();
+        assertThat(actualResponse.getStatusCode(), is(200));
+        assertThat(actualResponse.getHeader("X-Added"), contains("new"));
+        assertThat(actualResponse.getHeader("X-Existing"), contains("value"));
+    }
+
+    @Test
+    public void shouldApplyBothResponseOverrideAndModifier() throws Exception {
+        CompletableFuture<HttpResponse> responseFuture = new CompletableFuture<>();
+        responseFuture.complete(response().withStatusCode(200).withBody("upstream"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), any())).thenReturn(responseFuture);
+
+        HttpTemplate tmpl = template(TemplateType.VELOCITY, "{" + NEW_LINE +
+            "    'path': \"$!request.path\"" + NEW_LINE +
+            "}")
+            .withResponseOverride(response().withStatusCode(201).withBody("overridden"))
+            .withResponseModifier(responseModifier()
+                .withHeaders(
+                    Collections.singletonList(new Header("X-Added", "new")),
+                    Collections.emptyList(),
+                    Collections.emptyList()
+                ));
+
+        HttpForwardActionResult result = httpForwardTemplateActionHandler
+            .handle(tmpl, request("/somePath").withMethod("GET"));
+
+        HttpResponse actualResponse = result.getHttpResponse().get();
+        assertThat(actualResponse.getStatusCode(), is(201));
+        assertThat(actualResponse.getBodyAsString(), is("overridden"));
+        assertThat(actualResponse.getHeader("X-Added"), contains("new"));
     }
 
 }

@@ -5,6 +5,8 @@ import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.serialization.model.HttpRequestDTO;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
+import org.mockserver.model.HttpResponseModifier;
 import org.mockserver.model.HttpTemplate;
 import org.mockserver.templates.engine.TemplateEngine;
 import org.mockserver.templates.engine.javascript.JavaScriptTemplateEngine;
@@ -25,20 +27,7 @@ public class HttpForwardTemplateActionHandler extends HttpForwardAction {
     }
 
     public HttpForwardActionResult handle(HttpTemplate httpTemplate, HttpRequest originalRequest) {
-        TemplateEngine templateEngine;
-        switch (httpTemplate.getTemplateType()) {
-            case VELOCITY:
-                templateEngine = getVelocityTemplateEngine();
-                break;
-            case JAVASCRIPT:
-                templateEngine = getJavaScriptTemplateEngine();
-                break;
-            case MUSTACHE:
-                templateEngine = getMustacheTemplateEngine();
-                break;
-            default:
-                throw new RuntimeException("Unknown no template engine available for " + httpTemplate.getTemplateType());
-        }
+        TemplateEngine templateEngine = resolveTemplateEngine(httpTemplate);
         if (templateEngine != null) {
             HttpRequest templatedRequest = templateEngine.executeTemplate(httpTemplate.getTemplate(), originalRequest, HttpRequestDTO.class);
             if (templatedRequest != null) {
@@ -48,11 +37,35 @@ public class HttpForwardTemplateActionHandler extends HttpForwardAction {
                 if (!templateExplicitlySetHost) {
                     adjustHostHeader(templatedRequest);
                 }
+                HttpResponse responseOverride = httpTemplate.getResponseOverride();
+                HttpResponseModifier responseModifier = httpTemplate.getResponseModifier();
+                if (responseOverride != null || responseModifier != null) {
+                    return sendRequest(templatedRequest, null, httpResponse -> {
+                        if (httpResponse == null) {
+                            return responseOverride;
+                        } else {
+                            return httpResponse.update(responseOverride, responseModifier);
+                        }
+                    });
+                }
                 return sendRequest(templatedRequest, null, null);
             }
         }
 
         return notFoundFuture(originalRequest);
+    }
+
+    TemplateEngine resolveTemplateEngine(HttpTemplate httpTemplate) {
+        switch (httpTemplate.getTemplateType()) {
+            case VELOCITY:
+                return getVelocityTemplateEngine();
+            case JAVASCRIPT:
+                return getJavaScriptTemplateEngine();
+            case MUSTACHE:
+                return getMustacheTemplateEngine();
+            default:
+                throw new RuntimeException("Unknown no template engine available for " + httpTemplate.getTemplateType());
+        }
     }
 
     private VelocityTemplateEngine getVelocityTemplateEngine() {

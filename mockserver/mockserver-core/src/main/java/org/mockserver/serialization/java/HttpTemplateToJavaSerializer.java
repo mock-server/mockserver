@@ -21,6 +21,16 @@ public class HttpTemplateToJavaSerializer implements ToJavaSerializer<HttpTempla
             if (isNotBlank(httpTemplate.getTemplate())) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withTemplate(\"").append(StringEscapeUtils.escapeJava(httpTemplate.getTemplate())).append("\")");
             }
+            if (httpTemplate.getResponseOverride() != null) {
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withResponseOverride(");
+                output.append(new HttpResponseToJavaSerializer().serialize(numberOfSpacesToIndent + 2, httpTemplate.getResponseOverride()));
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(")");
+            }
+            if (httpTemplate.getResponseModifier() != null) {
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withResponseModifier(");
+                output.append(new HttpResponseModifierToJavaSerializer().serialize(numberOfSpacesToIndent + 2, httpTemplate.getResponseModifier()));
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(")");
+            }
             if (httpTemplate.getDelay() != null) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withDelay(").append(new DelayToJavaSerializer().serialize(0, httpTemplate.getDelay())).append(")");
             }

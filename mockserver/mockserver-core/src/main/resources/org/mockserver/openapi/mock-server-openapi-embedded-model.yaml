@@ -466,6 +466,38 @@ components:
             - MUSTACHE
         template:
           type: string
+        responseOverride:
+          $ref: "#/components/schemas/HttpResponse"
+        responseModifier:
+          type: object
+          additionalProperties: false
+          properties:
+            headers:
+              type: object
+              additionalProperties: false
+              properties:
+                add:
+                  "$ref": "#/components/schemas/KeyToMultiValue"
+                replace:
+                  "$ref": "#/components/schemas/KeyToMultiValue"
+                remove:
+                  type: array
+                  additionalProperties: false
+                  items:
+                    type: string
+            cookies:
+              type: object
+              additionalProperties: false
+              properties:
+                add:
+                  "$ref": "#/components/schemas/KeyToValue"
+                replace:
+                  "$ref": "#/components/schemas/KeyToValue"
+                remove:
+                  type: array
+                  additionalProperties: false
+                  items:
+                    type: string
     HttpForward:
       description: "host and port to forward to"
       type: object
@@ -594,6 +626,8 @@ components:
                       additionalProperties: false
                       items:
                         type: string
+            responseTemplate:
+              "$ref": "#/components/schemas/HttpTemplate"
         - type: object
           additionalProperties: false
           properties:

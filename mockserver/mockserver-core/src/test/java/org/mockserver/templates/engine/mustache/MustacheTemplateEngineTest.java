@@ -988,6 +988,28 @@ public class MustacheTemplateEngineTest {
     }
 
     @Test
+    public void shouldHandleResponseTemplateWithMustache() {
+        String template = "{" + NEW_LINE +
+            "    'statusCode': {{response.statusCode}}," + NEW_LINE +
+            "    'body': \"path={{request.path}},originalBody={{response.body}}\"" + NEW_LINE +
+            "}";
+        HttpRequest request = request()
+            .withPath("/testPath")
+            .withMethod("GET");
+        HttpResponse httpResponse = response()
+            .withStatusCode(200)
+            .withBody("hello");
+
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger, configuration).executeTemplate(template, request, httpResponse, HttpResponseDTO.class);
+
+        assertThat(actualHttpResponse, is(
+            response()
+                .withStatusCode(200)
+                .withBody("path=/testPath,originalBody=hello")
+        ));
+    }
+
+    @Test
     public void shouldHandleMultipleHttpRequestsWithMustacheResponseTemplateInParallel()
         throws InterruptedException, ExecutionException {
         // given

@@ -135,6 +135,9 @@
               }
             }
           }
+        },
+        "responseTemplate": {
+          "$ref": "#/definitions/httpTemplate"
         }
       }
     },

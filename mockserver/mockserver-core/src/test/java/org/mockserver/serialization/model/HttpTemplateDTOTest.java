@@ -1,6 +1,8 @@
 package org.mockserver.serialization.model;
 
+import com.google.common.collect.ImmutableList;
 import org.junit.Test;
+import org.mockserver.model.HttpResponseModifier;
 import org.mockserver.model.HttpTemplate;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -8,6 +10,8 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.model.Delay.delay;
+import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.HttpResponseModifier.responseModifier;
 
 /**
  * @author jamesdbloom
@@ -59,6 +63,25 @@ public class HttpTemplateDTOTest {
 
         // then
         assertThat(httpTemplateDTO.getTemplate(), is(template));
+    }
+
+    @Test
+    public void shouldBuildObjectWithResponseOverrideAndModifier() {
+        // given
+        HttpResponseModifier httpResponseModifier = responseModifier().withHeaders(ImmutableList.of(), ImmutableList.of(), null);
+
+        HttpTemplate httpTemplate = new HttpTemplate(HttpTemplate.TemplateType.JAVASCRIPT)
+                .withTemplate("some_template")
+                .withResponseOverride(response().withStatusCode(201))
+                .withResponseModifier(httpResponseModifier);
+
+        // when
+        HttpTemplate builtHttpTemplate = new HttpTemplateDTO(httpTemplate).buildObject();
+
+        // then
+        assertThat(builtHttpTemplate.getTemplate(), is("some_template"));
+        assertThat(builtHttpTemplate.getResponseOverride(), is(response().withStatusCode(201)));
+        assertThat(builtHttpTemplate.getResponseModifier(), is(httpResponseModifier));
     }
 
     @Test

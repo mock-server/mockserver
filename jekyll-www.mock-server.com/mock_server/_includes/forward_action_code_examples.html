@@ -1359,6 +1359,53 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
+<button id="button_response_template_forward" class="accordion">override forwarded request with response template</button>
+<div class="panel">
+    <p>A <strong>response template</strong> allows you to transform the response returned from the upstream server using a template that has access to both the original <strong>request</strong> and the upstream <strong>response</strong>. This is useful when you need to dynamically modify responses based on request context — for example, injecting request headers into the response body or conditionally changing the status code.</p>
+    <p>The template receives two objects: <span class="inline_code">request</span> (the original request) and <span class="inline_code">response</span> (the upstream response). The template must return a valid HTTP response JSON object.</p>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpOverrideForwardedRequest": {
+        "requestOverride": {
+            "headers": {
+                "Host": ["target.host.com"]
+            }
+        },
+        "responseTemplate": {
+            "templateType": "JAVASCRIPT",
+            "template": "return { 'statusCode': response.statusCode, 'headers': response.headers, 'body': JSON.stringify({ 'originalBody': response.body, 'requestPath': request.path }) };"
+        }
+    }
+}'</code></pre>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+<button id="button_response_override_template_forward" class="accordion">templated forward with response override</button>
+<div class="panel">
+    <p>When using a <strong>templated forward</strong> (JavaScript, Velocity, or Mustache), you can also specify a <span class="inline_code">responseOverride</span> and/or <span class="inline_code">responseModifier</span> to statically modify the response returned from the upstream server — without needing a separate response template.</p>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpForwardTemplate": {
+        "templateType": "JAVASCRIPT",
+        "template": "return { 'path': '/target' + request.path, 'headers': { 'Host': ['target.host.com'] } };",
+        "responseOverride": {
+            "headers": {
+                "x-proxy": ["mockserver"]
+            }
+        }
+    }
+}'</code></pre>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
 <button id="button_forward_class_callback" class="accordion">class callback to override request & response</button>
 <div class="panel">
     <button class="accordion inner">Java</button>

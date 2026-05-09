@@ -15,11 +15,13 @@ import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.DTO;
 import org.mockserver.templates.engine.TemplateEngine;
 import org.mockserver.templates.engine.TemplateFunctions;
 import org.mockserver.templates.engine.model.HttpRequestTemplateObject;
+import org.mockserver.templates.engine.model.HttpResponseTemplateObject;
 import org.mockserver.templates.engine.serializer.HttpTemplateOutputDeserializer;
 import org.mockserver.templates.engine.velocity.directives.Ifnull;
 import org.slf4j.event.Level;
@@ -141,12 +143,24 @@ public class VelocityTemplateEngine implements TemplateEngine {
 
     @Override
     public <T> T executeTemplate(String template, HttpRequest request, Class<? extends DTO<T>> dtoClass) {
+        return executeTemplateInternal(template, request, null, dtoClass);
+    }
+
+    @Override
+    public <T> T executeTemplate(String template, HttpRequest request, HttpResponse response, Class<? extends DTO<T>> dtoClass) {
+        return executeTemplateInternal(template, request, response, dtoClass);
+    }
+
+    private <T> T executeTemplateInternal(String template, HttpRequest request, HttpResponse response, Class<? extends DTO<T>> dtoClass) {
         T result;
         try {
             validateTemplate(template);
             Writer writer = new StringWriter();
             VelocityContext context = new VelocityContext(toolManager.createContext());
             context.put("request", new HttpRequestTemplateObject(request));
+            if (response != null) {
+                context.put("response", new HttpResponseTemplateObject(response));
+            }
             TemplateFunctions.BUILT_IN_FUNCTIONS.forEach(context::put);
             velocityEngine.evaluate(context, writer, "VelocityResponseTemplate", template);
             JsonNode generatedObject = null;
