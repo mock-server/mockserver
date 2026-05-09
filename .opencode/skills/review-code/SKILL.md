@@ -24,11 +24,13 @@ framework you MUST apply. Do not skip any lens.
 If you have not already been given the diff, obtain it:
 
 ```bash
-git diff --cached    # staged changes
-git diff             # unstaged changes
+git diff --cached                              # staged changes
+git diff                                       # unstaged changes
+git ls-files --others --exclude-standard       # untracked new files
 ```
 
-Read both. The union of staged and unstaged changes is the review scope.
+Read all three. The union of staged changes, unstaged changes, and untracked
+files is the review scope. For untracked files, read their full contents.
 
 ## Step 3: Read Surrounding Context
 
@@ -52,7 +54,7 @@ Work through each lens from the constitution. For each lens:
 
 Focus effort on these high-impact areas:
 
-**Correctness (Lens 7) — highest priority:**
+**Incorrectness (Lens 7) — highest priority:**
 - Logic errors, off-by-one, null dereferences (COR-02)
 - Hallucinated function/method names (COR-07)
 - Race conditions in concurrent code (COR-06)
@@ -60,7 +62,7 @@ Focus effort on these high-impact areas:
 - Ring buffer power-of-two invariant (COR-11)
 - Module boundary violations (COR-08)
 
-**Security (Lens 5):**
+**Insecurity (Lens 5):**
 - Secrets in logs, URLs, or error messages (SEC-06)
 - Input validation on control plane endpoints (SEC-05, SEC-11)
 - Template injection prevention (SEC-12)

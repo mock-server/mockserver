@@ -48,7 +48,7 @@ For each PR, check:
 - Java compatibility (if dependency upgrade)
 - PR state (open, closed, merged)
 
-Use the `pr-monitor` tool (see bundled tool below).
+Use the bundled `pr-monitor.sh` script (see Tool Usage below).
 
 ### 3. Handle Different States
 
@@ -99,7 +99,7 @@ Examples:
 
 ## Output Format
 
-The tool provides real-time status:
+The script provides real-time status:
 
 ```
 [2026-05-04 20:54:25] Iteration 1/60
@@ -136,16 +136,17 @@ After fixing build issues (like in today's session):
 1. Push fixes to master
 2. Trigger Dependabot rebase: `@dependabot rebase` in PR comments
 3. Start monitoring: `.opencode/skills/pr-monitor/pr-monitor.sh today`
-4. Tool will auto-merge as builds pass
+4. Script will auto-merge as builds pass
 
 ## Notes
 
-- The tool uses `--squash` merge by default (matches MockServer convention)
+- The script uses `--squash` merge by default (matches MockServer convention)
 - Uses `--auto` flag to enable auto-merge queue (waits for required checks)
-- Maximum monitoring time: 2 hours (configurable in script)
-- Check interval: 2 minutes (configurable in script)
+- Maximum monitoring time: 2 hours (set `MAX_ITERATIONS` at top of `pr-monitor.sh`, default 60)
+- Check interval: 2 minutes (set `SLEEP_INTERVAL` at top of `pr-monitor.sh`, default 120)
 - Exits successfully when all PRs are merged/closed
 - Exits with error code 1 if timeout reached with pending PRs
+- GitHub API rate limit: authenticated `gh` CLI allows 5,000 requests/hour; each PR check uses ~2-3 API calls, so monitoring up to ~20 PRs at 2-minute intervals is well within limits
 
 ## Example Session
 

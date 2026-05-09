@@ -79,7 +79,7 @@ No fix found. See Recommended Fix below.
 
 Save markdown reports to:
 ```
-docs/investigation/pipeline-investigations/{YYYY-MM-DD}-build-{build_number}.md
+docs/investigation/pipelines/{YYYY-MM-DD}-build-{build_number}.md
 ```
 
 ---
