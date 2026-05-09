@@ -96,7 +96,7 @@ trigger_if_changed() {
     echo "--- :pipeline: Triggering ${label} (matched ${path_regex})"
     STEPS="${STEPS}  - label: \":pipeline: ${label}\"
     command: \".buildkite/scripts/trigger-pipeline.sh ${pipeline_slug} '${label}'\"
-    timeout_in_minutes: 5
+    timeout_in_minutes: 120
     agents:
       queue: default
 "
@@ -118,7 +118,7 @@ if printf '%s\n' "$CHANGED_FILES" | grep -qE -- "^(\.buildkite/|\.github/|terraf
   echo "--- :pipeline: Triggering MockServer Infra (infra changes)"
   STEPS="${STEPS}  - label: \":pipeline: MockServer Infra\"
     command: \".buildkite/scripts/trigger-pipeline.sh mockserver-infra 'MockServer Infra'\"
-    timeout_in_minutes: 5
+    timeout_in_minutes: 120
     agents:
       queue: default
 "

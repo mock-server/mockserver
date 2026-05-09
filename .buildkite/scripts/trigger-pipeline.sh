@@ -100,5 +100,79 @@ RESPONSE=$(cat "$RESPONSE_FILE")
 BUILD_NUMBER=$(echo "$RESPONSE" | jq -r '.number')
 BUILD_URL=$(echo "$RESPONSE" | jq -r '.web_url')
 
+if ! [[ "$BUILD_NUMBER" =~ ^[0-9]+$ ]]; then
+  echo "^^^ +++"
+  echo ":x: Failed to extract build number from API response"
+  cat "$RESPONSE_FILE" 2>/dev/null
+  exit 1
+fi
+
+BUILD_API_URL="${API_BASE}/${BUILD_NUMBER}"
+
 echo ":white_check_mark: ${LABEL} build #${BUILD_NUMBER} created"
 echo "    ${BUILD_URL}"
+
+echo "--- :hourglass: Waiting for ${LABEL} build #${BUILD_NUMBER} to complete"
+
+POLL_INTERVAL="${CHILD_POLL_INTERVAL_SECONDS:-30}"
+MAX_WAIT="${CHILD_MAX_WAIT_SECONDS:-7200}"
+ELAPSED=0
+CONSECUTIVE_ERRORS=0
+
+while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
+  sleep "$POLL_INTERVAL"
+  ELAPSED=$((ELAPSED + POLL_INTERVAL))
+
+  POLL_RESPONSE=$(curl -sS --max-time 15 --connect-timeout 10 --retry 2 --retry-delay 5 \
+    -o "$RESPONSE_FILE" -w '%{http_code}' \
+    -H "Authorization: Bearer ${BUILDKITE_API_TOKEN}" \
+    "${BUILD_API_URL}" 2>/dev/null || echo "000")
+
+  if ! [[ "$POLL_RESPONSE" =~ ^2[0-9][0-9]$ ]]; then
+    CONSECUTIVE_ERRORS=$((CONSECUTIVE_ERRORS + 1))
+    echo "    :warning: API poll returned HTTP ${POLL_RESPONSE} (attempt ${CONSECUTIVE_ERRORS}/10)"
+    if [ "$CONSECUTIVE_ERRORS" -ge 10 ]; then
+      echo "^^^ +++"
+      echo ":x: Too many consecutive API errors polling ${LABEL} build #${BUILD_NUMBER}"
+      exit 1
+    fi
+    continue
+  fi
+  CONSECUTIVE_ERRORS=0
+
+  BUILD_STATE=$(jq -r '.state' "$RESPONSE_FILE")
+
+  case "$BUILD_STATE" in
+    passed)
+      echo ":white_check_mark: ${LABEL} build #${BUILD_NUMBER} passed"
+      exit 0
+      ;;
+    failed)
+      echo "^^^ +++"
+      echo ":x: ${LABEL} build #${BUILD_NUMBER} failed"
+      echo "    ${BUILD_URL}"
+      exit 1
+      ;;
+    canceled|canceling)
+      echo "^^^ +++"
+      echo ":warning: ${LABEL} build #${BUILD_NUMBER} was canceled"
+      echo "    ${BUILD_URL}"
+      exit 1
+      ;;
+    not_run)
+      echo "^^^ +++"
+      echo ":warning: ${LABEL} build #${BUILD_NUMBER} did not run"
+      echo "    ${BUILD_URL}"
+      exit 1
+      ;;
+    *)
+      MINS=$((ELAPSED / 60))
+      echo "    ${LABEL} build #${BUILD_NUMBER}: ${BUILD_STATE} (${MINS}m elapsed)"
+      ;;
+  esac
+done
+
+echo "^^^ +++"
+echo ":x: Timed out waiting for ${LABEL} build #${BUILD_NUMBER} after $((MAX_WAIT / 60))m"
+echo "    ${BUILD_URL}"
+exit 1
