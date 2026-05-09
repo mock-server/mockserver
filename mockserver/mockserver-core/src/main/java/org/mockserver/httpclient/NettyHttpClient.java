@@ -17,6 +17,7 @@ import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
+import org.mockserver.proxyconfiguration.NoProxyHostsUtils;
 import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.socket.tls.NettySslContextFactory;
 import org.slf4j.event.Level;
@@ -24,18 +25,15 @@ import org.slf4j.event.Level;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.ConnectException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.mockserver.model.HttpResponse.response;
 
@@ -245,16 +243,13 @@ public class NettyHttpClient {
             || StringUtils.isBlank(configuration.noProxyHosts())) {
             return true;
         }
-        return Stream.of(configuration.noProxyHosts().split(","))
-            .map(String::trim)
-            .map(host -> {
-                try {
-                    return InetAddress.getByName(host);
-                } catch (UnknownHostException e) {
-                    return null;
-                }
-            })
-            .filter(Objects::nonNull)
-            .noneMatch(remoteAddress.getAddress()::equals);
+        if (NoProxyHostsUtils.isHostOnNoProxyList(remoteAddress.getHostString(), configuration.noProxyHosts())) {
+            return false;
+        }
+        if (remoteAddress.getAddress() != null) {
+            String ipAddress = remoteAddress.getAddress().getHostAddress();
+            return !NoProxyHostsUtils.isHostOnNoProxyList(ipAddress, configuration.noProxyHosts());
+        }
+        return true;
     }
 }

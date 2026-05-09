@@ -16,6 +16,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpState;
 import org.mockserver.model.*;
+import org.mockserver.proxyconfiguration.NoProxyHostsUtils;
 import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
@@ -96,7 +97,7 @@ public class HttpActionHandler {
         }
         final Expectation expectation = httpStateHandler.firstMatchingExpectation(request);
         Runnable expectationPostProcessor = () -> httpStateHandler.postProcess(expectation);
-        final boolean potentiallyHttpProxy = !proxyingRequest && configuration.attemptToProxyIfNoMatchingExpectation() && !isEmpty(request.getFirstHeader(HOST.toString())) && !localAddresses.contains(request.getFirstHeader(HOST.toString()));
+        final boolean potentiallyHttpProxy = !proxyingRequest && configuration.attemptToProxyIfNoMatchingExpectation() && !isEmpty(request.getFirstHeader(HOST.toString())) && !localAddresses.contains(request.getFirstHeader(HOST.toString())) && !NoProxyHostsUtils.isHostOnNoProxyList(request.getFirstHeader(HOST.toString()), configuration.noProxyHosts());
 
         if (expectation != null && expectation.getAction() != null) {
 
