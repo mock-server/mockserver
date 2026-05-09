@@ -46,6 +46,8 @@ lastmod: 2019-11-10T08:00:00+01:00
 
 <pre class="prettyprint lang-bash code"><code class="code">java -Xmx500m -Dmockserver.logLevel=WARN -Dmockserver.disableLogging=true -jar ~/.m2/repository/org/mock-server/mockserver-netty/{{ site.mockserver_version }}/mockserver-netty-{{ site.mockserver_version }}-no-dependencies.jar -serverPort 1080</code></pre>
 
+<p><strong>Note:</strong> The benchmark uses <span class="inline_code">-Dmockserver.disableLogging=true</span> to suppress system-out log output and <span class="inline_code">-Dmockserver.logLevel=WARN</span> to reduce diagnostic log entries, minimising I/O and formatting overhead. Request/response log entries are still stored in memory for verification. For sustained high-throughput operation, the most effective tuning is to reduce <span class="inline_code">maxLogEntries</span> &mdash; see the <a href="#troubleshooting_performance">troubleshooting section</a> below for guidance.</p>
+
 <p>The following graph shows how the p99 increases as the number of parallel clients increase.</p>
 
 <img class="ui_image" src="/images/p99vsparallelclients.png" alt="p99 as parallel clients increase">

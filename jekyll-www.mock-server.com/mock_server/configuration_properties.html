@@ -126,7 +126,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 <div class="panel title">
     <p>Maximum number of expectations held in the in-memory ring buffer. Expectations are stored in a circular queue so once this limit is reached the oldest and lowest priority expectations are overwritten.</p>
     <p>Type: <span class="keyword">int</span> Default: <span class="this_value">minimum of (free heap space in KB / 10) and 15000</span></p>
-    <p>The default is calculated automatically based on available JVM heap memory. Each expectation typically uses 4-10 KB of heap (more if response bodies are large). With a 256 MB heap, the default is approximately 15,000. You can override this if you need more or want to reduce memory usage.</p>
+    <p>The default is calculated automatically based on available JVM heap memory. Each expectation typically uses 4-10 KB of heap for small response bodies. Expectations with large response bodies use significantly more: a 10 KB response body results in ~15-20 KB per expectation, a 50 KB response body results in ~55-75 KB per expectation. With a 256 MB heap, the default is approximately 15,000. You can override this if you need more or want to reduce memory usage.</p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxExpectations(int count)</code></pre>
     <p>System Property:</p>
@@ -143,7 +143,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 <div class="panel title">
     <p>Maximum number of log entries to hold in memory, this includes recorded requests, expectation match failures and other log entries. Log entries are stored in a circular queue so once this limit is reached the oldest entries are overwritten. The lower the <a href="#button_configuration_log_level">log level</a> the more log entries will be captured, particularly at TRACE level logging.</p>
     <p>Type: <span class="keyword">int</span> Default: <span class="this_value">minimum of (free heap space in KB / 8) and 100000</span></p>
-    <p>The default is calculated automatically based on available JVM heap memory. Each log entry typically uses 4-10 KB of heap depending on the size of request and response bodies. Each HTTP request generates 2-3 log entries, so with a 256 MB heap the default of approximately 20,000 entries covers around 7,000-10,000 HTTP requests before the oldest entries are evicted. You can override this if you need to retain more history or want to reduce memory usage.</p>
+    <p>The default is calculated automatically based on available JVM heap memory. Each log entry typically uses 4-10 KB of heap for small request/response bodies, but log entries for large responses are proportionally larger (e.g., a 100 KB response body produces log entries of ~100+ KB each). Each HTTP request generates 2-3 log entries (request recording, expectation match, and response) that are always stored regardless of log level. With a 256 MB heap the default of approximately 20,000 entries covers around 7,000-10,000 HTTP requests before the oldest entries are evicted. For high-throughput use cases or large response bodies, reduce this value to limit memory usage and GC pressure. See <a href="/mock_server/performance.html#troubleshooting_performance">troubleshooting performance</a> for detailed guidance.</p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxLogEntries(int count)</code></pre>
     <p>System Property:</p>

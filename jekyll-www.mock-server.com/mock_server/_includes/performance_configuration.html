@@ -39,8 +39,9 @@
 
 <p><strong>Tips for reducing memory usage:</strong></p>
 <ul>
-    <li>Set <a href="#button_configuration_performance_log_level">logLevel</a> to <span class="inline_code">WARN</span> or higher to reduce log entries generated per request</li>
-    <li>Disable logging entirely with <a href="#button_configuration_performance_disable_logging">disableLogging</a> if you do not need request recording or verification</li>
+    <li>Reduce <a href="#button_configuration_request_log_size">maxLogEntries</a> to limit the number of stored request/response log entries</li>
+    <li>Reduce <a href="#button_configuration_max_expectations">maxExpectations</a> if expectations contain large response bodies</li>
+    <li>Increase JVM heap size (<span class="inline_code">-Xmx</span>) to give the garbage collector more headroom</li>
     <li>Use <a href="#button_configuration_log_memory_statistics">outputMemoryUsageCsv</a> to monitor actual heap usage and tune values accordingly</li>
 </ul>
 
@@ -48,8 +49,132 @@
 <pre class="code" style="padding: 2px;"><code class="code">docker run -d --rm -p 1080:1080 \
   --env MOCKSERVER_MAX_EXPECTATIONS=1000 \
   --env MOCKSERVER_MAX_LOG_ENTRIES=5000 \
-  --env MOCKSERVER_LOG_LEVEL=WARN \
   mockserver/mockserver</code></pre>
+
+<a id="troubleshooting_performance" class="anchor" href="#troubleshooting_performance">&nbsp;</a>
+
+<h2>Troubleshooting: MockServer Becomes Slow or Unresponsive</h2>
+
+<p>If MockServer appears to freeze, hang, or become progressively slower under sustained load, the most likely cause is <strong>memory pressure</strong> from log entry accumulation. This section explains why it happens and how to fix it.</p>
+
+<h3>Why Does MockServer Slow Down?</h3>
+
+<p>Every HTTP request that MockServer processes generates 2-3 log entries that are stored in memory regardless of the configured log level. These entries record the received request, expectation match result, and response &mdash; they are always stored to support request verification. Each log entry consumes approximately 4-10 KB of heap for small request/response bodies, scaling proportionally for larger bodies. Under sustained high-throughput load, log entry allocation drives significant GC pressure:</p>
+
+<table>
+    <tr>
+        <th>Request Rate</th>
+        <th>Response Body Size</th>
+        <th>Log Data Generated Per Minute</th>
+    </tr>
+    <tr>
+        <td>1 req/s</td>
+        <td>1 KB</td>
+        <td>~1 MB</td>
+    </tr>
+    <tr>
+        <td>10 req/s</td>
+        <td>1 KB</td>
+        <td>~12 MB</td>
+    </tr>
+    <tr>
+        <td>10 req/s</td>
+        <td>100 KB</td>
+        <td>~120 MB</td>
+    </tr>
+    <tr>
+        <td>1 req/s</td>
+        <td>1 MB+</td>
+        <td>~120 MB</td>
+    </tr>
+</table>
+
+<p>Log entries are stored in a bounded circular queue (<span class="inline_code">maxLogEntries</span>), so total memory usage does not grow indefinitely. However, the constant allocation and eviction of log entries creates GC pressure. When the JVM heap fills up, the garbage collector runs more frequently and for longer, causing pauses that make MockServer appear to freeze. In extreme cases, the JVM may spend almost all of its time in garbage collection, effectively halting request processing.</p>
+
+<p><strong>Large response bodies amplify this problem significantly.</strong> A single expectation returning a 10 MB response at 1 request per second generates over 600 MB of log data per minute &mdash; far more than a default heap can handle. Even with ring buffer eviction, the JVM must allocate and then garbage-collect these large objects continuously.</p>
+
+<p><strong>Note:</strong> Expectations with large response bodies also consume heap proportionally (e.g., a 50 KB response body results in ~55-75 KB per stored expectation). If you have many expectations with large bodies, reduce <span class="inline_code">maxExpectations</span> as well.</p>
+
+<h3>How To Fix It</h3>
+
+<p>Apply one or more of the following, depending on your use case:</p>
+
+<table>
+    <tr>
+        <th>Fix</th>
+        <th>When To Use</th>
+        <th>Trade-off</th>
+    </tr>
+    <tr>
+        <td>Increase JVM heap size</td>
+        <td>Always recommended for large responses or high request rates</td>
+        <td>Uses more container/host memory</td>
+    </tr>
+    <tr>
+        <td>Reduce <span class="inline_code">maxLogEntries</span></td>
+        <td>The single most effective fix &mdash; fewer entries means less memory and less GC pressure</td>
+        <td>Fewer requests available for verification</td>
+    </tr>
+    <tr>
+        <td>Reduce <span class="inline_code">maxExpectations</span></td>
+        <td>When expectations contain large response bodies</td>
+        <td>Fewer expectations can be stored simultaneously</td>
+    </tr>
+</table>
+
+<p><strong>Note on <span class="inline_code">logLevel</span> and <span class="inline_code">disableLogging</span>:</strong> Setting <span class="inline_code">logLevel</span> to <span class="inline_code">WARN</span> reduces diagnostic TRACE/DEBUG log entries but does <strong>not</strong> prevent request/response recording &mdash; the memory-intensive log entries (received requests, matched expectations, and responses) are always stored regardless of log level, as they are required for verification. Similarly, <span class="inline_code">disableLogging</span> only suppresses system-out output and does not reduce memory usage. To reduce memory, lower <span class="inline_code">maxLogEntries</span> or increase heap size.</p>
+
+<h3>Recommended Configurations</h3>
+
+<p><strong>High-throughput with small responses</strong> (e.g., API mocking at &gt;10 req/s with &lt;10 KB bodies):</p>
+<pre class="code" style="padding: 2px;"><code class="code">docker run -d --rm -p 1080:1080 \
+  -e MOCKSERVER_MAX_LOG_ENTRIES=5000 \
+  mockserver/mockserver</code></pre>
+
+<p><strong>Large response bodies</strong> (e.g., responses &gt;100 KB):</p>
+<pre class="code" style="padding: 2px;"><code class="code">docker run -d --rm -p 1080:1080 \
+  -e JAVA_TOOL_OPTIONS="-Xmx1g" \
+  -e MOCKSERVER_MAX_LOG_ENTRIES=1000 \
+  -e MOCKSERVER_MAX_EXPECTATIONS=100 \
+  mockserver/mockserver</code></pre>
+
+<p><strong>Maximum throughput, minimal memory</strong> (verification limited to most recent requests):</p>
+<pre class="code" style="padding: 2px;"><code class="code">docker run -d --rm -p 1080:1080 \
+  -e JAVA_TOOL_OPTIONS="-Xmx512m" \
+  -e MOCKSERVER_MAX_LOG_ENTRIES=100 \
+  mockserver/mockserver</code></pre>
+
+<h3>Configuring JVM Heap Size</h3>
+
+<p>The default JVM heap in the MockServer Docker image is determined by the JVM's container-aware defaults (typically 25% of the container's memory limit). To set an explicit heap size, use the <span class="inline_code">JAVA_TOOL_OPTIONS</span> environment variable:</p>
+
+<pre class="code" style="padding: 2px;"><code class="code">docker run -d --rm -p 1080:1080 \
+  -e JAVA_TOOL_OPTIONS="-Xmx512m" \
+  mockserver/mockserver</code></pre>
+
+<p>When running with docker compose:</p>
+<pre class="prettyprint lang-yaml code"><code class="code">services:
+  mockServer:
+    image: mockserver/mockserver
+    ports:
+      - "1080:1080"
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xmx512m"
+      MOCKSERVER_MAX_LOG_ENTRIES: "5000"</code></pre>
+
+<p>When running as a standalone JAR:</p>
+<pre class="code" style="padding: 2px;"><code class="code">java -Xmx512m -jar mockserver-netty.jar -serverPort 1080</code></pre>
+
+<h3>Monitoring Memory Usage</h3>
+
+<p>To diagnose memory issues, enable CSV memory tracking:</p>
+<pre class="code" style="padding: 2px;"><code class="code">docker run -d --rm -p 1080:1080 \
+  -e MOCKSERVER_OUTPUT_MEMORY_USAGE_CSV=true \
+  -e MOCKSERVER_MEMORY_USAGE_CSV_DIRECTORY=/config \
+  -v $(pwd):/config \
+  mockserver/mockserver</code></pre>
+
+<p>This creates a <span class="inline_code">memoryUsage_&lt;date&gt;.csv</span> file that records heap usage, log entry count, and expectation count over time. If you see heap usage consistently near the maximum, increase <span class="inline_code">-Xmx</span> or reduce <span class="inline_code">maxLogEntries</span>.</p>
 
 <h2>Scalability Configuration:</h2>
 
@@ -201,9 +326,9 @@
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.disableSystemOut="true"</code></pre>
 </div>
 
-<button id="button_configuration_performance_disable_logging" class="accordion title"><strong>Disable All Logging</strong></button>
+<button id="button_configuration_performance_disable_logging" class="accordion title"><strong>Disable Logging To System Out</strong></button>
 <div class="panel title">
-    <p>Disable all logging and processing of log events</p>
+    <p>Disable logging output to system out. Request/response log entries are still recorded in memory for verification.</p>
     <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.disableLogging(boolean disableLogging)</code></pre>
