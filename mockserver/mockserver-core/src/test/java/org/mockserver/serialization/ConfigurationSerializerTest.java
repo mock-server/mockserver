@@ -1,7 +1,10 @@
 package org.mockserver.serialization;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.configuration.Configuration;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.slf4j.event.Level;
 
@@ -10,6 +13,18 @@ import static org.hamcrest.Matchers.*;
 import static org.mockserver.configuration.Configuration.configuration;
 
 public class ConfigurationSerializerTest {
+
+    private Level originalLogLevel;
+
+    @Before
+    public void saveLogLevel() {
+        originalLogLevel = ConfigurationProperties.logLevel();
+    }
+
+    @After
+    public void restoreLogLevel() {
+        ConfigurationProperties.logLevel(originalLogLevel.name());
+    }
 
     private final ConfigurationSerializer serializer = new ConfigurationSerializer(new MockServerLogger());
 

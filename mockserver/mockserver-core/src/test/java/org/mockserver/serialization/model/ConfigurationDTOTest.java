@@ -1,7 +1,10 @@
 package org.mockserver.serialization.model;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.configuration.Configuration;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.slf4j.event.Level;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -9,6 +12,18 @@ import static org.hamcrest.Matchers.is;
 import static org.mockserver.configuration.Configuration.configuration;
 
 public class ConfigurationDTOTest {
+
+    private Level originalLogLevel;
+
+    @Before
+    public void saveLogLevel() {
+        originalLogLevel = ConfigurationProperties.logLevel();
+    }
+
+    @After
+    public void restoreLogLevel() {
+        ConfigurationProperties.logLevel(originalLogLevel.name());
+    }
 
     @Test
     public void shouldBuildObjectFromDTO() {
