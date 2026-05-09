@@ -50,6 +50,7 @@ public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDef
             String remoteAddress = null;
             String specUrlOrPayload = null;
             String operationId = null;
+            String contextPathPrefix = null;
             while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
                 String fieldName = jsonParser.currentName();
                 if (fieldName != null) {
@@ -155,6 +156,11 @@ public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDef
                             operationId = ctxt.readValue(jsonParser, String.class);
                             break;
                         }
+                        case "contextPathPrefix": {
+                            jsonParser.nextToken();
+                            contextPathPrefix = ctxt.readValue(jsonParser, String.class);
+                            break;
+                        }
                     }
                 }
             }
@@ -162,6 +168,7 @@ public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDef
                 return (RequestDefinitionDTO) new OpenAPIDefinitionDTO()
                     .setSpecUrlOrPayload(specUrlOrPayload)
                     .setOperationId(operationId)
+                    .setContextPathPrefix(contextPathPrefix)
                     .setNot(not);
             } else {
                 return (RequestDefinitionDTO) new HttpRequestDTO()

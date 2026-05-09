@@ -6975,6 +6975,91 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(context.getDifferences(OPENAPI), nullValue());
     }
 
+    @Test
+    public void shouldMatchByPathWithGlobalContextPathPrefix() {
+        // given
+        Configuration configWithPrefix = configuration().openAPIContextPathPrefix("/api/v1");
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configWithPrefix, mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE)
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/api/v1/somePath")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByPathWithPerDefinitionContextPathPrefix() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE)
+                .withContextPathPrefix("/api/v2")
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/api/v2/somePath")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByPathWithPerDefinitionContextPathPrefixOverridingGlobal() {
+        // given
+        Configuration configWithPrefix = configuration().openAPIContextPathPrefix("/api/v1");
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configWithPrefix, mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE)
+                .withContextPathPrefix("/api/v2")
+        ));
+
+        // then - per-definition prefix overrides global
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/api/v2/somePath")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/api/v1/somePath")
+        ));
+    }
+
     private void thenMatchesEmptyFieldDifferences(MatchDifference context, boolean matches, boolean expected) {
         assertThat(matches, is(expected));
         assertThat(context.getDifferences(METHOD), nullValue());

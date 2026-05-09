@@ -157,7 +157,7 @@ public class ExpectationInitializerLoader {
                     }
                     try {
                         OpenAPIParser.clearCache(initializationOpenAPIPath);
-                        expectations = openAPIConverter.buildExpectations(initializationOpenAPIPath, null);
+                        expectations = openAPIConverter.buildExpectations(initializationOpenAPIPath, null, configuration.openAPIContextPathPrefix());
                     } catch (Throwable throwable) {
                         if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(WARN)) {
                             mockServerLogger.logEvent(

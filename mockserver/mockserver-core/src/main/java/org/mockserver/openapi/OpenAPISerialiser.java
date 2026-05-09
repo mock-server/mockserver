@@ -91,8 +91,13 @@ public class OpenAPISerialiser {
     }
 
     public Map<String, List<Pair<String, Operation>>> retrieveOperations(OpenAPI openAPI, String operationId) {
+        return retrieveOperations(openAPI, operationId, "");
+    }
+
+    public Map<String, List<Pair<String, Operation>>> retrieveOperations(OpenAPI openAPI, String operationId, String contextPathPrefix) {
         Map<String, List<Pair<String, Operation>>> operations = new LinkedHashMap<>();
         if (openAPI != null) {
+            String normalizedPrefix = normalizeContextPathPrefix(contextPathPrefix);
             openAPI
                 .getPaths()
                 .forEach((pathString, pathObject) -> {
@@ -105,7 +110,7 @@ public class OpenAPISerialiser {
                         if (!filteredOperations.isEmpty()) {
                             // add server path prefix to each operation path
                             filteredOperations.forEach((methodOperationPair) -> {
-                                String pathWithServerPrefixAdded = firstValidServerPath(methodOperationPair.getValue().getServers(), pathObject.getServers(), openAPI.getServers()) + pathString;
+                                String pathWithServerPrefixAdded = normalizedPrefix + firstValidServerPath(methodOperationPair.getValue().getServers(), pathObject.getServers(), openAPI.getServers()) + pathString;
                                 operations.computeIfAbsent(pathWithServerPrefixAdded, k -> new ArrayList<>()).add(methodOperationPair);
                             });
                         }
@@ -113,6 +118,16 @@ public class OpenAPISerialiser {
                 });
         }
         return operations;
+    }
+
+    static String normalizeContextPathPrefix(String contextPathPrefix) {
+        if (isBlank(contextPathPrefix)) {
+            return "";
+        }
+        String normalized = contextPathPrefix.trim().replaceAll("/+", "/");
+        normalized = Strings.CS.prependIfMissing(normalized, "/");
+        normalized = Strings.CS.removeEnd(normalized, "/");
+        return normalized.equals("/") ? "" : normalized;
     }
 
 }

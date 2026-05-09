@@ -790,7 +790,8 @@ public class McpToolRegistry {
         schema.put("type", "object");
         ObjectNode properties = schema.putObject("properties");
         properties.putObject("specUrlOrPayload").put("type", "string").put("description", "OpenAPI spec URL or JSON/YAML payload");
-        properties.putObject("operationsAndResponses").put("type", "object").put("description", "Map of operationId to response status code");
+        properties.putObject("operationsAndResponses").put("type", "object").put("description", "Map of operationId to response status code (string) or object with statusCode and optional exampleName");
+        properties.putObject("contextPathPrefix").put("type", "string").put("description", "Optional path prefix to prepend to all OpenAPI spec paths");
         schema.putArray("required").add("specUrlOrPayload");
 
         tools.put("create_expectation_from_openapi", new ToolDefinition(
@@ -808,13 +809,31 @@ public class McpToolRegistry {
 
             JsonNode opsNode = params.path("operationsAndResponses");
             if (opsNode.isObject()) {
-                Map<String, String> operationsAndResponses = new LinkedHashMap<>();
+                Map<String, Object> operationsAndResponses = new LinkedHashMap<>();
                 Iterator<Map.Entry<String, JsonNode>> fields = opsNode.fields();
                 while (fields.hasNext()) {
                     Map.Entry<String, JsonNode> entry = fields.next();
-                    operationsAndResponses.put(entry.getKey(), entry.getValue().asText());
+                    if (entry.getValue().isTextual()) {
+                        operationsAndResponses.put(entry.getKey(), entry.getValue().asText());
+                    } else if (entry.getValue().isObject()) {
+                        Map<String, Object> richValue = new LinkedHashMap<>();
+                        JsonNode statusCode = entry.getValue().path("statusCode");
+                        if (!statusCode.isMissingNode()) {
+                            richValue.put("statusCode", statusCode.asText());
+                        }
+                        JsonNode exampleNameNode = entry.getValue().path("exampleName");
+                        if (!exampleNameNode.isMissingNode()) {
+                            richValue.put("exampleName", exampleNameNode.asText());
+                        }
+                        operationsAndResponses.put(entry.getKey(), richValue);
+                    }
                 }
                 openAPIExpectation.withOperationsAndResponses(operationsAndResponses);
+            }
+
+            JsonNode contextPathNode = params.path("contextPathPrefix");
+            if (contextPathNode.isTextual()) {
+                openAPIExpectation.withContextPathPrefix(contextPathNode.asText());
             }
 
             List<Expectation> result = httpState.add(openAPIExpectation);

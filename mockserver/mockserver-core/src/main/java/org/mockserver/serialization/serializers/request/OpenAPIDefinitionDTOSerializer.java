@@ -39,6 +39,9 @@ public class OpenAPIDefinitionDTOSerializer extends StdSerializer<OpenAPIDefinit
                 jgen.writeObjectField("specUrlOrPayload", openAPIDefinition.getSpecUrlOrPayload());
             }
         }
+        if (isNotBlank(openAPIDefinition.getContextPathPrefix())) {
+            jgen.writeObjectField("contextPathPrefix", openAPIDefinition.getContextPathPrefix());
+        }
         jgen.writeEndObject();
     }
 }

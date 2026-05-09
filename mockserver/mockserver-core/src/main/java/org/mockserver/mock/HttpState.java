@@ -20,6 +20,7 @@ import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.*;
 import org.mockserver.serialization.java.ExpectationToJavaSerializer;
+import org.mockserver.serialization.YamlToJsonConverter;
 import org.mockserver.server.initialize.ExpectationInitializerLoader;
 import org.mockserver.uuid.UUIDService;
 import org.mockserver.verify.Verification;
@@ -37,6 +38,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -249,7 +251,7 @@ public class HttpState {
     }
 
     public List<Expectation> add(OpenAPIExpectation openAPIExpectation) {
-        return getOpenAPIConverter().buildExpectations(openAPIExpectation.getSpecUrlOrPayload(), openAPIExpectation.getOperationsAndResponses()).stream().map(this::add).flatMap(List::stream).collect(Collectors.toList());
+        return getOpenAPIConverter().buildExpectations(openAPIExpectation.getSpecUrlOrPayload(), openAPIExpectation.getOperationsAndResponses(), openAPIExpectation.getContextPathPrefix()).stream().map(this::add).flatMap(List::stream).collect(Collectors.toList());
     }
 
     public List<Expectation> add(Expectation... expectations) {
@@ -647,7 +649,15 @@ public class HttpState {
                 if (controlPlaneRequestAuthenticated(request, responseWriter)) {
                     try {
                         List<Expectation> upsertedExpectations = new ArrayList<>();
-                        for (OpenAPIExpectation openAPIExpectation : getOpenAPIExpectationSerializer().deserializeArray(request.getBodyAsJsonOrXmlString(), false)) {
+                        String requestBody = request.getBodyAsJsonOrXmlString();
+                        String contentType = request.getFirstHeader(CONTENT_TYPE.toString());
+                        if (contentType != null) {
+                            String baseType = contentType.split(";")[0].trim().toLowerCase();
+                            if ("application/yaml".equals(baseType) || "application/x-yaml".equals(baseType) || "text/yaml".equals(baseType)) {
+                                requestBody = YamlToJsonConverter.convertYamlToJson(requestBody);
+                            }
+                        }
+                        for (OpenAPIExpectation openAPIExpectation : getOpenAPIExpectationSerializer().deserializeArray(requestBody, false)) {
                             upsertedExpectations.addAll(add(openAPIExpectation));
                         }
                         responseWriter.writeResponse(request, response()

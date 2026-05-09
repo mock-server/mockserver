@@ -83,7 +83,7 @@ public class OpenAPIExpectationSerializerIntegrationTest {
         // then
         assertEquals(openAPIExpectation()
             .withSpecUrlOrPayload("org/mockserver/openapi/openapi_simple_example.json")
-            .withOperationsAndResponses(ImmutableMap.of(
+            .withOperationsAndResponses(ImmutableMap.<String, Object>of(
                 "listPets", "200",
                 "createPets", "201"
             )), httpResponse);
@@ -112,7 +112,7 @@ public class OpenAPIExpectationSerializerIntegrationTest {
         String jsonOpenAPIExpectation = new OpenAPIExpectationSerializer(new MockServerLogger()).serialize(
             openAPIExpectation()
                 .withSpecUrlOrPayload("org/mockserver/openapi/openapi_simple_example.json")
-                .withOperationsAndResponses(ImmutableMap.of(
+                .withOperationsAndResponses(ImmutableMap.<String, Object>of(
                     "listPets", "200",
                     "createPets", "201"
                 ))
@@ -136,13 +136,13 @@ public class OpenAPIExpectationSerializerIntegrationTest {
             new OpenAPIExpectation[]{
                 openAPIExpectation()
                     .withSpecUrlOrPayload("org/mockserver/openapi/openapi_simple_example.json")
-                    .withOperationsAndResponses(ImmutableMap.of(
+                    .withOperationsAndResponses(ImmutableMap.<String, Object>of(
                     "listPets", "200",
                     "createPets", "201"
                 )),
                 openAPIExpectation()
                     .withSpecUrlOrPayload("org/mockserver/openapi/openapi_simple_example.json")
-                    .withOperationsAndResponses(ImmutableMap.of(
+                    .withOperationsAndResponses(ImmutableMap.<String, Object>of(
                     "listPets", "200",
                     "createPets", "201"
                 ))
@@ -172,13 +172,13 @@ public class OpenAPIExpectationSerializerIntegrationTest {
             Arrays.asList(
                 openAPIExpectation()
                     .withSpecUrlOrPayload("org/mockserver/openapi/openapi_simple_example.json")
-                    .withOperationsAndResponses(ImmutableMap.of(
+                    .withOperationsAndResponses(ImmutableMap.<String, Object>of(
                         "listPets", "200",
                         "createPets", "201"
                     )),
                 openAPIExpectation()
                     .withSpecUrlOrPayload("org/mockserver/openapi/openapi_simple_example.json")
-                    .withOperationsAndResponses(ImmutableMap.of(
+                    .withOperationsAndResponses(ImmutableMap.<String, Object>of(
                         "listPets", "200",
                         "createPets", "201"
                     ))
@@ -211,7 +211,7 @@ public class OpenAPIExpectationSerializerIntegrationTest {
         assertThat(new OpenAPIExpectationSerializer(new MockServerLogger()).serialize(
             openAPIExpectation()
                 .withSpecUrlOrPayload("org/mockserver/openapi/openapi_simple_example.json")
-                .withOperationsAndResponses(ImmutableMap.of(
+                .withOperationsAndResponses(ImmutableMap.<String, Object>of(
                     "listPets", "200",
                     "createPets", "201"
                 ))
@@ -243,7 +243,7 @@ public class OpenAPIExpectationSerializerIntegrationTest {
         assertThat(new OpenAPIExpectationSerializer(new MockServerLogger()).serialize(
             openAPIExpectation()
                 .withSpecUrlOrPayload(FilePath.getURL("org/mockserver/openapi/openapi_simple_example.json").toString())
-                .withOperationsAndResponses(ImmutableMap.of(
+                .withOperationsAndResponses(ImmutableMap.<String, Object>of(
                     "listPets", "200",
                     "createPets", "201"
                 ))
@@ -275,7 +275,7 @@ public class OpenAPIExpectationSerializerIntegrationTest {
         assertThat(new OpenAPIExpectationSerializer(new MockServerLogger()).serialize(
             openAPIExpectation()
                 .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_simple_example.json"))
-                .withOperationsAndResponses(ImmutableMap.of(
+                .withOperationsAndResponses(ImmutableMap.<String, Object>of(
                     "listPets", "200",
                     "createPets", "201"
                 ))

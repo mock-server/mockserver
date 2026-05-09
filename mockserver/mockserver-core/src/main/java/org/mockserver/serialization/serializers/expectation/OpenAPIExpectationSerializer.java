@@ -37,6 +37,9 @@ public class OpenAPIExpectationSerializer extends StdSerializer<OpenAPIExpectati
         if (openAPIDefinition.getOperationsAndResponses() != null && !openAPIDefinition.getOperationsAndResponses().isEmpty()) {
             jgen.writeObjectField("operationsAndResponses", openAPIDefinition.getOperationsAndResponses());
         }
+        if (isNotBlank(openAPIDefinition.getContextPathPrefix())) {
+            jgen.writeObjectField("contextPathPrefix", openAPIDefinition.getContextPathPrefix());
+        }
         jgen.writeEndObject();
     }
 }

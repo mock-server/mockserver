@@ -65,6 +65,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private String initializationClass;
     private String initializationJsonPath;
     private String initializationOpenAPIPath;
+    private String openAPIContextPathPrefix;
     private Boolean watchInitializationJson;
 
     private Boolean persistExpectations;
@@ -174,6 +175,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
             this.initializationClass = configuration.initializationClass();
             this.initializationJsonPath = configuration.initializationJsonPath();
             this.initializationOpenAPIPath = configuration.initializationOpenAPIPath();
+            this.openAPIContextPathPrefix = configuration.openAPIContextPathPrefix();
             this.watchInitializationJson = configuration.watchInitializationJson();
 
             this.persistExpectations = configuration.persistExpectations();
@@ -330,6 +332,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
         configuration.initializationClass(initializationClass);
         configuration.initializationJsonPath(initializationJsonPath);
         configuration.initializationOpenAPIPath(initializationOpenAPIPath);
+        configuration.openAPIContextPathPrefix(openAPIContextPathPrefix);
         configuration.watchInitializationJson(watchInitializationJson);
 
         configuration.persistExpectations(persistExpectations);
@@ -525,6 +528,9 @@ public class ConfigurationDTO implements DTO<Configuration> {
         }
         if (initializationOpenAPIPath != null) {
             target.initializationOpenAPIPath(initializationOpenAPIPath);
+        }
+        if (openAPIContextPathPrefix != null) {
+            target.openAPIContextPathPrefix(openAPIContextPathPrefix);
         }
         if (watchInitializationJson != null) {
             target.watchInitializationJson(watchInitializationJson);
@@ -1052,6 +1058,15 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setInitializationOpenAPIPath(String initializationOpenAPIPath) {
         this.initializationOpenAPIPath = initializationOpenAPIPath;
+        return this;
+    }
+
+    public String getOpenAPIContextPathPrefix() {
+        return openAPIContextPathPrefix;
+    }
+
+    public ConfigurationDTO setOpenAPIContextPathPrefix(String openAPIContextPathPrefix) {
+        this.openAPIContextPathPrefix = openAPIContextPathPrefix;
         return this;
     }
 

@@ -129,7 +129,7 @@ public class OpenAPIExpectationSerializer implements Serializer<OpenAPIExpectati
 
     public List<Expectation> deserializeToExpectations(String jsonOpenAPIExpectation) {
         OpenAPIExpectation openAPIExpectation = deserialize(jsonOpenAPIExpectation);
-        return openAPIConverter.buildExpectations(openAPIExpectation.getSpecUrlOrPayload(), openAPIExpectation.getOperationsAndResponses());
+        return openAPIConverter.buildExpectations(openAPIExpectation.getSpecUrlOrPayload(), openAPIExpectation.getOperationsAndResponses(), openAPIExpectation.getContextPathPrefix());
     }
 
     @Override

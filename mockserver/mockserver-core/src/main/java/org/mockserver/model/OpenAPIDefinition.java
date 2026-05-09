@@ -11,6 +11,7 @@ public class OpenAPIDefinition extends RequestDefinition {
     private int hashCode;
     private String specUrlOrPayload;
     private String operationId;
+    private String contextPathPrefix;
 
     public static OpenAPIDefinition openAPI() {
         return new OpenAPIDefinition();
@@ -109,10 +110,20 @@ public class OpenAPIDefinition extends RequestDefinition {
         return this;
     }
 
+    public String getContextPathPrefix() {
+        return contextPathPrefix;
+    }
+
+    public OpenAPIDefinition withContextPathPrefix(String contextPathPrefix) {
+        this.contextPathPrefix = contextPathPrefix;
+        return this;
+    }
+
     public OpenAPIDefinition shallowClone() {
         return not(openAPI(), not)
             .withSpecUrlOrPayload(specUrlOrPayload)
-            .withOperationId(operationId);
+            .withOperationId(operationId)
+            .withContextPathPrefix(contextPathPrefix);
     }
 
     public OpenAPIDefinition update(OpenAPIDefinition replaceRequest) {
@@ -121,6 +132,9 @@ public class OpenAPIDefinition extends RequestDefinition {
         }
         if (replaceRequest.getOperationId() != null && isNotBlank(replaceRequest.getOperationId())) {
             withOperationId(replaceRequest.getOperationId());
+        }
+        if (replaceRequest.getContextPathPrefix() != null && isNotBlank(replaceRequest.getContextPathPrefix())) {
+            withContextPathPrefix(replaceRequest.getContextPathPrefix());
         }
         this.hashCode = 0;
         return this;
@@ -142,13 +156,14 @@ public class OpenAPIDefinition extends RequestDefinition {
         }
         OpenAPIDefinition that = (OpenAPIDefinition) o;
         return Objects.equals(specUrlOrPayload, that.specUrlOrPayload) &&
-            Objects.equals(operationId, that.operationId);
+            Objects.equals(operationId, that.operationId) &&
+            Objects.equals(contextPathPrefix, that.contextPathPrefix);
     }
 
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(super.hashCode(), specUrlOrPayload, operationId);
+            hashCode = Objects.hash(super.hashCode(), specUrlOrPayload, operationId, contextPathPrefix);
         }
         return hashCode;
     }

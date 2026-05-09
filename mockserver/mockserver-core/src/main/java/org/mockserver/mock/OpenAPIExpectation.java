@@ -12,7 +12,8 @@ public class OpenAPIExpectation extends ObjectWithJsonToString {
 
     private int hashCode;
     private String specUrlOrPayload;
-    private Map<String, String> operationsAndResponses;
+    private Map<String, Object> operationsAndResponses;
+    private String contextPathPrefix;
 
     public static OpenAPIExpectation openAPIExpectation() {
         return new OpenAPIExpectation();
@@ -53,13 +54,20 @@ public class OpenAPIExpectation extends ObjectWithJsonToString {
      * </pre>
      *
      * @param specUrlOrPayload       the OpenAPI to match against by URL or payload
-     * @param operationsAndResponses operations and responses to use for each example response where the key is the operationId in the OpenAPI and the value if the response key (i.e. "200", "400" or "default")
+     * @param operationsAndResponses operations and responses to use for each example response where the key is the operationId in the OpenAPI and the value is either a status code string (e.g. "200") or an object with "statusCode" and optional "exampleName"
      * @return the OpenAPIExpectation
      */
-    public static OpenAPIExpectation openAPIExpectation(String specUrlOrPayload, Map<String, String> operationsAndResponses) {
+    public static OpenAPIExpectation openAPIExpectation(String specUrlOrPayload, Map<String, Object> operationsAndResponses) {
         return new OpenAPIExpectation()
             .withSpecUrlOrPayload(specUrlOrPayload)
             .withOperationsAndResponses(operationsAndResponses);
+    }
+
+    @SuppressWarnings("unused")
+    public static OpenAPIExpectation openAPIExpectationWithStringResponses(String specUrlOrPayload, Map<String, String> operationsAndResponses) {
+        return new OpenAPIExpectation()
+            .withSpecUrlOrPayload(specUrlOrPayload)
+            .withOperationsAndResponses(new java.util.LinkedHashMap<>(operationsAndResponses));
     }
 
     /**
@@ -134,18 +142,38 @@ public class OpenAPIExpectation extends ObjectWithJsonToString {
         return this;
     }
 
-    public Map<String, String> getOperationsAndResponses() {
+    public Map<String, Object> getOperationsAndResponses() {
         return operationsAndResponses;
     }
 
     /**
-     * The operations and responses to use for each example response where the key is the operationId in the OpenAPI and the value if the response key (i.e. "200", "400" or "default")
+     * The operations and responses to use for each example response where the key is the operationId in the OpenAPI
+     * and the value is either:
+     * <ul>
+     *   <li>a String response status code (e.g. "200", "400", "default")</li>
+     *   <li>a Map/object with "statusCode" (required) and optional "exampleName" to select a specific named example</li>
+     * </ul>
      *
      * @param operationsAndResponses operations and responses to use for each example response
      * @return this OpenAPIExpectation
      */
-    public OpenAPIExpectation withOperationsAndResponses(Map<String, String> operationsAndResponses) {
+    public OpenAPIExpectation withOperationsAndResponses(Map<String, Object> operationsAndResponses) {
         this.operationsAndResponses = operationsAndResponses;
+        return this;
+    }
+
+    @SuppressWarnings("unused")
+    public OpenAPIExpectation withOperationsAndStringResponses(Map<String, String> operationsAndResponses) {
+        this.operationsAndResponses = new java.util.LinkedHashMap<>(operationsAndResponses);
+        return this;
+    }
+
+    public String getContextPathPrefix() {
+        return contextPathPrefix;
+    }
+
+    public OpenAPIExpectation withContextPathPrefix(String contextPathPrefix) {
+        this.contextPathPrefix = contextPathPrefix;
         return this;
     }
 
@@ -162,13 +190,14 @@ public class OpenAPIExpectation extends ObjectWithJsonToString {
         }
         OpenAPIExpectation that = (OpenAPIExpectation) o;
         return Objects.equals(specUrlOrPayload, that.specUrlOrPayload) &&
-            Objects.equals(operationsAndResponses, that.operationsAndResponses);
+            Objects.equals(operationsAndResponses, that.operationsAndResponses) &&
+            Objects.equals(contextPathPrefix, that.contextPathPrefix);
     }
 
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(specUrlOrPayload, operationsAndResponses);
+            hashCode = Objects.hash(specUrlOrPayload, operationsAndResponses, contextPathPrefix);
         }
         return hashCode;
     }

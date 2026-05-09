@@ -28,14 +28,14 @@ public class OpenAPIExpectationSerializerTest {
     private final OpenAPIExpectation fullOpenAPIExpectation =
         new OpenAPIExpectation()
             .withSpecUrlOrPayload("some_random_spec")
-            .withOperationsAndResponses(ImmutableMap.of(
+            .withOperationsAndResponses(ImmutableMap.<String, Object>of(
                 "operationOne", "200",
                 "operationTwo", "default"
             ));
     private final OpenAPIExpectationDTO fullOpenAPIExpectationDTO =
         new OpenAPIExpectationDTO()
             .setSpecUrlOrPayload("some_random_spec")
-            .setOperationsAndResponses(ImmutableMap.of(
+            .setOperationsAndResponses(ImmutableMap.<String, Object>of(
                 "operationOne", "200",
                 "operationTwo", "default"
             ));

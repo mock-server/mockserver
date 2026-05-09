@@ -80,6 +80,12 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/OpenAPIExpectations"
+          application/yaml:
+            schema:
+              $ref: "#/components/schemas/OpenAPIExpectations"
+          application/x-yaml:
+            schema:
+              $ref: "#/components/schemas/OpenAPIExpectations"
         description: expectation(s) to create
         required: true
   /mockserver/clear:

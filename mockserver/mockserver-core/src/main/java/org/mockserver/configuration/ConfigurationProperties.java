@@ -105,6 +105,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_INITIALIZATION_CLASS = "mockserver.initializationClass";
     private static final String MOCKSERVER_INITIALIZATION_JSON_PATH = "mockserver.initializationJsonPath";
     private static final String MOCKSERVER_INITIALIZATION_OPENAPI_PATH = "mockserver.initializationOpenAPIPath";
+    private static final String MOCKSERVER_OPENAPI_CONTEXT_PATH_PREFIX = "mockserver.openAPIContextPathPrefix";
     private static final String MOCKSERVER_WATCH_INITIALIZATION_JSON = "mockserver.watchInitializationJson";
 
     // mock persistence
@@ -942,6 +943,20 @@ public class ConfigurationProperties {
      */
     public static void initializationOpenAPIPath(String initializationOpenAPIPath) {
         setProperty(MOCKSERVER_INITIALIZATION_OPENAPI_PATH, initializationOpenAPIPath);
+    }
+
+    public static String openAPIContextPathPrefix() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_OPENAPI_CONTEXT_PATH_PREFIX, "MOCKSERVER_OPENAPI_CONTEXT_PATH_PREFIX", "");
+    }
+
+    /**
+     * <p>A path prefix to add to all paths generated from OpenAPI specifications.</p>
+     * <p>For example, if set to "/api/v1" then a path "/pets" from the spec becomes "/api/v1/pets".</p>
+     *
+     * @param openAPIContextPathPrefix the path prefix to add to OpenAPI paths
+     */
+    public static void openAPIContextPathPrefix(String openAPIContextPathPrefix) {
+        setProperty(MOCKSERVER_OPENAPI_CONTEXT_PATH_PREFIX, openAPIContextPathPrefix);
     }
 
     public static boolean watchInitializationJson() {

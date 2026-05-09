@@ -28,7 +28,7 @@ public class OpenAPIExpectationSerializerTest {
         assertThat(objectMapper.writeValueAsString(
             openAPIExpectation()
                 .withSpecUrlOrPayload("org/mockserver/openapi/openapi_simple_example.json")
-                .withOperationsAndResponses(ImmutableMap.of(
+                .withOperationsAndResponses(ImmutableMap.<String, Object>of(
                     "listPets", "200",
                     "createPets", "201"
                 ))
@@ -60,7 +60,7 @@ public class OpenAPIExpectationSerializerTest {
         assertThat(objectMapper.writeValueAsString(
             openAPIExpectation()
                 .withSpecUrlOrPayload(FilePath.getURL("org/mockserver/openapi/openapi_simple_example.json").toString())
-                .withOperationsAndResponses(ImmutableMap.of(
+                .withOperationsAndResponses(ImmutableMap.<String, Object>of(
                     "listPets", "200",
                     "createPets", "201"
                 ))
@@ -92,7 +92,7 @@ public class OpenAPIExpectationSerializerTest {
         assertThat(objectMapper.writeValueAsString(
             openAPIExpectation()
                 .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_simple_example.json"))
-                .withOperationsAndResponses(ImmutableMap.of(
+                .withOperationsAndResponses(ImmutableMap.<String, Object>of(
                     "listPets", "200",
                     "createPets", "201"
                 ))

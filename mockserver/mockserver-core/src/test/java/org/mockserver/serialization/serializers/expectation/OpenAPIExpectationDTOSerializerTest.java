@@ -28,7 +28,7 @@ public class OpenAPIExpectationDTOSerializerTest {
         assertThat(objectMapper.writeValueAsString(new OpenAPIExpectationDTO(
             openAPIExpectation()
                 .withSpecUrlOrPayload("org/mockserver/openapi/openapi_simple_example.json")
-                .withOperationsAndResponses(ImmutableMap.of(
+                .withOperationsAndResponses(ImmutableMap.<String, Object>of(
                     "listPets", "200",
                     "createPets", "201"
                 ))
@@ -60,7 +60,7 @@ public class OpenAPIExpectationDTOSerializerTest {
         assertThat(objectMapper.writeValueAsString(new OpenAPIExpectationDTO(
             openAPIExpectation()
                 .withSpecUrlOrPayload(FilePath.getURL("org/mockserver/openapi/openapi_simple_example.json").toString())
-                .withOperationsAndResponses(ImmutableMap.of(
+                .withOperationsAndResponses(ImmutableMap.<String, Object>of(
                     "listPets", "200",
                     "createPets", "201"
                 ))
@@ -88,11 +88,25 @@ public class OpenAPIExpectationDTOSerializerTest {
     }
 
     @Test
+    public void shouldReturnJsonWithContextPathPrefix() throws JsonProcessingException {
+        assertThat(objectMapper.writeValueAsString(new OpenAPIExpectationDTO(
+            openAPIExpectation()
+                .withSpecUrlOrPayload("org/mockserver/openapi/openapi_simple_example.json")
+                .withContextPathPrefix("/api/v1")
+        )), is("" +
+            "{" + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"org/mockserver/openapi/openapi_simple_example.json\"," + NEW_LINE +
+            "  \"contextPathPrefix\" : \"/api/v1\"" + NEW_LINE +
+            "}"
+        ));
+    }
+
+    @Test
     public void shouldReturnJsonWithOpenAPISpecAndOperationId() throws JsonProcessingException {
         assertThat(objectMapper.writeValueAsString(new OpenAPIExpectationDTO(
             openAPIExpectation()
                 .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_simple_example.json"))
-                .withOperationsAndResponses(ImmutableMap.of(
+                .withOperationsAndResponses(ImmutableMap.<String, Object>of(
                     "listPets", "200",
                     "createPets", "201"
                 ))

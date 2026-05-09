@@ -32,7 +32,7 @@ public class OpenAPIExpectationDTODeserializerTest {
             "}", OpenAPIExpectationDTO.class), is(
             new OpenAPIExpectationDTO(openAPIExpectation()
                 .withSpecUrlOrPayload("org/mockserver/openapi/openapi_simple_example.json")
-                .withOperationsAndResponses(ImmutableMap.of(
+                .withOperationsAndResponses(ImmutableMap.<String, Object>of(
                     "listPets", "200",
                     "createPets", "201"
                 ))
@@ -62,7 +62,7 @@ public class OpenAPIExpectationDTODeserializerTest {
             "}", OpenAPIExpectationDTO.class), is(
             new OpenAPIExpectationDTO(openAPIExpectation()
                 .withSpecUrlOrPayload(FilePath.getURL("org/mockserver/openapi/openapi_simple_example.json").toString())
-                .withOperationsAndResponses(ImmutableMap.of(
+                .withOperationsAndResponses(ImmutableMap.<String, Object>of(
                     "listPets", "200",
                     "createPets", "201"
                 ))
@@ -81,6 +81,36 @@ public class OpenAPIExpectationDTODeserializerTest {
     }
 
     @Test
+    public void shouldParseJsonWithContextPathPrefix() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().readValue("" +
+            "{" + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"org/mockserver/openapi/openapi_simple_example.json\"," + NEW_LINE +
+            "  \"contextPathPrefix\" : \"/api/v1\"" + NEW_LINE +
+            "}", OpenAPIExpectationDTO.class), is(
+            new OpenAPIExpectationDTO(openAPIExpectation()
+                .withSpecUrlOrPayload("org/mockserver/openapi/openapi_simple_example.json")
+                .withContextPathPrefix("/api/v1")
+            )));
+    }
+
+    @Test
+    public void shouldParseJsonWithContextPathPrefixAndOperationsAndResponses() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().readValue("" +
+            "{" + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"org/mockserver/openapi/openapi_simple_example.json\"," + NEW_LINE +
+            "  \"operationsAndResponses\" : {" + NEW_LINE +
+            "    \"listPets\" : \"200\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"contextPathPrefix\" : \"/api/v1\"" + NEW_LINE +
+            "}", OpenAPIExpectationDTO.class), is(
+            new OpenAPIExpectationDTO(openAPIExpectation()
+                .withSpecUrlOrPayload("org/mockserver/openapi/openapi_simple_example.json")
+                .withOperationsAndResponses(ImmutableMap.<String, Object>of("listPets", "200"))
+                .withContextPathPrefix("/api/v1")
+            )));
+    }
+
+    @Test
     public void shouldParseJsonWithOpenAPISpecAndOperationId() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().readValue("" +
             "{" + NEW_LINE +
@@ -92,7 +122,7 @@ public class OpenAPIExpectationDTODeserializerTest {
             "}", OpenAPIExpectationDTO.class), is(
             new OpenAPIExpectationDTO(openAPIExpectation()
                 .withSpecUrlOrPayload(ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_simple_example.json")).toPrettyString())
-                .withOperationsAndResponses(ImmutableMap.of(
+                .withOperationsAndResponses(ImmutableMap.<String, Object>of(
                     "listPets", "200",
                     "createPets", "201"
                 ))

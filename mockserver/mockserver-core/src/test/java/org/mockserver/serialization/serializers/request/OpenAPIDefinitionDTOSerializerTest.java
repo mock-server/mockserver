@@ -75,6 +75,22 @@ public class OpenAPIDefinitionDTOSerializerTest {
     }
 
     @Test
+    public void shouldReturnJsonWithContextPathPrefix() throws JsonProcessingException {
+        assertThat(objectMapper.writeValueAsString(new OpenAPIDefinitionDTO(
+            openAPI()
+                .withSpecUrlOrPayload("org/mockserver/openapi/openapi_simple_example.json")
+                .withOperationId("listPets")
+                .withContextPathPrefix("/api/v1")
+        )), is("" +
+            "{" + NEW_LINE +
+            "  \"operationId\" : \"listPets\"," + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"org/mockserver/openapi/openapi_simple_example.json\"," + NEW_LINE +
+            "  \"contextPathPrefix\" : \"/api/v1\"" + NEW_LINE +
+            "}"
+        ));
+    }
+
+    @Test
     public void shouldReturnJsonWithOpenAPISpecAndOperationId() throws JsonProcessingException {
         assertThat(objectMapper.writeValueAsString(new OpenAPIDefinitionDTO(
             openAPI()

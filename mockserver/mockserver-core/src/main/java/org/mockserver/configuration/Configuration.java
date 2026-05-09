@@ -88,6 +88,7 @@ public class Configuration {
     private String initializationClass;
     private String initializationJsonPath;
     private String initializationOpenAPIPath;
+    private String openAPIContextPathPrefix;
     private Boolean watchInitializationJson;
 
     // mock persistence
@@ -995,6 +996,24 @@ public class Configuration {
      */
     public Configuration initializationOpenAPIPath(String initializationOpenAPIPath) {
         this.initializationOpenAPIPath = initializationOpenAPIPath;
+        return this;
+    }
+
+    public String openAPIContextPathPrefix() {
+        if (openAPIContextPathPrefix == null) {
+            return ConfigurationProperties.openAPIContextPathPrefix();
+        }
+        return openAPIContextPathPrefix;
+    }
+
+    /**
+     * <p>A path prefix to add to all paths generated from OpenAPI specifications.</p>
+     * <p>For example, if set to "/api/v1" then a path "/pets" from the spec becomes "/api/v1/pets".</p>
+     *
+     * @param openAPIContextPathPrefix the path prefix to add to OpenAPI paths
+     */
+    public Configuration openAPIContextPathPrefix(String openAPIContextPathPrefix) {
+        this.openAPIContextPathPrefix = openAPIContextPathPrefix;
         return this;
     }
 

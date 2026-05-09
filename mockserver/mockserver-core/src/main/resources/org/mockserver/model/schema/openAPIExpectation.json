@@ -16,8 +16,29 @@
     "operationsAndResponses": {
       "type": "object",
       "additionalProperties": {
-        "type": "string"
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "statusCode": {
+                "type": "string"
+              },
+              "exampleName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "statusCode"
+            ]
+          }
+        ]
       }
+    },
+    "contextPathPrefix": {
+      "type": "string"
     }
   },
   "required": [

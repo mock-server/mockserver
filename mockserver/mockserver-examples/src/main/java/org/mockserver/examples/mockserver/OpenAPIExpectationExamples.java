@@ -36,7 +36,7 @@ public class OpenAPIExpectationExamples {
     }
 
     public void createOpenAPIExpectationFilteringOperations() {
-        Map<String, String> operationsAndResponses = new HashMap<>();
+        Map<String, Object> operationsAndResponses = new HashMap<>();
         operationsAndResponses.put("showPetById", "200");
         operationsAndResponses.put("createPets", "500");
         new MockServerClient("localhost", 1080)

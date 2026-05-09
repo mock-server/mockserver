@@ -23,7 +23,8 @@ public class OpenAPIExpectationDTODeserializer extends StdDeserializer<OpenAPIEx
     public OpenAPIExpectationDTO deserialize(JsonParser jsonParser, DeserializationContext ctxt) throws IOException {
         if (jsonParser.getCurrentToken() == JsonToken.START_OBJECT) {
             String specUrlOrPayload = null;
-            Map<String, String> operationsAndResponses = null;
+            Map<String, Object> operationsAndResponses = null;
+            String contextPathPrefix = null;
             while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
                 String fieldName = jsonParser.currentName();
                 switch (fieldName) {
@@ -38,22 +39,27 @@ public class OpenAPIExpectationDTODeserializer extends StdDeserializer<OpenAPIEx
                         break;
                     case "operationsAndResponses":
                         jsonParser.nextToken();
-                        Map<String, String> value = new HashMap<>();
+                        Map<String, Object> value = new HashMap<>();
                         Map<?, ?> map = ctxt.readValue(jsonParser, Map.class);
                         map.keySet().forEach(key -> {
-                            if (key instanceof String && map.get(key) instanceof String) {
-                                value.put((String) key, (String) map.get(key));
+                            if (key instanceof String && map.get(key) != null) {
+                                value.put((String) key, map.get(key));
                             }
                         });
                         if (!value.isEmpty()) {
                             operationsAndResponses = value;
                         }
                         break;
+                    case "contextPathPrefix":
+                        jsonParser.nextToken();
+                        contextPathPrefix = jsonParser.getValueAsString();
+                        break;
                 }
             }
             return new OpenAPIExpectationDTO()
                 .setSpecUrlOrPayload(specUrlOrPayload)
-                .setOperationsAndResponses(operationsAndResponses);
+                .setOperationsAndResponses(operationsAndResponses)
+                .setContextPathPrefix(contextPathPrefix);
         }
         return null;
     }

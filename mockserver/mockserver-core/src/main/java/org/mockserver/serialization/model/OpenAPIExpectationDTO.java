@@ -7,12 +7,14 @@ import java.util.Map;
 
 public class OpenAPIExpectationDTO extends ObjectWithJsonToString {
     private String specUrlOrPayload;
-    private Map<String, String> operationsAndResponses;
+    private Map<String, Object> operationsAndResponses;
+    private String contextPathPrefix;
 
     public OpenAPIExpectationDTO(OpenAPIExpectation openAPIExpectation) {
         if (openAPIExpectation != null) {
             specUrlOrPayload = openAPIExpectation.getSpecUrlOrPayload();
             operationsAndResponses = openAPIExpectation.getOperationsAndResponses();
+            contextPathPrefix = openAPIExpectation.getContextPathPrefix();
         }
     }
 
@@ -22,7 +24,8 @@ public class OpenAPIExpectationDTO extends ObjectWithJsonToString {
     public OpenAPIExpectation buildObject() {
         return new OpenAPIExpectation()
             .withSpecUrlOrPayload(specUrlOrPayload)
-            .withOperationsAndResponses(operationsAndResponses);
+            .withOperationsAndResponses(operationsAndResponses)
+            .withContextPathPrefix(contextPathPrefix);
     }
 
     public String getSpecUrlOrPayload() {
@@ -34,12 +37,21 @@ public class OpenAPIExpectationDTO extends ObjectWithJsonToString {
         return this;
     }
 
-    public Map<String, String> getOperationsAndResponses() {
+    public Map<String, Object> getOperationsAndResponses() {
         return operationsAndResponses;
     }
 
-    public OpenAPIExpectationDTO setOperationsAndResponses(Map<String, String> operationsAndResponses) {
+    public OpenAPIExpectationDTO setOperationsAndResponses(Map<String, Object> operationsAndResponses) {
         this.operationsAndResponses = operationsAndResponses;
+        return this;
+    }
+
+    public String getContextPathPrefix() {
+        return contextPathPrefix;
+    }
+
+    public OpenAPIExpectationDTO setContextPathPrefix(String contextPathPrefix) {
+        this.contextPathPrefix = contextPathPrefix;
         return this;
     }
 

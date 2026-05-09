@@ -15,6 +15,7 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.OpenAPIDefinition;
 import org.mockserver.openapi.examples.ExampleBuilder;
 import org.mockserver.openapi.examples.JsonNodeExampleSerializer;
 import org.mockserver.openapi.examples.models.StringExample;
@@ -25,6 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.OpenAPIDefinition.openAPI;
@@ -43,7 +45,11 @@ public class OpenAPIConverter {
         this.mockServerLogger = mockServerLogger;
     }
 
-    public List<Expectation> buildExpectations(String specUrlOrPayload, Map<String, String> operationsAndResponses) {
+    public List<Expectation> buildExpectations(String specUrlOrPayload, Map<String, Object> operationsAndResponses) {
+        return buildExpectations(specUrlOrPayload, operationsAndResponses, null);
+    }
+
+    public List<Expectation> buildExpectations(String specUrlOrPayload, Map<String, Object> operationsAndResponses, String contextPathPrefix) {
         OpenAPI openAPI = buildOpenAPI(specUrlOrPayload, mockServerLogger);
         AtomicInteger expectationCounter = new AtomicInteger(0);
         return openAPI
@@ -56,13 +62,27 @@ public class OpenAPIConverter {
                     .stream()
             )
             .filter(operation -> operationsAndResponses == null || operationsAndResponses.containsKey(operation.getOperationId()))
-            .map(operation -> new Expectation(openAPI(specUrlOrPayload, operation.getOperationId()))
-                .thenRespond(buildHttpResponse(
-                    openAPI,
-                    operation.getResponses(),
-                    operationsAndResponses != null ? operationsAndResponses.get(operation.getOperationId()) : null
-                ))
-            )
+            .map(operation -> {
+                String apiResponseKey = null;
+                String exampleName = null;
+                if (operationsAndResponses != null) {
+                    Object value = operationsAndResponses.get(operation.getOperationId());
+                    if (value instanceof String) {
+                        apiResponseKey = (String) value;
+                    } else if (value instanceof Map) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> richValue = (Map<String, Object>) value;
+                        apiResponseKey = richValue.get("statusCode") != null ? String.valueOf(richValue.get("statusCode")) : null;
+                        exampleName = richValue.get("exampleName") != null ? String.valueOf(richValue.get("exampleName")) : null;
+                    }
+                }
+                OpenAPIDefinition openAPIDefinition = openAPI(specUrlOrPayload, operation.getOperationId());
+                if (isNotBlank(contextPathPrefix)) {
+                    openAPIDefinition.withContextPathPrefix(contextPathPrefix);
+                }
+                return new Expectation(openAPIDefinition)
+                    .thenRespond(buildHttpResponse(openAPI, operation.getResponses(), apiResponseKey, exampleName));
+            })
             .map(expectation -> {
                 int index = expectationCounter.incrementAndGet();
                 return expectation.withId(new UUID((long) Objects.hash(specUrlOrPayload, operationsAndResponses) * index, (long) Objects.hash(specUrlOrPayload, operationsAndResponses) * index).toString());
@@ -71,6 +91,10 @@ public class OpenAPIConverter {
     }
 
     private HttpResponse buildHttpResponse(OpenAPI openAPI, ApiResponses apiResponses, String apiResponseKey) {
+        return buildHttpResponse(openAPI, apiResponses, apiResponseKey, null);
+    }
+
+    private HttpResponse buildHttpResponse(OpenAPI openAPI, ApiResponses apiResponses, String apiResponseKey, String exampleName) {
         HttpResponse response = response();
         Optional
             .ofNullable(apiResponses)
@@ -86,7 +110,7 @@ public class OpenAPIConverter {
                     .ifPresent(stream -> stream
                         .forEach(entry -> {
                             Header value = entry.getValue();
-                            Object headerExample = findHeaderExample(value, openAPI);
+                            Object headerExample = findHeaderExample(value, openAPI, exampleName);
                             if (headerExample != null) {
                                 response.withHeader(entry.getKey(), String.valueOf(headerExample));
                             } else if (value.getSchema() != null) {
@@ -111,7 +135,7 @@ public class OpenAPIConverter {
                         Optional
                             .ofNullable(contentType.getValue())
                             .ifPresent(mediaType -> {
-                                Object example = findExample(mediaType, openAPI);
+                                Object example = findExample(mediaType, openAPI, exampleName);
                                 if (example != null) {
                                     if (isJsonContentType(contentType.getKey())) {
                                         response.withBody(json(serialise(example)));
@@ -234,7 +258,14 @@ public class OpenAPIConverter {
         return org.mockserver.model.MediaType.parse(contentType).isJson();
     }
 
-    private Object findHeaderExample(Header value, OpenAPI openAPI) {
+    private Object findHeaderExample(Header value, OpenAPI openAPI, String exampleName) {
+        if (exampleName != null && value.getExamples() != null && value.getExamples().containsKey(exampleName)) {
+            Example example = value.getExamples().get(exampleName);
+            if (example != null) {
+                Object resolved = resolveExampleRefs(example.getValue(), openAPI);
+                return resolved != null ? resolved : example.getValue();
+            }
+        }
         if (value.getExample() instanceof Example) {
             Object resolved = resolveExampleRefs(((Example) value.getExample()).getValue(), openAPI);
             return resolved != null ? resolved : ((Example) value.getExample()).getValue();
@@ -250,9 +281,14 @@ public class OpenAPIConverter {
         return null;
     }
 
-    private Object findExample(MediaType mediaType, OpenAPI openAPI) {
+    private Object findExample(MediaType mediaType, OpenAPI openAPI, String exampleName) {
         Object example = null;
-        if (mediaType.getExample() != null) {
+        if (exampleName != null && mediaType.getExamples() != null && mediaType.getExamples().containsKey(exampleName)) {
+            Example namedExample = mediaType.getExamples().get(exampleName);
+            if (namedExample != null) {
+                example = namedExample.getValue();
+            }
+        } else if (mediaType.getExample() != null) {
             Object raw = mediaType.getExample();
             if (raw instanceof Example) {
                 example = ((Example) raw).getValue();

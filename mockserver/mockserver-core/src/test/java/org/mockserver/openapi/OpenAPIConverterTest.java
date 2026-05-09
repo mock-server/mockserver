@@ -44,7 +44,7 @@ public class OpenAPIConverterTest {
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
             specUrlOrPayload,
-            ImmutableMap.of(
+            ImmutableMap.<String, Object>of(
                 "listPets", "500",
                 "createPets", "default",
                 "showPetById", "200"
@@ -179,7 +179,7 @@ public class OpenAPIConverterTest {
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
             specUrlOrPayload,
-            ImmutableMap.of(
+            ImmutableMap.<String, Object>of(
                 "listPets", "500",
                 "createPets", "default",
                 "showPetById", "200"
@@ -213,7 +213,7 @@ public class OpenAPIConverterTest {
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
             specUrlOrPayload,
-            ImmutableMap.of(
+            ImmutableMap.<String, Object>of(
                 "listPets", "500",
                 "createPets", "default",
                 "showPetById", "200"
@@ -247,7 +247,7 @@ public class OpenAPIConverterTest {
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
             specUrlOrPayload,
-            ImmutableMap.of(
+            ImmutableMap.<String, Object>of(
                 "listPets", "500",
                 "createPets", "default",
                 "showPetById", "200"
@@ -281,7 +281,7 @@ public class OpenAPIConverterTest {
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
             specUrlOrPayload,
-            ImmutableMap.of(
+            ImmutableMap.<String, Object>of(
                 "listPets", "500",
                 "createPets", "default",
                 "showPetById", "200"
@@ -315,7 +315,7 @@ public class OpenAPIConverterTest {
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
             specUrlOrPayload,
-            ImmutableMap.of(
+            ImmutableMap.<String, Object>of(
                 "listPets", "500",
                 "createPets", "default",
                 "showPetById", "200"
@@ -349,7 +349,7 @@ public class OpenAPIConverterTest {
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
             specUrlOrPayload,
-            ImmutableMap.of(
+            ImmutableMap.<String, Object>of(
                 "listPets", "500",
                 "createPets", "default",
                 "showPetById", "200"
@@ -421,7 +421,7 @@ public class OpenAPIConverterTest {
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
             specUrlOrPayload,
-            ImmutableMap.of(
+            ImmutableMap.<String, Object>of(
                 "listPets", "500",
                 "createPets", "default",
                 "showPetById", "200"
@@ -564,7 +564,7 @@ public class OpenAPIConverterTest {
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
             specUrlOrPayload,
-            ImmutableMap.of("listTasks", "200")
+            ImmutableMap.<String, Object>of("listTasks", "200")
         );
 
         // then
@@ -608,7 +608,7 @@ public class OpenAPIConverterTest {
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
             specUrlOrPayload,
-            ImmutableMap.of("getTask", "200")
+            ImmutableMap.<String, Object>of("getTask", "200")
         );
 
         // then
@@ -643,7 +643,7 @@ public class OpenAPIConverterTest {
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
             specUrlOrPayload,
-            ImmutableMap.of("getTaskMediaTypeExample", "200")
+            ImmutableMap.<String, Object>of("getTaskMediaTypeExample", "200")
         );
 
         // then
@@ -676,7 +676,7 @@ public class OpenAPIConverterTest {
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
             specUrlOrPayload,
-            ImmutableMap.of("getTaskMediaTypeArrayExample", "200")
+            ImmutableMap.<String, Object>of("getTaskMediaTypeArrayExample", "200")
         );
 
         // then
@@ -718,7 +718,7 @@ public class OpenAPIConverterTest {
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
             specUrlOrPayload,
-            ImmutableMap.of("getTaskNestedRef", "200")
+            ImmutableMap.<String, Object>of("getTaskNestedRef", "200")
         );
 
         // then
@@ -755,7 +755,7 @@ public class OpenAPIConverterTest {
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
             specUrlOrPayload,
-            ImmutableMap.of("getTaskMixed", "200")
+            ImmutableMap.<String, Object>of("getTaskMixed", "200")
         );
 
         // then
@@ -799,7 +799,7 @@ public class OpenAPIConverterTest {
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
             specUrlOrPayload,
-            ImmutableMap.of("getTaskDeepNested", "200")
+            ImmutableMap.<String, Object>of("getTaskDeepNested", "200")
         );
 
         // then
@@ -838,7 +838,7 @@ public class OpenAPIConverterTest {
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
             specUrlOrPayload,
-            ImmutableMap.of("getTaskUnresolvable", "200")
+            ImmutableMap.<String, Object>of("getTaskUnresolvable", "200")
         );
 
         // then
@@ -866,7 +866,7 @@ public class OpenAPIConverterTest {
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
             specUrlOrPayload,
-            ImmutableMap.of("getTaskDuplicateRef", "200")
+            ImmutableMap.<String, Object>of("getTaskDuplicateRef", "200")
         );
 
         // then
