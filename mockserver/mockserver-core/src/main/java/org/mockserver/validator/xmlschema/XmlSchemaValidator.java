@@ -37,16 +37,18 @@ public class XmlSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStri
     public XmlSchemaValidator(MockServerLogger mockServerLogger, String schema, String sourceUri) {
         this.mockServerLogger = mockServerLogger;
         try {
-            if (schemaFactory == null) {
-                schemaFactory = buildSchemaFactory();
-            }
-            if (schema.trim().endsWith(">") || isBlank(schema)) {
-                this.schema = schemaFactory.newSchema(new StreamSource(new StringReader(schema), sourceUri));
-            } else if (schema.trim().endsWith(".xsd")) {
-                String systemId = resolveSchemaUri(schema);
-                this.schema = schemaFactory.newSchema(new StreamSource(FileReader.openReaderToFileFromClassPathOrPath(schema), systemId));
-            } else {
-                throw new IllegalArgumentException("Schema must either be a path reference to a *.xsd file or an xml string");
+            synchronized (XmlSchemaValidator.class) {
+                if (schemaFactory == null) {
+                    schemaFactory = buildSchemaFactory();
+                }
+                if (schema.trim().endsWith(">") || isBlank(schema)) {
+                    this.schema = schemaFactory.newSchema(new StreamSource(new StringReader(schema), sourceUri));
+                } else if (schema.trim().endsWith(".xsd")) {
+                    String systemId = resolveSchemaUri(schema);
+                    this.schema = schemaFactory.newSchema(new StreamSource(FileReader.openReaderToFileFromClassPathOrPath(schema), systemId));
+                } else {
+                    throw new IllegalArgumentException("Schema must either be a path reference to a *.xsd file or an xml string");
+                }
             }
         } catch (Exception e) {
             mockServerLogger.logEvent(

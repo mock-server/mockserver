@@ -50,7 +50,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import static java.util.Collections.unmodifiableSet;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.exception.ExceptionHandling.*;
-import static org.mockserver.logging.MockServerLogger.isEnabled;
 import static org.mockserver.mock.action.http.HttpActionHandler.setRemoteAddress;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.Protocol.HTTP_2;
@@ -186,13 +185,13 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
             switchToBinaryRequestProxying(ctx, msg);
         }
 
-        if (isEnabled(TRACE)) {
+        if (mockServerLogger.isEnabledForInstance(TRACE)) {
             loggingHandler.addLoggingHandler(ctx);
         }
     }
 
     private void logStage(ChannelHandlerContext ctx, String message) {
-        if (isEnabled(TRACE)) {
+        if (mockServerLogger.isEnabledForInstance(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(Level.TRACE)
@@ -279,7 +278,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
                             .build()
                     )
                 );
-            if (isEnabled(TRACE)) {
+            if (mockServerLogger.isEnabledForInstance(TRACE)) {
                 http2ConnectionHandlerBuilder.frameLogger(new Http2FrameLogger(LogLevel.TRACE, PortUnificationHandler.class.getName()));
             }
             addLastIfNotPresent(pipeline, http2ConnectionHandlerBuilder.connection(connection).build());
@@ -320,7 +319,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
                     .withStatusCode(426)
                     .withHeader("Upgrade", "TLS/1.2, HTTP/1.1")
                     .withHeader("Connection", "Upgrade");
-                if (MockServerLogger.isEnabled(Level.INFO)) {
+                if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.INFO)
@@ -447,7 +446,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
             String certInfo = " Configured x509CertificatePath=\"" + configuration.x509CertificatePath()
                 + "\" certificateAuthorityCertificate=\"" + configuration.certificateAuthorityCertificate() + "\".";
             if (messageLower.contains("certificate_unknown") || messageLower.contains("unknown_ca")) {
-                if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
+                if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(WARN)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.WARN)

@@ -153,7 +153,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
             try {
                 generatedObject = objectMapper.readTree(writer.toString());
             } catch (Throwable throwable) {
-                if (MockServerLogger.isEnabled(Level.INFO)) {
+                if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.INFO)
@@ -163,7 +163,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
                     );
                 }
             }
-            if (MockServerLogger.isEnabled(Level.INFO)) {
+            if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(TEMPLATE_GENERATED)

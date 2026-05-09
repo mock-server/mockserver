@@ -72,7 +72,7 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
                 try {
                     generatedObject = objectMapper.readTree(String.valueOf(stringifiedResponse));
                 } catch (Throwable throwable) {
-                    if (MockServerLogger.isEnabled(Level.INFO)) {
+                    if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(Level.INFO)
@@ -82,7 +82,7 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
                         );
                     }
                 }
-                if (MockServerLogger.isEnabled(Level.INFO)) {
+                if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setType(TEMPLATE_GENERATED)

@@ -3,7 +3,7 @@ package org.mockserver.log;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -31,11 +31,12 @@ import static org.mockserver.verify.VerificationTimes.exactly;
 public class MockServerEventLogRequestLogEntryVerificationTest {
 
     private static final Scheduler scheduler = new Scheduler(configuration(), new MockServerLogger());
+    private final Configuration configuration = configuration();
     private MockServerEventLog mockServerEventLog;
 
     @Before
     public void setupTestFixture() {
-        mockServerEventLog = new MockServerEventLog(configuration(), new MockServerLogger(), scheduler, true);
+        mockServerEventLog = new MockServerEventLog(configuration, new MockServerLogger(configuration, MockServerLogger.class), scheduler, true);
     }
 
     @AfterClass
@@ -365,44 +366,39 @@ public class MockServerEventLogRequestLogEntryVerificationTest {
 
     @Test
     public void shouldFailVerificationWithLimitedReturnedRequestsViaConfiguration() {
-        Integer originalMaximumNumberOfRequestToReturnInVerificationFailure = ConfigurationProperties.maximumNumberOfRequestToReturnInVerificationFailure();
-        try {
-            // given
-            HttpRequest httpRequest = new HttpRequest().withPath("some_path");
-            HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-            ConfigurationProperties.maximumNumberOfRequestToReturnInVerificationFailure(1);
+        // given
+        HttpRequest httpRequest = new HttpRequest().withPath("some_path");
+        HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
+        configuration.maximumNumberOfRequestToReturnInVerificationFailure(1);
 
-            // when
-            mockServerEventLog.add(
-                new LogEntry()
-                    .setHttpRequest(httpRequest)
-                    .setType(RECEIVED_REQUEST)
-            );
-            mockServerEventLog.add(
-                new LogEntry()
-                    .setHttpRequest(otherHttpRequest)
-                    .setType(RECEIVED_REQUEST)
-            );
-            mockServerEventLog.add(
-                new LogEntry()
-                    .setHttpRequest(httpRequest)
-                    .setType(RECEIVED_REQUEST)
-            );
+        // when
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(otherHttpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
 
-            // then
-            assertThat(verify(
-                    verification()
-                        .withRequest(
-                            new HttpRequest().withPath("some_other_path")
-                        )
-                        .withTimes(atLeast(2))
-                ),
-                is("Request not found at least 2 times, expected:<{" + NEW_LINE +
-                    "  \"path\" : \"some_other_path\"" + NEW_LINE +
-                    "}> but was found 1 time among 3 total requests"));
-        } finally {
-            ConfigurationProperties.maximumNumberOfRequestToReturnInVerificationFailure(originalMaximumNumberOfRequestToReturnInVerificationFailure);
-        }
+        // then
+        assertThat(verify(
+                verification()
+                    .withRequest(
+                        new HttpRequest().withPath("some_other_path")
+                    )
+                    .withTimes(atLeast(2))
+            ),
+            is("Request not found at least 2 times, expected:<{" + NEW_LINE +
+                "  \"path\" : \"some_other_path\"" + NEW_LINE +
+                "}> but was found 1 time among 3 total requests"));
     }
 
     @Test

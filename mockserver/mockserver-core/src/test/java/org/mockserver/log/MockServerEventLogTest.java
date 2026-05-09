@@ -3,7 +3,7 @@ package org.mockserver.log;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
@@ -36,6 +36,7 @@ import static org.slf4j.event.Level.INFO;
 
 public class MockServerEventLogTest {
 
+    private final Configuration configuration = configuration();
     private MockServerLogger mockServerLogger;
     private MockServerEventLog mockServerEventLog;
 
@@ -47,7 +48,7 @@ public class MockServerEventLogTest {
     @Before
     public void setupTestFixture() {
         Scheduler scheduler = mock(Scheduler.class);
-        HttpState httpStateHandler = new HttpState(configuration(), new MockServerLogger(), scheduler);
+        HttpState httpStateHandler = new HttpState(configuration, new MockServerLogger(configuration, MockServerLogger.class), scheduler);
         mockServerLogger = httpStateHandler.getMockServerLogger();
         mockServerEventLog = httpStateHandler.getMockServerLog();
     }
@@ -121,68 +122,61 @@ public class MockServerEventLogTest {
 
     @Test
     public void shouldRetrieveLogEntriesContainingNulls() {
-        Level originalLevel = ConfigurationProperties.logLevel();
-        try {
-            // given
-            ConfigurationProperties.logLevel("INFO");
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(RECEIVED_REQUEST)
-            );
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(NO_MATCH_RESPONSE)
-            );
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(RECEIVED_REQUEST)
-            );
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(EXPECTATION_MATCHED)
-            );
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(EXPECTATION_RESPONSE)
-            );
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(TRACE)
-            );
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(FORWARDED_REQUEST)
-            );
+        // given
+        configuration.logLevel(Level.INFO);
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(NO_MATCH_RESPONSE)
+        );
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(EXPECTATION_MATCHED)
+        );
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(EXPECTATION_RESPONSE)
+        );
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(TRACE)
+        );
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(FORWARDED_REQUEST)
+        );
 
-            // then
-            assertThat(retrieveRequests(null), empty());
-            assertThat(retrieveRequestResponseMessageLogEntries(null), contains(
-                new LogEntry()
-                    .setLogLevel(INFO)
-                    .setType(NO_MATCH_RESPONSE)
-                    .setHttpRequests(new RequestDefinition[0]),
-                new LogEntry()
-                    .setLogLevel(INFO)
-                    .setType(EXPECTATION_RESPONSE)
-                    .setHttpRequests(new RequestDefinition[0]),
-                new LogEntry()
-                    .setLogLevel(INFO)
-                    .setType(FORWARDED_REQUEST)
-                    .setHttpRequests(new RequestDefinition[0])
-            ));
-            assertThat(retrieveRecordedExpectations(null), empty());
-        } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
-        }
+        // then
+        assertThat(retrieveRequests(null), empty());
+        assertThat(retrieveRequestResponseMessageLogEntries(null), contains(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(NO_MATCH_RESPONSE)
+                .setHttpRequests(new RequestDefinition[0]),
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(EXPECTATION_RESPONSE)
+                .setHttpRequests(new RequestDefinition[0]),
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(FORWARDED_REQUEST)
+                .setHttpRequests(new RequestDefinition[0])
+        ));
+        assertThat(retrieveRecordedExpectations(null), empty());
     }
 
     @Test
     public void shouldRetrieveLogEntriesWithNullRequestMatcher() {
-        Level originalLevel = ConfigurationProperties.logLevel();
-        try {
-            // given
-            ConfigurationProperties.logLevel("INFO");
-            mockServerLogger.logEvent(
+        // given
+        configuration.logLevel(Level.INFO);
+        mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(INFO)
                     .setType(RECEIVED_REQUEST)
@@ -323,18 +317,13 @@ public class MockServerEventLogTest {
                     .setHttpResponse(response("response_five"))
                     .setExpectation(request("request_five"), response("response_five"))
             ));
-        } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
-        }
     }
 
     @Test
     public void shouldRetrieveLogEntriesWithRequestMatcher() {
-        Level originalLevel = ConfigurationProperties.logLevel();
-        try {
-            // given
-            ConfigurationProperties.logLevel("INFO");
-            mockServerLogger.logEvent(
+        // given
+        configuration.logLevel(Level.INFO);
+        mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(INFO)
                     .setType(RECEIVED_REQUEST)
@@ -425,18 +414,13 @@ public class MockServerEventLogTest {
                     .setMessageFormat("no expectation for:{}returning response:{}")
                     .setArguments(request("request_one"), notFoundResponse())
             ));
-        } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
-        }
     }
 
     @Test
     public void shouldClearWithNullRequestMatcher() {
-        Level originalLevel = ConfigurationProperties.logLevel();
-        try {
-            // given
-            ConfigurationProperties.logLevel("INFO");
-            mockServerLogger.logEvent(
+        // given
+        configuration.logLevel(Level.INFO);
+        mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(INFO)
                     .setType(NO_MATCH_RESPONSE)
@@ -494,18 +478,13 @@ public class MockServerEventLogTest {
                 .setArguments("{}")));
             assertThat(retrieveRequestLogEntries(), empty());
             assertThat(retrieveRequestResponseMessageLogEntries(null), empty());
-        } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
-        }
     }
 
     @Test
     public void shouldClearWithNullRequestMatcherWhenWhenLogLevelDebug() {
-        Level originalLevel = ConfigurationProperties.logLevel();
-        try {
-            // given
-            ConfigurationProperties.logLevel("DEBUG");
-            mockServerLogger.logEvent(
+        // given
+        configuration.logLevel(Level.DEBUG);
+        mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(INFO)
                     .setType(NO_MATCH_RESPONSE)
@@ -603,18 +582,13 @@ public class MockServerEventLogTest {
                 .setArguments("{}")));
             assertThat(retrieveRequestLogEntries(), empty());
             assertThat(retrieveRequestResponseMessageLogEntries(null), empty());
-        } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
-        }
     }
 
     @Test
     public void shouldClearWithRequestMatcher() {
-        Level originalLevel = ConfigurationProperties.logLevel();
-        try {
-            // given
-            ConfigurationProperties.logLevel("INFO");
-            mockServerLogger.logEvent(
+        // given
+        configuration.logLevel(Level.INFO);
+        mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(INFO)
                     .setType(RECEIVED_REQUEST)
@@ -738,18 +712,13 @@ public class MockServerEventLogTest {
                     .setMessageFormat("cleared logs that match:{}")
                     .setArguments(request("request_one"))
             ));
-        } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
-        }
     }
 
     @Test
     public void shouldClearWithRequestMatcherWhenLogLevelDebug() {
-        Level originalLevel = ConfigurationProperties.logLevel();
-        try {
-            // given
-            ConfigurationProperties.logLevel("DEBUG");
-            mockServerLogger.logEvent(
+        // given
+        configuration.logLevel(Level.DEBUG);
+        mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(INFO)
                     .setType(RECEIVED_REQUEST)
@@ -887,19 +856,14 @@ public class MockServerEventLogTest {
                 .setType(CLEARED)
                 .setHttpRequest(request("request_one"))
                 .setMessageFormat("cleared logs that match:{}")
-                .setArguments(request("request_one"))));
-        } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
-        }
+                    .setArguments(request("request_one"))));
     }
 
     @Test
     public void shouldReset() {
-        Level originalLevel = ConfigurationProperties.logLevel();
-        try {
-            // given
-            ConfigurationProperties.logLevel("INFO");
-            mockServerLogger.logEvent(
+        // given
+        configuration.logLevel(Level.INFO);
+        mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(INFO)
                     .setType(NO_MATCH_RESPONSE)
@@ -953,8 +917,5 @@ public class MockServerEventLogTest {
             assertThat(retrieveMessageLogEntries(null), empty());
             assertThat(retrieveRequestLogEntries(), empty());
             assertThat(retrieveRequestResponseMessageLogEntries(null), empty());
-        } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
-        }
     }
 }

@@ -78,6 +78,13 @@ public class MockServerLogger {
         this.httpStateHandler = null;
     }
 
+    @VisibleForTesting
+    public MockServerLogger(final Configuration configuration, final Logger logger) {
+        this.configuration = configuration;
+        this.logger = logger;
+        this.httpStateHandler = null;
+    }
+
     public MockServerLogger(final Class<?> loggerClass) {
         this.configuration = null;
         this.logger = LoggerFactory.getLogger(loggerClass);
@@ -115,6 +122,8 @@ public class MockServerLogger {
             || isEnabledForInstance(logEntry.getLogLevel())) {
             if (httpStateHandler != null) {
                 httpStateHandler.log(logEntry);
+            } else if (configuration != null) {
+                writeToSystemOut(logger, logEntry, configuration);
             } else {
                 writeToSystemOut(logger, logEntry);
             }
@@ -135,28 +144,41 @@ public class MockServerLogger {
         return ConfigurationProperties.disableLogging();
     }
 
+    private static void writeToSystemOut(Logger logger, LogEntry logEntry, Configuration configuration) {
+        if (!configuration.disableLogging()) {
+            if ((logEntry.isAlwaysLog() || isEnabled(logEntry.getLogLevel(), configuration.logLevel())) &&
+                isNotBlank(logEntry.getMessage())) {
+                writeLogEntry(logger, logEntry);
+            }
+        }
+    }
+
     public static void writeToSystemOut(Logger logger, LogEntry logEntry) {
         if (!ConfigurationProperties.disableLogging()) {
             if ((logEntry.isAlwaysLog() || isEnabled(logEntry.getLogLevel())) &&
                 isNotBlank(logEntry.getMessage())) {
-                switch (logEntry.getLogLevel()) {
-                    case ERROR:
-                        logger.error(portInformation(logEntry) + logEntry.getMessage(), logEntry.getThrowable());
-                        break;
-                    case WARN:
-                        logger.warn(portInformation(logEntry) + logEntry.getMessage(), logEntry.getThrowable());
-                        break;
-                    case INFO:
-                        logger.info(portInformation(logEntry) + logEntry.getMessage(), logEntry.getThrowable());
-                        break;
-                    case DEBUG:
-                        logger.debug(portInformation(logEntry) + logEntry.getMessage(), logEntry.getThrowable());
-                        break;
-                    case TRACE:
-                        logger.trace(portInformation(logEntry) + logEntry.getMessage(), logEntry.getThrowable());
-                        break;
-                }
+                writeLogEntry(logger, logEntry);
             }
+        }
+    }
+
+    private static void writeLogEntry(Logger logger, LogEntry logEntry) {
+        switch (logEntry.getLogLevel()) {
+            case ERROR:
+                logger.error(portInformation(logEntry) + logEntry.getMessage(), logEntry.getThrowable());
+                break;
+            case WARN:
+                logger.warn(portInformation(logEntry) + logEntry.getMessage(), logEntry.getThrowable());
+                break;
+            case INFO:
+                logger.info(portInformation(logEntry) + logEntry.getMessage(), logEntry.getThrowable());
+                break;
+            case DEBUG:
+                logger.debug(portInformation(logEntry) + logEntry.getMessage(), logEntry.getThrowable());
+                break;
+            case TRACE:
+                logger.trace(portInformation(logEntry) + logEntry.getMessage(), logEntry.getThrowable());
+                break;
         }
     }
 

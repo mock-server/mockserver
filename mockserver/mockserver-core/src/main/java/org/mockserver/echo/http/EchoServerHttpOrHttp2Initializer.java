@@ -30,7 +30,7 @@ public class EchoServerHttpOrHttp2Initializer extends ApplicationProtocolNegotia
 
     @Override
     protected void configurePipeline(ChannelHandlerContext ctx, String protocol) {
-        if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
+        if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(Level.TRACE)

@@ -77,7 +77,7 @@ public class MustacheTemplateEngine implements TemplateEngine {
             try {
                 generatedObject = objectMapper.readTree(writer.toString());
             } catch (Throwable throwable) {
-                if (MockServerLogger.isEnabled(Level.INFO)) {
+                if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.INFO)
@@ -87,7 +87,7 @@ public class MustacheTemplateEngine implements TemplateEngine {
                     );
                 }
             }
-            if (MockServerLogger.isEnabled(Level.INFO)) {
+            if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(TEMPLATE_GENERATED)
@@ -119,7 +119,7 @@ public class MustacheTemplateEngine implements TemplateEngine {
         try {
             Object jsonPathResult = JsonPath.compile(jsonPath).read(request.getBodyAsJsonOrXmlString());
             data.put("jsonPathResult", jsonPathResult);
-            if (MockServerLogger.isEnabled(Level.TRACE)) {
+            if (mockServerLogger.isEnabledForInstance(Level.TRACE)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(Level.TRACE)
@@ -151,7 +151,7 @@ public class MustacheTemplateEngine implements TemplateEngine {
                     .setArguments(xPath, request.getBodyAsJsonOrXmlString())
                     .setThrowable(exception)
             ), XPathConstants.STRING));
-            if (MockServerLogger.isEnabled(Level.TRACE)) {
+            if (mockServerLogger.isEnabledForInstance(Level.TRACE)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(Level.TRACE)

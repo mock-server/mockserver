@@ -105,14 +105,14 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
                 buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
             }
             certificateAuthorityPrivateKey = privateKeyFromPEMFile(certificateAuthorityPrivateKeyPath());
-            if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
+            if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(TRACE)
                         .setMessageFormat("loaded CA private key from path{}containing PEM{}")
                         .setArguments(FilePath.absolutePathFromClassPathOrPath(certificateAuthorityPrivateKeyPath()), certificateAuthorityPrivateKey)
                 );
-            } else if (MockServerLogger.isEnabled(INFO) && mockServerLogger != null) {
+            } else if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(INFO)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(INFO)
@@ -144,7 +144,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
                 buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
             }
             certificateAuthorityX509Certificate = x509FromPEMFile(certificateAuthorityX509CertificatePath());
-            if (MockServerLogger.isEnabled(DEBUG) && mockServerLogger != null) {
+            if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(DEBUG)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(DEBUG)
@@ -155,7 +155,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
                             certificateAuthorityX509Certificate
                         )
                 );
-            } else if (MockServerLogger.isEnabled(INFO) && mockServerLogger != null) {
+            } else if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(INFO)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(INFO)
@@ -222,7 +222,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
                     configuration.sslSubjectAlternativeNameDomains(),
                     configuration.sslSubjectAlternativeNameIps()
                 );
-                if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
+                if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(TRACE)
@@ -370,7 +370,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
     }
 
     private void saveAsPEMFile(Object object, String absolutePath, String type) throws IOException {
-        if (MockServerLogger.isEnabled(INFO) && mockServerLogger != null) {
+        if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(INFO)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(INFO)

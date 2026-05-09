@@ -29,7 +29,7 @@ public class JsonPathMatcher extends BodyMatcher<String> {
             try {
                 jsonPath = JsonPath.compile(matcher);
             } catch (Throwable throwable) {
-                if (MockServerLogger.isEnabled(DEBUG) && mockServerLogger != null) {
+                if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(DEBUG)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(DEBUG)

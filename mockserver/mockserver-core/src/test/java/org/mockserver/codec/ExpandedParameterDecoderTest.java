@@ -2,7 +2,6 @@ package org.mockserver.codec;
 
 import org.junit.Test;
 import org.mockserver.configuration.Configuration;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Parameter;
 import org.mockserver.model.ParameterStyle;
@@ -71,27 +70,27 @@ public class ExpandedParameterDecoderTest {
 
     @Test
     public void shouldNotParseQueryParametersSeparatedBySemicolon() {
-        boolean originalUseSemicolonAsQueryParameterSeparator = ConfigurationProperties.useSemicolonAsQueryParameterSeparator();
-        try {
-            ConfigurationProperties.useSemicolonAsQueryParameterSeparator(false);
-            shouldParseParameters(
-                "/users?one=5",
-                param("one", "5")
-            );
-            shouldParseParameters(
-                "/users?one=3;one=4;one=5",
-                param("one", "3;one=4;one=5")
-            );
-            shouldParseParameters(
-                "/users?one=3;one=4;one=5;two=1;two=2;three=1",
-                param("one", "3;one=4;one=5;two=1;two=2;three=1")
-            );
-            shouldParseParameters(
-                "/users"
-            );
-        } finally {
-            ConfigurationProperties.useSemicolonAsQueryParameterSeparator(originalUseSemicolonAsQueryParameterSeparator);
-        }
+        Configuration noSemicolonConfig = configuration().useSemicolonAsQueryParameterSeparator(false);
+        MockServerLogger noSemicolonLogger = new MockServerLogger(ExpandedParameterDecoderTest.class);
+        shouldParseParametersWithConfig(
+            noSemicolonConfig, noSemicolonLogger,
+            "/users?one=5",
+            param("one", "5")
+        );
+        shouldParseParametersWithConfig(
+            noSemicolonConfig, noSemicolonLogger,
+            "/users?one=3;one=4;one=5",
+            param("one", "3;one=4;one=5")
+        );
+        shouldParseParametersWithConfig(
+            noSemicolonConfig, noSemicolonLogger,
+            "/users?one=3;one=4;one=5;two=1;two=2;three=1",
+            param("one", "3;one=4;one=5;two=1;two=2;three=1")
+        );
+        shouldParseParametersWithConfig(
+            noSemicolonConfig, noSemicolonLogger,
+            "/users"
+        );
     }
 
     @Test
@@ -1010,7 +1009,11 @@ public class ExpandedParameterDecoderTest {
     }
 
     private void shouldParseParameters(String path, Parameter... parameters) {
-        List<Parameter> actual = new ExpandedParameterDecoder(configuration, mockServerLogger).retrieveFormParameters(path, path.contains("?")).getEntries();
+        shouldParseParametersWithConfig(configuration, mockServerLogger, path, parameters);
+    }
+
+    private void shouldParseParametersWithConfig(Configuration config, MockServerLogger logger, String path, Parameter... parameters) {
+        List<Parameter> actual = new ExpandedParameterDecoder(config, logger).retrieveFormParameters(path, path.contains("?")).getEntries();
         if (parameters.length > 0) {
             assertThat(actual, containsInAnyOrder(parameters));
         } else {

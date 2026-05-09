@@ -67,7 +67,7 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
         if (remoteAddress != null) { // binary protocol is only supported for proxies request and not mocking
             sendMessage(ctx, binaryRequest, logCorrelationId, remoteAddress);
         } else {
-            if (MockServerLogger.isEnabled(Level.INFO)) {
+            if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(Level.INFO)
@@ -120,7 +120,7 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
                     ctx.writeAndFlush(Unpooled.copiedBuffer(binaryResponse.getBytes()));
                 }
             } catch (Throwable throwable) {
-                if (MockServerLogger.isEnabled(Level.WARN)) {
+                if (mockServerLogger.isEnabledForInstance(Level.WARN)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.WARN)
@@ -152,7 +152,7 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
                 }
                 ctx.writeAndFlush(Unpooled.copiedBuffer(binaryResponse.getBytes()));
             } catch (Throwable throwable) {
-                if (MockServerLogger.isEnabled(Level.WARN)) {
+                if (mockServerLogger.isEnabledForInstance(Level.WARN)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.WARN)

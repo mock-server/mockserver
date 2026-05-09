@@ -49,7 +49,7 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
         try {
             if (msg instanceof FullHttpRequest && ((FullHttpRequest) msg).uri().equals(UPGRADE_CHANNEL_FOR_CALLBACK_WEB_SOCKET_URI)) {
                 if (isHttp2Enabled(ctx.channel())) {
-                    if (MockServerLogger.isEnabled(Level.TRACE)) {
+                    if (mockServerLogger.isEnabledForInstance(Level.TRACE)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(Level.TRACE)
@@ -111,7 +111,7 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
                         ctx.pipeline().remove(DashboardWebSocketHandler.class);
                         ctx.pipeline().remove(MockServerHttpServerCodec.class);
                         ctx.pipeline().remove(HttpRequestHandler.class);
-                        if (MockServerLogger.isEnabled(Level.TRACE)) {
+                        if (mockServerLogger.isEnabledForInstance(Level.TRACE)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setLogLevel(Level.TRACE)
@@ -120,7 +120,7 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
                         }
                         webSocketClientRegistry.registerClient(clientId, ctx);
                         future.channel().closeFuture().addListener((ChannelFutureListener) closeFuture -> {
-                            if (MockServerLogger.isEnabled(Level.TRACE)) {
+                            if (mockServerLogger.isEnabledForInstance(Level.TRACE)) {
                                 mockServerLogger.logEvent(
                                     new LogEntry()
                                         .setLogLevel(Level.TRACE)

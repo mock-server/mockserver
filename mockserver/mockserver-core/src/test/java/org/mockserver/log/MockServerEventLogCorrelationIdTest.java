@@ -3,7 +3,7 @@ package org.mockserver.log;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
@@ -37,6 +37,7 @@ import static org.mockserver.verify.VerificationTimes.exactly;
 public class MockServerEventLogCorrelationIdTest {
 
     private static final Scheduler scheduler = new Scheduler(configuration(), new MockServerLogger());
+    private final Configuration configuration = configuration();
     private MockServerLogger mockServerLogger;
     private MockServerEventLog mockServerEventLog;
 
@@ -47,7 +48,7 @@ public class MockServerEventLogCorrelationIdTest {
 
     @Before
     public void setupTestFixture() {
-        HttpState httpState = new HttpState(configuration(), new MockServerLogger(), scheduler);
+        HttpState httpState = new HttpState(configuration, new MockServerLogger(configuration, MockServerLogger.class), scheduler);
         mockServerLogger = httpState.getMockServerLogger();
         mockServerEventLog = httpState.getMockServerLog();
     }
@@ -87,161 +88,136 @@ public class MockServerEventLogCorrelationIdTest {
 
     @Test
     public void shouldAssignCorrelationIdToVerificationLogEntries() {
-        Level originalLevel = ConfigurationProperties.logLevel();
-        try {
-            ConfigurationProperties.logLevel("INFO");
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setHttpRequest(request("some_path"))
-                    .setType(RECEIVED_REQUEST)
-            );
+        configuration.logLevel(Level.INFO);
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setHttpRequest(request("some_path"))
+                .setType(RECEIVED_REQUEST)
+        );
 
-            assertThat(verify(
-                verification()
-                    .withRequest(request("some_path"))
-                    .withTimes(exactly(1))
-            ), is(""));
+        assertThat(verify(
+            verification()
+                .withRequest(request("some_path"))
+                .withTimes(exactly(1))
+        ), is(""));
 
-            List<LogEntry> logEntries = retrieveMessageLogEntries(null);
-            List<LogEntry> verificationEntries = logEntries.stream()
-                .filter(entry -> entry.getType() == VERIFICATION || entry.getType() == VERIFICATION_PASSED)
-                .collect(Collectors.toList());
-            assertThat(verificationEntries, hasSize(2));
-            String correlationId = verificationEntries.get(0).getCorrelationId();
-            assertThat(correlationId, is(notNullValue()));
-            assertThat(verificationEntries.get(1).getCorrelationId(), is(correlationId));
-        } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
-        }
+        List<LogEntry> logEntries = retrieveMessageLogEntries(null);
+        List<LogEntry> verificationEntries = logEntries.stream()
+            .filter(entry -> entry.getType() == VERIFICATION || entry.getType() == VERIFICATION_PASSED)
+            .collect(Collectors.toList());
+        assertThat(verificationEntries, hasSize(2));
+        String correlationId = verificationEntries.get(0).getCorrelationId();
+        assertThat(correlationId, is(notNullValue()));
+        assertThat(verificationEntries.get(1).getCorrelationId(), is(correlationId));
     }
 
     @Test
     public void shouldAssignCorrelationIdToFailedVerificationLogEntries() {
-        Level originalLevel = ConfigurationProperties.logLevel();
-        try {
-            ConfigurationProperties.logLevel("INFO");
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setHttpRequest(request("some_path"))
-                    .setType(RECEIVED_REQUEST)
-            );
+        configuration.logLevel(Level.INFO);
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setHttpRequest(request("some_path"))
+                .setType(RECEIVED_REQUEST)
+        );
 
-            assertThat(verify(
-                verification()
-                    .withRequest(request("some_other_path"))
-                    .withTimes(exactly(1))
-            ), is(not("")));
+        assertThat(verify(
+            verification()
+                .withRequest(request("some_other_path"))
+                .withTimes(exactly(1))
+        ), is(not("")));
 
-            List<LogEntry> logEntries = retrieveMessageLogEntries(null);
-            List<LogEntry> verificationEntries = logEntries.stream()
-                .filter(entry -> entry.getType() == VERIFICATION || entry.getType() == VERIFICATION_FAILED)
-                .collect(Collectors.toList());
-            assertThat(verificationEntries, hasSize(2));
-            String correlationId = verificationEntries.get(0).getCorrelationId();
-            assertThat(correlationId, is(notNullValue()));
-            assertThat(verificationEntries.get(1).getCorrelationId(), is(correlationId));
-        } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
-        }
+        List<LogEntry> logEntries = retrieveMessageLogEntries(null);
+        List<LogEntry> verificationEntries = logEntries.stream()
+            .filter(entry -> entry.getType() == VERIFICATION || entry.getType() == VERIFICATION_FAILED)
+            .collect(Collectors.toList());
+        assertThat(verificationEntries, hasSize(2));
+        String correlationId = verificationEntries.get(0).getCorrelationId();
+        assertThat(correlationId, is(notNullValue()));
+        assertThat(verificationEntries.get(1).getCorrelationId(), is(correlationId));
     }
 
     @Test
     public void shouldAssignUniqueCorrelationIdPerVerification() {
-        Level originalLevel = ConfigurationProperties.logLevel();
-        try {
-            ConfigurationProperties.logLevel("INFO");
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setHttpRequest(request("some_path"))
-                    .setType(RECEIVED_REQUEST)
-            );
+        configuration.logLevel(Level.INFO);
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setHttpRequest(request("some_path"))
+                .setType(RECEIVED_REQUEST)
+        );
 
-            verify(
-                verification()
-                    .withRequest(request("some_path"))
-                    .withTimes(exactly(1))
-            );
-            verify(
-                verification()
-                    .withRequest(request("some_path"))
-                    .withTimes(exactly(1))
-            );
+        verify(
+            verification()
+                .withRequest(request("some_path"))
+                .withTimes(exactly(1))
+        );
+        verify(
+            verification()
+                .withRequest(request("some_path"))
+                .withTimes(exactly(1))
+        );
 
-            List<LogEntry> logEntries = retrieveMessageLogEntries(null);
-            List<LogEntry> verificationEntries = logEntries.stream()
-                .filter(entry -> entry.getType() == VERIFICATION)
-                .collect(Collectors.toList());
-            assertThat(verificationEntries, hasSize(2));
-            assertThat(
-                verificationEntries.get(0).getCorrelationId(),
-                is(not(verificationEntries.get(1).getCorrelationId()))
-            );
-        } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
-        }
+        List<LogEntry> logEntries = retrieveMessageLogEntries(null);
+        List<LogEntry> verificationEntries = logEntries.stream()
+            .filter(entry -> entry.getType() == VERIFICATION)
+            .collect(Collectors.toList());
+        assertThat(verificationEntries, hasSize(2));
+        assertThat(
+            verificationEntries.get(0).getCorrelationId(),
+            is(not(verificationEntries.get(1).getCorrelationId()))
+        );
     }
 
     @Test
     public void shouldAssignCorrelationIdToVerificationSequenceLogEntries() {
-        Level originalLevel = ConfigurationProperties.logLevel();
-        try {
-            ConfigurationProperties.logLevel("INFO");
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setHttpRequest(request("one"))
-                    .setType(RECEIVED_REQUEST)
-            );
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setHttpRequest(request("two"))
-                    .setType(RECEIVED_REQUEST)
-            );
+        configuration.logLevel(Level.INFO);
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setHttpRequest(request("one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setHttpRequest(request("two"))
+                .setType(RECEIVED_REQUEST)
+        );
 
-            assertThat(verify(
-                new VerificationSequence()
-                    .withRequests(request("one"), request("two"))
-            ), is(""));
+        assertThat(verify(
+            new VerificationSequence()
+                .withRequests(request("one"), request("two"))
+        ), is(""));
 
-            List<LogEntry> logEntries = retrieveMessageLogEntries(null);
-            List<LogEntry> verificationEntries = logEntries.stream()
-                .filter(entry -> entry.getType() == VERIFICATION || entry.getType() == VERIFICATION_PASSED)
-                .collect(Collectors.toList());
-            assertThat(verificationEntries, hasSize(2));
-            String correlationId = verificationEntries.get(0).getCorrelationId();
-            assertThat(correlationId, is(notNullValue()));
-            assertThat(verificationEntries.get(1).getCorrelationId(), is(correlationId));
-        } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
-        }
+        List<LogEntry> logEntries = retrieveMessageLogEntries(null);
+        List<LogEntry> verificationEntries = logEntries.stream()
+            .filter(entry -> entry.getType() == VERIFICATION || entry.getType() == VERIFICATION_PASSED)
+            .collect(Collectors.toList());
+        assertThat(verificationEntries, hasSize(2));
+        String correlationId = verificationEntries.get(0).getCorrelationId();
+        assertThat(correlationId, is(notNullValue()));
+        assertThat(verificationEntries.get(1).getCorrelationId(), is(correlationId));
     }
 
     @Test
     public void shouldAssignCorrelationIdToFailedVerificationSequenceLogEntries() {
-        Level originalLevel = ConfigurationProperties.logLevel();
-        try {
-            ConfigurationProperties.logLevel("INFO");
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setHttpRequest(request("one"))
-                    .setType(RECEIVED_REQUEST)
-            );
+        configuration.logLevel(Level.INFO);
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setHttpRequest(request("one"))
+                .setType(RECEIVED_REQUEST)
+        );
 
-            assertThat(verify(
-                new VerificationSequence()
-                    .withRequests(request("one"), request("missing"))
-            ), is(not("")));
+        assertThat(verify(
+            new VerificationSequence()
+                .withRequests(request("one"), request("missing"))
+        ), is(not("")));
 
-            List<LogEntry> logEntries = retrieveMessageLogEntries(null);
-            List<LogEntry> verificationEntries = logEntries.stream()
-                .filter(entry -> entry.getType() == VERIFICATION || entry.getType() == VERIFICATION_FAILED)
-                .collect(Collectors.toList());
-            assertThat(verificationEntries, hasSize(2));
-            String correlationId = verificationEntries.get(0).getCorrelationId();
-            assertThat(correlationId, is(notNullValue()));
-            assertThat(verificationEntries.get(1).getCorrelationId(), is(correlationId));
-        } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
-        }
+        List<LogEntry> logEntries = retrieveMessageLogEntries(null);
+        List<LogEntry> verificationEntries = logEntries.stream()
+            .filter(entry -> entry.getType() == VERIFICATION || entry.getType() == VERIFICATION_FAILED)
+            .collect(Collectors.toList());
+        assertThat(verificationEntries, hasSize(2));
+        String correlationId = verificationEntries.get(0).getCorrelationId();
+        assertThat(correlationId, is(notNullValue()));
+        assertThat(verificationEntries.get(1).getCorrelationId(), is(correlationId));
     }
 
     @Test
@@ -265,58 +241,47 @@ public class MockServerEventLogCorrelationIdTest {
 
     @Test
     public void shouldAssignCorrelationIdToClearLogEntries() {
-        Level originalLevel = ConfigurationProperties.logLevel();
-        try {
-            ConfigurationProperties.logLevel("INFO");
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setHttpRequest(request("some_path"))
-                    .setType(RECEIVED_REQUEST)
-            );
+        configuration.logLevel(Level.INFO);
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setHttpRequest(request("some_path"))
+                .setType(RECEIVED_REQUEST)
+        );
 
-            mockServerEventLog.clear(request("some_path"));
+        mockServerEventLog.clear(request("some_path"));
 
-            List<LogEntry> logEntries = retrieveMessageLogEntries(null);
-            List<LogEntry> clearEntries = logEntries.stream()
-                .filter(entry -> entry.getType() == CLEARED)
-                .collect(Collectors.toList());
-            assertThat(clearEntries, hasSize(1));
-            assertThat(clearEntries.get(0).getCorrelationId(), is(notNullValue()));
-        } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
-        }
+        List<LogEntry> logEntries = retrieveMessageLogEntries(null);
+        List<LogEntry> clearEntries = logEntries.stream()
+            .filter(entry -> entry.getType() == CLEARED)
+            .collect(Collectors.toList());
+        assertThat(clearEntries, hasSize(1));
+        assertThat(clearEntries.get(0).getCorrelationId(), is(notNullValue()));
     }
 
     @Test
     public void shouldAssignCorrelationIdToClearAllLogEntries() {
-        Level originalLevel = ConfigurationProperties.logLevel();
-        try {
-            ConfigurationProperties.logLevel("INFO");
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setHttpRequest(request("path_one"))
-                    .setType(RECEIVED_REQUEST)
-            );
+        configuration.logLevel(Level.INFO);
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setHttpRequest(request("path_one"))
+                .setType(RECEIVED_REQUEST)
+        );
 
-            mockServerEventLog.clear(null);
+        mockServerEventLog.clear(null);
 
-            List<LogEntry> logEntries = retrieveMessageLogEntries(null);
-            List<LogEntry> clearEntries = logEntries.stream()
-                .filter(entry -> entry.getType() == CLEARED)
-                .collect(Collectors.toList());
-            assertThat(clearEntries, hasSize(1));
-            assertThat(clearEntries.get(0).getCorrelationId(), is(notNullValue()));
-        } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
-        }
+        List<LogEntry> logEntries = retrieveMessageLogEntries(null);
+        List<LogEntry> clearEntries = logEntries.stream()
+            .filter(entry -> entry.getType() == CLEARED)
+            .collect(Collectors.toList());
+        assertThat(clearEntries, hasSize(1));
+        assertThat(clearEntries.get(0).getCorrelationId(), is(notNullValue()));
     }
 
     @Test
     public void shouldPropagateLogCorrelationIdThroughExpectationClear() {
-        Level originalLevel = ConfigurationProperties.logLevel();
         try {
-            ConfigurationProperties.logLevel("INFO");
-            HttpState httpState = new HttpState(configuration(), new MockServerLogger(), scheduler);
+            Configuration localConfiguration = configuration().logLevel(Level.INFO);
+            HttpState httpState = new HttpState(localConfiguration, new MockServerLogger(localConfiguration, MockServerLogger.class), scheduler);
             RequestMatchers requestMatchers = httpState.getRequestMatchers();
             MockServerEventLog eventLog = httpState.getMockServerLog();
 
@@ -339,8 +304,6 @@ public class MockServerEventLogCorrelationIdTest {
             assertThat(removedEntries.get(0).getCorrelationId(), is(testCorrelationId));
         } catch (Exception e) {
             fail(e.getMessage());
-        } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
         }
     }
 }

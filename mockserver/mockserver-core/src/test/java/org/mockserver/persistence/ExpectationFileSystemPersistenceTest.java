@@ -3,7 +3,7 @@ package org.mockserver.persistence;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.RequestMatchers;
@@ -35,22 +35,23 @@ public class ExpectationFileSystemPersistenceTest {
 
     @Before
     public void createMockServerMatcher() {
-        mockServerLogger = new MockServerLogger();
-        requestMatchers = new RequestMatchers(configuration(), mockServerLogger, new Scheduler(configuration(), mockServerLogger), new WebSocketClientRegistry(configuration(), mockServerLogger));
+        Configuration matcherConfiguration = configuration();
+        mockServerLogger = new MockServerLogger(matcherConfiguration, ExpectationFileSystemPersistenceTest.class);
+        requestMatchers = new RequestMatchers(matcherConfiguration, mockServerLogger, new Scheduler(matcherConfiguration, mockServerLogger), new WebSocketClientRegistry(matcherConfiguration, mockServerLogger));
     }
 
     @Test
     public void shouldPersistExpectationsToJsonOnAdd() throws Exception {
         // given
-        String persistedExpectationsPath = ConfigurationProperties.persistedExpectationsPath();
-        ConfigurationProperties.persistExpectations(true);
+        File persistedExpectations = File.createTempFile("persistedExpectations", ".json");
+        Configuration configuration = configuration()
+            .persistExpectations(true)
+            .persistedExpectationsPath(persistedExpectations.getAbsolutePath());
+        MockServerLogger logger = new MockServerLogger(configuration, ExpectationFileSystemPersistenceTest.class);
         ExpectationFileSystemPersistence expectationFileSystemPersistence = null;
         try {
-            File persistedExpectations = File.createTempFile("persistedExpectations", ".json");
-            ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
-
             // when
-            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(configuration(), mockServerLogger, requestMatchers);
+            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(configuration, logger, requestMatchers);
             requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleFirst")
@@ -129,8 +130,6 @@ public class ExpectationFileSystemPersistenceTest {
                 "} ]";
             assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8), is(expectedFileContents));
         } finally {
-            ConfigurationProperties.persistedExpectationsPath(persistedExpectationsPath);
-            ConfigurationProperties.persistExpectations(false);
             if (expectationFileSystemPersistence != null) {
                 expectationFileSystemPersistence.stop();
             }
@@ -140,15 +139,15 @@ public class ExpectationFileSystemPersistenceTest {
     @Test
     public void shouldPersistExpectationsToJsonOnRemove() throws Exception {
         // given
-        String persistedExpectationsPath = ConfigurationProperties.persistedExpectationsPath();
-        ConfigurationProperties.persistExpectations(true);
+        File persistedExpectations = File.createTempFile("persistedExpectations", ".json");
+        Configuration configuration = configuration()
+            .persistExpectations(true)
+            .persistedExpectationsPath(persistedExpectations.getAbsolutePath());
+        MockServerLogger logger = new MockServerLogger(configuration, ExpectationFileSystemPersistenceTest.class);
         ExpectationFileSystemPersistence expectationFileSystemPersistence = null;
         try {
-            File persistedExpectations = File.createTempFile("persistedExpectations", ".json");
-            ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
-
             // when
-            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(configuration(), mockServerLogger, requestMatchers);
+            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(configuration, logger, requestMatchers);
             requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleFirst")
@@ -216,8 +215,6 @@ public class ExpectationFileSystemPersistenceTest {
                 "} ]";
             assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8), is(expectedFileContents));
         } finally {
-            ConfigurationProperties.persistedExpectationsPath(persistedExpectationsPath);
-            ConfigurationProperties.persistExpectations(false);
             if (expectationFileSystemPersistence != null) {
                 expectationFileSystemPersistence.stop();
             }
@@ -227,15 +224,15 @@ public class ExpectationFileSystemPersistenceTest {
     @Test
     public void shouldPersistExpectationsToJsonOnUpdate() throws Exception {
         // given
-        String persistedExpectationsPath = ConfigurationProperties.persistedExpectationsPath();
-        ConfigurationProperties.persistExpectations(true);
+        File persistedExpectations = File.createTempFile("persistedExpectations", ".json");
+        Configuration configuration = configuration()
+            .persistExpectations(true)
+            .persistedExpectationsPath(persistedExpectations.getAbsolutePath());
+        MockServerLogger logger = new MockServerLogger(configuration, ExpectationFileSystemPersistenceTest.class);
         ExpectationFileSystemPersistence expectationFileSystemPersistence = null;
         try {
-            File persistedExpectations = File.createTempFile("persistedExpectations", ".json");
-            ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
-
             // when
-            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(configuration(), mockServerLogger, requestMatchers);
+            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(configuration, logger, requestMatchers);
             requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleFirst")
@@ -323,8 +320,6 @@ public class ExpectationFileSystemPersistenceTest {
                 "} ]";
             assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8), is(expectedFileContents));
         } finally {
-            ConfigurationProperties.persistedExpectationsPath(persistedExpectationsPath);
-            ConfigurationProperties.persistExpectations(false);
             if (expectationFileSystemPersistence != null) {
                 expectationFileSystemPersistence.stop();
             }
@@ -334,15 +329,15 @@ public class ExpectationFileSystemPersistenceTest {
     @Test
     public void shouldPersistExpectationsToJsonOnUpdateAll() throws Exception {
         // given
-        String persistedExpectationsPath = ConfigurationProperties.persistedExpectationsPath();
-        ConfigurationProperties.persistExpectations(true);
+        File persistedExpectations = File.createTempFile("persistedExpectations", ".json");
+        Configuration configuration = configuration()
+            .persistExpectations(true)
+            .persistedExpectationsPath(persistedExpectations.getAbsolutePath());
+        MockServerLogger logger = new MockServerLogger(configuration, ExpectationFileSystemPersistenceTest.class);
         ExpectationFileSystemPersistence expectationFileSystemPersistence = null;
         try {
-            File persistedExpectations = File.createTempFile("persistedExpectations", ".json");
-            ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
-
             // when
-            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(configuration(), mockServerLogger, requestMatchers);
+            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(configuration, logger, requestMatchers);
             requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleFirst")
@@ -450,8 +445,6 @@ public class ExpectationFileSystemPersistenceTest {
                 "} ]";
             assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8), is(expectedFileContents));
         } finally {
-            ConfigurationProperties.persistedExpectationsPath(persistedExpectationsPath);
-            ConfigurationProperties.persistExpectations(false);
             if (expectationFileSystemPersistence != null) {
                 expectationFileSystemPersistence.stop();
             }
@@ -461,18 +454,17 @@ public class ExpectationFileSystemPersistenceTest {
     @Test
     public void shouldPersistExpectationsToJsonOnUpdateAllFromFileWatcher() throws Exception {
         // given
-        String persistedExpectationsPath = ConfigurationProperties.persistedExpectationsPath();
-        ConfigurationProperties.persistExpectations(true);
-        String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
-        ConfigurationProperties.watchInitializationJson(true);
+        File persistedExpectations = File.createTempFile("persistedExpectations", ".json");
+        Configuration configuration = configuration()
+            .persistExpectations(true)
+            .persistedExpectationsPath(persistedExpectations.getAbsolutePath())
+            .initializationJsonPath(persistedExpectations.getAbsolutePath())
+            .watchInitializationJson(true);
+        MockServerLogger logger = new MockServerLogger(configuration, ExpectationFileSystemPersistenceTest.class);
         ExpectationFileSystemPersistence expectationFileSystemPersistence = null;
         try {
-            File persistedExpectations = File.createTempFile("persistedExpectations", ".json");
-            ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
-            ConfigurationProperties.initializationJsonPath(persistedExpectations.getAbsolutePath());
-
             // when
-            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(configuration(), mockServerLogger, requestMatchers);
+            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(configuration, logger, requestMatchers);
             requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleFirst")
@@ -581,10 +573,6 @@ public class ExpectationFileSystemPersistenceTest {
                 "} ]";
             assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8), is(expectedFileContents));
         } finally {
-            ConfigurationProperties.persistedExpectationsPath(persistedExpectationsPath);
-            ConfigurationProperties.persistExpectations(false);
-            ConfigurationProperties.initializationJsonPath(initializationJsonPath);
-            ConfigurationProperties.watchInitializationJson(false);
             if (expectationFileSystemPersistence != null) {
                 expectationFileSystemPersistence.stop();
             }
@@ -593,14 +581,14 @@ public class ExpectationFileSystemPersistenceTest {
 
     @Test
     public void shouldPersistExpectationsWithFiniteTimeToLiveIncludingEndDate() throws Exception {
-        String persistedExpectationsPath = ConfigurationProperties.persistedExpectationsPath();
-        ConfigurationProperties.persistExpectations(true);
+        File persistedExpectations = File.createTempFile("persistedExpectations", ".json");
+        Configuration configuration = configuration()
+            .persistExpectations(true)
+            .persistedExpectationsPath(persistedExpectations.getAbsolutePath());
+        MockServerLogger logger = new MockServerLogger(configuration, ExpectationFileSystemPersistenceTest.class);
         ExpectationFileSystemPersistence expectationFileSystemPersistence = null;
         try {
-            File persistedExpectations = File.createTempFile("persistedExpectations", ".json");
-            ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
-
-            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(configuration(), mockServerLogger, requestMatchers);
+            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(configuration, logger, requestMatchers);
             requestMatchers.add(new Expectation(
                 request()
                     .withPath("/finiteTtl"),
@@ -620,8 +608,6 @@ public class ExpectationFileSystemPersistenceTest {
             assertThat(fileContents, containsString("\"timeToLive\" : 300"));
             assertThat(fileContents, containsString("\"endDate\""));
         } finally {
-            ConfigurationProperties.persistedExpectationsPath(persistedExpectationsPath);
-            ConfigurationProperties.persistExpectations(false);
             if (expectationFileSystemPersistence != null) {
                 expectationFileSystemPersistence.stop();
             }

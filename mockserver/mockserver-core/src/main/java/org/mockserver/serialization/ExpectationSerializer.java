@@ -169,14 +169,14 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                 for (int i = 0; i < jsonExpectationList.size(); i++) {
                     String jsonExpectation = JacksonUtils.prettyPrint(jsonExpectationList.get(i));
                     if (jsonExpectationList.size() > 100) {
-                        if (MockServerLogger.isEnabled(DEBUG) && mockServerLogger != null) {
+                        if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(DEBUG)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setLogLevel(DEBUG)
                                     .setMessageFormat("processing JSON expectation " + (i + 1) + " of " + jsonExpectationList.size() + ":{}")
                                     .setArguments(jsonExpectation)
                             );
-                        } else if (MockServerLogger.isEnabled(INFO) && mockServerLogger != null) {
+                        } else if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(INFO)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setLogLevel(INFO)

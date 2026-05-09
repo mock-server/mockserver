@@ -130,7 +130,7 @@ public class HttpState {
             }
         }
         this.memoryMonitoring = new MemoryMonitoring(configuration, this.mockServerLog, this.requestMatchers);
-        if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
+        if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(TRACE)
@@ -222,7 +222,7 @@ public class HttpState {
         requestMatchers.reset();
         mockServerLog.reset();
         webSocketClientRegistry.reset();
-        if (MockServerLogger.isEnabled(Level.INFO)) {
+        if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(CLEARED)
@@ -320,7 +320,7 @@ public class HttpState {
                             }
                             stringBuffer.append(NEW_LINE);
                             response.withBody(stringBuffer.toString(), MediaType.PLAIN_TEXT_UTF_8);
-                            if (MockServerLogger.isEnabled(Level.INFO)) {
+                            if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                                 mockServerLogger.logEvent(
                                     new LogEntry()
                                         .setType(RETRIEVED)
@@ -501,7 +501,7 @@ public class HttpState {
                                 response.withBody("LOG_ENTRIES not supported for ACTIVE_EXPECTATIONS", MediaType.create("text", "plain").withCharset(UTF_8));
                                 break;
                         }
-                        if (MockServerLogger.isEnabled(Level.INFO)) {
+                        if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setType(RETRIEVED)
@@ -530,7 +530,7 @@ public class HttpState {
                             metricsJson.append("}");
                             response.withBody(metricsJson.toString(), MediaType.JSON_UTF_8);
                         }
-                        if (MockServerLogger.isEnabled(Level.INFO)) {
+                        if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setType(RETRIEVED)
@@ -612,7 +612,7 @@ public class HttpState {
         request.withLogCorrelationId(UUIDService.getUUID());
         setPort(request);
 
-        if (MockServerLogger.isEnabled(Level.TRACE)) {
+        if (mockServerLogger.isEnabledForInstance(Level.TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(Level.TRACE)

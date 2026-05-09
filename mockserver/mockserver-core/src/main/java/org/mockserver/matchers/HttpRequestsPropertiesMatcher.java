@@ -118,7 +118,7 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                 logEntries.forEach(mockServerLogger::logEvent);
             }
             this.hashCode = 0;
-            if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
+            if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(TRACE)
@@ -521,7 +521,7 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
         if (httpRequestPropertiesMatchers != null && !httpRequestPropertiesMatchers.isEmpty()) {
             for (HttpRequestPropertiesMatcher httpRequestPropertiesMatcher : httpRequestPropertiesMatchers) {
                 if (context == null) {
-                    if (MockServerLogger.isEnabled(Level.TRACE) && requestDefinition instanceof HttpRequest) {
+                    if (mockServerLogger.isEnabledForInstance(Level.TRACE) && requestDefinition instanceof HttpRequest) {
                         context = new MatchDifference(configuration.detailedMatchFailures(), requestDefinition);
                     }
                     result = httpRequestPropertiesMatcher.matches(context, requestDefinition);

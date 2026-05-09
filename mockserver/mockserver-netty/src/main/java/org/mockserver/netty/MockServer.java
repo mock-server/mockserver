@@ -133,7 +133,7 @@ public class MockServer extends LifeCycle {
         }
 
         remoteSocket = new InetSocketAddress(remoteHost, remotePort);
-        if (proxyConfigurations != null && MockServerLogger.isEnabled(Level.INFO)) {
+        if (proxyConfigurations != null && mockServerLogger.isEnabledForInstance(Level.INFO)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(SERVER_CONFIGURATION)

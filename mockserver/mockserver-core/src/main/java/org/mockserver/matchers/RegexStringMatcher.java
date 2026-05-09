@@ -95,7 +95,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                             return true;
                         }
                     } catch (PatternSyntaxException pse) {
-                        if (MockServerLogger.isEnabled(DEBUG) && mockServerLogger != null) {
+                        if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(DEBUG)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setLogLevel(DEBUG)
@@ -108,7 +108,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                     try {
                         if (controlPlaneMatcher && matched.matches(matcherValue)) {
                             return true;
-                        } else if (MockServerLogger.isEnabled(DEBUG) && matched.matches(matcherValue) && mockServerLogger != null) {
+                        } else if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(DEBUG) && matched.matches(matcherValue)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setLogLevel(DEBUG)
@@ -118,7 +118,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                         }
                     } catch (PatternSyntaxException pse) {
                         if (controlPlaneMatcher) {
-                            if (MockServerLogger.isEnabled(DEBUG) && mockServerLogger != null) {
+                            if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(DEBUG)) {
                                 mockServerLogger.logEvent(
                                     new LogEntry()
                                         .setLogLevel(DEBUG)

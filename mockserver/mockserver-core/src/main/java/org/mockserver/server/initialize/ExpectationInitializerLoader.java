@@ -87,7 +87,7 @@ public class ExpectationInitializerLoader {
         String initializationClass = configuration.initializationClass();
         try {
             if (isNotBlank(initializationClass)) {
-                if (MockServerLogger.isEnabled(INFO) && mockServerLogger != null) {
+                if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(INFO)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setType(SERVER_CONFIGURATION)
@@ -106,7 +106,7 @@ public class ExpectationInitializerLoader {
                 }
             }
             if (expectations.length > 0) {
-                if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
+                if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(TRACE)
@@ -117,7 +117,7 @@ public class ExpectationInitializerLoader {
                 requestMatchers.update(expectations, new MockServerMatcherNotifier.Cause(initializationClass, Cause.Type.CLASS_INITIALISER));
             }
         } catch (Throwable throwable) {
-            if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
+            if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(WARN)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(SERVER_CONFIGURATION)
@@ -146,7 +146,7 @@ public class ExpectationInitializerLoader {
             .flatMap(initializationOpenAPIPath -> {
                 List<Expectation> expectations = Collections.emptyList();
                 if (isNotBlank(initializationOpenAPIPath)) {
-                    if (isNotBlank(initialLogMessage) && MockServerLogger.isEnabled(INFO)) {
+                    if (isNotBlank(initialLogMessage) && mockServerLogger.isEnabledForInstance(INFO)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setType(SERVER_CONFIGURATION)
@@ -159,7 +159,7 @@ public class ExpectationInitializerLoader {
                         OpenAPIParser.clearCache(initializationOpenAPIPath);
                         expectations = openAPIConverter.buildExpectations(initializationOpenAPIPath, null);
                     } catch (Throwable throwable) {
-                        if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
+                        if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(WARN)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setType(SERVER_CONFIGURATION)
@@ -171,7 +171,7 @@ public class ExpectationInitializerLoader {
                         }
                     }
                 }
-                if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
+                if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(TRACE)
@@ -192,7 +192,7 @@ public class ExpectationInitializerLoader {
             .flatMap(initializationJsonPath -> {
                 Expectation[] expectations = new Expectation[0];
                 if (isNotBlank(initializationJsonPath)) {
-                    if (isNotBlank(initialLogMessage) && MockServerLogger.isEnabled(INFO)) {
+                    if (isNotBlank(initialLogMessage) && mockServerLogger.isEnabledForInstance(INFO)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setType(SERVER_CONFIGURATION)
@@ -219,7 +219,7 @@ public class ExpectationInitializerLoader {
                             });
                         }
                     } catch (Throwable throwable) {
-                        if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
+                        if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(WARN)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setType(SERVER_CONFIGURATION)
@@ -231,7 +231,7 @@ public class ExpectationInitializerLoader {
                         }
                     }
                 }
-                if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
+                if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(TRACE)

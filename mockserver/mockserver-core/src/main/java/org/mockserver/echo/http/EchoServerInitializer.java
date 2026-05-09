@@ -23,7 +23,6 @@ import org.slf4j.event.Level;
 import java.util.List;
 
 import static org.mockserver.echo.http.EchoServer.*;
-import static org.mockserver.logging.MockServerLogger.isEnabled;
 import static org.slf4j.event.Level.TRACE;
 
 /**
@@ -65,7 +64,7 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
             pipeline.addLast((sslContext != null ? sslContext : new NettySslContextFactory(configuration, mockServerLogger, true).createServerSslContext()).newHandler(channel.alloc()));
         }
 
-        if (MockServerLogger.isEnabled(TRACE)) {
+        if (mockServerLogger.isEnabledForInstance(TRACE)) {
             pipeline.addLast(new LoggingHandler(EchoServer.class.getName() + " <-->"));
         }
         if (secure) {
@@ -106,7 +105,7 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
                 )
             )
             .connection(connection);
-        if (isEnabled(TRACE)) {
+        if (mockServerLogger.isEnabledForInstance(TRACE)) {
             http2ConnectionHandlerBuilder.frameLogger(new Http2FrameLogger(LogLevel.TRACE, EchoServerInitializer.class.getName()));
         }
         pipeline.addLast(http2ConnectionHandlerBuilder.build());

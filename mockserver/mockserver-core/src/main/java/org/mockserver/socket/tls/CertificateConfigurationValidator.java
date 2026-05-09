@@ -198,7 +198,7 @@ public class CertificateConfigurationValidator {
         try {
             List<String> extendedKeyUsage = leafCert.getExtendedKeyUsage();
             if (extendedKeyUsage != null && !extendedKeyUsage.contains("1.3.6.1.5.5.7.3.1")) {
-                if (MockServerLogger.isEnabled(Level.WARN) && mockServerLogger != null) {
+                if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(Level.WARN)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.WARN)

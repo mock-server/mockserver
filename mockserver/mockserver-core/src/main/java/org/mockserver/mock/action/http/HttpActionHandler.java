@@ -194,7 +194,7 @@ public class HttpActionHandler {
                             getHttpSseResponseActionHandler().handle((HttpSseResponse) action, ctx, request);
                             expectationPostProcessor.run();
                         } catch (Throwable throwable) {
-                            if (MockServerLogger.isEnabled(Level.INFO)) {
+                            if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                                 mockServerLogger.logEvent(
                                     new LogEntry()
                                         .setType(WARN)
@@ -234,7 +234,7 @@ public class HttpActionHandler {
                             getHttpWebSocketResponseActionHandler().handle((HttpWebSocketResponse) action, ctx, request);
                             expectationPostProcessor.run();
                         } catch (Throwable throwable) {
-                            if (MockServerLogger.isEnabled(Level.INFO)) {
+                            if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                                 mockServerLogger.logEvent(
                                     new LogEntry()
                                         .setType(WARN)
@@ -273,7 +273,7 @@ public class HttpActionHandler {
         } else if (CORSHeaders.isPreflightRequest(configuration, request) && (configuration.enableCORSForAPI() || configuration.enableCORSForAllResponses())) {
 
             responseWriter.writeResponse(request, OK);
-            if (MockServerLogger.isEnabled(Level.INFO)) {
+            if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(INFO)
@@ -287,7 +287,7 @@ public class HttpActionHandler {
 
             if (request.getHeaders() != null && request.getHeaders().containsEntry(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue())) {
 
-                if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
+                if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(TRACE)
@@ -335,7 +335,7 @@ public class HttpActionHandler {
                                 }
                                 if (response.containsHeader(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue())) {
                                     response.removeHeader(httpStateHandler.getUniqueLoopPreventionHeaderName());
-                                    if (MockServerLogger.isEnabled(Level.INFO)) {
+                                    if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                                         mockServerLogger.logEvent(
                                             new LogEntry()
                                                 .setType(NO_MATCH_RESPONSE)
@@ -365,7 +365,7 @@ public class HttpActionHandler {
                                 returnNotFound(responseWriter, request, sce.getMessage());
                             } catch (Throwable throwable) {
                                 if (potentiallyHttpProxy && connectionException(throwable)) {
-                                    if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
+                                    if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
                                         mockServerLogger.logEvent(
                                             new LogEntry()
                                                 .setLogLevel(TRACE)
@@ -422,7 +422,7 @@ public class HttpActionHandler {
             processAction.run();
         } catch (Throwable throwable) {
             writeResponseActionResponse(notFoundResponse(), responseWriter, request, action, synchronous);
-            if (MockServerLogger.isEnabled(Level.INFO)) {
+            if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(WARN)
@@ -510,7 +510,7 @@ public class HttpActionHandler {
 
     void handleExceptionDuringForwardingRequest(Action action, HttpRequest request, ResponseWriter responseWriter, Throwable exception) {
         if (connectionException(exception)) {
-            if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
+            if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(TRACE)
@@ -550,7 +550,7 @@ public class HttpActionHandler {
         HttpResponse response = notFoundResponse();
         if (request.getHeaders() != null && request.getHeaders().containsEntry(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue())) {
             response.withHeader(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue());
-            if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
+            if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(TRACE)
@@ -561,7 +561,7 @@ public class HttpActionHandler {
                 );
             }
         } else if (isNotBlank(error)) {
-            if (MockServerLogger.isEnabled(Level.INFO)) {
+            if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(NO_MATCH_RESPONSE)
@@ -574,7 +574,7 @@ public class HttpActionHandler {
                 );
             }
         } else {
-            if (MockServerLogger.isEnabled(Level.INFO)) {
+            if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(NO_MATCH_RESPONSE)

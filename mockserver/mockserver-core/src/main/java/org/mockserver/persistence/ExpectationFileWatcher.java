@@ -40,7 +40,7 @@ public class ExpectationFileWatcher {
                     .map(initializationPath -> {
                         try {
                             return new FileWatcher(Paths.get(initializationPath), () -> {
-                                if (MockServerLogger.isEnabled(DEBUG) && mockServerLogger != null) {
+                                if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(DEBUG)) {
                                     mockServerLogger.logEvent(
                                         new LogEntry()
                                             .setLogLevel(DEBUG)
@@ -50,7 +50,7 @@ public class ExpectationFileWatcher {
                                 }
                                 addExpectationsFromInitializer();
                             }, throwable -> {
-                                if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
+                                if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(WARN)) {
                                     mockServerLogger.logEvent(
                                         new LogEntry()
                                             .setLogLevel(WARN)
@@ -81,7 +81,7 @@ public class ExpectationFileWatcher {
                         .setThrowable(throwable)
                 );
             }
-            if (MockServerLogger.isEnabled(INFO) && mockServerLogger != null) {
+            if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(INFO)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(INFO)

@@ -48,7 +48,7 @@ public abstract class LifeCycle implements Stoppable {
 
     protected LifeCycle(Configuration configuration) {
         this.configuration = configuration != null ? configuration : configuration();
-        this.mockServerLogger = new MockServerLogger(MockServerEventLog.class);
+        this.mockServerLogger = new MockServerLogger(this.configuration, MockServerEventLog.class);
         this.bossGroup = new NioEventLoopGroup(5, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-bossEventLoop"));
         this.workerGroup = new NioEventLoopGroup(this.configuration.nioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-workerEventLoop"));
         this.scheduler = new Scheduler(this.configuration, this.mockServerLogger);
@@ -58,7 +58,7 @@ public abstract class LifeCycle implements Stoppable {
     public CompletableFuture<String> stopAsync() {
         if (!stopFuture.isDone() && stopping.compareAndSet(false, true)) {
             final String message = "stopped for port" + (getLocalPorts().size() == 1 ? ": " + getLocalPorts().get(0) : "s: " + getLocalPorts());
-            if (MockServerLogger.isEnabled(INFO) && mockServerLogger != null) {
+            if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(INFO)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(SERVER_CONFIGURATION)
@@ -110,7 +110,7 @@ public abstract class LifeCycle implements Stoppable {
         try {
             stopAsync().get(10, SECONDS);
         } catch (Throwable throwable) {
-            if (MockServerLogger.isEnabled(DEBUG) && mockServerLogger != null) {
+            if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(DEBUG)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(DEBUG)
@@ -159,7 +159,7 @@ public abstract class LifeCycle implements Stoppable {
             try {
                 return ((InetSocketAddress) channelOpened.get(15, SECONDS).localAddress()).getPort();
             } catch (Throwable throwable) {
-                if (MockServerLogger.isEnabled(WARN) && mockServerLogger != null) {
+                if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(WARN)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(WARN)
@@ -178,7 +178,7 @@ public abstract class LifeCycle implements Stoppable {
             try {
                 ports.add(((InetSocketAddress) channelOpened.get(3, SECONDS).localAddress()).getPort());
             } catch (Exception e) {
-                if (MockServerLogger.isEnabled(DEBUG) && mockServerLogger != null) {
+                if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(DEBUG)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(DEBUG)
@@ -237,7 +237,7 @@ public abstract class LifeCycle implements Stoppable {
     protected void startedServer(List<Integer> ports) {
         final String message = "started on port" + (ports.size() == 1 ? ": " + ports.get(0) : "s: " + ports);
         setPort(ports);
-        if (MockServerLogger.isEnabled(INFO) && mockServerLogger != null) {
+        if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(INFO)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(SERVER_CONFIGURATION)

@@ -182,7 +182,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             disruptor.shutdown(2, SECONDS);
         } catch (Throwable throwable) {
             if (!(throwable instanceof com.lmax.disruptor.TimeoutException)) {
-                if (MockServerLogger.isEnabled(Level.WARN)) {
+                if (mockServerLogger.isEnabledForInstance(Level.WARN)) {
                     writeToSystemOut(logger, new LogEntry()
                         .setLogLevel(Level.WARN)
                         .setMessageFormat("exception while shutting down log ring buffer")
@@ -211,7 +211,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
 
     public void clear(RequestDefinition requestDefinition) {
         CompletableFuture<String> future = new CompletableFuture<>();
-        final boolean markAsDeletedOnly = MockServerLogger.isEnabled(Level.INFO);
+        final boolean markAsDeletedOnly = mockServerLogger.isEnabledForInstance(Level.INFO);
         disruptor.publishEvent(new LogEntry()
             .setType(RUNNABLE)
             .setConsumer(() -> {
@@ -238,7 +238,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                         }
                     }
                 }
-                if (MockServerLogger.isEnabled(Level.INFO)) {
+                if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setType(CLEARED)
@@ -497,7 +497,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         drainDisruptor();
         final String logCorrelationId = UUIDService.getUUID();
         if (verification != null) {
-            if (MockServerLogger.isEnabled(Level.INFO)) {
+            if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(VERIFICATION)
@@ -524,7 +524,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                                 failureMessage = "Request not found " + verification.getTimes() + ", expected:<" + serializedRequestToBeVerified + "> but was found " + matchedCount + " time" + (matchedCount == 1 ? "" : "s") + " among " + allRequests.size() + " total requests";
                             }
                             final Object[] arguments = new Object[]{verification.getHttpRequest(), allRequests.size() == 1 ? allRequests.get(0) : allRequests};
-                            if (MockServerLogger.isEnabled(Level.INFO)) {
+                            if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                                 mockServerLogger.logEvent(
                                     new LogEntry()
                                         .setType(VERIFICATION_FAILED)
@@ -538,7 +538,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                             resultConsumer.accept(failureMessage);
                         });
                     } else {
-                        if (MockServerLogger.isEnabled(Level.INFO)) {
+                        if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setType(VERIFICATION_PASSED)
@@ -578,7 +578,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         drainDisruptor();
         if (verificationSequence != null) {
             final String logCorrelationId = UUIDService.getUUID();
-            if (MockServerLogger.isEnabled(Level.INFO)) {
+            if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(VERIFICATION)
@@ -651,7 +651,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     }
 
     private void verificationSequenceSuccessMessage(VerificationSequence verificationSequence, Consumer<String> resultConsumer, String logCorrelationId, String failureMessage) {
-        if (isBlank(failureMessage) && MockServerLogger.isEnabled(Level.INFO)) {
+        if (isBlank(failureMessage) && mockServerLogger.isEnabledForInstance(Level.INFO)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(VERIFICATION_PASSED)
@@ -675,7 +675,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             failureMessage = "Request sequence not found, expected:<" + serializedRequestToBeVerified + "> but was not found, found " + allRequests.size() + " other requests";
         }
         final Object[] arguments = new Object[]{verificationSequence.getHttpRequests(), allRequests.size() == 1 ? allRequests.get(0) : allRequests};
-        if (MockServerLogger.isEnabled(Level.INFO)) {
+        if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(VERIFICATION_FAILED)

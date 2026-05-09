@@ -86,7 +86,7 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
         }
 
         // add logging
-        if (MockServerLogger.isEnabled(TRACE)) {
+        if (mockServerLogger.isEnabledForInstance(TRACE)) {
             pipeline.addLast(new LoggingHandler(HttpClientHandler.class.getName()));
         }
 
@@ -125,7 +125,7 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
             )
             .connection(connection)
             .flushPreface(true);
-        if (MockServerLogger.isEnabled(TRACE)) {
+        if (mockServerLogger.isEnabledForInstance(TRACE)) {
             http2ConnectionHandlerBuilder.frameLogger(new Http2FrameLogger(LogLevel.TRACE, HttpClientHandler.class.getName()));
         }
         pipeline.addLast(http2ConnectionHandlerBuilder.build());

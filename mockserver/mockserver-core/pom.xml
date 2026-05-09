@@ -288,4 +288,56 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <parallel>classes</parallel>
+                    <threadCount>4</threadCount>
+                    <excludes>
+                        <exclude>**/*IntegrationTest.java</exclude>
+                        <exclude>**/ConfigurationTest.java</exclude>
+                        <exclude>**/ProxyConfigurationTest.java</exclude>
+                        <exclude>**/ExceptionHandlingTest.java</exclude>
+                        <exclude>**/MockServerMatcherNotificationAndMetricsTest.java</exclude>
+                        <exclude>**/MockServerEventLogTest.java</exclude>
+                        <exclude>**/HttpRequestPropertiesMatcherLogTest.java</exclude>
+                        <exclude>**/HttpActionHandlerTest.java</exclude>
+                        <exclude>**/HttpStateTest.java</exclude>
+                        <exclude>**/JavaScriptTemplateEngineTest.java</exclude>
+                        <exclude>**/MustacheTemplateEngineTest.java</exclude>
+                        <exclude>**/VelocityTemplateEngineTest.java</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>sequential-tests</id>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <parallel>none</parallel>
+                            <includes>
+                                <include>**/ConfigurationTest.java</include>
+                                <include>**/ProxyConfigurationTest.java</include>
+                                <include>**/ExceptionHandlingTest.java</include>
+                                <include>**/MockServerMatcherNotificationAndMetricsTest.java</include>
+                                <include>**/MockServerEventLogTest.java</include>
+                                <include>**/HttpRequestPropertiesMatcherLogTest.java</include>
+                                <include>**/HttpActionHandlerTest.java</include>
+                                <include>**/HttpStateTest.java</include>
+                                <include>**/JavaScriptTemplateEngineTest.java</include>
+                                <include>**/MustacheTemplateEngineTest.java</include>
+                                <include>**/VelocityTemplateEngineTest.java</include>
+                            </includes>
+                            <excludes combine.self="override" />
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>

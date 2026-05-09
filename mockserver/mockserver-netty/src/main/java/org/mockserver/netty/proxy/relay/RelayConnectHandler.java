@@ -27,7 +27,6 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
-import static org.mockserver.logging.MockServerLogger.isEnabled;
 import static org.mockserver.mock.action.http.HttpActionHandler.getRemoteAddress;
 import static org.mockserver.model.Protocol.HTTP_2;
 import static org.mockserver.netty.unification.PortUnificationHandler.*;
@@ -101,7 +100,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                                                 boolean http2EnabledDownstream = HTTP_2.equals(negotiated);
                                                 configurePipelines(pipelineToMockServer, pipelineToProxyClient, mockServerCtx, proxyClientCtx, http2EnabledDownstream);
                                             } else {
-                                                if (MockServerLogger.isEnabled(TRACE)) {
+                                                if (mockServerLogger.isEnabledForInstance(TRACE)) {
                                                     mockServerLogger.logEvent(
                                                         new LogEntry()
                                                             .setLogLevel(Level.TRACE)
@@ -187,7 +186,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
             pipelineToMockServer.addLast(nettySslContextFactory(proxyClientCtx.channel()).createClientSslContext(true, http2EnabledDownstream).newHandler(mockServerCtx.alloc(), host, port));
         }
 
-        if (isEnabled(TRACE)) {
+        if (mockServerLogger.isEnabledForInstance(TRACE)) {
             pipelineToMockServer.addLast(new LoggingHandler(RelayConnectHandler.class.getName() + "-downstream -->"));
         }
 
@@ -197,7 +196,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
 
         pipelineToMockServer.addLast(new DownstreamProxyRelayHandler(mockServerLogger, proxyClientCtx.channel()));
 
-        if (isEnabled(TRACE)) {
+        if (mockServerLogger.isEnabledForInstance(TRACE)) {
             pipelineToProxyClient.addLast(new LoggingHandler(RelayConnectHandler.class.getName() + "-upstream <-- "));
         }
 
@@ -214,7 +213,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                             .build()
                     )
                 );
-            if (isEnabled(TRACE)) {
+            if (mockServerLogger.isEnabledForInstance(TRACE)) {
                 http2ConnectionHandlerBuilder.frameLogger(new Http2FrameLogger(LogLevel.TRACE, RelayConnectHandler.class.getName()));
             }
             pipelineToProxyClient.addLast(http2ConnectionHandlerBuilder.connection(connection).build());

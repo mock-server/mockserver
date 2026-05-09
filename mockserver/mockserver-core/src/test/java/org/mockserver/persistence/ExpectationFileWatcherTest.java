@@ -5,7 +5,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.RequestMatchers;
@@ -64,25 +64,27 @@ public class ExpectationFileWatcherTest {
 
     @Before
     public void createMockServerMatcher() {
-        mockServerLogger = new MockServerLogger();
-        requestMatchers = new RequestMatchers(configuration(), mockServerLogger, new Scheduler(configuration(), mockServerLogger), new WebSocketClientRegistry(configuration(), mockServerLogger));
+        Configuration matcherConfiguration = configuration();
+        mockServerLogger = new MockServerLogger(matcherConfiguration, ExpectationFileWatcherTest.class);
+        requestMatchers = new RequestMatchers(matcherConfiguration, mockServerLogger, new Scheduler(matcherConfiguration, mockServerLogger), new WebSocketClientRegistry(matcherConfiguration, mockServerLogger));
     }
 
     @Test
     public void shouldDetectModifiedInitialiserJsonInWorkingDirectoryThatDoesNotInitiallyExist() throws Exception {
-        String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
-        ConfigurationProperties.watchInitializationJson(true);
         ExpectationFileWatcher expectationFileWatcher = null;
         try {
             // given - configuration
             File mockserverInitialization = new File("mockserverInitialization" + UUIDService.getUUID() + ".json");
             mockserverInitialization.deleteOnExit();
-            ConfigurationProperties.initializationJsonPath(mockserverInitialization.getPath());
+            Configuration configuration = configuration()
+                .initializationJsonPath(mockserverInitialization.getPath())
+                .watchInitializationJson(true);
+            MockServerLogger logger = new MockServerLogger(configuration, ExpectationFileWatcherTest.class);
             // and - expectation update notification
             CompletableFuture<String> expectationsUpdated = new CompletableFuture<>();
             requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
             // and - file watcher
-            expectationFileWatcher = new ExpectationFileWatcher(configuration(), mockServerLogger, requestMatchers, new ExpectationInitializerLoader(configuration(), mockServerLogger, requestMatchers));
+            expectationFileWatcher = new ExpectationFileWatcher(configuration, logger, requestMatchers, new ExpectationInitializerLoader(configuration, logger, requestMatchers));
             assertThat(mockserverInitialization.exists(), equalTo(false));
 
             // when
@@ -171,8 +173,6 @@ public class ExpectationFileWatcherTest {
                 )
             );
         } finally {
-            ConfigurationProperties.initializationJsonPath(initializationJsonPath);
-            ConfigurationProperties.watchInitializationJson(false);
             if (expectationFileWatcher != null) {
                 expectationFileWatcher.stop();
             }
@@ -181,18 +181,19 @@ public class ExpectationFileWatcherTest {
 
     @Test
     public void shouldDetectModifiedInitialiserJsonOnAdd() throws Exception {
-        String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
-        ConfigurationProperties.watchInitializationJson(true);
         ExpectationFileWatcher expectationFileWatcher = null;
         try {
             // given - configuration
             File mockserverInitialization = File.createTempFile("mockserverInitialization", ".json");
-            ConfigurationProperties.initializationJsonPath(mockserverInitialization.getAbsolutePath());
+            Configuration configuration = configuration()
+                .initializationJsonPath(mockserverInitialization.getAbsolutePath())
+                .watchInitializationJson(true);
+            MockServerLogger logger = new MockServerLogger(configuration, ExpectationFileWatcherTest.class);
             // and - expectation update notification
             CompletableFuture<String> expectationsUpdated = new CompletableFuture<>();
             requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
             // and - file watcher
-            expectationFileWatcher = new ExpectationFileWatcher(configuration(), mockServerLogger, requestMatchers, new ExpectationInitializerLoader(configuration(), mockServerLogger, requestMatchers));
+            expectationFileWatcher = new ExpectationFileWatcher(configuration, logger, requestMatchers, new ExpectationInitializerLoader(configuration, logger, requestMatchers));
 
             // when
             String watchedFileContents = "[ {" + NEW_LINE +
@@ -280,8 +281,6 @@ public class ExpectationFileWatcherTest {
                 )
             );
         } finally {
-            ConfigurationProperties.initializationJsonPath(initializationJsonPath);
-            ConfigurationProperties.watchInitializationJson(false);
             if (expectationFileWatcher != null) {
                 expectationFileWatcher.stop();
             }
@@ -290,8 +289,6 @@ public class ExpectationFileWatcherTest {
 
     @Test
     public void shouldDetectModifiedInitialiserJsonOnAddWithGlob() throws Exception {
-        String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
-        ConfigurationProperties.watchInitializationJson(true);
         ExpectationFileWatcher expectationFileWatcher = null;
         try {
             // given - configuration
@@ -300,12 +297,15 @@ public class ExpectationFileWatcherTest {
             File mockserverInitializerOne = File.createTempFile(uniquePrefix + "_mockserverInitializationOne", ".json");
             File mockserverInitializerTwo = File.createTempFile(uniquePrefix + "_mockserverInitializationTwo", ".json");
             File mockserverInitializerThree = File.createTempFile(uniquePrefix + "_mockserverInitializationThree", ".json");
-            ConfigurationProperties.initializationJsonPath(mockserverInitializer.getParentFile().getAbsolutePath() + "/" + uniquePrefix + "_mockserverInitialization{One,Two}*.json");
+            Configuration configuration = configuration()
+                .initializationJsonPath(mockserverInitializer.getParentFile().getAbsolutePath() + "/" + uniquePrefix + "_mockserverInitialization{One,Two}*.json")
+                .watchInitializationJson(true);
+            MockServerLogger logger = new MockServerLogger(configuration, ExpectationFileWatcherTest.class);
             // and - expectation update notification
             AtomicInteger expectationsUpdatedCount = new AtomicInteger();
             requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdatedCount.incrementAndGet());
             // and - file watcher
-            expectationFileWatcher = new ExpectationFileWatcher(configuration(), mockServerLogger, requestMatchers, new ExpectationInitializerLoader(configuration(), mockServerLogger, requestMatchers));
+            expectationFileWatcher = new ExpectationFileWatcher(configuration, logger, requestMatchers, new ExpectationInitializerLoader(configuration, logger, requestMatchers));
 
             // when
             Expectation[] expectations = {
@@ -431,8 +431,6 @@ public class ExpectationFileWatcherTest {
                     )
             ));
         } finally {
-            ConfigurationProperties.initializationJsonPath(initializationJsonPath);
-            ConfigurationProperties.watchInitializationJson(false);
             if (expectationFileWatcher != null) {
                 expectationFileWatcher.stop();
             }
@@ -441,13 +439,14 @@ public class ExpectationFileWatcherTest {
 
     @Test
     public void shouldDetectModifiedInitialiserJsonOnPartialDeletion() throws Exception {
-        String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
-        ConfigurationProperties.watchInitializationJson(true);
         ExpectationFileWatcher expectationFileWatcher = null;
         try {
             // given - configuration
             File mockserverInitialization = File.createTempFile("mockserverInitialization", ".json");
-            ConfigurationProperties.initializationJsonPath(mockserverInitialization.getAbsolutePath());
+            Configuration configuration = configuration()
+                .initializationJsonPath(mockserverInitialization.getAbsolutePath())
+                .watchInitializationJson(true);
+            MockServerLogger logger = new MockServerLogger(configuration, ExpectationFileWatcherTest.class);
             // and - existing file contents
             String watchedFileContents = "[ {" + NEW_LINE +
                 "  \"id\" : \"one\"," + NEW_LINE +
@@ -528,7 +527,7 @@ public class ExpectationFileWatcherTest {
             CompletableFuture<String> expectationsUpdated = new CompletableFuture<>();
             requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
             // and - file watcher
-            expectationFileWatcher = new ExpectationFileWatcher(configuration(), mockServerLogger, requestMatchers, new ExpectationInitializerLoader(configuration(), mockServerLogger, requestMatchers));
+            expectationFileWatcher = new ExpectationFileWatcher(configuration, logger, requestMatchers, new ExpectationInitializerLoader(configuration, logger, requestMatchers));
 
             // when
             watchedFileContents = "[ {" + NEW_LINE +
@@ -592,8 +591,6 @@ public class ExpectationFileWatcherTest {
                 )
             );
         } finally {
-            ConfigurationProperties.initializationJsonPath(initializationJsonPath);
-            ConfigurationProperties.watchInitializationJson(false);
             if (expectationFileWatcher != null) {
                 expectationFileWatcher.stop();
             }
@@ -602,13 +599,14 @@ public class ExpectationFileWatcherTest {
 
     @Test
     public void shouldDetectModifiedInitialiserJsonOnCompleteDeletion() throws Exception {
-        String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
-        ConfigurationProperties.watchInitializationJson(true);
         ExpectationFileWatcher expectationFileWatcher = null;
         try {
             // given - configuration
             File mockserverInitialization = File.createTempFile("mockserverInitialization", ".json");
-            ConfigurationProperties.initializationJsonPath(mockserverInitialization.getAbsolutePath());
+            Configuration configuration = configuration()
+                .initializationJsonPath(mockserverInitialization.getAbsolutePath())
+                .watchInitializationJson(true);
+            MockServerLogger logger = new MockServerLogger(configuration, ExpectationFileWatcherTest.class);
             // and - existing file contents
             String watchedFileContents = "[ {" + NEW_LINE +
                 "  \"id\" : \"one\"," + NEW_LINE +
@@ -689,7 +687,7 @@ public class ExpectationFileWatcherTest {
             CompletableFuture<String> expectationsUpdated = new CompletableFuture<>();
             requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
             // and - file watcher
-            expectationFileWatcher = new ExpectationFileWatcher(configuration(), mockServerLogger, requestMatchers, new ExpectationInitializerLoader(configuration(), mockServerLogger, requestMatchers));
+            expectationFileWatcher = new ExpectationFileWatcher(configuration, logger, requestMatchers, new ExpectationInitializerLoader(configuration, logger, requestMatchers));
 
             // when
             watchedFileContents = "[ ]";
@@ -706,8 +704,6 @@ public class ExpectationFileWatcherTest {
                 emptyCollectionOf(Expectation.class)
             );
         } finally {
-            ConfigurationProperties.initializationJsonPath(initializationJsonPath);
-            ConfigurationProperties.watchInitializationJson(false);
             if (expectationFileWatcher != null) {
                 expectationFileWatcher.stop();
             }
@@ -716,13 +712,14 @@ public class ExpectationFileWatcherTest {
 
     @Test
     public void shouldDetectModifiedInitialiserJsonOnUpdateFileChanged() throws Exception {
-        String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
-        ConfigurationProperties.watchInitializationJson(true);
         ExpectationFileWatcher expectationFileWatcher = null;
         try {
             // given - configuration
             File mockserverInitialization = File.createTempFile("mockserverInitialization", ".json");
-            ConfigurationProperties.initializationJsonPath(mockserverInitialization.getAbsolutePath());
+            Configuration configuration = configuration()
+                .initializationJsonPath(mockserverInitialization.getAbsolutePath())
+                .watchInitializationJson(true);
+            MockServerLogger logger = new MockServerLogger(configuration, ExpectationFileWatcherTest.class);
             // and - existing file contents
             String watchedFileContents = "[ {" + NEW_LINE +
                 "  \"id\" : \"one\"," + NEW_LINE +
@@ -772,7 +769,7 @@ public class ExpectationFileWatcherTest {
             CompletableFuture<String> expectationsInitialised = new CompletableFuture<>();
             requestMatchers.registerListener((requestMatchers, cause) -> expectationsInitialised.complete("updated"));
             // and - file watcher
-            expectationFileWatcher = new ExpectationFileWatcher(configuration(), mockServerLogger, requestMatchers, new ExpectationInitializerLoader(configuration(), mockServerLogger, requestMatchers));
+            expectationFileWatcher = new ExpectationFileWatcher(configuration, logger, requestMatchers, new ExpectationInitializerLoader(configuration, logger, requestMatchers));
             expectationsInitialised.get(30, SECONDS);
 
             // when
@@ -862,8 +859,6 @@ public class ExpectationFileWatcherTest {
                 )
             );
         } finally {
-            ConfigurationProperties.initializationJsonPath(initializationJsonPath);
-            ConfigurationProperties.watchInitializationJson(false);
             if (expectationFileWatcher != null) {
                 expectationFileWatcher.stop();
             }

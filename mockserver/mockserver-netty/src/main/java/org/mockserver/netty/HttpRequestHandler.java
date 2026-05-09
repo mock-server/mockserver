@@ -168,7 +168,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
                             synchronized (configuration) {
                                 configurationDTO.applyTo(configuration);
                             }
-                            if (MockServerLogger.isEnabled(Level.INFO)) {
+                            if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                                 mockServerLogger.logEvent(
                                     new LogEntry()
                                         .setLogLevel(Level.INFO)
@@ -252,7 +252,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
                             .withReasonPhrase("Upgrade Required")
                             .withHeader("Upgrade", "TLS/1.2, HTTP/1.1")
                             .withHeader("Connection", "Upgrade");
-                        if (MockServerLogger.isEnabled(Level.INFO)) {
+                        if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setLogLevel(Level.INFO)

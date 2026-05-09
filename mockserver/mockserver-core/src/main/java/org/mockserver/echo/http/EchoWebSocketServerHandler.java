@@ -87,7 +87,7 @@ public class EchoWebSocketServerHandler extends ChannelInboundHandlerAdapter {
                 )
                 .addListener((ChannelFutureListener) future -> {
                     ctx.pipeline().remove(MockServerHttpServerCodec.class);
-                    if (MockServerLogger.isEnabled(Level.TRACE)) {
+                    if (mockServerLogger.isEnabledForInstance(Level.TRACE)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(Level.TRACE)
@@ -97,7 +97,7 @@ public class EchoWebSocketServerHandler extends ChannelInboundHandlerAdapter {
                     registeredClients.add(clientId);
                     websocketChannels.add(future.channel());
                     future.channel().closeFuture().addListener((ChannelFutureListener) closeFuture -> {
-                        if (MockServerLogger.isEnabled(Level.TRACE)) {
+                        if (mockServerLogger.isEnabledForInstance(Level.TRACE)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setLogLevel(Level.TRACE)

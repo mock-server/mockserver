@@ -228,7 +228,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
             boolean overallMatch = matches(context, request, becauseBuilder);
             if (!controlPlaneMatcher) {
                 if (overallMatch) {
-                    if (MockServerLogger.isEnabled(Level.INFO)) {
+                    if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setType(EXPECTATION_MATCHED)
@@ -243,7 +243,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                 } else {
                     becauseBuilder.replace(0, 1, "");
                     String because = becauseBuilder.toString();
-                    if (MockServerLogger.isEnabled(Level.INFO)) {
+                    if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setType(EXPECTATION_NOT_MATCHED)

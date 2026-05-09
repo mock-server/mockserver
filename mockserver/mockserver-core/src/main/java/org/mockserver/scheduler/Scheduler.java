@@ -93,7 +93,7 @@ public class Scheduler {
         try {
             command.run();
         } catch (Throwable throwable) {
-            if (MockServerLogger.isEnabled(Level.INFO)) {
+            if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(WARN)
@@ -167,7 +167,7 @@ public class Scheduler {
                 run(command, port);
             } else {
                 future.getHttpResponse().whenCompleteAsync((httpResponse, throwable) -> {
-                    if (throwable != null && MockServerLogger.isEnabled(Level.INFO) && logException.test(throwable)) {
+                    if (throwable != null && mockServerLogger.isEnabledForInstance(Level.INFO) && logException.test(throwable)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setType(WARN)
@@ -215,7 +215,7 @@ public class Scheduler {
                 try {
                     consumer.accept(httpResponse, exception);
                 } catch (Throwable throwable) {
-                    if (MockServerLogger.isEnabled(Level.INFO)) {
+                    if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setType(WARN)

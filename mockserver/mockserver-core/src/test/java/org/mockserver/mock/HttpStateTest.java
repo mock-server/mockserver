@@ -9,7 +9,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.file.FilePath;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.MockServerEventLog;
@@ -82,6 +82,7 @@ public class HttpStateTest {
     private final VerificationSerializer verificationSerializer = new VerificationSerializer(new MockServerLogger());
     private final VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer(new MockServerLogger());
 
+    private final Configuration configuration = configuration();
     @InjectMocks
     private HttpState httpState;
 
@@ -93,7 +94,7 @@ public class HttpStateTest {
     @Before
     public void prepareTestFixture() {
         Scheduler scheduler = mock(Scheduler.class);
-        httpState = new HttpState(configuration(), new MockServerLogger(), scheduler);
+        httpState = new HttpState(configuration, new MockServerLogger(configuration, MockServerLogger.class), scheduler);
         openMocks(this);
     }
 
@@ -245,12 +246,10 @@ public class HttpStateTest {
 
     @Test
     public void shouldHandleRetrieveLogMessagesRequest() {
-        Level originalLevel = ConfigurationProperties.logLevel();
-        try {
-            // given
-            ConfigurationProperties.logLevel("INFO");
-            httpState.add(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_one")));
-            FakeResponseWriter responseWriter = new FakeResponseWriter();
+        // given
+        configuration.logLevel(Level.INFO);
+        httpState.add(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_one")));
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
 
             // when
             HttpRequest retrieveLogRequest = request("/mockserver/retrieve")
@@ -292,9 +291,6 @@ public class HttpStateTest {
                     "  key_one" + NEW_LINE +
                     NEW_LINE))
             );
-        } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
-        }
     }
 
     @Test
@@ -853,11 +849,9 @@ public class HttpStateTest {
 
     @Test
     public void shouldClearLogsAndExpectations() {
-        Level originalLevel = ConfigurationProperties.logLevel();
-        try {
-            // given
-            ConfigurationProperties.logLevel("INFO");
-            httpState.add(
+        // given
+        configuration.logLevel(Level.INFO);
+        httpState.add(
                 new Expectation(request("request_one"))
                     .withId("one")
                     .thenRespond(response("response_one"))
@@ -928,18 +922,13 @@ public class HttpStateTest {
                 is(response().withBody("[]", MediaType.JSON_UTF_8).withStatusCode(200))
             );
             assertThat(httpState.firstMatchingExpectation(request("request_one")), nullValue());
-        } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
-        }
     }
 
     @Test
     public void shouldClearLogsAndExpectationsWithRequestMatcher() {
-        Level originalLevel = ConfigurationProperties.logLevel();
-        try {
-            // given
-            ConfigurationProperties.logLevel("INFO");
-            httpState.add(
+        // given
+        configuration.logLevel(Level.INFO);
+        httpState.add(
                 new Expectation(request("request_one"))
                     .withId("key_one")
                     .thenRespond(response("response_one"))
@@ -1094,18 +1083,13 @@ public class HttpStateTest {
                 httpState.firstMatchingExpectation(request("request_four")),
                 nullValue()
             );
-        } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
-        }
     }
 
     @Test
     public void shouldClearLogsOnly() {
-        Level originalLevel = ConfigurationProperties.logLevel();
-        try {
-            // given
-            ConfigurationProperties.logLevel("INFO");
-            httpState.add(
+        // given
+        configuration.logLevel(Level.INFO);
+        httpState.add(
                 new Expectation(request("request_one"))
                     .withId("key_one")
                     .thenRespond(response("response_one"))
@@ -1175,9 +1159,6 @@ public class HttpStateTest {
                         .thenRespond(response("response_one"))
                 )
             );
-        } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
-        }
     }
 
     @Test
@@ -1823,11 +1804,9 @@ public class HttpStateTest {
 
     @Test
     public void shouldRetrieveLogEntries() {
-        Level originalLevel = ConfigurationProperties.logLevel();
-        try {
-            // given
-            ConfigurationProperties.logLevel("INFO");
-            httpState.log(
+        // given
+        configuration.logLevel(Level.INFO);
+        httpState.log(
                 new LogEntry()
                     .setLogLevel(INFO)
                     .setType(NO_MATCH_RESPONSE)
@@ -1983,18 +1962,13 @@ public class HttpStateTest {
                         " message" + NEW_LINE,
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
             );
-        } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
-        }
     }
 
     @Test
     public void shouldRetrieveLogEntriesWithRequestMatcher() {
-        Level originalLevel = ConfigurationProperties.logLevel();
-        try {
-            // given
-            ConfigurationProperties.logLevel("INFO");
-            httpState.log(
+        // given
+        configuration.logLevel(Level.INFO);
+        httpState.log(
                 new LogEntry()
                     .setLogLevel(INFO)
                     .setType(NO_MATCH_RESPONSE)
@@ -2093,9 +2067,6 @@ public class HttpStateTest {
                         NEW_LINE,
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
             );
-        } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
-        }
     }
 
     @Test
@@ -2159,11 +2130,9 @@ public class HttpStateTest {
 
     @Test
     public void shouldReset() {
-        Level originalLevel = ConfigurationProperties.logLevel();
-        try {
-            // given
-            ConfigurationProperties.logLevel("INFO");
-            httpState.add(
+        // given
+        configuration.logLevel(Level.INFO);
+        httpState.add(
                 new Expectation(request("request_one"))
                     .thenRespond(response("response_one"))
             );
@@ -2200,9 +2169,6 @@ public class HttpStateTest {
                 is(response().withBody("[]", MediaType.JSON_UTF_8).withStatusCode(200))
             );
             assertThat(httpState.firstMatchingExpectation(request("request_one")), nullValue());
-        } finally {
-            ConfigurationProperties.logLevel(originalLevel.name());
-        }
     }
 
     @Test

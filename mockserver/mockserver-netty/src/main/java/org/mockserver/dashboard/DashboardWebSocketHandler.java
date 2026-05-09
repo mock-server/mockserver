@@ -132,7 +132,7 @@ public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter impl
         try {
             if (msg instanceof FullHttpRequest && ((FullHttpRequest) msg).uri().equals(UPGRADE_CHANNEL_FOR_UI_WEB_SOCKET_URI)) {
                 if (isHttp2Enabled(ctx.channel())) {
-                    if (MockServerLogger.isEnabled(Level.TRACE)) {
+                    if (mockServerLogger.isEnabledForInstance(Level.TRACE)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(Level.TRACE)
@@ -167,7 +167,7 @@ public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter impl
 
     private void upgradeChannel(final ChannelHandlerContext ctx, FullHttpRequest httpRequest) {
         String webSocketURL = (sslEnabledUpstream ? "wss" : "ws") + "://" + httpRequest.headers().get(HOST) + UPGRADE_CHANNEL_FOR_UI_WEB_SOCKET_URI;
-        if (MockServerLogger.isEnabled(Level.TRACE)) {
+        if (mockServerLogger.isEnabledForInstance(Level.TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(Level.TRACE)

@@ -78,7 +78,7 @@ public class HttpSseResponseActionHandler {
                 );
                 ctx.writeAndFlush(content).addListener(future -> {
                     if (future.isSuccess()) {
-                        if (MockServerLogger.isEnabled(Level.DEBUG)) {
+                        if (mockServerLogger.isEnabledForInstance(Level.DEBUG)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setType(EXPECTATION_RESPONSE)
@@ -91,7 +91,7 @@ public class HttpSseResponseActionHandler {
                         }
                         scheduleEvents(events, index + 1, ctx, httpSseResponse, request);
                     } else {
-                        if (MockServerLogger.isEnabled(Level.WARN)) {
+                        if (mockServerLogger.isEnabledForInstance(Level.WARN)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setLogLevel(Level.WARN)
@@ -106,7 +106,7 @@ public class HttpSseResponseActionHandler {
                     }
                 });
             } catch (Exception e) {
-                if (MockServerLogger.isEnabled(Level.WARN)) {
+                if (mockServerLogger.isEnabledForInstance(Level.WARN)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.WARN)

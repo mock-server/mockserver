@@ -61,7 +61,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
             httpRequestMatcher -> httpRequestMatcher.getExpectation() != null ? httpRequestMatcher.getExpectation().getId() : ""
         );
         expectationRequestDefinitions = new CircularHashMap<>(configuration.maxExpectations());
-        if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
+        if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(TRACE)
@@ -87,7 +87,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                     httpRequestMatchers.removePriorityKey(httpRequestMatcher);
                     if (httpRequestMatcher.update(expectation)) {
                         httpRequestMatchers.addPriorityKey(httpRequestMatcher);
-                        if (MockServerLogger.isEnabled(Level.INFO)) {
+                        if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setType(UPDATED_EXPECTATION)
@@ -146,7 +146,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                             if (httpRequestMatcher.update(expectation)) {
                                 httpRequestMatchers.addPriorityKey(httpRequestMatcher);
                                 numberOfChanges.getAndIncrement();
-                                if (MockServerLogger.isEnabled(Level.INFO)) {
+                                if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                                     mockServerLogger.logEvent(
                                         new LogEntry()
                                             .setType(UPDATED_EXPECTATION)
@@ -190,7 +190,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         if (expectation.getAction() != null) {
             metrics.increment(expectation.getAction().getType());
         }
-        if (MockServerLogger.isEnabled(Level.INFO)) {
+        if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(CREATED_EXPECTATION)
@@ -224,7 +224,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
             .map(httpRequestMatcher -> {
                 Expectation matchingExpectation = null;
                 boolean remainingMatchesDecremented = false;
-                if (httpRequestMatcher.matches(MockServerLogger.isEnabled(DEBUG) ? new MatchDifference(configuration.detailedMatchFailures(), httpRequest) : null, httpRequest)) {
+                    if (httpRequestMatcher.matches(mockServerLogger.isEnabledForInstance(DEBUG) ? new MatchDifference(configuration.detailedMatchFailures(), httpRequest) : null, httpRequest)) {
                     matchingExpectation = httpRequestMatcher.getExpectation();
                     httpRequestMatcher.setResponseInProgress(true);
                     if (!matchingExpectation.consumeMatch()) {
@@ -270,7 +270,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                     removeHttpRequestMatcher(httpRequestMatcher, requestDefinition.getLogCorrelationId());
                 }
             });
-            if (MockServerLogger.isEnabled(Level.INFO)) {
+            if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(CLEARED)
@@ -291,7 +291,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
             httpRequestMatchers
                 .getByKey(expectationId.getId())
                 .ifPresent(httpRequestMatcher -> removeHttpRequestMatcher(httpRequestMatcher, logCorrelationId));
-            if (MockServerLogger.isEnabled(Level.INFO)) {
+            if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(CLEARED)
@@ -328,7 +328,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
     @SuppressWarnings("rawtypes")
     private void removeHttpRequestMatcher(HttpRequestMatcher httpRequestMatcher, Cause cause, boolean notifyAndUpdateMetrics, String logCorrelationId) {
         if (httpRequestMatchers.remove(httpRequestMatcher)) {
-            if (httpRequestMatcher.getExpectation() != null && MockServerLogger.isEnabled(Level.INFO)) {
+            if (httpRequestMatcher.getExpectation() != null && mockServerLogger.isEnabledForInstance(Level.INFO)) {
                 Expectation expectation = httpRequestMatcher.getExpectation().clone();
                 mockServerLogger.logEvent(
                     new LogEntry()

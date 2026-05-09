@@ -7,6 +7,7 @@ import org.junit.*;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.log.model.LogEntry;
@@ -85,7 +86,7 @@ public class HttpActionHandlerTest {
     private Expectation expectation;
     @InjectMocks
     private HttpActionHandler actionHandler;
-    private Level originalLogLevel;
+    private Configuration configuration;
 
     @BeforeClass
     public static void fixTime() {
@@ -99,16 +100,16 @@ public class HttpActionHandlerTest {
 
     @Before
     public void setupMocks() {
-        originalLogLevel = ConfigurationProperties.logLevel();
-        ConfigurationProperties.logLevel("INFO");
+        configuration = configuration().logLevel(Level.INFO);
 
         mockHttpStateHandler = mock(HttpState.class);
-        scheduler = spy(new Scheduler(configuration(), mockServerLogger));
+        scheduler = spy(new Scheduler(configuration, mockServerLogger));
         when(mockHttpStateHandler.getScheduler()).thenReturn(scheduler);
         when(mockHttpStateHandler.getUniqueLoopPreventionHeaderValue()).thenReturn("MockServer_" + UUIDService.getUUID());
-        actionHandler = new HttpActionHandler(configuration(), null, mockHttpStateHandler, null, null);
+        actionHandler = new HttpActionHandler(configuration, null, mockHttpStateHandler, null, null);
 
         openMocks(this);
+        when(mockServerLogger.isEnabledForInstance(any(Level.class))).thenReturn(true);
         request = request("some_path");
         response = response("some_body").withDelay(milliseconds(0));
         responseFuture = new CompletableFuture<>();
@@ -125,11 +126,6 @@ public class HttpActionHandlerTest {
         when(mockHttpForwardTemplateActionHandler.handle(any(HttpTemplate.class), any(HttpRequest.class))).thenReturn(httpForwardActionResult);
         when(mockHttpForwardClassCallbackActionHandler.handle(any(HttpClassCallback.class), any(HttpRequest.class))).thenReturn(httpForwardActionResult);
         when(mockHttpOverrideForwardedRequestActionHandler.handle(any(HttpOverrideForwardedRequest.class), any(HttpRequest.class))).thenReturn(httpForwardActionResult);
-    }
-
-    @After
-    public void resetLogLevel() {
-        ConfigurationProperties.logLevel(originalLogLevel.name());
     }
 
     @Test

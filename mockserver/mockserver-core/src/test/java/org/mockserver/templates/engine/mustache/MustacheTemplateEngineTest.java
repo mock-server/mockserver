@@ -7,7 +7,6 @@ import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.mockserver.configuration.Configuration;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -36,7 +35,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.Configuration.configuration;
@@ -75,19 +76,7 @@ public class MustacheTemplateEngineTest {
     @Before
     public void setupTestFixture() {
         openMocks(this);
-    }
-
-    private Level originalLogLevel;
-
-    @Before
-    public void setLogLevel() {
-        originalLogLevel = ConfigurationProperties.logLevel();
-        ConfigurationProperties.logLevel("INFO");
-    }
-
-    @After
-    public void resetLogLevel() {
-        ConfigurationProperties.logLevel(originalLogLevel.name());
+        when(mockServerLogger.isEnabledForInstance(any(Level.class))).thenReturn(true);
     }
 
     @Test

@@ -59,7 +59,7 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
             }
             this.initializationPathMatchesPersistencePath = FilePath.expandFilePathGlobs(configuration.initializationJsonPath()).contains(configuration.persistedExpectationsPath());
             requestMatchers.registerListener(this);
-            if (MockServerLogger.isEnabled(INFO) && mockServerLogger != null) {
+            if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(INFO)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(INFO)
@@ -90,14 +90,14 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
                     ) {
                         if (fileLock != null) {
                             List<Expectation> expectations = requestMatchers.retrieveActiveExpectations(null);
-                            if (MockServerLogger.isEnabled(TRACE) && mockServerLogger != null) {
+                            if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
                                 mockServerLogger.logEvent(
                                     new LogEntry()
                                         .setLogLevel(TRACE)
                                         .setMessageFormat("persisting expectations{}to{}")
                                         .setArguments(expectations, configuration.persistedExpectationsPath())
                                 );
-                            } else if (MockServerLogger.isEnabled(DEBUG) && mockServerLogger != null) {
+                            } else if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(DEBUG)) {
                                 mockServerLogger.logEvent(
                                     new LogEntry()
                                         .setLogLevel(DEBUG)

@@ -178,7 +178,7 @@ public class NettyHttpClient {
                 .connect(remoteAddress)
                 .addListener((ChannelFutureListener) future -> {
                     if (future.isSuccess()) {
-                        if (MockServerLogger.isEnabled(Level.DEBUG)) {
+                        if (mockServerLogger.isEnabledForInstance(Level.DEBUG)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setLogLevel(Level.DEBUG)
