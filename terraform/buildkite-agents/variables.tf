@@ -34,6 +34,18 @@ variable "on_demand_percentage" {
   default     = 0
 }
 
+variable "release_min_size" {
+  description = "Minimum number of release agent instances (0 = scale to zero when idle)"
+  type        = number
+  default     = 0
+}
+
+variable "release_max_size" {
+  description = "Maximum number of release agent instances (release queue)"
+  type        = number
+  default     = 2
+}
+
 variable "alert_email" {
   description = "Email address for infrastructure alerts (SNS notifications)"
   type        = string

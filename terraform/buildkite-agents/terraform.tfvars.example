@@ -10,6 +10,7 @@ instance_types       = "c5.2xlarge,c5.xlarge,c5a.2xlarge,c5a.xlarge,m5.2xlarge,m
 min_size             = 0
 max_size             = 10
 on_demand_percentage = 20
+release_max_size     = 2
 
 # Email address for infrastructure alerts (SNS notifications)
 # Leave empty ("") to skip email subscription

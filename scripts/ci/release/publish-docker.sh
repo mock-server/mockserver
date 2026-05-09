@@ -15,7 +15,7 @@ if is_ci; then
   buildkite-agent artifact download "mockserver/mockserver-netty/target/mockserver-netty-*-shaded.jar" .
 fi
 
-SHADED_JAR=$(ls mockserver/mockserver-netty/target/mockserver-netty-*-shaded.jar 2>/dev/null | head -1)
+SHADED_JAR=$(find mockserver/mockserver-netty/target -name 'mockserver-netty-*-shaded.jar' -print -quit 2>/dev/null)
 if [[ -z "$SHADED_JAR" ]]; then
   log_error "Shaded JAR not found. Run build-and-test.sh first."
   exit 1

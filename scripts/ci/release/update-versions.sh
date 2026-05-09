@@ -21,10 +21,6 @@ OLD_MINOR_REST="${OLD_VERSION#*.}"
 OLD_MINOR="${OLD_MINOR_REST%%.*}"
 OLD_API_VERSION="${OLD_MAJOR}.${OLD_MINOR}.x"
 
-NEXT_MAJOR="${NEXT_VERSION%%.*}"
-NEXT_MINOR_REST="${NEXT_VERSION#*.}"
-NEXT_MINOR="${NEXT_MINOR_REST%%.*}"
-
 OLD_SNAPSHOT_PARTS="${OLD_VERSION%.*}"
 OLD_PATCH="${OLD_VERSION##*.}"
 OLD_SNAPSHOT="${OLD_SNAPSHOT_PARTS}.$((OLD_PATCH + 1))-SNAPSHOT"
@@ -36,17 +32,17 @@ log_info "  $OLD_SNAPSHOT -> $NEXT_VERSION"
 
 log_info "Updating changelog"
 TODAY=$(date +%Y-%m-%d)
-sed -i '' "s/^## \[Unreleased\]/## [Unreleased]\n\n### Added\n\n### Changed\n\n### Fixed\n\n## [$RELEASE_VERSION] - $TODAY/" changelog.md
+sed_i "s/^## \[Unreleased\]/## [Unreleased]\n\n### Added\n\n### Changed\n\n### Fixed\n\n## [$RELEASE_VERSION] - $TODAY/" changelog.md
 
 log_info "Updating Jekyll config"
 JEKYLL_CONFIG="jekyll-www.mock-server.com/_config.yml"
-sed -i '' "s/^mockserver_version: .*/mockserver_version: $RELEASE_VERSION/" "$JEKYLL_CONFIG"
-sed -i '' "s/^mockserver_api_version: .*/mockserver_api_version: $API_VERSION/" "$JEKYLL_CONFIG"
-sed -i '' "s/^mockserver_snapshot_version: .*/mockserver_snapshot_version: $NEXT_VERSION/" "$JEKYLL_CONFIG"
+sed_i "s/^mockserver_version: .*/mockserver_version: $RELEASE_VERSION/" "$JEKYLL_CONFIG"
+sed_i "s/^mockserver_api_version: .*/mockserver_api_version: $API_VERSION/" "$JEKYLL_CONFIG"
+sed_i "s/^mockserver_snapshot_version: .*/mockserver_snapshot_version: $NEXT_VERSION/" "$JEKYLL_CONFIG"
 
 log_info "Updating OpenAPI spec"
 OPENAPI_SPEC="mockserver/mockserver-core/src/main/resources/org/mockserver/openapi/mock-server-openapi-embedded-model.yaml"
-sed -i '' "s/^  version: .*/  version: $RELEASE_VERSION/" "$OPENAPI_SPEC"
+sed_i "s/^  version: .*/  version: $RELEASE_VERSION/" "$OPENAPI_SPEC"
 
 log_info "Updating Node packages"
 for PKG_DIR in mockserver-node mockserver-client-node; do
@@ -59,7 +55,7 @@ for PKG_DIR in mockserver-node mockserver-client-node; do
 done
 
 if [[ -f "mockserver-node/package.json" ]]; then
-  sed -i '' "s/mockserver-netty-${OLD_VERSION}-jar-with-dependencies.jar/mockserver-netty-${RELEASE_VERSION}-jar-with-dependencies.jar/g" mockserver-node/package.json
+  sed_i "s/mockserver-netty-${OLD_VERSION}-jar-with-dependencies.jar/mockserver-netty-${RELEASE_VERSION}-jar-with-dependencies.jar/g" mockserver-node/package.json
 fi
 
 if [[ -f "mockserver-client-node/package.json" ]]; then
@@ -70,17 +66,17 @@ fi
 log_info "Updating Python package"
 PYPROJECT="mockserver-client-python/pyproject.toml"
 if [[ -f "$PYPROJECT" ]]; then
-  sed -i '' "s/^version = \".*\"/version = \"$RELEASE_VERSION\"/" "$PYPROJECT"
+  sed_i "s/^version = \".*\"/version = \"$RELEASE_VERSION\"/" "$PYPROJECT"
 fi
 
 log_info "Updating Ruby package"
 VERSION_RB="mockserver-client-ruby/lib/mockserver/version.rb"
 if [[ -f "$VERSION_RB" ]]; then
-  sed -i '' "s/VERSION = '.*'/VERSION = '$RELEASE_VERSION'/" "$VERSION_RB"
+  sed_i "s/VERSION = '.*'/VERSION = '$RELEASE_VERSION'/" "$VERSION_RB"
 fi
 RUBY_README="mockserver-client-ruby/README.md"
 if [[ -f "$RUBY_README" ]]; then
-  sed -i '' "s/$OLD_VERSION/$RELEASE_VERSION/g" "$RUBY_README"
+  sed_i "s/$OLD_VERSION/$RELEASE_VERSION/g" "$RUBY_README"
 fi
 
 log_info "Running general find-and-replace across docs and config"
@@ -106,12 +102,12 @@ for ext in "${FIND_REPLACE_EXTS[@]}"; do
     -not -name "CHANGELOG.md" \
     -not -name "package-lock.json" \
     -print0 2>/dev/null | while IFS= read -r -d '' file; do
-      sed -i '' "s/${OLD_VERSION}/${RELEASE_VERSION}/g" "$file" 2>/dev/null || true
+      sed_i "s/${OLD_VERSION}/${RELEASE_VERSION}/g" "$file" 2>/dev/null || true
       if [[ "$OLD_API_VERSION" != "$API_VERSION" ]]; then
-        sed -i '' "s/${OLD_API_VERSION}/${API_VERSION}/g" "$file" 2>/dev/null || true
+        sed_i "s/${OLD_API_VERSION}/${API_VERSION}/g" "$file" 2>/dev/null || true
       fi
       if [[ "$OLD_SNAPSHOT" != "$NEXT_VERSION" ]]; then
-        sed -i '' "s/${OLD_SNAPSHOT}/${NEXT_VERSION}/g" "$file" 2>/dev/null || true
+        sed_i "s/${OLD_SNAPSHOT}/${NEXT_VERSION}/g" "$file" 2>/dev/null || true
       fi
     done
 done

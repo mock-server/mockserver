@@ -13,8 +13,8 @@ cd "$REPO_ROOT"
 
 log_info "Updating Chart.yaml"
 CHART_FILE="helm/mockserver/Chart.yaml"
-sed -i '' "s/^version: .*/version: \"$RELEASE_VERSION\"/" "$CHART_FILE"
-sed -i '' "s/^appVersion: .*/appVersion: \"$RELEASE_VERSION\"/" "$CHART_FILE"
+sed_i "s/^version: .*/version: \"$RELEASE_VERSION\"/" "$CHART_FILE"
+sed_i "s/^appVersion: .*/appVersion: \"$RELEASE_VERSION\"/" "$CHART_FILE"
 
 log_info "Packaging Helm chart"
 helm package ./helm/mockserver/ --destination helm/charts/

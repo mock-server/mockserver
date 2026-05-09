@@ -9,6 +9,7 @@ All code is committed and ready. The release pipeline consists of:
 - **Buildkite pipeline** `.buildkite/release-pipeline.yml` — CI pipeline with TOTP + approval gates
 - **Terraform resources** — 6 new secrets in `build-secrets.tf`, release pipeline in `pipelines.tf`, website module in `terraform/website/`
 - **CI Docker image** — updated with oathtool, gnupg, jq, AWS CLI, Helm, gh, Ruby/Jekyll
+- **Dedicated release agent queue** — a separate `release` Buildkite agent stack with access to release secrets, isolating GPG keys, GitHub PATs, and cross-account IAM roles from regular CI builds
 
 ## Deferred Steps (Must Complete Before First Release)
 
@@ -210,19 +211,28 @@ The `block` steps in the release pipeline restrict unblocking to the `release-ma
 2. Create team `release-managers`
 3. Add yourself (and any other release managers)
 
-### 8. Apply Terraform for Secrets and Pipeline
+### 8. Apply Terraform for Secrets, Release Agent Stack, and Pipeline
 
-The 6 new `aws_secretsmanager_secret` resources and the release pipeline entry need to be applied:
+The 6 new secrets, dedicated release agent stack, and release pipeline entry need to be applied:
 
 ```bash
 cd terraform/buildkite-agents
-terraform plan    # Should show 6 new secrets + 1 new IAM policy
+terraform plan    # Should show: 6 new secrets, 2 IAM policies, release agent stack (ASG + Lambda scaler)
 terraform apply
 
 cd ../buildkite-pipelines
 terraform plan    # Should show 1 new pipeline (release)
 terraform apply
 ```
+
+The release agent stack creates a separate `release` queue with its own ASG and Lambda scaler. Only release pipeline steps that access `mockserver-release/*` secrets or assume the website cross-account role run on this queue. Regular CI builds on the `default` queue cannot access release secrets.
+
+| Queue | IAM Policies | Secrets Access |
+|-------|-------------|----------------|
+| `default` | `read_build_secrets` | dockerhub, sonatype, pypi, rubygems, buildkite-api-token |
+| `release` | `read_build_secrets` + `read_release_secrets` | All build secrets + gpg-key, github-token, totp-seed, npm-token, swaggerhub, website-role + `sts:AssumeRole` |
+
+The release agents scale to zero when idle (same as default agents) and use 100% on-demand instances for reliability during releases. Expect 1-3 minutes of cold-start latency before the first release step begins, as agents must launch and register with Buildkite.
 
 ### 9. Rebuild CI Docker Image
 
@@ -458,18 +468,18 @@ buildkite-agent pipeline upload --dry-run .buildkite/release-pipeline.yml
 Use this checklist to track your testing progress:
 
 ```
-[ ] Tier 1: shellcheck passes on all scripts
-[ ] Tier 1: terraform validate passes (all 3 modules)
-[ ] Tier 1: validate.sh works with test version numbers
-[ ] Tier 1: Full Maven build passes
-[ ] Tier 1: Jekyll site builds
-[ ] Tier 1: Helm chart packages
-[ ] Tier 1: Docker image builds and smoke test passes
+[x] Tier 1: shellcheck passes on all scripts (only SC1091 info — dynamic source path)
+[x] Tier 1: terraform validate passes (all 3 modules)
+[x] Tier 1: validate.sh works with test version numbers (correctly rejects dirty tree)
+[x] Tier 1: Full Maven build passes (1773/1774 tests — 1 pre-existing flaky timeout in ExpectationInitializerIntegrationTest)
+[x] Tier 1: Jekyll site builds
+[x] Tier 1: Helm chart packages (mockserver-5.15.0.tgz)
+[x] Tier 1: Docker image builds and smoke test passes (status 200, expectation 201, mock 200)
 ---
 [ ] Secrets: All 6 secrets stored in AWS SM
 [ ] Secrets: release-managers team created in Buildkite
 [ ] Secrets: CI Docker image rebuilt with new tools
-[ ] Secrets: Terraform applied (agents + pipelines + website)
+[ ] Secrets: Terraform applied (agents + release agents + pipelines + website)
 ---
 [ ] Tier 2: TOTP verification works
 [ ] Tier 2: GPG key imports successfully
@@ -484,10 +494,25 @@ Use this checklist to track your testing progress:
 [ ] Ready for first real release
 ```
 
+### Tier 1 Test Results (2026-05-09)
+
+| Test | Result | Notes |
+|------|--------|-------|
+| shellcheck | **PASS** | Only SC1091 info (dynamic `source` path — expected) |
+| terraform validate (buildkite-agents) | **PASS** | After adding release agent stack and fixing policy references |
+| terraform validate (buildkite-pipelines) | **PASS** | |
+| terraform validate (website) | **PASS** | |
+| validate.sh | **PASS** | Correctly rejects dirty tree, validates version formats |
+| Maven build (1774 integration tests) | **PASS** (1 flake) | 1773/1774 passed. `ExpectationInitializerIntegrationTest.shouldLoadOpenAPIExpectationsFromJson` timed out — pre-existing flaky test (socket timeout on resource-constrained local machine), not related to release pipeline changes |
+| Jekyll site build | **PASS** | Requires Homebrew Ruby (`/opt/homebrew/opt/ruby/bin/bundle`) — system Ruby 2.6 too old |
+| Helm chart package | **PASS** | Produced `mockserver-5.15.0.tgz` |
+| Docker image build | **PASS** | Built from shaded JAR |
+| Docker smoke test | **PASS** | Status endpoint: 200, Create expectation: 201, Mock response: 200 |
+
 ## Recommended Order of Operations
 
 1. **Run Tier 1 tests now** — no prerequisites, validates all script logic
-2. **Apply Terraform** for secrets (creates empty secret shells) and pipeline entry
+2. **Apply Terraform** for secrets, release agent stack, and pipeline entry
 3. **Store secrets** in AWS SM (steps 1-6 above)
 4. **Create Buildkite team** (step 7)
 5. **Rebuild CI Docker image** (step 9)

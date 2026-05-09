@@ -15,7 +15,7 @@ PLUGIN_DIR="$REPO_ROOT/mockserver-maven-plugin"
 PLUGIN_POM="$PLUGIN_DIR/pom.xml"
 
 log_info "Updating dependency versions from SNAPSHOT to release"
-sed -i '' "s|<version>${CURRENT_SNAPSHOT}</version>|<version>${RELEASE_VERSION}</version>|g" "$PLUGIN_POM"
+sed_i "s|<version>${CURRENT_SNAPSHOT}</version>|<version>${RELEASE_VERSION}</version>|g" "$PLUGIN_POM"
 
 log_info "Building core MockServer first"
 cd "$REPO_ROOT/mockserver"
@@ -98,7 +98,7 @@ log_info "Setting maven-plugin to next SNAPSHOT"
 ./mvnw versions:set -DnewVersion="$NEXT_VERSION" -DgenerateBackupPoms=false
 ./mvnw versions:commit
 
-sed -i '' "s|<version>${RELEASE_VERSION}</version>|<version>${NEXT_VERSION}</version>|g" "$PLUGIN_POM"
+sed_i "s|<version>${RELEASE_VERSION}</version>|<version>${NEXT_VERSION}</version>|g" "$PLUGIN_POM"
 
 log_info "Deploying SNAPSHOT"
 if is_ci; then

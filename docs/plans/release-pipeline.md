@@ -1175,11 +1175,11 @@ resource "aws_secretsmanager_secret" "website_role" {
 }
 ```
 
-Extend the existing IAM policy to include new secrets and STS assume-role:
+A separate `read_release_secrets` IAM policy grants access to release secrets and cross-account role assumption. This policy is attached **only** to the dedicated release agent stack (see below), not to the default build agents.
 
 ```hcl
-resource "aws_iam_policy" "release_secrets" {
-  name = "buildkite-release-secrets"
+resource "aws_iam_policy" "read_release_secrets" {
+  name = "buildkite-read-release-secrets"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -1198,12 +1198,42 @@ resource "aws_iam_policy" "release_secrets" {
       {
         Effect   = "Allow"
         Action   = "sts:AssumeRole"
-        Resource = "arn:aws:iam::role/mockserver-release-website"
+        Resource = "arn:aws:iam::*:role/mockserver-release-website"
       }
     ]
   })
 }
 ```
+
+### Dedicated Release Agent Stack (`terraform/buildkite-agents/main.tf`)
+
+A separate Buildkite elastic CI stack runs on the `release` queue, with both build and release IAM policies. This isolates release secrets (GPG keys, GitHub PATs, TOTP seeds) from regular CI builds:
+
+```hcl
+module "buildkite_release_stack" {
+  source  = "buildkite/elastic-ci-stack-for-aws/buildkite"
+  version = "~> 0.7.0"
+
+  stack_name            = "buildkite-mockserver-release"
+  buildkite_agent_token = var.buildkite_agent_token
+  buildkite_queue       = "release"
+
+  instance_types          = var.instance_types
+  min_size                = var.release_min_size
+  max_size                = var.release_max_size
+  on_demand_percentage    = 100
+  on_demand_base_capacity = 1
+
+  agents_per_instance         = 1
+  associate_public_ip_address = true
+  managed_policy_arns         = [
+    aws_iam_policy.read_build_secrets.arn,
+    aws_iam_policy.read_release_secrets.arn
+  ]
+}
+```
+
+Pipeline steps that access `mockserver-release/*` secrets specify `agents: { queue: "release" }` to run on this stack. Steps that only use build secrets (or no secrets) run on the default queue.
 
 ### Release Pipeline (`terraform/buildkite-pipelines/pipelines.tf`)
 

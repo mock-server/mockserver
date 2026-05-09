@@ -50,7 +50,7 @@ All custom CI pipelines run on Buildkite with self-managed EC2 agents. This keep
 
 ## Buildkite Pipelines
 
-The monorepo uses a path-based pipeline orchestrator that dynamically triggers separate child pipelines based on changed files. Each child pipeline appears individually in the Buildkite dashboard, giving per-project visibility. All pipelines use the same EC2 Spot agent pool (`default` queue).
+The monorepo uses a path-based pipeline orchestrator that dynamically triggers separate child pipelines based on changed files. Each child pipeline appears individually in the Buildkite dashboard, giving per-project visibility. Build pipelines use the `default` queue (EC2 Spot pool). Release pipeline steps that access release secrets use a dedicated `release` queue with its own agent stack and IAM permissions.
 
 ### Pipeline Orchestrator
 

@@ -1,7 +1,18 @@
-# CloudWatch Alarms and SNS notifications for Buildkite agent infrastructure
-# Monitoring focuses on available AWS metrics since Buildkite custom metrics are disabled
+locals {
+  stacks = {
+    default = {
+      asg_name            = module.buildkite_stack.auto_scaling_group_name
+      lambda_function_name = module.buildkite_stack.scaler_lambda_function_name
+      scaler_log_group    = module.buildkite_stack.scaler_log_group
+    }
+    release = {
+      asg_name            = module.buildkite_release_stack.auto_scaling_group_name
+      lambda_function_name = module.buildkite_release_stack.scaler_lambda_function_name
+      scaler_log_group    = module.buildkite_release_stack.scaler_log_group
+    }
+  }
+}
 
-# SNS topic for infrastructure alerts
 resource "aws_sns_topic" "buildkite_alerts" {
   name         = "buildkite-mockserver-alerts"
   display_name = "Buildkite Agent Infrastructure Alerts"
@@ -16,7 +27,6 @@ resource "aws_sns_topic_subscription" "buildkite_alerts_email" {
 
 data "aws_caller_identity" "current" {}
 
-# SNS topic policy allowing CloudWatch and EventBridge to publish
 resource "aws_sns_topic_policy" "buildkite_alerts" {
   arn = aws_sns_topic.buildkite_alerts.arn
 
@@ -49,8 +59,8 @@ resource "aws_sns_topic_policy" "buildkite_alerts" {
           StringEquals = {
             "aws:SourceAccount" = data.aws_caller_identity.current.account_id
           }
-          ArnEquals = {
-            "aws:SourceArn" = aws_cloudwatch_event_rule.asg_launch_failures.arn
+          ArnLike = {
+            "aws:SourceArn" = "arn:aws:events:${var.region}:${data.aws_caller_identity.current.account_id}:rule/buildkite-mockserver-*"
           }
         }
       }
@@ -58,10 +68,11 @@ resource "aws_sns_topic_policy" "buildkite_alerts" {
   })
 }
 
-# Alarm: ASG desired capacity not met (instances failing to launch)
 resource "aws_cloudwatch_metric_alarm" "asg_capacity_gap" {
-  alarm_name          = "buildkite-mockserver-capacity-gap"
-  alarm_description   = "ASG desired capacity not met for 5 minutes (EC2 launch failures or Spot unavailability)"
+  for_each = local.stacks
+
+  alarm_name          = "buildkite-mockserver-${each.key}-capacity-gap"
+  alarm_description   = "${each.key} queue: ASG desired capacity not met for 5 minutes (EC2 launch failures or Spot unavailability)"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 5
   threshold           = 0
@@ -79,7 +90,7 @@ resource "aws_cloudwatch_metric_alarm" "asg_capacity_gap" {
       stat        = "Average"
 
       dimensions = {
-        AutoScalingGroupName = module.buildkite_stack.auto_scaling_group_name
+        AutoScalingGroupName = each.value.asg_name
       }
     }
   }
@@ -95,7 +106,7 @@ resource "aws_cloudwatch_metric_alarm" "asg_capacity_gap" {
       stat        = "Average"
 
       dimensions = {
-        AutoScalingGroupName = module.buildkite_stack.auto_scaling_group_name
+        AutoScalingGroupName = each.value.asg_name
       }
     }
   }
@@ -110,10 +121,11 @@ resource "aws_cloudwatch_metric_alarm" "asg_capacity_gap" {
   alarm_actions = [aws_sns_topic.buildkite_alerts.arn]
 }
 
-# Alarm: Lambda scaler errors
 resource "aws_cloudwatch_metric_alarm" "scaler_lambda_errors" {
-  alarm_name          = "buildkite-mockserver-scaler-errors"
-  alarm_description   = "Lambda scaler function is experiencing errors"
+  for_each = local.stacks
+
+  alarm_name          = "buildkite-mockserver-${each.key}-scaler-errors"
+  alarm_description   = "${each.key} queue: Lambda scaler function is experiencing errors"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 2
   threshold           = 0
@@ -125,16 +137,17 @@ resource "aws_cloudwatch_metric_alarm" "scaler_lambda_errors" {
   statistic   = "Sum"
 
   dimensions = {
-    FunctionName = module.buildkite_stack.scaler_lambda_function_name
+    FunctionName = each.value.lambda_function_name
   }
 
   alarm_actions = [aws_sns_topic.buildkite_alerts.arn]
 }
 
-# Alarm: Lambda scaler not invoked (EventBridge schedule broken)
 resource "aws_cloudwatch_metric_alarm" "scaler_lambda_not_invoked" {
-  alarm_name          = "buildkite-mockserver-scaler-not-invoked"
-  alarm_description   = "Lambda scaler has not been invoked in 5 minutes (EventBridge schedule may be broken)"
+  for_each = local.stacks
+
+  alarm_name          = "buildkite-mockserver-${each.key}-scaler-not-invoked"
+  alarm_description   = "${each.key} queue: Lambda scaler has not been invoked in 5 minutes (EventBridge schedule may be broken)"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = 1
   threshold           = 1
@@ -146,56 +159,58 @@ resource "aws_cloudwatch_metric_alarm" "scaler_lambda_not_invoked" {
   statistic   = "Sum"
 
   dimensions = {
-    FunctionName = module.buildkite_stack.scaler_lambda_function_name
+    FunctionName = each.value.lambda_function_name
   }
 
   alarm_actions = [aws_sns_topic.buildkite_alerts.arn]
 }
 
-# EventBridge rule to capture ASG scaling failures
 resource "aws_cloudwatch_event_rule" "asg_launch_failures" {
-  name        = "buildkite-mockserver-asg-launch-failures"
-  description = "Capture AutoScaling launch failures"
+  for_each = local.stacks
+
+  name        = "buildkite-mockserver-${each.key}-asg-launch-failures"
+  description = "Capture AutoScaling launch failures for ${each.key} queue"
 
   event_pattern = jsonencode({
     source      = ["aws.autoscaling"]
     detail-type = ["EC2 Instance Launch Unsuccessful"]
     detail = {
-      AutoScalingGroupName = [module.buildkite_stack.auto_scaling_group_name]
+      AutoScalingGroupName = [each.value.asg_name]
     }
   })
 }
 
 resource "aws_cloudwatch_event_target" "asg_launch_failures_to_sns" {
-  rule      = aws_cloudwatch_event_rule.asg_launch_failures.name
+  for_each = local.stacks
+
+  rule      = aws_cloudwatch_event_rule.asg_launch_failures[each.key].name
   target_id = "SendToSNS"
   arn       = aws_sns_topic.buildkite_alerts.arn
 
   input_transformer {
     input_paths = {
-      time   = "$.time"
-      cause  = "$.detail.Cause"
+      time    = "$.time"
+      cause   = "$.detail.Cause"
       asgName = "$.detail.AutoScalingGroupName"
     }
-    input_template = "\"Buildkite ASG Launch Failure at <time>: <cause> (ASG: <asgName>)\""
+    input_template = "\"Buildkite ${each.key} ASG Launch Failure at <time>: <cause> (ASG: <asgName>)\""
   }
 }
 
-# CloudWatch Dashboard
 resource "aws_cloudwatch_dashboard" "buildkite_infrastructure" {
   dashboard_name = "buildkite-mockserver-infrastructure"
 
   dashboard_body = jsonencode({
-    widgets = [
-      {
+    widgets = concat(
+      [for key, stack in local.stacks : {
         type   = "metric"
         width  = 12
         height = 6
         properties = {
-          title   = "Agent Capacity"
+          title   = "${title(key)} Agent Capacity"
           region  = var.region
           metrics = [
-            ["AWS/AutoScaling", "GroupDesiredCapacity", "AutoScalingGroupName", module.buildkite_stack.auto_scaling_group_name, { stat = "Average", label = "Desired" }],
+            ["AWS/AutoScaling", "GroupDesiredCapacity", "AutoScalingGroupName", stack.asg_name, { stat = "Average", label = "Desired" }],
             [".", "GroupInServiceInstances", ".", ".", { stat = "Average", label = "Running" }],
             [".", "GroupPendingInstances", ".", ".", { stat = "Average", label = "Pending" }]
           ]
@@ -206,16 +221,16 @@ resource "aws_cloudwatch_dashboard" "buildkite_infrastructure" {
             }
           }
         }
-      },
-      {
+      }],
+      [for key, stack in local.stacks : {
         type   = "metric"
         width  = 12
         height = 6
         properties = {
-          title   = "Lambda Scaler Health"
+          title   = "${title(key)} Lambda Scaler Health"
           region  = var.region
           metrics = [
-            ["AWS/Lambda", "Invocations", "FunctionName", module.buildkite_stack.scaler_lambda_function_name, { stat = "Sum", label = "Invocations" }],
+            ["AWS/Lambda", "Invocations", "FunctionName", stack.lambda_function_name, { stat = "Sum", label = "Invocations" }],
             [".", "Errors", ".", ".", { stat = "Sum", label = "Errors" }],
             [".", "Duration", ".", ".", { stat = "Average", label = "Duration (ms)" }]
           ]
@@ -226,22 +241,17 @@ resource "aws_cloudwatch_dashboard" "buildkite_infrastructure" {
             }
           }
         }
-      },
-      {
+      }],
+      [for key, stack in local.stacks : {
         type   = "log"
         width  = 24
         height = 6
         properties = {
-          title  = "Recent Scaler Lambda Logs"
+          title  = "${title(key)} Scaler Lambda Logs"
           region = var.region
-          query  = <<-EOT
-            SOURCE '${module.buildkite_stack.scaler_log_group}'
-            | fields @timestamp, @message
-            | sort @timestamp desc
-            | limit 100
-          EOT
+          query  = "SOURCE '${stack.scaler_log_group}'\n| fields @timestamp, @message\n| sort @timestamp desc\n| limit 100"
         }
-      }
-    ]
+      }]
+    )
   })
 }

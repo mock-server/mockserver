@@ -10,10 +10,12 @@ steps:
         key: "next-version"
         hint: "e.g., 5.16.1-SNAPSHOT"
         required: true
+        format: "[0-9]+\\.[0-9]+\\.[0-9]+-SNAPSHOT"
       - text: "Previous Version"
         key: "old-version"
         hint: "e.g., 5.15.0 (for find-and-replace)"
         required: true
+        format: "[0-9]+\\.[0-9]+\\.[0-9]+"
       - select: "Release Type"
         key: "release-type"
         default: "full"
@@ -45,6 +47,8 @@ steps:
 
   - label: ":shield: Verify TOTP"
     command: "scripts/ci/release/verify-totp.sh"
+    agents:
+      queue: "release"
 
   - label: ":white_check_mark: Validate"
     command: "scripts/ci/release/validate.sh"
@@ -65,6 +69,8 @@ steps:
   - label: ":lock: Deploy Release to Central Portal"
     command: "scripts/ci/release/deploy-release.sh"
     timeout_in_minutes: 30
+    agents:
+      queue: "release"
 
   - label: ":hourglass: Poll Central Portal Validation"
     command: "scripts/ci/release/poll-central-portal.sh"
@@ -100,6 +106,8 @@ steps:
       - label: ":java: Release Maven Plugin (Step 6)"
         command: "scripts/ci/release/release-maven-plugin.sh"
         timeout_in_minutes: 60
+        agents:
+          queue: "release"
 
       - label: ":docker: Docker Image (Step 7)"
         command: "scripts/ci/release/publish-docker.sh"
@@ -108,18 +116,26 @@ steps:
       - label: ":helm: Helm Chart (Step 8)"
         command: "scripts/ci/release/publish-helm.sh"
         timeout_in_minutes: 15
+        agents:
+          queue: "release"
 
       - label: ":book: Javadoc (Step 9)"
         command: "scripts/ci/release/publish-javadoc.sh"
         timeout_in_minutes: 15
+        agents:
+          queue: "release"
 
       - label: ":swagger: SwaggerHub (Step 10)"
         command: "scripts/ci/release/update-swaggerhub.sh"
         timeout_in_minutes: 10
+        agents:
+          queue: "release"
 
       - label: ":globe_with_meridians: Website (Step 11)"
         command: "scripts/ci/release/publish-website.sh"
         timeout_in_minutes: 15
+        agents:
+          queue: "release"
 
       - label: ":python: PyPI (Step 14)"
         command: "scripts/ci/release/publish-pypi.sh"
@@ -132,6 +148,8 @@ steps:
       - label: ":github: GitHub Release"
         command: "scripts/ci/release/github-release.sh"
         timeout_in_minutes: 10
+        agents:
+          queue: "release"
 
   - wait
 
@@ -139,6 +157,8 @@ steps:
     command: "scripts/ci/release/create-versioned-site.sh"
     if: "build.meta_data('create-versioned-site') == 'yes'"
     timeout_in_minutes: 15
+    agents:
+      queue: "release"
 
   - wait
 

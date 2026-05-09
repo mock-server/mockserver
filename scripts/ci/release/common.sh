@@ -3,6 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+export REPO_ROOT
 REGION="eu-west-2"
 
 is_ci() { [[ -n "${BUILDKITE:-}" ]]; }
@@ -14,6 +15,14 @@ log_step()  { echo "--- :arrow_right: $*"; }
 require_cmd() {
   local cmd="$1"
   command -v "$cmd" >/dev/null 2>&1 || { log_error "Missing required command: $cmd"; exit 1; }
+}
+
+sed_i() {
+  if sed --version 2>/dev/null | grep -q GNU; then
+    sed -i "$@"
+  else
+    sed -i '' "$@"
+  fi
 }
 
 require_env() {
@@ -65,9 +74,13 @@ assume_website_role() {
     --role-session-name "mockserver-release-${RELEASE_VERSION}" \
     --duration-seconds 3600 \
     --output json)
-  export AWS_ACCESS_KEY_ID=$(echo "$creds" | jq -r '.Credentials.AccessKeyId')
-  export AWS_SECRET_ACCESS_KEY=$(echo "$creds" | jq -r '.Credentials.SecretAccessKey')
-  export AWS_SESSION_TOKEN=$(echo "$creds" | jq -r '.Credentials.SessionToken')
+  local aki_val sak_val st_val
+  aki_val=$(echo "$creds" | jq -r '.Credentials.AccessKeyId')
+  sak_val=$(echo "$creds" | jq -r '.Credentials.SecretAccessKey')
+  st_val=$(echo "$creds" | jq -r '.Credentials.SessionToken')
+  export AWS_ACCESS_KEY_ID="$aki_val"
+  export AWS_SECRET_ACCESS_KEY="$sak_val"
+  export AWS_SESSION_TOKEN="$st_val"
   eval "$xtrace_state"
 }
 

@@ -15,9 +15,28 @@ module "buildkite_stack" {
   min_size                = var.min_size
   max_size                = var.max_size
   on_demand_percentage    = var.on_demand_percentage
-  on_demand_base_capacity = 1 # Always launch at least 1 on-demand instance when scaling up
+  on_demand_base_capacity = 1
 
   agents_per_instance         = 1
   associate_public_ip_address = true
-  managed_policy_arns         = [aws_iam_policy.read_dockerhub_secret.arn]
+  managed_policy_arns         = [aws_iam_policy.read_build_secrets.arn]
+}
+
+module "buildkite_release_stack" {
+  source  = "buildkite/elastic-ci-stack-for-aws/buildkite"
+  version = "~> 0.7.0"
+
+  stack_name            = "buildkite-mockserver-release"
+  buildkite_agent_token = var.buildkite_agent_token
+  buildkite_queue       = "release"
+
+  instance_types          = var.instance_types
+  min_size                = var.release_min_size
+  max_size                = var.release_max_size
+  on_demand_percentage    = 100
+  on_demand_base_capacity = 1
+
+  agents_per_instance         = 1
+  associate_public_ip_address = true
+  managed_policy_arns         = [aws_iam_policy.read_build_secrets.arn, aws_iam_policy.read_release_secrets.arn]
 }
