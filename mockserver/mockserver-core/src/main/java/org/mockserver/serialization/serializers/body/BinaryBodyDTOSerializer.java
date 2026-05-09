@@ -12,6 +12,8 @@ import java.io.IOException;
  */
 public class BinaryBodyDTOSerializer extends StdSerializer<BinaryBodyDTO> {
 
+    private static final long serialVersionUID = 1L;
+
     public BinaryBodyDTOSerializer() {
         super(BinaryBodyDTO.class);
     }

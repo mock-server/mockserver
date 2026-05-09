@@ -12,6 +12,8 @@ import java.io.IOException;
  */
 public class LogEntryBodyDTOSerializer extends StdSerializer<LogEntryBodyDTO> {
 
+    private static final long serialVersionUID = 1L;
+
     public LogEntryBodyDTOSerializer() {
         super(LogEntryBodyDTO.class);
     }

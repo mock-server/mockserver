@@ -22,7 +22,6 @@ import org.slf4j.event.Level;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -135,8 +134,7 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                         definition
                     );
                     if (definition != null && definition.get("definitions") != null) {
-                        StreamSupport
-                            .stream(Spliterators.spliteratorUnknownSize(definition.get("definitions").fields(), Spliterator.ORDERED), false)
+                        definition.get("definitions").properties()
                             .forEach(stringJsonNodeEntry -> ((ObjectNode) definitions).set(stringJsonNodeEntry.getKey(), stringJsonNodeEntry.getValue()));
                     }
                 }

@@ -12,6 +12,8 @@ import java.io.IOException;
  */
 public class JsonPathBodySerializer extends StdSerializer<JsonPathBody> {
 
+    private static final long serialVersionUID = 1L;
+
     public JsonPathBodySerializer() {
         super(JsonPathBody.class);
     }

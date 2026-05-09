@@ -18,6 +18,7 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class ByteArraySchemaSerializer extends AbstractSchemaSerializer<ByteArraySchema> {
+    private static final long serialVersionUID = 1L;
 
     public ByteArraySchemaSerializer() {
         super(ByteArraySchema.class);

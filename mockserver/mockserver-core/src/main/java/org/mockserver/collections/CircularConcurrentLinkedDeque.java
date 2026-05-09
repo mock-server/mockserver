@@ -8,6 +8,9 @@ import java.util.function.Consumer;
  * @author jamesdbloom
  */
 public class CircularConcurrentLinkedDeque<E> extends ConcurrentLinkedDeque<E> {
+
+    private static final long serialVersionUID = 1L;
+
     private int maxSize;
     private final Consumer<E> onEvictCallback;
 

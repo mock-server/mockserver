@@ -18,6 +18,7 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class BinarySchemaSerializer extends AbstractSchemaSerializer<BinarySchema> {
+    private static final long serialVersionUID = 1L;
 
     public BinarySchemaSerializer() {
         super(BinarySchema.class);

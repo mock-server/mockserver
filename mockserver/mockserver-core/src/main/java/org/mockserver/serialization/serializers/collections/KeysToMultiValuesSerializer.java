@@ -20,6 +20,8 @@ import static org.mockserver.model.NottableString.serialiseNottableString;
  */
 public abstract class KeysToMultiValuesSerializer<T extends KeysToMultiValues<? extends KeyToMultiValue, T>> extends StdSerializer<T> {
 
+    private static final long serialVersionUID = 1L;
+
     KeysToMultiValuesSerializer(Class<T> valueClass) {
         super(valueClass);
     }

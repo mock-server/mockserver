@@ -2,7 +2,7 @@ package org.mockserver.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.serialization.model.VerificationSequenceDTO;
@@ -80,7 +80,7 @@ public class VerificationSequenceSerializer implements Serializer<VerificationSe
                 }
                 return verificationSequence;
             } else {
-                throw new IllegalArgumentException(StringUtils.removeEndIgnoreCase(formatLogMessage("incorrect verification sequence json format for:{}schema validation errors:{}", jsonVerificationSequence, validationErrors), "\n"));
+                throw new IllegalArgumentException(Strings.CI.removeEnd(formatLogMessage("incorrect verification sequence json format for:{}schema validation errors:{}", jsonVerificationSequence, validationErrors), "\n"));
             }
         }
     }

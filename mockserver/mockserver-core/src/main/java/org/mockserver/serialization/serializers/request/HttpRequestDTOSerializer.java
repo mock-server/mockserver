@@ -14,6 +14,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  */
 public class HttpRequestDTOSerializer extends StdSerializer<HttpRequestDTO> {
 
+    private static final long serialVersionUID = 1L;
+
     public HttpRequestDTOSerializer() {
         super(HttpRequestDTO.class);
     }

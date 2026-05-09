@@ -18,6 +18,7 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class ObjectSchemaSerializer extends AbstractSchemaSerializer<ObjectSchema> {
+    private static final long serialVersionUID = 1L;
 
     public ObjectSchemaSerializer() {
         super(ObjectSchema.class);

@@ -7,6 +7,8 @@ import org.mockserver.model.Parameters;
  */
 public class ParametersDeserializer extends KeysToMultiValuesDeserializer<Parameters> {
 
+    private static final long serialVersionUID = 1L;
+
     public ParametersDeserializer() {
         super(Parameters.class);
     }

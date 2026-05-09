@@ -13,6 +13,8 @@ import java.io.IOException;
  */
 public class XmlBodyDTOSerializer extends StdSerializer<XmlBodyDTO> {
 
+    private static final long serialVersionUID = 1L;
+
     public XmlBodyDTOSerializer() {
         super(XmlBodyDTO.class);
     }

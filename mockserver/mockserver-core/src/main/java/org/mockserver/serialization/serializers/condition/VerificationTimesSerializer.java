@@ -12,6 +12,8 @@ import java.io.IOException;
  */
 public class VerificationTimesSerializer extends StdSerializer<VerificationTimes> {
 
+    private static final long serialVersionUID = 1L;
+
     public VerificationTimesSerializer() {
         super(VerificationTimes.class);
     }

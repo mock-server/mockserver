@@ -18,6 +18,7 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class NumberSchemaSerializer extends AbstractSchemaSerializer<NumberSchema> {
+    private static final long serialVersionUID = 1L;
 
     public NumberSchemaSerializer() {
         super(NumberSchema.class);

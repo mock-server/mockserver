@@ -17,6 +17,8 @@ import java.io.IOException;
  */
 public class JsonBodyDTOSerializer extends StdSerializer<JsonBodyDTO> {
 
+    private static final long serialVersionUID = 1L;
+
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper()
         .copy()
         .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);

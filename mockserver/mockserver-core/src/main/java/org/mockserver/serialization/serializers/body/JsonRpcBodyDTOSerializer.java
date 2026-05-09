@@ -9,6 +9,8 @@ import java.io.IOException;
 
 public class JsonRpcBodyDTOSerializer extends StdSerializer<JsonRpcBodyDTO> {
 
+    private static final long serialVersionUID = 1L;
+
     public JsonRpcBodyDTOSerializer() {
         super(JsonRpcBodyDTO.class);
     }

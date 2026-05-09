@@ -12,6 +12,8 @@ import java.io.IOException;
  */
 public class ParameterBodyDTOSerializer extends StdSerializer<ParameterBodyDTO> {
 
+    private static final long serialVersionUID = 1L;
+
     public ParameterBodyDTOSerializer() {
         super(ParameterBodyDTO.class);
     }

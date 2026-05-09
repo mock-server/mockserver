@@ -21,6 +21,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 @SuppressWarnings("SameParameterValue")
 public class CertificateSerializer extends StdSerializer<Certificate> {
 
+    private static final long serialVersionUID = 1L;
+
     public CertificateSerializer() {
         super(Certificate.class);
     }

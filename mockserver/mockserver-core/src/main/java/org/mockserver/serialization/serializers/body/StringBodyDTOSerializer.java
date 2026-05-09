@@ -12,6 +12,8 @@ import java.io.IOException;
  */
 public class StringBodyDTOSerializer extends StdSerializer<StringBodyDTO> {
 
+    private static final long serialVersionUID = 1L;
+
     private final boolean serialiseDefaultValues;
 
     public StringBodyDTOSerializer(boolean serialiseDefaultValues) {

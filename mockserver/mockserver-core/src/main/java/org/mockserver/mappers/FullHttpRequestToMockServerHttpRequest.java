@@ -5,7 +5,7 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import io.netty.handler.codec.http2.HttpConversionUtil;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.mockserver.codec.BodyDecoderEncoder;
 import org.mockserver.codec.ExpandedParameterDecoder;
 import org.mockserver.configuration.Configuration;
@@ -87,10 +87,10 @@ public class FullHttpRequestToMockServerHttpRequest {
     private void setSocketAddress(HttpRequest httpRequest, FullHttpRequest fullHttpRequest, boolean isSecure, Integer port, SocketAddress localAddress, SocketAddress remoteAddress) {
         httpRequest.withSocketAddress(isSecure, fullHttpRequest.headers().get("host"), port);
         if (remoteAddress instanceof InetSocketAddress) {
-            httpRequest.withRemoteAddress(StringUtils.removeStart(remoteAddress.toString(), "/"));
+            httpRequest.withRemoteAddress(Strings.CS.removeStart(remoteAddress.toString(), "/"));
         }
         if (localAddress instanceof InetSocketAddress) {
-            httpRequest.withLocalAddress(StringUtils.removeStart(localAddress.toString(), "/"));
+            httpRequest.withLocalAddress(Strings.CS.removeStart(localAddress.toString(), "/"));
         }
     }
 

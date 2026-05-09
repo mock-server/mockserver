@@ -312,7 +312,7 @@ public class OpenAPIConverter {
                 }
             }
             ObjectNode resolvedNode = node.objectNode();
-            node.fields().forEachRemaining(entry -> {
+            node.properties().forEach(entry -> {
                 Object resolvedField = resolveExampleRefs(entry.getValue(), openAPI, activeRefChain, refDepth, structureDepth + 1);
                 if (resolvedField instanceof JsonNode) {
                     resolvedNode.set(entry.getKey(), (JsonNode) resolvedField);

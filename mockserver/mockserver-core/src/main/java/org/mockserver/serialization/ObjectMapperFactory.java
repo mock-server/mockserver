@@ -145,9 +145,9 @@ public class ObjectMapperFactory {
         ObjectMapper objectMapper = buildObjectMapperWithoutRemovingEmptyValues();
 
         // remove empty values from JSON
-        ExceptionHandling.handleThrowable(() -> objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT));
-        ExceptionHandling.handleThrowable(() -> objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL));
-        ExceptionHandling.handleThrowable(() -> objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY));
+        ExceptionHandling.handleThrowable(() -> objectMapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_DEFAULT));
+        ExceptionHandling.handleThrowable(() -> objectMapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL));
+        ExceptionHandling.handleThrowable(() -> objectMapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_EMPTY));
 
         // add support for java date time serialisation and de-serialisation
         objectMapper.registerModule(new JavaTimeModule());

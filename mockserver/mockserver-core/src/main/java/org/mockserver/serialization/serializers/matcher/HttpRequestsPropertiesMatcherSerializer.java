@@ -13,6 +13,8 @@ import java.io.IOException;
  */
 public class HttpRequestsPropertiesMatcherSerializer extends StdSerializer<HttpRequestsPropertiesMatcher> {
 
+    private static final long serialVersionUID = 1L;
+
     public HttpRequestsPropertiesMatcherSerializer() {
         super(HttpRequestsPropertiesMatcher.class);
     }

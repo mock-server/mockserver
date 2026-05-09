@@ -18,6 +18,8 @@ import java.util.concurrent.TimeUnit;
  */
 public class TimeToLiveDTODeserializer extends StdDeserializer<TimeToLiveDTO> {
 
+    private static final long serialVersionUID = 1L;
+
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger();
 
     public TimeToLiveDTODeserializer() {

@@ -14,6 +14,7 @@ import org.mockserver.url.URLParser;
 import org.slf4j.event.Level;
 
 import java.io.File;
+import java.net.URI;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +33,7 @@ public class JWTAuthenticationHandler implements AuthenticationHandler {
         this.mockServerLogger = mockServerLogger;
         try {
             if (URLParser.isFullUrl(jwkSource)) {
-                this.jwtValidator = new JWTValidator(new RemoteJWKSet<>(new URL(jwkSource)));
+                this.jwtValidator = new JWTValidator(new RemoteJWKSet<>(URI.create(jwkSource).toURL()));
             } else {
                 this.jwtValidator = new JWTValidator(new ImmutableJWKSet<>(JWKSet.load(new File(FilePath.absolutePathFromClassPathOrPath(jwkSource)))));
             }

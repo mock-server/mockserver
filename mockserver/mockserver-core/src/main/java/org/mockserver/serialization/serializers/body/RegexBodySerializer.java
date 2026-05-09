@@ -12,6 +12,8 @@ import java.io.IOException;
  */
 public class RegexBodySerializer extends StdSerializer<RegexBody> {
 
+    private static final long serialVersionUID = 1L;
+
     public RegexBodySerializer() {
         super(RegexBody.class);
     }

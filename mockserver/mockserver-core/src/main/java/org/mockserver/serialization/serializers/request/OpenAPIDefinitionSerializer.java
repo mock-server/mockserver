@@ -15,6 +15,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * @author jamesdbloom
  */
 public class OpenAPIDefinitionSerializer extends StdSerializer<OpenAPIDefinition> {
+    private static final long serialVersionUID = 1L;
 
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
 

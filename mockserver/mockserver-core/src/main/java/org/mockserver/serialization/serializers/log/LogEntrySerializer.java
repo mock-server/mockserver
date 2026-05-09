@@ -14,6 +14,8 @@ import static org.mockserver.character.Character.NEW_LINE;
  */
 public class LogEntrySerializer extends StdSerializer<LogEntry> {
 
+    private static final long serialVersionUID = 1L;
+
     public LogEntrySerializer() {
         super(LogEntry.class);
     }

@@ -8,6 +8,9 @@ import java.util.function.Consumer;
  * @author jamesdbloom
  */
 public class CircularHashMap<K, V> extends LinkedHashMap<K, V> {
+
+    private static final long serialVersionUID = 1L;
+
     private final int maxSize;
     private final Consumer<V> evictionListener;
 

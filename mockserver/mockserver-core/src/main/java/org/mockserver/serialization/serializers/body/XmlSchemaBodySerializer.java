@@ -12,6 +12,8 @@ import java.io.IOException;
  */
 public class XmlSchemaBodySerializer extends StdSerializer<XmlSchemaBody> {
 
+    private static final long serialVersionUID = 1L;
+
     public XmlSchemaBodySerializer() {
         super(XmlSchemaBody.class);
     }

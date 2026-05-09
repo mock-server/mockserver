@@ -18,6 +18,7 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class BooleanSchemaSerializer extends AbstractSchemaSerializer<BooleanSchema> {
+    private static final long serialVersionUID = 1L;
 
     public BooleanSchemaSerializer() {
         super(BooleanSchema.class);

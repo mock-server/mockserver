@@ -18,6 +18,7 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class UUIDSchemaSerializer extends AbstractSchemaSerializer<UUIDSchema> {
+    private static final long serialVersionUID = 1L;
 
     public UUIDSchemaSerializer() {
         super(UUIDSchema.class);

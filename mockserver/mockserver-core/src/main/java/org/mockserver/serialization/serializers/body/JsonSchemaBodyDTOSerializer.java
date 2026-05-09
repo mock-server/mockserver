@@ -18,6 +18,8 @@ import java.util.List;
  */
 public class JsonSchemaBodyDTOSerializer extends StdSerializer<JsonSchemaBodyDTO> {
 
+    private static final long serialVersionUID = 1L;
+
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
 
     public JsonSchemaBodyDTOSerializer() {

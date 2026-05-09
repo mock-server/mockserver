@@ -18,6 +18,7 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class DateTimeSchemaSerializer extends AbstractSchemaSerializer<DateTimeSchema> {
+    private static final long serialVersionUID = 1L;
 
     public DateTimeSchemaSerializer() {
         super(DateTimeSchema.class);

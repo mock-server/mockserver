@@ -18,6 +18,7 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class IntegerSchemaSerializer extends AbstractSchemaSerializer<IntegerSchema> {
+    private static final long serialVersionUID = 1L;
 
     public IntegerSchemaSerializer() {
         super(IntegerSchema.class);

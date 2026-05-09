@@ -99,7 +99,7 @@ public class HttpSseResponseActionHandler {
                                     .setHttpRequest(request)
                                     .setMessageFormat("async write failure for SSE event {} for request:{}")
                                     .setArguments(index + 1, request)
-                                    .setThrowable((Throwable) future.cause())
+                                    .setThrowable(future.cause())
                             );
                         }
                         finishStream(ctx, httpSseResponse);

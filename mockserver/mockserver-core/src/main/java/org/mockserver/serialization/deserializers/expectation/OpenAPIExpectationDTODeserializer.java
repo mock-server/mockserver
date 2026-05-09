@@ -13,6 +13,8 @@ import java.util.Map;
 
 public class OpenAPIExpectationDTODeserializer extends StdDeserializer<OpenAPIExpectationDTO> {
 
+    private static final long serialVersionUID = 1L;
+
     public OpenAPIExpectationDTODeserializer() {
         super(OpenAPIExpectationDTO.class);
     }
@@ -23,7 +25,7 @@ public class OpenAPIExpectationDTODeserializer extends StdDeserializer<OpenAPIEx
             String specUrlOrPayload = null;
             Map<String, String> operationsAndResponses = null;
             while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
-                String fieldName = jsonParser.getCurrentName();
+                String fieldName = jsonParser.currentName();
                 switch (fieldName) {
                     case "specUrlOrPayload":
                         jsonParser.nextToken();

@@ -11,6 +11,7 @@ import java.io.IOException;
  * @author jamesdbloom
  */
 public class TimeToLiveDTOSerializer extends StdSerializer<TimeToLiveDTO> {
+    private static final long serialVersionUID = 1L;
 
     public TimeToLiveDTOSerializer() {
         super(TimeToLiveDTO.class);

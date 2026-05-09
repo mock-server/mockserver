@@ -22,6 +22,8 @@ import static org.mockserver.model.NottableString.string;
  */
 public class NottableStringDeserializer extends StdDeserializer<NottableString> {
 
+    private static final long serialVersionUID = 1L;
+
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
 
     public NottableStringDeserializer() {
@@ -38,7 +40,7 @@ public class NottableStringDeserializer extends StdDeserializer<NottableString> 
             ParameterStyle parameterStyle = null;
 
             while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
-                String fieldName = jsonParser.getCurrentName();
+                String fieldName = jsonParser.currentName();
                 if ("not".equals(fieldName)) {
                     jsonParser.nextToken();
                     not = jsonParser.getBooleanValue();

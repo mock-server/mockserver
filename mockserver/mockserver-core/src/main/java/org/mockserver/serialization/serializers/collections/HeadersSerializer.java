@@ -7,6 +7,8 @@ import org.mockserver.model.Headers;
  */
 public class HeadersSerializer extends KeysToMultiValuesSerializer<Headers> {
 
+    private static final long serialVersionUID = 1L;
+
     public HeadersSerializer() {
         super(Headers.class);
     }

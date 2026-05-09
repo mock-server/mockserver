@@ -13,6 +13,8 @@ import java.util.Map;
  */
 public class XPathBodyDTOSerializer extends StdSerializer<XPathBodyDTO> {
 
+    private static final long serialVersionUID = 1L;
+
     public XPathBodyDTOSerializer() {
         super(XPathBodyDTO.class);
     }

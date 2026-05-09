@@ -14,6 +14,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  */
 public class HttpRequestSerializer extends StdSerializer<HttpRequest> {
 
+    private static final long serialVersionUID = 1L;
+
     public HttpRequestSerializer() {
         super(HttpRequest.class);
     }

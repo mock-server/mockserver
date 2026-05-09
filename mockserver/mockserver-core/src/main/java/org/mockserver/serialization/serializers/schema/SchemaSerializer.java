@@ -20,6 +20,7 @@ import java.util.List;
  */
 @SuppressWarnings("rawtypes")
 public class SchemaSerializer extends AbstractSchemaSerializer<Schema> {
+    private static final long serialVersionUID = 1L;
 
     public SchemaSerializer() {
         super(Schema.class);

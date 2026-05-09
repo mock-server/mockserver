@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Joiner;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -155,7 +155,7 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
                 }
                 return httpRequest;
             } else {
-                throw new IllegalArgumentException(StringUtils.removeEndIgnoreCase(formatLogMessage("incorrect request json format for:{}schema validation errors:{}", jsonHttpRequest, validationErrors), "\n"));
+                throw new IllegalArgumentException(Strings.CI.removeEnd(formatLogMessage("incorrect request json format for:{}schema validation errors:{}", jsonHttpRequest, validationErrors), "\n"));
             }
         }
     }

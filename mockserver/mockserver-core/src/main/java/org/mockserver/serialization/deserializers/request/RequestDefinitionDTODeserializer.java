@@ -24,6 +24,8 @@ import static org.slf4j.event.Level.ERROR;
 
 public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDefinitionDTO> {
 
+    private static final long serialVersionUID = 1L;
+
     public RequestDefinitionDTODeserializer() {
         super(RequestDefinitionDTO.class);
     }
@@ -49,7 +51,7 @@ public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDef
             String specUrlOrPayload = null;
             String operationId = null;
             while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
-                String fieldName = jsonParser.getCurrentName();
+                String fieldName = jsonParser.currentName();
                 if (fieldName != null) {
                     switch (fieldName) {
                         case "not": {

@@ -15,6 +15,8 @@ import static org.mockserver.model.NottableString.serialiseNottableString;
  */
 public class CookiesSerializer extends StdSerializer<Cookies> {
 
+    private static final long serialVersionUID = 1L;
+
     public CookiesSerializer() {
         super(Cookies.class);
     }

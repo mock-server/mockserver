@@ -6,6 +6,9 @@ package org.mockserver.httpclient;
  * @author jamesdbloom
  */
 public class SocketConnectionException extends RuntimeException {
+
+    private static final long serialVersionUID = 1L;
+
     SocketConnectionException(String message, Throwable cause) {
         super(message, cause);
     }

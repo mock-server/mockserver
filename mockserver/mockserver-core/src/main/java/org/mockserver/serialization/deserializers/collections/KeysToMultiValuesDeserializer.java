@@ -18,6 +18,8 @@ import static org.mockserver.model.NottableString.string;
  */
 public abstract class KeysToMultiValuesDeserializer<T extends KeysToMultiValues<?, ?>> extends StdDeserializer<T> {
 
+    private static final long serialVersionUID = 1L;
+
     KeysToMultiValuesDeserializer(Class<T> valueClass) {
         super(valueClass);
     }
@@ -54,7 +56,7 @@ public abstract class KeysToMultiValuesDeserializer<T extends KeysToMultiValues<
                     ParameterStyle parameterStyle = ParameterStyle.FORM_EXPLODED;
                     NottableString[] values = null;
                     while (token != JsonToken.END_OBJECT) {
-                        String fieldName = jsonParser.getCurrentName();
+                        String fieldName = jsonParser.currentName();
                         if ("values".equals(fieldName)) {
                             jsonParser.nextToken();
                             values = ctxt.readValue(jsonParser, NottableString[].class);

@@ -18,6 +18,7 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class EmailSchemaSerializer extends AbstractSchemaSerializer<EmailSchema> {
+    private static final long serialVersionUID = 1L;
 
     public EmailSchemaSerializer() {
         super(EmailSchema.class);

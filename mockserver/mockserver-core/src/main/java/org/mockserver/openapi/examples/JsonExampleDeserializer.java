@@ -34,7 +34,6 @@ import com.fasterxml.jackson.databind.node.ShortNode;
 import org.mockserver.openapi.examples.models.*;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.Map.Entry;
 
 public class JsonExampleDeserializer extends JsonDeserializer<Example> {
@@ -50,8 +49,7 @@ public class JsonExampleDeserializer extends JsonDeserializer<Example> {
         if (node instanceof ObjectNode) {
             ObjectExample obj = new ObjectExample();
             ObjectNode on = (ObjectNode) node;
-            for (Iterator<Entry<String, JsonNode>> x = on.fields(); x.hasNext(); ) {
-                Entry<String, JsonNode> i = x.next();
+            for (Entry<String, JsonNode> i : on.properties()) {
                 String key = i.getKey();
                 JsonNode value = i.getValue();
                 obj.put(key, createExample(value));

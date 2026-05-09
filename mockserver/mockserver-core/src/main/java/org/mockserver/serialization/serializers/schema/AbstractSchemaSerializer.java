@@ -20,6 +20,7 @@ import java.util.function.Consumer;
  */
 @SuppressWarnings("rawtypes")
 public class AbstractSchemaSerializer<T extends Schema> extends StdSerializer<T> {
+    private static final long serialVersionUID = 1L;
 
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.buildObjectMapperWithOnlyConfigurationDefaults();
     private static final List<String> fieldsToRemove = ImmutableList.of(

@@ -16,6 +16,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  */
 public class OpenAPIExpectationDTOSerializer extends StdSerializer<OpenAPIExpectationDTO> {
 
+    private static final long serialVersionUID = 1L;
+
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
 
     public OpenAPIExpectationDTOSerializer() {

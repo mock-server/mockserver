@@ -29,6 +29,8 @@ import static org.slf4j.event.Level.TRACE;
  */
 public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWithContentTypeDTO> {
 
+    private static final long serialVersionUID = 1L;
+
     private static final Map<String, Body.Type> fieldNameToType = new HashMap<>();
     private static final Base64.Decoder BASE64_DECODER = Base64.getDecoder();
     private static ObjectWriter jsonBodyObjectWriter;

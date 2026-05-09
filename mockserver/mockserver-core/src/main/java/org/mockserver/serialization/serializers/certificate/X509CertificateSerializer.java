@@ -15,6 +15,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  */
 public class X509CertificateSerializer extends StdSerializer<X509Certificate> {
 
+    private static final long serialVersionUID = 1L;
+
     public X509CertificateSerializer() {
         super(X509Certificate.class);
     }

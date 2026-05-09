@@ -3,6 +3,7 @@ package org.mockserver.serialization.curl;
 import io.netty.handler.codec.http.cookie.ClientCookieEncoder;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
+import org.apache.commons.lang3.Strings;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.MockServerHttpRequestToFullHttpRequest;
 import org.mockserver.model.Header;
@@ -16,7 +17,8 @@ import java.util.List;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.COOKIE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
-import static org.apache.commons.lang3.StringUtils.*;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * @author jamesdbloom
@@ -83,7 +85,7 @@ public class HttpRequestToCurlSerializer {
         String uri = new MockServerHttpRequestToFullHttpRequest(mockServerLogger, null).getURI(request, null);
         if (isBlank(uri)) {
             uri = "/";
-        } else if (!startsWith(uri, "/")) {
+        } else if (!Strings.CS.startsWith(uri, "/")) {
             uri = "/" + uri;
         }
         return uri;

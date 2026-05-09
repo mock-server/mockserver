@@ -18,6 +18,7 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class FileSchemaSerializer extends AbstractSchemaSerializer<FileSchema> {
+    private static final long serialVersionUID = 1L;
 
     public FileSchemaSerializer() {
         super(FileSchema.class);

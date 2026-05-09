@@ -5,7 +5,7 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.servers.ServerVariables;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -73,7 +73,7 @@ public class OpenAPISerialiser {
             if (serverList != null && serverList.size() > 0) {
                 String returnPath = URLParser.returnPath(serverUrlWithVariablesExpanded(serverList.get(0)));
                 if (isNotBlank(returnPath)) {
-                    return StringUtils.removeEnd(StringUtils.prependIfMissing(returnPath, "/"), "/");
+                    return Strings.CS.removeEnd(Strings.CS.prependIfMissing(returnPath, "/"), "/");
                 }
             }
         }

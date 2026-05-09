@@ -18,6 +18,7 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class ComposedSchemaSerializer extends AbstractSchemaSerializer<ComposedSchema> {
+    private static final long serialVersionUID = 1L;
 
     public ComposedSchemaSerializer() {
         super(ComposedSchema.class);

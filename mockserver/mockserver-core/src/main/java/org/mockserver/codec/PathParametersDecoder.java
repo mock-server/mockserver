@@ -2,6 +2,7 @@ package org.mockserver.codec;
 
 import com.google.common.base.Joiner;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.NottableString;
 import org.mockserver.model.Parameters;
@@ -100,6 +101,6 @@ public class PathParametersDecoder {
     }
 
     private String[] getPathParts(NottableString path) {
-        return path != null ? Arrays.stream(StringUtils.removeStart(path.getValue(), "/").split("/")).filter(StringUtils::isNotBlank).toArray(String[]::new) : new String[0];
+        return path != null ? Arrays.stream(Strings.CS.removeStart(path.getValue(), "/").split("/")).filter(StringUtils::isNotBlank).toArray(String[]::new) : new String[0];
     }
 }

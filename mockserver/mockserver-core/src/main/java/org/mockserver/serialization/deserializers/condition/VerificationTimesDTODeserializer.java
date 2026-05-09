@@ -14,6 +14,8 @@ import java.io.IOException;
  */
 public class VerificationTimesDTODeserializer extends StdDeserializer<VerificationTimesDTO> {
 
+    private static final long serialVersionUID = 1L;
+
     public VerificationTimesDTODeserializer() {
         super(VerificationTimesDTO.class);
     }
@@ -28,7 +30,7 @@ public class VerificationTimesDTODeserializer extends StdDeserializer<Verificati
         Integer atMost = null;
 
         while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
-            String fieldName = jsonParser.getCurrentName();
+            String fieldName = jsonParser.currentName();
             if ("count".equals(fieldName)) {
                 jsonParser.nextToken();
                 count = jsonParser.getIntValue();

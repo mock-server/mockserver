@@ -18,6 +18,7 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class PasswordSchemaSerializer extends AbstractSchemaSerializer<PasswordSchema> {
+    private static final long serialVersionUID = 1L;
 
     public PasswordSchemaSerializer() {
         super(PasswordSchema.class);

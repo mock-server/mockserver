@@ -18,6 +18,8 @@ import static org.mockserver.model.NottableString.string;
  */
 public class CookiesDeserializer extends StdDeserializer<Cookies> {
 
+    private static final long serialVersionUID = 1L;
+
     public CookiesDeserializer() {
         super(Cookies.class);
     }

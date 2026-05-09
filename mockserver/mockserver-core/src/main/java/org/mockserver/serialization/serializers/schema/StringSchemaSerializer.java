@@ -17,6 +17,7 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class StringSchemaSerializer extends AbstractSchemaSerializer<StringSchema> {
+    private static final long serialVersionUID = 1L;
 
     public StringSchemaSerializer() {
         super(StringSchema.class);

@@ -12,6 +12,8 @@ import java.io.IOException;
  */
 public class XmlSchemaBodyDTOSerializer extends StdSerializer<XmlSchemaBodyDTO> {
 
+    private static final long serialVersionUID = 1L;
+
     public XmlSchemaBodyDTOSerializer() {
         super(XmlSchemaBodyDTO.class);
     }

@@ -146,7 +146,7 @@ public class HttpWebSocketResponseActionHandler {
                                     .setHttpRequest(request)
                                     .setMessageFormat("async write failure for WebSocket message {} for request:{}")
                                     .setArguments(index + 1, request)
-                                    .setThrowable((Throwable) future.cause())
+                                    .setThrowable(future.cause())
                             );
                         }
                         finishWebSocket(ctx, httpWebSocketResponse, handshaker);

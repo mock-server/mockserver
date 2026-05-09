@@ -20,6 +20,7 @@ import static org.mockserver.model.NottableString.serialiseNottableString;
  * @author jamesdbloom
  */
 public class NottableStringSerializer extends StdSerializer<NottableString> {
+    private static final long serialVersionUID = 1L;
 
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
 

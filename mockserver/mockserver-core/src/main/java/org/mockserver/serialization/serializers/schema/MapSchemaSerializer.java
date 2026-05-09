@@ -18,6 +18,7 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class MapSchemaSerializer extends AbstractSchemaSerializer<MapSchema> {
+    private static final long serialVersionUID = 1L;
 
     public MapSchemaSerializer() {
         super(MapSchema.class);

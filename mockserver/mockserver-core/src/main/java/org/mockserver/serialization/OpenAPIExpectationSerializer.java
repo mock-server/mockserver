@@ -3,7 +3,7 @@ package org.mockserver.serialization;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Joiner;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
@@ -122,7 +122,7 @@ public class OpenAPIExpectationSerializer implements Serializer<OpenAPIExpectati
                 }
                 return expectation;
             } else {
-                throw new IllegalArgumentException(StringUtils.removeEndIgnoreCase(formatLogMessage("incorrect openapi expectation json format for:{}schema validation errors:{}", jsonOpenAPIExpectation, validationErrors), "\n"));
+                throw new IllegalArgumentException(Strings.CI.removeEnd(formatLogMessage("incorrect openapi expectation json format for:{}schema validation errors:{}", jsonOpenAPIExpectation, validationErrors), "\n"));
             }
         }
     }

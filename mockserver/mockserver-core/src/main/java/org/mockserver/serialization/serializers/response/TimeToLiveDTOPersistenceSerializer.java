@@ -8,6 +8,7 @@ import org.mockserver.serialization.model.TimeToLiveDTO;
 import java.io.IOException;
 
 public class TimeToLiveDTOPersistenceSerializer extends StdSerializer<TimeToLiveDTO> {
+    private static final long serialVersionUID = 1L;
 
     public TimeToLiveDTOPersistenceSerializer() {
         super(TimeToLiveDTO.class);

@@ -243,11 +243,11 @@ public class NettySslContextFactory {
                     .setMessageFormat("using certificate authority serial:{}issuer:{}subject:{}and certificate serial:{}issuer:{}subject:{}")
                     .setArguments(
                         caCertificate.getSerialNumber(),
-                        caCertificate.getIssuerDN(),
-                        caCertificate.getSubjectDN(),
+                        caCertificate.getIssuerX500Principal(),
+                        caCertificate.getSubjectX500Principal(),
                         eeCertificate.getSerialNumber(),
-                        eeCertificate.getIssuerDN(),
-                        eeCertificate.getSubjectDN()
+                        eeCertificate.getIssuerX500Principal(),
+                        eeCertificate.getSubjectX500Principal()
                     )
             );
         }

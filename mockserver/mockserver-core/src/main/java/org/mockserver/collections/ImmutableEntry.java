@@ -9,6 +9,9 @@ import java.util.*;
 import static org.mockserver.model.NottableString.string;
 
 public class ImmutableEntry extends Pair<NottableString, NottableString> implements Map.Entry<NottableString, NottableString> {
+
+    private static final long serialVersionUID = 1L;
+
     private final RegexStringMatcher regexStringMatcher;
     private final NottableString key;
     private final NottableString value;

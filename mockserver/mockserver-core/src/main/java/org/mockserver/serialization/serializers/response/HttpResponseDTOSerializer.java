@@ -11,6 +11,7 @@ import java.io.IOException;
  * @author jamesdbloom
  */
 public class HttpResponseDTOSerializer extends StdSerializer<HttpResponseDTO> {
+    private static final long serialVersionUID = 1L;
 
     public HttpResponseDTOSerializer() {
         super(HttpResponseDTO.class);
