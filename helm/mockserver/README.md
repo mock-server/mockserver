@@ -1,4 +1,4 @@
-## Installing MockServer
+## Install MockServer Helm Chart
 
 ### Prerequisites
 
@@ -212,6 +212,20 @@ echo http://$MOCKSERVER_HOST
 #### Inside Kubernetes Cluster
 
 If a [DNS server](https://kubernetes.io/docs/concepts/services-networking/service/#dns) has been installed in the Kubernetes cluster the following DNS name should be available `mockserver.<namespace>.svc.cluster.local`, i.e. `mockserver.mockserver.svc.cluster.local`
+
+### Available Versions
+
+| Version | Chart Archive |
+|---------|---------------|
+| 5.15.0 (latest) | [mockserver-5.15.0.tgz](https://www.mock-server.com/mockserver-5.15.0.tgz) |
+| 5.14.0 | [mockserver-5.14.0.tgz](https://www.mock-server.com/mockserver-5.14.0.tgz) |
+| 5.13.2 | [mockserver-5.13.2.tgz](https://www.mock-server.com/mockserver-5.13.2.tgz) |
+| 5.13.1 | [mockserver-5.13.1.tgz](https://www.mock-server.com/mockserver-5.13.1.tgz) |
+| 5.13.0 | [mockserver-5.13.0.tgz](https://www.mock-server.com/mockserver-5.13.0.tgz) |
+| 5.12.0 | [mockserver-5.12.0.tgz](https://www.mock-server.com/mockserver-5.12.0.tgz) |
+| 5.11.2 | [mockserver-5.11.2.tgz](https://www.mock-server.com/mockserver-5.11.2.tgz) |
+| 5.11.1 | [mockserver-5.11.1.tgz](https://www.mock-server.com/mockserver-5.11.1.tgz) |
+| 5.11.0 | [mockserver-5.11.0.tgz](https://www.mock-server.com/mockserver-5.11.0.tgz) |
 
 ### Helm Delete
 

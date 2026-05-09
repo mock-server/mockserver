@@ -92,24 +92,14 @@ Docker Hub contains the following artifacts:
 
 ##### Helm Chart
 
-* [MockServer Helm Chart](helm/mockserver/README.md) - a Helm Chart that installs MockServer to a Kubernetes cluster, available versions:
-  * [5.15.0](https://www.mock-server.com/mockserver-5.15.0.tgz)
-  * [5.14.0](https://www.mock-server.com/mockserver-5.14.0.tgz)
-  * [5.13.2](https://www.mock-server.com/mockserver-5.13.2.tgz)
-  * [5.13.1](https://www.mock-server.com/mockserver-5.13.1.tgz)
-  * [5.13.0](https://www.mock-server.com/mockserver-5.13.0.tgz)
-  * [5.12.0](https://www.mock-server.com/mockserver-5.12.0.tgz)
-  * [5.11.2](https://www.mock-server.com/mockserver-5.11.2.tgz)
-  * [5.11.1](https://www.mock-server.com/mockserver-5.11.1.tgz)
-  * [5.11.0](https://www.mock-server.com/mockserver-5.11.0.tgz)
-  * ...
+* [MockServer Helm Chart](helm/mockserver/README.md) - a Helm Chart that installs MockServer to a Kubernetes cluster (latest: [5.15.0](https://www.mock-server.com/mockserver-5.15.0.tgz)). See the [Install MockServer Helm Chart](helm/mockserver/README.md) guide for all available versions and configuration options.
 
 ##### MockServer Clients
 
-* [mockserver-client-ruby ![mockserver-client](https://badge.fury.io/rb/mockserver-client.png)](https://rubygems.org/gems/mockserver-client) - Ruby client for both the MockServer and the proxy 
-* [mockserver-client-java](https://central.sonatype.com/artifact/org.mock-server/mockserver-client-java) - a Java client for both the MockServer and the proxy 
-* [mockserver-client-node](https://www.npmjs.org/package/mockserver-client) - a Node.js and [browser](https://raw.githubusercontent.com/mock-server/mockserver-client-node/mockserver-5.10.0/mockServerClient.js) client for both the MockServer and the proxy
-* [kotest-extensions-kotest](https://github.com/kotest/kotest-extensions-mockserver) - Kotlin Kotest integration with MockServer
+* [mockserver-client-java ![Maven Central](https://img.shields.io/maven-central/v/org.mock-server/mockserver-client-java.svg)](https://central.sonatype.com/artifact/org.mock-server/mockserver-client-java) - a Java client for both the MockServer and the proxy
+* [mockserver-client-node ![npm](https://img.shields.io/npm/v/mockserver-client.svg)](https://www.npmjs.org/package/mockserver-client) - a Node.js and [browser](https://raw.githubusercontent.com/mock-server/mockserver-client-node/mockserver-5.10.0/mockServerClient.js) client for both the MockServer and the proxy
+* [mockserver-client-python](https://pypi.org/project/mockserver-client/) - a Python client for both the MockServer and the proxy
+* [mockserver-client-ruby ![Gem](https://badge.fury.io/rb/mockserver-client.png)](https://rubygems.org/gems/mockserver-client) - a Ruby client for both the MockServer and the proxy
 
 ##### Previous Versions
 | Version         | Date        | Git & Docker Tag / Git Hash                                                                                                                                                                                     | Documentation                                  | Java API                                                                | REST API                                                                                  |
