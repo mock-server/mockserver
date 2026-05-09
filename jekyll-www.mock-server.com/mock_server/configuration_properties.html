@@ -520,6 +520,30 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.proxyAuthenticationPassword="p@ssw0rd"</code></pre>
 </div>
 
+<button id="button_configuration_proxy_pass" class="accordion title"><strong>ProxyPass Mappings</strong></button>
+<div class="panel title">
+    <p>Configure reverse proxy mappings that route incoming requests by path prefix to upstream servers with automatic path rewriting. This provides Apache-style ProxyPass functionality.</p>
+    <p>Value is a JSON array of objects. Each object has:</p>
+    <ul>
+        <li><span class="inline_code">pathPrefix</span> (required) — the incoming path prefix to match, e.g. <span class="inline_code">/api/</span></li>
+        <li><span class="inline_code">targetUri</span> (required) — the upstream server URI including path, e.g. <span class="inline_code">https://backend:8443/services/</span></li>
+        <li><span class="inline_code">preserveHost</span> (optional, default <span class="inline_code">false</span>) — if true, the original Host header is preserved instead of being adjusted to match the target</li>
+    </ul>
+    <p><strong>Path rewriting example:</strong> with <span class="inline_code">pathPrefix="/api/"</span> and <span class="inline_code">targetUri="https://backend:8443/services/"</span>, a request to <span class="inline_code">GET /api/users/123</span> is forwarded as <span class="inline_code">GET /services/users/123</span> to <span class="inline_code">backend:8443</span> over HTTPS.</p>
+    <p>Mappings are evaluated in order; the first matching prefix wins. ProxyPass is evaluated after expectations and CORS, but before the speculative proxy attempt.</p>
+    <p>Type: <span class="keyword">JSON array</span> Default: <span class="this_value">[]</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.proxyPass("[{\"pathPrefix\":\"/api/\",\"targetUri\":\"https://backend:8443/services/\"}]")</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.proxyPass=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_PROXY_PASS=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.proxyPass=[{"pathPrefix":"/api/","targetUri":"https://backend:8443/services/"}]</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_PROXY_PASS='[{"pathPrefix":"/api/","targetUri":"https://backend:8443/services/"},{"pathPrefix":"/auth/","targetUri":"http://auth-server:9090/","preserveHost":true}]'</code></pre>
+</div>
+
 <button id="button_configuration_no_proxy_hosts" class="accordion title"><strong>Hosts That Bypass Proxy</strong></button>
 <div class="panel title">
     <p>Comma-separated list of hostnames that MockServer should not proxy to. When a request's Host header matches one of these hosts, MockServer will return a 404 instead of forwarding the request. This applies both to direct proxying and to upstream proxy bypass.</p>

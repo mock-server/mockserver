@@ -284,6 +284,10 @@ public class HttpActionHandler {
                 );
             }
 
+        } else if (handleProxyPass(request, responseWriter, synchronous)) {
+
+            // handled by proxy pass
+
         } else if (proxyingRequest || potentiallyHttpProxy) {
 
             if (request.getHeaders() != null && request.getHeaders().containsEntry(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue())) {
@@ -416,6 +420,68 @@ public class HttpActionHandler {
             returnNotFound(responseWriter, request, null);
 
         }
+    }
+
+    private boolean handleProxyPass(final HttpRequest request, final ResponseWriter responseWriter, final boolean synchronous) {
+        List<ProxyPassMapping> mappings = configuration.proxyPassMappings();
+        if (mappings == null || mappings.isEmpty() || request.getPath() == null) {
+            return false;
+        }
+        String requestPath = request.getPath().getValue();
+        if (requestPath == null) {
+            return false;
+        }
+        for (ProxyPassMapping mapping : mappings) {
+            if (requestPath.startsWith(mapping.getPathPrefix())) {
+                String remainder = requestPath.substring(mapping.getPathPrefix().length());
+                String targetPath = mapping.getTargetPath();
+                String newPath;
+                if (remainder.isEmpty()) {
+                    newPath = targetPath.isEmpty() ? "/" : targetPath;
+                } else if (remainder.startsWith("/") || targetPath.endsWith("/")) {
+                    newPath = targetPath + remainder;
+                } else {
+                    newPath = targetPath + "/" + remainder;
+                }
+                HttpRequest clonedRequest = hopByHopHeaderFilter.onRequest(request);
+                clonedRequest.withPath(newPath);
+                clonedRequest.withSecure(mapping.isTargetSecure());
+
+                if (!mapping.isPreserveHost() && configuration.forwardAdjustHostHeader()) {
+                    boolean defaultPort = (mapping.isTargetSecure() && mapping.getTargetPort() == 443)
+                        || (!mapping.isTargetSecure() && mapping.getTargetPort() == 80);
+                    String hostHeader = defaultPort ? mapping.getTargetHost() : mapping.getTargetHost() + ":" + mapping.getTargetPort();
+                    clonedRequest.replaceHeader(new Header("Host", hostHeader));
+                }
+
+                InetSocketAddress targetAddress = new InetSocketAddress(mapping.getTargetHost(), mapping.getTargetPort());
+                final HttpForwardActionResult responseFuture = new HttpForwardActionResult(clonedRequest, httpClient.sendRequest(clonedRequest, targetAddress), null, targetAddress);
+                scheduler.submit(responseFuture, () -> {
+                    try {
+                        HttpResponse response = responseFuture.getHttpResponse().get(configuration.maxFutureTimeoutInMillis(), MILLISECONDS);
+                        if (response == null) {
+                            response = notFoundResponse();
+                        }
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setType(FORWARDED_REQUEST)
+                                .setLogLevel(Level.INFO)
+                                .setCorrelationId(request.getLogCorrelationId())
+                                .setHttpRequest(request)
+                                .setHttpResponse(response)
+                                .setExpectation(request, response)
+                                .setMessageFormat("returning response:{}for proxy pass forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}")
+                                .setArguments(response, request, httpRequestToCurlSerializer.toCurl(request, targetAddress))
+                        );
+                        responseWriter.writeResponse(request, response, false);
+                    } catch (Throwable throwable) {
+                        returnNotFound(responseWriter, request, "proxy pass forwarding failed for " + mapping.getTargetUri() + ": " + throwable.getMessage());
+                    }
+                }, synchronous, throwable -> true);
+                return true;
+            }
+        }
+        return false;
     }
 
     private void handleAnyException(HttpRequest request, ResponseWriter responseWriter, boolean synchronous, Action action, Runnable processAction) {

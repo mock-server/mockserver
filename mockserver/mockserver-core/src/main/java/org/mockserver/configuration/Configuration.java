@@ -3,11 +3,13 @@ package org.mockserver.configuration;
 import com.google.common.collect.Sets;
 import com.google.common.net.InetAddresses;
 import org.mockserver.model.BinaryProxyListener;
+import org.mockserver.model.ProxyPassMapping;
 import org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager;
 import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -107,6 +109,7 @@ public class Configuration {
     private String proxyAuthenticationPassword;
     private String noProxyHosts;
     private Boolean forwardAdjustHostHeader;
+    private List<ProxyPassMapping> proxyPassMappings;
 
     // liveness
     private String livenessHttpGetPath;
@@ -1277,6 +1280,23 @@ public class Configuration {
      */
     public Configuration forwardAdjustHostHeader(Boolean forwardAdjustHostHeader) {
         this.forwardAdjustHostHeader = forwardAdjustHostHeader;
+        return this;
+    }
+
+    public List<ProxyPassMapping> proxyPassMappings() {
+        if (proxyPassMappings == null) {
+            return ConfigurationProperties.proxyPass();
+        }
+        return proxyPassMappings;
+    }
+
+    /**
+     * Configure ProxyPass mappings that map incoming path prefixes to upstream servers with automatic path rewriting.
+     *
+     * @param proxyPassMappings list of ProxyPassMapping objects
+     */
+    public Configuration proxyPassMappings(List<ProxyPassMapping> proxyPassMappings) {
+        this.proxyPassMappings = proxyPassMappings;
         return this;
     }
 

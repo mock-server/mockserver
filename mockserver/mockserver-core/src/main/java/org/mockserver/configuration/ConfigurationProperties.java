@@ -7,11 +7,14 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.net.InetAddresses;
 import org.apache.commons.lang3.StringUtils;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.memory.MemoryMonitoring;
 import org.mockserver.memory.Summary;
+import org.mockserver.model.ProxyPassMapping;
+import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager;
 import org.mockserver.socket.tls.KeyAndCertificateFactory;
 import org.slf4j.event.Level;
@@ -123,6 +126,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_PROXY_AUTHENTICATION_PASSWORD = "mockserver.proxyAuthenticationPassword";
     private static final String MOCKSERVER_NO_PROXY_HOSTS = "mockserver.noProxyHosts";
     private static final String MOCKSERVER_FORWARD_ADJUST_HOST_HEADER = "mockserver.forwardAdjustHostHeader";
+    private static final String MOCKSERVER_PROXY_PASS = "mockserver.proxyPass";
 
     // liveness
     private static final String MOCKSERVER_LIVENESS_HTTP_GET_PATH = "mockserver.livenessHttpGetPath";
@@ -1198,6 +1202,57 @@ public class ConfigurationProperties {
      */
     public static void forwardAdjustHostHeader(boolean enable) {
         setProperty(MOCKSERVER_FORWARD_ADJUST_HOST_HEADER, "" + enable);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static List<ProxyPassMapping> proxyPass() {
+        String value = readPropertyHierarchically(PROPERTIES, MOCKSERVER_PROXY_PASS, "MOCKSERVER_PROXY_PASS", "");
+        if (isBlank(value)) {
+            return Collections.emptyList();
+        }
+        try {
+            return ObjectMapperFactory.createObjectMapper().readValue(value, new TypeReference<List<ProxyPassMapping>>() {});
+        } catch (Exception e) {
+            if (MOCK_SERVER_LOGGER != null) {
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setLogLevel(Level.ERROR)
+                        .setMessageFormat("invalid proxyPass value: " + value)
+                        .setThrowable(e)
+                );
+            }
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * Configure ProxyPass mappings that map incoming path prefixes to upstream servers with automatic path rewriting.
+     * Value is a JSON array of objects with pathPrefix, targetUri, and optional preserveHost fields.
+     *
+     * @param proxyPassJson JSON array string, e.g. [{"pathPrefix":"/api/","targetUri":"https://backend:8443/services/"}]
+     */
+    public static void proxyPass(String proxyPassJson) {
+        setProperty(MOCKSERVER_PROXY_PASS, proxyPassJson);
+    }
+
+    /**
+     * Configure ProxyPass mappings that map incoming path prefixes to upstream servers with automatic path rewriting.
+     *
+     * @param mappings list of ProxyPassMapping objects
+     */
+    public static void proxyPass(List<ProxyPassMapping> mappings) {
+        try {
+            setProperty(MOCKSERVER_PROXY_PASS, ObjectMapperFactory.createObjectMapper().writeValueAsString(mappings));
+        } catch (Exception e) {
+            if (MOCK_SERVER_LOGGER != null) {
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setLogLevel(Level.ERROR)
+                        .setMessageFormat("failed to serialize proxyPass mappings")
+                        .setThrowable(e)
+                );
+            }
+        }
     }
 
     /**
