@@ -1,36 +1,38 @@
-# install and run jekyll
+# MockServer Documentation Site
+
+> [Jekyll](https://jekyllrb.com/) source for [www.mock-server.com](https://www.mock-server.com)
+
+## Development
+
+Use the dev server script (handles Ruby version, gem installation, and live reload):
+
 ```bash
-# 1.
+./jekyll_server.sh
+```
+
+This requires [rbenv](https://github.com/rbenv/rbenv) with Ruby 3.3.11 installed:
+
+```bash
 brew install rbenv
-# 2.
-rbenv install -l
-# 3.
-rbenv install 2.6.3
-# 4.
-rbenv local 2.6.3
-# 5.
-`rbenv which gem` install bundler
-# 6.
-`rbenv which bundle` install --path vendor/bundle
-# 7.
-`rbenv which bundle` exec jekyll serve
+rbenv install 3.3.11
 ```
 
-# deploy
+## Manual Build
+
 ```bash
-# 1.
 cd jekyll-www.mock-server.com
-# 2.
-rm -rf _site
-# 3.
-`rbenv which bundle` exec jekyll build
-# 4.
-open _site
-# 5.
-copy to main website S3 bucket (see ~/mockserver-aws-ids.md)
+rbenv local 3.3.11
+$(rbenv which bundle) config set --local path vendor/bundle
+$(rbenv which bundle) install
+$(rbenv which bundle) exec jekyll build
 ```
 
-# slack
-- Heroku Signup Application: https://dashboard.heroku.com/apps/join-mock-server-slack/settings
-- Slackin: https://www.npmjs.com/package/slackin?activeTab=readme
-- OLD: https://gitter.im/jamesdbloom/mockserver?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+The built site is output to `_site/`.
+
+## Deploy
+
+The site is hosted on S3 + CloudFront. See [docs/operations/website.md](../docs/operations/website.md) for deployment details.
+
+## Community, Issues & Contributing
+
+See the [main MockServer README](../README.md) for community links, how to report issues, and contribution guidelines.

@@ -1,1 +1,1 @@
-This folder contains examples for [mockserver-client-node](https://github.com/mock-server/mockserver-client-node) and [mockserver-node](https://github.com/mock-server/mockserver-node) 
+This folder contains examples for [mockserver-client-node](../../mockserver-client-node) and [mockserver-node](../../mockserver-node).

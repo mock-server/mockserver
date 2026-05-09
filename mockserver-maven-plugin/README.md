@@ -1,142 +1,69 @@
-MockServer Maven Plugin &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [![Build status](https://badge.buildkite.com/9005b0b9e44f14184673967663e7a424f9cdd1278c9c74a96c.svg?branch=master&style=square&theme=slack)](https://buildkite.com/mockserver/mockserver-maven-plugin) 
-[![GitHub license](https://img.shields.io/github/license/mock-server/mockserver-monorepo.svg)](https://github.com/mock-server/mockserver-monorepo/blob/master/LICENSE.md) 
-[![GitHub stars](https://img.shields.io/github/stars/mock-server/mockserver-monorepo.svg)](https://github.com/mock-server/mockserver-monorepo/stargazers)
-=====
+# MockServer Maven Plugin
 
-A maven plugin to start and stop the MockServer
+> A Maven plugin to start, stop and fork [MockServer](https://mock-server.com/) from Maven builds
 
-### Documentation
+[![Build status](https://badge.buildkite.com/9005b0b9e44f14184673967663e7a424f9cdd1278c9c74a96c.svg?branch=master&style=square&theme=slack)](https://buildkite.com/mockserver/mockserver-maven-plugin)
+[![Maven Central](https://img.shields.io/maven-central/v/org.mock-server/mockserver-maven-plugin.svg)](https://central.sonatype.com/artifact/org.mock-server/mockserver-maven-plugin)
+
+## Documentation
 
 For usage guide please see: [www.mock-server.com](https://www.mock-server.com/)
 
-### Change Log
+## Quick Start
 
-Please see: [Change Log](https://github.com/mock-server/mockserver-monorepo/blob/master/changelog.md)
+Add the plugin to your `pom.xml`:
 
-### Community
+```xml
+<plugin>
+    <groupId>org.mock-server</groupId>
+    <artifactId>mockserver-maven-plugin</artifactId>
+    <version>5.15.0</version>
+    <configuration>
+        <serverPort>1080</serverPort>
+    </configuration>
+    <executions>
+        <execution>
+            <id>process-test-classes</id>
+            <phase>process-test-classes</phase>
+            <goals>
+                <goal>start</goal>
+            </goals>
+        </execution>
+        <execution>
+            <id>verify</id>
+            <phase>verify</phase>
+            <goals>
+                <goal>stop</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+```
 
-<table>
-    <tr>
-        <td>Discussions</td>
-        <td><a href="https://github.com/mock-server/mockserver-monorepo/discussions"><img height="20px" src="https://mock-server.com/images/GitHub_Logo-md.png" alt="GitHub Discussions"></a></td>
-    </tr>
-    <tr>
-        <td>Feature Requests</td>
-        <td><a href="https://github.com/mock-server/mockserver-monorepo/issues"><img height="20px" src="https://mock-server.com/images/GitHub_Logo-md.png" alt="Github Issues"></a></td>
-    </tr>
-    <tr> 
-        <td>Issues / Bugs</td>
-        <td><a href="https://github.com/mock-server/mockserver-monorepo/issues"><img height="20px" src="https://mock-server.com/images/GitHub_Logo-md.png" alt="Github Issues"></a></td>
-    </tr>
-    <tr>
-        <td>Roadmap</td>
-        <td><a href="https://github.com/orgs/mock-server/projects/1"><img height="20px" src="https://mock-server.com/images/GitHub_Logo-md.png" alt="GitHub Project"></a></td>
-    </tr>
-</table>
+## Goals
 
-### Versions
+| Goal | Description |
+|------|-------------|
+| `start` | Start MockServer, blocking until it is ready |
+| `stop` | Stop a running MockServer instance |
+| `run` | Run MockServer and block (useful for manual testing) |
+| `runForked` | Start MockServer in a forked JVM (does not require a Maven project) |
+| `stopForked` | Stop a forked MockServer instance |
 
-##### Maven Central [![mockserver](https://img.shields.io/maven-central/v/org.mock-server/mockserver-netty.svg)](https://central.sonatype.com/search?q=g:org.mock-server)
+## Configuration
 
-Maven Central contains the following MockServer artifacts:
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `serverPort` | *(none)* | HTTP/HTTPS port for MockServer (e.g. `1080`) |
+| `proxyRemotePort` | *(none)* | Enables port forwarding mode |
+| `proxyRemoteHost` | `localhost` | Host for port forwarding (requires `proxyRemotePort`) |
+| `logLevel` | `INFO` | MockServer log level |
+| `pipeLogToConsole` | `false` | Write MockServer logs to Maven console |
+| `initializationClass` | *(none)* | Expectation initializer class |
+| `initializationJson` | *(none)* | Path to JSON expectation initialization file |
+| `timeout` | *(none)* | How long `run` goal blocks (milliseconds) |
+| `skip` | `false` | Skip plugin execution |
 
-* [mockserver-netty](https://central.sonatype.com/artifact/org.mock-server/mockserver-netty) - an HTTP(S) web server that mocks and records requests and responses
-* [mockserver-netty:shaded](https://central.sonatype.com/artifact/org.mock-server/mockserver-netty) - mockserver-netty (as above) with all dependencies embedded
-* [mockserver-war](https://central.sonatype.com/artifact/org.mock-server/mockserver-war) - a deployable WAR for mocking HTTP(S) responses (for any JEE web server)
-* [mockserver-proxy-war](https://central.sonatype.com/artifact/org.mock-server/mockserver-proxy-war) - a deployable WAR that records requests and responses (for any JEE web server)
-* [mockserver-maven-plugin](https://central.sonatype.com/artifact/org.mock-server/mockserver-maven-plugin) - a maven plugin to start, stop and fork MockServer using maven
-* [mockserver-client-java](https://central.sonatype.com/artifact/org.mock-server/mockserver-client-java) - a Java client to communicate with both the server and the proxy
+## Community, Issues & Contributing
 
-In addition MockServer SNAPSHOT artifacts can also be found on [Sonatype](https://oss.sonatype.org/index.html#nexus-search;quick~org.mock-server).
-
-##### Node Module & Grunt Plugin
-
-NPM Registry contains the following module:
-
-* [mockserver-node](https://www.npmjs.org/package/mockserver-node) - a Node.js module and Grunt plugin to start and stop MockServer
-    [![mockserver-node](https://nodei.co/npm/mockserver-node.png?downloads=true)](https://www.npmjs.org/package/mockserver-node)
-* [mockserver-client-node](https://www.npmjs.org/package/mockserver-client) - a Node.js client for both the MockServer and the proxy 
-    [![mockserver-client-node](https://nodei.co/npm/mockserver-client.png?downloads=true)](https://www.npmjs.org/package/mockserver-client)
-
-##### Docker Hub
-
-Docker Hub contains the following artifacts:
-
-* [MockServer Docker Container](https://hub.docker.com/r/mockserver/mockserver/) - a Docker container containing the Netty MockServer and proxy
-
-##### Helm Chart
-
-* [MockServer Helm Chart](../helm/mockserver/README.md) - a Helm Chart that installs MockServer to a Kubernetes cluster, available versions:
-  * [5.15.0](https://www.mock-server.com/mockserver-5.15.0.tgz)
-  * [5.14.0](https://www.mock-server.com/mockserver-5.14.0.tgz)
-  * [5.13.2](https://www.mock-server.com/mockserver-5.13.2.tgz)
-  * [5.13.1](https://www.mock-server.com/mockserver-5.13.1.tgz)
-  * [5.13.0](https://www.mock-server.com/mockserver-5.13.0.tgz)
-  * [5.12.0](https://www.mock-server.com/mockserver-5.12.0.tgz)
-  * [5.11.2](https://www.mock-server.com/mockserver-5.11.2.tgz)
-  * [5.11.1](https://www.mock-server.com/mockserver-5.11.1.tgz)
-  * [5.11.0](https://www.mock-server.com/mockserver-5.11.0.tgz)
-  * ...
-
-##### MockServer Clients
-
-* [mockserver-client-ruby ![mockserver-client](https://badge.fury.io/rb/mockserver-client.png)](https://rubygems.org/gems/mockserver-client) - Ruby client for both the MockServer and the proxy 
-* [mockserver-client-java](https://central.sonatype.com/artifact/org.mock-server/mockserver-client-java) - a Java client for both the MockServer and the proxy 
-* [mockserver-client-node](https://www.npmjs.org/package/mockserver-client) - a Node.js and [browser](https://raw.githubusercontent.com/mock-server/mockserver-client-node/mockserver-5.10.0/mockServerClient.js) client for both the MockServer and the proxy
-
-##### Previous Versions
-Version | Date        | Git & Docker Tag / Git Hash                                                                                                                                                                                     | Documentation                                  | Java API                                                                | REST API
-:-------|:------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-----------------------------------------------|:------------------------------------------------------------------------|:---------------------------------------------------------------------------------------
-5.15.0 (latest) | 11 Jan 2023 | [mockserver-5.15.0](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.15.0) / [7c071b](https://github.com/mock-server/mockserver-monorepo/commit/7c071b8be3608036f2a2ea45eee6970d2f2b8d02) | [Documentation](https://mock-server.com)       | [Java API](https://mock-server.com/versions/5.15.0/apidocs/index.html)  | [5.15.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x)
-5.14.0  | 22 Aug 2022 | [mockserver-5.14.0](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.14.0) / [808eba](https://github.com/mock-server/mockserver-monorepo/commit/808ebaa44a88b630ca181e62712aa47d4c9c7ff4) | [Documentation](https://5-14.mock-server.com)  | [Java API](https://mock-server.com/versions/5.14.0/apidocs/index.html)  | [5.14.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.14.x)
-5.13.2  | 05 Apr 2022 | [mockserver-5.13.2](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.13.2) / [81105b](https://github.com/mock-server/mockserver-monorepo/commit/81105b3153674bbe66df612ad1b3a09a34a520cf) | [Documentation](https://5-13.mock-server.com)  | [Java API](https://mock-server.com/versions/5.13.2/apidocs/index.html)  | [5.13.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x)
-5.13.1  | 02 Apr 2022 | [mockserver-5.13.1](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.13.1) / [39d1cc](https://github.com/mock-server/mockserver-monorepo/commit/39d1cc6251e6dbd00ab8012dbe39def6d8bb7312) | [Documentation](https://5-13.mock-server.com)  | [Java API](https://mock-server.com/versions/5.13.1/apidocs/index.html)  | [5.13.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x)
-5.13.0  | 17 Mar 2022 | [mockserver-5.13.0](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.13.0) / [604888](https://github.com/mock-server/mockserver-monorepo/commit/604888cdb0f66f1f217e54c4f3ad3e3c7785f3af) | [Documentation](https://5-13.mock-server.com)  | [Java API](https://mock-server.com/versions/5.13.0/apidocs/index.html)  | [5.13.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x)
-5.12.0  | 12 Feb 2022 | [mockserver-5.12.0](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.12.0) / [61747f](https://github.com/mock-server/mockserver-monorepo/commit/61747fd20316603e7ff4c0dd0e3ee34ea386882f) | [Documentation](https://5-12.mock-server.com)  | [Java API](https://mock-server.com/versions/5.12.0/apidocs/index.html)  | [5.12.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.12.x)
-5.11.2  | 08 Nov 2020 | [mockserver-5.11.2](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.11.2) / [eb84f2](https://github.com/mock-server/mockserver-monorepo/commit/eb84f20b9485233c6926e4067e1e8de652a112d6) | [Documentation](https://5-11.mock-server.com)  | [Java API](https://mock-server.com/versions/5.11.2/apidocs/index.html)  | [5.11.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x)
-5.11.1  | 22 Jul 2020 | [mockserver-5.11.1](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.11.1) / [361e5c](https://github.com/mock-server/mockserver-monorepo/commit/361e5c74e5c7fd906957edbd5a46bb27582e4f5c) | [Documentation](https://5-11.mock-server.com)  | [Java API](https://mock-server.com/versions/5.11.1/apidocs/index.html)  | [5.11.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x)
-5.11.0  | 08 Jul 2020 | [mockserver-5.11.0](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.11.0) / [756758](https://github.com/mock-server/mockserver-monorepo/commit/756758ebe3d032f3852411a9bb91c3c66d819ddc) | [Documentation](https://5-11.mock-server.com)  | [Java API](https://mock-server.com/versions/5.11.0/apidocs/index.html)  | [5.11.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x)
-5.10.0  | 24 Mar 2020 | [mockserver-5.10.0](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.10.0) / [14124d](https://github.com/mock-server/mockserver-monorepo/commit/14124d32ef96c207cc73cc5334c1d7236d8c7640) | [Documentation](https://5-10.mock-server.com)  | [Java API](https://mock-server.com/versions/5.10.0/apidocs/index.html)  | [5.10.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x)
-5.9.0   | 01 Feb 2020 | [mockserver-5.9.0](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.9.0)   / [eacf07](https://github.com/mock-server/mockserver-monorepo/commit/eacf07ad1eb738bacbf7c473f0d1aa62b4028602) | [Documentation](https://5-9.mock-server.com)   | [Java API](https://mock-server.com/versions/5.9.0/apidocs/index.html)   | [5.9.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x)
-5.8.1   | 23 Dec 2019 | [mockserver-5.8.1](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.8.1)   / [f0e9ab](https://github.com/mock-server/mockserver-monorepo/commit/f0e9ab3b64f47f7f8f756d5ae8bf7b1b4611d8e6) | [Documentation](https://5-8.mock-server.com)   | [Java API](https://mock-server.com/versions/5.8.1/apidocs/index.html)   | [5.8.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x)
-5.8.0   | 01 Dec 2019 | [mockserver-5.8.0](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.8.0)   / [7c9fc5](https://github.com/mock-server/mockserver-monorepo/commit/7c9fc5e5e831feac71dd68d0341ff089f37cec1e) | [Documentation](https://5-8.mock-server.com)   | [Java API](https://mock-server.com/versions/5.8.0/apidocs/index.html)   | [5.8.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x)
-5.7.2   | 16 Nov 2019 | [mockserver-5.7.2](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.7.2)   / [7c9fc5](https://github.com/mock-server/mockserver-monorepo/commit/7c9fc5e5e831feac71dd68d0341ff089f37cec1e) | [Documentation](https://5-7.mock-server.com)   | [Java API](https://mock-server.com/versions/5.7.2/apidocs/index.html)   | [5.7.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.7.x)
-5.7.1   | 09 Nov 2019 | [mockserver-5.7.1](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.7.1)   / [0ca353](https://github.com/mock-server/mockserver-monorepo/commit/0ca3537023e9e0f9abcb09c92279891cbc0527c7) | [Documentation](https://5-7.mock-server.com)   | [Java API](https://mock-server.com/versions/5.7.1/apidocs/index.html)   | [5.7.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.7.x)
-5.7.0   | 01 Nov 2019 | [mockserver-5.7.0](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.7.0)   / [b58bc5](https://github.com/mock-server/mockserver-monorepo/commit/b58bc589efbc76272a2053a64e774a001f1bb0a2) | [Documentation](https://5-7.mock-server.com)   | [Java API](https://mock-server.com/versions/5.7.0/apidocs/index.html)   | [5.7.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.7.x)
-5.6.1   | 21 Jul 2019 | [mockserver-5.6.1](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.6.1)   / [aec1fb](https://github.com/mock-server/mockserver-monorepo/commit/aec1fbf1e826dc59fe4a19c3331ab6802ec4c3c7) | [Documentation](https://5-6.mock-server.com)   | [Java API](https://mock-server.com/versions/5.6.0/apidocs/index.html)   | [5.6.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.6.x)
-5.6.0   | 21 Jun 2019 | [mockserver-5.6.0](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.6.0)   / [8f82dc](https://github.com/mock-server/mockserver-monorepo/commit/8f82dc4d37271c3cbfe0b3a1963e91ec3a4ef7a7) | [Documentation](https://5-6.mock-server.com)   | [Java API](https://mock-server.com/versions/5.6.0/apidocs/index.html)   | [5.6.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.6.x)
-5.5.4   | 26 Apr 2019 | [mockserver-5.5.4](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.5.4)   / [4ffd31](https://github.com/mock-server/mockserver-monorepo/commit/4ffd3162a3250f18d343901b30c3ee71a75b1982) | [Documentation](https://5-5.mock-server.com)   | [Java API](https://mock-server.com/versions/5.5.4/apidocs/index.html)   | [5.5.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.5.x)
-5.5.1   | 29 Dec 2018 | [mockserver-5.5.1](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.5.1)   / [11d8a9](https://github.com/mock-server/mockserver-monorepo/commit/11d8a96b0eaf07b7fffd29444203503b1cdca653) | [Documentation](https://5-5.mock-server.com)   | [Java API](https://mock-server.com/versions/5.5.1/apidocs/index.html)   | [5.5.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.5.x)
-5.5.0   | 15 Nov 2018 | [mockserver-5.5.0](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.5.0)   / [06e6fd](https://github.com/mock-server/mockserver-monorepo/commit/06e6fdc4757f13fb5943fc281d5e55dc1c30919d) | [Documentation](https://5-5.mock-server.com)   | [Java API](https://mock-server.com/versions/5.5.0/apidocs/index.html)   | [5.5.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.5.x)
-5.4.1   | 20 Jun 2018 | [mockserver-5.4.1](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.4.1)   / [7cd5de](https://github.com/mock-server/mockserver-monorepo/commit/7cd5defc7463e8773d011467147a8a0f7e7b4af8) | [Documentation](https://5-4.mock-server.com)   | [Java API](https://mock-server.com/versions/5.4.1/apidocs/index.html)   | [5.4.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.4.x)
-5.3.0   | 25 Dec 2017 | [mockserver-5.3.0](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.3.0)   / [ad62bb](https://github.com/mock-server/mockserver-monorepo/commit/ad62bbc4fdc1470818ffab14630623dc591ead74) | [Documentation](https://5-3.mock-server.com)   | [Java API](https://mock-server.com/versions/5.3.0/apidocs/index.html)   | [5.2.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
-5.2.3   | 17 Dec 2017 | [mockserver-5.2.3](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.2.3)   / [e81c53](https://github.com/mock-server/mockserver-monorepo/commit/e81c53852b763f88b2399090ef414f074b3e3d81) | [Documentation](https://5-2.mock-server.com)   | [Java API](https://mock-server.com/versions/5.2.3/apidocs/index.html)   | [5.2.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
-5.2.2   | 12 Dec 2017 | [mockserver-5.2.2](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.2.2)   / [b47090](https://github.com/mock-server/mockserver-monorepo/commit/b47090b579d35c7136b84378402ff466db0bfb60) | [Documentation](https://5-2.mock-server.com)   | [Java API](https://mock-server.com/versions/5.2.2/apidocs/index.html)   | [5.2.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
-5.2.1   | 11 Dec 2017 | [mockserver-5.2.1](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.2.1)   / [834ec8](https://github.com/mock-server/mockserver-monorepo/commit/834ec8fcac335b10d09183cecfe6dae358a4080c) | [Documentation](https://5-2.mock-server.com)   | [Java API](https://mock-server.com/versions/5.2.1/apidocs/index.html)   | [5.2.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
-5.2.0   | 10 Dec 2017 | [mockserver-5.2.0](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.2.0)   / [ccb4d2](https://github.com/mock-server/mockserver-monorepo/commit/ccb4d241b55dcebc9f8abfb3722cadad143f3acf) | [Documentation](https://5-2.mock-server.com)   | [Java API](https://mock-server.com/versions/5.2.0/apidocs/index.html)   | [5.2.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
-5.1.1   | 06 Dec 2017 | [mockserver-5.1.1](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.1.1)   / [664afb](https://github.com/mock-server/mockserver-monorepo/commit/664afb2c539333ce89559fb3153e56bc48ba9cb5) | [Documentation](https://5-1.mock-server.com)   | [Java API](https://mock-server.com/versions/5.1.1/apidocs/index.html)   | [5.1.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.1.x)
-5.1.0   | 05 Dec 2017 | [mockserver-5.1.0](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.1.0)   / [bbdda1](https://github.com/mock-server/mockserver-monorepo/commit/bbdda1898eb3f396d56f7268faa6c2a644449ae3) | [Documentation](https://5-1.mock-server.com)   | [Java API](https://mock-server.com/versions/5.1.0/apidocs/index.html)   | [5.1.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.1.x)
-5.0.1   | 05 Dec 2017 | [mockserver-5.0.1](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.0.1)   / [975fb8](https://github.com/mock-server/mockserver-monorepo/commit/975fb8971da1cd32891201733a2bc6aa4080d7ae) | [Documentation](https://5-0.mock-server.com)   | [Java API](https://mock-server.com/versions/5.0.1/apidocs/index.html)   | [5.0.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.0.x)
-5.0.0   | 04 Dec 2017 | [mockserver-5.0.0](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-5.0.0)   / [ed5d13](https://github.com/mock-server/mockserver-monorepo/commit/ed5d13e863a25e00ab404735e183df2ce4afe635) | [Documentation](https://5-0.mock-server.com)   | [Java API](https://mock-server.com/versions/5.0.0/apidocs/index.html)   | [5.0.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.0.x)
-4.1.0   | 30 Nov 2017 | [mockserver-4.1.0](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-4.1.0)   / [4e37b2](https://github.com/mock-server/mockserver-monorepo/commit/4e37b27b9b1bc786d0b5f53d5f1a39dd457f5d34) | [Documentation](https://4-1.mock-server.com)   | [Java API](https://mock-server.com/versions/4.1.0/apidocs/index.html)   | [4.x.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/4.x.x)
-4.0.0   | 28 Nov 2017 | [mockserver-4.0.0](https://github.com/mock-server/mockserver-monorepo/tree/mockserver-4.0.0)   / [8b2455](https://github.com/mock-server/mockserver-monorepo/commit/8b24553c6b7aabbe4ef5e99b37449330f5b908d7) | [Documentation](https://4-0.mock-server.com)   | [Java API](https://mock-server.com/versions/4.0.0/apidocs/index.html)   | [4.x.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/4.x.x)
-
-### Issues
-
-If you have any problems, please [check the project issues](https://github.com/mock-server/mockserver-monorepo/issues?state=open) and avoid opening issues that have already been fixed.  When you open an issue please provide the following information:
-- MockServer version (i.e. 5.15.0)
-- How your running the MockServer (i.e maven plugin, docker, etc)
-- MockServer log output, at INFO level (or higher)
-- What the error is
-- What you are trying to do
-
-### Contributions
-
-Pull requests are, of course, very welcome! Please read our [contributing to the project](../CONTRIBUTING.md) guide first. Then head over to the [open issues](https://github.com/mock-server/mockserver-monorepo/issues?state=open) to see what we need help with. Make sure you let us know if you intend to work on something. Also check out the [project roadmap](https://github.com/orgs/mock-server/projects/1) to see what is already in the backlog.
-
-### Feature Requests
-
-Feature requests are submitted to [GitHub issues](https://github.com/mock-server/mockserver-monorepo/issues?state=open) and tracked on the [project roadmap](https://github.com/orgs/mock-server/projects/1).
-
-### Maintainers
-* [James D Bloom](https://blog.jamesdbloom.com)
+See the [main MockServer README](../README.md) for community links, how to report issues, and contribution guidelines.

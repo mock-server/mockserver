@@ -1,87 +1,66 @@
-[MockServer](https://www.mock-server.com)
-==========
+# MockServer Docker Container
 
-### Installation
+> Docker container for running [MockServer](https://www.mock-server.com) — an HTTP(S) mock server and proxy for testing
 
-1. Install [Docker](https://www.docker.com/).
+[![Docker Hub](https://img.shields.io/docker/pulls/mockserver/mockserver.svg)](https://hub.docker.com/r/mockserver/mockserver/)
 
-2. Download [trusted build](https://hub.docker.com/r/mockserver/mockserver) from public [Docker Registry](https://hub.docker.com/): `docker pull mockserver/mockserver`
-
-### Usage
-
-* **FIRST** ensure you have the latest version
+## Quick Start
 
 ```bash
 docker pull mockserver/mockserver
+docker run -d --rm --name mockserver -p 1080:1080 mockserver/mockserver
 ```
-    
-* **EITHER** run the container with no log output (i.e. in daemon mode)
- 
+
+## Usage
+
+Run in daemon mode (no log output):
+
 ```bash
 docker run -d --rm --name mockserver -p <serverPort>:1080 mockserver/mockserver
 ```
 
-* **OR** run the container with log output to console (i.e. in the foreground)
- 
+Or run in foreground (log output to console):
+
 ```bash
 docker run --rm --name mockserver -p <serverPort>:1080 mockserver/mockserver
 ```
 
-* **THEN** when your finished stop the container
+Stop the container:
 
 ```bash
 docker stop mockserver && docker rm mockserver
 ```
 
+## Configuration
+
 The default command executed when the container runs is:
- 
+
 ```bash
 -logLevel INFO -serverPort 1080
 ```
 
-This can be modified to change the command line options passed to the MockServer for example:
+Override command line options:
 
 ```bash
 docker run --rm --name mockserver -p 1090:1090 mockserver/mockserver -logLevel INFO -serverPort 1090 -proxyRemotePort 443 -proxyRemoteHost mock-server.com
 ```
 
-All configuration values (see: https://mock-server.com/mock_server/configuration_properties.html) can also be modified by passing environment variable through docker-compose.yml file. 
+All [configuration properties](https://mock-server.com/mock_server/configuration_properties.html) can also be set via environment variables in a `docker-compose.yml`:
 
-The following is a sample docker-compose.yml file for changing maximum expectations and maximum header size:
+```yaml
+version: "2.4"
+services:
+  mockServer:
+    image: mockserver/mockserver:latest
+    ports:
+    - 1080:1080
+    environment:
+    - MOCKSERVER_MAX_EXPECTATIONS=100
+    - MOCKSERVER_MAX_HEADER_SIZE=8192
+```
 
- ```
- mockServer:
-   image: mockserver/mockserver:latest
-   ports:
-   - 1080:1080
-   environment:
-   - MOCKSERVER_MAX_EXPECTATIONS=100
-   - MOCKSERVER_MAX_HEADER_SIZE=8192
- ```
- 
-### What is MockServer
+For more configuration options see the [Docker documentation](https://www.mock-server.com/where/docker.html).
 
-MockServer is for mocking of any system you integrate with via HTTP or HTTPS (i.e. services, web sites, etc).
+## Community, Issues & Contributing
 
-MockServer supports:
-
-* mocking of any HTTP / HTTPS response when any request is matched ([learn more](https://www.mock-server.com/#what-is-mockserver))
-* recording requests and responses to analyse how a system behaves ([learn more](https://www.mock-server.com/#what-is-mockserver))
-* verifying which requests and responses have been sent as part of a test ([learn more](https://www.mock-server.com/#what-is-mockserver))
-
-This docker container will (by default) run an instance of the MockServer on the following port:
-
-* serverPort **1080**
-
-For information on how to use the MockServer please see https://www.mock-server.com
-
-### Issues
-
-If you have any problems, please [check the project issues](https://github.com/mock-server/mockserver-monorepo/issues?state=open).
-
-### Contributions
-
-Pull requests are, of course, very welcome! Please read our [contributing to the project](../CONTRIBUTING.md) guide first. Then head over to the [open issues](https://github.com/mock-server/mockserver-monorepo/issues?state=open) to see what we need help with. Make sure you let us know if you intend to work on something.
-
-### Maintainers
-* [James D Bloom](https://blog.jamesdbloom.com)
+See the [main MockServer README](../README.md) for community links, how to report issues, and contribution guidelines.
