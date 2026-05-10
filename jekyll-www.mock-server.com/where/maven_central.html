@@ -15,6 +15,8 @@ sitemap:
 
 <p>Maven Central contains the following released MockServer artifacts:</p>
 
+<p><strong>Recommended:</strong> Use the <code>-no-dependencies</code> artifacts (e.g. <code>mockserver-netty-no-dependencies</code>, <code>mockserver-client-java-no-dependencies</code>). These bundle all dependencies into a single JAR with relocated packages, so they declare <strong>zero transitive dependencies</strong>. This avoids classpath conflicts with your project's own dependencies and eliminates CVE scanning noise from unused transitive dependencies. The standard artifacts (without the <code>-no-dependencies</code> suffix) pull in all transitive dependencies via their POM and should only be used if you need to override specific dependency versions.</p>
+
 <ul>
     <a id="mockserver_netty" class="anchor" href="#mockserver_netty">&nbsp;</a>
 	<li><a target="_blank" href="https://search.maven.org/artifact/org.mock-server/mockserver-netty">mockserver-netty</a> - a web server for mocking and proxying using Netty

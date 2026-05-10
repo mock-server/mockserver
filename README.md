@@ -66,12 +66,15 @@ MockServer requires **Java 11+**. Java 11 is the minimum supported version to ma
 
 Maven Central contains the following MockServer artifacts:
 
-* [mockserver-netty](https://central.sonatype.com/artifact/org.mock-server/mockserver-netty) - an HTTP(S) web server that mocks and records requests and responses
-* [mockserver-netty:shaded](https://central.sonatype.com/artifact/org.mock-server/mockserver-netty) - mockserver-netty (as above) with all dependencies embedded
+* [mockserver-netty-no-dependencies](https://central.sonatype.com/artifact/org.mock-server/mockserver-netty-no-dependencies) - an HTTP(S) web server that mocks and records requests and responses, with all dependencies bundled and relocated — **zero transitive dependencies (recommended)**
+* [mockserver-netty](https://central.sonatype.com/artifact/org.mock-server/mockserver-netty) - as above but with transitive dependencies declared in the POM
 * [mockserver-war](https://central.sonatype.com/artifact/org.mock-server/mockserver-war) - a deployable WAR for mocking HTTP(S) responses (for any JEE web server)
 * [mockserver-proxy-war](https://central.sonatype.com/artifact/org.mock-server/mockserver-proxy-war) - a deployable WAR that records requests and responses (for any JEE web server)
 * [mockserver-maven-plugin](https://central.sonatype.com/artifact/org.mock-server/mockserver-maven-plugin) - a maven plugin to start, stop and fork MockServer using maven
-* [mockserver-client-java](https://central.sonatype.com/artifact/org.mock-server/mockserver-client-java) - a Java client to communicate with both the server and the proxy
+* [mockserver-client-java-no-dependencies](https://central.sonatype.com/artifact/org.mock-server/mockserver-client-java-no-dependencies) - a Java client to communicate with both the server and the proxy, with all dependencies bundled and relocated — **zero transitive dependencies (recommended)**
+* [mockserver-client-java](https://central.sonatype.com/artifact/org.mock-server/mockserver-client-java) - as above but with transitive dependencies declared in the POM
+
+> **Tip:** The `-no-dependencies` artifacts bundle all dependencies into a single JAR with relocated packages, so they declare zero transitive dependencies. This avoids classpath conflicts and eliminates CVE scanning noise from unused transitive dependencies. See the [Maven Central](https://www.mock-server.com/where/maven_central.html) page for all artifact variants.
 
 In addition MockServer SNAPSHOT artifacts can also be found on [Sonatype](https://oss.sonatype.org/index.html#nexus-search;quick~org.mock-server).
 
@@ -96,7 +99,7 @@ Docker Hub contains the following artifacts:
 
 ##### MockServer Clients
 
-* [mockserver-client-java ![Maven Central](https://img.shields.io/maven-central/v/org.mock-server/mockserver-client-java.svg)](https://central.sonatype.com/artifact/org.mock-server/mockserver-client-java) - a Java client for both the MockServer and the proxy
+* [mockserver-client-java ![Maven Central](https://img.shields.io/maven-central/v/org.mock-server/mockserver-client-java.svg)](https://central.sonatype.com/artifact/org.mock-server/mockserver-client-java) - a Java client for both the MockServer and the proxy (use the `-no-dependencies` artifact to avoid transitive dependencies)
 * [mockserver-client-node ![npm](https://img.shields.io/npm/v/mockserver-client.svg)](https://www.npmjs.org/package/mockserver-client) - a Node.js and [browser](https://raw.githubusercontent.com/mock-server/mockserver-client-node/mockserver-5.10.0/mockServerClient.js) client for both the MockServer and the proxy
 * [mockserver-client-python](https://pypi.org/project/mockserver-client/) - a Python client for both the MockServer and the proxy
 * [mockserver-client-ruby ![Gem](https://badge.fury.io/rb/mockserver-client.png)](https://rubygems.org/gems/mockserver-client) - a Ruby client for both the MockServer and the proxy
