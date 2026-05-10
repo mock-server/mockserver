@@ -22,6 +22,25 @@ module "buildkite_stack" {
   managed_policy_arns         = [aws_iam_policy.read_build_secrets.arn]
 }
 
+module "buildkite_trigger_stack" {
+  source  = "buildkite/elastic-ci-stack-for-aws/buildkite"
+  version = "~> 0.7.0"
+
+  stack_name            = "buildkite-mockserver-trigger"
+  buildkite_agent_token = var.buildkite_agent_token
+  buildkite_queue       = "trigger"
+
+  instance_types          = var.trigger_instance_types
+  min_size                = var.trigger_min_size
+  max_size                = var.trigger_max_size
+  on_demand_percentage    = 0
+  on_demand_base_capacity = 0
+
+  agents_per_instance         = 4
+  associate_public_ip_address = true
+  managed_policy_arns         = [aws_iam_policy.read_build_secrets.arn]
+}
+
 module "buildkite_release_stack" {
   source  = "buildkite/elastic-ci-stack-for-aws/buildkite"
   version = "~> 0.7.0"

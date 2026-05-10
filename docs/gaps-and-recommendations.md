@@ -144,7 +144,7 @@ No Dependabot or Renovate configuration exists for automated dependency update P
 | Testing strategy | Documented | [testing.md](testing.md) |
 | Security architecture | Documented | [code/tls-and-security.md](code/tls-and-security.md) |
 | Metrics & monitoring | Documented | [code/metrics.md](code/metrics.md) |
-| Agent starvation fix | **Open** | Trigger jobs block agents polling; see [ci-cd.md](infrastructure/ci-cd.md#known-issue-agent-starvation-from-script-based-triggers) |
+| Agent starvation fix | **Resolved** | Separate `trigger` queue on cheap t3 instances; see [ci-cd.md](infrastructure/ci-cd.md#agent-starvation-from-script-based-triggers-resolved) |
 | Operational runbook | **Missing** | Recommended: `docs/runbook.md` |
 | Infrastructure as Code | **Partial** | `terraform/buildkite-agents/` (website IaC still missing) |
 | API documentation | **Partial** | OpenAPI spec exists, not integrated |

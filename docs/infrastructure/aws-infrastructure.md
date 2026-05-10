@@ -10,13 +10,17 @@ graph TB
         direction TB
         TF["Terraform
 buildkite-agents/"]
-        ASG["AutoScaling Group"]
+        ASG_D["ASG default queue"]
+        ASG_T["ASG trigger queue"]
         SCALER["Lambda Autoscaler"]
         AZ_LAMBDA["Lambda AZ Rebalance
 Suspender"]
         EC2["EC2 c5/m5 instances
-0–10 agents
+0–10 build agents
 20% on-demand / 80% spot"]
+        EC2_T["EC2 t3 instances
+0–4 trigger agents
+100% spot, 4 agents/instance"]
         SSM["SSM Parameter Store
 Agent Token"]
         S3_SECRETS["S3 Secrets Bucket"]
@@ -53,15 +57,20 @@ mock-server.com + 4 other zones"]
 mock-server.com + wildcard"]
     end
 
-    TF -->|provisions| ASG
+    TF -->|provisions| ASG_D
+    TF -->|provisions| ASG_T
     TF -->|provisions| SCALER
     TF -->|state| S3_STATE
     EB -->|triggers| SCALER
-    SCALER -->|scales| ASG
-    ASG -->|uses| LT
-    ASG -->|manages| EC2
+    SCALER -->|scales| ASG_D
+    SCALER -->|scales| ASG_T
+    ASG_D -->|uses| LT
+    ASG_D -->|manages| EC2
+    ASG_T -->|manages| EC2_T
     EC2 -->|reads token| SSM
     EC2 -->|reads secrets| S3_SECRETS
+    EC2_T -->|reads token| SSM
+    EC2_T -->|reads secrets| S3_SECRETS
     VPC -->|internet via| IGW
     VPC -->|private access via| VPCE
     EC2 -->|logs to| CW
@@ -94,8 +103,8 @@ All active resources are in `eu-west-2`, managed by Terraform in `terraform/buil
 flowchart TB
     subgraph "Buildkite Cloud"
         BK_API[Buildkite API]
-        BK_QUEUE["Job Queue
-'default'"]
+        BK_QUEUE["Job Queues
+default · trigger · release"]
     end
 
     subgraph "AWS eu-west-2"
@@ -114,8 +123,11 @@ Buildkite Agent
 SSM · SSM Messages · EC2 Messages"]
         end
         IGW[Internet Gateway]
-        ASG["AutoScaling Group
-0–10 instances"]
+        ASG_D["ASG default
+0–10 c5/m5 instances"]
+        ASG_T["ASG trigger
+0–4 t3 instances
+4 agents/instance"]
         SCALER["Lambda Autoscaler
 Runs every minute"]
         AZ_LAMBDA[Lambda AZ Rebalance Suspender]
@@ -129,8 +141,9 @@ rate 1 min"]
 
     BK_API -->|queue depth| SCALER
     EB -->|invokes| SCALER
-    SCALER -->|set desired 0–10| ASG
-    ASG -->|manages| EC2_1 & EC2_2
+    SCALER -->|set desired| ASG_D
+    SCALER -->|set desired| ASG_T
+    ASG_D -->|manages| EC2_1 & EC2_2
     EC2_1 & EC2_2 -->|poll for jobs| BK_QUEUE
     EC2_1 & EC2_2 -->|read token via| VPCE
     VPCE -->|reads| SSM
@@ -144,9 +157,11 @@ rate 1 min"]
 
 | Resource | Details |
 |----------|---------|
-| AutoScaling Group | Min 0, Max 10, 20% on-demand / 80% Spot, diversified instance types (c5, c5a, m5), on-demand base capacity 1, AZRebalance suspended |
-| Launch Template | c5.2xlarge (primary), 250 GiB gp3 root volume, delete-on-termination |
-| EC2 Instances | 0–10 mixed on-demand + Spot instances (ephemeral), scale to zero when idle |
+| ASG `default` | Min 0, Max 10, 20% on-demand / 80% Spot, diversified instance types (c5, c5a, m5), on-demand base capacity 1, 1 agent/instance, AZRebalance suspended |
+| ASG `trigger` | Min 0, Max 4, 100% Spot, t3.small/t3a.small/t3.micro, 4 agents/instance — cheap instances for trigger polling jobs |
+| ASG `release` | Min 0, Max 2, 100% on-demand, same instance types as default, 1 agent/instance |
+| Launch Template | c5.2xlarge (primary for default/release), t3.small (primary for trigger), 250 GiB gp3 root volume, delete-on-termination |
+| EC2 Instances | 0–10 default + 0–4 trigger + 0–2 release (ephemeral), all scale to zero when idle |
 
 #### Networking
 
@@ -228,15 +243,24 @@ rate 1 min"]
 
 ### Scaling Behaviour
 
+#### Default Queue (builds)
 - **Minimum:** 0 instances (scales to zero when idle)
-- **Maximum:** 10 instances
-- **Agents per instance:** 1
+- **Maximum:** 10 instances, 1 agent per instance
+- **Instance types:** Diversified (c5.2xlarge, c5a.2xlarge, m5.2xlarge)
+- **Capacity mix:** 20% on-demand, 80% Spot, with on-demand base capacity of 1
+- **Build cost:** ~$0.03–0.10/hr per agent (mixed on-demand/spot pricing)
+
+#### Trigger Queue (polling)
+- **Minimum:** 0 instances (scales to zero when idle)
+- **Maximum:** 4 instances, 4 agents per instance (up to 16 concurrent trigger jobs)
+- **Instance types:** t3.small, t3a.small, t3.micro
+- **Capacity mix:** 100% Spot
+- **Cost:** ~$0.004–0.008/hr per instance (~$0.001–0.002/hr per trigger agent)
+
+#### Common
 - **Scaling frequency:** Every 60 seconds
 - **Scale trigger:** Buildkite job queue depth
-- **Instance types:** Diversified (c5.2xlarge, c5.xlarge, c5a.2xlarge, c5a.xlarge, m5.2xlarge, m5.xlarge)
-- **Capacity mix:** 20% on-demand, 80% Spot, with on-demand base capacity of 1
-- **Idle cost:** $0 (scales to zero)
-- **Build cost:** ~$0.03–0.10/hr per agent (mixed on-demand/spot pricing)
+- **Idle cost:** $0 (all queues scale to zero)
 
 ### Build Flow
 
@@ -310,11 +334,16 @@ The bootstrap (`terraform/buildkite-agents/bootstrap/`) uses `import` blocks, ma
 |----------|------|---------|-------------|
 | `buildkite_agent_token` | `string` | *(required)* | Buildkite agent registration token |
 | `region` | `string` | `eu-west-2` | AWS region |
-| `instance_types` | `string` | `c5.2xlarge,c5.xlarge,...` | EC2 instance types (diversified) |
+| `instance_types` | `string` | `c5.2xlarge` | EC2 instance types for default/release queues |
+| `min_size` | `number` | `0` | Minimum default queue instances (0 = scale to zero) |
+| `max_size` | `number` | `10` | Maximum default queue instances |
+| `on_demand_percentage` | `number` | `20` | % on-demand vs spot for default queue |
+| `trigger_instance_types` | `string` | `t3.small` | EC2 instance types for trigger queue (cheap polling) |
+| `trigger_min_size` | `number` | `0` | Minimum trigger queue instances |
+| `trigger_max_size` | `number` | `4` | Maximum trigger queue instances |
+| `release_min_size` | `number` | `0` | Minimum release queue instances |
+| `release_max_size` | `number` | `2` | Maximum release queue instances |
 | `alert_email` | `string` | `""` | Email address for infrastructure alerts |
-| `min_size` | `number` | `0` | Minimum instances (0 = scale to zero) |
-| `max_size` | `number` | `10` | Maximum instances |
-| `on_demand_percentage` | `number` | `20` | % on-demand vs spot (20 = 20% on-demand fallback) |
 
 ### Quick Start
 

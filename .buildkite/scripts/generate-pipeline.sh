@@ -98,7 +98,11 @@ trigger_if_changed() {
     command: \".buildkite/scripts/trigger-pipeline.sh ${pipeline_slug} '${label}'\"
     timeout_in_minutes: 120
     agents:
-      queue: default
+      queue: trigger
+    retry:
+      automatic:
+        - exit_status: -1
+          limit: 2
 "
   fi
 }
@@ -120,7 +124,11 @@ if printf '%s\n' "$CHANGED_FILES" | grep -qE -- "^(\.buildkite/|\.github/|terraf
     command: \".buildkite/scripts/trigger-pipeline.sh mockserver-infra 'MockServer Infra'\"
     timeout_in_minutes: 120
     agents:
-      queue: default
+      queue: trigger
+    retry:
+      automatic:
+        - exit_status: -1
+          limit: 2
 "
 fi
 

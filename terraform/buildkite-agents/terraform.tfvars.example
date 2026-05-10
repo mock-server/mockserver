@@ -11,6 +11,8 @@ min_size             = 0
 max_size             = 10
 on_demand_percentage = 20
 release_max_size     = 2
+trigger_instance_types = "t3.small,t3a.small,t3.micro"
+trigger_max_size       = 4
 
 # Email address for infrastructure alerts (SNS notifications)
 # Leave empty ("") to skip email subscription

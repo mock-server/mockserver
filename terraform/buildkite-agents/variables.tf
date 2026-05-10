@@ -46,6 +46,24 @@ variable "release_max_size" {
   default     = 2
 }
 
+variable "trigger_instance_types" {
+  description = "EC2 instance types for trigger queue (cheap, low-CPU — only runs curl/sleep polling loops)"
+  type        = string
+  default     = "t3.small"
+}
+
+variable "trigger_min_size" {
+  description = "Minimum number of trigger agent instances (0 = scale to zero when idle)"
+  type        = number
+  default     = 0
+}
+
+variable "trigger_max_size" {
+  description = "Maximum number of trigger agent instances"
+  type        = number
+  default     = 4
+}
+
 variable "alert_email" {
   description = "Email address for infrastructure alerts (SNS notifications)"
   type        = string

@@ -82,16 +82,17 @@ To investigate or manage AWS infrastructure:
 
 ### Buildkite Agent Infrastructure
 
-Build agents run on EC2 instances in an AutoScaling Group, managed by a Lambda-based autoscaler. Infrastructure is managed by Terraform in `terraform/buildkite-agents/`. See [docs/infrastructure/aws-infrastructure.md](docs/infrastructure/aws-infrastructure.md) for full details.
+Build agents run on EC2 instances in AutoScaling Groups, managed by Lambda-based autoscalers. Infrastructure is managed by Terraform in `terraform/buildkite-agents/`. See [docs/infrastructure/aws-infrastructure.md](docs/infrastructure/aws-infrastructure.md) for full details.
 
-| Property | Current (Terraform) | Legacy (CloudFormation) |
-|----------|---------------------|------------------------|
-| Region | `eu-west-2` | `us-east-1` |
-| Capacity and instance type | Defined by `instance_types`, `min_size`, `max_size`, and `on_demand_percentage` in `terraform/buildkite-agents/` | Inspect live values via AWS CLI |
-| IaC in repo | Yes (`terraform/`) | No |
-| Scaling behavior | Lambda scaler adjusts desired capacity from Buildkite queue depth | Lambda scaler adjusts desired capacity from queue depth |
+Three agent queues separate workloads by resource needs:
 
-The scaler runs every minute. Treat values in Terraform and live AWS state as authoritative; avoid hard-coding instance types or capacity numbers in prompts.
+| Queue | Instance Types | Max Instances | Agents/Instance | Purpose |
+|-------|---------------|---------------|-----------------|---------|
+| `default` | c5.2xlarge, c5a.2xlarge, m5.2xlarge | 10 | 1 | Build and test (Maven, Docker, k3d) |
+| `trigger` | t3.small, t3a.small, t3.micro | 4 | 4 | Trigger polling jobs (sleep + curl) |
+| `release` | Same as default | 2 | 1 | Release pipeline steps with release secrets |
+
+The scaler runs every minute per queue. Treat values in Terraform and live AWS state as authoritative; avoid hard-coding instance types or capacity numbers in prompts.
 
 #### Critical Cost Requirement: Scale to Zero
 

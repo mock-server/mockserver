@@ -50,7 +50,15 @@ All custom CI pipelines run on Buildkite with self-managed EC2 agents. This keep
 
 ## Buildkite Pipelines
 
-The monorepo uses a path-based pipeline orchestrator that dynamically triggers separate child pipelines based on changed files. Each child pipeline appears individually in the Buildkite dashboard, giving per-project visibility. Build pipelines use the `default` queue (EC2 Spot pool). Release pipeline steps that access release secrets use a dedicated `release` queue with its own agent stack and IAM permissions.
+The monorepo uses a path-based pipeline orchestrator that dynamically triggers separate child pipelines based on changed files. Each child pipeline appears individually in the Buildkite dashboard, giving per-project visibility. Three agent queues are used:
+
+| Queue | Instance Types | Purpose |
+|-------|---------------|---------|
+| `default` | `c5.2xlarge`, `c5a.2xlarge`, `m5.2xlarge` | Build and test workloads (Maven, Docker, k3d) |
+| `trigger` | `t3.small`, `t3a.small`, `t3.micro` | Trigger polling jobs (`sleep` + `curl` loops) |
+| `release` | Same as `default` | Release pipeline steps that access release secrets |
+
+Trigger jobs (which poll child builds via the Buildkite API) run on cheap `trigger` queue instances to avoid starving build agents. See [Agent Starvation](#agent-starvation-from-script-based-triggers-resolved) for background.
 
 ### Pipeline Orchestrator
 
@@ -406,7 +414,7 @@ Once `bk` is installed and authenticated, opencode agents can use it directly fo
 
 **Note:** `bk auth login` requires an interactive TTY (browser OAuth flow), so it must be run by the user in a separate terminal before opencode can use `bk` commands. If the agent detects `bk` is not authenticated, it will prompt the user to run `bk auth login` manually.
 
-## Known Issue: Agent Starvation from Script-Based Triggers
+## Agent Starvation from Script-Based Triggers (Resolved)
 
 ### Problem
 
@@ -463,14 +471,15 @@ Add a second, cheap agent stack on small instances (e.g. `t3.small` or `t3.micro
      buildkite_agent_token = var.buildkite_agent_token
      buildkite_queue       = "trigger"
 
-     instance_types          = "t3.small,t3.micro"
-     min_size                = 0
-     max_size                = 15
-     on_demand_percentage    = 0
-     on_demand_base_capacity = 0
+      instance_types          = "t3.small,t3a.small,t3.micro"
+      min_size                = 0
+      max_size                = 4
+      on_demand_percentage    = 0
+      on_demand_base_capacity = 0
 
-     agents_per_instance         = 5
-     associate_public_ip_address = true
+      agents_per_instance         = 4
+      associate_public_ip_address = true
+      managed_policy_arns         = [aws_iam_policy.read_build_secrets.arn]
    }
    ```
 
@@ -535,9 +544,14 @@ Combine Options A and B: run triggers on cheap instances AND limit concurrency p
 - Most complex to implement
 - Serialisation delays from concurrency groups may not be worth it if the cheap pool has enough capacity
 
-### Recommendation
+### Resolution
 
-**Option A (Separate Agent Pool)** is recommended as the primary fix. It cleanly separates the concern (polling vs. building), is low-cost, and doesn't introduce serialisation delays. If concurrent master builds remain a problem after implementing Option A, Option E (adding concurrency groups) can be layered on top.
+**Option A (Separate Agent Pool) has been implemented.** Trigger steps now target `queue: trigger` in `generate-pipeline.sh`, and a dedicated `buildkite-mockserver-trigger` stack runs on cheap `t3.small`/`t3a.small`/`t3.micro` instances with 4 agents per instance. This cleanly separates polling from building — trigger jobs never compete with real work for `default` queue agents.
+
+**Terraform:** `terraform/buildkite-agents/main.tf` — `module "buildkite_trigger_stack"`
+**Pipeline:** `.buildkite/scripts/generate-pipeline.sh` — `agents: { queue: trigger }`
+
+If concurrent master builds remain a problem, Option E (adding concurrency groups) can be layered on top.
 
 ## Local CI Simulation
 
