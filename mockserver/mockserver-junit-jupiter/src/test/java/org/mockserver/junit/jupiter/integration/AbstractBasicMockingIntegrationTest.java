@@ -1769,7 +1769,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             "" + NEW_LINE +
             " schema validation errors:" + NEW_LINE +
             "" + NEW_LINE +
-            "  16 errors:\n" +
+            "  15 errors:\n" +
             "   - $.httpError: is missing, but is required, if specifying action of type Error\n" +
             "   - $.httpForward: is missing, but is required, if specifying action of type Forward\n" +
             "   - $.httpForwardClassCallback: is missing, but is required, if specifying action of type ForwardClassCallback\n" +
@@ -1784,7 +1784,6 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             "   - $.httpSseResponse: is missing, but is required, if specifying action of type SseResponse\n" +
             "   - $.httpWebSocketResponse: is missing, but is required, if specifying action of type WebSocketResponse\n" +
             "   - $.incorrectField: is not defined in the schema and the schema does not allow additional properties\n" +
-            "   - $: should be valid to one and only one schema, but 0 are valid\n" +
             "   - oneOf of the following must be specified [httpError, httpForward, httpForwardClassCallback, httpForwardObjectCallback, httpForwardTemplate, httpForwardValidateAction, httpOverrideForwardedRequest, httpResponse, httpResponseClassCallback, httpResponseObjectCallback, httpResponseTemplate]" + NEW_LINE +
             "  " + NEW_LINE +
             "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  ")));
