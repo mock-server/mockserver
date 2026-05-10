@@ -11,9 +11,8 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.serialization.model.WebSocketMessageDTO;
 
 import java.io.IOException;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author jamesdbloom
@@ -21,11 +20,11 @@ import java.util.Set;
 @SuppressWarnings({"rawtypes", "unchecked", "FieldMayBeFinal"})
 public class WebSocketMessageSerializer {
 
-    private static final Set<String> ALLOWED_TYPES = new HashSet<>();
+    private static final Map<String, Class> ALLOWED_TYPES = new HashMap<>();
     static {
-        ALLOWED_TYPES.add(HttpRequest.class.getName());
-        ALLOWED_TYPES.add(HttpResponse.class.getName());
-        ALLOWED_TYPES.add(HttpRequestAndHttpResponse.class.getName());
+        ALLOWED_TYPES.put(HttpRequest.class.getName(), HttpRequest.class);
+        ALLOWED_TYPES.put(HttpResponse.class.getName(), HttpResponse.class);
+        ALLOWED_TYPES.put(HttpRequestAndHttpResponse.class.getName(), HttpRequestAndHttpResponse.class);
     }
     private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true, false);
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
@@ -48,13 +47,13 @@ public class WebSocketMessageSerializer {
         }
     }
 
-    public Object deserialize(String messageJson) throws ClassNotFoundException, IOException {
+    public Object deserialize(String messageJson) throws IOException {
         WebSocketMessageDTO webSocketMessageDTO = objectMapper.readValue(messageJson, WebSocketMessageDTO.class);
         if (webSocketMessageDTO.getType() != null && webSocketMessageDTO.getValue() != null) {
-            if (!ALLOWED_TYPES.contains(webSocketMessageDTO.getType())) {
+            Class format = ALLOWED_TYPES.get(webSocketMessageDTO.getType());
+            if (format == null) {
                 throw new IllegalArgumentException("Unsupported WebSocket message type: " + webSocketMessageDTO.getType());
             }
-            Class format = Class.forName(webSocketMessageDTO.getType());
             if (serializers.containsKey(format)) {
                 return serializers.get(format).deserialize(webSocketMessageDTO.getValue());
             } else {

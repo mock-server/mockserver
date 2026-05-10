@@ -27,7 +27,7 @@ import static org.mockserver.model.StringBody.exact;
 public class WebSocketMessageSerializerTest {
 
     @Test
-    public void shouldDeserializeCompleteResponse() throws IOException, ClassNotFoundException {
+    public void shouldDeserializeCompleteResponse() throws IOException {
         // given
         String requestBytes = "{" + NEW_LINE +
             "  \"type\" : \"org.mockserver.model.HttpResponse\"," + NEW_LINE +
@@ -104,7 +104,7 @@ public class WebSocketMessageSerializerTest {
     }
 
     @Test
-    public void shouldDeserializeCompleteRequest() throws IOException, ClassNotFoundException {
+    public void shouldDeserializeCompleteRequest() throws IOException {
         // given
         String requestBytes = "{" + NEW_LINE +
             "  \"type\" : \"org.mockserver.model.HttpRequest\"," + NEW_LINE +
