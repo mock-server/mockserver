@@ -88,3 +88,30 @@ export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'er
 export type ThemeMode = 'dark' | 'light';
 
 export type ClearType = 'all' | 'log' | 'expectations';
+
+export interface DebugMismatchExpectationResult {
+  expectationId?: string;
+  expectationPath?: string;
+  expectationMethod?: string;
+  matches: boolean;
+  matchedFieldCount: number;
+  totalFieldCount: number;
+  differences?: Record<string, string[]>;
+}
+
+export interface DebugMismatchClosestMatch {
+  expectationId: string;
+  matchedFields: number;
+  totalFields: number;
+}
+
+export interface DebugMismatchResult {
+  correlationId: string;
+  timestamp: string;
+  totalExpectations: number;
+  evaluatedExpectations: number;
+  truncated?: boolean;
+  maxExpectationsEvaluated?: number;
+  closestMatch?: DebugMismatchClosestMatch;
+  results: DebugMismatchExpectationResult[];
+}

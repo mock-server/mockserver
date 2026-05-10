@@ -7,10 +7,13 @@ import { useDashboardStore } from './store';
 import { buildTheme } from './theme';
 import { useConnectionParams } from './hooks/useConnectionParams';
 import { useWebSocket } from './hooks/useWebSocket';
+import { useDebugMismatch } from './hooks/useDebugMismatch';
+import { DebugMismatchContext } from './hooks/DebugMismatchContext';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import AppBar from './components/AppBar';
 import FilterPanel from './components/FilterPanel';
 import DashboardGrid from './components/DashboardGrid';
+import DebugMismatchDialog from './components/DebugMismatchDialog';
 import type { RequestFilter } from './types';
 
 export default function App() {
@@ -20,6 +23,7 @@ export default function App() {
 
   const params = useConnectionParams();
   const { connect, sendFilter, clearServer } = useWebSocket(params);
+  const { debugMismatch } = useDebugMismatch(params);
   const initialConnectDone = useRef(false);
 
   useEffect(() => {
@@ -70,20 +74,23 @@ export default function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-        <AppBar
-          onClearServer={handleClearServer}
-          onClearLogs={handleClearLogs}
-          onClearExpectations={handleClearExpectations}
-        />
-        <FilterPanel onFilterChange={handleFilterChange} />
-        {error && (
-          <Alert severity="error" sx={{ mx: 1, mt: 1, flexShrink: 0 }}>
-            {error}
-          </Alert>
-        )}
-        <DashboardGrid />
-      </Box>
+      <DebugMismatchContext.Provider value={debugMismatch}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+          <AppBar
+            onClearServer={handleClearServer}
+            onClearLogs={handleClearLogs}
+            onClearExpectations={handleClearExpectations}
+          />
+          <FilterPanel onFilterChange={handleFilterChange} />
+          {error && (
+            <Alert severity="error" sx={{ mx: 1, mt: 1, flexShrink: 0 }}>
+              {error}
+            </Alert>
+          )}
+          <DashboardGrid />
+        </Box>
+        <DebugMismatchDialog />
+      </DebugMismatchContext.Provider>
     </ThemeProvider>
   );
 }

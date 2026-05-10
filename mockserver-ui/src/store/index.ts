@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type {
   ConnectionStatus,
+  DebugMismatchResult,
   JsonListItem,
   LogMessage,
   RequestFilter,
@@ -29,6 +30,11 @@ interface DashboardState {
 
   error: string | null;
 
+  debugMismatchOpen: boolean;
+  debugMismatchLoading: boolean;
+  debugMismatchResult: DebugMismatchResult | null;
+  debugMismatchError: string | null;
+
   applyMessage: (message: WebSocketMessage) => void;
   clearUI: () => void;
   setRequestFilter: (filter: RequestFilter) => void;
@@ -45,6 +51,10 @@ interface DashboardState {
   setReceivedSearch: (term: string) => void;
   setProxiedSearch: (term: string) => void;
   setError: (error: string | null) => void;
+  openDebugMismatch: (result: DebugMismatchResult) => void;
+  closeDebugMismatch: () => void;
+  setDebugMismatchLoading: (loading: boolean) => void;
+  setDebugMismatchError: (error: string | null) => void;
 }
 
 function getInitialTheme(): ThemeMode {
@@ -78,6 +88,11 @@ export const useDashboardStore = create<DashboardState>()((set) => ({
 
   error: null,
 
+  debugMismatchOpen: false,
+  debugMismatchLoading: false,
+  debugMismatchResult: null,
+  debugMismatchError: null,
+
   applyMessage: (message) =>
     set({
       logMessages: message.logMessages ?? [],
@@ -94,6 +109,11 @@ export const useDashboardStore = create<DashboardState>()((set) => ({
       recordedRequests: [],
       proxiedRequests: [],
       error: null,
+
+      debugMismatchOpen: false,
+      debugMismatchLoading: false,
+      debugMismatchResult: null,
+      debugMismatchError: null,
     }),
 
   setRequestFilter: (filter) => set({ requestFilter: filter }),
@@ -118,4 +138,11 @@ export const useDashboardStore = create<DashboardState>()((set) => ({
   setReceivedSearch: (term) => set({ receivedSearch: term }),
   setProxiedSearch: (term) => set({ proxiedSearch: term }),
   setError: (error) => set({ error }),
+  openDebugMismatch: (result) =>
+    set({ debugMismatchOpen: true, debugMismatchResult: result, debugMismatchLoading: false, debugMismatchError: null }),
+  closeDebugMismatch: () =>
+    set({ debugMismatchOpen: false, debugMismatchResult: null, debugMismatchLoading: false, debugMismatchError: null }),
+  setDebugMismatchLoading: (loading) => set({ debugMismatchLoading: loading }),
+  setDebugMismatchError: (error) =>
+    set({ debugMismatchError: error, debugMismatchLoading: false }),
 }));

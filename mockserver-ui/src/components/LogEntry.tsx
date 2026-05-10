@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import HelpOutlinedIcon from '@mui/icons-material/HelpOutlined';
 import type { LogEntryValue, MessagePart } from '../types';
 import JsonViewer from './JsonViewer';
 import BecauseSection from './BecauseSection';
 import CopyButton from './CopyButton';
+import { useDebugMismatchContext } from '../hooks/DebugMismatchContext';
 
 interface LogEntryProps {
   entry: LogEntryValue;
@@ -128,11 +131,32 @@ function descriptionText(entry: LogEntryValue): string {
   return entry.description.first;
 }
 
+function isNotMatchedEntry(entry: LogEntryValue): boolean {
+  const desc = descriptionText(entry);
+  return desc.includes('EXPECTATION_NOT_MATCHED');
+}
+
+function extractRequestFromEntry(entry: LogEntryValue): Record<string, unknown> | null {
+  if (!entry.messageParts) return null;
+  const jsonParts = entry.messageParts.filter(
+    (p) => p.json && p.argument && typeof p.value === 'object' && p.value !== null,
+  );
+  if (jsonParts.length >= 2) {
+    return jsonParts[1]!.value as Record<string, unknown>;
+  }
+  if (jsonParts.length === 1) {
+    return jsonParts[0]!.value as Record<string, unknown>;
+  }
+  return null;
+}
+
 export default function LogEntry({ entry, indent = false, divider = false, collapsible = false }: LogEntryProps) {
   const style = entry.style ?? {};
   const hasBody = entry.messageParts && entry.messageParts.length > 0;
   const canCollapse = collapsible && hasBody;
   const [expanded, setExpanded] = useState(false);
+  const debugMismatch = useDebugMismatchContext();
+  const showWhyButton = isNotMatchedEntry(entry) && debugMismatch !== null;
 
   return (
     <Box
@@ -174,6 +198,23 @@ export default function LogEntry({ entry, indent = false, divider = false, colla
             >
               {descriptionText(entry) || 'SYSTEM_MESSAGE'}
             </Box>
+            {showWhyButton && (
+              <Tooltip title="Analyze why this request didn't match">
+                <IconButton
+                  size="small"
+                  sx={{ p: 0, ml: 0.5, '& .MuiSvgIcon-root': { fontSize: '0.9rem' } }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const request = extractRequestFromEntry(entry);
+                    if (request && debugMismatch) {
+                      void debugMismatch(request);
+                    }
+                  }}
+                >
+                  <HelpOutlinedIcon sx={{ color: 'warning.main' }} />
+                </IconButton>
+              </Tooltip>
+            )}
             {!expanded && (
               <Box
                 component="span"
