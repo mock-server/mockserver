@@ -15,10 +15,14 @@ spec:
       release: {{ .Release.Name }}
   template:
     metadata:
-{{- if .Values.podAnnotations }}
-      # Allows custom annotations to be specified
+{{- if or .Values.app.config.enabled .Values.podAnnotations }}
       annotations:
+{{- if .Values.app.config.enabled }}
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+{{- end }}
+{{- if .Values.podAnnotations }}
 {{ toYaml .Values.podAnnotations | indent 8 }}
+{{- end }}
 {{- end }}
       name: {{ template "release.name" . }}
       labels:

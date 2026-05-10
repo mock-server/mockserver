@@ -142,6 +142,8 @@ helm repo update</code></pre>
 
 <pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver -f values.yaml mockserver helm/mockserver</code></pre>
 
+<p>When using inline configuration, pods are <strong>automatically restarted</strong> on <span class="keyword">helm upgrade</span> whenever the configuration content changes. This ensures MockServer always runs with the latest configuration.</p>
+
 <p>The following inline config values are supported:</p>
 <ul>
     <li><span class="keyword">app.config.enabled</span> (default: false) - set <span class="keyword">true</span> to create a ConfigMap from inline values</li>

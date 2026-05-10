@@ -2,3 +2,10 @@ steps:
   - label: ":bash: validate container integration test scripts"
     command: ".buildkite/scripts/steps/container-tests-validate.sh"
     timeout_in_minutes: 5
+
+  - label: ":helm: Helm integration tests (k3d)"
+    command: ".buildkite/scripts/steps/helm-integration-test.sh"
+    timeout_in_minutes: 15
+    depends_on: ~
+    agents:
+      queue: default

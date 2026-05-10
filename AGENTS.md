@@ -149,6 +149,10 @@ MockServer targets **Java 11** as the minimum supported version. This is a delib
 - The `javax` namespace is used throughout — do NOT migrate to `jakarta` namespace
 - Spring 5.x, Tomcat 9.x, and Jetty 9.x are the highest major versions compatible with Java 11 + `javax`
 
+## Helm Chart Versioning Policy
+
+All MockServer components — Java modules, client libraries, Docker images, and Helm charts — share a single version number to keep things simple and transparent. The Helm chart `version` and `appVersion` in `Chart.yaml` **MUST always match the MockServer application version**. NEVER bump the chart version independently. See [docs/infrastructure/helm.md](docs/infrastructure/helm.md) for full details.
+
 ## Fix Placement Policy
 
 Always fix bugs and add features at the architecturally correct layer. If a bug surfaces in `mockserver/mockserver-netty` but the root cause is in `mockserver/mockserver-core`, fix it in `mockserver/mockserver-core`.

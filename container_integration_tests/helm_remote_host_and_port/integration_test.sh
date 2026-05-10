@@ -17,6 +17,7 @@ function integration_test() {
   start-up "--set image.repositoryNameAndTag=mockserver/mockserver:integration_testing --set app.proxyRemoteHost=proxy-target.proxy-target.svc.cluster.local --set app.proxyRemotePort=1090"
   TEST_EXIT_CODE=0
   sleep 3
+  run-helm-test || TEST_EXIT_CODE=1
   runCommand "curl -v -s -X PUT 'http://${PROXY_TARGET}/mockserver/expectation' -d \"{
                 'httpRequest' : {
                   'path' : '/some/path'

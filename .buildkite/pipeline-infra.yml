@@ -10,3 +10,7 @@ steps:
   - label: ":docker: validate Dockerfile sync"
     command: ".buildkite/scripts/steps/docker-validate-sync.sh"
     timeout_in_minutes: 5
+
+  - label: ":helm: validate Helm charts"
+    command: ".buildkite/scripts/steps/helm-validate.sh"
+    timeout_in_minutes: 5

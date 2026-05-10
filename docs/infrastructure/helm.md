@@ -184,6 +184,19 @@ Static defaults are in `helm/mockserver-config/static/`:
 - `mockserver.properties` — default MockServer properties
 - `initializerJson.json` — default expectation initialiser (empty array)
 
+## Versioning Policy
+
+All MockServer components — Java modules, client libraries, Docker images, and Helm charts — share a single version number. This keeps things simple and transparent for users.
+
+The Helm chart `version` and `appVersion` in `Chart.yaml` **MUST always match the MockServer application version**. Both charts (`mockserver` and `mockserver-config`) follow this rule.
+
+- **NEVER** bump the chart version independently of the MockServer version
+- **NEVER** change `version` without also changing `appVersion` to the same value
+- The release script `scripts/ci/release/publish-helm.sh` enforces this by setting both fields to `$RELEASE_VERSION`
+- Both charts must be kept at the same version
+
+Helm chart changes made between releases are published as part of the next MockServer release, not independently.
+
 ## Chart Repository
 
 The Helm chart repository is hosted on S3 alongside the website:
@@ -210,36 +223,75 @@ helm repo index .
 # (manual upload via AWS Console or aws s3 cp)
 ```
 
-## Kind-Based Integration Testing
+## Testing
 
-The container integration tests use Kind (Kubernetes in Docker) for Helm testing:
+### Static Validation (CI)
+
+The infra pipeline runs `helm lint` and `helm template` against both charts on every change to `helm/`. This catches syntax errors, rendering issues, and invalid template logic without needing a Kubernetes cluster.
+
+- **Pipeline step:** `.buildkite/scripts/steps/helm-validate.sh`
+- **Validates:** default values, inline config enabled, ingress enabled
+
+### k3d-Based Integration Testing
+
+The container integration tests use k3d (k3s in Docker) for Helm testing. k3d was chosen over Kind for faster cluster startup (~10-15s vs ~30-40s) and simpler port mapping.
 
 ```mermaid
 sequenceDiagram
     participant Script as integration_tests.sh
-    participant Kind as Kind Cluster
+    participant K3d as k3d Cluster
     participant Helm as Helm
     participant MS as MockServer Pod
-    participant Client as Curl Client Pod
+    participant Test as helm test Pod
 
-    Script->>Kind: Create cluster (port 1080 mapped)
-    Script->>Kind: Load MockServer image
+    Script->>K3d: Create cluster (port 1080 mapped)
+    Script->>K3d: Import MockServer image
     Script->>Helm: helm install mockserver
     Helm->>MS: Deploy pod
-    Script->>Client: Create expectations (curl PUT)
-    Script->>Client: Validate responses (curl GET)
+    Script->>Helm: helm test (curl /status)
+    Helm->>Test: Run test pod
+    Script->>MS: Create expectations (curl PUT)
+    Script->>MS: Validate responses (curl PUT)
     Script->>Helm: helm uninstall
-    Script->>Kind: Delete cluster
+    Script->>K3d: Delete cluster
 ```
 
-**Kind config** (`container_integration_tests/kind-config.yaml`):
+**k3d config** (`container_integration_tests/k3d-config.yaml`):
 
 ```yaml
-kind: Cluster
-apiVersion: kind.x-k8s.io/v1alpha4
-nodes:
-  - role: control-plane
-    extraPortMappings:
-      - containerPort: 1080
-        hostPort: 1080
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: mockserver
+servers: 1
+ports:
+  - port: 1080:1080
+    nodeFilters:
+      - loadbalancer
+```
+
+### Test Cases
+
+| Test | What It Tests |
+|------|--------------|
+| `helm_default_config` | Default chart deployment (no overrides) |
+| `helm_local_docker_container` | Custom local Docker image |
+| `helm_custom_server_port` | Custom server port (`app.serverPort=1081`) |
+| `helm_remote_host_and_port` | Proxy remote host/port (two MockServer instances) |
+| `helm_inline_config` | Inline ConfigMap with pre-loaded expectations (`app.config.enabled=true`) |
+
+Each test also invokes `helm test` to verify the service-test pod can reach MockServer's `/status` endpoint.
+
+### Running Locally
+
+```bash
+# Prerequisites: docker, k3d, helm, kubectl
+# Build the test image first
+SKIP_HELM_TESTS=true container_integration_tests/integration_tests.sh
+
+# Run helm tests only
+SKIP_JAVA_BUILD=true SKIP_DOCKER_TESTS=true container_integration_tests/integration_tests.sh
+
+# Clean up cluster afterward
+DELETE_CLUSTER=true SKIP_JAVA_BUILD=true SKIP_DOCKER_TESTS=true container_integration_tests/integration_tests.sh
 ```

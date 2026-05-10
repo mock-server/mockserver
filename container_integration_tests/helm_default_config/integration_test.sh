@@ -14,6 +14,7 @@ function integration_test() {
   start-up
   TEST_EXIT_CODE=0
   sleep 3
+  run-helm-test || TEST_EXIT_CODE=1
   runCommand "curl -v -s -X PUT 'http://${MOCKSERVER_HOST}/mockserver/expectation' -d \"{
                 'httpRequest' : {
                   'path' : '/some/path'

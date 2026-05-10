@@ -61,6 +61,7 @@ function run_all_tests() {
       test "helm_local_docker_container"
       test "helm_custom_server_port"
       test "helm_remote_host_and_port"
+      test "helm_inline_config"
       tear-down-k8s
     fi
     set -euo pipefail

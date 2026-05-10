@@ -3,26 +3,26 @@
 set -euo pipefail
 
 CLUSTER_NAME="mockserver"
-KUBE_CONTEXT="kind-${CLUSTER_NAME}"
+KUBE_CONTEXT="k3d-${CLUSTER_NAME}"
 
 function start-up-k8s() {
   local SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
   if [[ "${REBUILD_CLUSTER:-false}" == "true" ]]; then
-    runCommand "kind delete cluster --name ${CLUSTER_NAME}"
+    runCommand "k3d cluster delete ${CLUSTER_NAME}"
   fi
 
-  if [[ "$(kind get clusters 2>&1 | grep -w ${CLUSTER_NAME})" == "${CLUSTER_NAME}" ]]; then
+  if k3d cluster list 2>&1 | grep -qw "${CLUSTER_NAME}"; then
     printMessage "Found existing cluster"
   else
-    runCommand "kind create cluster --config ${SCRIPT_DIR}/kind-config.yaml --name ${CLUSTER_NAME}"
+    runCommand "k3d cluster create --config ${SCRIPT_DIR}/k3d-config.yaml"
   fi
 
-  runCommand "kind load docker-image --name ${CLUSTER_NAME} mockserver/mockserver:integration_testing"
+  runCommand "k3d image import --cluster ${CLUSTER_NAME} mockserver/mockserver:integration_testing"
 }
 
 function tear-down-k8s() {
   if [[ "${DELETE_CLUSTER:-false}" == "true" ]]; then
-    runCommand "kind delete cluster --name mockserver"
+    runCommand "k3d cluster delete ${CLUSTER_NAME}"
   fi
 }
 
@@ -32,8 +32,12 @@ function start-up() {
   runCommand "(ps -ef | grep port-forward | grep ${3:-1080} | awk '{ print \$2 }' | xargs kill) || true"
   runCommand "kubectl --context ${KUBE_CONTEXT} --namespace ${2:-mockserver} port-forward svc/${2:-mockserver} ${3:-1080}:${3:-1080} &"
   export MOCKSERVER_HOST=127.0.0.1:${3:-1080}
-  # TODO add poll for startup and port-forward
   sleep 3
+}
+
+function run-helm-test() {
+  printMessage "Running helm test for release: ${1:-mockserver}"
+  runCommand "helm --kube-context ${KUBE_CONTEXT} --namespace ${1:-mockserver} test ${1:-mockserver} --timeout 60s"
 }
 
 function tear-down() {
