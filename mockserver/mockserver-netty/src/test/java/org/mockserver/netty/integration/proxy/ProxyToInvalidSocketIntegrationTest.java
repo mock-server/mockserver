@@ -76,7 +76,7 @@ public class ProxyToInvalidSocketIntegrationTest {
             );
 
         // then
-        assertThat(responseFuture.get(10, TimeUnit.SECONDS).getStatusCode(), is(404));
+        assertThat(responseFuture.get(10, TimeUnit.SECONDS).getStatusCode(), is(502));
     }
 
     @Test
@@ -91,7 +91,7 @@ public class ProxyToInvalidSocketIntegrationTest {
             );
 
         // then
-        assertThat(responseFuture.get(10, TimeUnit.SECONDS).getStatusCode(), is(404));
+        assertThat(responseFuture.get(10, TimeUnit.SECONDS).getStatusCode(), is(502));
 
         // then
         clientAndServer.verify(request()

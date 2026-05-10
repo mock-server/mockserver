@@ -17,7 +17,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.model.HttpResponse.notFoundResponse;
+import static org.mockserver.model.HttpResponse.badGatewayResponse;
 
 /**
  * @author jamesdbloom
@@ -49,7 +49,7 @@ public abstract class HttpForwardAction {
                     .setThrowable(e)
             );
         }
-        return notFoundFuture(request);
+        return badGatewayFuture(request);
     }
 
     protected void adjustHostHeader(HttpRequest request) {
@@ -65,9 +65,9 @@ public abstract class HttpForwardAction {
         }
     }
 
-    HttpForwardActionResult notFoundFuture(HttpRequest httpRequest) {
-        CompletableFuture<HttpResponse> notFoundFuture = new CompletableFuture<>();
-        notFoundFuture.complete(notFoundResponse());
-        return new HttpForwardActionResult(httpRequest, notFoundFuture, null);
+    HttpForwardActionResult badGatewayFuture(HttpRequest httpRequest) {
+        CompletableFuture<HttpResponse> future = new CompletableFuture<>();
+        future.complete(badGatewayResponse());
+        return new HttpForwardActionResult(httpRequest, future, null);
     }
 }

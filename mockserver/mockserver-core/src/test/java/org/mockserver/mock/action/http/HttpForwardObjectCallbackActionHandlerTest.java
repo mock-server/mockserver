@@ -18,7 +18,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.*;
 import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.HttpResponse.notFoundResponse;
+import static org.mockserver.model.HttpResponse.badGatewayResponse;
 
 /**
  * @author jamesdbloom
@@ -45,7 +45,7 @@ public class HttpForwardObjectCallbackActionHandlerTest {
     }
 
     @Test
-    public void shouldReturnNotFound() throws ExecutionException, InterruptedException {
+    public void shouldReturnBadGateway() throws ExecutionException, InterruptedException {
         // given
         HttpActionHandler mockActionHandler = mock(HttpActionHandler.class);
         HttpState mockHttpStateHandler = mock(HttpState.class);
@@ -65,7 +65,7 @@ public class HttpForwardObjectCallbackActionHandlerTest {
         verify(mockWebSocketClientRegistry).sendClientMessage(eq("some_clientId"), any(HttpRequest.class), isNull());
         ArgumentCaptor<HttpForwardActionResult> httpForwardActionResultArgumentCaptor = ArgumentCaptor.forClass(HttpForwardActionResult.class);
         verify(mockActionHandler).writeForwardActionResponse(httpForwardActionResultArgumentCaptor.capture(), same(mockResponseWriter), same(request), same(httpObjectCallback), eq(true));
-        assertThat(httpForwardActionResultArgumentCaptor.getValue().getHttpResponse().get(), is(notFoundResponse()));
+        assertThat(httpForwardActionResultArgumentCaptor.getValue().getHttpResponse().get(), is(badGatewayResponse()));
     }
 
 }

@@ -41,6 +41,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.exception.ExceptionHandling.*;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.log.model.LogEntryMessages.*;
+import static org.mockserver.model.HttpResponse.badGatewayResponse;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
 import static org.slf4j.event.Level.TRACE;
@@ -346,7 +347,7 @@ public class HttpActionHandler {
                             try {
                                 HttpResponse response = responseFuture.getHttpResponse().get(configuration.maxFutureTimeoutInMillis(), MILLISECONDS);
                                 if (response == null) {
-                                    response = notFoundResponse();
+                                    response = badGatewayResponse();
                                 }
                                 if (response.containsHeader(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue())) {
                                     response.removeHeader(httpStateHandler.getUniqueLoopPreventionHeaderName());
@@ -377,7 +378,7 @@ public class HttpActionHandler {
                                 }
                                 responseWriter.writeResponse(request, response, false);
                             } catch (SocketCommunicationException sce) {
-                                returnNotFound(responseWriter, request, sce.getMessage());
+                                returnBadGateway(responseWriter, request, sce.getMessage());
                             } catch (Throwable throwable) {
                                 if (potentiallyHttpProxy && connectionException(throwable)) {
                                     if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
@@ -389,7 +390,7 @@ public class HttpActionHandler {
                                                 .setArguments(request, throwable.getCause())
                                         );
                                     }
-                                    returnNotFound(responseWriter, request, null);
+                                    returnBadGateway(responseWriter, request, "failed to connect to proxied socket due to exploratory HTTP proxy");
                                 } else if (sslHandshakeException(throwable)) {
                                     mockServerLogger.logEvent(
                                         new LogEntry()
@@ -400,7 +401,7 @@ public class HttpActionHandler {
                                             .setArguments(request, remoteAddress)
                                             .setThrowable(throwable)
                                     );
-                                    returnNotFound(responseWriter, request, "TLS handshake exception while proxying request to remote address" + remoteAddress);
+                                    returnBadGateway(responseWriter, request, "TLS handshake exception while proxying request to remote address" + remoteAddress);
                                 } else if (!connectionClosedException(throwable)) {
                                     mockServerLogger.logEvent(
                                         new LogEntry()
@@ -411,9 +412,9 @@ public class HttpActionHandler {
                                             .setMessageFormat(throwable.getMessage())
                                             .setThrowable(throwable)
                                     );
-                                    returnNotFound(responseWriter, request, "connection closed while proxying request to remote address" + remoteAddress);
+                                    returnBadGateway(responseWriter, request, "connection closed while proxying request to remote address" + remoteAddress);
                                 } else {
-                                    returnNotFound(responseWriter, request, throwable.getMessage());
+                                    returnBadGateway(responseWriter, request, throwable.getMessage());
                                 }
                             }
                         },
@@ -470,7 +471,7 @@ public class HttpActionHandler {
                     try {
                         HttpResponse response = responseFuture.getHttpResponse().get(configuration.maxFutureTimeoutInMillis(), MILLISECONDS);
                         if (response == null) {
-                            response = notFoundResponse();
+                            response = badGatewayResponse();
                         }
                         mockServerLogger.logEvent(
                             new LogEntry()
@@ -485,7 +486,7 @@ public class HttpActionHandler {
                         );
                         responseWriter.writeResponse(request, response, false);
                     } catch (Throwable throwable) {
-                        returnNotFound(responseWriter, request, "proxy pass forwarding failed for " + mapping.getTargetUri() + ": " + throwable.getMessage());
+                        returnBadGateway(responseWriter, request, "proxy pass forwarding failed for " + mapping.getTargetUri() + ": " + throwable.getMessage());
                     }
                 }, synchronous, throwable -> true);
                 return true;
@@ -629,7 +630,7 @@ public class HttpActionHandler {
                         .setThrowable(exception)
                 );
             }
-            returnNotFound(responseWriter, request, "failed to connect to remote socket while forwarding request");
+            returnBadGateway(responseWriter, request, "failed to connect to remote socket while forwarding request");
         } else if (sslHandshakeException(exception)) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -640,7 +641,7 @@ public class HttpActionHandler {
                     .setArguments(request, action)
                     .setThrowable(exception)
             );
-            returnNotFound(responseWriter, request, "TLS handshake exception while forwarding request");
+            returnBadGateway(responseWriter, request, "TLS handshake exception while forwarding request");
         } else {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -651,8 +652,40 @@ public class HttpActionHandler {
                     .setMessageFormat(exception != null ? isNotBlank(exception.getMessage()) ? exception.getMessage() : exception.getClass().getSimpleName() : null)
                     .setThrowable(exception)
             );
-            returnNotFound(responseWriter, request, exception != null ? exception.getMessage() : null);
+            returnBadGateway(responseWriter, request, exception != null ? exception.getMessage() : null);
         }
+    }
+
+    private void returnBadGateway(ResponseWriter responseWriter, HttpRequest request, String error) {
+        HttpResponse response = badGatewayResponse();
+        if (isNotBlank(error)) {
+            if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(NO_MATCH_RESPONSE)
+                        .setLogLevel(Level.INFO)
+                        .setCorrelationId(request.getLogCorrelationId())
+                        .setHttpRequest(request)
+                        .setHttpResponse(response)
+                        .setMessageFormat(FORWARD_FAILURE_MESSAGE_FORMAT)
+                        .setArguments(request, error, response)
+                );
+            }
+        } else {
+            if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(NO_MATCH_RESPONSE)
+                        .setLogLevel(Level.INFO)
+                        .setCorrelationId(request.getLogCorrelationId())
+                        .setHttpRequest(request)
+                        .setHttpResponse(response)
+                        .setMessageFormat(FORWARD_FAILURE_MESSAGE_FORMAT)
+                        .setArguments(request, "unknown error", response)
+                );
+            }
+        }
+        responseWriter.writeResponse(request, response, false);
     }
 
     private void returnNotFound(ResponseWriter responseWriter, HttpRequest request, String error) {

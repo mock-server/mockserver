@@ -20,7 +20,7 @@ import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.HttpResponse.notFoundResponse;
+import static org.mockserver.model.HttpResponse.badGatewayResponse;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpResponseModifier.responseModifier;
 import static org.mockserver.model.HttpTemplate.template;
@@ -65,7 +65,7 @@ public class HttpForwardTemplateActionHandlerTest {
             verify(mockHttpClient).sendRequest(httpRequest, null);
             assertThat(actualHttpResponse, is(sameInstance(httpResponse)));
         } else {
-            assertThat(actualHttpResponse.get(), is(notFoundResponse()));
+            assertThat(actualHttpResponse.get(), is(badGatewayResponse()));
         }
     }
 

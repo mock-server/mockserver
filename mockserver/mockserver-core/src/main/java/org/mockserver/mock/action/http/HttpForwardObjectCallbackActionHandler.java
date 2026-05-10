@@ -22,7 +22,7 @@ import java.util.concurrent.CompletableFuture;
 import static org.apache.commons.lang3.BooleanUtils.isFalse;
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
 import static org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
-import static org.mockserver.model.HttpResponse.notFoundResponse;
+import static org.mockserver.model.HttpResponse.badGatewayResponse;
 import static org.slf4j.event.Level.*;
 
 /**
@@ -79,11 +79,11 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                                         .setLogLevel(WARN)
                                         .setHttpRequest(request)
                                         .setMessageFormat("returning{}because client " + clientId + " response callback threw an exception")
-                                        .setArguments(notFoundResponse())
+                                        .setArguments(badGatewayResponse())
                                         .setThrowable(throwable)
                                 );
                             }
-                            actionHandler.writeForwardActionResponse(notFoundFuture(request), responseWriter, request, httpObjectCallback, synchronous);
+                            actionHandler.writeForwardActionResponse(badGatewayFuture(request), responseWriter, request, httpObjectCallback, synchronous);
                         }
                     } else if (exception != null) {
                         actionHandler.handleExceptionDuringForwardingRequest(httpObjectCallback, request, responseWriter, exception);
@@ -99,11 +99,11 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                         .setLogLevel(WARN)
                         .setHttpRequest(request)
                         .setMessageFormat("returning{}because client " + clientId + " request callback throw an exception")
-                        .setArguments(notFoundResponse())
+                        .setArguments(badGatewayResponse())
                         .setThrowable(throwable)
                 );
             }
-            actionHandler.writeForwardActionResponse(notFoundFuture(request), responseWriter, request, httpObjectCallback, synchronous);
+            actionHandler.writeForwardActionResponse(badGatewayFuture(request), responseWriter, request, httpObjectCallback, synchronous);
         }
     }
 
@@ -167,10 +167,10 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                         .setLogLevel(WARN)
                         .setHttpRequest(request)
                         .setMessageFormat("returning{}because client " + clientId + " has closed web socket connection")
-                        .setArguments(notFoundResponse())
+                        .setArguments(badGatewayResponse())
                 );
             }
-            actionHandler.writeForwardActionResponse(notFoundFuture(request), responseWriter, request, httpObjectCallback, synchronous);
+            actionHandler.writeForwardActionResponse(badGatewayFuture(request), responseWriter, request, httpObjectCallback, synchronous);
         } else if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -216,10 +216,10 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                                 .setLogLevel(WARN)
                                 .setHttpRequest(request)
                                 .setMessageFormat("returning{}because client " + clientId + " has closed web socket connection")
-                                .setArguments(notFoundResponse())
+                                .setArguments(badGatewayResponse())
                         );
                     }
-                    actionHandler.writeForwardActionResponse(notFoundFuture(request), responseWriter, request, httpObjectCallback, synchronous);
+                    actionHandler.writeForwardActionResponse(badGatewayFuture(request), responseWriter, request, httpObjectCallback, synchronous);
                 } else if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
                     mockServerLogger.logEvent(
                         new LogEntry()

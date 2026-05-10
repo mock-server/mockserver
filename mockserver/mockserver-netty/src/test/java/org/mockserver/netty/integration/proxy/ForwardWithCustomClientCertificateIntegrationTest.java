@@ -147,11 +147,11 @@ public class ForwardWithCustomClientCertificateIntegrationTest extends AbstractM
                     .withScheme(HttpForward.Scheme.HTTPS)
             );
 
-        // then - invalid certificate returns 404
+        // then - invalid certificate returns 502 because TLS handshake fails during forwarding
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
+                .withStatusCode(HttpStatusCode.BAD_GATEWAY_502.code())
+                .withReasonPhrase(HttpStatusCode.BAD_GATEWAY_502.reasonPhrase()),
             makeRequest(
                 request()
                     .withSecure(true)

@@ -13,6 +13,7 @@ import java.util.Objects;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.SET_COOKIE;
 import static org.mockserver.model.Header.header;
+import static org.mockserver.model.HttpStatusCode.BAD_GATEWAY_502;
 import static org.mockserver.model.HttpStatusCode.NOT_FOUND_404;
 import static org.mockserver.model.HttpStatusCode.OK_200;
 import static org.mockserver.model.NottableString.string;
@@ -52,6 +53,13 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
      */
     public static HttpResponse notFoundResponse() {
         return new HttpResponse().withStatusCode(NOT_FOUND_404.code()).withReasonPhrase(NOT_FOUND_404.reasonPhrase());
+    }
+
+    /**
+     * Static builder to create a bad gateway response.
+     */
+    public static HttpResponse badGatewayResponse() {
+        return new HttpResponse().withStatusCode(BAD_GATEWAY_502.code()).withReasonPhrase(BAD_GATEWAY_502.reasonPhrase());
     }
 
     /**

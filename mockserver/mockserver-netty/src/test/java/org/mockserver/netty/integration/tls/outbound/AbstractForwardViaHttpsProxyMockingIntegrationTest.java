@@ -26,6 +26,7 @@ import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverriddenRequest;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.HttpStatusCode.BAD_GATEWAY_502;
 import static org.mockserver.model.HttpStatusCode.NOT_FOUND_404;
 import static org.mockserver.model.HttpStatusCode.OK_200;
 import static org.mockserver.model.HttpTemplate.template;
@@ -354,11 +355,11 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
                     .withScheme(HttpForward.Scheme.HTTPS)
             );
 
-        // then - invalid certificate returns 404
+        // then - invalid certificate returns 502 because TLS handshake fails during forwarding
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
+                .withStatusCode(BAD_GATEWAY_502.code())
+                .withReasonPhrase(BAD_GATEWAY_502.reasonPhrase()),
             makeRequest(
                 request()
                     .withSecure(true)

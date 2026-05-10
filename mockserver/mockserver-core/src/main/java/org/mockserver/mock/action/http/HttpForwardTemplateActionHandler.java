@@ -52,7 +52,7 @@ public class HttpForwardTemplateActionHandler extends HttpForwardAction {
             }
         }
 
-        return notFoundFuture(originalRequest);
+        return badGatewayFuture(originalRequest);
     }
 
     TemplateEngine resolveTemplateEngine(HttpTemplate httpTemplate) {

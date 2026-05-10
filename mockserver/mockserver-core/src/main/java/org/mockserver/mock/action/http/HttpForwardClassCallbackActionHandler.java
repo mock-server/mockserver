@@ -99,13 +99,13 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
                             .setMessageFormat(httpClassCallback.getCallbackClass() + " throw exception while executing handle callback method - " + throwable.getMessage())
                             .setThrowable(throwable)
                     );
-                    return notFoundFuture(httpRequest);
+                    return badGatewayFuture(httpRequest);
                 }
             } else {
                 return sendRequest(httpRequest, null, null);
             }
         } else {
-            return notFoundFuture(null);
+            return badGatewayFuture(null);
         }
     }
 }
