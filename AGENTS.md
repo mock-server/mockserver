@@ -86,13 +86,13 @@ Build agents run on EC2 instances in AutoScaling Groups, managed by Lambda-based
 
 Three agent queues separate workloads by resource needs:
 
-| Queue | Instance Types | Max Instances | Agents/Instance | Purpose |
-|-------|---------------|---------------|-----------------|---------|
-| `default` | c5.2xlarge, c5a.2xlarge, m5.2xlarge | 10 | 1 | Build and test (Maven, Docker, k3d) |
-| `trigger` | t3.small, t3a.small, t3.micro | 4 | 4 | Trigger polling jobs (sleep + curl) |
-| `release` | Same as default | 2 | 1 | Release pipeline steps with release secrets |
+| Queue | Purpose |
+|-------|---------|
+| `default` | Build and test (Maven, Docker, k3d) |
+| `trigger` | Trigger polling jobs (sleep + curl) — cheap, small instances with multiple agents per instance |
+| `release` | Release pipeline steps with release secrets |
 
-The scaler runs every minute per queue. Treat values in Terraform and live AWS state as authoritative; avoid hard-coding instance types or capacity numbers in prompts.
+Capacity, instance types, and agents-per-instance are defined in `terraform/buildkite-agents/` (`main.tf`, `variables.tf`, `terraform.tfvars`). The scaler runs every minute per queue. Treat values in Terraform and live AWS state as authoritative; avoid hard-coding instance types or capacity numbers in prompts.
 
 #### Critical Cost Requirement: Scale to Zero
 
