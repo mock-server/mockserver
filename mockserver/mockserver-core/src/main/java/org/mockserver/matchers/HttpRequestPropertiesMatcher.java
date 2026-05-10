@@ -244,6 +244,18 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                     becauseBuilder.replace(0, 1, "");
                     String because = becauseBuilder.toString();
                     if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
+                        String messageFormat;
+                        if (this.expectation == null) {
+                            messageFormat = didNotMatchRequestBecause;
+                        } else {
+                            String expectationId = this.expectation.getId();
+                            String expectationLabel = isNotBlank(expectationId) ? " expectation \"" + expectationId + "\"" : EXPECTATION;
+                            if (becauseBuilder.length() > 0) {
+                                messageFormat = REQUEST_DID_NOT_MATCH + matcherDescription + expectationLabel + BECAUSE;
+                            } else {
+                                messageFormat = REQUEST_DID_NOT_MATCH + matcherDescription + expectationLabel;
+                            }
+                        }
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setType(EXPECTATION_NOT_MATCHED)
@@ -251,7 +263,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                                 .setCorrelationId(requestDefinition.getLogCorrelationId())
                                 .setHttpRequest(request)
                                 .setExpectation(this.expectation)
-                                .setMessageFormat(this.expectation == null ? didNotMatchRequestBecause : becauseBuilder.length() > 0 ? didNotMatchExpectationBecause : didNotMatchExpectationWithoutBecause)
+                                .setMessageFormat(messageFormat)
                                 .setArguments(request, (this.expectation == null ? this : this.expectation.clone()), because)
                                 .setBecause(because)
                         );

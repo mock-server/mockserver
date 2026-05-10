@@ -198,7 +198,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                 "    \"body\" : \"some_other_body\"" + NEW_LINE +
                 "  }" + NEW_LINE +
                 NEW_LINE +
-                " didn't match expectation:" + NEW_LINE +
+                " didn't match expectation \"" + UUIDService.getUUID() + "\":" + NEW_LINE +
                 NEW_LINE +
                 "  {" + NEW_LINE +
                 "    \"httpRequest\" : {" + NEW_LINE +
@@ -386,7 +386,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "    \"body\" : \"some_other_body\"" + NEW_LINE +
                     "  }" + NEW_LINE +
                     NEW_LINE +
-                    " didn't match expectation:" + NEW_LINE +
+                    " didn't match expectation \"" + UUIDService.getUUID() + "\":" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"httpRequest\" : {" + NEW_LINE +
@@ -660,7 +660,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "    \"keepAlive\" : false" + NEW_LINE +
                     "  }" + NEW_LINE +
                     NEW_LINE +
-                    " didn't match expectation:" + NEW_LINE +
+                    " didn't match expectation \"" + UUIDService.getUUID() + "\":" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"httpRequest\" : {" + NEW_LINE +
@@ -703,7 +703,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                     NEW_LINE +
                     "  { }" + NEW_LINE +
                     NEW_LINE +
-                    " didn't match expectation:" + NEW_LINE +
+                    " didn't match expectation \"" + UUIDService.getUUID() + "\":" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"httpRequest\" : {" + NEW_LINE +

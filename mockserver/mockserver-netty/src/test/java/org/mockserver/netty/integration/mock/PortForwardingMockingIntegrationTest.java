@@ -195,7 +195,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingSa
                         "  {" + NEW_LINE +
                         "    \"method\" : \"GET\"," + NEW_LINE +
                         "    \"path\" : \"/not_found\",",
-                    " didn't match expectation:" + NEW_LINE +
+                    " didn't match expectation \"" + UUIDService.getUUID() + "\":" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"httpRequest\" : {" + NEW_LINE +

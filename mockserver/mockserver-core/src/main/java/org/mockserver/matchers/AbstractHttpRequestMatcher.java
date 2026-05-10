@@ -30,6 +30,7 @@ public abstract class AbstractHttpRequestMatcher extends NotMatcher<RequestDefin
     private MockServerMatcherNotifier.Cause source;
     protected boolean controlPlaneMatcher;
     protected Expectation expectation;
+    protected String matcherDescription = "";
     protected String didNotMatchRequestBecause = REQUEST_DID_NOT_MATCH + REQUEST_MATCHER + BECAUSE;
     protected String didNotMatchExpectationBecause = REQUEST_DID_NOT_MATCH + EXPECTATION + BECAUSE;
     protected String didNotMatchExpectationWithoutBecause = REQUEST_DID_NOT_MATCH + EXPECTATION;
@@ -40,6 +41,7 @@ public abstract class AbstractHttpRequestMatcher extends NotMatcher<RequestDefin
     }
 
     public void setDescription(String description) {
+        this.matcherDescription = description;
         didNotMatchRequestBecause = REQUEST_DID_NOT_MATCH + description + REQUEST_MATCHER + BECAUSE;
         didNotMatchExpectationBecause = REQUEST_DID_NOT_MATCH + description + EXPECTATION + BECAUSE;
         didNotMatchExpectationWithoutBecause = REQUEST_DID_NOT_MATCH + description + EXPECTATION;
