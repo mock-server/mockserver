@@ -50,6 +50,9 @@ public class NottableStringSerializer extends StdSerializer<NottableString> {
         if (nottableString.getParameterStyle() != null) {
             jgen.writeObjectField("parameterStyle", nottableString.getParameterStyle());
         }
+        if (nottableString.getSchemaType() != null) {
+            jgen.writeStringField("schemaType", nottableString.getSchemaType());
+        }
         jgen.writeObjectField(valueFieldName, value);
         jgen.writeEndObject();
     }

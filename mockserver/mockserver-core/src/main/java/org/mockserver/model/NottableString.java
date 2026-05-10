@@ -10,7 +10,6 @@ import java.util.regex.Pattern;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.model.NottableOptionalString.OPTIONAL_CHAR;
 import static org.mockserver.model.NottableOptionalString.optional;
-import static org.mockserver.model.ParameterStyle.DEEP_OBJECT;
 
 /**
  * @author jamesdbloom
@@ -26,6 +25,7 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
     private final String json;
     private Pattern pattern;
     private ParameterStyle parameterStyle;
+    private String schemaType;
 
     NottableString(String value, Boolean not) {
         this.value = value;
@@ -160,10 +160,16 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
     }
 
     public NottableString withStyle(ParameterStyle style) {
-        if (style != null && style.equals(DEEP_OBJECT)) {
-            throw new IllegalArgumentException("deep object style is not supported");
-        }
         this.parameterStyle = style;
+        return this;
+    }
+
+    public String getSchemaType() {
+        return schemaType;
+    }
+
+    public NottableString withSchemaType(String schemaType) {
+        this.schemaType = schemaType;
         return this;
     }
 

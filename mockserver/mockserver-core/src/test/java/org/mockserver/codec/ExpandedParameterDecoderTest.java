@@ -3,11 +3,13 @@ package org.mockserver.codec;
 import org.junit.Test;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.NottableString;
 import org.mockserver.model.Parameter;
 import org.mockserver.model.ParameterStyle;
 import org.mockserver.model.Parameters;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -1107,6 +1109,286 @@ public class ExpandedParameterDecoderTest {
         assertThat(actual, containsInAnyOrder(
             param("q", "1", "1", "2")
         ));
+    }
+
+    // OBJECT RECONSTRUCTION
+
+    @Test
+    public void shouldReconstructObjectFromAlternatingValues() {
+        ExpandedParameterDecoder decoder = new ExpandedParameterDecoder(configuration, mockServerLogger);
+        String result = decoder.reconstructObjectFromAlternatingValues(
+            Arrays.asList(string("R"), string("100"), string("G"), string("200"), string("B"), string("150"))
+        );
+        assertThat(result, is("{\"R\":\"100\",\"G\":\"200\",\"B\":\"150\"}"));
+    }
+
+    @Test
+    public void shouldReturnNullForOddNumberOfAlternatingValues() {
+        ExpandedParameterDecoder decoder = new ExpandedParameterDecoder(configuration, mockServerLogger);
+        String result = decoder.reconstructObjectFromAlternatingValues(
+            Arrays.asList(string("R"), string("100"), string("G"))
+        );
+        assertThat(result, is((String) null));
+    }
+
+    @Test
+    public void shouldReturnNullForEmptyAlternatingValues() {
+        ExpandedParameterDecoder decoder = new ExpandedParameterDecoder(configuration, mockServerLogger);
+        String result = decoder.reconstructObjectFromAlternatingValues(
+            Collections.emptyList()
+        );
+        assertThat(result, is((String) null));
+    }
+
+    @Test
+    public void shouldReturnNullForSingleAlternatingValue() {
+        ExpandedParameterDecoder decoder = new ExpandedParameterDecoder(configuration, mockServerLogger);
+        String result = decoder.reconstructObjectFromAlternatingValues(
+            Collections.singletonList(string("R"))
+        );
+        assertThat(result, is((String) null));
+    }
+
+    @Test
+    public void shouldReconstructExplodedObject() {
+        ExpandedParameterDecoder decoder = new ExpandedParameterDecoder(configuration, mockServerLogger);
+        String result = decoder.reconstructExplodedObject(
+            Arrays.asList(string("R=100"), string("G=200"), string("B=150"))
+        );
+        assertThat(result, is("{\"R\":\"100\",\"G\":\"200\",\"B\":\"150\"}"));
+    }
+
+    @Test
+    public void shouldReturnNullForExplodedObjectWithoutEquals() {
+        ExpandedParameterDecoder decoder = new ExpandedParameterDecoder(configuration, mockServerLogger);
+        String result = decoder.reconstructExplodedObject(
+            Arrays.asList(string("100"), string("200"), string("150"))
+        );
+        assertThat(result, is((String) null));
+    }
+
+    @Test
+    public void shouldReturnNullForEmptyExplodedObject() {
+        ExpandedParameterDecoder decoder = new ExpandedParameterDecoder(configuration, mockServerLogger);
+        String result = decoder.reconstructExplodedObject(
+            Collections.emptyList()
+        );
+        assertThat(result, is((String) null));
+    }
+
+    // SIMPLE STYLE OBJECT
+
+    @Test
+    public void shouldSplitSimpleNonExplodedObjectParameters() {
+        Parameters matcher = new Parameters(
+            param(string("color").withStyle(ParameterStyle.SIMPLE).withSchemaType("object"), string("schema"))
+        );
+        Parameters matched = new Parameters(
+            param(string("color"), string("R,100,G,200,B,150"))
+        );
+
+        new ExpandedParameterDecoder(configuration, mockServerLogger).splitParameters(matcher, matched);
+
+        assertThat(matched.getValues("color"), containsInAnyOrder("{\"R\":\"100\",\"G\":\"200\",\"B\":\"150\"}"));
+    }
+
+    @Test
+    public void shouldSplitSimpleExplodedObjectParameters() {
+        Parameters matcher = new Parameters(
+            param(string("color").withStyle(ParameterStyle.SIMPLE_EXPLODED).withSchemaType("object"), string("schema"))
+        );
+        Parameters matched = new Parameters(
+            param(string("color"), string("R=100,G=200,B=150"))
+        );
+
+        new ExpandedParameterDecoder(configuration, mockServerLogger).splitParameters(matcher, matched);
+
+        assertThat(matched.getValues("color"), containsInAnyOrder("{\"R\":\"100\",\"G\":\"200\",\"B\":\"150\"}"));
+    }
+
+    // LABEL STYLE OBJECT
+
+    @Test
+    public void shouldSplitLabelNonExplodedObjectParameters() {
+        Parameters matcher = new Parameters(
+            param(string("color").withStyle(ParameterStyle.LABEL).withSchemaType("object"), string("schema"))
+        );
+        Parameters matched = new Parameters(
+            param(string("color"), string("R,100,G,200,B,150"))
+        );
+
+        new ExpandedParameterDecoder(configuration, mockServerLogger).splitParameters(matcher, matched);
+
+        assertThat(matched.getValues("color"), containsInAnyOrder("{\"R\":\"100\",\"G\":\"200\",\"B\":\"150\"}"));
+    }
+
+    @Test
+    public void shouldSplitLabelExplodedObjectParameters() {
+        Parameters matcher = new Parameters(
+            param(string("color").withStyle(ParameterStyle.LABEL_EXPLODED).withSchemaType("object"), string("schema"))
+        );
+        Parameters matched = new Parameters(
+            param(string("color"), string("R=100.G=200.B=150"))
+        );
+
+        new ExpandedParameterDecoder(configuration, mockServerLogger).splitParameters(matcher, matched);
+
+        assertThat(matched.getValues("color"), containsInAnyOrder("{\"R\":\"100\",\"G\":\"200\",\"B\":\"150\"}"));
+    }
+
+    // MATRIX STYLE OBJECT
+
+    @Test
+    public void shouldSplitMatrixNonExplodedObjectParameters() {
+        Parameters matcher = new Parameters(
+            param(string("color").withStyle(ParameterStyle.MATRIX).withSchemaType("object"), string("schema"))
+        );
+        Parameters matched = new Parameters(
+            param(string("color"), string("R,100,G,200,B,150"))
+        );
+
+        new ExpandedParameterDecoder(configuration, mockServerLogger).splitParameters(matcher, matched);
+
+        assertThat(matched.getValues("color"), containsInAnyOrder("{\"R\":\"100\",\"G\":\"200\",\"B\":\"150\"}"));
+    }
+
+    @Test
+    public void shouldSplitMatrixExplodedObjectParameters() {
+        Parameters matcher = new Parameters(
+            param(string("color").withStyle(ParameterStyle.MATRIX_EXPLODED).withSchemaType("object"), string("schema"))
+        );
+        Parameters matched = new Parameters(
+            param(string("color"), string("R=100;color=G=200;color=B=150"))
+        );
+
+        new ExpandedParameterDecoder(configuration, mockServerLogger).splitParameters(matcher, matched);
+
+        assertThat(matched.getValues("color"), containsInAnyOrder("{\"R\":\"100\",\"G\":\"200\",\"B\":\"150\"}"));
+    }
+
+    // FORM STYLE OBJECT
+
+    @Test
+    public void shouldSplitFormNonExplodedObjectParameters() {
+        Parameters matcher = new Parameters(
+            param(string("color").withStyle(ParameterStyle.FORM).withSchemaType("object"), string("schema"))
+        );
+        Parameters matched = new Parameters(
+            param(string("color"), string("R,100,G,200,B,150"))
+        );
+
+        new ExpandedParameterDecoder(configuration, mockServerLogger).splitParameters(matcher, matched);
+
+        assertThat(matched.getValues("color"), containsInAnyOrder("{\"R\":\"100\",\"G\":\"200\",\"B\":\"150\"}"));
+    }
+
+    // DEEP OBJECT STYLE
+
+    @Test
+    public void shouldReconstructDeepObjectParameters() {
+        Parameters matcher = new Parameters(
+            param(string("color").withStyle(ParameterStyle.DEEP_OBJECT).withSchemaType("object"), string("schema"))
+        );
+        Parameters matched = new Parameters(
+            param(string("color[R]"), string("100")),
+            param(string("color[G]"), string("200")),
+            param(string("color[B]"), string("150"))
+        );
+
+        new ExpandedParameterDecoder(configuration, mockServerLogger).splitParameters(matcher, matched);
+
+        assertThat(matched.getValues("color"), containsInAnyOrder("{\"R\":\"100\",\"G\":\"200\",\"B\":\"150\"}"));
+        assertThat(matched.getValues("color[R]"), is(Collections.emptyList()));
+        assertThat(matched.getValues("color[G]"), is(Collections.emptyList()));
+        assertThat(matched.getValues("color[B]"), is(Collections.emptyList()));
+    }
+
+    @Test
+    public void shouldNotReconstructDeepObjectParametersWithoutObjectSchemaType() {
+        Parameters matcher = new Parameters(
+            param(string("color").withStyle(ParameterStyle.DEEP_OBJECT), string("schema"))
+        );
+        Parameters matched = new Parameters(
+            param(string("color[R]"), string("100")),
+            param(string("color[G]"), string("200"))
+        );
+
+        new ExpandedParameterDecoder(configuration, mockServerLogger).splitParameters(matcher, matched);
+
+        assertThat(matched.getValues("color[R]"), containsInAnyOrder("100"));
+        assertThat(matched.getValues("color[G]"), containsInAnyOrder("200"));
+    }
+
+    // ARRAY TYPE SHOULD NOT BE RECONSTRUCTED AS OBJECT
+
+    @Test
+    public void shouldNotReconstructArrayTypeAsObject() {
+        Parameters matcher = new Parameters(
+            param(string("color").withStyle(ParameterStyle.SIMPLE).withSchemaType("array"), string("schema"))
+        );
+        Parameters matched = new Parameters(
+            param(string("color"), string("R,100,G,200,B,150"))
+        );
+
+        new ExpandedParameterDecoder(configuration, mockServerLogger).splitParameters(matcher, matched);
+
+        assertThat(matched, is(new Parameters(
+            param("color", "R", "100", "G", "200", "B", "150")
+        )));
+    }
+
+    @Test
+    public void shouldNotReconstructStringTypeAsObject() {
+        Parameters matcher = new Parameters(
+            param(string("color").withStyle(ParameterStyle.SIMPLE).withSchemaType("string"), string("schema"))
+        );
+        Parameters matched = new Parameters(
+            param(string("color"), string("R,100,G,200,B,150"))
+        );
+
+        new ExpandedParameterDecoder(configuration, mockServerLogger).splitParameters(matcher, matched);
+
+        assertThat(matched, is(new Parameters(
+            param("color", "R", "100", "G", "200", "B", "150")
+        )));
+    }
+
+    @Test
+    public void shouldNotReconstructWithoutSchemaType() {
+        Parameters matcher = new Parameters(
+            param(string("color").withStyle(ParameterStyle.SIMPLE), string("schema"))
+        );
+        Parameters matched = new Parameters(
+            param(string("color"), string("R,100,G,200,B,150"))
+        );
+
+        new ExpandedParameterDecoder(configuration, mockServerLogger).splitParameters(matcher, matched);
+
+        assertThat(matched, is(new Parameters(
+            param("color", "R", "100", "G", "200", "B", "150")
+        )));
+    }
+
+    // DEEP_OBJECT STYLE ON NOTTABLE STRING
+
+    @Test
+    public void shouldAllowDeepObjectStyleOnNottableString() {
+        NottableString name = string("color").withStyle(ParameterStyle.DEEP_OBJECT);
+        assertThat(name.getParameterStyle(), is(ParameterStyle.DEEP_OBJECT));
+    }
+
+    // SCHEMA TYPE ON NOTTABLE STRING
+
+    @Test
+    public void shouldSetAndGetSchemaType() {
+        NottableString name = string("color").withSchemaType("object");
+        assertThat(name.getSchemaType(), is("object"));
+    }
+
+    @Test
+    public void shouldReturnNullSchemaTypeByDefault() {
+        NottableString name = string("color");
+        assertThat(name.getSchemaType(), is((String) null));
     }
 
 }

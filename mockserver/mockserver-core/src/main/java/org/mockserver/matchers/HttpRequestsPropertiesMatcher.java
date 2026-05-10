@@ -157,6 +157,9 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                 if (schema != null) {
                     try {
                         NottableString name = (parameter.getRequired() != null && parameter.getRequired() ? string(parameter.getName()) : optional(parameter.getName())).withStyle(parameterStyle(parameter.getExplode(), parameter.getStyle()));
+                        if (schema.getType() != null) {
+                            name.withSchemaType(schema.getType());
+                        }
                         if (parameter.getAllowEmptyValue() != null && parameter.getAllowEmptyValue()) {
                             schema.nullable(true);
                         }

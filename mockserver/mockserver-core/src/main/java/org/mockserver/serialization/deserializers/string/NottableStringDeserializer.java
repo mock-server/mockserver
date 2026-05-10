@@ -38,6 +38,7 @@ public class NottableStringDeserializer extends StdDeserializer<NottableString> 
             String value = null;
             JsonNode schema = null;
             ParameterStyle parameterStyle = null;
+            String schemaType = null;
 
             while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
                 String fieldName = jsonParser.currentName();
@@ -56,6 +57,9 @@ public class NottableStringDeserializer extends StdDeserializer<NottableString> 
                 } else if ("parameterStyle".equals(fieldName)) {
                     jsonParser.nextToken();
                     parameterStyle = ctxt.readValue(jsonParser, ParameterStyle.class);
+                } else if ("schemaType".equals(fieldName)) {
+                    jsonParser.nextToken();
+                    schemaType = ctxt.readValue(jsonParser, String.class);
                 }
             }
 
@@ -70,6 +74,9 @@ public class NottableStringDeserializer extends StdDeserializer<NottableString> 
 
             if (result != null && parameterStyle != null) {
                 result.withStyle(parameterStyle);
+            }
+            if (result != null && schemaType != null) {
+                result.withSchemaType(schemaType);
             }
 
             return result;
