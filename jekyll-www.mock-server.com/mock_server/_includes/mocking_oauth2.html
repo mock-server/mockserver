@@ -1,0 +1,664 @@
+<p>MockServer can simulate OAuth2 authorization servers and OpenID Connect providers, enabling you to test OAuth-secured applications without connecting to a real identity provider. This is useful for:</p>
+
+<ul>
+    <li><strong>Integration testing</strong> &mdash; verify your application correctly handles token acquisition, refresh, and error scenarios</li>
+    <li><strong>Offline development</strong> &mdash; develop and test locally without network access to an IdP</li>
+    <li><strong>Fast CI pipelines</strong> &mdash; eliminate external dependencies and network latency from your test suite</li>
+    <li><strong>Edge case testing</strong> &mdash; simulate expired tokens, invalid grants, and error responses that are difficult to trigger with a real IdP</li>
+</ul>
+
+<p>The examples below show how to create MockServer expectations that simulate each major OAuth2 flow. All examples use the <a href="/mock_server/creating_expectations.html">REST API</a> to create expectations.</p>
+
+<a id="client_credentials" class="anchor" href="#client_credentials">&nbsp;</a>
+
+<h2>Client Credentials Flow</h2>
+
+<p>The <strong>client credentials</strong> flow is used for machine-to-machine communication where no user is involved. The client authenticates directly with the authorization server using its <code>client_id</code> and <code>client_secret</code> to obtain an access token.</p>
+
+<p>This is the simplest OAuth2 flow and is commonly used for service-to-service API calls, background jobs, and microservice communication.</p>
+
+<button id="button_client_credentials_token" class="accordion">mock token endpoint for client credentials grant</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/oauth/token",
+        "headers": {
+            "Content-Type": ["application/x-www-form-urlencoded"]
+        },
+        "body": {
+            "type": "PARAMETERS",
+            "parameters": {
+                "grant_type": ["client_credentials"],
+                "client_id": ["my-client-id"],
+                "client_secret": ["my-client-secret"]
+            }
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "headers": {
+            "Content-Type": ["application/json"]
+        },
+        "body": {
+            "type": "JSON",
+            "json": "{\"access_token\": \"mock-access-token-12345\", \"token_type\": \"Bearer\", \"expires_in\": 3600, \"scope\": \"read write\"}"
+        }
+    }
+}'</code></pre>
+    </div>
+</div>
+
+<button id="button_client_credentials_with_scope" class="accordion">mock token endpoint with specific scope request</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/oauth/token",
+        "body": {
+            "type": "PARAMETERS",
+            "parameters": {
+                "grant_type": ["client_credentials"],
+                "scope": ["read"]
+            }
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "headers": {
+            "Content-Type": ["application/json"]
+        },
+        "body": {
+            "type": "JSON",
+            "json": "{\"access_token\": \"mock-read-only-token\", \"token_type\": \"Bearer\", \"expires_in\": 3600, \"scope\": \"read\"}"
+        }
+    }
+}'</code></pre>
+    </div>
+</div>
+
+<button id="button_client_credentials_basic_auth" class="accordion">mock token endpoint with HTTP Basic authentication</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/oauth/token",
+        "headers": {
+            "Authorization": ["Basic bXktY2xpZW50LWlkOm15LWNsaWVudC1zZWNyZXQ="]
+        },
+        "body": {
+            "type": "PARAMETERS",
+            "parameters": {
+                "grant_type": ["client_credentials"]
+            }
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "headers": {
+            "Content-Type": ["application/json"]
+        },
+        "body": {
+            "type": "JSON",
+            "json": "{\"access_token\": \"mock-access-token-basic\", \"token_type\": \"Bearer\", \"expires_in\": 3600}"
+        }
+    }
+}'</code></pre>
+        <p>Some OAuth2 clients send credentials as an HTTP Basic <code>Authorization</code> header (<code>base64(client_id:client_secret)</code>) instead of form parameters.</p>
+    </div>
+</div>
+
+<a id="authorization_code" class="anchor" href="#authorization_code">&nbsp;</a>
+
+<h2>Authorization Code Flow</h2>
+
+<p>The <strong>authorization code</strong> flow is used by web applications and native apps to obtain tokens on behalf of a user. It involves two steps:</p>
+
+<ol>
+    <li>The client redirects the user to the authorization server's <code>/authorize</code> endpoint, which authenticates the user and redirects back with an authorization <code>code</code></li>
+    <li>The client exchanges the authorization code for tokens at the <code>/token</code> endpoint</li>
+</ol>
+
+<p>To mock this flow, create expectations for both the authorization endpoint and the token endpoint.</p>
+
+<button id="button_auth_code_authorize" class="accordion">mock authorization endpoint (redirect with code)</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/authorize",
+        "queryStringParameters": {
+            "response_type": ["code"],
+            "client_id": ["my-client-id"],
+            "redirect_uri": ["https://myapp.example.com/callback"]
+        }
+    },
+    "httpResponseTemplate": {
+        "templateType": "JAVASCRIPT",
+        "template": "return { statusCode: 302, headers: { Location: [\"https://myapp.example.com/callback?code=mock-auth-code-xyz&state=\" + (request.queryStringParameters[\"state\"] && request.queryStringParameters[\"state\"][0] ? request.queryStringParameters[\"state\"][0] : \"\")] } };"
+    }
+}'</code></pre>
+        <p>The authorization endpoint redirects the user's browser back to the client application's <code>redirect_uri</code> with an authorization code. The <code>state</code> parameter is echoed back using a <a href="/mock_server/response_templates.html">JavaScript response template</a> that reads from the incoming request's query string parameters, preserving CSRF protection.</p>
+    </div>
+</div>
+
+<button id="button_auth_code_token" class="accordion">mock token endpoint (exchange code for tokens)</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/oauth/token",
+        "body": {
+            "type": "PARAMETERS",
+            "parameters": {
+                "grant_type": ["authorization_code"],
+                "code": ["mock-auth-code-xyz"],
+                "redirect_uri": ["https://myapp.example.com/callback"],
+                "client_id": ["my-client-id"]
+            }
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "headers": {
+            "Content-Type": ["application/json"]
+        },
+        "body": {
+            "type": "JSON",
+            "json": "{\"access_token\": \"mock-access-token-from-code\", \"token_type\": \"Bearer\", \"expires_in\": 3600, \"refresh_token\": \"mock-refresh-token-abc\", \"scope\": \"openid profile email\"}"
+        }
+    }
+}'</code></pre>
+        <p>This example omits <code>client_secret</code> from the token request. Confidential clients (server-side web apps) must also include <code>client_secret</code> as a form parameter or via HTTP Basic authentication. Public clients (SPAs, mobile apps) omit it.</p>
+    </div>
+</div>
+
+<a id="refresh_token" class="anchor" href="#refresh_token">&nbsp;</a>
+
+<h2>Refresh Token Flow</h2>
+
+<p>The <strong>refresh token</strong> flow allows clients to obtain a new access token without requiring user interaction, using a previously issued refresh token. This is used when access tokens expire and the client needs to maintain a session.</p>
+
+<button id="button_refresh_token" class="accordion">mock token endpoint for refresh token grant</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/oauth/token",
+        "body": {
+            "type": "PARAMETERS",
+            "parameters": {
+                "grant_type": ["refresh_token"],
+                "refresh_token": ["mock-refresh-token-abc"],
+                "client_id": ["my-client-id"]
+            }
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "headers": {
+            "Content-Type": ["application/json"]
+        },
+        "body": {
+            "type": "JSON",
+            "json": "{\"access_token\": \"mock-new-access-token-67890\", \"token_type\": \"Bearer\", \"expires_in\": 3600, \"refresh_token\": \"mock-new-refresh-token-def\"}"
+        }
+    }
+}'</code></pre>
+        <p>Many authorization servers issue a new refresh token alongside the new access token (refresh token rotation). This example demonstrates that pattern.</p>
+    </div>
+</div>
+
+<button id="button_refresh_token_expired" class="accordion">mock expired refresh token error response</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/oauth/token",
+        "body": {
+            "type": "PARAMETERS",
+            "parameters": {
+                "grant_type": ["refresh_token"],
+                "refresh_token": ["expired-refresh-token"]
+            }
+        }
+    },
+    "httpResponse": {
+        "statusCode": 400,
+        "headers": {
+            "Content-Type": ["application/json"]
+        },
+        "body": {
+            "type": "JSON",
+            "json": "{\"error\": \"invalid_grant\", \"error_description\": \"The refresh token has expired\"}"
+        }
+    }
+}'</code></pre>
+        <p>Use this pattern to test how your application handles refresh token expiry &mdash; typically the user should be redirected to re-authenticate.</p>
+    </div>
+</div>
+
+<a id="pkce" class="anchor" href="#pkce">&nbsp;</a>
+
+<h2>PKCE Extension</h2>
+
+<p><strong>PKCE</strong> (Proof Key for Code Exchange, <a target="_blank" href="https://datatracker.ietf.org/doc/html/rfc7636">RFC 7636</a>) is an extension to the authorization code flow designed for public clients (single-page apps, mobile apps) that cannot securely store a client secret. The client generates a random <code>code_verifier</code> and sends a derived <code>code_challenge</code> in the authorization request, then proves possession of the verifier when exchanging the code for tokens.</p>
+
+<button id="button_pkce_authorize" class="accordion">mock authorization endpoint with PKCE challenge</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/authorize",
+        "queryStringParameters": {
+            "response_type": ["code"],
+            "client_id": ["my-spa-client"],
+            "redirect_uri": ["https://myapp.example.com/callback"],
+            "code_challenge_method": ["S256"],
+            "code_challenge": [".+"]
+        }
+    },
+    "httpResponseTemplate": {
+        "templateType": "JAVASCRIPT",
+        "template": "return { statusCode: 302, headers: { Location: [\"https://myapp.example.com/callback?code=mock-pkce-auth-code&state=\" + (request.queryStringParameters[\"state\"] && request.queryStringParameters[\"state\"][0] ? request.queryStringParameters[\"state\"][0] : \"\")] } };"
+    }
+}'</code></pre>
+        <p>The <code>code_challenge</code> parameter is matched with a regex (<code>.+</code>) since it will be a different Base64url-encoded hash each time. The <code>state</code> parameter is echoed back using a <a href="/mock_server/response_templates.html">JavaScript response template</a>. In a real flow, the authorization server validates the challenge against the verifier during token exchange.</p>
+    </div>
+</div>
+
+<button id="button_pkce_token" class="accordion">mock token endpoint with PKCE code verifier</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/oauth/token",
+        "body": {
+            "type": "PARAMETERS",
+            "parameters": {
+                "grant_type": ["authorization_code"],
+                "code": ["mock-pkce-auth-code"],
+                "redirect_uri": ["https://myapp.example.com/callback"],
+                "client_id": ["my-spa-client"],
+                "code_verifier": [".+"]
+            }
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "headers": {
+            "Content-Type": ["application/json"]
+        },
+        "body": {
+            "type": "JSON",
+            "json": "{\"access_token\": \"mock-pkce-access-token\", \"token_type\": \"Bearer\", \"expires_in\": 3600, \"id_token\": \"mock-id-token-jwt\", \"scope\": \"openid profile\"}"
+        }
+    }
+}'</code></pre>
+        <p>The <code>code_verifier</code> is matched with a regex since MockServer does not need to verify the PKCE proof &mdash; it just needs to accept the token exchange request. Note that PKCE flows for public clients do not include a <code>client_secret</code>.</p>
+    </div>
+</div>
+
+<a id="dynamic_tokens" class="anchor" href="#dynamic_tokens">&nbsp;</a>
+
+<h2>Dynamic Token Responses with Response Templates</h2>
+
+<p>The examples above return static token values. For more realistic testing &mdash; especially when running multiple tests in parallel &mdash; you can use <a href="/mock_server/response_templates.html">response templates</a> to generate unique tokens for each request.</p>
+
+<button id="button_dynamic_token_mustache" class="accordion">dynamic access token using Mustache template</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/oauth/token",
+        "body": {
+            "type": "PARAMETERS",
+            "parameters": {
+                "grant_type": ["client_credentials"]
+            }
+        }
+    },
+    "httpResponseTemplate": {
+        "templateType": "MUSTACHE",
+        "template": "{\"statusCode\": 200, \"headers\": {\"Content-Type\": [\"application/json\"]}, \"body\": \"{\\\"access_token\\\": \\\"{{uuid}}\\\", \\\"token_type\\\": \\\"Bearer\\\", \\\"expires_in\\\": 3600, \\\"scope\\\": \\\"read write\\\"}\"}"
+    }
+}'</code></pre>
+        <p>Each request receives a unique <code>access_token</code> generated by the <code>{{uuid}}</code> built-in template variable.</p>
+    </div>
+</div>
+
+<button id="button_dynamic_token_javascript" class="accordion">dynamic access token with expiry timestamp using JavaScript template</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/oauth/token",
+        "body": {
+            "type": "PARAMETERS",
+            "parameters": {
+                "grant_type": ["client_credentials"]
+            }
+        }
+    },
+    "httpResponseTemplate": {
+        "templateType": "JAVASCRIPT",
+        "template": "return { statusCode: 200, headers: { \"Content-Type\": [\"application/json\"] }, body: JSON.stringify({ access_token: uuid, token_type: \"Bearer\", expires_in: 3600, issued_at: parseInt(now_epoch), scope: \"read write\" }) };"
+    }
+}'</code></pre>
+        <p>JavaScript templates provide access to built-in template variables like <code>uuid</code> and <code>now_epoch</code> for generating dynamic values. The <code>issued_at</code> field contains the epoch time when the token was issued.</p>
+    </div>
+</div>
+
+<a id="bearer_token_matching" class="anchor" href="#bearer_token_matching">&nbsp;</a>
+
+<h2>Matching Protected Resources by Bearer Token</h2>
+
+<p>After obtaining an access token, clients include it in the <code>Authorization</code> header when calling protected APIs. You can mock these protected endpoints to accept any bearer token, require a specific token, or reject missing/invalid tokens.</p>
+
+<button id="button_bearer_any" class="accordion">match any Bearer token on a protected endpoint</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/api/resource",
+        "headers": {
+            "Authorization": ["Bearer .+"]
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "headers": {
+            "Content-Type": ["application/json"]
+        },
+        "body": {
+            "type": "JSON",
+            "json": "{\"id\": 1, \"name\": \"Protected Resource\", \"description\": \"This resource requires authentication\"}"
+        }
+    }
+}'</code></pre>
+        <p>The regex <code>Bearer .+</code> matches any non-empty bearer token value.</p>
+    </div>
+</div>
+
+<button id="button_bearer_specific" class="accordion">match a specific Bearer token</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/api/resource",
+        "headers": {
+            "Authorization": ["Bearer mock-access-token-12345"]
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "headers": {
+            "Content-Type": ["application/json"]
+        },
+        "body": {
+            "type": "JSON",
+            "json": "{\"id\": 1, \"name\": \"Protected Resource\"}"
+        }
+    }
+}'</code></pre>
+        <p>Match a specific token to ensure your application sends the correct token obtained from the mock token endpoint.</p>
+    </div>
+</div>
+
+<button id="button_bearer_missing_401" class="accordion">return 401 Unauthorized for missing or invalid tokens</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/api/resource",
+        "headers": {
+            "!Authorization": ["Bearer .+"]
+        }
+    },
+    "httpResponse": {
+        "statusCode": 401,
+        "headers": {
+            "Content-Type": ["application/json"],
+            "WWW-Authenticate": ["Bearer realm=\"mockserver\", error=\"invalid_token\""]
+        },
+        "body": {
+            "type": "JSON",
+            "json": "{\"error\": \"unauthorized\", \"error_description\": \"Access token is missing or invalid\"}"
+        }
+    }
+}'</code></pre>
+        <p>The <code>!</code> prefix on the header name creates a <a href="/mock_server/creating_expectations.html#button_match_request_by_not_matching_headers">negative matcher</a> &mdash; this expectation matches requests that do <em>not</em> have a valid Bearer token. Use this with a lower <a href="/mock_server/creating_expectations.html">priority</a> to create a catch-all 401 response alongside a higher-priority expectation that matches valid tokens.</p>
+    </div>
+</div>
+
+<button id="button_bearer_forbidden_scope" class="accordion">return 403 Forbidden for insufficient scope</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "DELETE",
+        "path": "/api/admin/resource",
+        "headers": {
+            "Authorization": ["Bearer mock-read-only-token"]
+        }
+    },
+    "httpResponse": {
+        "statusCode": 403,
+        "headers": {
+            "Content-Type": ["application/json"],
+            "WWW-Authenticate": ["Bearer realm=\"mockserver\", error=\"insufficient_scope\", scope=\"admin\""]
+        },
+        "body": {
+            "type": "JSON",
+            "json": "{\"error\": \"forbidden\", \"error_description\": \"Insufficient scope for this resource\"}"
+        }
+    }
+}'</code></pre>
+        <p>Simulate a scenario where the access token is valid but does not have the required scope for the requested operation.</p>
+    </div>
+</div>
+
+<a id="oidc_discovery" class="anchor" href="#oidc_discovery">&nbsp;</a>
+
+<h2>OpenID Connect Discovery</h2>
+
+<p><strong>OpenID Connect</strong> (OIDC) clients typically start by fetching the provider's discovery document from <code>/.well-known/openid-configuration</code> to learn the authorization, token, and JWKS endpoint URLs. Many OAuth2 client libraries require this endpoint to be available during initialization.</p>
+
+<button id="button_oidc_discovery" class="accordion">mock OpenID Connect discovery endpoint</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/.well-known/openid-configuration"
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "headers": {
+            "Content-Type": ["application/json"]
+        },
+        "body": {
+            "type": "JSON",
+            "json": "{\"issuer\": \"http://localhost:1080\", \"authorization_endpoint\": \"http://localhost:1080/authorize\", \"token_endpoint\": \"http://localhost:1080/oauth/token\", \"userinfo_endpoint\": \"http://localhost:1080/userinfo\", \"jwks_uri\": \"http://localhost:1080/.well-known/jwks.json\", \"response_types_supported\": [\"code\", \"token\", \"id_token\"], \"subject_types_supported\": [\"public\"], \"id_token_signing_alg_values_supported\": [\"RS256\"], \"scopes_supported\": [\"openid\", \"profile\", \"email\"], \"token_endpoint_auth_methods_supported\": [\"client_secret_basic\", \"client_secret_post\"], \"grant_types_supported\": [\"authorization_code\", \"client_credentials\", \"refresh_token\"]}"
+        }
+    }
+}'</code></pre>
+        <p>The discovery document tells OIDC clients where to find all the other endpoints. All URLs point to MockServer (<code>localhost:1080</code>) so the client library interacts entirely with the mock.</p>
+    </div>
+</div>
+
+<button id="button_oidc_jwks" class="accordion">mock JWKS endpoint (JSON Web Key Set)</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/.well-known/jwks.json"
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "headers": {
+            "Content-Type": ["application/json"]
+        },
+        "body": {
+            "type": "JSON",
+            "json": "{\"keys\": [{\"kty\": \"RSA\", \"use\": \"sig\", \"kid\": \"mock-key-1\", \"alg\": \"RS256\", \"n\": \"0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAtVT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn64tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FDW2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n91CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINHaQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw\", \"e\": \"AQAB\"}]}"
+        }
+    }
+}'</code></pre>
+        <p>The JWKS endpoint exposes public keys that OIDC clients use to verify the signature of ID tokens. For testing purposes you can use a placeholder RSA key &mdash; unless your application actually validates JWT signatures, in which case you should generate a real key pair and sign your mock ID tokens with the corresponding private key.</p>
+    </div>
+</div>
+
+<button id="button_oidc_userinfo" class="accordion">mock UserInfo endpoint</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/userinfo",
+        "headers": {
+            "Authorization": ["Bearer .+"]
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "headers": {
+            "Content-Type": ["application/json"]
+        },
+        "body": {
+            "type": "JSON",
+            "json": "{\"sub\": \"mock-user-123\", \"name\": \"Test User\", \"email\": \"test@example.com\", \"email_verified\": true, \"picture\": \"https://example.com/photo.jpg\"}"
+        }
+    }
+}'</code></pre>
+        <p>The UserInfo endpoint returns claims about the authenticated user. This is called by OIDC clients after obtaining an access token.</p>
+    </div>
+</div>
+
+<a id="error_responses" class="anchor" href="#error_responses">&nbsp;</a>
+
+<h2>Error Responses</h2>
+
+<p>Testing error scenarios is critical for building resilient OAuth2 integrations. The OAuth2 specification defines <a target="_blank" href="https://datatracker.ietf.org/doc/html/rfc6749#section-5.2">standard error codes</a> that authorization servers return when requests fail.</p>
+
+<button id="button_error_invalid_client" class="accordion">mock invalid client credentials error</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/oauth/token",
+        "body": {
+            "type": "PARAMETERS",
+            "parameters": {
+                "grant_type": ["client_credentials"],
+                "client_id": ["invalid-client"]
+            }
+        }
+    },
+    "httpResponse": {
+        "statusCode": 401,
+        "headers": {
+            "Content-Type": ["application/json"]
+        },
+        "body": {
+            "type": "JSON",
+            "json": "{\"error\": \"invalid_client\", \"error_description\": \"Client authentication failed\"}"
+        }
+    }
+}'</code></pre>
+    </div>
+</div>
+
+<button id="button_error_invalid_grant" class="accordion">mock invalid authorization code error</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/oauth/token",
+        "body": {
+            "type": "PARAMETERS",
+            "parameters": {
+                "grant_type": ["authorization_code"],
+                "code": ["expired-or-used-code"]
+            }
+        }
+    },
+    "httpResponse": {
+        "statusCode": 400,
+        "headers": {
+            "Content-Type": ["application/json"]
+        },
+        "body": {
+            "type": "JSON",
+            "json": "{\"error\": \"invalid_grant\", \"error_description\": \"The authorization code has expired or has already been used\"}"
+        }
+    }
+}'</code></pre>
+    </div>
+</div>
+
+<button id="button_error_unsupported_grant" class="accordion">mock unsupported grant type error</button>
+<div class="panel">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/oauth/token",
+        "body": {
+            "type": "PARAMETERS",
+            "parameters": {
+                "grant_type": ["password"]
+            }
+        }
+    },
+    "httpResponse": {
+        "statusCode": 400,
+        "headers": {
+            "Content-Type": ["application/json"]
+        },
+        "body": {
+            "type": "JSON",
+            "json": "{\"error\": \"unsupported_grant_type\", \"error_description\": \"The authorization grant type is not supported\"}"
+        }
+    }
+}'</code></pre>
+    </div>
+</div>
