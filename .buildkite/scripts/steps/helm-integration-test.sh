@@ -37,10 +37,13 @@ rm docker/mockserver-netty-jar-with-dependencies.jar
 
 echo "--- :k8s: Installing k3d (if needed)"
 K3D_VERSION="v5.7.5"
+K3D_BIN="/usr/local/bin/k3d"
 if ! command -v k3d &>/dev/null || [[ "$(k3d version 2>/dev/null | head -1)" != *"${K3D_VERSION#v}"* ]]; then
   ARCH=$(uname -m); case "$ARCH" in x86_64) ARCH=amd64;; aarch64) ARCH=arm64;; esac
-  curl -fsSL "https://github.com/k3d-io/k3d/releases/download/${K3D_VERSION}/k3d-linux-${ARCH}" -o /usr/local/bin/k3d
-  chmod +x /usr/local/bin/k3d
+  K3D_TMP=$(mktemp)
+  curl -fsSL "https://github.com/k3d-io/k3d/releases/download/${K3D_VERSION}/k3d-linux-${ARCH}" -o "$K3D_TMP"
+  chmod +x "$K3D_TMP"
+  sudo mv "$K3D_TMP" "$K3D_BIN" 2>/dev/null || mv "$K3D_TMP" "$K3D_BIN"
   k3d version
 fi
 
