@@ -11,6 +11,7 @@ WORKDIR="/build"
 MEMORY=""
 NETWORK=""
 DOCKER_SOCKET=false
+ENTRYPOINT=""
 ENV_VARS=()
 VOLUMES=()
 
@@ -26,6 +27,7 @@ Options:
   -w, --workdir DIR        Working directory inside container (default: /build)
   -m, --memory SIZE        Memory limit (e.g. 7g)
   -s, --docker-socket      Mount Docker socket into container
+  --entrypoint CMD         Override container entrypoint
   -e, --env KEY=VALUE      Pass environment variable to container
   -v, --volume SRC:DST     Additional volume mount
   --network NAME           Docker network to connect to
@@ -44,6 +46,7 @@ while [[ $# -gt 0 ]]; do
     -w|--workdir) WORKDIR="$2"; shift 2 ;;
     -m|--memory)  MEMORY="$2"; shift 2 ;;
     -s|--docker-socket) DOCKER_SOCKET=true; shift ;;
+    --entrypoint) ENTRYPOINT="$2"; shift 2 ;;
     -e|--env)     ENV_VARS+=("$2"); shift 2 ;;
     -v|--volume)  VOLUMES+=("$2"); shift 2 ;;
     --network)    NETWORK="$2"; shift 2 ;;
@@ -69,6 +72,10 @@ DOCKER_ARGS+=(-w "$WORKDIR")
 
 if [[ -n "$MEMORY" ]]; then
   DOCKER_ARGS+=(--memory="$MEMORY" --memory-swap="$MEMORY")
+fi
+
+if [[ -n "$ENTRYPOINT" ]]; then
+  DOCKER_ARGS+=(--entrypoint "$ENTRYPOINT")
 fi
 
 if [[ -n "$NETWORK" ]]; then

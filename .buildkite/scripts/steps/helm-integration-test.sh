@@ -1,19 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "--- :buildkite: Downloading shaded JAR artifact"
-buildkite-agent artifact download "mockserver/mockserver-netty/target/mockserver-netty-*-shaded.jar" .
+JAR_DIR="mockserver/mockserver-netty/target"
 
-SHADED_JAR=$(ls mockserver/mockserver-netty/target/mockserver-netty-*-shaded.jar 2>/dev/null | head -1)
-if [ -z "$SHADED_JAR" ]; then
-  echo "Error: shaded JAR not found after artifact download"
-  exit 1
+echo "--- :buildkite: Downloading shaded JAR artifact"
+if command -v buildkite-agent &>/dev/null && buildkite-agent artifact download "mockserver/mockserver-netty/target/mockserver-netty-*-shaded.jar" . 2>/dev/null; then
+  SHADED_JAR=$(ls "${JAR_DIR}"/mockserver-netty-*-shaded.jar 2>/dev/null | head -1)
+  if [ -z "$SHADED_JAR" ]; then
+    echo "Error: shaded JAR not found after artifact download"
+    exit 1
+  fi
+  JAR_NAME=$(basename "$SHADED_JAR" | sed 's/-shaded\.jar$/-jar-with-dependencies.jar/')
+  cp "$SHADED_JAR" "$JAR_DIR/$JAR_NAME"
+else
+  echo "No artifact available — building JAR from source"
+  echo "--- :maven: Building mockserver-netty shaded JAR"
+  (cd mockserver && ./mvnw -pl mockserver-netty -am package -DskipTests -q)
+  JAR_NAME=$(ls "${JAR_DIR}"/mockserver-netty-*-jar-with-dependencies.jar 2>/dev/null | head -1 | xargs basename)
 fi
 
-echo "--- :package: Copying shaded JAR as jar-with-dependencies"
-JAR_DIR="mockserver/mockserver-netty/target"
-JAR_NAME=$(basename "$SHADED_JAR" | sed 's/-shaded\.jar$/-jar-with-dependencies.jar/')
-cp "$SHADED_JAR" "$JAR_DIR/$JAR_NAME"
+if [ -z "$JAR_NAME" ] || [ ! -f "$JAR_DIR/$JAR_NAME" ]; then
+  echo "Error: jar-with-dependencies JAR not found in $JAR_DIR"
+  exit 1
+fi
 
 echo "--- :docker: Building MockServer Docker image for testing"
 cp "$JAR_DIR/$JAR_NAME" docker/mockserver-netty-jar-with-dependencies.jar

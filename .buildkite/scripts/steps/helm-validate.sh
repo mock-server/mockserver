@@ -5,7 +5,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 exec "$SCRIPT_DIR/../run-in-docker.sh" \
   -i alpine/helm:3.17.3 \
-  -- sh -c '
+  --entrypoint sh \
+  -- -c '
     errors=0
 
     for chart in helm/mockserver helm/mockserver-config; do
