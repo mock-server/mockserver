@@ -195,29 +195,10 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingSa
                         "  {" + NEW_LINE +
                         "    \"method\" : \"GET\"," + NEW_LINE +
                         "    \"path\" : \"/not_found\",",
-                    " didn't match expectation \"" + UUIDService.getUUID() + "\":" + NEW_LINE +
-                        NEW_LINE +
-                        "  {" + NEW_LINE +
-                        "    \"httpRequest\" : {" + NEW_LINE +
-                        "      \"path\" : \"/some_path.*\"" + NEW_LINE +
-                        "    }," + NEW_LINE +
-                        "    \"httpResponse\" : {" + NEW_LINE +
-                        "      \"body\" : \"some_body\"" + NEW_LINE +
-                        "    }," + NEW_LINE +
-                        "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
-                        "    \"priority\" : 0," + NEW_LINE +
-                        "    \"timeToLive\" : {" + NEW_LINE +
-                        "      \"unlimited\" : true" + NEW_LINE +
-                        "    }," + NEW_LINE +
-                        "    \"times\" : {" + NEW_LINE +
-                        "      \"remainingTimes\" : 3" + NEW_LINE +
-                        "    }" + NEW_LINE +
-                        "  }" + NEW_LINE +
-                        NEW_LINE +
-                        " because:" + NEW_LINE +
-                        NEW_LINE +
-                        "  method matched" + NEW_LINE +
-                        "  path didn't match"
+                    " didn't match expectation \"" + UUIDService.getUUID() + "\":",
+                    " because:",
+                    "method matched",
+                    "path didn't match"
                 },
                 new String[]{ // 7
                     "closest expectation:"
