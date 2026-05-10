@@ -406,6 +406,139 @@ Once `bk` is installed and authenticated, opencode agents can use it directly fo
 
 **Note:** `bk auth login` requires an interactive TTY (browser OAuth flow), so it must be run by the user in a separate terminal before opencode can use `bk` commands. If the agent detects `bk` is not authenticated, it will prompt the user to run `bk auth login` manually.
 
+## Known Issue: Agent Starvation from Script-Based Triggers
+
+### Problem
+
+The orchestrator emits `command` steps that run `trigger-pipeline.sh`, which creates a child build via the Buildkite API and then **polls until completion** (up to 2 hours). Each polling trigger job occupies an agent slot while doing essentially nothing — just `sleep 30` + `curl` in a loop.
+
+When multiple commits land on `master` in quick succession (e.g. from concurrent opencode sessions), each parent build triggers ~6 child pipelines, and each trigger job holds an agent:
+
+| Concurrent parent builds | Trigger jobs (agents blocked polling) | Agents remaining for actual work |
+|---|---|---|
+| 1 | ~6 | 4 of 10 |
+| 2 | ~12 | 0 of 10 (starvation) |
+| 3 | ~18 | 0 of 10 (starvation, queued jobs can't start) |
+
+Cancel/skip intermediate builds is set to `!master` (disabled on master) because enabling it on master would cause legitimate builds to be dropped. Child pipelines (`mockserver-infra`, `mockserver-container-tests`) have empty filters (cancel/skip enabled on all branches), but the parent pipeline's trigger jobs still hold agents.
+
+### Why Not Native Trigger Steps
+
+Buildkite's native `trigger` step type would solve this — it doesn't consume an agent. However, native triggers cannot be used because PR build authorisation requires the script-based approach (the trigger script passes PR metadata and handles auth that native triggers don't support).
+
+### Options Investigated
+
+#### Option A: Separate Agent Pool for Triggers (Recommended)
+
+Add a second, cheap agent stack on small instances (e.g. `t3.small` or `t3.micro`) dedicated to the `trigger` queue. Trigger jobs run on tiny instances while real work runs on the existing `default` queue.
+
+| Property | `default` queue (current) | `trigger` queue (new) |
+|---|---|---|
+| Instance types | `c5.2xlarge`, `c5a.2xlarge`, `m5.2xlarge` | `t3.small`, `t3.micro` |
+| Cost per instance (spot) | ~$0.06–0.12/hr | ~$0.004–0.008/hr |
+| Max instances | 10 | 10–15 |
+| Agents per instance | 1 | 3–5 (trigger jobs are idle polling) |
+| Workload | Maven builds, Docker, k3d tests | `sleep` + `curl` polling loops |
+| Memory needs | 7–16 GB | <256 MB |
+
+**Pros:**
+- Completely eliminates agent starvation — trigger jobs never compete with real work
+- Very low cost (~$0.04/hr for 10 trigger agents vs ~$1/hr for 10 build agents)
+- Simple Terraform change (add a third `module "buildkite_trigger_stack"` block)
+- No pipeline YAML or script changes needed — only update `generate-pipeline.sh` to emit `agents: { queue: trigger }` for trigger steps
+
+**Cons:**
+- Adds a third ASG/Lambda scaler to manage
+- Small increase in baseline infrastructure complexity
+
+**Implementation:**
+
+1. Add Terraform module in `terraform/buildkite-agents/main.tf`:
+   ```hcl
+   module "buildkite_trigger_stack" {
+     source  = "buildkite/elastic-ci-stack-for-aws/buildkite"
+     version = "~> 0.7.0"
+
+     stack_name            = "buildkite-mockserver-trigger"
+     buildkite_agent_token = var.buildkite_agent_token
+     buildkite_queue       = "trigger"
+
+     instance_types          = "t3.small,t3.micro"
+     min_size                = 0
+     max_size                = 15
+     on_demand_percentage    = 0
+     on_demand_base_capacity = 0
+
+     agents_per_instance         = 5
+     associate_public_ip_address = true
+   }
+   ```
+
+2. Update `generate-pipeline.sh` to target the `trigger` queue:
+   ```bash
+   STEPS="${STEPS}  - label: \":pipeline: ${label}\"
+       command: \".buildkite/scripts/trigger-pipeline.sh ${pipeline_slug} '${label}'\"
+       timeout_in_minutes: 120
+       agents:
+         queue: trigger
+   "
+   ```
+
+#### Option B: Concurrency Groups on Trigger Steps
+
+Add `concurrency: 1` and `concurrency_group: "trigger/<pipeline-slug>"` to each trigger step. This ensures only one trigger job per child pipeline runs at a time — when build #4051 is already polling `mockserver-java`, build #4052's `mockserver-java` trigger queues instead of grabbing another agent.
+
+**Pros:**
+- No infrastructure changes — purely a pipeline YAML change
+- Reduces worst-case agent consumption from N×6 to 6 (one per child pipeline)
+
+**Cons:**
+- Builds become serialised — build #4052 can't start `mockserver-java` until #4051 finishes
+- Still wastes 6 expensive agents on polling (just caps it at 6 instead of unlimited)
+- Increases total build wall-clock time for master
+
+#### Option C: Increase Max Agents
+
+Raise `max_size` from 10 to 20+ to accommodate concurrent builds.
+
+**Pros:**
+- Simple — change one number in `terraform.tfvars`
+- No pipeline changes needed
+
+**Cons:**
+- Doubles cost during burst periods (~$1.20/hr → ~$2.40/hr with c5.2xlarge)
+- Doesn't fix the root cause — trigger jobs still waste expensive instances
+- Cost scales linearly with concurrency
+
+#### Option D: Cancel Intermediate Builds on Master
+
+Enable `cancel_running_branch_builds` for master (remove `!master` filter).
+
+**Pros:**
+- Frees agents immediately when a newer commit arrives
+- No infrastructure cost increase
+
+**Cons:**
+- **Drops legitimate builds** — if commit A contains a real bug and commit B arrives, commit A's build is cancelled before it finishes, so the bug is never tested against commit A's code
+- Current `trigger-pipeline.sh` has `cancel_child_build` trap logic that would also cancel child builds mid-run
+- Not suitable for master where every commit should be validated
+
+#### Option E: Hybrid — Cheap Trigger Pool + Concurrency Groups
+
+Combine Options A and B: run triggers on cheap instances AND limit concurrency per child pipeline. This provides both cost efficiency and prevents runaway concurrent builds.
+
+**Pros:**
+- Best of both approaches
+- Trigger agents are cheap, AND concurrency is bounded
+
+**Cons:**
+- Most complex to implement
+- Serialisation delays from concurrency groups may not be worth it if the cheap pool has enough capacity
+
+### Recommendation
+
+**Option A (Separate Agent Pool)** is recommended as the primary fix. It cleanly separates the concern (polling vs. building), is low-cost, and doesn't introduce serialisation delays. If concurrent master builds remain a problem after implementing Option A, Option E (adding concurrency groups) can be layered on top.
+
 ## Local CI Simulation
 
 To run the Buildkite build locally:
