@@ -409,6 +409,12 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                     .append(COLON_NEW_LINES)
                     .append(Joiner.on(NEW_LINE).join(context.getDifferences(fieldName)));
             }
+            if (!fieldMatches) {
+                List<String> hints = generateHintsForField(fieldName, matchDifferenceCount.getHttpRequest());
+                for (String hint : hints) {
+                    becauseBuilder.append(NEW_LINE).append(hint);
+                }
+            }
         }
         if (!fieldMatches) {
             if (!controlPlaneMatcher) {
@@ -439,6 +445,22 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
             );
         }
         return false;
+    }
+
+    private List<String> generateHintsForField(MatchDifference.Field fieldName, HttpRequest request) {
+        if (httpRequest == null || request == null) {
+            return Collections.emptyList();
+        }
+        switch (fieldName) {
+            case PATH:
+                return MatchFailureHints.generateHints(fieldName, httpRequest.getPath(), request.getPath());
+            case HEADERS:
+                return MatchFailureHints.generateHints(fieldName, httpRequest.getHeaders(), request.getHeaders());
+            case BODY:
+                return MatchFailureHints.generateHints(fieldName, httpRequest.getBody(), request.getBody());
+            default:
+                return Collections.emptyList();
+        }
     }
 
     /**

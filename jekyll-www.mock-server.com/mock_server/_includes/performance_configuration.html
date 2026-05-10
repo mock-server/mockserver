@@ -279,7 +279,7 @@
 <button id="button_configuration_matchers_fail_fast" class="accordion title"><strong>Request Matchers Fail Fast</strong></button>
 <div class="panel title">
     <p>If true (the default) request matchers will fail on the first non-matching field, if false request matchers will compare all fields.</p>
-    <p>This is useful to see all mismatching fields in the log event recording that a request matcher did not match.</p>
+    <p>Set to <code>false</code> when debugging matching issues to see all mismatching fields in a single log entry. See <a href="/mock_server/troubleshooting_matching.html">Troubleshooting Matching</a> for a step-by-step guide.</p>
     <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">true</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.matchersFailFast(boolean enable)</code></pre>

@@ -9,6 +9,8 @@ import org.mockserver.configuration.Configuration;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.matchers.HttpRequestMatcher;
+import org.mockserver.matchers.MatchDifference;
 import org.mockserver.memory.MemoryMonitoring;
 import org.mockserver.metrics.Metrics;
 import org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause;
@@ -19,6 +21,7 @@ import org.mockserver.persistence.ExpectationFileWatcher;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.*;
+import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.serialization.YamlToJsonConverter;
 import org.mockserver.server.initialize.ExpectationInitializerLoader;
@@ -292,6 +295,132 @@ public class HttpState {
 
     public void postProcess(Expectation expectation) {
         requestMatchers.postProcess(expectation);
+    }
+
+    private static final int DEBUG_MISMATCH_MAX_EXPECTATIONS = 100;
+
+    public HttpResponse debugMismatch(HttpRequest request) {
+        final String correlationId = UUIDService.getUUID();
+        final String timestamp = java.time.Instant.now().toString();
+        try {
+            final RequestDefinition requestDefinition = isNotBlank(request.getBodyAsString())
+                ? getRequestDefinitionSerializer().deserialize(request.getBodyAsJsonOrXmlString())
+                : request();
+            if (!(requestDefinition instanceof HttpRequest)) {
+                com.fasterxml.jackson.databind.ObjectMapper errorMapper = ObjectMapperFactory.createObjectMapper();
+                com.fasterxml.jackson.databind.node.ObjectNode errorNode = errorMapper.createObjectNode();
+                errorNode.put("error", "debugMismatch only supports HttpRequest definitions");
+                errorNode.put("correlationId", correlationId);
+                errorNode.put("timestamp", timestamp);
+                return response()
+                    .withStatusCode(BAD_REQUEST.code())
+                    .withBody(errorMapper.writerWithDefaultPrettyPrinter().writeValueAsString(errorNode), MediaType.JSON_UTF_8);
+            }
+            HttpRequest debugRequest = (HttpRequest) requestDefinition;
+
+            List<HttpRequestMatcher> matchers = requestMatchers.retrieveRequestMatchers(null);
+            com.fasterxml.jackson.databind.ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+            com.fasterxml.jackson.databind.node.ArrayNode expectationResults = objectMapper.createArrayNode();
+
+            int closestMatchFailures = Integer.MAX_VALUE;
+            String closestMatchId = null;
+            int closestMatchedFields = 0;
+            int totalFields = MatchDifference.Field.values().length;
+            boolean truncated = matchers.size() > DEBUG_MISMATCH_MAX_EXPECTATIONS;
+            int evaluateCount = Math.min(matchers.size(), DEBUG_MISMATCH_MAX_EXPECTATIONS);
+
+            for (int i = 0; i < evaluateCount; i++) {
+                HttpRequestMatcher matcher = matchers.get(i);
+                com.fasterxml.jackson.databind.node.ObjectNode matchResult = objectMapper.createObjectNode();
+                Expectation expectation = matcher.getExpectation();
+                if (expectation != null) {
+                    matchResult.put("expectationId", expectation.getId());
+                    if (expectation.getHttpRequest() instanceof HttpRequest) {
+                        HttpRequest expRequest = (HttpRequest) expectation.getHttpRequest();
+                        matchResult.put("expectationPath", expRequest.getPath() != null ? expRequest.getPath().getValue() : "");
+                        matchResult.put("expectationMethod", expRequest.getMethod() != null ? expRequest.getMethod().getValue() : "");
+                    }
+                }
+
+                HttpRequest clonedRequest = debugRequest.clone();
+                MatchDifference matchDifference = new MatchDifference(true, clonedRequest);
+                boolean matches = matcher.matches(matchDifference, clonedRequest);
+                matchResult.put("matches", matches);
+
+                if (!matches) {
+                    java.util.Map<MatchDifference.Field, List<String>> allDifferences = matchDifference.getAllDifferences();
+                    int failures = allDifferences.size();
+                    int matchedFields = totalFields - failures;
+                    matchResult.put("matchedFieldCount", matchedFields);
+                    matchResult.put("totalFieldCount", totalFields);
+
+                    com.fasterxml.jackson.databind.node.ObjectNode differences = objectMapper.createObjectNode();
+                    for (java.util.Map.Entry<MatchDifference.Field, List<String>> diffEntry : allDifferences.entrySet()) {
+                        com.fasterxml.jackson.databind.node.ArrayNode fieldDiffs = differences.putArray(diffEntry.getKey().getName());
+                        for (String diff : diffEntry.getValue()) {
+                            fieldDiffs.add(diff);
+                        }
+                    }
+                    matchResult.set("differences", differences);
+
+                    if (failures < closestMatchFailures && expectation != null) {
+                        closestMatchFailures = failures;
+                        closestMatchId = expectation.getId();
+                        closestMatchedFields = matchedFields;
+                    }
+                } else {
+                    matchResult.put("matchedFieldCount", totalFields);
+                    matchResult.put("totalFieldCount", totalFields);
+                }
+
+                expectationResults.add(matchResult);
+            }
+
+            com.fasterxml.jackson.databind.node.ObjectNode resultNode = objectMapper.createObjectNode();
+            resultNode.put("correlationId", correlationId);
+            resultNode.put("timestamp", timestamp);
+            resultNode.put("totalExpectations", matchers.size());
+            resultNode.put("evaluatedExpectations", evaluateCount);
+            if (truncated) {
+                resultNode.put("truncated", true);
+                resultNode.put("maxExpectationsEvaluated", DEBUG_MISMATCH_MAX_EXPECTATIONS);
+            }
+            if (closestMatchId != null) {
+                com.fasterxml.jackson.databind.node.ObjectNode closestMatch = objectMapper.createObjectNode();
+                closestMatch.put("expectationId", closestMatchId);
+                closestMatch.put("matchedFields", closestMatchedFields);
+                closestMatch.put("totalFields", totalFields);
+                resultNode.set("closestMatch", closestMatch);
+            }
+            resultNode.set("results", expectationResults);
+
+            return response()
+                .withStatusCode(OK.code())
+                .withBody(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(resultNode), MediaType.JSON_UTF_8);
+        } catch (Exception e) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(Level.ERROR)
+                    .setCorrelationId(correlationId)
+                    .setMessageFormat("exception handling debugMismatch request:{}error:{}")
+                    .setArguments(request, e.getMessage())
+                    .setThrowable(e)
+            );
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper errorMapper = ObjectMapperFactory.createObjectMapper();
+                com.fasterxml.jackson.databind.node.ObjectNode errorNode = errorMapper.createObjectNode();
+                errorNode.put("error", "failed to debug request mismatch: " + e.getMessage());
+                errorNode.put("correlationId", correlationId);
+                errorNode.put("timestamp", timestamp);
+                return response()
+                    .withStatusCode(BAD_REQUEST.code())
+                    .withBody(errorMapper.writerWithDefaultPrettyPrinter().writeValueAsString(errorNode), MediaType.JSON_UTF_8);
+            } catch (Exception jsonError) {
+                return response()
+                    .withStatusCode(BAD_REQUEST.code())
+                    .withBody("{\"error\":\"failed to debug request mismatch\"}", MediaType.JSON_UTF_8);
+            }
+        }
     }
 
     public void log(LogEntry logEntry) {
@@ -698,6 +827,13 @@ public class HttpState {
                 if (controlPlaneRequestAuthenticated(request, responseWriter)) {
                     reset();
                     responseWriter.writeResponse(request, OK);
+                }
+                canHandle.complete(true);
+
+            } else if (request.matches("PUT", PATH_PREFIX + "/debugMismatch", "/debugMismatch")) {
+
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    responseWriter.writeResponse(request, debugMismatch(request), true);
                 }
                 canHandle.complete(true);
 

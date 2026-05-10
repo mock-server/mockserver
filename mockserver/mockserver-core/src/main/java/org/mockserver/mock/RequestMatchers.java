@@ -28,7 +28,6 @@ import static org.mockserver.log.model.LogEntryMessages.*;
 import static org.mockserver.metrics.Metrics.Name.*;
 import static org.mockserver.mock.SortableExpectationId.EXPECTATION_SORTABLE_PRIORITY_COMPARATOR;
 import static org.mockserver.mock.SortableExpectationId.NULL;
-import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.TRACE;
 
 /**
@@ -220,38 +219,62 @@ public class RequestMatchers extends MockServerMatcherNotifier {
     }
 
     public Expectation firstMatchingExpectation(HttpRequest httpRequest) {
-        Optional<Expectation> first = getHttpRequestMatchersCopy()
-            .map(httpRequestMatcher -> {
-                Expectation matchingExpectation = null;
-                boolean remainingMatchesDecremented = false;
-                    if (httpRequestMatcher.matches(mockServerLogger.isEnabledForInstance(DEBUG) ? new MatchDifference(configuration.detailedMatchFailures(), httpRequest) : null, httpRequest)) {
-                    matchingExpectation = httpRequestMatcher.getExpectation();
-                    httpRequestMatcher.setResponseInProgress(true);
-                    if (!matchingExpectation.consumeMatch()) {
-                        httpRequestMatcher.setResponseInProgress(false);
-                        return null;
-                    }
-                    remainingMatchesDecremented = matchingExpectation.getTimes() != null && !matchingExpectation.getTimes().isUnlimited();
-                } else if (!httpRequestMatcher.isResponseInProgress() && !httpRequestMatcher.isActive()) {
-                    scheduler.submit(() -> removeHttpRequestMatcher(httpRequestMatcher, UUIDService.getUUID()));
+        Expectation matchedExpectation = null;
+        Expectation closestMatchExpectation = null;
+        int closestMatchFailures = Integer.MAX_VALUE;
+        int totalFields = MatchDifference.Field.values().length;
+
+        for (HttpRequestMatcher httpRequestMatcher : httpRequestMatchers.toSortedList()) {
+            MatchDifference matchDifference = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
+            if (httpRequestMatcher.matches(matchDifference, httpRequest)) {
+                Expectation expectation = httpRequestMatcher.getExpectation();
+                httpRequestMatcher.setResponseInProgress(true);
+                if (!expectation.consumeMatch()) {
+                    httpRequestMatcher.setResponseInProgress(false);
+                    continue;
                 }
+                boolean remainingMatchesDecremented = expectation.getTimes() != null && !expectation.getTimes().isUnlimited();
                 if (remainingMatchesDecremented) {
                     notifyListeners(this, Cause.API);
                 }
-                return matchingExpectation;
-            })
-            .filter(Objects::nonNull)
-            .findFirst();
+                matchedExpectation = expectation;
+                break;
+            } else {
+                if (!httpRequestMatcher.isResponseInProgress() && !httpRequestMatcher.isActive()) {
+                    scheduler.submit(() -> removeHttpRequestMatcher(httpRequestMatcher, UUIDService.getUUID()));
+                }
+                int failures = matchDifference.getAllDifferences().size();
+                if (failures < closestMatchFailures && httpRequestMatcher.getExpectation() != null) {
+                    closestMatchFailures = failures;
+                    closestMatchExpectation = httpRequestMatcher.getExpectation();
+                }
+            }
+        }
+
+        if (matchedExpectation == null && closestMatchExpectation != null && mockServerLogger.isEnabledForInstance(Level.INFO)) {
+            int matchedFields = totalFields - closestMatchFailures;
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(EXPECTATION_NOT_MATCHED)
+                    .setLogLevel(Level.INFO)
+                    .setCorrelationId(httpRequest.getLogCorrelationId())
+                    .setHttpRequest(httpRequest)
+                    .setExpectation(closestMatchExpectation)
+                    .setMessageFormat("closest expectation:{}matched " + matchedFields + "/" + totalFields + " fields for request:{}")
+                    .setArguments(closestMatchExpectation.clone(), httpRequest)
+            );
+        }
+
         if (configuration.metricsEnabled()) {
-            if (!first.isPresent() || first.get().getAction() == null) {
+            if (matchedExpectation == null || matchedExpectation.getAction() == null) {
                 metrics.increment(EXPECTATIONS_NOT_MATCHED_COUNT);
-            } else if (first.get().getAction().getType().direction == Action.Direction.FORWARD) {
+            } else if (matchedExpectation.getAction().getType().direction == Action.Direction.FORWARD) {
                 metrics.increment(FORWARD_EXPECTATIONS_MATCHED_COUNT);
             } else {
                 metrics.increment(RESPONSE_EXPECTATIONS_MATCHED_COUNT);
             }
         }
-        return first.orElse(null);
+        return matchedExpectation;
     }
 
     public void clear(RequestDefinition requestDefinition) {

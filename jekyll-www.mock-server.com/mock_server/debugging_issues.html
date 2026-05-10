@@ -10,6 +10,10 @@ changefreq: 'monthly'
 lastmod: 2019-11-10T08:00:00+01:00
 ---
 
+<p style="background-color: #f8f9fa; border-left: 4px solid #9c0000; padding: 12px; margin-bottom: 16px;">
+    <strong>If your expectations are not matching requests,</strong> see the <a href="/mock_server/troubleshooting_matching.html">Troubleshooting Matching</a> guide for a step-by-step debugging checklist and common pitfalls.
+</p>
+
 <p>MockServer supports the following features to simplify debugging</p>
 
 <ul>
@@ -26,6 +30,7 @@ lastmod: 2019-11-10T08:00:00+01:00
         </ul>
     </li>
     <li>Configurable <a href="#logging-levels">log level</a></li>
+    <li>A <a href="/mock_server/troubleshooting_matching.html#debug_mismatch_endpoint">debug mismatch endpoint</a> to programmatically analyze why requests don't match expectations</li>
     <li>Clear and simple log messages for all actions</li>
     <li>JSON Schema validation of all requests to the REST API, with clear failure messages</li>
     <li>Clear failure messages when verifying requests (that support "show difference" in IntelliJ)</li>

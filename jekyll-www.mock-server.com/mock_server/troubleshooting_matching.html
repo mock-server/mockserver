@@ -1,0 +1,319 @@
+---
+title: Troubleshooting Matching
+shortTitle: Troubleshooting
+layout: page
+pageOrder: 9
+section: 'Mock Server'
+subsection: true
+sitemap:
+  priority: 0.8
+  changefreq: 'monthly'
+  lastmod: 2025-05-10T08:00:00+01:00
+---
+
+<p>When an expectation does not match a request, MockServer returns a 404 response. This page explains how to diagnose and fix matching issues.</p>
+
+<a id="debugging_checklist" class="anchor" href="#debugging_checklist">&nbsp;</a>
+
+<h2>Debugging Checklist</h2>
+
+<p>Follow these steps in order when a request is not matching:</p>
+
+<h3>1. Is the expectation active?</h3>
+
+<p>Expectations expire after their configured <code>times</code> limit or <code>timeToLive</code>. Retrieve active expectations to confirm yours is still present:</p>
+
+<pre><code class="prettyprint lang-java">// Java
+Expectation[] active = mockServerClient.retrieveActiveExpectations(null);
+</code></pre>
+
+<pre><code class="prettyprint lang-bash"># REST API
+curl -X PUT "http://localhost:1080/mockserver/retrieve?type=ACTIVE_EXPECTATIONS"
+</code></pre>
+
+<h3>2. Did the request arrive at MockServer?</h3>
+
+<p>Verify that MockServer received the request:</p>
+
+<pre><code class="prettyprint lang-java">// Java
+HttpRequest[] requests = mockServerClient.retrieveRecordedRequests(null);
+</code></pre>
+
+<pre><code class="prettyprint lang-bash"># REST API
+curl -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS"
+</code></pre>
+
+<h3>3. Check the match failure reason</h3>
+
+<p>MockServer logs an <code>EXPECTATION_NOT_MATCHED</code> event for every expectation that was compared. Each event includes a <strong>because</strong> section explaining which fields matched and which did not:</p>
+
+<pre><code class="prettyprint lang-bash"># Retrieve logs
+curl -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS"
+</code></pre>
+
+<p>In the <a href="/mock_server/mockserver_ui.html">dashboard UI</a>, look for log entries with the pink/rose colour. Click the <strong>...</strong> to expand the "because" section, which shows each field result colour-coded green (matched) or red (didn't match).</p>
+
+<h3>4. Enable full match diagnostics</h3>
+
+<p>By default, MockServer stops comparing fields at the first mismatch (<code>matchersFailFast=true</code>). To see <strong>all</strong> mismatching fields at once, disable fail-fast:</p>
+
+<pre><code class="prettyprint lang-java">// Java - when starting MockServer
+ConfigurationProperties.matchersFailFast(false);
+</code></pre>
+
+<pre><code class="prettyprint lang-bash"># System property
+-Dmockserver.matchersFailFast=false
+
+# Environment variable
+MOCKSERVER_MATCHERS_FAIL_FAST=false
+</code></pre>
+
+<p>This shows every field that does not match in a single log entry, making it much easier to identify all issues at once rather than fixing them one at a time.</p>
+
+<h3>5. Look for the closest match</h3>
+
+<p>When no expectation matches, MockServer logs a <strong>closest match</strong> summary showing which expectation was most similar to the request and how many fields matched (e.g., "matched 8/12 fields"). This immediately tells you which expectation to investigate.</p>
+
+<a id="common_pitfalls" class="anchor" href="#common_pitfalls">&nbsp;</a>
+
+<h2>Common Pitfalls</h2>
+
+<p>These are the most frequent reasons expectations fail to match:</p>
+
+<h3>Trailing slash in path</h3>
+
+<p>A path of <code>/api/users</code> does not match <code>/api/users/</code>. Ensure your expectation path matches exactly, or use a regex:</p>
+
+<pre><code class="prettyprint lang-java">// Exact match - will NOT match "/api/users/"
+.withPath("/api/users")
+
+// Match with or without trailing slash
+.withPath("/api/users/?")
+</code></pre>
+
+<p>MockServer will show a <strong>HINT</strong> in the match failure when it detects a trailing slash mismatch.</p>
+
+<h3>Content-Type charset mismatch</h3>
+
+<p>Many HTTP clients send <code>Content-Type: application/json; charset=utf-8</code> but expectations often specify just <code>application/json</code>. This is a header value mismatch.</p>
+
+<p>Solutions:</p>
+<ul>
+    <li>Include the charset in your expectation: <code>.withHeader("Content-Type", "application/json; charset=utf-8")</code></li>
+    <li>Use a substring header matcher</li>
+    <li>Omit the Content-Type header from your expectation (unspecified headers match anything)</li>
+</ul>
+
+<p>MockServer will show a <strong>HINT</strong> when it detects this pattern.</p>
+
+<h3>JSON body matching semantics</h3>
+
+<p>By default, JSON body matching uses <code>ONLY_MATCHING_FIELDS</code> mode:</p>
+<ul>
+    <li><strong>Extra fields</strong> in the request body are ignored (the expectation is a subset match)</li>
+    <li><strong>Missing fields</strong> (in the request but expected in the matcher) cause a failure</li>
+    <li><strong>Array order</strong> does not matter</li>
+    <li><strong>Extra array items</strong> are ignored</li>
+</ul>
+
+<p>If you need an exact match, use <code>STRICT</code> mode:</p>
+
+<pre><code class="prettyprint lang-java">// Subset match (default) - extra fields OK
+.withBody(json("{\"name\": \"foo\"}", MatchType.ONLY_MATCHING_FIELDS))
+
+// Strict match - no extra fields allowed
+.withBody(json("{\"name\": \"foo\"}", MatchType.STRICT))
+</code></pre>
+
+<h3>Regex metacharacters in paths</h3>
+
+<p>Paths are matched as regular expressions. Characters like <code>.</code>, <code>*</code>, <code>+</code>, <code>?</code>, <code>(</code>, <code>)</code>, <code>[</code>, <code>{</code> have special meaning in regex.</p>
+
+<p>For example, <code>/api/v1.0/users</code> will also match <code>/api/v1X0/users</code> because <code>.</code> matches any character. Use <code>\.</code> for a literal dot:</p>
+
+<pre><code class="prettyprint lang-java">// This matches "/api/v1X0/users" too
+.withPath("/api/v1.0/users")
+
+// This only matches "/api/v1.0/users"
+.withPath("/api/v1\\.0/users")
+</code></pre>
+
+<p>MockServer will show a <strong>HINT</strong> when it detects unescaped dots in paths.</p>
+
+<h3>Header name case sensitivity</h3>
+
+<p>HTTP header <strong>names</strong> are matched case-insensitively (per HTTP spec), but header <strong>values</strong> are case-sensitive. For example:</p>
+
+<pre><code class="prettyprint lang-java">// Header name "content-type" matches "Content-Type" - OK
+// Header value "Application/JSON" does NOT match "application/json"
+.withHeader("Content-Type", "application/json")
+</code></pre>
+
+<h3>Query parameter encoding</h3>
+
+<p>Query parameters are decoded before matching. <code>?name=hello%20world</code> is matched against the decoded value <code>hello world</code>:</p>
+
+<pre><code class="prettyprint lang-java">// Matches ?name=hello%20world and ?name=hello+world
+.withQueryStringParameter("name", "hello world")
+</code></pre>
+
+<h3>Body type confusion</h3>
+
+<p>Using the wrong body matcher type is a common mistake:</p>
+
+<pre><code class="prettyprint lang-java">// This is an EXACT string match - entire body must match this text exactly
+.withBody("{\"name\": \"foo\"}")
+
+// This is a JSON subset match - only specified fields must be present
+.withBody(json("{\"name\": \"foo\"}"))
+
+// This is a regex match
+.withBody(regex(".*foo.*"))
+</code></pre>
+
+<p>If your JSON body isn't matching, check that you are using <code>json()</code> and not a plain string body matcher.</p>
+
+<a id="reading_because_output" class="anchor" href="#reading_because_output">&nbsp;</a>
+
+<h2>Reading the "because" Output</h2>
+
+<p>When a request does not match an expectation, the log entry includes a "because" section. Here is an annotated example:</p>
+
+<pre><code>method matched                        &larr; GET matched GET
+path didn't match:                    &larr; path comparison failed
+
+  string or regex match failed        &larr; the matcher type used
+  expected: /api/users                &larr; what the expectation specified
+  found: /api/user                    &larr; what was in the request
+HINT: trailing slash mismatch ...     &larr; actionable suggestion (when applicable)
+body matched                          &larr; body was not checked (no body matcher)
+headers matched                       &larr; all expected headers were found
+cookies matched                       &larr; all expected cookies were found
+</code></pre>
+
+<p>Fields are listed in matching order. When <code>matchersFailFast=true</code> (default), only fields up to and including the first failure are shown. Set <code>matchersFailFast=false</code> to see all fields.</p>
+
+<a id="configuration_reference" class="anchor" href="#configuration_reference">&nbsp;</a>
+
+<h2>Debugging Configuration Properties</h2>
+
+<table class="table table-bordered table-striped">
+    <thead>
+    <tr>
+        <th>Property</th>
+        <th>Default</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td><code>matchersFailFast</code></td>
+        <td><code>true</code></td>
+        <td>When <code>true</code>, matching stops at the first non-matching field. Set to <code>false</code> to see all mismatching fields in a single log entry.</td>
+    </tr>
+    <tr>
+        <td><code>detailedMatchFailures</code></td>
+        <td><code>true</code></td>
+        <td>When <code>true</code>, match failure log entries include detailed explanations of why each field did not match (expected vs actual values).</td>
+    </tr>
+    <tr>
+        <td><code>logLevel</code></td>
+        <td><code>INFO</code></td>
+        <td>At <code>INFO</code> (default), all match results are logged with full detail. Set to <code>TRACE</code> for internal matcher-level diagnostics.</td>
+    </tr>
+    </tbody>
+</table>
+
+<p>For full configuration details, see the <a href="/mock_server/configuration_properties.html">Configuration</a> page.</p>
+
+<a id="debug_mismatch_endpoint" class="anchor" href="#debug_mismatch_endpoint">&nbsp;</a>
+
+<h2>Programmatic Mismatch Debugging</h2>
+
+<p>MockServer provides a dedicated <code>PUT /mockserver/debugMismatch</code> endpoint that analyzes why a request does not match any active expectations. It returns structured JSON showing per-expectation, per-field match results — including the closest match.</p>
+
+<h3>REST API</h3>
+
+<pre><code class="prettyprint lang-bash"># Debug why a specific request doesn't match
+curl -X PUT "http://localhost:1080/mockserver/debugMismatch" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "method": "GET",
+    "path": "/api/users",
+    "headers": {
+      "Content-Type": ["application/json"]
+    }
+  }'
+</code></pre>
+
+<h3>Java Client</h3>
+
+<pre><code class="prettyprint lang-java">// Debug why a request doesn't match any expectation
+String result = mockServerClient.debugMismatch(
+    request()
+        .withMethod("GET")
+        .withPath("/api/users")
+        .withHeader("Content-Type", "application/json")
+);
+System.out.println(result);
+</code></pre>
+
+<h3>Response Format</h3>
+
+<p>The response is a JSON object with:</p>
+<ul>
+    <li><code>totalExpectations</code> — the number of active expectations compared</li>
+    <li><code>closestMatch</code> — which expectation had the fewest differences</li>
+    <li><code>results</code> — per-expectation match analysis with field-level differences</li>
+</ul>
+
+<pre><code class="prettyprint lang-json">{
+  "totalExpectations": 2,
+  "closestMatch": {
+    "expectationId": "abc-123",
+    "matchedFields": 10,
+    "totalFields": 12
+  },
+  "results": [
+    {
+      "expectationId": "abc-123",
+      "expectationPath": "/api/users",
+      "expectationMethod": "POST",
+      "matches": false,
+      "matchedFieldCount": 10,
+      "totalFieldCount": 12,
+      "differences": {
+        "method": [
+          "string or regex match failed expected: POST found: GET"
+        ]
+      }
+    }
+  ]
+}
+</code></pre>
+
+<h3>Worked Example: "My test is getting 404"</h3>
+
+<p>When your test receives a 404, use the debug endpoint to find out exactly why:</p>
+
+<pre><code class="prettyprint lang-java">// 1. Set up your expectation
+mockServerClient.when(
+    request().withMethod("POST").withPath("/api/users")
+        .withBody(json("{\"name\": \"foo\"}"))
+).respond(response().withStatusCode(201));
+
+// 2. Your test sends a request that gets 404 - why?
+// 3. Debug the mismatch
+String analysis = mockServerClient.debugMismatch(
+    request()
+        .withMethod("GET")           // oops - wrong method!
+        .withPath("/api/users")
+        .withBody("{\"name\": \"foo\"}")
+);
+
+// The response will show:
+// - method didn't match: expected POST, found GET
+// - matchedFieldCount: 11/12 (all fields matched except method)
+</code></pre>
+
+<p>This endpoint is also available via the <a href="/mock_server/ai_mcp_tools.html">MCP <code>debug_request_mismatch</code> tool</a> for AI-assisted debugging.</p>

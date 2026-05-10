@@ -1619,6 +1619,26 @@ public class MockServerClient implements Stoppable {
         return httpResponse.getBodyAsString();
     }
 
+    /**
+     * Analyze why a request does not match any active expectations, showing per-field match failures for each expectation.
+     * Returns a JSON string containing the total number of expectations, the closest match, and per-expectation results
+     * with field-level differences.
+     *
+     * @param requestDefinition the request to debug against active expectations
+     * @return a JSON string with structured match analysis
+     */
+    public String debugMismatch(RequestDefinition requestDefinition) {
+        HttpResponse httpResponse = sendRequest(
+            request()
+                .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
+                .withPath(calculatePath("debugMismatch"))
+                .withBody(requestDefinition != null ? requestDefinitionSerializer.serialize(requestDefinition) : "", StandardCharsets.UTF_8),
+            true
+        );
+        return httpResponse.getBodyAsString();
+    }
+
     public String retrieveMetrics() {
         HttpResponse httpResponse = sendRequest(
             request()

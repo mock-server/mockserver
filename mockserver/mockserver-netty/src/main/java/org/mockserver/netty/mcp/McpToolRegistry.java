@@ -7,8 +7,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.matchers.HttpRequestMatcher;
-import org.mockserver.matchers.MatchDifference;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
@@ -742,44 +740,11 @@ public class McpToolRegistry {
                 }
             }
 
-            List<HttpRequestMatcher> matchers = httpState.getRequestMatchers().retrieveRequestMatchers(null);
-            ArrayNode expectationResults = objectMapper.createArrayNode();
-
-            for (HttpRequestMatcher matcher : matchers) {
-                ObjectNode matchResult = objectMapper.createObjectNode();
-                Expectation expectation = matcher.getExpectation();
-                if (expectation != null) {
-                    matchResult.put("expectationId", expectation.getId());
-                    if (expectation.getHttpRequest() instanceof HttpRequest) {
-                        HttpRequest expRequest = (HttpRequest) expectation.getHttpRequest();
-                        matchResult.put("expectationPath", expRequest.getPath() != null ? expRequest.getPath().getValue() : "");
-                        matchResult.put("expectationMethod", expRequest.getMethod() != null ? expRequest.getMethod().getValue() : "");
-                    }
-                }
-
-                MatchDifference matchDifference = new MatchDifference(true, httpRequest);
-                boolean matches = matcher.matches(matchDifference, httpRequest);
-                matchResult.put("matches", matches);
-
-                if (!matches) {
-                    ObjectNode differences = objectMapper.createObjectNode();
-                    Map<MatchDifference.Field, List<String>> allDifferences = matchDifference.getAllDifferences();
-                    for (Map.Entry<MatchDifference.Field, List<String>> diffEntry : allDifferences.entrySet()) {
-                        ArrayNode fieldDiffs = differences.putArray(diffEntry.getKey().getName());
-                        for (String diff : diffEntry.getValue()) {
-                            fieldDiffs.add(diff);
-                        }
-                    }
-                    matchResult.set("differences", differences);
-                }
-
-                expectationResults.add(matchResult);
-            }
-
-            ObjectNode resultNode = objectMapper.createObjectNode();
-            resultNode.put("totalExpectations", matchers.size());
-            resultNode.set("results", expectationResults);
-            return resultNode;
+            HttpRequest wrapperRequest = request()
+                .withMethod("PUT")
+                .withBody(getRequestDefinitionSerializer().serialize(httpRequest));
+            HttpResponse response = httpState.debugMismatch(wrapperRequest);
+            return objectMapper.readTree(response.getBodyAsString());
         } catch (Exception e) {
             return errorResult("Failed to debug request mismatch", e);
         }
