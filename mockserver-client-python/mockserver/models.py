@@ -152,23 +152,63 @@ def _deserialize_key_multi_values(data: list | dict | None) -> list[KeyToMultiVa
 
 
 @dataclass
+class DelayDistribution:
+    type: str | None = None
+    min: int | None = None
+    max: int | None = None
+    median: int | None = None
+    p99: int | None = None
+    mean: int | None = None
+    std_dev: int | None = None
+
+    def to_dict(self) -> dict:
+        return _strip_none({
+            "type": self.type,
+            "min": self.min,
+            "max": self.max,
+            "median": self.median,
+            "p99": self.p99,
+            "mean": self.mean,
+            "stdDev": self.std_dev,
+        })
+
+    @classmethod
+    def from_dict(cls, data: dict) -> DelayDistribution:
+        if data is None:
+            return None
+        return cls(
+            type=data.get("type"),
+            min=data.get("min"),
+            max=data.get("max"),
+            median=data.get("median"),
+            p99=data.get("p99"),
+            mean=data.get("mean"),
+            std_dev=data.get("stdDev"),
+        )
+
+
+@dataclass
 class Delay:
     time_unit: str = "MILLISECONDS"
     value: int = 0
+    distribution: DelayDistribution | None = None
 
     def to_dict(self) -> dict:
         return _strip_none({
             "timeUnit": self.time_unit,
             "value": self.value,
+            "distribution": self.distribution.to_dict() if self.distribution else None,
         })
 
     @classmethod
     def from_dict(cls, data: dict) -> Delay:
         if data is None:
             return None
+        dist_data = data.get("distribution")
         return cls(
             time_unit=data.get("timeUnit", "MILLISECONDS"),
             value=data.get("value", 0),
+            distribution=DelayDistribution.from_dict(dist_data) if dist_data else None,
         )
 
 

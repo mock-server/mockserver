@@ -160,18 +160,28 @@ module MockServer
   # Model classes
   # -------------------------------------------------------------------
 
-  class Delay
-    attr_accessor :time_unit, :value
+  class DelayDistribution
+    attr_accessor :type, :min, :max, :median, :p99, :mean, :std_dev
 
-    def initialize(time_unit: 'MILLISECONDS', value: 0)
-      @time_unit = time_unit
-      @value = value
+    def initialize(type: nil, min: nil, max: nil, median: nil, p99: nil, mean: nil, std_dev: nil)
+      @type = type
+      @min = min
+      @max = max
+      @median = median
+      @p99 = p99
+      @mean = mean
+      @std_dev = std_dev
     end
 
     def to_h
       MockServer.strip_none({
-        'timeUnit' => @time_unit,
-        'value'    => @value
+        'type'   => @type,
+        'min'    => @min,
+        'max'    => @max,
+        'median' => @median,
+        'p99'    => @p99,
+        'mean'   => @mean,
+        'stdDev' => @std_dev
       })
     end
 
@@ -179,8 +189,42 @@ module MockServer
       return nil if data.nil?
 
       new(
-        time_unit: data.fetch('timeUnit', 'MILLISECONDS'),
-        value:     data.fetch('value', 0)
+        type:    data['type'],
+        min:     data['min'],
+        max:     data['max'],
+        median:  data['median'],
+        p99:     data['p99'],
+        mean:    data['mean'],
+        std_dev: data['stdDev']
+      )
+    end
+  end
+
+  class Delay
+    attr_accessor :time_unit, :value, :distribution
+
+    def initialize(time_unit: 'MILLISECONDS', value: 0, distribution: nil)
+      @time_unit = time_unit
+      @value = value
+      @distribution = distribution
+    end
+
+    def to_h
+      MockServer.strip_none({
+        'timeUnit'     => @time_unit,
+        'value'        => @value,
+        'distribution' => @distribution&.to_h
+      })
+    end
+
+    def self.from_hash(data)
+      return nil if data.nil?
+
+      dist_data = data['distribution']
+      new(
+        time_unit:    data.fetch('timeUnit', 'MILLISECONDS'),
+        value:        data.fetch('value', 0),
+        distribution: dist_data ? DelayDistribution.from_hash(dist_data) : nil
       )
     end
   end

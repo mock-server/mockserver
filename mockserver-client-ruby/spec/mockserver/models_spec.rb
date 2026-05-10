@@ -2,6 +2,50 @@
 
 RSpec.describe 'MockServer models' do
   # -------------------------------------------------------------------
+  # DelayDistribution
+  # -------------------------------------------------------------------
+  describe MockServer::DelayDistribution do
+    it 'has nil defaults' do
+      dist = MockServer::DelayDistribution.new
+      expect(dist.type).to be_nil
+      expect(dist.min).to be_nil
+      expect(dist.max).to be_nil
+    end
+
+    it 'serializes uniform to camelCase hash' do
+      dist = MockServer::DelayDistribution.new(type: 'UNIFORM', min: 100, max: 500)
+      expect(dist.to_h).to eq({ 'type' => 'UNIFORM', 'min' => 100, 'max' => 500 })
+    end
+
+    it 'serializes log_normal to camelCase hash' do
+      dist = MockServer::DelayDistribution.new(type: 'LOG_NORMAL', median: 200, p99: 800)
+      expect(dist.to_h).to eq({ 'type' => 'LOG_NORMAL', 'median' => 200, 'p99' => 800 })
+    end
+
+    it 'serializes gaussian to camelCase hash' do
+      dist = MockServer::DelayDistribution.new(type: 'GAUSSIAN', mean: 200, std_dev: 50)
+      expect(dist.to_h).to eq({ 'type' => 'GAUSSIAN', 'mean' => 200, 'stdDev' => 50 })
+    end
+
+    it 'deserializes from camelCase hash' do
+      dist = MockServer::DelayDistribution.from_hash({ 'type' => 'UNIFORM', 'min' => 10, 'max' => 20 })
+      expect(dist.type).to eq('UNIFORM')
+      expect(dist.min).to eq(10)
+      expect(dist.max).to eq(20)
+    end
+
+    it 'returns nil from_hash when data is nil' do
+      expect(MockServer::DelayDistribution.from_hash(nil)).to be_nil
+    end
+
+    it 'round-trips correctly' do
+      original = MockServer::DelayDistribution.new(type: 'GAUSSIAN', mean: 100, std_dev: 25)
+      roundtrip = MockServer::DelayDistribution.from_hash(original.to_h)
+      expect(roundtrip.to_h).to eq(original.to_h)
+    end
+  end
+
+  # -------------------------------------------------------------------
   # Delay
   # -------------------------------------------------------------------
   describe MockServer::Delay do
@@ -9,6 +53,7 @@ RSpec.describe 'MockServer models' do
       delay = MockServer::Delay.new
       expect(delay.time_unit).to eq('MILLISECONDS')
       expect(delay.value).to eq(0)
+      expect(delay.distribution).to be_nil
     end
 
     it 'serializes to camelCase hash' do
@@ -28,6 +73,34 @@ RSpec.describe 'MockServer models' do
 
     it 'round-trips correctly' do
       original = MockServer::Delay.new(time_unit: 'SECONDS', value: 10)
+      roundtrip = MockServer::Delay.from_hash(original.to_h)
+      expect(roundtrip.to_h).to eq(original.to_h)
+    end
+
+    it 'serializes with distribution' do
+      dist = MockServer::DelayDistribution.new(type: 'UNIFORM', min: 100, max: 500)
+      delay = MockServer::Delay.new(time_unit: 'MILLISECONDS', distribution: dist)
+      expect(delay.to_h).to eq({
+        'timeUnit' => 'MILLISECONDS',
+        'value' => 0,
+        'distribution' => { 'type' => 'UNIFORM', 'min' => 100, 'max' => 500 }
+      })
+    end
+
+    it 'deserializes with distribution' do
+      delay = MockServer::Delay.from_hash({
+        'timeUnit' => 'MILLISECONDS',
+        'distribution' => { 'type' => 'LOG_NORMAL', 'median' => 200, 'p99' => 800 }
+      })
+      expect(delay.distribution).not_to be_nil
+      expect(delay.distribution.type).to eq('LOG_NORMAL')
+      expect(delay.distribution.median).to eq(200)
+      expect(delay.distribution.p99).to eq(800)
+    end
+
+    it 'round-trips with distribution' do
+      dist = MockServer::DelayDistribution.new(type: 'GAUSSIAN', mean: 200, std_dev: 50)
+      original = MockServer::Delay.new(time_unit: 'MILLISECONDS', distribution: dist)
       roundtrip = MockServer::Delay.from_hash(original.to_h)
       expect(roundtrip.to_h).to eq(original.to_h)
     end

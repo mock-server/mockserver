@@ -448,6 +448,104 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
+<button id="button_response_with_distribution_delay" class="accordion">response with distribution-based delay (for realistic latency simulation)</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">// uniform random delay between 100ms and 500ms
+new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+            .withDelay(Delay.uniform(TimeUnit.MILLISECONDS, 100, 500))
+    );
+
+// log-normal delay (realistic latency distribution) with median 200ms and p99 of 800ms
+new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+            .withDelay(Delay.logNormal(TimeUnit.MILLISECONDS, 200, 800))
+    );
+
+// gaussian delay with mean 200ms and standard deviation of 50ms
+new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+            .withDelay(Delay.gaussian(TimeUnit.MILLISECONDS, 200, 50))
+    );</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code"># uniform random delay between 100ms and 500ms
+curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpResponse": {
+        "body": "some_response_body",
+        "delay": {
+            "timeUnit": "MILLISECONDS",
+            "distribution": {
+                "type": "UNIFORM",
+                "min": 100,
+                "max": 500
+            }
+        }
+    }
+}'
+
+# log-normal delay with median 200ms and p99 of 800ms
+curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpResponse": {
+        "body": "some_response_body",
+        "delay": {
+            "timeUnit": "MILLISECONDS",
+            "distribution": {
+                "type": "LOG_NORMAL",
+                "median": 200,
+                "p99": 800
+            }
+        }
+    }
+}'
+
+# gaussian delay with mean 200ms and standard deviation of 50ms
+curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpResponse": {
+        "body": "some_response_body",
+        "delay": {
+            "timeUnit": "MILLISECONDS",
+            "distribution": {
+                "type": "GAUSSIAN",
+                "mean": 200,
+                "stdDev": 50
+            }
+        }
+    }
+}'</code></pre>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
 <button id="button_response_differently_for_same_request" class="accordion">respond differently for the same request</button>
 <div class="panel">
     <button class="accordion inner">Java</button>

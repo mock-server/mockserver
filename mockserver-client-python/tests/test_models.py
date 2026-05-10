@@ -6,6 +6,7 @@ from mockserver.models import (
     Body,
     ConnectionOptions,
     Delay,
+    DelayDistribution,
     Expectation,
     ExpectationId,
     HttpClassCallback,
@@ -132,11 +133,48 @@ class TestSerializeBody:
         assert _serialize_body(b) == {"type": "STRING", "string": "hello"}
 
 
+class TestDelayDistribution:
+    def test_defaults(self):
+        d = DelayDistribution()
+        assert d.type is None
+        assert d.min is None
+        assert d.max is None
+
+    def test_uniform(self):
+        d = DelayDistribution(type="UNIFORM", min=100, max=500)
+        assert d.to_dict() == {"type": "UNIFORM", "min": 100, "max": 500}
+
+    def test_log_normal(self):
+        d = DelayDistribution(type="LOG_NORMAL", median=200, p99=800)
+        assert d.to_dict() == {"type": "LOG_NORMAL", "median": 200, "p99": 800}
+
+    def test_gaussian(self):
+        d = DelayDistribution(type="GAUSSIAN", mean=200, std_dev=50)
+        assert d.to_dict() == {"type": "GAUSSIAN", "mean": 200, "stdDev": 50}
+
+    def test_from_dict(self):
+        d = DelayDistribution.from_dict({"type": "UNIFORM", "min": 10, "max": 20})
+        assert d.type == "UNIFORM"
+        assert d.min == 10
+        assert d.max == 20
+
+    def test_from_dict_none(self):
+        assert DelayDistribution.from_dict(None) is None
+
+    def test_round_trip(self):
+        original = DelayDistribution(type="GAUSSIAN", mean=100, std_dev=25)
+        restored = DelayDistribution.from_dict(original.to_dict())
+        assert restored.type == original.type
+        assert restored.mean == original.mean
+        assert restored.std_dev == original.std_dev
+
+
 class TestDelay:
     def test_defaults(self):
         d = Delay()
         assert d.time_unit == "MILLISECONDS"
         assert d.value == 0
+        assert d.distribution is None
 
     def test_construction(self):
         d = Delay(time_unit="SECONDS", value=5)
@@ -165,6 +203,36 @@ class TestDelay:
         restored = Delay.from_dict(original.to_dict())
         assert restored.time_unit == original.time_unit
         assert restored.value == original.value
+
+    def test_with_distribution(self):
+        dist = DelayDistribution(type="UNIFORM", min=100, max=500)
+        d = Delay(time_unit="MILLISECONDS", distribution=dist)
+        result = d.to_dict()
+        assert result == {
+            "timeUnit": "MILLISECONDS",
+            "value": 0,
+            "distribution": {"type": "UNIFORM", "min": 100, "max": 500},
+        }
+
+    def test_from_dict_with_distribution(self):
+        d = Delay.from_dict({
+            "timeUnit": "MILLISECONDS",
+            "value": 0,
+            "distribution": {"type": "LOG_NORMAL", "median": 200, "p99": 800},
+        })
+        assert d.distribution is not None
+        assert d.distribution.type == "LOG_NORMAL"
+        assert d.distribution.median == 200
+        assert d.distribution.p99 == 800
+
+    def test_round_trip_with_distribution(self):
+        dist = DelayDistribution(type="GAUSSIAN", mean=200, std_dev=50)
+        original = Delay(time_unit="MILLISECONDS", distribution=dist)
+        restored = Delay.from_dict(original.to_dict())
+        assert restored.distribution is not None
+        assert restored.distribution.type == original.distribution.type
+        assert restored.distribution.mean == original.distribution.mean
+        assert restored.distribution.std_dev == original.distribution.std_dev
 
 
 class TestTimes:

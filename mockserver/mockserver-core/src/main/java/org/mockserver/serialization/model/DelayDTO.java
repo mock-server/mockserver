@@ -12,11 +12,15 @@ public class DelayDTO extends ObjectWithReflectiveEqualsHashCodeToString impleme
 
     private TimeUnit timeUnit;
     private long value;
+    private DelayDistributionDTO distribution;
 
     public DelayDTO(Delay delay) {
         if (delay != null) {
             timeUnit = delay.getTimeUnit();
             value = delay.getValue();
+            if (delay.getDistribution() != null) {
+                distribution = new DelayDistributionDTO(delay.getDistribution());
+            }
         }
     }
 
@@ -24,6 +28,9 @@ public class DelayDTO extends ObjectWithReflectiveEqualsHashCodeToString impleme
     }
 
     public Delay buildObject() {
+        if (distribution != null) {
+            return new Delay(timeUnit, value, distribution.buildObject());
+        }
         return new Delay(timeUnit, value);
     }
 
@@ -42,6 +49,15 @@ public class DelayDTO extends ObjectWithReflectiveEqualsHashCodeToString impleme
 
     public DelayDTO setValue(long value) {
         this.value = value;
+        return this;
+    }
+
+    public DelayDistributionDTO getDistribution() {
+        return distribution;
+    }
+
+    public DelayDTO setDistribution(DelayDistributionDTO distribution) {
+        this.distribution = distribution;
         return this;
     }
 }

@@ -57,6 +57,18 @@ classDiagram
         +delay: Delay
         +expectationId: String
     }
+    class Delay {
+        +timeUnit: TimeUnit
+        +value: long
+        +distribution: DelayDistribution
+    }
+    class DelayDistribution {
+        +type: UNIFORM/LOG_NORMAL/GAUSSIAN
+        +min/max: Long
+        +median/p99: Long
+        +mean/stdDev: Long
+    }
+    Delay --> DelayDistribution : optional
     class HttpResponse {
         +statusCode: Integer
         +reasonPhrase: String

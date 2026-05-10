@@ -18,6 +18,9 @@ import java.util.Arrays;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static junit.framework.TestCase.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.file.FileReader.openStreamToFileFromClassPathOrPath;
 import static org.mockserver.model.BinaryBody.binary;
@@ -596,5 +599,108 @@ public class HttpResponseSerializerIntegrationTest {
         assertEquals("{" + NEW_LINE +
             "  \"statusCode\" : 123" + NEW_LINE +
             "}", jsonHttpResponse);
+    }
+
+    @Test
+    public void shouldDeserializeResponseWithUniformDistributionDelay() {
+        // given
+        String requestBytes = "{" + NEW_LINE +
+            "  \"statusCode\" : 200," + NEW_LINE +
+            "  \"body\" : \"test\"," + NEW_LINE +
+            "  \"delay\" : {" + NEW_LINE +
+            "    \"timeUnit\" : \"MILLISECONDS\"," + NEW_LINE +
+            "    \"distribution\" : {" + NEW_LINE +
+            "      \"type\" : \"UNIFORM\"," + NEW_LINE +
+            "      \"min\" : 100," + NEW_LINE +
+            "      \"max\" : 500" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}";
+
+        // when
+        HttpResponse httpResponse = new HttpResponseSerializer(new MockServerLogger()).deserialize(requestBytes);
+
+        // then
+        assertThat(httpResponse.getDelay(), is(notNullValue()));
+        assertThat(httpResponse.getDelay().getDistribution(), is(notNullValue()));
+        assertThat(httpResponse.getDelay().getDistribution().getType(), is(org.mockserver.model.DelayDistribution.Type.UNIFORM));
+        assertThat(httpResponse.getDelay().getDistribution().getMin(), is(100L));
+        assertThat(httpResponse.getDelay().getDistribution().getMax(), is(500L));
+        assertThat(httpResponse.getDelay().getTimeUnit(), is(java.util.concurrent.TimeUnit.MILLISECONDS));
+    }
+
+    @Test
+    public void shouldDeserializeResponseWithLogNormalDistributionDelay() {
+        // given
+        String requestBytes = "{" + NEW_LINE +
+            "  \"statusCode\" : 200," + NEW_LINE +
+            "  \"body\" : \"test\"," + NEW_LINE +
+            "  \"delay\" : {" + NEW_LINE +
+            "    \"timeUnit\" : \"MILLISECONDS\"," + NEW_LINE +
+            "    \"distribution\" : {" + NEW_LINE +
+            "      \"type\" : \"LOG_NORMAL\"," + NEW_LINE +
+            "      \"median\" : 200," + NEW_LINE +
+            "      \"p99\" : 800" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}";
+
+        // when
+        HttpResponse httpResponse = new HttpResponseSerializer(new MockServerLogger()).deserialize(requestBytes);
+
+        // then
+        assertThat(httpResponse.getDelay(), is(notNullValue()));
+        assertThat(httpResponse.getDelay().getDistribution(), is(notNullValue()));
+        assertThat(httpResponse.getDelay().getDistribution().getType(), is(org.mockserver.model.DelayDistribution.Type.LOG_NORMAL));
+        assertThat(httpResponse.getDelay().getDistribution().getMedian(), is(200L));
+        assertThat(httpResponse.getDelay().getDistribution().getP99(), is(800L));
+    }
+
+    @Test
+    public void shouldDeserializeResponseWithGaussianDistributionDelay() {
+        // given
+        String requestBytes = "{" + NEW_LINE +
+            "  \"statusCode\" : 200," + NEW_LINE +
+            "  \"body\" : \"test\"," + NEW_LINE +
+            "  \"delay\" : {" + NEW_LINE +
+            "    \"timeUnit\" : \"MILLISECONDS\"," + NEW_LINE +
+            "    \"distribution\" : {" + NEW_LINE +
+            "      \"type\" : \"GAUSSIAN\"," + NEW_LINE +
+            "      \"mean\" : 200," + NEW_LINE +
+            "      \"stdDev\" : 50" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}";
+
+        // when
+        HttpResponse httpResponse = new HttpResponseSerializer(new MockServerLogger()).deserialize(requestBytes);
+
+        // then
+        assertThat(httpResponse.getDelay(), is(notNullValue()));
+        assertThat(httpResponse.getDelay().getDistribution(), is(notNullValue()));
+        assertThat(httpResponse.getDelay().getDistribution().getType(), is(org.mockserver.model.DelayDistribution.Type.GAUSSIAN));
+        assertThat(httpResponse.getDelay().getDistribution().getMean(), is(200L));
+        assertThat(httpResponse.getDelay().getDistribution().getStdDev(), is(50L));
+    }
+
+    @Test
+    public void shouldRoundTripSerializeDistributionDelay() throws JsonProcessingException {
+        // given
+        HttpResponse httpResponse = HttpResponse.response()
+            .withStatusCode(200)
+            .withBody("test")
+            .withDelay(Delay.uniform(java.util.concurrent.TimeUnit.MILLISECONDS, 100, 500));
+
+        // when
+        String json = new HttpResponseSerializer(new MockServerLogger()).serialize(httpResponse);
+        HttpResponse deserialized = new HttpResponseSerializer(new MockServerLogger()).deserialize(json);
+
+        // then
+        assertThat(deserialized.getDelay(), is(notNullValue()));
+        assertThat(deserialized.getDelay().getDistribution(), is(notNullValue()));
+        assertThat(deserialized.getDelay().getDistribution().getType(), is(org.mockserver.model.DelayDistribution.Type.UNIFORM));
+        assertThat(deserialized.getDelay().getDistribution().getMin(), is(100L));
+        assertThat(deserialized.getDelay().getDistribution().getMax(), is(500L));
+        assertThat(deserialized.getDelay().getTimeUnit(), is(java.util.concurrent.TimeUnit.MILLISECONDS));
     }
 }

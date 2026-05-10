@@ -106,37 +106,41 @@ public class Scheduler {
     }
 
     public void schedule(Runnable command, boolean synchronous, Delay... delays) {
-        Delay delay = addDelays(delays);
+        long delayMillis = sampleCombinedDelayMillis(delays);
         Integer port = getPort();
         if (this.synchronous || synchronous) {
-            if (delay != null) {
-                delay.applyDelay();
+            if (delayMillis > 0) {
+                try {
+                    MILLISECONDS.sleep(delayMillis);
+                } catch (InterruptedException ie) {
+                    throw new RuntimeException("InterruptedException while apply delay to response", ie);
+                }
             }
             run(command, port);
         } else {
-            if (delay != null) {
-                scheduler.schedule(() -> run(command, port), delay.getValue(), delay.getTimeUnit());
+            if (delayMillis > 0) {
+                scheduler.schedule(() -> run(command, port), delayMillis, MILLISECONDS);
             } else {
                 run(command, port);
             }
         }
     }
 
-    private Delay addDelays(Delay... delays) {
+    private long sampleCombinedDelayMillis(Delay... delays) {
         if (delays == null || delays.length == 0) {
-            return null;
-        } else if (delays.length == 1) {
-            return delays[0];
+            return 0;
+        } else if (delays.length == 1 && delays[0] != null) {
+            return delays[0].sampleValueMillis();
         } else if (delays.length == 2 && delays[0] == delays[1]) {
-            return delays[0];
+            return delays[0] != null ? delays[0].sampleValueMillis() : 0;
         } else {
             long timeInMilliseconds = 0;
             for (Delay delay : delays) {
                 if (delay != null) {
-                    timeInMilliseconds += delay.getTimeUnit().toMillis(delay.getValue());
+                    timeInMilliseconds = Math.min(Long.MAX_VALUE, timeInMilliseconds + delay.sampleValueMillis());
                 }
             }
-            return new Delay(MILLISECONDS, timeInMilliseconds);
+            return timeInMilliseconds;
         }
     }
 

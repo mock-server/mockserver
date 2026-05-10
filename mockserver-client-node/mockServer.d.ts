@@ -258,11 +258,25 @@ export type BodyWithContentType =
       });
 
 /**
+ * delay distribution for variable response delays
+ */
+export interface DelayDistribution {
+  type?: "UNIFORM" | "LOG_NORMAL" | "GAUSSIAN";
+  min?: number;
+  max?: number;
+  median?: number;
+  p99?: number;
+  mean?: number;
+  stdDev?: number;
+}
+
+/**
  * response delay
  */
 export interface Delay {
   timeUnit?: string;
   value?: number;
+  distribution?: DelayDistribution;
 }
 
 export interface SseEvent {
