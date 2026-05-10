@@ -11,7 +11,7 @@ source "${SCRIPT_DIR}/../logging.sh"
 printMessage "Start: \"${SCRIPT_DIR/\//}\""
 
 function integration_test() {
-  start-up "--set image.repositoryNameAndTag=mockserver/mockserver:integration_testing --set app.config.enabled=true --set app.config.properties=mockserver.initializationJsonPath=/config/initializerJson.json --set app.config.initializerJson=[{\"httpRequest\":{\"path\":\"/preset\"},\"httpResponse\":{\"body\":\"preset_response\"}}]"
+  start-up "--set image.repositoryNameAndTag=mockserver/mockserver:integration_testing --set app.config.enabled=true --set app.config.properties=mockserver.initializationJsonPath=/config/initializerJson.json --set-string app.config.initializerJson=[{\"httpRequest\":{\"path\":\"/preset\"}\,\"httpResponse\":{\"body\":\"preset_response\"}}]"
   TEST_EXIT_CODE=0
   sleep 3
   run-helm-test || TEST_EXIT_CODE=1

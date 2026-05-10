@@ -185,10 +185,11 @@ helm install mockserver mockserver/mockserver \
   --set service.type=ClusterIP
 
 # Install with inline configuration (single chart — recommended)
+# Use --set-string for JSON values — escape commas as \, since --set treats commas as separators
 helm install mockserver mockserver/mockserver \
   --set app.config.enabled=true \
   --set app.config.properties="mockserver.initializationJsonPath=/config/initializerJson.json" \
-  --set app.config.initializerJson='[{"httpRequest":{"path":"/example"},"httpResponse":{"body":"response"}}]'
+  --set-string 'app.config.initializerJson=[{"httpRequest":{"path":"/example"}\,"httpResponse":{"body":"response"}}]'
 
 # Or using a values.yaml file for complex config
 helm install mockserver mockserver/mockserver -f my-values.yaml

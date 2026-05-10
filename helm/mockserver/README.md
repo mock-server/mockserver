@@ -87,15 +87,17 @@ Both approaches mount configuration into the container at `/config`. See [MockSe
 
 Set `app.config.enabled=true` and provide configuration content directly in values. This creates a ConfigMap as part of the main chart — no separate chart or manual ConfigMap creation is needed.
 
-Using `--set`:
+Using `--set-string` (commas in JSON must be escaped as `\,`):
 
 ```bash
 helm upgrade --install --create-namespace --namespace mockserver \
   --set app.config.enabled=true \
   --set app.config.properties="mockserver.initializationJsonPath=/config/initializerJson.json" \
-  --set app.config.initializerJson='[{"httpRequest":{"path":"/example"},"httpResponse":{"body":"response"}}]' \
+  --set-string 'app.config.initializerJson=[{"httpRequest":{"path":"/example"}\,"httpResponse":{"body":"response"}}]' \
   mockserver helm/mockserver
 ```
+
+> **Note:** Helm's `--set` flag treats commas as key/value separators, which corrupts JSON values. Use `--set-string` with escaped commas (`\,`) for simple cases, or a `values.yaml` file (recommended) for anything non-trivial.
 
 Or using a `values.yaml` file (recommended for complex configuration):
 

@@ -23,7 +23,7 @@ exec "$SCRIPT_DIR/../run-in-docker.sh" \
     helm template test-release helm/mockserver \
       --set app.config.enabled=true \
       --set app.config.properties="mockserver.initializationJsonPath=/config/initializerJson.json" \
-      --set "app.config.initializerJson=[{\"httpRequest\":{\"path\":\"/example\"},\"httpResponse\":{\"body\":\"response\"}}]" \
+      --set-string "app.config.initializerJson=[{\"httpRequest\":{\"path\":\"/example\"}\,\"httpResponse\":{\"body\":\"response\"}}]" \
       > /dev/null || errors=$((errors + 1))
 
     echo "--- Rendering mockserver with ingress enabled"

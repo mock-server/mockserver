@@ -15,7 +15,12 @@ if command -v buildkite-agent &>/dev/null && buildkite-agent artifact download "
 else
   echo "No artifact available — building JAR from source"
   echo "--- :maven: Building mockserver-netty shaded JAR"
-  (cd mockserver && ./mvnw -pl mockserver-netty -am package -DskipTests -q)
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  "$SCRIPT_DIR/../run-in-docker.sh" \
+    -i mockserver/mockserver:maven \
+    -m 7g \
+    -e "MAVEN_OPTS=-Xms2048m -Xmx6144m" \
+    -- /build/mockserver/mvnw -f /build/mockserver/pom.xml -pl mockserver-netty -am package -DskipTests -q
   JAR_NAME=$(ls "${JAR_DIR}"/mockserver-netty-*-jar-with-dependencies.jar 2>/dev/null | head -1 | xargs basename)
 fi
 

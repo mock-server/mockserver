@@ -115,13 +115,15 @@ helm repo update</code></pre>
 
 <p>Set <span class="keyword">app.config.enabled=true</span> and provide configuration content directly in values. This creates a ConfigMap as part of the main chart &mdash; no separate chart or manual ConfigMap creation is needed.</p>
 
-<p>Using <span class="keyword">--set</span>:</p>
+<p>Using <span class="keyword">--set-string</span> (commas in JSON must be escaped as <span class="keyword">\,</span>):</p>
 
 <pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver \
   --set app.config.enabled=true \
   --set app.config.properties="mockserver.initializationJsonPath=/config/initializerJson.json" \
-  --set app.config.initializerJson='[{"httpRequest":{"path":"/example"},"httpResponse":{"body":"response"}}]' \
+  --set-string 'app.config.initializerJson=[{"httpRequest":{"path":"/example"}\,"httpResponse":{"body":"response"}}]' \
   mockserver helm/mockserver</code></pre>
+
+<p><strong>Note:</strong> Helm's <span class="keyword">--set</span> flag treats commas as key/value separators, which corrupts JSON values. Use <span class="keyword">--set-string</span> with escaped commas (<span class="keyword">\,</span>) for simple cases, or a <span class="keyword">values.yaml</span> file (recommended) for anything non-trivial.</p>
 
 <p>Or using a <span class="keyword">values.yaml</span> file (recommended for complex configuration):</p>
 
