@@ -19,8 +19,9 @@ else
   "$SCRIPT_DIR/../run-in-docker.sh" \
     -i mockserver/mockserver:maven \
     -m 7g \
+    -w /build/mockserver \
     -e "MAVEN_OPTS=-Xms2048m -Xmx6144m" \
-    -- /build/mockserver/mvnw -f /build/mockserver/pom.xml -pl mockserver-netty -am package -DskipTests -q
+    -- ./mvnw -pl mockserver-netty -am package -DskipTests -q
   JAR_NAME=$(ls "${JAR_DIR}"/mockserver-netty-*-jar-with-dependencies.jar 2>/dev/null | head -1 | xargs basename)
 fi
 
