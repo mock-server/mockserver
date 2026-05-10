@@ -21,6 +21,7 @@ import java.util.Locale;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mockserver.formatting.StringFormatter.formatCompactLogMessage;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.model.HttpRequest.request;
 
@@ -349,6 +350,15 @@ public class LogEntry implements EventTranslator<LogEntry> {
             }
         }
         return message;
+    }
+
+    @JsonIgnore
+    public String getCompactMessage() {
+        if (arguments != null) {
+            return formatCompactLogMessage(messageFormat, arguments);
+        } else {
+            return messageFormat;
+        }
     }
 
     public Object[] getArguments() {

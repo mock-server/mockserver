@@ -3,10 +3,15 @@ package org.mockserver.formatting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import io.netty.buffer.ByteBufUtil;
+import org.mockserver.mock.Expectation;
+import org.mockserver.model.Action;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 
 /**
@@ -77,6 +82,67 @@ public class StringFormatter {
             }
         }
         return logMessage.toString();
+    }
+
+    public static String formatCompactLogMessage(final String message, final Object... arguments) {
+        final String[] messageParts = message.split("\\{}");
+        final StringBuilder logMessage = new StringBuilder();
+        for (int i = 0; i < messageParts.length; i++) {
+            String part = messageParts[i].trim();
+            if (i > 0 && logMessage.length() > 0 && !part.isEmpty()) {
+                logMessage.append(" ");
+            }
+            logMessage.append(part);
+            if (arguments != null && i < arguments.length) {
+                String compact = toCompactString(arguments[i]);
+                if (!compact.isEmpty()) {
+                    if (logMessage.length() > 0) {
+                        logMessage.append(" ");
+                    }
+                    logMessage.append(compact);
+                }
+            }
+        }
+        return logMessage.toString();
+    }
+
+    @SuppressWarnings("rawtypes")
+    public static String toCompactString(Object argument) {
+        if (argument == null) {
+            return "";
+        }
+        if (argument instanceof HttpResponse) {
+            HttpResponse response = (HttpResponse) argument;
+            Integer statusCode = response.getStatusCode();
+            return statusCode != null ? String.valueOf(statusCode) : "response";
+        }
+        if (argument instanceof HttpRequest) {
+            HttpRequest request = (HttpRequest) argument;
+            String method = request.getMethod("");
+            String path = request.getPath() != null ? request.getPath().getValue() : "";
+            if (isNotBlank(method) && isNotBlank(path)) {
+                return method + " " + path;
+            } else if (isNotBlank(path)) {
+                return path;
+            } else if (isNotBlank(method)) {
+                return method;
+            }
+            return "request";
+        }
+        if (argument instanceof Expectation) {
+            return ((Expectation) argument).getId();
+        }
+        if (argument instanceof Action) {
+            Action<?> action = (Action<?>) argument;
+            Action.Type type = action.getType();
+            return type != null ? type.name().toLowerCase() : "action";
+        }
+        String str = String.valueOf(argument);
+        str = str.replaceAll("\\s*\\n\\s*", " ").trim();
+        if (str.length() > 120) {
+            str = str.substring(0, 117) + "...";
+        }
+        return str;
     }
 
     public static String formatBytes(byte[] bytes) {

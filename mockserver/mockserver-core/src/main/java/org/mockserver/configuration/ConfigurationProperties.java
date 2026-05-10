@@ -54,6 +54,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_METRICS_ENABLED = "mockserver.metricsEnabled";
     private static final String MOCKSERVER_MCP_ENABLED = "mockserver.mcpEnabled";
     private static final String MOCKSERVER_LOG_LEVEL_OVERRIDES = "mockserver.logLevelOverrides";
+    private static final String MOCKSERVER_COMPACT_LOG_FORMAT = "mockserver.compactLogFormat";
 
     // memory usage
     private static final String MOCKSERVER_MAX_EXPECTATIONS = "mockserver.maxExpectations";
@@ -422,6 +423,22 @@ public class ConfigurationProperties {
         } else {
             clearProperty(MOCKSERVER_LOG_LEVEL_OVERRIDES);
         }
+    }
+
+    public static boolean compactLogFormat() {
+        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_COMPACT_LOG_FORMAT, "MOCKSERVER_COMPACT_LOG_FORMAT", "" + false));
+    }
+
+    /**
+     * When enabled, log messages written to stdout/SLF4J use a compact single-line format showing
+     * summary information (e.g., method, path, status code, expectation ID) instead of full
+     * JSON-serialized request and response details. The dashboard UI, verification, and log
+     * retrieval APIs are not affected.
+     *
+     * @param enable enable compact log format
+     */
+    public static void compactLogFormat(boolean enable) {
+        setProperty(MOCKSERVER_COMPACT_LOG_FORMAT, "" + enable);
     }
 
     // memory usage

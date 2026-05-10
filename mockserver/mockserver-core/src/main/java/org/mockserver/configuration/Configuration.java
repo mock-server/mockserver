@@ -36,6 +36,7 @@ public class Configuration {
     private Boolean metricsEnabled;
     private Boolean mcpEnabled;
     private Map<String, String> logLevelOverrides;
+    private Boolean compactLogFormat;
 
     // memory usage
     private Integer maxExpectations;
@@ -302,6 +303,18 @@ public class Configuration {
 
     public Configuration logLevelOverrides(Map<String, String> logLevelOverrides) {
         this.logLevelOverrides = logLevelOverrides;
+        return this;
+    }
+
+    public Boolean compactLogFormat() {
+        if (compactLogFormat == null) {
+            return ConfigurationProperties.compactLogFormat();
+        }
+        return compactLogFormat;
+    }
+
+    public Configuration compactLogFormat(Boolean compactLogFormat) {
+        this.compactLogFormat = compactLogFormat;
         return this;
     }
 

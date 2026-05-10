@@ -150,7 +150,7 @@ public class MockServerLogger {
             Level effectiveLevel = resolveEffectiveLevel(logEntry.getType(), configuration.logLevelOverrides(), configuration.logLevel());
             if ((logEntry.isAlwaysLog() || isEnabled(logEntry.getLogLevel(), effectiveLevel)) &&
                 isNotBlank(logEntry.getMessage())) {
-                writeLogEntry(logger, logEntry);
+                writeLogEntry(logger, logEntry, configuration.compactLogFormat());
             }
         }
     }
@@ -160,27 +160,28 @@ public class MockServerLogger {
             Level effectiveLevel = resolveEffectiveLevel(logEntry.getType(), ConfigurationProperties.logLevelOverrides(), ConfigurationProperties.logLevel());
             if ((logEntry.isAlwaysLog() || isEnabled(logEntry.getLogLevel(), effectiveLevel)) &&
                 isNotBlank(logEntry.getMessage())) {
-                writeLogEntry(logger, logEntry);
+                writeLogEntry(logger, logEntry, ConfigurationProperties.compactLogFormat());
             }
         }
     }
 
-    private static void writeLogEntry(Logger logger, LogEntry logEntry) {
+    private static void writeLogEntry(Logger logger, LogEntry logEntry, boolean compact) {
+        String message = compact ? logEntry.getCompactMessage() : logEntry.getMessage();
         switch (logEntry.getLogLevel()) {
             case ERROR:
-                logger.error(portInformation(logEntry) + logEntry.getMessage(), logEntry.getThrowable());
+                logger.error(portInformation(logEntry) + message, logEntry.getThrowable());
                 break;
             case WARN:
-                logger.warn(portInformation(logEntry) + logEntry.getMessage(), logEntry.getThrowable());
+                logger.warn(portInformation(logEntry) + message, logEntry.getThrowable());
                 break;
             case INFO:
-                logger.info(portInformation(logEntry) + logEntry.getMessage(), logEntry.getThrowable());
+                logger.info(portInformation(logEntry) + message, logEntry.getThrowable());
                 break;
             case DEBUG:
-                logger.debug(portInformation(logEntry) + logEntry.getMessage(), logEntry.getThrowable());
+                logger.debug(portInformation(logEntry) + message, logEntry.getThrowable());
                 break;
             case TRACE:
-                logger.trace(portInformation(logEntry) + logEntry.getMessage(), logEntry.getThrowable());
+                logger.trace(portInformation(logEntry) + message, logEntry.getThrowable());
                 break;
         }
     }

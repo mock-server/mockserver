@@ -2,6 +2,27 @@
 
 <h2>Logging & Metrics Configuration:</h2>
 
+<h3>Quick Reference</h3>
+<table class="table" style="width: 100%; margin-bottom: 20px;">
+    <thead>
+        <tr>
+            <th>Property</th>
+            <th>Purpose</th>
+            <th>Default</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td><a href="#button_configuration_log_level"><code>logLevel</code></a></td><td>Global minimum log level</td><td><code>INFO</code></td></tr>
+        <tr><td><a href="#button_configuration_disable_system_out"><code>disableSystemOut</code></a></td><td>Suppress stdout output</td><td><code>false</code></td></tr>
+        <tr><td><a href="#button_configuration_disable_logging"><code>disableLogging</code></a></td><td>Disable all logging and event processing</td><td><code>false</code></td></tr>
+        <tr><td><a href="#button_configuration_compact_log_format"><code>compactLogFormat</code></a></td><td>One-line summaries instead of full JSON in stdout</td><td><code>false</code></td></tr>
+        <tr><td><a href="#button_configuration_log_level_overrides"><code>logLevelOverrides</code></a></td><td>Per-type/category log level overrides</td><td><code>{}</code></td></tr>
+        <tr><td><a href="#button_configuration_detailed_match_failures"><code>detailedMatchFailures</code></a></td><td>Include per-field match failure reasons</td><td><code>true</code></td></tr>
+        <tr><td><a href="#button_configuration_launch_ui__debug"><code>launchUIForLogLevelDebug</code></a></td><td>Auto-open UI when log level is DEBUG</td><td><code>false</code></td></tr>
+        <tr><td><a href="#button_configuration_enabled_metrics"><code>metricsEnabled</code></a></td><td>Prometheus metrics endpoint</td><td><code>false</code></td></tr>
+    </tbody>
+</table>
+
 <button id="button_configuration_log_level" class="accordion title"><strong>Log Level</strong></button>
 <div class="panel title">
     <p>The the minimum level of logs to record in the event log and to output to system out (if <a href="#button_configuration_disable_system_out">system out log output</a> is not disabled).  The lower the log level the more log entries will be captured, particularly at TRACE level logging.</p>
@@ -49,6 +70,47 @@
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.disableLogging=...</code></pre>
     <p>Example:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.disableLogging="true"</code></pre>
+</div>
+
+<button id="button_configuration_compact_log_format" class="accordion title"><strong>Compact Log Format</strong></button>
+<div class="panel title">
+    <p>When enabled, log messages written to stdout/SLF4J use a compact single-line format showing summary information (method, path, status code, expectation ID) instead of full JSON-serialized request and response details. This significantly reduces log noise, especially in CI/CD environments or when running many tests.</p>
+    <p>The dashboard UI, verification, and log retrieval APIs are not affected &mdash; they continue to show full details.</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.compactLogFormat(boolean enable)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.compactLogFormat=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_COMPACT_LOG_FORMAT=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.compactLogFormat=...</code></pre>
+    <p>Example output comparison:</p>
+    <p><strong>Verbose (default):</strong></p>
+    <pre class="code" style="padding: 2px;"><code class="code">INFO - 50850 returning response:
+
+  {
+    "statusCode" : 200,
+    "body" : "{\"accessToken\":{...}}"
+  }
+
+ for request:
+
+  {
+    "method" : "POST",
+    "path" : "/oauth2/token",
+    "headers" : { ... }
+  }
+
+ from expectation:
+
+  a735b798-8aec-4c15-b264-c6d3c93fda1d</code></pre>
+    <p><strong>Compact:</strong></p>
+    <pre class="code" style="padding: 2px;"><code class="code">INFO - 50850 returning response: 200 for request: POST /oauth2/token from expectation: a735b798-8aec-4c15-b264-c6d3c93fda1d</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.compactLogFormat="true"</code></pre>
+    <p>Tip: combine with <a href="#button_configuration_log_level_overrides">logLevelOverrides</a> for maximum control. For example, enable compact format and suppress startup/shutdown noise:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.compactLogFormat="true" -Dmockserver.logLevelOverrides='{"SERVER":"WARN"}'</code></pre>
 </div>
 
 <button id="button_configuration_log_level_overrides" class="accordion title"><strong>Log Level Overrides (Per-Category)</strong></button>

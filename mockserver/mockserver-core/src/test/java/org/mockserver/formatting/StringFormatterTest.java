@@ -7,7 +7,10 @@ import java.nio.charset.StandardCharsets;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
+import org.mockserver.mock.Expectation;
+
 import static org.mockserver.formatting.StringFormatter.formatBytes;
+import static org.mockserver.formatting.StringFormatter.formatCompactLogMessage;
 import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -146,6 +149,69 @@ public class StringFormatterTest {
         ));
     }
 
+
+    @Test
+    public void shouldFormatCompactLogMessageWithMultipleParameters() {
+        // when
+        String logMessage = formatCompactLogMessage(
+            "returning response:{}for request:{}for action:{}",
+            response("response_body").withStatusCode(200),
+            request("request_path").withMethod("GET"),
+            response("response_body").withStatusCode(200)
+        );
+
+        // then
+        assertThat(logMessage, is("returning response: 200 for request: GET request_path for action: 200"));
+    }
+
+    @Test
+    public void shouldFormatCompactLogMessageWithStringArguments() {
+        // when
+        String logMessage = formatCompactLogMessage(
+            "some message with{}and{}",
+            "value1",
+            "value2"
+        );
+
+        // then
+        assertThat(logMessage, is("some message with value1 and value2"));
+    }
+
+    @Test
+    public void shouldFormatCompactLogMessageWithExpectation() {
+        // when
+        Expectation expectation = new Expectation(request("test")).withId("test-id");
+        String logMessage = formatCompactLogMessage(
+            "matched expectation:{}",
+            expectation
+        );
+
+        // then
+        assertThat(logMessage, is("matched expectation: test-id"));
+    }
+
+    @Test
+    public void shouldFormatCompactLogMessageWithNoArguments() {
+        // when
+        String logMessage = formatCompactLogMessage("started on port: 1080");
+
+        // then
+        assertThat(logMessage, is("started on port: 1080"));
+    }
+
+    @Test
+    public void shouldFormatCompactLogMessageWithForward() {
+        // when
+        String logMessage = formatCompactLogMessage(
+            "returning response:{}for request:{}for action:{}",
+            response("response_body").withStatusCode(200),
+            request("request_path").withMethod("POST"),
+            forward()
+        );
+
+        // then
+        assertThat(logMessage, is("returning response: 200 for request: POST request_path for action: forward"));
+    }
 
     @Test
     public void shouldFormatBytes() {

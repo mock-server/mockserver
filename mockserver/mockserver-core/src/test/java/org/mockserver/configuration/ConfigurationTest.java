@@ -151,6 +151,32 @@ public class ConfigurationTest {
     }
 
     @Test
+    public void shouldSetAndGetCompactLogFormat() {
+        boolean original = ConfigurationProperties.compactLogFormat();
+        try {
+            // then - default value
+            assertThat(configuration.compactLogFormat(), equalTo(false));
+
+            // when - system property setter
+            ConfigurationProperties.compactLogFormat(true);
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.compactLogFormat(), equalTo(true));
+            assertThat(System.getProperty("mockserver.compactLogFormat"), equalTo("true"));
+            assertThat(configuration.compactLogFormat(), equalTo(true));
+            ConfigurationProperties.compactLogFormat(original);
+
+            // when - setter
+            configuration.compactLogFormat(true);
+
+            // then - getter
+            assertThat(configuration.compactLogFormat(), equalTo(true));
+        } finally {
+            ConfigurationProperties.compactLogFormat(original);
+        }
+    }
+
+    @Test
     public void shouldSetAndGetLaunchUIForLogLevelDebug() {
         boolean original = ConfigurationProperties.launchUIForLogLevelDebug();
         try {

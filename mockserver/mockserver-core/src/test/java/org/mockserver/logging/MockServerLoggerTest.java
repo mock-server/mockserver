@@ -17,6 +17,7 @@ import static org.mockito.Mockito.*;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
 
 public class MockServerLoggerTest {
 
@@ -169,6 +170,57 @@ public class MockServerLoggerTest {
             "  multi-line" + NEW_LINE +
             "  object" + NEW_LINE;
         verify(mockLogger).error(message, (Throwable) null);
+    }
+
+    @Test
+    public void shouldFormatCompactLogMessages() {
+        // given
+        Configuration compactConfig = configuration().logLevel(Level.INFO).disableSystemOut(false).compactLogFormat(true);
+        Logger mockLogger = mock(Logger.class);
+        MockServerLogger logFormatter = new MockServerLogger(compactConfig, mockLogger);
+
+        // when
+        logFormatter.logEvent(
+            new LogEntry()
+                .setLogLevel(Level.INFO)
+                .setType(LogEntry.LogMessageType.EXPECTATION_RESPONSE)
+                .setMessageFormat("returning response:{}for request:{}from expectation:{}")
+                .setArguments(
+                    response().withStatusCode(200),
+                    request("/test").withMethod("GET"),
+                    "test-expectation-id"
+                )
+        );
+
+        // then
+        verify(mockLogger).info("returning response: 200 for request: GET /test from expectation: test-expectation-id", (Throwable) null);
+    }
+
+    @Test
+    public void shouldFormatVerboseLogMessagesWhenCompactDisabled() {
+        // given
+        Configuration verboseConfig = configuration().logLevel(Level.INFO).disableSystemOut(false).compactLogFormat(false);
+        Logger mockLogger = mock(Logger.class);
+        MockServerLogger logFormatter = new MockServerLogger(verboseConfig, mockLogger);
+
+        // when
+        logFormatter.logEvent(
+            new LogEntry()
+                .setLogLevel(Level.INFO)
+                .setType(LogEntry.LogMessageType.EXPECTATION_RESPONSE)
+                .setMessageFormat("some message with{}and{}")
+                .setArguments("value1", "value2")
+        );
+
+        // then
+        String expectedMessage = "some message with" + NEW_LINE +
+            NEW_LINE +
+            "  value1" + NEW_LINE +
+            NEW_LINE +
+            " and" + NEW_LINE +
+            NEW_LINE +
+            "  value2" + NEW_LINE;
+        verify(mockLogger).info(expectedMessage, (Throwable) null);
     }
 
 }

@@ -22,6 +22,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private Boolean metricsEnabled;
     private Boolean mcpEnabled;
     private Map<String, String> logLevelOverrides;
+    private Boolean compactLogFormat;
 
     private Integer maxExpectations;
     private Integer maxLogEntries;
@@ -135,6 +136,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
             this.mcpEnabled = configuration.mcpEnabled();
             Map<String, String> overrides = configuration.logLevelOverrides();
             this.logLevelOverrides = overrides != null && !overrides.isEmpty() ? overrides : null;
+            this.compactLogFormat = configuration.compactLogFormat();
 
             this.maxExpectations = configuration.maxExpectations();
             this.maxLogEntries = configuration.maxLogEntries();
@@ -294,6 +296,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
         configuration.metricsEnabled(metricsEnabled);
         configuration.mcpEnabled(mcpEnabled);
         configuration.logLevelOverrides(logLevelOverrides);
+        configuration.compactLogFormat(compactLogFormat);
 
         configuration.maxExpectations(maxExpectations);
         configuration.maxLogEntries(maxLogEntries);
@@ -430,6 +433,9 @@ public class ConfigurationDTO implements DTO<Configuration> {
         }
         if (logLevelOverrides != null) {
             target.logLevelOverrides(logLevelOverrides);
+        }
+        if (compactLogFormat != null) {
+            target.compactLogFormat(compactLogFormat);
         }
         if (maxExpectations != null) {
             target.maxExpectations(maxExpectations);
@@ -756,6 +762,15 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setLogLevelOverrides(Map<String, String> logLevelOverrides) {
         this.logLevelOverrides = logLevelOverrides;
+        return this;
+    }
+
+    public Boolean getCompactLogFormat() {
+        return compactLogFormat;
+    }
+
+    public ConfigurationDTO setCompactLogFormat(Boolean compactLogFormat) {
+        this.compactLogFormat = compactLogFormat;
         return this;
     }
 
