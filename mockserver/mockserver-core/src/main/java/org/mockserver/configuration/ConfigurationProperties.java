@@ -53,6 +53,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_LAUNCH_UI_FOR_LOG_LEVEL_DEBUG = "mockserver.launchUIForLogLevelDebug";
     private static final String MOCKSERVER_METRICS_ENABLED = "mockserver.metricsEnabled";
     private static final String MOCKSERVER_MCP_ENABLED = "mockserver.mcpEnabled";
+    private static final String MOCKSERVER_LOG_LEVEL_OVERRIDES = "mockserver.logLevelOverrides";
 
     // memory usage
     private static final String MOCKSERVER_MAX_EXPECTATIONS = "mockserver.maxExpectations";
@@ -372,6 +373,55 @@ public class ConfigurationProperties {
      */
     public static void mcpEnabled(boolean enable) {
         setProperty(MOCKSERVER_MCP_ENABLED, "" + enable);
+    }
+
+    public static Map<String, String> logLevelOverrides() {
+        String overridesJson = readPropertyHierarchically(PROPERTIES, MOCKSERVER_LOG_LEVEL_OVERRIDES, "MOCKSERVER_LOG_LEVEL_OVERRIDES", "");
+        if (isNotBlank(overridesJson)) {
+            try {
+                return ObjectMapperFactory.createObjectMapper().readValue(overridesJson, new TypeReference<Map<String, String>>() {
+                });
+            } catch (Exception e) {
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setType(SERVER_CONFIGURATION)
+                        .setLogLevel(Level.WARN)
+                        .setMessageFormat("invalid value for logLevelOverrides, expected JSON map but found:{}")
+                        .setArguments(overridesJson)
+                );
+                return Collections.emptyMap();
+            }
+        } else {
+            return Collections.emptyMap();
+        }
+    }
+
+    /**
+     * Override the log level for specific log message type categories or individual log message types.
+     * <p>
+     * Keys can be category group names (MATCHING, REQUEST_LIFECYCLE, EXPECTATION_MANAGEMENT, VERIFICATION, SERVER, GENERAL)
+     * or individual LogMessageType names (e.g., EXPECTATION_NOT_MATCHED, FORWARDED_REQUEST).
+     * Values are SLF4J log level names (TRACE, DEBUG, INFO, WARN, ERROR).
+     * Resolution order: individual type override > category group override > global logLevel.
+     *
+     * @param overrides map of category/type names to log level names
+     */
+    public static void logLevelOverrides(Map<String, String> overrides) {
+        if (overrides != null && !overrides.isEmpty()) {
+            try {
+                setProperty(MOCKSERVER_LOG_LEVEL_OVERRIDES, ObjectMapperFactory.createObjectMapper().writeValueAsString(overrides));
+            } catch (Exception e) {
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setType(SERVER_CONFIGURATION)
+                        .setLogLevel(Level.WARN)
+                        .setMessageFormat("failed to serialize logLevelOverrides:{}")
+                        .setArguments(overrides)
+                );
+            }
+        } else {
+            clearProperty(MOCKSERVER_LOG_LEVEL_OVERRIDES);
+        }
     }
 
     // memory usage

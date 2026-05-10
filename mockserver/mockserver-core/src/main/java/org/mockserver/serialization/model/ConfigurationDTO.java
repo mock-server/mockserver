@@ -21,6 +21,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private Boolean launchUIForLogLevelDebug;
     private Boolean metricsEnabled;
     private Boolean mcpEnabled;
+    private Map<String, String> logLevelOverrides;
 
     private Integer maxExpectations;
     private Integer maxLogEntries;
@@ -132,6 +133,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
             this.launchUIForLogLevelDebug = configuration.launchUIForLogLevelDebug();
             this.metricsEnabled = configuration.metricsEnabled();
             this.mcpEnabled = configuration.mcpEnabled();
+            Map<String, String> overrides = configuration.logLevelOverrides();
+            this.logLevelOverrides = overrides != null && !overrides.isEmpty() ? overrides : null;
 
             this.maxExpectations = configuration.maxExpectations();
             this.maxLogEntries = configuration.maxLogEntries();
@@ -290,6 +293,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
         configuration.launchUIForLogLevelDebug(launchUIForLogLevelDebug);
         configuration.metricsEnabled(metricsEnabled);
         configuration.mcpEnabled(mcpEnabled);
+        configuration.logLevelOverrides(logLevelOverrides);
 
         configuration.maxExpectations(maxExpectations);
         configuration.maxLogEntries(maxLogEntries);
@@ -423,6 +427,9 @@ public class ConfigurationDTO implements DTO<Configuration> {
         }
         if (mcpEnabled != null) {
             target.mcpEnabled(mcpEnabled);
+        }
+        if (logLevelOverrides != null) {
+            target.logLevelOverrides(logLevelOverrides);
         }
         if (maxExpectations != null) {
             target.maxExpectations(maxExpectations);
@@ -740,6 +747,15 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setMcpEnabled(Boolean mcpEnabled) {
         this.mcpEnabled = mcpEnabled;
+        return this;
+    }
+
+    public Map<String, String> getLogLevelOverrides() {
+        return logLevelOverrides;
+    }
+
+    public ConfigurationDTO setLogLevelOverrides(Map<String, String> logLevelOverrides) {
+        this.logLevelOverrides = logLevelOverrides;
         return this;
     }
 

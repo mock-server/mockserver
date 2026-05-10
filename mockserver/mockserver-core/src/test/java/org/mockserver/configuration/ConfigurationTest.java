@@ -8,9 +8,14 @@ import org.mockserver.server.initialize.ExpectationInitializerExample;
 import org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager;
 import org.mockserver.socket.tls.KeyAndCertificateFactory;
 
+import org.mockserver.log.model.LogEntry;
+import org.slf4j.event.Level;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -2247,6 +2252,217 @@ public class ConfigurationTest {
             assertThat(configuration.rebuildServerTLSContext(), equalTo(true));
         } finally {
             ConfigurationProperties.sslSubjectAlternativeNameIps(original);
+        }
+    }
+
+    @Test
+    public void shouldSetAndGetLogLevelOverrides() {
+        Map<String, String> original = ConfigurationProperties.logLevelOverrides();
+        try {
+            assertThat(configuration.logLevelOverrides(), equalTo(Collections.emptyMap()));
+
+            ConfigurationProperties.logLevelOverrides(ImmutableMap.of("MATCHING", "WARN", "EXPECTATION_MATCHED", "INFO"));
+
+            assertThat(ConfigurationProperties.logLevelOverrides(), equalTo(ImmutableMap.of("MATCHING", "WARN", "EXPECTATION_MATCHED", "INFO")));
+            assertThat(configuration.logLevelOverrides(), equalTo(ImmutableMap.of("MATCHING", "WARN", "EXPECTATION_MATCHED", "INFO")));
+
+            configuration.logLevelOverrides(ImmutableMap.of("SERVER", "ERROR"));
+
+            assertThat(configuration.logLevelOverrides(), equalTo(ImmutableMap.of("SERVER", "ERROR")));
+        } finally {
+            ConfigurationProperties.logLevelOverrides(original);
+        }
+    }
+
+    @Test
+    public void shouldSetAndGetLogLevelOverridesWithEmptyMap() {
+        Map<String, String> original = ConfigurationProperties.logLevelOverrides();
+        try {
+            ConfigurationProperties.logLevelOverrides(ImmutableMap.of("MATCHING", "WARN"));
+            assertThat(ConfigurationProperties.logLevelOverrides(), equalTo(ImmutableMap.of("MATCHING", "WARN")));
+
+            ConfigurationProperties.logLevelOverrides(Collections.emptyMap());
+            assertThat(ConfigurationProperties.logLevelOverrides(), equalTo(Collections.emptyMap()));
+        } finally {
+            ConfigurationProperties.logLevelOverrides(original);
+        }
+    }
+
+    @Test
+    public void shouldResolveEffectiveLevelWithEmptyOverrides() {
+        assertThat(
+            LogEntry.LogMessageTypeCategory.resolveEffectiveLevel(
+                LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED,
+                Collections.emptyMap(),
+                Level.INFO
+            ),
+            equalTo(Level.INFO)
+        );
+    }
+
+    @Test
+    public void shouldResolveEffectiveLevelWithNullOverrides() {
+        assertThat(
+            LogEntry.LogMessageTypeCategory.resolveEffectiveLevel(
+                LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED,
+                null,
+                Level.INFO
+            ),
+            equalTo(Level.INFO)
+        );
+    }
+
+    @Test
+    public void shouldResolveEffectiveLevelWithGroupOverride() {
+        Map<String, String> overrides = ImmutableMap.of("MATCHING", "WARN");
+        assertThat(
+            LogEntry.LogMessageTypeCategory.resolveEffectiveLevel(
+                LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED,
+                overrides,
+                Level.INFO
+            ),
+            equalTo(Level.WARN)
+        );
+        assertThat(
+            LogEntry.LogMessageTypeCategory.resolveEffectiveLevel(
+                LogEntry.LogMessageType.EXPECTATION_MATCHED,
+                overrides,
+                Level.INFO
+            ),
+            equalTo(Level.WARN)
+        );
+        assertThat(
+            LogEntry.LogMessageTypeCategory.resolveEffectiveLevel(
+                LogEntry.LogMessageType.NO_MATCH_RESPONSE,
+                overrides,
+                Level.INFO
+            ),
+            equalTo(Level.WARN)
+        );
+    }
+
+    @Test
+    public void shouldResolveEffectiveLevelWithTypeOverrideTakesPrecedenceOverGroup() {
+        Map<String, String> overrides = ImmutableMap.of("MATCHING", "WARN", "EXPECTATION_MATCHED", "DEBUG");
+        assertThat(
+            LogEntry.LogMessageTypeCategory.resolveEffectiveLevel(
+                LogEntry.LogMessageType.EXPECTATION_MATCHED,
+                overrides,
+                Level.INFO
+            ),
+            equalTo(Level.DEBUG)
+        );
+        assertThat(
+            LogEntry.LogMessageTypeCategory.resolveEffectiveLevel(
+                LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED,
+                overrides,
+                Level.INFO
+            ),
+            equalTo(Level.WARN)
+        );
+    }
+
+    @Test
+    public void shouldResolveEffectiveLevelFallsBackToGlobalLevel() {
+        Map<String, String> overrides = ImmutableMap.of("MATCHING", "WARN");
+        assertThat(
+            LogEntry.LogMessageTypeCategory.resolveEffectiveLevel(
+                LogEntry.LogMessageType.FORWARDED_REQUEST,
+                overrides,
+                Level.INFO
+            ),
+            equalTo(Level.INFO)
+        );
+    }
+
+    @Test
+    public void shouldResolveEffectiveLevelCaseInsensitive() {
+        Map<String, String> overrides = new HashMap<>();
+        overrides.put("matching", "warn");
+        overrides.put("Expectation_Matched", "debug");
+        assertThat(
+            LogEntry.LogMessageTypeCategory.resolveEffectiveLevel(
+                LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED,
+                overrides,
+                Level.INFO
+            ),
+            equalTo(Level.WARN)
+        );
+        assertThat(
+            LogEntry.LogMessageTypeCategory.resolveEffectiveLevel(
+                LogEntry.LogMessageType.EXPECTATION_MATCHED,
+                overrides,
+                Level.INFO
+            ),
+            equalTo(Level.DEBUG)
+        );
+    }
+
+    @Test
+    public void shouldResolveEffectiveLevelIgnoresInvalidLevelValues() {
+        Map<String, String> overrides = ImmutableMap.of("MATCHING", "INVALID_LEVEL");
+        assertThat(
+            LogEntry.LogMessageTypeCategory.resolveEffectiveLevel(
+                LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED,
+                overrides,
+                Level.INFO
+            ),
+            equalTo(Level.INFO)
+        );
+    }
+
+    @Test
+    public void shouldResolveEffectiveLevelIgnoresUnknownKeys() {
+        Map<String, String> overrides = ImmutableMap.of("FOOBAR", "WARN");
+        assertThat(
+            LogEntry.LogMessageTypeCategory.resolveEffectiveLevel(
+                LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED,
+                overrides,
+                Level.INFO
+            ),
+            equalTo(Level.INFO)
+        );
+    }
+
+    @Test
+    public void shouldResolveEffectiveLevelIgnoresNullKeysAndValues() {
+        Map<String, String> overrides = new HashMap<>();
+        overrides.put(null, "WARN");
+        overrides.put("MATCHING", null);
+        overrides.put("VERIFICATION", "ERROR");
+        assertThat(
+            LogEntry.LogMessageTypeCategory.resolveEffectiveLevel(
+                LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED,
+                overrides,
+                Level.INFO
+            ),
+            equalTo(Level.INFO)
+        );
+        assertThat(
+            LogEntry.LogMessageTypeCategory.resolveEffectiveLevel(
+                LogEntry.LogMessageType.VERIFICATION_FAILED,
+                overrides,
+                Level.INFO
+            ),
+            equalTo(Level.ERROR)
+        );
+    }
+
+    @Test
+    public void shouldResolveCategoryForAllLogMessageTypes() {
+        for (LogEntry.LogMessageType type : LogEntry.LogMessageType.values()) {
+            if (type == LogEntry.LogMessageType.RUNNABLE) {
+                assertThat(
+                    LogEntry.LogMessageTypeCategory.categoryFor(type),
+                    equalTo(null)
+                );
+            } else {
+                assertThat(
+                    "Expected category for " + type,
+                    LogEntry.LogMessageTypeCategory.categoryFor(type) != null,
+                    is(true)
+                );
+            }
         }
     }
 

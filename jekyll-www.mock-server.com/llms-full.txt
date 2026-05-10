@@ -783,6 +783,25 @@ Disable all logging and processing of log events.
 - Default: false
 - Environment variable: MOCKSERVER_DISABLE_LOGGING
 
+**logLevelOverrides**
+Override the log level for specific categories of log events or individual log message types.
+Keys can be category group names (MATCHING, REQUEST_LIFECYCLE, EXPECTATION_MANAGEMENT, VERIFICATION, SERVER, GENERAL) or individual LogMessageType names (e.g., EXPECTATION_NOT_MATCHED).
+Values are SLF4J log level names (TRACE, DEBUG, INFO, WARN, ERROR).
+Resolution order: individual type override > category group override > global logLevel.
+Only affects stdout/SLF4J output and dashboard UI; event log storage for verification is unaffected.
+Note: overrides can only suppress events already captured at the global logLevel. They cannot increase verbosity beyond what the global logLevel generates. Set the global logLevel low enough first, then use overrides to suppress noisy categories.
+- Default: {} (empty, global logLevel applies to all)
+- System property: mockserver.logLevelOverrides
+- Environment variable: MOCKSERVER_LOG_LEVEL_OVERRIDES
+- Format: JSON map, e.g., {"MATCHING":"WARN","EXPECTATION_MATCHED":"INFO"}
+- Category groups:
+  - MATCHING: EXPECTATION_MATCHED, EXPECTATION_NOT_MATCHED, NO_MATCH_RESPONSE
+  - REQUEST_LIFECYCLE: RECEIVED_REQUEST, FORWARDED_REQUEST, EXPECTATION_RESPONSE, TEMPLATE_GENERATED
+  - EXPECTATION_MANAGEMENT: CREATED_EXPECTATION, UPDATED_EXPECTATION, REMOVED_EXPECTATION, CLEARED
+  - VERIFICATION: VERIFICATION, VERIFICATION_FAILED, VERIFICATION_PASSED, RETRIEVED
+  - SERVER: SERVER_CONFIGURATION, AUTHENTICATION_FAILED, OPENAPI_RESPONSE_VALIDATION_FAILED
+  - GENERAL: TRACE, DEBUG, INFO, WARN, ERROR, EXCEPTION
+
 **detailedMatchFailures**
 Include detailed reasons why each non-matching field did not match in log entries.
 - Default: true
@@ -2184,6 +2203,7 @@ Or by expectation IDs:
 | MOCKSERVER_LOG_LEVEL | mockserver.logLevel | INFO |
 | MOCKSERVER_DISABLE_SYSTEM_OUT | mockserver.disableSystemOut | false |
 | MOCKSERVER_DISABLE_LOGGING | mockserver.disableLogging | false |
+| MOCKSERVER_LOG_LEVEL_OVERRIDES | mockserver.logLevelOverrides | {} |
 | MOCKSERVER_MAX_EXPECTATIONS | mockserver.maxExpectations | auto |
 | MOCKSERVER_MAX_LOG_ENTRIES | mockserver.maxLogEntries | auto |
 | MOCKSERVER_MAX_WEB_SOCKET_EXPECTATIONS | mockserver.maxWebSocketExpectations | 1500 |

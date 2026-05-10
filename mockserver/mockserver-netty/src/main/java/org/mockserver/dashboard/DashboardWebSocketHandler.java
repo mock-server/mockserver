@@ -21,6 +21,7 @@ import org.mockserver.collections.CircularHashMap;
 import org.mockserver.dashboard.model.DashboardLogEntryDTO;
 import org.mockserver.dashboard.model.DashboardLogEntryDTOGroup;
 import org.mockserver.dashboard.serializers.*;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -350,10 +351,15 @@ public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter impl
         DescriptionProcessor logMessagesDescriptionProcessor = new DescriptionProcessor();
         DescriptionProcessor recordedRequestsDescriptionProcessor = new DescriptionProcessor();
         DescriptionProcessor proxiedRequestsDescriptionProcessor = new DescriptionProcessor();
+        Configuration configuration = httpState.getConfiguration();
+        Map<String, String> overrides = configuration.logLevelOverrides();
+        Level globalLevel = configuration.logLevel();
         mockServerEventLog
             .retrieveLogEntriesInReverseForUI(
                 httpRequest,
-                logEntry -> !logEntry.isDeleted(),
+                logEntry -> !logEntry.isDeleted()
+                    && (logEntry.isAlwaysLog() || overrides == null || overrides.isEmpty()
+                    || MockServerLogger.isEnabled(logEntry.getLogLevel(), LogEntry.LogMessageTypeCategory.resolveEffectiveLevel(logEntry.getType(), overrides, globalLevel))),
                 DashboardLogEntryDTO::new,
                 reverseLogEventsStream -> {
                     List<ImmutableMap<String, Object>> activeExpectations = requestMatchers

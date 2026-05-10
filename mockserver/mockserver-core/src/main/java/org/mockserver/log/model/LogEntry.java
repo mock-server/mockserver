@@ -16,10 +16,8 @@ import org.slf4j.event.Level;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.Locale;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -577,6 +575,91 @@ public class LogEntry implements EventTranslator<LogEntry> {
         TEMPLATE_GENERATED,
         SERVER_CONFIGURATION,
         AUTHENTICATION_FAILED,
+    }
+
+    public enum LogMessageTypeCategory {
+        MATCHING(LogMessageType.EXPECTATION_MATCHED, LogMessageType.EXPECTATION_NOT_MATCHED, LogMessageType.NO_MATCH_RESPONSE),
+        REQUEST_LIFECYCLE(LogMessageType.RECEIVED_REQUEST, LogMessageType.FORWARDED_REQUEST, LogMessageType.EXPECTATION_RESPONSE, LogMessageType.TEMPLATE_GENERATED),
+        EXPECTATION_MANAGEMENT(LogMessageType.CREATED_EXPECTATION, LogMessageType.UPDATED_EXPECTATION, LogMessageType.REMOVED_EXPECTATION, LogMessageType.CLEARED),
+        VERIFICATION(LogMessageType.VERIFICATION, LogMessageType.VERIFICATION_FAILED, LogMessageType.VERIFICATION_PASSED, LogMessageType.RETRIEVED),
+        SERVER(LogMessageType.SERVER_CONFIGURATION, LogMessageType.AUTHENTICATION_FAILED, LogMessageType.OPENAPI_RESPONSE_VALIDATION_FAILED),
+        GENERAL(LogMessageType.TRACE, LogMessageType.DEBUG, LogMessageType.INFO, LogMessageType.WARN, LogMessageType.ERROR, LogMessageType.EXCEPTION);
+
+        private static final Map<LogMessageType, LogMessageTypeCategory> TYPE_TO_CATEGORY = new EnumMap<>(LogMessageType.class);
+
+        static {
+            for (LogMessageTypeCategory category : values()) {
+                for (LogMessageType type : category.types) {
+                    TYPE_TO_CATEGORY.put(type, category);
+                }
+            }
+        }
+
+        private final LogMessageType[] types;
+
+        LogMessageTypeCategory(LogMessageType... types) {
+            this.types = types;
+        }
+
+        public static LogMessageTypeCategory categoryFor(LogMessageType type) {
+            return TYPE_TO_CATEGORY.get(type);
+        }
+
+        private static final Map<String, Level> VALID_LEVELS = new HashMap<>();
+
+        static {
+            for (Level level : Level.values()) {
+                VALID_LEVELS.put(level.name(), level);
+            }
+        }
+
+        private static volatile Map<String, String> cachedRawOverrides;
+        private static volatile Map<String, Level> cachedNormalizedOverrides;
+
+        private static Map<String, Level> normalizeOverrides(Map<String, String> overrides) {
+            Map<String, String> cached = cachedRawOverrides;
+            if (cached == overrides && cachedNormalizedOverrides != null) {
+                return cachedNormalizedOverrides;
+            }
+            Map<String, Level> normalized = new HashMap<>();
+            for (Map.Entry<String, String> entry : overrides.entrySet()) {
+                if (entry.getKey() == null || entry.getValue() == null) {
+                    continue;
+                }
+                String key = entry.getKey().toUpperCase(Locale.ROOT);
+                Level level = VALID_LEVELS.get(entry.getValue().toUpperCase(Locale.ROOT));
+                if (level != null) {
+                    normalized.put(key, level);
+                }
+            }
+            cachedRawOverrides = overrides;
+            cachedNormalizedOverrides = normalized;
+            return normalized;
+        }
+
+        public static Level resolveEffectiveLevel(LogMessageType type, Map<String, String> overrides, Level globalLevel) {
+            if (overrides == null || overrides.isEmpty()) {
+                return globalLevel;
+            }
+            Map<String, Level> normalized = normalizeOverrides(overrides);
+            if (normalized.isEmpty()) {
+                return globalLevel;
+            }
+            if (type != null) {
+                Level typeLevel = normalized.get(type.name());
+                if (typeLevel != null) {
+                    return typeLevel;
+                }
+            }
+            LogMessageTypeCategory category = type != null ? categoryFor(type) : null;
+            if (category != null) {
+                Level categoryLevel = normalized.get(category.name());
+                if (categoryLevel != null) {
+                    return categoryLevel;
+                }
+            }
+            return globalLevel;
+        }
     }
 
 }

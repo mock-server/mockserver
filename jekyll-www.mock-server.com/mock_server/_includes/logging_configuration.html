@@ -51,6 +51,38 @@
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.disableLogging="true"</code></pre>
 </div>
 
+<button id="button_configuration_log_level_overrides" class="accordion title"><strong>Log Level Overrides (Per-Category)</strong></button>
+<div class="panel title">
+    <p>Override the log level for specific categories of log events or individual log message types. This allows fine-grained control over log verbosity without changing the global log level.</p>
+    <p>Keys can be <strong>category group names</strong> or <strong>individual log message type names</strong>. When both are specified, the individual type override takes precedence over the category group override, which takes precedence over the global <code>logLevel</code>.</p>
+    <p>This setting affects stdout/SLF4J output and the dashboard UI. The internal event log (used for verification) is not affected.</p>
+    <p><strong>Note:</strong> Overrides can only suppress log events that are already captured at the global <code>logLevel</code>. For example, with <code>logLevel=WARN</code>, setting <code>{"EXPECTATION_MATCHED":"INFO"}</code> will <em>not</em> cause INFO-level match events to appear, because they are not generated when the global level is WARN. To see more verbose events for a specific category, first set the global <code>logLevel</code> low enough (e.g., INFO or DEBUG), then use overrides to suppress the noisy categories.</p>
+    <p>Type: <span class="keyword">map (JSON object)</span> Default: <span class="this_value">{}</span> (empty, global logLevel applies to all categories)</p>
+    <p><strong>Category Groups:</strong></p>
+    <table class="table" style="width: auto;">
+        <tr><td><code>MATCHING</code></td><td>EXPECTATION_MATCHED, EXPECTATION_NOT_MATCHED, NO_MATCH_RESPONSE</td></tr>
+        <tr><td><code>REQUEST_LIFECYCLE</code></td><td>RECEIVED_REQUEST, FORWARDED_REQUEST, EXPECTATION_RESPONSE, TEMPLATE_GENERATED</td></tr>
+        <tr><td><code>EXPECTATION_MANAGEMENT</code></td><td>CREATED_EXPECTATION, UPDATED_EXPECTATION, REMOVED_EXPECTATION, CLEARED</td></tr>
+        <tr><td><code>VERIFICATION</code></td><td>VERIFICATION, VERIFICATION_FAILED, VERIFICATION_PASSED, RETRIEVED</td></tr>
+        <tr><td><code>SERVER</code></td><td>SERVER_CONFIGURATION, AUTHENTICATION_FAILED, OPENAPI_RESPONSE_VALIDATION_FAILED</td></tr>
+        <tr><td><code>GENERAL</code></td><td>TRACE, DEBUG, INFO, WARN, ERROR, EXCEPTION</td></tr>
+    </table>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.logLevelOverrides(Map&lt;String, String&gt; overrides)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.logLevelOverrides=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_LOG_LEVEL_OVERRIDES=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.logLevelOverrides=...</code></pre>
+    <p>REST API:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">PUT /mockserver/configuration {"logLevelOverrides": {"MATCHING": "WARN", "EXPECTATION_MATCHED": "INFO"}}</code></pre>
+    <p>Example - suppress per-expectation match failure noise while keeping match successes:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.logLevelOverrides='{"MATCHING":"WARN","EXPECTATION_MATCHED":"INFO"}'</code></pre>
+    <p>Example - suppress all matching and expectation management logs:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_LOG_LEVEL_OVERRIDES='{"MATCHING":"WARN","EXPECTATION_MANAGEMENT":"WARN"}'</code></pre>
+</div>
+
 <button id="button_configuration_detailed_match_failures" class="accordion title"><strong>Detailed Match Failures</strong></button>
 <div class="panel title">
     <p>If true (the default) the log event recording that a request matcher did not match will include a detailed reason why each non matching field did not match.</p>

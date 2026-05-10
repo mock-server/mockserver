@@ -19,6 +19,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
+import static org.mockserver.log.model.LogEntry.LogMessageTypeCategory.resolveEffectiveLevel;
 import static org.slf4j.event.Level.ERROR;
 
 /**
@@ -144,9 +145,10 @@ public class MockServerLogger {
         return ConfigurationProperties.disableLogging();
     }
 
-    private static void writeToSystemOut(Logger logger, LogEntry logEntry, Configuration configuration) {
+    public static void writeToSystemOut(Logger logger, LogEntry logEntry, Configuration configuration) {
         if (!configuration.disableLogging()) {
-            if ((logEntry.isAlwaysLog() || isEnabled(logEntry.getLogLevel(), configuration.logLevel())) &&
+            Level effectiveLevel = resolveEffectiveLevel(logEntry.getType(), configuration.logLevelOverrides(), configuration.logLevel());
+            if ((logEntry.isAlwaysLog() || isEnabled(logEntry.getLogLevel(), effectiveLevel)) &&
                 isNotBlank(logEntry.getMessage())) {
                 writeLogEntry(logger, logEntry);
             }
@@ -155,7 +157,8 @@ public class MockServerLogger {
 
     public static void writeToSystemOut(Logger logger, LogEntry logEntry) {
         if (!ConfigurationProperties.disableLogging()) {
-            if ((logEntry.isAlwaysLog() || isEnabled(logEntry.getLogLevel())) &&
+            Level effectiveLevel = resolveEffectiveLevel(logEntry.getType(), ConfigurationProperties.logLevelOverrides(), ConfigurationProperties.logLevel());
+            if ((logEntry.isAlwaysLog() || isEnabled(logEntry.getLogLevel(), effectiveLevel)) &&
                 isNotBlank(logEntry.getMessage())) {
                 writeLogEntry(logger, logEntry);
             }

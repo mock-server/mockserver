@@ -1,11 +1,15 @@
 package org.mockserver.serialization.model;
 
+import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 import org.mockserver.configuration.Configuration;
 import org.slf4j.event.Level;
 
+import java.util.Collections;
+import java.util.Map;
+
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.mockserver.configuration.Configuration.configuration;
 
 public class ConfigurationDTOTest {
@@ -162,5 +166,55 @@ public class ConfigurationDTOTest {
         }
 
         assertThat(target.metricsEnabled(), is(false));
+    }
+
+    @Test
+    public void shouldRoundTripLogLevelOverrides() {
+        Map<String, String> overrides = ImmutableMap.of("MATCHING", "WARN", "EXPECTATION_MATCHED", "INFO");
+        Configuration original = configuration()
+            .logLevel(Level.DEBUG)
+            .logLevelOverrides(overrides);
+
+        ConfigurationDTO dto = new ConfigurationDTO(original);
+        assertThat(dto.getLogLevelOverrides(), equalTo(overrides));
+
+        Configuration rebuilt = dto.buildObject();
+        assertThat(rebuilt.logLevelOverrides(), equalTo(overrides));
+    }
+
+    @Test
+    public void shouldApplyLogLevelOverridesPartially() {
+        Configuration target = configuration()
+            .logLevel(Level.INFO)
+            .logLevelOverrides(Collections.emptyMap());
+
+        ConfigurationDTO dto = new ConfigurationDTO();
+        dto.setLogLevelOverrides(ImmutableMap.of("MATCHING", "ERROR"));
+
+        dto.applyTo(target);
+
+        assertThat(target.logLevelOverrides(), equalTo(ImmutableMap.of("MATCHING", "ERROR")));
+        assertThat(target.logLevel(), is(Level.INFO));
+    }
+
+    @Test
+    public void shouldNotApplyLogLevelOverridesWhenNull() {
+        Map<String, String> original = ImmutableMap.of("SERVER", "WARN");
+        Configuration target = configuration()
+            .logLevelOverrides(original);
+
+        ConfigurationDTO dto = new ConfigurationDTO();
+        dto.applyTo(target);
+
+        assertThat(target.logLevelOverrides(), equalTo(original));
+    }
+
+    @Test
+    public void shouldSerializeEmptyLogLevelOverridesAsNull() {
+        Configuration config = configuration()
+            .logLevelOverrides(Collections.emptyMap());
+
+        ConfigurationDTO dto = new ConfigurationDTO(config);
+        assertThat(dto.getLogLevelOverrides(), nullValue());
     }
 }

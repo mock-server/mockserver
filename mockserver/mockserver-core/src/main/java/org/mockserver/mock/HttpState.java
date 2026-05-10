@@ -149,6 +149,10 @@ public class HttpState {
         this.controlPlaneAuthenticationHandler = controlPlaneAuthenticationHandler;
     }
 
+    public Configuration getConfiguration() {
+        return configuration;
+    }
+
     public MockServerLogger getMockServerLogger() {
         return mockServerLogger;
     }

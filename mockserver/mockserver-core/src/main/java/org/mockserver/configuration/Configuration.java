@@ -35,6 +35,7 @@ public class Configuration {
     private Boolean launchUIForLogLevelDebug;
     private Boolean metricsEnabled;
     private Boolean mcpEnabled;
+    private Map<String, String> logLevelOverrides;
 
     // memory usage
     private Integer maxExpectations;
@@ -289,6 +290,18 @@ public class Configuration {
 
     public Configuration mcpEnabled(Boolean mcpEnabled) {
         this.mcpEnabled = mcpEnabled;
+        return this;
+    }
+
+    public Map<String, String> logLevelOverrides() {
+        if (logLevelOverrides == null) {
+            return ConfigurationProperties.logLevelOverrides();
+        }
+        return logLevelOverrides;
+    }
+
+    public Configuration logLevelOverrides(Map<String, String> logLevelOverrides) {
+        this.logLevelOverrides = logLevelOverrides;
         return this;
     }
 

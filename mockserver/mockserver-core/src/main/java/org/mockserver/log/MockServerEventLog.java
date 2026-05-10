@@ -155,7 +155,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         logEntry = logEntry.cloneAndClear();
         eventLog.add(logEntry);
         notifyListeners(this, false);
-        writeToSystemOut(logger, logEntry);
+        writeToSystemOut(logger, logEntry, configuration);
     }
 
     private void drainDisruptor() {

@@ -117,16 +117,19 @@ disruptor.getRingBuffer().tryPublishEvent(
 
 ## LogEntry
 
-Each event is represented by a `LogEntry` with 24 possible types:
+Each event is represented by a `LogEntry` with 24 possible types, organized into `LogMessageTypeCategory` groups for per-category log level overrides:
 
-| Category | Types |
-|----------|-------|
-| Request lifecycle | `RECEIVED_REQUEST`, `EXPECTATION_RESPONSE`, `EXPECTATION_MATCHED`, `EXPECTATION_NOT_MATCHED`, `NO_MATCH_RESPONSE`, `FORWARDED_REQUEST` |
-| Expectation lifecycle | `CREATED_EXPECTATION`, `UPDATED_EXPECTATION`, `REMOVED_EXPECTATION` |
-| Verification | `VERIFICATION`, `VERIFICATION_FAILED`, `VERIFICATION_PASSED` |
-| State management | `CLEARED`, `RETRIEVED`, `TEMPLATE_GENERATED` |
-| Operational | `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`, `EXCEPTION`, `SERVER_CONFIGURATION`, `AUTHENTICATION_FAILED` |
-| Internal | `RUNNABLE` (used to serialize read operations through the ring buffer) |
+| Category Group | Types |
+|----------------|-------|
+| `MATCHING` | `EXPECTATION_MATCHED`, `EXPECTATION_NOT_MATCHED`, `NO_MATCH_RESPONSE` |
+| `REQUEST_LIFECYCLE` | `RECEIVED_REQUEST`, `FORWARDED_REQUEST`, `EXPECTATION_RESPONSE`, `TEMPLATE_GENERATED` |
+| `EXPECTATION_MANAGEMENT` | `CREATED_EXPECTATION`, `UPDATED_EXPECTATION`, `REMOVED_EXPECTATION`, `CLEARED` |
+| `VERIFICATION` | `VERIFICATION`, `VERIFICATION_FAILED`, `VERIFICATION_PASSED`, `RETRIEVED` |
+| `SERVER` | `SERVER_CONFIGURATION`, `AUTHENTICATION_FAILED`, `OPENAPI_RESPONSE_VALIDATION_FAILED` |
+| `GENERAL` | `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`, `EXCEPTION` |
+| (Internal) | `RUNNABLE` (used to serialize read operations through the ring buffer; excluded from categories) |
+
+Users can override the log level per category or per individual type via the `logLevelOverrides` configuration property (a JSON map). Resolution order: individual type override > category group override > global `logLevel`. Overrides affect stdout/SLF4J output and the dashboard UI only; the event log stores entries based on the global `logLevel` threshold to preserve verification functionality. Note: overrides can only further suppress events that are already generated at the global `logLevel` — they cannot increase verbosity beyond the global threshold because events below the global level are never created or stored.
 
 ### Key Fields
 
