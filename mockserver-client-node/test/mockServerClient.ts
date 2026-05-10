@@ -1,5 +1,5 @@
-import {mockServerClient} from '../index';
-import {MockServerClient, RequestResponse} from '../mockServerClient';
+import {mockServerClient, MockServerClient} from '../index';
+import {RequestResponse} from '../mockServerClient';
 import {Expectation, HttpOverrideForwardedRequest, HttpRequest, HttpResponse, RequestDefinition} from '../mockServer';
 
 const client: MockServerClient = mockServerClient('mockhttp', 1080);

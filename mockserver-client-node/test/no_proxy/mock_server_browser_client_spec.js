@@ -972,12 +972,7 @@ describe("mockServerClient client:", function () {
                         'path': '/someOtherPath'
                     }, 1)
                         .then(fail, function (error) {
-                            expect(error).toContain("Request not found at least once, expected:<{\n" +
-                                "  \"path\" : \"/someOtherPath\",\n" +
-                                "  \"headers\" : {\n" +
-                                "    \"Vary\" : [ \"" + uuid + "\" ]\n" +
-                                "  }\n" +
-                                "}> but was:<");
+                            expect(error).toEqual("Request not found at least once");
                             done();
                         });
                 };
@@ -1003,14 +998,7 @@ describe("mockServerClient client:", function () {
                             'body': 'someBody'
                         }, 2, 3)
                         .then(fail, function (error) {
-                            expect(error).toContain("Request not found between 2 and 3 times, expected:<{\n" +
-                                "  \"method\" : \"POST\",\n" +
-                                "  \"path\" : \"/somePath\",\n" +
-                                "  \"body\" : \"someBody\",\n" +
-                                "  \"headers\" : {\n" +
-                                "    \"Vary\" : [ \"" + uuid + "\" ]\n" +
-                                "  }\n" +
-                                "}> but was:<");
+                            expect(error).toEqual("Request not found between 2 and 3 times");
                             done();
                         });
                 };
@@ -1036,14 +1024,7 @@ describe("mockServerClient client:", function () {
                             'body': 'someBody'
                         }, 2)
                         .then(fail, function (error) {
-                            expect(error).toContain("Request not found at least 2 times, expected:<{\n" +
-                                "  \"method\" : \"POST\",\n" +
-                                "  \"path\" : \"/somePath\",\n" +
-                                "  \"body\" : \"someBody\",\n" +
-                                "  \"headers\" : {\n" +
-                                "    \"Vary\" : [ \"" + uuid + "\" ]\n" +
-                                "  }\n" +
-                                "}> but was:<");
+                            expect(error).toEqual("Request not found at least 2 times");
                             done();
                         });
                 };
@@ -1139,26 +1120,7 @@ describe("mockServerClient client:", function () {
                                             'path': '/notFound'
                                         }
                                     ).then(fail, function (error) {
-                                        expect(error).toContain("Request sequence not found, expected:<[ {\n" +
-                                            "  \"method\" : \"POST\",\n" +
-                                            "  \"path\" : \"/somePathOne\",\n" +
-                                            "  \"body\" : \"someBody\",\n" +
-                                            "  \"headers\" : {\n" +
-                                            "    \"Vary\" : [ \"" + uuid + "\" ]\n" +
-                                            "  }\n" +
-                                            "}, {\n" +
-                                            "  \"method\" : \"GET\",\n" +
-                                            "  \"path\" : \"/somePathTwo\",\n" +
-                                            "  \"headers\" : {\n" +
-                                            "    \"Vary\" : [ \"" + uuid + "\" ]\n" +
-                                            "  }\n" +
-                                            "}, {\n" +
-                                            "  \"method\" : \"GET\",\n" +
-                                            "  \"path\" : \"/notFound\",\n" +
-                                            "  \"headers\" : {\n" +
-                                            "    \"Vary\" : [ \"" + uuid + "\" ]\n" +
-                                            "  }\n" +
-                                            "} ]> but was:<[ {\n");
+                                        expect(error).toEqual("Request sequence not found");
                                         done();
                                     });
 
@@ -1213,26 +1175,7 @@ describe("mockServerClient client:", function () {
                                             'path': '/somePathTwo'
                                         }
                                     ).then(fail, function (error) {
-                                        expect(error).toContain("Request sequence not found, expected:<[ {\n" +
-                                            "  \"method\" : \"POST\",\n" +
-                                            "  \"path\" : \"/somePathOne\",\n" +
-                                            "  \"body\" : \"some_incorrect_body\",\n" +
-                                            "  \"headers\" : {\n" +
-                                            "    \"Vary\" : [ \"" + uuid + "\" ]\n" +
-                                            "  }\n" +
-                                            "}, {\n" +
-                                            "  \"method\" : \"GET\",\n" +
-                                            "  \"path\" : \"/notFound\",\n" +
-                                            "  \"headers\" : {\n" +
-                                            "    \"Vary\" : [ \"" + uuid + "\" ]\n" +
-                                            "  }\n" +
-                                            "}, {\n" +
-                                            "  \"method\" : \"GET\",\n" +
-                                            "  \"path\" : \"/somePathTwo\",\n" +
-                                            "  \"headers\" : {\n" +
-                                            "    \"Vary\" : [ \"" + uuid + "\" ]\n" +
-                                            "  }\n" +
-                                            "} ]> but was:<[ {\n");
+                                        expect(error).toEqual("Request sequence not found");
                                         done();
                                     });
                                 };

@@ -1739,9 +1739,7 @@
                                 test.ok(false, "failed with the following error \n" + JSON.stringify(error));
                                 test.done();
                             }, function (message) {
-                                test.ok(message.startsWith("Request not found at least once, expected:<{\n" +
-                                    "  \"path\" : \"/someOtherPath\"\n" +
-                                    "}> but was:<{\n"), message);
+                                test.equal(message, "Request not found at least once");
                                 test.done();
                             });
                     });
@@ -1775,11 +1773,7 @@
                                 test.ok(false, "failed with the following error \n" + JSON.stringify(error));
                                 test.done();
                             }, function (message) {
-                                test.ok(message.startsWith("Request not found between 2 and 3 times, expected:<{\n" +
-                                    "  \"body\" : \"someBody\",\n" +
-                                    "  \"method\" : \"POST\",\n" +
-                                    "  \"path\" : \"/somePath\"\n" +
-                                    "}> but was:<{\n"), message);
+                                test.equal(message, "Request not found between 2 and 3 times");
                                 test.done();
                             });
                     });
@@ -1813,11 +1807,7 @@
                                 test.ok(false, "failed with the following error \n" + JSON.stringify(error));
                                 test.done();
                             }, function (message) {
-                                test.ok(message.startsWith("Request not found at least 2 times, expected:<{\n" +
-                                    "  \"body\" : \"someBody\",\n" +
-                                    "  \"method\" : \"POST\",\n" +
-                                    "  \"path\" : \"/somePath\"\n" +
-                                    "}> but was:<{\n"), message);
+                                test.equal(message, "Request not found at least 2 times");
                                 test.done();
                             });
                     });
@@ -1947,17 +1937,7 @@
                                                     test.ok(false, "failed with the following error \n" + JSON.stringify(error));
                                                     test.done();
                                                 }, function (message) {
-                                                    test.ok(message.startsWith("Request sequence not found, expected:<[ {\n" +
-                                                        "  \"body\" : \"someBody\",\n" +
-                                                        "  \"method\" : \"POST\",\n" +
-                                                        "  \"path\" : \"/somePathOne\"\n" +
-                                                        "}, {\n" +
-                                                        "  \"method\" : \"GET\",\n" +
-                                                        "  \"path\" : \"/somePathTwo\"\n" +
-                                                        "}, {\n" +
-                                                        "  \"method\" : \"GET\",\n" +
-                                                        "  \"path\" : \"/notFound\"\n" +
-                                                        "} ]> but was:<[ {\n"), message);
+                                                    test.equal(message, "Request sequence not found");
                                                     test.done();
                                                 });
 
@@ -2026,17 +2006,7 @@
                                                 test.ok(false, "failed with the following error \n" + JSON.stringify(error));
                                                 test.done();
                                             }, function (message) {
-                                                test.ok(message.startsWith("Request sequence not found, expected:<[ {\n" +
-                                                    "  \"body\" : \"some_incorrect_body\",\n" +
-                                                    "  \"method\" : \"POST\",\n" +
-                                                    "  \"path\" : \"/somePathOne\"\n" +
-                                                    "}, {\n" +
-                                                    "  \"method\" : \"GET\",\n" +
-                                                    "  \"path\" : \"/notFound\"\n" +
-                                                    "}, {\n" +
-                                                    "  \"method\" : \"GET\",\n" +
-                                                    "  \"path\" : \"/somePathTwo\"\n" +
-                                                    "} ]> but was:<[ {\n"), message);
+                                                test.equal(message, "Request sequence not found");
                                                 test.done();
                                             });
                                         });

@@ -614,6 +614,15 @@ var mockServerClient;
         var mockSimpleResponse = function (path, responseBody, statusCode) {
             return mockAnyResponse(createExpectation(path, responseBody, statusCode));
         };
+        var simplifyVerificationError = function (message) {
+            if (typeof message === "string") {
+                var idx = message.indexOf(", expected:<");
+                if (idx !== -1) {
+                    return message.substring(0, idx);
+                }
+            }
+            return message;
+        };
         /**
          * Verify a request has been sent, for example:
          *
@@ -650,7 +659,7 @@ var mockServerClient;
                         function (result) {
                             if (!result.statusCode || result.statusCode !== 202) {
                                 if (error) {
-                                    error(result);
+                                    error(simplifyVerificationError(result));
                                 }
                             } else {
                                 if (error) {
@@ -694,7 +703,7 @@ var mockServerClient;
                         function (result) {
                             if (!result.statusCode || result.statusCode !== 202) {
                                 if (error) {
-                                    error(result);
+                                    error(simplifyVerificationError(result));
                                 }
                             } else {
                                 if (error) {
@@ -746,7 +755,7 @@ var mockServerClient;
                         function (result) {
                             if (!result.statusCode || result.statusCode !== 202) {
                                 if (error) {
-                                    error(result);
+                                    error(simplifyVerificationError(result));
                                 }
                             } else {
                                 if (error) {
@@ -793,7 +802,7 @@ var mockServerClient;
                         function (result) {
                             if (!result.statusCode || result.statusCode !== 202) {
                                 if (error) {
-                                    error(result);
+                                    error(simplifyVerificationError(result));
                                 }
                             } else {
                                 if (error) {
