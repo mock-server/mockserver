@@ -137,6 +137,18 @@ API_BASE_URL=http://localhost:1080</code></pre>
     <li>Offer to retrieve and analyse the captured traffic after you run your test</li>
 </ol>
 
+<h3>"Trace the full lifecycle of a specific request"</h3>
+
+<p>The assistant will:</p>
+<ol>
+    <li>Use <code class="code inline">raw_retrieve</code> with type <code class="code inline">LOGS</code> to find recent log entries and identify the correlation ID for the request</li>
+    <li>Use <code class="code inline">raw_retrieve</code> with type <code class="code inline">LOGS</code> and the <code class="code inline">correlationId</code> parameter to get all log entries for that specific request</li>
+    <li>Present the full lifecycle: request received → expectation matching attempts → match result → response returned</li>
+    <li>Highlight which expectations were compared and why each didn't match</li>
+</ol>
+
+<p>This is particularly useful for intermittent failures where you need to understand exactly what happened for a specific request.</p>
+
 <h2>Tips for Effective AI-Assisted Debugging</h2>
 
 <ul>
@@ -153,4 +165,5 @@ API_BASE_URL=http://localhost:1080</code></pre>
     <li><a href="/mock_server/ai_mcp_setup.html"><strong>MCP Setup</strong></a> — how to connect your AI assistant to MockServer</li>
     <li><a href="/mock_server/ai_mcp_tools.html"><strong>MCP Tools Reference</strong></a> — full documentation of all MCP tools</li>
     <li><a href="/mock_server/debugging_issues.html"><strong>Logging &amp; Debugging</strong></a> — traditional (non-AI) debugging approaches</li>
+    <li><a href="/mock_server/troubleshooting_matching.html"><strong>Troubleshooting Matching</strong></a> — step-by-step checklist, common pitfalls, and the debug mismatch endpoint</li>
 </ul>

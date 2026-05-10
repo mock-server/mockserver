@@ -37,7 +37,7 @@ sitemap:
         <tr><td><a href="#stop_server"><code>stop_server</code></a></td><td>Stop the MockServer instance</td><td>High</td></tr>
         <tr><td><a href="#create_expectation_from_openapi"><code>create_expectation_from_openapi</code></a></td><td>Generate expectations from an OpenAPI spec</td><td>High</td></tr>
         <tr><td><a href="#raw_expectation"><code>raw_expectation</code></a></td><td>Full expectation JSON passthrough</td><td>Low</td></tr>
-        <tr><td><a href="#raw_retrieve"><code>raw_retrieve</code></a></td><td>Full retrieve parameters</td><td>Low</td></tr>
+        <tr><td><a href="#raw_retrieve"><code>raw_retrieve</code></a></td><td>Full retrieve with correlation ID filtering</td><td>Low</td></tr>
         <tr><td><a href="#raw_verify"><code>raw_verify</code></a></td><td>Full verification JSON</td><td>Low</td></tr>
     </tbody>
 </table>
@@ -546,6 +546,7 @@ sitemap:
         <tr><td><code>requestDefinition</code></td><td>object</td><td>No</td><td>Request matcher JSON to filter results</td></tr>
         <tr><td><code>type</code></td><td>string</td><td>No</td><td>Type of data to retrieve: <code>REQUESTS</code>, <code>REQUEST_RESPONSES</code>, <code>RECORDED_EXPECTATIONS</code>, <code>ACTIVE_EXPECTATIONS</code>, or <code>LOGS</code></td></tr>
         <tr><td><code>format</code></td><td>string</td><td>No</td><td>Response format: <code>JSON</code>, <code>JAVA</code>, or <code>LOG_ENTRIES</code></td></tr>
+        <tr><td><code>correlationId</code></td><td>string</td><td>No</td><td>Filter log entries by correlation ID (only applies when type is <code>LOGS</code>). Each incoming request is assigned a unique correlation ID that links all log entries for that request's lifecycle.</td></tr>
     </tbody>
 </table>
 

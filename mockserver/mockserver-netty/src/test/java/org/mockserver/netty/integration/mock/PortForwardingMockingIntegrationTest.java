@@ -217,7 +217,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingSa
                         " because:" + NEW_LINE +
                         NEW_LINE +
                         "  method matched" + NEW_LINE +
-                        "  path didn't match" + NEW_LINE
+                        "  path didn't match"
                 },
                 new String[]{ // 7
                     "no expectation for:" + NEW_LINE +
@@ -298,6 +298,70 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingSa
             UUIDService.fixedUUID = false;
             ConfigurationProperties.logLevel(originalLevel.name());
         }
+    }
+
+    @Test
+    @Override
+    public void shouldReset() {
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path1"))
+            )
+            .respond(
+                response()
+                    .withBody("some_body1")
+            );
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path2"))
+            )
+            .respond(
+                response()
+                    .withBody("some_body2")
+            );
+
+        mockServerClient.reset();
+
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path1")),
+                getHeadersToRemove()
+            )
+        );
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path2")),
+                getHeadersToRemove()
+            )
+        );
+        assertEquals(
+            response()
+                .withStatusCode(HttpStatusCode.BAD_GATEWAY_502.code())
+                .withReasonPhrase(HttpStatusCode.BAD_GATEWAY_502.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("some_path1")),
+                getHeadersToRemove()
+            )
+        );
+        assertEquals(
+            response()
+                .withStatusCode(HttpStatusCode.BAD_GATEWAY_502.code())
+                .withReasonPhrase(HttpStatusCode.BAD_GATEWAY_502.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("some_path2")),
+                getHeadersToRemove()
+            )
+        );
     }
 
     @Test

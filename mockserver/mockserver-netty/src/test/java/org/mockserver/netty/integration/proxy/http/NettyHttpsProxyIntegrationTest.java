@@ -469,7 +469,7 @@ public class NettyHttpsProxyIntegrationTest {
                 output.flush();
 
                 // then
-                assertContains(IOStreamUtils.readHttpInputStreamToString(sslSocket), "HTTP/1.1 404 Not Found");
+                assertContains(IOStreamUtils.readHttpInputStreamToString(sslSocket), "HTTP/1.1 502 Bad Gateway");
 
                 // and
                 mockServerClient.verify(

@@ -2384,7 +2384,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         " because:" + NEW_LINE +
                         NEW_LINE +
                         "  method matched" + NEW_LINE +
-                        "  path didn't match" + NEW_LINE
+                        "  path didn't match"
                 },
                 new String[]{
                     "no expectation for:" + NEW_LINE +

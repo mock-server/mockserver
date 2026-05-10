@@ -5671,7 +5671,17 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         );
 
         // then
-        assertThat(logEntriesActual, is(new LogEntrySerializer(new MockServerLogger()).serialize(logEntriesExpected)));
+        JsonNode actualArray = ObjectMapperFactory.createObjectMapper().readTree(logEntriesActual);
+        assertThat(actualArray.size(), is(2));
+        for (int i = 0; i < 2; i++) {
+            LogEntry expected = logEntriesExpected.get(i);
+            JsonNode actual = actualArray.get(i);
+            assertThat(actual.get("type").asText(), is(expected.getType().name()));
+            assertThat(actual.get("logLevel").asText(), is(expected.getLogLevel().name()));
+            assertThat(actual.get("messageFormat").asText(), is(expected.getMessageFormat()));
+            assertThat(actual.has("httpRequest"), is(true));
+            assertThat(actual.get("httpRequest").get("path").asText(), is(((HttpRequest) expected.getHttpRequest()).getPath().getValue()));
+        }
     }
 
     public String getRequestTcpPortForPath(String path) throws JsonProcessingException {

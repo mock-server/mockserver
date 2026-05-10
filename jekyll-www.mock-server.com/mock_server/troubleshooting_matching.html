@@ -322,7 +322,20 @@ String analysis = mockServerClient.debugMismatch(
 
 <h2>Retrieving Logs by Correlation ID</h2>
 
-<p>Every incoming HTTP request is assigned a unique <strong>correlation ID</strong>. All log entries for that request's lifecycle (received, match attempts, response) share this ID. You can retrieve the full correlation chain for any request:</p>
+<p>Every incoming HTTP request is assigned a unique <strong>correlation ID</strong>. All log entries for that request's lifecycle (received, match attempts, response) share this ID. This is invaluable when debugging a specific request among many — you can isolate exactly what happened.</p>
+
+<h3>Finding the Correlation ID</h3>
+
+<p>The correlation ID appears in:</p>
+<ul>
+    <li><strong>Dashboard UI</strong> — as a small chip on grouped log entries (click to copy)</li>
+    <li><strong>Log text</strong> — in the prefix of each log message</li>
+    <li><strong>Typed log entries</strong> — as the <code>correlationId</code> field when using <code>format=LOG_ENTRIES</code></li>
+</ul>
+
+<h3>Retrieving by Correlation ID</h3>
+
+<p>Once you have a correlation ID, retrieve all log entries for that request:</p>
 
 <pre><code class="prettyprint lang-bash"># Retrieve all log entries for a specific correlation ID
 curl -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS&correlationId=abc-123-def-456"
