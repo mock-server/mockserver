@@ -15,7 +15,37 @@ ORG="mockserver"
 API_BASE="https://api.buildkite.com/v2/organizations/${ORG}/pipelines/${PIPELINE_SLUG}/builds"
 
 RESPONSE_FILE=$(mktemp /tmp/bk-response-XXXXXX.json)
-trap 'rm -f "$RESPONSE_FILE"' EXIT
+BUILD_NUMBER=""
+CLEANUP_DONE="no"
+
+cancel_child_build() {
+  if [ "$CLEANUP_DONE" = "yes" ]; then
+    return
+  fi
+  CLEANUP_DONE="yes"
+
+  if [ -z "$BUILD_NUMBER" ] && [ -f "$RESPONSE_FILE" ]; then
+    FALLBACK=$(jq -r '.number // empty' "$RESPONSE_FILE" 2>/dev/null || true)
+    if [[ "$FALLBACK" =~ ^[0-9]+$ ]]; then
+      BUILD_NUMBER="$FALLBACK"
+    fi
+  fi
+
+  if [ -n "$BUILD_NUMBER" ] && [ -n "${BUILDKITE_API_TOKEN:-}" ]; then
+    echo "--- :octagonal_sign: Cancelling ${LABEL} build #${BUILD_NUMBER} (parent terminated)"
+    CANCEL_HTTP=$(curl -sS --max-time 10 --connect-timeout 5 -o /dev/null -w '%{http_code}' \
+      -X PUT "${API_BASE}/${BUILD_NUMBER}/cancel" \
+      -H "Authorization: Bearer ${BUILDKITE_API_TOKEN}" 2>/dev/null || echo "000")
+    case "$CANCEL_HTTP" in
+      2[0-9][0-9]) ;;
+      422) echo "    :information_source: Build already finished (HTTP 422)" ;;
+      *)   echo "    :warning: Cancel request failed (HTTP ${CANCEL_HTTP})" ;;
+    esac
+  fi
+  rm -f "$RESPONSE_FILE"
+}
+
+trap cancel_child_build EXIT SIGTERM SIGINT
 
 echo "--- :aws: Fetching Buildkite API token from Secrets Manager"
 BUILDKITE_API_TOKEN=$(aws secretsmanager get-secret-value \
@@ -145,24 +175,32 @@ while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
   case "$BUILD_STATE" in
     passed)
       echo ":white_check_mark: ${LABEL} build #${BUILD_NUMBER} passed"
+      BUILD_NUMBER=""
+      rm -f "$RESPONSE_FILE"
       exit 0
       ;;
     failed)
       echo "^^^ +++"
       echo ":x: ${LABEL} build #${BUILD_NUMBER} failed"
       echo "    ${BUILD_URL}"
+      BUILD_NUMBER=""
+      rm -f "$RESPONSE_FILE"
       exit 1
       ;;
     canceled|canceling)
       echo "^^^ +++"
       echo ":warning: ${LABEL} build #${BUILD_NUMBER} was canceled"
       echo "    ${BUILD_URL}"
+      BUILD_NUMBER=""
+      rm -f "$RESPONSE_FILE"
       exit 1
       ;;
     not_run)
       echo "^^^ +++"
       echo ":warning: ${LABEL} build #${BUILD_NUMBER} did not run"
       echo "    ${BUILD_URL}"
+      BUILD_NUMBER=""
+      rm -f "$RESPONSE_FILE"
       exit 1
       ;;
     *)
