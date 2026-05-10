@@ -442,33 +442,55 @@ public class HttpState {
                 final String correlationIdFilter = request.getFirstQueryStringParameter("correlationId");
                 switch (type) {
                     case LOGS: {
-                        java.util.function.Consumer<List<LogEntry>> logsConsumer = (List<LogEntry> logEntries) -> {
-                            StringBuilder stringBuffer = new StringBuilder();
-                            for (int i = 0; i < logEntries.size(); i++) {
-                                LogEntry messageLogEntry = logEntries.get(i);
-                                stringBuffer
-                                    .append(messageLogEntry.getTimestamp())
-                                    .append(" - ")
-                                    .append(messageLogEntry.getMessage());
-                                if (i < logEntries.size() - 1) {
-                                    stringBuffer.append(LOG_SEPARATOR);
-                                }
-                            }
-                            stringBuffer.append(NEW_LINE);
-                            response.withBody(stringBuffer.toString(), MediaType.PLAIN_TEXT_UTF_8);
-                            if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
-                                mockServerLogger.logEvent(
-                                    new LogEntry()
-                                        .setType(RETRIEVED)
-                                        .setLogLevel(Level.INFO)
-                                        .setCorrelationId(logCorrelationId)
-                                        .setHttpRequest(requestDefinition)
-                                        .setMessageFormat("retrieved logs that match:{}")
-                                        .setArguments(requestDefinition)
+                        java.util.function.Consumer<List<LogEntry>> logsConsumer;
+                        if (format == Format.LOG_ENTRIES) {
+                            logsConsumer = (List<LogEntry> logEntries) -> {
+                                response.withBody(
+                                    getLogEntrySerializer().serialize(logEntries),
+                                    MediaType.JSON_UTF_8
                                 );
-                            }
-                            httpResponseFuture.complete(response);
-                        };
+                                if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
+                                    mockServerLogger.logEvent(
+                                        new LogEntry()
+                                            .setType(RETRIEVED)
+                                            .setLogLevel(Level.INFO)
+                                            .setCorrelationId(logCorrelationId)
+                                            .setHttpRequest(requestDefinition)
+                                            .setMessageFormat("retrieved log entries in log_entries format that match:{}")
+                                            .setArguments(requestDefinition)
+                                    );
+                                }
+                                httpResponseFuture.complete(response);
+                            };
+                        } else {
+                            logsConsumer = (List<LogEntry> logEntries) -> {
+                                StringBuilder stringBuffer = new StringBuilder();
+                                for (int i = 0; i < logEntries.size(); i++) {
+                                    LogEntry messageLogEntry = logEntries.get(i);
+                                    stringBuffer
+                                        .append(messageLogEntry.getTimestamp())
+                                        .append(" - ")
+                                        .append(messageLogEntry.getMessage());
+                                    if (i < logEntries.size() - 1) {
+                                        stringBuffer.append(LOG_SEPARATOR);
+                                    }
+                                }
+                                stringBuffer.append(NEW_LINE);
+                                response.withBody(stringBuffer.toString(), MediaType.PLAIN_TEXT_UTF_8);
+                                if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
+                                    mockServerLogger.logEvent(
+                                        new LogEntry()
+                                            .setType(RETRIEVED)
+                                            .setLogLevel(Level.INFO)
+                                            .setCorrelationId(logCorrelationId)
+                                            .setHttpRequest(requestDefinition)
+                                            .setMessageFormat("retrieved logs that match:{}")
+                                            .setArguments(requestDefinition)
+                                    );
+                                }
+                                httpResponseFuture.complete(response);
+                            };
+                        }
                         if (isNotBlank(correlationIdFilter)) {
                             mockServerLog.retrieveLogEntriesByCorrelationId(correlationIdFilter, logsConsumer);
                         } else {

@@ -333,3 +333,50 @@ String logs = mockServerClient.retrieveLogsByCorrelationId("abc-123-def-456");
 </code></pre>
 
 <p>The correlation ID is visible in the dashboard UI as a small chip on grouped log entries. Click it to copy the ID.</p>
+
+<a id="typed_log_entries" class="anchor" href="#typed_log_entries">&nbsp;</a>
+
+<h2>Typed Log Entry Retrieval</h2>
+
+<p>Instead of retrieving logs as plain text, you can retrieve structured <code>LogEntry</code> objects. This is useful for programmatic analysis — filtering by type, inspecting expectations, or building custom reports:</p>
+
+<pre><code class="prettyprint lang-java">// Retrieve all log entries as typed objects
+LogEntry[] entries = mockServerClient.retrieveLogEntries(null);
+
+// Filter to a specific request pattern
+LogEntry[] matchEntries = mockServerClient.retrieveLogEntries(
+    request().withPath("/api/users")
+);
+
+// Deserialized entries include: type, logLevel, correlationId, epochTime,
+// timestamp, port, expectationId, messageFormat, arguments, because.
+// Note: httpRequest, httpResponse, expectation, throwable are in the JSON
+// but not deserialized (returned as null on the client).
+for (LogEntry entry : entries) {
+    System.out.println(entry.getType() + " at " + entry.getTimestamp());
+}
+</code></pre>
+
+<pre><code class="prettyprint lang-java">// Retrieve typed log entries by correlation ID
+LogEntry[] entries = mockServerClient.retrieveLogEntriesByCorrelationId("abc-123-def-456");
+</code></pre>
+
+<pre><code class="prettyprint lang-bash"># REST API - use format=LOG_ENTRIES to get structured JSON
+curl -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS&format=LOG_ENTRIES"
+
+# Combined with correlation ID filter
+curl -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS&format=LOG_ENTRIES&correlationId=abc-123-def-456"
+</code></pre>
+
+<a id="time_filtered_retrieval" class="anchor" href="#time_filtered_retrieval">&nbsp;</a>
+
+<h3>Time-Filtered Retrieval</h3>
+
+<p>When debugging intermittent issues, you can narrow log entries to a specific time window:</p>
+
+<pre><code class="prettyprint lang-java">// Retrieve log entries from the last 30 seconds
+long now = System.currentTimeMillis();
+LogEntry[] recentEntries = mockServerClient.retrieveLogEntries(
+    null, now - 30_000, now
+);
+</code></pre>

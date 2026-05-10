@@ -204,6 +204,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
         return false;
     }
 
+    @JsonIgnore
     public LogEntry setHttpRequests(RequestDefinition[] httpRequests) {
         this.httpRequests = httpRequests;
         return this;
@@ -217,6 +218,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
         }
     }
 
+    @JsonIgnore
     public LogEntry setHttpRequest(RequestDefinition httpRequest) {
         if (httpRequest != null) {
             if (isNotBlank(httpRequest.getLogCorrelationId())) {
@@ -244,6 +246,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
         }
     }
 
+    @JsonIgnore
     public LogEntry setHttpResponse(HttpResponse httpResponse) {
         this.httpResponse = httpResponse;
         return this;
@@ -253,6 +256,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
         return httpError;
     }
 
+    @JsonIgnore
     public LogEntry setHttpError(HttpError httpError) {
         this.httpError = httpError;
         return this;
@@ -262,11 +266,13 @@ public class LogEntry implements EventTranslator<LogEntry> {
         return expectation;
     }
 
+    @JsonIgnore
     public LogEntry setExpectation(Expectation expectation) {
         this.expectation = expectation;
         return this;
     }
 
+    @JsonIgnore
     public LogEntry setExpectation(RequestDefinition httpRequest, HttpResponse httpResponse) {
         this.expectation = new Expectation(httpRequest, Times.once(), TimeToLive.unlimited(), 0).thenRespond(httpResponse);
         return this;
@@ -292,6 +298,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
         return throwable;
     }
 
+    @JsonIgnore
     public LogEntry setThrowable(Throwable throwable) {
         this.throwable = throwable;
         if (isBlank(messageFormat) && throwable != null) {
@@ -304,6 +311,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
         return consumer;
     }
 
+    @JsonIgnore
     public LogEntry setConsumer(Runnable consumer) {
         this.consumer = consumer;
         return this;

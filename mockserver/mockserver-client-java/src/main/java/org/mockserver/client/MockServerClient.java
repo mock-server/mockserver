@@ -90,6 +90,7 @@ public class MockServerClient implements Stoppable {
     private OpenAPIExpectationSerializer openAPIExpectationSerializer = new OpenAPIExpectationSerializer(MOCK_SERVER_LOGGER);
     private VerificationSerializer verificationSerializer = new VerificationSerializer(MOCK_SERVER_LOGGER);
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer(MOCK_SERVER_LOGGER);
+    private LogEntrySerializer logEntrySerializer = new LogEntrySerializer(MOCK_SERVER_LOGGER);
     private final CompletableFuture<MockServerClient> stopFuture = new CompletableFuture<>();
 
     /**
@@ -1329,6 +1330,66 @@ public class MockServerClient implements Stoppable {
      */
     public String[] retrieveLogMessagesArray(RequestDefinition requestDefinition) {
         return retrieveLogMessages(requestDefinition).split(LOG_SEPARATOR);
+    }
+
+    /**
+     * Retrieve log entries as typed objects that match the httpRequest parameter, use null for the parameter to retrieve all log entries.
+     * Uses the LOG_ENTRIES format to get structured JSON log entries from the server.
+     *
+     * @param requestDefinition the http request that is matched against when deciding whether to return each log entry, use null to retrieve all
+     * @return an array of all log entries that match
+     */
+    public LogEntry[] retrieveLogEntries(RequestDefinition requestDefinition) {
+        HttpResponse httpResponse = sendRequest(
+            request()
+                .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
+                .withPath(calculatePath("retrieve"))
+                .withQueryStringParameter("type", RetrieveType.LOGS.name())
+                .withQueryStringParameter("format", Format.LOG_ENTRIES.name())
+                .withBody(requestDefinition != null ? requestDefinitionSerializer.serialize(requestDefinition) : "", StandardCharsets.UTF_8),
+            true
+        );
+        return logEntrySerializer.deserializeArray(httpResponse.getBodyAsString());
+    }
+
+    /**
+     * Retrieve log entries as typed objects filtered by correlation ID.
+     * A correlationId groups all log entries for a single incoming HTTP request lifecycle.
+     *
+     * @param correlationId the correlation ID to filter by
+     * @return an array of all log entries for the given correlation ID
+     */
+    public LogEntry[] retrieveLogEntriesByCorrelationId(String correlationId) {
+        HttpResponse httpResponse = sendRequest(
+            request()
+                .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
+                .withPath(calculatePath("retrieve"))
+                .withQueryStringParameter("type", RetrieveType.LOGS.name())
+                .withQueryStringParameter("format", Format.LOG_ENTRIES.name())
+                .withQueryStringParameter("correlationId", correlationId)
+                .withBody("", StandardCharsets.UTF_8),
+            true
+        );
+        return logEntrySerializer.deserializeArray(httpResponse.getBodyAsString());
+    }
+
+    /**
+     * Retrieve log entries as typed objects that match the httpRequest parameter, filtered to a time window.
+     * Only entries with epochTime between fromEpochMillis (inclusive) and toEpochMillis (exclusive) are returned.
+     * Note: time filtering is performed client-side after fetching all matching entries from the server.
+     *
+     * @param requestDefinition the http request that is matched against when deciding whether to return each log entry, use null to retrieve all
+     * @param fromEpochMillis   start of time window (inclusive), milliseconds since epoch
+     * @param toEpochMillis     end of time window (exclusive), milliseconds since epoch
+     * @return an array of log entries within the specified time window
+     */
+    public LogEntry[] retrieveLogEntries(RequestDefinition requestDefinition, long fromEpochMillis, long toEpochMillis) {
+        LogEntry[] allEntries = retrieveLogEntries(requestDefinition);
+        return Arrays.stream(allEntries)
+            .filter(entry -> entry.getEpochTime() >= fromEpochMillis && entry.getEpochTime() < toEpochMillis)
+            .toArray(LogEntry[]::new);
     }
 
     /**

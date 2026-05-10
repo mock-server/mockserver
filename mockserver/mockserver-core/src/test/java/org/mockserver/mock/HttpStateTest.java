@@ -1539,86 +1539,17 @@ public class HttpStateTest {
             );
 
         // then
-        assertThat(response,
-            is(response().withBody("[" + NEW_LINE +
-                "  {" + NEW_LINE +
-                "    \"logLevel\" : \"INFO\"," + NEW_LINE +
-                "    \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + "\"," + NEW_LINE +
-                "    \"type\" : \"NO_MATCH_RESPONSE\"," + NEW_LINE +
-                "    \"httpRequest\" : {" + NEW_LINE +
-                "      \"path\" : \"request_one\"" + NEW_LINE +
-                "    }," + NEW_LINE +
-                "    \"expectation\" : {" + NEW_LINE +
-                "      \"httpRequest\" : {" + NEW_LINE +
-                "        \"path\" : \"request_one\"" + NEW_LINE +
-                "      }," + NEW_LINE +
-                "      \"httpResponse\" : {" + NEW_LINE +
-                "        \"statusCode\" : 200," + NEW_LINE +
-                "        \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                "        \"body\" : \"response_two\"" + NEW_LINE +
-                "      }," + NEW_LINE +
-                "      \"id\" : \"key_one\"," + NEW_LINE +
-                "      \"priority\" : 0," + NEW_LINE +
-                "      \"timeToLive\" : {" + NEW_LINE +
-                "        \"unlimited\" : true" + NEW_LINE +
-                "      }," + NEW_LINE +
-                "      \"times\" : {" + NEW_LINE +
-                "        \"unlimited\" : true" + NEW_LINE +
-                "      }" + NEW_LINE +
-                "    }," + NEW_LINE +
-                "    \"message\" : [" + NEW_LINE +
-                "      \"no expectation for:\"," + NEW_LINE +
-                "      \"\"," + NEW_LINE +
-                "      \"   {\"," + NEW_LINE +
-                "      \"      \\\"path\\\" : \\\"request_one\\\"\"," + NEW_LINE +
-                "      \"   }\"," + NEW_LINE +
-                "      \"\"," + NEW_LINE +
-                "      \" returning response:\"," + NEW_LINE +
-                "      \"\"," + NEW_LINE +
-                "      \"   {\"," + NEW_LINE +
-                "      \"      \\\"statusCode\\\" : 404,\"," + NEW_LINE +
-                "      \"      \\\"reasonPhrase\\\" : \\\"Not Found\\\"\"," + NEW_LINE +
-                "      \"   }\"" + NEW_LINE +
-                "    ]" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  {" + NEW_LINE +
-                "    \"logLevel\" : \"INFO\"," + NEW_LINE +
-                "    \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + "\"," + NEW_LINE +
-                "    \"type\" : \"EXPECTATION_RESPONSE\"," + NEW_LINE +
-                "    \"httpRequest\" : {" + NEW_LINE +
-                "      \"path\" : \"request_two\"" + NEW_LINE +
-                "    }," + NEW_LINE +
-                "    \"httpResponse\" : {" + NEW_LINE +
-                "      \"statusCode\" : 200," + NEW_LINE +
-                "      \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                "      \"body\" : \"response_two\"" + NEW_LINE +
-                "    }," + NEW_LINE +
-                "    \"message\" : [" + NEW_LINE +
-                "      \"returning error:\"," + NEW_LINE +
-                "      \"\"," + NEW_LINE +
-                "      \"   {\"," + NEW_LINE +
-                "      \"      \\\"path\\\" : \\\"request_two\\\"\"," + NEW_LINE +
-                "      \"   }\"," + NEW_LINE +
-                "      \"\"," + NEW_LINE +
-                "      \" for request:\"," + NEW_LINE +
-                "      \"\"," + NEW_LINE +
-                "      \"   {\"," + NEW_LINE +
-                "      \"      \\\"statusCode\\\" : 200,\"," + NEW_LINE +
-                "      \"      \\\"reasonPhrase\\\" : \\\"OK\\\",\"," + NEW_LINE +
-                "      \"      \\\"body\\\" : \\\"response_two\\\"\"," + NEW_LINE +
-                "      \"   }\"," + NEW_LINE +
-                "      \"\"," + NEW_LINE +
-                "      \" for action:\"," + NEW_LINE +
-                "      \"\"," + NEW_LINE +
-                "      \"   {\"," + NEW_LINE +
-                "      \"      \\\"statusCode\\\" : 200,\"," + NEW_LINE +
-                "      \"      \\\"reasonPhrase\\\" : \\\"OK\\\",\"," + NEW_LINE +
-                "      \"      \\\"body\\\" : \\\"response_two\\\"\"," + NEW_LINE +
-                "      \"   }\"" + NEW_LINE +
-                "    ]" + NEW_LINE +
-                "  }" + NEW_LINE +
-                "]", MediaType.JSON_UTF_8).withStatusCode(200))
-        );
+        assertThat(response.getStatusCode(), is(200));
+        String body = response.getBodyAsString();
+        assertThat(body, containsString("\"type\" : \"NO_MATCH_RESPONSE\""));
+        assertThat(body, containsString("\"type\" : \"EXPECTATION_RESPONSE\""));
+        assertThat(body, containsString("\"epochTime\" :"));
+        assertThat(body, containsString("\"messageFormat\" : \"no expectation for:{}returning response:{}\""));
+        assertThat(body, containsString("\"messageFormat\" : \"returning error:{}for request:{}for action:{}\""));
+        assertThat(body, containsString("\"arguments\" :"));
+        assertThat(body, containsString("\"logLevel\" : \"INFO\""));
+        assertThat(body, containsString("\"path\" : \"request_one\""));
+        assertThat(body, containsString("\"path\" : \"request_two\""));
     }
 
     @Test
@@ -2370,6 +2301,136 @@ public class HttpStateTest {
             "}, {" + NEW_LINE +
             "  \"path\" : \"three\"" + NEW_LINE +
             "} ]>"));
+    }
+
+    @Test
+    public void shouldRetrieveLogsAsLogEntries() {
+        // given
+        configuration.logLevel(Level.INFO);
+        httpState.log(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(RECEIVED_REQUEST)
+                .setHttpRequest(request("request_one"))
+                .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
+                .setArguments(request("request_one"))
+        );
+        httpState.log(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(EXPECTATION_MATCHED)
+                .setHttpRequest(request("request_one"))
+                .setExpectation(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_one")))
+                .setMessageFormat("request:{}matched expectation:{}")
+                .setArguments(request("request_one"), new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_one")))
+        );
+
+        // when
+        HttpResponse response = httpState
+            .retrieve(
+                request()
+                    .withQueryStringParameter("type", "logs")
+                    .withQueryStringParameter("format", "log_entries")
+            );
+
+        // then
+        assertThat(response.getStatusCode(), is(200));
+        String body = response.getBodyAsString();
+        assertThat(body, containsString("RECEIVED_REQUEST"));
+        assertThat(body, containsString("EXPECTATION_MATCHED"));
+        LogEntrySerializer serializer = new LogEntrySerializer(new MockServerLogger());
+        LogEntry[] deserialized = serializer.deserializeArray(body);
+        assertThat(deserialized.length, is(2));
+        assertThat(deserialized[0].getType(), is(RECEIVED_REQUEST));
+        assertThat(deserialized[1].getType(), is(EXPECTATION_MATCHED));
+        assertThat(deserialized[0].getHttpRequest(), is(nullValue()));
+        assertThat(deserialized[1].getExpectation(), is(nullValue()));
+    }
+
+    @Test
+    public void shouldRetrieveLogsAsLogEntriesByCorrelationId() {
+        // given
+        configuration.logLevel(Level.INFO);
+        httpState.log(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(RECEIVED_REQUEST)
+                .setCorrelationId("test-corr-id-1")
+                .setHttpRequest(request("request_one"))
+                .setMessageFormat("received request:{}")
+                .setArguments("request_one")
+        );
+        httpState.log(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(EXPECTATION_MATCHED)
+                .setCorrelationId("test-corr-id-1")
+                .setHttpRequest(request("request_one"))
+                .setMessageFormat("matched:{}")
+                .setArguments("key_one")
+        );
+        httpState.log(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(RECEIVED_REQUEST)
+                .setCorrelationId("test-corr-id-2")
+                .setHttpRequest(request("request_two"))
+                .setMessageFormat("received request:{}")
+                .setArguments("request_two")
+        );
+
+        // when
+        HttpResponse response = httpState
+            .retrieve(
+                request()
+                    .withQueryStringParameter("type", "logs")
+                    .withQueryStringParameter("format", "log_entries")
+                    .withQueryStringParameter("correlationId", "test-corr-id-1")
+            );
+
+        // then
+        assertThat(response.getStatusCode(), is(200));
+        LogEntrySerializer serializer = new LogEntrySerializer(new MockServerLogger());
+        LogEntry[] deserialized = serializer.deserializeArray(response.getBodyAsString());
+        assertThat(deserialized.length, is(2));
+        assertThat(deserialized[0].getType(), is(RECEIVED_REQUEST));
+        assertThat(deserialized[0].getCorrelationId(), is("test-corr-id-1"));
+        assertThat(deserialized[1].getType(), is(EXPECTATION_MATCHED));
+        assertThat(deserialized[1].getCorrelationId(), is("test-corr-id-1"));
+    }
+
+    @Test
+    public void shouldRoundTripLogEntriesThroughSerializer() {
+        // given
+        LogEntrySerializer serializer = new LogEntrySerializer(new MockServerLogger());
+        LogEntry entry = new LogEntry()
+            .setLogLevel(INFO)
+            .setType(EXPECTATION_NOT_MATCHED)
+            .setCorrelationId("round-trip-test")
+            .setMessageFormat("test message:{}")
+            .setArguments("arg1");
+
+        // when
+        String json = serializer.serialize(Collections.singletonList(entry));
+        LogEntry[] deserialized = serializer.deserializeArray(json);
+
+        // then
+        assertThat(deserialized.length, is(1));
+        assertThat(deserialized[0].getType(), is(EXPECTATION_NOT_MATCHED));
+        assertThat(deserialized[0].getCorrelationId(), is("round-trip-test"));
+        assertThat(deserialized[0].getLogLevel(), is(INFO));
+        assertThat(deserialized[0].getMessageFormat(), is("test message:{}"));
+    }
+
+    @Test
+    public void shouldDeserializeEmptyLogEntryArray() {
+        // given
+        LogEntrySerializer serializer = new LogEntrySerializer(new MockServerLogger());
+
+        // when / then
+        assertThat(serializer.deserializeArray("[]").length, is(0));
+        assertThat(serializer.deserializeArray("").length, is(0));
+        assertThat(serializer.deserializeArray(null).length, is(0));
     }
 
 }

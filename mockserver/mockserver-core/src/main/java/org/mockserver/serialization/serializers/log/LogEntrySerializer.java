@@ -26,11 +26,20 @@ public class LogEntrySerializer extends StdSerializer<LogEntry> {
         if (logEntry.getLogLevel() != null) {
             jgen.writeObjectField("logLevel", logEntry.getLogLevel());
         }
+        if (logEntry.getEpochTime() > 0) {
+            jgen.writeNumberField("epochTime", logEntry.getEpochTime());
+        }
         if (logEntry.getTimestamp() != null) {
             jgen.writeObjectField("timestamp", logEntry.getTimestamp());
         }
         if (logEntry.getType() != null) {
             jgen.writeObjectField("type", logEntry.getType());
+        }
+        if (logEntry.getCorrelationId() != null) {
+            jgen.writeStringField("correlationId", logEntry.getCorrelationId());
+        }
+        if (logEntry.getPort() != null) {
+            jgen.writeNumberField("port", logEntry.getPort());
         }
         if (logEntry.getHttpRequests() != null) {
             if (logEntry.getHttpRequests().length > 1) {
@@ -48,8 +57,20 @@ public class LogEntrySerializer extends StdSerializer<LogEntry> {
         if (logEntry.getExpectation() != null) {
             jgen.writeObjectField("expectation", logEntry.getExpectation());
         }
+        if (logEntry.getExpectationId() != null) {
+            jgen.writeStringField("expectationId", logEntry.getExpectationId());
+        }
+        if (logEntry.getMessageFormat() != null) {
+            jgen.writeStringField("messageFormat", logEntry.getMessageFormat());
+        }
         if (logEntry.getMessage() != null) {
             jgen.writeObjectField("message", logEntry.getMessage().replaceAll(" {2}", "   ").split(NEW_LINE));
+        }
+        if (logEntry.getArguments() != null) {
+            jgen.writeObjectField("arguments", logEntry.getArguments());
+        }
+        if (logEntry.getBecause() != null) {
+            jgen.writeStringField("because", logEntry.getBecause());
         }
         if (logEntry.getThrowable() != null) {
             jgen.writeObjectField("throwable", logEntry.getThrowable());
