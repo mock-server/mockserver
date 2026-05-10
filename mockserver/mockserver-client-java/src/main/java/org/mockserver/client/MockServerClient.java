@@ -1639,6 +1639,28 @@ public class MockServerClient implements Stoppable {
         return httpResponse.getBodyAsString();
     }
 
+    /**
+     * Retrieve all log entries that share the specified correlationId.
+     * A correlationId groups all log entries for a single incoming HTTP request lifecycle
+     * (received, match attempts, response).
+     *
+     * @param correlationId the correlation ID to filter by
+     * @return a string containing all log entries for the given correlation ID
+     */
+    public String retrieveLogsByCorrelationId(String correlationId) {
+        HttpResponse httpResponse = sendRequest(
+            request()
+                .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
+                .withPath(calculatePath("retrieve"))
+                .withQueryStringParameter("type", RetrieveType.LOGS.name())
+                .withQueryStringParameter("correlationId", correlationId)
+                .withBody("", StandardCharsets.UTF_8),
+            false
+        );
+        return httpResponse.getBodyAsString();
+    }
+
     public String retrieveMetrics() {
         HttpResponse httpResponse = sendRequest(
             request()

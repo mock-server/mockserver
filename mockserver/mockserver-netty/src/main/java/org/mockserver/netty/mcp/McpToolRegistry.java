@@ -901,10 +901,11 @@ public class McpToolRegistry {
         formatEnum.add("JSON");
         formatEnum.add("JAVA");
         formatEnum.add("LOG_ENTRIES");
+        properties.putObject("correlationId").put("type", "string").put("description", "Filter log entries by correlation ID (only applies when type is LOGS)");
 
         tools.put("raw_retrieve", new ToolDefinition(
             "raw_retrieve",
-            "Retrieves data from MockServer using the full retrieve API with complete control over type and format",
+            "Retrieves data from MockServer using the full retrieve API with complete control over type, format, and correlation ID filtering",
             schema,
             this::handleRawRetrieve
         ));
@@ -926,6 +927,11 @@ public class McpToolRegistry {
                 .withPath("/mockserver/retrieve")
                 .withQueryStringParameter("type", type)
                 .withQueryStringParameter("format", format);
+
+            JsonNode correlationIdNode = params.path("correlationId");
+            if (correlationIdNode.isTextual() && !correlationIdNode.asText().isEmpty()) {
+                retrieveRequest.withQueryStringParameter("correlationId", correlationIdNode.asText());
+            }
 
             JsonNode requestDefNode = params.path("requestDefinition");
             if (requestDefNode.isObject()) {

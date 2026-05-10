@@ -317,3 +317,19 @@ String analysis = mockServerClient.debugMismatch(
 </code></pre>
 
 <p>This endpoint is also available via the <a href="/mock_server/ai_mcp_tools.html">MCP <code>debug_request_mismatch</code> tool</a> for AI-assisted debugging.</p>
+
+<a id="correlation_id_retrieval" class="anchor" href="#correlation_id_retrieval">&nbsp;</a>
+
+<h2>Retrieving Logs by Correlation ID</h2>
+
+<p>Every incoming HTTP request is assigned a unique <strong>correlation ID</strong>. All log entries for that request's lifecycle (received, match attempts, response) share this ID. You can retrieve the full correlation chain for any request:</p>
+
+<pre><code class="prettyprint lang-bash"># Retrieve all log entries for a specific correlation ID
+curl -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS&correlationId=abc-123-def-456"
+</code></pre>
+
+<pre><code class="prettyprint lang-java">// Java client
+String logs = mockServerClient.retrieveLogsByCorrelationId("abc-123-def-456");
+</code></pre>
+
+<p>The correlation ID is visible in the dashboard UI as a small chip on grouped log entries. Click it to copy the ID.</p>

@@ -439,9 +439,10 @@ public class HttpState {
                 requestDefinition.withLogCorrelationId(logCorrelationId);
                 Format format = Format.valueOf(defaultIfEmpty(request.getFirstQueryStringParameter("format").toUpperCase(), "JSON"));
                 RetrieveType type = RetrieveType.valueOf(defaultIfEmpty(request.getFirstQueryStringParameter("type").toUpperCase(), "REQUESTS"));
+                final String correlationIdFilter = request.getFirstQueryStringParameter("correlationId");
                 switch (type) {
                     case LOGS: {
-                        mockServerLog.retrieveMessageLogEntries(requestDefinition, (List<LogEntry> logEntries) -> {
+                        java.util.function.Consumer<List<LogEntry>> logsConsumer = (List<LogEntry> logEntries) -> {
                             StringBuilder stringBuffer = new StringBuilder();
                             for (int i = 0; i < logEntries.size(); i++) {
                                 LogEntry messageLogEntry = logEntries.get(i);
@@ -467,7 +468,12 @@ public class HttpState {
                                 );
                             }
                             httpResponseFuture.complete(response);
-                        });
+                        };
+                        if (isNotBlank(correlationIdFilter)) {
+                            mockServerLog.retrieveLogEntriesByCorrelationId(correlationIdFilter, logsConsumer);
+                        } else {
+                            mockServerLog.retrieveMessageLogEntries(requestDefinition, logsConsumer);
+                        }
                         break;
                     }
                     case REQUESTS: {

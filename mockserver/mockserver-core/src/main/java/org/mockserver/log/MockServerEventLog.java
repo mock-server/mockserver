@@ -471,6 +471,34 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         );
     }
 
+    public void retrieveLogEntriesByCorrelationId(String correlationId, Consumer<List<LogEntry>> listConsumer) {
+        disruptor.publishEvent(new LogEntry()
+            .setType(RUNNABLE)
+            .setConsumer(() -> listConsumer.accept(this.eventLog
+                .stream()
+                .filter(notDeletedPredicate)
+                .filter(logItem -> correlationId.equals(logItem.getCorrelationId()))
+                .collect(Collectors.toList())
+            ))
+        );
+    }
+
+    public void retrieveAlmostMatchedEntries(Consumer<List<LogEntry>> listConsumer) {
+        disruptor.publishEvent(new LogEntry()
+            .setType(RUNNABLE)
+            .setConsumer(() -> listConsumer.accept(this.eventLog
+                .stream()
+                .filter(notDeletedPredicate)
+                .filter(logItem -> logItem.getType() == EXPECTATION_NOT_MATCHED)
+                .filter(logItem -> {
+                    String msg = logItem.getMessageFormat();
+                    return msg != null && msg.startsWith("closest expectation:");
+                })
+                .collect(Collectors.toList())
+            ))
+        );
+    }
+
     public <T> void retrieveLogEntriesInReverseForUI(RequestDefinition requestDefinition, Predicate<LogEntry> logEntryPredicate, Function<LogEntry, T> logEntryMapper, Consumer<Stream<T>> consumer) {
         disruptor.publishEvent(new LogEntry()
             .setType(RUNNABLE)

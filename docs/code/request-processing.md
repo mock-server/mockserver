@@ -145,6 +145,10 @@ A `MatchDifference` context is always created for each comparison (regardless of
 
 The `PUT /mockserver/debugMismatch` endpoint (implemented in `HttpState.debugMismatch()`) provides programmatic access to match analysis. It accepts a `RequestDefinition` body and returns structured JSON showing per-expectation, per-field match results with the closest match highlighted. The MCP `debug_request_mismatch` tool delegates to this same implementation. The Java client exposes this via `MockServerClient.debugMismatch(RequestDefinition)`.
 
+### Correlation ID Retrieval
+
+All log entries for a single incoming HTTP request share the same `correlationId` (a UUID assigned in `HttpState.handle()`). The `PUT /mockserver/retrieve?type=LOGS&correlationId=<id>` endpoint retrieves all log entries for a specific correlation ID, enabling request-to-match-attempts correlation. The Java client exposes this via `MockServerClient.retrieveLogsByCorrelationId(String)`, and the MCP `raw_retrieve` tool supports a `correlationId` parameter.
+
 ```mermaid
 sequenceDiagram
     participant AH as HttpActionHandler
