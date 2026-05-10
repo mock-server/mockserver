@@ -23,6 +23,7 @@ public class JsonSchemaExpectationValidator extends JsonSchemaValidator {
             "httpClassCallback",
             "httpObjectCallback",
             "httpOverrideForwardedRequest",
+            "httpForwardValidateAction",
             "httpError",
             "httpSseResponse",
             "httpWebSocketResponse",

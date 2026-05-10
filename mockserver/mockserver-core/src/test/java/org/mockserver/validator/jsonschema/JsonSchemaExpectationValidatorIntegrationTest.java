@@ -461,6 +461,30 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
     }
 
     @Test
+    public void shouldValidateValidCompleteExpectationWithHttpForwardValidateAction() {
+        // when
+        assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpForwardValidateAction\" : {" + NEW_LINE +
+            "    \"specUrlOrPayload\" : \"org/mockserver/openapi/openapi_petstore_example.json\"," + NEW_LINE +
+            "    \"host\" : \"localhost\"," + NEW_LINE +
+            "    \"port\" : 8080," + NEW_LINE +
+            "    \"scheme\" : \"HTTPS\"," + NEW_LINE +
+            "    \"validateRequest\" : true," + NEW_LINE +
+            "    \"validateResponse\" : true," + NEW_LINE +
+            "    \"validationMode\" : \"STRICT\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}"), is(""));
+    }
+
+    @Test
     public void shouldValidateValidCompleteExpectationWithHttpError() {
         // when
         assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +
@@ -1032,12 +1056,13 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                 "  }" + NEW_LINE +
                 "}"),
             is(
-                "14 errors:" + NEW_LINE +
+                "15 errors:" + NEW_LINE +
                     " - $.httpError: is missing, but is required, if specifying action of type Error" + NEW_LINE +
                     " - $.httpForward: is missing, but is required, if specifying action of type Forward" + NEW_LINE +
                     " - $.httpForwardClassCallback: is missing, but is required, if specifying action of type ForwardClassCallback" + NEW_LINE +
                     " - $.httpForwardObjectCallback: is missing, but is required, if specifying action of type ForwardObjectCallback" + NEW_LINE +
                     " - $.httpForwardTemplate: is missing, but is required, if specifying action of type ForwardTemplate" + NEW_LINE +
+                    " - $.httpForwardValidateAction: is missing, but is required, if specifying action of type ForwardValidateAction" + NEW_LINE +
                     " - $.httpOverrideForwardedRequest: is missing, but is required, if specifying action of type OverrideForwardedRequest" + NEW_LINE +
                     " - $.httpResponse: is missing, but is required, if specifying action of type Response" + NEW_LINE +
                     " - $.httpResponseClassCallback: is missing, but is required, if specifying action of type ResponseClassCallback" + NEW_LINE +
@@ -1046,7 +1071,7 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                     " - $.httpSseResponse: is missing, but is required, if specifying action of type SseResponse" + NEW_LINE +
                     " - $.httpWebSocketResponse: is missing, but is required, if specifying action of type WebSocketResponse" + NEW_LINE +
                     " - $: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
-                    " - oneOf of the following must be specified [httpError, httpForward, httpForwardClassCallback, httpForwardObjectCallback, httpForwardTemplate, httpOverrideForwardedRequest, httpResponse, httpResponseClassCallback, httpResponseObjectCallback, httpResponseTemplate]" + NEW_LINE +
+                    " - oneOf of the following must be specified [httpError, httpForward, httpForwardClassCallback, httpForwardObjectCallback, httpForwardTemplate, httpForwardValidateAction, httpOverrideForwardedRequest, httpResponse, httpResponseClassCallback, httpResponseObjectCallback, httpResponseTemplate]" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
             ));
@@ -1072,12 +1097,13 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                 "    \"invalidField\" : \"randomValue\"" + NEW_LINE +
                 "  }"),
             is(
-                "15 errors:" + NEW_LINE +
+                "16 errors:" + NEW_LINE +
                     " - $.httpError: is missing, but is required, if specifying action of type Error" + NEW_LINE +
                     " - $.httpForward: is missing, but is required, if specifying action of type Forward" + NEW_LINE +
                     " - $.httpForwardClassCallback: is missing, but is required, if specifying action of type ForwardClassCallback" + NEW_LINE +
                     " - $.httpForwardObjectCallback: is missing, but is required, if specifying action of type ForwardObjectCallback" + NEW_LINE +
                     " - $.httpForwardTemplate: is missing, but is required, if specifying action of type ForwardTemplate" + NEW_LINE +
+                    " - $.httpForwardValidateAction: is missing, but is required, if specifying action of type ForwardValidateAction" + NEW_LINE +
                     " - $.httpOverrideForwardedRequest: is missing, but is required, if specifying action of type OverrideForwardedRequest" + NEW_LINE +
                     " - $.httpResponse: is missing, but is required, if specifying action of type Response" + NEW_LINE +
                     " - $.httpResponseClassCallback: is missing, but is required, if specifying action of type ResponseClassCallback" + NEW_LINE +
@@ -1087,7 +1113,7 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                     " - $.httpWebSocketResponse: is missing, but is required, if specifying action of type WebSocketResponse" + NEW_LINE +
                     " - $.invalidField: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
                     " - $: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
-                    " - oneOf of the following must be specified [httpError, httpForward, httpForwardClassCallback, httpForwardObjectCallback, httpForwardTemplate, httpOverrideForwardedRequest, httpResponse, httpResponseClassCallback, httpResponseObjectCallback, httpResponseTemplate]" + NEW_LINE +
+                    " - oneOf of the following must be specified [httpError, httpForward, httpForwardClassCallback, httpForwardObjectCallback, httpForwardTemplate, httpForwardValidateAction, httpOverrideForwardedRequest, httpResponse, httpResponseClassCallback, httpResponseObjectCallback, httpResponseTemplate]" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
             ));

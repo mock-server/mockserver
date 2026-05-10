@@ -16,6 +16,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpState;
 import org.mockserver.model.*;
+import org.mockserver.openapi.OpenAPIResponseValidator;
 import org.mockserver.proxyconfiguration.NoProxyHostsUtils;
 import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.responsewriter.ResponseWriter;
@@ -65,6 +66,7 @@ public class HttpActionHandler {
     private HttpForwardClassCallbackActionHandler httpForwardClassCallbackActionHandler;
     private HttpForwardObjectCallbackActionHandler httpForwardObjectCallbackActionHandler;
     private HttpOverrideForwardedRequestActionHandler httpOverrideForwardedRequestCallbackActionHandler;
+    private HttpForwardValidateActionHandler httpForwardValidateActionHandler;
     private HttpSseResponseActionHandler httpSseResponseActionHandler;
     private HttpWebSocketResponseActionHandler httpWebSocketResponseActionHandler;
     private HttpErrorActionHandler httpErrorActionHandler;
@@ -106,7 +108,7 @@ public class HttpActionHandler {
                 case RESPONSE: {
                     scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         final HttpResponse response = getHttpResponseActionHandler().handle((HttpResponse) action);
-                        writeResponseActionResponse(response, responseWriter, request, action, synchronous);
+                        writeResponseActionResponse(response, responseWriter, request, action, synchronous, expectation.getHttpRequest());
                         expectationPostProcessor.run();
                     }), synchronous);
                     break;
@@ -114,7 +116,7 @@ public class HttpActionHandler {
                 case RESPONSE_TEMPLATE: {
                     scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         final HttpResponse response = getHttpResponseTemplateActionHandler().handle((HttpTemplate) action, request);
-                        writeResponseActionResponse(response, responseWriter, request, action, synchronous);
+                        writeResponseActionResponse(response, responseWriter, request, action, synchronous, expectation.getHttpRequest());
                         expectationPostProcessor.run();
                     }), synchronous, action.getDelay());
                     break;
@@ -122,7 +124,7 @@ public class HttpActionHandler {
                 case RESPONSE_CLASS_CALLBACK: {
                     scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         final HttpResponse response = getHttpResponseClassCallbackActionHandler().handle((HttpClassCallback) action, request);
-                        writeResponseActionResponse(response, responseWriter, request, action, synchronous);
+                        writeResponseActionResponse(response, responseWriter, request, action, synchronous, expectation.getHttpRequest());
                         expectationPostProcessor.run();
                     }), synchronous, action.getDelay());
                     break;
@@ -166,6 +168,14 @@ public class HttpActionHandler {
                 case FORWARD_REPLACE: {
                     scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         final HttpForwardActionResult responseFuture = getHttpOverrideForwardedRequestCallbackActionHandler().handle((HttpOverrideForwardedRequest) action, request);
+                        writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous);
+                        expectationPostProcessor.run();
+                    }), synchronous, action.getDelay());
+                    break;
+                }
+                case FORWARD_VALIDATE: {
+                    scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
+                        final HttpForwardActionResult responseFuture = getHttpForwardValidateActionHandler().handle((HttpForwardValidateAction) action, request);
                         writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous);
                         expectationPostProcessor.run();
                     }), synchronous, action.getDelay());
@@ -504,6 +514,10 @@ public class HttpActionHandler {
     }
 
     void writeResponseActionResponse(final HttpResponse response, final ResponseWriter responseWriter, final HttpRequest request, final Action action, boolean synchronous) {
+        writeResponseActionResponse(response, responseWriter, request, action, synchronous, null);
+    }
+
+    void writeResponseActionResponse(final HttpResponse response, final ResponseWriter responseWriter, final HttpRequest request, final Action action, boolean synchronous, final RequestDefinition requestDefinition) {
         scheduler.schedule(() -> {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -516,8 +530,36 @@ public class HttpActionHandler {
                     .setMessageFormat("returning response:{}for request:{}for action:{}from expectation:{}")
                     .setArguments(response, request, action, action.getExpectationId())
             );
+            validateOpenAPIResponse(response, request, action, requestDefinition);
             responseWriter.writeResponse(request, response, false);
         }, synchronous, response.getDelay());
+    }
+
+    private void validateOpenAPIResponse(final HttpResponse response, final HttpRequest request, final Action action, final RequestDefinition requestDefinition) {
+        if (configuration.openAPIResponseValidation() && requestDefinition instanceof OpenAPIDefinition) {
+            OpenAPIDefinition openAPIDefinition = (OpenAPIDefinition) requestDefinition;
+            if (isNotBlank(openAPIDefinition.getSpecUrlOrPayload()) && isNotBlank(openAPIDefinition.getOperationId())) {
+                List<String> validationErrors = OpenAPIResponseValidator.validate(
+                    openAPIDefinition.getSpecUrlOrPayload(),
+                    openAPIDefinition.getOperationId(),
+                    response,
+                    mockServerLogger
+                );
+                if (!validationErrors.isEmpty()) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(OPENAPI_RESPONSE_VALIDATION_FAILED)
+                            .setLogLevel(Level.WARN)
+                            .setCorrelationId(request.getLogCorrelationId())
+                            .setHttpRequest(request)
+                            .setHttpResponse(response)
+                            .setExpectationId(action.getExpectationId())
+                            .setMessageFormat("OpenAPI response validation failed for operation " + openAPIDefinition.getOperationId() + ":{}for request:{}for response:{}")
+                            .setArguments(String.join(NEW_LINE, validationErrors), request, response)
+                    );
+                }
+            }
+        }
     }
 
     void executeAfterForwardActionResponse(final HttpForwardActionResult responseFuture, final BiConsumer<HttpResponse, Throwable> command, final boolean synchronous) {
@@ -718,6 +760,13 @@ public class HttpActionHandler {
             httpOverrideForwardedRequestCallbackActionHandler = new HttpOverrideForwardedRequestActionHandler(mockServerLogger, configuration, httpClient);
         }
         return httpOverrideForwardedRequestCallbackActionHandler;
+    }
+
+    private HttpForwardValidateActionHandler getHttpForwardValidateActionHandler() {
+        if (httpForwardValidateActionHandler == null) {
+            httpForwardValidateActionHandler = new HttpForwardValidateActionHandler(mockServerLogger, configuration, httpClient);
+        }
+        return httpForwardValidateActionHandler;
     }
 
     private HttpSseResponseActionHandler getHttpSseResponseActionHandler() {

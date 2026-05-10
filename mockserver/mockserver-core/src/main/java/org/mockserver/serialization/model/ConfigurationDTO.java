@@ -66,6 +66,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private String initializationJsonPath;
     private String initializationOpenAPIPath;
     private String openAPIContextPathPrefix;
+    private Boolean openAPIResponseValidation;
     private Boolean watchInitializationJson;
 
     private Boolean persistExpectations;
@@ -176,6 +177,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
             this.initializationJsonPath = configuration.initializationJsonPath();
             this.initializationOpenAPIPath = configuration.initializationOpenAPIPath();
             this.openAPIContextPathPrefix = configuration.openAPIContextPathPrefix();
+            this.openAPIResponseValidation = configuration.openAPIResponseValidation();
             this.watchInitializationJson = configuration.watchInitializationJson();
 
             this.persistExpectations = configuration.persistExpectations();
@@ -333,6 +335,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
         configuration.initializationJsonPath(initializationJsonPath);
         configuration.initializationOpenAPIPath(initializationOpenAPIPath);
         configuration.openAPIContextPathPrefix(openAPIContextPathPrefix);
+        configuration.openAPIResponseValidation(openAPIResponseValidation);
         configuration.watchInitializationJson(watchInitializationJson);
 
         configuration.persistExpectations(persistExpectations);
@@ -531,6 +534,9 @@ public class ConfigurationDTO implements DTO<Configuration> {
         }
         if (openAPIContextPathPrefix != null) {
             target.openAPIContextPathPrefix(openAPIContextPathPrefix);
+        }
+        if (openAPIResponseValidation != null) {
+            target.openAPIResponseValidation(openAPIResponseValidation);
         }
         if (watchInitializationJson != null) {
             target.watchInitializationJson(watchInitializationJson);
@@ -1067,6 +1073,15 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setOpenAPIContextPathPrefix(String openAPIContextPathPrefix) {
         this.openAPIContextPathPrefix = openAPIContextPathPrefix;
+        return this;
+    }
+
+    public Boolean getOpenAPIResponseValidation() {
+        return openAPIResponseValidation;
+    }
+
+    public ConfigurationDTO setOpenAPIResponseValidation(Boolean openAPIResponseValidation) {
+        this.openAPIResponseValidation = openAPIResponseValidation;
         return this;
     }
 

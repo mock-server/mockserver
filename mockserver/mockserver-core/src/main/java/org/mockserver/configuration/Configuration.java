@@ -89,6 +89,7 @@ public class Configuration {
     private String initializationJsonPath;
     private String initializationOpenAPIPath;
     private String openAPIContextPathPrefix;
+    private Boolean openAPIResponseValidation;
     private Boolean watchInitializationJson;
 
     // mock persistence
@@ -1014,6 +1015,26 @@ public class Configuration {
      */
     public Configuration openAPIContextPathPrefix(String openAPIContextPathPrefix) {
         this.openAPIContextPathPrefix = openAPIContextPathPrefix;
+        return this;
+    }
+
+    public Boolean openAPIResponseValidation() {
+        if (openAPIResponseValidation == null) {
+            return ConfigurationProperties.openAPIResponseValidation();
+        }
+        return openAPIResponseValidation;
+    }
+
+    /**
+     * <p>If enabled MockServer will validate that mock responses conform to the OpenAPI spec schema they were generated from.</p>
+     * <p>Validation is advisory only - responses are still returned to the client even if validation fails.</p>
+     *
+     * <p>The default is false</p>
+     *
+     * @param openAPIResponseValidation if enabled mock responses will be validated against the OpenAPI spec schema
+     */
+    public Configuration openAPIResponseValidation(Boolean openAPIResponseValidation) {
+        this.openAPIResponseValidation = openAPIResponseValidation;
         return this;
     }
 

@@ -1,0 +1,43 @@
+{
+  "title": "forward and validate against OpenAPI spec",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "delay": {
+      "$ref": "#/definitions/delay"
+    },
+    "specUrlOrPayload": {
+      "type": "string"
+    },
+    "host": {
+      "type": "string"
+    },
+    "port": {
+      "type": "integer"
+    },
+    "scheme": {
+      "enum": [
+        "HTTP",
+        "HTTPS"
+      ]
+    },
+    "validateRequest": {
+      "type": "boolean"
+    },
+    "validateResponse": {
+      "type": "boolean"
+    },
+    "validationMode": {
+      "enum": [
+        "STRICT",
+        "LOG_ONLY"
+      ]
+    }
+  },
+  "required": [
+    "specUrlOrPayload",
+    "host"
+  ],
+  "definitions": {
+  }
+}

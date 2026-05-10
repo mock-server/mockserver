@@ -573,6 +573,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
         VERIFICATION_FAILED,
         VERIFICATION_PASSED,
         FORWARDED_REQUEST,
+        OPENAPI_RESPONSE_VALIDATION_FAILED,
         TEMPLATE_GENERATED,
         SERVER_CONFIGURATION,
         AUTHENTICATION_FAILED,

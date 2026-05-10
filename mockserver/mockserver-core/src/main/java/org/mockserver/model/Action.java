@@ -60,6 +60,7 @@ public abstract class Action<T extends Action> extends ObjectWithJsonToString {
         FORWARD_CLASS_CALLBACK(Direction.FORWARD),
         FORWARD_OBJECT_CALLBACK(Direction.FORWARD),
         FORWARD_REPLACE(Direction.FORWARD),
+        FORWARD_VALIDATE(Direction.FORWARD),
         RESPONSE(Direction.RESPONSE),
         RESPONSE_TEMPLATE(Direction.RESPONSE),
         RESPONSE_CLASS_CALLBACK(Direction.RESPONSE),

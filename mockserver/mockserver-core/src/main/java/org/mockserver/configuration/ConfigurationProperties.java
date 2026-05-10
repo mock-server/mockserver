@@ -106,6 +106,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_INITIALIZATION_JSON_PATH = "mockserver.initializationJsonPath";
     private static final String MOCKSERVER_INITIALIZATION_OPENAPI_PATH = "mockserver.initializationOpenAPIPath";
     private static final String MOCKSERVER_OPENAPI_CONTEXT_PATH_PREFIX = "mockserver.openAPIContextPathPrefix";
+    private static final String MOCKSERVER_OPENAPI_RESPONSE_VALIDATION = "mockserver.openAPIResponseValidation";
     private static final String MOCKSERVER_WATCH_INITIALIZATION_JSON = "mockserver.watchInitializationJson";
 
     // mock persistence
@@ -957,6 +958,22 @@ public class ConfigurationProperties {
      */
     public static void openAPIContextPathPrefix(String openAPIContextPathPrefix) {
         setProperty(MOCKSERVER_OPENAPI_CONTEXT_PATH_PREFIX, openAPIContextPathPrefix);
+    }
+
+    public static boolean openAPIResponseValidation() {
+        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_OPENAPI_RESPONSE_VALIDATION, "MOCKSERVER_OPENAPI_RESPONSE_VALIDATION", "" + false));
+    }
+
+    /**
+     * <p>If enabled MockServer will validate that mock responses conform to the OpenAPI spec schema they were generated from.</p>
+     * <p>Validation is advisory only - responses are still returned to the client even if validation fails.</p>
+     *
+     * <p>The default is false</p>
+     *
+     * @param enable if enabled mock responses will be validated against the OpenAPI spec schema
+     */
+    public static void openAPIResponseValidation(boolean enable) {
+        setProperty(MOCKSERVER_OPENAPI_RESPONSE_VALIDATION, "" + enable);
     }
 
     public static boolean watchInitializationJson() {

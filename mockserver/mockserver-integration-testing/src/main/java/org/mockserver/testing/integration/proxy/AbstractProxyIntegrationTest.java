@@ -1054,7 +1054,7 @@ public abstract class AbstractProxyIntegrationTest {
             "   - $.httpRequest: is not defined in the schema and the schema does not allow additional properties\n" +
             "   - $.httpRequests: is missing, but is required, if specifying action of type Requests\n" +
             "   - $: should be valid to one and only one schema, but 0 are valid\n" +
-            "   - oneOf of the following must be specified [httpError, httpForward, httpForwardClassCallback, httpForwardObjectCallback, httpForwardTemplate, httpOverrideForwardedRequest, httpResponse, httpResponseClassCallback, httpResponseObjectCallback, httpResponseTemplate]" + NEW_LINE +
+            "   - oneOf of the following must be specified [httpError, httpForward, httpForwardClassCallback, httpForwardObjectCallback, httpForwardTemplate, httpForwardValidateAction, httpOverrideForwardedRequest, httpResponse, httpResponseClassCallback, httpResponseObjectCallback, httpResponseTemplate]" + NEW_LINE +
             "  " + NEW_LINE +
             "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  ")));
     }

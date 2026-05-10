@@ -39,6 +39,9 @@
     "httpOverrideForwardedRequest": {
       "$ref": "#/definitions/httpOverrideForwardedRequest"
     },
+    "httpForwardValidateAction": {
+      "$ref": "#/definitions/httpForwardValidateAction"
+    },
     "httpError": {
       "$ref": "#/definitions/httpError"
     },
@@ -103,6 +106,11 @@
     {
       "required": [
         "httpOverrideForwardedRequest"
+      ]
+    },
+    {
+      "required": [
+        "httpForwardValidateAction"
       ]
     },
     {
