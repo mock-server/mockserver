@@ -83,7 +83,7 @@ public class MockServerHttpResponseToFullHttpResponse {
     private HttpResponseStatus getStatus(HttpResponse httpResponse) {
         int statusCode = httpResponse.getStatusCode() != null ? httpResponse.getStatusCode() : 200;
         if (!isEmpty(httpResponse.getReasonPhrase())) {
-            return new HttpResponseStatus(statusCode, httpResponse.getReasonPhrase());
+            return new HttpResponseStatus(statusCode, sanitizeHeaderValue(httpResponse.getReasonPhrase()));
         } else {
             return HttpResponseStatus.valueOf(statusCode);
         }
@@ -110,7 +110,7 @@ public class MockServerHttpResponseToFullHttpResponse {
                 .forEach(entry ->
                     response
                         .headers()
-                        .add(entry.getKey().getValue(), entry.getValue().getValue())
+                        .add(sanitizeHeaderValue(entry.getKey().getValue()), sanitizeHeaderValue(entry.getValue().getValue()))
                 );
         }
 
@@ -118,7 +118,7 @@ public class MockServerHttpResponseToFullHttpResponse {
         if (isBlank(httpResponse.getFirstHeader(CONTENT_TYPE.toString()))) {
             if (httpResponse.getBody() != null
                 && httpResponse.getBody().getContentType() != null) {
-                response.headers().set(CONTENT_TYPE, httpResponse.getBody().getContentType());
+                response.headers().set(CONTENT_TYPE, sanitizeHeaderValue(httpResponse.getBody().getContentType()));
             }
         }
 
@@ -154,5 +154,12 @@ public class MockServerHttpResponseToFullHttpResponse {
                 }
             }
         }
+    }
+
+    private static String sanitizeHeaderValue(String value) {
+        if (value == null) {
+            return null;
+        }
+        return value.replace("\r", "").replace("\n", "");
     }
 }

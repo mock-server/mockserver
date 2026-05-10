@@ -18,7 +18,7 @@
   },
   "license": "Apache-2.0",
   "engines": {
-    "node": ">= 0.8.0"
+    "node": ">= 14.17.0"
   },
   "files": [
     "README.md",

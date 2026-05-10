@@ -90,13 +90,17 @@ public class IOStreamUtils {
             output.write(data);
             output.close();
         } catch (IOException ioe) {
+            String truncatedContent = data.length > 100
+                ? new String(data, 0, 100, UTF_8) + "...(" + data.length + " bytes)"
+                : new String(data, UTF_8);
+            String sanitized = truncatedContent.replaceAll("[<>&]", "_");
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("IOException while writing [" + new String(data) + "] to HttpServletResponse output stream")
+                    .setMessageFormat("IOException while writing [" + sanitized + "] to HttpServletResponse output stream")
                     .setThrowable(ioe)
             );
-            throw new RuntimeException("IOException while writing [" + new String(data) + "] to HttpServletResponse output stream", ioe);
+            throw new RuntimeException("IOException while writing " + data.length + " bytes to HttpServletResponse output stream", ioe);
         }
     }
 

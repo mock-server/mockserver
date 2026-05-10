@@ -54,7 +54,17 @@ public class DashboardHandler {
             if (path.isEmpty() || path.equals("/")) {
                 path = "/index.html";
             }
-            try (InputStream contentStream = DashboardHandler.class.getResourceAsStream("/org/mockserver/dashboard" + path)) {
+            if (path.contains("..")) {
+                ctx.writeAndFlush(notFoundResponse()).addListener(ChannelFutureListener.CLOSE);
+                return;
+            }
+            String resourcePath = "/org/mockserver/dashboard" + path;
+            String normalizedPath = java.net.URI.create(resourcePath).normalize().getPath();
+            if (!normalizedPath.startsWith("/org/mockserver/dashboard/") && !normalizedPath.equals("/org/mockserver/dashboard")) {
+                ctx.writeAndFlush(notFoundResponse()).addListener(ChannelFutureListener.CLOSE);
+                return;
+            }
+            try (InputStream contentStream = DashboardHandler.class.getResourceAsStream(normalizedPath)) {
                 if (contentStream != null) {
                     final String extension = substringAfterLast(path, ".");
                     if (IS_STRING_CONTENT.contains(extension)) {

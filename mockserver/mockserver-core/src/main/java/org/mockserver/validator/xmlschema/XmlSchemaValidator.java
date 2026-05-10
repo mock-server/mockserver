@@ -76,8 +76,9 @@ public class XmlSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStri
 
     private SchemaFactory buildSchemaFactory() throws SAXNotRecognizedException, SAXNotSupportedException {
         SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-        schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "all");
-        schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "all");
+        schemaFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+        schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "file");
         return schemaFactory;
     }
 
@@ -86,7 +87,10 @@ public class XmlSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStri
         String errorMessage = "";
         try {
             try {
-                schema.newValidator().validate(new StreamSource(new ByteArrayInputStream(xml.getBytes(UTF_8))));
+                javax.xml.validation.Validator validator = schema.newValidator();
+                validator.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+                validator.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+                validator.validate(new StreamSource(new ByteArrayInputStream(xml.getBytes(UTF_8))));
             } catch (SAXException e) {
                 errorMessage = e.getMessage();
             }

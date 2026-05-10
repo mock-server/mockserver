@@ -41,8 +41,13 @@ public class FileReader {
     public static InputStream openStreamToFileFromClassPathOrPath(String filename) throws FileNotFoundException {
         InputStream inputStream = FileReader.class.getClassLoader().getResourceAsStream(filename);
         if (inputStream == null) {
-            // load from path if not found in classpath
-            inputStream = new FileInputStream(filename);
+            File file;
+            try {
+                file = new File(filename).getCanonicalFile();
+            } catch (IOException e) {
+                throw new FileNotFoundException("Invalid file path: " + filename);
+            }
+            inputStream = new FileInputStream(file);
         }
         return inputStream;
     }

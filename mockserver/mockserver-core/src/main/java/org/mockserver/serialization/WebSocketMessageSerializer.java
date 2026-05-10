@@ -11,7 +11,9 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.serialization.model.WebSocketMessageDTO;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author jamesdbloom
@@ -19,6 +21,12 @@ import java.util.Map;
 @SuppressWarnings({"rawtypes", "unchecked", "FieldMayBeFinal"})
 public class WebSocketMessageSerializer {
 
+    private static final Set<String> ALLOWED_TYPES = new HashSet<>();
+    static {
+        ALLOWED_TYPES.add(HttpRequest.class.getName());
+        ALLOWED_TYPES.add(HttpResponse.class.getName());
+        ALLOWED_TYPES.add(HttpRequestAndHttpResponse.class.getName());
+    }
     private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true, false);
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private Map<Class, Serializer> serializers;
@@ -43,6 +51,9 @@ public class WebSocketMessageSerializer {
     public Object deserialize(String messageJson) throws ClassNotFoundException, IOException {
         WebSocketMessageDTO webSocketMessageDTO = objectMapper.readValue(messageJson, WebSocketMessageDTO.class);
         if (webSocketMessageDTO.getType() != null && webSocketMessageDTO.getValue() != null) {
+            if (!ALLOWED_TYPES.contains(webSocketMessageDTO.getType())) {
+                throw new IllegalArgumentException("Unsupported WebSocket message type: " + webSocketMessageDTO.getType());
+            }
             Class format = Class.forName(webSocketMessageDTO.getType());
             if (serializers.containsKey(format)) {
                 return serializers.get(format).deserialize(webSocketMessageDTO.getValue());

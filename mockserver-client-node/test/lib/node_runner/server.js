@@ -38,8 +38,10 @@ var routing = function () {
         }
 
         for (var directoryIndex = 0; directoryIndex < directories.length; directoryIndex++) {
-            filename = path.join(directories[directoryIndex], unescape(uri));
-            if (fs.existsSync(filename) && fs.lstatSync(filename).isFile()) {
+            var resolvedDir = path.resolve(directories[directoryIndex]);
+            var candidate = path.resolve(resolvedDir, unescape(uri).replace(/^\//, ''));
+            if ((candidate === resolvedDir || candidate.startsWith(resolvedDir + path.sep)) && fs.existsSync(candidate) && fs.lstatSync(candidate).isFile()) {
+                filename = candidate;
                 break;
             } else {
                 filename = "";

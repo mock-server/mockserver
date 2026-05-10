@@ -6,6 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.model.NottableOptionalString.OPTIONAL_CHAR;
@@ -215,9 +216,19 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
         return isBlank;
     }
 
+    private static final int MAX_REGEX_LENGTH = 8192;
+
     public boolean matches(String input) {
         if (pattern == null) {
-            pattern = Pattern.compile(getValue(), Pattern.DOTALL | Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+            String regex = getValue();
+            if (regex != null && regex.length() > MAX_REGEX_LENGTH) {
+                return false;
+            }
+            try {
+                pattern = Pattern.compile(regex, Pattern.DOTALL | Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+            } catch (PatternSyntaxException e) {
+                return false;
+            }
         }
         return pattern.matcher(input).matches();
     }

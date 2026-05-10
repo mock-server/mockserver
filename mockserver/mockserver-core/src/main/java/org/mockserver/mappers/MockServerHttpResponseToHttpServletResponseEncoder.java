@@ -35,7 +35,7 @@ public class MockServerHttpResponseToHttpServletResponseEncoder {
     private void setStatusCode(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
         int statusCode = httpResponse.getStatusCode() != null ? httpResponse.getStatusCode() : 200;
         if (httpResponse.getReasonPhrase() != null) {
-            httpServletResponse.setStatus(statusCode, httpResponse.getReasonPhrase());
+            httpServletResponse.setStatus(statusCode, sanitizeHeaderValue(httpResponse.getReasonPhrase()));
         } else {
             httpServletResponse.setStatus(statusCode);
         }
@@ -44,14 +44,14 @@ public class MockServerHttpResponseToHttpServletResponseEncoder {
     private void setHeaders(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
         if (httpResponse.getHeaderList() != null) {
             for (Header header : httpResponse.getHeaderList()) {
-                String headerName = header.getName().getValue();
+                String headerName = sanitizeHeaderValue(header.getName().getValue());
                 if (!headerName.equalsIgnoreCase(CONTENT_LENGTH.toString())
                     && !headerName.equalsIgnoreCase(TRANSFER_ENCODING.toString())
                     && !headerName.equalsIgnoreCase(HOST.toString())
                     && !headerName.equalsIgnoreCase(ACCEPT_ENCODING.toString())
                     && !headerName.equalsIgnoreCase(CONNECTION.toString())) {
                     for (NottableString value : header.getValues()) {
-                        httpServletResponse.addHeader(headerName, value.getValue());
+                        httpServletResponse.addHeader(headerName, sanitizeHeaderValue(value.getValue()));
                     }
                 }
             }
@@ -77,7 +77,14 @@ public class MockServerHttpResponseToHttpServletResponseEncoder {
         if (httpServletResponse.getContentType() == null
             && httpResponse.getBody() != null
             && httpResponse.getBody().getContentType() != null) {
-            httpServletResponse.addHeader(CONTENT_TYPE.toString(), httpResponse.getBody().getContentType());
+            httpServletResponse.addHeader(CONTENT_TYPE.toString(), sanitizeHeaderValue(httpResponse.getBody().getContentType()));
         }
+    }
+
+    private static String sanitizeHeaderValue(String value) {
+        if (value == null) {
+            return null;
+        }
+        return value.replace("\r", "").replace("\n", "");
     }
 }
