@@ -1,5 +1,6 @@
 package org.mockserver.serialization.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.mockserver.model.HttpWebSocketResponse;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
@@ -11,6 +12,8 @@ public class HttpWebSocketResponseDTO extends ObjectWithReflectiveEqualsHashCode
     private String subprotocol;
     private List<WebSocketMessageModelDTO> messages;
     private Boolean closeConnection;
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private boolean primary;
 
     public HttpWebSocketResponseDTO(HttpWebSocketResponse httpWebSocketResponse) {
         if (httpWebSocketResponse != null) {
@@ -23,6 +26,7 @@ public class HttpWebSocketResponseDTO extends ObjectWithReflectiveEqualsHashCode
                 messages = new ArrayList<>();
                 httpWebSocketResponse.getMessages().forEach(message -> messages.add(new WebSocketMessageModelDTO(message)));
             }
+            primary = httpWebSocketResponse.isPrimary();
         }
     }
 
@@ -33,7 +37,8 @@ public class HttpWebSocketResponseDTO extends ObjectWithReflectiveEqualsHashCode
         HttpWebSocketResponse httpWebSocketResponse = new HttpWebSocketResponse()
             .withDelay(delay != null ? delay.buildObject() : null)
             .withSubprotocol(subprotocol)
-            .withCloseConnection(closeConnection);
+            .withCloseConnection(closeConnection)
+            .withPrimary(primary);
         if (messages != null) {
             messages.forEach(messageDTO -> httpWebSocketResponse.withMessage(messageDTO.buildObject()));
         }
@@ -73,6 +78,15 @@ public class HttpWebSocketResponseDTO extends ObjectWithReflectiveEqualsHashCode
 
     public HttpWebSocketResponseDTO setCloseConnection(Boolean closeConnection) {
         this.closeConnection = closeConnection;
+        return this;
+    }
+
+    public boolean isPrimary() {
+        return primary;
+    }
+
+    public HttpWebSocketResponseDTO setPrimary(boolean primary) {
+        this.primary = primary;
         return this;
     }
 }

@@ -1,5 +1,6 @@
 package org.mockserver.serialization.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpForwardValidateAction;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
@@ -13,6 +14,8 @@ public class HttpForwardValidateActionDTO extends ObjectWithReflectiveEqualsHash
     private Boolean validateResponse;
     private HttpForwardValidateAction.ValidationMode validationMode;
     private DelayDTO delay;
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private boolean primary;
 
     public HttpForwardValidateActionDTO(HttpForwardValidateAction httpForwardValidateAction) {
         if (httpForwardValidateAction != null) {
@@ -26,6 +29,7 @@ public class HttpForwardValidateActionDTO extends ObjectWithReflectiveEqualsHash
             if (httpForwardValidateAction.getDelay() != null) {
                 delay = new DelayDTO(httpForwardValidateAction.getDelay());
             }
+            primary = httpForwardValidateAction.isPrimary();
         }
     }
 
@@ -41,7 +45,8 @@ public class HttpForwardValidateActionDTO extends ObjectWithReflectiveEqualsHash
             .withValidateRequest(validateRequest != null ? validateRequest : true)
             .withValidateResponse(validateResponse != null ? validateResponse : true)
             .withValidationMode(validationMode != null ? validationMode : HttpForwardValidateAction.ValidationMode.STRICT)
-            .withDelay(delay != null ? delay.buildObject() : null);
+            .withDelay(delay != null ? delay.buildObject() : null)
+            .withPrimary(primary);
     }
 
     public String getSpecUrlOrPayload() {
@@ -113,6 +118,15 @@ public class HttpForwardValidateActionDTO extends ObjectWithReflectiveEqualsHash
 
     public HttpForwardValidateActionDTO setDelay(DelayDTO delay) {
         this.delay = delay;
+        return this;
+    }
+
+    public boolean isPrimary() {
+        return primary;
+    }
+
+    public HttpForwardValidateActionDTO setPrimary(boolean primary) {
+        this.primary = primary;
         return this;
     }
 }

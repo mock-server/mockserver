@@ -17,6 +17,7 @@ import org.mockserver.model.*;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.uuid.UUIDService;
 
+import java.util.Arrays;
 import java.util.concurrent.Future;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -71,6 +72,25 @@ public class ForwardChainExpectation {
     public ForwardChainExpectation withPriority(int priority) {
         expectation.withPriority(priority);
         return this;
+    }
+
+    /**
+     * Set after-actions to execute after the primary action completes
+     *
+     * @param afterActions the after-actions to execute
+     */
+    public ForwardChainExpectation withAfterActions(AfterAction... afterActions) {
+        expectation.withAfterActions(afterActions);
+        return this;
+    }
+
+    /**
+     * Set a single after-action to execute after the primary action completes
+     *
+     * @param afterAction the after-action to set
+     */
+    public ForwardChainExpectation withAfterAction(AfterAction afterAction) {
+        return withAfterActions(afterAction);
     }
 
     /**

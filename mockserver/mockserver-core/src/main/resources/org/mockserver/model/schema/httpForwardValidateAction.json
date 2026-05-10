@@ -32,6 +32,9 @@
         "STRICT",
         "LOG_ONLY"
       ]
+    },
+    "primary": {
+      "type": "boolean"
     }
   },
   "required": [

@@ -12,6 +12,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
 
 /**
  * @author jamesdbloom
@@ -181,157 +182,157 @@ public class ExpectationTest {
         assertThat(expectation.getTimes(), nullValue());
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldPreventResponseAfterForward() {
+    @Test
+    public void shouldAllowResponseAfterForward() {
         // given
         HttpRequest httpRequest = new HttpRequest();
         HttpResponse httpResponse = new HttpResponse();
         HttpForward httpForward = new HttpForward();
 
+        // when
+        Expectation expectation = new Expectation(httpRequest, Times.once(), TimeToLive.unlimited(), 0).thenForward(httpForward).thenRespond(httpResponse);
+
         // then
-        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited(), 0).thenForward(httpForward).thenRespond(httpResponse);
+        assertEquals(httpResponse, expectation.getHttpResponse());
+        assertEquals(httpForward, expectation.getHttpForward());
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldPreventResponseAfterError() {
+    @Test
+    public void shouldAllowResponseAfterError() {
         // given
         HttpRequest httpRequest = new HttpRequest();
         HttpResponse httpResponse = new HttpResponse();
         HttpError httpError = new HttpError();
 
-        // then
-        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited(), 0).thenError(httpError).thenRespond(httpResponse);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldPreventResponseAfterClassCallback() {
-        // given
-        HttpRequest httpRequest = new HttpRequest();
-        HttpClassCallback httpClassCallback = new HttpClassCallback();
-        HttpResponse httpResponse = new HttpResponse();
+        // when
+        Expectation expectation = new Expectation(httpRequest, Times.once(), TimeToLive.unlimited(), 0).thenError(httpError).thenRespond(httpResponse);
 
         // then
-        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited(), 0).thenRespond(httpClassCallback).thenRespond(httpResponse);
+        assertEquals(httpResponse, expectation.getHttpResponse());
+        assertEquals(httpError, expectation.getHttpError());
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldPreventResponseAfterObjectCallback() {
-        // given
-        HttpRequest httpRequest = new HttpRequest();
-        HttpObjectCallback httpObjectCallback = new HttpObjectCallback();
-        HttpResponse httpResponse = new HttpResponse();
-
-        // then
-        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited(), 0).thenRespond(httpObjectCallback).thenRespond(httpResponse);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldPreventForwardAfterResponse() {
+    @Test
+    public void shouldAllowForwardAfterResponse() {
         // given
         HttpRequest httpRequest = new HttpRequest();
         HttpResponse httpResponse = new HttpResponse();
         HttpForward httpForward = new HttpForward();
 
+        // when
+        Expectation expectation = new Expectation(httpRequest, Times.once(), TimeToLive.unlimited(), 0).thenRespond(httpResponse).thenForward(httpForward);
+
         // then
-        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited(), 0).thenRespond(httpResponse).thenForward(httpForward);
+        assertEquals(httpResponse, expectation.getHttpResponse());
+        assertEquals(httpForward, expectation.getHttpForward());
+    }
+
+    @Test
+    public void shouldReturnPrimaryActionWhenFlagged() {
+        // given
+        HttpResponse httpResponse = response().withPrimary(false);
+        HttpForward httpForward = new HttpForward().withHost("localhost").withPrimary(true);
+
+        // when
+        Expectation expectation = new Expectation(request())
+            .thenRespond(httpResponse)
+            .thenForward(httpForward);
+
+        // then
+        assertEquals(httpForward, expectation.getPrimaryAction());
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void shouldPreventForwardAfterError() {
+    public void shouldThrowWhenMultipleActionsAndNoPrimary() {
         // given
-        HttpRequest httpRequest = new HttpRequest();
-        HttpError httpError = new HttpError();
-        HttpForward httpForward = new HttpForward();
+        HttpResponse httpResponse = response();
+        HttpForward httpForward = new HttpForward().withHost("localhost");
 
-        // then
-        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited(), 0).thenError(httpError).thenForward(httpForward);
+        // when
+        Expectation expectation = new Expectation(request())
+            .thenRespond(httpResponse)
+            .thenForward(httpForward);
+
+        // then - throws
+        expectation.getPrimaryAction();
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void shouldPreventForwardAfterClassCallback() {
+    public void shouldThrowWhenMultipleActionsAndMultiplePrimaries() {
         // given
-        HttpRequest httpRequest = new HttpRequest();
-        HttpClassCallback httpClassCallback = new HttpClassCallback();
-        HttpForward httpForward = new HttpForward();
+        HttpResponse httpResponse = response().withPrimary(true);
+        HttpForward httpForward = new HttpForward().withHost("localhost").withPrimary(true);
 
-        // then
-        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited(), 0).thenRespond(httpClassCallback).thenForward(httpForward);
+        // when
+        Expectation expectation = new Expectation(request())
+            .thenRespond(httpResponse)
+            .thenForward(httpForward);
+
+        // then - throws
+        expectation.getPrimaryAction();
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldPreventForwardAfterObjectCallback() {
+    @Test
+    public void shouldReturnSecondaryActions() {
         // given
-        HttpRequest httpRequest = new HttpRequest();
-        HttpObjectCallback httpObjectCallback = new HttpObjectCallback();
-        HttpForward httpForward = new HttpForward();
+        HttpResponse httpResponse = response().withPrimary(true);
+        HttpForward httpForward = new HttpForward().withHost("localhost");
+
+        // when
+        Expectation expectation = new Expectation(request())
+            .thenRespond(httpResponse)
+            .thenForward(httpForward);
 
         // then
-        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited(), 0).thenRespond(httpObjectCallback).thenForward(httpForward);
+        assertThat(expectation.getSecondaryActions().size(), is(1));
+        assertEquals(httpForward, expectation.getSecondaryActions().get(0));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldPreventClassCallbackAfterForward() {
+    @Test
+    public void shouldReturnEmptySecondaryActionsForSingleAction() {
         // given
-        HttpRequest httpRequest = new HttpRequest();
-        HttpForward httpForward = new HttpForward();
-        HttpClassCallback httpClassCallback = new HttpClassCallback();
+        HttpResponse httpResponse = response();
+
+        // when
+        Expectation expectation = new Expectation(request())
+            .thenRespond(httpResponse);
 
         // then
-        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited(), 0).thenForward(httpForward).thenRespond(httpClassCallback);
+        assertThat(expectation.getSecondaryActions().size(), is(0));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldPreventClassCallbackAfterError() {
-        // given
-        HttpRequest httpRequest = new HttpRequest();
-        HttpError httpError = new HttpError();
-        HttpClassCallback httpClassCallback = new HttpClassCallback();
+    @Test
+    public void shouldReturnEmptySecondaryActionsForNoAction() {
+        // when
+        Expectation expectation = new Expectation(request());
 
         // then
-        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited(), 0).thenError(httpError).thenRespond(httpClassCallback);
+        assertThat(expectation.getSecondaryActions().size(), is(0));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldPreventClassCallbackAfterResponse() {
+    @Test
+    public void shouldGetActionDelegatesToPrimaryAction() {
         // given
-        HttpRequest httpRequest = new HttpRequest();
-        HttpResponse httpResponse = new HttpResponse();
-        HttpClassCallback httpClassCallback = new HttpClassCallback();
+        HttpResponse httpResponse = response().withPrimary(false);
+        HttpForward httpForward = new HttpForward().withHost("localhost").withPrimary(true);
+
+        // when
+        Expectation expectation = new Expectation(request())
+            .thenRespond(httpResponse)
+            .thenForward(httpForward);
 
         // then
-        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited(), 0).thenRespond(httpResponse).thenRespond(httpClassCallback);
+        assertEquals(httpForward, expectation.getAction());
+        assertEquals(expectation.getPrimaryAction(), expectation.getAction());
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldPreventObjectCallbackAfterForward() {
-        // given
-        HttpRequest httpRequest = new HttpRequest();
-        HttpForward httpForward = new HttpForward();
-        HttpObjectCallback httpObjectCallback = new HttpObjectCallback();
+    @Test
+    public void shouldReturnNullPrimaryActionWhenNoActions() {
+        // when
+        Expectation expectation = new Expectation(request());
 
         // then
-        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited(), 0).thenForward(httpForward).thenRespond(httpObjectCallback);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldPreventObjectCallbackAfterError() {
-        // given
-        HttpRequest httpRequest = new HttpRequest();
-        HttpError httpError = new HttpError();
-        HttpObjectCallback httpObjectCallback = new HttpObjectCallback();
-
-        // then
-        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited(), 0).thenError(httpError).thenRespond(httpObjectCallback);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldPreventObjectCallbackAfterResponse() {
-        // given
-        HttpRequest httpRequest = new HttpRequest();
-        HttpResponse httpResponse = new HttpResponse();
-        HttpObjectCallback httpObjectCallback = new HttpObjectCallback();
-
-        // then
-        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited(), 0).thenRespond(httpResponse).thenRespond(httpObjectCallback);
+        assertNull(expectation.getPrimaryAction());
+        assertNull(expectation.getAction());
     }
 }

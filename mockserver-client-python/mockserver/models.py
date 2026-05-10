@@ -54,6 +54,7 @@ _FIELD_MAP = {
     "maximum_number_of_request_to_return_in_verification_failure": "maximumNumberOfRequestToReturnInVerificationFailure",
     "http_sse_response": "httpSseResponse",
     "http_websocket_response": "httpWebSocketResponse",
+    "after_actions": "afterActions",
 }
 
 
@@ -554,6 +555,7 @@ class HttpResponse:
     body: Body | str | dict | None = None
     delay: Delay | None = None
     connection_options: ConnectionOptions | None = None
+    primary: bool | None = None
 
     def to_dict(self) -> dict:
         return _strip_none({
@@ -564,6 +566,7 @@ class HttpResponse:
             "body": _serialize_body(self.body),
             "delay": self.delay.to_dict() if self.delay else None,
             "connectionOptions": self.connection_options.to_dict() if self.connection_options else None,
+            "primary": self.primary,
         })
 
     @classmethod
@@ -578,6 +581,7 @@ class HttpResponse:
             body=_deserialize_body(data.get("body")),
             delay=Delay.from_dict(data.get("delay")),
             connection_options=ConnectionOptions.from_dict(data.get("connectionOptions")),
+            primary=data.get("primary"),
         )
 
     @staticmethod
@@ -633,6 +637,7 @@ class HttpForward:
     port: int | None = None
     scheme: str | None = None
     delay: Delay | None = None
+    primary: bool | None = None
 
     def to_dict(self) -> dict:
         return _strip_none({
@@ -640,6 +645,7 @@ class HttpForward:
             "port": self.port,
             "scheme": self.scheme,
             "delay": self.delay.to_dict() if self.delay else None,
+            "primary": self.primary,
         })
 
     @classmethod
@@ -651,6 +657,7 @@ class HttpForward:
             port=data.get("port"),
             scheme=data.get("scheme"),
             delay=Delay.from_dict(data.get("delay")),
+            primary=data.get("primary"),
         )
 
     @staticmethod
@@ -663,12 +670,14 @@ class HttpTemplate:
     template_type: str = "JAVASCRIPT"
     template: str | None = None
     delay: Delay | None = None
+    primary: bool | None = None
 
     def to_dict(self) -> dict:
         return _strip_none({
             "templateType": self.template_type,
             "template": self.template,
             "delay": self.delay.to_dict() if self.delay else None,
+            "primary": self.primary,
         })
 
     @classmethod
@@ -679,6 +688,7 @@ class HttpTemplate:
             template_type=data.get("templateType", "JAVASCRIPT"),
             template=data.get("template"),
             delay=Delay.from_dict(data.get("delay")),
+            primary=data.get("primary"),
         )
 
 
@@ -693,11 +703,13 @@ HttpTemplate.template = staticmethod(_http_template_factory)
 class HttpClassCallback:
     callback_class: str | None = None
     delay: Delay | None = None
+    primary: bool | None = None
 
     def to_dict(self) -> dict:
         return _strip_none({
             "callbackClass": self.callback_class,
             "delay": self.delay.to_dict() if self.delay else None,
+            "primary": self.primary,
         })
 
     @classmethod
@@ -707,6 +719,7 @@ class HttpClassCallback:
         return cls(
             callback_class=data.get("callbackClass"),
             delay=Delay.from_dict(data.get("delay")),
+            primary=data.get("primary"),
         )
 
     @staticmethod
@@ -719,12 +732,14 @@ class HttpObjectCallback:
     client_id: str | None = None
     response_callback: bool | None = None
     delay: Delay | None = None
+    primary: bool | None = None
 
     def to_dict(self) -> dict:
         return _strip_none({
             "clientId": self.client_id,
             "responseCallback": self.response_callback,
             "delay": self.delay.to_dict() if self.delay else None,
+            "primary": self.primary,
         })
 
     @classmethod
@@ -735,6 +750,7 @@ class HttpObjectCallback:
             client_id=data.get("clientId"),
             response_callback=data.get("responseCallback"),
             delay=Delay.from_dict(data.get("delay")),
+            primary=data.get("primary"),
         )
 
 
@@ -743,12 +759,14 @@ class HttpError:
     drop_connection: bool | None = None
     response_bytes: str | None = None
     delay: Delay | None = None
+    primary: bool | None = None
 
     def to_dict(self) -> dict:
         return _strip_none({
             "dropConnection": self.drop_connection,
             "responseBytes": self.response_bytes,
             "delay": self.delay.to_dict() if self.delay else None,
+            "primary": self.primary,
         })
 
     @classmethod
@@ -759,6 +777,7 @@ class HttpError:
             drop_connection=data.get("dropConnection"),
             response_bytes=data.get("responseBytes"),
             delay=Delay.from_dict(data.get("delay")),
+            primary=data.get("primary"),
         )
 
     @staticmethod
@@ -808,6 +827,7 @@ class HttpSseResponse:
     events: list[SseEvent] | None = None
     close_connection: bool | None = None
     delay: Delay | None = None
+    primary: bool | None = None
 
     def to_dict(self) -> dict:
         result: dict = {}
@@ -821,6 +841,8 @@ class HttpSseResponse:
             result["closeConnection"] = self.close_connection
         if self.delay is not None:
             result["delay"] = self.delay.to_dict()
+        if self.primary is not None:
+            result["primary"] = self.primary
         return result
 
     @classmethod
@@ -837,6 +859,7 @@ class HttpSseResponse:
             events=events,
             close_connection=data.get("closeConnection"),
             delay=Delay.from_dict(data.get("delay")),
+            primary=data.get("primary"),
         )
 
 
@@ -877,6 +900,7 @@ class HttpWebSocketResponse:
     messages: list[WebSocketMessage] | None = None
     close_connection: bool | None = None
     delay: Delay | None = None
+    primary: bool | None = None
 
     def to_dict(self) -> dict:
         result: dict = {}
@@ -888,6 +912,8 @@ class HttpWebSocketResponse:
             result["closeConnection"] = self.close_connection
         if self.delay is not None:
             result["delay"] = self.delay.to_dict()
+        if self.primary is not None:
+            result["primary"] = self.primary
         return result
 
     @classmethod
@@ -903,6 +929,7 @@ class HttpWebSocketResponse:
             messages=messages,
             close_connection=data.get("closeConnection"),
             delay=Delay.from_dict(data.get("delay")),
+            primary=data.get("primary"),
         )
 
 
@@ -913,6 +940,7 @@ class HttpOverrideForwardedRequest:
     delay: Delay | None = None
     request_modifier: dict | None = None
     response_modifier: dict | None = None
+    primary: bool | None = None
 
     def to_dict(self) -> dict:
         return _strip_none({
@@ -921,6 +949,7 @@ class HttpOverrideForwardedRequest:
             "delay": self.delay.to_dict() if self.delay else None,
             "requestModifier": self.request_modifier,
             "responseModifier": self.response_modifier,
+            "primary": self.primary,
         })
 
     @classmethod
@@ -933,6 +962,7 @@ class HttpOverrideForwardedRequest:
             delay=Delay.from_dict(data.get("delay")),
             request_modifier=data.get("requestModifier"),
             response_modifier=data.get("responseModifier"),
+            primary=data.get("primary"),
         )
 
     @staticmethod
@@ -976,6 +1006,33 @@ class ExpectationId:
 
 
 @dataclass
+class AfterAction:
+    http_request: HttpRequest | None = None
+    http_class_callback: HttpClassCallback | None = None
+    http_object_callback: HttpObjectCallback | None = None
+    delay: Delay | None = None
+
+    def to_dict(self) -> dict:
+        return _strip_none({
+            "httpRequest": self.http_request.to_dict() if self.http_request else None,
+            "httpClassCallback": self.http_class_callback.to_dict() if self.http_class_callback else None,
+            "httpObjectCallback": self.http_object_callback.to_dict() if self.http_object_callback else None,
+            "delay": self.delay.to_dict() if self.delay else None,
+        })
+
+    @classmethod
+    def from_dict(cls, data: dict) -> AfterAction:
+        if data is None:
+            return None
+        return cls(
+            http_request=HttpRequest.from_dict(data.get("httpRequest")),
+            http_class_callback=HttpClassCallback.from_dict(data.get("httpClassCallback")),
+            http_object_callback=HttpObjectCallback.from_dict(data.get("httpObjectCallback")),
+            delay=Delay.from_dict(data.get("delay")),
+        )
+
+
+@dataclass
 class Expectation:
     id: str | None = None
     priority: int | None = None
@@ -994,6 +1051,7 @@ class Expectation:
     http_websocket_response: HttpWebSocketResponse | None = None
     times: Times | None = None
     time_to_live: TimeToLive | None = None
+    after_actions: list[AfterAction] | None = None
 
     def to_dict(self) -> dict:
         return _strip_none({
@@ -1014,12 +1072,16 @@ class Expectation:
             "httpWebSocketResponse": self.http_websocket_response.to_dict() if self.http_websocket_response else None,
             "times": self.times.to_dict() if self.times else None,
             "timeToLive": self.time_to_live.to_dict() if self.time_to_live else None,
+            "afterActions": [a.to_dict() for a in self.after_actions] if self.after_actions else None,
         })
 
     @classmethod
     def from_dict(cls, data: dict) -> Expectation:
         if data is None:
             return None
+        after_actions_data = data.get("afterActions")
+        if isinstance(after_actions_data, dict):
+            after_actions_data = [after_actions_data]
         return cls(
             id=data.get("id"),
             priority=data.get("priority"),
@@ -1034,10 +1096,11 @@ class Expectation:
             http_forward_object_callback=HttpObjectCallback.from_dict(data.get("httpForwardObjectCallback")),
             http_override_forwarded_request=HttpOverrideForwardedRequest.from_dict(data.get("httpOverrideForwardedRequest")),
             http_error=HttpError.from_dict(data.get("httpError")),
-            http_sse_response=HttpSseResponse.from_dict(data.get("httpSseResponse")) if data.get("httpSseResponse") else None,
-            http_websocket_response=HttpWebSocketResponse.from_dict(data.get("httpWebSocketResponse")) if data.get("httpWebSocketResponse") else None,
+            http_sse_response=HttpSseResponse.from_dict(data.get("httpSseResponse")),
+            http_websocket_response=HttpWebSocketResponse.from_dict(data.get("httpWebSocketResponse")),
             times=Times.from_dict(data.get("times")),
             time_to_live=TimeToLive.from_dict(data.get("timeToLive")),
+            after_actions=[AfterAction.from_dict(a) for a in after_actions_data] if after_actions_data else None,
         )
 
 

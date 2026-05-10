@@ -1,6 +1,7 @@
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -12,6 +13,8 @@ import java.util.concurrent.TimeUnit;
 public abstract class Action<T extends Action> extends ObjectWithJsonToString {
     private int hashCode;
     private Delay delay;
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private boolean primary;
     private String expectationId;
 
     /**
@@ -38,6 +41,16 @@ public abstract class Action<T extends Action> extends ObjectWithJsonToString {
 
     public Delay getDelay() {
         return delay;
+    }
+
+    public T withPrimary(boolean primary) {
+        this.primary = primary;
+        this.hashCode = 0;
+        return (T) this;
+    }
+
+    public boolean isPrimary() {
+        return primary;
     }
 
     @JsonIgnore
@@ -93,13 +106,14 @@ public abstract class Action<T extends Action> extends ObjectWithJsonToString {
             return false;
         }
         Action<?> action = (Action<?>) o;
-        return Objects.equals(delay, action.delay);
+        return primary == action.primary &&
+            Objects.equals(delay, action.delay);
     }
 
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(delay);
+            hashCode = Objects.hash(delay, primary);
         }
         return hashCode;
     }

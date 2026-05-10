@@ -102,14 +102,11 @@ public class ExpectationWithSseAndJsonRpcSerializationTest {
     }
 
     @Test
-    public void shouldNotAllowBothSseResponseAndRegularResponse() {
-        try {
-            Expectation.when(request())
-                .thenRespond(HttpResponse.response().withStatusCode(200))
-                .thenRespondWithSse(sseResponse().withEvent(sseEvent().withData("test")));
-            fail("Expected IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            assertTrue(e.getMessage().contains("response has been set"));
-        }
+    public void shouldAllowBothSseResponseAndRegularResponse() {
+        Expectation expectation = Expectation.when(request())
+            .thenRespond(HttpResponse.response().withStatusCode(200))
+            .thenRespondWithSse(sseResponse().withEvent(sseEvent().withData("test")));
+        assertNotNull(expectation.getHttpResponse());
+        assertNotNull(expectation.getHttpSseResponse());
     }
 }

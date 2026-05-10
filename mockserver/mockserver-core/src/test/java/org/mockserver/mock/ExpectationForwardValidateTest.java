@@ -43,18 +43,22 @@ public class ExpectationForwardValidateTest {
         assertTrue(retrieved instanceof HttpForwardValidateAction);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldNotAllowResponseAndForwardValidate() {
-        Expectation.when(request("/test"))
+    @Test
+    public void shouldAllowResponseAndForwardValidate() {
+        Expectation expectation = Expectation.when(request("/test"))
             .thenRespond(org.mockserver.model.HttpResponse.response().withStatusCode(200))
             .thenForwardValidate(forwardValidate().withSpecUrlOrPayload("spec.json").withHost("localhost"));
+        assertNotNull(expectation.getHttpResponse());
+        assertNotNull(expectation.getHttpForwardValidateAction());
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldNotAllowForwardValidateAndResponse() {
-        Expectation.when(request("/test"))
+    @Test
+    public void shouldAllowForwardValidateAndResponse() {
+        Expectation expectation = Expectation.when(request("/test"))
             .thenForwardValidate(forwardValidate().withSpecUrlOrPayload("spec.json").withHost("localhost"))
             .thenRespond(org.mockserver.model.HttpResponse.response().withStatusCode(200));
+        assertNotNull(expectation.getHttpForwardValidateAction());
+        assertNotNull(expectation.getHttpResponse());
     }
 
     @Test

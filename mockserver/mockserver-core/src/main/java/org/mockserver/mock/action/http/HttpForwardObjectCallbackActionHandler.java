@@ -41,13 +41,13 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
     public void handle(final HttpActionHandler actionHandler, final HttpObjectCallback httpObjectCallback, final HttpRequest request, final ResponseWriter responseWriter, final boolean synchronous, Runnable expectationPostProcessor) {
         final String clientId = httpObjectCallback.getClientId();
         if (LocalCallbackRegistry.forwardClientExists(clientId)) {
-            handleLocally(actionHandler, httpObjectCallback, request, responseWriter, synchronous, clientId);
+            handleLocally(actionHandler, httpObjectCallback, request, responseWriter, synchronous, expectationPostProcessor, clientId);
         } else {
             handleViaWebSocket(actionHandler, httpObjectCallback, request, responseWriter, synchronous, expectationPostProcessor, clientId);
         }
     }
 
-    private void handleLocally(HttpActionHandler actionHandler, HttpObjectCallback httpObjectCallback, HttpRequest request, ResponseWriter responseWriter, boolean synchronous, String clientId) {
+    private void handleLocally(HttpActionHandler actionHandler, HttpObjectCallback httpObjectCallback, HttpRequest request, ResponseWriter responseWriter, boolean synchronous, Runnable expectationPostProcessor, String clientId) {
         if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -72,6 +72,9 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                         try {
                             HttpResponse callbackResponse = expectationForwardAndResponseCallback.handle(callbackRequest, httpResponse);
                             actionHandler.writeForwardActionResponse(callbackResponse, responseWriter, request, httpObjectCallback);
+                            if (expectationPostProcessor != null) {
+                                expectationPostProcessor.run();
+                            }
                         } catch (Throwable throwable) {
                             if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(WARN)) {
                                 mockServerLogger.logEvent(
@@ -83,14 +86,17 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                                         .setThrowable(throwable)
                                 );
                             }
-                            actionHandler.writeForwardActionResponse(badGatewayFuture(request), responseWriter, request, httpObjectCallback, synchronous);
+                            actionHandler.writeForwardActionResponse(badGatewayFuture(request), responseWriter, request, httpObjectCallback, synchronous, expectationPostProcessor);
                         }
                     } else if (exception != null) {
                         actionHandler.handleExceptionDuringForwardingRequest(httpObjectCallback, request, responseWriter, exception);
+                        if (expectationPostProcessor != null) {
+                            expectationPostProcessor.run();
+                        }
                     }
                 }, synchronous);
             } else {
-                actionHandler.writeForwardActionResponse(responseFuture, responseWriter, request, httpObjectCallback, synchronous);
+                actionHandler.writeForwardActionResponse(responseFuture, responseWriter, request, httpObjectCallback, synchronous, expectationPostProcessor);
             }
         } catch (Throwable throwable) {
             if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(WARN)) {
@@ -103,7 +109,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                         .setThrowable(throwable)
                 );
             }
-            actionHandler.writeForwardActionResponse(badGatewayFuture(request), responseWriter, request, httpObjectCallback, synchronous);
+            actionHandler.writeForwardActionResponse(badGatewayFuture(request), responseWriter, request, httpObjectCallback, synchronous, expectationPostProcessor);
         }
     }
 
@@ -136,13 +142,10 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                     );
                 }
                 webSocketClientRegistry.unregisterForwardCallbackHandler(webSocketCorrelationId);
-                if (expectationPostProcessor != null && isFalse(httpObjectCallback.getResponseCallback())) {
-                    expectationPostProcessor.run();
-                }
                 if (isTrue(httpObjectCallback.getResponseCallback())) {
                     handleResponseViaWebSocket(callbackRequest, responseFuture, actionHandler, webSocketCorrelationId, clientId, expectationPostProcessor, responseWriter, httpObjectCallback, synchronous);
                 } else {
-                    actionHandler.writeForwardActionResponse(responseFuture, responseWriter, callbackRequest, httpObjectCallback, synchronous);
+                    actionHandler.writeForwardActionResponse(responseFuture, responseWriter, callbackRequest, httpObjectCallback, synchronous, expectationPostProcessor);
                 }
             }
 
@@ -157,7 +160,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                     );
                 }
                 webSocketClientRegistry.unregisterForwardCallbackHandler(webSocketCorrelationId);
-                actionHandler.writeResponseActionResponse(httpResponse, responseWriter, request, httpObjectCallback, synchronous);
+                actionHandler.writeResponseActionResponse(httpResponse, responseWriter, request, httpObjectCallback, synchronous, null, expectationPostProcessor);
             }
         });
         if (!webSocketClientRegistry.sendClientMessage(clientId, request.clone().withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId), null)) {
@@ -170,7 +173,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                         .setArguments(badGatewayResponse())
                 );
             }
-            actionHandler.writeForwardActionResponse(badGatewayFuture(request), responseWriter, request, httpObjectCallback, synchronous);
+            actionHandler.writeForwardActionResponse(badGatewayFuture(request), responseWriter, request, httpObjectCallback, synchronous, expectationPostProcessor);
         } else if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -203,9 +206,6 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                         );
                     }
                     webSocketClientRegistry.unregisterResponseCallbackHandler(webSocketCorrelationId);
-                    if (expectationPostProcessor != null) {
-                        expectationPostProcessor.run();
-                    }
                     httpResponseCompletableFuture.complete(overriddenResponse.removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME));
                 });
                 // send websocket message to override response
@@ -219,7 +219,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                                 .setArguments(badGatewayResponse())
                         );
                     }
-                    actionHandler.writeForwardActionResponse(badGatewayFuture(request), responseWriter, request, httpObjectCallback, synchronous);
+                    actionHandler.writeForwardActionResponse(badGatewayFuture(request), responseWriter, request, httpObjectCallback, synchronous, expectationPostProcessor);
                 } else if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
@@ -230,9 +230,12 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                     );
                 }
                 // return overridden response
-                actionHandler.writeForwardActionResponse(responseFuture.setHttpResponse(httpResponseCompletableFuture), responseWriter, request, httpObjectCallback, synchronous);
+                actionHandler.writeForwardActionResponse(responseFuture.setHttpResponse(httpResponseCompletableFuture), responseWriter, request, httpObjectCallback, synchronous, expectationPostProcessor);
             } else if (exception != null) {
                 actionHandler.handleExceptionDuringForwardingRequest(httpObjectCallback, request, responseWriter, exception);
+                if (expectationPostProcessor != null) {
+                    expectationPostProcessor.run();
+                }
             }
         }, synchronous);
     }

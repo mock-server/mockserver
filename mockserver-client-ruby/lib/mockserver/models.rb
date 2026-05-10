@@ -594,10 +594,10 @@ module MockServer
 
   class HttpResponse
     attr_accessor :status_code, :reason_phrase, :headers, :cookies,
-                  :body, :delay, :connection_options
+                  :body, :delay, :connection_options, :primary
 
     def initialize(status_code: nil, reason_phrase: nil, headers: nil, cookies: nil,
-                   body: nil, delay: nil, connection_options: nil)
+                   body: nil, delay: nil, connection_options: nil, primary: nil)
       @status_code = status_code
       @reason_phrase = reason_phrase
       @headers = headers
@@ -605,6 +605,7 @@ module MockServer
       @body = body
       @delay = delay
       @connection_options = connection_options
+      @primary = primary
     end
 
     def to_h
@@ -615,7 +616,8 @@ module MockServer
         'cookies'          => MockServer.serialize_key_multi_values(@cookies),
         'body'             => MockServer.serialize_body(@body),
         'delay'            => @delay&.to_h,
-        'connectionOptions' => @connection_options&.to_h
+        'connectionOptions' => @connection_options&.to_h,
+        'primary'          => @primary
       })
     end
 
@@ -629,7 +631,8 @@ module MockServer
         cookies:           MockServer.deserialize_key_multi_values(data['cookies']),
         body:              MockServer.deserialize_body(data['body']),
         delay:             Delay.from_hash(data['delay']),
-        connection_options: ConnectionOptions.from_hash(data['connectionOptions'])
+        connection_options: ConnectionOptions.from_hash(data['connectionOptions']),
+        primary:           data['primary']
       )
     end
 
@@ -687,21 +690,23 @@ module MockServer
   end
 
   class HttpForward
-    attr_accessor :host, :port, :scheme, :delay
+    attr_accessor :host, :port, :scheme, :delay, :primary
 
-    def initialize(host: nil, port: nil, scheme: nil, delay: nil)
+    def initialize(host: nil, port: nil, scheme: nil, delay: nil, primary: nil)
       @host = host
       @port = port
       @scheme = scheme
       @delay = delay
+      @primary = primary
     end
 
     def to_h
       MockServer.strip_none({
-        'host'   => @host,
-        'port'   => @port,
-        'scheme' => @scheme,
-        'delay'  => @delay&.to_h
+        'host'    => @host,
+        'port'    => @port,
+        'scheme'  => @scheme,
+        'delay'   => @delay&.to_h,
+        'primary' => @primary
       })
     end
 
@@ -709,10 +714,11 @@ module MockServer
       return nil if data.nil?
 
       new(
-        host:   data['host'],
-        port:   data['port'],
-        scheme: data['scheme'],
-        delay:  Delay.from_hash(data['delay'])
+        host:    data['host'],
+        port:    data['port'],
+        scheme:  data['scheme'],
+        delay:   Delay.from_hash(data['delay']),
+        primary: data['primary']
       )
     end
 
@@ -722,19 +728,21 @@ module MockServer
   end
 
   class HttpTemplate
-    attr_accessor :template_type, :template, :delay
+    attr_accessor :template_type, :template, :delay, :primary
 
-    def initialize(template_type: 'JAVASCRIPT', template: nil, delay: nil)
+    def initialize(template_type: 'JAVASCRIPT', template: nil, delay: nil, primary: nil)
       @template_type = template_type
       @template = template
       @delay = delay
+      @primary = primary
     end
 
     def to_h
       MockServer.strip_none({
         'templateType' => @template_type,
         'template'     => @template,
-        'delay'        => @delay&.to_h
+        'delay'        => @delay&.to_h,
+        'primary'      => @primary
       })
     end
 
@@ -744,7 +752,8 @@ module MockServer
       new(
         template_type: data.fetch('templateType', 'JAVASCRIPT'),
         template:      data['template'],
-        delay:         Delay.from_hash(data['delay'])
+        delay:         Delay.from_hash(data['delay']),
+        primary:       data['primary']
       )
     end
 
@@ -754,17 +763,19 @@ module MockServer
   end
 
   class HttpClassCallback
-    attr_accessor :callback_class, :delay
+    attr_accessor :callback_class, :delay, :primary
 
-    def initialize(callback_class: nil, delay: nil)
+    def initialize(callback_class: nil, delay: nil, primary: nil)
       @callback_class = callback_class
       @delay = delay
+      @primary = primary
     end
 
     def to_h
       MockServer.strip_none({
         'callbackClass' => @callback_class,
-        'delay'         => @delay&.to_h
+        'delay'         => @delay&.to_h,
+        'primary'       => @primary
       })
     end
 
@@ -773,7 +784,8 @@ module MockServer
 
       new(
         callback_class: data['callbackClass'],
-        delay:          Delay.from_hash(data['delay'])
+        delay:          Delay.from_hash(data['delay']),
+        primary:        data['primary']
       )
     end
 
@@ -783,19 +795,21 @@ module MockServer
   end
 
   class HttpObjectCallback
-    attr_accessor :client_id, :response_callback, :delay
+    attr_accessor :client_id, :response_callback, :delay, :primary
 
-    def initialize(client_id: nil, response_callback: nil, delay: nil)
+    def initialize(client_id: nil, response_callback: nil, delay: nil, primary: nil)
       @client_id = client_id
       @response_callback = response_callback
       @delay = delay
+      @primary = primary
     end
 
     def to_h
       MockServer.strip_none({
         'clientId'         => @client_id,
         'responseCallback' => @response_callback,
-        'delay'            => @delay&.to_h
+        'delay'            => @delay&.to_h,
+        'primary'          => @primary
       })
     end
 
@@ -805,25 +819,28 @@ module MockServer
       new(
         client_id:         data['clientId'],
         response_callback: data['responseCallback'],
-        delay:             Delay.from_hash(data['delay'])
+        delay:             Delay.from_hash(data['delay']),
+        primary:           data['primary']
       )
     end
   end
 
   class HttpError
-    attr_accessor :drop_connection, :response_bytes, :delay
+    attr_accessor :drop_connection, :response_bytes, :delay, :primary
 
-    def initialize(drop_connection: nil, response_bytes: nil, delay: nil)
+    def initialize(drop_connection: nil, response_bytes: nil, delay: nil, primary: nil)
       @drop_connection = drop_connection
       @response_bytes = response_bytes
       @delay = delay
+      @primary = primary
     end
 
     def to_h
       MockServer.strip_none({
         'dropConnection' => @drop_connection,
         'responseBytes'  => @response_bytes,
-        'delay'          => @delay&.to_h
+        'delay'          => @delay&.to_h,
+        'primary'        => @primary
       })
     end
 
@@ -833,7 +850,8 @@ module MockServer
       new(
         drop_connection: data['dropConnection'],
         response_bytes:  data['responseBytes'],
-        delay:           Delay.from_hash(data['delay'])
+        delay:           Delay.from_hash(data['delay']),
+        primary:         data['primary']
       )
     end
 
@@ -844,15 +862,16 @@ module MockServer
 
   class HttpOverrideForwardedRequest
     attr_accessor :http_request, :http_response, :delay,
-                  :request_modifier, :response_modifier
+                  :request_modifier, :response_modifier, :primary
 
     def initialize(http_request: nil, http_response: nil, delay: nil,
-                   request_modifier: nil, response_modifier: nil)
+                   request_modifier: nil, response_modifier: nil, primary: nil)
       @http_request = http_request
       @http_response = http_response
       @delay = delay
       @request_modifier = request_modifier
       @response_modifier = response_modifier
+      @primary = primary
     end
 
     def to_h
@@ -861,7 +880,8 @@ module MockServer
         'httpResponse'     => @http_response&.to_h,
         'delay'            => @delay&.to_h,
         'requestModifier'  => @request_modifier,
-        'responseModifier' => @response_modifier
+        'responseModifier' => @response_modifier,
+        'primary'          => @primary
       })
     end
 
@@ -873,7 +893,8 @@ module MockServer
         http_response:     HttpResponse.from_hash(data['httpResponse']),
         delay:             Delay.from_hash(data['delay']),
         request_modifier:  data['requestModifier'],
-        response_modifier: data['responseModifier']
+        response_modifier: data['responseModifier'],
+        primary:           data['primary']
       )
     end
 
@@ -960,14 +981,15 @@ module MockServer
   end
 
   class HttpSseResponse
-    attr_accessor :status_code, :headers, :events, :close_connection, :delay
+    attr_accessor :status_code, :headers, :events, :close_connection, :delay, :primary
 
-    def initialize(status_code: nil, headers: nil, events: nil, close_connection: nil, delay: nil)
+    def initialize(status_code: nil, headers: nil, events: nil, close_connection: nil, delay: nil, primary: nil)
       @status_code = status_code
       @headers = headers
       @events = events
       @close_connection = close_connection
       @delay = delay
+      @primary = primary
     end
 
     def to_h
@@ -977,6 +999,7 @@ module MockServer
       result['events'] = @events&.map(&:to_h) if @events
       result['closeConnection'] = @close_connection unless @close_connection.nil?
       result['delay'] = @delay.to_h if @delay
+      result['primary'] = @primary unless @primary.nil?
       result
     end
 
@@ -990,7 +1013,8 @@ module MockServer
         headers:          MockServer.deserialize_key_multi_values(data['headers']),
         events:           events,
         close_connection: data['closeConnection'],
-        delay:            Delay.from_hash(data['delay'])
+        delay:            Delay.from_hash(data['delay']),
+        primary:          data['primary']
       )
     end
   end
@@ -1026,13 +1050,14 @@ module MockServer
   end
 
   class HttpWebSocketResponse
-    attr_accessor :subprotocol, :messages, :close_connection, :delay
+    attr_accessor :subprotocol, :messages, :close_connection, :delay, :primary
 
-    def initialize(subprotocol: nil, messages: nil, close_connection: nil, delay: nil)
+    def initialize(subprotocol: nil, messages: nil, close_connection: nil, delay: nil, primary: nil)
       @subprotocol = subprotocol
       @messages = messages
       @close_connection = close_connection
       @delay = delay
+      @primary = primary
     end
 
     def to_h
@@ -1041,6 +1066,7 @@ module MockServer
       result['messages'] = @messages&.map(&:to_h) if @messages
       result['closeConnection'] = @close_connection unless @close_connection.nil?
       result['delay'] = @delay.to_h if @delay
+      result['primary'] = @primary unless @primary.nil?
       result
     end
 
@@ -1053,7 +1079,39 @@ module MockServer
         subprotocol:      data['subprotocol'],
         messages:         messages,
         close_connection: data['closeConnection'],
-        delay:            Delay.from_hash(data['delay'])
+        delay:            Delay.from_hash(data['delay']),
+        primary:          data['primary']
+      )
+    end
+  end
+
+  class AfterAction
+    attr_accessor :http_request, :http_class_callback, :http_object_callback, :delay
+
+    def initialize(http_request: nil, http_class_callback: nil, http_object_callback: nil, delay: nil)
+      @http_request = http_request
+      @http_class_callback = http_class_callback
+      @http_object_callback = http_object_callback
+      @delay = delay
+    end
+
+    def to_h
+      MockServer.strip_none({
+        'httpRequest'        => @http_request&.to_h,
+        'httpClassCallback'  => @http_class_callback&.to_h,
+        'httpObjectCallback' => @http_object_callback&.to_h,
+        'delay'              => @delay&.to_h
+      })
+    end
+
+    def self.from_hash(data)
+      return nil if data.nil?
+
+      new(
+        http_request:        HttpRequest.from_hash(data['httpRequest']),
+        http_class_callback: HttpClassCallback.from_hash(data['httpClassCallback']),
+        http_object_callback: HttpObjectCallback.from_hash(data['httpObjectCallback']),
+        delay:               Delay.from_hash(data['delay'])
       )
     end
   end
@@ -1065,7 +1123,7 @@ module MockServer
                   :http_forward_template, :http_forward_class_callback,
                   :http_forward_object_callback, :http_override_forwarded_request,
                   :http_error, :times, :time_to_live,
-                  :http_sse_response, :http_websocket_response
+                  :http_sse_response, :http_websocket_response, :after_actions
 
     def initialize(id: nil, priority: nil, http_request: nil, http_response: nil,
                    http_response_template: nil, http_response_class_callback: nil,
@@ -1073,7 +1131,7 @@ module MockServer
                    http_forward_template: nil, http_forward_class_callback: nil,
                    http_forward_object_callback: nil, http_override_forwarded_request: nil,
                    http_error: nil, times: nil, time_to_live: nil,
-                   http_sse_response: nil, http_websocket_response: nil)
+                   http_sse_response: nil, http_websocket_response: nil, after_actions: nil)
       @id = id
       @priority = priority
       @http_request = http_request
@@ -1091,9 +1149,17 @@ module MockServer
       @time_to_live = time_to_live
       @http_sse_response = http_sse_response
       @http_websocket_response = http_websocket_response
+      @after_actions = after_actions
     end
 
     def to_h
+      after_actions_h = nil
+      if @after_actions.is_a?(Array)
+        after_actions_h = @after_actions.map(&:to_h) unless @after_actions.empty?
+      elsif @after_actions
+        after_actions_h = @after_actions.to_h
+      end
+
       MockServer.strip_none({
         'id'                           => @id,
         'priority'                     => @priority,
@@ -1110,6 +1176,7 @@ module MockServer
         'httpError'                    => @http_error&.to_h,
         'httpSseResponse'              => @http_sse_response&.to_h,
         'httpWebSocketResponse'        => @http_websocket_response&.to_h,
+        'afterActions'                 => after_actions_h,
         'times'                        => @times&.to_h,
         'timeToLive'                   => @time_to_live&.to_h
       })
@@ -1117,6 +1184,13 @@ module MockServer
 
     def self.from_hash(data)
       return nil if data.nil?
+
+      after_actions_data = data['afterActions']
+      after_actions = if after_actions_data.is_a?(Array)
+                        after_actions_data.map { |a| AfterAction.from_hash(a) }
+                      elsif after_actions_data
+                        AfterAction.from_hash(after_actions_data)
+                      end
 
       new(
         id:                              data['id'],
@@ -1134,6 +1208,7 @@ module MockServer
         http_error:                      HttpError.from_hash(data['httpError']),
         http_sse_response:               HttpSseResponse.from_hash(data['httpSseResponse']),
         http_websocket_response:         HttpWebSocketResponse.from_hash(data['httpWebSocketResponse']),
+        after_actions:                   after_actions,
         times:                           Times.from_hash(data['times']),
         time_to_live:                    TimeToLive.from_hash(data['timeToLive'])
       )

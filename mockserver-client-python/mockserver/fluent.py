@@ -113,3 +113,4 @@ class ForwardChainExpectation:
     async def error(self, error: HttpError) -> list[Expectation]:
         self._expectation.http_error = error
         return await self._client.upsert(self._expectation)
+

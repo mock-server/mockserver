@@ -1,5 +1,6 @@
 package org.mockserver.serialization.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.mockserver.model.Header;
 import org.mockserver.model.Headers;
 import org.mockserver.model.HttpSseResponse;
@@ -14,6 +15,8 @@ public class HttpSseResponseDTO extends ObjectWithReflectiveEqualsHashCodeToStri
     private Headers headers;
     private List<SseEventDTO> events;
     private Boolean closeConnection;
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private boolean primary;
 
     public HttpSseResponseDTO(HttpSseResponse httpSseResponse) {
         if (httpSseResponse != null) {
@@ -27,6 +30,7 @@ public class HttpSseResponseDTO extends ObjectWithReflectiveEqualsHashCodeToStri
                 events = new ArrayList<>();
                 httpSseResponse.getEvents().forEach(event -> events.add(new SseEventDTO(event)));
             }
+            primary = httpSseResponse.isPrimary();
         }
     }
 
@@ -38,7 +42,8 @@ public class HttpSseResponseDTO extends ObjectWithReflectiveEqualsHashCodeToStri
             .withDelay(delay != null ? delay.buildObject() : null)
             .withStatusCode(statusCode)
             .withHeaders(headers)
-            .withCloseConnection(closeConnection);
+            .withCloseConnection(closeConnection)
+            .withPrimary(primary);
         if (events != null) {
             events.forEach(eventDTO -> httpSseResponse.withEvent(eventDTO.buildObject()));
         }
@@ -87,6 +92,15 @@ public class HttpSseResponseDTO extends ObjectWithReflectiveEqualsHashCodeToStri
 
     public HttpSseResponseDTO setCloseConnection(Boolean closeConnection) {
         this.closeConnection = closeConnection;
+        return this;
+    }
+
+    public boolean isPrimary() {
+        return primary;
+    }
+
+    public HttpSseResponseDTO setPrimary(boolean primary) {
+        this.primary = primary;
         return this;
     }
 }

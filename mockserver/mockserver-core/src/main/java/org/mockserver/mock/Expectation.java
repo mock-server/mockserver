@@ -6,6 +6,10 @@ import org.mockserver.matchers.Times;
 import org.mockserver.model.*;
 import org.mockserver.uuid.UUIDService;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -42,6 +46,7 @@ public class Expectation extends ObjectWithJsonToString {
     private HttpSseResponse httpSseResponse;
     private HttpWebSocketResponse httpWebSocketResponse;
     private HttpError httpError;
+    private List<AfterAction> afterActions;
 
     /**
      * Specify the OpenAPI and operationId to match against by URL or payload and string as follows:
@@ -382,40 +387,118 @@ public class Expectation extends ObjectWithJsonToString {
         return httpError;
     }
 
+    public List<AfterAction> getAfterActions() {
+        return afterActions != null ? Collections.unmodifiableList(afterActions) : null;
+    }
+
+    public Expectation withAfterActions(AfterAction... afterActions) {
+        if (afterActions != null && afterActions.length > 0) {
+            this.afterActions = new ArrayList<>(Arrays.asList(afterActions));
+            this.hashCode = 0;
+        }
+        return this;
+    }
+
+    public Expectation withAfterActions(List<AfterAction> afterActions) {
+        if (afterActions != null && !afterActions.isEmpty()) {
+            this.afterActions = new ArrayList<>(afterActions);
+            this.hashCode = 0;
+        }
+        return this;
+    }
+
     @JsonIgnore
     public Action getAction() {
-        Action action = null;
-        if (httpResponse != null) {
-            action = getHttpResponse();
-        } else if (httpResponseTemplate != null) {
-            action = getHttpResponseTemplate();
-        } else if (httpResponseClassCallback != null) {
-            action = getHttpResponseClassCallback();
-        } else if (httpResponseObjectCallback != null) {
-            action = getHttpResponseObjectCallback();
-        } else if (httpForward != null) {
-            action = getHttpForward();
-        } else if (httpForwardTemplate != null) {
-            action = getHttpForwardTemplate();
-        } else if (httpForwardClassCallback != null) {
-            action = getHttpForwardClassCallback();
-        } else if (httpForwardObjectCallback != null) {
-            action = getHttpForwardObjectCallback();
-        } else if (httpOverrideForwardedRequest != null) {
-            action = getHttpOverrideForwardedRequest();
-        } else if (httpForwardValidateAction != null) {
-            action = getHttpForwardValidateAction();
-        } else if (httpSseResponse != null) {
-            action = getHttpSseResponse();
-        } else if (httpWebSocketResponse != null) {
-            action = getHttpWebSocketResponse();
-        } else if (httpError != null) {
-            action = getHttpError();
+        return getPrimaryAction();
+    }
+
+    @JsonIgnore
+    public Action getPrimaryAction() {
+        List<Action> actions = getAllActions();
+        if (actions.isEmpty()) {
+            return null;
         }
-        if (action != null) {
+        if (actions.size() == 1) {
+            Action action = actions.get(0);
             action.setExpectationId(getId());
+            return action;
         }
-        return action;
+        Action primary = null;
+        for (Action action : actions) {
+            if (action.isPrimary()) {
+                if (primary != null) {
+                    throw new IllegalArgumentException("multiple actions marked as primary, only one action can be primary when multiple action types are configured");
+                }
+                primary = action;
+            }
+        }
+        if (primary == null) {
+            throw new IllegalArgumentException("when multiple action types are configured, exactly one must be marked as primary");
+        }
+        primary.setExpectationId(getId());
+        return primary;
+    }
+
+    @JsonIgnore
+    public List<Action> getSecondaryActions() {
+        List<Action> all = getAllActions();
+        if (all.size() <= 1) {
+            return Collections.emptyList();
+        }
+        Action primary = getPrimaryAction();
+        List<Action> secondary = new ArrayList<>();
+        for (Action action : all) {
+            if (action != primary) {
+                action.setExpectationId(getId());
+                secondary.add(action);
+            }
+        }
+        return secondary;
+    }
+
+    @JsonIgnore
+    private List<Action> getAllActions() {
+        List<Action> actions = new ArrayList<>();
+        if (getHttpResponse() != null) {
+            actions.add(getHttpResponse());
+        }
+        if (getHttpResponseTemplate() != null) {
+            actions.add(getHttpResponseTemplate());
+        }
+        if (getHttpResponseClassCallback() != null) {
+            actions.add(getHttpResponseClassCallback());
+        }
+        if (getHttpResponseObjectCallback() != null) {
+            actions.add(getHttpResponseObjectCallback());
+        }
+        if (getHttpForward() != null) {
+            actions.add(getHttpForward());
+        }
+        if (getHttpForwardTemplate() != null) {
+            actions.add(getHttpForwardTemplate());
+        }
+        if (getHttpForwardClassCallback() != null) {
+            actions.add(getHttpForwardClassCallback());
+        }
+        if (getHttpForwardObjectCallback() != null) {
+            actions.add(getHttpForwardObjectCallback());
+        }
+        if (getHttpOverrideForwardedRequest() != null) {
+            actions.add(getHttpOverrideForwardedRequest());
+        }
+        if (getHttpForwardValidateAction() != null) {
+            actions.add(getHttpForwardValidateAction());
+        }
+        if (getHttpSseResponse() != null) {
+            actions.add(getHttpSseResponse());
+        }
+        if (getHttpWebSocketResponse() != null) {
+            actions.add(getHttpWebSocketResponse());
+        }
+        if (getHttpError() != null) {
+            actions.add(getHttpError());
+        }
+        return actions;
     }
 
     public Times getTimes() {
@@ -428,7 +511,6 @@ public class Expectation extends ObjectWithJsonToString {
 
     public Expectation thenRespond(HttpResponse httpResponse) {
         if (httpResponse != null) {
-            validationErrors("a response", httpResponse.getType());
             this.httpResponse = httpResponse;
             this.hashCode = 0;
         }
@@ -438,7 +520,6 @@ public class Expectation extends ObjectWithJsonToString {
     public Expectation thenRespond(HttpTemplate httpTemplate) {
         if (httpTemplate != null) {
             httpTemplate.withActionType(Action.Type.RESPONSE_TEMPLATE);
-            validationErrors("a response template", httpTemplate.getType());
             this.httpResponseTemplate = httpTemplate;
             this.hashCode = 0;
         }
@@ -448,7 +529,6 @@ public class Expectation extends ObjectWithJsonToString {
     public Expectation thenRespond(HttpClassCallback httpClassCallback) {
         if (httpClassCallback != null) {
             httpClassCallback.withActionType(Action.Type.RESPONSE_CLASS_CALLBACK);
-            validationErrors("a response class callback", httpClassCallback.getType());
             this.httpResponseClassCallback = httpClassCallback;
             this.hashCode = 0;
         }
@@ -458,7 +538,6 @@ public class Expectation extends ObjectWithJsonToString {
     public Expectation thenRespond(HttpObjectCallback httpObjectCallback) {
         if (httpObjectCallback != null) {
             httpObjectCallback.withActionType(Action.Type.RESPONSE_OBJECT_CALLBACK);
-            validationErrors("a response object callback", httpObjectCallback.getType());
             this.httpResponseObjectCallback = httpObjectCallback;
             this.hashCode = 0;
         }
@@ -467,7 +546,6 @@ public class Expectation extends ObjectWithJsonToString {
 
     public Expectation thenForward(HttpForward httpForward) {
         if (httpForward != null) {
-            validationErrors("a forward", httpForward.getType());
             this.httpForward = httpForward;
             this.hashCode = 0;
         }
@@ -477,7 +555,6 @@ public class Expectation extends ObjectWithJsonToString {
     public Expectation thenForward(HttpTemplate httpTemplate) {
         if (httpTemplate != null) {
             httpTemplate.withActionType(Action.Type.FORWARD_TEMPLATE);
-            validationErrors("a forward template", httpTemplate.getType());
             this.httpForwardTemplate = httpTemplate;
             this.hashCode = 0;
         }
@@ -487,7 +564,6 @@ public class Expectation extends ObjectWithJsonToString {
     public Expectation thenForward(HttpClassCallback httpClassCallback) {
         if (httpClassCallback != null) {
             httpClassCallback.withActionType(Action.Type.FORWARD_CLASS_CALLBACK);
-            validationErrors("a forward class callback", httpClassCallback.getType());
             this.httpForwardClassCallback = httpClassCallback;
             this.hashCode = 0;
         }
@@ -498,7 +574,6 @@ public class Expectation extends ObjectWithJsonToString {
         if (httpObjectCallback != null) {
             httpObjectCallback
                 .withActionType(Action.Type.FORWARD_OBJECT_CALLBACK);
-            validationErrors("a forward object callback", httpObjectCallback.getType());
             this.httpForwardObjectCallback = httpObjectCallback;
             this.hashCode = 0;
         }
@@ -507,7 +582,6 @@ public class Expectation extends ObjectWithJsonToString {
 
     public Expectation thenForward(HttpOverrideForwardedRequest httpOverrideForwardedRequest) {
         if (httpOverrideForwardedRequest != null) {
-            validationErrors("a forward replace", httpOverrideForwardedRequest.getType());
             this.httpOverrideForwardedRequest = httpOverrideForwardedRequest;
             this.hashCode = 0;
         }
@@ -516,7 +590,6 @@ public class Expectation extends ObjectWithJsonToString {
 
     public Expectation thenForwardValidate(HttpForwardValidateAction httpForwardValidateAction) {
         if (httpForwardValidateAction != null) {
-            validationErrors("a forward validate", httpForwardValidateAction.getType());
             this.httpForwardValidateAction = httpForwardValidateAction;
             this.hashCode = 0;
         }
@@ -525,7 +598,6 @@ public class Expectation extends ObjectWithJsonToString {
 
     public Expectation thenRespondWithSse(HttpSseResponse httpSseResponse) {
         if (httpSseResponse != null) {
-            validationErrors("an SSE response", httpSseResponse.getType());
             this.httpSseResponse = httpSseResponse;
             this.hashCode = 0;
         }
@@ -534,7 +606,6 @@ public class Expectation extends ObjectWithJsonToString {
 
     public Expectation thenRespondWithWebSocket(HttpWebSocketResponse httpWebSocketResponse) {
         if (httpWebSocketResponse != null) {
-            validationErrors("a WebSocket response", httpWebSocketResponse.getType());
             this.httpWebSocketResponse = httpWebSocketResponse;
             this.hashCode = 0;
         }
@@ -543,53 +614,10 @@ public class Expectation extends ObjectWithJsonToString {
 
     public Expectation thenError(HttpError httpError) {
         if (httpError != null) {
-            validationErrors("an error", httpError.getType());
             this.httpError = httpError;
             this.hashCode = 0;
         }
         return this;
-    }
-
-    private void validationErrors(String actionDescription, Action.Type actionType) {
-        if (actionType != Action.Type.RESPONSE && httpResponse != null) {
-            throw new IllegalArgumentException("It is not possible to set " + actionDescription + " once a response has been set");
-        }
-        if (actionType != Action.Type.RESPONSE_TEMPLATE && httpResponseTemplate != null) {
-            throw new IllegalArgumentException("It is not possible to set " + actionDescription + " once a response template has been set");
-        }
-        if (actionType != Action.Type.RESPONSE_CLASS_CALLBACK && httpResponseClassCallback != null) {
-            throw new IllegalArgumentException("It is not possible to set " + actionDescription + " once a class callback has been set");
-        }
-        if (actionType != Action.Type.RESPONSE_OBJECT_CALLBACK && httpResponseObjectCallback != null) {
-            throw new IllegalArgumentException("It is not possible to set " + actionDescription + " once an object callback has been set");
-        }
-        if (actionType != Action.Type.FORWARD && httpForward != null) {
-            throw new IllegalArgumentException("It is not possible to set " + actionDescription + " once a forward has been set");
-        }
-        if (actionType != Action.Type.FORWARD_TEMPLATE && httpForwardTemplate != null) {
-            throw new IllegalArgumentException("It is not possible to set " + actionDescription + " once a forward template has been set");
-        }
-        if (actionType != Action.Type.FORWARD_CLASS_CALLBACK && httpForwardClassCallback != null) {
-            throw new IllegalArgumentException("It is not possible to set " + actionDescription + " once a class callback has been set");
-        }
-        if (actionType != Action.Type.FORWARD_OBJECT_CALLBACK && httpForwardObjectCallback != null) {
-            throw new IllegalArgumentException("It is not possible to set " + actionDescription + " once an object callback has been set");
-        }
-        if (actionType != Action.Type.FORWARD_REPLACE && httpOverrideForwardedRequest != null) {
-            throw new IllegalArgumentException("It is not possible to set " + actionDescription + " once a forward replace has been set");
-        }
-        if (actionType != Action.Type.FORWARD_VALIDATE && httpForwardValidateAction != null) {
-            throw new IllegalArgumentException("It is not possible to set " + actionDescription + " once a forward validate has been set");
-        }
-        if (actionType != Action.Type.SSE_RESPONSE && httpSseResponse != null) {
-            throw new IllegalArgumentException("It is not possible to set " + actionDescription + " once an SSE response has been set");
-        }
-        if (actionType != Action.Type.WEBSOCKET_RESPONSE && httpWebSocketResponse != null) {
-            throw new IllegalArgumentException("It is not possible to set " + actionDescription + " once a WebSocket response has been set");
-        }
-        if (actionType != Action.Type.ERROR && httpError != null) {
-            throw new IllegalArgumentException("It is not possible to set " + actionDescription + " callback once an error has been set");
-        }
     }
 
     @JsonIgnore
@@ -626,7 +654,7 @@ public class Expectation extends ObjectWithJsonToString {
 
     @SuppressWarnings("MethodDoesntCallSuperMethod")
     public Expectation clone() {
-        return new Expectation(httpRequest, times.clone(), timeToLive, priority)
+        Expectation clone = new Expectation(httpRequest, times.clone(), timeToLive, priority)
             .withId(id)
             .withCreated(created)
             .thenRespond(httpResponse)
@@ -642,6 +670,10 @@ public class Expectation extends ObjectWithJsonToString {
             .thenRespondWithSse(httpSseResponse)
             .thenRespondWithWebSocket(httpWebSocketResponse)
             .thenError(httpError);
+        if (afterActions != null) {
+            clone.afterActions = new ArrayList<>(afterActions);
+        }
+        return clone;
     }
 
     @Override
@@ -678,13 +710,14 @@ public class Expectation extends ObjectWithJsonToString {
             Objects.equals(httpForwardValidateAction, that.httpForwardValidateAction) &&
             Objects.equals(httpSseResponse, that.httpSseResponse) &&
             Objects.equals(httpWebSocketResponse, that.httpWebSocketResponse) &&
-            Objects.equals(httpError, that.httpError);
+            Objects.equals(httpError, that.httpError) &&
+            Objects.equals(afterActions, that.afterActions);
     }
 
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(priority, httpRequest, times, timeToLive, httpResponse, httpResponseTemplate, httpResponseClassCallback, httpResponseObjectCallback, httpForward, httpForwardTemplate, httpForwardClassCallback, httpForwardObjectCallback, httpOverrideForwardedRequest, httpForwardValidateAction, httpSseResponse, httpWebSocketResponse, httpError);
+            hashCode = Objects.hash(priority, httpRequest, times, timeToLive, httpResponse, httpResponseTemplate, httpResponseClassCallback, httpResponseObjectCallback, httpForward, httpForwardTemplate, httpForwardClassCallback, httpForwardObjectCallback, httpOverrideForwardedRequest, httpForwardValidateAction, httpSseResponse, httpWebSocketResponse, httpError, afterActions);
         }
         return hashCode;
     }

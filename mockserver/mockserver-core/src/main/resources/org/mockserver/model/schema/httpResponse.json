@@ -23,6 +23,9 @@
     },
     "reasonPhrase": {
       "type": "string"
+    },
+    "primary": {
+      "type": "boolean"
     }
   },
   "definitions": {

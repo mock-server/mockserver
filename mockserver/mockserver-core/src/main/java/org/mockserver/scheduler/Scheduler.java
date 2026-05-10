@@ -105,6 +105,27 @@ public class Scheduler {
         }
     }
 
+    public void submitAsync(Runnable command, Delay... delays) {
+        long delayMillis = sampleCombinedDelayMillis(delays);
+        Integer port = getPort();
+        if (scheduler != null) {
+            if (delayMillis > 0) {
+                scheduler.schedule(() -> run(command, port), delayMillis, MILLISECONDS);
+            } else {
+                scheduler.submit(() -> run(command, port));
+            }
+        } else {
+            if (delayMillis > 0) {
+                try {
+                    MILLISECONDS.sleep(delayMillis);
+                } catch (InterruptedException ie) {
+                    throw new RuntimeException("InterruptedException while applying delay", ie);
+                }
+            }
+            run(command, port);
+        }
+    }
+
     public void schedule(Runnable command, boolean synchronous, Delay... delays) {
         long delayMillis = sampleCombinedDelayMillis(delays);
         Integer port = getPort();

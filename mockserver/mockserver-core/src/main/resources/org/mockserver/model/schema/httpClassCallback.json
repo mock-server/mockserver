@@ -8,6 +8,9 @@
     },
     "callbackClass": {
       "type": "string"
+    },
+    "primary": {
+      "type": "boolean"
     }
   }
 }

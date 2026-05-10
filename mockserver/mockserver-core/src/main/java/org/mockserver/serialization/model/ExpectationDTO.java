@@ -1,10 +1,15 @@
 package org.mockserver.serialization.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author jamesdbloom
@@ -28,6 +33,8 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
     private HttpSseResponseDTO httpSseResponse;
     private HttpWebSocketResponseDTO httpWebSocketResponse;
     private HttpErrorDTO httpError;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private List<AfterActionDTO> afterActions;
     private org.mockserver.serialization.model.TimesDTO times;
     private TimeToLiveDTO timeToLive;
 
@@ -95,6 +102,10 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
             HttpError httpError = expectation.getHttpError();
             if (httpError != null) {
                 this.httpError = new HttpErrorDTO(httpError);
+            }
+            List<AfterAction> afterActions = expectation.getAfterActions();
+            if (afterActions != null && !afterActions.isEmpty()) {
+                this.afterActions = afterActions.stream().map(AfterActionDTO::new).collect(Collectors.toList());
             }
             Times times = expectation.getTimes();
             if (times != null) {
@@ -170,6 +181,10 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
         if (this.httpError != null) {
             httpError = this.httpError.buildObject();
         }
+        List<AfterAction> afterActionList = null;
+        if (this.afterActions != null && !this.afterActions.isEmpty()) {
+            afterActionList = this.afterActions.stream().map(AfterActionDTO::buildObject).collect(Collectors.toList());
+        }
         if (this.times != null) {
             times = this.times.buildObject();
         } else {
@@ -199,7 +214,8 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
             .thenForwardValidate(httpForwardValidateAction)
             .thenRespondWithSse(httpSseResponse)
             .thenRespondWithWebSocket(httpWebSocketResponse)
-            .thenError(httpError);
+            .thenError(httpError)
+            .withAfterActions(afterActionList);
     }
 
     public String getId() {
@@ -361,6 +377,16 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
 
     public ExpectationDTO setTimeToLive(TimeToLiveDTO timeToLive) {
         this.timeToLive = timeToLive;
+        return this;
+    }
+
+    public List<AfterActionDTO> getAfterActions() {
+        return afterActions;
+    }
+
+    @JsonSetter("afterActions")
+    public ExpectationDTO setAfterActions(List<AfterActionDTO> afterActions) {
+        this.afterActions = afterActions;
         return this;
     }
 

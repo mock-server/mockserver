@@ -32,13 +32,13 @@ public class HttpResponseObjectCallbackActionHandler {
     public void handle(final HttpActionHandler actionHandler, final HttpObjectCallback httpObjectCallback, final HttpRequest request, final ResponseWriter responseWriter, final boolean synchronous, Runnable expectationPostProcessor) {
         final String clientId = httpObjectCallback.getClientId();
         if (LocalCallbackRegistry.responseClientExists(clientId)) {
-            handleLocally(actionHandler, httpObjectCallback, request, responseWriter, synchronous, clientId);
+            handleLocally(actionHandler, httpObjectCallback, request, responseWriter, synchronous, expectationPostProcessor, clientId);
         } else {
             handleViaWebSocket(actionHandler, httpObjectCallback, request, responseWriter, synchronous, expectationPostProcessor, clientId);
         }
     }
 
-    private void handleLocally(HttpActionHandler actionHandler, HttpObjectCallback httpObjectCallback, HttpRequest request, ResponseWriter responseWriter, boolean synchronous, String clientId) {
+    private void handleLocally(HttpActionHandler actionHandler, HttpObjectCallback httpObjectCallback, HttpRequest request, ResponseWriter responseWriter, boolean synchronous, Runnable expectationPostProcessor, String clientId) {
         if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -50,7 +50,7 @@ public class HttpResponseObjectCallbackActionHandler {
         }
         try {
             HttpResponse callbackResponse = LocalCallbackRegistry.retrieveResponseCallback(clientId).handle(request);
-            actionHandler.writeResponseActionResponse(callbackResponse, responseWriter, request, httpObjectCallback, synchronous);
+            actionHandler.writeResponseActionResponse(callbackResponse, responseWriter, request, httpObjectCallback, synchronous, null, expectationPostProcessor);
         } catch (Throwable throwable) {
             if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(WARN)) {
                 mockServerLogger.logEvent(
@@ -62,7 +62,7 @@ public class HttpResponseObjectCallbackActionHandler {
                         .setThrowable(throwable)
                 );
             }
-            actionHandler.writeResponseActionResponse(notFoundResponse(), responseWriter, request, httpObjectCallback, synchronous);
+            actionHandler.writeResponseActionResponse(notFoundResponse(), responseWriter, request, httpObjectCallback, synchronous, null, expectationPostProcessor);
         }
     }
 
@@ -79,10 +79,7 @@ public class HttpResponseObjectCallbackActionHandler {
                 );
             }
             webSocketClientRegistry.unregisterResponseCallbackHandler(webSocketCorrelationId);
-            if (expectationPostProcessor != null) {
-                expectationPostProcessor.run();
-            }
-            actionHandler.writeResponseActionResponse(response.removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME), responseWriter, request, httpObjectCallback, synchronous);
+            actionHandler.writeResponseActionResponse(response.removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME), responseWriter, request, httpObjectCallback, synchronous, null, expectationPostProcessor);
         });
         if (!webSocketClientRegistry.sendClientMessage(clientId, request.clone().withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId), null)) {
             if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(WARN)) {
@@ -94,7 +91,7 @@ public class HttpResponseObjectCallbackActionHandler {
                         .setArguments(notFoundResponse())
                 );
             }
-            actionHandler.writeResponseActionResponse(notFoundResponse(), responseWriter, request, httpObjectCallback, synchronous);
+            actionHandler.writeResponseActionResponse(notFoundResponse(), responseWriter, request, httpObjectCallback, synchronous, null, expectationPostProcessor);
         } else if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()

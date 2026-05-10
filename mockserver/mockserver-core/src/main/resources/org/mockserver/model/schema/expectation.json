@@ -51,6 +51,12 @@
     "httpWebSocketResponse": {
       "$ref": "#/definitions/httpWebSocketResponse"
     },
+    "afterActions": {
+      "oneOf": [
+        { "$ref": "#/definitions/afterAction" },
+        { "type": "array", "items": { "$ref": "#/definitions/afterAction" }, "minItems": 1 }
+      ]
+    },
     "times": {
       "$ref": "#/definitions/times"
     },
@@ -62,7 +68,7 @@
       "type": "string"
     }
   },
-  "oneOf": [
+  "anyOf": [
     {
       "required": [
         "httpResponse"

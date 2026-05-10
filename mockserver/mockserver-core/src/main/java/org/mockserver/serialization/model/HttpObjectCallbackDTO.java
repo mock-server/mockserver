@@ -1,5 +1,6 @@
 package org.mockserver.serialization.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.mockserver.model.Delay;
 import org.mockserver.model.HttpObjectCallback;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
@@ -12,6 +13,8 @@ public class HttpObjectCallbackDTO extends ObjectWithReflectiveEqualsHashCodeToS
     private String clientId;
     private Boolean responseCallback;
     private DelayDTO delay;
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private boolean primary;
 
     public HttpObjectCallbackDTO(HttpObjectCallback httpObjectCallback) {
         if (httpObjectCallback != null) {
@@ -20,6 +23,7 @@ public class HttpObjectCallbackDTO extends ObjectWithReflectiveEqualsHashCodeToS
             if (httpObjectCallback.getDelay() != null) {
                 delay = new DelayDTO(httpObjectCallback.getDelay());
             }
+            primary = httpObjectCallback.isPrimary();
         }
     }
 
@@ -34,7 +38,8 @@ public class HttpObjectCallbackDTO extends ObjectWithReflectiveEqualsHashCodeToS
         return new HttpObjectCallback()
             .withClientId(clientId)
             .withResponseCallback(responseCallback)
-            .withDelay(delay);
+            .withDelay(delay)
+            .withPrimary(primary);
     }
 
     public String getClientId() {
@@ -61,6 +66,15 @@ public class HttpObjectCallbackDTO extends ObjectWithReflectiveEqualsHashCodeToS
 
     public void setDelay(DelayDTO delay) {
         this.delay = delay;
+    }
+
+    public boolean isPrimary() {
+        return primary;
+    }
+
+    public HttpObjectCallbackDTO setPrimary(boolean primary) {
+        this.primary = primary;
+        return this;
     }
 }
 

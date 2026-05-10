@@ -17,6 +17,9 @@
         "HTTP",
         "HTTPS"
       ]
+    },
+    "primary": {
+      "type": "boolean"
     }
   },
   "definitions": {

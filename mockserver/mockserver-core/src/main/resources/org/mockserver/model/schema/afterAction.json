@@ -1,0 +1,24 @@
+{
+  "title": "afterAction",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "httpRequest": {
+      "$ref": "#/definitions/httpRequest"
+    },
+    "httpClassCallback": {
+      "$ref": "#/definitions/httpClassCallback"
+    },
+    "httpObjectCallback": {
+      "$ref": "#/definitions/httpObjectCallback"
+    },
+    "delay": {
+      "$ref": "#/definitions/delay"
+    }
+  },
+  "oneOf": [
+    { "required": ["httpRequest"] },
+    { "required": ["httpClassCallback"] },
+    { "required": ["httpObjectCallback"] }
+  ]
+}

@@ -6,6 +6,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.handler.codec.base64.Base64;
 import io.netty.util.AttributeKey;
 import org.apache.commons.text.StringEscapeUtils;
+import org.mockserver.closurecallback.websocketregistry.LocalCallbackRegistry;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.cors.CORSHeaders;
 import org.mockserver.filters.HopByHopHeaderFilter;
@@ -29,6 +30,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
@@ -99,7 +101,17 @@ public class HttpActionHandler {
             );
         }
         final Expectation expectation = httpStateHandler.firstMatchingExpectation(request);
-        Runnable expectationPostProcessor = () -> httpStateHandler.postProcess(expectation);
+        final AtomicBoolean postProcessed = new AtomicBoolean(false);
+        Runnable expectationPostProcessor = () -> {
+            if (postProcessed.compareAndSet(false, true)) {
+                httpStateHandler.postProcess(expectation);
+                if (expectation != null && expectation.getAfterActions() != null) {
+                    for (AfterAction afterAction : expectation.getAfterActions()) {
+                        dispatchAfterAction(afterAction, request);
+                    }
+                }
+            }
+        };
         final boolean potentiallyHttpProxy = !proxyingRequest && configuration.attemptToProxyIfNoMatchingExpectation() && !isEmpty(request.getFirstHeader(HOST.toString())) && !localAddresses.contains(request.getFirstHeader(HOST.toString())) && !NoProxyHostsUtils.isHostOnNoProxyList(request.getFirstHeader(HOST.toString()), configuration.noProxyHosts());
 
         if (expectation != null && expectation.getAction() != null) {
@@ -109,25 +121,22 @@ public class HttpActionHandler {
                 case RESPONSE: {
                     scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         final HttpResponse response = getHttpResponseActionHandler().handle((HttpResponse) action);
-                        writeResponseActionResponse(response, responseWriter, request, action, synchronous, expectation.getHttpRequest());
-                        expectationPostProcessor.run();
-                    }), synchronous);
+                        writeResponseActionResponse(response, responseWriter, request, action, synchronous, expectation.getHttpRequest(), expectationPostProcessor);
+                    }, expectationPostProcessor), synchronous);
                     break;
                 }
                 case RESPONSE_TEMPLATE: {
                     scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         final HttpResponse response = getHttpResponseTemplateActionHandler().handle((HttpTemplate) action, request);
-                        writeResponseActionResponse(response, responseWriter, request, action, synchronous, expectation.getHttpRequest());
-                        expectationPostProcessor.run();
-                    }), synchronous, action.getDelay());
+                        writeResponseActionResponse(response, responseWriter, request, action, synchronous, expectation.getHttpRequest(), expectationPostProcessor);
+                    }, expectationPostProcessor), synchronous, action.getDelay());
                     break;
                 }
                 case RESPONSE_CLASS_CALLBACK: {
                     scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         final HttpResponse response = getHttpResponseClassCallbackActionHandler().handle((HttpClassCallback) action, request);
-                        writeResponseActionResponse(response, responseWriter, request, action, synchronous, expectation.getHttpRequest());
-                        expectationPostProcessor.run();
-                    }), synchronous, action.getDelay());
+                        writeResponseActionResponse(response, responseWriter, request, action, synchronous, expectation.getHttpRequest(), expectationPostProcessor);
+                    }, expectationPostProcessor), synchronous, action.getDelay());
                     break;
                 }
                 case RESPONSE_OBJECT_CALLBACK: {
@@ -139,25 +148,22 @@ public class HttpActionHandler {
                 case FORWARD: {
                     scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         final HttpForwardActionResult responseFuture = getHttpForwardActionHandler().handle((HttpForward) action, request);
-                        writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous);
-                        expectationPostProcessor.run();
-                    }), synchronous, action.getDelay());
+                        writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous, expectationPostProcessor);
+                    }, expectationPostProcessor), synchronous, action.getDelay());
                     break;
                 }
                 case FORWARD_TEMPLATE: {
                     scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         final HttpForwardActionResult responseFuture = getHttpForwardTemplateActionHandler().handle((HttpTemplate) action, request);
-                        writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous);
-                        expectationPostProcessor.run();
-                    }), synchronous, action.getDelay());
+                        writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous, expectationPostProcessor);
+                    }, expectationPostProcessor), synchronous, action.getDelay());
                     break;
                 }
                 case FORWARD_CLASS_CALLBACK: {
                     scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         final HttpForwardActionResult responseFuture = getHttpForwardClassCallbackActionHandler().handle((HttpClassCallback) action, request);
-                        writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous);
-                        expectationPostProcessor.run();
-                    }), synchronous, action.getDelay());
+                        writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous, expectationPostProcessor);
+                    }, expectationPostProcessor), synchronous, action.getDelay());
                     break;
                 }
                 case FORWARD_OBJECT_CALLBACK: {
@@ -169,26 +175,23 @@ public class HttpActionHandler {
                 case FORWARD_REPLACE: {
                     scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         final HttpForwardActionResult responseFuture = getHttpOverrideForwardedRequestCallbackActionHandler().handle((HttpOverrideForwardedRequest) action, request);
-                        writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous);
-                        expectationPostProcessor.run();
-                    }), synchronous, action.getDelay());
+                        writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous, expectationPostProcessor);
+                    }, expectationPostProcessor), synchronous, action.getDelay());
                     break;
                 }
                 case FORWARD_VALIDATE: {
                     scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         final HttpForwardActionResult responseFuture = getHttpForwardValidateActionHandler().handle((HttpForwardValidateAction) action, request);
-                        writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous);
-                        expectationPostProcessor.run();
-                    }), synchronous, action.getDelay());
+                        writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous, expectationPostProcessor);
+                    }, expectationPostProcessor), synchronous, action.getDelay());
                     break;
                 }
                 case SSE_RESPONSE: {
                     if (ctx == null) {
                         writeResponseActionResponse(
                             response().withStatusCode(501).withBody("SSE streaming is not supported in WAR deployments"),
-                            responseWriter, request, action, synchronous
+                            responseWriter, request, action, synchronous, null, expectationPostProcessor
                         );
-                        expectationPostProcessor.run();
                         break;
                     }
                     scheduler.schedule(() -> {
@@ -204,7 +207,6 @@ public class HttpActionHandler {
                                     .setArguments(request, action, action.getExpectationId())
                             );
                             getHttpSseResponseActionHandler().handle((HttpSseResponse) action, ctx, request);
-                            expectationPostProcessor.run();
                         } catch (Throwable throwable) {
                             if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                                 mockServerLogger.logEvent(
@@ -218,6 +220,8 @@ public class HttpActionHandler {
                                 );
                             }
                             ctx.close();
+                        } finally {
+                            expectationPostProcessor.run();
                         }
                     }, synchronous, action.getDelay());
                     break;
@@ -226,9 +230,8 @@ public class HttpActionHandler {
                     if (ctx == null) {
                         writeResponseActionResponse(
                             response().withStatusCode(501).withBody("WebSocket mocking is not supported in WAR deployments"),
-                            responseWriter, request, action, synchronous
+                            responseWriter, request, action, synchronous, null, expectationPostProcessor
                         );
-                        expectationPostProcessor.run();
                         break;
                     }
                     scheduler.schedule(() -> {
@@ -244,7 +247,6 @@ public class HttpActionHandler {
                                     .setArguments(request, action, action.getExpectationId())
                             );
                             getHttpWebSocketResponseActionHandler().handle((HttpWebSocketResponse) action, ctx, request);
-                            expectationPostProcessor.run();
                         } catch (Throwable throwable) {
                             if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                                 mockServerLogger.logEvent(
@@ -258,6 +260,8 @@ public class HttpActionHandler {
                                 );
                             }
                             ctx.close();
+                        } finally {
+                            expectationPostProcessor.run();
                         }
                     }, synchronous, action.getDelay());
                     break;
@@ -277,8 +281,15 @@ public class HttpActionHandler {
                                 .setArguments(action, request, action, action.getExpectationId())
                         );
                         expectationPostProcessor.run();
-                    }), synchronous, action.getDelay());
+                    }, expectationPostProcessor), synchronous, action.getDelay());
                     break;
+                }
+            }
+
+            final List<Action> secondaryActions = expectation.getSecondaryActions();
+            if (!secondaryActions.isEmpty()) {
+                for (final Action secondaryAction : secondaryActions) {
+                    dispatchSecondaryAction(secondaryAction, request, synchronous);
                 }
             }
 
@@ -495,11 +506,11 @@ public class HttpActionHandler {
         return false;
     }
 
-    private void handleAnyException(HttpRequest request, ResponseWriter responseWriter, boolean synchronous, Action action, Runnable processAction) {
+    private void handleAnyException(HttpRequest request, ResponseWriter responseWriter, boolean synchronous, Action action, Runnable processAction, Runnable postProcessor) {
         try {
             processAction.run();
         } catch (Throwable throwable) {
-            writeResponseActionResponse(notFoundResponse(), responseWriter, request, action, synchronous);
+            writeResponseActionResponse(notFoundResponse(), responseWriter, request, action, synchronous, null, postProcessor);
             if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
@@ -514,25 +525,187 @@ public class HttpActionHandler {
         }
     }
 
+    private void dispatchSecondaryAction(final Action secondaryAction, final HttpRequest request, final boolean synchronous) {
+        scheduler.submitAsync(() -> {
+            try {
+                switch (secondaryAction.getType()) {
+                    case RESPONSE:
+                        getHttpResponseActionHandler().handle((HttpResponse) secondaryAction);
+                        break;
+                    case RESPONSE_TEMPLATE:
+                        getHttpResponseTemplateActionHandler().handle((HttpTemplate) secondaryAction, request);
+                        break;
+                    case RESPONSE_CLASS_CALLBACK:
+                        getHttpResponseClassCallbackActionHandler().handle((HttpClassCallback) secondaryAction, request);
+                        break;
+                    case RESPONSE_OBJECT_CALLBACK: {
+                        String clientId = ((HttpObjectCallback) secondaryAction).getClientId();
+                        if (LocalCallbackRegistry.responseClientExists(clientId)) {
+                            LocalCallbackRegistry.retrieveResponseCallback(clientId).handle(request);
+                        }
+                        break;
+                    }
+                    case FORWARD: {
+                        HttpForwardActionResult result = getHttpForwardActionHandler().handle((HttpForward) secondaryAction, request);
+                        logForwardResultAsync(result, request, secondaryAction);
+                        break;
+                    }
+                    case FORWARD_TEMPLATE: {
+                        HttpForwardActionResult result = getHttpForwardTemplateActionHandler().handle((HttpTemplate) secondaryAction, request);
+                        logForwardResultAsync(result, request, secondaryAction);
+                        break;
+                    }
+                    case FORWARD_CLASS_CALLBACK: {
+                        HttpForwardActionResult result = getHttpForwardClassCallbackActionHandler().handle((HttpClassCallback) secondaryAction, request);
+                        logForwardResultAsync(result, request, secondaryAction);
+                        break;
+                    }
+                    case FORWARD_OBJECT_CALLBACK: {
+                        String clientId = ((HttpObjectCallback) secondaryAction).getClientId();
+                        if (LocalCallbackRegistry.forwardClientExists(clientId)) {
+                            HttpRequest callbackRequest = LocalCallbackRegistry.retrieveForwardCallback(clientId).handle(request);
+                            if (callbackRequest != null) {
+                                httpClient.sendRequest(callbackRequest)
+                                    .whenComplete((response, throwable) -> {
+                                        if (throwable != null && mockServerLogger.isEnabledForInstance(Level.INFO)) {
+                                            mockServerLogger.logEvent(
+                                                new LogEntry()
+                                                    .setType(WARN)
+                                                    .setLogLevel(Level.INFO)
+                                                    .setCorrelationId(request.getLogCorrelationId())
+                                                    .setHttpRequest(request)
+                                                    .setMessageFormat("secondary forward object callback failed - " + throwable.getMessage())
+                                                    .setThrowable(throwable)
+                                            );
+                                        }
+                                    });
+                            }
+                        }
+                        break;
+                    }
+                    case FORWARD_REPLACE: {
+                        HttpForwardActionResult result = getHttpOverrideForwardedRequestCallbackActionHandler().handle((HttpOverrideForwardedRequest) secondaryAction, request);
+                        logForwardResultAsync(result, request, secondaryAction);
+                        break;
+                    }
+                    case FORWARD_VALIDATE: {
+                        HttpForwardActionResult result = getHttpForwardValidateActionHandler().handle((HttpForwardValidateAction) secondaryAction, request);
+                        logForwardResultAsync(result, request, secondaryAction);
+                        break;
+                    }
+                    case ERROR:
+                        break;
+                    default:
+                        break;
+                }
+            } catch (Exception e) {
+                if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(WARN)
+                            .setLogLevel(Level.INFO)
+                            .setCorrelationId(request.getLogCorrelationId())
+                            .setHttpRequest(request)
+                            .setMessageFormat("exception handling secondary action " + secondaryAction.getType() + " - " + e.getMessage())
+                            .setThrowable(e)
+                    );
+                }
+            }
+        }, secondaryAction.getDelay());
+    }
+
+    private void logForwardResultAsync(HttpForwardActionResult result, HttpRequest request, Action action) {
+        if (result != null && result.getHttpResponse() != null) {
+            result.getHttpResponse().whenComplete((response, throwable) -> {
+                if (throwable != null && mockServerLogger.isEnabledForInstance(Level.INFO)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(WARN)
+                            .setLogLevel(Level.INFO)
+                            .setCorrelationId(request.getLogCorrelationId())
+                            .setHttpRequest(request)
+                            .setMessageFormat("secondary forward action " + action.getType() + " failed - " + throwable.getMessage())
+                            .setThrowable(throwable)
+                    );
+                }
+            });
+        }
+    }
+
+    private void dispatchAfterAction(final AfterAction afterAction, final HttpRequest request) {
+        scheduler.submitAsync(() -> {
+            try {
+                if (afterAction.getHttpRequest() != null) {
+                    httpClient.sendRequest(afterAction.getHttpRequest())
+                        .whenComplete((response, throwable) -> {
+                            if (throwable != null && mockServerLogger.isEnabledForInstance(Level.INFO)) {
+                                mockServerLogger.logEvent(
+                                    new LogEntry()
+                                        .setType(WARN)
+                                        .setLogLevel(Level.INFO)
+                                        .setCorrelationId(request.getLogCorrelationId())
+                                        .setHttpRequest(request)
+                                        .setMessageFormat("after-action webhook failed for request{} - " + throwable.getMessage())
+                                        .setArguments(afterAction.getHttpRequest())
+                                        .setThrowable(throwable)
+                                );
+                            }
+                        });
+                } else if (afterAction.getHttpClassCallback() != null) {
+                    getHttpResponseClassCallbackActionHandler().handle(afterAction.getHttpClassCallback(), request);
+                } else if (afterAction.getHttpObjectCallback() != null) {
+                    HttpObjectCallback callback = afterAction.getHttpObjectCallback();
+                    callback.withActionType(Action.Type.RESPONSE_OBJECT_CALLBACK);
+                    String clientId = callback.getClientId();
+                    if (LocalCallbackRegistry.responseClientExists(clientId)) {
+                        LocalCallbackRegistry.retrieveResponseCallback(clientId).handle(request);
+                    }
+                }
+            } catch (Exception e) {
+                if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(WARN)
+                            .setLogLevel(Level.INFO)
+                            .setCorrelationId(request.getLogCorrelationId())
+                            .setHttpRequest(request)
+                            .setMessageFormat("exception dispatching after-action - " + e.getMessage())
+                            .setThrowable(e)
+                    );
+                }
+            }
+        }, afterAction.getDelay());
+    }
+
     void writeResponseActionResponse(final HttpResponse response, final ResponseWriter responseWriter, final HttpRequest request, final Action action, boolean synchronous) {
-        writeResponseActionResponse(response, responseWriter, request, action, synchronous, null);
+        writeResponseActionResponse(response, responseWriter, request, action, synchronous, null, null);
     }
 
     void writeResponseActionResponse(final HttpResponse response, final ResponseWriter responseWriter, final HttpRequest request, final Action action, boolean synchronous, final RequestDefinition requestDefinition) {
+        writeResponseActionResponse(response, responseWriter, request, action, synchronous, requestDefinition, null);
+    }
+
+    void writeResponseActionResponse(final HttpResponse response, final ResponseWriter responseWriter, final HttpRequest request, final Action action, boolean synchronous, final RequestDefinition requestDefinition, final Runnable postProcessor) {
         scheduler.schedule(() -> {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(EXPECTATION_RESPONSE)
-                    .setLogLevel(Level.INFO)
-                    .setCorrelationId(request.getLogCorrelationId())
-                    .setHttpRequest(request)
-                    .setHttpResponse(response)
-                    .setExpectationId(action.getExpectationId())
-                    .setMessageFormat("returning response:{}for request:{}for action:{}from expectation:{}")
-                    .setArguments(response, request, action, action.getExpectationId())
-            );
-            validateOpenAPIResponse(response, request, action, requestDefinition);
-            responseWriter.writeResponse(request, response, false);
+            try {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(EXPECTATION_RESPONSE)
+                        .setLogLevel(Level.INFO)
+                        .setCorrelationId(request.getLogCorrelationId())
+                        .setHttpRequest(request)
+                        .setHttpResponse(response)
+                        .setExpectationId(action.getExpectationId())
+                        .setMessageFormat("returning response:{}for request:{}for action:{}from expectation:{}")
+                        .setArguments(response, request, action, action.getExpectationId())
+                );
+                validateOpenAPIResponse(response, request, action, requestDefinition);
+                responseWriter.writeResponse(request, response, false);
+            } finally {
+                if (postProcessor != null) {
+                    postProcessor.run();
+                }
+            }
         }, synchronous, response.getDelay());
     }
 
@@ -568,6 +741,10 @@ public class HttpActionHandler {
     }
 
     void writeForwardActionResponse(final HttpForwardActionResult responseFuture, final ResponseWriter responseWriter, final HttpRequest request, final Action action, boolean synchronous) {
+        writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous, null);
+    }
+
+    void writeForwardActionResponse(final HttpForwardActionResult responseFuture, final ResponseWriter responseWriter, final HttpRequest request, final Action action, boolean synchronous, final Runnable postProcessor) {
         scheduler.submit(responseFuture, () -> {
             try {
                 HttpResponse response = responseFuture.getHttpResponse().get(configuration.maxFutureTimeoutInMillis(), MILLISECONDS);
@@ -586,6 +763,10 @@ public class HttpActionHandler {
                 );
             } catch (Throwable throwable) {
                 handleExceptionDuringForwardingRequest(action, request, responseWriter, throwable);
+            } finally {
+                if (postProcessor != null) {
+                    postProcessor.run();
+                }
             }
         }, synchronous, throwable -> true);
     }

@@ -64,7 +64,7 @@ public class HttpForwardObjectCallbackActionHandlerTest {
         verify(mockWebSocketClientRegistry).registerForwardCallbackHandler(any(String.class), any(WebSocketRequestCallback.class));
         verify(mockWebSocketClientRegistry).sendClientMessage(eq("some_clientId"), any(HttpRequest.class), isNull());
         ArgumentCaptor<HttpForwardActionResult> httpForwardActionResultArgumentCaptor = ArgumentCaptor.forClass(HttpForwardActionResult.class);
-        verify(mockActionHandler).writeForwardActionResponse(httpForwardActionResultArgumentCaptor.capture(), same(mockResponseWriter), same(request), same(httpObjectCallback), eq(true));
+        verify(mockActionHandler).writeForwardActionResponse(httpForwardActionResultArgumentCaptor.capture(), same(mockResponseWriter), same(request), same(httpObjectCallback), eq(true), isNull());
         assertThat(httpForwardActionResultArgumentCaptor.getValue().getHttpResponse().get(), is(badGatewayResponse()));
     }
 

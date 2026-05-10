@@ -11,6 +11,9 @@
     },
     "responseBytes": {
       "type": "string"
+    },
+    "primary": {
+      "type": "boolean"
     }
   }
 }

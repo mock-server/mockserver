@@ -11,6 +11,9 @@
     },
     "responseCallback": {
       "type": "boolean"
+    },
+    "primary": {
+      "type": "boolean"
     }
   }
 }

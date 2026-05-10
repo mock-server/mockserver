@@ -1,5 +1,6 @@
 package org.mockserver.serialization.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.mockserver.model.Cookies;
 import org.mockserver.model.Headers;
 import org.mockserver.model.HttpResponse;
@@ -16,6 +17,8 @@ public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString 
     private Headers headers;
     private DelayDTO delay;
     private ConnectionOptionsDTO connectionOptions;
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private boolean primary;
 
     public HttpResponseDTO() {
     }
@@ -29,6 +32,7 @@ public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString 
             cookies = httpResponse.getCookies();
             delay = (httpResponse.getDelay() != null ? new DelayDTO(httpResponse.getDelay()) : null);
             connectionOptions = (httpResponse.getConnectionOptions() != null ? new ConnectionOptionsDTO(httpResponse.getConnectionOptions()) : null);
+            primary = httpResponse.isPrimary();
         }
     }
 
@@ -40,7 +44,8 @@ public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString 
             .withHeaders(headers)
             .withCookies(cookies)
             .withDelay((delay != null ? delay.buildObject() : null))
-            .withConnectionOptions(connectionOptions != null ? connectionOptions.buildObject() : null);
+            .withConnectionOptions(connectionOptions != null ? connectionOptions.buildObject() : null)
+            .withPrimary(primary);
     }
 
     public Integer getStatusCode() {
@@ -103,6 +108,15 @@ public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString 
 
     public HttpResponseDTO setConnectionOptions(ConnectionOptionsDTO connectionOptions) {
         this.connectionOptions = connectionOptions;
+        return this;
+    }
+
+    public boolean isPrimary() {
+        return primary;
+    }
+
+    public HttpResponseDTO setPrimary(boolean primary) {
+        this.primary = primary;
         return this;
     }
 }

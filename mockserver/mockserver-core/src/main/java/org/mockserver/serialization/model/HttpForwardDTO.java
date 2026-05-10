@@ -1,5 +1,6 @@
 package org.mockserver.serialization.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.mockserver.model.Delay;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
@@ -12,6 +13,8 @@ public class HttpForwardDTO extends ObjectWithReflectiveEqualsHashCodeToString i
     private Integer port;
     private HttpForward.Scheme scheme;
     private DelayDTO delay;
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private boolean primary;
 
     public HttpForwardDTO(HttpForward httpForward) {
         if (httpForward != null) {
@@ -21,6 +24,7 @@ public class HttpForwardDTO extends ObjectWithReflectiveEqualsHashCodeToString i
             if (httpForward.getDelay() != null) {
                 delay = new DelayDTO(httpForward.getDelay());
             }
+            primary = httpForward.isPrimary();
         }
     }
 
@@ -36,7 +40,8 @@ public class HttpForwardDTO extends ObjectWithReflectiveEqualsHashCodeToString i
             .withHost(host)
             .withPort(port != null ? port : 80)
             .withScheme((scheme != null ? scheme : HttpForward.Scheme.HTTP))
-            .withDelay(delay);
+            .withDelay(delay)
+            .withPrimary(primary);
     }
 
     public String getHost() {
@@ -72,6 +77,15 @@ public class HttpForwardDTO extends ObjectWithReflectiveEqualsHashCodeToString i
 
     public void setDelay(DelayDTO delay) {
         this.delay = delay;
+    }
+
+    public boolean isPrimary() {
+        return primary;
+    }
+
+    public HttpForwardDTO setPrimary(boolean primary) {
+        this.primary = primary;
+        return this;
     }
 }
 

@@ -1,5 +1,6 @@
 package org.mockserver.serialization.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpResponseModifier;
 import org.mockserver.model.HttpTemplate;
@@ -15,6 +16,8 @@ public class HttpTemplateDTO extends ObjectWithReflectiveEqualsHashCodeToString 
     private DelayDTO delay;
     private HttpResponseDTO responseOverride;
     private HttpResponseModifierDTO responseModifier;
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private boolean primary;
 
     public HttpTemplateDTO(HttpTemplate httpTemplate) {
         if (httpTemplate != null) {
@@ -27,6 +30,7 @@ public class HttpTemplateDTO extends ObjectWithReflectiveEqualsHashCodeToString 
             if (httpTemplate.getResponseModifier() != null) {
                 responseModifier = new HttpResponseModifierDTO(httpTemplate.getResponseModifier());
             }
+            primary = httpTemplate.isPrimary();
         }
     }
 
@@ -36,7 +40,8 @@ public class HttpTemplateDTO extends ObjectWithReflectiveEqualsHashCodeToString 
     public HttpTemplate buildObject() {
         HttpTemplate result = new HttpTemplate(templateType)
             .withTemplate(template)
-            .withDelay((delay != null ? delay.buildObject() : null));
+            .withDelay((delay != null ? delay.buildObject() : null))
+            .withPrimary(primary);
         if (responseOverride != null) {
             result.withResponseOverride(responseOverride.buildObject());
         }
@@ -88,6 +93,15 @@ public class HttpTemplateDTO extends ObjectWithReflectiveEqualsHashCodeToString 
 
     public HttpTemplateDTO setResponseModifier(HttpResponseModifierDTO responseModifier) {
         this.responseModifier = responseModifier;
+        return this;
+    }
+
+    public boolean isPrimary() {
+        return primary;
+    }
+
+    public HttpTemplateDTO setPrimary(boolean primary) {
+        this.primary = primary;
         return this;
     }
 }

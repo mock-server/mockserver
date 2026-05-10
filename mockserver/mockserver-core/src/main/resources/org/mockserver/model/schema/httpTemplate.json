@@ -16,6 +16,9 @@
     "template": {
       "type": "string"
     },
+    "primary": {
+      "type": "boolean"
+    },
     "responseOverride": {
       "$ref": "#/definitions/httpResponse"
     },

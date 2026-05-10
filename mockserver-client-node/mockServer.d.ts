@@ -38,6 +38,7 @@ export type Expectation = {
   httpWebSocketResponse?: HttpWebSocketResponse;
   times?: Times;
   timeToLive?: TimeToLive;
+  afterActions?: AfterAction | AfterAction[];
 };
 
 export interface ExpectationId {
@@ -76,6 +77,7 @@ export interface OpenAPIDefinition {
 export interface HttpResponse {
   /** response delay */
   delay?: Delay;
+  primary?: boolean;
 
   /** response body */
   body?: BodyWithContentType;
@@ -91,6 +93,7 @@ export interface HttpResponse {
 export interface HttpTemplate {
   /** response delay */
   delay?: Delay;
+  primary?: boolean;
   templateType?: "VELOCITY" | "JAVASCRIPT" | "MUSTACHE";
   template?: string;
 }
@@ -98,6 +101,7 @@ export interface HttpTemplate {
 export interface HttpForward {
   /** response delay */
   delay?: Delay;
+  primary?: boolean;
   host?: string;
   port?: number;
   scheme?: "HTTP" | "HTTPS";
@@ -106,12 +110,14 @@ export interface HttpForward {
 export interface HttpClassCallback {
   /** response delay */
   delay?: Delay;
+  primary?: boolean;
   callbackClass?: string;
 }
 
 export interface HttpObjectCallback {
   /** response delay */
   delay?: Delay;
+  primary?: boolean;
   clientId?: string;
   responseCallback?: boolean;
 }
@@ -119,6 +125,7 @@ export interface HttpObjectCallback {
 export type HttpOverrideForwardedRequest =
   | {
       delay?: Delay;
+      primary?: boolean;
       requestOverride?: HttpRequest;
       requestModifier?: {
         path?: { regex?: string; substitution?: string };
@@ -132,11 +139,12 @@ export type HttpOverrideForwardedRequest =
         cookies?: { add?: KeyToValue; replace?: KeyToValue; remove?: string[] };
       };
     }
-  | { delay?: Delay; httpRequest?: HttpRequest; httpResponse?: HttpResponse };
+  | { delay?: Delay; primary?: boolean; httpRequest?: HttpRequest; httpResponse?: HttpResponse };
 
 export interface HttpError {
   /** response delay */
   delay?: Delay;
+  primary?: boolean;
   dropConnection?: boolean;
   responseBytes?: string;
 }
@@ -293,6 +301,7 @@ export interface HttpSseResponse {
   events?: SseEvent[];
   closeConnection?: boolean;
   delay?: Delay;
+  primary?: boolean;
 }
 
 export interface WebSocketMessage {
@@ -305,6 +314,14 @@ export interface HttpWebSocketResponse {
   subprotocol?: string;
   messages?: WebSocketMessage[];
   closeConnection?: boolean;
+  delay?: Delay;
+  primary?: boolean;
+}
+
+export interface AfterAction {
+  httpRequest?: HttpRequest;
+  httpClassCallback?: HttpClassCallback;
+  httpObjectCallback?: HttpObjectCallback;
   delay?: Delay;
 }
 

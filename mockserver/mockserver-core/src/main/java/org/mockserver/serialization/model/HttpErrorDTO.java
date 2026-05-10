@@ -1,5 +1,6 @@
 package org.mockserver.serialization.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.mockserver.model.HttpError;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
@@ -10,6 +11,8 @@ public class HttpErrorDTO extends ObjectWithReflectiveEqualsHashCodeToString imp
     private DelayDTO delay;
     private Boolean dropConnection;
     private byte[] responseBytes;
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private boolean primary;
 
     public HttpErrorDTO(HttpError httpError) {
         if (httpError != null) {
@@ -18,6 +21,7 @@ public class HttpErrorDTO extends ObjectWithReflectiveEqualsHashCodeToString imp
             }
             dropConnection = httpError.getDropConnection();
             responseBytes = httpError.getResponseBytes();
+            primary = httpError.isPrimary();
         }
     }
 
@@ -28,7 +32,8 @@ public class HttpErrorDTO extends ObjectWithReflectiveEqualsHashCodeToString imp
         return new HttpError()
             .withDelay((delay != null ? delay.buildObject() : null))
             .withDropConnection(dropConnection)
-            .withResponseBytes(responseBytes);
+            .withResponseBytes(responseBytes)
+            .withPrimary(primary);
     }
 
     public DelayDTO getDelay() {
@@ -55,6 +60,15 @@ public class HttpErrorDTO extends ObjectWithReflectiveEqualsHashCodeToString imp
 
     public HttpErrorDTO setResponseBytes(byte[] scheme) {
         this.responseBytes = scheme;
+        return this;
+    }
+
+    public boolean isPrimary() {
+        return primary;
+    }
+
+    public HttpErrorDTO setPrimary(boolean primary) {
+        this.primary = primary;
         return this;
     }
 }

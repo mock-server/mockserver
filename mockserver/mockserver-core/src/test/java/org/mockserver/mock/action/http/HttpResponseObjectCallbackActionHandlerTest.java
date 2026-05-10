@@ -58,6 +58,6 @@ public class HttpResponseObjectCallbackActionHandlerTest {
         // then
         verify(mockWebSocketClientRegistry).registerResponseCallbackHandler(any(String.class), any(WebSocketResponseCallback.class));
         verify(mockWebSocketClientRegistry).sendClientMessage(eq("some_clientId"), any(HttpRequest.class), isNull());
-        verify(mockActionHandler).writeResponseActionResponse(notFoundResponse().removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME), mockResponseWriter, request, httpObjectCallback, true);
+        verify(mockActionHandler).writeResponseActionResponse(notFoundResponse().removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME), mockResponseWriter, request, httpObjectCallback, true, null, null);
     }
 }

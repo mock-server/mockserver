@@ -1,4 +1,5 @@
 from mockserver.models import (
+    AfterAction,
     Body,
     ConnectionOptions,
     Delay,
@@ -42,6 +43,7 @@ from mockserver.client import MockServerClient
 from mockserver.async_client import AsyncMockServerClient
 
 __all__ = [
+    "AfterAction",
     "AsyncMockServerClient",
     "Body",
     "ConnectionOptions",

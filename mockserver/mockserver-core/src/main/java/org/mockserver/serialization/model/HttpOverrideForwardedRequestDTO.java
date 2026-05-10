@@ -1,6 +1,7 @@
 package org.mockserver.serialization.model;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.mockserver.model.*;
 
 /**
@@ -17,6 +18,8 @@ public class HttpOverrideForwardedRequestDTO extends ObjectWithReflectiveEqualsH
     private HttpResponseModifierDTO responseModifier;
     private HttpTemplateDTO responseTemplate;
     private DelayDTO delay;
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private boolean primary;
 
     public HttpOverrideForwardedRequestDTO(HttpOverrideForwardedRequest httpOverrideForwardedRequest) {
         if (httpOverrideForwardedRequest != null) {
@@ -41,6 +44,7 @@ public class HttpOverrideForwardedRequestDTO extends ObjectWithReflectiveEqualsH
                 this.responseTemplate = new HttpTemplateDTO(responseTemplateModel);
             }
             delay = (httpOverrideForwardedRequest.getDelay() != null ? new DelayDTO(httpOverrideForwardedRequest.getDelay()) : null);
+            primary = httpOverrideForwardedRequest.isPrimary();
         }
     }
 
@@ -74,7 +78,8 @@ public class HttpOverrideForwardedRequestDTO extends ObjectWithReflectiveEqualsH
             .withResponseOverride(overrideHttpResponse)
             .withResponseModifier(modifyHttpResponse)
             .withResponseTemplate(responseTemplateModel)
-            .withDelay((delay != null ? delay.buildObject() : null));
+            .withDelay((delay != null ? delay.buildObject() : null))
+            .withPrimary(primary);
     }
 
     public HttpRequestDTO getRequestOverride() {
@@ -128,6 +133,15 @@ public class HttpOverrideForwardedRequestDTO extends ObjectWithReflectiveEqualsH
 
     public HttpOverrideForwardedRequestDTO setDelay(DelayDTO delay) {
         this.delay = delay;
+        return this;
+    }
+
+    public boolean isPrimary() {
+        return primary;
+    }
+
+    public HttpOverrideForwardedRequestDTO setPrimary(boolean primary) {
+        this.primary = primary;
         return this;
     }
 }

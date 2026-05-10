@@ -38,6 +38,9 @@
     },
     "closeConnection": {
       "type": "boolean"
+    },
+    "primary": {
+      "type": "boolean"
     }
   },
   "definitions": {
