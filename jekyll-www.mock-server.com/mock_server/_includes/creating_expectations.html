@@ -358,7 +358,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
             <li><strong><a href="#button_response_literal_binary_PNG_body">body</a></strong></li>
             <li><strong><a href="#button_response_literal_with_header">headers</a></strong></li>
             <li><strong><a href="#button_response_literal_with_cookie">cookies</a></strong></li>
-            <li><strong><a href="#button_response_literal_with_10_second_delay">delay</a></strong></li>
+            <li><strong><a href="#button_response_literal_with_10_second_delay">delay</a></strong> (including <a href="#button_response_with_distribution_delay">distribution-based delays</a> for realistic latency simulation)</li>
             <li><strong><a href="#button_response_literal_with_connection_options_to_suppress_headers">connectionOptions</a></strong> that can be used to <a href="#button_response_literal_with_connection_options_to_suppress_headers">suppress
                 headers</a>, <a href="#button_response_literal_with_connection_options_to_override_headers">override headers</a> or <a href="#button_response_literal_with_connection_options_to_close_socket">close the socket connection</a>
             </li>
@@ -401,7 +401,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         </ul>
     </li>
     <li>
-        <p>or an <a href="#button_forward_overridden">overridden request</a> (or overridden response), with a <strong><a href="#button_forward_overridden_with_delay">delay</a></strong>, that allows any part of a forwarded request or
+        <p>or an <a href="#button_forward_overridden">overridden request</a> (or overridden response), with a <strong><a href="#button_forward_overridden_with_delay">delay</a></strong> (including <a href="#button_forward_overridden_with_distribution_delay">distribution-based delays</a>), that allows any part of a forwarded request or
             response to be replaced or certain fields (path, headers, cookies or query parameters) to be modified</p>
     </li>
     <li>
@@ -429,7 +429,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 
 <a id="error_action" class="anchor" href="#error_action">&nbsp;</a>
 
-<p>An <strong>error action</strong> can return an invalid response as a <a href="#button_random_bytes_error">sequence of bytes</a> or <a href="#button_drop_connection_error">drop the connection</a></p>
+<p>An <strong>error action</strong> can return an invalid response as a <a href="#button_random_bytes_error">sequence of bytes</a> or <a href="#button_drop_connection_error">drop the connection</a> (with an optional <a href="#button_error_with_delay">delay</a>)</p>
 
 <button id="button_error" class="accordion title"><strong>Error Action Code Examples</strong></button>
 <div class="panel title">

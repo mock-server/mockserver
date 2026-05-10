@@ -1,4 +1,61 @@
 <p>The following code examples show how to create different error actions.</p>
+<button id="button_error_with_delay" class="accordion">drop connection error with delay</button>
+<div class="panel">
+    <p>An error action can include a delay to simulate a service that hangs before dropping the connection, which is useful for testing timeout handling.</p>
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .error(
+        error()
+            .withDropConnection(true)
+            .withDelay(TimeUnit.SECONDS, 5)
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpError": {
+        "dropConnection": true,
+        "delay": {
+            "timeUnit": "SECONDS",
+            "value": 5
+        }
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpError": {
+        "dropConnection": true,
+        "delay": {
+            "timeUnit": "SECONDS",
+            "value": 5
+        }
+    }
+}'</code></pre>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
 <button id="button_random_bytes_error" class="accordion">random bytes error</button>
 <div class="panel">
     <button class="accordion inner">Java</button>

@@ -389,7 +389,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         }
     }
 }'</code></pre>
-        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 <button id="button_response_literal_with_10_second_delay" class="accordion">literal response with 10 second delay</button>
@@ -429,7 +429,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         console.log(error);
     }
 );</code></pre>
-        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -445,11 +445,19 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         }
     }
 }'</code></pre>
-        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 <button id="button_response_with_distribution_delay" class="accordion">response with distribution-based delay (for realistic latency simulation)</button>
 <div class="panel">
+    <p>Distribution-based delays add realistic variability to response times. Each request samples a new random delay from the chosen distribution. Three distribution types are supported:</p>
+    <ul>
+        <li><strong>UNIFORM</strong> — equal probability across a min/max range; use for simple random variation</li>
+        <li><strong>LOG_NORMAL</strong> — most values near the median with a long tail of slower responses; best for realistic network/API latency simulation. Specified via median and p99 (99th percentile)</li>
+        <li><strong>GAUSSIAN</strong> — bell curve centered on the mean; use when you know the average latency and expected spread (standard deviation)</li>
+    </ul>
+    <p>Distribution-based delays are supported on all action types including response, forward, error, template, and callback actions.</p>
+    <p>Sampled values are clamped to a minimum of 0 and a maximum of 86,400,000 milliseconds (24 hours). Validation constraints: UNIFORM requires <code>min &gt;= 0</code> and <code>max &gt;= min</code>; LOG_NORMAL requires <code>median &gt; 0</code> and <code>p99 &gt;= median</code>; GAUSSIAN requires <code>mean &gt;= 0</code> and <code>stdDev &gt;= 0</code>.</p>
     <button class="accordion inner">Java</button>
     <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">// uniform random delay between 100ms and 500ms
@@ -487,6 +495,85 @@ new MockServerClient("localhost", 1080)
             .withBody("some_response_body")
             .withDelay(Delay.gaussian(TimeUnit.MILLISECONDS, 200, 50))
     );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+// uniform random delay between 100ms and 500ms
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpResponse": {
+        "body": "some_response_body",
+        "delay": {
+            "timeUnit": "MILLISECONDS",
+            "distribution": {
+                "type": "UNIFORM",
+                "min": 100,
+                "max": 500
+            }
+        }
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);
+
+// log-normal delay with median 200ms and p99 of 800ms
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpResponse": {
+        "body": "some_response_body",
+        "delay": {
+            "timeUnit": "MILLISECONDS",
+            "distribution": {
+                "type": "LOG_NORMAL",
+                "median": 200,
+                "p99": 800
+            }
+        }
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);
+
+// gaussian delay with mean 200ms and standard deviation of 50ms
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpResponse": {
+        "body": "some_response_body",
+        "delay": {
+            "timeUnit": "MILLISECONDS",
+            "distribution": {
+                "type": "GAUSSIAN",
+                "mean": 200,
+                "stdDev": 50
+            }
+        }
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -543,7 +630,7 @@ curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
         }
     }
 }'</code></pre>
-        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 <button id="button_response_differently_for_same_request" class="accordion">respond differently for the same request</button>
@@ -621,7 +708,7 @@ client.mockAnyResponse({
         console.log(error);
     }
 );</code></pre>
-        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -653,7 +740,7 @@ curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
         "unlimited": false
     }
 }'</code></pre>
-        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 <button id="button_response_literal_with_connection_options_to_suppress_headers" class="accordion">literal response with connection options to suppress headers</button>
@@ -697,7 +784,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         console.log(error);
     }
 );</code></pre>
-        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -713,7 +800,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         }
     }
 }'</code></pre>
-        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 <button id="button_response_literal_with_connection_options_to_override_headers" class="accordion">literal response with connection options to override headers</button>
@@ -757,7 +844,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         console.log(error);
     }
 );</code></pre>
-        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -773,7 +860,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         }
     }
 }'</code></pre>
-        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 <button id="button_response_literal_with_connection_options_to_close_socket" class="accordion">literal response with connection options to close socket</button>
@@ -815,7 +902,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         console.log(error);
     }
 );</code></pre>
-        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -830,7 +917,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         }
     }
 }'</code></pre>
-        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 <button id="button_response_literal_with_connection_options_to_close_socket_after_delay" class="accordion">literal response with connection options to close socket after a delay</button>
@@ -877,7 +964,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         console.log(error);
     }
 );</code></pre>
-        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -896,7 +983,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         }
     }
 }'</code></pre>
-        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 <button id="button_javascript_templated_response" class="accordion">javascript templated response</button>
@@ -951,7 +1038,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         console.log(error);
     }
 );</code></pre>
-        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -964,7 +1051,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         "templateType": "JAVASCRIPT"
     }
 }'</code></pre>
-        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 <button id="button_javascript_templated_response_with_body_as_string" class="accordion">javascript templated response reading request body</button>
@@ -1003,7 +1090,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         console.log(error);
     }
 );</code></pre>
-        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -1016,7 +1103,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         "templateType": "JAVASCRIPT"
     }
 }'</code></pre>
-        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 <button id="button_javascript_templated_response_with_delay" class="accordion">javascript templated response with delay</button>
@@ -1065,7 +1152,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         console.log(error);
     }
 );</code></pre>
-        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -1077,7 +1164,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         "delay": {"timeUnit": "MINUTES", "value": 2}
     }
 }'</code></pre>
-        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 <button id="button_javascript_velocity_templated_response" class="accordion">velocity templated response</button>
@@ -1128,7 +1215,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         console.log(error);
     }
 );</code></pre>
-        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -1141,7 +1228,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         "templateType": "VELOCITY"
     }
 }'</code></pre>
-        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 <button id="button_response_class_callback" class="accordion">class callback</button>

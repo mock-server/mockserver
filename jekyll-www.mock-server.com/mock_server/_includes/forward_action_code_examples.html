@@ -1029,6 +1029,85 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
+<button id="button_forward_overridden_with_distribution_delay" class="accordion">forward overridden request with distribution-based delay</button>
+<div class="panel">
+    <p>Forward actions support the same <a href="#button_response_with_distribution_delay">distribution-based delays</a> as response actions, allowing realistic latency simulation when proxying requests.</p>
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .forward(
+        forwardOverriddenRequest(
+            request()
+                .withHeader("Host", "target.host.com")
+                .withBody("some_overridden_body")
+        ).withDelay(Delay.logNormal(TimeUnit.MILLISECONDS, 200, 800))
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpOverrideForwardedRequest": {
+        "httpRequest": {
+            "path": "/some/other/path",
+            "body": "some_overridden_body",
+            "headers": {
+                "Host": ["target.host.com"]
+            }
+        },
+        "delay": {
+            "timeUnit": "MILLISECONDS",
+            "distribution": {
+                "type": "LOG_NORMAL",
+                "median": 200,
+                "p99": 800
+            }
+        }
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpOverrideForwardedRequest": {
+        "httpRequest": {
+            "path": "/some/other/path",
+            "body": "some_overridden_body",
+            "headers": {
+                "Host": ["target.host.com"]
+            }
+        },
+        "delay": {
+            "timeUnit": "MILLISECONDS",
+            "distribution": {
+                "type": "LOG_NORMAL",
+                "median": 200,
+                "p99": 800
+            }
+        }
+    }
+}'</code></pre>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
 <button id="button_javascript_templated_forward" class="accordion">javascript templated forward</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
@@ -1331,7 +1410,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         console.log(error);
     }
 );</code></pre>
-        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -1356,7 +1435,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         "templateType": "VELOCITY"
     }
 }'</code></pre>
-        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.15.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 <button id="button_response_template_forward" class="accordion">override forwarded request with response template</button>
