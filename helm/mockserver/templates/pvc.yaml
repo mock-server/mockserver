@@ -1,0 +1,24 @@
+{{- if and .Values.app.persistence.enabled (not .Values.app.persistence.existingClaimName) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ template "release.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "chart.name" . }}
+    release: {{ .Release.Name }}
+    chart: {{ template "chart.name_version" . }}
+{{- with .Values.app.persistence.annotations }}
+  annotations:
+{{ toYaml . | indent 4 }}
+{{- end }}
+spec:
+  accessModes:
+{{ toYaml .Values.app.persistence.accessModes | indent 4 }}
+{{- if .Values.app.persistence.storageClass }}
+  storageClassName: {{ .Values.app.persistence.storageClass | quote }}
+{{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.app.persistence.size | quote }}
+{{- end }}

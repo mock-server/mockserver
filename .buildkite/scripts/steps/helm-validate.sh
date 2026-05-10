@@ -30,6 +30,17 @@ exec "$SCRIPT_DIR/../run-in-docker.sh" \
       --set ingress.enabled=true \
       > /dev/null || errors=$((errors + 1))
 
+    echo "--- Rendering mockserver with persistence enabled (chart-managed PVC)"
+    helm template test-release helm/mockserver \
+      --set app.persistence.enabled=true \
+      > /dev/null || errors=$((errors + 1))
+
+    echo "--- Rendering mockserver with persistence enabled (existing PVC)"
+    helm template test-release helm/mockserver \
+      --set app.persistence.enabled=true \
+      --set app.persistence.existingClaimName=my-existing-pvc \
+      > /dev/null || errors=$((errors + 1))
+
     if [ "$errors" -eq 0 ]; then
       echo "All Helm validations passed"
     else

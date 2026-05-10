@@ -192,6 +192,95 @@ For example:
 
 <pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.mountedLibsConfigMapName=mockserver-libs mockserver helm/mockserver</code></pre>
 
+<a id="helm_persistent_storage" class="anchor" href="#helm_persistent_storage">&nbsp;</a>
+
+<h2>Persistent Storage</h2>
+
+<p>By default, MockServer holds expectations in memory only. On Kubernetes, this means expectations are lost when a pod restarts.
+    To persist expectations across pod restarts, enable persistent storage. This creates (or references) a <strong>PersistentVolumeClaim</strong>
+    and automatically configures MockServer to save and reload expectations from it.</p>
+
+<h3>Quick Start</h3>
+
+<p>The simplest way to enable persistence is with a single <span class="keyword">--set</span> flag:</p>
+
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver \
+  --set app.persistence.enabled=true \
+  mockserver helm/mockserver</code></pre>
+
+<p>This creates a <strong>256Mi</strong> PersistentVolumeClaim using the cluster's default StorageClass, and automatically configures MockServer to persist expectations to it.</p>
+
+<h3>How It Works</h3>
+
+<p>When <span class="keyword">app.persistence.enabled=true</span>, the chart:</p>
+<ol>
+    <li>Creates a PersistentVolumeClaim (unless <span class="keyword">app.persistence.existingClaimName</span> is set)</li>
+    <li>Mounts the PVC into the container at <span class="keyword">/persistence</span> (configurable via <span class="keyword">app.persistence.mountPath</span>)</li>
+    <li>Sets the following environment variables to enable persistence automatically:
+        <ul>
+            <li><span class="keyword">MOCKSERVER_PERSIST_EXPECTATIONS=true</span></li>
+            <li><span class="keyword">MOCKSERVER_PERSISTED_EXPECTATIONS_PATH=/persistence/persistedExpectations.json</span></li>
+            <li><span class="keyword">MOCKSERVER_INITIALIZATION_JSON_PATH=/persistence/persistedExpectations.json</span></li>
+        </ul>
+    </li>
+</ol>
+
+<p><strong>Important:</strong> These environment variables provide defaults. Any matching property in your <span class="keyword">mockserver.properties</span>
+    file takes precedence over environment variables. If you need custom paths or want to disable auto-initialization,
+    set the equivalent properties in your properties file. See <a href="/mock_server/configuration_properties.html">MockServer Configuration</a>
+    for the full property precedence rules.</p>
+
+<h3>Persistence Values</h3>
+
+<p>The following values control persistent storage:</p>
+
+<ul>
+    <li><span class="keyword">app.persistence.enabled</span> (default: <span class="this_value">false</span>) &mdash; set <span class="keyword">true</span> to enable persistent storage</li>
+    <li><span class="keyword">app.persistence.existingClaimName</span> (default: <span class="this_value">""</span>) &mdash; name of an existing PVC to use; if empty, the chart creates one</li>
+    <li><span class="keyword">app.persistence.storageClass</span> (default: <span class="this_value">""</span>) &mdash; StorageClass for the PVC; if empty, the cluster default is used</li>
+    <li><span class="keyword">app.persistence.accessModes</span> (default: <span class="this_value">[ReadWriteOnce]</span>) &mdash; access modes for the PVC</li>
+    <li><span class="keyword">app.persistence.size</span> (default: <span class="this_value">256Mi</span>) &mdash; size of the PVC</li>
+    <li><span class="keyword">app.persistence.mountPath</span> (default: <span class="this_value">/persistence</span>) &mdash; mount path inside the container</li>
+    <li><span class="keyword">app.persistence.annotations</span> (default: <span class="this_value">{}</span>) &mdash; annotations for the PVC (only used when creating a new PVC)</li>
+</ul>
+
+<h3>Example: Chart-Managed PVC</h3>
+
+<p>Let the chart create and manage the PVC:</p>
+
+<pre class="prettyprint code"><code class="code">app:
+  persistence:
+    enabled: true
+    storageClass: "gp3"
+    size: 1Gi</code></pre>
+
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver -f values.yaml mockserver helm/mockserver</code></pre>
+
+<h3>Example: Existing PVC</h3>
+
+<p>If you manage PVCs separately (e.g. via GitOps or Terraform), reference an existing PVC by name:</p>
+
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver \
+  --set app.persistence.enabled=true \
+  --set app.persistence.existingClaimName=my-mockserver-data \
+  mockserver helm/mockserver</code></pre>
+
+<h3>Example: Clustering with Shared Storage</h3>
+
+<p>For <a href="/mock_server/persisting_expectations.html">clustered MockServer deployments</a>, use a <span class="keyword">ReadWriteMany</span> access mode
+    with a shared filesystem such as NFS, <a target="_blank" href="https://aws.amazon.com/efs/">AWS EFS</a>, or <a target="_blank" href="https://docs.microsoft.com/en-us/azure/storage/files/">Azure Files</a>:</p>
+
+<pre class="prettyprint code"><code class="code">replicaCount: 3
+
+app:
+  persistence:
+    enabled: true
+    accessModes:
+      - ReadWriteMany
+    storageClass: "efs-sc"</code></pre>
+
+<p>See <a href="/mock_server/persisting_expectations.html">Persisting &amp; Clustering Expectations</a> for more details on how MockServer clustering works.</p>
+
 <a id="mockserver_url" class="anchor" href="#mockserver_url">&nbsp</a>
 
 <h2>MockServer URL</h2>

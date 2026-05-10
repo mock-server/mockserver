@@ -41,6 +41,7 @@ initializerJson.json"]
 | `service.yaml` | Service (NodePort/LoadBalancer/ClusterIP) |
 | `ingress.yaml` | Optional Ingress resource |
 | `configmap.yaml` | Optional ConfigMap for inline configuration (when `app.config.enabled`) |
+| `pvc.yaml` | Optional PersistentVolumeClaim (when `app.persistence.enabled` and no `existingClaimName`) |
 | `service-test.yaml` | Helm test pod (curl readiness check) |
 | `_helpers.tpl` | Template helper functions |
 | `NOTES.txt` | Post-install instructions |
@@ -63,6 +64,15 @@ app:
     properties: ""
     initializerJson: ""
     extraFiles: {}
+  persistence:
+    enabled: false
+    existingClaimName: ""
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 256Mi
+    mountPath: /persistence
+    annotations: {}
 image:
   repository: mockserver
   snapshot: false
@@ -112,14 +122,47 @@ Port 1080"]
 mockserver.properties"]
         VOL_LIBS["/libs/
 additional JARs"]
+        VOL_PERSIST["/persistence/
+persistedExpectations.json
+optional"]
     end
 
     CM["ConfigMap
 mockserver-config"] -->|volume mount| VOL_PROPS
     CM -->|volume mount| VOL_LIBS
+    PVC["PersistentVolumeClaim
+optional"] -->|volume mount| VOL_PERSIST
     CONT --> VOL_PROPS
     CONT --> VOL_LIBS
+    CONT --> VOL_PERSIST
 ```
+
+### Persistence
+
+When `app.persistence.enabled=true`, the chart:
+
+1. Creates a PersistentVolumeClaim (unless `app.persistence.existingClaimName` references an existing one)
+2. Mounts the PVC at `app.persistence.mountPath` (default `/persistence`)
+3. Injects environment variables to enable MockServer's file-based persistence:
+   - `MOCKSERVER_PERSIST_EXPECTATIONS=true`
+   - `MOCKSERVER_PERSISTED_EXPECTATIONS_PATH=/persistence/persistedExpectations.json`
+   - `MOCKSERVER_INITIALIZATION_JSON_PATH=/persistence/persistedExpectations.json`
+
+**Property precedence:** These environment variables are safe defaults. MockServer's property resolution order is: system property > property file > environment variable > hardcoded default. So any matching property in the user's `mockserver.properties` file overrides the chart-injected env vars.
+
+| Value | Type | Default | Description |
+|-------|------|---------|-------------|
+| `app.persistence.enabled` | bool | `false` | Enable persistent storage |
+| `app.persistence.existingClaimName` | string | `""` | Use existing PVC (skip PVC creation) |
+| `app.persistence.storageClass` | string | `""` | StorageClass (empty = cluster default) |
+| `app.persistence.accessModes` | list | `[ReadWriteOnce]` | PVC access modes |
+| `app.persistence.size` | string | `256Mi` | PVC size |
+| `app.persistence.mountPath` | string | `/persistence` | Container mount path |
+| `app.persistence.annotations` | map | `{}` | PVC annotations |
+
+**Backward compatibility:** Disabled by default. When disabled, no PVC, volumes, volumeMounts, or env vars are added — the chart behaves identically to before this feature was added.
+
+**PVC retention:** Chart-managed PVCs are NOT deleted by `helm uninstall`. Delete the PVC manually if you want to remove persisted data: `kubectl delete pvc <release-name> -n <namespace>`.
 
 ### Health Checks
 
@@ -230,7 +273,7 @@ helm repo index .
 The infra pipeline runs `helm lint` and `helm template` against both charts on every change to `helm/`. This catches syntax errors, rendering issues, and invalid template logic without needing a Kubernetes cluster.
 
 - **Pipeline step:** `.buildkite/scripts/steps/helm-validate.sh`
-- **Validates:** default values, inline config enabled, ingress enabled
+- **Validates:** default values, inline config enabled, ingress enabled, persistence enabled (chart-managed and existing PVC)
 
 ### k3d-Based Integration Testing
 

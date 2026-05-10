@@ -87,6 +87,14 @@ spec:
             - name: MOCKSERVER_PROPERTY_FILE
               value: /config/{{ .Values.app.propertiesFileName }}
 {{- end }}
+{{- if .Values.app.persistence.enabled }}
+            - name: MOCKSERVER_PERSIST_EXPECTATIONS
+              value: "true"
+            - name: MOCKSERVER_PERSISTED_EXPECTATIONS_PATH
+              value: {{ .Values.app.persistence.mountPath }}/persistedExpectations.json
+            - name: MOCKSERVER_INITIALIZATION_JSON_PATH
+              value: {{ .Values.app.persistence.mountPath }}/persistedExpectations.json
+{{- end }}
           volumeMounts:
             - name: config-volume
               mountPath: /config
@@ -94,6 +102,10 @@ spec:
             - name: libs-volume
               mountPath: /libs
 {{- end}}
+{{- if .Values.app.persistence.enabled }}
+            - name: persistence-volume
+              mountPath: {{ .Values.app.persistence.mountPath }}
+{{- end }}
 {{- if .Values.resources }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
@@ -109,6 +121,11 @@ spec:
             name: {{ .Values.app.mountedLibsConfigMapName }}
             optional: true
 {{- end}}
+{{- if .Values.app.persistence.enabled }}
+        - name: persistence-volume
+          persistentVolumeClaim:
+            claimName: {{ .Values.app.persistence.existingClaimName | default (include "release.name" .) }}
+{{- end }}
 {{- with .Values.nodeSelector }}
       nodeSelector:
 {{ toYaml . | indent 8 }}

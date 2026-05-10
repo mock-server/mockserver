@@ -33,6 +33,25 @@ java -jar ~/Downloads/mockserver-netty-{{ site.mockserver_version }}-no-dependen
 -Dmockserver.initializationJsonPath=mockserverInitialization.json \
 -jar ~/Downloads/mockserver-netty-{{ site.mockserver_version }}-no-dependencies.jar -serverPort 1080,1081 -logLevel INFO</code></pre>
 
+<a id="kubernetes_persistence" class="anchor" href="#kubernetes_persistence">&nbsp;</a>
+
+<h2>Kubernetes Persistence</h2>
+
+<p>On Kubernetes, pods are ephemeral &mdash; any files written inside the container are lost when the pod restarts. To persist expectations across pod restarts, the MockServer
+    <a href="/where/kubernetes.html#helm_persistent_storage">Helm chart supports PersistentVolumeClaims</a>.</p>
+
+<p>The simplest way to enable persistence on Kubernetes is:</p>
+
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver \
+  --set app.persistence.enabled=true \
+  mockserver helm/mockserver</code></pre>
+
+<p>This creates a PersistentVolumeClaim and automatically configures MockServer to persist and reload expectations from it. No additional configuration is needed.</p>
+
+<p>For clustered deployments on Kubernetes, use a <span class="keyword">ReadWriteMany</span> PVC backed by a shared filesystem
+    (e.g. NFS, <a target="_blank" href="https://aws.amazon.com/efs/">AWS EFS</a>, or <a target="_blank" href="https://docs.microsoft.com/en-us/azure/storage/files/">Azure Files</a>).
+    See the <a href="/where/kubernetes.html#helm_persistent_storage">Helm chart persistent storage documentation</a> for full details and examples.</p>
+
 {% include_subpage _includes/clustering.html %}
 
 {% include_subpage _includes/initializer_persistence_configuration.html %}

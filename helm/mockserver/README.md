@@ -161,6 +161,33 @@ For example:
 helm upgrade --install --create-namespace --namespace mockserver --set app.mountedLibsConfigMapName=mockserver-libs mockserver helm/mockserver
 ```
 
+### Persistent Storage
+
+By default, expectations are held in memory and lost when a pod restarts. To persist expectations across pod restarts, enable persistent storage:
+
+```bash
+helm upgrade --install --namespace mockserver \
+  --set app.persistence.enabled=true \
+  mockserver helm/mockserver
+```
+
+This creates a PersistentVolumeClaim and automatically configures MockServer to persist and reload expectations from it. No additional configuration is needed.
+
+The following persistence values are supported:
+- `app.persistence.enabled` (default: false) — enable persistent storage
+- `app.persistence.existingClaimName` (default: "") — use an existing PVC instead of creating one
+- `app.persistence.storageClass` (default: "") — StorageClass for the PVC (empty = cluster default)
+- `app.persistence.accessModes` (default: [ReadWriteOnce]) — PVC access modes
+- `app.persistence.size` (default: 256Mi) — PVC size
+- `app.persistence.mountPath` (default: /persistence) — mount path inside the container
+- `app.persistence.annotations` (default: {}) — annotations for the PVC
+
+When persistence is enabled, the chart automatically sets `MOCKSERVER_PERSIST_EXPECTATIONS`, `MOCKSERVER_PERSISTED_EXPECTATIONS_PATH`, and `MOCKSERVER_INITIALIZATION_JSON_PATH` environment variables. These are safe defaults — any matching property in your `mockserver.properties` file takes precedence.
+
+**Note:** Chart-managed PVCs are NOT deleted by `helm uninstall`. Delete the PVC manually if you want to remove persisted data.
+
+See the [full persistence documentation](https://www.mock-server.com/where/kubernetes.html#helm_persistent_storage) for more examples including existing PVC usage and clustering with shared storage.
+
 ### MockServer URL
 
 #### Local Kubernetes Cluster (i.e. [minikube](https://github.com/kubernetes/minikube), [microk8s](https://microk8s.io/))

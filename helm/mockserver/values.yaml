@@ -21,6 +21,60 @@ app:
     properties: ""
     initializerJson: ""
     extraFiles: {}
+  persistence:
+    # -- Enable persistent storage for expectations.
+    # When enabled, a PersistentVolumeClaim is mounted and MockServer is configured
+    # to persist expectations to it, so they survive pod restarts.
+    #
+    # The chart automatically sets the following environment variables:
+    #   MOCKSERVER_PERSIST_EXPECTATIONS=true
+    #   MOCKSERVER_PERSISTED_EXPECTATIONS_PATH=/persistence/persistedExpectations.json
+    #   MOCKSERVER_INITIALIZATION_JSON_PATH=/persistence/persistedExpectations.json
+    #
+    # These are safe defaults — any matching property in your mockserver.properties
+    # file takes precedence over environment variables.
+    #
+    # Example - enable with chart-managed PVC (simplest):
+    #   persistence:
+    #     enabled: true
+    #
+    # Example - use an existing PVC:
+    #   persistence:
+    #     enabled: true
+    #     existingClaimName: "my-mockserver-data"
+    #
+    # Example - custom StorageClass and size:
+    #   persistence:
+    #     enabled: true
+    #     storageClass: "gp3"
+    #     size: 1Gi
+    #
+    # Example - clustering with shared storage (ReadWriteMany):
+    #   persistence:
+    #     enabled: true
+    #     accessModes:
+    #       - ReadWriteMany
+    #     storageClass: "efs-sc"
+    enabled: false
+    # -- Use an existing PersistentVolumeClaim instead of creating a new one.
+    # If empty, the chart creates a PVC automatically.
+    existingClaimName: ""
+    # -- StorageClass for the PVC. If empty, the cluster default StorageClass is used.
+    storageClass: ""
+    # -- Access modes for the PVC.
+    # Use ReadWriteOnce for single-replica deployments (default).
+    # Use ReadWriteMany (with NFS, AWS EFS, or Azure Files) for clustered deployments.
+    accessModes:
+      - ReadWriteOnce
+    # -- Size of the PVC. Expectation JSON files are typically small.
+    size: 256Mi
+    # -- Mount path inside the container for the persistent volume.
+    mountPath: /persistence
+    # -- Annotations to add to the PVC (only used when creating a new PVC).
+    # Example:
+    #   annotations:
+    #     helm.sh/resource-policy: keep
+    annotations: {}
 
 image:
   repository: mockserver

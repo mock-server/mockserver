@@ -50,3 +50,16 @@
    export MOCKSERVER_HOST=127.0.0.1:1080
    echo http://$MOCKSERVER_HOST
 {{- end }}
+{{- if .Values.app.persistence.enabled }}
+
+4. Persistence is enabled. Expectations will be persisted to {{ .Values.app.persistence.mountPath }}/persistedExpectations.json
+   {{- if .Values.app.persistence.existingClaimName }}
+   Using existing PVC: {{ .Values.app.persistence.existingClaimName }}
+   {{- else }}
+   A PersistentVolumeClaim named "{{ template "release.name" . }}" has been created.
+   {{- end }}
+
+   NOTE: The chart automatically sets MOCKSERVER_PERSIST_EXPECTATIONS,
+   MOCKSERVER_PERSISTED_EXPECTATIONS_PATH, and MOCKSERVER_INITIALIZATION_JSON_PATH.
+   Any matching property in your mockserver.properties file takes precedence.
+{{- end }}
