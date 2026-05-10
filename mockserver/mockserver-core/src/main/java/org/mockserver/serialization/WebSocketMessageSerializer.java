@@ -8,6 +8,8 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpRequestAndHttpResponse;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.serialization.model.WebSocketClientIdDTO;
+import org.mockserver.serialization.model.WebSocketErrorDTO;
 import org.mockserver.serialization.model.WebSocketMessageDTO;
 
 import java.io.IOException;
@@ -25,6 +27,8 @@ public class WebSocketMessageSerializer {
         ALLOWED_TYPES.put(HttpRequest.class.getName(), HttpRequest.class);
         ALLOWED_TYPES.put(HttpResponse.class.getName(), HttpResponse.class);
         ALLOWED_TYPES.put(HttpRequestAndHttpResponse.class.getName(), HttpRequestAndHttpResponse.class);
+        ALLOWED_TYPES.put(WebSocketClientIdDTO.class.getName(), WebSocketClientIdDTO.class);
+        ALLOWED_TYPES.put(WebSocketErrorDTO.class.getName(), WebSocketErrorDTO.class);
     }
     private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true, false);
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();

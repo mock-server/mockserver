@@ -220,6 +220,9 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingSa
                         "  path didn't match"
                 },
                 new String[]{ // 7
+                    "closest expectation:"
+                },
+                new String[]{ // 8
                     "no expectation for:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
