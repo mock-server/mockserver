@@ -1,0 +1,20 @@
+version: "2.4"
+services:
+  mockserver:
+    image: mockserver/mockserver:integration_testing
+    ports:
+      - "1080:1080"
+    environment:
+      MOCKSERVER_LOG_LEVEL: INFO
+      MOCKSERVER_SERVER_PORT: 1080
+      MOCKSERVER_INITIALIZATION_JSON_PATH: /config/expectationInitialiser.json
+      MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_REQUIRED: "true"
+      MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN: /certs/ca.pem
+      MOCKSERVER_CERTIFICATE_AUTHORITY_PRIVATE_KEY: /certs/ca-key.pem
+      MOCKSERVER_CERTIFICATE_AUTHORITY_X509_CERTIFICATE: /certs/ca.pem
+      MOCKSERVER_TLS_PRIVATE_KEY_PATH: /certs/server-key-pkcs8.pem
+      MOCKSERVER_TLS_X509_CERTIFICATE_PATH: /certs/server-cert-chain.pem
+      MOCKSERVER_PROACTIVELY_INITIALISE_TLS: "true"
+    volumes:
+      - ./certs:/certs:ro
+      - ./config:/config:ro
