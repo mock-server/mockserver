@@ -91,11 +91,31 @@ central_portal_auth_header() {
   printf "%s:%s" "$username" "$password" | base64
 }
 
+version_to_subdomain() {
+  local ver="$1"
+  local major="${ver%%.*}"
+  local minor_rest="${ver#*.}"
+  local minor="${minor_rest%%.*}"
+  echo "${major}-${minor}"
+}
+
 if is_ci; then
   RELEASE_VERSION=$(buildkite-agent meta-data get release-version)
   NEXT_VERSION=$(buildkite-agent meta-data get next-version)
   OLD_VERSION=$(buildkite-agent meta-data get old-version)
+  WEBSITE_BUCKET=$(buildkite-agent meta-data get website-bucket 2>/dev/null || echo "")
+  DISTRIBUTION_ID=$(buildkite-agent meta-data get distribution-id 2>/dev/null || echo "")
 else
   : "${RELEASE_VERSION:?Set RELEASE_VERSION}" "${NEXT_VERSION:?Set NEXT_VERSION}" "${OLD_VERSION:?Set OLD_VERSION}"
+  : "${WEBSITE_BUCKET:=}"
+  : "${DISTRIBUTION_ID:=}"
 fi
-export RELEASE_VERSION NEXT_VERSION OLD_VERSION
+
+if [[ -z "$WEBSITE_BUCKET" ]]; then
+  WEBSITE_BUCKET=$(cd "$REPO_ROOT/terraform/website" && terraform output -raw main_bucket_name 2>/dev/null || echo "")
+fi
+if [[ -z "$DISTRIBUTION_ID" ]]; then
+  DISTRIBUTION_ID=$(cd "$REPO_ROOT/terraform/website" && terraform output -raw main_distribution_id 2>/dev/null || echo "")
+fi
+
+export RELEASE_VERSION NEXT_VERSION OLD_VERSION WEBSITE_BUCKET DISTRIBUTION_ID

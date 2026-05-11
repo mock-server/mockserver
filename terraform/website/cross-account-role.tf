@@ -20,16 +20,15 @@ resource "aws_iam_role_policy" "release_website" {
         Effect = "Allow"
         Action = ["s3:PutObject", "s3:GetObject", "s3:DeleteObject", "s3:ListBucket"]
         Resource = concat(
-          [for b in values(aws_s3_bucket.versioned) : b.arn],
-          [for b in values(aws_s3_bucket.versioned) : "${b.arn}/*"],
-          [aws_s3_bucket.main.arn, "${aws_s3_bucket.main.arn}/*"]
+          [for b in values(aws_s3_bucket.site) : b.arn],
+          [for b in values(aws_s3_bucket.site) : "${b.arn}/*"]
         )
       },
       {
         Effect = "Allow"
         Action = "cloudfront:CreateInvalidation"
         Resource = concat(
-          [for d in values(aws_cloudfront_distribution.versioned) : d.arn],
+          [for d in values(aws_cloudfront_distribution.site) : d.arn],
           [aws_cloudfront_distribution.main.arn]
         )
       }

@@ -22,15 +22,21 @@ cp _site/mock_server/running_mock_server.html _site/ 2>/dev/null || true
 cp _site/mock_server/debugging_issues.html _site/ 2>/dev/null || true
 cp _site/mock_server/creating_expectations.html _site/ 2>/dev/null || true
 
+if [[ -z "$WEBSITE_BUCKET" ]]; then
+  log_error "WEBSITE_BUCKET not set — cannot publish website"
+  exit 1
+fi
+
 log_info "Assuming website role"
 cd "$REPO_ROOT"
 assume_website_role
 
-WEBSITE_BUCKET="${WEBSITE_BUCKET:-www.mock-server.com}"
-DISTRIBUTION_ID="${DISTRIBUTION_ID:-}"
-
 log_info "Syncing to S3"
-aws s3 sync "$REPO_ROOT/jekyll-www.mock-server.com/_site/" "s3://$WEBSITE_BUCKET/" --delete
+aws s3 sync "$REPO_ROOT/jekyll-www.mock-server.com/_site/" "s3://$WEBSITE_BUCKET/" --delete \
+  --exclude "versions/*" \
+  --exclude "schema/*" \
+  --exclude "index.yaml" \
+  --exclude "*.tgz"
 
 if [[ -n "$DISTRIBUTION_ID" ]]; then
   log_info "Invalidating CloudFront cache"

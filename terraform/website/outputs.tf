@@ -8,12 +8,17 @@ output "main_distribution_domain" {
   description = "CloudFront distribution domain name for the main website"
 }
 
+output "main_bucket_name" {
+  value       = aws_s3_bucket.site[var.latest_version].bucket
+  description = "S3 bucket name for the main website (latest version)"
+}
+
 output "release_website_role_arn" {
   value       = aws_iam_role.release_website.arn
   description = "IAM role ARN for cross-account website access from build account"
 }
 
-output "versioned_distribution_ids" {
-  value       = { for k, v in aws_cloudfront_distribution.versioned : k => v.id }
+output "distribution_ids" {
+  value       = { for k, v in aws_cloudfront_distribution.site : k => v.id }
   description = "CloudFront distribution IDs for versioned sites"
 }

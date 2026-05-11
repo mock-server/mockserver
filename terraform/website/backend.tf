@@ -5,6 +5,6 @@ terraform {
     region       = "eu-west-2"
     use_lockfile = true
     encrypt      = true
-    profile      = "mockserver-website"
+    profile      = "mockserver-build"
   }
 }

@@ -8,7 +8,18 @@ require_cmd aws
 
 log_step "Publishing Javadoc for $RELEASE_VERSION"
 
+if [[ -z "$WEBSITE_BUCKET" ]]; then
+  log_error "WEBSITE_BUCKET not set — cannot publish Javadoc"
+  exit 1
+fi
+
 cd "$REPO_ROOT"
+
+cleanup_git() {
+  log_info "Restoring master branch"
+  git checkout master 2>/dev/null || true
+}
+trap cleanup_git EXIT
 
 log_info "Checking out release tag"
 git checkout "mockserver-$RELEASE_VERSION"
@@ -24,13 +35,12 @@ log_info "Assuming website role for S3 upload"
 cd "$REPO_ROOT"
 assume_website_role
 
-WEBSITE_BUCKET="${WEBSITE_BUCKET:-www.mock-server.com}"
-
 log_info "Uploading Javadoc to S3"
 aws s3 sync ".tmp/javadoc/$RELEASE_VERSION" "s3://$WEBSITE_BUCKET/versions/$RELEASE_VERSION/" \
   --delete
 
 log_info "Switching back to master"
 git checkout master
+trap - EXIT
 
 log_info "Javadoc for $RELEASE_VERSION published"

@@ -4,9 +4,9 @@ variable "domain" {
   description = "Root domain for the website"
 }
 
-variable "main_bucket_name" {
+variable "latest_version" {
   type        = string
-  description = "S3 bucket name for the main website"
+  description = "Version key in sites map that serves as the main website (e.g. '5-15')"
 }
 
 variable "build_account_agent_role_arn" {
@@ -14,11 +14,11 @@ variable "build_account_agent_role_arn" {
   description = "IAM role ARN of the Buildkite agent in the build account, used in the cross-account trust policy"
 }
 
-variable "versioned_sites" {
+variable "sites" {
   type = map(object({
     bucket_name = string
   }))
-  description = "Map of version subdomain (e.g. '5-16') to its S3 bucket name"
+  description = "Map of version key (e.g. '5-15') to its S3 bucket name. The latest_version entry serves as the main site."
 }
 
 variable "zone_id" {

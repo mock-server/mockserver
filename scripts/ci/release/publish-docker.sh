@@ -12,13 +12,16 @@ cd "$REPO_ROOT"
 
 if is_ci; then
   log_info "Downloading shaded JAR artifact"
-  buildkite-agent artifact download "mockserver/mockserver-netty/target/mockserver-netty-*-shaded.jar" .
+  buildkite-agent artifact download "mockserver/mockserver-netty/target/mockserver-netty-*-shaded.jar" . 2>/dev/null || true
 fi
 
 SHADED_JAR=$(find mockserver/mockserver-netty/target -name 'mockserver-netty-*-shaded.jar' -print -quit 2>/dev/null)
 if [[ -z "$SHADED_JAR" ]]; then
-  log_error "Shaded JAR not found. Run build-and-test.sh first."
-  exit 1
+  log_info "JAR not found in build artifacts — downloading from Maven Central"
+  mkdir -p mockserver/mockserver-netty/target
+  SHADED_JAR="mockserver/mockserver-netty/target/mockserver-netty-${RELEASE_VERSION}-shaded.jar"
+  curl -fsSL --max-time 300 --connect-timeout 30 --retry 3 --retry-delay 5 -o "$SHADED_JAR" \
+    "https://repo1.maven.org/maven2/org/mock-server/mockserver-netty/${RELEASE_VERSION}/mockserver-netty-${RELEASE_VERSION}-shaded.jar"
 fi
 
 log_info "Using JAR: $SHADED_JAR"
