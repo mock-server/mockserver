@@ -69,7 +69,7 @@ Snyk provides a second layer of vulnerability scanning, independent of Dependabo
 - **Dashboard:** [app.snyk.io/org/mockserver/projects](https://app.snyk.io/org/mockserver/projects)
 - **Policy file:** [`.snyk`](../../.snyk) documents 28 vulnerability IDs that cannot be fixed due to Java 11 constraints, with expiry dates that trigger periodic review
 
-The `.snyk` policy file excludes `mockserver-examples` (sample code, not shipped) and documents the rationale for each ignored vulnerability. All ignores expire periodically (currently 2026-06-16) to force re-evaluation as the dependency landscape evolves.
+The `.snyk` policy file excludes `mockserver-examples` (sample code, not shipped) and documents the rationale for each ignored vulnerability. All ignores expire periodically (currently 2026-08-11) to force re-evaluation as the dependency landscape evolves.
 
 See [Snyk Security](snyk-security.md) for the full triage workflow, CLI commands, and vulnerability status by module.
 

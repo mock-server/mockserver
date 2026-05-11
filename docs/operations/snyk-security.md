@@ -28,7 +28,7 @@ Many modern dependency versions require Java 17+ (class file version 61.0):
 - Most vulnerable dependencies are **test-only** (`mockserver-examples`, `mockserver-spring-test-listener`)
 - Not shipped in production artifacts (`mockserver-netty` JAR, Docker images)
 - All vulnerabilities are tracked in the `.snyk` policy file with documented reasons
-- Expiration dates trigger periodic review (currently: 2026-06-16)
+- Expiration dates trigger periodic review (currently: 2026-08-11)
 
 ## Integration Points
 
@@ -177,7 +177,7 @@ MockServer uses a Snyk policy file to document vulnerabilities that cannot be fi
 
 The `.snyk` file contains:
 - **Ignore rules** for vulnerabilities where fixes require Java 17+
-- **Expiration dates** (set to end of 2026) to trigger periodic review
+- **Expiration dates** (currently 2026-08-11) to trigger periodic review
 - **Documented reasons** explaining the Java 11 constraint
 
 ### Adding New Ignores
@@ -191,7 +191,7 @@ snyk ignore --id=SNYK-JAVA-ORGSPRINGFRAMEWORK-12008931
 # Command line - specify all parameters
 snyk ignore --id=SNYK-JAVA-ORGSPRINGFRAMEWORK-12008931 \
   --reason="Spring 6.x required for fix, but Spring 6.x requires Java 17+. MockServer targets Java 11." \
-  --expires="2026-12-31"
+  --expires="2026-08-11"
 ```
 
 Or manually edit the `.snyk` file following the existing format.
