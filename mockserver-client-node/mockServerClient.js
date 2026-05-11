@@ -907,6 +907,18 @@ var mockServerClient;
                 }
             };
         };
+        var retrieveRecordedRequestsAndResponsesAsHar = function (pathOrRequestMatcher) {
+            return {
+                then: function (success, error) {
+                    makeRequest(host, port, "/mockserver/retrieve?type=REQUEST_RESPONSES&format=HAR", addDefaultRequestMatcherHeaders(pathOrRequestMatcher))
+                        .then(function (result) {
+                            success(result.body && JSON.parse(result.body));
+                        }, function (err) {
+                            error(err);
+                        });
+                }
+            };
+        };
         /**
          * Retrieve the active expectations that match the parameter,
          * the expectations are retrieved by matching the parameter
@@ -998,6 +1010,7 @@ var mockServerClient;
             bind: bind,
             retrieveRecordedRequests: retrieveRecordedRequests,
             retrieveRecordedRequestsAndResponses: retrieveRecordedRequestsAndResponses,
+            retrieveRecordedRequestsAndResponsesAsHar: retrieveRecordedRequestsAndResponsesAsHar,
             retrieveActiveExpectations: retrieveActiveExpectations,
             retrieveRecordedExpectations: retrieveRecordedExpectations,
             retrieveLogMessages: retrieveLogMessages

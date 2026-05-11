@@ -74,6 +74,9 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private Boolean persistExpectations;
     private String persistedExpectationsPath;
 
+    private Boolean persistRecordedExpectations;
+    private String persistedRecordedExpectationsPath;
+
     private Integer maximumNumberOfRequestToReturnInVerificationFailure;
 
     private Boolean attemptToProxyIfNoMatchingExpectation;
@@ -187,6 +190,9 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
             this.persistExpectations = configuration.persistExpectations();
             this.persistedExpectationsPath = configuration.persistedExpectationsPath();
+
+            this.persistRecordedExpectations = configuration.persistRecordedExpectations();
+            this.persistedRecordedExpectationsPath = configuration.persistedRecordedExpectationsPath();
 
             this.maximumNumberOfRequestToReturnInVerificationFailure = configuration.maximumNumberOfRequestToReturnInVerificationFailure();
 
@@ -347,6 +353,9 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
         configuration.persistExpectations(persistExpectations);
         configuration.persistedExpectationsPath(persistedExpectationsPath);
+
+        configuration.persistRecordedExpectations(persistRecordedExpectations);
+        configuration.persistedRecordedExpectationsPath(persistedRecordedExpectationsPath);
 
         configuration.maximumNumberOfRequestToReturnInVerificationFailure(maximumNumberOfRequestToReturnInVerificationFailure);
 
@@ -559,6 +568,12 @@ public class ConfigurationDTO implements DTO<Configuration> {
         }
         if (persistedExpectationsPath != null) {
             target.persistedExpectationsPath(persistedExpectationsPath);
+        }
+        if (persistRecordedExpectations != null) {
+            target.persistRecordedExpectations(persistRecordedExpectations);
+        }
+        if (persistedRecordedExpectationsPath != null) {
+            target.persistedRecordedExpectationsPath(persistedRecordedExpectationsPath);
         }
         if (maximumNumberOfRequestToReturnInVerificationFailure != null) {
             target.maximumNumberOfRequestToReturnInVerificationFailure(maximumNumberOfRequestToReturnInVerificationFailure);
@@ -1140,6 +1155,24 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setPersistedExpectationsPath(String persistedExpectationsPath) {
         this.persistedExpectationsPath = persistedExpectationsPath;
+        return this;
+    }
+
+    public Boolean getPersistRecordedExpectations() {
+        return persistRecordedExpectations;
+    }
+
+    public ConfigurationDTO setPersistRecordedExpectations(Boolean persistRecordedExpectations) {
+        this.persistRecordedExpectations = persistRecordedExpectations;
+        return this;
+    }
+
+    public String getPersistedRecordedExpectationsPath() {
+        return persistedRecordedExpectationsPath;
+    }
+
+    public ConfigurationDTO setPersistedRecordedExpectationsPath(String persistedRecordedExpectationsPath) {
+        this.persistedRecordedExpectationsPath = persistedRecordedExpectationsPath;
         return this;
     }
 

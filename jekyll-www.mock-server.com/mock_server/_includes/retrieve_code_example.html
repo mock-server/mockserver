@@ -348,4 +348,72 @@ mockServerClient("localhost", 1080).retrieveRecordedRequestsAndResponses({
             <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
         </div>
     </div>
+    <button id="button_retrieve_all_recorded_req_res_as_har" class="accordion">retrieve all recorded requests and responses as HAR</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">String har = new MockServerClient("localhost", 1080)
+    .retrieveRecordedRequestsAndResponses(
+        request(),
+        Format.HAR
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+    .retrieveRecordedRequestsAndResponsesAsHar({})
+    .then(
+        function (har) {
+            console.log(JSON.stringify(har));
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
+            <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUEST_RESPONSES&format=HAR"</code></pre>
+            <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
+        </div>
+    </div>
+    <button id="button_retrieve_recorded_req_res_as_har_using_request_matcher" class="accordion">retrieve recorded requests and responses as HAR using request matcher</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">String har = new MockServerClient("localhost", 1080)
+    .retrieveRecordedRequestsAndResponses(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST"),
+        Format.HAR
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).retrieveRecordedRequestsAndResponsesAsHar({
+    "path": "/some/path",
+    "method": "POST"
+}).then(
+    function (har) {
+        console.log(JSON.stringify(har));
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+            <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUEST_RESPONSES&format=HAR" -d '{
+    "path": "/some/path",
+    "method": "POST"
+}'</code></pre>
+            <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
+        </div>
+    </div>
 </div>

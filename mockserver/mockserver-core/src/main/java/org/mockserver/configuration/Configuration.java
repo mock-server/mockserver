@@ -98,6 +98,10 @@ public class Configuration {
     private Boolean persistExpectations;
     private String persistedExpectationsPath;
 
+    // recorded expectation persistence
+    private Boolean persistRecordedExpectations;
+    private String persistedRecordedExpectationsPath;
+
     // verification
     private Integer maximumNumberOfRequestToReturnInVerificationFailure;
 
@@ -1120,6 +1124,44 @@ public class Configuration {
      */
     public Configuration persistedExpectationsPath(String persistedExpectationsPath) {
         this.persistedExpectationsPath = persistedExpectationsPath;
+        return this;
+    }
+
+    public Boolean persistRecordedExpectations() {
+        if (persistRecordedExpectations == null) {
+            return ConfigurationProperties.persistRecordedExpectations();
+        }
+        return persistRecordedExpectations;
+    }
+
+    /**
+     * Enable the persisting of recorded expectations (proxy traffic) as json, which is updated whenever a new request is forwarded
+     * <p>
+     * The default is false
+     *
+     * @param persistRecordedExpectations the persisting of recorded expectations as json
+     */
+    public Configuration persistRecordedExpectations(Boolean persistRecordedExpectations) {
+        this.persistRecordedExpectations = persistRecordedExpectations;
+        return this;
+    }
+
+    public String persistedRecordedExpectationsPath() {
+        if (persistedRecordedExpectationsPath == null) {
+            return ConfigurationProperties.persistedRecordedExpectationsPath();
+        }
+        return persistedRecordedExpectationsPath;
+    }
+
+    /**
+     * The file path used to save persisted recorded expectations as json, which is updated whenever a new request is forwarded
+     * <p>
+     * The default is "persistedRecordedExpectations.json"
+     *
+     * @param persistedRecordedExpectationsPath file path used to save persisted recorded expectations as json
+     */
+    public Configuration persistedRecordedExpectationsPath(String persistedRecordedExpectationsPath) {
+        this.persistedRecordedExpectationsPath = persistedRecordedExpectationsPath;
         return this;
     }
 

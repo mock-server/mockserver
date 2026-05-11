@@ -33,6 +33,33 @@ java -jar ~/Downloads/mockserver-netty-{{ site.mockserver_version }}-no-dependen
 -Dmockserver.initializationJsonPath=mockserverInitialization.json \
 -jar ~/Downloads/mockserver-netty-{{ site.mockserver_version }}-no-dependencies.jar -serverPort 1080,1081 -logLevel INFO</code></pre>
 
+<a id="persisting_recorded_expectations" class="anchor" href="#persisting_recorded_expectations">&nbsp;</a>
+
+<h2>Persisting Recorded Proxy Expectations</h2>
+
+<p>When MockServer acts as a proxy, all forwarded requests are automatically recorded as expectations. These recorded expectations can be persisted to a file that is updated each time a new request is forwarded. This enables a record-and-replay workflow where traffic is captured from a real system and then replayed as mock expectations.</p>
+
+<ol>
+  <li><a href="/mock_server/configuration_properties.html#button_configuration_persist_recorded_expectations">persistRecordedExpectations</a> configuration property needs to be set to <strong>true</strong></li>
+  <li>the file path used to persist recorded expectations can be configured using the <a href="/mock_server/configuration_properties.html#button_configuration_persisted_recorded_expectations_file_path">persistedRecordedExpectationsPath</a> configuration property (default: <strong>persistedRecordedExpectations.json</strong>)</li>
+  <li>to replay recorded expectations on restart, set <a href="/mock_server/configuration_properties.html#button_configuration_initialization_json_path">initializationJsonPath</a> to the same file path</li>
+</ol>
+
+<pre class="prettyprint lang-javascript code"><code class="code">MOCKSERVER_PERSIST_RECORDED_EXPECTATIONS=true \
+MOCKSERVER_PERSISTED_RECORDED_EXPECTATIONS_PATH=recordedExpectations.json \
+MOCKSERVER_INITIALIZATION_JSON_PATH=recordedExpectations.json \
+java -jar ~/Downloads/mockserver-netty-{{ site.mockserver_version }}-no-dependencies.jar -serverPort 1080,1081 -logLevel INFO</code></pre>
+
+<p>or</p>
+
+<pre class="prettyprint lang-javascript code"><code class="code">java \
+-Dmockserver.persistRecordedExpectations=true \
+-Dmockserver.persistedRecordedExpectationsPath=recordedExpectations.json \
+-Dmockserver.initializationJsonPath=recordedExpectations.json \
+-jar ~/Downloads/mockserver-netty-{{ site.mockserver_version }}-no-dependencies.jar -serverPort 1080,1081 -logLevel INFO</code></pre>
+
+<p>This is separate from the <a href="#button_configuration_persist_expectations_as_json">persistExpectations</a> property which persists manually-created expectations. Both can be enabled simultaneously with different file paths.</p>
+
 <a id="kubernetes_persistence" class="anchor" href="#kubernetes_persistence">&nbsp;</a>
 
 <h2>Kubernetes Persistence</h2>

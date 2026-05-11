@@ -3,4 +3,27 @@
 <p>All requests and responses can be retrieved as expectations (called recorded expectations) in Java code or JSON.  This allows an easy way to replay a recording from the proxy.</p>
 <p>Unlike conventional record-replay approaches typically provided by other proxies, MockServer allows easy editing of the recorded requests because the recording is provided as Java code or JSON.  This ensures that if minor changes are made to an API the recording can easily be modified and no re-recording required avoiding the need to update test assertions.</p>
 
+<a id="har_export" class="anchor" href="#har_export">&nbsp;</a>
+
+<h2>HAR Export</h2>
+
+<p>Recorded requests and responses can be exported as a <a href="http://www.softwareishard.com/blog/har-12-spec/">HAR (HTTP Archive) 1.2</a> file, which is a standard format supported by browser DevTools and other HTTP analysis tools.</p>
+
+<p>To export as HAR, use the retrieve API with <strong>type=REQUEST_RESPONSES</strong> and <strong>format=HAR</strong>:</p>
+
+<pre class="prettyprint lang-bash code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUEST_RESPONSES&format=HAR"</code></pre>
+
+<a id="automatic_persistence" class="anchor" href="#automatic_persistence">&nbsp;</a>
+
+<h2>Automatic Persistence of Recorded Expectations</h2>
+
+<p>By default, recorded proxy traffic is only held in memory and lost when MockServer restarts. To automatically persist recorded expectations to a JSON file, configure the following properties:</p>
+
+<ul>
+    <li><strong>persistRecordedExpectations</strong> - set to <span class="keyword">true</span> to enable automatic persistence of recorded expectations</li>
+    <li><strong>persistedRecordedExpectationsPath</strong> - file path for saving the recorded expectations (default: <span class="keyword">persistedRecordedExpectations.json</span>)</li>
+</ul>
+
+<p>The file is updated whenever a new request is forwarded through the proxy. The saved file can be loaded back into MockServer using the <strong>initializationJsonPath</strong> property to replay the recorded traffic.</p>
+
 {% include_subpage ../mock_server/_includes/retrieve_code_example.html %}

@@ -69,6 +69,7 @@ public class HttpState {
     private final MockServerEventLog mockServerLog;
     private final Scheduler scheduler;
     private ExpectationFileSystemPersistence expectationFileSystemPersistence;
+    private org.mockserver.persistence.RecordedExpectationFileSystemPersistence recordedExpectationFileSystemPersistence;
     private ExpectationFileWatcher expectationFileWatcher;
     // mockserver
     private final RequestMatchers requestMatchers;
@@ -88,6 +89,7 @@ public class HttpState {
     private LogEntrySerializer logEntrySerializer;
     private final MemoryMonitoring memoryMonitoring;
     private OpenAPIConverter openAPIConverter;
+    private org.mockserver.serialization.har.HarConverter harConverter;
     private AuthenticationHandler controlPlaneAuthenticationHandler;
 
     public static void setPort(final HttpRequest request) {
@@ -127,6 +129,9 @@ public class HttpState {
         this.requestMatchers = new RequestMatchers(configuration, mockServerLogger, scheduler, webSocketClientRegistry);
         if (configuration.persistExpectations()) {
             this.expectationFileSystemPersistence = new ExpectationFileSystemPersistence(configuration, mockServerLogger, requestMatchers);
+        }
+        if (configuration.persistRecordedExpectations()) {
+            this.recordedExpectationFileSystemPersistence = new org.mockserver.persistence.RecordedExpectationFileSystemPersistence(configuration, mockServerLogger, mockServerLog);
         }
         if (isNotBlank(configuration.initializationJsonPath()) || isNotBlank(configuration.initializationOpenAPIPath()) || isNotBlank(configuration.initializationClass())) {
             ExpectationInitializerLoader expectationInitializerLoader = new ExpectationInitializerLoader(configuration, mockServerLogger, requestMatchers);
@@ -594,6 +599,20 @@ public class HttpState {
                                         }
                                     );
                                 break;
+                            case HAR:
+                                mockServerLog
+                                    .retrieveRequestResponses(
+                                        requestDefinition,
+                                        httpRequestAndHttpResponses -> {
+                                            response.withBody(
+                                                getHarConverter().serialize(httpRequestAndHttpResponses),
+                                                MediaType.JSON_UTF_8
+                                            );
+                                            mockServerLogger.logEvent(logEntry);
+                                            httpResponseFuture.complete(response);
+                                        }
+                                    );
+                                break;
                         }
                         break;
                     }
@@ -988,6 +1007,9 @@ public class HttpState {
         if (expectationFileSystemPersistence != null) {
             expectationFileSystemPersistence.stop();
         }
+        if (recordedExpectationFileSystemPersistence != null) {
+            recordedExpectationFileSystemPersistence.stop();
+        }
         if (expectationFileWatcher != null) {
             expectationFileWatcher.stop();
         }
@@ -1069,5 +1091,12 @@ public class HttpState {
             this.openAPIConverter = new OpenAPIConverter(mockServerLogger);
         }
         return openAPIConverter;
+    }
+
+    private org.mockserver.serialization.har.HarConverter getHarConverter() {
+        if (this.harConverter == null) {
+            this.harConverter = new org.mockserver.serialization.har.HarConverter();
+        }
+        return harConverter;
     }
 }

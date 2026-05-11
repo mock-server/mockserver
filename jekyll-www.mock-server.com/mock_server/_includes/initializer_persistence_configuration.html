@@ -105,6 +105,39 @@
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.persistedExpectationsPath="org/mockserver/server/initialize/initializerJson.json"</code></pre>
 </div>
 
+<button id="button_configuration_persist_recorded_expectations" class="accordion title"><strong>Persist Recorded Expectations As JSON</strong></button>
+<div class="panel title">
+    <p>Enable the persisting of recorded expectations (proxy traffic) as json, which is updated whenever a new request is forwarded through the proxy.</p>
+    <p>The persisted file can be loaded on restart using <a href="#button_configuration_initialization_json_path">initializationJsonPath</a> to replay recorded traffic as mock expectations.</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.persistRecordedExpectations(boolean enable)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.persistRecordedExpectations=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_PERSIST_RECORDED_EXPECTATIONS=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.persistRecordedExpectations=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.persistRecordedExpectations="true"</code></pre>
+</div>
+
+<button id="button_configuration_persisted_recorded_expectations_file_path" class="accordion title"><strong>Persisted Recorded Expectations File Path</strong></button>
+<div class="panel title">
+    <p>The file path used to save persisted recorded expectations as json, which is updated whenever a new request is forwarded through the proxy.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">persistedRecordedExpectations.json</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.persistedRecordedExpectationsPath(String persistedRecordedExpectationsPath)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.persistedRecordedExpectationsPath=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_PERSISTED_RECORDED_EXPECTATIONS_PATH=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.persistedRecordedExpectationsPath=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.persistedRecordedExpectationsPath="recordedExpectations.json"</code></pre>
+</div>
+
 <a id="verification_configuration" class="anchor" href="#verification_configuration">&nbsp;</a>
 
 <h2>Verification Configuration:</h2>

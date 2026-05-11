@@ -245,6 +245,42 @@ public class HttpStateTest {
     }
 
     @Test
+    public void shouldHandleRetrieveRequestResponsesAsHar() {
+        // given
+        httpState.log(
+            new LogEntry()
+                .setType(FORWARDED_REQUEST)
+                .setHttpRequest(request("/api/test").withMethod("GET").withHeader("host", "example.com"))
+                .setHttpResponse(response().withStatusCode(200).withReasonPhrase("OK").withBody("hello"))
+                .setExpectation(new Expectation(request("/api/test"), Times.once(), TimeToLive.unlimited(), 0).withId("key_one").thenRespond(response().withStatusCode(200).withReasonPhrase("OK").withBody("hello")))
+        );
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        HttpRequest retrieveRequest = request("/mockserver/retrieve")
+            .withMethod("PUT")
+            .withQueryStringParameter("type", REQUEST_RESPONSES.name())
+            .withQueryStringParameter("format", "HAR")
+            .withBody(
+                requestDefinitionSerializer.serialize(request("/api/test"))
+            );
+        boolean handle = httpState.handle(retrieveRequest, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(200));
+        String body = responseWriter.response.getBodyAsString();
+        assertThat(body, containsString("\"version\" : \"1.2\""));
+        assertThat(body, containsString("\"creator\""));
+        assertThat(body, containsString("\"MockServer\""));
+        assertThat(body, containsString("\"entries\""));
+        assertThat(body, containsString("\"method\" : \"GET\""));
+        assertThat(body, containsString("http://example.com/api/test"));
+        assertThat(body, containsString("\"status\" : 200"));
+        assertThat(body, containsString("\"statusText\" : \"OK\""));
+    }
+
+    @Test
     public void shouldHandleRetrieveLogMessagesRequest() {
         // given
         configuration.logLevel(Level.INFO);
@@ -2055,7 +2091,7 @@ public class HttpStateTest {
         } catch (Throwable throwable) {
             // then
             assertThat(throwable, instanceOf(IllegalArgumentException.class));
-            assertThat(throwable.getMessage(), is("\"invalid\" is not a valid value for \"format\" parameter, only the following values are supported [java, json, log_entries]"));
+            assertThat(throwable.getMessage(), is("\"invalid\" is not a valid value for \"format\" parameter, only the following values are supported [java, json, log_entries, har]"));
         }
     }
 

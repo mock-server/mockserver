@@ -115,6 +115,10 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_PERSIST_EXPECTATIONS = "mockserver.persistExpectations";
     private static final String MOCKSERVER_PERSISTED_EXPECTATIONS_PATH = "mockserver.persistedExpectationsPath";
 
+    // recorded expectation persistence
+    private static final String MOCKSERVER_PERSIST_RECORDED_EXPECTATIONS = "mockserver.persistRecordedExpectations";
+    private static final String MOCKSERVER_PERSISTED_RECORDED_EXPECTATIONS_PATH = "mockserver.persistedRecordedExpectationsPath";
+
     // verification
     private static final String MOCKSERVER_MAXIMUM_NUMBER_OF_REQUESTS_TO_RETURN_IN_VERIFICATION_FAILURE = "mockserver.maximumNumberOfRequestToReturnInVerificationFailure";
 
@@ -1090,6 +1094,38 @@ public class ConfigurationProperties {
      */
     public static void persistedExpectationsPath(String persistedExpectationsPath) {
         setProperty(MOCKSERVER_PERSISTED_EXPECTATIONS_PATH, persistedExpectationsPath);
+    }
+
+    // recorded expectation persistence
+
+    public static boolean persistRecordedExpectations() {
+        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_PERSIST_RECORDED_EXPECTATIONS, "MOCKSERVER_PERSIST_RECORDED_EXPECTATIONS", "" + false));
+    }
+
+    /**
+     * Enable the persisting of recorded expectations (proxy traffic) as json, which is updated whenever a new request is forwarded
+     * <p>
+     * The default is false
+     *
+     * @param enable the persisting of recorded expectations as json
+     */
+    public static void persistRecordedExpectations(boolean enable) {
+        setProperty(MOCKSERVER_PERSIST_RECORDED_EXPECTATIONS, "" + enable);
+    }
+
+    public static String persistedRecordedExpectationsPath() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_PERSISTED_RECORDED_EXPECTATIONS_PATH, "MOCKSERVER_PERSISTED_RECORDED_EXPECTATIONS_PATH", "persistedRecordedExpectations.json");
+    }
+
+    /**
+     * The file path used to save persisted recorded expectations as json, which is updated whenever a new request is forwarded
+     * <p>
+     * The default is "persistedRecordedExpectations.json"
+     *
+     * @param persistedRecordedExpectationsPath file path used to save persisted recorded expectations as json
+     */
+    public static void persistedRecordedExpectationsPath(String persistedRecordedExpectationsPath) {
+        setProperty(MOCKSERVER_PERSISTED_RECORDED_EXPECTATIONS_PATH, persistedRecordedExpectationsPath);
     }
 
     // verification
