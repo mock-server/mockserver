@@ -80,6 +80,7 @@ public abstract class Action<T extends Action> extends ObjectWithJsonToString {
         RESPONSE_OBJECT_CALLBACK(Direction.RESPONSE),
         SSE_RESPONSE(Direction.RESPONSE),
         WEBSOCKET_RESPONSE(Direction.RESPONSE),
+        GRPC_STREAM_RESPONSE(Direction.RESPONSE),
         ERROR(Direction.RESPONSE);
 
         public final Direction direction;

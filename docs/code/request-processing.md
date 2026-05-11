@@ -74,6 +74,9 @@ required?"}
 | `PUT /mockserver/retrieve` | Retrieve requests, responses, logs, or active expectations |
 | `PUT /mockserver/verify` | Verify request count against `VerificationTimes` |
 | `PUT /mockserver/verifySequence` | Verify ordered sequence of requests |
+| `PUT /mockserver/grpc/descriptors` | Upload a compiled proto descriptor set (binary body) |
+| `PUT /mockserver/grpc/services` | List all loaded gRPC services and their methods |
+| `PUT /mockserver/grpc/clear` | Clear all loaded gRPC descriptors and reset the store |
 
 All control-plane requests go through `controlPlaneRequestAuthenticated()` which enforces mTLS and/or JWT authentication if configured.
 
@@ -193,7 +196,7 @@ After a match, `postProcess()`:
 
 ## Action Types
 
-Each `Expectation` binds a request matcher to exactly one action. There are 10 action types across two categories:
+Each `Expectation` binds a request matcher to exactly one action. There are 11 action types across two categories:
 
 ### Response Actions
 
@@ -203,6 +206,7 @@ Each `Expectation` binds a request matcher to exactly one action. There are 10 a
 | `RESPONSE_TEMPLATE` | `HttpResponseTemplateActionHandler` | Evaluates a template (Velocity/Mustache/JavaScript) to generate the response |
 | `RESPONSE_CLASS_CALLBACK` | `HttpResponseClassCallbackActionHandler` | Loads a Java class implementing `ExpectationResponseCallback`, invokes `handle(request)` |
 | `RESPONSE_OBJECT_CALLBACK` | `HttpResponseObjectCallbackActionHandler` | Sends request to a WebSocket-connected client, awaits response callback |
+| `GRPC_STREAM_RESPONSE` | `GrpcStreamResponseActionHandler` | Streams gRPC-framed protobuf messages with per-message delays and grpc-status trailers (Netty only; returns 501 in WAR) |
 
 ### Forward Actions
 

@@ -72,6 +72,7 @@ public class HttpActionHandler {
     private HttpForwardValidateActionHandler httpForwardValidateActionHandler;
     private HttpSseResponseActionHandler httpSseResponseActionHandler;
     private HttpWebSocketResponseActionHandler httpWebSocketResponseActionHandler;
+    private GrpcStreamResponseActionHandler grpcStreamResponseActionHandler;
     private HttpErrorActionHandler httpErrorActionHandler;
 
     // forwarding
@@ -247,6 +248,46 @@ public class HttpActionHandler {
                                     .setArguments(request, action, action.getExpectationId())
                             );
                             getHttpWebSocketResponseActionHandler().handle((HttpWebSocketResponse) action, ctx, request);
+                        } catch (Throwable throwable) {
+                            if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
+                                mockServerLogger.logEvent(
+                                    new LogEntry()
+                                        .setType(WARN)
+                                        .setLogLevel(Level.INFO)
+                                        .setCorrelationId(request.getLogCorrelationId())
+                                        .setHttpRequest(request)
+                                        .setMessageFormat(throwable.getMessage())
+                                        .setThrowable(throwable)
+                                );
+                            }
+                            ctx.close();
+                        } finally {
+                            expectationPostProcessor.run();
+                        }
+                    }, synchronous, action.getDelay());
+                    break;
+                }
+                case GRPC_STREAM_RESPONSE: {
+                    if (ctx == null) {
+                        writeResponseActionResponse(
+                            response().withStatusCode(501).withBody("gRPC streaming is not supported in WAR deployments"),
+                            responseWriter, request, action, synchronous, null, expectationPostProcessor
+                        );
+                        break;
+                    }
+                    scheduler.schedule(() -> {
+                        try {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setType(EXPECTATION_RESPONSE)
+                                    .setLogLevel(Level.INFO)
+                                    .setCorrelationId(request.getLogCorrelationId())
+                                    .setHttpRequest(request)
+                                    .setExpectationId(action.getExpectationId())
+                                    .setMessageFormat("returning gRPC stream response for request:{}for action:{}from expectation:{}")
+                                    .setArguments(request, action, action.getExpectationId())
+                            );
+                            getGrpcStreamResponseActionHandler().handle((GrpcStreamResponse) action, ctx, request);
                         } catch (Throwable throwable) {
                             if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                                 mockServerLogger.logEvent(
@@ -995,6 +1036,13 @@ public class HttpActionHandler {
             httpWebSocketResponseActionHandler = new HttpWebSocketResponseActionHandler(mockServerLogger, scheduler);
         }
         return httpWebSocketResponseActionHandler;
+    }
+
+    private GrpcStreamResponseActionHandler getGrpcStreamResponseActionHandler() {
+        if (grpcStreamResponseActionHandler == null) {
+            grpcStreamResponseActionHandler = new GrpcStreamResponseActionHandler(mockServerLogger, scheduler, httpStateHandler.getGrpcDescriptorStore());
+        }
+        return grpcStreamResponseActionHandler;
     }
 
     private HttpErrorActionHandler getHttpErrorActionHandler() {

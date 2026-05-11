@@ -147,6 +147,30 @@ with InboundHttp2ToHttpAdapter"]
 
 HTTP/2 frames are converted to HTTP/1.1 objects via `InboundHttp2ToHttpAdapter`, allowing the same `HttpRequestHandler` to process both protocols uniformly. When MCP is enabled (`ConfigurationProperties.mcpEnabled()`), the `McpStreamableHttpHandler` is also inserted in the HTTP/2 pipeline.
 
+#### gRPC Pipeline (over HTTP/2)
+
+When gRPC is enabled and the `GrpcProtoDescriptorStore` has loaded services, two additional handlers are inserted into both the h2c and TLS-negotiated HTTP/2 pipelines:
+
+```mermaid
+graph LR
+    H2C["HttpToHttp2ConnectionHandler\nwith InboundHttp2ToHttpAdapter"] --> CB[CallbackWebSocketServerHandler]
+    CB --> DASH[DashboardWebSocketHandler]
+    DASH --> MCP["McpStreamableHttpHandler\n(conditional)"]
+    MCP --> CODEC[MockServerHttpServerCodec]
+    CODEC --> GRPC_RESP["GrpcToHttpResponseHandler\n(conditional)"]
+    GRPC_RESP --> GRPC_REQ["GrpcToHttpRequestHandler\n(conditional)"]
+    GRPC_REQ --> HANDLER[HttpRequestHandler]
+```
+
+| Handler | Class | Purpose |
+|---------|-------|---------|
+| GrpcToHttpResponseHandler | `o.m.netty.grpc` | Outbound encoder — intercepts responses with `x-grpc-service` header, encodes JSON body back to gRPC-framed protobuf, appends `grpc-status` trailers |
+| GrpcToHttpRequestHandler | `o.m.netty.grpc` | Inbound handler — intercepts `application/grpc` requests, decodes protobuf body to JSON using descriptors, rewrites as `POST /<service>/<method>` with `x-grpc-*` headers |
+
+The handlers are placed after `MockServerHttpServerCodec` so they operate on MockServer model objects (`HttpRequest`/`HttpResponse`), not raw Netty HTTP objects.
+
+h2c (HTTP/2 cleartext) is detected by `isH2cPreface()` in `PortUnificationHandler`, which checks for the HTTP/2 connection preface (`PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n`). Both `switchToH2c()` and `switchToHttp2()` conditionally wire gRPC handlers when descriptors are loaded.
+
 #### TLS Pipeline
 
 ```mermaid
@@ -331,3 +355,5 @@ stateDiagram-v2
 | `SniHandler` | `mockserver-core/.../socket/tls/SniHandler.java` | TLS SNI extraction, dynamic cert generation |
 | `HttpContentLengthRemover` | `mockserver-netty/.../netty/unification/HttpContentLengthRemover.java` | Strips empty Content-Length |
 | `MockServerHttpServerCodec` | `mockserver-core/.../codec/MockServerHttpServerCodec.java` | Netty HTTP ↔ MockServer model codec |
+| `GrpcToHttpRequestHandler` | `mockserver-netty/.../netty/grpc/GrpcToHttpRequestHandler.java` | gRPC request decode (protobuf→JSON) |
+| `GrpcToHttpResponseHandler` | `mockserver-netty/.../netty/grpc/GrpcToHttpResponseHandler.java` | gRPC response encode (JSON→protobuf) |

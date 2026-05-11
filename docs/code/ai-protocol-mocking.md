@@ -1,4 +1,4 @@
-# AI Protocol Mocking (SSE, WebSocket, JSON-RPC, MCP, A2A)
+# AI & RPC Protocol Mocking (SSE, WebSocket, JSON-RPC, MCP, A2A, gRPC)
 
 ## Overview
 
@@ -296,6 +296,111 @@ A2aMockBuilder.a2aMock("/agent")
     .applyTo(mockServerClient);
 ```
 
+## gRPC Mocking
+
+MockServer supports mocking gRPC services without requiring grpc-java as a dependency. Instead, it uses a pure Netty pipeline approach: gRPC requests are decoded from HTTP/2 + protobuf framing into JSON, routed through the existing matching engine as `POST /<service>/<method>`, and responses are re-encoded back to gRPC framing. This means all existing JSON/JSONPath/JSONSchema matchers work with gRPC automatically.
+
+### Architecture
+
+```mermaid
+flowchart LR
+    Client["gRPC Client"] -->|HTTP/2 + protobuf| GRH["GrpcToHttpRequestHandler\n(decode protobuf→JSON)"]
+    GRH -->|POST /service/method\nJSON body| MH["HttpRequestHandler\n(standard matching)"]
+    MH -->|JSON response| GWH["GrpcToHttpResponseHandler\n(encode JSON→protobuf)"]
+    GWH -->|HTTP/2 + protobuf\n+ grpc-status trailers| Client
+```
+
+### Proto Descriptor Infrastructure
+
+gRPC mocking requires proto descriptors so MockServer can convert between protobuf binary and JSON. Three loading mechanisms are supported:
+
+| Mechanism | Config Property | Description |
+|-----------|----------------|-------------|
+| Descriptor files (`.dsc`/`.desc`) | `grpcDescriptorDirectory` | Directory of pre-compiled descriptor set files |
+| Proto source files (`.proto`) | `grpcProtoDirectory` | Directory of `.proto` files compiled at startup via `protoc` |
+| Runtime REST API upload | `PUT /mockserver/grpc/descriptors` | Upload descriptor bytes at runtime via client API |
+
+Core classes:
+
+| Class | Module | Purpose |
+|-------|--------|---------|
+| `GrpcProtoDescriptorStore` | core | Registry of loaded service/method descriptors, provides converters |
+| `GrpcProtoFileCompiler` | core | Compiles `.proto` files to descriptors via `protoc` |
+| `GrpcJsonMessageConverter` | core | Converts protobuf binary ↔ JSON using `com.google.protobuf.util.JsonFormat` |
+| `GrpcFrameCodec` | core | Encodes/decodes the 5-byte gRPC length-prefixed framing |
+| `GrpcStatusMapper` | core | Maps between gRPC status codes and names |
+
+### Netty Pipeline Integration
+
+gRPC handlers are conditionally inserted into both h2c (HTTP/2 cleartext) and TLS-negotiated HTTP/2 pipelines when the descriptor store has loaded services:
+
+```mermaid
+graph LR
+    H2C["HTTP/2 Connection Handler"] --> CB[CallbackWebSocketServerHandler]
+    CB --> DASH[DashboardWebSocketHandler]
+    DASH --> CODEC[MockServerHttpServerCodec]
+    CODEC --> GRPC_RESP["GrpcToHttpResponseHandler"]
+    GRPC_RESP --> GRPC_REQ["GrpcToHttpRequestHandler"]
+    GRPC_REQ --> HANDLER[HttpRequestHandler]
+```
+
+The handlers are placed after `MockServerHttpServerCodec` so they operate on MockServer model objects. `GrpcToHttpRequestHandler` intercepts inbound `HttpRequest` objects with `content-type: application/grpc`, extracts the service and method from the path, decodes the protobuf body to JSON, and forwards with `x-grpc-service`, `x-grpc-method` headers.
+
+`GrpcToHttpResponseHandler` is an outbound encoder that intercepts `HttpResponse` objects with `x-grpc-service` header, encodes the JSON body back to protobuf binary with gRPC framing, and appends `grpc-status` / `grpc-message` trailers.
+
+### h2c Detection
+
+`PortUnificationHandler.decode()` includes `isH2cPreface()` which detects the HTTP/2 connection preface (`PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n`) on cleartext connections. When detected, `switchToH2c()` assembles the HTTP/2 pipeline with gRPC handlers, enabling gRPC over plaintext HTTP/2.
+
+### Streaming Support
+
+`GrpcStreamResponse` is an action type for gRPC server streaming (and as a building block for other streaming patterns). It follows the same recursive scheduling pattern as `HttpSseResponse`:
+
+| Class | Module | Purpose |
+|-------|--------|---------|
+| `GrpcStreamMessage` | core (model) | A single message in a stream: JSON body + optional per-message `Delay` |
+| `GrpcStreamResponse` | core (model) | Action containing a list of `GrpcStreamMessage` objects and a `statusCode` |
+| `GrpcStreamResponseActionHandler` | core (action) | Recursively schedules messages via `Scheduler`, encodes each to gRPC-framed protobuf, writes `grpc-status` trailers after last message |
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant MockServer
+    participant Handler as GrpcStreamResponseActionHandler
+    participant Scheduler
+
+    Client->>MockServer: gRPC request (e.g., ListGreetings)
+    MockServer->>Handler: GRPC_STREAM_RESPONSE action matched
+    Handler->>Client: HTTP/2 200 headers (content-type: application/grpc)
+    loop For each GrpcStreamMessage
+        Handler->>Scheduler: schedule with per-message Delay
+        Scheduler->>Handler: execute after delay
+        Handler->>Client: gRPC-framed protobuf message
+    end
+    Handler->>Client: grpc-status trailers (OK)
+```
+
+### Serialization
+
+- **`GrpcStreamMessageDTO`** and **`GrpcStreamResponseDTO`** handle REST API serialization
+- **`ExpectationDTO`** includes a `grpcStreamResponse` field mapped to `GrpcStreamResponseDTO`
+- **`grpcStreamResponse.json`** JSON schema is registered in `JsonSchemaExpectationValidator`
+
+### Control Plane REST API
+
+| Endpoint | Action |
+|----------|--------|
+| `PUT /mockserver/grpc/descriptors` | Upload a compiled proto descriptor set (binary body) |
+| `PUT /mockserver/grpc/services` | List all loaded gRPC services and their methods |
+| `PUT /mockserver/grpc/clear` | Clear all loaded descriptors and reset the store |
+
+### Limitations
+
+- **gRPC forwarding/proxy** is deferred — requires HTTP/2 + gRPC-framing client changes to `NettyHttpClient`
+- **True client streaming and bidirectional streaming** require migration from `InboundHttp2ToHttpAdapter` (which aggregates full messages) to `Http2MultiplexHandler` with per-stream child channels
+- **WAR deployment** returns 501 for `GRPC_STREAM_RESPONSE` actions (no `ChannelHandlerContext` available)
+- **Proto reflection** is not yet supported — descriptors must be provided via files or API upload
+
 ## Module Boundaries
 
 | Component | Module | Package |
@@ -305,6 +410,11 @@ A2aMockBuilder.a2aMock("/agent")
 | `HttpSseResponseActionHandler` | `mockserver-core` | `org.mockserver.mock.action.http` |
 | `SseEventDTO`, `HttpSseResponseDTO`, `JsonRpcBodyDTO` | `mockserver-core` | `org.mockserver.serialization.model` |
 | `HttpRequestTemplateObject` (jsonRpc fields) | `mockserver-core` | `org.mockserver.templates.engine.model` |
+| `GrpcStreamMessage`, `GrpcStreamResponse` | `mockserver-core` | `org.mockserver.model` |
+| `GrpcFrameCodec`, `GrpcJsonMessageConverter`, `GrpcProtoDescriptorStore`, `GrpcProtoFileCompiler`, `GrpcStatusMapper`, `GrpcException` | `mockserver-core` | `org.mockserver.grpc` |
+| `GrpcStreamResponseActionHandler` | `mockserver-core` | `org.mockserver.mock.action.http` |
+| `GrpcStreamMessageDTO`, `GrpcStreamResponseDTO` | `mockserver-core` | `org.mockserver.serialization.model` |
+| `GrpcToHttpRequestHandler`, `GrpcToHttpResponseHandler` | `mockserver-netty` | `org.mockserver.netty.grpc` |
 | `McpMockBuilder`, `A2aMockBuilder` | `mockserver-client-java` | `org.mockserver.client` |
 
 ## Test Coverage
@@ -330,6 +440,12 @@ A2aMockBuilder.a2aMock("/agent")
 | `HttpWebSocketResponseDTOTest` | core | 5 | Unit |
 | `ForwardChainExpectationTest` | client-java | 10 | Unit |
 | `WebSocketMockingIntegrationTest` | netty | 6 | Integration |
+| `GrpcFrameCodecTest` | core | 6 | Unit |
+| `GrpcJsonMessageConverterTest` | core | 7 | Unit |
+| `GrpcProtoDescriptorStoreTest` | core | 7 | Unit |
+| `GrpcStatusMapperTest` | core | 7 | Unit |
+| `GrpcStreamResponseDTOTest` | core | 3 | Unit |
+| `GrpcIntegrationTest` | netty | 11 | Integration |
 
 ## Client Library Support
 
@@ -342,6 +458,10 @@ All four client libraries support the new action types and body matchers:
 | JSON-RPC Body (`JSON_RPC`) | `jsonRpc("method")` | `{ type: 'JSON_RPC', method: '...' }` | `Body.json_rpc("method")` | `Body.json_rpc("method")` |
 | MCP Mock Builder | `McpMockBuilder.mcpMock()` | N/A (use REST API) | N/A (use REST API) | N/A (use REST API) |
 | A2A Mock Builder | `A2aMockBuilder.a2aMock()` | N/A (use REST API) | N/A (use REST API) | N/A (use REST API) |
+| gRPC Stream Response (`grpcStreamResponse`) | `respondWithGrpcStream()` | N/A (use REST API) | N/A (use REST API) | N/A (use REST API) |
+| gRPC Descriptor Upload | `uploadGrpcDescriptor()` | N/A (use REST API) | N/A (use REST API) | N/A (use REST API) |
+| gRPC Services List | `retrieveGrpcServices()` | N/A (use REST API) | N/A (use REST API) | N/A (use REST API) |
+| gRPC Descriptors Clear | `clearGrpcDescriptors()` | N/A (use REST API) | N/A (use REST API) | N/A (use REST API) |
 | Callback Support | Full (WebSocket) | Full (WebSocket) | Full (WebSocket) | Full (WebSocket) |
 
 ## Related GitHub Issues
@@ -349,3 +469,4 @@ All four client libraries support the new action types and body matchers:
 - #2143 — SSE Streaming Support
 - #2168 — WebSocket Mocking
 - #2115 — Streaming Response Support
+- #1936 — gRPC Protocol Support (under #2173 Protocol Extensions)

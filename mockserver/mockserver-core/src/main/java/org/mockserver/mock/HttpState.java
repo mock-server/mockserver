@@ -6,6 +6,8 @@ import org.mockserver.authentication.AuthenticationHandler;
 import org.mockserver.closurecallback.websocketregistry.LocalCallbackRegistry;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.configuration.Configuration;
+import org.mockserver.grpc.GrpcProtoDescriptorStore;
+import org.mockserver.grpc.GrpcProtoFileCompiler;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -91,6 +93,7 @@ public class HttpState {
     private OpenAPIConverter openAPIConverter;
     private org.mockserver.serialization.har.HarConverter harConverter;
     private AuthenticationHandler controlPlaneAuthenticationHandler;
+    private GrpcProtoDescriptorStore grpcDescriptorStore;
 
     public static void setPort(final HttpRequest request) {
         if (request != null && request.getSocketAddress() != null) {
@@ -147,6 +150,25 @@ public class HttpState {
                     .setMessageFormat("log ring buffer created, with size " + configuration.ringBufferSize())
             );
         }
+        initGrpcDescriptorStore();
+    }
+
+    private void initGrpcDescriptorStore() {
+        this.grpcDescriptorStore = new GrpcProtoDescriptorStore(mockServerLogger);
+        if (configuration.grpcEnabled()) {
+            String descriptorDir = configuration.grpcDescriptorDirectory();
+            if (isNotBlank(descriptorDir)) {
+                grpcDescriptorStore.loadDescriptorDirectory(java.nio.file.Paths.get(descriptorDir));
+            }
+            String protoDir = configuration.grpcProtoDirectory();
+            if (isNotBlank(protoDir)) {
+                new GrpcProtoFileCompiler(mockServerLogger, configuration.grpcProtocPath()).compileDirectory(java.nio.file.Paths.get(protoDir), grpcDescriptorStore);
+            }
+        }
+    }
+
+    public GrpcProtoDescriptorStore getGrpcDescriptorStore() {
+        return grpcDescriptorStore;
     }
 
     public AuthenticationHandler getControlPlaneAuthenticationHandler() {
@@ -920,6 +942,63 @@ public class HttpState {
                 } else {
                     canHandle.complete(true);
                 }
+
+            } else if (request.matches("PUT", PATH_PREFIX + "/grpc/descriptors", "/grpc/descriptors")) {
+
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    try {
+                        byte[] bodyBytes = request.getBodyAsRawBytes();
+                        if (bodyBytes != null && bodyBytes.length > 0) {
+                            grpcDescriptorStore.loadDescriptorSet(bodyBytes);
+                            responseWriter.writeResponse(request, response()
+                                .withStatusCode(CREATED.code())
+                                .withBody("{\"status\":\"loaded\"}", MediaType.JSON_UTF_8), true);
+                        } else {
+                            responseWriter.writeResponse(request, BAD_REQUEST, "descriptor set body is empty", MediaType.create("text", "plain").toString());
+                        }
+                    } catch (Exception e) {
+                        responseWriter.writeResponse(request, BAD_REQUEST, "failed to load gRPC descriptor: " + e.getMessage(), MediaType.create("text", "plain").toString());
+                    }
+                }
+                canHandle.complete(true);
+
+            } else if (request.matches("PUT", PATH_PREFIX + "/grpc/services", "/grpc/services")) {
+
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    try {
+                        com.fasterxml.jackson.databind.ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+                        com.fasterxml.jackson.databind.node.ArrayNode servicesArray = objectMapper.createArrayNode();
+                        for (java.util.Map.Entry<String, com.google.protobuf.Descriptors.ServiceDescriptor> entry : grpcDescriptorStore.getAllServices().entrySet()) {
+                            com.fasterxml.jackson.databind.node.ObjectNode serviceNode = objectMapper.createObjectNode();
+                            serviceNode.put("name", entry.getKey());
+                            com.fasterxml.jackson.databind.node.ArrayNode methodsArray = serviceNode.putArray("methods");
+                            for (com.google.protobuf.Descriptors.MethodDescriptor method : entry.getValue().getMethods()) {
+                                com.fasterxml.jackson.databind.node.ObjectNode methodNode = objectMapper.createObjectNode();
+                                methodNode.put("name", method.getName());
+                                methodNode.put("inputType", method.getInputType().getFullName());
+                                methodNode.put("outputType", method.getOutputType().getFullName());
+                                methodNode.put("clientStreaming", method.isClientStreaming());
+                                methodNode.put("serverStreaming", method.isServerStreaming());
+                                methodsArray.add(methodNode);
+                            }
+                            servicesArray.add(serviceNode);
+                        }
+                        responseWriter.writeResponse(request, response()
+                            .withStatusCode(OK.code())
+                            .withBody(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(servicesArray), MediaType.JSON_UTF_8), true);
+                    } catch (Exception e) {
+                        responseWriter.writeResponse(request, BAD_REQUEST, "failed to list gRPC services: " + e.getMessage(), MediaType.create("text", "plain").toString());
+                    }
+                }
+                canHandle.complete(true);
+
+            } else if (request.matches("PUT", PATH_PREFIX + "/grpc/clear", "/grpc/clear")) {
+
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    grpcDescriptorStore.reset();
+                    responseWriter.writeResponse(request, OK);
+                }
+                canHandle.complete(true);
 
             } else {
 

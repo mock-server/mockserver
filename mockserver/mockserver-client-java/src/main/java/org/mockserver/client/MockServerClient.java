@@ -1756,4 +1756,35 @@ public class MockServerClient implements Stoppable {
         );
         return httpResponse.getBodyAsString();
     }
+
+    public MockServerClient uploadGrpcDescriptor(byte[] descriptorSetBytes) {
+        sendRequest(
+            request()
+                .withMethod("PUT")
+                .withPath(calculatePath("grpc/descriptors"))
+                .withBody(new BinaryBody(descriptorSetBytes)),
+            true
+        );
+        return clientClass.cast(this);
+    }
+
+    public String retrieveGrpcServices() {
+        HttpResponse httpResponse = sendRequest(
+            request()
+                .withMethod("PUT")
+                .withPath(calculatePath("grpc/services")),
+            false
+        );
+        return httpResponse.getBodyAsString();
+    }
+
+    public MockServerClient clearGrpcDescriptors() {
+        sendRequest(
+            request()
+                .withMethod("PUT")
+                .withPath(calculatePath("grpc/clear")),
+            true
+        );
+        return clientClass.cast(this);
+    }
 }

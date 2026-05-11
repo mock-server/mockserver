@@ -45,6 +45,7 @@ public class Expectation extends ObjectWithJsonToString {
     private HttpForwardValidateAction httpForwardValidateAction;
     private HttpSseResponse httpSseResponse;
     private HttpWebSocketResponse httpWebSocketResponse;
+    private GrpcStreamResponse grpcStreamResponse;
     private HttpError httpError;
     private List<AfterAction> afterActions;
 
@@ -383,6 +384,10 @@ public class Expectation extends ObjectWithJsonToString {
         return httpWebSocketResponse;
     }
 
+    public GrpcStreamResponse getGrpcStreamResponse() {
+        return grpcStreamResponse;
+    }
+
     public HttpError getHttpError() {
         return httpError;
     }
@@ -494,6 +499,9 @@ public class Expectation extends ObjectWithJsonToString {
         }
         if (getHttpWebSocketResponse() != null) {
             actions.add(getHttpWebSocketResponse());
+        }
+        if (getGrpcStreamResponse() != null) {
+            actions.add(getGrpcStreamResponse());
         }
         if (getHttpError() != null) {
             actions.add(getHttpError());
@@ -612,6 +620,14 @@ public class Expectation extends ObjectWithJsonToString {
         return this;
     }
 
+    public Expectation thenRespondWithGrpcStream(GrpcStreamResponse grpcStreamResponse) {
+        if (grpcStreamResponse != null) {
+            this.grpcStreamResponse = grpcStreamResponse;
+            this.hashCode = 0;
+        }
+        return this;
+    }
+
     public Expectation thenError(HttpError httpError) {
         if (httpError != null) {
             this.httpError = httpError;
@@ -669,6 +685,7 @@ public class Expectation extends ObjectWithJsonToString {
             .thenForwardValidate(httpForwardValidateAction)
             .thenRespondWithSse(httpSseResponse)
             .thenRespondWithWebSocket(httpWebSocketResponse)
+            .thenRespondWithGrpcStream(grpcStreamResponse)
             .thenError(httpError);
         if (afterActions != null) {
             clone.afterActions = new ArrayList<>(afterActions);
@@ -710,6 +727,7 @@ public class Expectation extends ObjectWithJsonToString {
             Objects.equals(httpForwardValidateAction, that.httpForwardValidateAction) &&
             Objects.equals(httpSseResponse, that.httpSseResponse) &&
             Objects.equals(httpWebSocketResponse, that.httpWebSocketResponse) &&
+            Objects.equals(grpcStreamResponse, that.grpcStreamResponse) &&
             Objects.equals(httpError, that.httpError) &&
             Objects.equals(afterActions, that.afterActions);
     }
@@ -717,7 +735,7 @@ public class Expectation extends ObjectWithJsonToString {
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(priority, httpRequest, times, timeToLive, httpResponse, httpResponseTemplate, httpResponseClassCallback, httpResponseObjectCallback, httpForward, httpForwardTemplate, httpForwardClassCallback, httpForwardObjectCallback, httpOverrideForwardedRequest, httpForwardValidateAction, httpSseResponse, httpWebSocketResponse, httpError, afterActions);
+            hashCode = Objects.hash(priority, httpRequest, times, timeToLive, httpResponse, httpResponseTemplate, httpResponseClassCallback, httpResponseObjectCallback, httpForward, httpForwardTemplate, httpForwardClassCallback, httpForwardObjectCallback, httpOverrideForwardedRequest, httpForwardValidateAction, httpSseResponse, httpWebSocketResponse, grpcStreamResponse, httpError, afterActions);
         }
         return hashCode;
     }

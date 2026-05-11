@@ -32,6 +32,7 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
     private HttpForwardValidateActionDTO httpForwardValidateAction;
     private HttpSseResponseDTO httpSseResponse;
     private HttpWebSocketResponseDTO httpWebSocketResponse;
+    private GrpcStreamResponseDTO grpcStreamResponse;
     private HttpErrorDTO httpError;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<AfterActionDTO> afterActions;
@@ -99,6 +100,10 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
             if (httpWebSocketResponse != null) {
                 this.httpWebSocketResponse = new HttpWebSocketResponseDTO(httpWebSocketResponse);
             }
+            GrpcStreamResponse grpcStreamResponse = expectation.getGrpcStreamResponse();
+            if (grpcStreamResponse != null) {
+                this.grpcStreamResponse = new GrpcStreamResponseDTO(grpcStreamResponse);
+            }
             HttpError httpError = expectation.getHttpError();
             if (httpError != null) {
                 this.httpError = new HttpErrorDTO(httpError);
@@ -135,6 +140,7 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
         HttpForwardValidateAction httpForwardValidateAction = null;
         HttpSseResponse httpSseResponse = null;
         HttpWebSocketResponse httpWebSocketResponse = null;
+        GrpcStreamResponse grpcStreamResponse = null;
         HttpError httpError = null;
         Times times;
         TimeToLive timeToLive;
@@ -178,6 +184,9 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
         if (this.httpWebSocketResponse != null) {
             httpWebSocketResponse = this.httpWebSocketResponse.buildObject();
         }
+        if (this.grpcStreamResponse != null) {
+            grpcStreamResponse = this.grpcStreamResponse.buildObject();
+        }
         if (this.httpError != null) {
             httpError = this.httpError.buildObject();
         }
@@ -214,6 +223,7 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
             .thenForwardValidate(httpForwardValidateAction)
             .thenRespondWithSse(httpSseResponse)
             .thenRespondWithWebSocket(httpWebSocketResponse)
+            .thenRespondWithGrpcStream(grpcStreamResponse)
             .thenError(httpError)
             .withAfterActions(afterActionList);
     }
@@ -350,6 +360,15 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
 
     public ExpectationDTO setHttpWebSocketResponse(HttpWebSocketResponseDTO httpWebSocketResponse) {
         this.httpWebSocketResponse = httpWebSocketResponse;
+        return this;
+    }
+
+    public GrpcStreamResponseDTO getGrpcStreamResponse() {
+        return grpcStreamResponse;
+    }
+
+    public ExpectationDTO setGrpcStreamResponse(GrpcStreamResponseDTO grpcStreamResponse) {
+        this.grpcStreamResponse = grpcStreamResponse;
         return this;
     }
 

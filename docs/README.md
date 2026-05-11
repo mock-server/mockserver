@@ -20,7 +20,7 @@ Deep-dive documentation of MockServer's codebase, from high-level module structu
 | [Client & Integrations](code/client-and-integrations.md) | Low | MockServerClient, JUnit 4/5, Spring, WebSocket callbacks |
 | [Memory Management](code/memory-management.md) | Medium | Log entry and expectation memory analysis, default limit calculation, tuning guide |
 | [Metrics & Monitoring](code/metrics.md) | Low | Prometheus metrics, memory monitoring, CSV export |
-| [AI Protocol Mocking](code/ai-protocol-mocking.md) | Medium | SSE streaming, JSON-RPC matching, MCP and A2A mock builders |
+| [AI & RPC Protocol Mocking](code/ai-protocol-mocking.md) | Medium | SSE streaming, JSON-RPC matching, MCP and A2A mock builders, gRPC mocking |
 
 ### Infrastructure
 
@@ -49,6 +49,16 @@ Build process, releases, dependencies, security scanning, and the documentation 
 | [AI-Assisted Development](operations/ai-assisted-development.md) | AI development approach, adversarial review, testing backstop, structural safety |
 | [OpenCode Configuration](operations/opencode-configuration.md) | AI harness: config, agents, rules, skills, commands, plugins |
 | [OpenCode Building Blocks](operations/opencode-building-blocks.md) | Generic guide to the 9 building blocks: what each controls, when to use which, and how they fit together |
+
+### Plans
+
+| Document | Description |
+|----------|-------------|
+| [Java 17 Migration](plans/java-17-migration.md) | GraalVM JS, Spring 6, jakarta, DataFaker, language modernisation |
+| [WireMock Feature Parity](plans/wiremock-feature-parity.md) | JWT templates, template helpers, faker data, chunked dribble delay, GraphQL matching, stateful scenarios |
+| [Build Optimisation](plans/build-optimisation.md) | Maven build speed improvements |
+| [Testing Improvements](plans/testing-improvements.md) | Test coverage and quality improvements |
+| [Security Remediation](plans/security-remediation.md) | Vulnerability fixes and security hardening |
 
 ### Other
 

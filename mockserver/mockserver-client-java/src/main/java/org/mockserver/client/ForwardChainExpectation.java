@@ -304,6 +304,11 @@ public class ForwardChainExpectation {
         return mockServerClient.upsert(expectation);
     }
 
+    public Expectation[] respondWithGrpcStream(final GrpcStreamResponse grpcStreamResponse) {
+        expectation.thenRespondWithGrpcStream(grpcStreamResponse);
+        return mockServerClient.upsert(expectation);
+    }
+
     @SuppressWarnings("rawtypes")
     private <T extends HttpMessage> String registerWebSocketClient(ExpectationCallback<T> expectationCallback, ExpectationForwardAndResponseCallback expectationForwardResponseCallback) {
         try {

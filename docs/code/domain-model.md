@@ -113,7 +113,18 @@ classDiagram
     Action <|-- HttpClassCallback
     Action <|-- HttpObjectCallback
     Action <|-- HttpOverrideForwardedRequest
+    class GrpcStreamResponse {
+        +statusCode: Integer
+        +messages: List~GrpcStreamMessage~
+    }
+    class GrpcStreamMessage {
+        +json: String
+        +delay: Delay
+    }
+    GrpcStreamResponse --> GrpcStreamMessage : 0..*
+
     Action <|-- HttpError
+    Action <|-- GrpcStreamResponse
 ```
 
 ### Body Types
@@ -419,3 +430,14 @@ The Model Context Protocol endpoint is controlled by a single property:
 | `mcpEnabled` | `boolean` | `true` | `Configuration` / `ConfigurationProperties` / system property `mockserver.mcpEnabled` |
 
 When `mcpEnabled` is `true` (the default), MockServer registers the `McpStreamableHttpHandler` in the Netty pipeline to serve MCP requests at `/mockserver/mcp`. When `false`, no MCP handler is registered and requests to that path are handled normally by `HttpRequestHandler`.
+
+### gRPC Configuration
+
+| Property | Type | Default | Source |
+|----------|------|---------|--------|
+| `grpcEnabled` | `boolean` | `true` | `Configuration` / `ConfigurationProperties` / system property `mockserver.grpcEnabled` |
+| `grpcDescriptorDirectory` | `String` | `null` | Directory of pre-compiled `.dsc`/`.desc` proto descriptor files |
+| `grpcProtoDirectory` | `String` | `null` | Directory of `.proto` files to compile at startup |
+| `grpcProtocPath` | `String` | `"protoc"` | Path to the `protoc` compiler binary |
+
+When `grpcEnabled` is `true` (the default) and descriptors are loaded (via directory config or runtime API upload), MockServer inserts `GrpcToHttpRequestHandler` and `GrpcToHttpResponseHandler` into the HTTP/2 pipeline to intercept and convert gRPC requests. The `GrpcProtoDescriptorStore` is initialized in `HttpState` and provides method descriptors for protobuf↔JSON conversion.

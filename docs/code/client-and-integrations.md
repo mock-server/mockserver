@@ -116,6 +116,14 @@ HttpRequest[] requests = client.retrieveRecordedRequests(
 | `withRequestOverride(HttpRequest)` | Default headers for control-plane requests |
 | `withProxyConfiguration(ProxyConfiguration)` | Route via proxy |
 
+#### gRPC
+
+| Method | Description |
+|--------|-------------|
+| `uploadGrpcDescriptor(byte[])` | Upload a compiled proto descriptor set to the server |
+| `retrieveGrpcServices()` | List all loaded gRPC services and their methods |
+| `clearGrpcDescriptors()` | Clear all loaded gRPC descriptors |
+
 ### ForwardChainExpectation
 
 Returned by `when()`, provides terminal methods to define the action:
@@ -125,6 +133,7 @@ Returned by `when()`, provides terminal methods to define the action:
 | Response | `respond(HttpResponse)`, `respond(HttpTemplate)`, `respond(HttpClassCallback)`, `respond(ExpectationResponseCallback)` |
 | Forward | `forward(HttpForward)`, `forward(HttpTemplate)`, `forward(HttpClassCallback)`, `forward(ExpectationForwardCallback)`, `forward(HttpOverrideForwardedRequest)` |
 | Error | `error(HttpError)` |
+| gRPC | `respondWithGrpcStream(GrpcStreamResponse)` |
 | Configuration | `withId(String)`, `withPriority(int)` |
 
 ### Authentication Support

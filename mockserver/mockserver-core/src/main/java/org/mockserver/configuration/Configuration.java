@@ -35,6 +35,10 @@ public class Configuration {
     private Boolean launchUIForLogLevelDebug;
     private Boolean metricsEnabled;
     private Boolean mcpEnabled;
+    private String grpcDescriptorDirectory;
+    private String grpcProtoDirectory;
+    private Boolean grpcEnabled;
+    private String grpcProtocPath;
     private Map<String, String> logLevelOverrides;
     private Boolean compactLogFormat;
 
@@ -295,6 +299,54 @@ public class Configuration {
 
     public Configuration mcpEnabled(Boolean mcpEnabled) {
         this.mcpEnabled = mcpEnabled;
+        return this;
+    }
+
+    public String grpcDescriptorDirectory() {
+        if (grpcDescriptorDirectory == null) {
+            return ConfigurationProperties.grpcDescriptorDirectory();
+        }
+        return grpcDescriptorDirectory;
+    }
+
+    public Configuration grpcDescriptorDirectory(String grpcDescriptorDirectory) {
+        this.grpcDescriptorDirectory = grpcDescriptorDirectory;
+        return this;
+    }
+
+    public String grpcProtoDirectory() {
+        if (grpcProtoDirectory == null) {
+            return ConfigurationProperties.grpcProtoDirectory();
+        }
+        return grpcProtoDirectory;
+    }
+
+    public Configuration grpcProtoDirectory(String grpcProtoDirectory) {
+        this.grpcProtoDirectory = grpcProtoDirectory;
+        return this;
+    }
+
+    public Boolean grpcEnabled() {
+        if (grpcEnabled == null) {
+            return ConfigurationProperties.grpcEnabled();
+        }
+        return grpcEnabled;
+    }
+
+    public Configuration grpcEnabled(Boolean grpcEnabled) {
+        this.grpcEnabled = grpcEnabled;
+        return this;
+    }
+
+    public String grpcProtocPath() {
+        if (grpcProtocPath == null) {
+            return ConfigurationProperties.grpcProtocPath();
+        }
+        return grpcProtocPath;
+    }
+
+    public Configuration grpcProtocPath(String grpcProtocPath) {
+        this.grpcProtocPath = grpcProtocPath;
         return this;
     }
 

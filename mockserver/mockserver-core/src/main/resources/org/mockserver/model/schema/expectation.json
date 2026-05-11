@@ -51,6 +51,9 @@
     "httpWebSocketResponse": {
       "$ref": "#/definitions/httpWebSocketResponse"
     },
+    "grpcStreamResponse": {
+      "$ref": "#/definitions/grpcStreamResponse"
+    },
     "afterActions": {
       "oneOf": [
         { "$ref": "#/definitions/afterAction" },
@@ -132,6 +135,11 @@
     {
       "required": [
         "httpWebSocketResponse"
+      ]
+    },
+    {
+      "required": [
+        "grpcStreamResponse"
       ]
     }
   ],

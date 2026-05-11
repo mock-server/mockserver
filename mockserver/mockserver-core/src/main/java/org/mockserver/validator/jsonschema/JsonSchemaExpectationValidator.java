@@ -27,6 +27,7 @@ public class JsonSchemaExpectationValidator extends JsonSchemaValidator {
             "httpError",
             "httpSseResponse",
             "httpWebSocketResponse",
+            "grpcStreamResponse",
             "afterAction",
             "times",
             "timeToLive",

@@ -31,6 +31,8 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.netty.HttpRequestHandler;
 import org.mockserver.netty.mcp.McpSessionManager;
 import org.mockserver.netty.mcp.McpStreamableHttpHandler;
+import org.mockserver.netty.grpc.GrpcToHttpRequestHandler;
+import org.mockserver.netty.grpc.GrpcToHttpResponseHandler;
 import org.mockserver.netty.proxy.BinaryRequestProxyingHandler;
 import org.mockserver.netty.proxy.socks.Socks4ProxyHandler;
 import org.mockserver.netty.proxy.socks.Socks5ProxyHandler;
@@ -171,6 +173,9 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         } else if (HTTP_2.equals(getALPNProtocol(mockServerLogger, ctx))) {
             logStage(ctx, "adding HTTP2 decoders");
             switchToHttp2(ctx, msg);
+        } else if (isH2cPreface(msg)) {
+            logStage(ctx, "adding HTTP2 cleartext (h2c) decoders");
+            switchToH2c(ctx, msg);
         } else if (isHttp(msg)) {
             logStage(ctx, "adding HTTP decoders");
             switchToHttp(ctx, msg);
@@ -260,6 +265,57 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
             method.startsWith("CONNECT ");
     }
 
+    private static final String H2C_PREFACE = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
+
+    private boolean isH2cPreface(ByteBuf msg) {
+        if (actualReadableBytes() < H2C_PREFACE.length()) {
+            return false;
+        }
+        String prefix = msg.toString(msg.readerIndex(), H2C_PREFACE.length(), StandardCharsets.US_ASCII);
+        return H2C_PREFACE.equals(prefix);
+    }
+
+    private void switchToH2c(ChannelHandlerContext ctx, ByteBuf msg) {
+        if (!isHttp2Enabled(ctx.channel())) {
+            http2Enabled(ctx.channel());
+
+            ChannelPipeline pipeline = ctx.pipeline();
+
+            final Http2Connection connection = new DefaultHttp2Connection(true);
+            final HttpToHttp2ConnectionHandlerBuilder http2ConnectionHandlerBuilder = new HttpToHttp2ConnectionHandlerBuilder()
+                .frameListener(
+                    new DelegatingDecompressorFrameListener(
+                        connection,
+                        new InboundHttp2ToHttpAdapterBuilder(connection)
+                            .maxContentLength(Integer.MAX_VALUE)
+                            .propagateSettings(true)
+                            .validateHttpHeaders(false)
+                            .build()
+                    )
+                );
+            if (mockServerLogger.isEnabledForInstance(TRACE)) {
+                http2ConnectionHandlerBuilder.frameLogger(new Http2FrameLogger(LogLevel.TRACE, PortUnificationHandler.class.getName()));
+            }
+            addLastIfNotPresent(pipeline, http2ConnectionHandlerBuilder.connection(connection).build());
+            addLastIfNotPresent(pipeline, new CallbackWebSocketServerHandler(httpState));
+            addLastIfNotPresent(pipeline, new DashboardWebSocketHandler(httpState, false, false));
+            if (configuration.mcpEnabled()) {
+                addLastIfNotPresent(pipeline, new McpStreamableHttpHandler(httpState, server, mcpSessionManager));
+            }
+            addLastIfNotPresent(pipeline, new MockServerHttpServerCodec(configuration, mockServerLogger, false, null, ctx.channel().localAddress()));
+            if (httpState.getGrpcDescriptorStore() != null && httpState.getGrpcDescriptorStore().hasServices()) {
+                addLastIfNotPresent(pipeline, new GrpcToHttpResponseHandler(mockServerLogger, httpState.getGrpcDescriptorStore()));
+                addLastIfNotPresent(pipeline, new GrpcToHttpRequestHandler(mockServerLogger, httpState.getGrpcDescriptorStore()));
+            }
+            addLastIfNotPresent(pipeline, new HttpRequestHandler(configuration, server, httpState, actionHandler));
+            pipeline.remove(this);
+
+            ctx.channel().attr(LOCAL_HOST_HEADERS).set(getLocalAddresses(ctx));
+
+            ctx.fireChannelRead(msg.readBytes(actualReadableBytes()));
+        }
+    }
+
     private void switchToHttp2(ChannelHandlerContext ctx, ByteBuf msg) {
         if (!isHttp2Enabled(ctx.channel())) {
             http2Enabled(ctx.channel());
@@ -289,6 +345,10 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
                 addLastIfNotPresent(pipeline, new McpStreamableHttpHandler(httpState, server, mcpSessionManager));
             }
             addLastIfNotPresent(pipeline, new MockServerHttpServerCodec(configuration, mockServerLogger, isSslEnabledUpstream(ctx.channel()), SniHandler.retrieveClientCertificates(mockServerLogger, ctx), ctx.channel().localAddress()));
+            if (httpState.getGrpcDescriptorStore() != null && httpState.getGrpcDescriptorStore().hasServices()) {
+                addLastIfNotPresent(pipeline, new GrpcToHttpResponseHandler(mockServerLogger, httpState.getGrpcDescriptorStore()));
+                addLastIfNotPresent(pipeline, new GrpcToHttpRequestHandler(mockServerLogger, httpState.getGrpcDescriptorStore()));
+            }
             addLastIfNotPresent(pipeline, new HttpRequestHandler(configuration, server, httpState, actionHandler));
             pipeline.remove(this);
 

@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package com.example.grpc;
+
+option java_package = "com.example.grpc";
+option java_outer_classname = "GreetingProtos";
+
+service GreetingService {
+  rpc Greeting (HelloRequest) returns (HelloResponse);
+  rpc ListGreetings (HelloRequest) returns (stream HelloResponse);
+  rpc CollectGreetings (stream HelloRequest) returns (HelloResponse);
+  rpc Chat (stream HelloRequest) returns (stream HelloResponse);
+}
+
+message HelloRequest {
+  string name = 1;
+}
+
+message HelloResponse {
+  string greeting = 1;
+}

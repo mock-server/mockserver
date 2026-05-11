@@ -84,6 +84,12 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR = "mockserver.useSemicolonAsQueryParameterSeparator";
     private static final String MOCKSERVER_ASSUME_ALL_REQUESTS_ARE_HTTP = "mockserver.assumeAllRequestsAreHttp";
 
+    // gRPC
+    private static final String MOCKSERVER_GRPC_DESCRIPTOR_DIRECTORY = "mockserver.grpcDescriptorDirectory";
+    private static final String MOCKSERVER_GRPC_PROTO_DIRECTORY = "mockserver.grpcProtoDirectory";
+    private static final String MOCKSERVER_GRPC_ENABLED = "mockserver.grpcEnabled";
+    private static final String MOCKSERVER_GRPC_PROTOC_PATH = "mockserver.grpcProtocPath";
+
     // non http proxying
     private static final String MOCKSERVER_FORWARD_BINARY_REQUESTS_WITHOUT_WAITING_FOR_RESPONSE = "mockserver.forwardBinaryRequestsWithoutWaitingForResponse";
 
@@ -378,6 +384,38 @@ public class ConfigurationProperties {
      */
     public static void mcpEnabled(boolean enable) {
         setProperty(MOCKSERVER_MCP_ENABLED, "" + enable);
+    }
+
+    public static String grpcDescriptorDirectory() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_GRPC_DESCRIPTOR_DIRECTORY, "MOCKSERVER_GRPC_DESCRIPTOR_DIRECTORY", "");
+    }
+
+    public static void grpcDescriptorDirectory(String directory) {
+        setProperty(MOCKSERVER_GRPC_DESCRIPTOR_DIRECTORY, directory);
+    }
+
+    public static String grpcProtoDirectory() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_GRPC_PROTO_DIRECTORY, "MOCKSERVER_GRPC_PROTO_DIRECTORY", "");
+    }
+
+    public static void grpcProtoDirectory(String directory) {
+        setProperty(MOCKSERVER_GRPC_PROTO_DIRECTORY, directory);
+    }
+
+    public static boolean grpcEnabled() {
+        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_GRPC_ENABLED, "MOCKSERVER_GRPC_ENABLED", "" + true));
+    }
+
+    public static void grpcEnabled(boolean enable) {
+        setProperty(MOCKSERVER_GRPC_ENABLED, "" + enable);
+    }
+
+    public static String grpcProtocPath() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_GRPC_PROTOC_PATH, "MOCKSERVER_GRPC_PROTOC_PATH", "protoc");
+    }
+
+    public static void grpcProtocPath(String path) {
+        setProperty(MOCKSERVER_GRPC_PROTOC_PATH, path);
     }
 
     public static Map<String, String> logLevelOverrides() {

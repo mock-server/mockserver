@@ -1,0 +1,68 @@
+<a id="grpc_configuration" class="anchor" href="#grpc_configuration">&nbsp;</a>
+
+<h2>gRPC Configuration:</h2>
+
+<button id="button_configuration_grpc_enabled" class="accordion title"><strong>Enable gRPC Support</strong></button>
+<div class="panel title">
+    <p>Enable or disable gRPC protocol support. When enabled and proto descriptors are loaded (via <span class="inline_code">grpcDescriptorDirectory</span>, <span class="inline_code">grpcProtoDirectory</span>, or the <span class="inline_code">PUT /mockserver/grpc/descriptors</span> REST API), MockServer intercepts gRPC requests on HTTP/2 connections, converts protobuf to JSON, and routes them through the standard expectation matching engine. Without loaded descriptors, gRPC interception is not active even when this property is true.</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">true</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.grpcEnabled(boolean enable)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.grpcEnabled=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_GRPC_ENABLED=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.grpcEnabled=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.grpcEnabled="false"</code></pre>
+</div>
+
+<button id="button_configuration_grpc_descriptor_directory" class="accordion title"><strong>gRPC Descriptor Directory</strong></button>
+<div class="panel title">
+    <p>Directory containing pre-compiled proto descriptor set files (<span class="inline_code">.dsc</span> or <span class="inline_code">.desc</span>). MockServer loads all descriptor files from this directory at startup and registers their services for gRPC mocking.</p>
+    <p>Generate descriptor files using <span class="inline_code">protoc --descriptor_set_out=service.dsc --include_imports service.proto</span>.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.grpcDescriptorDirectory(String directory)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.grpcDescriptorDirectory=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_GRPC_DESCRIPTOR_DIRECTORY=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.grpcDescriptorDirectory=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.grpcDescriptorDirectory="/path/to/descriptors"</code></pre>
+</div>
+
+<button id="button_configuration_grpc_proto_directory" class="accordion title"><strong>gRPC Proto Source Directory</strong></button>
+<div class="panel title">
+    <p>Directory containing <span class="inline_code">.proto</span> source files. MockServer compiles these files at startup using <span class="inline_code">protoc</span> and registers their services for gRPC mocking. Requires <span class="inline_code">protoc</span> to be available on the system PATH (or configured via <span class="inline_code">grpcProtocPath</span>).</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.grpcProtoDirectory(String directory)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.grpcProtoDirectory=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_GRPC_PROTO_DIRECTORY=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.grpcProtoDirectory=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.grpcProtoDirectory="/path/to/protos"</code></pre>
+</div>
+
+<button id="button_configuration_grpc_protoc_path" class="accordion title"><strong>gRPC Protoc Path</strong></button>
+<div class="panel title">
+    <p>Path to the <span class="inline_code">protoc</span> compiler binary. Only needed when using <span class="inline_code">grpcProtoDirectory</span> to compile <span class="inline_code">.proto</span> files at startup. If <span class="inline_code">protoc</span> is on the system PATH, the default value works without configuration.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">"protoc"</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.grpcProtocPath(String path)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.grpcProtocPath=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_GRPC_PROTOC_PATH=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.grpcProtocPath=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.grpcProtocPath="/usr/local/bin/protoc"</code></pre>
+</div>

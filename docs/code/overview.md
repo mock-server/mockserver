@@ -89,7 +89,7 @@ REST API handler"]
     ACTION --> MATCH{"Expectation
 matched?"}
     MATCH -->|Yes| DISPATCH["Action Dispatcher
-10 action types"]
+11 action types"]
     MATCH -->|No, proxy mode| FWD["Forward to
 original destination"]
     MATCH -->|No, mock mode| NF[404 Not Found]
@@ -239,7 +239,7 @@ See: [Client & Integrations — MCP](client-and-integrations.md#mcp-model-contex
 | `org.mockserver.netty.mcp` | netty | MCP (Model Context Protocol) server handler | [Client & Integrations](client-and-integrations.md) |
 | `org.mockserver.integration` | netty | `ClientAndServer` combined class | [Client & Integrations](client-and-integrations.md) |
 | `org.mockserver.mock` | core | Expectation management, HttpState | [Request Processing](request-processing.md) |
-| `org.mockserver.mock.action.http` | core | Action handlers (10 types) | [Request Processing](request-processing.md) |
+| `org.mockserver.mock.action.http` | core | Action handlers (11 types) | [Request Processing](request-processing.md) |
 | `org.mockserver.matchers` | core | Request matching (15+ matcher types) | [Domain Model](domain-model.md) |
 | `org.mockserver.model` | core | Domain objects (HttpRequest, etc.) | [Domain Model](domain-model.md) |
 | `org.mockserver.serialization` | core | JSON/Java serialization | [Domain Model](domain-model.md) |
@@ -254,6 +254,8 @@ See: [Client & Integrations — MCP](client-and-integrations.md#mcp-model-contex
 | `org.mockserver.persistence` | core | File persistence & watching | [Event System](event-system.md) |
 | `org.mockserver.metrics` | core | Prometheus metrics collection | [Metrics & Monitoring](metrics.md) |
 | `org.mockserver.memory` | core | Memory usage monitoring/CSV export | [Metrics & Monitoring](metrics.md) |
+| `org.mockserver.grpc` | core | gRPC proto descriptor store, frame codec, JSON conversion | [AI & RPC Protocol Mocking](ai-protocol-mocking.md) |
+| `org.mockserver.netty.grpc` | netty | gRPC↔HTTP pipeline handlers | [AI & RPC Protocol Mocking](ai-protocol-mocking.md) |
 | `org.mockserver.client` | client-java | MockServerClient API | [Client & Integrations](client-and-integrations.md) |
 | `org.mockserver.junit` | junit-rule | JUnit 4 Rule | [Client & Integrations](client-and-integrations.md) |
 | `org.mockserver.junit.jupiter` | junit-jupiter | JUnit 5 Extension | [Client & Integrations](client-and-integrations.md) |
@@ -271,4 +273,5 @@ See: [Client & Integrations — MCP](client-and-integrations.md#mcp-model-contex
 | **Low** | [Domain Model, Matchers & Serialization](domain-model.md) | Model classes, matcher hierarchy, codec layer, OpenAPI, configuration |
 | **Low** | [TLS, Certificates & Security](tls-and-security.md) | BouncyCastle CA, SNI, mTLS, JWT, control plane auth |
 | **Low** | [Client API & Test Integrations](client-and-integrations.md) | MockServerClient, JUnit 4/5, Spring, WebSocket callbacks |
+| **Medium** | [AI & RPC Protocol Mocking](ai-protocol-mocking.md) | SSE streaming, JSON-RPC, MCP, A2A, gRPC mocking |
 | **Low** | [Metrics & Monitoring](metrics.md) | Prometheus metrics, memory monitoring |
