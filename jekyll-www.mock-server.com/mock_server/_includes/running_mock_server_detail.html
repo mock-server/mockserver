@@ -412,6 +412,26 @@ public class ExampleSpringTestListenerTestWithUrlInjection {
 
 }</code></pre>
 
+<p>Properties prefixed with <code>mockserver.</code> are applied to the MockServer <code>Configuration</code> object, allowing declarative configuration of MockServer directly in the annotation. All other properties are injected into the Spring <code>Environment</code> as test properties (with <code>${mockServerPort}</code> substitution). This enables setting any <a href="/mock_server/configuration_properties.html">configuration property</a> such as <strong>initializationClass</strong>, <strong>logLevel</strong>, <strong>maxExpectations</strong>, etc. without needing separate system property setup.</p>
+<p><strong>Note:</strong> Because the MockServer instance is shared across all test classes, <code>mockserver.*</code> configuration properties from the <strong>first</strong> <code>@MockServerTest</code> class to run are used. If multiple test classes specify different <code>mockserver.*</code> properties, only the first class's configuration takes effect.</p>
+
+<pre><code class="prettyprint lang-java code">@RunWith(SpringRunner.class)
+@MockServerTest({
+    "server.url=http://localhost:${mockServerPort}/path",
+    "mockserver.initializationClass=org.mockserver.server.initialize.ExpectationInitializerExample",
+    "mockserver.logLevel=WARN"
+})
+public class ExampleSpringTestListenerTestWithConfiguration {
+
+    private MockServerClient mockServerClient;
+
+    @Test
+    public void testSomething() {
+        // expectations from ExpectationInitializerExample are available immediately
+    }
+
+}</code></pre>
+
 <p>The free port itself is also added as test property and can be retrieved with <code>@MockServerPort</code>.</p>
 
 <pre><code class="prettyprint lang-java code">@MockServerTest

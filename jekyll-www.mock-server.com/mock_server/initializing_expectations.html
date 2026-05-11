@@ -29,6 +29,13 @@ sitemap:
 <pre class="prettyprint lang-java code"><code class="code">System.setProperty("mockserver.initializationClass", ExpectationInitializerExample.class.getName());
 int mockServerPort = new ClientAndServer().getLocalPort();</code></pre>
 
+<p>When using Spring's <code>@MockServerTest</code>, the initializer class can be configured directly in the annotation:</p>
+<pre class="prettyprint lang-java code"><code class="code">@MockServerTest("mockserver.initializationClass=org.mockserver.server.initialize.ExpectationInitializerExample")
+@RunWith(SpringRunner.class)
+public class MyTest {
+    private MockServerClient mockServerClient;  // auto-injected with expectations already loaded
+}</code></pre>
+
 <p>The class must implement the <strong>org.mockserver.server.initialize.ExpectationInitializer</strong> interface and have a default constructor with zero arguments, for example:</p>
 
 <pre class="prettyprint lang-java code"><code class="code">public class ExpectationInitializerExample implements ExpectationInitializer {

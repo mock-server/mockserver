@@ -259,13 +259,14 @@ sequenceDiagram
     SB->>CF: createContextCustomizer()
     CF->>CF: Find @MockServerTest annotation
     CF->>PC: new MockServerPropertyCustomizer(properties)
-    PC->>PC: Allocate free port (static)
+    PC->>PC: Split properties into Spring vs mockserver.*
+    PC->>PC: Build Configuration from mockserver.* properties
+    PC->>PC: Create ClientAndServer with Configuration on free port
     PC->>SB: Add mockServerPort to Environment
-    PC->>SB: Replace ${mockServerPort} in property values
+    PC->>SB: Replace ${mockServerPort} in Spring property values
 
     SB->>EL: prepareTestInstance()
     EL->>EL: Find MockServerClient fields
-    EL->>EL: Create ClientAndServer on mockServerPort
     EL->>T: Inject client into fields
 
     SB->>T: Run test
@@ -277,7 +278,11 @@ sequenceDiagram
 **Usage:**
 
 ```java
-@MockServerTest("my.service.url=http://localhost:${mockServerPort}")
+@MockServerTest({
+    "my.service.url=http://localhost:${mockServerPort}",
+    "mockserver.initializationClass=com.example.MyInit",
+    "mockserver.logLevel=WARN"
+})
 @SpringBootTest
 class MyTest {
     private MockServerClient mockServerClient;  // Auto-injected
@@ -292,9 +297,10 @@ class MyTest {
 
 **How it works:**
 1. `MockServerTestCustomizerFactory` (loaded via `spring.factories`) scans for `@MockServerTest`
-2. `MockServerPropertyCustomizer` allocates a static port and injects it into the Spring `Environment`
-3. `MockServerTestExecutionListener` creates a `ClientAndServer` on that port and injects it into test fields
-4. After each test, `reset()` clears state
+2. `MockServerPropertyCustomizer` splits annotation properties: `mockserver.*`-prefixed properties are applied to a per-instance `Configuration` object; other properties go to the Spring `Environment`
+3. `MockServerPropertyCustomizer` creates a `ClientAndServer` with the `Configuration` on a free port and injects `mockServerPort` into the Spring `Environment`
+4. `MockServerTestExecutionListener` injects the `ClientAndServer` into `MockServerClient` fields
+5. After each test, `reset()` clears state
 
 ## WebSocket Callback System
 

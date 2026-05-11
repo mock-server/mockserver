@@ -486,9 +486,9 @@ These are confirmed thread-safety bugs in the current codebase. All involve shar
 
 ### #1554: InitializationClass on @MockServerTest
 
-**Status**: Missing feature — P3
-**Root cause**: Neither `@MockServerTest` nor `@MockServerSettings` exposes an `initializationClass` attribute. Users must set `mockserver.initializationClass` via system property separately.
-**Fix**: Add an `initializationClass` attribute to both `@MockServerTest` and `@MockServerSettings`.
+**Status**: Resolved
+**Root cause**: `MockServerPropertyCustomizer` treated all `@MockServerTest` annotation values as Spring Environment properties. Properties prefixed with `mockserver.` were not applied to the MockServer `Configuration` object.
+**Fix**: `MockServerPropertyCustomizer` now splits annotation properties: `mockserver.*`-prefixed properties are parsed and applied to a per-instance `Configuration` object (via a type-safe switch statement mapping ~70 properties), which is passed to `ClientAndServer.startClientAndServer(configuration, port)`. Non-prefixed properties continue to be injected into the Spring Environment. This is more flexible than a single `initializationClass` attribute since it supports any `mockserver.*` configuration property declaratively.
 
 ### #1710: Ability to configure @MockServerClient
 

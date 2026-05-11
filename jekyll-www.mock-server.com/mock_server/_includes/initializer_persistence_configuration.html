@@ -14,6 +14,8 @@
     <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_INITIALIZATION_CLASS=...</code></pre>
     <p>Property File:</p>
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.initializationClass=...</code></pre>
+    <p>Spring <code>@MockServerTest</code>:</p>
+    <pre class="prettyprint lang-java code"><code class="code">@MockServerTest("mockserver.initializationClass=org.mockserver.server.initialize.ExpectationInitializerExample")</code></pre>
     <p>Example:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.initializationClass="org.mockserver.server.initialize.ExpectationInitializerExample"</code></pre>
 </div>
