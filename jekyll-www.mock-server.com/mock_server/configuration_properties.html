@@ -68,8 +68,8 @@ sitemap:
 
 # Socket & Port Settings
 
-# socket timeout in milliseconds (default 120000)
-mockserver.maxSocketTimeout=120000
+# socket timeout in milliseconds (default 20000)
+mockserver.maxSocketTimeout=20000
 
 # Certificate Generation
 
@@ -231,9 +231,9 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 <button id="button_configuration_socket_connection_timeout" class="accordion title"><strong>Maximum Socket Connection Timeout In Millis</strong></button>
 <div class="panel title">
     <p>Maximum time in milliseconds allowed to connect to a socket</p>
-    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">20000</span></p>
+    <p>Type: <span class="keyword">long</span> Default: <span class="this_value">20000</span></p>
     <p>Java Code:</p>
-    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.socketConnectionTimeout(int milliseconds)</code></pre>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.socketConnectionTimeout(long milliseconds)</code></pre>
     <p>System Property:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.socketConnectionTimeout=...</code></pre>
     <p>Environment Variable:</p>
@@ -247,7 +247,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 <button id="button_configuration_aways_close_socket_connection" class="accordion title"><strong>Always Close Socket Connection After Response</strong></button>
 <div class="panel title">
     <p>If true socket connections will always be closed after a response is returned, if false connection is only closed if request header indicate connection should be closed.</p>
-    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">false</span></p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.alwaysCloseSocketConnections(boolean alwaysClose)</code></pre>
     <p>System Property:</p>
@@ -331,7 +331,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 <button id="button_configuration_treat_semicolon_as_query_parameter_separator" class="accordion title"><strong>Treat Semicolon As Query Parameter Separator</strong></button>
 <div class="panel title">
     <p>If true semicolons are treated as a separator for a query parameter string, if false the semicolon is treated as a normal character that is part of a query parameter value.</p>
-    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">true</span></p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">true</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.useSemicolonAsQueryParameterSeparator(boolean useSemicolonAsQueryParameterSeparator)</code></pre>
     <p>System Property:</p>
@@ -347,7 +347,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 <button id="button_configuration_assume_all_requests_are_http" class="accordion title"><strong>Assume All Requests Are HTTP</strong></button>
 <div class="panel title">
     <p>If false requests are assumed as binary if the method isn't one of "GET", "POST", "PUT", "HEAD", "OPTIONS", "PATCH", "DELETE", "TRACE" or "CONNECT"</p>
-    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">false</span></p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.assumeAllRequestsAreHttp(boolean assumeAllRequestsAreHttp)</code></pre>
     <p>System Property:</p>

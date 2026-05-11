@@ -146,7 +146,7 @@ public class MyTest {
 
 <p>If a JSON expectation initializer or OpenAPI initializer is specified, a file watcher can be enabled that watches for changes in the initialization files and updates the expectations when a file is modified.  Changes are detected at most after 5 seconds if the file contents has changed.</p>
 <p>If enabled the initialization JSON and OpenAPI files will be watched for changes, any changes found will result in expectations being created, removed or updated by matching against their key.</p>
-<p>If duplicate keys exist only the first duplicate key in the file will be processed and all duplicates except the first duplicate will be ignored.</p>
+<p>If duplicate keys exist only the last duplicate key in the file will be processed and all duplicates except the last duplicate will be removed.</p>
 <p>The order of expectations in the file is the order in which they are created if they are new, however, re-ordering existing expectations does not change the order they are matched against incoming requests.</p>
 
 <pre class="prettyprint lang-javascript code"><code class="code">MOCKSERVER_WATCH_INITIALIZATION_JSON=true \

@@ -1,8 +1,8 @@
 <p>MockServer supports verification of requests it has received, including both proxied requests and requests that have matched an expectation.</p>
 <p>Verification can be specified as follows:</p>
 <ul>
-    <li>a <a href="/mock_server/getting_started.html#request_matchers"><strong>request matcher</strong></a> and a condition indicating the number of times the request should be matched</li>
-	<li>a sequence of <a href="/mock_server/getting_started.html#request_matchers"><strong>request matchers</strong></a> that is matched in order</li>
+    <li>a <a href="/mock_server/creating_expectations.html#request_matchers"><strong>request matcher</strong></a> and a condition indicating the number of times the request should be matched</li>
+	<li>a sequence of <a href="/mock_server/creating_expectations.html#request_matchers"><strong>request matchers</strong></a> that is matched in order</li>
 </ul>
 
 <a id="how_verification_works" class="anchor" href="#how_verification_works">&nbsp;</a>
@@ -74,7 +74,7 @@ mockServerClient("localhost", 1080)
     }, 2)
   .then(
     function () {
-      console.log("request found exactly 2 times");
+      console.log("request found at least 2 times");
     },
     function (error) {
       console.log(error);
@@ -116,7 +116,7 @@ mockServerClient("localhost", 1080)
 }, 0, 2)
 .then(
 function () {
-  console.log("request found exactly 2 times");
+  console.log("request found at most 2 times");
 },
 function (error) {
   console.log(error);
@@ -156,14 +156,14 @@ mockServerClient("localhost", 1080)
     {
       'path': '/some/path'
     }, 2, 2)
-  .then(
-    function () {
-      console.log("request found exactly 1 times");
-    },
-    function (error) {
-      console.log(error);
-    }
-  );</code></pre>
+    .then(
+        function () {
+            console.log("request found exactly 1 time");
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
         <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
@@ -290,7 +290,7 @@ mockServerClient("localhost", 1080)
         }, 1, 1)
     .then(
         function () {
-            console.log("request found exactly 2 times");
+            console.log("request found exactly 1 time");
         },
         function (error) {
             console.log(error);
@@ -519,6 +519,8 @@ mockServerClient("localhost", 1080)
     <button class="accordion inner">REST API</button>
     <div class="panel">
             <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/verifySequence" -d '{
+    "httpRequests": [
+        {
             "id": "31e4ca35-66c6-4645-afeb-6e66c4ca0559"
         },
         {
@@ -526,7 +528,9 @@ mockServerClient("localhost", 1080)
         },
         {
             "id": "ca3531e4-23c8-ff45-88f5-4ca0c7ca0559"
-        }'</code></pre>
+        }
+    ]
+}'</code></pre>
         <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/verify/put_verifySequence" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>

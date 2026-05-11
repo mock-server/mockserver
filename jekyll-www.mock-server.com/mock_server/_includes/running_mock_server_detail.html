@@ -245,7 +245,7 @@
  *                     if true a single MockServer is created per JVM
  *                     if false one instance per test class is created
  */</span>
-<span class="keyword">public</span> MockServerRule(Object target, <span class="keyword">boolean</span> per TestSuite);
+<span class="keyword">public</span> MockServerRule(Object target, <span class="keyword">boolean</span> perTestSuite);
 <span class="comment">/**
  * Start the proxy prior to test execution and stop the proxy after the tests have completed.
  * This constructor dynamically create a proxy that accepts HTTP(S) requests on the specified port
@@ -265,7 +265,7 @@
  *                     if false one instance per test class is created
  * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the HTTP(S) port for the proxy
  */</span>
-<span class="keyword">public</span> MockServerRule(Object target, <span class="keyword">boolean</span> per TestSuite, Integer... ports);</code></pre>
+<span class="keyword">public</span> MockServerRule(Object target, <span class="keyword">boolean</span> perTestSuite, Integer... ports);</code></pre>
 
 <a id="junit_test_extension" class="anchor" href="#junit_test_extension">&nbsp;</a>
 
@@ -533,7 +533,7 @@ i.e. mockserver -logLevel INFO -serverPort <span class="numeric_literal">1080,10
 
 <p>The command line supports the following options:</p>
 
-<pre><code class="code">java -jar <span class="command_line_argument_placeholder">&lt;path to mockserver-jetty-no-dependencies.jar&gt;</span> -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span> [-proxyRemotePort <span class="command_line_argument_placeholder">&lt;port&gt;</span>] [-proxyRemoteHost <span class="command_line_argument_placeholder">&lt;hostname&gt;</span>] [-logLevel <span class="command_line_argument_placeholder">&lt;level&gt;</span>]
+<pre><code class="code">java -jar <span class="command_line_argument_placeholder">&lt;path to mockserver-netty-no-dependencies-{{ site.mockserver_version }}.jar&gt;</span> -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span> [-proxyRemotePort <span class="command_line_argument_placeholder">&lt;port&gt;</span>] [-proxyRemoteHost <span class="command_line_argument_placeholder">&lt;hostname&gt;</span>] [-logLevel <span class="command_line_argument_placeholder">&lt;level&gt;</span>]
 
  valid options are:
     -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>           The HTTP, HTTPS, SOCKS and HTTP CONNECT
@@ -563,7 +563,7 @@ i.e. mockserver -logLevel INFO -serverPort <span class="numeric_literal">1080,10
                                  Logger levels: FINEST, FINE, INFO, WARNING,
                                  SEVERE or OFF. If not specified default is INFO
 
-i.e. java -jar ./mockserver-jetty-shaded.jar -serverPort <span class="numeric_literal">1080</span> -proxyRemotePort <span class="numeric_literal">80</span> -proxyRemoteHost www.mock-server.com</code></pre>
+i.e. java -jar ./mockserver-netty-{{ site.mockserver_version }}-shaded.jar -serverPort <span class="numeric_literal">1080</span> -proxyRemotePort <span class="numeric_literal">80</span> -proxyRemoteHost www.mock-server.com</code></pre>
 
 <p>For example:</p>
 

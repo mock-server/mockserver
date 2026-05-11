@@ -82,7 +82,7 @@ HttpRequest request = request()
     .withBody("some_body");
 
 // execute
-HttpResponse httpResponse = ResponseTemplateTester.testVelocityTemplate(template, request);
+HttpResponse httpResponse = ResponseTemplateTester.testMustacheTemplate(template, request);
 
 // result
 System.out.println("httpResponse = " + httpResponse);</code></pre>
@@ -120,7 +120,7 @@ HttpRequest request = request()
     .withBody("some_body");
 
 // execute
-HttpResponse httpResponse = ResponseTemplateTester.testVelocityTemplate(template, request);
+HttpResponse httpResponse = ResponseTemplateTester.testJavaScriptTemplate(template, request);
 
 // result
 System.out.println("httpResponse = " + httpResponse);</code></pre>

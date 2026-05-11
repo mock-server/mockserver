@@ -114,7 +114,7 @@
     <p>The maximum number of requests to return in verification failure result, if more expectations are found the failure result does not list them separately</p>
     <p>Type: <span class="keyword">int</span> Default: <span class="this_value">10</span></p>
     <p>Java Code:</p>
-    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maximumNumberOfRequestToReturnInVerificationFailure(String maximumNumberOfRequestToReturnInVerificationFailure)</code></pre>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maximumNumberOfRequestToReturnInVerificationFailure(Integer maximumNumberOfRequestToReturnInVerificationFailure)</code></pre>
     <p>System Property:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maximumNumberOfRequestToReturnInVerificationFailure=...</code></pre>
     <p>Environment Variable:</p>
@@ -122,5 +122,5 @@
     <p>Property File:</p>
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.maximumNumberOfRequestToReturnInVerificationFailure=...</code></pre>
     <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maximumNumberOfRequestToReturnInVerificationFailure="org/mockserver/server/initialize/initializerJson.json"</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maximumNumberOfRequestToReturnInVerificationFailure="20"</code></pre>
 </div>
