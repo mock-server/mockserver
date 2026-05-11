@@ -131,7 +131,7 @@ trap - EXIT
 .buildkite/scripts/docker-login.sh
 .buildkite/scripts/ecr-login.sh
 
-ECR_REPO="public.ecr.aws/mockserver/mockserver"
+ECR_REPO="public.ecr.aws/t2x9c0i6/mockserver"
 
 echo "--- :docker: Building and pushing mockserver/mockserver:latest (multi-arch)"
 
