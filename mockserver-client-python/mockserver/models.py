@@ -520,6 +520,8 @@ class ConnectionOptions:
     suppress_content_length_header: bool | None = None
     content_length_header_override: int | None = None
     suppress_connection_header: bool | None = None
+    chunk_size: int | None = None
+    chunk_delay: Delay | None = None
     keep_alive_override: bool | None = None
 
     def to_dict(self) -> dict:
@@ -529,6 +531,8 @@ class ConnectionOptions:
             "suppressContentLengthHeader": self.suppress_content_length_header,
             "contentLengthHeaderOverride": self.content_length_header_override,
             "suppressConnectionHeader": self.suppress_connection_header,
+            "chunkSize": self.chunk_size,
+            "chunkDelay": self.chunk_delay.to_dict() if self.chunk_delay else None,
             "keepAliveOverride": self.keep_alive_override,
         })
 
@@ -542,6 +546,8 @@ class ConnectionOptions:
             suppress_content_length_header=data.get("suppressContentLengthHeader"),
             content_length_header_override=data.get("contentLengthHeaderOverride"),
             suppress_connection_header=data.get("suppressConnectionHeader"),
+            chunk_size=data.get("chunkSize"),
+            chunk_delay=Delay.from_dict(data.get("chunkDelay")),
             keep_alive_override=data.get("keepAliveOverride"),
         )
 

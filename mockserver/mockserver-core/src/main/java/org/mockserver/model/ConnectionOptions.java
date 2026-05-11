@@ -9,6 +9,7 @@ public class ConnectionOptions extends ObjectWithJsonToString {
     private Integer contentLengthHeaderOverride = null;
     private Boolean suppressConnectionHeader = null;
     private Integer chunkSize = null;
+    private Delay chunkDelay = null;
     private Boolean keepAliveOverride = null;
     private Boolean closeSocket = null;
     private Delay closeSocketDelay = null;
@@ -75,6 +76,22 @@ public class ConnectionOptions extends ObjectWithJsonToString {
 
     public Integer getChunkSize() {
         return chunkSize;
+    }
+
+    /**
+     * Specifies the delay between sending each chunk of a chunked response.
+     * This simulates slow or degraded network conditions by dribbling the response
+     * body over time. Only applies when chunkSize is set to a positive value.
+     *
+     * @param chunkDelay the delay to apply between each chunk
+     */
+    public ConnectionOptions withChunkDelay(Delay chunkDelay) {
+        this.chunkDelay = chunkDelay;
+        return this;
+    }
+
+    public Delay getChunkDelay() {
+        return chunkDelay;
     }
 
     /**

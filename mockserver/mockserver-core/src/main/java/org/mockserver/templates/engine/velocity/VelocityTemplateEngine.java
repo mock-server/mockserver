@@ -162,6 +162,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
                 context.put("response", new HttpResponseTemplateObject(response));
             }
             TemplateFunctions.BUILT_IN_FUNCTIONS.forEach(context::put);
+            TemplateFunctions.BUILT_IN_HELPERS.forEach(context::put);
             velocityEngine.evaluate(context, writer, "VelocityResponseTemplate", template);
             JsonNode generatedObject = null;
             try {

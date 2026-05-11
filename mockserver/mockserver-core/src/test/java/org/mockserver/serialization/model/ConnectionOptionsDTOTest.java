@@ -20,6 +20,7 @@ public class ConnectionOptionsDTOTest {
                 .withContentLengthHeaderOverride(50)
                 .withSuppressConnectionHeader(true)
                 .withChunkSize(100)
+                .withChunkDelay(new Delay(SECONDS, 5))
                 .withKeepAliveOverride(true)
                 .withCloseSocket(true)
                 .withCloseSocketDelay(new Delay(SECONDS, 10))
@@ -30,6 +31,7 @@ public class ConnectionOptionsDTOTest {
         assertThat(connectionOptions.getContentLengthHeaderOverride(), is(50));
         assertThat(connectionOptions.getSuppressConnectionHeader(), is(true));
         assertThat(connectionOptions.getChunkSize(), is(100));
+        assertThat(connectionOptions.getChunkDelay(), is(new DelayDTO(new Delay(SECONDS, 5))));
         assertThat(connectionOptions.getKeepAliveOverride(), is(true));
         assertThat(connectionOptions.getCloseSocket(), is(true));
         assertThat(connectionOptions.getCloseSocketDelay(), is(new DelayDTO(new Delay(SECONDS, 10))));
@@ -43,6 +45,7 @@ public class ConnectionOptionsDTOTest {
         connectionOptions.setContentLengthHeaderOverride(50);
         connectionOptions.setSuppressConnectionHeader(true);
         connectionOptions.setChunkSize(100);
+        connectionOptions.setChunkDelay(new DelayDTO(new Delay(SECONDS, 5)));
         connectionOptions.setKeepAliveOverride(true);
         connectionOptions.setCloseSocket(true);
         connectionOptions.setCloseSocketDelay(new DelayDTO(new Delay(SECONDS, 10)));
@@ -52,6 +55,7 @@ public class ConnectionOptionsDTOTest {
         assertThat(connectionOptions.getContentLengthHeaderOverride(), is(50));
         assertThat(connectionOptions.getSuppressConnectionHeader(), is(true));
         assertThat(connectionOptions.getChunkSize(), is(100));
+        assertThat(connectionOptions.getChunkDelay(), is(new DelayDTO(new Delay(SECONDS, 5))));
         assertThat(connectionOptions.getKeepAliveOverride(), is(true));
         assertThat(connectionOptions.getCloseSocket(), is(true));
         assertThat(connectionOptions.getCloseSocketDelay(), is(new DelayDTO(new Delay(SECONDS, 10))));
@@ -67,6 +71,7 @@ public class ConnectionOptionsDTOTest {
         assertThat(connectionOptions.getContentLengthHeaderOverride(), nullValue());
         assertThat(connectionOptions.getSuppressConnectionHeader(), nullValue());
         assertThat(connectionOptions.getChunkSize(), nullValue());
+        assertThat(connectionOptions.getChunkDelay(), nullValue());
         assertThat(connectionOptions.getKeepAliveOverride(), nullValue());
         assertThat(connectionOptions.getCloseSocket(), nullValue());
         assertThat(connectionOptions.getCloseSocketDelay(), nullValue());

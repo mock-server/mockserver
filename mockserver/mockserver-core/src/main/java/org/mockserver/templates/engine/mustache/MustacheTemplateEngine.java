@@ -84,6 +84,7 @@ public class MustacheTemplateEngine implements TemplateEngine {
                 data.put("response", new HttpResponseTemplateObject(response));
             }
             data.putAll(TemplateFunctions.BUILT_IN_FUNCTIONS);
+            data.putAll(TemplateFunctions.BUILT_IN_HELPERS);
             data.put("xPath", (Mustache.Lambda) (frag, out) -> evaluatedXPath(frag.execute(), request, out));
             data.put("jsonPath", (Mustache.Lambda) (frag, out) -> evaluateJsonPath(data, frag.execute(), request, out));
             compiledTemplate.execute(data, writer);

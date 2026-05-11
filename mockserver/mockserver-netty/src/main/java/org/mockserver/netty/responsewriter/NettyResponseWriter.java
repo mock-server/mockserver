@@ -3,6 +3,8 @@ package org.mockserver.netty.responsewriter;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.DefaultHttpObject;
+import io.netty.util.ReferenceCountUtil;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
@@ -13,6 +15,9 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
+
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.slf4j.event.Level.TRACE;
 import static org.slf4j.event.Level.WARN;
@@ -46,7 +51,59 @@ public class NettyResponseWriter extends ResponseWriter {
             closeChannel = !(request.isKeepAlive() != null && request.isKeepAlive());
         }
 
-        ChannelFuture channelFuture = ctx.writeAndFlush(response);
+        Delay chunkDelay = connectionOptions != null ? connectionOptions.getChunkDelay() : null;
+        Integer chunkSize = connectionOptions != null ? connectionOptions.getChunkSize() : null;
+        if (chunkDelay != null && chunkSize != null && chunkSize > 0) {
+            writeChunkedResponseWithDelay(ctx, response, connectionOptions, closeChannel, chunkDelay);
+        } else {
+            ChannelFuture channelFuture = ctx.writeAndFlush(response);
+            addCloseSocketListener(channelFuture, connectionOptions, closeChannel);
+        }
+    }
+
+    private void writeChunkedResponseWithDelay(
+        final ChannelHandlerContext ctx,
+        HttpResponse response,
+        ConnectionOptions connectionOptions,
+        boolean closeChannel,
+        Delay chunkDelay
+    ) {
+        List<DefaultHttpObject> httpObjects = new org.mockserver.mappers.MockServerHttpResponseToFullHttpResponse(mockServerLogger)
+            .mapMockServerResponseToNettyResponse(response);
+        if (httpObjects.size() <= 1) {
+            ChannelFuture channelFuture = ctx.writeAndFlush(response);
+            addCloseSocketListener(channelFuture, connectionOptions, closeChannel);
+            return;
+        }
+        ChannelFuture headerFuture = ctx.writeAndFlush(httpObjects.get(0));
+        headerFuture.addListener(f -> {
+            if (!f.isSuccess()) {
+                for (int i = 1; i < httpObjects.size(); i++) {
+                    ReferenceCountUtil.release(httpObjects.get(i));
+                }
+                addCloseSocketListener(headerFuture, connectionOptions, closeChannel);
+                return;
+            }
+            long cumulativeDelayMs = 0;
+            for (int i = 1; i < httpObjects.size(); i++) {
+                final DefaultHttpObject chunk = httpObjects.get(i);
+                final boolean isLast = (i == httpObjects.size() - 1);
+                cumulativeDelayMs += chunkDelay.sampleValueMillis();
+                ctx.executor().schedule(() -> {
+                    if (ctx.channel().isActive()) {
+                        ChannelFuture chunkFuture = ctx.writeAndFlush(chunk);
+                        if (isLast) {
+                            addCloseSocketListener(chunkFuture, connectionOptions, closeChannel);
+                        }
+                    } else {
+                        ReferenceCountUtil.release(chunk);
+                    }
+                }, cumulativeDelayMs, TimeUnit.MILLISECONDS);
+            }
+        });
+    }
+
+    private void addCloseSocketListener(ChannelFuture channelFuture, ConnectionOptions connectionOptions, boolean closeChannel) {
         if (closeChannel || configuration.alwaysCloseSocketConnections()) {
             channelFuture.addListener((ChannelFutureListener) future -> {
                 Delay closeSocketDelay = connectionOptions != null ? connectionOptions.getCloseSocketDelay() : null;

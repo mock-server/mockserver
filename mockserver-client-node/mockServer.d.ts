@@ -333,6 +333,7 @@ export interface ConnectionOptions {
   contentLengthHeaderOverride?: number;
   suppressConnectionHeader?: boolean;
   chunkSize?: number;
+  chunkDelay?: Delay;
   keepAliveOverride?: boolean;
   closeSocket?: boolean;
 

@@ -14,7 +14,7 @@ lastmod: 2019-11-10T08:00:00+01:00
 
 <h2>Response Templates</h2>
 
-<p>MockServer supports the following response template formats:</p>
+<p>MockServer supports the following response template formats, with built-in <a href="#template_helper_objects">template helper objects</a> for JWT generation, string manipulation, JSON processing, date arithmetic, and math operations:</p>
 <ul>
     <li><strong><a href="#mustache_templates">mustache templates</a></strong>
         <ul>
@@ -690,6 +690,150 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
             </tr>
         </table>
     </li>
+</ul>
+
+<a id="template_helper_objects" class="anchor" href="#template_helper_objects">&nbsp;</a>
+
+<h2>Template Helper Objects</h2>
+
+<p>In addition to the simple dynamic variables above, all template formats have access to helper objects that provide rich functionality for string manipulation, JSON processing, date/time arithmetic, math operations, and JWT generation. These helpers are accessed as objects with methods.</p>
+
+<a id="jwt_helper" class="anchor" href="#jwt_helper">&nbsp;</a>
+
+<h3>JWT Helper (<code>jwt</code>)</h3>
+
+<p>Generates signed JSON Web Tokens (JWTs) and JSON Web Key Sets (JWKS) for testing OAuth2/OIDC flows. Tokens are signed with RSA-256 using an auto-generated key pair.</p>
+
+<table class="table">
+    <thead><tr><th>Method</th><th>Description</th><th>Example Output</th></tr></thead>
+    <tbody>
+        <tr><td><code>jwt.generate()</code></td><td>Generate a JWT with default claims (sub, iss, aud, iat, exp)</td><td><code>eyJhbGciOiJSUzI1NiJ9...</code></td></tr>
+        <tr><td><code>jwt.generate(claims)</code></td><td>Generate a JWT with custom claims (Velocity/JS only)</td><td><code>eyJhbGciOiJSUzI1NiJ9...</code></td></tr>
+        <tr><td><code>jwt.jwks()</code></td><td>Return the JWKS (public key set) for verifying tokens</td><td><code>{"keys":[{"kty":"RSA",...}]}</code></td></tr>
+    </tbody>
+</table>
+
+<p>Usage examples:</p>
+<ul>
+    <li><strong>Mustache:</strong> <code class="inline code">&lbrace;&lbrace; jwt &rbrace;&rbrace;</code> (generates a default JWT) or <code class="inline code">&lbrace;&lbrace; jwt.jwks &rbrace;&rbrace;</code></li>
+    <li><strong>Velocity:</strong> <code class="inline code">$jwt.generate()</code> or <code class="inline code">$jwt.jwks()</code></li>
+    <li><strong>JavaScript:</strong> <code class="inline code">jwt.generate()</code> or <code class="inline code">jwt.jwks()</code></li>
+</ul>
+
+<a id="strings_helper" class="anchor" href="#strings_helper">&nbsp;</a>
+
+<h3>String Helper (<code>strings</code>)</h3>
+
+<p>Provides string manipulation functions useful for transforming request data in response templates.</p>
+
+<table class="table">
+    <thead><tr><th>Method</th><th>Description</th><th>Example</th></tr></thead>
+    <tbody>
+        <tr><td><code>strings.trim(value)</code></td><td>Remove leading and trailing whitespace</td><td><code>strings.trim("  hello  ")</code> &rarr; <code>"hello"</code></td></tr>
+        <tr><td><code>strings.capitalize(value)</code></td><td>Capitalize the first letter</td><td><code>strings.capitalize("hello")</code> &rarr; <code>"Hello"</code></td></tr>
+        <tr><td><code>strings.uppercase(value)</code></td><td>Convert to uppercase</td><td><code>strings.uppercase("hello")</code> &rarr; <code>"HELLO"</code></td></tr>
+        <tr><td><code>strings.lowercase(value)</code></td><td>Convert to lowercase</td><td><code>strings.lowercase("HELLO")</code> &rarr; <code>"hello"</code></td></tr>
+        <tr><td><code>strings.urlEncode(value)</code></td><td>URL-encode a string</td><td><code>strings.urlEncode("a=b")</code> &rarr; <code>"a%3Db"</code></td></tr>
+        <tr><td><code>strings.urlDecode(value)</code></td><td>URL-decode a string</td><td><code>strings.urlDecode("a%3Db")</code> &rarr; <code>"a=b"</code></td></tr>
+        <tr><td><code>strings.base64Encode(value)</code></td><td>Base64-encode a string</td><td><code>strings.base64Encode("hello")</code> &rarr; <code>"aGVsbG8="</code></td></tr>
+        <tr><td><code>strings.base64Decode(value)</code></td><td>Base64-decode a string</td><td><code>strings.base64Decode("aGVsbG8=")</code> &rarr; <code>"hello"</code></td></tr>
+        <tr><td><code>strings.substringBefore(value, sep)</code></td><td>Get substring before the first occurrence of separator</td><td><code>strings.substringBefore("a-b", "-")</code> &rarr; <code>"a"</code></td></tr>
+        <tr><td><code>strings.substringAfter(value, sep)</code></td><td>Get substring after the first occurrence of separator</td><td><code>strings.substringAfter("a-b", "-")</code> &rarr; <code>"b"</code></td></tr>
+        <tr><td><code>strings.length(value)</code></td><td>Return the length of a string</td><td><code>strings.length("hello")</code> &rarr; <code>5</code></td></tr>
+        <tr><td><code>strings.contains(value, search)</code></td><td>Check if a string contains a substring</td><td><code>strings.contains("hello", "ell")</code> &rarr; <code>true</code></td></tr>
+        <tr><td><code>strings.replace(value, target, replacement)</code></td><td>Replace all occurrences of target with replacement</td><td><code>strings.replace("hello", "l", "r")</code> &rarr; <code>"herro"</code></td></tr>
+    </tbody>
+</table>
+
+<p>Usage examples:</p>
+<ul>
+    <li><strong>Velocity:</strong> <code class="inline code">$strings.uppercase($!request.method)</code></li>
+    <li><strong>JavaScript:</strong> <code class="inline code">strings.base64Encode(request.body)</code></li>
+</ul>
+
+<a id="json_helper" class="anchor" href="#json_helper">&nbsp;</a>
+
+<h3>JSON Helper (<code>json</code>)</h3>
+
+<p>Provides JSON manipulation functions for merging, sorting, and extracting data from JSON strings.</p>
+
+<table class="table">
+    <thead><tr><th>Method</th><th>Description</th><th>Example</th></tr></thead>
+    <tbody>
+        <tr><td><code>json.merge(json1, json2)</code></td><td>Merge two JSON objects (json2 fields overwrite json1)</td><td><code>json.merge('{"a":1}', '{"b":2}')</code> &rarr; <code>'{"a":1,"b":2}'</code></td></tr>
+        <tr><td><code>json.sort(jsonArray, field)</code></td><td>Sort a JSON array of objects by a field</td><td><code>json.sort('[{"n":"b"},{"n":"a"}]', "n")</code></td></tr>
+        <tr><td><code>json.arrayAdd(jsonArray, element)</code></td><td>Add an element to a JSON array</td><td><code>json.arrayAdd('[1,2]', '3')</code> &rarr; <code>'[1,2,3]'</code></td></tr>
+        <tr><td><code>json.remove(json, fieldName)</code></td><td>Remove a field from a JSON object</td><td><code>json.remove('{"a":1,"b":2}', "a")</code> &rarr; <code>'{"b":2}'</code></td></tr>
+        <tr><td><code>json.prettyPrint(json)</code></td><td>Pretty-print a JSON string</td><td><code>json.prettyPrint('{"a":1}')</code></td></tr>
+        <tr><td><code>json.field(json, fieldName)</code></td><td>Extract a single field value from a JSON object</td><td><code>json.field('{"name":"test"}', "name")</code> &rarr; <code>"test"</code></td></tr>
+        <tr><td><code>json.size(jsonArray)</code></td><td>Return the number of elements in a JSON array</td><td><code>json.size('[1,2,3]')</code> &rarr; <code>3</code></td></tr>
+    </tbody>
+</table>
+
+<p>Usage examples:</p>
+<ul>
+    <li><strong>Velocity:</strong> <code class="inline code">$json.field($!request.body, "username")</code></li>
+    <li><strong>JavaScript:</strong> <code class="inline code">json.merge(request.body, '{"status":"processed"}')</code></li>
+</ul>
+
+<a id="dates_helper" class="anchor" href="#dates_helper">&nbsp;</a>
+
+<h3>Date Helper (<code>dates</code>)</h3>
+
+<p>Provides date/time arithmetic and formatting functions. All times are UTC-based.</p>
+
+<table class="table">
+    <thead><tr><th>Method</th><th>Description</th><th>Example Output</th></tr></thead>
+    <tbody>
+        <tr><td><code>dates.format(pattern)</code></td><td>Format current time with a pattern (e.g., <code>yyyy-MM-dd</code>)</td><td><code>"2026-05-11"</code></td></tr>
+        <tr><td><code>dates.plusSeconds(n)</code></td><td>Current time plus n seconds (ISO-8601)</td><td><code>"2026-05-11T10:15:30Z"</code></td></tr>
+        <tr><td><code>dates.plusMinutes(n)</code></td><td>Current time plus n minutes (ISO-8601)</td><td><code>"2026-05-11T10:20:00Z"</code></td></tr>
+        <tr><td><code>dates.plusHours(n)</code></td><td>Current time plus n hours (ISO-8601)</td><td><code>"2026-05-11T11:15:00Z"</code></td></tr>
+        <tr><td><code>dates.plusDays(n)</code></td><td>Current time plus n days (ISO-8601)</td><td><code>"2026-05-12T10:15:00Z"</code></td></tr>
+        <tr><td><code>dates.minusSeconds(n)</code></td><td>Current time minus n seconds (ISO-8601)</td><td></td></tr>
+        <tr><td><code>dates.minusMinutes(n)</code></td><td>Current time minus n minutes (ISO-8601)</td><td></td></tr>
+        <tr><td><code>dates.minusHours(n)</code></td><td>Current time minus n hours (ISO-8601)</td><td></td></tr>
+        <tr><td><code>dates.minusDays(n)</code></td><td>Current time minus n days (ISO-8601)</td><td></td></tr>
+        <tr><td><code>dates.epochSeconds()</code></td><td>Current time as Unix epoch seconds</td><td><code>1747048530</code></td></tr>
+        <tr><td><code>dates.epochMillis()</code></td><td>Current time as Unix epoch milliseconds</td><td><code>1747048530000</code></td></tr>
+        <tr><td><code>dates.epochSecondsPlus(n)</code></td><td>Epoch seconds plus n seconds</td><td><code>"1747048590"</code></td></tr>
+        <tr><td><code>dates.epochSecondsMinus(n)</code></td><td>Epoch seconds minus n seconds</td><td><code>"1747048470"</code></td></tr>
+    </tbody>
+</table>
+
+<p>Usage examples:</p>
+<ul>
+    <li><strong>Velocity:</strong> <code class="inline code">$dates.plusHours(1)</code> (token expiry 1 hour from now)</li>
+    <li><strong>JavaScript:</strong> <code class="inline code">dates.format("yyyy-MM-dd")</code></li>
+    <li><strong>Mustache:</strong> <code class="inline code">&lbrace;&lbrace; dates &rbrace;&rbrace;</code> (outputs current ISO-8601 timestamp via toString)</li>
+</ul>
+
+<a id="math_helper" class="anchor" href="#math_helper">&nbsp;</a>
+
+<h3>Math Helper (<code>math</code>)</h3>
+
+<p>Provides mathematical functions for generating random numbers, rounding, and formatting.</p>
+
+<table class="table">
+    <thead><tr><th>Method</th><th>Description</th><th>Example</th></tr></thead>
+    <tbody>
+        <tr><td><code>math.randomInt(min, max)</code></td><td>Random integer between min and max (inclusive)</td><td><code>math.randomInt(1, 100)</code> &rarr; <code>42</code></td></tr>
+        <tr><td><code>math.randomDouble()</code></td><td>Random double between 0.0 and 1.0</td><td><code>0.7312...</code></td></tr>
+        <tr><td><code>math.randomDouble(min, max)</code></td><td>Random double between min and max</td><td><code>math.randomDouble(1.0, 5.0)</code></td></tr>
+        <tr><td><code>math.abs(value)</code></td><td>Absolute value</td><td><code>math.abs(-5)</code> &rarr; <code>5</code></td></tr>
+        <tr><td><code>math.min(a, b)</code></td><td>Minimum of two integers</td><td><code>math.min(3, 7)</code> &rarr; <code>3</code></td></tr>
+        <tr><td><code>math.max(a, b)</code></td><td>Maximum of two integers</td><td><code>math.max(3, 7)</code> &rarr; <code>7</code></td></tr>
+        <tr><td><code>math.round(value, scale)</code></td><td>Round to specified decimal places</td><td><code>math.round(3.14159, 2)</code> &rarr; <code>3.14</code></td></tr>
+        <tr><td><code>math.format(value, pattern)</code></td><td>Format a number with a DecimalFormat pattern</td><td><code>math.format(1234.5, "#,##0.00")</code> &rarr; <code>"1,234.50"</code></td></tr>
+        <tr><td><code>math.ceil(value)</code></td><td>Round up to nearest integer</td><td><code>math.ceil(3.1)</code> &rarr; <code>4.0</code></td></tr>
+        <tr><td><code>math.floor(value)</code></td><td>Round down to nearest integer</td><td><code>math.floor(3.9)</code> &rarr; <code>3.0</code></td></tr>
+    </tbody>
+</table>
+
+<p>Usage examples:</p>
+<ul>
+    <li><strong>Velocity:</strong> <code class="inline code">$math.randomInt(1, 1000)</code></li>
+    <li><strong>JavaScript:</strong> <code class="inline code">math.round(math.randomDouble(0.0, 100.0), 2)</code></li>
 </ul>
 
 <a id="mustache_templates" class="anchor" href="#mustache_templates">&nbsp;</a>

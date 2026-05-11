@@ -360,7 +360,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
             <li><strong><a href="#button_response_literal_with_cookie">cookies</a></strong></li>
             <li><strong><a href="#button_response_literal_with_10_second_delay">delay</a></strong> (including <a href="#button_response_with_distribution_delay">distribution-based delays</a> for realistic latency simulation)</li>
             <li><strong><a href="#button_response_literal_with_connection_options_to_suppress_headers">connectionOptions</a></strong> that can be used to <a href="#button_response_literal_with_connection_options_to_suppress_headers">suppress
-                headers</a>, <a href="#button_response_literal_with_connection_options_to_override_headers">override headers</a> or <a href="#button_response_literal_with_connection_options_to_close_socket">close the socket connection</a>
+                headers</a>, <a href="#button_response_literal_with_connection_options_to_override_headers">override headers</a>, <a href="#button_response_literal_with_connection_options_to_close_socket">close the socket connection</a>, or <a href="#button_response_literal_with_chunked_dribble_delay">deliver the response in chunks with delays</a> (dribble delay)
             </li>
         </ul>
     </li>

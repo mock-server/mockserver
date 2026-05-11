@@ -156,7 +156,7 @@ classDiagram
     BodyWithContentType <|-- BinaryBody
 ```
 
-Body `Type` enum: `BINARY`, `JSON`, `JSON_SCHEMA`, `JSON_PATH`, `PARAMETERS`, `REGEX`, `STRING`, `XML`, `XML_SCHEMA`, `XPATH`, `LOG_EVENT`
+Body `Type` enum: `BINARY`, `JSON`, `JSON_SCHEMA`, `JSON_PATH`, `PARAMETERS`, `REGEX`, `STRING`, `XML`, `XML_SCHEMA`, `XPATH`, `JSON_RPC`, `LOG_EVENT`
 
 ### ConnectionOptions
 
@@ -168,6 +168,7 @@ Body `Type` enum: `BINARY`, `JSON`, `JSON_SCHEMA`, `JSON_PATH`, `PARAMETERS`, `R
 | `contentLengthHeaderOverride` | Integer | Override `Content-Length` with a specific value |
 | `suppressConnectionHeader` | Boolean | Prevent `Connection` header from being added |
 | `chunkSize` | Integer | If positive, response is sent with `Transfer-Encoding: chunked` in chunks of this size |
+| `chunkDelay` | Delay | Delay between each chunk when `chunkSize` is set. Uses Netty `EventLoop.schedule()` (non-blocking). Supports all delay distributions (fixed, uniform, lognormal, Gaussian). First chunk (headers) is written immediately; subsequent chunks are scheduled with cumulative delays |
 | `keepAliveOverride` | Boolean | If true, `Connection: keep-alive`; if false, `Connection: close` |
 | `closeSocket` | Boolean | Force close (true) or keep open (false) the socket after responding |
 | `closeSocketDelay` | Delay | Delay before closing the socket (ignored if socket is not being closed) |

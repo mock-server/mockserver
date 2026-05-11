@@ -2,6 +2,11 @@ package org.mockserver.templates.engine;
 
 import com.google.common.collect.ImmutableMap;
 import org.mockserver.serialization.Base64Converter;
+import org.mockserver.templates.engine.helpers.DateTemplateHelper;
+import org.mockserver.templates.engine.helpers.JsonTemplateHelper;
+import org.mockserver.templates.engine.helpers.JwtTemplateHelper;
+import org.mockserver.templates.engine.helpers.MathTemplateHelper;
+import org.mockserver.templates.engine.helpers.StringTemplateHelper;
 import org.mockserver.time.TimeService;
 import org.mockserver.uuid.UUIDService;
 
@@ -31,6 +36,14 @@ public class TemplateFunctions implements Supplier<Object> {
         .put("rand_bytes_32", new TemplateFunctions(() -> TemplateFunctions.randomBytes(32)))
         .put("rand_bytes_64", new TemplateFunctions(() -> TemplateFunctions.randomBytes(64)))
         .put("rand_bytes_128", new TemplateFunctions(() -> TemplateFunctions.randomBytes(128)))
+        .build();
+
+    public static final Map<String, Object> BUILT_IN_HELPERS = ImmutableMap.<String, Object>builder()
+        .put("jwt", new JwtTemplateHelper())
+        .put("strings", new StringTemplateHelper())
+        .put("json", new JsonTemplateHelper())
+        .put("dates", new DateTemplateHelper())
+        .put("math", new MathTemplateHelper())
         .build();
 
     private final Supplier<String> supplier;

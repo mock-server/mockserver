@@ -14,6 +14,7 @@ public class ConnectionOptionsDTO extends ObjectWithJsonToString implements DTO<
     private Integer contentLengthHeaderOverride = null;
     private Boolean suppressConnectionHeader = null;
     private Integer chunkSize = null;
+    private DelayDTO chunkDelay = null;
     private Boolean keepAliveOverride = null;
     private Boolean closeSocket = null;
     private DelayDTO closeSocketDelay = null;
@@ -24,6 +25,9 @@ public class ConnectionOptionsDTO extends ObjectWithJsonToString implements DTO<
             contentLengthHeaderOverride = connectionOptions.getContentLengthHeaderOverride();
             suppressConnectionHeader = connectionOptions.getSuppressConnectionHeader();
             chunkSize = connectionOptions.getChunkSize();
+            if (connectionOptions.getChunkDelay() != null) {
+                chunkDelay = new DelayDTO(connectionOptions.getChunkDelay());
+            }
             keepAliveOverride = connectionOptions.getKeepAliveOverride();
             closeSocket = connectionOptions.getCloseSocket();
             if (connectionOptions.getCloseSocketDelay() != null) {
@@ -41,6 +45,7 @@ public class ConnectionOptionsDTO extends ObjectWithJsonToString implements DTO<
             .withContentLengthHeaderOverride(contentLengthHeaderOverride)
             .withSuppressConnectionHeader(suppressConnectionHeader)
             .withChunkSize(chunkSize)
+            .withChunkDelay(chunkDelay != null ? chunkDelay.buildObject() : null)
             .withKeepAliveOverride(keepAliveOverride)
             .withCloseSocket(closeSocket)
             .withCloseSocketDelay(closeSocketDelay != null ? closeSocketDelay.buildObject() : null);
@@ -79,6 +84,15 @@ public class ConnectionOptionsDTO extends ObjectWithJsonToString implements DTO<
 
     public ConnectionOptionsDTO setChunkSize(Integer chunkSize) {
         this.chunkSize = chunkSize;
+        return this;
+    }
+
+    public DelayDTO getChunkDelay() {
+        return chunkDelay;
+    }
+
+    public ConnectionOptionsDTO setChunkDelay(DelayDTO chunkDelay) {
+        this.chunkDelay = chunkDelay;
         return this;
     }
 

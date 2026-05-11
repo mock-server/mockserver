@@ -15,6 +15,9 @@
     "chunkSize": {
       "type": "integer"
     },
+    "chunkDelay": {
+      "$ref": "#/definitions/delay"
+    },
     "keepAliveOverride": {
       "type": "boolean"
     },

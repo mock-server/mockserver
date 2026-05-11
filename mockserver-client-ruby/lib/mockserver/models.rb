@@ -554,16 +554,19 @@ module MockServer
   class ConnectionOptions
     attr_accessor :close_socket, :close_socket_delay, :suppress_content_length_header,
                   :content_length_header_override, :suppress_connection_header,
-                  :keep_alive_override
+                  :chunk_size, :chunk_delay, :keep_alive_override
 
     def initialize(close_socket: nil, close_socket_delay: nil,
                    suppress_content_length_header: nil, content_length_header_override: nil,
-                   suppress_connection_header: nil, keep_alive_override: nil)
+                   suppress_connection_header: nil, chunk_size: nil, chunk_delay: nil,
+                   keep_alive_override: nil)
       @close_socket = close_socket
       @close_socket_delay = close_socket_delay
       @suppress_content_length_header = suppress_content_length_header
       @content_length_header_override = content_length_header_override
       @suppress_connection_header = suppress_connection_header
+      @chunk_size = chunk_size
+      @chunk_delay = chunk_delay
       @keep_alive_override = keep_alive_override
     end
 
@@ -574,6 +577,8 @@ module MockServer
         'suppressContentLengthHeader' => @suppress_content_length_header,
         'contentLengthHeaderOverride' => @content_length_header_override,
         'suppressConnectionHeader'    => @suppress_connection_header,
+        'chunkSize'                   => @chunk_size,
+        'chunkDelay'                  => @chunk_delay&.to_h,
         'keepAliveOverride'           => @keep_alive_override
       })
     end
@@ -587,6 +592,8 @@ module MockServer
         suppress_content_length_header: data['suppressContentLengthHeader'],
         content_length_header_override: data['contentLengthHeaderOverride'],
         suppress_connection_header:     data['suppressConnectionHeader'],
+        chunk_size:                     data['chunkSize'],
+        chunk_delay:                    Delay.from_hash(data['chunkDelay']),
         keep_alive_override:            data['keepAliveOverride']
       )
     end

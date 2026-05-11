@@ -28,6 +28,9 @@ public class ConnectionOptionsToJavaSerializer implements ToJavaSerializer<Conne
             if (connectionOptions.getChunkSize() != null) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withChunkSize(").append(connectionOptions.getChunkSize()).append(")");
             }
+            if (connectionOptions.getChunkDelay() != null) {
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withChunkDelay(").append(new DelayToJavaSerializer().serialize(0, connectionOptions.getChunkDelay())).append(")");
+            }
             if (connectionOptions.getKeepAliveOverride() != null) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withKeepAliveOverride(").append(connectionOptions.getKeepAliveOverride()).append(")");
             }

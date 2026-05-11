@@ -46,6 +46,7 @@ public class MockServerHttpResponseToFullHttpResponse {
                     getStatus(httpResponse)
                 );
                 setHeaders(httpResponse, defaultHttpResponse, body);
+                body.release();
                 HttpUtil.setTransferEncodingChunked(defaultHttpResponse, true);
                 setCookies(httpResponse, defaultHttpResponse);
                 httpMessages.add(defaultHttpResponse);

@@ -73,6 +73,95 @@ Note: `allowHostClassLookup` alone only controls class name resolution. `HostAcc
 
 Only affects `mockserver-examples` module. Low impact.
 
+### 1.4 DataFaker (Fake Data Generation in Response Templates)
+
+DataFaker generates realistic fake data (names, addresses, emails, phone numbers, commerce data, etc.) for use in response templates. WireMock includes this via Data Faker integration; MockServer currently lacks it.
+
+| Property | DataFaker 1.x | DataFaker 2.x |
+|----------|---------------|---------------|
+| Artifact | `net.datafaker:datafaker:1.9.0` | `net.datafaker:datafaker:2.5.4` |
+| Java minimum | **Java 8** | **Java 17** |
+| Providers | ~196 | ~258 |
+| Maintained | **No** (last release April 2023) | **Yes** (active development) |
+| Size | ~1.5 MB (shaded: snakeyaml + generex) | ~2 MB (shaded: snakeyaml + generex) |
+| License | Apache 2.0 | Apache 2.0 |
+
+**Java 11 constraint:** DataFaker 2.x requires Java 17, making it unavailable while MockServer targets Java 11. DataFaker 1.9.0 works on Java 11 but is unmaintained — no bug fixes, security patches, or new providers. This is one more reason to migrate to Java 17: it unlocks the actively maintained DataFaker 2.x with 60+ additional providers.
+
+**How DataFaker works:**
+
+1. **`Faker` entry point** — instantiate with optional `Locale` for localized data:
+   ```java
+   Faker faker = new Faker();                       // default English
+   Faker faker = new Faker(new Locale("fr", "FR")); // French
+   ```
+
+2. **Provider methods** — each category (name, address, internet, commerce, etc.) is a provider object with typed methods:
+   ```java
+   faker.name().fullName();         // "Miss Samanta Schmidt"
+   faker.name().firstName();        // "Emory"
+   faker.address().streetAddress(); // "60018 Sawayn Brooks Suite 449"
+   faker.internet().emailAddress(); // "john.doe@gmail.com"
+   faker.commerce().productName();  // "Ergonomic Granite Chair"
+   faker.phoneNumber().cellPhone(); // "1-234-567-8901"
+   ```
+
+3. **YAML data files** — providers read from locale-specific YAML files bundled in the JAR (e.g., `en.yml`, `fr.yml`). Values are selected randomly from these files.
+
+4. **Expression DSL** — string-based composition without Java code:
+   ```java
+   faker.expression("#{Name.first_name}");           // "Emory"
+   faker.expression("#{numerify '###-###-####'}");    // "123-456-7890"
+   faker.expression("#{regexify '[A-Z]{3}\\d{4}'}"); // "ABC1234"
+   ```
+
+5. **Dependencies** — minimal: `snakeyaml` (YAML parsing) and `generex` (regex-to-string). Both are shaded into the JAR to avoid classpath conflicts.
+
+**Integration with MockServer templates:**
+
+Two approaches, both using `TemplateFunctions.BUILT_IN_FUNCTIONS`:
+
+*Approach A — Expose a `Faker` instance as a single template variable (recommended):*
+
+```velocity
+## Velocity template
+$faker.name().firstName()        ## → "Emory"
+$faker.address().city()          ## → "Brittneymouth"
+$faker.internet().emailAddress() ## → "john@example.com"
+```
+
+This gives users access to all 258 providers without registering individual functions. The `Faker` instance would be thread-safe (DataFaker is thread-safe) and created once at startup.
+
+*Approach B — Register individual helper functions:*
+
+```java
+// In TemplateFunctions.BUILT_IN_FUNCTIONS
+put("faker_first_name", () -> faker.name().firstName());
+put("faker_last_name",  () -> faker.name().lastName());
+put("faker_email",      () -> faker.internet().emailAddress());
+// ... per-function registration for each provider
+```
+
+This is simpler but requires registering each function individually and limits discoverability.
+
+**Files requiring changes:**
+
+| File | Change |
+|------|--------|
+| `mockserver/pom.xml` (dependencyManagement) | Add `net.datafaker:datafaker:2.x` |
+| `mockserver-core/pom.xml` | Add datafaker dependency |
+| `mockserver-core/.../templates/engine/TemplateFunctions.java` | Add `faker` entry to `BUILT_IN_FUNCTIONS` map |
+| `mockserver-core/.../templates/engine/velocity/VelocityTemplateEngine.java` | Ensure `faker` object is available in Velocity context |
+| `mockserver-core/.../templates/engine/mustache/MustacheTemplateEngine.java` | Expose `faker` in Mustache data model (lambdas for common providers) |
+| `mockserver-core/.../templates/engine/javascript/JavaScriptTemplateEngine.java` | Bind `faker` object in JS engine scope |
+| `mockserver-netty/pom.xml` (shade plugin) | Add `net.datafaker` to shade includes/relocations to avoid snakeyaml conflicts |
+| Test files for all three template engines | Add faker template tests |
+| `jekyll-www.mock-server.com/mock_server/response_templates.html` | Document faker usage in templates with examples |
+
+**Shade/relocation concern:** DataFaker shades its own copy of snakeyaml internally (`net.datafaker.shaded.snakeyaml`), so there should be no classpath conflict with MockServer's existing snakeyaml usage. However, the MockServer uber-JAR shade plugin configuration should be verified to include `net.datafaker` artifacts.
+
+**Provider categories available (258 in DataFaker 2.x):** Address, Animal, App, Aviation, Barcode, Beer, Book, Business, Cat, Chess, Code, Color, Commerce, Company, Computer, Country, CryptoCoin, Currency, DateAndTime, Demographics, Dog, Domain, Educator, Emoji, File, Finance, Food, Hacker, IdNumber, Internet, Job, Lorem, Marketing, Medical, Military, Money, Music, Name, Nation, Number, Passport, PhoneNumber, ProgrammingLanguage, Science, Shakespeare, Space, Stock, Superhero, Team, University, Vehicle, Weather, plus 200+ entertainment, videogame, sport, and specialty providers.
+
 ## Phase 2: Language Modernisation (~1-2 weeks)
 
 ### 2.1 Pattern Matching for instanceof (High Impact)

@@ -121,6 +121,7 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
                 CompiledScript compiledScript = compilable.compile(script + serialiseFunction);
 
                 engine.setBindings(new ScriptBindings(TemplateFunctions.BUILT_IN_FUNCTIONS), ScriptContext.ENGINE_SCOPE);
+                TemplateFunctions.BUILT_IN_HELPERS.forEach((key, value) -> engine.getBindings(ScriptContext.ENGINE_SCOPE).put(key, value));
                 compiledScript.eval();
 
                 Invocable invocable = (Invocable) engine;
