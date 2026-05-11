@@ -311,6 +311,10 @@ components:
           type: string
         priority:
           type: integer
+        percentage:
+          type: integer
+          minimum: 0
+          maximum: 100
         httpRequest:
           $ref: "#/components/schemas/RequestDefinition"
         httpResponse:

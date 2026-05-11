@@ -229,6 +229,29 @@
           "type": "string"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "not": {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "GRAPHQL"
+          ]
+        },
+        "query": {
+          "type": "string"
+        },
+        "operationName": {
+          "type": "string"
+        },
+        "variablesSchema": {
+          "type": "string"
+        }
+      }
     }
   ]
 }

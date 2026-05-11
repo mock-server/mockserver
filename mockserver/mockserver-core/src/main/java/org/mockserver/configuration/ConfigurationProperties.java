@@ -139,7 +139,10 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_PROXY_AUTHENTICATION_USERNAME = "mockserver.proxyAuthenticationUsername";
     private static final String MOCKSERVER_PROXY_AUTHENTICATION_PASSWORD = "mockserver.proxyAuthenticationPassword";
     private static final String MOCKSERVER_NO_PROXY_HOSTS = "mockserver.noProxyHosts";
+    private static final String MOCKSERVER_PROXY_REMOTE_HOST = "mockserver.proxyRemoteHost";
+    private static final String MOCKSERVER_PROXY_REMOTE_PORT = "mockserver.proxyRemotePort";
     private static final String MOCKSERVER_FORWARD_ADJUST_HOST_HEADER = "mockserver.forwardAdjustHostHeader";
+    private static final String MOCKSERVER_FORWARD_DEFAULT_HOST_HEADER = "mockserver.forwardDefaultHostHeader";
     private static final String MOCKSERVER_PROXY_PASS = "mockserver.proxyPass";
 
     // liveness
@@ -1362,6 +1365,35 @@ public class ConfigurationProperties {
         return readPropertyHierarchically(PROPERTIES, MOCKSERVER_NO_PROXY_HOSTS, "MOCKSERVER_NO_PROXY_HOSTS", "");
     }
 
+    public static String proxyRemoteHost() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_PROXY_REMOTE_HOST, "MOCKSERVER_PROXY_REMOTE_HOST", "");
+    }
+
+    public static void proxyRemoteHost(String proxyRemoteHost) {
+        setProperty(MOCKSERVER_PROXY_REMOTE_HOST, proxyRemoteHost);
+    }
+
+    public static Integer proxyRemotePort() {
+        String value = readPropertyHierarchically(PROPERTIES, MOCKSERVER_PROXY_REMOTE_PORT, "MOCKSERVER_PROXY_REMOTE_PORT", "");
+        if (isBlank(value)) {
+            return null;
+        }
+        int port;
+        try {
+            port = Integer.parseInt(value);
+        } catch (NumberFormatException nfe) {
+            throw new IllegalArgumentException("proxyRemotePort must be an integer between 1 and 65535, got: " + value);
+        }
+        if (port < 1 || port > 65535) {
+            throw new IllegalArgumentException("proxyRemotePort must be between 1 and 65535, got: " + port);
+        }
+        return port;
+    }
+
+    public static void proxyRemotePort(Integer proxyRemotePort) {
+        setProperty(MOCKSERVER_PROXY_REMOTE_PORT, proxyRemotePort != null ? "" + proxyRemotePort : "");
+    }
+
     public static boolean forwardAdjustHostHeader() {
         return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_FORWARD_ADJUST_HOST_HEADER, "MOCKSERVER_FORWARD_ADJUST_HOST_HEADER", "" + true));
     }
@@ -1375,6 +1407,14 @@ public class ConfigurationProperties {
      */
     public static void forwardAdjustHostHeader(boolean enable) {
         setProperty(MOCKSERVER_FORWARD_ADJUST_HOST_HEADER, "" + enable);
+    }
+
+    public static String forwardDefaultHostHeader() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_FORWARD_DEFAULT_HOST_HEADER, "MOCKSERVER_FORWARD_DEFAULT_HOST_HEADER", "");
+    }
+
+    public static void forwardDefaultHostHeader(String hostHeader) {
+        setProperty(MOCKSERVER_FORWARD_DEFAULT_HOST_HEADER, hostHeader);
     }
 
     @SuppressWarnings("unchecked")

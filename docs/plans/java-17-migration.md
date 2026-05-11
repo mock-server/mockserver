@@ -75,7 +75,7 @@ Only affects `mockserver-examples` module. Low impact.
 
 ### 1.4 DataFaker (Fake Data Generation in Response Templates)
 
-DataFaker generates realistic fake data (names, addresses, emails, phone numbers, commerce data, etc.) for use in response templates. WireMock includes this via Data Faker integration; MockServer currently lacks it.
+DataFaker generates realistic fake data (names, addresses, emails, phone numbers, commerce data, etc.) for use in response templates. Other mock servers include this via DataFaker integration; MockServer currently lacks it.
 
 | Property | DataFaker 1.x | DataFaker 2.x |
 |----------|---------------|---------------|

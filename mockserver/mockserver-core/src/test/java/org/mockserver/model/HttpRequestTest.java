@@ -452,4 +452,53 @@ public class HttpRequestTest {
         assertEquals("::1", request.getSocketAddress().getHost());
         assertEquals(Integer.valueOf(9090), request.getSocketAddress().getPort());
     }
+
+    @Test
+    public void shouldCreateGetRequest() {
+        HttpRequest request = HttpRequest.get("/path");
+        assertEquals(string("GET"), request.getMethod());
+        assertEquals(string("/path"), request.getPath());
+    }
+
+    @Test
+    public void shouldCreatePostRequest() {
+        HttpRequest request = HttpRequest.post("/path");
+        assertEquals(string("POST"), request.getMethod());
+        assertEquals(string("/path"), request.getPath());
+    }
+
+    @Test
+    public void shouldCreatePutRequest() {
+        HttpRequest request = HttpRequest.put("/path");
+        assertEquals(string("PUT"), request.getMethod());
+        assertEquals(string("/path"), request.getPath());
+    }
+
+    @Test
+    public void shouldCreateDeleteRequest() {
+        HttpRequest request = HttpRequest.delete("/path");
+        assertEquals(string("DELETE"), request.getMethod());
+        assertEquals(string("/path"), request.getPath());
+    }
+
+    @Test
+    public void shouldCreatePatchRequest() {
+        HttpRequest request = HttpRequest.patch("/path");
+        assertEquals(string("PATCH"), request.getMethod());
+        assertEquals(string("/path"), request.getPath());
+    }
+
+    @Test
+    public void shouldCreateHeadRequest() {
+        HttpRequest request = HttpRequest.head("/path");
+        assertEquals(string("HEAD"), request.getMethod());
+        assertEquals(string("/path"), request.getPath());
+    }
+
+    @Test
+    public void shouldCreateOptionsRequest() {
+        HttpRequest request = HttpRequest.options("/path");
+        assertEquals(string("OPTIONS"), request.getMethod());
+        assertEquals(string("/path"), request.getPath());
+    }
 }

@@ -121,7 +121,9 @@ When forwarding requests, MockServer's `NettyHttpClient` needs to trust upstream
 
 ## Mutual TLS (mTLS)
 
-MockServer supports mTLS for both incoming connections and the control plane:
+MockServer supports mTLS for both incoming connections and the control plane.
+
+A complete end-to-end mTLS example with self-generated certificates, Docker Compose configuration, and curl commands is available in [`mockserver/mockserver-examples/docker_compose_examples/docker_compose_with_mtls/`](../../mockserver/mockserver-examples/docker_compose_examples/docker_compose_with_mtls/). The consumer-facing documentation is on the [HTTPS & TLS page](https://www.mock-server.com/mock_server/HTTPS_TLS.html#mtls_examples).
 
 ### Incoming Connection mTLS
 

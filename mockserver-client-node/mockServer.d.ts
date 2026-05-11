@@ -39,6 +39,9 @@ export type Expectation = {
   times?: Times;
   timeToLive?: TimeToLive;
   afterActions?: AfterAction | AfterAction[];
+  scenarioName?: string;
+  scenarioState?: string;
+  newScenarioState?: string;
 };
 
 export interface ExpectationId {
@@ -215,6 +218,14 @@ export type Body =
       type: 'JSON_RPC';
       method: string;
       paramsSchema?: string;
+      not?: boolean;
+      optional?: boolean;
+    }
+  | {
+      type: 'GRAPHQL';
+      query: string;
+      operationName?: string;
+      variablesSchema?: string;
       not?: boolean;
       optional?: boolean;
     }

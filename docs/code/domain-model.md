@@ -149,6 +149,7 @@ classDiagram
     Body <|-- XmlSchemaBody
     Body <|-- XPathBody
     Body <|-- ParameterBody
+    Body <|-- GraphQLBody
 
     BodyWithContentType <|-- StringBody
     BodyWithContentType <|-- JsonBody
@@ -156,7 +157,7 @@ classDiagram
     BodyWithContentType <|-- BinaryBody
 ```
 
-Body `Type` enum: `BINARY`, `JSON`, `JSON_SCHEMA`, `JSON_PATH`, `PARAMETERS`, `REGEX`, `STRING`, `XML`, `XML_SCHEMA`, `XPATH`, `JSON_RPC`, `LOG_EVENT`
+Body `Type` enum: `BINARY`, `JSON`, `JSON_SCHEMA`, `JSON_PATH`, `PARAMETERS`, `REGEX`, `STRING`, `XML`, `XML_SCHEMA`, `XPATH`, `JSON_RPC`, `GRAPHQL`, `LOG_EVENT`
 
 ### ConnectionOptions
 
@@ -216,7 +217,12 @@ Expectation.when(request)      // RequestDefinition
     .withTimeToLive(TimeToLive.exactly(TimeUnit.MINUTES, 5))
     .withPriority(10)
     .withId("unique-id")
+    .withScenarioName("MyScenario")
+    .withScenarioState("Started")
+    .withNewScenarioState("Step2")
 ```
+
+Scenario fields are optional. When `scenarioName` and `scenarioState` are set, the expectation only matches when the named scenario is in the required state. After matching, the scenario transitions to `newScenarioState` (if set). All scenarios start in the `"Started"` state. State is managed by `ScenarioManager` in `RequestMatchers`.
 
 ## Request Matching
 
@@ -255,6 +261,7 @@ classDiagram
     BodyMatcher <|-- XPathMatcher
     BodyMatcher <|-- BinaryMatcher
     BodyMatcher <|-- ParameterStringMatcher
+    BodyMatcher <|-- GraphQLMatcher
     BodyMatcher <|-- MultiValueMapMatcher
     BodyMatcher <|-- HashMapMatcher
     BodyMatcher <|-- BooleanMatcher

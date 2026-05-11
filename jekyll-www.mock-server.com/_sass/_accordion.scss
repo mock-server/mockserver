@@ -60,10 +60,11 @@ button.accordion.active:after {
 
 button.accordion:after {
     content: '\002B';
-    color: #cc1313;
+    color: #1a73e8;
     font-weight: bold;
-    float: right;
-    margin-left: 5px;
+    float: left;
+    margin-right: 10px;
+    margin-left: 0;
     font-family: 'Averia Sans Libre', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: 1.1em;
 }

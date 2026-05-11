@@ -581,6 +581,54 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.forwardAdjustHostHeader="false"</code></pre>
 </div>
 
+<button id="button_configuration_forward_default_host_header" class="accordion title"><strong>Default Host Header for Forwarded Requests</strong></button>
+<div class="panel title">
+    <p>Set a default Host header value to use when forwarding requests. When set, the Host header will be overridden with this value for all forwarded requests, regardless of the target server's address. This is useful when the target proxy server routes requests based on the Host header.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.forwardDefaultHostHeader(String hostHeader)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.forwardDefaultHostHeader=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_FORWARD_DEFAULT_HOST_HEADER=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.forwardDefaultHostHeader=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.forwardDefaultHostHeader="foo.com"</code></pre>
+</div>
+
+<button id="button_configuration_proxy_remote_host" class="accordion title"><strong>Proxy Remote Host</strong></button>
+<div class="panel title">
+    <p>The hostname of the remote server to forward all unmatched requests to. When set together with <span class="inline_code">proxyRemotePort</span>, MockServer acts as a forward proxy, sending any request that does not match an expectation to the specified remote host. This works in all deployment modes including WAR deployments.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.proxyRemoteHost(String hostname)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.proxyRemoteHost=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_PROXY_REMOTE_HOST=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.proxyRemoteHost=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.proxyRemoteHost="www.mock-server.com"</code></pre>
+</div>
+
+<button id="button_configuration_proxy_remote_port" class="accordion title"><strong>Proxy Remote Port</strong></button>
+<div class="panel title">
+    <p>The port of the remote server to forward all unmatched requests to. Must be specified together with <span class="inline_code">proxyRemoteHost</span>. Valid values are 1-65535.</p>
+    <p>Type: <span class="keyword">integer</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.proxyRemotePort(Integer port)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.proxyRemotePort=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_PROXY_REMOTE_PORT=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.proxyRemotePort=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.proxyRemotePort="443"</code></pre>
+</div>
+
 <a id="liveness_configuration" class="anchor" href="#liveness_configuration">&nbsp;</a>
 
 <h2>Liveness Configuration:</h2>

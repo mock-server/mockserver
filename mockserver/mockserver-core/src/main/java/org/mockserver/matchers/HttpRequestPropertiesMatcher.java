@@ -188,6 +188,10 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                     JsonRpcBody jsonRpcBody = (JsonRpcBody) body;
                     bodyMatcher = new JsonRpcMatcher(mockServerLogger, jsonRpcBody.getMethod(), jsonRpcBody.getParamsSchema());
                     break;
+                case GRAPHQL:
+                    GraphQLBody graphQLBody = (GraphQLBody) body;
+                    bodyMatcher = new GraphQLMatcher(mockServerLogger, graphQLBody.getQuery(), graphQLBody.getOperationName(), graphQLBody.getVariablesSchema());
+                    break;
                 case BINARY:
                     BinaryBody binaryBody = (BinaryBody) body;
                     bodyMatcher = new BinaryMatcher(mockServerLogger, binaryBody.getValue());
@@ -549,6 +553,8 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                 // xml body matcher
                 bodyMatches = matches(BODY, context, bodyMatcher, request.getBodyAsString());
             } else if (bodyMatcher instanceof JsonRpcMatcher) {
+                bodyMatches = matches(BODY, context, bodyMatcher, request.getBodyAsString());
+            } else if (bodyMatcher instanceof GraphQLMatcher) {
                 bodyMatches = matches(BODY, context, bodyMatcher, request.getBodyAsString());
             } else if (bodyMatcher instanceof JsonStringMatcher ||
                 bodyMatcher instanceof JsonSchemaMatcher ||

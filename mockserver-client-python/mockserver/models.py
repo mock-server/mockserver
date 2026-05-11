@@ -105,7 +105,7 @@ def _serialize_body(body: Body | str | dict | None) -> Any:
     return body
 
 
-_BODY_TYPES = {"STRING", "JSON", "REGEX", "XML", "BINARY", "JSON_SCHEMA", "JSON_PATH", "XPATH", "XML_SCHEMA", "JSON_RPC"}
+_BODY_TYPES = {"STRING", "JSON", "REGEX", "XML", "BINARY", "JSON_SCHEMA", "JSON_PATH", "XPATH", "XML_SCHEMA", "JSON_RPC", "GRAPHQL"}
 
 
 def _deserialize_body(data: Any) -> Body | JsonRpcBody | str | dict | None:
@@ -118,6 +118,14 @@ def _deserialize_body(data: Any) -> Body | JsonRpcBody | str | dict | None:
             return JsonRpcBody(
                 method=data.get("method", ""),
                 params_schema=data.get("paramsSchema"),
+                not_body=data.get("not", False),
+                optional=data.get("optional", False),
+            )
+        if data.get("type") == "GRAPHQL":
+            return GraphQLBody(
+                query=data.get("query", ""),
+                operation_name=data.get("operationName"),
+                variables_schema=data.get("variablesSchema"),
                 not_body=data.get("not", False),
                 optional=data.get("optional", False),
             )
@@ -370,6 +378,27 @@ class JsonRpcBody:
         return result
 
 
+@dataclass
+class GraphQLBody:
+    query: str = ""
+    operation_name: str | None = None
+    variables_schema: str | None = None
+    not_body: bool = False
+    optional: bool = False
+
+    def to_dict(self) -> dict:
+        result: dict = {"type": "GRAPHQL", "query": self.query}
+        if self.operation_name is not None:
+            result["operationName"] = self.operation_name
+        if self.variables_schema is not None:
+            result["variablesSchema"] = self.variables_schema
+        if self.not_body:
+            result["not"] = True
+        if self.optional:
+            result["optional"] = True
+        return result
+
+
 def _body_string(value: str) -> Body:
     return Body(type="STRING", string=value)
 
@@ -394,12 +423,17 @@ def _body_json_rpc(method: str, params_schema: str | None = None) -> JsonRpcBody
     return JsonRpcBody(method=method, params_schema=params_schema)
 
 
+def _body_graphql(query: str, operation_name: str | None = None, variables_schema: str | None = None) -> GraphQLBody:
+    return GraphQLBody(query=query, operation_name=operation_name, variables_schema=variables_schema)
+
+
 Body.string = staticmethod(_body_string)
 Body.json = staticmethod(_body_json)
 Body.regex = staticmethod(_body_regex)
 Body.exact = staticmethod(_body_exact)
 Body.xml = staticmethod(_body_xml)
 Body.json_rpc = staticmethod(_body_json_rpc)
+Body.graphql = staticmethod(_body_graphql)
 
 
 @dataclass
@@ -1058,6 +1092,9 @@ class Expectation:
     times: Times | None = None
     time_to_live: TimeToLive | None = None
     after_actions: list[AfterAction] | None = None
+    scenario_name: str | None = None
+    scenario_state: str | None = None
+    new_scenario_state: str | None = None
 
     def to_dict(self) -> dict:
         return _strip_none({
@@ -1079,6 +1116,9 @@ class Expectation:
             "times": self.times.to_dict() if self.times else None,
             "timeToLive": self.time_to_live.to_dict() if self.time_to_live else None,
             "afterActions": [a.to_dict() for a in self.after_actions] if self.after_actions else None,
+            "scenarioName": self.scenario_name,
+            "scenarioState": self.scenario_state,
+            "newScenarioState": self.new_scenario_state,
         })
 
     @classmethod
@@ -1107,6 +1147,9 @@ class Expectation:
             times=Times.from_dict(data.get("times")),
             time_to_live=TimeToLive.from_dict(data.get("timeToLive")),
             after_actions=[AfterAction.from_dict(a) for a in after_actions_data] if after_actions_data else None,
+            scenario_name=data.get("scenarioName"),
+            scenario_state=data.get("scenarioState"),
+            new_scenario_state=data.get("newScenarioState"),
         )
 
 

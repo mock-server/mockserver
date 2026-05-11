@@ -51,6 +51,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
         fieldNameToType.put("xmlSchema".toLowerCase(), Body.Type.XML_SCHEMA);
         fieldNameToType.put("xpath".toLowerCase(), Body.Type.XPATH);
         fieldNameToType.put("jsonRpc".toLowerCase(), Body.Type.JSON_RPC);
+        fieldNameToType.put("graphql".toLowerCase(), Body.Type.GRAPHQL);
     }
 
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(BodyDTODeserializer.class);
@@ -80,6 +81,12 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
         String jsonRpcParamsSchema = null;
         String methodFieldValue = null;
         String paramsSchemaFieldValue = null;
+        String graphQLQuery = null;
+        String graphQLOperationName = null;
+        String graphQLVariablesSchema = null;
+        String queryFieldValue = null;
+        String operationNameFieldValue = null;
+        String variablesSchemaFieldValue = null;
         if (currentToken == JsonToken.START_OBJECT) {
             @SuppressWarnings("unchecked") Map<Object, Object> body = (Map<Object, Object>) ctxt.readValue(jsonParser, Map.class);
             for (Map.Entry<Object, Object> entry : body.entrySet()) {
@@ -111,6 +118,23 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                                 jsonBodyObjectWriter = buildObjectMapperWithoutRemovingEmptyValues().writerWithDefaultPrettyPrinter();
                             }
                             jsonRpcParamsSchema = jsonBodyObjectWriter.writeValueAsString(jsonRpcMap.get("paramsSchema"));
+                        }
+                    }
+                    if (key.equalsIgnoreCase("graphQL") && entry.getValue() instanceof Map) {
+                        type = Body.Type.GRAPHQL;
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> graphQLMap = (Map<String, Object>) entry.getValue();
+                        if (graphQLMap.containsKey("query")) {
+                            graphQLQuery = String.valueOf(graphQLMap.get("query"));
+                        }
+                        if (graphQLMap.containsKey("operationName")) {
+                            graphQLOperationName = String.valueOf(graphQLMap.get("operationName"));
+                        }
+                        if (graphQLMap.containsKey("variablesSchema")) {
+                            if (jsonBodyObjectWriter == null) {
+                                jsonBodyObjectWriter = buildObjectMapperWithoutRemovingEmptyValues().writerWithDefaultPrettyPrinter();
+                            }
+                            graphQLVariablesSchema = jsonBodyObjectWriter.writeValueAsString(graphQLMap.get("variablesSchema"));
                         }
                     }
                     if (containsIgnoreCase(key, "string", "regex", "json", "jsonSchema", "jsonPath", "xml", "xmlSchema", "xpath", "base64Bytes") && type != Body.Type.PARAMETERS) {
@@ -271,6 +295,22 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                             paramsSchemaFieldValue = jsonBodyObjectWriter.writeValueAsString(entry.getValue());
                         }
                     }
+                    if (key.equalsIgnoreCase("query") && entry.getValue() instanceof String) {
+                        queryFieldValue = String.valueOf(entry.getValue());
+                    }
+                    if (key.equalsIgnoreCase("operationName") && entry.getValue() instanceof String) {
+                        operationNameFieldValue = String.valueOf(entry.getValue());
+                    }
+                    if (key.equalsIgnoreCase("variablesSchema")) {
+                        if (entry.getValue() instanceof String) {
+                            variablesSchemaFieldValue = String.valueOf(entry.getValue());
+                        } else if (entry.getValue() instanceof Map) {
+                            if (jsonBodyObjectWriter == null) {
+                                jsonBodyObjectWriter = buildObjectMapperWithoutRemovingEmptyValues().writerWithDefaultPrettyPrinter();
+                            }
+                            variablesSchemaFieldValue = jsonBodyObjectWriter.writeValueAsString(entry.getValue());
+                        }
+                    }
                     if (key.equalsIgnoreCase("parameters")) {
                         if (objectMapper == null) {
                             objectMapper = ObjectMapperFactory.createObjectMapper();
@@ -347,6 +387,13 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         result = new JsonRpcBodyDTO(new JsonRpcBody(
                             jsonRpcMethod != null ? jsonRpcMethod : methodFieldValue,
                             jsonRpcParamsSchema != null ? jsonRpcParamsSchema : paramsSchemaFieldValue
+                        ), not);
+                        break;
+                    case GRAPHQL:
+                        result = new GraphQLBodyDTO(new GraphQLBody(
+                            graphQLQuery != null ? graphQLQuery : queryFieldValue,
+                            graphQLOperationName != null ? graphQLOperationName : operationNameFieldValue,
+                            graphQLVariablesSchema != null ? graphQLVariablesSchema : variablesSchemaFieldValue
                         ), not);
                         break;
                 }

@@ -61,6 +61,9 @@ public abstract class BodyDTO extends NotDTO implements DTO<Body<?>> {
         } else if (body instanceof JsonRpcBody) {
             JsonRpcBody jsonRpcBody = (JsonRpcBody) body;
             result = new JsonRpcBodyDTO(jsonRpcBody, jsonRpcBody.getNot());
+        } else if (body instanceof GraphQLBody) {
+            GraphQLBody graphQLBody = (GraphQLBody) body;
+            result = new GraphQLBodyDTO(graphQLBody, graphQLBody.getNot());
         }
 
         if (result != null) {
@@ -104,6 +107,8 @@ public abstract class BodyDTO extends NotDTO implements DTO<Body<?>> {
             return ((XPathBodyDTO) body).getXPath();
         } else if (body instanceof JsonRpcBodyDTO) {
             return ((JsonRpcBodyDTO) body).getMethod();
+        } else if (body instanceof GraphQLBodyDTO) {
+            return ((GraphQLBodyDTO) body).getQuery();
         }
 
         return "";

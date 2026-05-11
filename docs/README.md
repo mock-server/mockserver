@@ -55,7 +55,6 @@ Build process, releases, dependencies, security scanning, and the documentation 
 | Document | Description |
 |----------|-------------|
 | [Java 17 Migration](plans/java-17-migration.md) | GraalVM JS, Spring 6, jakarta, DataFaker, language modernisation |
-| [WireMock Feature Parity](plans/wiremock-feature-parity.md) | JWT templates, template helpers, faker data, chunked dribble delay, GraphQL matching, stateful scenarios |
 | [Build Optimisation](plans/build-optimisation.md) | Maven build speed improvements |
 | [Testing Improvements](plans/testing-improvements.md) | Test coverage and quality improvements |
 | [Security Remediation](plans/security-remediation.md) | Vulnerability fixes and security hardening |

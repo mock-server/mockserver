@@ -288,8 +288,26 @@ public class MockServerPropertyCustomizer implements ContextCustomizer {
             case "attemptToProxyIfNoMatchingExpectation":
                 config.attemptToProxyIfNoMatchingExpectation(parseStrictBoolean(value, key));
                 break;
+            case "proxyRemoteHost":
+                config.proxyRemoteHost(value);
+                break;
+            case "proxyRemotePort":
+                int port;
+                try {
+                    port = Integer.parseInt(value);
+                } catch (NumberFormatException nfe) {
+                    throw new IllegalArgumentException("mockserver.proxyRemotePort must be an integer between 1 and 65535, got: " + value);
+                }
+                if (port < 1 || port > 65535) {
+                    throw new IllegalArgumentException("mockserver.proxyRemotePort must be between 1 and 65535, got: " + port);
+                }
+                config.proxyRemotePort(port);
+                break;
             case "forwardAdjustHostHeader":
                 config.forwardAdjustHostHeader(parseStrictBoolean(value, key));
+                break;
+            case "forwardDefaultHostHeader":
+                config.forwardDefaultHostHeader(value);
                 break;
             case "controlPlaneTLSMutualAuthenticationRequired":
                 config.controlPlaneTLSMutualAuthenticationRequired(parseStrictBoolean(value, key));

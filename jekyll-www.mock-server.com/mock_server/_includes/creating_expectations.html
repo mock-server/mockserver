@@ -76,6 +76,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <li><strong><a href="#button_match_request_by_path_exactly_once_in_the_next_60_seconds">timeToLive</a></strong> <em>(optional)</em> - how long the expectation should stay active</li>
     <li><strong><a href="#button_match_request_by_priority">priority</a></strong> <em>(optional)</em> - matching is ordered by priority (highest first) then creation (earliest first)</li>
     <li><strong><a href="#button_match_request_update_by_id">id</a></strong> <em>(optional)</em> - used for updating an existing expectation (i.e. when the id matches)</li>
+    <li><strong><a href="#stateful_scenarios">scenario</a></strong> <em>(optional)</em> - used for stateful multi-step API flows where the response changes based on prior interactions</li>
 </ul>
 
 <p><strong><a href="/mock_server/using_openapi.html#generate_expectation_from_openapi">open api expectations</a></strong> are also supported using an <a target="_blank" href="https://swagger.io/docs/specification/basic-structure/"><strong>OpenAPI
@@ -92,6 +93,224 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     priority (highest first) then creation (earliest first).</p>
 <p>Priority can be used to configure a <a href="#button_match_request_by_negative_priority">default expectation or response</a> by specifying a negative value for priority and a very lax request matcher; the lax request matcher ensures the
     default expectation is always matched, but the low priority ensure it is matched last after all other expectations.</p>
+
+<a id="probabilistic_matching" class="anchor" href="#probabilistic_matching">&nbsp;</a>
+
+<h4>Probabilistic Matching (Percentage)</h4>
+
+<p>An expectation can be configured with a <strong>percentage</strong> (0-100) to enable probabilistic matching. When set, the expectation will only match the specified percentage of requests that structurally match the request matcher. This is useful for simulating intermittent failures, flaky services, or A/B testing scenarios.</p>
+<p>For example, setting <span class="inline_code">percentage</span> to <span class="inline_code">50</span> means approximately half of matching requests will be handled by this expectation, while the other half will fall through to the next matching expectation or the default behavior.</p>
+<p>If <span class="inline_code">percentage</span> is not set or set to <span class="inline_code">100</span>, the expectation matches all structurally matching requests (the default behavior). A value of <span class="inline_code">0</span> means the expectation never matches.</p>
+
+<a id="stateful_scenarios" class="anchor" href="#stateful_scenarios">&nbsp;</a>
+
+<h4>Stateful Scenarios</h4>
+
+<p>Stateful scenarios let you model <strong>multi-step API conversations</strong> where MockServer's response changes based on prior interactions. Each scenario is an independent named state machine that starts in the <span class="inline_code">"Started"</span> state.</p>
+
+<p>An expectation can participate in a scenario by specifying:</p>
+<ul>
+    <li><strong>scenarioName</strong> - the name of the scenario this expectation belongs to</li>
+    <li><strong>scenarioState</strong> - the state the scenario must be in for this expectation to match</li>
+    <li><strong>newScenarioState</strong> - the state the scenario transitions to after this expectation matches</li>
+</ul>
+
+<p>If <span class="inline_code">scenarioName</span> is not set, the expectation behaves normally without any scenario filtering. The default initial state for all scenarios is <span class="inline_code">"Started"</span>.</p>
+
+<p><strong>Example - Login Flow:</strong> First call returns a token, subsequent calls using that token get a different response.</p>
+<pre class="prettyprint lang-java code"><code class="code">// Step 1: Login returns a token (scenario starts in "Started" state)
+{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/login"
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "{\"token\": \"abc123\"}"
+    },
+    "scenarioName": "LoginFlow",
+    "scenarioState": "Started",
+    "newScenarioState": "LoggedIn",
+    "times": { "remainingTimes": 1 }
+}
+
+// Step 2: After login, GET /profile returns user data
+{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/profile"
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "{\"name\": \"Alice\", \"email\": \"alice@example.com\"}"
+    },
+    "scenarioName": "LoginFlow",
+    "scenarioState": "LoggedIn"
+}
+
+// Step 3: Before login, GET /profile returns 401
+{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/profile"
+    },
+    "httpResponse": {
+        "statusCode": 401,
+        "body": "{\"error\": \"Not authenticated\"}"
+    },
+    "scenarioName": "LoginFlow",
+    "scenarioState": "Started"
+}</code></pre>
+
+<p><strong>Example - Pagination:</strong> Successive calls to the same endpoint return different pages of data.</p>
+<pre class="prettyprint lang-java code"><code class="code">// Page 1 (initial state)
+{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/items"
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "{\"items\": [\"a\", \"b\"], \"page\": 1, \"hasMore\": true}"
+    },
+    "scenarioName": "Pagination",
+    "scenarioState": "Started",
+    "newScenarioState": "Page2",
+    "times": { "remainingTimes": 1 }
+}
+
+// Page 2
+{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/items"
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "{\"items\": [\"c\", \"d\"], \"page\": 2, \"hasMore\": true}"
+    },
+    "scenarioName": "Pagination",
+    "scenarioState": "Page2",
+    "newScenarioState": "Page3",
+    "times": { "remainingTimes": 1 }
+}
+
+// Page 3 (last page)
+{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/items"
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "{\"items\": [\"e\"], \"page\": 3, \"hasMore\": false}"
+    },
+    "scenarioName": "Pagination",
+    "scenarioState": "Page3"
+}</code></pre>
+
+<p><strong>Example - Retry Testing:</strong> First two calls return 503, third call succeeds.</p>
+<pre class="prettyprint lang-java code"><code class="code">// First call: 503
+{
+    "httpRequest": { "path": "/api/data" },
+    "httpResponse": { "statusCode": 503, "body": "{\"error\": \"Service Unavailable\"}" },
+    "scenarioName": "RetryTest",
+    "scenarioState": "Started",
+    "newScenarioState": "Attempt2",
+    "times": { "remainingTimes": 1 }
+}
+
+// Second call: 503
+{
+    "httpRequest": { "path": "/api/data" },
+    "httpResponse": { "statusCode": 503, "body": "{\"error\": \"Service Unavailable\"}" },
+    "scenarioName": "RetryTest",
+    "scenarioState": "Attempt2",
+    "newScenarioState": "Ready",
+    "times": { "remainingTimes": 1 }
+}
+
+// Third call onwards: 200
+{
+    "httpRequest": { "path": "/api/data" },
+    "httpResponse": { "statusCode": 200, "body": "{\"data\": \"success\"}" },
+    "scenarioName": "RetryTest",
+    "scenarioState": "Ready"
+}</code></pre>
+
+<p><strong>Example - Order State Machine:</strong> Model an order lifecycle with state transitions.</p>
+<pre class="prettyprint lang-java code"><code class="code">// Create order
+{
+    "httpRequest": { "method": "POST", "path": "/orders" },
+    "httpResponse": { "statusCode": 201, "body": "{\"id\": 1, \"status\": \"CREATED\"}" },
+    "scenarioName": "OrderLifecycle",
+    "scenarioState": "Started",
+    "newScenarioState": "OrderCreated",
+    "times": { "remainingTimes": 1 }
+}
+
+// Pay for order (only available after creation)
+{
+    "httpRequest": { "method": "PUT", "path": "/orders/1/pay" },
+    "httpResponse": { "statusCode": 200, "body": "{\"id\": 1, \"status\": \"PAID\"}" },
+    "scenarioName": "OrderLifecycle",
+    "scenarioState": "OrderCreated",
+    "newScenarioState": "OrderPaid",
+    "times": { "remainingTimes": 1 }
+}
+
+// Get order - returns CREATED status
+{
+    "httpRequest": { "method": "GET", "path": "/orders/1" },
+    "httpResponse": { "statusCode": 200, "body": "{\"id\": 1, \"status\": \"CREATED\"}" },
+    "scenarioName": "OrderLifecycle",
+    "scenarioState": "OrderCreated"
+}
+
+// Get order - returns PAID status
+{
+    "httpRequest": { "method": "GET", "path": "/orders/1" },
+    "httpResponse": { "statusCode": 200, "body": "{\"id\": 1, \"status\": \"PAID\"}" },
+    "scenarioName": "OrderLifecycle",
+    "scenarioState": "OrderPaid"
+}</code></pre>
+
+<p><strong>Example - Rate Limiting:</strong> Allow a fixed number of calls, then return 429.</p>
+<pre class="prettyprint lang-java code"><code class="code">// First 3 calls succeed
+{
+    "httpRequest": { "path": "/api/resource" },
+    "httpResponse": { "statusCode": 200, "body": "{\"data\": \"ok\"}" },
+    "scenarioName": "RateLimit",
+    "scenarioState": "Started",
+    "newScenarioState": "Call2",
+    "times": { "remainingTimes": 1 }
+}
+{
+    "httpRequest": { "path": "/api/resource" },
+    "httpResponse": { "statusCode": 200, "body": "{\"data\": \"ok\"}" },
+    "scenarioName": "RateLimit",
+    "scenarioState": "Call2",
+    "newScenarioState": "Call3",
+    "times": { "remainingTimes": 1 }
+}
+{
+    "httpRequest": { "path": "/api/resource" },
+    "httpResponse": { "statusCode": 200, "body": "{\"data\": \"ok\"}" },
+    "scenarioName": "RateLimit",
+    "scenarioState": "Call3",
+    "newScenarioState": "RateLimited",
+    "times": { "remainingTimes": 1 }
+}
+
+// Subsequent calls: 429 Too Many Requests
+{
+    "httpRequest": { "path": "/api/resource" },
+    "httpResponse": { "statusCode": 429, "body": "{\"error\": \"Rate limit exceeded\"}" },
+    "scenarioName": "RateLimit",
+    "scenarioState": "RateLimited"
+}</code></pre>
+
+<p>Scenarios are independent of each other — different scenario names maintain separate state. All scenario states are reset when MockServer is <a href="/mock_server/clearing_and_resetting.html">reset</a>.</p>
 
 <a id="updating_expectations" class="anchor" href="#updating_expectations">&nbsp;</a>
 
@@ -274,8 +493,73 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <li><strong><a href="#button_match_request_by_body_with_xpath">XPath</a></strong> - matches if at least one value returned by expression, see <a target="_blank" href="https://www.w3.org/TR/2017/REC-xpath-31-20170321/">XPath specification</a></li>
     <li><strong><a href="#button_match_request_by_form_submission_body">form fields</a></strong> (i.e. body parameters)</li>
     <li><strong><a href="#button_match_request_by_binary_body">binary</a></strong></li>
+    <li><strong><a href="#graphql_body_matching">GraphQL</a></strong> - semantic matching of GraphQL queries, mutations, and subscriptions</li>
     <li><strong><a href="#button_match_request_by_not_matching_body_with_xpath">negated matcher</a></strong></li>
 </ul>
+
+<a id="graphql_body_matching" class="anchor" href="#graphql_body_matching">&nbsp;</a>
+
+<h4>GraphQL Body Matching</h4>
+
+<p>MockServer supports semantic matching of <a target="_blank" href="https://graphql.org/learn/serving-over-http/">GraphQL over HTTP</a> request bodies. This allows expectations to match GraphQL queries, mutations, and subscriptions regardless of whitespace or formatting differences.</p>
+
+<p>A GraphQL body matcher can specify:</p>
+<ul>
+    <li><strong>query</strong> (required) - the GraphQL query string. Whitespace is normalized before comparison, so <span class="inline_code">{ user { name } }</span> matches <span class="inline_code">{\n  user {\n    name\n  }\n}</span></li>
+    <li><strong>operationName</strong> (optional) - match the operation name exactly, or using a regex pattern (e.g. <span class="inline_code">Get.*</span>)</li>
+    <li><strong>variablesSchema</strong> (optional) - a <a target="_blank" href="https://json-schema.org/">JSON Schema</a> to validate the <span class="inline_code">variables</span> field</li>
+</ul>
+
+<p><strong>Example - match a GraphQL query:</strong></p>
+<pre class="prettyprint lang-java code"><code class="code">{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/graphql",
+        "body": {
+            "type": "GRAPHQL",
+            "query": "{ user(id: 1) { name email } }"
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "{\"data\": {\"user\": {\"name\": \"Alice\", \"email\": \"alice@example.com\"}}}"
+    }
+}</code></pre>
+
+<p><strong>Example - match with operation name and variables schema:</strong></p>
+<pre class="prettyprint lang-java code"><code class="code">{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/graphql",
+        "body": {
+            "type": "GRAPHQL",
+            "query": "query GetUser($id: ID!) { user(id: $id) { name email } }",
+            "operationName": "GetUser",
+            "variablesSchema": "{\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"string\"}}, \"required\": [\"id\"]}"
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "{\"data\": {\"user\": {\"name\": \"Alice\", \"email\": \"alice@example.com\"}}}"
+    }
+}</code></pre>
+
+<p><strong>Example - match a mutation:</strong></p>
+<pre class="prettyprint lang-java code"><code class="code">{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/graphql",
+        "body": {
+            "type": "GRAPHQL",
+            "query": "mutation CreateUser($input: CreateUserInput!) { createUser(input: $input) { id name } }",
+            "operationName": "CreateUser"
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "{\"data\": {\"createUser\": {\"id\": \"123\", \"name\": \"Alice\"}}}"
+    }
+}</code></pre>
 
 <button id="button_request" class="accordion title"><strong>Request Properties Matcher Code Examples</strong></button>
 <div class="panel title">

@@ -335,4 +335,85 @@ public class ExpectationTest {
         assertNull(expectation.getPrimaryAction());
         assertNull(expectation.getAction());
     }
+
+    @Test
+    public void shouldSetAndGetPercentage() {
+        Expectation expectation = new Expectation(request()).withPercentage(50);
+        assertThat(expectation.getPercentage(), is(50));
+    }
+
+    @Test
+    public void shouldReturnNullPercentageByDefault() {
+        Expectation expectation = new Expectation(request());
+        assertThat(expectation.getPercentage(), nullValue());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldRejectPercentageBelow0() {
+        new Expectation(request()).withPercentage(-1);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldRejectPercentageAbove100() {
+        new Expectation(request()).withPercentage(101);
+    }
+
+    @Test
+    public void shouldAcceptPercentageBoundaryValues() {
+        assertThat(new Expectation(request()).withPercentage(0).getPercentage(), is(0));
+        assertThat(new Expectation(request()).withPercentage(100).getPercentage(), is(100));
+    }
+
+    @Test
+    public void shouldMatchByPercentageWhenNull() {
+        assertTrue(new Expectation(request()).matchesByPercentage());
+    }
+
+    @Test
+    public void shouldMatchByPercentageWhen100() {
+        assertTrue(new Expectation(request()).withPercentage(100).matchesByPercentage());
+    }
+
+    @Test
+    public void shouldNotMatchByPercentageWhen0() {
+        assertFalse(new Expectation(request()).withPercentage(0).matchesByPercentage());
+    }
+
+    @Test
+    public void shouldMatchByPercentageStatistically() {
+        Expectation expectation = new Expectation(request()).withPercentage(50);
+        int matchCount = 0;
+        int iterations = 10000;
+        for (int i = 0; i < iterations; i++) {
+            if (expectation.matchesByPercentage()) {
+                matchCount++;
+            }
+        }
+        assertTrue("Expected ~50% matches but got " + matchCount, matchCount > 3000 && matchCount < 7000);
+    }
+
+    @Test
+    public void shouldIncludePercentageInClone() {
+        Expectation original = new Expectation(request()).withPercentage(75).thenRespond(response());
+        Expectation clone = original.clone();
+        assertThat(clone.getPercentage(), is(75));
+    }
+
+    @Test
+    public void shouldIncludePercentageInEquals() {
+        Expectation a = new Expectation(request(), Times.unlimited(), TimeToLive.unlimited(), 0).withPercentage(50);
+        Expectation b = new Expectation(request(), Times.unlimited(), TimeToLive.unlimited(), 0).withPercentage(50);
+        Expectation c = new Expectation(request(), Times.unlimited(), TimeToLive.unlimited(), 0).withPercentage(75);
+        assertEquals(a, b);
+        assertFalse(a.equals(c));
+    }
+
+    @Test
+    public void shouldIncludePercentageInHashCode() {
+        Expectation a = new Expectation(request(), Times.unlimited(), TimeToLive.unlimited(), 0).withPercentage(50);
+        Expectation b = new Expectation(request(), Times.unlimited(), TimeToLive.unlimited(), 0).withPercentage(50);
+        Expectation c = new Expectation(request(), Times.unlimited(), TimeToLive.unlimited(), 0).withPercentage(75);
+        assertEquals(a.hashCode(), b.hashCode());
+        assertNotSame(a.hashCode(), c.hashCode());
+    }
 }

@@ -75,6 +75,22 @@ public class ForwardChainExpectation {
     }
 
     /**
+     * <p>
+     * Set percentage of requests this expectation should match (0-100).
+     * </p>
+     * <p>
+     * When set, the expectation will only match the specified percentage of
+     * requests that structurally match, enabling probabilistic matching.
+     * </p>
+     *
+     * @param percentage percentage of requests to match (0-100), or null for all requests
+     */
+    public ForwardChainExpectation withPercentage(Integer percentage) {
+        expectation.withPercentage(percentage);
+        return this;
+    }
+
+    /**
      * Set after-actions to execute after the primary action completes
      *
      * @param afterActions the after-actions to execute

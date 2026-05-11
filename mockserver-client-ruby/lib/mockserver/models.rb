@@ -64,7 +64,7 @@ module MockServer
   # Known Body type strings used to distinguish Body objects from plain hashes
   # during deserialization.
   BODY_TYPES = Set.new(%w[
-    STRING JSON REGEX XML BINARY JSON_SCHEMA JSON_PATH XPATH XML_SCHEMA JSON_RPC
+    STRING JSON REGEX XML BINARY JSON_SCHEMA JSON_PATH XPATH XML_SCHEMA JSON_RPC GRAPHQL
   ]).freeze
 
   # -------------------------------------------------------------------
@@ -110,6 +110,7 @@ module MockServer
     return body if body.is_a?(Hash)
     return body.to_h if body.is_a?(Body)
     return body.to_h if body.is_a?(JsonRpcBody)
+    return body.to_h if body.is_a?(GraphQLBody)
 
     body
   end
@@ -122,6 +123,9 @@ module MockServer
     if data.is_a?(Hash)
       if data['type'] == 'JSON_RPC'
         return JsonRpcBody.from_hash(data)
+      end
+      if data['type'] == 'GRAPHQL'
+        return GraphQLBody.from_hash(data)
       end
       return Body.from_hash(data) if BODY_TYPES.include?(data['type'])
 
@@ -391,6 +395,10 @@ module MockServer
     def self.json_rpc(method_name, params_schema: nil)
       JsonRpcBody.new(method_name: method_name, params_schema: params_schema)
     end
+
+    def self.graphql(query, operation_name: nil, variables_schema: nil)
+      GraphQLBody.new(query: query, operation_name: operation_name, variables_schema: variables_schema)
+    end
   end
 
   class JsonRpcBody
@@ -419,6 +427,39 @@ module MockServer
         params_schema: data['paramsSchema'],
         not_body:      data.fetch('not', false),
         optional:      data.fetch('optional', false)
+      )
+    end
+  end
+
+  class GraphQLBody
+    attr_accessor :query, :operation_name, :variables_schema, :not_body, :optional
+
+    def initialize(query:, operation_name: nil, variables_schema: nil, not_body: false, optional: false)
+      @query = query
+      @operation_name = operation_name
+      @variables_schema = variables_schema
+      @not_body = not_body
+      @optional = optional
+    end
+
+    def to_h
+      result = { 'type' => 'GRAPHQL', 'query' => @query }
+      result['operationName'] = @operation_name if @operation_name
+      result['variablesSchema'] = @variables_schema if @variables_schema
+      result['not'] = true if @not_body
+      result['optional'] = true if @optional
+      result
+    end
+
+    def self.from_hash(data)
+      return nil if data.nil?
+
+      new(
+        query:            data['query'] || '',
+        operation_name:   data['operationName'],
+        variables_schema: data['variablesSchema'],
+        not_body:         data.fetch('not', false),
+        optional:         data.fetch('optional', false)
       )
     end
   end
@@ -1130,7 +1171,8 @@ module MockServer
                   :http_forward_template, :http_forward_class_callback,
                   :http_forward_object_callback, :http_override_forwarded_request,
                   :http_error, :times, :time_to_live,
-                  :http_sse_response, :http_websocket_response, :after_actions
+                  :http_sse_response, :http_websocket_response, :after_actions,
+                  :scenario_name, :scenario_state, :new_scenario_state
 
     def initialize(id: nil, priority: nil, http_request: nil, http_response: nil,
                    http_response_template: nil, http_response_class_callback: nil,
@@ -1138,7 +1180,8 @@ module MockServer
                    http_forward_template: nil, http_forward_class_callback: nil,
                    http_forward_object_callback: nil, http_override_forwarded_request: nil,
                    http_error: nil, times: nil, time_to_live: nil,
-                   http_sse_response: nil, http_websocket_response: nil, after_actions: nil)
+                   http_sse_response: nil, http_websocket_response: nil, after_actions: nil,
+                   scenario_name: nil, scenario_state: nil, new_scenario_state: nil)
       @id = id
       @priority = priority
       @http_request = http_request
@@ -1157,6 +1200,9 @@ module MockServer
       @http_sse_response = http_sse_response
       @http_websocket_response = http_websocket_response
       @after_actions = after_actions
+      @scenario_name = scenario_name
+      @scenario_state = scenario_state
+      @new_scenario_state = new_scenario_state
     end
 
     def to_h
@@ -1185,7 +1231,10 @@ module MockServer
         'httpWebSocketResponse'        => @http_websocket_response&.to_h,
         'afterActions'                 => after_actions_h,
         'times'                        => @times&.to_h,
-        'timeToLive'                   => @time_to_live&.to_h
+        'timeToLive'                   => @time_to_live&.to_h,
+        'scenarioName'                 => @scenario_name,
+        'scenarioState'                => @scenario_state,
+        'newScenarioState'             => @new_scenario_state
       })
     end
 
@@ -1217,7 +1266,10 @@ module MockServer
         http_websocket_response:         HttpWebSocketResponse.from_hash(data['httpWebSocketResponse']),
         after_actions:                   after_actions,
         times:                           Times.from_hash(data['times']),
-        time_to_live:                    TimeToLive.from_hash(data['timeToLive'])
+        time_to_live:                    TimeToLive.from_hash(data['timeToLive']),
+        scenario_name:                   data['scenarioName'],
+        scenario_state:                  data['scenarioState'],
+        new_scenario_state:              data['newScenarioState']
       )
     end
   end

@@ -49,6 +49,34 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
         return new HttpRequest().withPath(path);
     }
 
+    public static HttpRequest get(String path) {
+        return new HttpRequest().withMethod("GET").withPath(path);
+    }
+
+    public static HttpRequest post(String path) {
+        return new HttpRequest().withMethod("POST").withPath(path);
+    }
+
+    public static HttpRequest put(String path) {
+        return new HttpRequest().withMethod("PUT").withPath(path);
+    }
+
+    public static HttpRequest delete(String path) {
+        return new HttpRequest().withMethod("DELETE").withPath(path);
+    }
+
+    public static HttpRequest patch(String path) {
+        return new HttpRequest().withMethod("PATCH").withPath(path);
+    }
+
+    public static HttpRequest head(String path) {
+        return new HttpRequest().withMethod("HEAD").withPath(path);
+    }
+
+    public static HttpRequest options(String path) {
+        return new HttpRequest().withMethod("OPTIONS").withPath(path);
+    }
+
     public Boolean isKeepAlive() {
         return keepAlive;
     }

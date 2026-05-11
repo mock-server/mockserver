@@ -44,6 +44,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
     private WebSocketClientRegistry webSocketClientRegistry;
     private MatcherBuilder matcherBuilder;
     private Metrics metrics;
+    private final ScenarioManager scenarioManager = new ScenarioManager();
 
     public RequestMatchers(Configuration configuration, MockServerLogger mockServerLogger, Scheduler scheduler, WebSocketClientRegistry webSocketClientRegistry) {
         super(scheduler);
@@ -209,6 +210,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
     public void reset(Cause cause) {
         httpRequestMatchers.stream().forEach(httpRequestMatcher -> removeHttpRequestMatcher(httpRequestMatcher, cause, false, UUIDService.getUUID()));
         expectationRequestDefinitions.clear();
+        scenarioManager.reset();
         Metrics.clearActionMetrics();
         Metrics.clearRequestAndExpectationMetrics();
         notifyListeners(this, cause);
@@ -228,11 +230,20 @@ public class RequestMatchers extends MockServerMatcherNotifier {
             MatchDifference matchDifference = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
             if (httpRequestMatcher.matches(matchDifference, httpRequest)) {
                 Expectation expectation = httpRequestMatcher.getExpectation();
+                if (expectation.getScenarioName() != null && expectation.getScenarioState() != null) {
+                    if (!scenarioManager.matchesState(expectation.getScenarioName(), expectation.getScenarioState())) {
+                        continue;
+                    }
+                }
+                if (!expectation.matchesByPercentage()) {
+                    continue;
+                }
                 httpRequestMatcher.setResponseInProgress(true);
                 if (!expectation.consumeMatch()) {
                     httpRequestMatcher.setResponseInProgress(false);
                     continue;
                 }
+                scenarioManager.transitionState(expectation.getScenarioName(), expectation.getNewScenarioState());
                 boolean remainingMatchesDecremented = expectation.getTimes() != null && !expectation.getTimes().isUnlimited();
                 if (remainingMatchesDecremented) {
                     notifyListeners(this, Cause.API);
@@ -447,6 +458,10 @@ public class RequestMatchers extends MockServerMatcherNotifier {
 
     public boolean isEmpty() {
         return httpRequestMatchers.isEmpty();
+    }
+
+    public ScenarioManager getScenarioManager() {
+        return scenarioManager;
     }
 
     protected void notifyListeners(final RequestMatchers notifier, Cause cause) {

@@ -19,6 +19,7 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
     private static final String[] excludedFields = {"id"};
     private String id;
     private Integer priority;
+    private Integer percentage;
     private RequestDefinitionDTO httpRequest;
     private HttpResponseDTO httpResponse;
     private HttpTemplateDTO httpResponseTemplate;
@@ -38,6 +39,9 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
     private List<AfterActionDTO> afterActions;
     private org.mockserver.serialization.model.TimesDTO times;
     private TimeToLiveDTO timeToLive;
+    private String scenarioName;
+    private String scenarioState;
+    private String newScenarioState;
 
     public ExpectationDTO(Expectation expectation) {
         if (expectation != null) {
@@ -46,6 +50,7 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
             if (priority != null) {
                 this.priority = expectation.getPriority();
             }
+            this.percentage = expectation.getPercentage();
             RequestDefinition requestMatcher = expectation.getHttpRequest();
             if (requestMatcher instanceof HttpRequest) {
                 this.httpRequest = new HttpRequestDTO((HttpRequest) requestMatcher);
@@ -119,6 +124,15 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
             TimeToLive timeToLive = expectation.getTimeToLive();
             if (timeToLive != null) {
                 this.timeToLive = new TimeToLiveDTO(timeToLive);
+            }
+            if (expectation.getScenarioName() != null) {
+                this.scenarioName = expectation.getScenarioName();
+            }
+            if (expectation.getScenarioState() != null) {
+                this.scenarioState = expectation.getScenarioState();
+            }
+            if (expectation.getNewScenarioState() != null) {
+                this.newScenarioState = expectation.getNewScenarioState();
             }
         }
     }
@@ -211,6 +225,10 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
         }
         return new Expectation(httpRequest, times, timeToLive, priority)
             .withId(this.id)
+            .withPercentage(this.percentage)
+            .withScenarioName(this.scenarioName)
+            .withScenarioState(this.scenarioState)
+            .withNewScenarioState(this.newScenarioState)
             .thenRespond(httpResponse)
             .thenRespond(httpResponseTemplate)
             .thenRespond(httpResponseClassCallback)
@@ -243,6 +261,15 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
 
     public ExpectationDTO setPriority(Integer priority) {
         this.priority = priority;
+        return this;
+    }
+
+    public Integer getPercentage() {
+        return percentage;
+    }
+
+    public ExpectationDTO setPercentage(Integer percentage) {
+        this.percentage = percentage;
         return this;
     }
 
@@ -406,6 +433,33 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
     @JsonSetter("afterActions")
     public ExpectationDTO setAfterActions(List<AfterActionDTO> afterActions) {
         this.afterActions = afterActions;
+        return this;
+    }
+
+    public String getScenarioName() {
+        return scenarioName;
+    }
+
+    public ExpectationDTO setScenarioName(String scenarioName) {
+        this.scenarioName = scenarioName;
+        return this;
+    }
+
+    public String getScenarioState() {
+        return scenarioState;
+    }
+
+    public ExpectationDTO setScenarioState(String scenarioState) {
+        this.scenarioState = scenarioState;
+        return this;
+    }
+
+    public String getNewScenarioState() {
+        return newScenarioState;
+    }
+
+    public ExpectationDTO setNewScenarioState(String newScenarioState) {
+        this.newScenarioState = newScenarioState;
         return this;
     }
 

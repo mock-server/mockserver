@@ -553,4 +553,40 @@ public class ExpectationDTOTest {
         assertThat(expectationDTO.getHttpOverrideForwardedRequest(), is(nullValue()));
         assertThat(expectationDTO.getHttpError(), is(nullValue()));
     }
+
+    @Test
+    public void shouldPreservePercentageInDTO() {
+        Expectation expectation = new Expectation(request(), Times.unlimited(), TimeToLive.unlimited(), 0)
+            .withPercentage(75)
+            .thenRespond(new HttpResponse().withBody("response"));
+
+        ExpectationDTO dto = new ExpectationDTO(expectation);
+
+        assertThat(dto.getPercentage(), is(75));
+    }
+
+    @Test
+    public void shouldRoundTripPercentageThroughDTO() {
+        Expectation original = new Expectation(request(), Times.unlimited(), TimeToLive.unlimited(), 0)
+            .withPercentage(42)
+            .thenRespond(new HttpResponse().withBody("response"));
+
+        ExpectationDTO dto = new ExpectationDTO(original);
+        Expectation rebuilt = dto.buildObject();
+
+        assertThat(rebuilt.getPercentage(), is(42));
+    }
+
+    @Test
+    public void shouldHandleNullPercentageInDTO() {
+        Expectation expectation = new Expectation(request(), Times.unlimited(), TimeToLive.unlimited(), 0)
+            .thenRespond(new HttpResponse().withBody("response"));
+
+        ExpectationDTO dto = new ExpectationDTO(expectation);
+
+        assertThat(dto.getPercentage(), is(nullValue()));
+
+        Expectation rebuilt = dto.buildObject();
+        assertThat(rebuilt.getPercentage(), is(nullValue()));
+    }
 }

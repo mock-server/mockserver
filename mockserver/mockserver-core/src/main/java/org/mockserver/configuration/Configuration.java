@@ -120,7 +120,10 @@ public class Configuration {
     private String proxyAuthenticationUsername;
     private String proxyAuthenticationPassword;
     private String noProxyHosts;
+    private String proxyRemoteHost;
+    private Integer proxyRemotePort;
     private Boolean forwardAdjustHostHeader;
+    private String forwardDefaultHostHeader;
     private List<ProxyPassMapping> proxyPassMappings;
 
     // liveness
@@ -1424,6 +1427,42 @@ public class Configuration {
         return this;
     }
 
+    public String proxyRemoteHost() {
+        if (proxyRemoteHost == null) {
+            return ConfigurationProperties.proxyRemoteHost();
+        }
+        return proxyRemoteHost;
+    }
+
+    /**
+     * The hostname of the remote server to proxy all requests to.
+     * When set, unmatched requests are forwarded to this host.
+     *
+     * @param proxyRemoteHost the hostname to forward requests to
+     */
+    public Configuration proxyRemoteHost(String proxyRemoteHost) {
+        this.proxyRemoteHost = proxyRemoteHost;
+        return this;
+    }
+
+    public Integer proxyRemotePort() {
+        if (proxyRemotePort == null) {
+            return ConfigurationProperties.proxyRemotePort();
+        }
+        return proxyRemotePort;
+    }
+
+    /**
+     * The port of the remote server to proxy all requests to.
+     * Must be specified together with proxyRemoteHost.
+     *
+     * @param proxyRemotePort the port to forward requests to
+     */
+    public Configuration proxyRemotePort(Integer proxyRemotePort) {
+        this.proxyRemotePort = proxyRemotePort;
+        return this;
+    }
+
     public Boolean forwardAdjustHostHeader() {
         if (forwardAdjustHostHeader == null) {
             return ConfigurationProperties.forwardAdjustHostHeader();
@@ -1440,6 +1479,26 @@ public class Configuration {
      */
     public Configuration forwardAdjustHostHeader(Boolean forwardAdjustHostHeader) {
         this.forwardAdjustHostHeader = forwardAdjustHostHeader;
+        return this;
+    }
+
+    public String forwardDefaultHostHeader() {
+        if (forwardDefaultHostHeader == null) {
+            return ConfigurationProperties.forwardDefaultHostHeader();
+        }
+        return forwardDefaultHostHeader;
+    }
+
+    /**
+     * Set a default Host header value to use when forwarding requests.
+     * When set, the Host header will be overridden with this value for all forwarded requests,
+     * regardless of the target server's address. This is useful when the target server
+     * routes requests based on the Host header.
+     *
+     * @param forwardDefaultHostHeader the Host header value to set on forwarded requests
+     */
+    public Configuration forwardDefaultHostHeader(String forwardDefaultHostHeader) {
+        this.forwardDefaultHostHeader = forwardDefaultHostHeader;
         return this;
     }
 

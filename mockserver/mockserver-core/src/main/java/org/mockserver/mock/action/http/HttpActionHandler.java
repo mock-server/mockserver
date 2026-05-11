@@ -113,7 +113,8 @@ public class HttpActionHandler {
                 }
             }
         };
-        final boolean potentiallyHttpProxy = !proxyingRequest && configuration.attemptToProxyIfNoMatchingExpectation() && !isEmpty(request.getFirstHeader(HOST.toString())) && !localAddresses.contains(request.getFirstHeader(HOST.toString())) && !NoProxyHostsUtils.isHostOnNoProxyList(request.getFirstHeader(HOST.toString()), configuration.noProxyHosts());
+        final boolean hasConfiguredRemoteProxy = isNotBlank(configuration.proxyRemoteHost()) && configuration.proxyRemotePort() != null;
+        final boolean potentiallyHttpProxy = !proxyingRequest && (hasConfiguredRemoteProxy || (configuration.attemptToProxyIfNoMatchingExpectation() && !isEmpty(request.getFirstHeader(HOST.toString())) && !localAddresses.contains(request.getFirstHeader(HOST.toString())) && !NoProxyHostsUtils.isHostOnNoProxyList(request.getFirstHeader(HOST.toString()), configuration.noProxyHosts())));
 
         if (expectation != null && expectation.getAction() != null) {
 
@@ -392,7 +393,7 @@ public class HttpActionHandler {
 
                 } else {
 
-                    final InetSocketAddress remoteAddress = getRemoteAddress(ctx);
+                    final InetSocketAddress remoteAddress = getRemoteAddressWithFallback(ctx);
                     final HttpRequest clonedRequest = hopByHopHeaderFilter.onRequest(request).withHeader(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue());
                     final HttpForwardActionResult responseFuture = new HttpForwardActionResult(clonedRequest, httpClient.sendRequest(clonedRequest, remoteAddress, potentiallyHttpProxy ? 1000 : configuration.socketConnectionTimeoutInMillis()), null, remoteAddress);
                     scheduler.submit(responseFuture, () -> {
@@ -1063,6 +1064,18 @@ public class HttpActionHandler {
         } else {
             return null;
         }
+    }
+
+    private InetSocketAddress getRemoteAddressWithFallback(final ChannelHandlerContext ctx) {
+        InetSocketAddress remoteAddress = getRemoteAddress(ctx);
+        if (remoteAddress == null && configuration != null) {
+            String host = configuration.proxyRemoteHost();
+            Integer port = configuration.proxyRemotePort();
+            if (isNotBlank(host) && port != null) {
+                remoteAddress = new InetSocketAddress(host, port);
+            }
+        }
+        return remoteAddress;
     }
 
 

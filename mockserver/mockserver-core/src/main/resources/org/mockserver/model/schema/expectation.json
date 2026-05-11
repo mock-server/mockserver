@@ -9,6 +9,11 @@
     "priority": {
       "type": "integer"
     },
+    "percentage": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
     "httpRequest": {
       "$ref": "#/definitions/requestDefinition"
     },
@@ -59,6 +64,15 @@
         { "$ref": "#/definitions/afterAction" },
         { "type": "array", "items": { "$ref": "#/definitions/afterAction" }, "minItems": 1 }
       ]
+    },
+    "scenarioName": {
+      "type": "string"
+    },
+    "scenarioState": {
+      "type": "string"
+    },
+    "newScenarioState": {
+      "type": "string"
     },
     "times": {
       "$ref": "#/definitions/times"

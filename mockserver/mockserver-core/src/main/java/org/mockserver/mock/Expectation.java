@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.mockserver.model.OpenAPIDefinition.openAPI;
@@ -29,6 +30,7 @@ public class Expectation extends ObjectWithJsonToString {
     @JsonIgnore
     private long created;
     private int priority;
+    private Integer percentage;
     private SortableExpectationId sortableExpectationId;
     private final RequestDefinition httpRequest;
     private final Times times;
@@ -48,6 +50,9 @@ public class Expectation extends ObjectWithJsonToString {
     private GrpcStreamResponse grpcStreamResponse;
     private HttpError httpError;
     private List<AfterAction> afterActions;
+    private String scenarioName;
+    private String scenarioState;
+    private String newScenarioState;
 
     /**
      * Specify the OpenAPI and operationId to match against by URL or payload and string as follows:
@@ -313,6 +318,30 @@ public class Expectation extends ObjectWithJsonToString {
         return priority;
     }
 
+    public Expectation withPercentage(Integer percentage) {
+        if (percentage != null && (percentage < 0 || percentage > 100)) {
+            throw new IllegalArgumentException("percentage must be between 0 and 100");
+        }
+        this.percentage = percentage;
+        this.hashCode = 0;
+        return this;
+    }
+
+    public Integer getPercentage() {
+        return percentage;
+    }
+
+    @JsonIgnore
+    public boolean matchesByPercentage() {
+        if (percentage == null || percentage == 100) {
+            return true;
+        }
+        if (percentage == 0) {
+            return false;
+        }
+        return ThreadLocalRandom.current().nextInt(100) < percentage;
+    }
+
     public Expectation withCreated(long created) {
         this.created = created;
         this.sortableExpectationId = null;
@@ -410,6 +439,36 @@ public class Expectation extends ObjectWithJsonToString {
             this.hashCode = 0;
         }
         return this;
+    }
+
+    public Expectation withScenarioName(String scenarioName) {
+        this.scenarioName = scenarioName;
+        this.hashCode = 0;
+        return this;
+    }
+
+    public String getScenarioName() {
+        return scenarioName;
+    }
+
+    public Expectation withScenarioState(String scenarioState) {
+        this.scenarioState = scenarioState;
+        this.hashCode = 0;
+        return this;
+    }
+
+    public String getScenarioState() {
+        return scenarioState;
+    }
+
+    public Expectation withNewScenarioState(String newScenarioState) {
+        this.newScenarioState = newScenarioState;
+        this.hashCode = 0;
+        return this;
+    }
+
+    public String getNewScenarioState() {
+        return newScenarioState;
     }
 
     @JsonIgnore
@@ -673,6 +732,10 @@ public class Expectation extends ObjectWithJsonToString {
         Expectation clone = new Expectation(httpRequest, times.clone(), timeToLive, priority)
             .withId(id)
             .withCreated(created)
+            .withPercentage(percentage)
+            .withScenarioName(scenarioName)
+            .withScenarioState(scenarioState)
+            .withNewScenarioState(newScenarioState)
             .thenRespond(httpResponse)
             .thenRespond(httpResponseTemplate)
             .thenRespond(httpResponseClassCallback)
@@ -712,6 +775,7 @@ public class Expectation extends ObjectWithJsonToString {
         }
         Expectation that = (Expectation) o;
         return Objects.equals(priority, that.priority) &&
+            Objects.equals(percentage, that.percentage) &&
             Objects.equals(httpRequest, that.httpRequest) &&
             Objects.equals(times, that.times) &&
             Objects.equals(timeToLive, that.timeToLive) &&
@@ -729,13 +793,16 @@ public class Expectation extends ObjectWithJsonToString {
             Objects.equals(httpWebSocketResponse, that.httpWebSocketResponse) &&
             Objects.equals(grpcStreamResponse, that.grpcStreamResponse) &&
             Objects.equals(httpError, that.httpError) &&
-            Objects.equals(afterActions, that.afterActions);
+            Objects.equals(afterActions, that.afterActions) &&
+            Objects.equals(scenarioName, that.scenarioName) &&
+            Objects.equals(scenarioState, that.scenarioState) &&
+            Objects.equals(newScenarioState, that.newScenarioState);
     }
 
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(priority, httpRequest, times, timeToLive, httpResponse, httpResponseTemplate, httpResponseClassCallback, httpResponseObjectCallback, httpForward, httpForwardTemplate, httpForwardClassCallback, httpForwardObjectCallback, httpOverrideForwardedRequest, httpForwardValidateAction, httpSseResponse, httpWebSocketResponse, grpcStreamResponse, httpError, afterActions);
+            hashCode = Objects.hash(priority, percentage, httpRequest, times, timeToLive, httpResponse, httpResponseTemplate, httpResponseClassCallback, httpResponseObjectCallback, httpForward, httpForwardTemplate, httpForwardClassCallback, httpForwardObjectCallback, httpOverrideForwardedRequest, httpForwardValidateAction, httpSseResponse, httpWebSocketResponse, grpcStreamResponse, httpError, afterActions, scenarioName, scenarioState, newScenarioState);
         }
         return hashCode;
     }

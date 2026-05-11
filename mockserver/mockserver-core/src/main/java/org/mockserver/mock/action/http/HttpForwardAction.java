@@ -53,14 +53,19 @@ public abstract class HttpForwardAction {
     }
 
     protected void adjustHostHeader(HttpRequest request) {
-        if (configuration != null && configuration.forwardAdjustHostHeader()) {
-            SocketAddress sa = request.getSocketAddress();
-            if (sa != null && isNotBlank(sa.getHost())) {
-                boolean defaultPort = (SocketAddress.Scheme.HTTPS.equals(sa.getScheme()) && sa.getPort() != null && sa.getPort() == 443)
-                    || (SocketAddress.Scheme.HTTP.equals(sa.getScheme()) && sa.getPort() != null && sa.getPort() == 80)
-                    || (sa.getPort() == null);
-                String hostHeader = defaultPort ? sa.getHost() : sa.getHost() + ":" + sa.getPort();
-                request.replaceHeader(new Header("Host", hostHeader));
+        if (configuration != null) {
+            String defaultHostHeader = configuration.forwardDefaultHostHeader();
+            if (isNotBlank(defaultHostHeader)) {
+                request.replaceHeader(new Header("Host", defaultHostHeader));
+            } else if (configuration.forwardAdjustHostHeader()) {
+                SocketAddress sa = request.getSocketAddress();
+                if (sa != null && isNotBlank(sa.getHost())) {
+                    boolean defaultPort = (SocketAddress.Scheme.HTTPS.equals(sa.getScheme()) && sa.getPort() != null && sa.getPort() == 443)
+                        || (SocketAddress.Scheme.HTTP.equals(sa.getScheme()) && sa.getPort() != null && sa.getPort() == 80)
+                        || (sa.getPort() == null);
+                    String hostHeader = defaultPort ? sa.getHost() : sa.getHost() + ":" + sa.getPort();
+                    request.replaceHeader(new Header("Host", hostHeader));
+                }
             }
         }
     }

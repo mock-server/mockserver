@@ -54,6 +54,9 @@ public class ExpectationToJavaSerializer implements ToJavaSerializer<Expectation
             output.append(",");
             appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(expectation.getPriority());
             appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
+            if (expectation.getPercentage() != null) {
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".withPercentage(").append(expectation.getPercentage()).append(")");
+            }
             if (expectation.getHttpResponse() != null) {
                 appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".respond(");
                 output.append(new HttpResponseToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getHttpResponse()));

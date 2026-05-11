@@ -1,7 +1,9 @@
 package org.mockserver.serialization;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.StreamReadConstraints;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -100,7 +102,12 @@ public class ObjectMapperFactory {
 
     @SuppressWarnings("deprecation")
     public static ObjectMapper buildObjectMapperWithoutRemovingEmptyValues() {
-        ObjectMapper objectMapper = new ObjectMapper();
+        JsonFactory jsonFactory = JsonFactory.builder()
+            .streamReadConstraints(StreamReadConstraints.builder()
+                .maxStringLength(100 * 1024 * 1024)
+                .build())
+            .build();
+        ObjectMapper objectMapper = new ObjectMapper(jsonFactory);
 
         // ignore failures
         ExceptionHandling.handleThrowable(() -> objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false));
@@ -237,6 +244,8 @@ public class ObjectMapperFactory {
             new XPathBodyDTOSerializer(),
             new JsonRpcBodySerializer(),
             new JsonRpcBodyDTOSerializer(),
+            new GraphQLBodySerializer(),
+            new GraphQLBodyDTOSerializer(),
             new LogEntryBodySerializer(),
             new LogEntryBodyDTOSerializer(),
             // condition
