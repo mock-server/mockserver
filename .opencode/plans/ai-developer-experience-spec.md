@@ -14,7 +14,7 @@ AI coding assistants (Cursor, Copilot, Windsurf, Cline, OpenCode, etc.) cannot c
 
 ## Problem Statement
 
-Developers using AI coding assistants currently have no programmatic way to discover MockServer's capabilities, create mock expectations, verify HTTP traffic, or debug API integration issues through their AI tools. This results in MockServer being invisible to AI-assisted workflows and losing adoption to competitors (WireMock already ships `llms.txt`). The desired outcome is that any AI coding assistant can discover MockServer via `llms.txt`, connect to a running instance via MCP, and perform the full mock/verify/debug workflow without the developer writing MockServer-specific code.
+Developers using AI coding assistants currently have no programmatic way to discover MockServer's capabilities, create mock expectations, verify HTTP traffic, or debug API integration issues through their AI tools. This results in MockServer being invisible to AI-assisted workflows and losing adoption to competitors (some already ship `llms.txt`). The desired outcome is that any AI coding assistant can discover MockServer via `llms.txt`, connect to a running instance via MCP, and perform the full mock/verify/debug workflow without the developer writing MockServer-specific code.
 
 ---
 
@@ -24,7 +24,7 @@ MockServer is an HTTP(S) mock server and proxy with a well-defined REST API (doc
 
 The Model Context Protocol (MCP) is an open standard for AI tool integration. It enables AI assistants to discover and invoke tools exposed by servers. The "Streamable HTTP" transport runs over standard HTTP POST/SSE — a natural fit for MockServer's existing Netty pipeline. The MCP protocol is JSON-RPC 2.0, which can be implemented directly in Java 11 without external SDK dependencies (the official Java MCP SDK requires Java 17+, conflicting with MockServer's Java 11 policy).
 
-The `llms.txt` convention (llmstxt.org) provides a standardised way for websites to expose machine-readable content summaries for LLMs. WireMock (a direct competitor) already ships `llms.txt`, `llms-small.txt`, and `llms-full.txt`. MockServer has none.
+The `llms.txt` convention (llmstxt.org) provides a standardised way for websites to expose machine-readable content summaries for LLMs. Some competing mock servers already ship `llms.txt`, `llms-small.txt`, and `llms-full.txt`. MockServer has none.
 
 Currently, no package README (npm, PyPI, RubyGems, Maven Central) mentions AI tooling, MCP, or points to machine-readable documentation. Keywords are sparse (npm packages have only 3 keywords each, mostly Grunt-related).
 
@@ -289,7 +289,7 @@ For the HTTP debugging use case:
 | SC-05 | `https://www.mock-server.com/llms-full.txt` returns comprehensive content covering all features, languages, and configuration | HTTP GET + verify coverage of REST API, all 4 client libraries, Docker, MCP, configuration |
 | SC-06 | All package READMEs mention MCP integration and link to llms.txt | Inspect published packages on npm, PyPI, RubyGems |
 | SC-07 | The website "AI Assistants" page includes working MCP configuration examples for at least 3 AI tools | Manual verification of page content |
-| SC-08 | WireMock llms.txt parity: MockServer's llms.txt provides equivalent or better coverage than WireMock's llms.txt for common use cases | Side-by-side comparison: prompt both llms.txt to an LLM and verify MockServer answers are at least as good |
+| SC-08 | Competitor llms.txt parity: MockServer's llms.txt provides equivalent or better coverage than competing mock servers' llms.txt for common use cases | Side-by-side comparison: prompt both llms.txt to an LLM and verify MockServer answers are at least as good |
 
 ---
 

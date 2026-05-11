@@ -95,6 +95,21 @@ public class ForwardChainExpectation {
      *
      * @param afterActions the after-actions to execute
      */
+    public ForwardChainExpectation withScenarioName(String scenarioName) {
+        expectation.withScenarioName(scenarioName);
+        return this;
+    }
+
+    public ForwardChainExpectation withScenarioState(String scenarioState) {
+        expectation.withScenarioState(scenarioState);
+        return this;
+    }
+
+    public ForwardChainExpectation withNewScenarioState(String newScenarioState) {
+        expectation.withNewScenarioState(newScenarioState);
+        return this;
+    }
+
     public ForwardChainExpectation withAfterActions(AfterAction... afterActions) {
         expectation.withAfterActions(afterActions);
         return this;

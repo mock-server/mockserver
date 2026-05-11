@@ -493,7 +493,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <li><strong><a href="#button_match_request_by_body_with_xpath">XPath</a></strong> - matches if at least one value returned by expression, see <a target="_blank" href="https://www.w3.org/TR/2017/REC-xpath-31-20170321/">XPath specification</a></li>
     <li><strong><a href="#button_match_request_by_form_submission_body">form fields</a></strong> (i.e. body parameters)</li>
     <li><strong><a href="#button_match_request_by_binary_body">binary</a></strong></li>
-    <li><strong><a href="#graphql_body_matching">GraphQL</a></strong> - semantic matching of GraphQL queries, mutations, and subscriptions</li>
+    <li><strong><a href="#graphql_body_matching">GraphQL</a></strong> - whitespace-insensitive matching of GraphQL queries, mutations, and subscriptions</li>
     <li><strong><a href="#button_match_request_by_not_matching_body_with_xpath">negated matcher</a></strong></li>
 </ul>
 
@@ -501,7 +501,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 
 <h4>GraphQL Body Matching</h4>
 
-<p>MockServer supports semantic matching of <a target="_blank" href="https://graphql.org/learn/serving-over-http/">GraphQL over HTTP</a> request bodies. This allows expectations to match GraphQL queries, mutations, and subscriptions regardless of whitespace or formatting differences.</p>
+<p>MockServer supports whitespace-insensitive matching of <a target="_blank" href="https://graphql.org/learn/serving-over-http/">GraphQL over HTTP</a> JSON request bodies. This allows expectations to match GraphQL queries, mutations, and subscriptions regardless of whitespace, formatting, or comment differences. The request body must be a JSON object with a <span class="inline_code">query</span> field (the standard GraphQL over HTTP format).</p>
 
 <p>A GraphQL body matcher can specify:</p>
 <ul>

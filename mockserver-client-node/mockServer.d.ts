@@ -22,6 +22,7 @@ export type Expectations = Expectation | Expectation[];
 export type Expectation = {
   id?: string;
   priority?: number;
+  percentage?: number;
   httpRequest?: RequestDefinition;
   openAPIDefinition?: OpenAPIDefinition;
   httpResponse?: HttpResponse;

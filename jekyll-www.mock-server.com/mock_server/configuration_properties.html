@@ -599,8 +599,8 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 
 <button id="button_configuration_proxy_remote_host" class="accordion title"><strong>Proxy Remote Host</strong></button>
 <div class="panel title">
-    <p>The hostname of the remote server to forward all unmatched requests to. When set together with <span class="inline_code">proxyRemotePort</span>, MockServer acts as a forward proxy, sending any request that does not match an expectation to the specified remote host. This works in all deployment modes including WAR deployments.</p>
-    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>The hostname of the remote server to forward all unmatched requests to. When set together with <span class="inline_code">proxyRemotePort</span>, MockServer acts as a forward proxy, sending any request that does not match an expectation to the specified remote host. The Host header is automatically updated to match the configured remote host unless <span class="inline_code">forwardDefaultHostHeader</span> is set. This works in all deployment modes including WAR deployments.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span> (unset)</p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.proxyRemoteHost(String hostname)</code></pre>
     <p>System Property:</p>

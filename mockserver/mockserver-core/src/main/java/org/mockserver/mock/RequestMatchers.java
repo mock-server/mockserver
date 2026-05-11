@@ -231,7 +231,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
             if (httpRequestMatcher.matches(matchDifference, httpRequest)) {
                 Expectation expectation = httpRequestMatcher.getExpectation();
                 if (expectation.getScenarioName() != null && expectation.getScenarioState() != null) {
-                    if (!scenarioManager.matchesState(expectation.getScenarioName(), expectation.getScenarioState())) {
+                    if (!scenarioManager.matchesAndTransition(expectation.getScenarioName(), expectation.getScenarioState(), expectation.getNewScenarioState())) {
                         continue;
                     }
                 }
@@ -243,7 +243,9 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                     httpRequestMatcher.setResponseInProgress(false);
                     continue;
                 }
-                scenarioManager.transitionState(expectation.getScenarioName(), expectation.getNewScenarioState());
+                if (expectation.getScenarioName() != null && expectation.getScenarioState() == null && expectation.getNewScenarioState() != null) {
+                    scenarioManager.transitionState(expectation.getScenarioName(), expectation.getNewScenarioState());
+                }
                 boolean remainingMatchesDecremented = expectation.getTimes() != null && !expectation.getTimes().isUnlimited();
                 if (remainingMatchesDecremented) {
                     notifyListeners(this, Cause.API);
@@ -375,6 +377,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                 );
             }
             if (httpRequestMatcher.getExpectation() != null) {
+                clearOrphanedScenarioState(httpRequestMatcher.getExpectation());
                 final Action action = httpRequestMatcher.getExpectation().getAction();
                 if (action instanceof HttpObjectCallback) {
                     webSocketClientRegistry.unregisterClient(((HttpObjectCallback) action).getClientId());
@@ -386,6 +389,20 @@ public class RequestMatchers extends MockServerMatcherNotifier {
             if (notifyAndUpdateMetrics) {
                 notifyListeners(this, cause);
             }
+        }
+    }
+
+    private void clearOrphanedScenarioState(Expectation removed) {
+        String scenarioName = removed.getScenarioName();
+        if (isBlank(scenarioName)) {
+            return;
+        }
+        boolean hasRemaining = httpRequestMatchers.stream()
+            .anyMatch(m -> m.getExpectation() != null
+                && m.getExpectation() != removed
+                && scenarioName.equals(m.getExpectation().getScenarioName()));
+        if (!hasRemaining) {
+            scenarioManager.clear(scenarioName);
         }
     }
 

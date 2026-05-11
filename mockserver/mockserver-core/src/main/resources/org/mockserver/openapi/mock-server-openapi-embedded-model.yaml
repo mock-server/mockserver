@@ -345,6 +345,12 @@ components:
           $ref: "#/components/schemas/Times"
         timeToLive:
           $ref: "#/components/schemas/TimeToLive"
+        scenarioName:
+          type: string
+        scenarioState:
+          type: string
+        newScenarioState:
+          type: string
       oneOf:
         - required:
             - httpResponse
@@ -1006,6 +1012,24 @@ components:
               type: string
             paramsSchema:
               type: string
+        - type: object
+          description: "GraphQL body matcher"
+          additionalProperties: false
+          properties:
+            not:
+              type: boolean
+            type:
+              enum:
+                - GRAPHQL
+            query:
+              type: string
+            operationName:
+              type: string
+            variablesSchema:
+              type: string
+          required:
+            - type
+            - query
     BodyWithContentType:
       description: "response body"
       anyOf:

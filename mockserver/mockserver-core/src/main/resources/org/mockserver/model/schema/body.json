@@ -251,7 +251,11 @@
         "variablesSchema": {
           "type": "string"
         }
-      }
+      },
+      "required": [
+        "type",
+        "query"
+      ]
     }
   ]
 }

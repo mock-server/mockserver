@@ -1076,6 +1076,7 @@ class AfterAction:
 class Expectation:
     id: str | None = None
     priority: int | None = None
+    percentage: int | None = None
     http_request: HttpRequest | None = None
     http_response: HttpResponse | None = None
     http_response_template: HttpTemplate | None = None
@@ -1100,6 +1101,7 @@ class Expectation:
         return _strip_none({
             "id": self.id,
             "priority": self.priority,
+            "percentage": self.percentage,
             "httpRequest": self.http_request.to_dict() if self.http_request else None,
             "httpResponse": self.http_response.to_dict() if self.http_response else None,
             "httpResponseTemplate": self.http_response_template.to_dict() if self.http_response_template else None,
@@ -1131,6 +1133,7 @@ class Expectation:
         return cls(
             id=data.get("id"),
             priority=data.get("priority"),
+            percentage=data.get("percentage"),
             http_request=HttpRequest.from_dict(data.get("httpRequest")),
             http_response=HttpResponse.from_dict(data.get("httpResponse")),
             http_response_template=HttpTemplate.from_dict(data.get("httpResponseTemplate")),

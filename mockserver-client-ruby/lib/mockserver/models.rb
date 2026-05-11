@@ -1165,7 +1165,7 @@ module MockServer
   end
 
   class Expectation
-    attr_accessor :id, :priority, :http_request, :http_response,
+    attr_accessor :id, :priority, :percentage, :http_request, :http_response,
                   :http_response_template, :http_response_class_callback,
                   :http_response_object_callback, :http_forward,
                   :http_forward_template, :http_forward_class_callback,
@@ -1174,7 +1174,7 @@ module MockServer
                   :http_sse_response, :http_websocket_response, :after_actions,
                   :scenario_name, :scenario_state, :new_scenario_state
 
-    def initialize(id: nil, priority: nil, http_request: nil, http_response: nil,
+    def initialize(id: nil, priority: nil, percentage: nil, http_request: nil, http_response: nil,
                    http_response_template: nil, http_response_class_callback: nil,
                    http_response_object_callback: nil, http_forward: nil,
                    http_forward_template: nil, http_forward_class_callback: nil,
@@ -1184,6 +1184,7 @@ module MockServer
                    scenario_name: nil, scenario_state: nil, new_scenario_state: nil)
       @id = id
       @priority = priority
+      @percentage = percentage
       @http_request = http_request
       @http_response = http_response
       @http_response_template = http_response_template
@@ -1216,6 +1217,7 @@ module MockServer
       MockServer.strip_none({
         'id'                           => @id,
         'priority'                     => @priority,
+        'percentage'                   => @percentage,
         'httpRequest'                  => @http_request&.to_h,
         'httpResponse'                 => @http_response&.to_h,
         'httpResponseTemplate'         => @http_response_template&.to_h,
@@ -1251,6 +1253,7 @@ module MockServer
       new(
         id:                              data['id'],
         priority:                        data['priority'],
+        percentage:                      data['percentage'],
         http_request:                    HttpRequest.from_hash(data['httpRequest']),
         http_response:                   HttpResponse.from_hash(data['httpResponse']),
         http_response_template:          HttpTemplate.from_hash(data['httpResponseTemplate']),

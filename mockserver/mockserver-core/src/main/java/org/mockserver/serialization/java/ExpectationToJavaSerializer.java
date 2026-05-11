@@ -1,6 +1,7 @@
 package org.mockserver.serialization.java;
 
 import com.google.common.base.Strings;
+import org.apache.commons.text.StringEscapeUtils;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.OpenAPIDefinition;
@@ -8,6 +9,7 @@ import org.mockserver.model.RequestDefinition;
 
 import java.util.List;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 
 /**
@@ -56,6 +58,15 @@ public class ExpectationToJavaSerializer implements ToJavaSerializer<Expectation
             appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
             if (expectation.getPercentage() != null) {
                 appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".withPercentage(").append(expectation.getPercentage()).append(")");
+            }
+            if (isNotBlank(expectation.getScenarioName())) {
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".withScenarioName(\"").append(StringEscapeUtils.escapeJava(expectation.getScenarioName())).append("\")");
+            }
+            if (isNotBlank(expectation.getScenarioState())) {
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".withScenarioState(\"").append(StringEscapeUtils.escapeJava(expectation.getScenarioState())).append("\")");
+            }
+            if (isNotBlank(expectation.getNewScenarioState())) {
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".withNewScenarioState(\"").append(StringEscapeUtils.escapeJava(expectation.getNewScenarioState())).append("\")");
             }
             if (expectation.getHttpResponse() != null) {
                 appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".respond(");

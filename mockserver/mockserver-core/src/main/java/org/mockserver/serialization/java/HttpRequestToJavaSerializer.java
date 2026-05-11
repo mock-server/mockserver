@@ -128,6 +128,17 @@ public class HttpRequestToJavaSerializer implements ToJavaSerializer<HttpRequest
                     output.append(")");
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                     output.append(")");
+                } else if (request.getBody() instanceof GraphQLBody) {
+                    appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
+                    GraphQLBody graphQLBody = (GraphQLBody) request.getBody();
+                    output.append(".withBody(GraphQLBody.graphQL(\"").append(StringEscapeUtils.escapeJava(graphQLBody.getQuery())).append("\"");
+                    if (isNotBlank(graphQLBody.getOperationName())) {
+                        output.append(", \"").append(StringEscapeUtils.escapeJava(graphQLBody.getOperationName())).append("\"");
+                        if (isNotBlank(graphQLBody.getVariablesSchema())) {
+                            output.append(", \"").append(StringEscapeUtils.escapeJava(graphQLBody.getVariablesSchema())).append("\"");
+                        }
+                    }
+                    output.append("))");
                 } else if (request.getBody() instanceof BinaryBody) {
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                     BinaryBody body = (BinaryBody) request.getBody();

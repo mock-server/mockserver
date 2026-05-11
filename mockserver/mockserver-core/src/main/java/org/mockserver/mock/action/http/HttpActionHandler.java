@@ -395,6 +395,7 @@ public class HttpActionHandler {
 
                     final InetSocketAddress remoteAddress = getRemoteAddressWithFallback(ctx);
                     final HttpRequest clonedRequest = hopByHopHeaderFilter.onRequest(request).withHeader(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue());
+                    adjustHostHeaderForUnmatchedRequest(clonedRequest, remoteAddress);
                     final HttpForwardActionResult responseFuture = new HttpForwardActionResult(clonedRequest, httpClient.sendRequest(clonedRequest, remoteAddress, potentiallyHttpProxy ? 1000 : configuration.socketConnectionTimeoutInMillis()), null, remoteAddress);
                     scheduler.submit(responseFuture, () -> {
                             try {
@@ -1076,6 +1077,20 @@ public class HttpActionHandler {
             }
         }
         return remoteAddress;
+    }
+
+    private void adjustHostHeaderForUnmatchedRequest(HttpRequest request, InetSocketAddress remoteAddress) {
+        if (configuration != null) {
+            String defaultHostHeader = configuration.forwardDefaultHostHeader();
+            if (isNotBlank(defaultHostHeader)) {
+                request.replaceHeader(new Header("Host", defaultHostHeader));
+            } else if (remoteAddress != null && isNotBlank(configuration.proxyRemoteHost())) {
+                Integer port = configuration.proxyRemotePort();
+                boolean defaultPort = port == null || port == 80 || port == 443;
+                String hostHeader = defaultPort ? configuration.proxyRemoteHost() : configuration.proxyRemoteHost() + ":" + port;
+                request.replaceHeader(new Header("Host", hostHeader));
+            }
+        }
     }
 
 
