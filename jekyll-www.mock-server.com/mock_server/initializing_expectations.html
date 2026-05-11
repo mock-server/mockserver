@@ -100,6 +100,31 @@ public class MyTest {
   }
 ]</code></pre>
 
+<a id="expectation_initializer_json_schema" class="anchor" href="#expectation_initializer_json_schema">&nbsp;</a>
+
+<h3>JSON Schema for IDE Support</h3>
+
+<p>A self-contained JSON Schema is published for MockServer expectations, providing autocompletion and validation in IDEs such as VS Code, IntelliJ, and any editor that supports <a href="https://json-schema.org/">JSON Schema</a>.</p>
+
+<p>The schema is available at:</p>
+<ul>
+    <li><strong>Single expectation:</strong> <a href="https://www.mock-server.com/schema/expectation.json">https://www.mock-server.com/schema/expectation.json</a></li>
+    <li><strong>Array of expectations:</strong> <a href="https://www.mock-server.com/schema/expectations.json">https://www.mock-server.com/schema/expectations.json</a></li>
+</ul>
+
+<p>The schema is also registered with the <a href="https://www.schemastore.org/json/">JSON Schema Store</a>, which means IDEs will automatically apply the schema to files matching these patterns:</p>
+<ul>
+    <li><span class="inline_code">mockserverInitialization.json</span> — the default MockServer initialization file</li>
+    <li><span class="inline_code">*mockserver*Initialization.json</span> — any initialization file containing "mockserver" and "Initialization" in the name</li>
+    <li><span class="inline_code">mockserver*.json</span> — any JSON file starting with "mockserver"</li>
+</ul>
+
+<p>To manually reference the schema in a JSON file, add a <span class="inline_code">$schema</span> property at the top level:</p>
+<pre class="prettyprint lang-java code"><code class="code">{
+  "$schema": "https://www.mock-server.com/schema/expectations.json",
+  ...
+}</code></pre>
+
 <a id="expectation_initializer_json_glob_patterns" class="anchor" href="#expectation_initializer_json_glob_patterns">&nbsp;</a>
 
 <h3>Multiple Files (Glob Patterns)</h3>

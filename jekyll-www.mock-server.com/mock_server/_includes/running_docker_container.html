@@ -82,7 +82,7 @@ In addition it is possible to <a href="#docker_container_customization">customis
 
 <h3>Modifying Default Command</h3>
 
-<p>The MockServer container entrypoint accepts command line arguments. For example, to override the default server port:</p>
+<p>The MockServer container entrypoint calls <code>org.mockserver.cli.Main</code> directly with <code>CMD []</code> (no default arguments). The <code>SERVER_PORT</code> environment variable defaults to <code>1080</code> in the Dockerfile. Command line options can be explicitly provided, for example:</p>
 
 <pre><code class="code">docker run --rm --name mockserver -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1090</span> mockserver/mockserver <em>-logLevel <span class="string_literal">INFO</span> -serverPort <span class="numeric_literal">1090</span> -proxyRemotePort <span class="numeric_literal">443</span> -proxyRemoteHost <span class="string_literal">mock-server.com</span></em></code></pre>
 
