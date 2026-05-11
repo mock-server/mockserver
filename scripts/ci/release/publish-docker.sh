@@ -28,12 +28,15 @@ log_info "Using JAR: $SHADED_JAR"
 cp "$SHADED_JAR" docker/local/mockserver-netty-jar-with-dependencies.jar
 
 .buildkite/scripts/docker-login.sh
+.buildkite/scripts/ecr-login.sh
 
 FULL_TAG="mockserver-$RELEASE_VERSION"
 SHORT_TAG="$RELEASE_VERSION"
+ECR_REPO="public.ecr.aws/mockserver/mockserver"
 
 log_info "Building and pushing multi-arch images"
 log_info "  Tags: mockserver/mockserver:$FULL_TAG, mockserver/mockserver:$SHORT_TAG, mockserver/mockserver:latest"
+log_info "  ECR:  ${ECR_REPO}:$FULL_TAG, ${ECR_REPO}:$SHORT_TAG, ${ECR_REPO}:latest"
 
 docker buildx create --use --name multiarch 2>/dev/null || docker buildx use multiarch
 docker buildx build \
@@ -42,6 +45,23 @@ docker buildx build \
   --tag "mockserver/mockserver:$FULL_TAG" \
   --tag "mockserver/mockserver:$SHORT_TAG" \
   --tag "mockserver/mockserver:latest" \
+  --tag "${ECR_REPO}:$FULL_TAG" \
+  --tag "${ECR_REPO}:$SHORT_TAG" \
+  --tag "${ECR_REPO}:latest" \
   docker/local
+
+log_info "Building and pushing GraalJS variant"
+cp docker/local/mockserver-netty-jar-with-dependencies.jar docker/graaljs/mockserver-netty-jar-with-dependencies.jar
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  --push \
+  --build-arg source=copy \
+  --tag "mockserver/mockserver:$FULL_TAG-graaljs" \
+  --tag "mockserver/mockserver:$SHORT_TAG-graaljs" \
+  --tag "mockserver/mockserver:latest-graaljs" \
+  --tag "${ECR_REPO}:$FULL_TAG-graaljs" \
+  --tag "${ECR_REPO}:$SHORT_TAG-graaljs" \
+  --tag "${ECR_REPO}:latest-graaljs" \
+  docker/graaljs
 
 log_info "Docker images published for $RELEASE_VERSION"

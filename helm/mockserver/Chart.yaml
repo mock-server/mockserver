@@ -18,6 +18,7 @@ home: "http://mock-server.com"
 sources:
   - "https://github.com/mock-server/mockserver-monorepo"
   - "https://hub.docker.com/r/mockserver/mockserver"
+  - "https://gallery.ecr.aws/mockserver/mockserver"
 maintainers:
   - name: James D Bloom
     email: jamesdbloom+mockserver@gmail.com

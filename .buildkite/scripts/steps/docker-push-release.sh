@@ -24,11 +24,14 @@ echo "Full tag:  mockserver/mockserver:${FULL_TAG}"
 echo "Short tag: mockserver/mockserver:${SHORT_TAG}"
 
 .buildkite/scripts/docker-login.sh
+.buildkite/scripts/ecr-login.sh
 
-DOCKER_CMD="docker buildx build --platform linux/amd64,linux/arm64 --push --tag mockserver/mockserver:${FULL_TAG} --tag mockserver/mockserver:${SHORT_TAG} --file docker/Dockerfile ."
+ECR_REPO="public.ecr.aws/mockserver/mockserver"
+
+DOCKER_CMD="docker buildx build --platform linux/amd64,linux/arm64 --push --tag mockserver/mockserver:${FULL_TAG} --tag mockserver/mockserver:${SHORT_TAG} --tag ${ECR_REPO}:${FULL_TAG} --tag ${ECR_REPO}:${SHORT_TAG} --file docker/Dockerfile ."
 
 echo "┌──────────────────────────────────────────────────────────────────"
-echo "│ 🐳 Docker Command (copy to reproduce locally):"
+echo "│ Docker Command (copy to reproduce locally):"
 echo "│"
 echo "│   $DOCKER_CMD"
 echo "│"
@@ -36,10 +39,23 @@ echo "└───────────────────────�
 echo ""
 
 docker buildx create --use --name multiarch 2>/dev/null || docker buildx use multiarch
-exec docker buildx build \
+docker buildx build \
   --platform linux/amd64,linux/arm64 \
   --push \
   --tag "mockserver/mockserver:${FULL_TAG}" \
   --tag "mockserver/mockserver:${SHORT_TAG}" \
+  --tag "${ECR_REPO}:${FULL_TAG}" \
+  --tag "${ECR_REPO}:${SHORT_TAG}" \
   --file docker/Dockerfile \
+  .
+
+echo "--- :docker: Building and pushing GraalJS variant"
+exec docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  --push \
+  --tag "mockserver/mockserver:${FULL_TAG}-graaljs" \
+  --tag "mockserver/mockserver:${SHORT_TAG}-graaljs" \
+  --tag "${ECR_REPO}:${FULL_TAG}-graaljs" \
+  --tag "${ECR_REPO}:${SHORT_TAG}-graaljs" \
+  --file docker/graaljs/Dockerfile \
   .

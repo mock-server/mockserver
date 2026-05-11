@@ -25,11 +25,18 @@ public class ResponseTemplateTester {
     }
 
     public static HttpResponse testJavaScriptTemplate(String template, HttpRequest request) {
-        if (new ScriptEngineManager().getEngineByName("nashorn") != null) {
+        if (isJavaScriptEngineAvailable()) {
             return new JavaScriptTemplateEngine(MOCK_SERVER_LOGGER, new Configuration()).executeTemplate(template, request, HttpResponseDTO.class);
         } else {
-            throw new NotImplementedException("Nashorn is not available on this JVM so JavaScript templates are not supported");
+            throw new NotImplementedException("No JavaScript engine (Nashorn or GraalJS) is available on this JVM");
         }
+    }
+
+    private static boolean isJavaScriptEngineAvailable() {
+        ScriptEngineManager manager = new ScriptEngineManager();
+        return manager.getEngineByName("nashorn") != null
+            || manager.getEngineByName("graal.js") != null
+            || manager.getEngineByName("js") != null;
     }
 
 }

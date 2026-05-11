@@ -129,10 +129,13 @@ docker rmi "$SMOKE_TAG" 2>/dev/null || true
 trap - EXIT
 
 .buildkite/scripts/docker-login.sh
+.buildkite/scripts/ecr-login.sh
+
+ECR_REPO="public.ecr.aws/mockserver/mockserver"
 
 echo "--- :docker: Building and pushing mockserver/mockserver:latest (multi-arch)"
 
-DOCKER_CMD="docker buildx build --platform linux/amd64,linux/arm64 --push --tag mockserver/mockserver:latest docker/local"
+DOCKER_CMD="docker buildx build --platform linux/amd64,linux/arm64 --push --tag mockserver/mockserver:latest --tag ${ECR_REPO}:latest docker/local"
 
 echo "┌──────────────────────────────────────────────────────────────────"
 echo "│ Docker Command (copy to reproduce locally):"
@@ -143,8 +146,19 @@ echo "└───────────────────────�
 echo ""
 
 docker buildx create --use --name builder 2>/dev/null || docker buildx use builder
-exec docker buildx build \
+docker buildx build \
   --platform linux/amd64,linux/arm64 \
   --push \
   --tag mockserver/mockserver:latest \
+  --tag "${ECR_REPO}:latest" \
   docker/local
+
+echo "--- :docker: Building and pushing mockserver/mockserver:latest-graaljs (multi-arch)"
+cp docker/local/mockserver-netty-jar-with-dependencies.jar docker/graaljs/mockserver-netty-jar-with-dependencies.jar
+exec docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  --push \
+  --build-arg source=copy \
+  --tag mockserver/mockserver:latest-graaljs \
+  --tag "${ECR_REPO}:latest-graaljs" \
+  docker/graaljs

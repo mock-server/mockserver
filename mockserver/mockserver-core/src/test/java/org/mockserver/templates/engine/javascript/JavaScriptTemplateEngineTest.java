@@ -91,12 +91,24 @@ public class JavaScriptTemplateEngineTest {
     }
 
     public static void nashornAvailable() {
+        boolean engineAvailable = false;
         try {
-            Class<?> nashornClass = JavaScriptTemplateEngineTest.class.getClassLoader().loadClass("org.openjdk.nashorn.api.scripting.ClassFilter");
-            assumeThat("attempted to load nashorn", nashornClass, notNullValue());
-        } catch (Throwable throwable) {
-            assumeThat("attempted to load nashorn, but " + throwable.getMessage(), throwable, nullValue());
+            JavaScriptTemplateEngineTest.class.getClassLoader().loadClass("org.openjdk.nashorn.api.scripting.ClassFilter");
+            engineAvailable = true;
+        } catch (Throwable ignore) {
         }
+        if (!engineAvailable) {
+            try {
+                JavaScriptTemplateEngineTest.class.getClassLoader().loadClass("org.graalvm.polyglot.Context");
+                engineAvailable = true;
+            } catch (Throwable ignore) {
+            }
+        }
+        if (!engineAvailable) {
+            javax.script.ScriptEngine jsEngine = new javax.script.ScriptEngineManager().getEngineByName("js");
+            engineAvailable = jsEngine != null;
+        }
+        assumeThat("JavaScript engine (Nashorn or GraalJS) available", engineAvailable, is(true));
     }
 
     @Test

@@ -53,20 +53,24 @@ spec:
               containerPort: {{ .Values.app.serverPort }}
               protocol: TCP
           readinessProbe:
-            tcpSocket:
+            httpGet:
+              path: /liveness/probe
               port: serviceport
             initialDelaySeconds: 2
             periodSeconds: 2
             successThreshold: 1
             failureThreshold: 10
           livenessProbe:
-            tcpSocket:
+            httpGet:
+              path: /liveness/probe
               port: serviceport
             initialDelaySeconds: 10
             periodSeconds: 5
             successThreshold: 1
             failureThreshold: 10
           env:
+            - name: MOCKSERVER_LIVENESS_HTTP_GET_PATH
+              value: /liveness/probe
             - name: MOCKSERVER_LOG_LEVEL
               value: {{ .Values.app.logLevel | quote }}
             - name: SERVER_PORT

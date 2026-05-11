@@ -261,15 +261,25 @@ The `mockserver/mockserver:maven` image is defined in `docker_build/maven/Docker
 - Dependencies: Pre-fetched by running a throwaway build during image creation
 - Corporate CA: Optional certificate injection for TLS proxy environments (see [Docker](docker.md#maven-ci-image))
 
-### Docker Hub Authentication
+### Docker Registry Authentication
 
-All Docker push pipelines authenticate to Docker Hub using credentials stored in AWS Secrets Manager (`mockserver-build/dockerhub`). The secret is a JSON object:
+Docker push pipelines authenticate to two registries:
+
+**Docker Hub** — credentials stored in AWS Secrets Manager (`mockserver-build/dockerhub`):
 
 ```json
 {"username": "...", "token": "..."}
 ```
 
-The shared script `.buildkite/scripts/docker-login.sh` fetches the secret and runs `docker login`. Buildkite agent EC2 instances have IAM permissions to read this secret (via `managed_policy_arns` in `terraform/buildkite-agents/main.tf`).
+The shared script `.buildkite/scripts/docker-login.sh` fetches the secret and runs `docker login`.
+
+**AWS ECR Public** — authenticated via IAM instance role (no stored credentials needed):
+
+The shared script `.buildkite/scripts/ecr-login.sh` runs `aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws`.
+
+Buildkite agent EC2 instances have IAM permissions for both Docker Hub secret access and ECR Public push (via `managed_policy_arns` in `terraform/buildkite-agents/main.tf`).
+
+All Docker push scripts call both login scripts and push tags to both registries in a single `docker buildx build` command.
 
 ### Managing Buildkite Pipelines
 

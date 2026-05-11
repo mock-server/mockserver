@@ -72,6 +72,16 @@
             <artifactId>netty-tcnative-boringssl-static</artifactId>
         </dependency>
 
+        <!-- protobuf (gRPC support) -->
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java-util</artifactId>
+        </dependency>
+
         <!-- gzip HTTP deflater & inflater -->
         <dependency>
             <groupId>com.jcraft</groupId>
@@ -129,6 +139,17 @@
         <dependency>
             <groupId>org.openjdk.nashorn</groupId>
             <artifactId>nashorn-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.graalvm.polyglot</groupId>
+            <artifactId>polyglot</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.graalvm.polyglot</groupId>
+            <artifactId>js</artifactId>
+            <type>pom</type>
+            <optional>true</optional>
         </dependency>
 
         <!-- json (object serialisation) -->

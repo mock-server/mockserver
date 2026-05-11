@@ -57,4 +57,7 @@ ENTRYPOINT ["java", "-Dfile.encoding=UTF-8", "-cp", "/mockserver-netty-jar-with-
 
 ENV SERVER_PORT 1080
 
+HEALTHCHECK --interval=10s --timeout=5s --start-period=120s --retries=3 \
+  CMD ["java", "-cp", "/mockserver-netty-jar-with-dependencies.jar", "org.mockserver.cli.HealthCheck"]
+
 CMD []

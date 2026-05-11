@@ -84,6 +84,7 @@
         <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
         <!-- also update NETTY_TCNATIVE in docker/*/Dockerfile download stages -->
         <netty-tcnative-boringssl-static.version>2.0.77.Final</netty-tcnative-boringssl-static.version>
+        <protobuf.version>4.29.3</protobuf.version>
     </properties>
 
     <modules>
@@ -383,6 +384,28 @@
                 <version>${netty.version}</version>
             </dependency>
 
+            <!-- protobuf (gRPC support) -->
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>${protobuf.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java-util</artifactId>
+                <version>${protobuf.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.errorprone</groupId>
+                <artifactId>error_prone_annotations</artifactId>
+                <version>2.47.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.j2objc</groupId>
+                <artifactId>j2objc-annotations</artifactId>
+                <version>3.1</version>
+            </dependency>
+
             <!-- gzip HTTP deflater & inflater -->
             <dependency>
                 <groupId>com.jcraft</groupId>
@@ -443,6 +466,17 @@
                 <groupId>org.openjdk.nashorn</groupId>
                 <artifactId>nashorn-core</artifactId>
                 <version>15.7</version>
+            </dependency>
+            <dependency>
+                <groupId>org.graalvm.polyglot</groupId>
+                <artifactId>polyglot</artifactId>
+                <version>24.1.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.graalvm.polyglot</groupId>
+                <artifactId>js</artifactId>
+                <version>24.1.1</version>
+                <type>pom</type>
             </dependency>
             <dependency>
                 <groupId>org.ow2.asm</groupId>

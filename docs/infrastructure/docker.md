@@ -43,9 +43,32 @@ locustio/locust"]
 |---------|-----------|------------|------|---------|
 | Main | `docker/Dockerfile` | `gcr.io/distroless/java17:nonroot` | `nonroot` | Default production image |
 | Root | `docker/root/Dockerfile` | `gcr.io/distroless/java17` | `root` | When root access is needed |
+| GraalJS | `docker/graaljs/Dockerfile` | `gcr.io/distroless/java17:nonroot` | `nonroot` | Includes GraalJS for JS templating |
 | Snapshot | `docker/snapshot/Dockerfile` | `gcr.io/distroless/java17:debug-nonroot` | `nonroot` | Testing pre-release builds |
 | Root Snapshot | `docker/root-snapshot/Dockerfile` | `gcr.io/distroless/java17` | `root` | Testing pre-release (root) |
 | Local | `docker/local/Dockerfile` | `gcr.io/distroless/java17:nonroot` | `nonroot` | Building from local JAR |
+
+### Docker Registries
+
+Images are published to two registries:
+
+| Registry | Image | Notes |
+|----------|-------|-------|
+| Docker Hub | `mockserver/mockserver` | Primary registry |
+| AWS ECR Public | `public.ecr.aws/mockserver/mockserver` | Avoids Docker Hub rate limits for AWS-based CI/CD |
+
+Both registries receive the same tags on every push (`:latest`, `:X.Y.Z`, `:mockserver-X.Y.Z`, and `-graaljs` variants).
+
+### Docker HEALTHCHECK
+
+All production Dockerfiles include a built-in `HEALTHCHECK` instruction that runs a lightweight Java class (`org.mockserver.cli.HealthCheck`) to verify MockServer is serving requests. The health check calls `PUT /mockserver/status` internally — no shell, curl, or external tools required.
+
+```dockerfile
+HEALTHCHECK --interval=10s --timeout=5s --start-period=120s --retries=3 \
+  CMD ["java", "-cp", "/mockserver-netty-jar-with-dependencies.jar", "org.mockserver.cli.HealthCheck"]
+```
+
+The health check reads `SERVER_PORT` / `MOCKSERVER_SERVER_PORT` to determine the correct port (defaults to 1080).
 
 ### Main Dockerfile Build Process
 

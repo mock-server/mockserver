@@ -34,10 +34,10 @@ lastmod: 2019-11-10T08:00:00+01:00
     </li>
     <li><strong><a href="#javascript_templates">javascript templates</a></strong>
         <ul>
-            <li>use Nashorn JavaScript engine</li>
+            <li>uses Nashorn (bundled) or GraalJS JavaScript engine</li>
             <li>more complex to use</li>
             <li>supports more complex logic</li>
-            <li>requires Nashorn deprecated in Java 11 and removed from 15 onwards</li>
+            <li>works with all Docker images; use the <code>-graaljs</code> image tag for GraalJS support</li>
         </ul>
     </li>
 </ul>
@@ -1152,17 +1152,15 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
 
 <p>JavaScript response templates support ES5 syntax for Java 8, for a summary of ES5 syntax see <a target="_blank" href="https://www.w3schools.com/js/js_es5.asp">w3schools</a>.</p>
 
-<h4>Java Version Support</h4>
+<h4>JavaScript Engine Support</h4>
 
-<p>JavaScript templates rely on Nashorn which has the following limitations for Java versions:</p>
+<p>MockServer supports two JavaScript engines:</p>
 <ul>
-    <li>Java 8 - ES5 only</li>
-    <li>Java 9 or 10 - ES5 & ES6</li>
-    <li>Java 11 to 14 - ES5 & ES6 but prints deprecated warning</li>
-    <li>Java 15+ - not supported</li>
+    <li><strong>Nashorn</strong> (bundled) &mdash; the standalone <code>nashorn-core</code> library is included in MockServer and works on Java 11+. All Docker images include Nashorn by default.</li>
+    <li><strong>GraalJS</strong> (optional) &mdash; a modern, actively maintained JavaScript engine from Oracle. Use the <code>-graaljs</code> Docker image tag (e.g., <code>mockserver/mockserver:latest-graaljs</code>) or add GraalJS JARs to the <code>/libs</code> directory.</li>
 </ul>
 
-<p>From Java 15 Nashorn is no longer part of the JDK but it is available as a separate library that requires Java 11+.  Once MockServer minimum Java version is 11 then this separate library will be used.</p>
+<p>MockServer automatically detects which engine is available on the classpath, preferring Nashorn for backward compatibility. Both engines support ES6+ syntax.</p>
 
 <h4>Variables</h4>
 

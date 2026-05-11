@@ -132,7 +132,7 @@ steps:
 
       - label: ":docker: Docker Image"
         command: "scripts/ci/release/publish-docker.sh"
-        timeout_in_minutes: 45
+        timeout_in_minutes: 60
         if: "build.meta_data('release-type') != 'maven-only'"
 
       - label: ":helm: Helm Chart"

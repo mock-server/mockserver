@@ -22,6 +22,10 @@ In addition it is possible to <a href="#docker_container_customization">customis
 
 <pre><code class="code">docker pull mockserver/mockserver</code></pre>
 
+<p>MockServer images are also available from <strong>AWS ECR Public</strong>, which avoids Docker Hub rate limits and provides lower latency for AWS-based CI/CD:</p>
+
+<pre><code class="code">docker pull public.ecr.aws/mockserver/mockserver</code></pre>
+
 <p>This is not strictly necessary as the image will be automatically pulled if it does not exist when the run command is used. However, using the pull command will ensure the latest version of the image is downloaded.</p>
 
 <a id="run_docker_container" class="anchor" href="#run_docker_container">&nbsp;</a>
@@ -116,40 +120,36 @@ For example to add all jar files in the current directory, map <strong>$(pwd)</s
 
 <h2>Docker Health Checks</h2>
 
-<p>MockServer Docker images are based on <a target="_blank" href="https://github.com/GoogleContainerTools/distroless">distroless</a> containers, which do not include shell utilities like <code>curl</code> or <code>wget</code>. This means traditional HTTP-based health checks cannot be run inside the container.</p>
+<p>MockServer Docker images include a built-in <span class="inline_code">HEALTHCHECK</span> instruction that uses a lightweight Java health check class to verify the server is running. Since the images are based on <a target="_blank" href="https://github.com/GoogleContainerTools/distroless">distroless</a> containers (no shell, no <code>curl</code>), the health check runs as a small Java process that calls the <span class="inline_code">PUT /mockserver/status</span> endpoint internally.</p>
 
-<p>To configure health checks for MockServer containers, use the following approach:</p>
+<p>The built-in health check works automatically with no configuration required:</p>
 
-<p><strong>Note:</strong> The MockServer Docker image is based on distroless Java (no shell, no system utilities). Health checks must be performed externally or using platform-specific mechanisms.</p>
+<pre><code class="code">HEALTHCHECK --interval=10s --timeout=5s --start-period=120s --retries=3
+  CMD ["java", "-cp", "/mockserver-netty-jar-with-dependencies.jar", "org.mockserver.cli.HealthCheck"]</code></pre>
 
-<h3>HTTP Liveness Endpoint (Recommended)</h3>
+<p>The health check reads the <span class="inline_code">SERVER_PORT</span> or <span class="inline_code">MOCKSERVER_SERVER_PORT</span> environment variable to determine the correct port (defaults to 1080). Docker reports the container as <span class="inline_code">healthy</span> once MockServer is ready to accept requests.</p>
 
-<p>Use a separate container or external monitoring tool to check the liveness endpoint:</p>
+<h3>Using with Docker Compose</h3>
+
+<p>The built-in health check integrates with Docker Compose <span class="inline_code">depends_on</span> conditions:</p>
 
 <pre class="prettyprint lang-yaml code"><code class="code">services:
   mockserver:
     image: mockserver/mockserver:{{ site.mockserver_version }}
     ports:
       - "1080:1080"
-    environment:
-      MOCKSERVER_LIVENESS_HTTP_GET_PATH: "/liveness/probe"
-  
-  # Separate healthcheck container
-  healthcheck:
-    image: curlimages/curl:latest
-    depends_on:
-      - mockserver
-    command: >
-      sh -c "while true; do
-        curl -f http://mockserver:1080/liveness/probe || exit 1;
-        sleep 10;
-      done"</code></pre>
 
-<p>Alternatively, configure your orchestration platform to perform HTTP health checks externally rather than inside the container.</p>
+  app:
+    image: my-app:latest
+    depends_on:
+      mockserver:
+        condition: service_healthy</code></pre>
+
+<p>To override or disable the built-in health check, use the <span class="inline_code">healthcheck</span> key in your Compose file.</p>
 
 <h3>Kubernetes Liveness and Readiness Probes</h3>
 
-<p>In Kubernetes, use <span class="inline_code">httpGet</span> probes that connect to the MockServer container from outside:</p>
+<p>In Kubernetes, use <span class="inline_code">httpGet</span> probes with the configurable liveness endpoint:</p>
 
 <pre class="prettyprint lang-yaml code"><code class="code">containers:
   - name: mockserver
@@ -172,23 +172,22 @@ For example to add all jar files in the current directory, map <strong>$(pwd)</s
       initialDelaySeconds: 5
       periodSeconds: 5</code></pre>
 
+<p>The MockServer Helm chart configures these probes automatically.</p>
+
 <h3>Amazon ECS Health Check</h3>
 
-<p>For ECS task definitions, configure the health check command to call MockServer from outside the container using the ECS agent:</p>
+<p>For ECS task definitions, the built-in <span class="inline_code">HEALTHCHECK</span> in the Docker image is used automatically. Alternatively, configure an explicit health check:</p>
 
 <pre class="prettyprint lang-json code"><code class="code">{
   "containerDefinitions": [{
     "name": "mockserver",
     "image": "mockserver/mockserver:{{ site.mockserver_version }}",
-    "environment": [
-      { "name": "MOCKSERVER_LIVENESS_HTTP_GET_PATH", "value": "/liveness/probe" }
-    ],
     "healthCheck": {
-      "command": ["CMD-SHELL", "curl -f http://localhost:1080/liveness/probe || exit 1"],
+      "command": ["CMD-SHELL", "curl -f http://localhost:1080/mockserver/status -X PUT || exit 1"],
       "interval": 10,
       "timeout": 5,
       "retries": 3,
-      "startPeriod": 10
+      "startPeriod": 120
     }
   }]
 }</code></pre>

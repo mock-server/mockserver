@@ -9,6 +9,7 @@ DOCKERFILES=(
   "docker/root/Dockerfile"
   "docker/root-snapshot/Dockerfile"
   "docker/local/Dockerfile"
+  "docker/graaljs/Dockerfile"
 )
 
 errors=0

@@ -197,6 +197,12 @@ rate 1 min"]
 | S3 Bucket (secrets logs) | Secrets bucket access logs (versioned, encrypted, public access blocked) |
 | S3 Bucket (CloudTrail) | CloudTrail audit logs (encrypted, 90-day lifecycle, public access blocked) |
 
+#### Container Registry
+
+| Resource | Purpose |
+|----------|---------|
+| ECR Public Repository (`mockserver`) | Public Docker image registry at `public.ecr.aws/mockserver/mockserver` — avoids Docker Hub rate limits for AWS-based CI/CD |
+
 #### Secrets
 
 | Resource | Type | Purpose |
@@ -229,6 +235,7 @@ rate 1 min"]
 | AZ Rebalance Suspender Role | ASG process management |
 | Instance Profile | Attached to EC2 instances |
 | IAM Policy (`buildkite-read-dockerhub-secret`) | Allows agents to read Docker Hub credentials from Secrets Manager |
+| IAM Policy (`buildkite-ecr-public-push`) | Allows agents to push Docker images to ECR Public |
 | Service-linked roles | AutoScaling, EC2Spot, Organizations, SSO, Support, TrustedAdvisor, ResourceExplorer |
 
 #### Security
@@ -302,6 +309,7 @@ terraform/
     ├── monitoring.tf        # CloudWatch alarms, SNS notifications, dashboard
     ├── backend.tf           # S3 remote state configuration
     ├── build-secrets.tf     # Docker Hub secret + Buildkite agent IAM policy
+    ├── ecr-public.tf        # ECR Public repository + push IAM policy
     ├── variables.tf         # Input variables
     ├── outputs.tf           # Outputs (ASG name, VPC ID, dashboard URL)
     ├── versions.tf          # Terraform + provider versions

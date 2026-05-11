@@ -43,4 +43,4 @@ steps:
   - label: ":docker: build and push :latest"
     if: "build.branch == 'master'"
     command: ".buildkite/scripts/steps/java-docker-push-latest.sh"
-    timeout_in_minutes: 15
+    timeout_in_minutes: 30

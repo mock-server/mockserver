@@ -134,6 +134,8 @@ flowchart LR
 docker-push-release"]
     BK --> DH["Docker Hub
 mockserver/mockserver"]
+    BK --> ECR["ECR Public
+public.ecr.aws/mockserver/mockserver"]
 ```
 
 1. Verify the release JAR is available:
@@ -141,6 +143,7 @@ mockserver/mockserver"]
    curl -v https://oss.sonatype.org/service/local/artifact/maven/redirect\?r\=releases\&g\=org.mock-server\&a\=mockserver-netty\&c\=shaded\&e\=jar\&v\=RELEASE
    ```
 2. Trigger the Buildkite `docker-push-release` pipeline with `RELEASE_TAG=mockserver-X.Y.Z`
+3. The pipeline pushes to both Docker Hub and AWS ECR Public, including standard and `-graaljs` variants
 
 ### 8. Update Helm Chart
 
@@ -214,6 +217,8 @@ graph LR
     REL --> MC["Maven Central
 JARs, POMs, Sources, Javadoc"]
     REL --> DH["Docker Hub
+Multi-arch images"]
+    REL --> ECR["ECR Public
 Multi-arch images"]
     REL --> NPM["npm Registry
 mockserver-node

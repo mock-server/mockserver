@@ -32,3 +32,8 @@ output "sns_topic_arn" {
   description = "SNS topic ARN for infrastructure alerts"
   value       = aws_sns_topic.buildkite_alerts.arn
 }
+
+output "ecr_public_repository_uri" {
+  description = "ECR Public repository URI for MockServer Docker images"
+  value       = aws_ecrpublic_repository.mockserver.repository_uri
+}
