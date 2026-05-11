@@ -230,14 +230,14 @@ connection.setSSLSocketFactory(sslContext.getSocketFactory());</code></pre>
 
 <h3>Step 1: Generate Certificates</h3>
 
-<p>mTLS requires three certificate sets, all signed by the same Certificate Authority (CA):</p>
+<p>This example uses one CA to sign both server and client certificates. In production, server and client certificates may be issued by separate trusted CAs. The three certificate sets are:</p>
 <ul>
     <li><strong>CA certificate and key</strong> &mdash; the root of trust; both MockServer and clients must trust this CA</li>
     <li><strong>Server certificate and key</strong> &mdash; used by MockServer to identify itself to clients</li>
     <li><strong>Client certificate and key</strong> &mdash; used by clients (curl, HTTP libraries) to authenticate to MockServer</li>
 </ul>
 
-<p><strong>Important:</strong> MockServer requires private keys in <strong>PKCS#8 PEM</strong> format. The <code class="inline_code">openssl genpkey</code> command generates PKCS#8 keys directly. If you have a PKCS#1 key (begins with <code class="inline_code">-----BEGIN RSA PRIVATE KEY-----</code>), convert it with:</p>
+<p>MockServer accepts private keys in both <strong>PKCS#8</strong> (<code class="inline_code">-----BEGIN PRIVATE KEY-----</code>) and <strong>PKCS#1 RSA</strong> (<code class="inline_code">-----BEGIN RSA PRIVATE KEY-----</code>) PEM format. The examples below use PKCS#8 for consistency. To convert a PKCS#1 key to PKCS#8:</p>
 <pre class="prettyprint lang-bash code"><code class="code">openssl pkcs8 -topk8 -inform PEM -in private_key_PKCS_1.pem -out private_key_PKCS_8.pem -nocrypt</code></pre>
 
 <h4>Using OpenSSL (Recommended)</h4>
@@ -263,7 +263,7 @@ authorityKeyIdentifier=keyid,issuer
 basicConstraints=CA:FALSE
 keyUsage=digitalSignature,keyEncipherment
 extendedKeyUsage=serverAuth
-subjectAltName=DNS:localhost,DNS:mockserver,IP:127.0.0.1
+subjectAltName=DNS:localhost,DNS:mockserver,DNS:host.docker.internal,IP:127.0.0.1
 EOF
 
 openssl x509 -req -in server.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial \
@@ -309,35 +309,58 @@ EOF
 cfssl genkey -initca ca-csr.json | cfssljson -bare ca
 rm -f ca.csr
 
-# 2. Generate server certificate
-cat > server-csr.json &lt;&lt;EOF
+# 2. Create signing config with explicit profiles and expiry
+cat > cfssl-config.json &lt;&lt;EOF
 {
-  "hosts": ["localhost", "mockserver", "127.0.0.1"],
-  "key": { "algo": "rsa", "size": 2048 },
-  "names": [{ "C": "UK", "L": "London", "O": "MockServer", "CN": "localhost" }]
+  "signing": {
+    "default": { "expiry": "87600h" },
+    "profiles": {
+      "server": {
+        "expiry": "87600h",
+        "usages": ["signing", "key encipherment", "server auth"]
+      },
+      "client": {
+        "expiry": "87600h",
+        "usages": ["signing", "key encipherment", "client auth"]
+      }
+    }
+  }
 }
 EOF
-cfssl gencert -ca ca.pem -ca-key ca-key.pem server-csr.json | cfssljson -bare server
+
+# 3. Generate server certificate
+cat > server-csr.json &lt;&lt;EOF
+{
+  "CN": "localhost",
+  "hosts": ["localhost", "mockserver", "host.docker.internal", "127.0.0.1"],
+  "key": { "algo": "rsa", "size": 2048 },
+  "names": [{ "C": "UK", "L": "London", "O": "MockServer" }]
+}
+EOF
+cfssl gencert -ca ca.pem -ca-key ca-key.pem -config cfssl-config.json -profile server \
+    server-csr.json | cfssljson -bare server
 rm -f server.csr
 openssl pkcs8 -topk8 -inform PEM -in server-key.pem -out server-key-pkcs8.pem -nocrypt
 mv server.pem server-cert.pem
 cat server-cert.pem ca.pem > server-cert-chain.pem
 
-# 3. Generate client certificate
+# 4. Generate client certificate
 cat > client-csr.json &lt;&lt;EOF
 {
+  "CN": "MockServer Client",
   "key": { "algo": "rsa", "size": 2048 },
-  "names": [{ "C": "UK", "L": "London", "O": "MockServer", "CN": "MockServer Client" }]
+  "names": [{ "C": "UK", "L": "London", "O": "MockServer" }]
 }
 EOF
-cfssl gencert -ca ca.pem -ca-key ca-key.pem client-csr.json | cfssljson -bare client
+cfssl gencert -ca ca.pem -ca-key ca-key.pem -config cfssl-config.json -profile client \
+    client-csr.json | cfssljson -bare client
 rm -f client.csr
 openssl pkcs8 -topk8 -inform PEM -in client-key.pem -out client-key-pkcs8.pem -nocrypt
 mv client.pem client-cert.pem
 cat client-cert.pem ca.pem > client-cert-chain.pem
 
 # Clean up
-rm -f ca-csr.json server-csr.json client-csr.json server-key.pem client-key.pem</code></pre>
+rm -f ca-csr.json cfssl-config.json server-csr.json client-csr.json server-key.pem client-key.pem</code></pre>
 
 <p>Both approaches produce the same output files:</p>
 <table>
@@ -394,7 +417,7 @@ services:
 
 <p>Failed request without client certificate (TLS handshake fails):</p>
 <pre class="prettyprint lang-bash code"><code class="code">curl --cacert certs/ca.pem https://localhost:1080/hello
-# curl: (56) OpenSSL SSL_read: error:0A000412:SSL routines::sslv3 alert bad certificate</code></pre>
+# Error varies by TLS backend, e.g.: alert bad certificate / certificate required / handshake failure</code></pre>
 
 <p>Failed request over HTTP (returns 426 Upgrade Required):</p>
 <pre class="prettyprint lang-bash code"><code class="code">curl http://localhost:1080/hello
@@ -481,14 +504,19 @@ curl --cacert certs/ca.pem \
 <pre class="prettyprint lang-java code"><code class="code">import org.mockserver.client.MockServerClient;
 import org.mockserver.configuration.ConfigurationProperties;
 
-// Configure MockServerClient to use client certificates for control-plane mTLS
+// Enable control-plane mTLS on the client side
+ConfigurationProperties.controlPlaneTLSMutualAuthenticationRequired(true);
+
+// Client certificate and key for authenticating to MockServer
 ConfigurationProperties.controlPlanePrivateKeyPath("/path/to/client-key-pkcs8.pem");
-ConfigurationProperties.controlPlaneX509CertificatePath("/path/to/client-cert.pem");
+ConfigurationProperties.controlPlaneX509CertificatePath("/path/to/client-cert-chain.pem");
 
-// Configure MockServerClient to trust MockServer's CA certificate
-ConfigurationProperties.tlsMutualAuthenticationCertificateChain("/path/to/ca.pem");
+// CA certificate to verify MockServer's server certificate
+ConfigurationProperties.controlPlaneTLSMutualAuthenticationCAChain("/path/to/ca.pem");
 
-MockServerClient client = new MockServerClient("localhost", 1080);</code></pre>
+// Connect over HTTPS
+MockServerClient client = new MockServerClient("localhost", 1080)
+    .withSecure(true);</code></pre>
 
 <a id="tls_troubleshooting" class="anchor" href="#tls_troubleshooting">&nbsp;</a>
 

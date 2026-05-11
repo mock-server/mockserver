@@ -1,0 +1,6 @@
+*.pem
+*.csr
+*.srl
+*.cnf
+*.json
+!.gitignore
