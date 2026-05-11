@@ -2769,7 +2769,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             "" + NEW_LINE +
             " schema validation errors:" + NEW_LINE +
             "" + NEW_LINE +
-            "  15 errors:" + NEW_LINE +
+            "  16 errors:" + NEW_LINE +
+            "   - $.grpcStreamResponse: is missing, but is required, if specifying action of type GrpcStreamResponse" + NEW_LINE +
             "   - $.httpError: is missing, but is required, if specifying action of type Error" + NEW_LINE +
             "   - $.httpForward: is missing, but is required, if specifying action of type Forward" + NEW_LINE +
             "   - $.httpForwardClassCallback: is missing, but is required, if specifying action of type ForwardClassCallback" + NEW_LINE +

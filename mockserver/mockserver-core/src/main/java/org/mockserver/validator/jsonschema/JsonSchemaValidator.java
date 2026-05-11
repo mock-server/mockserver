@@ -327,6 +327,11 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                             "]");
                         return StringUtils.substringBefore(validationMessageText, ":") + ": is missing, but is required, if specifying action of type " + StringUtils.substringBefore(StringUtils.substringAfter(validationMessageText, "$.http"), ":");
                     }
+                    if (validationMessageText.startsWith("$.grpc") && validationMessageText.endsWith(": is missing but it is required")) {
+                        String fieldName = StringUtils.substringBefore(StringUtils.substringAfter(validationMessageText, "$."), ":");
+                        String actionType = fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
+                        return StringUtils.substringBefore(validationMessageText, ":") + ": is missing, but is required, if specifying action of type " + actionType;
+                    }
                     return validationMessageText;
                 })
                 .filter(Objects::nonNull)
