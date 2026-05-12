@@ -66,8 +66,8 @@
             <dependency>
                 <groupId>org.apache.maven.resolver</groupId>
                 <artifactId>maven-resolver-util</artifactId>
-                <!-- version 1.9.4 appears to brake build -->
-                <version>1.9.4</version>
+                <!-- version 1.9.27 appears to brake build -->
+                <version>1.9.27</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.maven.resolver</groupId>
