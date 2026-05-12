@@ -39,6 +39,8 @@ public class Configuration {
     private String grpcProtoDirectory;
     private Boolean grpcEnabled;
     private String grpcProtocPath;
+    private Boolean dnsEnabled;
+    private Integer dnsPort;
     private Map<String, String> logLevelOverrides;
     private Boolean compactLogFormat;
 
@@ -354,6 +356,30 @@ public class Configuration {
 
     public Configuration grpcProtocPath(String grpcProtocPath) {
         this.grpcProtocPath = grpcProtocPath;
+        return this;
+    }
+
+    public Boolean dnsEnabled() {
+        if (dnsEnabled == null) {
+            return ConfigurationProperties.dnsEnabled();
+        }
+        return dnsEnabled;
+    }
+
+    public Configuration dnsEnabled(Boolean dnsEnabled) {
+        this.dnsEnabled = dnsEnabled;
+        return this;
+    }
+
+    public Integer dnsPort() {
+        if (dnsPort == null) {
+            return ConfigurationProperties.dnsPort();
+        }
+        return dnsPort;
+    }
+
+    public Configuration dnsPort(Integer dnsPort) {
+        this.dnsPort = dnsPort;
         return this;
     }
 

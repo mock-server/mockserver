@@ -1,11 +1,17 @@
 package org.mockserver.netty;
 
 import com.google.common.collect.ImmutableList;
+import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.WriteBufferWaterMark;
+import io.netty.channel.socket.DatagramChannel;
+import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.dns.DatagramDnsQueryDecoder;
+import io.netty.handler.codec.dns.DatagramDnsResponseEncoder;
 import org.mockserver.authentication.ChainedAuthenticationHandler;
 import org.mockserver.authentication.jwt.JWTAuthenticationHandler;
 import org.mockserver.authentication.mtls.MTLSAuthenticationHandler;
@@ -15,6 +21,7 @@ import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.action.http.HttpActionHandler;
+import org.mockserver.netty.dns.DnsRequestHandler;
 import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.socket.tls.NettySslContextFactory;
 import org.slf4j.event.Level;
@@ -40,6 +47,7 @@ public class MockServer extends LifeCycle {
 
     private InetSocketAddress remoteSocket;
     private volatile org.mockserver.netty.mcp.McpSessionManager mcpSessionManager;
+    private volatile io.netty.channel.Channel dnsChannel;
 
     /**
      * Start the instance using the ports provided
@@ -208,15 +216,22 @@ public class MockServer extends LifeCycle {
             stop();
             throw throwable;
         }
-        startedServer(getLocalPorts());
-    }
 
-    @Override
-    public CompletableFuture<String> stopAsync() {
-        if (mcpSessionManager != null) {
-            mcpSessionManager.shutdown();
+        if (Boolean.TRUE.equals(configuration.dnsEnabled())) {
+            try {
+                bindDnsPort(configuration);
+            } catch (Throwable throwable) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(SERVER_CONFIGURATION)
+                        .setLogLevel(Level.WARN)
+                        .setMessageFormat("exception binding DNS port - DNS mocking disabled")
+                        .setThrowable(throwable)
+                );
+            }
         }
-        return super.stopAsync();
+
+        startedServer(getLocalPorts());
     }
 
     public InetSocketAddress getRemoteAddress() {
@@ -226,6 +241,53 @@ public class MockServer extends LifeCycle {
     public MockServer registerListener(ExpectationsListener expectationsListener) {
         super.registerListener(expectationsListener);
         return this;
+    }
+
+    private void bindDnsPort(Configuration configuration) {
+        int dnsPort = configuration.dnsPort() != null ? configuration.dnsPort() : 0;
+        DnsRequestHandler dnsHandler = new DnsRequestHandler(mockServerLogger, httpState);
+        Bootstrap dnsBootstrap = new Bootstrap()
+            .group(workerGroup)
+            .channel(NioDatagramChannel.class)
+            .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+            .handler(new ChannelInitializer<DatagramChannel>() {
+                @Override
+                protected void initChannel(DatagramChannel ch) {
+                    ch.pipeline()
+                        .addLast(new DatagramDnsQueryDecoder())
+                        .addLast(new DatagramDnsResponseEncoder())
+                        .addLast(dnsHandler);
+                }
+            });
+        dnsChannel = dnsBootstrap.bind(dnsPort).syncUninterruptibly().channel();
+        int boundPort = ((InetSocketAddress) dnsChannel.localAddress()).getPort();
+        if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(SERVER_CONFIGURATION)
+                    .setLogLevel(Level.INFO)
+                    .setMessageFormat("DNS mock server started on port: {}")
+                    .setArguments(boundPort)
+            );
+        }
+    }
+
+    public int getDnsPort() {
+        if (dnsChannel != null && dnsChannel.localAddress() instanceof InetSocketAddress) {
+            return ((InetSocketAddress) dnsChannel.localAddress()).getPort();
+        }
+        return -1;
+    }
+
+    @Override
+    public CompletableFuture<String> stopAsync() {
+        if (dnsChannel != null) {
+            dnsChannel.close();
+        }
+        if (mcpSessionManager != null) {
+            mcpSessionManager.shutdown();
+        }
+        return super.stopAsync();
     }
 
 }

@@ -10,8 +10,12 @@ import org.mockserver.configuration.Configuration;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.mock.Expectation;
+import org.mockserver.mock.HttpState;
 import org.mockserver.model.BinaryMessage;
 import org.mockserver.model.BinaryProxyListener;
+import org.mockserver.model.BinaryRequestDefinition;
+import org.mockserver.model.BinaryResponse;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.uuid.UUIDService;
 import org.slf4j.event.Level;
@@ -41,14 +45,16 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
     private final Scheduler scheduler;
     private final NettyHttpClient httpClient;
     private final BinaryProxyListener binaryExchangeCallback;
+    private final HttpState httpState;
 
-    public BinaryRequestProxyingHandler(final Configuration configuration, final MockServerLogger mockServerLogger, final Scheduler scheduler, final NettyHttpClient httpClient) {
+    public BinaryRequestProxyingHandler(final Configuration configuration, final MockServerLogger mockServerLogger, final Scheduler scheduler, final NettyHttpClient httpClient, final HttpState httpState) {
         super(true);
         this.configuration = configuration;
         this.mockServerLogger = mockServerLogger;
         this.scheduler = scheduler;
         this.httpClient = httpClient;
         this.binaryExchangeCallback = configuration.binaryProxyListener();
+        this.httpState = httpState;
     }
 
     @Override
@@ -64,8 +70,37 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
                 .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()))
         );
         final InetSocketAddress remoteAddress = getRemoteAddress(ctx);
-        if (remoteAddress != null) { // binary protocol is only supported for proxies request and not mocking
+        if (remoteAddress != null) {
             sendMessage(ctx, binaryRequest, logCorrelationId, remoteAddress);
+        } else if (httpState != null) {
+            BinaryRequestDefinition binaryRequestDefinition = BinaryRequestDefinition.binaryRequest(binaryRequest.getBytes());
+            binaryRequestDefinition.withLogCorrelationId(logCorrelationId);
+            Expectation matchedExpectation = httpState.firstMatchingExpectation(binaryRequestDefinition);
+            if (matchedExpectation != null && matchedExpectation.getBinaryResponse() != null) {
+                BinaryResponse binaryResponse = matchedExpectation.getBinaryResponse();
+                if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(FORWARDED_REQUEST)
+                            .setLogLevel(Level.INFO)
+                            .setCorrelationId(logCorrelationId)
+                            .setMessageFormat("returning binary mock response:{}for binary request:{}")
+                            .setArguments(formatBytes(binaryResponse.getBinaryData()), formatBytes(binaryRequest.getBytes()))
+                    );
+                }
+                ctx.writeAndFlush(Unpooled.copiedBuffer(binaryResponse.getBinaryData()));
+            } else {
+                if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(Level.INFO)
+                            .setCorrelationId(logCorrelationId)
+                            .setMessageFormat("no matching binary expectation for binary request:{}")
+                            .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()))
+                    );
+                }
+                ctx.close();
+            }
         } else {
             if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                 mockServerLogger.logEvent(

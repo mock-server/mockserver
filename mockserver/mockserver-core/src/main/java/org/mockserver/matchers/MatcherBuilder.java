@@ -4,6 +4,8 @@ import org.mockserver.cache.LRUCache;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
+import org.mockserver.model.BinaryRequestDefinition;
+import org.mockserver.model.DnsRequestDefinition;
 import org.mockserver.model.OpenAPIDefinition;
 import org.mockserver.model.RequestDefinition;
 
@@ -29,6 +31,10 @@ public class MatcherBuilder {
         if (httpRequestMatcher == null) {
             if (requestDefinition instanceof OpenAPIDefinition) {
                 httpRequestMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
+            } else if (requestDefinition instanceof BinaryRequestDefinition) {
+                httpRequestMatcher = new BinaryRequestPropertiesMatcher(configuration, mockServerLogger);
+            } else if (requestDefinition instanceof DnsRequestDefinition) {
+                httpRequestMatcher = new DnsRequestPropertiesMatcher(configuration, mockServerLogger);
             } else {
                 httpRequestMatcher = new HttpRequestPropertiesMatcher(configuration, mockServerLogger);
             }
@@ -42,6 +48,10 @@ public class MatcherBuilder {
         HttpRequestMatcher httpRequestMatcher;
         if (expectation.getHttpRequest() instanceof OpenAPIDefinition) {
             httpRequestMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
+        } else if (expectation.getHttpRequest() instanceof BinaryRequestDefinition) {
+            httpRequestMatcher = new BinaryRequestPropertiesMatcher(configuration, mockServerLogger);
+        } else if (expectation.getHttpRequest() instanceof DnsRequestDefinition) {
+            httpRequestMatcher = new DnsRequestPropertiesMatcher(configuration, mockServerLogger);
         } else {
             httpRequestMatcher = new HttpRequestPropertiesMatcher(configuration, mockServerLogger);
         }

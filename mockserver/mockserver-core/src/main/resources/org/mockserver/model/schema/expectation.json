@@ -59,6 +59,12 @@
     "grpcStreamResponse": {
       "$ref": "#/definitions/grpcStreamResponse"
     },
+    "binaryResponse": {
+      "$ref": "#/definitions/binaryResponse"
+    },
+    "dnsResponse": {
+      "$ref": "#/definitions/dnsResponse"
+    },
     "afterActions": {
       "oneOf": [
         { "$ref": "#/definitions/afterAction" },
@@ -167,6 +173,16 @@
     {
       "required": [
         "grpcStreamResponse"
+      ]
+    },
+    {
+      "required": [
+        "binaryResponse"
+      ]
+    },
+    {
+      "required": [
+        "dnsResponse"
       ]
     },
     {

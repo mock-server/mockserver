@@ -1,0 +1,38 @@
+{
+  "title": "DNS record",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "type": {
+      "enum": ["A", "AAAA", "CNAME", "MX", "SRV", "TXT", "PTR"]
+    },
+    "dnsClass": {
+      "enum": ["IN", "CH", "HS", "ANY"]
+    },
+    "ttl": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "value": {
+      "type": "string"
+    },
+    "priority": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "weight": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "port": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535
+    }
+  },
+  "definitions": {
+  }
+}

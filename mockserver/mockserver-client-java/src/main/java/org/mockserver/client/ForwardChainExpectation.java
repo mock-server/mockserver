@@ -359,6 +359,16 @@ public class ForwardChainExpectation {
         return mockServerClient.upsert(expectation);
     }
 
+    public Expectation[] respondWithBinary(final BinaryResponse binaryResponse) {
+        expectation.thenRespondWithBinary(binaryResponse);
+        return mockServerClient.upsert(expectation);
+    }
+
+    public Expectation[] respondWithDns(final DnsResponse dnsResponse) {
+        expectation.thenRespondWithDns(dnsResponse);
+        return mockServerClient.upsert(expectation);
+    }
+
     @SuppressWarnings("rawtypes")
     private <T extends HttpMessage> String registerWebSocketClient(ExpectationCallback<T> expectationCallback, ExpectationForwardAndResponseCallback expectationForwardResponseCallback) {
         try {

@@ -1,0 +1,35 @@
+<a id="dns_configuration" class="anchor" href="#dns_configuration">&nbsp;</a>
+
+<h2>DNS Configuration:</h2>
+
+<button id="button_configuration_dns_enabled" class="accordion title"><strong>Enable DNS Mocking</strong></button>
+<div class="panel title">
+    <p>Enable or disable the DNS mock server. When enabled, MockServer starts a UDP DNS server that matches incoming DNS queries against expectations. DNS expectations use <span class="inline_code">DnsRequestDefinition</span> for matching and <span class="inline_code">DnsResponse</span> for responses. Supported record types: A, AAAA, CNAME, MX, SRV, TXT, PTR.</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.dnsEnabled(boolean enable)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.dnsEnabled=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_DNS_ENABLED=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.dnsEnabled=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.dnsEnabled="true"</code></pre>
+</div>
+
+<button id="button_configuration_dns_port" class="accordion title"><strong>DNS Port</strong></button>
+<div class="panel title">
+    <p>The UDP port for the DNS mock server. Set to <span class="inline_code">0</span> to let the operating system assign an ephemeral port. Use <span class="inline_code">MockServer.getDnsPort()</span> to retrieve the actual bound port at runtime.</p>
+    <p>Type: <span class="keyword">integer</span> Default: <span class="this_value">0</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.dnsPort(int port)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.dnsPort=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_DNS_PORT=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.dnsPort=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.dnsPort="5353"</code></pre>
+</div>

@@ -467,34 +467,6 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
         }
     }
 
-    /**
-     * Apply NOT operators sequentially to the base match result.
-     * Each NOT flag independently negates the result.
-     * 
-     * @param baseMatches the base matching result (before any NOT operations)
-     * @param requestNot whether the request has NOT flag
-     * @param expectationNot whether the expectation has NOT flag
-     * @param matcherNot whether this matcher is wrapped with notMatcher() (expectation request matcher NOT operator)
-     * @return the final result after applying all NOT operations
-     */
-    private static boolean applyNotOperators(boolean baseMatches, boolean requestNot, boolean expectationNot, boolean matcherNot) {
-        boolean result = baseMatches;
-        
-        // Apply each NOT flag sequentially
-        // Order matters for clarity, but mathematically NOT is commutative
-        if (matcherNot) {
-            result = !result;
-        }
-        if (expectationNot) {
-            result = !result;
-        }
-        if (requestNot) {
-            result = !result;
-        }
-        
-        return result;
-    }
-
     private boolean bodyMatches(MatchDifference context, HttpRequest request) {
         boolean bodyMatches;
         if (bodyMatcher != null) {

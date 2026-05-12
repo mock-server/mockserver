@@ -312,7 +312,7 @@ public class HttpState {
         return upsertedExpectations;
     }
 
-    public Expectation firstMatchingExpectation(HttpRequest request) {
+    public Expectation firstMatchingExpectation(RequestDefinition request) {
         if (requestMatchers.isEmpty()) {
             return null;
         } else {

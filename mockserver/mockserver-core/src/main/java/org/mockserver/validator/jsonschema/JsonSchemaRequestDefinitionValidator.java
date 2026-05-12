@@ -17,6 +17,8 @@ public class JsonSchemaRequestDefinitionValidator extends JsonSchemaValidator {
             "httpRequest",
             "stringOrJsonSchema",
             "openAPIDefinition",
+            "binaryRequestDefinition",
+            "dnsRequestDefinition",
             "body",
             "keyToMultiValue",
             "keyToValue",

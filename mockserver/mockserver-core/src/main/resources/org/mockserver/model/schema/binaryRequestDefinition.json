@@ -1,0 +1,21 @@
+{
+  "title": "binary request definition",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "not": {
+      "type": "boolean"
+    },
+    "binaryData": {
+      "type": "string"
+    },
+    "socketAddress": {
+      "$ref": "#/definitions/socketAddress"
+    }
+  },
+  "required": [
+    "binaryData"
+  ],
+  "definitions": {
+  }
+}

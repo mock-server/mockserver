@@ -1,0 +1,36 @@
+{
+  "title": "DNS response to return",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "delay": {
+      "$ref": "#/definitions/delay"
+    },
+    "answerRecords": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/dnsRecord"
+      }
+    },
+    "authorityRecords": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/dnsRecord"
+      }
+    },
+    "additionalRecords": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/dnsRecord"
+      }
+    },
+    "responseCode": {
+      "enum": ["NOERROR", "FORMERR", "SERVFAIL", "NXDOMAIN", "NOTIMP", "REFUSED"]
+    },
+    "primary": {
+      "type": "boolean"
+    }
+  },
+  "definitions": {
+  }
+}

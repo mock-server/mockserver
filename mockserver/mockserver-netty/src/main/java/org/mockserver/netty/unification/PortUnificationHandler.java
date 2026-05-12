@@ -27,6 +27,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.MockServerHttpResponseToFullHttpResponse;
 import org.mockserver.mock.HttpState;
 import org.mockserver.mock.action.http.HttpActionHandler;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.netty.HttpRequestHandler;
 import org.mockserver.netty.mcp.McpSessionManager;
@@ -420,13 +421,13 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
     private void switchToProxyConnected(ChannelHandlerContext ctx, ByteBuf msg) {
         String message = readMessage(msg);
         if (message.startsWith(PROXIED_SECURE)) {
-            String[] hostParts = StringUtils.substringAfter(message, PROXIED_SECURE).split(":");
+            String[] hostParts = HttpRequest.splitHostPort(StringUtils.substringAfter(message, PROXIED_SECURE));
             int port = hostParts.length > 1 ? Integer.parseInt(hostParts[1]) : 443;
             enableSslUpstreamAndDownstream(ctx.channel());
             setProxyingRequest(ctx, Boolean.TRUE);
             setRemoteAddress(ctx, new InetSocketAddress(hostParts[0], port));
         } else if (message.startsWith(PROXIED)) {
-            String[] hostParts = StringUtils.substringAfter(message, PROXIED).split(":");
+            String[] hostParts = HttpRequest.splitHostPort(StringUtils.substringAfter(message, PROXIED));
             int port = hostParts.length > 1 ? Integer.parseInt(hostParts[1]) : 80;
             setProxyingRequest(ctx, Boolean.TRUE);
             setRemoteAddress(ctx, new InetSocketAddress(hostParts[0], port));
@@ -441,7 +442,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
     }
 
     private void switchToBinaryRequestProxying(ChannelHandlerContext ctx, ByteBuf msg) {
-        addLastIfNotPresent(ctx.pipeline(), new BinaryRequestProxyingHandler(configuration, httpState.getMockServerLogger(), httpState.getScheduler(), actionHandler.getHttpClient()));
+        addLastIfNotPresent(ctx.pipeline(), new BinaryRequestProxyingHandler(configuration, httpState.getMockServerLogger(), httpState.getScheduler(), actionHandler.getHttpClient(), httpState));
 
         // fire message back through pipeline
         ctx.fireChannelRead(msg.readBytes(actualReadableBytes()));
@@ -482,6 +483,9 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         localAddresses.add(socketAddress.getHostName() + portExtension);
         localAddresses.add("localhost" + portExtension);
         localAddresses.add("127.0.0.1" + portExtension);
+        localAddresses.add("::1" + portExtension);
+        localAddresses.add("[::1]" + portExtension);
+        localAddresses.add("0:0:0:0:0:0:0:1" + portExtension);
         return unmodifiableSet(localAddresses);
     }
 

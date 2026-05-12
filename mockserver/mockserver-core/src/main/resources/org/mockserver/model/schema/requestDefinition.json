@@ -6,6 +6,12 @@
     },
     {
       "$ref": "#/definitions/openAPIDefinition"
+    },
+    {
+      "$ref": "#/definitions/binaryRequestDefinition"
+    },
+    {
+      "$ref": "#/definitions/dnsRequestDefinition"
     }
   ],
   "definitions": {

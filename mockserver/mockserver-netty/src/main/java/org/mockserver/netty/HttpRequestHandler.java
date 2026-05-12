@@ -233,13 +233,13 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
                         setProxyingRequest(ctx, Boolean.TRUE);
                         // assume SSL for CONNECT request
                         enableSslUpstreamAndDownstream(ctx.channel());
-                        // add Subject Alternative Name for SSL certificate
-                        if (isNotBlank(request.getPath().getValue())) {
-                            server.getScheduler().submit(() -> configuration.addSubjectAlternativeName(request.getPath().getValue()));
-                        }
-                        String[] hostParts = request.getPath().getValue().split(":");
+                        String[] hostParts = HttpRequest.splitHostPort(request.getPath().getValue());
+                        String connectHost = hostParts[0];
                         int port = hostParts.length > 1 ? Integer.parseInt(hostParts[1]) : isSslEnabledUpstream(ctx.channel()) ? 443 : 80;
-                        ctx.pipeline().addLast(new HttpConnectHandler(configuration, server, mockServerLogger, hostParts[0], port));
+                        if (isNotBlank(connectHost)) {
+                            server.getScheduler().submit(() -> configuration.addSubjectAlternativeName(connectHost));
+                        }
+                        ctx.pipeline().addLast(new HttpConnectHandler(configuration, server, mockServerLogger, connectHost, port));
                         ctx.pipeline().remove(this);
                         ctx.fireChannelRead(request);
                     }

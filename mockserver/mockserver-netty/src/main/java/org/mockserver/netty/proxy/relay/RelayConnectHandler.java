@@ -61,10 +61,11 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
             .handler(new ChannelInboundHandlerAdapter() {
                 @Override
                 public void channelActive(final ChannelHandlerContext mockServerCtx) {
+                    String hostForMessage = host.contains(":") ? "[" + host + "]" : host;
                     if (isSslEnabledUpstream(proxyClientCtx.channel())) {
-                        mockServerCtx.writeAndFlush(Unpooled.copiedBuffer((PROXIED_SECURE + host + ":" + port).getBytes(StandardCharsets.UTF_8))).awaitUninterruptibly();
+                        mockServerCtx.writeAndFlush(Unpooled.copiedBuffer((PROXIED_SECURE + hostForMessage + ":" + port).getBytes(StandardCharsets.UTF_8))).awaitUninterruptibly();
                     } else {
-                        mockServerCtx.writeAndFlush(Unpooled.copiedBuffer((PROXIED + host + ":" + port).getBytes(StandardCharsets.UTF_8))).awaitUninterruptibly();
+                        mockServerCtx.writeAndFlush(Unpooled.copiedBuffer((PROXIED + hostForMessage + ":" + port).getBytes(StandardCharsets.UTF_8))).awaitUninterruptibly();
                     }
                 }
 

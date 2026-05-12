@@ -8,7 +8,9 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
+import org.mockserver.serialization.model.BinaryRequestDefinitionDTO;
 import org.mockserver.serialization.model.BodyDTO;
+import org.mockserver.serialization.model.DnsRequestDefinitionDTO;
 import org.mockserver.serialization.model.HttpRequestDTO;
 import org.mockserver.serialization.model.OpenAPIDefinitionDTO;
 import org.mockserver.serialization.model.RequestDefinitionDTO;
@@ -51,6 +53,10 @@ public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDef
             String specUrlOrPayload = null;
             String operationId = null;
             String contextPathPrefix = null;
+            byte[] binaryData = null;
+            String dnsName = null;
+            DnsRecordType dnsType = null;
+            DnsRecordClass dnsClass = null;
             while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
                 String fieldName = jsonParser.currentName();
                 if (fieldName != null) {
@@ -161,10 +167,61 @@ public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDef
                             contextPathPrefix = ctxt.readValue(jsonParser, String.class);
                             break;
                         }
+                        case "binaryData": {
+                            jsonParser.nextToken();
+                            binaryData = ctxt.readValue(jsonParser, byte[].class);
+                            break;
+                        }
+                        case "dnsName": {
+                            jsonParser.nextToken();
+                            dnsName = ctxt.readValue(jsonParser, String.class);
+                            break;
+                        }
+                        case "dnsType": {
+                            jsonParser.nextToken();
+                            try {
+                                dnsType = DnsRecordType.valueOf(ctxt.readValue(jsonParser, String.class));
+                            } catch (IllegalArgumentException throwable) {
+                                new MockServerLogger().logEvent(
+                                    new LogEntry()
+                                        .setType(EXCEPTION)
+                                        .setLogLevel(ERROR)
+                                        .setMessageFormat("exception while parsing dnsType value for RequestDefinitionDTO - {}")
+                                        .setArguments(throwable.getMessage())
+                                );
+                            }
+                            break;
+                        }
+                        case "dnsClass": {
+                            jsonParser.nextToken();
+                            try {
+                                dnsClass = DnsRecordClass.valueOf(ctxt.readValue(jsonParser, String.class));
+                            } catch (IllegalArgumentException throwable) {
+                                new MockServerLogger().logEvent(
+                                    new LogEntry()
+                                        .setType(EXCEPTION)
+                                        .setLogLevel(ERROR)
+                                        .setMessageFormat("exception while parsing dnsClass value for RequestDefinitionDTO - {}")
+                                        .setArguments(throwable.getMessage())
+                                );
+                            }
+                            break;
+                        }
                     }
                 }
             }
-            if (isNotBlank(specUrlOrPayload)) {
+            if (isNotBlank(dnsName)) {
+                return (RequestDefinitionDTO) new DnsRequestDefinitionDTO()
+                    .setDnsName(dnsName)
+                    .setDnsType(dnsType)
+                    .setDnsClass(dnsClass)
+                    .setNot(not);
+            } else if (binaryData != null) {
+                return (RequestDefinitionDTO) new BinaryRequestDefinitionDTO()
+                    .setBinaryData(binaryData)
+                    .setSocketAddress(socketAddress)
+                    .setNot(not);
+            } else if (isNotBlank(specUrlOrPayload)) {
                 return (RequestDefinitionDTO) new OpenAPIDefinitionDTO()
                     .setSpecUrlOrPayload(specUrlOrPayload)
                     .setOperationId(operationId)

@@ -89,6 +89,8 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_GRPC_PROTO_DIRECTORY = "mockserver.grpcProtoDirectory";
     private static final String MOCKSERVER_GRPC_ENABLED = "mockserver.grpcEnabled";
     private static final String MOCKSERVER_GRPC_PROTOC_PATH = "mockserver.grpcProtocPath";
+    private static final String MOCKSERVER_DNS_ENABLED = "mockserver.dnsEnabled";
+    private static final String MOCKSERVER_DNS_PORT = "mockserver.dnsPort";
 
     // non http proxying
     private static final String MOCKSERVER_FORWARD_BINARY_REQUESTS_WITHOUT_WAITING_FOR_RESPONSE = "mockserver.forwardBinaryRequestsWithoutWaitingForResponse";
@@ -421,6 +423,22 @@ public class ConfigurationProperties {
 
     public static void grpcProtocPath(String path) {
         setProperty(MOCKSERVER_GRPC_PROTOC_PATH, path);
+    }
+
+    public static boolean dnsEnabled() {
+        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_DNS_ENABLED, "MOCKSERVER_DNS_ENABLED", "" + false));
+    }
+
+    public static void dnsEnabled(boolean enable) {
+        setProperty(MOCKSERVER_DNS_ENABLED, "" + enable);
+    }
+
+    public static int dnsPort() {
+        return readIntegerProperty(MOCKSERVER_DNS_PORT, "MOCKSERVER_DNS_PORT", 0);
+    }
+
+    public static void dnsPort(int port) {
+        setProperty(MOCKSERVER_DNS_PORT, "" + port);
     }
 
     public static Map<String, String> logLevelOverrides() {

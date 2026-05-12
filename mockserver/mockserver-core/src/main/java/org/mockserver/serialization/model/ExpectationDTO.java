@@ -35,6 +35,8 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
     private HttpSseResponseDTO httpSseResponse;
     private HttpWebSocketResponseDTO httpWebSocketResponse;
     private GrpcStreamResponseDTO grpcStreamResponse;
+    private BinaryResponseDTO binaryResponse;
+    private DnsResponseDTO dnsResponse;
     private HttpErrorDTO httpError;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<AfterActionDTO> afterActions;
@@ -60,6 +62,10 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
                 this.httpRequest = new HttpRequestDTO((HttpRequest) requestMatcher);
             } else if (requestMatcher instanceof OpenAPIDefinition) {
                 this.httpRequest = new OpenAPIDefinitionDTO((OpenAPIDefinition) requestMatcher);
+            } else if (requestMatcher instanceof BinaryRequestDefinition) {
+                this.httpRequest = new BinaryRequestDefinitionDTO((BinaryRequestDefinition) requestMatcher);
+            } else if (requestMatcher instanceof DnsRequestDefinition) {
+                this.httpRequest = new DnsRequestDefinitionDTO((DnsRequestDefinition) requestMatcher);
             }
             HttpResponse httpResponse = expectation.getHttpResponse();
             if (httpResponse != null) {
@@ -113,6 +119,14 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
             if (grpcStreamResponse != null) {
                 this.grpcStreamResponse = new GrpcStreamResponseDTO(grpcStreamResponse);
             }
+            BinaryResponse binaryResponse = expectation.getBinaryResponse();
+            if (binaryResponse != null) {
+                this.binaryResponse = new BinaryResponseDTO(binaryResponse);
+            }
+            DnsResponse dnsResponse = expectation.getDnsResponse();
+            if (dnsResponse != null) {
+                this.dnsResponse = new DnsResponseDTO(dnsResponse);
+            }
             HttpError httpError = expectation.getHttpError();
             if (httpError != null) {
                 this.httpError = new HttpErrorDTO(httpError);
@@ -164,6 +178,8 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
         HttpSseResponse httpSseResponse = null;
         HttpWebSocketResponse httpWebSocketResponse = null;
         GrpcStreamResponse grpcStreamResponse = null;
+        BinaryResponse binaryResponse = null;
+        DnsResponse dnsResponse = null;
         HttpError httpError = null;
         Times times;
         TimeToLive timeToLive;
@@ -210,6 +226,12 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
         if (this.grpcStreamResponse != null) {
             grpcStreamResponse = this.grpcStreamResponse.buildObject();
         }
+        if (this.binaryResponse != null) {
+            binaryResponse = this.binaryResponse.buildObject();
+        }
+        if (this.dnsResponse != null) {
+            dnsResponse = this.dnsResponse.buildObject();
+        }
         if (this.httpError != null) {
             httpError = this.httpError.buildObject();
         }
@@ -251,6 +273,8 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
             .thenRespondWithSse(httpSseResponse)
             .thenRespondWithWebSocket(httpWebSocketResponse)
             .thenRespondWithGrpcStream(grpcStreamResponse)
+            .thenRespondWithBinary(binaryResponse)
+            .thenRespondWithDns(dnsResponse)
             .thenError(httpError)
             .withAfterActions(afterActionList)
             .thenRespond(this.httpResponses != null ? this.httpResponses.stream().map(HttpResponseDTO::buildObject).collect(Collectors.toList()) : null)
@@ -407,6 +431,24 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
 
     public ExpectationDTO setGrpcStreamResponse(GrpcStreamResponseDTO grpcStreamResponse) {
         this.grpcStreamResponse = grpcStreamResponse;
+        return this;
+    }
+
+    public BinaryResponseDTO getBinaryResponse() {
+        return binaryResponse;
+    }
+
+    public ExpectationDTO setBinaryResponse(BinaryResponseDTO binaryResponse) {
+        this.binaryResponse = binaryResponse;
+        return this;
+    }
+
+    public DnsResponseDTO getDnsResponse() {
+        return dnsResponse;
+    }
+
+    public ExpectationDTO setDnsResponse(DnsResponseDTO dnsResponse) {
+        this.dnsResponse = dnsResponse;
         return this;
     }
 

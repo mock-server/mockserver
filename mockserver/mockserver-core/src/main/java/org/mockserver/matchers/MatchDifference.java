@@ -27,7 +27,11 @@ public class MatchDifference {
         PROTOCOL("protocol"),
         KEEP_ALIVE("keep-alive"),
         OPERATION("operation"),
-        OPENAPI("openapi");
+        OPENAPI("openapi"),
+        DNS_NAME("dnsName"),
+        DNS_TYPE("dnsType"),
+        DNS_CLASS("dnsClass"),
+        BINARY_BODY("binaryBody");
 
         private final String name;
 

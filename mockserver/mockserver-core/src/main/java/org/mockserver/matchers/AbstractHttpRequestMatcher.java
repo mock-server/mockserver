@@ -128,7 +128,7 @@ public abstract class AbstractHttpRequestMatcher extends NotMatcher<RequestDefin
         if (hashCode() != o.hashCode()) {
             return false;
         }
-        HttpRequestPropertiesMatcher that = (HttpRequestPropertiesMatcher) o;
+        AbstractHttpRequestMatcher that = (AbstractHttpRequestMatcher) o;
         return Objects.equals(expectation, that.expectation);
     }
 
@@ -138,5 +138,19 @@ public abstract class AbstractHttpRequestMatcher extends NotMatcher<RequestDefin
             hashCode = Objects.hash(expectation);
         }
         return hashCode;
+    }
+
+    protected static boolean applyNotOperators(boolean baseMatches, boolean requestNot, boolean expectationNot, boolean matcherNot) {
+        boolean result = baseMatches;
+        if (matcherNot) {
+            result = !result;
+        }
+        if (expectationNot) {
+            result = !result;
+        }
+        if (requestNot) {
+            result = !result;
+        }
+        return result;
     }
 }

@@ -1,0 +1,24 @@
+{
+  "title": "DNS request definition",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "not": {
+      "type": "boolean"
+    },
+    "dnsName": {
+      "type": "string"
+    },
+    "dnsType": {
+      "enum": ["A", "AAAA", "CNAME", "MX", "SRV", "TXT", "PTR"]
+    },
+    "dnsClass": {
+      "enum": ["IN", "CH", "HS", "ANY"]
+    }
+  },
+  "required": [
+    "dnsName"
+  ],
+  "definitions": {
+  }
+}

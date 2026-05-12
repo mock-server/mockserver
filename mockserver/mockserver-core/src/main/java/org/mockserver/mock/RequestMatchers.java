@@ -220,15 +220,15 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         reset(Cause.API);
     }
 
-    public Expectation firstMatchingExpectation(HttpRequest httpRequest) {
+    public Expectation firstMatchingExpectation(RequestDefinition requestDefinition) {
         Expectation matchedExpectation = null;
         Expectation closestMatchExpectation = null;
         int closestMatchFailures = Integer.MAX_VALUE;
         int totalFields = MatchDifference.Field.values().length;
 
         for (HttpRequestMatcher httpRequestMatcher : httpRequestMatchers.toSortedList()) {
-            MatchDifference matchDifference = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
-            if (httpRequestMatcher.matches(matchDifference, httpRequest)) {
+            MatchDifference matchDifference = new MatchDifference(configuration.detailedMatchFailures(), requestDefinition);
+            if (httpRequestMatcher.matches(matchDifference, requestDefinition)) {
                 Expectation expectation = httpRequestMatcher.getExpectation();
                 if (expectation.getScenarioName() != null && expectation.getScenarioState() != null) {
                     if (!scenarioManager.matchesAndTransition(expectation.getScenarioName(), expectation.getScenarioState(), expectation.getNewScenarioState())) {
@@ -270,11 +270,11 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                 new LogEntry()
                     .setType(EXPECTATION_NOT_MATCHED)
                     .setLogLevel(Level.INFO)
-                    .setCorrelationId(httpRequest.getLogCorrelationId())
-                    .setHttpRequest(httpRequest)
+                    .setCorrelationId(requestDefinition.getLogCorrelationId())
+                    .setHttpRequest(requestDefinition)
                     .setExpectation(closestMatchExpectation)
                     .setMessageFormat("closest expectation:{}matched " + matchedFields + "/" + totalFields + " fields for request:{}")
-                    .setArguments(closestMatchExpectation.clone(), httpRequest)
+                    .setArguments(closestMatchExpectation.clone(), requestDefinition)
             );
         }
 

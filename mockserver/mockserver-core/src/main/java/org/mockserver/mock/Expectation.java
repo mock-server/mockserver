@@ -48,6 +48,8 @@ public class Expectation extends ObjectWithJsonToString {
     private HttpSseResponse httpSseResponse;
     private HttpWebSocketResponse httpWebSocketResponse;
     private GrpcStreamResponse grpcStreamResponse;
+    private BinaryResponse binaryResponse;
+    private DnsResponse dnsResponse;
     private HttpError httpError;
     private List<AfterAction> afterActions;
     private List<HttpResponse> httpResponses;
@@ -423,6 +425,14 @@ public class Expectation extends ObjectWithJsonToString {
         return grpcStreamResponse;
     }
 
+    public BinaryResponse getBinaryResponse() {
+        return binaryResponse;
+    }
+
+    public DnsResponse getDnsResponse() {
+        return dnsResponse;
+    }
+
     public HttpError getHttpError() {
         return httpError;
     }
@@ -610,6 +620,12 @@ public class Expectation extends ObjectWithJsonToString {
         if (getGrpcStreamResponse() != null) {
             actions.add(getGrpcStreamResponse());
         }
+        if (getBinaryResponse() != null) {
+            actions.add(getBinaryResponse());
+        }
+        if (getDnsResponse() != null) {
+            actions.add(getDnsResponse());
+        }
         if (getHttpError() != null) {
             actions.add(getHttpError());
         }
@@ -735,6 +751,22 @@ public class Expectation extends ObjectWithJsonToString {
         return this;
     }
 
+    public Expectation thenRespondWithBinary(BinaryResponse binaryResponse) {
+        if (binaryResponse != null) {
+            this.binaryResponse = binaryResponse;
+            this.hashCode = 0;
+        }
+        return this;
+    }
+
+    public Expectation thenRespondWithDns(DnsResponse dnsResponse) {
+        if (dnsResponse != null) {
+            this.dnsResponse = dnsResponse;
+            this.hashCode = 0;
+        }
+        return this;
+    }
+
     public Expectation thenError(HttpError httpError) {
         if (httpError != null) {
             this.httpError = httpError;
@@ -805,6 +837,8 @@ public class Expectation extends ObjectWithJsonToString {
             .thenRespondWithSse(httpSseResponse)
             .thenRespondWithWebSocket(httpWebSocketResponse)
             .thenRespondWithGrpcStream(grpcStreamResponse)
+            .thenRespondWithBinary(binaryResponse)
+            .thenRespondWithDns(dnsResponse)
             .thenError(httpError)
             .thenRespond(httpResponses)
             .withResponseMode(responseMode);
@@ -850,6 +884,8 @@ public class Expectation extends ObjectWithJsonToString {
             Objects.equals(httpSseResponse, that.httpSseResponse) &&
             Objects.equals(httpWebSocketResponse, that.httpWebSocketResponse) &&
             Objects.equals(grpcStreamResponse, that.grpcStreamResponse) &&
+            Objects.equals(binaryResponse, that.binaryResponse) &&
+            Objects.equals(dnsResponse, that.dnsResponse) &&
             Objects.equals(httpError, that.httpError) &&
             Objects.equals(afterActions, that.afterActions) &&
             Objects.equals(httpResponses, that.httpResponses) &&
@@ -862,7 +898,7 @@ public class Expectation extends ObjectWithJsonToString {
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(priority, percentage, httpRequest, times, timeToLive, httpResponse, httpResponseTemplate, httpResponseClassCallback, httpResponseObjectCallback, httpForward, httpForwardTemplate, httpForwardClassCallback, httpForwardObjectCallback, httpOverrideForwardedRequest, httpForwardValidateAction, httpSseResponse, httpWebSocketResponse, grpcStreamResponse, httpError, afterActions, httpResponses, responseMode, scenarioName, scenarioState, newScenarioState);
+            hashCode = Objects.hash(priority, percentage, httpRequest, times, timeToLive, httpResponse, httpResponseTemplate, httpResponseClassCallback, httpResponseObjectCallback, httpForward, httpForwardTemplate, httpForwardClassCallback, httpForwardObjectCallback, httpOverrideForwardedRequest, httpForwardValidateAction, httpSseResponse, httpWebSocketResponse, grpcStreamResponse, binaryResponse, dnsResponse, httpError, afterActions, httpResponses, responseMode, scenarioName, scenarioState, newScenarioState);
         }
         return hashCode;
     }

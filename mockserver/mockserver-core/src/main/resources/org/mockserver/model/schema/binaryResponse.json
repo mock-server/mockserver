@@ -1,0 +1,18 @@
+{
+  "title": "binary response to return",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "delay": {
+      "$ref": "#/definitions/delay"
+    },
+    "binaryData": {
+      "type": "string"
+    },
+    "primary": {
+      "type": "boolean"
+    }
+  },
+  "definitions": {
+  }
+}

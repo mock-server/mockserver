@@ -115,6 +115,11 @@ public class Metrics {
         clear(Name.RESPONSE_TEMPLATE_ACTIONS_COUNT);
         clear(Name.RESPONSE_CLASS_CALLBACK_ACTIONS_COUNT);
         clear(Name.RESPONSE_OBJECT_CALLBACK_ACTIONS_COUNT);
+        clear(Name.SSE_RESPONSE_ACTIONS_COUNT);
+        clear(Name.WEBSOCKET_RESPONSE_ACTIONS_COUNT);
+        clear(Name.GRPC_STREAM_RESPONSE_ACTIONS_COUNT);
+        clear(Name.BINARY_RESPONSE_ACTIONS_COUNT);
+        clear(Name.DNS_RESPONSE_ACTIONS_COUNT);
         clear(Name.ERROR_ACTIONS_COUNT);
     }
 
@@ -138,6 +143,11 @@ public class Metrics {
         RESPONSE_TEMPLATE_ACTIONS_COUNT("Action response template count"),
         RESPONSE_CLASS_CALLBACK_ACTIONS_COUNT("Action response class callback count"),
         RESPONSE_OBJECT_CALLBACK_ACTIONS_COUNT("Action response object callback count"),
+        SSE_RESPONSE_ACTIONS_COUNT("Action SSE response count"),
+        WEBSOCKET_RESPONSE_ACTIONS_COUNT("Action WebSocket response count"),
+        GRPC_STREAM_RESPONSE_ACTIONS_COUNT("Action gRPC stream response count"),
+        BINARY_RESPONSE_ACTIONS_COUNT("Action binary response count"),
+        DNS_RESPONSE_ACTIONS_COUNT("Action DNS response count"),
         ERROR_ACTIONS_COUNT("Action error count"),
         WEBSOCKET_CALLBACK_CLIENTS_COUNT("Websocket callback client count"),
         WEBSOCKET_CALLBACK_RESPONSE_HANDLERS_COUNT("Websocket callback response handler count"),

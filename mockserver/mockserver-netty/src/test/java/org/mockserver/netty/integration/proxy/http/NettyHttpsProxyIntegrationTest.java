@@ -562,4 +562,56 @@ public class NettyHttpsProxyIntegrationTest {
             ConfigurationProperties.forwardProxyAuthenticationPassword(existingForwardPassword);
         }
     }
+
+    @Test
+    public void shouldConnectToSecurePortWithIPv6Target() throws Exception {
+        try {
+            try (Socket socket = new Socket("127.0.0.1", mockServerPort)) {
+                OutputStream output = socket.getOutputStream();
+
+                output.write(("" +
+                    "CONNECT [::1]:443 HTTP/1.1\r\n" +
+                    "Host: [::1]:443\r\n" +
+                    "\r\n"
+                ).getBytes(UTF_8));
+                output.flush();
+
+                assertContains(IOStreamUtils.readHttpInputStreamToString(socket), "HTTP/1.1 200 OK");
+            }
+        } catch (java.net.SocketException se) {
+            new MockServerLogger().logEvent(
+                new LogEntry()
+                    .setLogLevel(ERROR)
+                    .setMessageFormat("Port port " + mockServerPort)
+                    .setThrowable(se)
+            );
+            throw se;
+        }
+    }
+
+    @Test
+    public void shouldConnectToSecurePortWithFullIPv6Target() throws Exception {
+        try {
+            try (Socket socket = new Socket("127.0.0.1", mockServerPort)) {
+                OutputStream output = socket.getOutputStream();
+
+                output.write(("" +
+                    "CONNECT [2001:db8::1]:8443 HTTP/1.1\r\n" +
+                    "Host: [2001:db8::1]:8443\r\n" +
+                    "\r\n"
+                ).getBytes(UTF_8));
+                output.flush();
+
+                assertContains(IOStreamUtils.readHttpInputStreamToString(socket), "HTTP/1.1 200 OK");
+            }
+        } catch (java.net.SocketException se) {
+            new MockServerLogger().logEvent(
+                new LogEntry()
+                    .setLogLevel(ERROR)
+                    .setMessageFormat("Port port " + mockServerPort)
+                    .setThrowable(se)
+            );
+            throw se;
+        }
+    }
 }
