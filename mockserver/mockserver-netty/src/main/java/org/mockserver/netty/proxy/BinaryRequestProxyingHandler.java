@@ -99,25 +99,29 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
                             .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()))
                     );
                 }
-                ctx.close();
+                writeUnknownFormatMessage(ctx, binaryRequest, logCorrelationId);
             }
         } else {
-            if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(Level.INFO)
-                        .setCorrelationId(logCorrelationId)
-                        .setMessageFormat(
-                            "unknown message format, only HTTP requests are supported for mocking or HTTP & binary requests for proxying, but request is not being proxied and request is not valid HTTP, found request in binary: {} in utf8 text: {}"
-                        )
-                        .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()), new String(binaryRequest.getBytes(), StandardCharsets.UTF_8))
-                );
-            }
-            ctx.writeAndFlush(Unpooled.copiedBuffer(
-                "unknown message format, only HTTP requests are supported for mocking or HTTP & binary requests for proxying, but request is not being proxied and request is not valid HTTP".getBytes(StandardCharsets.UTF_8)
-            ));
-            ctx.close();
+            writeUnknownFormatMessage(ctx, binaryRequest, logCorrelationId);
         }
+    }
+
+    private void writeUnknownFormatMessage(ChannelHandlerContext ctx, BinaryMessage binaryRequest, String logCorrelationId) {
+        if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(Level.INFO)
+                    .setCorrelationId(logCorrelationId)
+                    .setMessageFormat(
+                        "unknown message format, only HTTP requests are supported for mocking or HTTP & binary requests for proxying, but request is not being proxied and request is not valid HTTP, found request in binary: {} in utf8 text: {}"
+                    )
+                    .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()), new String(binaryRequest.getBytes(), StandardCharsets.UTF_8))
+            );
+        }
+        ctx.writeAndFlush(Unpooled.copiedBuffer(
+            "unknown message format, only HTTP requests are supported for mocking or HTTP & binary requests for proxying, but request is not being proxied and request is not valid HTTP".getBytes(StandardCharsets.UTF_8)
+        ));
+        ctx.close();
     }
 
     private void sendMessage(ChannelHandlerContext ctx, BinaryMessage binaryRequest, String logCorrelationId, InetSocketAddress remoteAddress) {
