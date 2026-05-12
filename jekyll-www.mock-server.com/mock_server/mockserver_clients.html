@@ -16,6 +16,8 @@ sitemap:
     <li><a href="#rest-api">REST API</a></li>
 	<li><a href="#java-mockserver-client">Java</a></li>
 	<li><a href="#javascript-mockserver-client">JavaScript</a> (both browser API & Node.js module)</li>
+	<li><a href="#python-mockserver-client">Python</a> (sync and async)</li>
+	<li><a href="#ruby-mockserver-client">Ruby</a></li>
 </ul>
 
 <p>The following activities are supported:</p>
@@ -66,6 +68,74 @@ sitemap:
 <p>To include the browser based client in an HTML page as follows:</p>
 
 <pre class="prettyprint lang-java code"><code class="code">&lt;script src=&quot;https://raw.githubusercontent.com/mock-server/mockserver-monorepo/master/mockserver-client-node/mockServerClient.js&quot;&gt;&lt;/script&gt;</code></pre>
+
+<a id="python-mockserver-client" class="anchor" href="#python-mockserver-client">&nbsp;</a>
+
+<h2>Python Client</h2>
+
+<p>The Python client provides both synchronous and asynchronous APIs:</p>
+
+<ul>
+    <li><strong>MockServerClient</strong> - synchronous client wrapping the async implementation</li>
+    <li><strong>AsyncMockServerClient</strong> - native async client using <span class="inline_code">asyncio</span></li>
+</ul>
+
+<p>Install via pip:</p>
+
+<pre class="prettyprint code"><code class="code">pip install mockserver-client</code></pre>
+
+<p>The synchronous client supports context manager usage:</p>
+
+<pre class="prettyprint lang-python code"><code class="code">from mockserver import MockServerClient, HttpRequest, HttpResponse
+
+with MockServerClient("localhost", 1080) as client:
+    client.when(
+        HttpRequest.request(path="/hello")
+    ).respond(
+        HttpResponse.response(body="world")
+    )</code></pre>
+
+<p>The async client can be used with <span class="inline_code">async with</span>:</p>
+
+<pre class="prettyprint lang-python code"><code class="code">from mockserver import AsyncMockServerClient, HttpRequest, HttpResponse
+
+async with AsyncMockServerClient("localhost", 1080) as client:
+    await client.when(
+        HttpRequest.request(path="/hello")
+    ).respond(
+        HttpResponse.response(body="world")
+    )</code></pre>
+
+<p>Requires Python &gt;= 3.9.</p>
+
+<a id="ruby-mockserver-client" class="anchor" href="#ruby-mockserver-client">&nbsp;</a>
+
+<h2>Ruby Client</h2>
+
+<p>The Ruby client provides a fluent builder DSL and WebSocket-based callback support:</p>
+
+<ul>
+    <li><strong>MockServer::Client</strong> - makes HTTP requests to a remote MockServer instance</li>
+</ul>
+
+<p>Install via gem:</p>
+
+<pre class="prettyprint code"><code class="code">gem install mockserver-client</code></pre>
+
+<p>The client supports a block form for automatic cleanup:</p>
+
+<pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+include MockServer
+
+MockServer::Client.new('localhost', 1080) do |client|
+  client.when(
+    HttpRequest.request(path: '/hello')
+  ).respond(
+    HttpResponse.response(body: 'world')
+  )
+end</code></pre>
+
+<p>Requires Ruby &gt;= 3.0.</p>
 
 <a id="client-code-examples" class="anchor" href="#client-code-examples">&nbsp;</a>
 
@@ -169,6 +239,39 @@ mockServerClient("localhost", 1080)
     );
 &lt;/script&gt;</code></pre>
         </div>
+        <button class="accordion inner">Python</button>
+        <div class="panel">
+        <pre class="prettyprint lang-python code"><code class="code">from mockserver import MockServerClient, HttpRequest, HttpResponse, KeyToMultiValue
+
+client = MockServerClient("localhost", 1080)
+client.when(
+    HttpRequest(
+        method="GET",
+        path="/view/cart",
+        cookies=[KeyToMultiValue(name="session", values=["4930456C-C718-476F-971F-CB8E047AB349"])],
+        query_string_parameters=[KeyToMultiValue(name="cartId", values=["055CA455-1DF7-45BB-8535-4F83E7266092"])]
+    )
+).respond(
+    HttpResponse(body="some_response_body")
+)</code></pre>
+        </div>
+        <button class="accordion inner">Ruby</button>
+        <div class="panel">
+        <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+include MockServer
+
+client = MockServer::Client.new('localhost', 1080)
+client.when(
+  HttpRequest.new(
+    method: 'GET',
+    path: '/view/cart',
+    cookies: [{ name: 'session', values: ['4930456C-C718-476F-971F-CB8E047AB349'] }],
+    query_string_parameters: [{ name: 'cartId', values: ['055CA455-1DF7-45BB-8535-4F83E7266092'] }]
+  )
+).respond(
+  HttpResponse.new(body: 'some_response_body')
+)</code></pre>
+        </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
@@ -258,6 +361,39 @@ mockServerClient("localhost", 1080, undefined, true)
     }
   );</code></pre>
         </div>
+        <button class="accordion inner">Python</button>
+        <div class="panel">
+        <pre class="prettyprint lang-python code"><code class="code">from mockserver import MockServerClient, HttpRequest, HttpResponse, KeyToMultiValue
+
+client = MockServerClient("localhost", 1080, secure=True, tls_verify=False)
+client.when(
+    HttpRequest(
+        method="GET",
+        path="/view/cart",
+        cookies=[KeyToMultiValue(name="session", values=["4930456C-C718-476F-971F-CB8E047AB349"])],
+        query_string_parameters=[KeyToMultiValue(name="cartId", values=["055CA455-1DF7-45BB-8535-4F83E7266092"])]
+    )
+).respond(
+    HttpResponse(body="some_response_body")
+)</code></pre>
+        </div>
+        <button class="accordion inner">Ruby</button>
+        <div class="panel">
+        <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+include MockServer
+
+client = MockServer::Client.new('localhost', 1080, secure: true, tls_verify: false)
+client.when(
+  HttpRequest.new(
+    method: 'GET',
+    path: '/view/cart',
+    cookies: [{ name: 'session', values: ['4930456C-C718-476F-971F-CB8E047AB349'] }],
+    query_string_parameters: [{ name: 'cartId', values: ['055CA455-1DF7-45BB-8535-4F83E7266092'] }]
+  )
+).respond(
+  HttpResponse.new(body: 'some_response_body')
+)</code></pre>
+        </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -k -X PUT "https://localhost:1080/mockserver/expectation" -d '{
@@ -332,6 +468,27 @@ mockServerClient("localhost", 1080)
       }
     );
 &lt;/script&gt;</code></pre>
+        </div>
+        <button class="accordion inner">Python</button>
+        <div class="panel">
+            <pre class="prettyprint lang-python code"><code class="code">from mockserver import MockServerClient, HttpRequest, VerificationTimes
+
+client = MockServerClient("localhost", 1080)
+client.verify(
+    HttpRequest(path="/some/path"),
+    times=VerificationTimes(at_least=2)
+)</code></pre>
+        </div>
+        <button class="accordion inner">Ruby</button>
+        <div class="panel">
+            <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+include MockServer
+
+client = MockServer::Client.new('localhost', 1080)
+client.verify(
+  HttpRequest.new(path: '/some/path'),
+  times: VerificationTimes.at_least(2)
+)</code></pre>
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
@@ -422,6 +579,29 @@ mockServerClient("localhost", 1080)
     );
 &lt;/script&gt;</code></pre>
         </div>
+        <button class="accordion inner">Python</button>
+        <div class="panel">
+            <pre class="prettyprint lang-python code"><code class="code">from mockserver import MockServerClient, HttpRequest
+
+client = MockServerClient("localhost", 1080)
+client.verify_sequence(
+    HttpRequest(path="/some/path/one"),
+    HttpRequest(path="/some/path/two"),
+    HttpRequest(path="/some/path/three")
+)</code></pre>
+        </div>
+        <button class="accordion inner">Ruby</button>
+        <div class="panel">
+            <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+include MockServer
+
+client = MockServer::Client.new('localhost', 1080)
+client.verify_sequence(
+  HttpRequest.new(path: '/some/path/one'),
+  HttpRequest.new(path: '/some/path/two'),
+  HttpRequest.new(path: '/some/path/three')
+)</code></pre>
+        </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
             <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/verifySequence" -d '{
@@ -495,6 +675,25 @@ mockServerClient("localhost", 1080)
     );
 &lt;/script&gt;</code></pre>
         </div>
+        <button class="accordion inner">Python</button>
+        <div class="panel">
+            <pre class="prettyprint lang-python code"><code class="code">from mockserver import MockServerClient, HttpRequest
+
+client = MockServerClient("localhost", 1080)
+recorded_requests = client.retrieve_recorded_requests(
+    HttpRequest(path="/some/path", method="POST")
+)</code></pre>
+        </div>
+        <button class="accordion inner">Ruby</button>
+        <div class="panel">
+            <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+include MockServer
+
+client = MockServer::Client.new('localhost', 1080)
+recorded_requests = client.retrieve_recorded_requests(
+  request: HttpRequest.new(path: '/some/path', method: 'POST')
+)</code></pre>
+        </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
             <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS" -d '{
@@ -558,6 +757,25 @@ mockServerClient("localhost", 1080)
       }
     );
 &lt;/script&gt;</code></pre>
+        </div>
+        <button class="accordion inner">Python</button>
+        <div class="panel">
+            <pre class="prettyprint lang-python code"><code class="code">from mockserver import MockServerClient, HttpRequest
+
+client = MockServerClient("localhost", 1080)
+recorded_expectations = client.retrieve_recorded_expectations(
+    HttpRequest(path="/some/path", method="POST")
+)</code></pre>
+        </div>
+        <button class="accordion inner">Ruby</button>
+        <div class="panel">
+            <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+include MockServer
+
+client = MockServer::Client.new('localhost', 1080)
+recorded_expectations = client.retrieve_recorded_expectations(
+  request: HttpRequest.new(path: '/some/path', method: 'POST')
+)</code></pre>
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
@@ -625,6 +843,25 @@ mockServerClient("localhost", 1080)
     );
 &lt;/script&gt;</code></pre>
         </div>
+        <button class="accordion inner">Python</button>
+        <div class="panel">
+            <pre class="prettyprint lang-python code"><code class="code">from mockserver import MockServerClient, HttpRequest
+
+client = MockServerClient("localhost", 1080)
+log_messages = client.retrieve_log_messages(
+    HttpRequest(path="/some/path", method="POST")
+)</code></pre>
+        </div>
+        <button class="accordion inner">Ruby</button>
+        <div class="panel">
+            <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+include MockServer
+
+client = MockServer::Client.new('localhost', 1080)
+log_messages = client.retrieve_log_messages(
+  request: HttpRequest.new(path: '/some/path', method: 'POST')
+)</code></pre>
+        </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
             <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS" -d '{
@@ -684,6 +921,21 @@ mockServerClient("localhost", 1080)
       }
     );
 &lt;/script&gt;</code></pre>
+        </div>
+        <button class="accordion inner">Python</button>
+        <div class="panel">
+            <pre class="prettyprint lang-python code"><code class="code">from mockserver import MockServerClient, HttpRequest
+
+client = MockServerClient("localhost", 1080)
+client.clear(HttpRequest(path="/some/path"))</code></pre>
+        </div>
+        <button class="accordion inner">Ruby</button>
+        <div class="panel">
+            <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+include MockServer
+
+client = MockServer::Client.new('localhost', 1080)
+client.clear(HttpRequest.new(path: '/some/path'))</code></pre>
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
@@ -746,6 +998,21 @@ mockServerClient("localhost", 1080)
     );
 &lt;/script&gt;</code></pre>
         </div>
+        <button class="accordion inner">Python</button>
+        <div class="panel">
+            <pre class="prettyprint lang-python code"><code class="code">from mockserver import MockServerClient, HttpRequest
+
+client = MockServerClient("localhost", 1080)
+client.clear(HttpRequest(path="/some/path"), clear_type="LOG")</code></pre>
+        </div>
+        <button class="accordion inner">Ruby</button>
+        <div class="panel">
+            <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+include MockServer
+
+client = MockServer::Client.new('localhost', 1080)
+client.clear(HttpRequest.new(path: '/some/path'), type: 'LOG')</code></pre>
+        </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
             <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/clear?type=log" -d '{
@@ -793,6 +1060,20 @@ mockServerClient("localhost", 1080)
     );
 &lt;/script&gt;</code></pre>
         </div>
+        <button class="accordion inner">Python</button>
+        <div class="panel">
+            <pre class="prettyprint lang-python code"><code class="code">from mockserver import MockServerClient
+
+client = MockServerClient("localhost", 1080)
+client.reset()</code></pre>
+        </div>
+        <button class="accordion inner">Ruby</button>
+        <div class="panel">
+            <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+
+client = MockServer::Client.new('localhost', 1080)
+client.reset</code></pre>
+        </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
             <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/reset</code></pre>
@@ -811,6 +1092,20 @@ mockServerClient("localhost", 1080)
             <pre class="prettyprint lang-java code"><code class="code">List&lt;Integer&gt; boundPorts = new ClientAndServer(1080).bind(
             0
         );</code></pre>
+        </div>
+        <button class="accordion inner">Python</button>
+        <div class="panel">
+            <pre class="prettyprint lang-python code"><code class="code">from mockserver import MockServerClient
+
+client = MockServerClient("localhost", 1080)
+bound_ports = client.bind(0)</code></pre>
+        </div>
+        <button class="accordion inner">Ruby</button>
+        <div class="panel">
+            <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+
+client = MockServer::Client.new('localhost', 1080)
+bound_ports = client.bind(0)</code></pre>
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
@@ -835,6 +1130,20 @@ mockServerClient("localhost", 1080)
             <pre class="prettyprint lang-java code"><code class="code">List&lt;Integer&gt; boundPorts = new ClientAndServer(1080).bind(
             1081, 1082
         );</code></pre>
+        </div>
+        <button class="accordion inner">Python</button>
+        <div class="panel">
+            <pre class="prettyprint lang-python code"><code class="code">from mockserver import MockServerClient
+
+client = MockServerClient("localhost", 1080)
+bound_ports = client.bind(1081, 1082)</code></pre>
+        </div>
+        <button class="accordion inner">Ruby</button>
+        <div class="panel">
+            <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+
+client = MockServer::Client.new('localhost', 1080)
+bound_ports = client.bind(1081, 1082)</code></pre>
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">

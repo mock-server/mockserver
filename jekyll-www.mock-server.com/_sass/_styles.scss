@@ -322,6 +322,28 @@ ol pre {
     padding-left: 20px;
 }
 
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 1em;
+}
+
+table th,
+table td {
+    text-align: left;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+}
+
+table thead th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+}
+
+table tbody tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
 table.results {
     font-family: 'Averia Sans Libre', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     border: 2px solid #EEEEEE;

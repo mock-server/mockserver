@@ -1,0 +1,311 @@
+<p>MockServer supports mocking gRPC services by transparently converting gRPC requests (protobuf over HTTP/2) into JSON-over-HTTP requests internally. This allows the standard expectation matching engine to handle gRPC requests using the same JSON format used for HTTP mocking.</p>
+
+<a id="how_grpc_mocking_works" class="anchor" href="#how_grpc_mocking_works">&nbsp;</a>
+
+<h2>How gRPC Mocking Works</h2>
+
+<p>When MockServer receives a gRPC request:</p>
+
+<ol>
+    <li>The protobuf binary body is decoded to JSON using the loaded proto descriptors</li>
+    <li>MockServer adds metadata headers to the converted request:
+        <ul>
+            <li><span class="inline_code">x-grpc-service</span> — the fully-qualified gRPC service name</li>
+            <li><span class="inline_code">x-grpc-method</span> — the RPC method name</li>
+            <li><span class="inline_code">x-grpc-original-content-type</span> — the original gRPC content type</li>
+        </ul>
+    </li>
+    <li>The converted JSON request is matched against active expectations</li>
+    <li>The JSON response is encoded back to protobuf binary and returned as a gRPC response</li>
+</ol>
+
+<p>This means you can set up gRPC expectations using the same JSON format and client APIs as HTTP mocking — no special gRPC client tooling is needed.</p>
+
+<a id="loading_proto_descriptors" class="anchor" href="#loading_proto_descriptors">&nbsp;</a>
+
+<h2>Loading Proto Descriptors</h2>
+
+<p>MockServer needs proto descriptors to convert between protobuf binary and JSON. There are three ways to load them:</p>
+
+<h3>1. Pre-compiled Descriptor Files</h3>
+
+<p>Compile your <span class="inline_code">.proto</span> files to descriptor sets and point MockServer at the directory:</p>
+
+<pre class="prettyprint code"><code class="code">protoc --descriptor_set_out=service.dsc --include_imports service.proto</code></pre>
+
+<p>Then configure MockServer:</p>
+
+<pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.grpcDescriptorDirectory="/path/to/descriptors"</code></pre>
+
+<p>Or via environment variable:</p>
+
+<pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_GRPC_DESCRIPTOR_DIRECTORY=/path/to/descriptors</code></pre>
+
+<h3>2. Proto Source Files (Auto-compiled)</h3>
+
+<p>Point MockServer at a directory of <span class="inline_code">.proto</span> source files and they will be compiled at startup using <span class="inline_code">protoc</span>:</p>
+
+<pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.grpcProtoDirectory="/path/to/protos"</code></pre>
+
+<p>This requires <span class="inline_code">protoc</span> to be available on the system PATH. If <span class="inline_code">protoc</span> is installed elsewhere, configure its path:</p>
+
+<pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.grpcProtocPath="/usr/local/bin/protoc"</code></pre>
+
+<h3>3. REST API Upload</h3>
+
+<p>Upload compiled descriptors at runtime via the REST API:</p>
+
+<pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/grpc/descriptors" \
+  --data-binary @service.dsc</code></pre>
+
+<a id="grpc_docker" class="anchor" href="#grpc_docker">&nbsp;</a>
+
+<h3>Docker</h3>
+
+<p>When running MockServer in Docker, mount your proto files or descriptors into the container:</p>
+
+<pre class="prettyprint code"><code class="code">docker run -d --rm \
+  -p 1080:1080 \
+  -v /local/path/to/protos:/protos \
+  -e MOCKSERVER_GRPC_PROTO_DIRECTORY=/protos \
+  mockserver/mockserver</code></pre>
+
+<a id="creating_grpc_expectations" class="anchor" href="#creating_grpc_expectations">&nbsp;</a>
+
+<h2>Creating gRPC Expectations</h2>
+
+<p>Given a proto file such as:</p>
+
+<pre class="prettyprint code"><code class="code">syntax = "proto3";
+package com.example.grpc;
+
+service GreetingService {
+  rpc Greeting (HelloRequest) returns (HelloResponse);
+  rpc ListGreetings (HelloRequest) returns (stream HelloResponse);
+}
+
+message HelloRequest {
+  string name = 1;
+}
+
+message HelloResponse {
+  string greeting = 1;
+}</code></pre>
+
+<p>You can create expectations that match on the JSON-converted request body and the gRPC metadata headers:</p>
+
+<a id="unary_rpc" class="anchor" href="#unary_rpc">&nbsp;</a>
+
+<h3>Unary RPC</h3>
+
+<button id="button_grpc_unary" class="accordion title"><strong>Unary RPC Code Examples</strong></button>
+<div class="panel title">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+    <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+  "httpRequest": {
+    "method": "POST",
+    "path": "/com.example.grpc.GreetingService/Greeting",
+    "headers": {
+      "x-grpc-service": ["com.example.grpc.GreetingService"],
+      "x-grpc-method": ["Greeting"]
+    },
+    "body": {
+      "type": "JSON",
+      "json": "{\"name\": \"World\"}"
+    }
+  },
+  "httpResponse": {
+    "statusCode": 200,
+    "headers": {
+      "grpc-status": ["0"]
+    },
+    "body": "{\"greeting\": \"Hello World\"}"
+  }
+}'</code></pre>
+    </div>
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+    <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withMethod("POST")
+            .withPath("/com.example.grpc.GreetingService/Greeting")
+            .withHeader("x-grpc-service", "com.example.grpc.GreetingService")
+            .withHeader("x-grpc-method", "Greeting")
+            .withBody(json("{\"name\": \"World\"}"))
+    )
+    .respond(
+        response()
+            .withStatusCode(200)
+            .withHeader("grpc-status", "0")
+            .withBody("{\"greeting\": \"Hello World\"}")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">Python</button>
+    <div class="panel">
+    <pre class="prettyprint lang-python code"><code class="code">from mockserver import MockServerClient, HttpRequest, HttpResponse, KeyToMultiValue
+
+client = MockServerClient("localhost", 1080)
+client.when(
+    HttpRequest(
+        method="POST",
+        path="/com.example.grpc.GreetingService/Greeting",
+        headers=[
+            KeyToMultiValue(name="x-grpc-service", values=["com.example.grpc.GreetingService"]),
+            KeyToMultiValue(name="x-grpc-method", values=["Greeting"])
+        ],
+        body={"type": "JSON", "json": '{"name": "World"}'}
+    )
+).respond(
+    HttpResponse(
+        status_code=200,
+        headers=[KeyToMultiValue(name="grpc-status", values=["0"])],
+        body='{"greeting": "Hello World"}'
+    )
+)</code></pre>
+    </div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel">
+    <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+include MockServer
+
+client = MockServer::Client.new('localhost', 1080)
+client.when(
+  HttpRequest.new(
+    method: 'POST',
+    path: '/com.example.grpc.GreetingService/Greeting',
+    headers: [
+      { name: 'x-grpc-service', values: ['com.example.grpc.GreetingService'] },
+      { name: 'x-grpc-method', values: ['Greeting'] }
+    ],
+    body: { type: 'JSON', json: '{"name": "World"}' }
+  )
+).respond(
+  HttpResponse.new(
+    status_code: 200,
+    headers: [{ name: 'grpc-status', values: ['0'] }],
+    body: '{"greeting": "Hello World"}'
+  )
+)</code></pre>
+    </div>
+</div>
+
+<a id="server_streaming_rpc" class="anchor" href="#server_streaming_rpc">&nbsp;</a>
+
+<h3>Server Streaming RPC</h3>
+
+<p>For server streaming RPCs, use a gRPC stream response to return multiple messages. Each message can have an optional delay:</p>
+
+<button id="button_grpc_stream" class="accordion title"><strong>Server Streaming RPC Code Examples</strong></button>
+<div class="panel title">
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+    <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+  "httpRequest": {
+    "method": "POST",
+    "path": "/com.example.grpc.GreetingService/ListGreetings",
+    "headers": {
+      "x-grpc-service": ["com.example.grpc.GreetingService"],
+      "x-grpc-method": ["ListGreetings"]
+    }
+  },
+  "grpcStreamResponse": {
+    "statusName": "OK",
+    "messages": [
+      {"json": "{\"greeting\": \"Hello Alice\"}"},
+      {"json": "{\"greeting\": \"Hello Bob\"}", "delay": {"timeUnit": "MILLISECONDS", "value": 100}},
+      {"json": "{\"greeting\": \"Hello Charlie\"}", "delay": {"timeUnit": "MILLISECONDS", "value": 200}}
+    ]
+  }
+}'</code></pre>
+    </div>
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+    <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withMethod("POST")
+            .withPath("/com.example.grpc.GreetingService/ListGreetings")
+            .withHeader("x-grpc-service", "com.example.grpc.GreetingService")
+            .withHeader("x-grpc-method", "ListGreetings")
+    )
+    .respondWithGrpcStream(
+        grpcStreamResponse()
+            .withStatusName("OK")
+            .withMessage("{\"greeting\": \"Hello Alice\"}")
+            .withMessage("{\"greeting\": \"Hello Bob\"}", delay(MILLISECONDS, 100))
+            .withMessage("{\"greeting\": \"Hello Charlie\"}", delay(MILLISECONDS, 200))
+    );</code></pre>
+    </div>
+</div>
+
+<a id="client_streaming_rpc" class="anchor" href="#client_streaming_rpc">&nbsp;</a>
+
+<h3>Client Streaming RPC</h3>
+
+<p>Client streaming requests are converted with the combined stream messages in the request body. MockServer adds an <span class="inline_code">x-grpc-client-streaming</span> header to indicate this is a client streaming request. Client streaming support is limited — see <a href="#grpc_limitations">Limitations</a> below.</p>
+
+<a id="matching_grpc_requests" class="anchor" href="#matching_grpc_requests">&nbsp;</a>
+
+<h2>Matching gRPC Requests</h2>
+
+<p>Since gRPC requests are converted to JSON, all standard MockServer matchers work:</p>
+
+<ul>
+    <li><strong>Path matching</strong> — match on <span class="inline_code">/package.ServiceName/MethodName</span></li>
+    <li><strong>Header matching</strong> — match on <span class="inline_code">x-grpc-service</span> and <span class="inline_code">x-grpc-method</span> headers</li>
+    <li><strong>JSON body matching</strong> — match on the JSON-converted protobuf body using exact match, JSON Schema, JsonPath, etc.</li>
+    <li><strong>Regex</strong> — use regex matchers on any field</li>
+</ul>
+
+<a id="grpc_status_codes" class="anchor" href="#grpc_status_codes">&nbsp;</a>
+
+<h2>gRPC Status Codes</h2>
+
+<p>Set gRPC status codes using the <span class="inline_code">grpc-status</span> response header or the <span class="inline_code">statusName</span> field in a gRPC stream response. Standard gRPC status codes are supported:</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Code</th>
+            <th>Name</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td>0</td><td>OK</td></tr>
+        <tr><td>1</td><td>CANCELLED</td></tr>
+        <tr><td>2</td><td>UNKNOWN</td></tr>
+        <tr><td>3</td><td>INVALID_ARGUMENT</td></tr>
+        <tr><td>4</td><td>DEADLINE_EXCEEDED</td></tr>
+        <tr><td>5</td><td>NOT_FOUND</td></tr>
+        <tr><td>6</td><td>ALREADY_EXISTS</td></tr>
+        <tr><td>7</td><td>PERMISSION_DENIED</td></tr>
+        <tr><td>8</td><td>RESOURCE_EXHAUSTED</td></tr>
+        <tr><td>9</td><td>FAILED_PRECONDITION</td></tr>
+        <tr><td>10</td><td>ABORTED</td></tr>
+        <tr><td>11</td><td>OUT_OF_RANGE</td></tr>
+        <tr><td>12</td><td>UNIMPLEMENTED</td></tr>
+        <tr><td>13</td><td>INTERNAL</td></tr>
+        <tr><td>14</td><td>UNAVAILABLE</td></tr>
+        <tr><td>15</td><td>DATA_LOSS</td></tr>
+        <tr><td>16</td><td>UNAUTHENTICATED</td></tr>
+    </tbody>
+</table>
+
+<a id="grpc_limitations" class="anchor" href="#grpc_limitations">&nbsp;</a>
+
+<h2>Limitations</h2>
+
+<ul>
+    <li><strong>Unary RPC</strong> — fully supported</li>
+    <li><strong>Server streaming RPC</strong> — fully supported via <span class="inline_code">grpcStreamResponse</span></li>
+    <li><strong>Client streaming RPC</strong> — limited support; stream messages are aggregated into a single request body</li>
+    <li><strong>Bidirectional streaming RPC</strong> — not yet supported</li>
+</ul>
+
+<a id="grpc_configuration_link" class="anchor" href="#grpc_configuration_link">&nbsp;</a>
+
+<h2>Configuration</h2>
+
+<p>For full details on gRPC configuration properties, see the <a href="/mock_server/configuration_properties.html#grpc_configuration">gRPC Configuration</a> section on the Configuration page.</p>

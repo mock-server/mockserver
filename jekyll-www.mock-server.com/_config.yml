@@ -30,3 +30,7 @@ author:
 markdown: kramdown
 sass:
     style: :compressed
+    silence_deprecations:
+        - import
+        - global-builtin
+        - color-functions
