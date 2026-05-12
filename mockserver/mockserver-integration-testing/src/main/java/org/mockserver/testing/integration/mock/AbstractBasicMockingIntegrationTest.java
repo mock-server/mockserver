@@ -2769,7 +2769,9 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             "" + NEW_LINE +
             " schema validation errors:" + NEW_LINE +
             "" + NEW_LINE +
-            "  17 errors:" + NEW_LINE +
+            "  19 errors:" + NEW_LINE +
+            "   - $.binaryResponse: is missing but it is required" + NEW_LINE +
+            "   - $.dnsResponse: is missing but it is required" + NEW_LINE +
             "   - $.grpcStreamResponse: is missing, but is required, if specifying action of type GrpcStreamResponse" + NEW_LINE +
             "   - $.httpError: is missing, but is required, if specifying action of type Error" + NEW_LINE +
             "   - $.httpForward: is missing, but is required, if specifying action of type Forward" + NEW_LINE +
@@ -2821,7 +2823,9 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             "" + NEW_LINE +
             " schema validation errors:" + NEW_LINE +
             "" + NEW_LINE +
-            "  6 errors:" + NEW_LINE +
+            "  8 errors:" + NEW_LINE +
+            "   - $.binaryData: is missing but it is required" + NEW_LINE +
+            "   - $.dnsName: is missing but it is required" + NEW_LINE +
             "   - $.keepAlive: string found, boolean expected" + NEW_LINE +
             "   - $.method: boolean found, string expected" + NEW_LINE +
             "   - $.method: should be valid to one and only one schema, but 0 are valid" + NEW_LINE +
