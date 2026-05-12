@@ -14,30 +14,28 @@ lastmod: 2019-11-10T08:00:00+01:00
 
 <h2>Response Templates</h2>
 
-<p>MockServer supports the following response template formats, with built-in <a href="#template_helper_objects">template helper objects</a> for JWT generation, string manipulation, JSON processing, date arithmetic, and math operations:</p>
+<p>MockServer supports dynamic response templates that generate responses based on request data, built-in variables, and helper objects. The following template features are supported:</p>
+
 <ul>
-    <li><strong><a href="#mustache_templates">mustache templates</a></strong>
+    <li><strong>Template Formats</strong> &mdash; three template engines, each with different trade-offs:
         <ul>
-            <li>uses mustache syntax</li>
-            <li>simple and easy to use</li>
-            <li>simple conditional logic</li>
-            <li>works on all JVM versions</li>
+            <li><a href="#mustache_templates">Mustache</a> &mdash; simple syntax, conditional logic, JsonPath and XPath extraction</li>
+            <li><a href="#velocity_templates">Velocity</a> &mdash; Apache Velocity engine with conditionals, loops, math, and JSON/XML body parsing</li>
+            <li><a href="#javascript_templates">JavaScript</a> &mdash; full JavaScript via Nashorn (bundled) or GraalJS engine</li>
         </ul>
     </li>
-    <li><strong><a href="#velocity_templates">velocity templates</a></strong>
+    <li><a href="#templates_in_json_files"><strong>Templates in JSON Initializer Files</strong></a> &mdash; defining templates in JSON expectation files</li>
+    <li><a href="#response_template_testing"><strong>Response Template Testing</strong></a> &mdash; test templates locally using <code>ResponseTemplateTester</code></li>
+    <li><a href="#request_model_variables"><strong>Request Model Variables</strong></a> &mdash; access request fields (method, path, headers, body, etc.) in templates</li>
+    <li><a href="#request_multi_value_maps"><strong>Multi-Value And Single Value Maps</strong></a> &mdash; access headers, parameters, and cookies by key, entry set, values, or key set</li>
+    <li><a href="#dynamic_model_variables"><strong>Dynamic Model Variables</strong></a> &mdash; timestamps, UUIDs, random integers, and random bytes</li>
+    <li><strong>Template Helper Objects</strong> &mdash; rich helper objects available in all template formats:
         <ul>
-            <li>uses <a target="_blank" href="https://velocity.apache.org/">Apache Velocity</a></li>
-            <li>more complex to use</li>
-            <li>supports more complex logic</li>
-            <li>works on all JVM versions</li>
-        </ul>
-    </li>
-    <li><strong><a href="#javascript_templates">javascript templates</a></strong>
-        <ul>
-            <li>uses Nashorn (bundled) or GraalJS JavaScript engine</li>
-            <li>more complex to use</li>
-            <li>supports more complex logic</li>
-            <li>works with all Docker images; use the <code>-graaljs</code> image tag for GraalJS support</li>
+            <li><a href="#jwt_helper">JWT Helper</a> &mdash; generate signed JWTs and JWKS for testing OAuth2/OIDC flows</li>
+            <li><a href="#strings_helper">String Helper</a> &mdash; trim, capitalize, URL/Base64 encode/decode, substring, replace</li>
+            <li><a href="#json_helper">JSON Transform Helper</a> &mdash; merge, sort, extract fields, add/remove elements, pretty-print</li>
+            <li><a href="#dates_helper">Date Helper</a> &mdash; date formatting, arithmetic, and epoch conversion</li>
+            <li><a href="#math_helper">Calc Helper</a> &mdash; random numbers, rounding, min/max, abs, ceil/floor, number formatting</li>
         </ul>
     </li>
 </ul>
@@ -176,19 +174,19 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="inline code">&lbrace;&lbrace; request.pathParameters.&lt;key&ft;.&lt;index&ft; &rbrace;&rbrace;</code></td>
+                <td><code class="inline code">&lbrace;&lbrace; request.pathParameters.&lt;key&gt;.&lt;index&gt; &rbrace;&rbrace;</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="inline code">$!request.pathParameters[&lt;key&ft;][&lt;index&ft;]</code></td>
+                <td><code class="inline code">$!request.pathParameters[&lt;key&gt;][&lt;index&gt;]</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="inline code">request.pathParameters[&lt;key&ft;][&lt;index&ft;]</code></td>
+                <td><code class="inline code">request.pathParameters[&lt;key&gt;][&lt;index&gt;]</code></td>
             </tr>
         </table>
     </li>
@@ -196,19 +194,19 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="inline code">&lbrace;&lbrace; request.queryStringParameters.&lt;key&ft;.&lt;index&ft; &rbrace;&rbrace;</code></td>
+                <td><code class="inline code">&lbrace;&lbrace; request.queryStringParameters.&lt;key&gt;.&lt;index&gt; &rbrace;&rbrace;</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="inline code">$!request.queryStringParameters[&lt;key&ft;][&lt;index&ft;]</code></td>
+                <td><code class="inline code">$!request.queryStringParameters[&lt;key&gt;][&lt;index&gt;]</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="inline code">request.queryStringParameters[&lt;key&ft;][&lt;index&ft;]</code></td>
+                <td><code class="inline code">request.queryStringParameters[&lt;key&gt;][&lt;index&gt;]</code></td>
             </tr>
         </table>
     </li>
@@ -216,19 +214,19 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="inline code">&lbrace;&lbrace; request.headers.&lt;key&ft;.&lt;index&ft; &rbrace;&rbrace;</code></td>
+                <td><code class="inline code">&lbrace;&lbrace; request.headers.&lt;key&gt;.&lt;index&gt; &rbrace;&rbrace;</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="inline code">$!request.headers[&lt;key&ft;][&lt;index&ft;]</code></td>
+                <td><code class="inline code">$!request.headers[&lt;key&gt;][&lt;index&gt;]</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="inline code">request.headers[&lt;key&ft;][&lt;index&ft;]</code></td>
+                <td><code class="inline code">request.headers[&lt;key&gt;][&lt;index&gt;]</code></td>
             </tr>
         </table>
     </li>
@@ -236,19 +234,19 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="inline code">&lbrace;&lbrace; request.cookies.&lt;key&ft; &rbrace;&rbrace;</code></td>
+                <td><code class="inline code">&lbrace;&lbrace; request.cookies.&lt;key&gt; &rbrace;&rbrace;</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="inline code">$!request.cookies[&lt;key&ft;]</code></td>
+                <td><code class="inline code">$!request.cookies[&lt;key&gt;]</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="inline code">request.cookies[&lt;key&ft;]</code></td>
+                <td><code class="inline code">request.cookies[&lt;key&gt;]</code></td>
             </tr>
         </table>
     </li>
@@ -383,66 +381,60 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
 
 <ul>
     <li><strong>values by key</strong>
-        <div style="padding: 20px 0"><table>
+        <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="inline code">&lbrace;&lbrace; request.headers.&lt;key&ft;.&lt;index&ft; &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.queryStringParameters.&lt;key&ft;.&lt;index&ft; &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.headers.&lt;key&ft;.&lt;index&ft; &rbrace;&rbrace;</code></td>
+                <td><code class="inline code">&lbrace;&lbrace; request.headers.&lt;key&gt;.&lt;index&gt; &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.queryStringParameters.&lt;key&gt;.&lt;index&gt; &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.headers.&lt;key&gt;.&lt;index&gt; &rbrace;&rbrace;</code></td>
             </tr>
-        </table></div>
-        <div style="padding: 20px 0"><table>
+        </table>
+        <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="inline code">$!request.pathParameters[&lt;key&ft;][&lt;index&ft;]</code><br/><code class="inline code">$!request.queryStringParameters[&lt;key&ft;][&lt;index&ft;]</code><br/><code class="inline code">$!request.headers[&lt;key&ft;][&lt;index&ft;]</code><br/></td>
+                <td><code class="inline code">$!request.pathParameters[&lt;key&gt;][&lt;index&gt;]</code><br/><code class="inline code">$!request.queryStringParameters[&lt;key&gt;][&lt;index&gt;]</code><br/><code class="inline code">$!request.headers[&lt;key&gt;][&lt;index&gt;]</code></td>
             </tr>
-        </table></div>
-        <div style="padding: 20px 0"><table>
+        </table>
+        <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="inline code">request.pathParameters[&lt;key&ft;][&lt;index&ft;]</code><br/><code class="inline code">request.queryStringParameters[&lt;key&ft;][&lt;index&ft;]</code><br/><code class="inline code">request.headers[&lt;key&ft;][&lt;index&ft;]</code><br/></td>
+                <td><code class="inline code">request.pathParameters[&lt;key&gt;][&lt;index&gt;]</code><br/><code class="inline code">request.queryStringParameters[&lt;key&gt;][&lt;index&gt;]</code><br/><code class="inline code">request.headers[&lt;key&gt;][&lt;index&gt;]</code></td>
             </tr>
-        </table></div>
+        </table>
     </li>
     <li><strong>entries as set</strong>
-        <div style="padding: 20px 0"><table>
-            <tr>
-                <td style="padding-left: 20px; width: 100px"></td>
-                <td>each entry has a <code class="inline code">key</code> and a <code class="inline code">value</code> field<br/>for multi-value maps the <code class="inline code">value</code> is a list<br/>for single-value maps the <code class="inline code">value</code> is a string</td>
-            </tr>
-        </table></div>
-
-        <div style="padding: 20px 0"><table>
+        <p>each entry has a <code class="inline code">key</code> and a <code class="inline code">value</code> field<br/>for multi-value maps the <code class="inline code">value</code> is a list<br/>for single-value maps the <code class="inline code">value</code> is a string</p>
+        <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="inline code">&lbrace;&lbrace; request.pathParameters.entrySet &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.queryStringParameters.entrySet &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.headers.entrySet &rbrace;&rbrace;</code><br/></td>
+                <td><code class="inline code">&lbrace;&lbrace; request.pathParameters.entrySet &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.queryStringParameters.entrySet &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.headers.entrySet &rbrace;&rbrace;</code></td>
             </tr>
-        </table></div>
-        <div style="padding: 20px 0"><table>
+        </table>
+        <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="inline code">$!request.pathParameters.entrySet</code><br/><code class="inline code">$!request.queryStringParameters.entrySet</code><br/><code class="inline code">$!request.headers.entrySet</code><br/></td>
+                <td><code class="inline code">$!request.pathParameters.entrySet</code><br/><code class="inline code">$!request.queryStringParameters.entrySet</code><br/><code class="inline code">$!request.headers.entrySet</code></td>
             </tr>
-        </table></div>
-        <div style="padding: 20px 0"><table>
+        </table>
+        <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
                 <td><strong>not available</strong></td>
             </tr>
-        </table></div>
+        </table>
     </li>
     <li><strong>values as list</strong>
-        <div style="padding: 20px 0"><table>
+        <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="inline code">&lbrace;&lbrace; request.pathParameters.values &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.queryStringParameters.values &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.headers.values &rbrace;&rbrace;</code><br/></td>
+                <td><code class="inline code">&lbrace;&lbrace; request.pathParameters.values &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.queryStringParameters.values &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.headers.values &rbrace;&rbrace;</code></td>
             </tr>
-        </table></div>
-        <div style="padding: 20px 0"><table>
+        </table>
+        <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="inline code">$!request.pathParameters.values</code><br/><code class="inline code">$!request.queryStringParameters.values</code><br/><code class="inline code">$!request.headers.values</code><br/></td>
+                <td><code class="inline code">$!request.pathParameters.values</code><br/><code class="inline code">$!request.queryStringParameters.values</code><br/><code class="inline code">$!request.headers.values</code></td>
             </tr>
-        </table></div>
-        <div style="padding: 20px 0"><table>
+        </table>
+        <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
                 <td><code class="code" style="width: 80%;">for (pathParameterKey in request.pathParameters) {
@@ -451,24 +443,24 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
     var values = request.queryStringParameters[queryStringParameterKey];
 }</code><br/><code class="code" style="width: 62%;">for (headerKey in request.headers) {
     var values = request.headers[headerKey];
-}</code><br/></td>
+}</code></td>
             </tr>
-        </table></div>
+        </table>
     </li>
     <li><strong>keys as set</strong>
-        <div style="padding: 20px 0"><table>
+        <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="inline code">&lbrace;&lbrace; request.pathParameters.keySet &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.queryStringParameters.keySet &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.headers.keySet &rbrace;&rbrace;</code><br/></td>
+                <td><code class="inline code">&lbrace;&lbrace; request.pathParameters.keySet &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.queryStringParameters.keySet &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.headers.keySet &rbrace;&rbrace;</code></td>
             </tr>
-        </table></div>
-        <div style="padding: 20px 0"><table>
+        </table>
+        <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="inline code">$!request.pathParameters.keySet</code><br/><code class="inline code">$!request.queryStringParameters.keySet</code><br/><code class="inline code">$!request.headers.keySet</code><br/></td>
+                <td><code class="inline code">$!request.pathParameters.keySet</code><br/><code class="inline code">$!request.queryStringParameters.keySet</code><br/><code class="inline code">$!request.headers.keySet</code></td>
             </tr>
-        </table></div>
-        <div style="padding: 20px 0"><table>
+        </table>
+        <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
                 <td><code class="code" style="width: 80%;">for (pathParameterKey in request.pathParameters) {
@@ -477,9 +469,9 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
     // ...
 }</code><br/><code class="code" style="width: 62%;">for (headerKey in request.headers) {
     // ...
-}</code><br/></td>
+}</code></td>
             </tr>
-        </table></div>
+        </table>
     </li>
 </ul>
 
@@ -1046,27 +1038,27 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
 
 <p>Given a request with the following xml body:</p>
 
-<pre class="prettyprint lang-xml code"><code class="code">&lt;?xml version="1.0" encoding="UTF-8" ?&ft;
-&lt;store&ft;
-  &lt;book&ft;
-    &lt;category&ft;reference&lt;/category&ft;
-    &lt;author&ft;Nigel Rees&lt;/author&ft;
-    &lt;title&ft;Sayings of the Century&lt;/title&ft;
-    &lt;price&ft;18.95&lt;/price&ft;
-  &lt;/book&ft;
-  &lt;book&ft;
-    &lt;category&ft;fiction&lt;/category&ft;
-    &lt;author&ft;Herman Melville&lt;/author&ft;
-    &lt;title&ft;Moby Dick&lt;/title&ft;
-    &lt;isbn&ft;0-553-21311-3&lt;/isbn&ft;
-    &lt;price&ft;8.99&lt;/price&ft;
-  &lt;/book&ft;
-  &lt;bicycle&ft;
-    &lt;color&ft;red&lt;/color&ft;
-    &lt;price&ft;19.95&lt;/price&ft;
-  &lt;/bicycle&ft;
-  &lt;expensive&ft;10&lt;/expensive&ft;
-&lt;/store&ft;</code></pre>
+<pre class="prettyprint lang-xml code"><code class="code">&lt;?xml version="1.0" encoding="UTF-8" ?&gt;
+&lt;store&gt;
+  &lt;book&gt;
+    &lt;category&gt;reference&lt;/category&gt;
+    &lt;author&gt;Nigel Rees&lt;/author&gt;
+    &lt;title&gt;Sayings of the Century&lt;/title&gt;
+    &lt;price&gt;18.95&lt;/price&gt;
+  &lt;/book&gt;
+  &lt;book&gt;
+    &lt;category&gt;fiction&lt;/category&gt;
+    &lt;author&gt;Herman Melville&lt;/author&gt;
+    &lt;title&gt;Moby Dick&lt;/title&gt;
+    &lt;isbn&gt;0-553-21311-3&lt;/isbn&gt;
+    &lt;price&gt;8.99&lt;/price&gt;
+  &lt;/book&gt;
+  &lt;bicycle&gt;
+    &lt;color&gt;red&lt;/color&gt;
+    &lt;price&gt;19.95&lt;/price&gt;
+  &lt;/bicycle&gt;
+  &lt;expensive&gt;10&lt;/expensive&gt;
+&lt;/store&gt;</code></pre>
 
 <p>The example produces:</p>
 

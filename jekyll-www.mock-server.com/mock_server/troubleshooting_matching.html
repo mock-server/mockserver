@@ -23,33 +23,23 @@ sitemap:
 
 <p>Expectations expire after their configured <code>times</code> limit or <code>timeToLive</code>. Retrieve active expectations to confirm yours is still present:</p>
 
-<pre><code class="prettyprint lang-java">// Java
-Expectation[] active = mockServerClient.retrieveActiveExpectations(null);
-</code></pre>
+<pre class="prettyprint lang-java code"><code class="code">Expectation[] active = mockServerClient.retrieveActiveExpectations(null);</code></pre>
 
-<pre><code class="prettyprint lang-bash"># REST API
-curl -X PUT "http://localhost:1080/mockserver/retrieve?type=ACTIVE_EXPECTATIONS"
-</code></pre>
+<pre class="prettyprint code"><code class="code">curl -X PUT "http://localhost:1080/mockserver/retrieve?type=ACTIVE_EXPECTATIONS"</code></pre>
 
 <h3>2. Did the request arrive at MockServer?</h3>
 
 <p>Verify that MockServer received the request:</p>
 
-<pre><code class="prettyprint lang-java">// Java
-HttpRequest[] requests = mockServerClient.retrieveRecordedRequests(null);
-</code></pre>
+<pre class="prettyprint lang-java code"><code class="code">HttpRequest[] requests = mockServerClient.retrieveRecordedRequests(null);</code></pre>
 
-<pre><code class="prettyprint lang-bash"># REST API
-curl -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS"
-</code></pre>
+<pre class="prettyprint code"><code class="code">curl -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS"</code></pre>
 
 <h3>3. Check the match failure reason</h3>
 
 <p>MockServer logs an <code>EXPECTATION_NOT_MATCHED</code> event for every expectation that was compared. Each event includes a <strong>because</strong> section explaining which fields matched and which did not:</p>
 
-<pre><code class="prettyprint lang-bash"># Retrieve logs
-curl -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS"
-</code></pre>
+<pre class="prettyprint code"><code class="code">curl -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS"</code></pre>
 
 <p>In the <a href="/mock_server/mockserver_ui.html">dashboard UI</a>, look for log entries with the pink/rose colour. Click the <strong>...</strong> to expand the "because" section, which shows each field result colour-coded green (matched) or red (didn't match).</p>
 
@@ -57,16 +47,13 @@ curl -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS"
 
 <p>By default, MockServer stops comparing fields at the first mismatch (<code>matchersFailFast=true</code>). To see <strong>all</strong> mismatching fields at once, disable fail-fast:</p>
 
-<pre><code class="prettyprint lang-java">// Java - when starting MockServer
-ConfigurationProperties.matchersFailFast(false);
-</code></pre>
+<pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.matchersFailFast(false);</code></pre>
 
-<pre><code class="prettyprint lang-bash"># System property
+<pre class="prettyprint code"><code class="code"># System property
 -Dmockserver.matchersFailFast=false
 
 # Environment variable
-MOCKSERVER_MATCHERS_FAIL_FAST=false
-</code></pre>
+MOCKSERVER_MATCHERS_FAIL_FAST=false</code></pre>
 
 <p>This shows every field that does not match in a single log entry, making it much easier to identify all issues at once rather than fixing them one at a time.</p>
 
@@ -84,12 +71,11 @@ MOCKSERVER_MATCHERS_FAIL_FAST=false
 
 <p>A path of <code>/api/users</code> does not match <code>/api/users/</code>. Ensure your expectation path matches exactly, or use a regex:</p>
 
-<pre><code class="prettyprint lang-java">// Exact match - will NOT match "/api/users/"
+<pre class="prettyprint lang-java code"><code class="code">// Exact match - will NOT match "/api/users/"
 .withPath("/api/users")
 
 // Match with or without trailing slash
-.withPath("/api/users/?")
-</code></pre>
+.withPath("/api/users/?")</code></pre>
 
 <p>MockServer will show a <strong>HINT</strong> in the match failure when it detects a trailing slash mismatch.</p>
 
@@ -118,12 +104,11 @@ MOCKSERVER_MATCHERS_FAIL_FAST=false
 
 <p>If you need an exact match, use <code>STRICT</code> mode:</p>
 
-<pre><code class="prettyprint lang-java">// Subset match (default) - extra fields OK
+<pre class="prettyprint lang-java code"><code class="code">// Subset match (default) - extra fields OK
 .withBody(json("{\"name\": \"foo\"}", MatchType.ONLY_MATCHING_FIELDS))
 
 // Strict match - no extra fields allowed
-.withBody(json("{\"name\": \"foo\"}", MatchType.STRICT))
-</code></pre>
+.withBody(json("{\"name\": \"foo\"}", MatchType.STRICT))</code></pre>
 
 <h3>Regex metacharacters in paths</h3>
 
@@ -131,12 +116,11 @@ MOCKSERVER_MATCHERS_FAIL_FAST=false
 
 <p>For example, <code>/api/v1.0/users</code> will also match <code>/api/v1X0/users</code> because <code>.</code> matches any character. Use <code>\.</code> for a literal dot:</p>
 
-<pre><code class="prettyprint lang-java">// This matches "/api/v1X0/users" too
+<pre class="prettyprint lang-java code"><code class="code">// This matches "/api/v1X0/users" too
 .withPath("/api/v1.0/users")
 
 // This only matches "/api/v1.0/users"
-.withPath("/api/v1\\.0/users")
-</code></pre>
+.withPath("/api/v1\\.0/users")</code></pre>
 
 <p>MockServer will show a <strong>HINT</strong> when it detects unescaped dots in paths.</p>
 
@@ -144,32 +128,29 @@ MOCKSERVER_MATCHERS_FAIL_FAST=false
 
 <p>HTTP header <strong>names</strong> are matched case-insensitively (per HTTP spec), but header <strong>values</strong> are case-sensitive. For example:</p>
 
-<pre><code class="prettyprint lang-java">// Header name "content-type" matches "Content-Type" - OK
+<pre class="prettyprint lang-java code"><code class="code">// Header name "content-type" matches "Content-Type" - OK
 // Header value "Application/JSON" does NOT match "application/json"
-.withHeader("Content-Type", "application/json")
-</code></pre>
+.withHeader("Content-Type", "application/json")</code></pre>
 
 <h3>Query parameter encoding</h3>
 
 <p>Query parameters are decoded before matching. <code>?name=hello%20world</code> is matched against the decoded value <code>hello world</code>:</p>
 
-<pre><code class="prettyprint lang-java">// Matches ?name=hello%20world and ?name=hello+world
-.withQueryStringParameter("name", "hello world")
-</code></pre>
+<pre class="prettyprint lang-java code"><code class="code">// Matches ?name=hello%20world and ?name=hello+world
+.withQueryStringParameter("name", "hello world")</code></pre>
 
 <h3>Body type confusion</h3>
 
 <p>Using the wrong body matcher type is a common mistake:</p>
 
-<pre><code class="prettyprint lang-java">// This is an EXACT string match - entire body must match this text exactly
+<pre class="prettyprint lang-java code"><code class="code">// This is an EXACT string match - entire body must match this text exactly
 .withBody("{\"name\": \"foo\"}")
 
 // This is a JSON subset match - only specified fields must be present
 .withBody(json("{\"name\": \"foo\"}"))
 
 // This is a regex match
-.withBody(regex(".*foo.*"))
-</code></pre>
+.withBody(regex(".*foo.*"))</code></pre>
 
 <p>If your JSON body isn't matching, check that you are using <code>json()</code> and not a plain string body matcher.</p>
 
@@ -179,7 +160,7 @@ MOCKSERVER_MATCHERS_FAIL_FAST=false
 
 <p>When a request does not match an expectation, the log entry includes a "because" section. Here is an annotated example:</p>
 
-<pre><code>method matched                        &larr; GET matched GET
+<pre class="prettyprint code"><code class="code">method matched                        &larr; GET matched GET
 path didn't match:                    &larr; path comparison failed
 
   string or regex match failed        &larr; the matcher type used
@@ -188,8 +169,7 @@ path didn't match:                    &larr; path comparison failed
 HINT: trailing slash mismatch ...     &larr; actionable suggestion (when applicable)
 body matched                          &larr; body was not checked (no body matcher)
 headers matched                       &larr; all expected headers were found
-cookies matched                       &larr; all expected cookies were found
-</code></pre>
+cookies matched                       &larr; all expected cookies were found</code></pre>
 
 <p>Fields are listed in matching order. When <code>matchersFailFast=true</code> (default), only fields up to and including the first failure are shown. Set <code>matchersFailFast=false</code> to see all fields.</p>
 
@@ -234,8 +214,7 @@ cookies matched                       &larr; all expected cookies were found
 
 <h3>REST API</h3>
 
-<pre><code class="prettyprint lang-bash"># Debug why a specific request doesn't match
-curl -X PUT "http://localhost:1080/mockserver/debugMismatch" \
+<pre class="prettyprint code"><code class="code">curl -X PUT "http://localhost:1080/mockserver/debugMismatch" \
   -H "Content-Type: application/json" \
   -d '{
     "method": "GET",
@@ -243,20 +222,17 @@ curl -X PUT "http://localhost:1080/mockserver/debugMismatch" \
     "headers": {
       "Content-Type": ["application/json"]
     }
-  }'
-</code></pre>
+  }'</code></pre>
 
 <h3>Java Client</h3>
 
-<pre><code class="prettyprint lang-java">// Debug why a request doesn't match any expectation
-String result = mockServerClient.debugMismatch(
+<pre class="prettyprint lang-java code"><code class="code">String result = mockServerClient.debugMismatch(
     request()
         .withMethod("GET")
         .withPath("/api/users")
         .withHeader("Content-Type", "application/json")
 );
-System.out.println(result);
-</code></pre>
+System.out.println(result);</code></pre>
 
 <h3>Response Format</h3>
 
@@ -267,7 +243,7 @@ System.out.println(result);
     <li><code>results</code> — per-expectation match analysis with field-level differences</li>
 </ul>
 
-<pre><code class="prettyprint lang-json">{
+<pre class="prettyprint lang-json code"><code class="code">{
   "totalExpectations": 2,
   "closestMatch": {
     "expectationId": "abc-123",
@@ -289,14 +265,13 @@ System.out.println(result);
       }
     }
   ]
-}
-</code></pre>
+}</code></pre>
 
 <h3>Worked Example: "My test is getting 404"</h3>
 
 <p>When your test receives a 404, use the debug endpoint to find out exactly why:</p>
 
-<pre><code class="prettyprint lang-java">// 1. Set up your expectation
+<pre class="prettyprint lang-java code"><code class="code">// 1. Set up your expectation
 mockServerClient.when(
     request().withMethod("POST").withPath("/api/users")
         .withBody(json("{\"name\": \"foo\"}"))
@@ -313,8 +288,7 @@ String analysis = mockServerClient.debugMismatch(
 
 // The response will show:
 // - method didn't match: expected POST, found GET
-// - matchedFieldCount: 11/12 (all fields matched except method)
-</code></pre>
+// - matchedFieldCount: 11/12 (all fields matched except method)</code></pre>
 
 <p>This endpoint is also available via the <a href="/mock_server/ai_mcp_tools.html">MCP <code>debug_request_mismatch</code> tool</a> for AI-assisted debugging.</p>
 
@@ -337,13 +311,9 @@ String analysis = mockServerClient.debugMismatch(
 
 <p>Once you have a correlation ID, retrieve all log entries for that request:</p>
 
-<pre><code class="prettyprint lang-bash"># Retrieve all log entries for a specific correlation ID
-curl -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS&correlationId=abc-123-def-456"
-</code></pre>
+<pre class="prettyprint code"><code class="code">curl -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS&correlationId=abc-123-def-456"</code></pre>
 
-<pre><code class="prettyprint lang-java">// Java client
-String logs = mockServerClient.retrieveLogsByCorrelationId("abc-123-def-456");
-</code></pre>
+<pre class="prettyprint lang-java code"><code class="code">String logs = mockServerClient.retrieveLogsByCorrelationId("abc-123-def-456");</code></pre>
 
 <p>The correlation ID is visible in the dashboard UI as a small chip on grouped log entries. Click it to copy the ID.</p>
 
@@ -353,10 +323,8 @@ String logs = mockServerClient.retrieveLogsByCorrelationId("abc-123-def-456");
 
 <p>Instead of retrieving logs as plain text, you can retrieve structured <code>LogEntry</code> objects. This is useful for programmatic analysis — filtering by type, inspecting expectations, or building custom reports:</p>
 
-<pre><code class="prettyprint lang-java">// Retrieve all log entries as typed objects
-LogEntry[] entries = mockServerClient.retrieveLogEntries(null);
+<pre class="prettyprint lang-java code"><code class="code">LogEntry[] entries = mockServerClient.retrieveLogEntries(null);
 
-// Filter to a specific request pattern
 LogEntry[] matchEntries = mockServerClient.retrieveLogEntries(
     request().withPath("/api/users")
 );
@@ -367,19 +335,15 @@ LogEntry[] matchEntries = mockServerClient.retrieveLogEntries(
 // but not deserialized (returned as null on the client).
 for (LogEntry entry : entries) {
     System.out.println(entry.getType() + " at " + entry.getTimestamp());
-}
-</code></pre>
+}</code></pre>
 
-<pre><code class="prettyprint lang-java">// Retrieve typed log entries by correlation ID
-LogEntry[] entries = mockServerClient.retrieveLogEntriesByCorrelationId("abc-123-def-456");
-</code></pre>
+<pre class="prettyprint lang-java code"><code class="code">LogEntry[] entries = mockServerClient.retrieveLogEntriesByCorrelationId("abc-123-def-456");</code></pre>
 
-<pre><code class="prettyprint lang-bash"># REST API - use format=LOG_ENTRIES to get structured JSON
+<pre class="prettyprint code"><code class="code"># REST API - use format=LOG_ENTRIES to get structured JSON
 curl -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS&format=LOG_ENTRIES"
 
 # Combined with correlation ID filter
-curl -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS&format=LOG_ENTRIES&correlationId=abc-123-def-456"
-</code></pre>
+curl -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS&format=LOG_ENTRIES&correlationId=abc-123-def-456"</code></pre>
 
 <a id="time_filtered_retrieval" class="anchor" href="#time_filtered_retrieval">&nbsp;</a>
 
@@ -387,9 +351,7 @@ curl -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS&format=LOG_ENTR
 
 <p>When debugging intermittent issues, you can narrow log entries to a specific time window:</p>
 
-<pre><code class="prettyprint lang-java">// Retrieve log entries from the last 30 seconds
-long now = System.currentTimeMillis();
+<pre class="prettyprint lang-java code"><code class="code">long now = System.currentTimeMillis();
 LogEntry[] recentEntries = mockServerClient.retrieveLogEntries(
     null, now - 30_000, now
-);
-</code></pre>
+);</code></pre>
