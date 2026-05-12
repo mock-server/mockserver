@@ -151,41 +151,41 @@ public class HttpActionHandler {
                     scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         final HttpForwardActionResult responseFuture = getHttpForwardActionHandler().handle((HttpForward) action, request);
                         writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous, expectationPostProcessor);
-                    }, expectationPostProcessor), synchronous, action.getDelay());
+                    }, expectationPostProcessor), synchronous, combineWithGlobalDelay(action.getDelay()));
                     break;
                 }
                 case FORWARD_TEMPLATE: {
                     scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         final HttpForwardActionResult responseFuture = getHttpForwardTemplateActionHandler().handle((HttpTemplate) action, request);
                         writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous, expectationPostProcessor);
-                    }, expectationPostProcessor), synchronous, action.getDelay());
+                    }, expectationPostProcessor), synchronous, combineWithGlobalDelay(action.getDelay()));
                     break;
                 }
                 case FORWARD_CLASS_CALLBACK: {
                     scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         final HttpForwardActionResult responseFuture = getHttpForwardClassCallbackActionHandler().handle((HttpClassCallback) action, request);
                         writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous, expectationPostProcessor);
-                    }, expectationPostProcessor), synchronous, action.getDelay());
+                    }, expectationPostProcessor), synchronous, combineWithGlobalDelay(action.getDelay()));
                     break;
                 }
                 case FORWARD_OBJECT_CALLBACK: {
                     scheduler.schedule(() ->
                             getHttpForwardObjectCallbackActionHandler().handle(HttpActionHandler.this, (HttpObjectCallback) action, request, responseWriter, synchronous, expectationPostProcessor),
-                        synchronous, action.getDelay());
+                        synchronous, combineWithGlobalDelay(action.getDelay()));
                     break;
                 }
                 case FORWARD_REPLACE: {
                     scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         final HttpForwardActionResult responseFuture = getHttpOverrideForwardedRequestCallbackActionHandler().handle((HttpOverrideForwardedRequest) action, request);
                         writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous, expectationPostProcessor);
-                    }, expectationPostProcessor), synchronous, action.getDelay());
+                    }, expectationPostProcessor), synchronous, combineWithGlobalDelay(action.getDelay()));
                     break;
                 }
                 case FORWARD_VALIDATE: {
                     scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         final HttpForwardActionResult responseFuture = getHttpForwardValidateActionHandler().handle((HttpForwardValidateAction) action, request);
                         writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous, expectationPostProcessor);
-                    }, expectationPostProcessor), synchronous, action.getDelay());
+                    }, expectationPostProcessor), synchronous, combineWithGlobalDelay(action.getDelay()));
                     break;
                 }
                 case SSE_RESPONSE: {
@@ -225,7 +225,7 @@ public class HttpActionHandler {
                         } finally {
                             expectationPostProcessor.run();
                         }
-                    }, synchronous, action.getDelay());
+                    }, synchronous, combineWithGlobalDelay(action.getDelay()));
                     break;
                 }
                 case WEBSOCKET_RESPONSE: {
@@ -265,7 +265,7 @@ public class HttpActionHandler {
                         } finally {
                             expectationPostProcessor.run();
                         }
-                    }, synchronous, action.getDelay());
+                    }, synchronous, combineWithGlobalDelay(action.getDelay()));
                     break;
                 }
                 case GRPC_STREAM_RESPONSE: {
@@ -305,7 +305,7 @@ public class HttpActionHandler {
                         } finally {
                             expectationPostProcessor.run();
                         }
-                    }, synchronous, action.getDelay());
+                    }, synchronous, combineWithGlobalDelay(action.getDelay()));
                     break;
                 }
                 case ERROR: {
@@ -323,7 +323,7 @@ public class HttpActionHandler {
                                 .setArguments(action, request, action, action.getExpectationId())
                         );
                         expectationPostProcessor.run();
-                    }, expectationPostProcessor), synchronous, action.getDelay());
+                    }, expectationPostProcessor), synchronous, combineWithGlobalDelay(action.getDelay()));
                     break;
                 }
             }
@@ -749,7 +749,22 @@ public class HttpActionHandler {
                     postProcessor.run();
                 }
             }
-        }, synchronous, response.getDelay());
+        }, synchronous, combineWithGlobalDelay(response.getDelay()));
+    }
+
+    private Delay[] combineWithGlobalDelay(Delay actionDelay) {
+        Long globalDelayMillis = configuration.globalResponseDelayMillis();
+        if (globalDelayMillis != null && globalDelayMillis > 0) {
+            Delay globalDelay = Delay.milliseconds(globalDelayMillis);
+            if (actionDelay != null) {
+                return new Delay[]{actionDelay, globalDelay};
+            }
+            return new Delay[]{globalDelay};
+        }
+        if (actionDelay != null) {
+            return new Delay[]{actionDelay};
+        }
+        return new Delay[0];
     }
 
     private void validateOpenAPIResponse(final HttpResponse response, final HttpRequest request, final Action action, final RequestDefinition requestDefinition) {

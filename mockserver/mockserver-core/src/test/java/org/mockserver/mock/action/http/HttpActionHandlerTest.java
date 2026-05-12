@@ -546,6 +546,38 @@ public class HttpActionHandlerTest {
     }
 
     @Test
+    public void shouldProcessResponseActionWithGlobalDelay() {
+        // given
+        configuration.globalResponseDelayMillis(200L);
+        HttpResponse response = response("some_body").withDelay(milliseconds(0));
+        expectation = new Expectation(request).thenRespond(response);
+        when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
+
+        // when
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
+
+        // then - writeResponseActionResponse combines action delay (from handled response) + global delay
+        verify(scheduler).schedule(any(Runnable.class), eq(true), eq(milliseconds(0)), eq(milliseconds(200)));
+        configuration.globalResponseDelayMillis(null);
+    }
+
+    @Test
+    public void shouldProcessResponseActionWithGlobalDelayOnly() {
+        // given
+        configuration.globalResponseDelayMillis(300L);
+        HttpResponse response = response("some_body").withDelay(milliseconds(0));
+        expectation = new Expectation(request).thenRespond(response);
+        when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
+
+        // when
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
+
+        // then - writeResponseActionResponse combines 0ms action delay + 300ms global delay
+        verify(scheduler).schedule(any(Runnable.class), eq(true), eq(milliseconds(0)), eq(milliseconds(300)));
+        configuration.globalResponseDelayMillis(null);
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     public void shouldProxyRequestsWithRemoteSocketAttribute() {
         // given

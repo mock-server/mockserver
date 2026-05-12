@@ -351,6 +351,14 @@ components:
           type: string
         newScenarioState:
           type: string
+        httpResponses:
+          type: array
+          items:
+            $ref: "#/components/schemas/HttpResponse"
+        responseMode:
+          enum:
+            - SEQUENTIAL
+            - RANDOM
       oneOf:
         - required:
             - httpResponse
@@ -376,6 +384,8 @@ components:
             - httpSseResponse
         - required:
             - httpWebSocketResponse
+        - required:
+            - httpResponses
     ExpectationId:
       description: "pointer to existing expectation"
       type: object

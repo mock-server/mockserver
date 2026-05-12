@@ -5,6 +5,9 @@ import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.*;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static junit.framework.TestCase.*;
@@ -415,5 +418,185 @@ public class ExpectationTest {
         Expectation c = new Expectation(request(), Times.unlimited(), TimeToLive.unlimited(), 0).withPercentage(75);
         assertEquals(a.hashCode(), b.hashCode());
         assertNotSame(a.hashCode(), c.hashCode());
+    }
+
+    @Test
+    public void shouldSelectSequentialResponsesByDefault() {
+        HttpResponse r1 = response("one");
+        HttpResponse r2 = response("two");
+        HttpResponse r3 = response("three");
+        Expectation expectation = new Expectation(request())
+            .thenRespond(Arrays.asList(r1, r2, r3));
+
+        expectation.consumeMatch();
+        assertThat(((HttpResponse) expectation.getAction()).getBodyAsString(), is("one"));
+
+        expectation.consumeMatch();
+        assertThat(((HttpResponse) expectation.getAction()).getBodyAsString(), is("two"));
+
+        expectation.consumeMatch();
+        assertThat(((HttpResponse) expectation.getAction()).getBodyAsString(), is("three"));
+
+        expectation.consumeMatch();
+        assertThat(((HttpResponse) expectation.getAction()).getBodyAsString(), is("one"));
+    }
+
+    @Test
+    public void shouldSelectSequentialResponsesExplicitly() {
+        HttpResponse r1 = response("a");
+        HttpResponse r2 = response("b");
+        Expectation expectation = new Expectation(request())
+            .thenRespond(Arrays.asList(r1, r2))
+            .withResponseMode(ResponseMode.SEQUENTIAL);
+
+        expectation.consumeMatch();
+        assertThat(((HttpResponse) expectation.getAction()).getBodyAsString(), is("a"));
+
+        expectation.consumeMatch();
+        assertThat(((HttpResponse) expectation.getAction()).getBodyAsString(), is("b"));
+
+        expectation.consumeMatch();
+        assertThat(((HttpResponse) expectation.getAction()).getBodyAsString(), is("a"));
+    }
+
+    @Test
+    public void shouldSelectRandomResponses() {
+        HttpResponse r1 = response("x");
+        HttpResponse r2 = response("y");
+        HttpResponse r3 = response("z");
+        Expectation expectation = new Expectation(request())
+            .thenRespond(Arrays.asList(r1, r2, r3))
+            .withResponseMode(ResponseMode.RANDOM);
+
+        Set<String> seen = new HashSet<>();
+        for (int i = 0; i < 100; i++) {
+            expectation.consumeMatch();
+            seen.add(((HttpResponse) expectation.getAction()).getBodyAsString());
+        }
+        assertTrue("Expected multiple different responses in RANDOM mode, but got: " + seen, seen.size() > 1);
+    }
+
+    @Test
+    public void shouldReturnSingleResponseFromHttpResponses() {
+        HttpResponse r1 = response("only");
+        Expectation expectation = new Expectation(request())
+            .thenRespond(Arrays.asList(r1));
+
+        expectation.consumeMatch();
+        assertThat(((HttpResponse) expectation.getAction()).getBodyAsString(), is("only"));
+
+        expectation.consumeMatch();
+        assertThat(((HttpResponse) expectation.getAction()).getBodyAsString(), is("only"));
+    }
+
+    @Test
+    public void shouldPrioritizeHttpResponsesOverHttpResponse() {
+        HttpResponse single = response("single");
+        HttpResponse multi1 = response("multi1");
+        HttpResponse multi2 = response("multi2");
+        Expectation expectation = new Expectation(request())
+            .thenRespond(single)
+            .thenRespond(Arrays.asList(multi1, multi2));
+
+        expectation.consumeMatch();
+        assertThat(((HttpResponse) expectation.getAction()).getBodyAsString(), is("multi1"));
+    }
+
+    @Test
+    public void shouldFallBackToHttpResponseWhenHttpResponsesEmpty() {
+        HttpResponse single = response("fallback");
+        Expectation expectation = new Expectation(request()).thenRespond(single);
+
+        assertThat(((HttpResponse) expectation.getAction()).getBodyAsString(), is("fallback"));
+    }
+
+    @Test
+    public void shouldIncludeHttpResponsesInClone() {
+        HttpResponse r1 = response("one");
+        HttpResponse r2 = response("two");
+        Expectation original = new Expectation(request())
+            .thenRespond(Arrays.asList(r1, r2))
+            .withResponseMode(ResponseMode.RANDOM);
+        Expectation clone = original.clone();
+
+        assertThat(clone.getHttpResponses().size(), is(2));
+        assertThat(clone.getResponseMode(), is(ResponseMode.RANDOM));
+    }
+
+    @Test
+    public void shouldIncludeHttpResponsesInEquals() {
+        HttpResponse r1 = response("one");
+        HttpResponse r2 = response("two");
+        Expectation a = new Expectation(request(), Times.unlimited(), TimeToLive.unlimited(), 0)
+            .thenRespond(Arrays.asList(r1, r2))
+            .withResponseMode(ResponseMode.SEQUENTIAL);
+        Expectation b = new Expectation(request(), Times.unlimited(), TimeToLive.unlimited(), 0)
+            .thenRespond(Arrays.asList(r1, r2))
+            .withResponseMode(ResponseMode.SEQUENTIAL);
+        Expectation c = new Expectation(request(), Times.unlimited(), TimeToLive.unlimited(), 0)
+            .thenRespond(Arrays.asList(r1, r2))
+            .withResponseMode(ResponseMode.RANDOM);
+        assertEquals(a, b);
+        assertFalse(a.equals(c));
+    }
+
+    @Test
+    public void shouldTrackMatchCount() {
+        Expectation expectation = new Expectation(request()).thenRespond(response());
+
+        assertThat(expectation.getMatchCount(), is(0));
+
+        expectation.consumeMatch();
+        assertThat(expectation.getMatchCount(), is(1));
+
+        expectation.consumeMatch();
+        assertThat(expectation.getMatchCount(), is(2));
+
+        expectation.consumeMatch();
+        assertThat(expectation.getMatchCount(), is(3));
+    }
+
+    @Test
+    public void shouldNotIncrementMatchCountWhenTimesExhausted() {
+        Expectation expectation = new Expectation(request(), Times.exactly(2), TimeToLive.unlimited(), 0)
+            .thenRespond(response());
+
+        assertTrue(expectation.consumeMatch());
+        assertThat(expectation.getMatchCount(), is(1));
+
+        assertTrue(expectation.consumeMatch());
+        assertThat(expectation.getMatchCount(), is(2));
+
+        assertFalse(expectation.consumeMatch());
+        assertThat(expectation.getMatchCount(), is(2));
+    }
+
+    @Test
+    public void shouldIncludeScenarioFieldsInClone() {
+        Expectation original = new Expectation(request())
+            .thenRespond(response())
+            .withScenarioName("TestScenario")
+            .withScenarioState("Started")
+            .withNewScenarioState("Step2");
+        Expectation clone = original.clone();
+
+        assertThat(clone.getScenarioName(), is("TestScenario"));
+        assertThat(clone.getScenarioState(), is("Started"));
+        assertThat(clone.getNewScenarioState(), is("Step2"));
+    }
+
+    @Test
+    public void shouldIncludeScenarioFieldsInEquals() {
+        Expectation a = new Expectation(request(), Times.unlimited(), TimeToLive.unlimited(), 0)
+            .withScenarioName("S1")
+            .withScenarioState("Started");
+        Expectation b = new Expectation(request(), Times.unlimited(), TimeToLive.unlimited(), 0)
+            .withScenarioName("S1")
+            .withScenarioState("Started");
+        Expectation c = new Expectation(request(), Times.unlimited(), TimeToLive.unlimited(), 0)
+            .withScenarioName("S1")
+            .withScenarioState("Different");
+        assertEquals(a, b);
+        assertFalse(a.equals(c));
     }
 }

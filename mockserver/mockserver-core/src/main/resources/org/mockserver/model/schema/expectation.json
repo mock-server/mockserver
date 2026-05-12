@@ -74,6 +74,19 @@
     "newScenarioState": {
       "type": "string"
     },
+    "httpResponses": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/httpResponse"
+      },
+      "minItems": 1
+    },
+    "responseMode": {
+      "enum": [
+        "SEQUENTIAL",
+        "RANDOM"
+      ]
+    },
     "times": {
       "$ref": "#/definitions/times"
     },
@@ -154,6 +167,11 @@
     {
       "required": [
         "grpcStreamResponse"
+      ]
+    },
+    {
+      "required": [
+        "httpResponses"
       ]
     }
   ],

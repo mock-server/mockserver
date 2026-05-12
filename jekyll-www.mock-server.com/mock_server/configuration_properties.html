@@ -629,6 +629,23 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.proxyRemotePort="443"</code></pre>
 </div>
 
+<button id="button_configuration_global_response_delay_millis" class="accordion title"><strong>Global Response Delay</strong></button>
+<div class="panel title">
+    <p>Adds a fixed delay (in milliseconds) to all matched expectation responses. This delay is <strong>additive</strong> — it combines with any per-action delay configured on individual expectations. For example, if an expectation has a 100ms delay and the global delay is 200ms, the total delay is 300ms.</p>
+    <p>This is useful for simulating network latency across all mocked endpoints without having to configure delay on each expectation individually.</p>
+    <p>Type: <span class="keyword">long</span> Default: <span class="this_value">null</span> (no global delay)</p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.globalResponseDelayMillis(Long millis)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.globalResponseDelayMillis=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_GLOBAL_RESPONSE_DELAY_MILLIS=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.globalResponseDelayMillis=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.globalResponseDelayMillis="200"</code></pre>
+</div>
+
 <a id="liveness_configuration" class="anchor" href="#liveness_configuration">&nbsp;</a>
 
 <h2>Liveness Configuration:</h2>

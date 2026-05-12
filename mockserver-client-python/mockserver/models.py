@@ -1093,6 +1093,8 @@ class Expectation:
     times: Times | None = None
     time_to_live: TimeToLive | None = None
     after_actions: list[AfterAction] | None = None
+    http_responses: list[HttpResponse] | None = None
+    response_mode: str | None = None
     scenario_name: str | None = None
     scenario_state: str | None = None
     new_scenario_state: str | None = None
@@ -1118,6 +1120,8 @@ class Expectation:
             "times": self.times.to_dict() if self.times else None,
             "timeToLive": self.time_to_live.to_dict() if self.time_to_live else None,
             "afterActions": [a.to_dict() for a in self.after_actions] if self.after_actions else None,
+            "httpResponses": [r.to_dict() for r in self.http_responses] if self.http_responses else None,
+            "responseMode": self.response_mode,
             "scenarioName": self.scenario_name,
             "scenarioState": self.scenario_state,
             "newScenarioState": self.new_scenario_state,
@@ -1150,6 +1154,8 @@ class Expectation:
             times=Times.from_dict(data.get("times")),
             time_to_live=TimeToLive.from_dict(data.get("timeToLive")),
             after_actions=[AfterAction.from_dict(a) for a in after_actions_data] if after_actions_data else None,
+            http_responses=[HttpResponse.from_dict(r) for r in data["httpResponses"]] if data.get("httpResponses") else None,
+            response_mode=data.get("responseMode"),
             scenario_name=data.get("scenarioName"),
             scenario_state=data.get("scenarioState"),
             new_scenario_state=data.get("newScenarioState"),

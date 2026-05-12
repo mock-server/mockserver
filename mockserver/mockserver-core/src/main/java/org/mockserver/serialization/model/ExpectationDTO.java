@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
+import org.mockserver.mock.ResponseMode;
 import org.mockserver.model.*;
 
 import java.util.List;
@@ -37,6 +38,9 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
     private HttpErrorDTO httpError;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<AfterActionDTO> afterActions;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private List<HttpResponseDTO> httpResponses;
+    private ResponseMode responseMode;
     private org.mockserver.serialization.model.TimesDTO times;
     private TimeToLiveDTO timeToLive;
     private String scenarioName;
@@ -117,6 +121,11 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
             if (afterActions != null && !afterActions.isEmpty()) {
                 this.afterActions = afterActions.stream().map(AfterActionDTO::new).collect(Collectors.toList());
             }
+            List<HttpResponse> httpResponsesList = expectation.getHttpResponses();
+            if (httpResponsesList != null && !httpResponsesList.isEmpty()) {
+                this.httpResponses = httpResponsesList.stream().map(HttpResponseDTO::new).collect(Collectors.toList());
+            }
+            this.responseMode = expectation.getResponseMode();
             Times times = expectation.getTimes();
             if (times != null) {
                 this.times = new org.mockserver.serialization.model.TimesDTO(times);
@@ -243,7 +252,9 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
             .thenRespondWithWebSocket(httpWebSocketResponse)
             .thenRespondWithGrpcStream(grpcStreamResponse)
             .thenError(httpError)
-            .withAfterActions(afterActionList);
+            .withAfterActions(afterActionList)
+            .thenRespond(this.httpResponses != null ? this.httpResponses.stream().map(HttpResponseDTO::buildObject).collect(Collectors.toList()) : null)
+            .withResponseMode(this.responseMode);
     }
 
     public String getId() {
@@ -433,6 +444,25 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
     @JsonSetter("afterActions")
     public ExpectationDTO setAfterActions(List<AfterActionDTO> afterActions) {
         this.afterActions = afterActions;
+        return this;
+    }
+
+    public List<HttpResponseDTO> getHttpResponses() {
+        return httpResponses;
+    }
+
+    @JsonSetter("httpResponses")
+    public ExpectationDTO setHttpResponses(List<HttpResponseDTO> httpResponses) {
+        this.httpResponses = httpResponses;
+        return this;
+    }
+
+    public ResponseMode getResponseMode() {
+        return responseMode;
+    }
+
+    public ExpectationDTO setResponseMode(ResponseMode responseMode) {
+        this.responseMode = responseMode;
         return this;
     }
 

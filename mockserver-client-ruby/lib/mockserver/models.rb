@@ -1172,6 +1172,7 @@ module MockServer
                   :http_forward_object_callback, :http_override_forwarded_request,
                   :http_error, :times, :time_to_live,
                   :http_sse_response, :http_websocket_response, :after_actions,
+                  :http_responses, :response_mode,
                   :scenario_name, :scenario_state, :new_scenario_state
 
     def initialize(id: nil, priority: nil, percentage: nil, http_request: nil, http_response: nil,
@@ -1181,6 +1182,7 @@ module MockServer
                    http_forward_object_callback: nil, http_override_forwarded_request: nil,
                    http_error: nil, times: nil, time_to_live: nil,
                    http_sse_response: nil, http_websocket_response: nil, after_actions: nil,
+                   http_responses: nil, response_mode: nil,
                    scenario_name: nil, scenario_state: nil, new_scenario_state: nil)
       @id = id
       @priority = priority
@@ -1201,6 +1203,8 @@ module MockServer
       @http_sse_response = http_sse_response
       @http_websocket_response = http_websocket_response
       @after_actions = after_actions
+      @http_responses = http_responses
+      @response_mode = response_mode
       @scenario_name = scenario_name
       @scenario_state = scenario_state
       @new_scenario_state = new_scenario_state
@@ -1232,6 +1236,8 @@ module MockServer
         'httpSseResponse'              => @http_sse_response&.to_h,
         'httpWebSocketResponse'        => @http_websocket_response&.to_h,
         'afterActions'                 => after_actions_h,
+        'httpResponses'                => @http_responses&.map(&:to_h),
+        'responseMode'                 => @response_mode,
         'times'                        => @times&.to_h,
         'timeToLive'                   => @time_to_live&.to_h,
         'scenarioName'                 => @scenario_name,
@@ -1268,6 +1274,8 @@ module MockServer
         http_sse_response:               HttpSseResponse.from_hash(data['httpSseResponse']),
         http_websocket_response:         HttpWebSocketResponse.from_hash(data['httpWebSocketResponse']),
         after_actions:                   after_actions,
+        http_responses:                  data['httpResponses']&.map { |r| HttpResponse.from_hash(r) },
+        response_mode:                   data['responseMode'],
         times:                           Times.from_hash(data['times']),
         time_to_live:                    TimeToLive.from_hash(data['timeToLive']),
         scenario_name:                   data['scenarioName'],

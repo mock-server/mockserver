@@ -144,6 +144,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_FORWARD_ADJUST_HOST_HEADER = "mockserver.forwardAdjustHostHeader";
     private static final String MOCKSERVER_FORWARD_DEFAULT_HOST_HEADER = "mockserver.forwardDefaultHostHeader";
     private static final String MOCKSERVER_PROXY_PASS = "mockserver.proxyPass";
+    private static final String MOCKSERVER_GLOBAL_RESPONSE_DELAY_MILLIS = "mockserver.globalResponseDelayMillis";
 
     // liveness
     private static final String MOCKSERVER_LIVENESS_HTTP_GET_PATH = "mockserver.livenessHttpGetPath";
@@ -1465,6 +1466,39 @@ public class ConfigurationProperties {
                         .setThrowable(e)
                 );
             }
+        }
+    }
+
+    public static Long globalResponseDelayMillis() {
+        String value = readPropertyHierarchically(PROPERTIES, MOCKSERVER_GLOBAL_RESPONSE_DELAY_MILLIS, "MOCKSERVER_GLOBAL_RESPONSE_DELAY_MILLIS", "");
+        if (isBlank(value)) {
+            return null;
+        }
+        try {
+            long millis = Long.parseLong(value);
+            if (millis < 0) {
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setLogLevel(Level.ERROR)
+                        .setMessageFormat("invalid value {} for globalResponseDelayMillis, must be >= 0")
+                        .setArguments(value)
+                );
+                return null;
+            }
+            return millis;
+        } catch (NumberFormatException nfe) {
+            return null;
+        }
+    }
+
+    public static void globalResponseDelayMillis(Long millis) {
+        if (millis != null) {
+            if (millis < 0) {
+                throw new IllegalArgumentException("globalResponseDelayMillis must be >= 0, got: " + millis);
+            }
+            setProperty(MOCKSERVER_GLOBAL_RESPONSE_DELAY_MILLIS, "" + millis);
+        } else {
+            clearProperty(MOCKSERVER_GLOBAL_RESPONSE_DELAY_MILLIS);
         }
     }
 

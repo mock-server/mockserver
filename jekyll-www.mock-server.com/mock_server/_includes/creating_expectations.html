@@ -77,6 +77,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <li><strong><a href="#button_match_request_by_priority">priority</a></strong> <em>(optional)</em> - matching is ordered by priority (highest first) then creation (earliest first)</li>
     <li><strong><a href="#button_match_request_update_by_id">id</a></strong> <em>(optional)</em> - used for updating an existing expectation (i.e. when the id matches)</li>
     <li><strong><a href="#stateful_scenarios">scenario</a></strong> <em>(optional)</em> - used for stateful multi-step API flows where the response changes based on prior interactions</li>
+    <li><strong><a href="#sequential_responses">httpResponses</a></strong> <em>(optional)</em> - an array of responses to cycle through sequentially or randomly on each match</li>
 </ul>
 
 <p><strong><a href="/mock_server/using_openapi.html#generate_expectation_from_openapi">open api expectations</a></strong> are also supported using an <a target="_blank" href="https://swagger.io/docs/specification/basic-structure/"><strong>OpenAPI
@@ -311,6 +312,59 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 }</code></pre>
 
 <p>Scenarios are independent of each other — different scenario names maintain separate state. All scenario states are reset when MockServer is <a href="/mock_server/clearing_and_resetting.html">reset</a>.</p>
+
+<a id="sequential_responses" class="anchor" href="#sequential_responses">&nbsp;</a>
+
+<h4>Sequential / Cycling Responses</h4>
+
+<p>A single expectation can return <strong>multiple different responses</strong> by providing an array of responses in the <span class="inline_code">httpResponses</span> field. Each time the expectation matches, the next response in the list is returned. After the last response, it cycles back to the first.</p>
+
+<p>The <span class="inline_code">responseMode</span> field controls how responses are selected:</p>
+<ul>
+    <li><strong>SEQUENTIAL</strong> (default) - responses are returned in order, cycling back to the first after the last</li>
+    <li><strong>RANDOM</strong> - a random response is selected from the list for each request</li>
+</ul>
+
+<p><strong>Note:</strong> Use <span class="inline_code">httpResponses</span> instead of <span class="inline_code">httpResponse</span> (singular) when you want multiple responses. If both are set, <span class="inline_code">httpResponses</span> takes priority.</p>
+
+<p><strong>Example - Sequential Responses:</strong> Cycle through different status codes.</p>
+<pre class="prettyprint lang-java code"><code class="code">{
+    "httpRequest": {
+        "path": "/api/status"
+    },
+    "httpResponses": [
+        { "statusCode": 200, "body": "{\"status\": \"ok\"}" },
+        { "statusCode": 503, "body": "{\"status\": \"degraded\"}" },
+        { "statusCode": 200, "body": "{\"status\": \"ok\"}" }
+    ]
+}</code></pre>
+<p>The first request returns 200, the second returns 503, the third returns 200, then it cycles back to the first response.</p>
+
+<p><strong>Example - Random Responses:</strong> Simulate unpredictable service behavior.</p>
+<pre class="prettyprint lang-java code"><code class="code">{
+    "httpRequest": {
+        "path": "/api/unstable"
+    },
+    "httpResponses": [
+        { "statusCode": 200, "body": "{\"result\": \"success\"}" },
+        { "statusCode": 500, "body": "{\"error\": \"Internal Server Error\"}" },
+        { "statusCode": 429, "body": "{\"error\": \"Too Many Requests\"}" }
+    ],
+    "responseMode": "RANDOM"
+}</code></pre>
+
+<p><strong>Example - Java Client:</strong></p>
+<pre class="prettyprint lang-java code"><code class="code">import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
+
+new MockServerClient("localhost", 1080)
+    .when(request().withPath("/api/status"))
+    .respond(
+        java.util.Arrays.asList(
+            response().withStatusCode(200).withBody("{\"status\": \"ok\"}"),
+            response().withStatusCode(503).withBody("{\"status\": \"degraded\"}")
+        )
+    );</code></pre>
 
 <a id="updating_expectations" class="anchor" href="#updating_expectations">&nbsp;</a>
 

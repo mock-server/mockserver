@@ -4,6 +4,7 @@ import com.google.common.base.Strings;
 import org.apache.commons.text.StringEscapeUtils;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 import org.mockserver.model.OpenAPIDefinition;
 import org.mockserver.model.RequestDefinition;
 
@@ -68,7 +69,22 @@ public class ExpectationToJavaSerializer implements ToJavaSerializer<Expectation
             if (isNotBlank(expectation.getNewScenarioState())) {
                 appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".withNewScenarioState(\"").append(StringEscapeUtils.escapeJava(expectation.getNewScenarioState())).append("\")");
             }
-            if (expectation.getHttpResponse() != null) {
+            if (expectation.getResponseMode() != null) {
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".withResponseMode(org.mockserver.mock.ResponseMode.").append(expectation.getResponseMode().name()).append(")");
+            }
+            if (expectation.getHttpResponses() != null && !expectation.getHttpResponses().isEmpty()) {
+                HttpResponseToJavaSerializer responseSerializer = new HttpResponseToJavaSerializer();
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".respond(java.util.Arrays.asList(");
+                List<HttpResponse> responses = expectation.getHttpResponses();
+                for (int i = 0; i < responses.size(); i++) {
+                    appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
+                    output.append(responseSerializer.serialize(numberOfSpacesToIndent + 2, responses.get(i)));
+                    if (i < responses.size() - 1) {
+                        output.append(",");
+                    }
+                }
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append("))");
+            } else if (expectation.getHttpResponse() != null) {
                 appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".respond(");
                 output.append(new HttpResponseToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getHttpResponse()));
                 appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");

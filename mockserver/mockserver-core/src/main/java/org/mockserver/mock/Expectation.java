@@ -50,9 +50,15 @@ public class Expectation extends ObjectWithJsonToString {
     private GrpcStreamResponse grpcStreamResponse;
     private HttpError httpError;
     private List<AfterAction> afterActions;
+    private List<HttpResponse> httpResponses;
+    private ResponseMode responseMode;
     private String scenarioName;
     private String scenarioState;
     private String newScenarioState;
+    @JsonIgnore
+    private final AtomicInteger matchCount = new AtomicInteger(0);
+    @JsonIgnore
+    private final ThreadLocal<Integer> lastConsumedCount = new ThreadLocal<>();
 
     /**
      * Specify the OpenAPI and operationId to match against by URL or payload and string as follows:
@@ -425,6 +431,28 @@ public class Expectation extends ObjectWithJsonToString {
         return afterActions != null ? Collections.unmodifiableList(afterActions) : null;
     }
 
+    public List<HttpResponse> getHttpResponses() {
+        return httpResponses != null ? Collections.unmodifiableList(httpResponses) : null;
+    }
+
+    public Expectation thenRespond(List<HttpResponse> httpResponses) {
+        if (httpResponses != null && !httpResponses.isEmpty()) {
+            this.httpResponses = new ArrayList<>(httpResponses);
+            this.hashCode = 0;
+        }
+        return this;
+    }
+
+    public ResponseMode getResponseMode() {
+        return responseMode;
+    }
+
+    public Expectation withResponseMode(ResponseMode responseMode) {
+        this.responseMode = responseMode;
+        this.hashCode = 0;
+        return this;
+    }
+
     public Expectation withAfterActions(AfterAction... afterActions) {
         if (afterActions != null && afterActions.length > 0) {
             this.afterActions = new ArrayList<>(Arrays.asList(afterActions));
@@ -478,6 +506,13 @@ public class Expectation extends ObjectWithJsonToString {
 
     @JsonIgnore
     public Action getPrimaryAction() {
+        if (httpResponses != null && !httpResponses.isEmpty()) {
+            HttpResponse selected = selectFromResponses();
+            if (selected != null) {
+                selected.setExpectationId(getId());
+                return selected;
+            }
+        }
         List<Action> actions = getAllActions();
         if (actions.isEmpty()) {
             return null;
@@ -504,6 +539,19 @@ public class Expectation extends ObjectWithJsonToString {
     }
 
     @JsonIgnore
+    private HttpResponse selectFromResponses() {
+        if (httpResponses == null || httpResponses.isEmpty()) {
+            return null;
+        }
+        if (responseMode == ResponseMode.RANDOM) {
+            return httpResponses.get(ThreadLocalRandom.current().nextInt(httpResponses.size()));
+        }
+        Integer consumed = lastConsumedCount.get();
+        int count = Math.max(0, (consumed != null ? consumed : matchCount.get()) - 1);
+        return httpResponses.get(count % httpResponses.size());
+    }
+
+    @JsonIgnore
     public List<Action> getSecondaryActions() {
         List<Action> all = getAllActions();
         if (all.size() <= 1) {
@@ -523,7 +571,7 @@ public class Expectation extends ObjectWithJsonToString {
     @JsonIgnore
     private List<Action> getAllActions() {
         List<Action> actions = new ArrayList<>();
-        if (getHttpResponse() != null) {
+        if (getHttpResponse() != null && (httpResponses == null || httpResponses.isEmpty())) {
             actions.add(getHttpResponse());
         }
         if (getHttpResponseTemplate() != null) {
@@ -717,9 +765,17 @@ public class Expectation extends ObjectWithJsonToString {
 
     public boolean consumeMatch() {
         if (times != null) {
-            return times.decrementAndCheckGreaterThanZero();
+            if (!times.decrementAndCheckGreaterThanZero()) {
+                return false;
+            }
         }
+        lastConsumedCount.set(matchCount.incrementAndGet());
         return true;
+    }
+
+    @JsonIgnore
+    public int getMatchCount() {
+        return matchCount.get();
     }
 
     @SuppressWarnings("PointlessNullCheck")
@@ -749,7 +805,9 @@ public class Expectation extends ObjectWithJsonToString {
             .thenRespondWithSse(httpSseResponse)
             .thenRespondWithWebSocket(httpWebSocketResponse)
             .thenRespondWithGrpcStream(grpcStreamResponse)
-            .thenError(httpError);
+            .thenError(httpError)
+            .thenRespond(httpResponses)
+            .withResponseMode(responseMode);
         if (afterActions != null) {
             clone.afterActions = new ArrayList<>(afterActions);
         }
@@ -794,6 +852,8 @@ public class Expectation extends ObjectWithJsonToString {
             Objects.equals(grpcStreamResponse, that.grpcStreamResponse) &&
             Objects.equals(httpError, that.httpError) &&
             Objects.equals(afterActions, that.afterActions) &&
+            Objects.equals(httpResponses, that.httpResponses) &&
+            Objects.equals(responseMode, that.responseMode) &&
             Objects.equals(scenarioName, that.scenarioName) &&
             Objects.equals(scenarioState, that.scenarioState) &&
             Objects.equals(newScenarioState, that.newScenarioState);
@@ -802,7 +862,7 @@ public class Expectation extends ObjectWithJsonToString {
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(priority, percentage, httpRequest, times, timeToLive, httpResponse, httpResponseTemplate, httpResponseClassCallback, httpResponseObjectCallback, httpForward, httpForwardTemplate, httpForwardClassCallback, httpForwardObjectCallback, httpOverrideForwardedRequest, httpForwardValidateAction, httpSseResponse, httpWebSocketResponse, grpcStreamResponse, httpError, afterActions, scenarioName, scenarioState, newScenarioState);
+            hashCode = Objects.hash(priority, percentage, httpRequest, times, timeToLive, httpResponse, httpResponseTemplate, httpResponseClassCallback, httpResponseObjectCallback, httpForward, httpForwardTemplate, httpForwardClassCallback, httpForwardObjectCallback, httpOverrideForwardedRequest, httpForwardValidateAction, httpSseResponse, httpWebSocketResponse, grpcStreamResponse, httpError, afterActions, httpResponses, responseMode, scenarioName, scenarioState, newScenarioState);
         }
         return hashCode;
     }

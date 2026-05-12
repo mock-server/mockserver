@@ -126,6 +126,9 @@ public class Configuration {
     private String forwardDefaultHostHeader;
     private List<ProxyPassMapping> proxyPassMappings;
 
+    // global response delay
+    private Long globalResponseDelayMillis;
+
     // liveness
     private String livenessHttpGetPath;
 
@@ -1516,6 +1519,21 @@ public class Configuration {
      */
     public Configuration proxyPassMappings(List<ProxyPassMapping> proxyPassMappings) {
         this.proxyPassMappings = proxyPassMappings;
+        return this;
+    }
+
+    public Long globalResponseDelayMillis() {
+        if (globalResponseDelayMillis == null) {
+            return ConfigurationProperties.globalResponseDelayMillis();
+        }
+        return globalResponseDelayMillis;
+    }
+
+    public Configuration globalResponseDelayMillis(Long globalResponseDelayMillis) {
+        if (globalResponseDelayMillis != null && globalResponseDelayMillis < 0) {
+            throw new IllegalArgumentException("globalResponseDelayMillis must be >= 0, got: " + globalResponseDelayMillis);
+        }
+        this.globalResponseDelayMillis = globalResponseDelayMillis;
         return this;
     }
 

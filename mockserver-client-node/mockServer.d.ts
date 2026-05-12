@@ -40,6 +40,8 @@ export type Expectation = {
   times?: Times;
   timeToLive?: TimeToLive;
   afterActions?: AfterAction | AfterAction[];
+  httpResponses?: HttpResponse[];
+  responseMode?: "SEQUENTIAL" | "RANDOM";
   scenarioName?: string;
   scenarioState?: string;
   newScenarioState?: string;

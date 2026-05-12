@@ -18,6 +18,7 @@ import org.mockserver.scheduler.Scheduler;
 import org.mockserver.uuid.UUIDService;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.Future;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -110,6 +111,11 @@ public class ForwardChainExpectation {
         return this;
     }
 
+    public ForwardChainExpectation withResponseMode(org.mockserver.mock.ResponseMode responseMode) {
+        expectation.withResponseMode(responseMode);
+        return this;
+    }
+
     public ForwardChainExpectation withAfterActions(AfterAction... afterActions) {
         expectation.withAfterActions(afterActions);
         return this;
@@ -132,6 +138,19 @@ public class ForwardChainExpectation {
      */
     public Expectation[] respond(final HttpResponse httpResponse) {
         expectation.thenRespond(httpResponse);
+        return mockServerClient.upsert(expectation);
+    }
+
+    /**
+     * Set a list of responses to cycle through sequentially when expectation
+     * is matched. Each match returns the next response in the list, cycling
+     * back to the first after the last.
+     *
+     * @param httpResponses list of responses to cycle through
+     * @return added or updated expectations
+     */
+    public Expectation[] respond(final List<HttpResponse> httpResponses) {
+        expectation.thenRespond(httpResponses);
         return mockServerClient.upsert(expectation);
     }
 

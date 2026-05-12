@@ -286,6 +286,15 @@ sequenceDiagram
     S->>S: Return response to original request
 ```
 
+## Global Response Delay
+
+The `globalResponseDelayMillis` configuration property adds a fixed delay to all matched expectation responses. The delay is **additive** — it combines with any per-action delay. Implementation:
+
+- `HttpActionHandler.combineWithGlobalDelay(Delay actionDelay)` returns a `Delay[]` passed as varargs to `Scheduler.schedule()`
+- `Scheduler.sampleCombinedDelayMillis()` sums all delay samples
+- Only applies to the primary response path (not after-actions or secondary actions)
+- Only applies when an expectation matches (unmatched/proxied requests are not delayed)
+
 ## Proxy Forwarding
 
 When no expectation matches and the channel is in proxy mode, `HttpActionHandler` forwards via `NettyHttpClient`:

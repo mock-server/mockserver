@@ -4,7 +4,10 @@ import org.junit.Test;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
+import org.mockserver.mock.ResponseMode;
 import org.mockserver.model.*;
+
+import java.util.Arrays;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static junit.framework.TestCase.assertNull;
@@ -588,5 +591,55 @@ public class ExpectationDTOTest {
 
         Expectation rebuilt = dto.buildObject();
         assertThat(rebuilt.getPercentage(), is(nullValue()));
+    }
+
+    @Test
+    public void shouldRoundTripHttpResponsesAndResponseMode() {
+        HttpResponse r1 = new HttpResponse().withBody("one");
+        HttpResponse r2 = new HttpResponse().withBody("two");
+        Expectation original = new Expectation(request(), Times.unlimited(), TimeToLive.unlimited(), 0)
+            .thenRespond(Arrays.asList(r1, r2))
+            .withResponseMode(ResponseMode.RANDOM);
+
+        ExpectationDTO dto = new ExpectationDTO(original);
+        assertThat(dto.getHttpResponses().size(), is(2));
+        assertThat(dto.getResponseMode(), is(ResponseMode.RANDOM));
+
+        Expectation rebuilt = dto.buildObject();
+        assertThat(rebuilt.getHttpResponses().size(), is(2));
+        assertThat(rebuilt.getResponseMode(), is(ResponseMode.RANDOM));
+    }
+
+    @Test
+    public void shouldRoundTripNullHttpResponses() {
+        Expectation original = new Expectation(request(), Times.unlimited(), TimeToLive.unlimited(), 0)
+            .thenRespond(new HttpResponse().withBody("single"));
+
+        ExpectationDTO dto = new ExpectationDTO(original);
+        assertThat(dto.getHttpResponses(), is(nullValue()));
+        assertThat(dto.getResponseMode(), is(nullValue()));
+
+        Expectation rebuilt = dto.buildObject();
+        assertThat(rebuilt.getHttpResponses(), is(nullValue()));
+        assertThat(rebuilt.getResponseMode(), is(nullValue()));
+    }
+
+    @Test
+    public void shouldRoundTripScenarioFields() {
+        Expectation original = new Expectation(request(), Times.unlimited(), TimeToLive.unlimited(), 0)
+            .thenRespond(new HttpResponse().withBody("response"))
+            .withScenarioName("TestScenario")
+            .withScenarioState("Started")
+            .withNewScenarioState("Step2");
+
+        ExpectationDTO dto = new ExpectationDTO(original);
+        assertThat(dto.getScenarioName(), is("TestScenario"));
+        assertThat(dto.getScenarioState(), is("Started"));
+        assertThat(dto.getNewScenarioState(), is("Step2"));
+
+        Expectation rebuilt = dto.buildObject();
+        assertThat(rebuilt.getScenarioName(), is("TestScenario"));
+        assertThat(rebuilt.getScenarioState(), is("Started"));
+        assertThat(rebuilt.getNewScenarioState(), is("Step2"));
     }
 }
