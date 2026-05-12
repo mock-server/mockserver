@@ -1,5 +1,7 @@
 # Java 17 Migration Plan
 
+**Status:** Planned (Future)
+
 Planned for a future major version bump. This document captures what would change, what would improve, and the migration steps required to raise MockServer's minimum Java version from 11 to 17.
 
 ## Motivation

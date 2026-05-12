@@ -234,6 +234,12 @@ This pattern allows MockServer to:
 - Match expectations against tunneled requests
 - Generate dynamic TLS certificates for the target hostname
 
+### IPv6 Support
+
+The relay connect protocol and CONNECT handler support IPv6 addresses in bracket notation (e.g., `[::1]:443`, `[2001:db8::1]:8443`). Host:port parsing uses `HttpRequest.splitHostPort()` which correctly handles both IPv4 and IPv6 formats.
+
+The local address detection (`calculateLocalAddresses()`) explicitly includes `127.0.0.1` and `localhost`, plus the bound interface address (via `InetAddress.getHostAddress()`), which may include IPv6 addresses depending on the network configuration. This ensures requests sent to MockServer's bound address are correctly identified as control-plane requests rather than proxy targets.
+
 ### Relay Handler Hierarchy
 
 ```mermaid
@@ -295,9 +301,28 @@ Internal Channel"]
     DPR -->|writes responses to| CLIENT[Client Channel]
 ```
 
-## Binary Protocol Proxying
+## DNS UDP Server
 
-When no known protocol is detected and a remote address is configured, `BinaryRequestProxyingHandler` forwards raw bytes via `NettyHttpClient.sendRequest(BinaryMessage, ...)`. It supports:
+When `dnsEnabled=true`, `MockServer.bindDnsPort()` creates a separate Netty `Bootstrap` with `NioDatagramChannel` for UDP DNS:
+
+```mermaid
+graph LR
+    UDP["NioDatagramChannel\n(UDP)"] --> DEC["DatagramDnsQueryDecoder"]
+    DEC --> ENC["DatagramDnsResponseEncoder"]
+    ENC --> HANDLER["DnsRequestHandler"]
+```
+
+| Handler | Class | Purpose |
+|---------|-------|---------|
+| DatagramDnsQueryDecoder | Netty built-in (`netty-codec-dns`) | Decodes UDP datagrams into `DatagramDnsQuery` |
+| DatagramDnsResponseEncoder | Netty built-in (`netty-codec-dns`) | Encodes `DatagramDnsResponse` to UDP datagrams |
+| DnsRequestHandler | `o.m.netty.dns` | Matches DNS queries against expectations via `HttpState`, returns `DnsResponse` records |
+
+The DNS channel uses the same `workerGroup` as the TCP server. It is managed separately from TCP `serverChannelFutures` — closed explicitly in `MockServer.stopAsync()`.
+
+## Binary Protocol Handling
+
+When no known protocol is detected, `BinaryRequestProxyingHandler` handles the raw bytes. The handler first checks for matching expectations via `HttpState.firstMatchingExpectation(BinaryRequestDefinition)`. If a match with a `BinaryResponse` action is found, the response bytes are written directly to the channel. Otherwise, in proxy mode (when a remote address is configured on the channel), raw bytes are forwarded via `NettyHttpClient.sendRequest(BinaryMessage, ...)`:
 
 - **Waiting mode**: Blocks until upstream response arrives, writes it back
 - **Non-waiting mode**: Fire-and-forget with optional `BinaryProxyListener` callback. `BinaryProxyListener` (`o.m.model.BinaryProxyListener`) is a functional interface with `onProxy(BinaryMessage binaryRequest, CompletableFuture<BinaryMessage> binaryResponse, SocketAddress serverAddress, SocketAddress clientAddress)` invoked when binary data is proxied
@@ -357,3 +382,4 @@ stateDiagram-v2
 | `MockServerHttpServerCodec` | `mockserver-core/.../codec/MockServerHttpServerCodec.java` | Netty HTTP ↔ MockServer model codec |
 | `GrpcToHttpRequestHandler` | `mockserver-netty/.../netty/grpc/GrpcToHttpRequestHandler.java` | gRPC request decode (protobuf→JSON) |
 | `GrpcToHttpResponseHandler` | `mockserver-netty/.../netty/grpc/GrpcToHttpResponseHandler.java` | gRPC response encode (JSON→protobuf) |
+| `DnsRequestHandler` | `mockserver-netty/.../netty/dns/DnsRequestHandler.java` | DNS query matching and response |

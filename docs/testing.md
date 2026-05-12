@@ -18,7 +18,7 @@ graph TB
     end
     subgraph "Container Integration Tests"
         DC["Docker Compose — 10 tests"]
-        HT["Helm/Kind — 4 tests"]
+        HT["Helm/k3d — 5 tests"]
     end
     subgraph "Performance Tests"
         PT["Locust"]
@@ -31,13 +31,13 @@ graph TB
 | Framework | Version | Usage |
 |-----------|---------|-------|
 | JUnit 4 | 4.13.2 | Primary test framework across almost all modules |
-| JUnit Jupiter (JUnit 5) | 5.9.2 | Used exclusively in `mockserver-junit-jupiter` |
-| Mockito Core | 4.11.0 | Mocking framework used in most modules |
-| Mockito JUnit Jupiter | 4.11.0 | JUnit 5 Mockito integration (`mockserver-junit-jupiter` only) |
-| Hamcrest | 2.2 | Assertion matchers used across all modules |
-| JSONAssert | 1.5.1 | JSON assertion library (`mockserver-core`) |
-| Spring Test | 5.3.26 | `mockserver-core`, `mockserver-war`, `mockserver-proxy-war`, `mockserver-spring-test-listener`, `mockserver-examples` |
-| XMLUnit | 2.9.1 | XML comparison (production dependency, also supports test assertions) |
+| JUnit Jupiter (JUnit 5) | 5.14.4 | Used exclusively in `mockserver-junit-jupiter` |
+| Mockito Core | 5.23.0 | Mocking framework used in most modules |
+| Mockito JUnit Jupiter | 5.23.0 | JUnit 5 Mockito integration (`mockserver-junit-jupiter` only) |
+| Hamcrest | 3.0 | Assertion matchers used across all modules |
+| JSONAssert | 1.5.3 | JSON assertion library (`mockserver-core`) |
+| Spring Test | 5.3.39 | `mockserver-core`, `mockserver-war`, `mockserver-proxy-war`, `mockserver-spring-test-listener`, `mockserver-examples` |
+| XMLUnit | 2.11.0 | XML comparison (production dependency, also supports test assertions) |
 
 No TestNG is used anywhere in the project.
 
@@ -66,8 +66,8 @@ Test filtering is done entirely by naming convention — no `@Category` or `@Tag
 
 | Pattern | Runner | Maven Phase | Plugin |
 |---------|--------|-------------|--------|
-| `**/*Test.java` | Surefire | `test` | `maven-surefire-plugin` 3.2.5 |
-| `**/*IntegrationTest.java` | Failsafe | `integration-test` / `verify` | `maven-failsafe-plugin` 3.2.5 |
+| `**/*Test.java` | Surefire | `test` | `maven-surefire-plugin` 3.5.5 |
+| `**/*IntegrationTest.java` | Failsafe | `integration-test` / `verify` | `maven-failsafe-plugin` 3.5.5 |
 
 ### Abstract Base Class Hierarchy
 
@@ -112,26 +112,37 @@ classDiagram
     }
 
     AbstractMockingIntegrationTestBase <|-- AbstractBasicMockingIntegrationTest
-    AbstractBasicMockingIntegrationTest <|-- AbstractExtendedMockingIntegrationTest
+    AbstractBasicMockingIntegrationTest <|-- AbstractBasicMockingSameJVMIntegrationTest
+    AbstractBasicMockingSameJVMIntegrationTest <|-- AbstractExtendedMockingIntegrationTest
     AbstractExtendedMockingIntegrationTest <|-- AbstractExtendedSameJVMMockingIntegrationTest
     AbstractMockingIntegrationTestBase <|-- AbstractProxyIntegrationTest
+
+    class AbstractBasicMockingSameJVMIntegrationTest {
+        <<abstract>>
+        Basic tests for same-JVM scenarios
+    }
 
     class ClientAndServerMockingIntegrationTest {
         +startServer()
         Concrete: starts Netty server
     }
-    class MockServerWarMockingIntegrationTest {
+    class AbstractExtendedDeployableWARMockingIntegrationTest {
+        <<abstract>>
+        Intermediate: WAR deployment setup
+    }
+    class ExtendedWARMockingIntegrationTest {
         +startServer()
         Concrete: deploys to embedded Tomcat
     }
-    class MockServerRuleMockingIntegrationTest {
+    class JUnitClassRuleIntegrationTest {
         +startServer()
-        Concrete: uses JUnit 4 Rule
+        Concrete: uses JUnit 4 ClassRule
     }
 
-    AbstractExtendedSameJVMMockingIntegrationTest <|-- ClientAndServerMockingIntegrationTest
-    AbstractBasicMockingIntegrationTest <|-- MockServerWarMockingIntegrationTest
-    AbstractBasicMockingIntegrationTest <|-- MockServerRuleMockingIntegrationTest
+    AbstractBasicMockingSameJVMIntegrationTest <|-- ClientAndServerMockingIntegrationTest
+    AbstractExtendedSameJVMMockingIntegrationTest <|-- AbstractExtendedDeployableWARMockingIntegrationTest
+    AbstractExtendedDeployableWARMockingIntegrationTest <|-- ExtendedWARMockingIntegrationTest
+    AbstractBasicMockingSameJVMIntegrationTest <|-- JUnitClassRuleIntegrationTest
 ```
 
 This architecture means a single abstract test class change can affect tests across multiple modules. The `mockserver-integration-testing` module has no tests of its own — it exists solely to provide these shared base classes.
@@ -163,11 +174,12 @@ Unit tests use JUnit 4 (or JUnit 5 in `mockserver-junit-jupiter`) and run via th
 | Naming convention | `*Test.java` |
 | Excludes | `*IntegrationTest.java` |
 | Maven phase | `test` |
-| Plugin | `maven-surefire-plugin` 3.2.5 |
-| Log level | `mockserver.logLevel=ERROR` |
+| Plugin | `maven-surefire-plugin` 3.5.5 |
+| Log level | `mockserver.logLevel=${mockserver.testLogLevel}` (default: `ERROR`) |
 | Locale | `en-GB` (`-Duser.language=en -Duser.country=GB`) |
 | Test listener | `org.mockserver.test.PrintOutCurrentTestRunListener` |
-| XML reports | Disabled (`<disableXmlReport>true</disableXmlReport>`) |
+| XML reports | Controlled by `${disableXmlReport}` (default: `true`) |
+| Forked process timeout | 1800 seconds |
 | Fork count | Default (1 fork per module; `forkCount=0` commented out for debugging) |
 
 ### Running Unit Tests
@@ -188,12 +200,13 @@ Integration tests use JUnit 4 and run via the Maven Failsafe plugin during the `
 |----------|-------|
 | Naming convention | `*IntegrationTest.java` |
 | Maven phase | `integration-test` / `verify` |
-| Plugin | `maven-failsafe-plugin` 3.2.5 |
-| Log level | `mockserver.logLevel=ERROR` |
+| Plugin | `maven-failsafe-plugin` 3.5.5 |
+| Log level | `mockserver.logLevel=${mockserver.testLogLevel}` (default: `ERROR`) |
 | Extra system properties | `project.version`, `project.basedir` |
 | Locale | `en-GB` |
 | Test listener | `org.mockserver.test.PrintOutCurrentTestRunListener` |
-| XML reports | Disabled |
+| XML reports | Controlled by `${disableXmlReport}` (default: `true`) |
+| Forked process timeout | 1800 seconds |
 
 ### Running Integration Tests
 
@@ -222,7 +235,7 @@ Integration tests use real embedded servers rather than mocks:
 
 | Server | Module | Purpose |
 |--------|--------|---------|
-| `EchoServer` (Netty) | `mockserver-integration-testing` | Returns request details as response body (secure + insecure instances) |
+| `EchoServer` (Netty) | `mockserver-core` | Returns request details as response body (secure + insecure instances) |
 | Embedded Tomcat 9.0.x | `mockserver-war`, `mockserver-proxy-war` | WAR deployment testing |
 | MockServer (Netty) | `mockserver-netty` | Full server lifecycle testing |
 
@@ -238,7 +251,7 @@ Integration tests use real embedded servers rather than mocks:
 | `gradle-netty-shaded-dependencies/` | Tests Gradle dependency resolution (shaded) |
 | `gradle-netty-no-dependencies-dependencies/` | Tests Gradle dependency resolution (no-deps) |
 
-These are run by `maven-invoker-plugin` 3.5.1 (Maven variants, `parallelThreads=2`) and `exec-maven-plugin` calling `gradle_integration_tests.sh` (Gradle variants) during the `integration-test`/`install` phases.
+These are run by `maven-invoker-plugin` 3.10.1 (Maven variants, `parallelThreads=2`) and `exec-maven-plugin` calling `gradle_integration_tests.sh` (Gradle variants) during the `integration-test`/`install` phases.
 
 ## Container Integration Tests
 
@@ -263,7 +276,7 @@ SKIP_JAVA_BUILD=true SKIP_DOCKER_BUILD_MOCKSERVER=true container_integration_tes
 | `SKIP_DOCKER_REBUILD_CLIENT` | unset | Skip rebuilding the curl client image |
 | `SKIP_ALL_TESTS` | unset | Skip all tests (build only) |
 | `SKIP_DOCKER_TESTS` | unset | Skip Docker Compose tests |
-| `SKIP_HELM_TESTS` | unset | Skip Helm/Kind tests |
+| `SKIP_HELM_TESTS` | unset | Skip Helm/k3d tests |
 
 ### Docker Compose Tests (10)
 
@@ -282,15 +295,16 @@ Each test has its own directory containing a `docker-compose.yml` and `integrati
 | `docker_compose_with_server_port_from_default_properties_file` | Port from `mockserver.properties` |
 | `docker_compose_with_server_port_from_custom_properties_file` | Port from custom properties file |
 
-### Helm Tests (4)
+### Helm Tests (5)
 
-Helm tests use KinD (Kubernetes in Docker) to create a local cluster:
+Helm tests use k3d (k3s in Docker) to create a local cluster:
 
 | Test | Validates |
 |------|-----------|
 | `helm_default_config` | Default Helm chart values |
-| `helm_local_docker_container` | Local Docker image loaded into Kind |
+| `helm_local_docker_container` | Local Docker image loaded into k3d |
 | `helm_custom_server_port` | Custom server port via Helm values |
+| `helm_inline_config` | Inline config via Helm values (`app.config.enabled`, `app.config.initializerJson`) |
 | `helm_remote_host_and_port` | Remote host/port via Helm values |
 
 ### Helper Scripts
@@ -299,7 +313,7 @@ Helm tests use KinD (Kubernetes in Docker) to create a local cluster:
 |--------|---------|
 | `integration_tests.sh` | Main orchestrator: builds Docker image, runs all tests, prints summary |
 | `docker-compose.sh` | Docker Compose helper functions (`start-up`, `tear-down`, `docker-exec`, `container-logs`) |
-| `helm-deploy.sh` | Kind cluster lifecycle (`start-up-k8s`, `tear-down-k8s`), Helm install/uninstall |
+| `helm-deploy.sh` | k3d cluster lifecycle (`start-up-k8s`, `tear-down-k8s`), Helm install/uninstall |
 | `logging.sh` | Coloured terminal output, `runCommand`, `retryCommand`, `logTestResult` |
 
 ### Test Flow
@@ -323,7 +337,7 @@ sequenceDiagram
         T->>D: docker-compose -p $TEST_CASE down
     end
 
-    R->>R: Start Kind cluster
+    R->>R: Start k3d cluster
     loop For each Helm test
         R->>T: cd test_dir && ./integration_test.sh
         T->>D: helm install ... && kubectl wait ...
@@ -331,18 +345,19 @@ sequenceDiagram
         T->>R: logTestResult $? $TEST_CASE
         T->>D: helm uninstall
     end
-    R->>R: Tear down Kind cluster
+    R->>R: Tear down k3d cluster
 
     R->>R: Print PASSED/FAILED summary
 ```
 
 ### Docker Image Variant Coverage
 
-There are 5 production Docker image variants. Only the main nonroot variant is tested:
+There are 6 production Docker image variants. Only the main nonroot variant is tested:
 
 | Variant | Dockerfile | Base Image | Tested? |
 |---------|-----------|------------|---------|
 | Main (nonroot) | `docker/Dockerfile` | `distroless/java17:nonroot` | YES (built as `integration_testing` image) |
+| GraalJS | `docker/graaljs/Dockerfile` | `distroless/java17:nonroot` | NO |
 | Root | `docker/root/Dockerfile` | `distroless/java17` | NO |
 | Snapshot (debug) | `docker/snapshot/Dockerfile` | `distroless/java17:debug-nonroot` | NO |
 | Root Snapshot | `docker/root-snapshot/Dockerfile` | `distroless/java17` | NO |
@@ -373,7 +388,7 @@ The integration tests always build with `--build-arg source=copy` (local JAR). T
 
 ### What Helm Features Are Tested
 
-The 4 Helm tests cover basic deployment, custom image tags, custom server port, and inter-service proxy forwarding. All use the same validation pattern: create expectation via PUT, verify response via GET.
+The 5 Helm tests cover basic deployment, custom image tags, custom server port, inline configuration, and inter-service proxy forwarding. All use the same validation pattern: create expectation via PUT, verify response via GET.
 
 ### What Helm Features Are NOT Tested
 
@@ -434,9 +449,11 @@ Supports three output modes controlled by `-Dmockserver.testOutput`:
 
 ```xml
 <plugin>
+    <groupId>org.apache.maven.plugins</groupId>
     <artifactId>maven-surefire-plugin</artifactId>
-    <version>3.2.5</version>
+    <version>${maven-surefire-plugin.version}</version>
     <configuration>
+        <forkedProcessTimeoutInSeconds>1800</forkedProcessTimeoutInSeconds>
         <includes>
             <include>**/*Test.java</include>
         </includes>
@@ -444,11 +461,19 @@ Supports three output modes controlled by `-Dmockserver.testOutput`:
             <exclude>**/*IntegrationTest.java</exclude>
         </excludes>
         <systemPropertyVariables>
-            <mockserver.logLevel>ERROR</mockserver.logLevel>
+            <mockserver.logLevel>${mockserver.testLogLevel}</mockserver.logLevel>
         </systemPropertyVariables>
-        <argLine>-Duser.language=en -Duser.country=GB
-                 -Dmockserver.testOutput=${mockserver.testOutput}</argLine>
-        <disableXmlReport>true</disableXmlReport>
+        <argLine>@{argLine} -Duser.language=en -Duser.country=GB
+                 -Dmockserver.testOutput=${mockserver.testOutput}
+                 ${mockserver.testArgLine}</argLine>
+        <disableXmlReport>${disableXmlReport}</disableXmlReport>
+        <redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
+        <properties>
+            <property>
+                <name>listener</name>
+                <value>org.mockserver.test.PrintOutCurrentTestRunListener</value>
+            </property>
+        </properties>
     </configuration>
 </plugin>
 ```
@@ -457,20 +482,30 @@ Supports three output modes controlled by `-Dmockserver.testOutput`:
 
 ```xml
 <plugin>
+    <groupId>org.apache.maven.plugins</groupId>
     <artifactId>maven-failsafe-plugin</artifactId>
-    <version>3.2.5</version>
+    <version>${maven-surefire-plugin.version}</version>
     <configuration>
+        <forkedProcessTimeoutInSeconds>1800</forkedProcessTimeoutInSeconds>
         <includes>
             <include>**/*IntegrationTest.java</include>
         </includes>
         <systemPropertyVariables>
-            <mockserver.logLevel>ERROR</mockserver.logLevel>
+            <mockserver.logLevel>${mockserver.testLogLevel}</mockserver.logLevel>
             <project.version>${project.version}</project.version>
             <project.basedir>${project.basedir}</project.basedir>
         </systemPropertyVariables>
-        <argLine>-Duser.language=en -Duser.country=GB
-                 -Dmockserver.testOutput=${mockserver.testOutput}</argLine>
-        <disableXmlReport>true</disableXmlReport>
+        <argLine>@{argLine} -Duser.language=en -Duser.country=GB
+                 -Dmockserver.testOutput=${mockserver.testOutput}
+                 ${mockserver.testArgLine}</argLine>
+        <disableXmlReport>${disableXmlReport}</disableXmlReport>
+        <redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
+        <properties>
+            <property>
+                <name>listener</name>
+                <value>org.mockserver.test.PrintOutCurrentTestRunListener</value>
+            </property>
+        </properties>
     </configuration>
     <executions>
         <execution>
@@ -536,16 +571,6 @@ Reports are generated in each module's `target/site/jacoco/` directory. See [AI-
 
 ## Known Issues
 
-### Disabled Tests
-
-Three tests are `@Ignore`d:
-
-| File | Test | Reason |
-|------|------|--------|
-| `ExpectationSerializerIntegrationTest.java:78` | `shouldAllowSingleOpenAPIObjectForArray()` | Uses external URL (network-dependent) |
-| `ExpectationSerializerIntegrationTest.java:135` | `shouldAllowMixedExpectationTypesForArray()` | Uses external URL (network-dependent) |
-| `AbstractForwardViaHttpsProxyMockingIntegrationTest.java:433` | `shouldForwardOverriddenRequestToHTTP2()` | HTTP/2 forwarding not yet implemented |
-
 ### Test Anti-Patterns
 
 | Pattern | Count | Details |
@@ -562,17 +587,19 @@ The `scripts/buildkite_quick_build.sh` script runs the full build inside a `mock
 
 ```bash
 ./mvnw -T 1C clean install -Djava.security.egd=file:/dev/./urandom \
-  -Dmockserver.testOutput=quiet -DskipShade=true \
-  -Dshade.install.phase=none -DskipAssembly=true
+  -Dmockserver.testOutput=quiet -DdisableXmlReport=false \
+  -DredirectTestOutputToFile=true -Dmockserver.testLogLevel=INFO \
+  "-Dmockserver.testArgLine=-Dmockserver.maxLogEntries=10000 -Dmockserver.maxExpectations=5000"
 ```
 
 | Property | Value |
 |----------|-------|
-| JVM heap | `-Xms2048m -Xmx8192m` |
+| JVM heap | `-Xms2048m -Xmx6144m` |
 | Maven parallelism | `-T 1C` (1 thread per CPU core) |
 | Test output | `quiet` (dots + failure details) |
-| Shading | Skipped (`-DskipShade=true`) |
-| Assembly | Skipped (`-DskipAssembly=true`) |
+| XML reports | Enabled (`-DdisableXmlReport=false`) |
+| Test output redirection | Enabled (`-DredirectTestOutputToFile=true`) |
+| Test log level | `INFO` (`-Dmockserver.testLogLevel=INFO`) |
 | Timeout | 60 minutes |
 | Build artefacts | `**/*.log` files collected |
 

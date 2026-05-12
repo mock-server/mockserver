@@ -304,6 +304,9 @@ terraform/
 └── buildkite-agents/
     ├── bootstrap/           # One-time state backend setup
     │   ├── main.tf          #   S3 bucket
+    │   ├── scripts/         #   Pre-flight check scripts
+    │   │   ├── check_dynamodb_table_exists.sh
+    │   │   └── check_s3_bucket_exists.sh
     │   └── README.md        #   Bootstrap instructions
     ├── main.tf              # Elastic CI Stack module
     ├── monitoring.tf        # CloudWatch alarms, SNS notifications, dashboard
@@ -345,7 +348,7 @@ The bootstrap (`terraform/buildkite-agents/bootstrap/`) uses `import` blocks, ma
 | `instance_types` | `string` | `c5.2xlarge` | EC2 instance types for default/release queues |
 | `min_size` | `number` | `0` | Minimum default queue instances (0 = scale to zero) |
 | `max_size` | `number` | `10` | Maximum default queue instances |
-| `on_demand_percentage` | `number` | `20` | % on-demand vs spot for default queue |
+| `on_demand_percentage` | `number` | `0` | % on-demand vs spot for default queue (terraform.tfvars overrides to 20) |
 | `trigger_instance_types` | `string` | `t3.small` | EC2 instance types for trigger queue (cheap polling) |
 | `trigger_min_size` | `number` | `0` | Minimum trigger queue instances |
 | `trigger_max_size` | `number` | `4` | Maximum trigger queue instances |

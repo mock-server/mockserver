@@ -59,10 +59,10 @@ maxExpectations  = min(heapAvailableInKB / 10, 15000)
 
 | Component | File | Line |
 |-----------|------|------|
-| `heapAvailableInKB()` | `ConfigurationProperties.java` | 357 |
-| `maxLogEntries()` default | `ConfigurationProperties.java` | 381 |
-| `maxExpectations()` default | `ConfigurationProperties.java` | 363 |
-| `ringBufferSize()` | `Configuration.java` | 1894 |
+| `heapAvailableInKB()` | `ConfigurationProperties.java` | 493 |
+| `maxLogEntries()` default | `ConfigurationProperties.java` | 517 |
+| `maxExpectations()` default | `ConfigurationProperties.java` | 499 |
+| `ringBufferSize()` | `Configuration.java` | 2220 |
 | Heap measurement | `MemoryMonitoring.getJVMMemory()` | `MemoryMonitoring.java:59` |
 
 ### Example: Default Limits by Heap Size
@@ -403,4 +403,4 @@ The LMAX Disruptor ring buffer size is computed as the next power of two greater
 
 The ring buffer pre-allocates `LogEntry` objects (just the shells, ~112 bytes each). These are reused via `translateTo()` / `cloneAndClear()` and do not hold persistent data. The ring buffer memory is a fixed overhead that does not grow with request volume.
 
-The `nextPowerOfTwo()` method in `Configuration.java` supports values up to `2^20 = 1,048,576`.
+The `nextPowerOfTwo()` method in `Configuration.java` supports values up to `2^30 = 1,073,741,824`.

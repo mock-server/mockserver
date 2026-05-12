@@ -89,7 +89,7 @@ REST API handler"]
     ACTION --> MATCH{"Expectation
 matched?"}
     MATCH -->|Yes| DISPATCH["Action Dispatcher
-11 action types"]
+14 action types"]
     MATCH -->|No, proxy mode| FWD["Forward to
 original destination"]
     MATCH -->|No, mock mode| NF[404 Not Found]
@@ -98,6 +98,7 @@ original destination"]
     DISPATCH --> TEMPLATE[Template Response]
     DISPATCH --> FORWARD[Forward]
     DISPATCH --> CALLBACK[Callback]
+    DISPATCH --> SSE[SSE / WebSocket]
     DISPATCH --> ERROR[Error]
 
     STATE --> LOG["MockServerEventLog
@@ -215,7 +216,7 @@ See: [Dashboard UI](dashboard-ui.md)
 
 ### 5. Action Dispatch Pattern
 
-Matched expectations produce one of 10 action types across two categories (response vs forward), each with a dedicated handler class. This pattern cleanly separates matching from action execution.
+Matched expectations produce one of 14 action types across two categories (response vs forward), each with a dedicated handler class. This pattern cleanly separates matching from action execution.
 
 See: [Request Processing, Mocking & Proxying](request-processing.md)
 
@@ -239,7 +240,7 @@ See: [Client & Integrations — MCP](client-and-integrations.md#mcp-model-contex
 | `org.mockserver.netty.mcp` | netty | MCP (Model Context Protocol) server handler | [Client & Integrations](client-and-integrations.md) |
 | `org.mockserver.integration` | netty | `ClientAndServer` combined class | [Client & Integrations](client-and-integrations.md) |
 | `org.mockserver.mock` | core | Expectation management, HttpState | [Request Processing](request-processing.md) |
-| `org.mockserver.mock.action.http` | core | Action handlers (11 types) | [Request Processing](request-processing.md) |
+| `org.mockserver.mock.action.http` | core | Action handlers (14 types) | [Request Processing](request-processing.md) |
 | `org.mockserver.matchers` | core | Request matching (15+ matcher types) | [Domain Model](domain-model.md) |
 | `org.mockserver.model` | core | Domain objects (HttpRequest, etc.) | [Domain Model](domain-model.md) |
 | `org.mockserver.serialization` | core | JSON/Java serialization | [Domain Model](domain-model.md) |

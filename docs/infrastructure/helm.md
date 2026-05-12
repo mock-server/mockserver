@@ -99,10 +99,12 @@ ingress:
           pathType: ImplementationSpecific
   tls: []
 podAnnotations: {}
+podLabels: {}
 resources: {}
 nodeSelector: {}
 tolerations: []
 affinity: {}
+imagePullSecrets: []
 releasenameOverride: ""
 ```
 

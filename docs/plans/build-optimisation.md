@@ -6,7 +6,7 @@
 |--------|------------|--------------|
 | Parallelism | `-T 3C` (3 threads/core) | None (single-threaded reactor) |
 | Test parallelism | None (sequential within each fork) | None |
-| Surefire/Failsafe version | 2.22.2 | 2.22.2 |
+| Surefire/Failsafe version | 3.5.5 | 3.5.5 |
 | Build caching | None | None (deps pre-warmed in Docker image) |
 | JVM config | Per-script `MAVEN_OPTS` | Per-script `MAVEN_OPTS` |
 | Maven version | 3.9.0 (wrapper) | 3.9.15 (Docker image) |
@@ -230,14 +230,14 @@ Post-process Maven output to inject Buildkite group markers before each `[INFO] 
 
 ### 2.1 Upgrade Surefire/Failsafe to 3.x and Enable Parallel Tests
 
-**Current:** `maven-surefire-plugin` and `maven-failsafe-plugin` at version 2.22.2 (2018).
+**Current:** `maven-surefire-plugin` and `maven-failsafe-plugin` upgraded to 3.5.5.
 
-**Proposed:** Upgrade to `3.2.5` (latest stable) and enable parallel test execution for unit tests.
+**Proposed:** Enable parallel test execution for unit tests.
 
 ```xml
 <plugin>
     <artifactId>maven-surefire-plugin</artifactId>
-    <version>3.2.5</version>
+    <version>3.5.5</version>
     <configuration>
         <parallel>classes</parallel>
         <threadCount>4</threadCount>
@@ -261,7 +261,7 @@ Post-process Maven output to inject Buildkite group markers before each `[INFO] 
 
 **Risk:** Medium. Some unit tests may have hidden shared state. Will need a test run to verify no flaky failures are introduced.
 
-**Implementation note:** Surefire/Failsafe upgraded to 3.2.5. Parallel test execution was attempted with `parallel=classes, threadCount=4` but caused 48 test failures in `mockserver-core` due to shared static state in `ConfigurationProperties` and `MockServerLogger`. Parallel execution is deferred until tests are refactored to avoid shared mutable statics. The surefire upgrade alone still provides benefits: better JUnit 5 support, improved fork management, and the deprecated `systemProperties` warning is resolved.
+**Implementation note:** Surefire/Failsafe upgraded to 3.5.5. Parallel test execution was attempted with `parallel=classes, threadCount=4` but caused 48 test failures in `mockserver-core` due to shared static state in `ConfigurationProperties` and `MockServerLogger`. Parallel execution is deferred until tests are refactored to avoid shared mutable statics. The surefire upgrade alone still provides benefits: better JUnit 5 support, improved fork management, and the deprecated `systemProperties` warning is resolved.
 
 ### 2.2 Add Maven Build Caching
 
@@ -536,8 +536,8 @@ gantt
     section Phase 2 - Medium Effort
     2.1 Surefire 3.x + parallel   :p2_1, after p1_4, 3d
     2.2 Build cache extension      :p2_2, after p2_1, 2d
-    2.3 Skip shade in CI           :p2_3, after p1_4, 1d
-    2.4 Skip assembly in CI        :p2_4, after p2_3, 1d
+    2.3 Skip shade for local dev    :p2_3, after p1_4, 1d
+    2.4 Skip assembly for local dev :p2_4, after p2_3, 1d
 
     section Phase 3 - Larger Changes
     3.1 Split pipeline             :p3_1, after p2_2, 5d
@@ -565,7 +565,7 @@ gantt
 | `.mvn/jvm.config` | New file: JVM memory settings |
 | `.mvn/extensions.xml` | New file: build cache extension (Phase 2) |
 | `.mvn/maven-build-cache-config.xml` | New file: cache configuration (Phase 2) |
-| `pom.xml` | Upgrade surefire/failsafe to 3.2.5, add `skipShade` property, add parallel config, add `mockserver.testOutput` property |
+| `pom.xml` | Upgrade surefire/failsafe to 3.5.5, add `skipShade` property, add parallel config, add `mockserver.testOutput` property |
 | `mockserver-testing/.../BuildkiteTestRunListener.java` | New file: quiet test output listener |
 | `mockserver-testing/.../PrintOutCurrentTestRunListener.java` | Keep as-is (used for `verbose` mode) |
 | `mockserver-testing/.../BuildkiteEventSpy.java` | New file: Buildkite group markers (Phase 1.4) |

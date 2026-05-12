@@ -55,7 +55,7 @@ MockServer targets Java 11 as its minimum supported version. Many security fixes
 - Jetty 10+/12+ (requires Java 17+)
 - Jakarta EE 9+ namespace (`javax` to `jakarta` migration)
 
-See [Dependencies](dependencies.md) for the full inventory and version ceilings.
+The full list of version ceilings is maintained in the Dependabot configuration (`.github/dependabot.yml`) and Snyk policy (`.snyk`). See also the Java 11 compatibility policy in [AGENTS.md](../../AGENTS.md#java-compatibility-policy).
 
 ### Maven Dependency Graph Submission
 
@@ -156,7 +156,7 @@ MockServer maintains Java 11 as its minimum supported version (approximately 23%
 These constraints are documented in detail in:
 - [SECURITY.md](../../SECURITY.md) -- full risk assessment and intentional behaviours
 - [`.snyk`](../../.snyk) -- specific CVE ignores with rationale
-- [Dependencies](dependencies.md) -- version ceilings and compatibility constraints
+- [AGENTS.md](../../AGENTS.md#java-compatibility-policy) -- Java 11 compatibility policy and version ceilings
 
 ## Vulnerability Reporting
 

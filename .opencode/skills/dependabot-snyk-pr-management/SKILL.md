@@ -268,7 +268,7 @@ ignore:
 
 MockServer targets Java 11 as the minimum supported version. When reviewing Dependabot PRs, **always check for Java 17+ dependencies.**
 
-See `../../../docs/operations/dependencies.md` for the complete list of version ceilings.
+See the Java 11 compatibility policy in `../../../AGENTS.md` and the Snyk policy in `../../../.snyk` for version ceilings.
 
 ### Quick Check: Is This PR Java 11 Compatible?
 
@@ -359,5 +359,5 @@ If recreate also fails, close the PR and wait for Dependabot to create a new one
 - [Dependabot commands documentation](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/managing-pull-requests-for-dependency-updates#managing-dependabot-pull-requests-with-comment-commands)
 - [Snyk GitHub integration](https://docs.snyk.io/integrate-with-snyk/git-repositories-scms-integrations-with-snyk/snyk-github-integration)
 - [MockServer Java 11 compatibility policy](../../../AGENTS.md#java-compatibility-policy)
-- [Dependency management guide](../../../docs/operations/dependencies.md)
+- [Security and dependency constraints](../../../docs/operations/security.md)
 - [Dependabot configuration file](../../../.github/dependabot.yml)

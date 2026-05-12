@@ -4,7 +4,7 @@
 
 ## Overview
 
-MockServer is a multi-module Maven project that provides an HTTP(S) mock server and proxy for testing. The server is built on Netty 4.1 and can be deployed as a standalone JAR, Docker container, WAR file, or embedded via JUnit/Spring integrations.
+MockServer is a multi-module Maven project that provides an HTTP(S) mock server and proxy for testing. The server is built on Netty 4.2 and can be deployed as a standalone JAR, Docker container, WAR file, or embedded via JUnit/Spring integrations.
 
 ```mermaid
 graph TB
@@ -68,11 +68,11 @@ Examples"]
 
 The foundation module containing all shared logic:
 
-- **Domain model:** `HttpRequest`, `HttpResponse`, `Expectation`, `Action` (response, forward, callback, error)
-- **Request matching:** body matchers (JSON, XML, regex, XPath, JSONPath, JSON Schema, XML Schema, OpenAPI), header/cookie/query matchers
+- **Domain model:** `HttpRequest`, `HttpResponse`, `Expectation`, `Action` (response, responseTemplate, responseClassCallback, responseObjectCallback, forward, forwardTemplate, forwardClassCallback, forwardObjectCallback, forwardReplace, forwardValidate, sseResponse, webSocketResponse, grpcStreamResponse, error) with multi-response support via `httpResponses` (sequential/random mode)
+- **Request matching:** body matchers (JSON, XML, regex, XPath, JSONPath, JSON Schema, XML Schema, GraphQL, OpenAPI), header/cookie/query matchers
 - **Serialisation:** Jackson-based JSON serialisation for all model objects
 - **TLS/SSL:** Dynamic certificate generation using BouncyCastle, CA management, mTLS support
-- **Templating:** Velocity and Mustache response templates with JavaScript support (Nashorn on Java 11+)
+- **Templating:** Velocity, Mustache, and JavaScript response templates with built-in template helpers (jwt, strings, jsonTransform, dates, calc)
 - **Logging:** Structured event logging with SLF4J
 - **Configuration:** Property-based configuration system (`mockserver.properties`)
 - **OpenAPI:** Swagger/OpenAPI spec parsing and request matching
@@ -83,10 +83,11 @@ The foundation module containing all shared logic:
 
 The primary server implementation:
 
-- **Netty pipeline:** HTTP/1.1, HTTP/2, HTTPS, SOCKS proxy, WebSocket support
+- **Netty pipeline:** HTTP/1.1, HTTP/2, HTTPS, SOCKS proxy, WebSocket, gRPC, SSE, and MCP (Model Context Protocol) support
 - **CLI:** `org.mockserver.cli.Main` — command-line entry point
 - **Proxy modes:** Port forwarding, HTTP proxy, HTTPS tunneling (CONNECT), SOCKS
 - **Packaging:** Fat JAR (`jar-with-dependencies`), shaded JAR, Debian package, Homebrew tarball
+- **Docker images:** Standard, snapshot, root, root-snapshot, and GraalJS (includes GraalJS JavaScript engine for JS templating)
 
 ### mockserver-client-java
 
@@ -141,7 +142,7 @@ Integration test infrastructure:
 
 Usage examples:
 
-- Docker Compose configuration samples (10 scenarios)
+- Docker Compose configuration samples (11 scenarios including mTLS)
 - Code examples referenced by the Jekyll documentation site
 
 ## Request Processing Flow
@@ -197,7 +198,9 @@ The main Java package is `org.mockserver` with sub-packages:
 | `org.mockserver.log` | core | Structured event logging |
 | `org.mockserver.cli` | netty | Command-line interface |
 | `org.mockserver.netty` | netty | Netty server bootstrap |
-| `org.mockserver.proxy` | netty | Proxy implementations |
+| `org.mockserver.netty.proxy` | netty | Proxy implementations |
+| `org.mockserver.netty.grpc` | netty | gRPC-to-HTTP request/response conversion |
+| `org.mockserver.netty.mcp` | netty | MCP (Model Context Protocol) endpoint |
 | `org.mockserver.client` | client-java | MockServerClient API |
 | `org.mockserver.junit` | junit-rule | JUnit 4 Rule |
 | `org.mockserver.junit.jupiter` | junit-jupiter | JUnit 5 Extension |

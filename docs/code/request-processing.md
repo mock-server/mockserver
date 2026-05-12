@@ -34,11 +34,15 @@ required?"}
     DISPATCH --> TMPL_R[HttpResponseTemplateActionHandler]
     DISPATCH --> CLASS_R[HttpResponseClassCallbackActionHandler]
     DISPATCH --> OBJ_R[HttpResponseObjectCallbackActionHandler]
+    DISPATCH --> SSE[HttpSseResponseActionHandler]
+    DISPATCH --> WS[HttpWebSocketResponseActionHandler]
     DISPATCH --> FWD_S[HttpForwardActionHandler]
     DISPATCH --> TMPL_F[HttpForwardTemplateActionHandler]
     DISPATCH --> CLASS_F[HttpForwardClassCallbackActionHandler]
     DISPATCH --> OBJ_F[HttpForwardObjectCallbackActionHandler]
     DISPATCH --> OVERRIDE[HttpOverrideForwardedRequestActionHandler]
+    DISPATCH --> FWDVAL[HttpForwardValidateActionHandler]
+    DISPATCH --> GRPC[GrpcStreamResponseActionHandler]
     DISPATCH --> ERR[HttpErrorActionHandler]
 
     RESP --> LOG_RESP[Log EXPECTATION_RESPONSE]
@@ -138,7 +142,7 @@ Before a request reaches `HttpRequestHandler`, the Netty pipeline may intercept 
 
 ### RequestMatchers
 
-Expectations are stored in a `CircularPriorityQueue` sorted by priority (highest first), then creation time (earliest first). The `firstMatchingExpectation()` method iterates in sort order and returns the first match.
+Expectations are stored in a `CircularPriorityQueue` sorted by priority (highest first), then creation time (earliest first). The `firstMatchingExpectation()` method accepts an `HttpRequest` and iterates in sort order, returning the first match.
 
 When no expectation matches, the method logs a **closest match summary** identifying the expectation with the fewest field differences, along with a match score (e.g., "matched 8/12 fields"). This helps users quickly identify which expectation was closest to matching.
 
@@ -196,7 +200,7 @@ After a match, `postProcess()`:
 
 ## Action Types
 
-Each `Expectation` binds a request matcher to exactly one action. There are 11 action types across two categories:
+Each `Expectation` binds a request matcher to exactly one action. There are 14 action types across two categories:
 
 ### Response Actions
 
@@ -206,8 +210,11 @@ Each `Expectation` binds a request matcher to exactly one action. There are 11 a
 | `RESPONSE_TEMPLATE` | `HttpResponseTemplateActionHandler` | Evaluates a template (Velocity/Mustache/JavaScript) to generate the response |
 | `RESPONSE_CLASS_CALLBACK` | `HttpResponseClassCallbackActionHandler` | Loads a Java class implementing `ExpectationResponseCallback`, invokes `handle(request)` |
 | `RESPONSE_OBJECT_CALLBACK` | `HttpResponseObjectCallbackActionHandler` | Sends request to a WebSocket-connected client, awaits response callback |
+| `SSE_RESPONSE` | `HttpSseResponseActionHandler` | Streams Server-Sent Events with per-event delays, optional `closeConnection` flag |
+| `WEBSOCKET_RESPONSE` | `HttpWebSocketResponseActionHandler` | Upgrades to WebSocket and sends a sequence of `WebSocketMessage` frames with per-message delays |
 | `GRPC_STREAM_RESPONSE` | `GrpcStreamResponseActionHandler` | Streams gRPC-framed protobuf messages with per-message delays and grpc-status trailers (Netty only; returns 501 in WAR) |
-
+| `BINARY_RESPONSE` | (inline in `BinaryRequestProxyingHandler`) | Returns raw binary bytes when a `BinaryRequestDefinition` matches |
+| `DNS_RESPONSE` | (inline in `DnsRequestHandler`) | Returns DNS response records when a `DnsRequestDefinition` matches a UDP DNS query |
 ### Forward Actions
 
 | Type | Handler | Description |
@@ -217,6 +224,7 @@ Each `Expectation` binds a request matcher to exactly one action. There are 11 a
 | `FORWARD_CLASS_CALLBACK` | `HttpForwardClassCallbackActionHandler` | Java class modifies the request before forwarding |
 | `FORWARD_OBJECT_CALLBACK` | `HttpForwardObjectCallbackActionHandler` | WebSocket client modifies request before forwarding |
 | `FORWARD_REPLACE` | `HttpOverrideForwardedRequestActionHandler` | Applies request/response overrides and modifiers |
+| `FORWARD_VALIDATE` | `HttpForwardValidateActionHandler` | Forwards and validates request/response against an OpenAPI spec |
 
 ### Host Header Auto-Adjustment
 
@@ -232,6 +240,19 @@ The `FORWARD` action type (`HttpForwardActionHandler`) has always adjusted the H
 |------|---------|-------------|
 | `ERROR` | `HttpErrorActionHandler` | Writes raw bytes and/or drops the connection |
 
+### Sequential/Cycling Response Dispatch
+
+When an expectation is configured with `httpResponses` (a list of `HttpResponse` objects) instead of a single `httpResponse`, each match returns the next response in the list. The selection is controlled by `responseMode`:
+
+- **`SEQUENTIAL`** (default): Returns responses in order, cycling back to the first after the last. Uses `(matchCount - 1) % size` because `matchCount` is incremented in `consumeMatch()` before `getPrimaryAction()` is called.
+- **`RANDOM`**: Returns a random response from the list on each match.
+
+The cycling logic is in `Expectation.getPrimaryAction()`. The `matchCount` is tracked per-expectation via an `AtomicInteger` and is runtime-only state (`@JsonIgnore`).
+
+### After-Actions
+
+An expectation can specify `afterActions` — a list of `AfterAction` objects executed after the primary response is sent. Each `AfterAction` can fire an `HttpRequest`, invoke an `HttpClassCallback`, or trigger an `HttpObjectCallback`, with an optional `Delay`. After-actions are dispatched in `HttpActionHandler` as secondary actions following the primary response. Only one target (request, class callback, or object callback) is active per after-action.
+
 ### Template Engines
 
 Three template engines are supported for `RESPONSE_TEMPLATE` and `FORWARD_TEMPLATE`:
@@ -242,15 +263,15 @@ Three template engines are supported for `RESPONSE_TEMPLATE` and `FORWARD_TEMPLA
 | Mustache | `MustacheTemplateEngine` | `request` (with `#jsonPath` and `#xPath` lambdas) |
 | JavaScript | `JavaScriptTemplateEngine` | `request` (Nashorn, Java 11+ only) |
 
-All engines receive built-in dynamic variables from `TemplateFunctions.BUILT_IN_FUNCTIONS` (`now`, `now_epoch`, `now_iso_8601`, `uuid`, `rand_int`, `rand_bytes`, etc.) and helper objects from `TemplateFunctions.BUILT_IN_HELPERS`:
+All engines receive built-in dynamic variables from `TemplateFunctions.BUILT_IN_FUNCTIONS` (`now`, `now_epoch`, `now_iso_8601`, `uuid`, `rand_int`, `rand_bytes`, etc.) and five helper objects from `TemplateFunctions.BUILT_IN_HELPERS`:
 
 | Helper | Variable | Description |
 |--------|----------|-------------|
 | `JwtTemplateHelper` | `jwt` | Generate signed JWTs (`jwt.generate()`, `jwt.generate(claims)`) and JWKS (`jwt.jwks()`) for OAuth2/OIDC testing |
 | `StringTemplateHelper` | `strings` | String manipulation: `trim`, `capitalize`, `uppercase`, `lowercase`, `urlEncode`, `urlDecode`, `base64Encode`, `base64Decode`, `substringBefore`, `substringAfter`, `length`, `contains`, `replace` |
-| `JsonTemplateHelper` | `json` | JSON manipulation: `merge`, `sort`, `arrayAdd`, `remove`, `prettyPrint`, `field`, `size` |
+| `JsonTemplateHelper` | `jsonTransform` | JSON manipulation: `merge`, `sort`, `arrayAdd`, `remove`, `prettyPrint`, `field`, `size` |
 | `DateTemplateHelper` | `dates` | Date/time arithmetic: `format(pattern)`, `plusSeconds/Minutes/Hours/Days`, `minusSeconds/Minutes/Hours/Days`, `epochSeconds`, `epochMillis`, `epochSecondsPlus/Minus` |
-| `MathTemplateHelper` | `math` | Math operations: `randomInt(min,max)`, `randomDouble()`, `abs`, `min`, `max`, `round(value,scale)`, `format(value,pattern)`, `ceil`, `floor` |
+| `MathTemplateHelper` | `calc` | Math operations: `randomInt(min,max)`, `randomDouble()`, `abs`, `min`, `max`, `round(value,scale)`, `format(value,pattern)`, `ceil`, `floor` |
 
 Helper objects are registered as template context variables, so methods are called directly (e.g., Velocity: `$strings.uppercase($!request.method)`, JavaScript: `dates.plusHours(1)`, Mustache: `{{ jwt }}`).
 
@@ -399,6 +420,37 @@ CRUD requests are intercepted in `HttpActionHandler.processAction()` **before** 
 ### Reset Behaviour
 
 `CrudDispatcher.reset()` is called during `HttpState.reset()`, clearing all CRUD registrations.
+
+## Binary Mock Processing
+
+When `BinaryRequestProxyingHandler` receives raw bytes on a channel, it first checks for a matching expectation via `HttpState.firstMatchingExpectation(BinaryRequestDefinition)`. If a match is found with a `BinaryResponse` action, the handler writes the response bytes directly to the channel. If no match is found and the channel is in proxy mode (remote address configured), the bytes are forwarded to the upstream server as before.
+
+```mermaid
+flowchart TD
+    RAW([Raw bytes arrive]) --> BRD["Create BinaryRequestDefinition\nfrom byte content"]
+    BRD --> MATCH["HttpState.firstMatchingExpectation()"]
+    MATCH -->|Match with BinaryResponse| WRITE["Write binaryData\nto channel"]
+    MATCH -->|No match| PROXY{"Remote address\nconfigured?"}
+    PROXY -->|Yes| FWD["Forward via\nNettyHttpClient"]
+    PROXY -->|No| CLOSE["Close channel"]
+```
+
+## DNS Mock Processing
+
+DNS queries arrive via UDP on a separate `DatagramChannel` bound by `MockServer.bindDnsPort()`. The `DnsRequestHandler` decodes the query, creates a `DnsRequestDefinition`, and matches it against expectations.
+
+```mermaid
+flowchart TD
+    UDP([UDP DNS query]) --> DECODE["DatagramDnsQueryDecoder\n→ DatagramDnsQuery"]
+    DECODE --> EXTRACT["Extract name, type, class\n→ DnsRequestDefinition"]
+    EXTRACT --> MATCH["HttpState.firstMatchingExpectation()"]
+    MATCH -->|Match with DnsResponse| ENCODE["Encode DnsRecords\nto DatagramDnsResponse"]
+    MATCH -->|No match| NXDOMAIN["Return NXDOMAIN"]
+    ENCODE --> SEND["ctx.writeAndFlush(response)"]
+    NXDOMAIN --> SEND
+```
+
+Supported DNS record types: A, AAAA, CNAME, MX, SRV, TXT, PTR. The DNS server is disabled by default (`dnsEnabled=false`) and must be explicitly enabled.
 
 ## Detailed Verification Failures (Diff Mode)
 

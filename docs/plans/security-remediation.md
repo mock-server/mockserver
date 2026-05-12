@@ -792,12 +792,12 @@ Recommended values:
 
 ### Version Numbering
 
-**Recommendation:** Major version bump (6.0.0 → 7.0.0) due to breaking changes
+**Recommendation:** Major version bump (5.x → 6.0.0) due to breaking changes
 
 ### Release Notes Structure
 
 ```markdown
-# MockServer 7.0.0 - Security Hardening Release
+# MockServer 6.0.0 - Security Hardening Release
 
 ## Security Fixes (12 issues resolved)
 

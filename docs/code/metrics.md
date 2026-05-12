@@ -12,7 +12,7 @@ graph LR
         HA[HttpActionHandler] -->|increment| M[Metrics]
         HS[HttpState] -->|increment| M
         WS[WebSocketClientRegistry] -->|set| M
-        M --> CR[CollectorRegistry]
+        M --> CR[PrometheusRegistry]
         BIC[BuildInfoCollector] --> CR
         MH[MetricsHandler] -->|scrape| CR
     end
@@ -83,7 +83,7 @@ All metrics are Prometheus `Gauge` type. The `Metrics.Name` enum defines 17 gaug
 
 ### Scrape Endpoint
 
-`MetricsHandler` serves the `/mockserver/metrics` endpoint. It uses Prometheus `TextFormat.writeFormat()` to render all registered metrics from the default `CollectorRegistry`, respecting the client's `Accept` header for content negotiation.
+`MetricsHandler` serves the `/mockserver/metrics` endpoint. It uses `ExpositionFormats` to render all registered metrics from `PrometheusRegistry.defaultRegistry`, respecting the client's `Accept` header for content negotiation.
 
 ## Memory Monitoring
 

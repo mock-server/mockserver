@@ -139,7 +139,7 @@ No Dependabot or Renovate configuration exists for automated dependency update P
 | Docker images | Documented | [infrastructure/docker.md](infrastructure/docker.md) |
 | Helm charts | Documented | [infrastructure/helm.md](infrastructure/helm.md) |
 | Website structure | Documented | [operations/website.md](operations/website.md) |
-| Dependencies | Documented | [operations/dependencies.md](operations/dependencies.md) |
+| Dependencies | Covered in [Security](operations/security.md) and [AGENTS.md](../AGENTS.md#java-compatibility-policy) | Version ceilings and Java 11 constraints |
 | Release process | Documented | [operations/release-process.md](operations/release-process.md) |
 | Testing strategy | Documented | [testing.md](testing.md) |
 | Security architecture | Documented | [code/tls-and-security.md](code/tls-and-security.md) |

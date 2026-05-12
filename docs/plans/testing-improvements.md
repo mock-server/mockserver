@@ -1,5 +1,7 @@
 # Testing Improvements Plan
 
+**Status:** Active
+
 Maximise test coverage within reason, without excessive complexity or build delay.
 
 See [docs/testing.md](../testing.md) for comprehensive documentation of the current testing approach.

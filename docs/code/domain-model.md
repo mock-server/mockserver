@@ -41,11 +41,22 @@ classDiagram
         +specUrlOrPayload: String
         +operationId: String
     }
-
+    class BinaryRequestDefinition {
+        +binaryData: byte[]
+    }
+    class DnsRequestDefinition {
+        +dnsName: String
+        +dnsType: DnsRecordType
+        +dnsClass: DnsRecordClass
+    }
     Not <|-- RequestDefinition
     RequestDefinition <|-- HttpRequest
     RequestDefinition <|-- OpenAPIDefinition
+    RequestDefinition <|-- BinaryRequestDefinition
+    RequestDefinition <|-- DnsRequestDefinition
 ```
+
+`BinaryRequestDefinition` matches raw binary connections by byte content. `DnsRequestDefinition` matches DNS queries by name, record type, and record class.
 
 ### Action Types
 
@@ -123,8 +134,44 @@ classDiagram
     }
     GrpcStreamResponse --> GrpcStreamMessage : 0..*
 
+    class HttpForwardValidateAction {
+        +specUrlOrPayload: String
+        +host: String
+        +port: Integer
+        +scheme: Scheme
+        +validateRequest: Boolean
+        +validateResponse: Boolean
+        +validationMode: ValidationMode
+    }
+    class HttpSseResponse {
+        +statusCode: Integer
+        +headers: Headers
+        +events: List~SseEvent~
+        +closeConnection: Boolean
+    }
+    class HttpWebSocketResponse {
+        +subprotocol: String
+        +messages: List~WebSocketMessage~
+        +closeConnection: Boolean
+    }
+
+    class BinaryResponse {
+        +binaryData: byte[]
+    }
+    class DnsResponse {
+        +answerRecords: List~DnsRecord~
+        +authorityRecords: List~DnsRecord~
+        +additionalRecords: List~DnsRecord~
+        +responseCode: DnsResponseCode
+    }
+
     Action <|-- HttpError
+    Action <|-- HttpForwardValidateAction
+    Action <|-- HttpSseResponse
+    Action <|-- HttpWebSocketResponse
     Action <|-- GrpcStreamResponse
+    Action <|-- BinaryResponse
+    Action <|-- DnsResponse
 ```
 
 ### Body Types
@@ -158,6 +205,18 @@ classDiagram
 ```
 
 Body `Type` enum: `BINARY`, `JSON`, `JSON_SCHEMA`, `JSON_PATH`, `PARAMETERS`, `REGEX`, `STRING`, `XML`, `XML_SCHEMA`, `XPATH`, `JSON_RPC`, `GRAPHQL`, `LOG_EVENT`
+
+#### GraphQL Body Matcher
+
+`GraphQLBody` (`org.mockserver.model.GraphQLBody`) enables matching GraphQL requests by query structure, operation name, and variables schema. The matcher normalizes whitespace and comments before comparison, so formatting differences between the expected and actual queries are ignored.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `query` | `String` | GraphQL query string, normalized before comparison (whitespace collapsed, comments stripped) |
+| `operationName` | `String` | Optional operation name filter; supports exact match or regex |
+| `variablesSchema` | `String` | Optional JSON Schema that the request's `variables` object must validate against |
+
+`GraphQLMatcher` (`org.mockserver.matchers.GraphQLMatcher`) parses the incoming request body as JSON, extracts the `query`, `operationName`, and `variables` fields, and matches each against the expectation. The `GraphQLBodyDTO` handles serialization. Static factory: `GraphQLBody.graphQL(query)`, `GraphQLBody.graphQL(query, operationName)`, `GraphQLBody.graphQL(query, operationName, variablesSchema)`.
 
 ### ConnectionOptions
 
@@ -224,9 +283,38 @@ Expectation.when(request)      // RequestDefinition
 
 Scenario fields are optional. When `scenarioName` and `scenarioState` are set, the expectation only matches when the named scenario is in the required state. After matching, the scenario transitions to `newScenarioState` (if set). All scenarios start in the `"Started"` state. State is managed by `ScenarioManager` in `RequestMatchers`.
 
-#### Sequential/Cycling Responses
+#### Sequential/Cycling Responses (`httpResponses`)
 
 An expectation can return multiple responses by setting `httpResponses` (a `List<HttpResponse>`) instead of `httpResponse`. Each match returns the next response, cycling back to the first after the last. The `responseMode` field (`ResponseMode.SEQUENTIAL` or `ResponseMode.RANDOM`) controls selection. Sequential mode uses `(matchCount - 1) % size` because `matchCount` is incremented in `consumeMatch()` before `getPrimaryAction()` is called.
+
+#### After-Actions (`afterActions`)
+
+An expectation can specify `afterActions` — a `List<AfterAction>` executed after the primary response is sent. Each `AfterAction` can fire one of three targets (mutually exclusive):
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `httpRequest` | `HttpRequest` | A fire-and-forget HTTP request to send |
+| `httpClassCallback` | `HttpClassCallback` | A Java class callback to invoke |
+| `httpObjectCallback` | `HttpObjectCallback` | A WebSocket object callback to invoke |
+| `delay` | `Delay` | Optional delay before executing the after-action |
+
+Setting one target clears the others. After-actions are dispatched in `HttpActionHandler` as secondary actions following the primary response.
+
+#### Forward Validate Action (`HttpForwardValidateAction`)
+
+`HttpForwardValidateAction` forwards requests to a target server and validates the request and/or response against an OpenAPI specification. It combines forwarding with contract validation.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `specUrlOrPayload` | `String` | — | OpenAPI spec URL or inline spec content |
+| `host` | `String` | — | Target host to forward to |
+| `port` | `Integer` | `80` | Target port |
+| `scheme` | `HttpForward.Scheme` | `HTTP` | Target scheme (HTTP/HTTPS) |
+| `validateRequest` | `Boolean` | `true` | Validate the outbound request against the spec |
+| `validateResponse` | `Boolean` | `true` | Validate the response from the target against the spec |
+| `validationMode` | `ValidationMode` | `STRICT` | `STRICT` fails the request on validation error; `LOG_ONLY` logs but still returns the response |
+
+Static factory: `HttpForwardValidateAction.forwardValidate()`
 
 #### Match Count
 
@@ -276,7 +364,17 @@ classDiagram
 
     AbstractHttpRequestMatcher <|-- HttpRequestPropertiesMatcher
     AbstractHttpRequestMatcher <|-- HttpRequestsPropertiesMatcher
+    AbstractHttpRequestMatcher <|-- BinaryRequestPropertiesMatcher
+    AbstractHttpRequestMatcher <|-- DnsRequestPropertiesMatcher
 ```
+
+### BinaryRequestPropertiesMatcher
+
+Matches `BinaryRequestDefinition` against incoming binary data using exact byte comparison via `BinaryMatcher`.
+
+### DnsRequestPropertiesMatcher
+
+Matches `DnsRequestDefinition` against incoming DNS queries. Compares `dnsName` (case-insensitive, trailing-dot-normalized), `dnsType`, and `dnsClass` fields. Uses fail-fast matching order: name → type → class.
 
 ### HttpRequestPropertiesMatcher
 
@@ -326,7 +424,11 @@ For `OpenAPIDefinition` request definitions, this matcher parses an OpenAPI spec
 
 ### MatchDifference
 
-Collects per-field match failure details for debugging. Fields: `METHOD`, `PATH`, `PATH_PARAMETERS`, `QUERY_PARAMETERS`, `COOKIES`, `HEADERS`, `BODY`, `SECURE`, `PROTOCOL`, `KEEP_ALIVE`, `OPERATION`, `OPENAPI`.
+Collects per-field match failure details for debugging. Fields correspond to HTTP request properties:
+
+`METHOD`, `PATH`, `PATH_PARAMETERS`, `QUERY_PARAMETERS`, `COOKIES`, `HEADERS`, `BODY`, `SECURE`, `PROTOCOL`, `KEEP_ALIVE`, `OPERATION`, `OPENAPI`, `DNS_NAME`, `DNS_TYPE`, `DNS_CLASS`, `BINARY_BODY`
+
+The "matched X/Y fields" closest-match log uses the total field count. OpenAPI fields (`OPERATION`, `OPENAPI`) are unused by non-OpenAPI matchers but still counted, which is imprecise but consistent.
 
 ## Codec Layer
 
@@ -446,6 +548,15 @@ The Model Context Protocol endpoint is controlled by a single property:
 | `mcpEnabled` | `boolean` | `true` | `Configuration` / `ConfigurationProperties` / system property `mockserver.mcpEnabled` |
 
 When `mcpEnabled` is `true` (the default), MockServer registers the `McpStreamableHttpHandler` in the Netty pipeline to serve MCP requests at `/mockserver/mcp`. When `false`, no MCP handler is registered and requests to that path are handled normally by `HttpRequestHandler`.
+
+### DNS Configuration
+
+| Property | Type | Default | Source |
+|----------|------|---------|--------|
+| `dnsEnabled` | `boolean` | `false` | `Configuration` / `ConfigurationProperties` / system property `mockserver.dnsEnabled` |
+| `dnsPort` | `Integer` | `0` (auto-assign) | `Configuration` / `ConfigurationProperties` / system property `mockserver.dnsPort` |
+
+When `dnsEnabled` is `true`, MockServer starts a UDP DNS server on the specified port (or auto-assigns if 0). DNS queries are matched against expectations using `DnsRequestDefinition` and responded with `DnsResponse`. Supported record types: A, AAAA, CNAME, MX, SRV, TXT, PTR.
 
 ### gRPC Configuration
 

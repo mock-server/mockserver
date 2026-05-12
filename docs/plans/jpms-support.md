@@ -1,6 +1,8 @@
 # JPMS (Java Platform Module System) Support Plan
 
-Analysis and implementation plan for adding JPMS support to MockServer.
+**Status:** Planned (Future)
+
+Analysis and implementation plan for adding JPMS support to MockServer. Note: dependency versions listed below may not be accurate — verify against `mockserver/pom.xml` at time of implementation.
 
 ## Current State
 

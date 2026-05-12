@@ -1,7 +1,7 @@
 # Specification: Hand-Written MockServer Client Libraries with WebSocket Callback Support
 
 **Created**: 2026-05-05
-**Status**: Draft
+**Status**: Implemented
 **Author**: User with AI-assisted ideation
 
 ---
@@ -103,8 +103,8 @@ flowchart LR
 |--------|----------|-------------------|-----------------|--------------------------|
 | Java | Full | Yes | Yes | Yes |
 | JavaScript | Full | Yes | No | No |
-| Python | Stale (v5.3.0) | No | No | No |
-| Ruby | Stale (v5.3.0) | No | No | No |
+| Python | Full (v6.0.0, hand-written, dataclasses, 438 tests) | Yes | Yes | Yes |
+| Ruby | Full (v2.0.0, hand-written, 312 unit + 21 integration tests) | Yes | Yes | Yes |
 
 ---
 

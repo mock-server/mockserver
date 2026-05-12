@@ -121,15 +121,15 @@ Manual activation"]
 
 | Plugin | Version | Phase | Purpose |
 |--------|---------|-------|---------|
-| `maven-compiler-plugin` | 3.10.1 | compile | Java 11 compilation with `-Xlint:all` |
-| `templating-maven-plugin` | 1.0.0 | generate-sources | Generates version class from templates |
-| `maven-jar-plugin` | 3.3.0 | package | JAR packaging with MANIFEST.MF metadata |
-| `maven-clean-plugin` | 3.2.0 | clean | Removes `.log`, keystore, and temp files |
-| `maven-surefire-plugin` | 2.22.2 | test | Unit tests (`*Test.java`, excludes `*IntegrationTest.java`) |
-| `maven-failsafe-plugin` | 2.22.2 | integration-test | Integration tests (`*IntegrationTest.java`) |
-| `maven-checkstyle-plugin` | 3.2.1 | validate | Code style enforcement via `checkstyle.xml` |
-| `maven-enforcer-plugin` | 3.2.1 | validate | Dependency convergence checks |
-| `exec-maven-plugin` | 3.1.0 | clean | Runs `stop_MockServer.sh` (Unix profile) |
+| `maven-compiler-plugin` | 3.15.0 | compile | Java 11 compilation with `-Xlint:all` |
+| `templating-maven-plugin` | 3.1.0 | generate-sources | Generates version class from templates |
+| `maven-jar-plugin` | 3.5.0 | package | JAR packaging with MANIFEST.MF metadata |
+| `maven-clean-plugin` | 3.5.0 | clean | Removes `.log`, keystore, and temp files |
+| `maven-surefire-plugin` | 3.5.5 | test | Unit tests (`*Test.java`, excludes `*IntegrationTest.java`) |
+| `maven-failsafe-plugin` | 3.5.5 | integration-test | Integration tests (`*IntegrationTest.java`) |
+| `maven-checkstyle-plugin` | 3.6.0 | validate | Code style enforcement via `checkstyle.xml` |
+| `maven-enforcer-plugin` | 3.6.2 | validate | Dependency convergence checks |
+| `exec-maven-plugin` | 3.6.3 | clean | Runs `stop_MockServer.sh` (Unix profile) |
 
 ## Test Configuration
 
@@ -169,7 +169,7 @@ Homebrew tarball"]
 
 Artifacts are published to:
 
-- **Sonatype OSSRH** (snapshots): `https://oss.sonatype.org/content/repositories/snapshots/`
-- **Maven Central** (releases): via Sonatype staging at `https://oss.sonatype.org/service/local/staging/deploy/maven2/`
+- **Central Portal** (snapshots): `https://central.sonatype.com/repository/maven-snapshots/`
+- **Maven Central** (releases): via Central Portal at `https://central.sonatype.com/repository/maven-releases/`
 
 GPG signing is required for releases (configured in the `release` profile).

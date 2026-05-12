@@ -1,5 +1,7 @@
 # Release Pipeline — Next Steps & Testing Guide
 
+**Status:** Partially Complete
+
 ## What's Been Built
 
 All code is committed and ready. The release pipeline consists of:

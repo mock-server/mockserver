@@ -30,7 +30,7 @@ flowchart LR
 
 ### The Review Constitution
 
-Reviews are not free-form opinions. They follow a formal **Review Constitution** with 6 core axioms and 8 structured lenses containing approximately 100 specific review principles:
+Reviews are not free-form opinions. They follow a formal **Review Constitution** (`.opencode/rules/review-constitution.md`) with 6 core axioms and 8 structured lenses containing approximately 100 specific review principles:
 
 | Lens | Focus | MockServer-Specific Checks |
 |------|-------|---------------------------|

@@ -22,9 +22,9 @@ global instructions"]
         AG["agents/
 12 sub-agent prompts"]
         RU["rules/
-7 guardrail files"]
+10 guardrail files"]
         SK["skills/
-11 workflow definitions"]
+15 workflow definitions"]
         CM["commands/
 11 slash commands"]
         PL["plugins/
@@ -49,8 +49,8 @@ global instructions"]
 | 1 | [Config](#building-block-1-config) | `opencode.jsonc` | Root configuration: models, permissions, agent definitions |
 | 2 | [Model Strategy](#building-block-2-model-strategy) | `opencode.jsonc` (agent entries) | Right model for the right task |
 | 3 | [Agents](#building-block-3-agents) | `.opencode/agents/*.md` | 12 specialist sub-agents with least-privilege access |
-| 4 | [Rules](#building-block-4-rules) | `.opencode/rules/*.md` | 7 guardrails always enforced |
-| 5 | [Skills](#building-block-5-skills) | `.opencode/skills/*/SKILL.md` | 11 reusable multi-step workflows |
+| 4 | [Rules](#building-block-4-rules) | `.opencode/rules/*.md` | 10 guardrails always enforced |
+| 5 | [Skills](#building-block-5-skills) | `.opencode/skills/*/SKILL.md` | 15 reusable multi-step workflows |
 | 6 | [Commands](#building-block-6-commands) | `.opencode/commands/*.md` | 11 slash shortcuts with guaranteed routing |
 | 7 | [Plugins & Tools](#building-block-7-plugins--tools) | `.opencode/plugins/*.ts` | Session hooks and external integrations |
 
@@ -279,10 +279,13 @@ Rules are mandatory constraints loaded into sessions. They encode what experienc
 | Rule | Lines | Always Loaded | Purpose |
 |------|------:|:------------:|---------|
 | `git-safety.md` | 56 | Yes | Blocks 11 destructive git commands without confirmation |
-| `commit-workflow.md` | 133 | Yes | 4-step pre-commit workflow with adversarial review |
+| `commit-workflow.md` | 202 | Yes | 4-step pre-commit workflow with adversarial review |
+| `commit-locking.md` | 311 | Yes | Filesystem-based commit lock for parallel session safety |
 | `testing-policy.md` | 69 | Yes | Maven module mapping, test commands, quality standards |
-| `tmp-directory.md` | 75 | Yes | Use `.tmp/` at repo root, never `/tmp/` |
-| `report-formatting.md` | 36 | Yes | Subagent JSON → report template formatting convention |
+| `tmp-directory.md` | 134 | Yes | Use `.tmp/` at repo root, never `/tmp/` |
+| `report-formatting.md` | 154 | Yes | Subagent JSON → report template formatting convention |
+| `review-constitution.md` | 223 | Yes | 8-lens adversarial review with ~100 review principles |
+| `mermaid-diagrams.md` | 86 | Yes | Mermaid diagram conventions and formatting rules |
 | `coding-principles.md` | 29 | Yes | Think before coding, simplicity first, surgical changes |
 | `aws-ids-file.md` | 31 | Yes | Require `~/mockserver-aws-ids.md` before AWS operations |
 
@@ -354,8 +357,12 @@ A skill is a self-contained multi-step workflow — a runbook the agent executes
 | `pipeline-investigation` | SKILL.md + report-template.md | Yes (`pipeline-investigator`) | "pipeline failing", "build errors", Buildkite URLs |
 | `ideate` | SKILL.md + spec-template.md | No | "I have an idea", "let's think through", "brainstorm" |
 | `pr-review` | SKILL.md | No | "review PRs", "PR report", "open PRs" |
+| `pr-monitor` | SKILL.md | No | "monitor PRs", "auto-merge PRs", "watch dependency PRs" |
 | `renew-test-certs` | SKILL.md | No | "certificates expired", "TLS tests failing" |
+| `review-code` | SKILL.md | No | "deep code review", "adversarial review", "quality audit" |
+| `review-spec` | SKILL.md | No | "spec review", "design review", "review this plan" |
 | `browser-auth` | SKILL.md | No | "navigate to buildkite", "extract token from browser" |
+| `dependabot-snyk-pr-management` | SKILL.md | No | "dependabot PR", "snyk PR", "dependency upgrade" |
 | `dockerhub-credentials` | SKILL.md | No | "docker hub token", "configure docker hub" |
 | `terraform-tfvars` | SKILL.md | No | "create tfvars", "deploy buildkite agents" |
 | `docker-build-push` | SKILL.md | No | "build docker image", "push maven image", "rebuild CI image" |
@@ -590,21 +597,26 @@ mockserver/
     │   ├── simplifier.md
     │   ├── taskify-agent.md
     │   └── test-runner.md
-    ├── rules/                               # 7 guardrail files
+    ├── rules/                               # 10 guardrail files
     │   ├── aws-ids-file.md
     │   ├── coding-principles.md
+    │   ├── commit-locking.md
     │   ├── commit-workflow.md
     │   ├── git-safety.md
+    │   ├── mermaid-diagrams.md
     │   ├── report-formatting.md
+    │   ├── review-constitution.md
     │   ├── testing-policy.md
     │   └── tmp-directory.md
-    ├── skills/                              # 11 skill workflows
+    ├── skills/                              # 15 skill workflows
     │   ├── aws-investigation/
     │   │   ├── SKILL.md
     │   │   └── report-template.md
     │   ├── browser-auth/
     │   │   └── SKILL.md
     │   ├── build-monitor/
+    │   │   └── SKILL.md
+    │   ├── dependabot-snyk-pr-management/
     │   │   └── SKILL.md
     │   ├── docker-build-push/
     │   │   └── SKILL.md
@@ -618,9 +630,15 @@ mockserver/
     │   ├── pipeline-investigation/
     │   │   ├── SKILL.md
     │   │   └── report-template.md
+    │   ├── pr-monitor/
+    │   │   └── SKILL.md
     │   ├── pr-review/
     │   │   └── SKILL.md
     │   ├── renew-test-certs/
+    │   │   └── SKILL.md
+    │   ├── review-code/
+    │   │   └── SKILL.md
+    │   ├── review-spec/
     │   │   └── SKILL.md
     │   └── terraform-tfvars/
     │       └── SKILL.md
@@ -640,7 +658,10 @@ mockserver/
     │   ├── buildkite-status.ts
     │   └── session-notification.ts
     └── plans/                               # Plan documents
-        └── buildkite-terraform-migration.md
+        ├── ai-developer-experience-spec.md
+        ├── fix-control-plane-tls-1766.md
+        ├── fix-verify-false-positive-1757.md
+        └── python-ruby-release-infrastructure.md
 ```
 
 ---

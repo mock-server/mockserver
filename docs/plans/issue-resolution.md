@@ -1,5 +1,7 @@
 # Issue Resolution Plan
 
+**Status:** Active
+
 ## Overview
 
 As of May 2026, MockServer has **129 open GitHub issues** (down from 214 after triage). This document provides a systematic analysis of every open issue, grouping them by category, identifying duplicates, issues already fixed, legitimate bugs, feature requests, and issues caused by documentation gaps. Each issue includes an investigation summary and proposed resolution path.

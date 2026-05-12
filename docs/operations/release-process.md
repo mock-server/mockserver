@@ -18,7 +18,7 @@ The release process has been automated via a Buildkite pipeline and shared scrip
 ```
 
 ### Key files
-- `scripts/ci/release/` — 25 standalone release scripts
+- `scripts/ci/release/` — 26 standalone release scripts
 - `scripts/release.sh` — local orchestrator
 - `.buildkite/release-pipeline.yml` — Buildkite pipeline with approval gates
 - `terraform/buildkite-agents/build-secrets.tf` — AWS Secrets Manager secrets

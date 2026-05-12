@@ -1,5 +1,7 @@
 # PR Resolution Plan
 
+**Status:** Active
+
 ## Overview
 
 As of May 2026, MockServer had accumulated 136 open PRs — mostly automated Snyk/Dependabot dependency bumps with some community contributions. This plan documents the systematic triage, validation, and resolution of all open PRs.

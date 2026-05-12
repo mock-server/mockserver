@@ -1,5 +1,7 @@
 # MockServer Monorepo Migration - Execution Checklist
 
+**Status:** Complete
+
 ## Goal
 
 Consolidate MockServer repositories into one monorepo to share CI/CD, AI configuration, release tooling, and documentation, while removing manual UI artifact copying.
@@ -511,7 +513,7 @@ done
 | Ruby integration tests | `cd mockserver-client-ruby && bundle exec rspec --tag integration` | 21 PASS |
 | Container scripts | `bash -n` syntax check on all shell scripts | PASS |
 | Performance test | Syntax validation | PASS |
-| Maven plugin | Not migrated to monorepo | N/A |
+| Maven plugin | `cd mockserver-maven-plugin && ../mockserver/mvnw clean verify` | PASS |
 
 ### Buildkite pipeline state
 
@@ -533,6 +535,6 @@ Confirm pipelines trigger correctly for at least:
 
 1. ~~Regenerate stale Python/Ruby clients during migration or follow-up?~~ **Resolved**: Python client replaced with hand-written idiomatic library (v6.0.0, dataclasses, WebSocket callbacks, 438 tests). Ruby client rewritten with idiomatic Ruby (v2.0.0, 312 unit tests, 21 integration tests).
 2. ~~Modernize UI during migration or as separate project?~~ **Resolved**: UI modernized during migration (Phase 4).
-3. Introduce Nx/Turborepo now or after baseline monorepo is stable?
+3. ~~Introduce Nx/Turborepo now or after baseline monorepo is stable?~~ **Deferred** — the current Buildkite-based build orchestration is sufficient.
 4. ~~Review `KeyToMultiValue.to_dict()` serialization consistency~~ **Resolved**: Both Python and Ruby clients now handle both dict-format (`{"name": ["value"]}`) and list-format (`[{"name": ..., "values": ...}]`) header deserialization, matching what MockServer returns for recorded requests vs expectations.
 5. ~~Run `terraform apply` in `terraform/buildkite-pipelines/` to sync pipeline state~~ **Done**: Pipeline updated with monorepo description/emoji, all 3 pipelines in sync.

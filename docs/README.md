@@ -41,7 +41,6 @@ Build process, releases, dependencies, security scanning, and the documentation 
 |----------|-------------|
 | [Build System](operations/build-system.md) | Maven configuration, profiles, plugins, and build scripts |
 | [Release Process](operations/release-process.md) | End-to-end release workflow with Mermaid diagrams |
-| [Dependencies](operations/dependencies.md) | Complete dependency inventory with versions |
 | [Security](operations/security.md) | Consolidated security overview: CodeQL, Dependabot, Snyk, AI security review, SNAPSHOT policy |
 | [Snyk Security](operations/snyk-security.md) | Vulnerability scanning, CLI usage, Java 11 constraints, triage workflow |
 | [Website](operations/website.md) | Jekyll documentation site structure and publishing |
