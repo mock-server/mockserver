@@ -884,6 +884,8 @@ components:
           properties:
             not:
               type: boolean
+            optional:
+              type: boolean
             type:
               enum:
                 - BINARY
@@ -896,6 +898,8 @@ components:
           additionalProperties: false
           properties:
             not:
+              type: boolean
+            optional:
               type: boolean
             type:
               enum:
@@ -919,6 +923,8 @@ components:
           properties:
             not:
               type: boolean
+            optional:
+              type: boolean
             type:
               enum:
                 - JSON_SCHEMA
@@ -929,6 +935,8 @@ components:
           additionalProperties: false
           properties:
             not:
+              type: boolean
+            optional:
               type: boolean
             type:
               enum:
@@ -941,6 +949,8 @@ components:
           properties:
             not:
               type: boolean
+            optional:
+              type: boolean
             type:
               enum:
                 - PARAMETERS
@@ -952,6 +962,8 @@ components:
           properties:
             not:
               type: boolean
+            optional:
+              type: boolean
             type:
               enum:
                 - REGEX
@@ -962,6 +974,8 @@ components:
           additionalProperties: false
           properties:
             not:
+              type: boolean
+            optional:
               type: boolean
             type:
               enum:
@@ -980,6 +994,8 @@ components:
           properties:
             not:
               type: boolean
+            optional:
+              type: boolean
             type:
               enum:
                 - XML
@@ -993,6 +1009,8 @@ components:
           properties:
             not:
               type: boolean
+            optional:
+              type: boolean
             type:
               enum:
                 - XML_SCHEMA
@@ -1004,6 +1022,8 @@ components:
           properties:
             not:
               type: boolean
+            optional:
+              type: boolean
             type:
               enum:
                 - XPATH
@@ -1014,6 +1034,8 @@ components:
           additionalProperties: false
           properties:
             not:
+              type: boolean
+            optional:
               type: boolean
             type:
               enum:
@@ -1027,6 +1049,8 @@ components:
           additionalProperties: false
           properties:
             not:
+              type: boolean
+            optional:
               type: boolean
             type:
               enum:

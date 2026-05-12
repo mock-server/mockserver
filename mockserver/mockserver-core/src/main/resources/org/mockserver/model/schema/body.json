@@ -8,6 +8,9 @@
         "not": {
           "type": "boolean"
         },
+        "optional": {
+          "type": "boolean"
+        },
         "type": {
           "enum": [
             "BINARY"
@@ -26,6 +29,9 @@
       "additionalProperties": false,
       "properties": {
         "not": {
+          "type": "boolean"
+        },
+        "optional": {
           "type": "boolean"
         },
         "type": {
@@ -62,6 +68,9 @@
         "not": {
           "type": "boolean"
         },
+        "optional": {
+          "type": "boolean"
+        },
         "type": {
           "enum": [
             "JSON_SCHEMA"
@@ -86,6 +95,9 @@
         "not": {
           "type": "boolean"
         },
+        "optional": {
+          "type": "boolean"
+        },
         "type": {
           "enum": [
             "JSON_PATH"
@@ -101,6 +113,9 @@
       "additionalProperties": false,
       "properties": {
         "not": {
+          "type": "boolean"
+        },
+        "optional": {
           "type": "boolean"
         },
         "type": {
@@ -120,6 +135,9 @@
         "not": {
           "type": "boolean"
         },
+        "optional": {
+          "type": "boolean"
+        },
         "type": {
           "enum": [
             "REGEX"
@@ -135,6 +153,9 @@
       "additionalProperties": false,
       "properties": {
         "not": {
+          "type": "boolean"
+        },
+        "optional": {
           "type": "boolean"
         },
         "type": {
@@ -163,6 +184,9 @@
         "not": {
           "type": "boolean"
         },
+        "optional": {
+          "type": "boolean"
+        },
         "type": {
           "enum": [
             "XML"
@@ -183,6 +207,9 @@
         "not": {
           "type": "boolean"
         },
+        "optional": {
+          "type": "boolean"
+        },
         "type": {
           "enum": [
             "XML_SCHEMA"
@@ -200,6 +227,9 @@
         "not": {
           "type": "boolean"
         },
+        "optional": {
+          "type": "boolean"
+        },
         "type": {
           "enum": [
             "XPATH"
@@ -215,6 +245,9 @@
       "additionalProperties": false,
       "properties": {
         "not": {
+          "type": "boolean"
+        },
+        "optional": {
           "type": "boolean"
         },
         "type": {
@@ -235,6 +268,9 @@
       "additionalProperties": false,
       "properties": {
         "not": {
+          "type": "boolean"
+        },
+        "optional": {
           "type": "boolean"
         },
         "type": {

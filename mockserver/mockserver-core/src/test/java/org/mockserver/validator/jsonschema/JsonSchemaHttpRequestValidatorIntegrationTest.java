@@ -300,6 +300,9 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
                     "           \"not\": {" + NEW_LINE +
                     "             \"type\": \"boolean\"" + NEW_LINE +
                     "           }," + NEW_LINE +
+                    "           \"optional\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
                     "           \"type\": {" + NEW_LINE +
                     "             \"enum\": [" + NEW_LINE +
                     "               \"BINARY\"" + NEW_LINE +
@@ -318,6 +321,9 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
                     "         \"additionalProperties\": false," + NEW_LINE +
                     "         \"properties\": {" + NEW_LINE +
                     "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"optional\": {" + NEW_LINE +
                     "             \"type\": \"boolean\"" + NEW_LINE +
                     "           }," + NEW_LINE +
                     "           \"type\": {" + NEW_LINE +
@@ -354,6 +360,9 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
                     "           \"not\": {" + NEW_LINE +
                     "             \"type\": \"boolean\"" + NEW_LINE +
                     "           }," + NEW_LINE +
+                    "           \"optional\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
                     "           \"type\": {" + NEW_LINE +
                     "             \"enum\": [" + NEW_LINE +
                     "               \"JSON_SCHEMA\"" + NEW_LINE +
@@ -378,6 +387,9 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
                     "           \"not\": {" + NEW_LINE +
                     "             \"type\": \"boolean\"" + NEW_LINE +
                     "           }," + NEW_LINE +
+                    "           \"optional\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
                     "           \"type\": {" + NEW_LINE +
                     "             \"enum\": [" + NEW_LINE +
                     "               \"JSON_PATH\"" + NEW_LINE +
@@ -393,6 +405,9 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
                     "         \"additionalProperties\": false," + NEW_LINE +
                     "         \"properties\": {" + NEW_LINE +
                     "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"optional\": {" + NEW_LINE +
                     "             \"type\": \"boolean\"" + NEW_LINE +
                     "           }," + NEW_LINE +
                     "           \"type\": {" + NEW_LINE +
@@ -412,6 +427,9 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
                     "           \"not\": {" + NEW_LINE +
                     "             \"type\": \"boolean\"" + NEW_LINE +
                     "           }," + NEW_LINE +
+                    "           \"optional\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
                     "           \"type\": {" + NEW_LINE +
                     "             \"enum\": [" + NEW_LINE +
                     "               \"REGEX\"" + NEW_LINE +
@@ -427,6 +445,9 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
                     "         \"additionalProperties\": false," + NEW_LINE +
                     "         \"properties\": {" + NEW_LINE +
                     "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"optional\": {" + NEW_LINE +
                     "             \"type\": \"boolean\"" + NEW_LINE +
                     "           }," + NEW_LINE +
                     "           \"type\": {" + NEW_LINE +
@@ -455,6 +476,9 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
                     "           \"not\": {" + NEW_LINE +
                     "             \"type\": \"boolean\"" + NEW_LINE +
                     "           }," + NEW_LINE +
+                    "           \"optional\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
                     "           \"type\": {" + NEW_LINE +
                     "             \"enum\": [" + NEW_LINE +
                     "               \"XML\"" + NEW_LINE +
@@ -475,6 +499,9 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
                     "           \"not\": {" + NEW_LINE +
                     "             \"type\": \"boolean\"" + NEW_LINE +
                     "           }," + NEW_LINE +
+                    "           \"optional\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
                     "           \"type\": {" + NEW_LINE +
                     "             \"enum\": [" + NEW_LINE +
                     "               \"XML_SCHEMA\"" + NEW_LINE +
@@ -490,6 +517,9 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
                     "         \"additionalProperties\": false," + NEW_LINE +
                     "         \"properties\": {" + NEW_LINE +
                     "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"optional\": {" + NEW_LINE +
                     "             \"type\": \"boolean\"" + NEW_LINE +
                     "           }," + NEW_LINE +
                     "           \"type\": {" + NEW_LINE +
@@ -509,6 +539,9 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
                     "           \"not\": {" + NEW_LINE +
                     "             \"type\": \"boolean\"" + NEW_LINE +
                     "           }," + NEW_LINE +
+                    "           \"optional\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
                     "           \"type\": {" + NEW_LINE +
                     "             \"enum\": [" + NEW_LINE +
                     "               \"JSON_RPC\"" + NEW_LINE +
@@ -521,9 +554,40 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
                     "             \"type\": \"string\"" + NEW_LINE +
                     "           }" + NEW_LINE +
                     "         }" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"object\"," + NEW_LINE +
+                    "         \"additionalProperties\": false," + NEW_LINE +
+                    "         \"properties\": {" + NEW_LINE +
+                    "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"optional\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"type\": {" + NEW_LINE +
+                    "             \"enum\": [" + NEW_LINE +
+                    "               \"GRAPHQL\"" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"query\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"operationName\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"variablesSchema\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "         }," + NEW_LINE +
+                    "         \"required\": [" + NEW_LINE +
+                    "           \"type\"," + NEW_LINE +
+                    "           \"query\"" + NEW_LINE +
+                    "         ]" + NEW_LINE +
                     "       }" + NEW_LINE +
                     "     ]" + NEW_LINE +
                     "   }" + NEW_LINE +
+                    "   " + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
             ));

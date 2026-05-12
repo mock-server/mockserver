@@ -92,9 +92,9 @@ public class ForwardChainExpectation {
     }
 
     /**
-     * Set after-actions to execute after the primary action completes
+     * Set the scenario name for stateful expectation matching
      *
-     * @param afterActions the after-actions to execute
+     * @param scenarioName the name of the scenario
      */
     public ForwardChainExpectation withScenarioName(String scenarioName) {
         expectation.withScenarioName(scenarioName);
