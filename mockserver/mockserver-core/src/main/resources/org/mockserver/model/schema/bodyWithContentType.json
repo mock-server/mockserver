@@ -8,6 +8,9 @@
         "not": {
           "type": "boolean"
         },
+        "optional": {
+          "type": "boolean"
+        },
         "type": {
           "enum": [
             "BINARY"
@@ -26,6 +29,9 @@
       "additionalProperties": false,
       "properties": {
         "not": {
+          "type": "boolean"
+        },
+        "optional": {
           "type": "boolean"
         },
         "type": {
@@ -56,6 +62,9 @@
         "not": {
           "type": "boolean"
         },
+        "optional": {
+          "type": "boolean"
+        },
         "type": {
           "enum": [
             "PARAMETERS"
@@ -71,6 +80,9 @@
       "additionalProperties": false,
       "properties": {
         "not": {
+          "type": "boolean"
+        },
+        "optional": {
           "type": "boolean"
         },
         "type": {
@@ -94,6 +106,9 @@
       "additionalProperties": false,
       "properties": {
         "not": {
+          "type": "boolean"
+        },
+        "optional": {
           "type": "boolean"
         },
         "type": {

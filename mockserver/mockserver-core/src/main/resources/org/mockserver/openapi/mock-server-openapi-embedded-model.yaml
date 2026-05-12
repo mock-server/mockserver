@@ -1073,6 +1073,8 @@ components:
           properties:
             not:
               type: boolean
+            optional:
+              type: boolean
             type:
               enum:
                 - BINARY
@@ -1085,6 +1087,8 @@ components:
           additionalProperties: false
           properties:
             not:
+              type: boolean
+            optional:
               type: boolean
             type:
               enum:
@@ -1102,6 +1106,8 @@ components:
           properties:
             not:
               type: boolean
+            optional:
+              type: boolean
             type:
               enum:
                 - STRING
@@ -1116,6 +1122,8 @@ components:
           additionalProperties: false
           properties:
             not:
+              type: boolean
+            optional:
               type: boolean
             type:
               enum:
