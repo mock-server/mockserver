@@ -41,9 +41,9 @@ public class TemplateFunctions implements Supplier<Object> {
     public static final Map<String, Object> BUILT_IN_HELPERS = ImmutableMap.<String, Object>builder()
         .put("jwt", new JwtTemplateHelper())
         .put("strings", new StringTemplateHelper())
-        .put("json", new JsonTemplateHelper())
+        .put("jsonTransform", new JsonTemplateHelper())
         .put("dates", new DateTemplateHelper())
-        .put("math", new MathTemplateHelper())
+        .put("calc", new MathTemplateHelper())
         .build();
 
     private final Supplier<String> supplier;

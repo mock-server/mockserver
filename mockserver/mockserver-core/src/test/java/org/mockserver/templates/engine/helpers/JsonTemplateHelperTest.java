@@ -86,7 +86,7 @@ public class JsonTemplateHelperTest {
 
     @Test
     public void shouldBeRegisteredInTemplateFunctions() {
-        Object jsonHelper = org.mockserver.templates.engine.TemplateFunctions.BUILT_IN_HELPERS.get("json");
+        Object jsonHelper = org.mockserver.templates.engine.TemplateFunctions.BUILT_IN_HELPERS.get("jsonTransform");
         assertThat(jsonHelper, is(notNullValue()));
         assertThat(jsonHelper, instanceOf(JsonTemplateHelper.class));
     }

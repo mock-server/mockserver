@@ -82,7 +82,7 @@ public class MathTemplateHelperTest {
 
     @Test
     public void shouldBeRegisteredInTemplateFunctions() {
-        Object mathHelper = org.mockserver.templates.engine.TemplateFunctions.BUILT_IN_HELPERS.get("math");
+        Object mathHelper = org.mockserver.templates.engine.TemplateFunctions.BUILT_IN_HELPERS.get("calc");
         assertThat(mathHelper, is(notNullValue()));
         assertThat(mathHelper, instanceOf(MathTemplateHelper.class));
     }

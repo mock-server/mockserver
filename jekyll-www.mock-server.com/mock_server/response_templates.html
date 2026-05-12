@@ -753,27 +753,27 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
 
 <a id="json_helper" class="anchor" href="#json_helper">&nbsp;</a>
 
-<h3>JSON Helper (<code>json</code>)</h3>
+<h3>JSON Transform Helper (<code>jsonTransform</code>)</h3>
 
-<p>Provides JSON manipulation functions for merging, sorting, and extracting data from JSON strings.</p>
+<p>Provides JSON manipulation functions for merging, sorting, and extracting data from JSON strings. Named <code class="inline_code">jsonTransform</code> to avoid collision with Velocity's built-in <code class="inline_code">$json</code> (<a target="_blank" href="https://velocity.apache.org/tools/3.1/tools-summary.html#JsonTool">JsonTool</a>).</p>
 
 <table class="table">
     <thead><tr><th>Method</th><th>Description</th><th>Example</th></tr></thead>
     <tbody>
-        <tr><td><code>json.merge(json1, json2)</code></td><td>Merge two JSON objects (json2 fields overwrite json1)</td><td><code>json.merge('{"a":1}', '{"b":2}')</code> &rarr; <code>'{"a":1,"b":2}'</code></td></tr>
-        <tr><td><code>json.sort(jsonArray, field)</code></td><td>Sort a JSON array of objects by a field</td><td><code>json.sort('[{"n":"b"},{"n":"a"}]', "n")</code></td></tr>
-        <tr><td><code>json.arrayAdd(jsonArray, element)</code></td><td>Add an element to a JSON array</td><td><code>json.arrayAdd('[1,2]', '3')</code> &rarr; <code>'[1,2,3]'</code></td></tr>
-        <tr><td><code>json.remove(json, fieldName)</code></td><td>Remove a field from a JSON object</td><td><code>json.remove('{"a":1,"b":2}', "a")</code> &rarr; <code>'{"b":2}'</code></td></tr>
-        <tr><td><code>json.prettyPrint(json)</code></td><td>Pretty-print a JSON string</td><td><code>json.prettyPrint('{"a":1}')</code></td></tr>
-        <tr><td><code>json.field(json, fieldName)</code></td><td>Extract a single field value from a JSON object</td><td><code>json.field('{"name":"test"}', "name")</code> &rarr; <code>"test"</code></td></tr>
-        <tr><td><code>json.size(jsonArray)</code></td><td>Return the number of elements in a JSON array</td><td><code>json.size('[1,2,3]')</code> &rarr; <code>3</code></td></tr>
+        <tr><td><code>jsonTransform.merge(json1, json2)</code></td><td>Merge two JSON objects (json2 fields overwrite json1)</td><td><code>jsonTransform.merge('{"a":1}', '{"b":2}')</code> &rarr; <code>'{"a":1,"b":2}'</code></td></tr>
+        <tr><td><code>jsonTransform.sort(jsonArray, field)</code></td><td>Sort a JSON array of objects by a field</td><td><code>jsonTransform.sort('[{"n":"b"},{"n":"a"}]', "n")</code></td></tr>
+        <tr><td><code>jsonTransform.arrayAdd(jsonArray, element)</code></td><td>Add an element to a JSON array</td><td><code>jsonTransform.arrayAdd('[1,2]', '3')</code> &rarr; <code>'[1,2,3]'</code></td></tr>
+        <tr><td><code>jsonTransform.remove(json, fieldName)</code></td><td>Remove a field from a JSON object</td><td><code>jsonTransform.remove('{"a":1,"b":2}', "a")</code> &rarr; <code>'{"b":2}'</code></td></tr>
+        <tr><td><code>jsonTransform.prettyPrint(json)</code></td><td>Pretty-print a JSON string</td><td><code>jsonTransform.prettyPrint('{"a":1}')</code></td></tr>
+        <tr><td><code>jsonTransform.field(json, fieldName)</code></td><td>Extract a single field value from a JSON object</td><td><code>jsonTransform.field('{"name":"test"}', "name")</code> &rarr; <code>"test"</code></td></tr>
+        <tr><td><code>jsonTransform.size(jsonArray)</code></td><td>Return the number of elements in a JSON array</td><td><code>jsonTransform.size('[1,2,3]')</code> &rarr; <code>3</code></td></tr>
     </tbody>
 </table>
 
 <p>Usage examples:</p>
 <ul>
-    <li><strong>Velocity:</strong> <code class="inline code">$json.field($!request.body, "username")</code></li>
-    <li><strong>JavaScript:</strong> <code class="inline code">json.merge(request.body, '{"status":"processed"}')</code></li>
+    <li><strong>Velocity:</strong> <code class="inline code">$jsonTransform.field($!request.body, "username")</code></li>
+    <li><strong>JavaScript:</strong> <code class="inline code">jsonTransform.merge(request.body, '{"status":"processed"}')</code></li>
 </ul>
 
 <a id="dates_helper" class="anchor" href="#dates_helper">&nbsp;</a>
@@ -810,30 +810,30 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
 
 <a id="math_helper" class="anchor" href="#math_helper">&nbsp;</a>
 
-<h3>Math Helper (<code>math</code>)</h3>
+<h3>Calc Helper (<code>calc</code>)</h3>
 
-<p>Provides mathematical functions for generating random numbers, rounding, and formatting.</p>
+<p>Provides mathematical functions for generating random numbers, rounding, and formatting. Named <code class="inline_code">calc</code> to avoid collision with Velocity's built-in <code class="inline_code">$math</code> (<a target="_blank" href="https://velocity.apache.org/tools/3.1/tools-summary.html#MathTool">MathTool</a>).</p>
 
 <table class="table">
     <thead><tr><th>Method</th><th>Description</th><th>Example</th></tr></thead>
     <tbody>
-        <tr><td><code>math.randomInt(min, max)</code></td><td>Random integer between min and max (inclusive)</td><td><code>math.randomInt(1, 100)</code> &rarr; <code>42</code></td></tr>
-        <tr><td><code>math.randomDouble()</code></td><td>Random double between 0.0 and 1.0</td><td><code>0.7312...</code></td></tr>
-        <tr><td><code>math.randomDouble(min, max)</code></td><td>Random double between min and max</td><td><code>math.randomDouble(1.0, 5.0)</code></td></tr>
-        <tr><td><code>math.abs(value)</code></td><td>Absolute value</td><td><code>math.abs(-5)</code> &rarr; <code>5</code></td></tr>
-        <tr><td><code>math.min(a, b)</code></td><td>Minimum of two integers</td><td><code>math.min(3, 7)</code> &rarr; <code>3</code></td></tr>
-        <tr><td><code>math.max(a, b)</code></td><td>Maximum of two integers</td><td><code>math.max(3, 7)</code> &rarr; <code>7</code></td></tr>
-        <tr><td><code>math.round(value, scale)</code></td><td>Round to specified decimal places</td><td><code>math.round(3.14159, 2)</code> &rarr; <code>3.14</code></td></tr>
-        <tr><td><code>math.format(value, pattern)</code></td><td>Format a number with a DecimalFormat pattern</td><td><code>math.format(1234.5, "#,##0.00")</code> &rarr; <code>"1,234.50"</code></td></tr>
-        <tr><td><code>math.ceil(value)</code></td><td>Round up to nearest integer</td><td><code>math.ceil(3.1)</code> &rarr; <code>4.0</code></td></tr>
-        <tr><td><code>math.floor(value)</code></td><td>Round down to nearest integer</td><td><code>math.floor(3.9)</code> &rarr; <code>3.0</code></td></tr>
+        <tr><td><code>calc.randomInt(min, max)</code></td><td>Random integer between min and max (inclusive)</td><td><code>calc.randomInt(1, 100)</code> &rarr; <code>42</code></td></tr>
+        <tr><td><code>calc.randomDouble()</code></td><td>Random double between 0.0 and 1.0</td><td><code>0.7312...</code></td></tr>
+        <tr><td><code>calc.randomDouble(min, max)</code></td><td>Random double between min and max</td><td><code>calc.randomDouble(1.0, 5.0)</code></td></tr>
+        <tr><td><code>calc.abs(value)</code></td><td>Absolute value</td><td><code>calc.abs(-5)</code> &rarr; <code>5</code></td></tr>
+        <tr><td><code>calc.min(a, b)</code></td><td>Minimum of two integers</td><td><code>calc.min(3, 7)</code> &rarr; <code>3</code></td></tr>
+        <tr><td><code>calc.max(a, b)</code></td><td>Maximum of two integers</td><td><code>calc.max(3, 7)</code> &rarr; <code>7</code></td></tr>
+        <tr><td><code>calc.round(value, scale)</code></td><td>Round to specified decimal places</td><td><code>calc.round(3.14159, 2)</code> &rarr; <code>3.14</code></td></tr>
+        <tr><td><code>calc.format(value, pattern)</code></td><td>Format a number with a DecimalFormat pattern</td><td><code>calc.format(1234.5, "#,##0.00")</code> &rarr; <code>"1,234.50"</code></td></tr>
+        <tr><td><code>calc.ceil(value)</code></td><td>Round up to nearest integer</td><td><code>calc.ceil(3.1)</code> &rarr; <code>4.0</code></td></tr>
+        <tr><td><code>calc.floor(value)</code></td><td>Round down to nearest integer</td><td><code>calc.floor(3.9)</code> &rarr; <code>3.0</code></td></tr>
     </tbody>
 </table>
 
 <p>Usage examples:</p>
 <ul>
-    <li><strong>Velocity:</strong> <code class="inline code">$math.randomInt(1, 1000)</code></li>
-    <li><strong>JavaScript:</strong> <code class="inline code">math.round(math.randomDouble(0.0, 100.0), 2)</code></li>
+    <li><strong>Velocity:</strong> <code class="inline code">$calc.randomInt(1, 1000)</code></li>
+    <li><strong>JavaScript:</strong> <code class="inline code">calc.round(calc.randomDouble(0.0, 100.0), 2)</code></li>
 </ul>
 
 <a id="mustache_templates" class="anchor" href="#mustache_templates">&nbsp;</a>

@@ -38,7 +38,7 @@ authorityKeyIdentifier=keyid,issuer
 basicConstraints=CA:FALSE
 keyUsage=digitalSignature,keyEncipherment
 extendedKeyUsage=serverAuth
-subjectAltName=DNS:localhost,DNS:mockserver,DNS:host.docker.internal,IP:127.0.0.1
+subjectAltName=DNS:localhost,DNS:mockserver,DNS:host.docker.internal,IP:127.0.0.1,IP:0.0.0.0
 EOF
 
     openssl x509 -req -in server.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial \
@@ -106,7 +106,7 @@ EOF
     cat > server-csr.json <<EOF
 {
   "CN": "localhost",
-  "hosts": ["localhost", "mockserver", "host.docker.internal", "127.0.0.1"],
+  "hosts": ["localhost", "mockserver", "host.docker.internal", "127.0.0.1", "0.0.0.0"],
   "key": { "algo": "rsa", "size": ${KEY_SIZE} },
   "names": [{ "C": "${COUNTRY}", "L": "${CITY}", "O": "${ORG}" }]
 }
