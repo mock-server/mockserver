@@ -987,15 +987,19 @@ public class HttpActionHandler {
                 );
             }
         }
-        if (configuration.detailedVerificationFailures()) {
+        if (configuration.detailedVerificationFailures() && mockServerLogger.isEnabledForInstance(Level.INFO)) {
             try {
                 java.util.Map<org.mockserver.matchers.MatchDifference.Field, java.util.List<String>> closestDiff = httpStateHandler.findClosestMatchDiff(request);
                 if (closestDiff != null && !closestDiff.isEmpty()) {
                     String diffBody = org.mockserver.matchers.MatchDifferenceFormatter.formatDifferences(closestDiff);
                     if (isNotBlank(diffBody)) {
-                        String existingBody = response.getBodyAsString();
-                        String prefix = isNotBlank(existingBody) ? existingBody : "no expectation for request";
-                        response.withBody(prefix + diffBody);
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setLogLevel(Level.INFO)
+                                .setHttpRequest(request)
+                                .setMessageFormat("closest match diff for unmatched request:{}")
+                                .setArguments(diffBody)
+                        );
                     }
                 }
             } catch (Exception e) {

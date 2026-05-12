@@ -412,9 +412,9 @@ In `MockServerEventLog.verify()`, after determining verification failed:
 3. Identifies the closest match (fewest diff fields)
 4. Appends formatted diff using `MatchDifferenceFormatter`
 
-### 404 Response Enrichment
+### 404 Closest Match Logging
 
-When no expectation matches and a 404 is returned, `HttpActionHandler.returnNotFound()` calls `HttpState.findClosestMatchDiff()` to find the closest matching expectation's diff details and appends them to the 404 response body.
+When no expectation matches and a 404 is returned, `HttpActionHandler.returnNotFound()` calls `HttpState.findClosestMatchDiff()` to find the closest matching expectation's diff details and logs them at INFO level. The 404 response body is not modified to avoid breaking client assertions.
 
 ### Key Classes
 
