@@ -83,6 +83,7 @@ against rules"}
     MATCH -->|mockserver-performance-test/| PERF["trigger: mockserver-performance-test"]
     MATCH -->|container_integration_tests/| CONTAINER["trigger: mockserver-container-tests"]
     MATCH -->|jekyll-www.mock-server.com/| WEBSITE["trigger: mockserver-website"]
+    MATCH -->|docker_build/maven/| BUILD_IMG["trigger: mockserver-build-image"]
     MATCH -->|.buildkite/ .github/ terraform/ etc.| INFRA["trigger: mockserver-infra"]
     MATCH -->|no match| DEFAULT["inline: no-op step"]
 ```
@@ -104,7 +105,7 @@ All pipelines are managed via Terraform in `terraform/buildkite-pipelines/pipeli
 | `mockserver-container-tests` | `pipeline-container-tests.yml` | Orchestrator | Shell script validation |
 | `mockserver-website` | `pipeline-website.yml` | Orchestrator | Jekyll site build |
 | `mockserver-infra` | `pipeline-infra.yml` | Orchestrator | Infrastructure validation |
-| `mockserver-build-image` | `docker-push-maven.yml` | Manual | Build/push maven CI image |
+| `mockserver-build-image` | `docker-push-maven.yml` | Orchestrator + Manual | Build/push maven CI image |
 | `mockserver-release-image` | `docker-push-release.yml` | Manual | Build/push release image |
 | `mockserver-release` | `release-pipeline.yml` | Manual | Automated release pipeline (TOTP, Maven Central, Docker, Helm, npm, PyPI, RubyGems, website) |
 | `mockserver-cleanup` | `pipeline-cleanup.yml` | GitHub webhook + scheduled | Clean up builds for closed PRs |
@@ -156,52 +157,56 @@ Steps 1 and 4 are managed by Terraform (`terraform/buildkite-pipelines/pipelines
 
 **File:** `.buildkite/pipeline-java.yml`
 
-Triggered by the orchestrator when files change in `mockserver/` or `mockserver-ui/`. The pipeline has two sequential steps (separated by an explicit `- wait` directive):
+Triggered by the orchestrator when files change in `mockserver/` or `mockserver-ui/`. The pipeline has multiple sequential phases separated by `- wait` directives:
 
 ```mermaid
-sequenceDiagram
-    participant BK as Buildkite
-    participant Agent as EC2 Agent
-    participant Docker as Docker (maven image)
-    participant Maven as Maven Build
-
-    BK->>Agent: Trigger build
-    Agent->>Docker: docker pull mockserver/mockserver:maven
-    Agent->>Docker: docker run (volume mount repo)
-    Docker->>Maven: scripts/buildkite_quick_build.sh
-    Maven->>Maven: ./mvnw clean install
-    Maven-->>BK: Collect **/*.log artifacts
+flowchart TD
+    CONFIG["1. opencode config validation
+    java-validate-config.sh"]
+    PULL["2. docker pull maven image"]
+    CONFIG --> PULL
+    PULL --> BUILD["3. Maven build
+    java-build.sh (in Docker)
+    ./mvnw clean install"]
+    BUILD --> JUNIT["4. JUnit annotate
+    test result annotations"]
+    JUNIT --> DEPLOY["5. Deploy snapshot to Sonatype
+    master only"]
+    DEPLOY --> CTESTS["6. Container integration tests
+    master only"]
+    CTESTS --> PUSH["7. Build and push :snapshot
+    master only"]
 ```
 
-#### Step 1: Update Docker Image
+#### Step 1: Validate Config
 
-```yaml
-- label: "update docker image"
-  command: "docker pull mockserver/mockserver:maven"
-```
+Runs `.buildkite/scripts/steps/java-validate-config.sh` to lint opencode configuration files.
+
+#### Step 2: Update Docker Image
 
 Pulls the latest `mockserver/mockserver:maven` build image to ensure the CI environment is current.
 
-#### Step 2: Build
+#### Step 3: Build
 
-```yaml
-- label: "build"
-  command: "docker run -v $(pwd):/build/mockserver -w /build/mockserver \
-    -a stdout -a stderr \
-    -e BUILDKITE_BRANCH=$BUILDKITE_BRANCH \
-    mockserver/mockserver:maven \
-    /build/mockserver/scripts/buildkite_quick_build.sh"
-  artifact_paths:
-    - "**/*.log"
-```
-
-Runs the full Maven build inside the `mockserver/mockserver:maven` Docker image:
+Runs `.buildkite/scripts/steps/java-build.sh`, which executes the full Maven build inside the `mockserver/mockserver:maven` Docker image via `run-in-docker.sh`:
 
 - Volume-mounts the repository into the container
 - Passes the `BUILDKITE_BRANCH` environment variable
 - Executes `scripts/buildkite_quick_build.sh` which runs `./mvnw clean install`
-- JVM memory: `-Xms2048m -Xmx8192m`
-- Collects all `.log` files as build artifacts
+- Memory limit: 7 GB
+- Collects `.log` files, surefire/failsafe XML reports, and the shaded JAR as build artifacts
+
+#### Step 4: JUnit Annotate
+
+Uses the `junit-annotate` plugin to parse `**/target/*-reports/TEST-*.xml` and add test result annotations to the Buildkite build page. Runs with `continue_on_failure: true` so annotations appear even on test failures.
+
+#### Steps 5–7: Master-Only Steps
+
+On `master` only, three additional steps run sequentially:
+
+- **Deploy snapshot:** `.buildkite/scripts/steps/java-deploy-snapshot.sh` — publishes SNAPSHOT artifacts to Sonatype
+- **Container integration tests:** `.buildkite/scripts/steps/container-tests-run.sh` — runs Docker Compose and Helm integration tests
+- **Build and push :snapshot:** `.buildkite/scripts/steps/java-docker-push-snapshot.sh` — builds and pushes the `:snapshot` and `:mockserver-snapshot` Docker images (`:latest` is only pushed during releases)
 
 ### Maven CI Image Push Pipeline
 
@@ -216,15 +221,17 @@ Builds and pushes `mockserver/mockserver:maven` — the Docker image used by the
 
 ```mermaid
 flowchart LR
-    TRIGGER[Manual trigger] --> LOGIN["Docker Hub login
-via Secrets Manager"]
-    LOGIN --> BUILD["docker buildx build
-linux/amd64"]
-    BUILD --> PUSH["Push to Docker Hub
-mockserver/mockserver:maven"]
+    TRIGGER[Manual trigger] --> BUILD["Step 1: Build
+maven-image-build.sh"]
+    BUILD --> PUSH["Step 2: Push
+maven-image-push.sh
+master only"]
 ```
 
-Docker Hub credentials are fetched from AWS Secrets Manager (`mockserver-build/dockerhub`) by `.buildkite/scripts/docker-login.sh`.
+The pipeline has two steps separated by a `- wait` directive:
+
+1. **Build:** `.buildkite/scripts/steps/maven-image-build.sh` builds the `mockserver/mockserver:maven` image
+2. **Push** (master only): `.buildkite/scripts/steps/maven-image-push.sh` authenticates to Docker Hub via AWS Secrets Manager (`mockserver-build/dockerhub`) and pushes the image
 
 ### Release Image Push Pipeline
 
@@ -283,7 +290,7 @@ All Docker push scripts call both login scripts and push tags to both registries
 
 ### Managing Buildkite Pipelines
 
-Pipelines are managed via Terraform in `terraform/buildkite-pipelines/`. The Terraform stack includes all 13 pipelines (orchestrator, 10 child pipelines, and 2 Docker image push pipelines), each pointing to `mock-server/mockserver-monorepo.git`. To add a new pipeline:
+Pipelines are managed via Terraform in `terraform/buildkite-pipelines/`. The Terraform stack includes all 15 pipelines (orchestrator, 11 child pipelines, 2 Docker image push pipelines, and 1 release pipeline), each pointing to `mock-server/mockserver-monorepo.git`. To add a new pipeline:
 
 1. Create the pipeline YAML in `.buildkite/`
 2. Add an entry to `local.pipelines` in `terraform/buildkite-pipelines/pipelines.tf`
@@ -305,7 +312,7 @@ Two workflows run on GitHub Actions, both triggered automatically on push and pu
 - Pull requests targeting `master`
 - Weekly schedule: Tuesdays at 22:00 UTC
 
-**Languages scanned:** Java, JavaScript
+**Languages scanned:** Java, JavaScript, Python, Ruby
 
 **Process:**
 
@@ -323,9 +330,9 @@ skip tests]
 The workflow:
 1. Checks out the repository
 2. Sets up JDK 11 (Temurin distribution)
-3. Initializes CodeQL for Java and JavaScript
+3. Initializes CodeQL for Java, JavaScript, Python, and Ruby
 4. For Java: Runs `./mvnw clean compile -DskipTests -Dmaven.javadoc.skip=true` (CodeQL autobuild)
-5. For JavaScript: Analyzes source files directly (no build required)
+5. For JavaScript, Python, and Ruby: Analyzes source files directly (no build required)
 6. Performs CodeQL static analysis to detect security vulnerabilities
 7. Uploads results to GitHub Security tab
 

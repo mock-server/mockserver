@@ -1,5 +1,7 @@
 # Release Pipeline Plan
 
+**Status:** Complete
+
 ## Decision: Option A — Buildkite Release Pipeline
 
 After evaluating four options (Buildkite pipeline, GitHub Actions, Hybrid, OpenCode skill), **Option A (Buildkite Release Pipeline)** was selected. The rejected options are preserved in [Appendix A](#appendix-a-rejected-options) for reference.
@@ -296,19 +298,15 @@ terraform/
 │   └── build-secrets.tf                # Modified: add release secrets + IAM policy
 ├── buildkite-pipelines/
 │   └── pipelines.tf                    # Modified: add release pipeline entry
-└── website/                            # NEW: website infra (website account)
+└── website/                            # Website infra (website account)
     ├── main.tf
     ├── variables.tf
     ├── versions.tf
     ├── backend.tf
-    ├── dns.tf
-    ├── acm.tf
-    ├── main-site.tf
-    ├── versioned-sites.tf
-    ├── helm-repo.tf
+    ├── sites.tf
     ├── outputs.tf
     ├── cross-account-role.tf           # IAM role for build account to assume
-    ├── import.tf
+    ├── terraform.tfvars
     └── terraform.tfvars.example
 ```
 
@@ -970,7 +968,7 @@ Operates in-tree on `mockserver-maven-plugin/`:
 
 ### Step 7: Docker Image — `publish-docker.sh`
 
-Uses the CI-built JAR from the build step (not Maven Central download), matching the existing `java-docker-push-latest.sh` pattern:
+Uses the CI-built JAR from the build step (not Maven Central download), matching the existing `java-docker-push-snapshot.sh` pattern:
 
 ```bash
 if is_ci; then

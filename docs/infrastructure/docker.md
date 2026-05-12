@@ -13,6 +13,9 @@ gcr.io/distroless/java17:nonroot"]
         ROOT["docker/root/Dockerfile
 Root
 gcr.io/distroless/java17"]
+        GRAAL["docker/graaljs/Dockerfile
+GraalJS
+gcr.io/distroless/java17:nonroot"]
         SNAP["docker/snapshot/Dockerfile
 Snapshot (debug)
 gcr.io/distroless/java17:debug-nonroot"]
@@ -57,7 +60,7 @@ Images are published to two registries:
 | Docker Hub | `mockserver/mockserver` | Primary registry |
 | AWS ECR Public | `public.ecr.aws/mockserver/mockserver` | Avoids Docker Hub rate limits for AWS-based CI/CD |
 
-Both registries receive the same tags on every push (`:latest`, `:X.Y.Z`, `:mockserver-X.Y.Z`, and `-graaljs` variants).
+Both registries receive the same tags on every push. On each merge to `master`, the `:snapshot`, `:mockserver-snapshot`, and `-graaljs` snapshot variants are pushed. During releases, `:latest`, `:X.Y.Z`, `:mockserver-X.Y.Z`, and `-graaljs` release variants are pushed. The `:latest` tag always points to the most recent official release, not the development branch.
 
 ### Docker HEALTHCHECK
 
@@ -170,7 +173,7 @@ scripts/local_docker_launch.sh
 
 ## Container Integration Tests
 
-The `container_integration_tests/` directory contains 14 automated tests:
+The `container_integration_tests/` directory contains 15 automated tests:
 
 ```mermaid
 graph TD
@@ -189,11 +192,12 @@ graph TD
         DC10[Forward with override]
     end
 
-    subgraph "Helm Tests (4)"
+    subgraph "Helm Tests (5)"
         H1[Default Helm values]
-        H2[Helm with config map]
+        H2[Helm with local Docker image]
         H3[Helm with custom port]
-        H4[Helm with ingress]
+        H4[Helm with remote host/port]
+        H5[Helm with inline config]
     end
 
     TESTS --> DC1
@@ -210,6 +214,7 @@ graph TD
     TESTS --> H2
     TESTS --> H3
     TESTS --> H4
+    TESTS --> H5
 ```
 
 Each test:

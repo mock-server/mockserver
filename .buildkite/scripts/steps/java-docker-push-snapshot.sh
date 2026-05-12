@@ -133,9 +133,9 @@ trap - EXIT
 
 ECR_REPO="public.ecr.aws/t2x9c0i6/mockserver"
 
-echo "--- :docker: Building and pushing mockserver/mockserver:latest (multi-arch)"
+echo "--- :docker: Building and pushing mockserver/mockserver:snapshot (multi-arch)"
 
-DOCKER_CMD="docker buildx build --platform linux/amd64,linux/arm64 --push --tag mockserver/mockserver:latest --tag ${ECR_REPO}:latest docker/local"
+DOCKER_CMD="docker buildx build --platform linux/amd64,linux/arm64 --push --tag mockserver/mockserver:snapshot --tag mockserver/mockserver:mockserver-snapshot --tag ${ECR_REPO}:snapshot --tag ${ECR_REPO}:mockserver-snapshot docker/local"
 
 echo "┌──────────────────────────────────────────────────────────────────"
 echo "│ Docker Command (copy to reproduce locally):"
@@ -149,16 +149,20 @@ docker buildx create --use --name builder 2>/dev/null || docker buildx use build
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
   --push \
-  --tag mockserver/mockserver:latest \
-  --tag "${ECR_REPO}:latest" \
+  --tag mockserver/mockserver:snapshot \
+  --tag mockserver/mockserver:mockserver-snapshot \
+  --tag "${ECR_REPO}:snapshot" \
+  --tag "${ECR_REPO}:mockserver-snapshot" \
   docker/local
 
-echo "--- :docker: Building and pushing mockserver/mockserver:latest-graaljs (multi-arch)"
+echo "--- :docker: Building and pushing mockserver/mockserver:snapshot-graaljs (multi-arch)"
 cp docker/local/mockserver-netty-jar-with-dependencies.jar docker/graaljs/mockserver-netty-jar-with-dependencies.jar
 exec docker buildx build \
   --platform linux/amd64,linux/arm64 \
   --push \
   --build-arg source=copy \
-  --tag mockserver/mockserver:latest-graaljs \
-  --tag "${ECR_REPO}:latest-graaljs" \
+  --tag mockserver/mockserver:snapshot-graaljs \
+  --tag mockserver/mockserver:mockserver-snapshot-graaljs \
+  --tag "${ECR_REPO}:snapshot-graaljs" \
+  --tag "${ECR_REPO}:mockserver-snapshot-graaljs" \
   docker/graaljs

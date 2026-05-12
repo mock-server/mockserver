@@ -40,7 +40,7 @@ steps:
     command: ".buildkite/scripts/steps/container-tests-run.sh"
     timeout_in_minutes: 30
 
-  - label: ":docker: build and push :latest"
+  - label: ":docker: build and push :snapshot"
     if: "build.branch == 'master'"
-    command: ".buildkite/scripts/steps/java-docker-push-latest.sh"
+    command: ".buildkite/scripts/steps/java-docker-push-snapshot.sh"
     timeout_in_minutes: 30
