@@ -7,7 +7,7 @@ subsection: true
 sitemap:
   priority: 0.8
   changefreq: 'monthly'
-  lastmod: 2019-11-10T08:00:00+01:00
+  lastmod: 2026-05-12T00:00:00+00:00
 ---
 
 <p>MockServer can be controlled in the following ways:</p>
@@ -90,9 +90,9 @@ sitemap:
 
 with MockServerClient("localhost", 1080) as client:
     client.when(
-        HttpRequest.request(path="/hello")
+        HttpRequest(path="/hello")
     ).respond(
-        HttpResponse.response(body="world")
+        HttpResponse(status_code=200, body="world")
     )</code></pre>
 
 <p>The async client can be used with <span class="inline_code">async with</span>:</p>
@@ -101,10 +101,23 @@ with MockServerClient("localhost", 1080) as client:
 
 async with AsyncMockServerClient("localhost", 1080) as client:
     await client.when(
-        HttpRequest.request(path="/hello")
+        HttpRequest(path="/hello")
     ).respond(
-        HttpResponse.response(body="world")
+        HttpResponse(status_code=200, body="world")
     )</code></pre>
+
+<p>Verification failures raise <span class="inline_code">MockServerVerificationError</span> (a subclass of both <span class="inline_code">MockServerError</span> and <span class="inline_code">AssertionError</span>). Connection failures raise <span class="inline_code">MockServerConnectionError</span>:</p>
+
+<pre class="prettyprint lang-python code"><code class="code">from mockserver import MockServerClient, HttpRequest, VerificationTimes
+from mockserver.exceptions import MockServerVerificationError, MockServerConnectionError
+
+try:
+    with MockServerClient("localhost", 1080) as client:
+        client.verify(HttpRequest(path="/some/path"), times=VerificationTimes(at_least=1))
+except MockServerVerificationError as e:
+    print(f"Verification failed: {e}")
+except MockServerConnectionError as e:
+    print(f"Connection failed: {e}")</code></pre>
 
 <p>Requires Python &gt;= 3.9.</p>
 
@@ -125,14 +138,28 @@ async with AsyncMockServerClient("localhost", 1080) as client:
 <p>The client supports a block form for automatic cleanup:</p>
 
 <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
-include MockServer
 
 MockServer::Client.new('localhost', 1080) do |client|
   client.when(
-    HttpRequest.request(path: '/hello')
+    MockServer::HttpRequest.new(path: '/hello')
   ).respond(
-    HttpResponse.response(body: 'world')
+    MockServer::HttpResponse.new(body: 'world')
   )
+end</code></pre>
+
+<p>You can <span class="inline_code">include MockServer</span> to use shorter class names (e.g. <span class="inline_code">HttpRequest</span> instead of <span class="inline_code">MockServer::HttpRequest</span>). All accordion examples below use this pattern for brevity.</p>
+
+<p>Verification failures raise <span class="inline_code">MockServer::VerificationError</span>. Connection failures raise <span class="inline_code">MockServer::ConnectionError</span>:</p>
+
+<pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+include MockServer
+
+MockServer::Client.new('localhost', 1080) do |client|
+  client.verify(HttpRequest.new(path: '/some/path'), times: VerificationTimes.at_least(1))
+rescue MockServer::VerificationError => e
+  puts "Verification failed: #{e.message}"
+rescue MockServer::ConnectionError => e
+  puts "Connection failed: #{e.message}"
 end</code></pre>
 
 <p>Requires Ruby &gt;= 3.0.</p>

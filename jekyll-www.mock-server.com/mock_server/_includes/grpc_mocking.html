@@ -68,7 +68,9 @@
   -p 1080:1080 \
   -v /local/path/to/protos:/protos \
   -e MOCKSERVER_GRPC_PROTO_DIRECTORY=/protos \
-  mockserver/mockserver</code></pre>
+  mockserver/mockserver:latest</code></pre>
+
+<p>Replace <span class="inline_code">latest</span> with a specific version tag (e.g. <span class="inline_code">mockserver/mockserver:5.15.0</span>) to pin a known working version.</p>
 
 <a id="creating_grpc_expectations" class="anchor" href="#creating_grpc_expectations">&nbsp;</a>
 
@@ -263,7 +265,7 @@ client.when(
 
 <h2>gRPC Status Codes</h2>
 
-<p>Set gRPC status codes using the <span class="inline_code">grpc-status</span> response header or the <span class="inline_code">statusName</span> field in a gRPC stream response. Standard gRPC status codes are supported:</p>
+<p>For unary RPCs, set the gRPC status via the <span class="inline_code">grpc-status</span> response header (as shown in the unary example above). For server streaming RPCs, use the <span class="inline_code">statusName</span> field in the <span class="inline_code">grpcStreamResponse</span> action instead. You can also set a <span class="inline_code">grpc-message</span> header (unary) or <span class="inline_code">statusMessage</span> field (streaming) to provide error details. Standard gRPC status codes are supported:</p>
 
 <table>
     <thead>
