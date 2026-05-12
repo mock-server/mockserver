@@ -52,8 +52,9 @@ Validation principle: prefer executable verification over static inspection. Whe
 ### Java changes (`java`)
 1. Identify affected Maven modules from file paths (see testing-policy.md for module mapping)
 2. Run unit tests: `cd mockserver && ./mvnw test -pl <module1>,<module2>`
-3. If tests fail, fix before committing
-4. If tests already passed earlier in this conversation for the exact same changes (no further edits since), skip re-running
+3. Integration tests can also be run locally: `cd mockserver && ./mvnw verify -pl <module>` (e.g., `mockserver-war`, `mockserver-netty`). Use this when changes affect shared integration test code like `AbstractBasicMockingIntegrationTest`.
+4. If tests fail, fix before committing
+5. If tests already passed earlier in this conversation for the exact same changes (no further edits since), skip re-running
 
 ### Terraform changes (`terraform`)
 1. Run `terraform fmt -check -recursive` in the terraform directory to verify formatting

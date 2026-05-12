@@ -1769,7 +1769,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             "" + NEW_LINE +
             " schema validation errors:" + NEW_LINE +
             "" + NEW_LINE +
-            "  16 errors:\n" +
+            "  17 errors:\n" +
             "   - $.grpcStreamResponse: is missing, but is required, if specifying action of type GrpcStreamResponse\n" +
             "   - $.httpError: is missing, but is required, if specifying action of type Error\n" +
             "   - $.httpForward: is missing, but is required, if specifying action of type Forward\n" +
@@ -1782,6 +1782,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             "   - $.httpResponseClassCallback: is missing, but is required, if specifying action of type ResponseClassCallback\n" +
             "   - $.httpResponseObjectCallback: is missing, but is required, if specifying action of type ResponseObjectCallback\n" +
             "   - $.httpResponseTemplate: is missing, but is required, if specifying action of type ResponseTemplate\n" +
+            "   - $.httpResponses: is missing, but is required, if specifying action of type Responses\n" +
             "   - $.httpSseResponse: is missing, but is required, if specifying action of type SseResponse\n" +
             "   - $.httpWebSocketResponse: is missing, but is required, if specifying action of type WebSocketResponse\n" +
             "   - $.incorrectField: is not defined in the schema and the schema does not allow additional properties\n" +
