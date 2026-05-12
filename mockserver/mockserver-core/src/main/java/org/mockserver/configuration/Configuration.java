@@ -108,6 +108,7 @@ public class Configuration {
 
     // verification
     private Integer maximumNumberOfRequestToReturnInVerificationFailure;
+    private Boolean detailedVerificationFailures;
 
     // proxy
     private Boolean attemptToProxyIfNoMatchingExpectation;
@@ -1237,6 +1238,23 @@ public class Configuration {
      */
     public Configuration maximumNumberOfRequestToReturnInVerificationFailure(Integer maximumNumberOfRequestToReturnInVerificationFailure) {
         this.maximumNumberOfRequestToReturnInVerificationFailure = maximumNumberOfRequestToReturnInVerificationFailure;
+        return this;
+    }
+
+    public Boolean detailedVerificationFailures() {
+        if (detailedVerificationFailures == null) {
+            return ConfigurationProperties.detailedVerificationFailures();
+        }
+        return detailedVerificationFailures;
+    }
+
+    /**
+     * If true (the default) verification failure messages include a detailed diff showing which fields did not match for the closest matching request.
+     *
+     * @param detailedVerificationFailures enabled detailed verification failure messages
+     */
+    public Configuration detailedVerificationFailures(Boolean detailedVerificationFailures) {
+        this.detailedVerificationFailures = detailedVerificationFailures;
         return this;
     }
 

@@ -14,6 +14,7 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpState;
+import org.mockserver.mock.crud.CrudDispatcher;
 import org.mockserver.model.*;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
@@ -106,6 +107,7 @@ public class HttpActionHandlerTest {
         scheduler = spy(new Scheduler(configuration, mockServerLogger));
         when(mockHttpStateHandler.getScheduler()).thenReturn(scheduler);
         when(mockHttpStateHandler.getUniqueLoopPreventionHeaderValue()).thenReturn("MockServer_" + UUIDService.getUUID());
+        when(mockHttpStateHandler.getCrudDispatcher()).thenReturn(new CrudDispatcher());
         actionHandler = new HttpActionHandler(configuration, null, mockHttpStateHandler, null, null);
 
         openMocks(this);

@@ -18,6 +18,7 @@
         <tr><td><a href="#button_configuration_compact_log_format"><code>compactLogFormat</code></a></td><td>One-line summaries instead of full JSON in stdout</td><td><code>false</code></td></tr>
         <tr><td><a href="#button_configuration_log_level_overrides"><code>logLevelOverrides</code></a></td><td>Per-type/category log level overrides</td><td><code>{}</code></td></tr>
         <tr><td><a href="#button_configuration_detailed_match_failures"><code>detailedMatchFailures</code></a></td><td>Include per-field match failure reasons</td><td><code>true</code></td></tr>
+        <tr><td><a href="#button_configuration_detailed_verification_failures"><code>detailedVerificationFailures</code></a></td><td>Include per-field diff in verification failures</td><td><code>true</code></td></tr>
         <tr><td><a href="#button_configuration_launch_ui__debug"><code>launchUIForLogLevelDebug</code></a></td><td>Auto-open UI when log level is DEBUG</td><td><code>false</code></td></tr>
         <tr><td><a href="#button_configuration_enabled_metrics"><code>metricsEnabled</code></a></td><td>Prometheus metrics endpoint</td><td><code>false</code></td></tr>
     </tbody>
@@ -159,6 +160,23 @@
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.detailedMatchFailures=...</code></pre>
     <p>Example:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.detailedMatchFailures="false"</code></pre>
+</div>
+
+<button id="button_configuration_detailed_verification_failures" class="accordion title"><strong>Detailed Verification Failures</strong></button>
+<div class="panel title">
+    <p>If true (the default) verification failure messages will include a detailed diff showing how each recorded request differed from the expected request. This makes it easier to identify why a verification failed by highlighting per-field mismatches between the expected and actual requests.</p>
+    <p>Disable this if verification failure messages are too verbose or if you prefer concise failure output.</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">true</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.detailedVerificationFailures(boolean enable)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.detailedVerificationFailures=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_DETAILED_VERIFICATION_FAILURES=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.detailedVerificationFailures=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.detailedVerificationFailures="false"</code></pre>
 </div>
 
 <button id="button_configuration_launch_ui__debug" class="accordion title"><strong>ClientAndServer launches UI when log level DEBUG</strong></button>

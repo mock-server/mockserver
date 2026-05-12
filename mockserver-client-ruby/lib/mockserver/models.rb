@@ -56,7 +56,11 @@ module MockServer
     'operation_id'                   => 'operationId',
     'request_modifier'               => 'requestModifier',
     'response_modifier'              => 'responseModifier',
-    'maximum_number_of_request_to_return_in_verification_failure' => 'maximumNumberOfRequestToReturnInVerificationFailure'
+    'maximum_number_of_request_to_return_in_verification_failure' => 'maximumNumberOfRequestToReturnInVerificationFailure',
+    'base_path'                      => 'basePath',
+    'id_field'                       => 'idField',
+    'id_strategy'                    => 'idStrategy',
+    'initial_data'                   => 'initialData'
   }.freeze
 
   REVERSE_FIELD_MAP = FIELD_MAP.invert.freeze
@@ -1455,6 +1459,37 @@ module MockServer
       return nil if data.nil?
 
       new(ports: data.fetch('ports', []))
+    end
+  end
+
+  class CrudExpectationsDefinition
+    attr_accessor :base_path, :id_field, :id_strategy, :initial_data
+
+    def initialize(base_path: '', id_field: 'id', id_strategy: 'AUTO_INCREMENT', initial_data: nil)
+      @base_path = base_path
+      @id_field = id_field
+      @id_strategy = id_strategy
+      @initial_data = initial_data
+    end
+
+    def to_h
+      MockServer.strip_none({
+        'basePath'    => @base_path,
+        'idField'     => @id_field,
+        'idStrategy'  => @id_strategy,
+        'initialData' => @initial_data
+      })
+    end
+
+    def self.from_hash(data)
+      return nil if data.nil?
+
+      new(
+        base_path:    data.fetch('basePath', ''),
+        id_field:     data.fetch('idField', 'id'),
+        id_strategy:  data.fetch('idStrategy', 'AUTO_INCREMENT'),
+        initial_data: data['initialData']
+      )
     end
   end
 

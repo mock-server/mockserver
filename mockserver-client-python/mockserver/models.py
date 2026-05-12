@@ -55,6 +55,10 @@ _FIELD_MAP = {
     "http_sse_response": "httpSseResponse",
     "http_websocket_response": "httpWebSocketResponse",
     "after_actions": "afterActions",
+    "base_path": "basePath",
+    "id_field": "idField",
+    "id_strategy": "idStrategy",
+    "initial_data": "initialData",
 }
 
 
@@ -1314,6 +1318,33 @@ class Ports:
         if data is None:
             return None
         return cls(ports=data.get("ports", []))
+
+
+@dataclass
+class CrudExpectationsDefinition:
+    base_path: str = ""
+    id_field: str = "id"
+    id_strategy: str = "AUTO_INCREMENT"
+    initial_data: list[dict] | None = None
+
+    def to_dict(self) -> dict:
+        return _strip_none({
+            "basePath": self.base_path,
+            "idField": self.id_field,
+            "idStrategy": self.id_strategy,
+            "initialData": self.initial_data,
+        })
+
+    @classmethod
+    def from_dict(cls, data: dict) -> CrudExpectationsDefinition:
+        if data is None:
+            return None
+        return cls(
+            base_path=data.get("basePath", ""),
+            id_field=data.get("idField", "id"),
+            id_strategy=data.get("idStrategy", "AUTO_INCREMENT"),
+            initial_data=data.get("initialData"),
+        )
 
 
 RequestDefinition = HttpRequest

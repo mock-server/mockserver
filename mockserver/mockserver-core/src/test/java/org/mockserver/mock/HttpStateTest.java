@@ -93,6 +93,7 @@ public class HttpStateTest {
 
     @Before
     public void prepareTestFixture() {
+        configuration.detailedVerificationFailures(false);
         Scheduler scheduler = mock(Scheduler.class);
         httpState = new HttpState(configuration, new MockServerLogger(configuration, MockServerLogger.class), scheduler);
         openMocks(this);

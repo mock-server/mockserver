@@ -473,6 +473,24 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         }
     }
 
+    public Map<MatchDifference.Field, List<String>> findClosestMatchDiff(HttpRequest httpRequest) {
+        int closestMatchFailures = Integer.MAX_VALUE;
+        Map<MatchDifference.Field, List<String>> closestDifferences = null;
+
+        for (HttpRequestMatcher httpRequestMatcher : httpRequestMatchers.toSortedList()) {
+            MatchDifference matchDifference = new MatchDifference(true, httpRequest);
+            if (!httpRequestMatcher.matches(matchDifference, httpRequest)) {
+                Map<MatchDifference.Field, List<String>> differences = matchDifference.getAllDifferences();
+                int failures = differences.size();
+                if (failures < closestMatchFailures && httpRequestMatcher.getExpectation() != null) {
+                    closestMatchFailures = failures;
+                    closestDifferences = differences;
+                }
+            }
+        }
+        return closestDifferences;
+    }
+
     public boolean isEmpty() {
         return httpRequestMatchers.isEmpty();
     }

@@ -370,3 +370,56 @@ The only difference between the two servlets is a single boolean flag: `ProxySer
 ### Loop Prevention Header
 
 MockServer adds an `x-forwarded-by` header to forwarded requests to prevent infinite loops. The header name is fixed (`x-forwarded-by`); the value is generated per server instance using the pattern `MockServer_<UUID>`. If an incoming request already contains this header with the matching value, it is identified as a loop and returned with a 404.
+
+## CRUD Simulation
+
+The CRUD simulation feature allows auto-generating stateful REST endpoints from a data model definition. Registered via `PUT /mockserver/crud`, it creates 5 endpoints (GET list, GET by ID, POST, PUT, DELETE) backed by an in-memory data store.
+
+### Architecture
+
+CRUD requests are intercepted in `HttpActionHandler.processAction()` **before** normal expectation matching. The dispatch chain is:
+
+1. `CrudDispatcher.dispatch(request)` checks if the request path matches any registered CRUD basePath
+2. If matched, delegates to the appropriate `CrudActionHandler` method based on HTTP method and path structure
+3. If no CRUD match, falls through to normal expectation matching
+
+### Key Classes
+
+| Class | Location | Purpose |
+|-------|----------|---------|
+| `CrudExpectationsDefinition` | `mockserver-core/.../model/` | POJO model for the CRUD definition (basePath, idField, idStrategy, initialData) |
+| `CrudDataStore` | `mockserver-core/.../mock/crud/` | Thread-safe in-memory store using ConcurrentHashMap + ConcurrentLinkedDeque |
+| `CrudActionHandler` | `mockserver-core/.../mock/crud/` | Handles CRUD operations, produces HttpResponse objects |
+| `CrudDispatcher` | `mockserver-core/.../mock/crud/` | Routes requests to the correct handler based on path and method |
+
+### Thread Safety
+
+`CrudDataStore` uses `ConcurrentHashMap` for data storage and `ConcurrentLinkedDeque` for insertion order tracking. The `AtomicLong` counter handles auto-increment ID generation. All operations are individually thread-safe.
+
+### Reset Behaviour
+
+`CrudDispatcher.reset()` is called during `HttpState.reset()`, clearing all CRUD registrations.
+
+## Detailed Verification Failures (Diff Mode)
+
+When `mockserver.detailedVerificationFailures` is enabled (default: `true`), verification failure messages include a "closest match diff" section showing exactly which fields of the closest matching request differed from the expected request.
+
+### How It Works
+
+In `MockServerEventLog.verify()`, after determining verification failed:
+1. Creates an `HttpRequestPropertiesMatcher` for the verification request definition
+2. Tests each received request against it with `detailedMatchFailures=true`
+3. Identifies the closest match (fewest diff fields)
+4. Appends formatted diff using `MatchDifferenceFormatter`
+
+### 404 Response Enrichment
+
+When no expectation matches and a 404 is returned, `HttpActionHandler.returnNotFound()` calls `HttpState.findClosestMatchDiff()` to find the closest matching expectation's diff details and appends them to the 404 response body.
+
+### Key Classes
+
+| Class | Location | Purpose |
+|-------|----------|---------|
+| `MatchDifferenceFormatter` | `mockserver-core/.../matchers/` | Formats `MatchDifference` maps into human-readable text |
+| `MatchDifference` | `mockserver-core/.../matchers/` | Stores per-field match failure details (pre-existing) |
+| `MatchFailureHints` | `mockserver-core/.../matchers/` | Generates actionable suggestions for common mismatches (pre-existing) |

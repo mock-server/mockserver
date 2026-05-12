@@ -773,3 +773,102 @@ new MockServerClient("localhost", 1080)
 <div class="panel title">
     {% include_subpage _includes/error_action_code_examples.html %}
 </div>
+
+<a id="crud_simulation" class="anchor" href="#crud_simulation">&nbsp;</a>
+
+<h3>CRUD Simulation</h3>
+
+<p>CRUD Simulation lets you quickly stand up a fully functional RESTful resource without writing individual expectations for each HTTP method. You provide a <strong>base path</strong> and optional configuration, and MockServer automatically generates five endpoints that manage an in-memory collection of JSON objects.</p>
+
+<p>This is useful when your tests need a realistic data store (e.g. users, products, orders) that supports create, read, update, and delete operations without manually defining expectations for each verb.</p>
+
+<h4>Auto-Generated Endpoints</h4>
+
+<p>Given a <span class="inline_code">basePath</span> of <span class="inline_code">/api/users</span>, MockServer generates:</p>
+
+<table class="table">
+    <thead>
+        <tr><th>Method</th><th>Path</th><th>Description</th><th>Success Status</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><span class="inline_code">GET</span></td><td><span class="inline_code">/api/users</span></td><td>List all items</td><td>200</td></tr>
+        <tr><td><span class="inline_code">POST</span></td><td><span class="inline_code">/api/users</span></td><td>Create a new item</td><td>201</td></tr>
+        <tr><td><span class="inline_code">GET</span></td><td><span class="inline_code">/api/users/{id}</span></td><td>Get item by ID</td><td>200</td></tr>
+        <tr><td><span class="inline_code">PUT</span></td><td><span class="inline_code">/api/users/{id}</span></td><td>Update item by ID</td><td>200</td></tr>
+        <tr><td><span class="inline_code">DELETE</span></td><td><span class="inline_code">/api/users/{id}</span></td><td>Delete item by ID</td><td>204</td></tr>
+    </tbody>
+</table>
+
+<h4>JSON Definition Format</h4>
+
+<p>A CRUD simulation is defined by a JSON object with the following fields:</p>
+<ul>
+    <li><strong>basePath</strong> (required) - the URL path prefix for the generated endpoints, e.g. <span class="inline_code">/api/users</span></li>
+    <li><strong>idField</strong> (optional, default <span class="inline_code">"id"</span>) - the field name used as the unique identifier in each JSON object</li>
+    <li><strong>idStrategy</strong> (optional, default <span class="inline_code">"AUTO_INCREMENT"</span>) - how IDs are generated for new items:
+        <ul>
+            <li><span class="inline_code">AUTO_INCREMENT</span> - sequential numeric IDs (1, 2, 3, ...)</li>
+            <li><span class="inline_code">UUID</span> - random UUID strings</li>
+        </ul>
+    </li>
+    <li><strong>initialData</strong> (optional) - an array of JSON objects to pre-populate the data store</li>
+</ul>
+
+<h4>REST API</h4>
+
+<p>Register a CRUD simulation using <span class="inline_code">PUT /mockserver/crud</span>:</p>
+<pre class="prettyprint lang-java code"><code class="code">curl -X PUT "http://localhost:1080/mockserver/crud" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "basePath": "/api/users",
+    "idField": "id",
+    "idStrategy": "AUTO_INCREMENT",
+    "initialData": [
+      {"name": "Alice", "email": "alice@example.com"},
+      {"name": "Bob", "email": "bob@example.com"}
+    ]
+  }'</code></pre>
+
+<p>After registration, the endpoints are immediately available:</p>
+<pre class="prettyprint lang-java code"><code class="code"># List all users
+curl http://localhost:1080/api/users
+
+# Create a new user
+curl -X POST http://localhost:1080/api/users \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Charlie", "email": "charlie@example.com"}'
+
+# Get user by ID
+curl http://localhost:1080/api/users/1
+
+# Update user
+curl -X PUT http://localhost:1080/api/users/1 \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Alice Updated", "email": "alice@example.com"}'
+
+# Delete user
+curl -X DELETE http://localhost:1080/api/users/3</code></pre>
+
+<h4>Java Client Example</h4>
+<pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .crud(
+        new CrudExpectationsDefinition()
+            .withBasePath("/api/users")
+            .withIdField("id")
+            .withIdStrategy(CrudExpectationsDefinition.IdStrategy.AUTO_INCREMENT)
+    );</code></pre>
+
+<h4>UUID ID Strategy Example</h4>
+<pre class="prettyprint lang-java code"><code class="code">curl -X PUT "http://localhost:1080/mockserver/crud" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "basePath": "/api/products",
+    "idStrategy": "UUID"
+  }'
+
+# Create a product - ID will be a UUID like "550e8400-e29b-41d4-a716-446655440000"
+curl -X POST http://localhost:1080/api/products \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Widget", "price": 9.99}'</code></pre>
+
+<p>CRUD simulations are independent of regular expectations and are cleared when MockServer is <a href="/mock_server/clearing_and_resetting.html">reset</a>. You can register multiple CRUD simulations with different base paths simultaneously.</p>

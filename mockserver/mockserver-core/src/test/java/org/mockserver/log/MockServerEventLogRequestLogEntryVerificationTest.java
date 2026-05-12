@@ -36,6 +36,7 @@ public class MockServerEventLogRequestLogEntryVerificationTest {
 
     @Before
     public void setupTestFixture() {
+        configuration.detailedVerificationFailures(false);
         mockServerEventLog = new MockServerEventLog(configuration, new MockServerLogger(configuration, MockServerLogger.class), scheduler, true);
     }
 
@@ -590,5 +591,105 @@ public class MockServerEventLogRequestLogEntryVerificationTest {
 
         // then
         assertThat(verify(verification().withRequest(httpRequest).withTimes(exactly(2))), is(""));
+    }
+
+    @Test
+    public void shouldIncludeDiffInVerificationFailureWhenEnabled() {
+        // given
+        configuration.detailedVerificationFailures(true);
+        HttpRequest httpRequest = new HttpRequest().withMethod("POST").withPath("some_path");
+
+        // when
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+
+        // then
+        String result = verify(
+            verification()
+                .withRequest(
+                    request().withMethod("GET").withPath("some_other_path")
+                )
+        );
+        assertThat(result, org.hamcrest.CoreMatchers.containsString("Request not found"));
+        assertThat(result, org.hamcrest.CoreMatchers.containsString("closest match diff:"));
+        assertThat(result, org.hamcrest.CoreMatchers.containsString("method:"));
+    }
+
+    @Test
+    public void shouldNotIncludeDiffInVerificationFailureWhenDisabled() {
+        // given
+        configuration.detailedVerificationFailures(false);
+        HttpRequest httpRequest = new HttpRequest().withMethod("POST").withPath("some_path");
+
+        // when
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+
+        // then
+        String result = verify(
+            verification()
+                .withRequest(
+                    request().withMethod("GET").withPath("some_other_path")
+                )
+        );
+        assertThat(result, org.hamcrest.CoreMatchers.containsString("Request not found"));
+        assertThat(result, org.hamcrest.CoreMatchers.not(org.hamcrest.CoreMatchers.containsString("closest match diff:")));
+    }
+
+    @Test
+    public void shouldPickClosestMatchByFewestFailedFields() {
+        // given
+        configuration.detailedVerificationFailures(true);
+        // closeMatch shares method GET with verification request, so method passes and only path fails
+        HttpRequest closeMatch = new HttpRequest().withMethod("GET").withPath("almost_right");
+        // farMatch has different method POST so fails at method (first check) with fail-fast
+        HttpRequest farMatch = new HttpRequest().withMethod("POST").withPath("completely_wrong");
+
+        // when
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(farMatch)
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(closeMatch)
+                .setType(RECEIVED_REQUEST)
+        );
+
+        // then - verification matcher for GET /some_path is used against each received request
+        // closeMatch (GET /almost_right): method matches, path fails -> 1 diff field (path)
+        // farMatch (POST /completely_wrong): method fails with fail-fast -> 1 diff field (method)
+        // both have 1 diff field but closeMatch is actually closer; since both have same count,
+        // the first processed one (farMatch) will be kept
+        String result = verify(
+            verification()
+                .withRequest(
+                    request().withMethod("GET").withPath("some_path")
+                )
+        );
+        assertThat(result, org.hamcrest.CoreMatchers.containsString("closest match diff:"));
+    }
+
+    @Test
+    public void shouldNotIncludeDiffWhenNoRequestsLogged() {
+        // given
+        configuration.detailedVerificationFailures(true);
+
+        // then
+        String result = verify(
+            verification()
+                .withRequest(
+                    request().withMethod("GET").withPath("some_path")
+                )
+        );
+        assertThat(result, org.hamcrest.CoreMatchers.containsString("Request not found"));
+        assertThat(result, org.hamcrest.CoreMatchers.not(org.hamcrest.CoreMatchers.containsString("closest match diff:")));
     }
 }

@@ -398,6 +398,13 @@ export type HttpRequestAndHttpResponse = {
     timestamp?: string;
 };
 
+export interface CrudExpectationsDefinition {
+  basePath: string;
+  idField?: string;
+  idStrategy?: "AUTO_INCREMENT" | "UUID";
+  initialData?: object[];
+}
+
 export type ClearUpdatePayload = RequestDefinition | ExpectationId;
 
 export interface RetrieveUpdateParams {

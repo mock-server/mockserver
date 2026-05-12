@@ -127,6 +127,7 @@ public class ConfigurationProperties {
 
     // verification
     private static final String MOCKSERVER_MAXIMUM_NUMBER_OF_REQUESTS_TO_RETURN_IN_VERIFICATION_FAILURE = "mockserver.maximumNumberOfRequestToReturnInVerificationFailure";
+    private static final String MOCKSERVER_DETAILED_VERIFICATION_FAILURES = "mockserver.detailedVerificationFailures";
 
     // proxy
     private static final String MOCKSERVER_ATTEMPT_TO_PROXY_IF_NO_MATCHING_EXPECTATION = "mockserver.attemptToProxyIfNoMatchingExpectation";
@@ -1183,6 +1184,19 @@ public class ConfigurationProperties {
      */
     public static void maximumNumberOfRequestToReturnInVerificationFailure(Integer maximumNumberOfRequestToReturnInVerification) {
         setProperty(MOCKSERVER_MAXIMUM_NUMBER_OF_REQUESTS_TO_RETURN_IN_VERIFICATION_FAILURE, "" + maximumNumberOfRequestToReturnInVerification);
+    }
+
+    public static boolean detailedVerificationFailures() {
+        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_DETAILED_VERIFICATION_FAILURES, "MOCKSERVER_DETAILED_VERIFICATION_FAILURES", "" + true));
+    }
+
+    /**
+     * If true (the default) verification failure messages include a detailed diff showing which fields did not match for the closest matching request.
+     *
+     * @param enable enabled detailed verification failure messages
+     */
+    public static void detailedVerificationFailures(boolean enable) {
+        setProperty(MOCKSERVER_DETAILED_VERIFICATION_FAILURES, "" + enable);
     }
 
     // proxy

@@ -88,6 +88,7 @@ public class MockServerClient implements Stoppable {
     private PortBindingSerializer portBindingSerializer = new PortBindingSerializer(MOCK_SERVER_LOGGER);
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer(MOCK_SERVER_LOGGER);
     private OpenAPIExpectationSerializer openAPIExpectationSerializer = new OpenAPIExpectationSerializer(MOCK_SERVER_LOGGER);
+    private CrudExpectationsDefinitionSerializer crudExpectationsDefinitionSerializer = new CrudExpectationsDefinitionSerializer(MOCK_SERVER_LOGGER);
     private VerificationSerializer verificationSerializer = new VerificationSerializer(MOCK_SERVER_LOGGER);
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer(MOCK_SERVER_LOGGER);
     private LogEntrySerializer logEntrySerializer = new LogEntrySerializer(MOCK_SERVER_LOGGER);
@@ -1614,6 +1615,33 @@ public class MockServerClient implements Stoppable {
             }
         }
         return new Expectation[0];
+    }
+
+    /**
+     * Register a CRUD simulation that auto-generates RESTful endpoints for a given base path.
+     * <p>
+     * For example, with basePath "/api/users", MockServer will automatically handle:
+     * <ul>
+     *     <li>GET /api/users - list all items</li>
+     *     <li>POST /api/users - create a new item</li>
+     *     <li>GET /api/users/{id} - get an item by ID</li>
+     *     <li>PUT /api/users/{id} - update an item by ID</li>
+     *     <li>DELETE /api/users/{id} - delete an item by ID</li>
+     * </ul>
+     *
+     * @param crudDefinition the CRUD expectations definition specifying basePath, idField, idStrategy, and optional initial data
+     * @return this MockServerClient for fluent chaining
+     */
+    public MockServerClient crud(CrudExpectationsDefinition crudDefinition) {
+        sendRequest(
+            request()
+                .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
+                .withPath(calculatePath("crud"))
+                .withBody(crudExpectationsDefinitionSerializer.serialize(crudDefinition), StandardCharsets.UTF_8),
+            true
+        );
+        return clientClass.cast(this);
     }
 
     /**

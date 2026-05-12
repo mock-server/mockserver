@@ -9,6 +9,9 @@ import org.mockserver.configuration.Configuration;
 import org.mockserver.grpc.GrpcProtoDescriptorStore;
 import org.mockserver.grpc.GrpcProtoFileCompiler;
 import org.mockserver.log.MockServerEventLog;
+import org.mockserver.mock.crud.CrudActionHandler;
+import org.mockserver.mock.crud.CrudDataStore;
+import org.mockserver.mock.crud.CrudDispatcher;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
@@ -94,6 +97,7 @@ public class HttpState {
     private org.mockserver.serialization.har.HarConverter harConverter;
     private AuthenticationHandler controlPlaneAuthenticationHandler;
     private GrpcProtoDescriptorStore grpcDescriptorStore;
+    private final CrudDispatcher crudDispatcher = new CrudDispatcher();
 
     public static void setPort(final HttpRequest request) {
         if (request != null && request.getSocketAddress() != null) {
@@ -169,6 +173,10 @@ public class HttpState {
 
     public GrpcProtoDescriptorStore getGrpcDescriptorStore() {
         return grpcDescriptorStore;
+    }
+
+    public CrudDispatcher getCrudDispatcher() {
+        return crudDispatcher;
     }
 
     public AuthenticationHandler getControlPlaneAuthenticationHandler() {
@@ -258,6 +266,7 @@ public class HttpState {
         requestMatchers.reset();
         mockServerLog.reset();
         webSocketClientRegistry.reset();
+        crudDispatcher.reset();
         if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -322,6 +331,13 @@ public class HttpState {
 
     public void postProcess(Expectation expectation) {
         requestMatchers.postProcess(expectation);
+    }
+
+    public java.util.Map<MatchDifference.Field, java.util.List<String>> findClosestMatchDiff(HttpRequest request) {
+        if (requestMatchers.isEmpty()) {
+            return null;
+        }
+        return requestMatchers.findClosestMatchDiff(request);
     }
 
     private static final int DEBUG_MISMATCH_MAX_EXPECTATIONS = 100;
@@ -942,6 +958,45 @@ public class HttpState {
                 } else {
                     canHandle.complete(true);
                 }
+
+            } else if (request.matches("PUT", PATH_PREFIX + "/crud", "/crud")) {
+
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    try {
+                        com.fasterxml.jackson.databind.ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+                        CrudExpectationsDefinition definition = objectMapper.readValue(request.getBodyAsJsonOrXmlString(), CrudExpectationsDefinition.class);
+                        if (definition.getBasePath() == null || definition.getBasePath().isEmpty()) {
+                            responseWriter.writeResponse(request, BAD_REQUEST, "basePath is required", MediaType.create("text", "plain").toString());
+                        } else {
+                            CrudDataStore store = new CrudDataStore(
+                                definition.getIdField() != null ? definition.getIdField() : "id",
+                                definition.getIdStrategy() != null ? definition.getIdStrategy() : CrudExpectationsDefinition.IdStrategy.AUTO_INCREMENT,
+                                definition.getInitialData()
+                            );
+                            CrudActionHandler handler = new CrudActionHandler(store, definition.getBasePath());
+                            crudDispatcher.register(definition.getBasePath(), handler);
+                            if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
+                                mockServerLogger.logEvent(
+                                    new LogEntry()
+                                        .setLogLevel(Level.INFO)
+                                        .setMessageFormat("registered CRUD resource at base path:{}")
+                                        .setArguments(definition.getBasePath())
+                                );
+                            }
+                            com.fasterxml.jackson.databind.node.ObjectNode responseNode = objectMapper.createObjectNode();
+                            responseNode.put("basePath", definition.getBasePath());
+                            responseNode.put("idField", definition.getIdField() != null ? definition.getIdField() : "id");
+                            responseNode.put("idStrategy", (definition.getIdStrategy() != null ? definition.getIdStrategy() : CrudExpectationsDefinition.IdStrategy.AUTO_INCREMENT).name());
+                            responseNode.put("itemCount", store.size());
+                            responseWriter.writeResponse(request, response()
+                                .withStatusCode(CREATED.code())
+                                .withBody(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(responseNode), MediaType.JSON_UTF_8), true);
+                        }
+                    } catch (Exception e) {
+                        responseWriter.writeResponse(request, BAD_REQUEST, "failed to register CRUD resource: " + e.getMessage(), MediaType.create("text", "plain").toString());
+                    }
+                }
+                canHandle.complete(true);
 
             } else if (request.matches("PUT", PATH_PREFIX + "/grpc/descriptors", "/grpc/descriptors")) {
 

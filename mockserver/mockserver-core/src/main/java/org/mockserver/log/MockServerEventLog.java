@@ -8,6 +8,8 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.log.model.RequestAndExpectationId;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
+import org.mockserver.matchers.MatchDifference;
+import org.mockserver.matchers.MatchDifferenceFormatter;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.listeners.MockServerEventLogNotifier;
@@ -551,6 +553,12 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                             } else {
                                 failureMessage = "Request not found " + verification.getTimes() + ", expected:<" + serializedRequestToBeVerified + "> but was found " + matchedCount + " time" + (matchedCount == 1 ? "" : "s") + " among " + allRequests.size() + " total requests";
                             }
+                            if (configuration.detailedVerificationFailures() && !allRequests.isEmpty() && verification.getHttpRequest() instanceof HttpRequest) {
+                                String diffSummary = buildClosestMatchDiff((HttpRequest) verification.getHttpRequest(), allRequests);
+                                if (isNotBlank(diffSummary)) {
+                                    failureMessage += diffSummary;
+                                }
+                            }
                             final Object[] arguments = new Object[]{verification.getHttpRequest(), allRequests.size() == 1 ? allRequests.get(0) : allRequests};
                             if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                                 mockServerLogger.logEvent(
@@ -676,6 +684,47 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         } else {
             resultConsumer.accept("");
         }
+    }
+
+    private String buildClosestMatchDiff(HttpRequest verificationRequest, List<RequestDefinition> allRequests) {
+        try {
+            HttpRequestMatcher verificationMatcher = matcherBuilder.transformsToMatcher(verificationRequest);
+            int closestMatchFailures = Integer.MAX_VALUE;
+            Map<MatchDifference.Field, List<String>> closestDifferences = null;
+            int totalFields = MatchDifference.Field.values().length;
+
+            for (RequestDefinition receivedRequest : allRequests) {
+                if (receivedRequest instanceof HttpRequest) {
+                    HttpRequest received = (HttpRequest) receivedRequest;
+                    MatchDifference matchDifference = new MatchDifference(true, received);
+                    verificationMatcher.matches(matchDifference, received);
+                    Map<MatchDifference.Field, List<String>> differences = matchDifference.getAllDifferences();
+                    int failures = differences.size();
+                    if (failures < closestMatchFailures) {
+                        closestMatchFailures = failures;
+                        closestDifferences = differences;
+                        if (failures == 0) {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (closestDifferences != null && !closestDifferences.isEmpty()) {
+                return MatchDifferenceFormatter.formatDifferences(closestDifferences);
+            }
+        } catch (Exception e) {
+            if (mockServerLogger.isEnabledForInstance(Level.TRACE)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(Level.TRACE)
+                        .setMessageFormat("exception generating closest match diff:{}")
+                        .setArguments(e.getMessage())
+                        .setThrowable(e)
+                );
+            }
+        }
+        return "";
     }
 
     private void verificationSequenceSuccessMessage(VerificationSequence verificationSequence, Consumer<String> resultConsumer, String logCorrelationId, String failureMessage) {

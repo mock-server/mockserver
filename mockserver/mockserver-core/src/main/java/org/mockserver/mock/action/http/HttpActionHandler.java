@@ -16,6 +16,7 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpState;
+import org.mockserver.mock.crud.CrudDispatcher;
 import org.mockserver.model.*;
 import org.mockserver.openapi.OpenAPIResponseValidator;
 import org.mockserver.proxyconfiguration.NoProxyHostsUtils;
@@ -101,6 +102,24 @@ public class HttpActionHandler {
                     .setArguments(request)
             );
         }
+
+        CrudDispatcher crudDispatcher = httpStateHandler.getCrudDispatcher();
+        HttpResponse crudResponse = crudDispatcher.dispatch(request);
+        if (crudResponse != null) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(EXPECTATION_RESPONSE)
+                    .setLogLevel(Level.INFO)
+                    .setCorrelationId(request.getLogCorrelationId())
+                    .setHttpRequest(request)
+                    .setHttpResponse(crudResponse)
+                    .setMessageFormat("returning CRUD response:{}for request:{}")
+                    .setArguments(crudResponse, request)
+            );
+            responseWriter.writeResponse(request, crudResponse, false);
+            return;
+        }
+
         final Expectation expectation = httpStateHandler.firstMatchingExpectation(request);
         final AtomicBoolean postProcessed = new AtomicBoolean(false);
         Runnable expectationPostProcessor = () -> {
@@ -966,6 +985,29 @@ public class HttpActionHandler {
                         .setMessageFormat(NO_MATCH_RESPONSE_NO_EXPECTATION_MESSAGE_FORMAT)
                         .setArguments(request, notFoundResponse())
                 );
+            }
+        }
+        if (configuration.detailedVerificationFailures()) {
+            try {
+                java.util.Map<org.mockserver.matchers.MatchDifference.Field, java.util.List<String>> closestDiff = httpStateHandler.findClosestMatchDiff(request);
+                if (closestDiff != null && !closestDiff.isEmpty()) {
+                    String diffBody = org.mockserver.matchers.MatchDifferenceFormatter.formatDifferences(closestDiff);
+                    if (isNotBlank(diffBody)) {
+                        String existingBody = response.getBodyAsString();
+                        String prefix = isNotBlank(existingBody) ? existingBody : "no expectation for request";
+                        response.withBody(prefix + diffBody);
+                    }
+                }
+            } catch (Exception e) {
+                if (mockServerLogger.isEnabledForInstance(Level.TRACE)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(Level.TRACE)
+                            .setMessageFormat("exception generating closest match diff for 404 response:{}")
+                            .setArguments(e.getMessage())
+                            .setThrowable(e)
+                    );
+                }
             }
         }
         responseWriter.writeResponse(request, response, false);
