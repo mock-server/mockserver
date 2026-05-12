@@ -16,7 +16,7 @@ docker network create "$NETWORK_NAME"
 docker run -d \
   --name "$MOCKSERVER_NAME" \
   --network "$NETWORK_NAME" \
-  mockserver/mockserver:latest
+  mockserver/mockserver:snapshot
 
 "$SCRIPT_DIR/../run-in-docker.sh" \
   -i ruby:3.3 \

@@ -52,7 +52,7 @@ def mockserver_url():
             "docker", "run", "-d",
             "--name", container_name,
             "-p", f"{port}:1080",
-            "mockserver/mockserver:latest",
+            "mockserver/mockserver:snapshot",
         ],
         capture_output=True,
         text=True,

@@ -36,7 +36,7 @@ def start_mockserver_container
   MOCKSERVER_STATE[:port] = port
   MOCKSERVER_STATE[:host] = 'localhost'
   container_name = "mockserver-ruby-integration-#{port}"
-  output = `docker run -d --name #{container_name} -p #{port}:1080 mockserver/mockserver:latest 2>&1`
+  output = `docker run -d --name #{container_name} -p #{port}:1080 mockserver/mockserver:snapshot 2>&1`
   raise "Failed to start container: #{output}" unless $?.success?
 
   MOCKSERVER_STATE[:container_id] = output.strip
