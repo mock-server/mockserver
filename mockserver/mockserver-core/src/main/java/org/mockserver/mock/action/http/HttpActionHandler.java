@@ -987,7 +987,7 @@ public class HttpActionHandler {
                 );
             }
         }
-        if (configuration.detailedVerificationFailures() && mockServerLogger.isEnabledForInstance(Level.INFO)) {
+        if (configuration.detailedVerificationFailures() && mockServerLogger.isEnabledForInstance(Level.DEBUG)) {
             try {
                 java.util.Map<org.mockserver.matchers.MatchDifference.Field, java.util.List<String>> closestDiff = httpStateHandler.findClosestMatchDiff(request);
                 if (closestDiff != null && !closestDiff.isEmpty()) {
@@ -995,7 +995,7 @@ public class HttpActionHandler {
                     if (isNotBlank(diffBody)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
-                                .setLogLevel(Level.INFO)
+                                .setLogLevel(Level.DEBUG)
                                 .setHttpRequest(request)
                                 .setMessageFormat("closest match diff for unmatched request:{}")
                                 .setArguments(diffBody)
