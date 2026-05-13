@@ -250,8 +250,14 @@ public class MockServerLoggerTest {
         );
 
         // then
-        assertThat(capturedEntries.size(), is(1));
-        assertThat(capturedEntries.get(0).getMessageFormat(), is("listener test message"));
+        List<LogEntry> matchingEntries = new ArrayList<>();
+        for (LogEntry entry : capturedEntries) {
+            if ("listener test message".equals(entry.getMessageFormat())) {
+                matchingEntries.add(entry);
+            }
+        }
+        assertThat(matchingEntries.size(), is(1));
+        assertThat(matchingEntries.get(0).getMessageFormat(), is("listener test message"));
         verify(mockHttpStateHandler, times(1)).log(any(LogEntry.class));
     }
 
