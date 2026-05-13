@@ -28,8 +28,12 @@ if [[ ! "$NEXT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-SNAPSHOT$ ]]; then
   exit 1
 fi
 
+if [[ -z "$OLD_VERSION" ]]; then
+  log_error "OLD_VERSION could not be derived — no mockserver-X.Y.Z git tag found (try: git fetch --tags)"
+  exit 1
+fi
 if [[ ! "$OLD_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  log_error "OLD_VERSION must be in X.Y.Z format, got: $OLD_VERSION"
+  log_error "OLD_VERSION (derived from latest git tag) must be in X.Y.Z format, got: $OLD_VERSION"
   exit 1
 fi
 
@@ -45,14 +49,8 @@ if [[ "$NEXT_VERSION" != "$EXPECTED_NEXT_VERSION" ]]; then
   exit 1
 fi
 
-LATEST_RELEASE_VERSION=$(latest_release_version)
-if [[ -n "$LATEST_RELEASE_VERSION" && "$OLD_VERSION" != "$LATEST_RELEASE_VERSION" ]]; then
-  log_error "OLD_VERSION must match the latest released version, expected: $LATEST_RELEASE_VERSION"
-  exit 1
-fi
-
 if [[ "$RELEASE_VERSION" == "$OLD_VERSION" ]]; then
-  log_error "RELEASE_VERSION must differ from OLD_VERSION"
+  log_error "RELEASE_VERSION must differ from OLD_VERSION (latest git tag: $OLD_VERSION)"
   exit 1
 fi
 

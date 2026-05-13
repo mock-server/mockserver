@@ -122,15 +122,18 @@ version_to_subdomain() {
 if is_ci; then
   RELEASE_VERSION=$(buildkite-agent meta-data get release-version)
   NEXT_VERSION=$(buildkite-agent meta-data get next-version)
-  OLD_VERSION=$(buildkite-agent meta-data get old-version)
   RELEASE_TYPE=$(buildkite-agent meta-data get release-type 2>/dev/null || echo "full")
   CREATE_VERSIONED_SITE=$(buildkite-agent meta-data get create-versioned-site 2>/dev/null || echo "no")
   CURRENT_VERSION=$(buildkite-agent meta-data get current-version 2>/dev/null || echo "")
   WEBSITE_BUCKET=$(buildkite-agent meta-data get website-bucket 2>/dev/null || echo "")
   DISTRIBUTION_ID=$(buildkite-agent meta-data get distribution-id 2>/dev/null || echo "")
+  # Buildkite shallow-clones without tags; fetch them so latest_release_version() works
+  git -C "$REPO_ROOT" fetch --tags --quiet 2>/dev/null || true
+  OLD_VERSION=$(latest_release_version)
 else
-  : "${RELEASE_VERSION:?Set RELEASE_VERSION}" "${NEXT_VERSION:?Set NEXT_VERSION}" "${OLD_VERSION:?Set OLD_VERSION}"
+  : "${RELEASE_VERSION:?Set RELEASE_VERSION}" "${NEXT_VERSION:?Set NEXT_VERSION}"
   : "${RELEASE_TYPE:=full}" "${CREATE_VERSIONED_SITE:=no}" "${CURRENT_VERSION:=}"
+  : "${OLD_VERSION:=$(latest_release_version)}"
   if [[ -z "$CURRENT_VERSION" && -f "$REPO_ROOT/.tmp/release-current-version" ]]; then
     CURRENT_VERSION=$(<"$REPO_ROOT/.tmp/release-current-version")
   fi
