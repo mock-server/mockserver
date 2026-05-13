@@ -16,7 +16,11 @@ log_info "Reading version from version.rb (in Docker)"
 VERSION=$("$REPO_ROOT/.buildkite/scripts/run-in-docker.sh" \
   -i "$RUBY_IMAGE" \
   -w /build/mockserver-client-ruby \
-  -- ruby -e "load 'lib/mockserver/version.rb'; puts MockServer::VERSION" | tail -1)
+  -- ruby -e "load 'lib/mockserver/version.rb'; puts MockServer::VERSION")
+if [[ -z "$VERSION" ]]; then
+  log_error "Failed to read version from mockserver-client-ruby/lib/mockserver/version.rb"
+  exit 1
+fi
 log_info "Version from version.rb: $VERSION"
 
 log_info "Checking if version already exists on RubyGems"

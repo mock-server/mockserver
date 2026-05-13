@@ -15,6 +15,10 @@ require_cmd git
 tf() {
   local aws_env
   aws_env=$(aws configure export-credentials --format env 2>/dev/null || true)
+  if [[ -z "$aws_env" ]]; then
+    log_error "aws configure export-credentials returned no creds — requires AWS CLI v2.10+ and valid credentials in scope"
+    exit 1
+  fi
   local -a env_args=()
   while IFS= read -r line; do
     [[ -z "$line" ]] && continue
@@ -63,6 +67,7 @@ log_info "Initializing Terraform"
 tf -chdir=/build/terraform/website init -input=false
 
 log_info "Planning Terraform changes"
+trap 'rm -f "$TF_DIR/tfplan"' EXIT
 tf -chdir=/build/terraform/website plan -input=false -out=tfplan
 
 if ! is_ci; then
@@ -72,6 +77,7 @@ fi
 log_info "Applying Terraform"
 tf -chdir=/build/terraform/website apply -input=false tfplan
 rm -f "$TF_DIR/tfplan"
+trap - EXIT
 
 NEW_BUCKET=$(tf -chdir=/build/terraform/website output -raw main_bucket_name)
 NEW_DISTRIBUTION_ID=$(tf -chdir=/build/terraform/website output -raw main_distribution_id)

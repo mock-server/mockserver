@@ -25,23 +25,12 @@ if [[ -z "$NPM_TOKEN" || "$NPM_TOKEN" == "null" ]]; then
   exit 1
 fi
 
-log_info "Building and publishing in Node container"
+log_info "Building package in Node container (install + grunt)"
 "$REPO_ROOT/.buildkite/scripts/run-in-docker.sh" \
   -i "$NODE_IMAGE" \
   -w "/build/$PKG_DIR" \
-  -e "NPM_TOKEN=$NPM_TOKEN" \
   -e "PKG_DIR=$PKG_DIR" \
   -- bash -ec '
-    set +x
-    cat > /tmp/.npmrc <<NPMRC
-//registry.npmjs.org/:_authToken=${NPM_TOKEN}
-registry=https://registry.npmjs.org/
-always-auth=true
-NPMRC
-    export NPM_CONFIG_USERCONFIG=/tmp/.npmrc
-
-    npm whoami >/dev/null || { echo "npm authentication failed"; exit 1; }
-
     rm -rf package-lock.json node_modules
 
     attempts=0
@@ -61,8 +50,6 @@ NPMRC
     else
       npx grunt
     fi
-
-    npm publish --access=public
   '
 
 log_info "Committing build artifacts"
@@ -74,5 +61,23 @@ git push origin master
 log_info "Tagging $PKG_DIR-$RELEASE_VERSION"
 git tag "$PKG_DIR-$RELEASE_VERSION"
 git push origin "$PKG_DIR-$RELEASE_VERSION"
+
+log_info "Publishing to npm (tag + commit already pushed)"
+"$REPO_ROOT/.buildkite/scripts/run-in-docker.sh" \
+  -i "$NODE_IMAGE" \
+  -w "/build/$PKG_DIR" \
+  -e "NPM_TOKEN=$NPM_TOKEN" \
+  -- bash -ec '
+    set +x
+    cat > /tmp/.npmrc <<NPMRC
+//registry.npmjs.org/:_authToken=${NPM_TOKEN}
+registry=https://registry.npmjs.org/
+always-auth=true
+NPMRC
+    export NPM_CONFIG_USERCONFIG=/tmp/.npmrc
+
+    npm whoami >/dev/null || { echo "npm authentication failed"; exit 1; }
+    npm publish --access=public
+  '
 
 log_info "Published $PKG_DIR $RELEASE_VERSION to npm"

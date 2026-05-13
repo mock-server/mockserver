@@ -106,8 +106,28 @@ quote_arg() {
   fi
 }
 
+# Build a redacted display version so the logged command never echoes secrets.
+# For `-e KEY=VAL` we keep KEY but replace VAL with `***`. The COMMAND_ARGS
+# (typically the bash heredoc body) is not redacted, so callers MUST avoid
+# embedding secrets literally in the command body and must instead use env
+# vars passed via -e.
 DISPLAY_ARGS=()
+redact_next=false
 for arg in "${DOCKER_ARGS[@]}"; do
+  if $redact_next; then
+    redact_next=false
+    if [[ "$arg" == *=* ]]; then
+      DISPLAY_ARGS+=("$(quote_arg "${arg%%=*}=***")")
+    else
+      DISPLAY_ARGS+=("***")
+    fi
+    continue
+  fi
+  if [[ "$arg" == -e || "$arg" == --env ]]; then
+    redact_next=true
+    DISPLAY_ARGS+=("$(quote_arg "$arg")")
+    continue
+  fi
   DISPLAY_ARGS+=("$(quote_arg "$arg")")
 done
 DISPLAY_CMD_ARGS=()
