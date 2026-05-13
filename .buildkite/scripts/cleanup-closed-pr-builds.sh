@@ -49,9 +49,6 @@ AUTH="Authorization: Bearer ${BUILDKITE_API_TOKEN}"
 
 cancel_and_delete_builds() {
   local branch="$1"
-  local label="$2"
-  local cancelled=0
-  local deleted=0
 
   for PIPELINE in "${PIPELINES[@]}"; do
     PAGE=1
@@ -113,7 +110,7 @@ if [ -n "$WEBHOOK" ]; then
   fi
 
   echo "PR #${PR_NUMBER} ${MERGED_LABEL} — cleaning up builds on branch: ${PR_BRANCH}"
-  cancel_and_delete_builds "$PR_BRANCH" "PR #${PR_NUMBER}"
+  cancel_and_delete_builds "$PR_BRANCH"
 
 else
   echo "--- :broom: Scheduled sweep mode"
@@ -157,7 +154,7 @@ else
 
         if [ "$PR_STATE" != "open" ]; then
           echo "--- :broom: PR #${PR_NUMBER} is ${PR_STATE} — cleaning up branch ${BRANCH}"
-          cancel_and_delete_builds "$BRANCH" "PR #${PR_NUMBER}"
+          cancel_and_delete_builds "$BRANCH"
           CLEANED_BRANCHES+=("$BRANCH")
         fi
       done

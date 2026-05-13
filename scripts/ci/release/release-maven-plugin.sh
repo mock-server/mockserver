@@ -5,6 +5,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 
 require_cmd gpg
+require_cmd java
+require_cmd git
+require_cmd aws
+require_cmd jq
 
 log_step "Releasing mockserver-maven-plugin $RELEASE_VERSION"
 

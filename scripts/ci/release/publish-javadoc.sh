@@ -5,6 +5,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 
 require_cmd aws
+require_cmd java
+require_cmd git
 
 log_step "Publishing Javadoc for $RELEASE_VERSION"
 

@@ -4,6 +4,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 
+require_cmd git
+require_cmd aws
+require_cmd jq
+
 log_step "Validating release inputs"
 
 check_secret_key() {

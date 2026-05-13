@@ -5,6 +5,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 
 require_cmd gpg
+require_cmd java
+require_cmd aws
+require_cmd jq
 
 log_step "Deploying release $RELEASE_VERSION to Central Portal"
 

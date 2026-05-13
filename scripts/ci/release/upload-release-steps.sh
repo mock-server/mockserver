@@ -13,6 +13,24 @@ CREATE_VERSIONED_SITE=$(buildkite-agent meta-data get create-versioned-site 2>&1
 generate_pipeline() {
   echo "steps:"
 
+  # Preflight — verify every tool every script will need, on each queue.
+  # Runs upfront so a missing dependency fails in seconds, not 30 minutes in.
+  cat << 'YAML'
+
+  - group: ":mag: Preflight"
+    steps:
+      - label: ":mag: Preflight (release queue)"
+        command: "scripts/ci/release/preflight.sh release"
+        timeout_in_minutes: 5
+        agents:
+          queue: "release"
+      - label: ":mag: Preflight (default queue)"
+        command: "scripts/ci/release/preflight.sh default"
+        timeout_in_minutes: 5
+
+  - wait
+YAML
+
   # Maven Central steps — skipped for docker-only and post-maven reruns
   if [[ "$RELEASE_TYPE" != "docker-only" && "$RELEASE_TYPE" != "post-maven" ]]; then
     cat << 'YAML'
@@ -36,6 +54,8 @@ generate_pipeline() {
     timeout_in_minutes: 60
     artifact_paths:
       - "mockserver/mockserver-netty/target/mockserver-netty-*-shaded.jar"
+    agents:
+      queue: "default"
 
   - wait
 
@@ -130,6 +150,8 @@ YAML
       - label: ":docker: Docker Image"
         command: "scripts/ci/release/publish-docker.sh"
         timeout_in_minutes: 60
+        agents:
+          queue: "default"
 '
   fi
 
@@ -182,10 +204,14 @@ YAML
       - label: ":python: PyPI"
         command: "scripts/ci/release/publish-pypi.sh"
         timeout_in_minutes: 10
+        agents:
+          queue: "default"
 
       - label: ":gem: RubyGems"
         command: "scripts/ci/release/publish-rubygems.sh"
         timeout_in_minutes: 10
+        agents:
+          queue: "default"
 
       - label: ":github: GitHub Release"
         command: "scripts/ci/release/github-release.sh"
@@ -207,6 +233,8 @@ YAML
 
   - label: ":bell: Notify"
     command: "scripts/ci/release/notify.sh"
+    agents:
+      queue: "default"
 YAML
 }
 

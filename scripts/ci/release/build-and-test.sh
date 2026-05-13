@@ -4,6 +4,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 
+require_cmd java
+require_cmd git
+
 log_step "Building and testing MockServer $RELEASE_VERSION"
 
 cd "$REPO_ROOT/mockserver"
