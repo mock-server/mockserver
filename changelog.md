@@ -79,7 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Helm chart `podLabels` value to attach arbitrary labels to MockServer pods, useful for service-mesh injection and internal routing rules (fixes #1884)
 
 ### Changed
-- removed implicit reliance on internal java-certificate-classes (thanks to @Arkinator)
+- BREAKING: removed implicit reliance on internal java-certificate-classes (thanks to @Arkinator)
 
 ### Fixed
 
