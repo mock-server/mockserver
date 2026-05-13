@@ -3,12 +3,12 @@ steps:
     fields:
       - text: "Release Version"
         key: "release-version"
-        hint: "e.g., 5.16.0"
+        hint: "e.g., 6.0.0"
         required: true
         format: "[0-9]+\\.[0-9]+\\.[0-9]+"
       - text: "Next SNAPSHOT Version"
         key: "next-version"
-        hint: "e.g., 5.16.1-SNAPSHOT"
+        hint: "e.g., 6.0.1-SNAPSHOT"
         required: true
         format: "[0-9]+\\.[0-9]+\\.[0-9]+-SNAPSHOT"
       - text: "Previous Version"
@@ -26,6 +26,8 @@ steps:
             value: "maven-only"
           - label: "Docker Image Only (re-publish)"
             value: "docker-only"
+          - label: "Post-Maven (Docker, npm, Helm, docs — skip Maven Central)"
+            value: "post-maven"
       - select: "Create Versioned Site?"
         key: "create-versioned-site"
         default: "no"
@@ -50,162 +52,7 @@ steps:
     agents:
       queue: "release"
 
-  - label: ":white_check_mark: Validate"
-    command: "scripts/ci/release/validate.sh"
-    if: 'build.meta_data["release-type"] != "docker-only"'
+  - label: ":pipeline: Upload Release Steps"
+    command: "scripts/ci/release/upload-release-steps.sh"
     agents:
       queue: "release"
-
-  - label: ":git: Set Release Version"
-    command: "scripts/ci/release/set-release-version.sh"
-    if: 'build.meta_data["release-type"] != "docker-only"'
-
-  - label: ":maven: Build & Test"
-    command: "scripts/ci/release/build-and-test.sh"
-    timeout_in_minutes: 60
-    artifact_paths:
-      - "mockserver/mockserver-netty/target/mockserver-netty-*-shaded.jar"
-    if: 'build.meta_data["release-type"] != "docker-only"'
-
-  - block: ":eyes: Review Build Results"
-    prompt: "Build and tests passed. Approve to deploy to Central Portal."
-    allowed_teams: ["release-managers"]
-    if: 'build.meta_data["release-type"] != "docker-only"'
-
-  - label: ":lock: Deploy Release to Central Portal"
-    command: "scripts/ci/release/deploy-release.sh"
-    timeout_in_minutes: 30
-    agents:
-      queue: "release"
-    if: 'build.meta_data["release-type"] != "docker-only"'
-
-  - label: ":hourglass: Poll Central Portal Validation"
-    command: "scripts/ci/release/poll-central-portal.sh"
-    timeout_in_minutes: 30
-    if: 'build.meta_data["release-type"] != "docker-only"'
-
-  - block: ":rocket: Approve Maven Central Publication"
-    prompt: |
-      Artifacts validated on Central Portal.
-      Review at https://central.sonatype.com/publishing/deployments
-      Approve to publish to Maven Central.
-    allowed_teams: ["release-managers"]
-    if: 'build.meta_data["release-type"] != "docker-only"'
-
-  - label: ":java: Publish on Central Portal"
-    command: "scripts/ci/release/publish-central-portal.sh"
-    timeout_in_minutes: 30
-    if: 'build.meta_data["release-type"] != "docker-only"'
-
-  - label: ":hourglass: Wait for Maven Central Sync"
-    command: "scripts/ci/release/wait-for-central.sh"
-    timeout_in_minutes: 120
-    if: 'build.meta_data["release-type"] != "docker-only"'
-
-  - label: ":arrows_counterclockwise: Deploy Next SNAPSHOT"
-    command: "scripts/ci/release/deploy-snapshot.sh"
-    timeout_in_minutes: 30
-    if: 'build.meta_data["release-type"] != "docker-only"'
-
-  - label: ":pencil: Update Versions"
-    command: "scripts/ci/release/update-versions.sh"
-    timeout_in_minutes: 15
-    if: 'build.meta_data["release-type"] != "docker-only"'
-
-  - wait
-
-  - label: ":globe_with_meridians: Create Versioned Site"
-    command: "scripts/ci/release/create-versioned-site.sh"
-    if: 'build.meta_data["release-type"] == "full" && build.meta_data["create-versioned-site"] == "yes"'
-    timeout_in_minutes: 15
-    agents:
-      queue: "release"
-
-  - wait
-
-  - group: ":package: Publish & Update"
-    steps:
-      - label: ":java: Release Maven Plugin"
-        command: "scripts/ci/release/release-maven-plugin.sh"
-        timeout_in_minutes: 60
-        agents:
-          queue: "release"
-        if: 'build.meta_data["release-type"] == "full"'
-
-      - label: ":docker: Docker Image"
-        command: "scripts/ci/release/publish-docker.sh"
-        timeout_in_minutes: 60
-        if: 'build.meta_data["release-type"] != "maven-only"'
-
-      - label: ":package: npm mockserver-node"
-        key: "publish-npm-mockserver-node"
-        command: "scripts/ci/release/publish-npm.sh mockserver-node"
-        timeout_in_minutes: 20
-        agents:
-          queue: "release"
-        if: 'build.meta_data["release-type"] == "full"'
-
-      - label: ":package: npm mockserver-client"
-        command: "scripts/ci/release/publish-npm.sh mockserver-client-node"
-        depends_on: "publish-npm-mockserver-node"
-        timeout_in_minutes: 20
-        agents:
-          queue: "release"
-        if: 'build.meta_data["release-type"] == "full"'
-
-      - label: ":helm: Helm Chart"
-        command: "scripts/ci/release/publish-helm.sh"
-        timeout_in_minutes: 15
-        agents:
-          queue: "release"
-        if: 'build.meta_data["release-type"] == "full"'
-
-      - label: ":book: Javadoc"
-        command: "scripts/ci/release/publish-javadoc.sh"
-        timeout_in_minutes: 15
-        agents:
-          queue: "release"
-        if: 'build.meta_data["release-type"] == "full"'
-
-      - label: ":swagger: SwaggerHub"
-        command: "scripts/ci/release/update-swaggerhub.sh"
-        timeout_in_minutes: 10
-        agents:
-          queue: "release"
-        if: 'build.meta_data["release-type"] == "full"'
-
-      - label: ":globe_with_meridians: Website"
-        command: "scripts/ci/release/publish-website.sh"
-        timeout_in_minutes: 15
-        agents:
-          queue: "release"
-        if: 'build.meta_data["release-type"] == "full"'
-
-      - label: ":page_facing_up: JSON Schema"
-        command: "scripts/ci/release/publish-schema.sh"
-        timeout_in_minutes: 10
-        agents:
-          queue: "release"
-        if: 'build.meta_data["release-type"] == "full"'
-
-      - label: ":python: PyPI"
-        command: "scripts/ci/release/publish-pypi.sh"
-        timeout_in_minutes: 10
-        if: 'build.meta_data["release-type"] == "full"'
-
-      - label: ":gem: RubyGems"
-        command: "scripts/ci/release/publish-rubygems.sh"
-        timeout_in_minutes: 10
-        if: 'build.meta_data["release-type"] == "full"'
-
-      - label: ":github: GitHub Release"
-        command: "scripts/ci/release/github-release.sh"
-        timeout_in_minutes: 10
-        agents:
-          queue: "release"
-        if: 'build.meta_data["release-type"] == "full"'
-
-  - wait
-
-  - label: ":bell: Notify"
-    command: "scripts/ci/release/notify.sh"
