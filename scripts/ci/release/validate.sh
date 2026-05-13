@@ -57,9 +57,8 @@ if [[ "$RELEASE_VERSION" == "$OLD_VERSION" ]]; then
 fi
 
 if is_ci; then
-  # Buildkite checks out a detached HEAD — verify the commit is reachable from origin/master
-  if ! git -C "$REPO_ROOT" branch -r --contains HEAD 2>/dev/null | grep -qE 'origin/master$'; then
-    log_error "Commit is not on origin/master"
+  if [[ "${BUILDKITE_BRANCH:-}" != "master" ]]; then
+    log_error "Releases must be performed from master, currently on: ${BUILDKITE_BRANCH:-unknown}"
     exit 1
   fi
 else
