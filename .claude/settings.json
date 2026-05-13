@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(*)"
+    ],
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean -fd*)",
+      "Bash(rm -rf .)",
+      "Bash(rm -rf ..)",
+      "Bash(rm -rf ~)",
+      "Bash(rm -rf /)",
+      "Bash(rm -rf /*)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"Task completed\" with title \"Claude Code — MockServer\"'"
+          }
+        ]
+      }
+    ]
+  }
+}

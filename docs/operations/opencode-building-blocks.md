@@ -132,7 +132,7 @@ The root configuration file. Every other building block is either defined here o
   // Session behaviour
   "compaction": { "auto": true, "prune": true },
   "default_agent": "plan",
-  "small_model": "tesco-anthropic/haiku-4.5",
+  "small_model": "openai/gpt-4o-mini",
 
   // Global instructions — loaded into every session
   "instructions": ["AGENTS.md"],
@@ -218,7 +218,7 @@ An agent has two parts:
 ```jsonc
 "code-reviewer": {
   "description": "Pre-commit code reviewer",
-  "model": "tesco-anthropic/sonnet-4.6",
+  "model": "openai/gpt-4o",
   "agent": ".opencode/agents/code-reviewer.md",
   "tools": {
     "write": false,

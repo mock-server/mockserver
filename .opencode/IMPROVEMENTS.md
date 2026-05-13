@@ -35,11 +35,9 @@ Added `_site/**` and `.sass-cache/**` to the watcher ignore list to prevent the 
 All references to "grill" have been renamed to "review" for clarity: `/review-code`, `/review-spec`, `review-cheap`, `review-final`.
 
 ### 8. Enhanced Rule Documentation
-Updated `report-formatting.md` and `tmp-directory.md` with improvements from the Tesco codebase:
+Updated `report-formatting.md` and `tmp-directory.md` with improvements from a battle-tested internal platform:
 - **report-formatting.md**: Added dual-mode contract (inline vs manifest), attribution rules for cached investigations, special cases documentation, expanded workflow steps with redaction patterns, manifest schema contract documentation
 - **tmp-directory.md**: Added Python helper patterns with `tmp_dir()` function, expanded bash script examples with `TMP_DIR` variable convention, exceptions section documenting legitimate `/tmp/` usage (remote hosts, third-party scripts, stdlib tempfile APIs), consistent naming convention guidance
-
-These improvements were ported from the Tesco Developer Platform repository which has battle-tested these patterns across 50+ skills over 6 months of production use.
 
 ---
 

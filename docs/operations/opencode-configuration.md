@@ -76,7 +76,7 @@ The root configuration file `opencode.jsonc` controls the entire system. Every s
   "default_agent": "plan",
 
   // Cheap model for titles, summaries, and compaction
-  "small_model": "tesco-anthropic/haiku-4.5",
+  "small_model": "openai/gpt-4o-mini",
 
   // Global instructions loaded into every session
   "instructions": ["AGENTS.md"],
@@ -161,13 +161,13 @@ flowchart LR
         TA["taskify-agent"]
     end
 
-    subgraph Independent["Independent Tier"]
+    subgraph Premium2["Premium Tier (cont.)"]
         RF["review-final"]
         DB["debugger"]
         PI["pipeline-investigator"]
     end
 
-    subgraph Budget["Budget Tier"]
+    subgraph Standard2["Standard Tier (cont.)"]
         RC["review-cheap"]
     end
 
@@ -178,22 +178,23 @@ flowchart LR
 
     style Premium fill:#fde8ec,stroke:#e4002b
     style Standard fill:#e8f0fa,stroke:#00539f
-    style Independent fill:#f0ecfb,stroke:#6b5ce7
-    style Budget fill:#fef8ec,stroke:#f5a623
+    style Premium2 fill:#fde8ec,stroke:#e4002b
+    style Standard2 fill:#e8f0fa,stroke:#00539f
     style Fast fill:#e8f8f0,stroke:#00a651
 ```
 
 | Tier | Model | Agents | Rationale |
 |------|-------|--------|-----------|
-| **Premium** | `opus-4.6` | implementer, simplifier | Highest quality for production code generation and complex refactoring |
-| **Standard** | `sonnet-4.6` | code-reviewer, security-auditor, docs-writer, taskify-agent | Strong code analysis and writing at moderate cost |
-| **Independent** | `gpt-5.5` | review-final, debugger, pipeline-investigator | Different provider to avoid shared blind spots with Anthropic models |
-| **Budget** | `kimi-k2.6` | review-cheap | Non-authoritative intermediate review; cheap enough to iterate |
-| **Fast** | `haiku-4.5` | test-runner, council-seat | Rote operations (run tests, emit short verdicts) — speed over depth |
+| **Premium** | `openai/o3` | implementer, simplifier, review-final, debugger, pipeline-investigator | Highest capability for production code, complex refactoring, and authoritative review |
+| **Standard** | `openai/gpt-4o` | code-reviewer, security-auditor, docs-writer, taskify-agent, review-cheap | Strong analysis and writing at moderate cost |
+| **Fast** | `openai/gpt-4o-mini` | test-runner, council-seat | Rote operations (run tests, emit short verdicts) — speed over depth |
 
-### Why Multiple Providers?
+### Provider Strategy
 
-The `review-final` agent deliberately uses a different provider (OpenAI) than the implementation agents (Anthropic). This ensures the final quality gate has genuinely independent reasoning — not the same model reviewing its own output through a different prompt.
+opencode uses OpenAI models exclusively. Claude Code (`.claude/`) uses Anthropic models exclusively. Independence between the implementation and review agents is achieved at two levels:
+
+1. **Model tier**: `review-cheap` (`gpt-4o`) and `review-final` (`o3`) run on different model tiers than `implementer` (`o3`), but more importantly they run with a **fresh context** — the reviewer never sees the implementing agent's reasoning, only the diff.
+2. **Cross-tool independence**: When switching between tools, a Claude Code session reviews OpenAI-generated work and vice versa, providing genuine cross-provider independence at the workflow level.
 
 ---
 
@@ -211,10 +212,10 @@ Each sub-agent is a configured AI persona with a specific model, system prompt, 
 | **taskify-agent** | Standard | Breaks specs into structured task graphs | Y | Y | Y | Y |
 | **code-reviewer** | Standard | Pre-commit correctness, security, conventions | - | - | Y | - |
 | **security-auditor** | Standard | Security-focused Java/Netty audits | - | - | Y | - |
-| **review-final** | Independent | Authoritative binding PASS/BLOCK verdict | - | - | Y | Y |
-| **review-cheap** | Budget | Non-authoritative intermediate review | - | - | Y | Y |
-| **debugger** | Independent | Investigates issues using logs, CI, AWS | - | - | Y | Y |
-| **pipeline-investigator** | Independent | Buildkite pipeline failure analysis | - | - | Y | Y |
+| **review-final** | Premium | Authoritative binding PASS/BLOCK verdict | - | - | Y | Y |
+| **review-cheap** | Standard | Non-authoritative intermediate review | - | - | Y | Y |
+| **debugger** | Premium | Investigates issues using logs, CI, AWS | - | - | Y | Y |
+| **pipeline-investigator** | Premium | Buildkite pipeline failure analysis | - | - | Y | Y |
 | **test-runner** | Fast | Runs Maven tests, reports results | - | - | Y | - |
 | **council-seat** | Fast | Design council parallel debate seat | - | - | - | - |
 
@@ -339,7 +340,7 @@ different model)"]
     style N fill:#e8f8f0,stroke:#00a651
 ```
 
-The adversarial review (Step 3) is critical: the `review-cheap` agent runs on a different model (`kimi-k2.6`) with fresh context, specifically scanning for LLM-generated issues — hallucinated names, plausible but wrong logic, missing error handling, and accidentally committed secrets.
+The adversarial review (Step 3) is critical: the `review-cheap` agent (`gpt-4o`) runs with a fresh context, specifically scanning for LLM-generated issues — hallucinated names, plausible but wrong logic, missing error handling, and accidentally committed secrets. The `review-final` agent (`o3`) provides the binding verdict.
 
 Skip conditions exist for speed: `"skip tests"` skips validation, `"skip review"` skips the adversarial review, `"just commit"` skips both. These are used when the user is confident in the change.
 

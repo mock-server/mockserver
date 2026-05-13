@@ -114,7 +114,7 @@ Validation principle: prefer executable verification over static inspection. Whe
 
 After all validations pass, launch an adversarial review using a subagent on a **different model** with a **fresh context**. This catches issues the implementing agent may have blind spots for.
 
-Use the **Task tool** with `subagent_type: "review-cheap"` and provide:
+Spawn a `review-cheap` subagent (use the Agent tool in Claude Code; the Task tool in opencode) and provide:
 - The diff of files being committed: stage them first with `git add`, then capture `git diff --cached`
 - The commit message you intend to use
 - The file categories from Step 1

@@ -154,7 +154,7 @@ docker manifest inspect mockserver/mockserver:maven 2>/dev/null \
 
 ```bash
 # Full workflow: build amd64 + push (from Apple Silicon Mac behind corporate proxy)
-cp ~/.tesco-ca/tesco_root_ca.pem docker_build/maven/corporate-root-ca.pem
+cp ~/corporate-ca/corporate_root_ca.pem docker_build/maven/corporate-root-ca.pem
 docker buildx build --builder desktop-linux --platform linux/amd64 --load -t mockserver/mockserver:maven docker_build/maven/
 docker inspect mockserver/mockserver:maven --format '{{.Architecture}}'  # verify: amd64
 docker push mockserver/mockserver:maven
