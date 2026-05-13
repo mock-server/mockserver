@@ -4,8 +4,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 
-require_cmd helm
+require_cmd docker
 require_cmd aws
+require_cmd git
 
 log_step "Publishing Helm chart $RELEASE_VERSION"
 
@@ -31,18 +32,23 @@ log_info "Downloading existing Helm charts from S3"
 aws s3 sync "s3://$WEBSITE_BUCKET/" helm/charts/ \
   --exclude "*" --include "mockserver-*.tgz" --include "index.yaml"
 
-log_info "Packaging Helm chart"
-helm package ./helm/mockserver/ --destination helm/charts/
+log_info "Packaging Helm chart (in Docker)"
+"$REPO_ROOT/.buildkite/scripts/run-in-docker.sh" \
+  -i "$HELM_IMAGE" \
+  -w /build \
+  -- package ./helm/mockserver/ --destination helm/charts/
 
-log_info "Rebuilding Helm repo index with all charts"
-helm repo index helm/charts/ --url "https://www.mock-server.com"
+log_info "Rebuilding Helm repo index (in Docker)"
+"$REPO_ROOT/.buildkite/scripts/run-in-docker.sh" \
+  -i "$HELM_IMAGE" \
+  -w /build \
+  -- repo index helm/charts/ --url "https://www.mock-server.com"
 
 log_info "Uploading chart and index to S3"
 aws s3 cp "helm/charts/mockserver-$RELEASE_VERSION.tgz" "s3://$WEBSITE_BUCKET/"
 aws s3 cp "helm/charts/index.yaml" "s3://$WEBSITE_BUCKET/"
 
 log_info "Committing Helm chart"
-cd "$REPO_ROOT"
 git add helm/mockserver/Chart.yaml "helm/charts/mockserver-$RELEASE_VERSION.tgz" helm/charts/index.yaml
 git commit -m "release: add Helm chart $RELEASE_VERSION" || true
 git push origin master

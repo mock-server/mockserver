@@ -4,15 +4,14 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 
-require_cmd python3
+require_cmd docker
 require_cmd curl
+require_cmd aws
+require_cmd jq
 
 log_step "Publishing Python client $RELEASE_VERSION to PyPI"
 
 PYTHON_DIR="$REPO_ROOT/mockserver-client-python"
-
-python3 -m build --help >/dev/null 2>&1 || { log_error "Missing Python package: build"; exit 1; }
-python3 -m twine --version >/dev/null 2>&1 || { log_error "Missing Python package: twine"; exit 1; }
 
 VERSION=$(grep -E '^version\s*=' "$PYTHON_DIR/pyproject.toml" | head -1 | sed 's/.*= *"\(.*\)".*/\1/')
 log_info "Version from pyproject.toml: $VERSION"
@@ -28,21 +27,21 @@ esac
 log_info "Cleaning previous builds"
 rm -rf "$PYTHON_DIR/dist" "$PYTHON_DIR/build" "$PYTHON_DIR"/*.egg-info
 
-log_info "Building Python package"
-python3 -m build "$PYTHON_DIR"
-
-log_info "Verifying package"
-python3 -m twine check "$PYTHON_DIR/dist/"*
-
 log_info "Fetching PyPI token"
 PYPI_TOKEN=$(load_secret "mockserver-build/pypi" "token")
 
-log_info "Uploading to PyPI"
-(
-  set +x
-  TWINE_USERNAME="__token__" \
-  TWINE_PASSWORD="$PYPI_TOKEN" \
-  python3 -m twine upload "$PYTHON_DIR/dist/"*
-)
+log_info "Building and uploading PyPI package (in Docker)"
+"$REPO_ROOT/.buildkite/scripts/run-in-docker.sh" \
+  -i "$PYTHON_IMAGE" \
+  -w /build/mockserver-client-python \
+  -e "TWINE_USERNAME=__token__" \
+  -e "TWINE_PASSWORD=$PYPI_TOKEN" \
+  -- bash -ec '
+    pip install --quiet --no-cache-dir build twine
+    python -m build .
+    python -m twine check dist/*
+    set +x
+    python -m twine upload dist/*
+  '
 
 log_info "Published mockserver-client $VERSION to PyPI"

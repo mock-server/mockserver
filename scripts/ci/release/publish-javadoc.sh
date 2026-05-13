@@ -4,8 +4,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 
+require_cmd docker
 require_cmd aws
-require_cmd java
 require_cmd git
 
 log_step "Publishing Javadoc for $RELEASE_VERSION"
@@ -26,15 +26,17 @@ trap cleanup_git EXIT
 log_info "Checking out release tag"
 git checkout "mockserver-$RELEASE_VERSION"
 
-log_info "Generating Javadoc"
+log_info "Generating Javadoc (in Docker)"
 mkdir -p .tmp/javadoc
-cd mockserver
-./mvnw javadoc:aggregate -P release \
-  -DreportOutputDirectory="$REPO_ROOT/.tmp/javadoc/$RELEASE_VERSION" \
-  -DskipTests
+"$REPO_ROOT/.buildkite/scripts/run-in-docker.sh" \
+  -i "$MAVEN_IMAGE" \
+  -w /build/mockserver \
+  -v mockserver-m2-cache:/root/.m2 \
+  -- mvn javadoc:aggregate -P release \
+       -DreportOutputDirectory="/build/.tmp/javadoc/$RELEASE_VERSION" \
+       -DskipTests
 
 log_info "Assuming website role for S3 upload"
-cd "$REPO_ROOT"
 assume_website_role
 
 log_info "Uploading Javadoc to S3"

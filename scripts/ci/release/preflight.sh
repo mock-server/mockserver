@@ -49,69 +49,34 @@ check_cmd() {
   return 0
 }
 
-probe_java() {
-  if command -v java >/dev/null 2>&1; then
+check_docker_works() {
+  local image="hello-world"
+  if docker run --rm "$image" >/dev/null 2>&1; then
+    echo "  ✓ docker run works (smoke-tested with $image)"
     return 0
   fi
-  echo "  java not in PATH — probing for installations:"
-  local candidates=(
-    "${JAVA_HOME:-}/bin/java"
-    /usr/lib/jvm/*/bin/java
-    /opt/*/bin/java
-    /Library/Java/JavaVirtualMachines/*/Contents/Home/bin/java
-  )
-  local found=0
-  for c in "${candidates[@]}"; do
-    if [[ -x "$c" ]]; then
-      echo "    found: $c"
-      found=1
-    fi
-  done
-  if [[ $found -eq 0 ]]; then
-    echo "    no java binaries found under /usr/lib/jvm /opt /Library/Java"
-  fi
-  echo "  JAVA_HOME=${JAVA_HOME:-<unset>}"
-  echo "  PATH=$PATH"
+  echo "  ✗ docker installed but 'docker run --rm hello-world' failed — daemon unreachable?" >&2
+  ERRORS=$((ERRORS + 1))
+  return 0
 }
 
 log_step "Preflight: verifying tools for queue=$QUEUE"
 
 echo ""
-log_info "Common tools (all queues)"
+log_info "Host tools (all queues — everything else runs in Docker)"
 check_cmd bash       "all scripts"
 check_cmd git        "all scripts"
 check_cmd aws        "common.sh:load_secret"
 check_cmd jq         "common.sh:load_secret"
 check_cmd curl       "API calls"
-check_cmd python3    "set-release-version, verify-totp, publish-pypi"
-check_cmd sed        "update-versions"
-check_cmd grep       "common.sh"
+check_cmd python3    "set-release-version, verify-totp"
+check_cmd docker     "every Maven/npm/helm/ruby/gh step runs in Docker"
+check_cmd buildkite-agent "all CI steps"
 
-if [[ "$QUEUE" == "default" || "$QUEUE" == "all" ]]; then
+if command -v docker >/dev/null 2>&1; then
   echo ""
-  log_info "Default-queue tools"
-  check_cmd java       "build-and-test"
-  command -v java >/dev/null 2>&1 || probe_java
-  check_cmd javac      "build-and-test (compilation)" optional
-  check_cmd docker     "publish-docker"
-  check_cmd gem        "publish-rubygems"
-  check_cmd buildkite-agent "all CI steps"
-fi
-
-if [[ "$QUEUE" == "release" || "$QUEUE" == "all" ]]; then
-  echo ""
-  log_info "Release-queue tools"
-  check_cmd java       "deploy-release, deploy-snapshot, release-maven-plugin, publish-javadoc, update-versions"
-  command -v java >/dev/null 2>&1 || probe_java
-  check_cmd javac      "Maven compilation" optional
-  check_cmd gpg        "deploy-release, release-maven-plugin"
-  check_cmd npm        "publish-npm"
-  check_cmd npx        "publish-npm"
-  check_cmd helm       "publish-helm"
-  check_cmd bundle     "publish-website (Jekyll)"
-  check_cmd gh         "github-release"
-  check_cmd terraform  "create-versioned-site, common.sh website-bucket lookup" optional
-  check_cmd buildkite-agent "all CI steps"
+  log_info "Docker smoke test"
+  check_docker_works
 fi
 
 echo ""

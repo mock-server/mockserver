@@ -4,18 +4,23 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 
-require_cmd bundle
-require_cmd jekyll
+require_cmd docker
 require_cmd aws
 
 log_step "Publishing website for $RELEASE_VERSION"
 
+log_info "Building Jekyll site (in Docker)"
+rm -rf "$REPO_ROOT/jekyll-www.mock-server.com/_site"
+"$REPO_ROOT/.buildkite/scripts/run-in-docker.sh" \
+  -i "$RUBY_IMAGE" \
+  -w /build/jekyll-www.mock-server.com \
+  -v mockserver-bundle-cache:/usr/local/bundle \
+  -- bash -ec '
+    bundle install --quiet
+    bundle exec jekyll build
+  '
+
 cd "$REPO_ROOT/jekyll-www.mock-server.com"
-
-log_info "Building Jekyll site"
-rm -rf _site
-bundle exec jekyll build
-
 log_info "Copying legacy URL pages"
 cp _site/mock_server/mockserver_clients.html _site/ 2>/dev/null || true
 cp _site/mock_server/running_mock_server.html _site/ 2>/dev/null || true

@@ -117,15 +117,18 @@ done
 
 FULL_CMD="docker run ${DISPLAY_ARGS[*]} $IMAGE ${DISPLAY_CMD_ARGS[*]}"
 
-echo "┌──────────────────────────────────────────────────────────────────"
-echo "│ Docker Command (copy to reproduce locally):"
-echo "│"
-echo "│   $FULL_CMD"
-echo "│"
-echo "│ Or from repo root:"
-echo "│   cd $(pwd) && $FULL_CMD"
-echo "│"
-echo "└──────────────────────────────────────────────────────────────────"
-echo ""
+# Log to stderr so callers can still capture the wrapped command's stdout.
+{
+  echo "┌──────────────────────────────────────────────────────────────────"
+  echo "│ Docker Command (copy to reproduce locally):"
+  echo "│"
+  echo "│   $FULL_CMD"
+  echo "│"
+  echo "│ Or from repo root:"
+  echo "│   cd $(pwd) && $FULL_CMD"
+  echo "│"
+  echo "└──────────────────────────────────────────────────────────────────"
+  echo ""
+} >&2
 
 exec docker run "${DOCKER_ARGS[@]}" "$IMAGE" "${COMMAND_ARGS[@]}"

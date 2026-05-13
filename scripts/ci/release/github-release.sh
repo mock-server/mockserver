@@ -4,18 +4,19 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 
-require_cmd gh
+require_cmd docker
+require_cmd aws
+require_cmd jq
 
 log_step "Creating GitHub Release for $RELEASE_VERSION"
 
 cd "$REPO_ROOT"
 
 GITHUB_TOKEN=$(load_secret "mockserver-release/github-token" "token")
-export GITHUB_TOKEN
 
 CHANGELOG_EXTRACT=""
 if [[ -f "changelog.md" ]]; then
-  CHANGELOG_EXTRACT=$(sed -n "/## \[$RELEASE_VERSION\]/,/## \[/p" changelog.md | head -n -1)
+  CHANGELOG_EXTRACT=$(sed -n "/## \[$RELEASE_VERSION\]/,/## \[/p" changelog.md | sed '$d')
 fi
 
 if [[ -z "$CHANGELOG_EXTRACT" ]]; then
@@ -26,11 +27,15 @@ NOTES_FILE="$REPO_ROOT/.tmp/changelog-extract.md"
 mkdir -p "$REPO_ROOT/.tmp"
 echo "$CHANGELOG_EXTRACT" > "$NOTES_FILE"
 
-log_info "Creating release mockserver-$RELEASE_VERSION"
-gh release create "mockserver-$RELEASE_VERSION" \
-  --title "MockServer $RELEASE_VERSION" \
-  --notes-file "$NOTES_FILE" \
-  --latest
+log_info "Creating release mockserver-$RELEASE_VERSION (in Docker)"
+"$REPO_ROOT/.buildkite/scripts/run-in-docker.sh" \
+  -i "$GH_IMAGE" \
+  -w /build \
+  -e "GITHUB_TOKEN=$GITHUB_TOKEN" \
+  -- release create "mockserver-$RELEASE_VERSION" \
+       --title "MockServer $RELEASE_VERSION" \
+       --notes-file ".tmp/changelog-extract.md" \
+       --latest
 
 rm -f "$NOTES_FILE"
 

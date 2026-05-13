@@ -4,15 +4,19 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 
-require_cmd ruby
-require_cmd gem
+require_cmd docker
 require_cmd curl
+require_cmd jq
 
 log_step "Publishing Ruby client $RELEASE_VERSION to RubyGems"
 
 RUBY_DIR="$REPO_ROOT/mockserver-client-ruby"
 
-VERSION=$(ruby -e "load '$RUBY_DIR/lib/mockserver/version.rb'; puts MockServer::VERSION")
+log_info "Reading version from version.rb (in Docker)"
+VERSION=$("$REPO_ROOT/.buildkite/scripts/run-in-docker.sh" \
+  -i "$RUBY_IMAGE" \
+  -w /build/mockserver-client-ruby \
+  -- ruby -e "load 'lib/mockserver/version.rb'; puts MockServer::VERSION" | tail -1)
 log_info "Version from version.rb: $VERSION"
 
 log_info "Checking if version already exists on RubyGems"
@@ -30,18 +34,19 @@ esac
 log_info "Cleaning previous builds"
 rm -f "$RUBY_DIR"/mockserver-client-*.gem
 
-log_info "Building gem"
-cd "$RUBY_DIR"
-gem build mockserver-client.gemspec
-
 log_info "Fetching RubyGems API key"
 GEM_HOST_API_KEY=$(load_secret "mockserver-build/rubygems" "api_key")
 
-log_info "Pushing to RubyGems"
-(
-  set +x
-  GEM_HOST_API_KEY="$GEM_HOST_API_KEY" \
-  gem push mockserver-client-"$VERSION".gem
-)
+log_info "Building and pushing gem (in Docker)"
+"$REPO_ROOT/.buildkite/scripts/run-in-docker.sh" \
+  -i "$RUBY_IMAGE" \
+  -w /build/mockserver-client-ruby \
+  -e "GEM_HOST_API_KEY=$GEM_HOST_API_KEY" \
+  -e "VERSION=$VERSION" \
+  -- bash -ec '
+    gem build mockserver-client.gemspec
+    set +x
+    gem push "mockserver-client-${VERSION}.gem"
+  '
 
 log_info "Published mockserver-client $VERSION to RubyGems"

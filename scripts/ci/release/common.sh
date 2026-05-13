@@ -6,6 +6,20 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 export REPO_ROOT
 REGION="eu-west-2"
 
+# Pinned upstream tool images. Every release script that needs a language
+# toolchain runs it via `.buildkite/scripts/run-in-docker.sh` against one of
+# these images, so a bare CI agent (or a developer laptop with just Docker)
+# can run any release step identically.
+MAVEN_IMAGE="maven:3.9.9-eclipse-temurin-11"
+NODE_IMAGE="node:20-bookworm"
+RUBY_IMAGE="ruby:3.2-bookworm"
+HELM_IMAGE="alpine/helm:3.16.2"
+GH_IMAGE="maniator/gh:v2.62.0"
+PYTHON_IMAGE="python:3.12-slim-bookworm"
+JEKYLL_IMAGE="jekyll/jekyll:4.2.2"
+TERRAFORM_IMAGE="hashicorp/terraform:1.9"
+export MAVEN_IMAGE NODE_IMAGE RUBY_IMAGE HELM_IMAGE GH_IMAGE PYTHON_IMAGE JEKYLL_IMAGE TERRAFORM_IMAGE
+
 is_ci() { [[ -n "${BUILDKITE:-}" ]]; }
 
 current_project_version() {

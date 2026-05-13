@@ -4,35 +4,41 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 
-require_cmd gpg
-require_cmd java
+require_cmd docker
 require_cmd aws
 require_cmd jq
 
 log_step "Deploying release $RELEASE_VERSION to Central Portal"
 
-log_info "Importing GPG key"
+log_info "Loading release secrets"
 GPG_KEY_B64=$(load_secret "mockserver-release/gpg-key" "key")
 GPG_PASSPHRASE=$(load_secret "mockserver-release/gpg-key" "passphrase")
-
-(
-  set +x
-  echo "$GPG_KEY_B64" | base64 -d | gpg --batch --import
-)
-
-mkdir -p ~/.gnupg
-echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-gpgconf --reload gpg-agent 2>/dev/null || true
-
-log_info "Generating release settings.xml"
 SONATYPE_USERNAME=$(load_secret "mockserver-build/sonatype" "username")
 SONATYPE_PASSWORD=$(load_secret "mockserver-build/sonatype" "password")
 
-SETTINGS_FILE="$REPO_ROOT/.tmp/release-settings.xml"
-mkdir -p "$REPO_ROOT/.tmp"
-(
-  set +x
-  cat > "$SETTINGS_FILE" <<SETTINGS_EOF
+# Run GPG import + Maven deploy in a single container so they share the
+# gnupg keyring. Settings.xml is generated inside the container too so
+# credentials never touch the host filesystem.
+log_info "Running gpg import + mvn deploy in Maven container"
+"$REPO_ROOT/.buildkite/scripts/run-in-docker.sh" \
+  -i "$MAVEN_IMAGE" \
+  -w /build/mockserver \
+  -v mockserver-m2-cache:/root/.m2 \
+  -e "GPG_KEY_B64=$GPG_KEY_B64" \
+  -e "GPG_PASSPHRASE=$GPG_PASSPHRASE" \
+  -e "SONATYPE_USERNAME=$SONATYPE_USERNAME" \
+  -e "SONATYPE_PASSWORD=$SONATYPE_PASSWORD" \
+  -- bash -ec '
+    apt-get update -qq >/dev/null
+    apt-get install -y -qq gnupg >/dev/null
+
+    set +x
+    echo "$GPG_KEY_B64" | base64 -d | gpg --batch --import
+    mkdir -p ~/.gnupg
+    echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+    gpgconf --reload gpg-agent 2>/dev/null || true
+
+    cat > /tmp/release-settings.xml <<SETTINGS
 <?xml version="1.0" encoding="UTF-8"?>
 <settings>
   <servers>
@@ -43,24 +49,13 @@ mkdir -p "$REPO_ROOT/.tmp"
     </server>
   </servers>
 </settings>
-SETTINGS_EOF
-)
+SETTINGS
 
-cleanup() {
-  rm -f "$SETTINGS_FILE"
-  gpg --batch --yes --delete-secret-and-public-key "$(gpg --list-secret-keys --keyid-format long 2>/dev/null | grep -E '^sec' | head -1 | awk '{print $2}' | cut -d/ -f2)" 2>/dev/null || true
-}
-trap cleanup EXIT
-
-log_info "Deploying with GPG signing"
-cd "$REPO_ROOT/mockserver"
-(
-  set +x
-  ./mvnw deploy -P release -DskipTests \
-    -Dgpg.passphrase="$GPG_PASSPHRASE" \
-    -Dgpg.useagent=false \
-    --settings "$SETTINGS_FILE"
-)
+    mvn deploy -P release -DskipTests \
+      -Dgpg.passphrase="$GPG_PASSPHRASE" \
+      -Dgpg.useagent=false \
+      --settings /tmp/release-settings.xml
+  '
 
 log_info "Release deployed to Central Portal"
 log_info "Review at https://central.sonatype.com/publishing/deployments"

@@ -4,8 +4,32 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 
-require_cmd terraform
+require_cmd docker
 require_cmd aws
+require_cmd git
+
+# Wrap terraform invocations in Docker so this script runs on a CI agent
+# that has only docker installed (and locally on any laptop with Docker).
+# Materialise AWS creds first so the container doesn't need access to the
+# instance metadata endpoint.
+tf() {
+  local aws_env
+  aws_env=$(aws configure export-credentials --format env 2>/dev/null || true)
+  local -a env_args=()
+  while IFS= read -r line; do
+    [[ -z "$line" ]] && continue
+    line="${line#export }"
+    env_args+=(-e "$line")
+  done <<< "$aws_env"
+  env_args+=(-e "AWS_DEFAULT_REGION=${AWS_REGION:-eu-west-2}")
+  env_args+=(-e "AWS_REGION=${AWS_REGION:-eu-west-2}")
+
+  "$REPO_ROOT/.buildkite/scripts/run-in-docker.sh" \
+    -i "$TERRAFORM_IMAGE" \
+    -w /build \
+    "${env_args[@]}" \
+    -- "$@"
+}
 
 log_step "Creating versioned site for $RELEASE_VERSION"
 
@@ -36,21 +60,21 @@ OLD_BUCKET=$(grep -E "\"${OLD_SUBDOMAIN}\"\\s*=" "$TFVARS" | sed 's/.*bucket_nam
 sed_i "s/^latest_version.*=.*/latest_version              = \"${SUBDOMAIN}\"/" "$TFVARS"
 
 log_info "Initializing Terraform"
-terraform -chdir="$TF_DIR" init -input=false
+tf -chdir=/build/terraform/website init -input=false
 
 log_info "Planning Terraform changes"
-terraform -chdir="$TF_DIR" plan -input=false -out=tfplan
+tf -chdir=/build/terraform/website plan -input=false -out=tfplan
 
 if ! is_ci; then
   confirm "Apply Terraform changes to create versioned site?"
 fi
 
 log_info "Applying Terraform"
-terraform -chdir="$TF_DIR" apply -input=false tfplan
+tf -chdir=/build/terraform/website apply -input=false tfplan
 rm -f "$TF_DIR/tfplan"
 
-NEW_BUCKET=$(terraform -chdir="$TF_DIR" output -raw main_bucket_name)
-NEW_DISTRIBUTION_ID=$(terraform -chdir="$TF_DIR" output -raw main_distribution_id)
+NEW_BUCKET=$(tf -chdir=/build/terraform/website output -raw main_bucket_name)
+NEW_DISTRIBUTION_ID=$(tf -chdir=/build/terraform/website output -raw main_distribution_id)
 
 log_info "New main bucket: $NEW_BUCKET"
 log_info "Main distribution ID: $NEW_DISTRIBUTION_ID"

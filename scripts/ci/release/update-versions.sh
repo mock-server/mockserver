@@ -131,7 +131,8 @@ for ext in "${FIND_REPLACE_EXTS[@]}"; do
 done
 
 log_info "Cleaning build artifacts"
-cd "$REPO_ROOT/mockserver" && ./mvnw clean -q 2>/dev/null || true
+rm -rf "$REPO_ROOT/mockserver/mockserver-netty/target" 2>/dev/null || true
+rm -rf "$REPO_ROOT/mockserver/mockserver-core/target" 2>/dev/null || true
 rm -rf "$REPO_ROOT/jekyll-www.mock-server.com/_site" 2>/dev/null || true
 cd "$REPO_ROOT"
 
