@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-RELEASE_TYPE=$(buildkite-agent meta-data get release-type)
-CREATE_VERSIONED_SITE=$(buildkite-agent meta-data get create-versioned-site)
+RELEASE_TYPE=$(buildkite-agent meta-data get release-type 2>&1) || {
+  echo "ERROR: meta-data key 'release-type' not found. Was the input step completed?" >&2
+  exit 1
+}
+CREATE_VERSIONED_SITE=$(buildkite-agent meta-data get create-versioned-site 2>&1) || {
+  echo "ERROR: meta-data key 'create-versioned-site' not found. Was the input step completed?" >&2
+  exit 1
+}
 
 generate_pipeline() {
   echo "steps:"

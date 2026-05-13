@@ -101,7 +101,7 @@ check_secret_key "mockserver-build/sonatype" "password" "Sonatype password"
 check_secret_key "mockserver-release/gpg-key" "key" "GPG private key"
 check_secret_key "mockserver-release/gpg-key" "passphrase" "GPG passphrase"
 
-if [[ "$RELEASE_TYPE" == "full" ]]; then
+if [[ "$RELEASE_TYPE" == "full" || "$RELEASE_TYPE" == "post-maven" ]]; then
   check_secret_key "mockserver-build/dockerhub" "username" "Docker Hub username"
   check_secret_key "mockserver-build/dockerhub" "token" "Docker Hub token"
   check_secret_key "mockserver-build/pypi" "token" "PyPI token"
