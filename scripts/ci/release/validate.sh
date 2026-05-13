@@ -56,10 +56,18 @@ if [[ "$RELEASE_VERSION" == "$OLD_VERSION" ]]; then
   exit 1
 fi
 
-CURRENT_BRANCH=$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)
-if [[ "$CURRENT_BRANCH" != "master" ]]; then
-  log_error "Releases must be performed from master, currently on: $CURRENT_BRANCH"
-  exit 1
+if is_ci; then
+  # Buildkite checks out a detached HEAD — verify the commit is reachable from origin/master
+  if ! git -C "$REPO_ROOT" branch -r --contains HEAD 2>/dev/null | grep -qE 'origin/master$'; then
+    log_error "Commit is not on origin/master"
+    exit 1
+  fi
+else
+  CURRENT_BRANCH=$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)
+  if [[ "$CURRENT_BRANCH" != "master" ]]; then
+    log_error "Releases must be performed from master, currently on: $CURRENT_BRANCH"
+    exit 1
+  fi
 fi
 
 if [[ -n "$(git -C "$REPO_ROOT" status --porcelain)" ]]; then

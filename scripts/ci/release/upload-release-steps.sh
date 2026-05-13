@@ -22,14 +22,22 @@ generate_pipeline() {
     agents:
       queue: "release"
 
+  - wait
+
   - label: ":git: Set Release Version"
     command: "scripts/ci/release/set-release-version.sh"
+    agents:
+      queue: "release"
+
+  - wait
 
   - label: ":maven: Build & Test"
     command: "scripts/ci/release/build-and-test.sh"
     timeout_in_minutes: 60
     artifact_paths:
       - "mockserver/mockserver-netty/target/mockserver-netty-*-shaded.jar"
+
+  - wait
 
   - block: ":eyes: Review Build Results"
     prompt: "Build and tests passed. Approve to deploy to Central Portal."
@@ -41,9 +49,15 @@ generate_pipeline() {
     agents:
       queue: "release"
 
+  - wait
+
   - label: ":hourglass: Poll Central Portal Validation"
     command: "scripts/ci/release/poll-central-portal.sh"
     timeout_in_minutes: 30
+    agents:
+      queue: "release"
+
+  - wait
 
   - block: ":rocket: Approve Maven Central Publication"
     prompt: |
@@ -55,18 +69,30 @@ generate_pipeline() {
   - label: ":java: Publish on Central Portal"
     command: "scripts/ci/release/publish-central-portal.sh"
     timeout_in_minutes: 30
+    agents:
+      queue: "release"
+
+  - wait
 
   - label: ":hourglass: Wait for Maven Central Sync"
     command: "scripts/ci/release/wait-for-central.sh"
     timeout_in_minutes: 120
+    agents:
+      queue: "release"
+
+  - wait
 
   - label: ":arrows_counterclockwise: Deploy Next SNAPSHOT"
     command: "scripts/ci/release/deploy-snapshot.sh"
     timeout_in_minutes: 30
+    agents:
+      queue: "release"
 
   - label: ":pencil: Update Versions"
     command: "scripts/ci/release/update-versions.sh"
     timeout_in_minutes: 15
+    agents:
+      queue: "release"
 
   - wait
 YAML
@@ -86,7 +112,7 @@ YAML
 YAML
   fi
 
-  # Publish group — contents depend on release type
+  # Publish group — contents depend on release type; steps within the group run in parallel
   local publish_steps=""
 
   if [[ "$RELEASE_TYPE" == "full" || "$RELEASE_TYPE" == "post-maven" ]]; then
