@@ -57,16 +57,13 @@ if [[ "$RELEASE_VERSION" == "$OLD_VERSION" ]]; then
 fi
 
 if is_ci; then
-  if [[ "${BUILDKITE_BRANCH:-}" != "master" ]]; then
-    log_error "Releases must be performed from master, currently on: ${BUILDKITE_BRANCH:-unknown}"
-    exit 1
-  fi
+  CURRENT_BRANCH="${BUILDKITE_BRANCH:-unknown}"
 else
   CURRENT_BRANCH=$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)
-  if [[ "$CURRENT_BRANCH" != "master" ]]; then
-    log_error "Releases must be performed from master, currently on: $CURRENT_BRANCH"
-    exit 1
-  fi
+fi
+if [[ "$CURRENT_BRANCH" != "master" ]]; then
+  log_error "Releases must be performed from master, currently on: $CURRENT_BRANCH"
+  exit 1
 fi
 
 if [[ -n "$(git -C "$REPO_ROOT" status --porcelain)" ]]; then
