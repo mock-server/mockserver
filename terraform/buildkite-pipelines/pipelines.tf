@@ -107,6 +107,13 @@ locals {
       emoji       = ":rocket:"
       trigger     = "none"
     }
+    "release-preflight" = {
+      name        = "MockServer Release Preflight"
+      description = "Validates release-queue and default-queue agents have every tool the release pipeline needs"
+      file        = ".buildkite/release-preflight-pipeline.yml"
+      emoji       = ":mag:"
+      trigger     = "none"
+    }
   }
 }
 
