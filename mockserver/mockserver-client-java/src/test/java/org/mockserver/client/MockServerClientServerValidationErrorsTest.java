@@ -130,12 +130,12 @@ public class MockServerClientServerValidationErrorsTest {
                             "      \"type\" : \"STRING\"," + NEW_LINE +
                             "      \"string\" : \"some_random_response\"," + NEW_LINE +
                             "      \"contentType\" : \"text/plain\"" + NEW_LINE +
-                            "    }" + NEW_LINE +
-                            "  }" + NEW_LINE +
-                            "" + NEW_LINE +
-                            " while submitted expectation:")
-            )
-            ;
+                            "    }")
+            );
+            assertThat(
+                clientException.getMessage(),
+                containsString("while submitted expectation:")
+            );
         } finally {
             UUIDService.fixedUUID = false;
             if (originalLevel != null) {

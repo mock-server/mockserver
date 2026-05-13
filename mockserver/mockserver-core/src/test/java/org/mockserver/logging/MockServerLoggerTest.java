@@ -11,7 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.event.Level;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -235,7 +237,7 @@ public class MockServerLoggerTest {
     @Test
     public void shouldCallGlobalLogEventListener() {
         // given
-        List<LogEntry> capturedEntries = new ArrayList<>();
+        List<LogEntry> capturedEntries = new CopyOnWriteArrayList<>();
         MockServerLogger.setGlobalLogEventListener(capturedEntries::add);
         HttpState mockHttpStateHandler = mock(HttpState.class);
         MockServerLogger logFormatter = new MockServerLogger(configuration, mockHttpStateHandler);
@@ -284,7 +286,7 @@ public class MockServerLoggerTest {
     @Test
     public void shouldCallGlobalLogEventListenerBeforeDispatching() {
         // given
-        List<String> callOrder = new ArrayList<>();
+        List<String> callOrder = Collections.synchronizedList(new ArrayList<>());
         MockServerLogger.setGlobalLogEventListener(entry -> {
             if ("order test".equals(entry.getMessageFormat())) {
                 callOrder.add("listener");
