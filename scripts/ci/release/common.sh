@@ -8,6 +8,26 @@ REGION="eu-west-2"
 
 is_ci() { [[ -n "${BUILDKITE:-}" ]]; }
 
+current_project_version() {
+  grep -m1 -E '^[[:space:]]*<version>[^<]+</version>' "$REPO_ROOT/mockserver/pom.xml" \
+    | sed -E 's/.*<version>([^<]+)<\/version>.*/\1/'
+}
+
+increment_patch_version() {
+  local ver="$1"
+  local major="${ver%%.*}"
+  local minor_rest="${ver#*.}"
+  local minor="${minor_rest%%.*}"
+  local patch="${ver##*.}"
+  echo "${major}.${minor}.$((patch + 1))"
+}
+
+latest_release_version() {
+  git -C "$REPO_ROOT" tag --list "mockserver-[0-9]*" --sort=-v:refname \
+    | sed 's/^mockserver-//' \
+    | awk 'NR == 1 { print; exit }'
+}
+
 log_info()  { echo "--- $*"; }
 log_error() { echo "--- :x: $*" >&2; }
 log_step()  { echo "--- :arrow_right: $*"; }
@@ -103,12 +123,23 @@ if is_ci; then
   RELEASE_VERSION=$(buildkite-agent meta-data get release-version)
   NEXT_VERSION=$(buildkite-agent meta-data get next-version)
   OLD_VERSION=$(buildkite-agent meta-data get old-version)
+  RELEASE_TYPE=$(buildkite-agent meta-data get release-type 2>/dev/null || echo "full")
+  CREATE_VERSIONED_SITE=$(buildkite-agent meta-data get create-versioned-site 2>/dev/null || echo "no")
+  CURRENT_VERSION=$(buildkite-agent meta-data get current-version 2>/dev/null || echo "")
   WEBSITE_BUCKET=$(buildkite-agent meta-data get website-bucket 2>/dev/null || echo "")
   DISTRIBUTION_ID=$(buildkite-agent meta-data get distribution-id 2>/dev/null || echo "")
 else
   : "${RELEASE_VERSION:?Set RELEASE_VERSION}" "${NEXT_VERSION:?Set NEXT_VERSION}" "${OLD_VERSION:?Set OLD_VERSION}"
+  : "${RELEASE_TYPE:=full}" "${CREATE_VERSIONED_SITE:=no}" "${CURRENT_VERSION:=}"
+  if [[ -z "$CURRENT_VERSION" && -f "$REPO_ROOT/.tmp/release-current-version" ]]; then
+    CURRENT_VERSION=$(<"$REPO_ROOT/.tmp/release-current-version")
+  fi
   : "${WEBSITE_BUCKET:=}"
   : "${DISTRIBUTION_ID:=}"
+fi
+
+if [[ -z "$CURRENT_VERSION" ]]; then
+  CURRENT_VERSION=$(current_project_version 2>/dev/null || echo "")
 fi
 
 if [[ -z "$WEBSITE_BUCKET" ]]; then
@@ -118,4 +149,4 @@ if [[ -z "$DISTRIBUTION_ID" ]]; then
   DISTRIBUTION_ID=$(cd "$REPO_ROOT/terraform/website" && terraform output -raw main_distribution_id 2>/dev/null || echo "")
 fi
 
-export RELEASE_VERSION NEXT_VERSION OLD_VERSION WEBSITE_BUCKET DISTRIBUTION_ID
+export RELEASE_VERSION NEXT_VERSION OLD_VERSION RELEASE_TYPE CREATE_VERSIONED_SITE CURRENT_VERSION WEBSITE_BUCKET DISTRIBUTION_ID

@@ -24,9 +24,9 @@ global instructions"]
         RU["rules/
 10 guardrail files"]
         SK["skills/
-15 workflow definitions"]
+16 workflow definitions"]
         CM["commands/
-11 slash commands"]
+12 slash commands"]
         PL["plugins/
 2 session plugins"]
     end
@@ -50,8 +50,8 @@ global instructions"]
 | 2 | [Model Strategy](#building-block-2-model-strategy) | `opencode.jsonc` (agent entries) | Right model for the right task |
 | 3 | [Agents](#building-block-3-agents) | `.opencode/agents/*.md` | 12 specialist sub-agents with least-privilege access |
 | 4 | [Rules](#building-block-4-rules) | `.opencode/rules/*.md` | 10 guardrails always enforced |
-| 5 | [Skills](#building-block-5-skills) | `.opencode/skills/*/SKILL.md` | 15 reusable multi-step workflows |
-| 6 | [Commands](#building-block-6-commands) | `.opencode/commands/*.md` | 11 slash shortcuts with guaranteed routing |
+| 5 | [Skills](#building-block-5-skills) | `.opencode/skills/*/SKILL.md` | 16 reusable multi-step workflows |
+| 6 | [Commands](#building-block-6-commands) | `.opencode/commands/*.md` | 12 slash shortcuts with guaranteed routing |
 | 7 | [Plugins & Tools](#building-block-7-plugins--tools) | `.opencode/plugins/*.ts` | Session hooks and external integrations |
 
 ---
@@ -609,7 +609,7 @@ mockserver/
     │   ├── review-constitution.md
     │   ├── testing-policy.md
     │   └── tmp-directory.md
-    ├── skills/                              # 15 skill workflows
+    ├── skills/                              # 16 skill workflows
     │   ├── aws-investigation/
     │   │   ├── SKILL.md
     │   │   └── report-template.md
@@ -635,6 +635,8 @@ mockserver/
     │   │   └── SKILL.md
     │   ├── pr-review/
     │   │   └── SKILL.md
+    │   ├── release-management/
+    │   │   └── SKILL.md
     │   ├── renew-test-certs/
     │   │   └── SKILL.md
     │   ├── review-code/
@@ -643,7 +645,7 @@ mockserver/
     │   │   └── SKILL.md
     │   └── terraform-tfvars/
     │       └── SKILL.md
-    ├── commands/                             # 11 slash commands
+    ├── commands/                             # 12 slash commands
     │   ├── aws-investigation.md
     │   ├── codebase-change-report.md
     │   ├── codeql-scan.md
@@ -652,6 +654,7 @@ mockserver/
     │   ├── excalidraw.md
     │   ├── issue-review.md
     │   ├── pipeline-investigation.md
+    │   ├── prepare-release.md
     │   ├── review-code.md
     │   ├── review-spec.md
     │   └── update-architecture-docs.md

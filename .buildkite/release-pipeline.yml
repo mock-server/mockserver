@@ -53,6 +53,8 @@ steps:
   - label: ":white_check_mark: Validate"
     command: "scripts/ci/release/validate.sh"
     if: "build.meta_data('release-type') != 'docker-only'"
+    agents:
+      queue: "release"
 
   - label: ":git: Set Release Version"
     command: "scripts/ci/release/set-release-version.sh"
@@ -103,18 +105,18 @@ steps:
   - label: ":arrows_counterclockwise: Deploy Next SNAPSHOT"
     command: "scripts/ci/release/deploy-snapshot.sh"
     timeout_in_minutes: 30
-    if: "build.meta_data('release-type') == 'full'"
+    if: "build.meta_data('release-type') != 'docker-only'"
 
   - label: ":pencil: Update Versions"
     command: "scripts/ci/release/update-versions.sh"
     timeout_in_minutes: 15
-    if: "build.meta_data('release-type') == 'full'"
+    if: "build.meta_data('release-type') != 'docker-only'"
 
   - wait
 
   - label: ":globe_with_meridians: Create Versioned Site"
     command: "scripts/ci/release/create-versioned-site.sh"
-    if: "build.meta_data('create-versioned-site') == 'yes'"
+    if: "build.meta_data('release-type') == 'full' && build.meta_data('create-versioned-site') == 'yes'"
     timeout_in_minutes: 15
     agents:
       queue: "release"
@@ -134,6 +136,22 @@ steps:
         command: "scripts/ci/release/publish-docker.sh"
         timeout_in_minutes: 60
         if: "build.meta_data('release-type') != 'maven-only'"
+
+      - label: ":package: npm mockserver-node"
+        key: "publish-npm-mockserver-node"
+        command: "scripts/ci/release/publish-npm.sh mockserver-node"
+        timeout_in_minutes: 20
+        agents:
+          queue: "release"
+        if: "build.meta_data('release-type') == 'full'"
+
+      - label: ":package: npm mockserver-client"
+        command: "scripts/ci/release/publish-npm.sh mockserver-client-node"
+        depends_on: "publish-npm-mockserver-node"
+        timeout_in_minutes: 20
+        agents:
+          queue: "release"
+        if: "build.meta_data('release-type') == 'full'"
 
       - label: ":helm: Helm Chart"
         command: "scripts/ci/release/publish-helm.sh"

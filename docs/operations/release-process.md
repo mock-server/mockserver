@@ -2,15 +2,42 @@
 
 ## Automated Release Pipeline
 
-The release process has been automated via a Buildkite pipeline and shared scripts. See [Release Pipeline Plan](../plans/release-pipeline.md) for the full design.
+The release process is automated via the `mockserver-release` Buildkite pipeline and shared scripts. See [Release Pipeline Plan](../plans/release-pipeline.md) for historical design context.
+
+### Release Preparation
+
+Run `/prepare-release` before triggering the pipeline. It inspects:
+
+- `changelog.md`
+- `mockserver/pom.xml`
+- the latest numeric `mockserver-X.Y.Z` tag
+- release secret readiness
+- pipeline coverage
+
+It recommends:
+
+- `release-version`
+- `next-version`
+- `old-version`
+- `release-type`
+- `create-versioned-site`
+
+Use `BREAKING:` at the start of an unreleased changelog bullet when a major version bump is intended.
+
+SemVer recommendation rules:
+
+- `BREAKING:` present: major release
+- any `Added` or `Changed` entries: minor release
+- only `Fixed` entries: patch release
 
 ### Quick Start
 
 **Via Buildkite (recommended):**
-1. Trigger the "MockServer Release" pipeline in Buildkite
-2. Enter release version, next SNAPSHOT version, and previous version
-3. Enter TOTP code when prompted
-4. Approve gates at each stage
+1. Run `/prepare-release` and review the recommended release parameters
+2. Trigger the "MockServer Release" pipeline in Buildkite
+3. Enter the recommended release version, next SNAPSHOT version, previous version, release type, and versioned-site choice
+4. Enter TOTP code when prompted
+5. Approve gates at each stage
 
 **Via local orchestrator:**
 ```bash
@@ -24,8 +51,34 @@ The release process has been automated via a Buildkite pipeline and shared scrip
 - `terraform/buildkite-agents/build-secrets.tf` — AWS Secrets Manager secrets
 - `terraform/website/` — website infrastructure (S3, CloudFront, cross-account IAM)
 
-### Deferred setup (secrets)
-Before the first release, store credentials in AWS Secrets Manager:
+### Automated Coverage
+
+The full pipeline automates:
+
+- Maven Central core artifacts
+- `mockserver-maven-plugin`
+- Docker Hub and AWS ECR Public images
+- `mockserver-node`
+- `mockserver-client`
+- Helm
+- Javadoc
+- SwaggerHub / OpenAPI
+- website and JSON Schema publishing
+- PyPI
+- RubyGems
+- GitHub Release
+
+Current manual follow-up:
+
+- Homebrew formula bump via `scripts/ci/release/update-homebrew.sh`
+
+### Required Release Secrets
+
+Store these credentials in AWS Secrets Manager before running the pipeline:
+- `mockserver-build/sonatype` — Sonatype username + password
+- `mockserver-build/dockerhub` — Docker Hub username + token
+- `mockserver-build/pypi` — PyPI token
+- `mockserver-build/rubygems` — RubyGems API key
 - `mockserver-release/gpg-key` — GPG private key + passphrase
 - `mockserver-release/github-token` — GitHub PAT
 - `mockserver-release/totp-seed` — TOTP shared secret

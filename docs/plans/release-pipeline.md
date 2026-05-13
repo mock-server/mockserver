@@ -238,8 +238,8 @@ Cross-account IAM role"]
 | 1f | Wait for Maven Central sync | `wait-for-central.sh` | Yes | Yes | Poll `repo1.maven.org` |
 | 2 | Deploy SNAPSHOT | `deploy-snapshot.sh` | Yes | Yes | |
 | 3 | Update repo versions | `update-versions.sh` | Yes | Yes | Includes Node package.json, Ruby version.rb, Python pyproject.toml |
-| 4 | Publish mockserver-node to npm | `publish-npm.sh mockserver-node` | Local-only | Yes | npm OTP required interactively |
-| 5 | Publish mockserver-client-node to npm | `publish-npm.sh mockserver-client-node` | Local-only | Yes | npm OTP required interactively |
+| 4 | Publish mockserver-node to npm | `publish-npm.sh mockserver-node` | Yes | Yes | Uses `mockserver-release/npm-token` from AWS Secrets Manager |
+| 5 | Publish mockserver-client-node to npm | `publish-npm.sh mockserver-client-node` | Yes | Yes | Runs after step 4 so the matching `mockserver-node` version resolves during `npm i` |
 | 6 | Release mockserver-maven-plugin | `release-maven-plugin.sh` | Yes | Yes | In-tree release cycle |
 | 7 | Docker image | `publish-docker.sh` | Yes | Yes | Uses CI-built JAR, not Maven Central download |
 | 8 | Helm chart | `publish-helm.sh` | Yes | Yes | Cross-account IAM role |
@@ -265,7 +265,7 @@ scripts/
 │   └── release/
 │       ├── common.sh                   # Shared: env detection, credential loading, logging
 │       ├── verify-totp.sh              # TOTP verification against AWS seed
-│       ├── validate.sh                 # Version format, branch, dirty-tree checks
+│       ├── validate.sh                 # Version, changelog, secret, branch, dirty-tree checks
 │       ├── set-release-version.sh      # mvn versions:set + git tag + commit
 │       ├── build-and-test.sh           # ./mvnw clean install (WITH tests)
 │       ├── deploy-release.sh           # GPG import + ./mvnw deploy -P release
@@ -274,7 +274,7 @@ scripts/
 │       ├── wait-for-central.sh         # Poll repo1.maven.org until JAR available
 │       ├── deploy-snapshot.sh          # mvn versions:set to SNAPSHOT + deploy
 │       ├── update-versions.sh          # Version find-and-replace + validation
-│       ├── publish-npm.sh              # In-tree npm build + publish (interactive OTP)
+│       ├── publish-npm.sh              # In-tree npm build + publish using AWS SM token
 │       ├── release-maven-plugin.sh     # In-tree maven-plugin release cycle
 │       ├── publish-docker.sh           # Docker buildx multi-arch + push
 │       ├── publish-helm.sh             # Helm package + S3 sync (cross-account role)
@@ -680,6 +680,16 @@ steps:
         command: "scripts/ci/release/publish-docker.sh"
         timeout_in_minutes: 45
 
+      - label: ":package: npm mockserver-node (Step 4)"
+        key: "publish-npm-mockserver-node"
+        command: "scripts/ci/release/publish-npm.sh mockserver-node"
+        timeout_in_minutes: 20
+
+      - label: ":package: npm mockserver-client (Step 5)"
+        command: "scripts/ci/release/publish-npm.sh mockserver-client-node"
+        depends_on: "publish-npm-mockserver-node"
+        timeout_in_minutes: 20
+
       - label: ":helm: Helm Chart (Step 8)"
         command: "scripts/ci/release/publish-helm.sh"
         timeout_in_minutes: 15
@@ -695,6 +705,10 @@ steps:
       - label: ":globe_with_meridians: Website (Step 11)"
         command: "scripts/ci/release/publish-website.sh"
         timeout_in_minutes: 15
+
+      - label: ":page_facing_up: JSON Schema"
+        command: "scripts/ci/release/publish-schema.sh"
+        timeout_in_minutes: 10
 
       - label: ":python: PyPI (Step 14)"
         command: "scripts/ci/release/publish-pypi.sh"
@@ -712,7 +726,7 @@ steps:
 
   - label: ":globe_with_meridians: Create Versioned Site (Step 12)"
     command: "scripts/ci/release/create-versioned-site.sh"
-    if: "build.meta_data('create-versioned-site') == 'yes'"
+    if: "build.meta_data('release-type') == 'full' && build.meta_data('create-versioned-site') == 'yes'"
     timeout_in_minutes: 15
 
   - wait
@@ -721,7 +735,7 @@ steps:
     command: "scripts/ci/release/notify.sh"
 ```
 
-**Steps 4 & 5** (npm with OTP) and **Step 13** (Homebrew with local `brew`) are local-only.
+Only **Step 13** (Homebrew with local `brew`) remains local-only.
 
 ---
 
@@ -938,15 +952,15 @@ Automates the manual find-and-replace, with a validation step:
 Takes a directory name as argument: `mockserver-node` or `mockserver-client-node`. Operates **in-tree** (no external cloning).
 
 1. `cd <dir> && rm -rf package-lock.json node_modules`
-2. `nvm use v16.14.1 && npm i`
-3. If `mockserver-node`: also run `npm audit fix` and `grunt`
-4. If `mockserver-client-node`: run `grunt`
-5. `git add -A && git commit -m "release: publish $DIR $RELEASE_VERSION" && git push origin master`
-6. `git tag ${DIR}-$RELEASE_VERSION && git push origin --tags`
-7. **Interactive OTP prompt**: `read -rp "Enter npm OTP: " OTP`
-8. `npm publish --access=public --otp=$OTP`
+2. Load `mockserver-release/npm-token` from AWS Secrets Manager into a temporary `.npmrc`
+3. `npm whoami && npm i` (retrying if registry propagation lags)
+4. If `mockserver-node`: also run `npm audit fix` and `grunt`
+5. If `mockserver-client-node`: run `grunt`
+6. `git add <dir> && git commit -m "release: publish $DIR $RELEASE_VERSION" && git push origin master`
+7. `git tag ${DIR}-$RELEASE_VERSION && git push origin --tags`
+8. `npm publish --access=public`
 
-**Local-only** because npm publish requires an interactive OTP code.
+`mockserver-client-node` must run after `mockserver-node` in CI so the new version resolves during `npm i`.
 
 ### Step 6: Release Maven Plugin — `release-maven-plugin.sh`
 
@@ -1442,7 +1456,7 @@ Phase 7 (website Terraform) and Phase 8 (secrets) can proceed in parallel with a
 | Central Portal Publisher API returns unexpected errors | Medium | Blocks Phase 2 | Test API early with a test namespace; fallback to OSSRH Staging API compatibility layer at `ossrh-staging-api.central.sonatype.com` |
 | Deployment ID capture from `mvn deploy` output is fragile | Medium | Cannot poll/publish programmatically | Use OSSRH Staging API compatibility `/manual/search/repositories` endpoint as alternative; or switch to bundle upload via Publisher API |
 | Website account SSO access not available | Medium | Blocks Phase 7 | Phase 7 can proceed last; website publishing can remain manual initially |
-| npm automation token may not bypass OTP | Medium | Steps 4/5 remain interactive | Investigate `npm token create --cidr`; fallback is local-only (current design) |
+| npm automation token misconfigured or revoked | Medium | npm publish fails in CI | Validate `mockserver-release/npm-token` before release and keep it scoped to package publish permissions |
 | SwaggerHub API restrictions | Low | Step 10 remains manual | Test API access early |
 | Docker CI image rebuild breaks CI | Medium | CI downtime | Test on branch, tag separately |
 | Cross-account IAM role trust policy misconfiguration | Low | Website access fails | Test with `aws sts assume-role` before pipeline deployment |

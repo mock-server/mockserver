@@ -7,9 +7,22 @@ source "$SCRIPT_DIR/common.sh"
 require_cmd sed
 require_cmd jq
 
+escape_sed_pattern() {
+  printf '%s' "$1" | sed -e 's/[][\\/.^$*]/\\&/g'
+}
+
+escape_sed_replacement() {
+  printf '%s' "$1" | sed -e 's/[\\/&]/\\&/g'
+}
+
 log_step "Updating version references from $OLD_VERSION to $RELEASE_VERSION"
 
 cd "$REPO_ROOT"
+
+if [[ -z "$CURRENT_VERSION" || ! "$CURRENT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-SNAPSHOT$ ]]; then
+  log_error "CURRENT_VERSION must be captured during validation before updating versions"
+  exit 1
+fi
 
 MAJOR="${RELEASE_VERSION%%.*}"
 MINOR_REST="${RELEASE_VERSION#*.}"
@@ -21,14 +34,17 @@ OLD_MINOR_REST="${OLD_VERSION#*.}"
 OLD_MINOR="${OLD_MINOR_REST%%.*}"
 OLD_API_VERSION="${OLD_MAJOR}.${OLD_MINOR}.x"
 
-OLD_SNAPSHOT_PARTS="${OLD_VERSION%.*}"
-OLD_PATCH="${OLD_VERSION##*.}"
-OLD_SNAPSHOT="${OLD_SNAPSHOT_PARTS}.$((OLD_PATCH + 1))-SNAPSHOT"
-
 log_info "Version mapping:"
 log_info "  $OLD_VERSION -> $RELEASE_VERSION"
 log_info "  $OLD_API_VERSION -> $API_VERSION"
-log_info "  $OLD_SNAPSHOT -> $NEXT_VERSION"
+log_info "  $CURRENT_VERSION -> $NEXT_VERSION"
+
+OLD_VERSION_PATTERN=$(escape_sed_pattern "$OLD_VERSION")
+RELEASE_VERSION_REPLACEMENT=$(escape_sed_replacement "$RELEASE_VERSION")
+OLD_API_VERSION_PATTERN=$(escape_sed_pattern "$OLD_API_VERSION")
+API_VERSION_REPLACEMENT=$(escape_sed_replacement "$API_VERSION")
+CURRENT_VERSION_PATTERN=$(escape_sed_pattern "$CURRENT_VERSION")
+NEXT_VERSION_REPLACEMENT=$(escape_sed_replacement "$NEXT_VERSION")
 
 log_info "Updating changelog"
 TODAY=$(date +%Y-%m-%d)
@@ -55,12 +71,14 @@ for PKG_DIR in mockserver-node mockserver-client-node; do
 done
 
 if [[ -f "mockserver-node/package.json" ]]; then
-  sed_i "s/mockserver-netty-${OLD_VERSION}-jar-with-dependencies.jar/mockserver-netty-${RELEASE_VERSION}-jar-with-dependencies.jar/g" mockserver-node/package.json
+  OLD_JAR_PATTERN=$(escape_sed_pattern "mockserver-netty-${OLD_VERSION}-jar-with-dependencies.jar")
+  NEW_JAR_REPLACEMENT=$(escape_sed_replacement "mockserver-netty-${RELEASE_VERSION}-jar-with-dependencies.jar")
+  sed_i "s/${OLD_JAR_PATTERN}/${NEW_JAR_REPLACEMENT}/g" mockserver-node/package.json
 fi
 
 if [[ -f "mockserver-client-node/package.json" ]]; then
   TMP_FILE="$REPO_ROOT/.tmp/pkg-client-node.json"
-  jq --arg v "$RELEASE_VERSION" '.dependencies["mockserver-node"] = $v' mockserver-client-node/package.json > "$TMP_FILE" && mv "$TMP_FILE" mockserver-client-node/package.json
+  jq --arg v "$RELEASE_VERSION" '.devDependencies["mockserver-node"] = $v' mockserver-client-node/package.json > "$TMP_FILE" && mv "$TMP_FILE" mockserver-client-node/package.json
 fi
 
 log_info "Updating Python package"
@@ -102,12 +120,12 @@ for ext in "${FIND_REPLACE_EXTS[@]}"; do
     -not -name "CHANGELOG.md" \
     -not -name "package-lock.json" \
     -print0 2>/dev/null | while IFS= read -r -d '' file; do
-      sed_i "s/${OLD_VERSION}/${RELEASE_VERSION}/g" "$file" 2>/dev/null || true
+      sed_i "s/${OLD_VERSION_PATTERN}/${RELEASE_VERSION_REPLACEMENT}/g" "$file" 2>/dev/null || true
       if [[ "$OLD_API_VERSION" != "$API_VERSION" ]]; then
-        sed_i "s/${OLD_API_VERSION}/${API_VERSION}/g" "$file" 2>/dev/null || true
+        sed_i "s/${OLD_API_VERSION_PATTERN}/${API_VERSION_REPLACEMENT}/g" "$file" 2>/dev/null || true
       fi
-      if [[ "$OLD_SNAPSHOT" != "$NEXT_VERSION" ]]; then
-        sed_i "s/${OLD_SNAPSHOT}/${NEXT_VERSION}/g" "$file" 2>/dev/null || true
+      if [[ "$CURRENT_VERSION" != "$NEXT_VERSION" ]]; then
+        sed_i "s/${CURRENT_VERSION_PATTERN}/${NEXT_VERSION_REPLACEMENT}/g" "$file" 2>/dev/null || true
       fi
     done
 done

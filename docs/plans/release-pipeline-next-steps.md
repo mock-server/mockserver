@@ -126,7 +126,7 @@ aws secretsmanager put-secret-value \
   --profile mockserver-build
 ```
 
-> **Note:** npm publish currently requires interactive OTP, so the `publish-npm.sh` script is local-only. If you create a granular token that bypasses OTP, it could run in CI too.
+> **Note:** `publish-npm.sh` now reads this token from AWS Secrets Manager and publishes non-interactively in CI.
 
 ### 5. SwaggerHub API Key — `mockserver-release/swaggerhub`
 

@@ -197,3 +197,9 @@ When investigating issues or answering technical questions:
 1. Search the codebase first
 2. Search online documentation
 3. Only then rely on training data
+
+## Release Preparation
+
+- Use `/prepare-release` before running the MockServer release pipeline.
+- The release preparation workflow recommends `release-version`, `next-version`, `old-version`, `release-type`, and `create-versioned-site` from `changelog.md`, Semantic Versioning rules, and release readiness checks.
+- Prefix unreleased changelog bullets with `BREAKING:` when a major version bump is intended.
