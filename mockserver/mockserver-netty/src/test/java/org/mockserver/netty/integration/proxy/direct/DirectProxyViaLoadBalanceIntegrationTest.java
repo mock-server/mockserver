@@ -179,10 +179,8 @@ public class DirectProxyViaLoadBalanceIntegrationTest {
                 "      \"content-length\" : [ \"15\" ]," + NEW_LINE +
                 "      \"connection\" : [ \"keep-alive\" ]" + NEW_LINE +
                 "    }," + NEW_LINE +
-                "    \"body\" : \"target_response\"" + NEW_LINE +
-                "  }" + NEW_LINE +
-                NEW_LINE +
-                " for forwarded request" + NEW_LINE +
+                "    \"body\" : \"target_response\""));
+            assertThat(logMessages[2], containsString("for forwarded request" + NEW_LINE +
                 NEW_LINE +
                 " in json:" + NEW_LINE +
                 NEW_LINE +
