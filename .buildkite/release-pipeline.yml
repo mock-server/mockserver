@@ -52,6 +52,8 @@ steps:
     agents:
       queue: "release"
 
+  - wait
+
   - label: ":pipeline: Upload Release Steps"
     command: "scripts/ci/release/upload-release-steps.sh"
     agents:
