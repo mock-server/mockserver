@@ -2,7 +2,9 @@ package org.mockserver.configuration;
 
 import com.google.common.collect.Sets;
 import com.google.common.net.InetAddresses;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.model.BinaryProxyListener;
+import org.mockserver.model.Delay;
 import org.mockserver.model.ProxyPassMapping;
 import org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager;
 import org.slf4j.event.Level;
@@ -12,6 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
@@ -29,6 +32,7 @@ public class Configuration {
 
     // logging
     private Level logLevel;
+    private Consumer<LogEntry> logEventListener;
     private Boolean disableSystemOut;
     private Boolean disableLogging;
     private Boolean detailedMatchFailures;
@@ -62,6 +66,7 @@ public class Configuration {
     // socket
     private Long maxSocketTimeoutInMillis;
     private Long socketConnectionTimeoutInMillis;
+    private Delay connectionDelay;
     private Boolean alwaysCloseSocketConnections;
     private String localBoundIP;
 
@@ -209,6 +214,15 @@ public class Configuration {
      */
     public Configuration logLevel(String level) {
         this.logLevel = Level.valueOf(level);
+        return this;
+    }
+
+    public Consumer<LogEntry> logEventListener() {
+        return logEventListener;
+    }
+
+    public Configuration logEventListener(Consumer<LogEntry> logEventListener) {
+        this.logEventListener = logEventListener;
         return this;
     }
 
@@ -660,6 +674,15 @@ public class Configuration {
      */
     public Configuration socketConnectionTimeoutInMillis(Long socketConnectionTimeoutInMillis) {
         this.socketConnectionTimeoutInMillis = socketConnectionTimeoutInMillis;
+        return this;
+    }
+
+    public Delay connectionDelay() {
+        return connectionDelay;
+    }
+
+    public Configuration connectionDelay(Delay connectionDelay) {
+        this.connectionDelay = connectionDelay;
         return this;
     }
 

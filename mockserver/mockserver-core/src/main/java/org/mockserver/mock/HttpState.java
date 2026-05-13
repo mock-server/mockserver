@@ -6,6 +6,7 @@ import org.mockserver.authentication.AuthenticationHandler;
 import org.mockserver.closurecallback.websocketregistry.LocalCallbackRegistry;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.configuration.Configuration;
+import org.mockserver.file.FileStore;
 import org.mockserver.grpc.GrpcProtoDescriptorStore;
 import org.mockserver.grpc.GrpcProtoFileCompiler;
 import org.mockserver.log.MockServerEventLog;
@@ -97,6 +98,7 @@ public class HttpState {
     private org.mockserver.serialization.har.HarConverter harConverter;
     private AuthenticationHandler controlPlaneAuthenticationHandler;
     private GrpcProtoDescriptorStore grpcDescriptorStore;
+    private final FileStore fileStore = new FileStore();
     private final CrudDispatcher crudDispatcher = new CrudDispatcher();
 
     public static void setPort(final HttpRequest request) {
@@ -173,6 +175,10 @@ public class HttpState {
 
     public GrpcProtoDescriptorStore getGrpcDescriptorStore() {
         return grpcDescriptorStore;
+    }
+
+    public FileStore getFileStore() {
+        return fileStore;
     }
 
     public CrudDispatcher getCrudDispatcher() {
@@ -267,6 +273,7 @@ public class HttpState {
         mockServerLog.reset();
         webSocketClientRegistry.reset();
         crudDispatcher.reset();
+        fileStore.reset();
         if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -1052,6 +1059,100 @@ public class HttpState {
                 if (controlPlaneRequestAuthenticated(request, responseWriter)) {
                     grpcDescriptorStore.reset();
                     responseWriter.writeResponse(request, OK);
+                }
+                canHandle.complete(true);
+
+            } else if (request.matches("PUT", PATH_PREFIX + "/files/store", "/files/store")) {
+
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    try {
+                        String bodyString = request.getBodyAsJsonOrXmlString();
+                        if (isNotBlank(bodyString)) {
+                            com.fasterxml.jackson.databind.ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+                            com.fasterxml.jackson.databind.JsonNode node = objectMapper.readTree(bodyString);
+                            if (node.has("name") && node.has("content")) {
+                                String fileName = node.get("name").asText();
+                                String content = node.get("content").asText();
+                                byte[] fileContent;
+                                if (node.has("base64") && node.get("base64").asBoolean()) {
+                                    fileContent = java.util.Base64.getDecoder().decode(content);
+                                } else {
+                                    fileContent = content.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                                }
+                                fileStore.store(fileName, fileContent);
+                                responseWriter.writeResponse(request, response()
+                                    .withStatusCode(CREATED.code())
+                                    .withBody("{\"name\":\"" + fileName + "\",\"size\":" + fileContent.length + "}", MediaType.JSON_UTF_8), true);
+                            } else {
+                                responseWriter.writeResponse(request, BAD_REQUEST, "request body must contain 'name' and 'content' fields", MediaType.create("text", "plain").toString());
+                            }
+                        } else {
+                            responseWriter.writeResponse(request, BAD_REQUEST, "request body is empty", MediaType.create("text", "plain").toString());
+                        }
+                    } catch (Exception e) {
+                        responseWriter.writeResponse(request, BAD_REQUEST, "failed to store file: " + e.getMessage(), MediaType.create("text", "plain").toString());
+                    }
+                }
+                canHandle.complete(true);
+
+            } else if (request.matches("PUT", PATH_PREFIX + "/files/retrieve", "/files/retrieve")) {
+
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    try {
+                        String bodyString = request.getBodyAsJsonOrXmlString();
+                        com.fasterxml.jackson.databind.ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+                        com.fasterxml.jackson.databind.JsonNode node = objectMapper.readTree(bodyString);
+                        String fileName = node.has("name") ? node.get("name").asText() : null;
+                        if (isBlank(fileName)) {
+                            responseWriter.writeResponse(request, BAD_REQUEST, "request body must contain 'name' field", MediaType.create("text", "plain").toString());
+                        } else {
+                            byte[] content = fileStore.retrieve(fileName);
+                            if (content != null) {
+                                responseWriter.writeResponse(request, response()
+                                    .withStatusCode(OK.code())
+                                    .withBody(content), true);
+                            } else {
+                                responseWriter.writeResponse(request, NOT_FOUND, "file not found: " + fileName, MediaType.create("text", "plain").toString());
+                            }
+                        }
+                    } catch (Exception e) {
+                        responseWriter.writeResponse(request, BAD_REQUEST, "failed to retrieve file: " + e.getMessage(), MediaType.create("text", "plain").toString());
+                    }
+                }
+                canHandle.complete(true);
+
+            } else if (request.matches("PUT", PATH_PREFIX + "/files/list", "/files/list")) {
+
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    try {
+                        com.fasterxml.jackson.databind.ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+                        responseWriter.writeResponse(request, response()
+                            .withStatusCode(OK.code())
+                            .withBody(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(fileStore.listFiles()), MediaType.JSON_UTF_8), true);
+                    } catch (Exception e) {
+                        responseWriter.writeResponse(request, BAD_REQUEST, "failed to list files: " + e.getMessage(), MediaType.create("text", "plain").toString());
+                    }
+                }
+                canHandle.complete(true);
+
+            } else if (request.matches("PUT", PATH_PREFIX + "/files/delete", "/files/delete")) {
+
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    try {
+                        String bodyString = request.getBodyAsJsonOrXmlString();
+                        com.fasterxml.jackson.databind.ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+                        com.fasterxml.jackson.databind.JsonNode node = objectMapper.readTree(bodyString);
+                        String fileName = node.has("name") ? node.get("name").asText() : null;
+                        if (isBlank(fileName)) {
+                            responseWriter.writeResponse(request, BAD_REQUEST, "request body must contain 'name' field", MediaType.create("text", "plain").toString());
+                        } else if (fileStore.delete(fileName)) {
+                            responseWriter.writeResponse(request, OK);
+                        } else {
+                            responseWriter.writeResponse(request, NOT_FOUND, "file not found: " + fileName, MediaType.create("text", "plain").toString());
+                        }
+                    } catch (Exception e) {
+                        responseWriter.writeResponse(request, BAD_REQUEST, "failed to delete file: " + e.getMessage(), MediaType.create("text", "plain").toString());
+                    }
                 }
                 canHandle.complete(true);
 

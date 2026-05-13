@@ -292,6 +292,29 @@
         "type",
         "query"
       ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "not": {
+          "type": "boolean"
+        },
+        "optional": {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "FILE"
+          ]
+        },
+        "filePath": {
+          "type": "string"
+        },
+        "contentType": {
+          "type": "string"
+        }
+      }
     }
   ]
 }

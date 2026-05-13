@@ -40,6 +40,7 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
         fieldNameToType.put("json".toLowerCase(), Body.Type.JSON);
         fieldNameToType.put("string".toLowerCase(), Body.Type.STRING);
         fieldNameToType.put("xml".toLowerCase(), Body.Type.XML);
+        fieldNameToType.put("filePath".toLowerCase(), Body.Type.FILE);
     }
 
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(BodyWithContentTypeDTODeserializer.class);
@@ -78,7 +79,7 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                             }
                         }
                     }
-                    if (containsIgnoreCase(key, "string", "regex", "json", "jsonSchema", "jsonPath", "xml", "xmlSchema", "xpath", "base64Bytes") && type != Body.Type.PARAMETERS) {
+                    if (containsIgnoreCase(key, "string", "regex", "json", "jsonSchema", "jsonPath", "xml", "xmlSchema", "xpath", "base64Bytes", "filePath") && type != Body.Type.PARAMETERS) {
                         String fieldName = String.valueOf(entry.getKey()).toLowerCase();
                         if (fieldNameToType.containsKey(fieldName)) {
                             type = fieldNameToType.get(fieldName);
@@ -203,6 +204,9 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                             result = new XmlBodyDTO(new XmlBody(valueJsonValue, rawBytes, XmlBody.DEFAULT_XML_CONTENT_TYPE), not);
                             break;
                         }
+                    case FILE:
+                        result = new FileBodyDTO(new FileBody(valueJsonValue, contentType), not);
+                        break;
                 }
             } else if (body.size() > 0) {
                 if (jsonBodyObjectWriter == null) {

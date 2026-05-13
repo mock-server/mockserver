@@ -1,5 +1,6 @@
 package org.mockserver.logging;
 
+import org.junit.After;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockserver.configuration.Configuration;
@@ -8,6 +9,9 @@ import org.mockserver.mock.HttpState;
 import org.mockserver.model.HttpRequest;
 import org.slf4j.Logger;
 import org.slf4j.event.Level;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -22,6 +26,11 @@ import static org.mockserver.model.HttpResponse.response;
 public class MockServerLoggerTest {
 
     private final Configuration configuration = configuration().logLevel(Level.INFO).disableSystemOut(false);
+
+    @After
+    public void tearDown() {
+        MockServerLogger.setGlobalLogEventListener(null);
+    }
 
     @Test
     public void shouldSendEventToStateHandler() {
@@ -221,6 +230,81 @@ public class MockServerLoggerTest {
             NEW_LINE +
             "  value2" + NEW_LINE;
         verify(mockLogger).info(expectedMessage, (Throwable) null);
+    }
+
+    @Test
+    public void shouldCallGlobalLogEventListener() {
+        // given
+        List<LogEntry> capturedEntries = new ArrayList<>();
+        MockServerLogger.setGlobalLogEventListener(capturedEntries::add);
+        HttpState mockHttpStateHandler = mock(HttpState.class);
+        MockServerLogger logFormatter = new MockServerLogger(configuration, mockHttpStateHandler);
+        HttpRequest request = request("some_path");
+
+        // when
+        logFormatter.logEvent(
+            new LogEntry()
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("listener test message")
+        );
+
+        // then
+        assertThat(capturedEntries.size(), is(1));
+        assertThat(capturedEntries.get(0).getMessageFormat(), is("listener test message"));
+        verify(mockHttpStateHandler, times(1)).log(any(LogEntry.class));
+    }
+
+    @Test
+    public void shouldNotFailWhenNoGlobalLogEventListenerSet() {
+        // given
+        MockServerLogger.setGlobalLogEventListener(null);
+        Logger mockLogger = mock(Logger.class);
+        MockServerLogger logFormatter = new MockServerLogger(configuration, mockLogger);
+
+        // when
+        logFormatter.logEvent(
+            new LogEntry()
+                .setLogLevel(Level.ERROR)
+                .setMessageFormat("test message without listener")
+        );
+
+        // then
+        ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
+        verify(mockLogger).error(messageCaptor.capture(), eq((Throwable) null));
+        assertThat(messageCaptor.getValue(), containsString("test message without listener"));
+    }
+
+    @Test
+    public void shouldCallGlobalLogEventListenerBeforeDispatching() {
+        // given
+        List<String> callOrder = new ArrayList<>();
+        MockServerLogger.setGlobalLogEventListener(entry -> {
+            if ("order test".equals(entry.getMessageFormat())) {
+                callOrder.add("listener");
+            }
+        });
+        HttpState mockHttpStateHandler = mock(HttpState.class);
+        doAnswer(invocation -> {
+            LogEntry entry = invocation.getArgument(0);
+            if ("order test".equals(entry.getMessageFormat())) {
+                callOrder.add("httpStateHandler");
+            }
+            return null;
+        }).when(mockHttpStateHandler).log(any(LogEntry.class));
+        MockServerLogger logFormatter = new MockServerLogger(configuration, mockHttpStateHandler);
+
+        // when
+        logFormatter.logEvent(
+            new LogEntry()
+                .setLogLevel(Level.INFO)
+                .setMessageFormat("order test")
+        );
+
+        // then
+        assertThat(callOrder.size(), is(2));
+        assertThat(callOrder.get(0), is("listener"));
+        assertThat(callOrder.get(1), is("httpStateHandler"));
     }
 
 }

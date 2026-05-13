@@ -9,6 +9,7 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.mockserver.client.initialize.ExpectationInitializer;
 import org.mockserver.configuration.IntegerStringListParser;
+import org.mockserver.file.FilePath;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.action.http.HttpResponseClassCallbackActionHandler;
@@ -189,11 +190,16 @@ public abstract class MockServerAbstractMojo extends AbstractMojo {
 
     protected String createInitializerJson() {
         try {
-            if (isNotBlank(initializationJson) && compileResourcePath != null) {
-                try {
-                    return readFileFromClassPathOrPath(compileResourcePath + "/" + initializationJson);
-                } catch (RuntimeException exception) {
-                    return readFileFromClassPathOrPath(testResourcePath + "/" + initializationJson);
+            if (isNotBlank(initializationJson)) {
+                if (initializationJson.contains("*") || initializationJson.contains("?") || initializationJson.contains("{")) {
+                    return readGlobInitializerJson();
+                }
+                if (compileResourcePath != null) {
+                    try {
+                        return readFileFromClassPathOrPath(compileResourcePath + "/" + initializationJson);
+                    } catch (RuntimeException exception) {
+                        return readFileFromClassPathOrPath(testResourcePath + "/" + initializationJson);
+                    }
                 }
             }
         } catch (Throwable throwable) {
@@ -206,6 +212,48 @@ public abstract class MockServerAbstractMojo extends AbstractMojo {
             );
         }
         return "";
+    }
+
+    private String readGlobInitializerJson() {
+        List<String> allExpectations = new ArrayList<>();
+        List<String> expandedPaths = new ArrayList<>();
+
+        if (compileResourcePath != null) {
+            expandedPaths.addAll(FilePath.expandFilePathGlobs(compileResourcePath + "/" + initializationJson));
+        }
+        if (testResourcePath != null) {
+            expandedPaths.addAll(FilePath.expandFilePathGlobs(testResourcePath + "/" + initializationJson));
+        }
+        if (expandedPaths.isEmpty()) {
+            expandedPaths.addAll(FilePath.expandFilePathGlobs(initializationJson));
+        }
+
+        for (String filePath : expandedPaths) {
+            try {
+                String content = readFileFromClassPathOrPath(filePath).trim();
+                if (isNotBlank(content)) {
+                    if (content.startsWith("[") && content.endsWith("]")) {
+                        content = content.substring(1, content.length() - 1).trim();
+                    }
+                    if (isNotBlank(content)) {
+                        allExpectations.add(content);
+                    }
+                }
+            } catch (RuntimeException e) {
+                MOCK_SERVER_LOGGER.logEvent(
+                        new LogEntry()
+                                .setType(LogEntry.LogMessageType.WARN)
+                                .setLogLevel(Level.WARN)
+                                .setMessageFormat("Exception loading json expectation from " + filePath)
+                                .setThrowable(e)
+                );
+            }
+        }
+
+        if (allExpectations.isEmpty()) {
+            return "";
+        }
+        return "[" + String.join(",", allExpectations) + "]";
     }
 
     private ClassLoader setupClasspath() throws MalformedURLException {

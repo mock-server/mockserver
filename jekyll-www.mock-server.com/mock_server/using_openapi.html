@@ -703,3 +703,62 @@ mockServerClient("localhost", 1080).openAPIExpectation({
         <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
+
+<a id="openapi_callbacks" class="anchor" href="#openapi_callbacks">&nbsp;</a>
+
+<h2>OpenAPI Callbacks (Webhooks)</h2>
+
+<p>When an OpenAPI specification includes <a target="_blank" href="https://swagger.io/docs/specification/callbacks/"><strong>callbacks</strong></a> on an operation, MockServer automatically generates webhook expectations that send HTTP requests to the callback URLs after the main response is returned. This allows you to simulate webhook-style interactions where an API notifies the client asynchronously after processing a request.</p>
+
+<p>The callback URL, method, and request body are derived from the OpenAPI callback definition. Runtime expression placeholders (such as <code class="inline code">{$request.body#/callbackUrl}</code>) are currently passed through as literal strings.</p>
+
+<p>For example, given the following OpenAPI specification with a callback:</p>
+
+<pre class="prettyprint lang-yaml code"><code class="code">paths:
+  /subscribe:
+    post:
+      operationId: createSubscription
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                callbackUrl:
+                  type: string
+                  format: uri
+      responses:
+        '201':
+          description: Subscription created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+      callbacks:
+        onEvent:
+          '{$request.body#/callbackUrl}':
+            post:
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        event:
+                          type: string
+                        subscriptionId:
+                          type: string
+              responses:
+                '200':
+                  description: Callback acknowledged</code></pre>
+
+<p>MockServer will create:</p>
+<ol>
+    <li>An expectation matching <code class="inline code">POST /subscribe</code> that returns a <code class="inline code">201</code> response with an auto-generated body</li>
+    <li>An after-action (webhook) that sends a <code class="inline code">POST</code> request to the callback URL with an auto-generated request body based on the callback schema</li>
+</ol>
+
+<p>This feature works automatically when loading OpenAPI specifications via any method (REST API, Java client, initializer file, or classpath). No additional configuration is required.</p>

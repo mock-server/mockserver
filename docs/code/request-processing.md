@@ -81,6 +81,10 @@ required?"}
 | `PUT /mockserver/grpc/descriptors` | Upload a compiled proto descriptor set (binary body) |
 | `PUT /mockserver/grpc/services` | List all loaded gRPC services and their methods |
 | `PUT /mockserver/grpc/clear` | Clear all loaded gRPC descriptors and reset the store |
+| `PUT /mockserver/files/store` | Store a file in the in-memory file store |
+| `PUT /mockserver/files/retrieve` | Retrieve a stored file by name |
+| `PUT /mockserver/files/list` | List all stored file names |
+| `PUT /mockserver/files/delete` | Delete a stored file by name |
 
 All control-plane requests go through `controlPlaneRequestAuthenticated()` which enforces mTLS and/or JWT authentication if configured.
 
@@ -451,6 +455,25 @@ flowchart TD
 ```
 
 Supported DNS record types: A, AAAA, CNAME, MX, SRV, TXT, PTR. The DNS server is disabled by default (`dnsEnabled=false`) and must be explicitly enabled.
+
+## OpenAPI Callback Support
+
+When expectations are generated from an OpenAPI specification (via `PUT /mockserver/openapi` or `initializationOpenAPIPath`), MockServer now automatically processes `callbacks` defined on operations.
+
+For each callback in the OpenAPI spec, `OpenAPIConverter.buildAfterActions()`:
+1. Extracts the callback URL expression (e.g., `{$request.body#/callbackUrl}`)
+2. Resolves the HTTP method from the callback operation
+3. Extracts the request body schema and generates an example body
+4. Creates an `AfterAction` with a `HttpForward`-style webhook that fires after the main response
+
+The callback URL is resolved by `resolveCallbackUrl()`:
+- Runtime expressions like `{$request.body#/...}` are stripped of the expression wrapper in v1 (passed as literal strings)
+- Static URLs are used as-is
+
+Limitations in v1:
+- Runtime expression placeholders are not dynamically resolved — they are passed through as literal text
+- Only `post`, `put`, `patch`, `get`, and `delete` callback methods are supported
+- Callback request bodies use the first available media type schema
 
 ## Detailed Verification Failures (Diff Mode)
 

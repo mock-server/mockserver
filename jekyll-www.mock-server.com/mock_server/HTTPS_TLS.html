@@ -518,6 +518,30 @@ ConfigurationProperties.controlPlaneTLSMutualAuthenticationCAChain("/path/to/ca.
 MockServerClient client = new MockServerClient("localhost", 1080)
     .withSecure(true);</code></pre>
 
+<a id="bouncycastle_fips" class="anchor" href="#bouncycastle_fips">&nbsp;</a>
+
+<h2>BouncyCastle FIPS Support</h2>
+
+<p>MockServer supports <strong>BouncyCastle FIPS</strong> (<code class="inline_code">bc-fips</code>) as a drop-in alternative to the standard BouncyCastle provider (<code class="inline_code">bcprov-jdk18on</code>). This is useful in environments that require FIPS 140-2 compliant cryptographic modules.</p>
+
+<p>MockServer automatically detects which BouncyCastle provider is available at runtime &mdash; no configuration changes are needed. To use FIPS mode:</p>
+
+<ol>
+    <li><strong>Exclude</strong> the standard BouncyCastle dependency (<code class="inline_code">bcprov-jdk18on</code>) from your classpath</li>
+    <li><strong>Add</strong> the BouncyCastle FIPS dependency (<code class="inline_code">bc-fips</code>) instead</li>
+    <li><strong>Ensure</strong> the FIPS provider is registered with the JVM (e.g. via <code class="inline_code">java.security</code> configuration or programmatically)</li>
+</ol>
+
+<p>Example Maven dependency replacement:</p>
+
+<pre class="prettyprint lang-xml code"><code class="code">&lt;dependency&gt;
+    &lt;groupId&gt;org.bouncycastle&lt;/groupId&gt;
+    &lt;artifactId&gt;bc-fips&lt;/artifactId&gt;
+    &lt;version&gt;1.0.2.5&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+
+<p>MockServer will use whichever provider it finds on the classpath. If both are present, the standard (non-FIPS) provider is used. If neither is available, MockServer falls back to the JVM's default cryptographic provider.</p>
+
 <a id="tls_troubleshooting" class="anchor" href="#tls_troubleshooting">&nbsp;</a>
 
 <h2>TLS Troubleshooting</h2>

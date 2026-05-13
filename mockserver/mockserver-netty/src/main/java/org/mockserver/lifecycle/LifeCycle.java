@@ -49,6 +49,9 @@ public abstract class LifeCycle implements Stoppable {
     protected LifeCycle(Configuration configuration) {
         this.configuration = configuration != null ? configuration : configuration();
         this.mockServerLogger = new MockServerLogger(this.configuration, MockServerEventLog.class);
+        if (this.configuration.logEventListener() != null) {
+            MockServerLogger.setGlobalLogEventListener(this.configuration.logEventListener());
+        }
         this.bossGroup = new NioEventLoopGroup(5, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-bossEventLoop"));
         this.workerGroup = new NioEventLoopGroup(this.configuration.nioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-workerEventLoop"));
         this.scheduler = new Scheduler(this.configuration, this.mockServerLogger);

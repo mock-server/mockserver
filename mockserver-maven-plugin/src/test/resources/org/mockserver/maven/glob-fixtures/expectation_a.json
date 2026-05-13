@@ -1,0 +1,10 @@
+[
+  {
+    "httpRequest": {
+      "path": "/path_a"
+    },
+    "httpResponse": {
+      "body": "response_a"
+    }
+  }
+]

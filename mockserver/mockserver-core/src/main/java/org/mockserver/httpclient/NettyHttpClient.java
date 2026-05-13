@@ -33,6 +33,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static org.mockserver.model.HttpResponse.response;
@@ -98,6 +99,9 @@ public class NettyHttpClient {
 
             final HttpClientInitializer clientInitializer = new HttpClientInitializer(proxyConfigurations, mockServerLogger, forwardProxyClient, nettySslContextFactory, httpProtocol);
 
+            final long requestStartedMillis = System.currentTimeMillis();
+            final AtomicLong connectionEstablishedMillis = new AtomicLong();
+
             new Bootstrap()
                 .group(eventLoopGroup)
                 .channel(NioSocketChannel.class)
@@ -113,12 +117,11 @@ public class NettyHttpClient {
                 .connect(remoteAddress)
                 .addListener((ChannelFutureListener) future -> {
                     if (future.isSuccess()) {
-                        // ensure if HTTP2 is used then settings have been received from server
+                        connectionEstablishedMillis.set(System.currentTimeMillis());
                         clientInitializer.whenComplete((protocol, throwable) -> {
                             if (throwable != null) {
                                 httpResponseFuture.completeExceptionally(throwable);
                             } else {
-                                // send the HTTP request
                                 future.channel().writeAndFlush(httpRequest);
                             }
                         });
@@ -130,14 +133,23 @@ public class NettyHttpClient {
             responseFuture
                 .whenComplete((message, throwable) -> {
                     if (throwable == null) {
+                        long responseReceivedMillis = System.currentTimeMillis();
+                        Timing timing = Timing.timing()
+                            .withRequestStartedMillis(requestStartedMillis)
+                            .withConnectionEstablishedMillis(connectionEstablishedMillis.get())
+                            .withResponseReceivedMillis(responseReceivedMillis)
+                            .withConnectionTimeInMillis(connectionEstablishedMillis.get() - requestStartedMillis)
+                            .withTotalTimeInMillis(responseReceivedMillis - requestStartedMillis);
                         if (message != null) {
+                            HttpResponse response = (HttpResponse) message;
+                            response.withTiming(timing);
                             if (forwardProxyClient) {
-                                httpResponseFuture.complete(hopByHopHeaderFilter.onResponse((HttpResponse) message));
+                                httpResponseFuture.complete(hopByHopHeaderFilter.onResponse(response));
                             } else {
-                                httpResponseFuture.complete((HttpResponse) message);
+                                httpResponseFuture.complete(response);
                             }
                         } else {
-                            httpResponseFuture.complete(response());
+                            httpResponseFuture.complete(response().withTiming(timing));
                         }
                     } else {
                         httpResponseFuture.completeExceptionally(throwable);

@@ -87,6 +87,7 @@ classDiagram
         +headers: Headers
         +cookies: Cookies
         +connectionOptions: ConnectionOptions
+        +timing: Timing
     }
     class HttpForward {
         +host: String
@@ -202,9 +203,21 @@ classDiagram
     BodyWithContentType <|-- JsonBody
     BodyWithContentType <|-- XmlBody
     BodyWithContentType <|-- BinaryBody
+    BodyWithContentType <|-- FileBody
 ```
 
-Body `Type` enum: `BINARY`, `JSON`, `JSON_SCHEMA`, `JSON_PATH`, `PARAMETERS`, `REGEX`, `STRING`, `XML`, `XML_SCHEMA`, `XPATH`, `JSON_RPC`, `GRAPHQL`, `LOG_EVENT`
+Body `Type` enum: `BINARY`, `FILE`, `JSON`, `JSON_SCHEMA`, `JSON_PATH`, `PARAMETERS`, `REGEX`, `STRING`, `XML`, `XML_SCHEMA`, `XPATH`, `JSON_RPC`, `GRAPHQL`, `LOG_EVENT`
+
+#### FileBody
+
+`FileBody` (`org.mockserver.model.FileBody`) loads response content from a file path at response time, rather than embedding the content in the expectation JSON. This keeps expectations clean when response bodies are large or shared across expectations.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `filePath` | `String` | Path to the file to load (absolute or relative to working directory) |
+| `contentType` | `String` | MIME type of the file content (optional) |
+
+Static factory: `FileBody.fileBody(filePath)`, `FileBody.fileBody(filePath, contentType)`. Convenience: `HttpResponse.withBodyFromFile(filePath)`.
 
 #### GraphQL Body Matcher
 
@@ -232,6 +245,17 @@ Body `Type` enum: `BINARY`, `JSON`, `JSON_SCHEMA`, `JSON_PATH`, `PARAMETERS`, `R
 | `keepAliveOverride` | Boolean | If true, `Connection: keep-alive`; if false, `Connection: close` |
 | `closeSocket` | Boolean | Force close (true) or keep open (false) the socket after responding |
 | `closeSocketDelay` | Delay | Delay before closing the socket (ignored if socket is not being closed) |
+
+### Timing (Forward Response Metadata)
+
+`Timing` captures latency metrics when MockServer forwards a request:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `connectTimeInMillis` | `Long` | Time to establish the TCP connection |
+| `totalTimeInMillis` | `Long` | Total round-trip time including connect, send, and receive |
+
+Timing is automatically populated by `NettyHttpClient.sendRequest()` and included in forwarded response objects. It appears in retrieved request-response pairs via the retrieve API.
 
 ### Request & Response Modifiers
 

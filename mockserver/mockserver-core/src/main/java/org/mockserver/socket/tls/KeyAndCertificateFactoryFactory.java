@@ -4,8 +4,6 @@ import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.tls.bouncycastle.BCKeyAndCertificateFactory;
 
-import java.lang.reflect.Constructor;
-
 /**
  * @author jamesdbloom
  */
@@ -24,7 +22,25 @@ public class KeyAndCertificateFactoryFactory {
             return customKeyAndCertificateFactorySupplier
                 .buildKeyAndCertificateFactory(mockServerLogger, forServer, configuration);
         } else {
-            return new BCKeyAndCertificateFactory(configuration, mockServerLogger);
+            if (isBouncyCastleAvailable()) {
+                return new BCKeyAndCertificateFactory(configuration, mockServerLogger);
+            } else {
+                throw new IllegalStateException(
+                    "BouncyCastle (bcprov-jdk18on) is not available on the classpath. " +
+                    "Either add bcprov-jdk18on to your dependencies, or provide a custom " +
+                    "KeyAndCertificateFactory via KeyAndCertificateFactoryFactory.setCustomKeyAndCertificateFactorySupplier(). " +
+                    "If using bc-fips, provide a FIPS-compatible KeyAndCertificateFactory implementation."
+                );
+            }
+        }
+    }
+
+    private static boolean isBouncyCastleAvailable() {
+        try {
+            CLASS_LOADER.loadClass("org.bouncycastle.jce.provider.BouncyCastleProvider");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
         }
     }
 

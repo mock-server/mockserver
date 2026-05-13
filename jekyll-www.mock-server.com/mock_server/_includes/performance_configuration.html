@@ -51,6 +51,23 @@
   --env MOCKSERVER_MAX_LOG_ENTRIES=5000 \
   mockserver/mockserver</code></pre>
 
+<button id="button_configuration_connection_delay_millis" class="accordion title"><strong>Connection Delay</strong></button>
+<div class="panel title">
+    <p>Introduces a delay (in milliseconds) before protocol detection on new TCP connections. This can be used to simulate slow connection establishment, such as when testing client timeout handling or connection pooling behaviour under latency.</p>
+    <p>Type: <span class="keyword">long</span> Default: <span class="this_value">0</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.connectionDelayMillis(long millis)</code></pre>
+    <pre class="prettyprint lang-java code"><code class="code">Configuration.connectionDelay(Delay delay)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.connectionDelayMillis=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CONNECTION_DELAY_MILLIS=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.connectionDelayMillis=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.connectionDelayMillis="500"</code></pre>
+</div>
+
 <a id="troubleshooting_performance" class="anchor" href="#troubleshooting_performance">&nbsp;</a>
 
 <h2>Troubleshooting: MockServer Becomes Slow or Unresponsive</h2>

@@ -13,6 +13,7 @@ import org.slf4j.event.Level;
 import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
+import java.util.function.Consumer;
 import java.util.logging.LogManager;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -26,6 +27,8 @@ import static org.slf4j.event.Level.ERROR;
  * @author jamesdbloom
  */
 public class MockServerLogger {
+
+    private static volatile Consumer<LogEntry> globalLogEventListener;
 
     static {
         configureLogger();
@@ -115,12 +118,20 @@ public class MockServerLogger {
         return this;
     }
 
+    public static void setGlobalLogEventListener(Consumer<LogEntry> listener) {
+        globalLogEventListener = listener;
+    }
+
     public void logEvent(LogEntry logEntry) {
         if (logEntry.getType() == RECEIVED_REQUEST
             || logEntry.getType() == FORWARDED_REQUEST
             || logEntry.getType() == EXPECTATION_RESPONSE
             || logEntry.isAlwaysLog()
             || isEnabledForInstance(logEntry.getLogLevel())) {
+            Consumer<LogEntry> listener = globalLogEventListener;
+            if (listener != null) {
+                listener.accept(logEntry);
+            }
             if (httpStateHandler != null) {
                 httpStateHandler.log(logEntry);
             } else if (configuration != null) {

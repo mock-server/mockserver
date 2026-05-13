@@ -34,6 +34,9 @@ public abstract class BodyWithContentTypeDTO extends BodyDTO {
         } else if (body instanceof LogEntryBody) {
             LogEntryBody logEventBody = (LogEntryBody) body;
             result = new LogEntryBodyDTO(logEventBody);
+        } else if (body instanceof FileBody) {
+            FileBody fileBody = (FileBody) body;
+            result = new FileBodyDTO(fileBody, fileBody.getNot());
         }
 
         if (result != null) {

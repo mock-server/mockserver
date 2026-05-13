@@ -31,6 +31,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
     private Cookies cookies;
     private ConnectionOptions connectionOptions;
     private Integer streamId = null;
+    private Timing timing;
 
     /**
      * Static builder to create a response.
@@ -172,6 +173,18 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
      */
     public HttpResponse withBody(BodyWithContentType body) {
         this.body = body;
+        this.hashCode = 0;
+        return this;
+    }
+
+    public HttpResponse withBodyFromFile(String filePath) {
+        this.body = new FileBody(filePath);
+        this.hashCode = 0;
+        return this;
+    }
+
+    public HttpResponse withBodyFromFile(String filePath, MediaType contentType) {
+        this.body = new FileBody(filePath, contentType);
         this.hashCode = 0;
         return this;
     }
@@ -546,6 +559,16 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
         return streamId;
     }
 
+    public HttpResponse withTiming(Timing timing) {
+        this.timing = timing;
+        this.hashCode = 0;
+        return this;
+    }
+
+    public Timing getTiming() {
+        return timing;
+    }
+
     @Override
     @JsonIgnore
     public Type getType() {
@@ -561,7 +584,8 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
             .withCookies(cookies)
             .withDelay(getDelay())
             .withConnectionOptions(connectionOptions)
-            .withStreamId(streamId);
+            .withStreamId(streamId)
+            .withTiming(timing);
     }
 
 
@@ -575,7 +599,8 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
             .withCookies(cookies != null ? cookies.clone() : null)
             .withDelay(getDelay())
             .withConnectionOptions(connectionOptions)
-            .withStreamId(streamId);
+            .withStreamId(streamId)
+            .withTiming(timing);
     }
 
     public HttpResponse update(HttpResponse responseOverride, HttpResponseModifier responseModifier) {
@@ -600,6 +625,9 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
             }
             if (responseOverride.getStreamId() != null) {
                 withStreamId(responseOverride.getStreamId());
+            }
+            if (responseOverride.getTiming() != null) {
+                withTiming(responseOverride.getTiming());
             }
             this.hashCode = 0;
         }

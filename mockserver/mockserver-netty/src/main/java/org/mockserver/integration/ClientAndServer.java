@@ -3,6 +3,7 @@ package org.mockserver.integration;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.lifecycle.ExpectationsListener;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.netty.MockServer;
 
@@ -10,6 +11,7 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import static org.mockserver.configuration.ClientConfiguration.clientConfiguration;
 import static org.mockserver.configuration.Configuration.configuration;
@@ -142,5 +144,9 @@ public class ClientAndServer extends MockServerClient {
     public ClientAndServer registerListener(ExpectationsListener expectationsListener) {
         mockServer.registerListener(expectationsListener);
         return this;
+    }
+
+    public static void setLogEventListener(Consumer<LogEntry> listener) {
+        MockServerLogger.setGlobalLogEventListener(listener);
     }
 }

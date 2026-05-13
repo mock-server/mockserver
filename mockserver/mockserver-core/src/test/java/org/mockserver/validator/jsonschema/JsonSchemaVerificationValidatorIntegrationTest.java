@@ -367,6 +367,29 @@ public class JsonSchemaVerificationValidatorIntegrationTest {
                     "           \"type\"," + NEW_LINE +
                     "           \"query\"" + NEW_LINE +
                     "         ]" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"object\"," + NEW_LINE +
+                    "         \"additionalProperties\": false," + NEW_LINE +
+                    "         \"properties\": {" + NEW_LINE +
+                    "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"optional\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"type\": {" + NEW_LINE +
+                    "             \"enum\": [" + NEW_LINE +
+                    "               \"FILE\"" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"filePath\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"contentType\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "         }" + NEW_LINE +
                     "       }" + NEW_LINE +
                     "     ]" + NEW_LINE +
                     "   }" + NEW_LINE +

@@ -1,0 +1,223 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Petstore with Callbacks"
+  },
+  "paths": {
+    "/pets": {
+      "post": {
+        "summary": "Create a pet",
+        "operationId": "createPetWithCallback",
+        "responses": {
+          "201": {
+            "description": "Pet created"
+          }
+        },
+        "callbacks": {
+          "onPetCreated": {
+            "https://callback.example.com/pets/notify": {
+              "post": {
+                "summary": "Pet created notification",
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/PetEvent"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "Callback received"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders": {
+      "post": {
+        "summary": "Create an order",
+        "operationId": "createOrderWithCallback",
+        "responses": {
+          "201": {
+            "description": "Order created"
+          }
+        },
+        "callbacks": {
+          "onOrderStatusChange": {
+            "http://notifications.example.com:8080/orders/status": {
+              "put": {
+                "summary": "Order status update",
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/OrderStatus"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "Status update received"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/subscriptions": {
+      "post": {
+        "summary": "Create a subscription",
+        "operationId": "createSubscriptionWithRuntimeCallback",
+        "responses": {
+          "201": {
+            "description": "Subscription created"
+          }
+        },
+        "callbacks": {
+          "onEvent": {
+            "{$request.body#/callbackUrl}/events": {
+              "post": {
+                "summary": "Event notification",
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Event"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "Event received"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/items": {
+      "get": {
+        "summary": "List items with no callbacks",
+        "operationId": "listItemsNoCallback",
+        "responses": {
+          "200": {
+            "description": "List of items"
+          }
+        }
+      }
+    },
+    "/webhooks": {
+      "post": {
+        "summary": "Register webhook with multiple callbacks",
+        "operationId": "registerMultipleCallbacks",
+        "responses": {
+          "201": {
+            "description": "Webhook registered"
+          }
+        },
+        "callbacks": {
+          "onSuccess": {
+            "https://success.example.com/hook": {
+              "post": {
+                "summary": "Success notification",
+                "responses": {
+                  "200": {
+                    "description": "OK"
+                  }
+                }
+              }
+            }
+          },
+          "onFailure": {
+            "https://failure.example.com/hook": {
+              "post": {
+                "summary": "Failure notification",
+                "responses": {
+                  "200": {
+                    "description": "OK"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/relative": {
+      "post": {
+        "summary": "Callback with relative path",
+        "operationId": "relativeCallback",
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "callbacks": {
+          "onDone": {
+            "/callback/done": {
+              "post": {
+                "summary": "Done callback",
+                "responses": {
+                  "200": {
+                    "description": "OK"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "PetEvent": {
+        "type": "object",
+        "properties": {
+          "eventType": {
+            "type": "string"
+          },
+          "petId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "OrderStatus": {
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "Event": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string"
+          },
+          "payload": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

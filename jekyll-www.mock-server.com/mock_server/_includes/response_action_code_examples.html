@@ -42,6 +42,72 @@ curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
         <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
+<button id="button_response_file_body" class="accordion">response with body loaded from file</button>
+<div class="panel">
+    <p>FileBody loads the response content from a file at response time, rather than embedding the content directly in the expectation. This is useful when the response payload is large (e.g. sample JSON or XML files), generated externally, or shared across multiple expectations. The file path can be absolute or relative to the working directory.</p>
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+<pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/api/data")
+    )
+    .respond(
+        response()
+            .withBodyFromFile("/path/to/response.json")
+    );
+
+new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/api/data")
+    )
+    .respond(
+        response()
+            .withBodyFromFile("/path/to/response.json", MediaType.APPLICATION_JSON)
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/api/data"
+    },
+    "httpResponse": {
+        "body": {
+            "type": "FILE",
+            "filePath": "/path/to/response.json",
+            "contentType": "application/json"
+        }
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/api/data"
+    },
+    "httpResponse": {
+        "body": {
+            "type": "FILE",
+            "filePath": "/path/to/response.json",
+            "contentType": "application/json"
+        }
+    }
+}'</code></pre>
+        <p>See <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
 <button id="button_response_literal_UTF16_body" class="accordion">literal response with UTF16 body</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
@@ -1477,6 +1543,52 @@ mockServerClient("localhost", 1080)
     </div>
     <p>When using <span class="inline_code">org.mockserver.client.MockServerClient</span> each method / closure callback has a separate web socket client.  To ensure the number of total threads does not grow too large for large numbers of method / closure callback expectations the default event loop thread pool for the web socket client is kept fairly low.  However, if an extremely large load is matched against a single method / closure callback expectation the event loop thread pool may not be large enough for its web socket client.</p>
     <p>The number of threads for the event loop thread pool for each web socket client (i.e. for each expectation with a method / closure callback) <a href="/mock_server/configuration_properties.html#button_configuration_web_socket_event_loop_thread_count">can be configured and is described in the configuration section</a>.</p>
+</div>
+<button id="button_file_store_api" class="accordion">file store REST API (store, retrieve, list, and delete files)</button>
+<div class="panel">
+    <p>MockServer provides an in-memory file store that can be used with the <a href="#button_response_file_body">FileBody</a> type. Files stored via the file store API can be referenced in expectations by name. The file store is cleared when MockServer is reset.</p>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code"># Store a file
+curl -v -X PUT "http://localhost:1080/mockserver/files/store?name=sample.json" \
+    -H "Content-Type: application/json" \
+    -d '{"id": 1, "name": "example"}'
+
+# Retrieve a file
+curl -v -X PUT "http://localhost:1080/mockserver/files/retrieve" \
+    -H "Content-Type: application/json" \
+    -d '{"name": "sample.json"}'
+
+# List all stored files
+curl -v -X PUT "http://localhost:1080/mockserver/files/list"
+
+# Delete a file
+curl -v -X PUT "http://localhost:1080/mockserver/files/delete" \
+    -H "Content-Type: application/json" \
+    -d '{"name": "sample.json"}'</code></pre>
+    </div>
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
+
+// Store a file, then reference it in an expectation using FileBody
+mockServerClient
+    .when(
+        request()
+            .withPath("/api/data")
+    )
+    .respond(
+        response()
+            .withBodyFromFile("sample.json", MediaType.APPLICATION_JSON)
+    );</code></pre>
+    </div>
+    <p><strong>Endpoints:</strong></p>
+    <ul>
+        <li><strong>PUT /mockserver/files/store?name=&lt;filename&gt;</strong> &mdash; stores a file with the given name; the request body is the file content</li>
+        <li><strong>PUT /mockserver/files/retrieve</strong> &mdash; retrieves a stored file; the request body is a JSON object with a <code class="inline code">"name"</code> field</li>
+        <li><strong>PUT /mockserver/files/list</strong> &mdash; lists all stored file names</li>
+        <li><strong>PUT /mockserver/files/delete</strong> &mdash; deletes a stored file; the request body is a JSON object with a <code class="inline code">"name"</code> field</li>
+    </ul>
 </div>
 <button id="button_response_create_expecation_within_closure_callback" class="accordion">create expectation within method / closure callback</button>
 <div class="panel">

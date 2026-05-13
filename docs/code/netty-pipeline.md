@@ -100,6 +100,14 @@ Raw binary handler"]
 
 **Recursive detection**: When TLS or SOCKS is detected, the handler adds protocol-specific decoders, re-fires the bytes through the pipeline, and runs detection again on the decoded data. This enables arbitrary nesting (e.g., SOCKS5 → TLS → HTTP/2).
 
+### Connection Delay
+
+A configurable connection delay can be applied before protocol detection begins. When `connectionDelayMillis` is set to a non-zero value, `PortUnificationHandler.decode()` sleeps for the configured duration before inspecting the first bytes. This simulates slow connection establishment for testing timeout handling in clients.
+
+Configuration: `ConfigurationProperties.connectionDelayMillis(long millis)`, system property `mockserver.connectionDelayMillis`, environment variable `MOCKSERVER_CONNECTION_DELAY_MILLIS`. Default: 0 (no delay).
+
+**Warning:** The delay blocks the Netty I/O thread. For large delays or high connection rates, this may impact server throughput.
+
 ### Protocol-Specific Pipelines
 
 #### HTTP/1.1 Pipeline

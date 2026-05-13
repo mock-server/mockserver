@@ -2470,4 +2470,218 @@ public class HttpStateTest {
         assertThat(serializer.deserializeArray(null).length, is(0));
     }
 
+    @Test
+    public void shouldHandleFileStore() {
+        // given
+        HttpRequest storeRequest = request("/mockserver/files/store")
+            .withMethod("PUT")
+            .withBody("{\"name\":\"test.txt\",\"content\":\"hello world\"}");
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpState.handle(storeRequest, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(201));
+        assertThat(responseWriter.response.getBodyAsString(), is("{\"name\":\"test.txt\",\"size\":11}"));
+    }
+
+    @Test
+    public void shouldHandleFileStoreBase64() {
+        // given
+        String base64Content = java.util.Base64.getEncoder().encodeToString("binary data".getBytes(UTF_8));
+        HttpRequest storeRequest = request("/mockserver/files/store")
+            .withMethod("PUT")
+            .withBody("{\"name\":\"binary.dat\",\"content\":\"" + base64Content + "\",\"base64\":true}");
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpState.handle(storeRequest, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(201));
+        assertThat(responseWriter.response.getBodyAsString(), is("{\"name\":\"binary.dat\",\"size\":11}"));
+    }
+
+    @Test
+    public void shouldHandleFileStoreWithEmptyBody() {
+        // given
+        HttpRequest storeRequest = request("/mockserver/files/store")
+            .withMethod("PUT");
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpState.handle(storeRequest, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(400));
+    }
+
+    @Test
+    public void shouldHandleFileStoreMissingFields() {
+        // given
+        HttpRequest storeRequest = request("/mockserver/files/store")
+            .withMethod("PUT")
+            .withBody("{\"name\":\"test.txt\"}");
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpState.handle(storeRequest, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(400));
+    }
+
+    @Test
+    public void shouldHandleFileRetrieve() {
+        // given
+        httpState.getFileStore().store("test.txt", "hello world".getBytes(UTF_8));
+        HttpRequest retrieveRequest = request("/mockserver/files/retrieve")
+            .withMethod("PUT")
+            .withBody("{\"name\":\"test.txt\"}");
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpState.handle(retrieveRequest, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(200));
+        assertThat(new String(responseWriter.response.getBodyAsRawBytes(), UTF_8), is("hello world"));
+    }
+
+    @Test
+    public void shouldHandleFileRetrieveNotFound() {
+        // given
+        HttpRequest retrieveRequest = request("/mockserver/files/retrieve")
+            .withMethod("PUT")
+            .withBody("{\"name\":\"nonexistent.txt\"}");
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpState.handle(retrieveRequest, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(404));
+    }
+
+    @Test
+    public void shouldHandleFileRetrieveMissingName() {
+        // given
+        HttpRequest retrieveRequest = request("/mockserver/files/retrieve")
+            .withMethod("PUT")
+            .withBody("{\"other\":\"value\"}");
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpState.handle(retrieveRequest, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(400));
+    }
+
+    @Test
+    public void shouldHandleFileList() {
+        // given
+        httpState.getFileStore().store("file1.txt", "data1".getBytes(UTF_8));
+        httpState.getFileStore().store("file2.txt", "data2".getBytes(UTF_8));
+        HttpRequest listRequest = request("/mockserver/files/list")
+            .withMethod("PUT");
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpState.handle(listRequest, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(200));
+        String body = responseWriter.response.getBodyAsString();
+        assertThat(body, containsString("file1.txt"));
+        assertThat(body, containsString("file2.txt"));
+    }
+
+    @Test
+    public void shouldHandleFileListEmpty() {
+        // given
+        HttpRequest listRequest = request("/mockserver/files/list")
+            .withMethod("PUT");
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpState.handle(listRequest, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(200));
+        assertThat(responseWriter.response.getBodyAsString(), containsString("[ ]"));
+    }
+
+    @Test
+    public void shouldHandleFileDelete() {
+        // given
+        httpState.getFileStore().store("test.txt", "data".getBytes(UTF_8));
+        HttpRequest deleteRequest = request("/mockserver/files/delete")
+            .withMethod("PUT")
+            .withBody("{\"name\":\"test.txt\"}");
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpState.handle(deleteRequest, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(200));
+        assertThat(httpState.getFileStore().exists("test.txt"), is(false));
+    }
+
+    @Test
+    public void shouldHandleFileDeleteNotFound() {
+        // given
+        HttpRequest deleteRequest = request("/mockserver/files/delete")
+            .withMethod("PUT")
+            .withBody("{\"name\":\"nonexistent.txt\"}");
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpState.handle(deleteRequest, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(404));
+    }
+
+    @Test
+    public void shouldHandleFileDeleteMissingName() {
+        // given
+        HttpRequest deleteRequest = request("/mockserver/files/delete")
+            .withMethod("PUT")
+            .withBody("{\"other\":\"value\"}");
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpState.handle(deleteRequest, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(400));
+    }
+
+    @Test
+    public void shouldResetFileStore() {
+        // given
+        httpState.getFileStore().store("test.txt", "data".getBytes(UTF_8));
+
+        // when
+        httpState.reset();
+
+        // then
+        assertThat(httpState.getFileStore().size(), is(0));
+    }
+
 }

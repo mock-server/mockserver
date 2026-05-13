@@ -54,6 +54,9 @@ public class HttpResponseSerializer extends StdSerializer<HttpResponse> {
         if (httpResponse.getConnectionOptions() != null) {
             jgen.writeObjectField("connectionOptions", httpResponse.getConnectionOptions());
         }
+        if (httpResponse.getTiming() != null) {
+            jgen.writeObjectField("timing", httpResponse.getTiming());
+        }
         jgen.writeEndObject();
     }
 }

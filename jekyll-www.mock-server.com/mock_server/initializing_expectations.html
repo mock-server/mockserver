@@ -225,6 +225,13 @@ java -jar ~/Downloads/mockserver-netty-{{ site.mockserver_version }}-no-dependen
     &lt;/<span class="element">executions</span>&gt;
 &lt;/<span class="element">plugin</span>&gt;</code></pre>
 
+<p><strong>Note:</strong> the <span class="inline_code">initializationJson</span> parameter in the Maven plugin also supports <a href="#expectation_initializer_json_glob_patterns">glob patterns</a>, allowing you to load expectations from multiple files using wildcards. For example:</p>
+
+<pre><code class="code xml">&lt;<span class="element">configuration</span>&gt;
+    &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
+    &lt;<span class="element">initializationJson</span>&gt;<span class="element_value">src/test/resources/expectations/**/*.json</span>&lt;/<span class="element">initializationJson</span>&gt;
+&lt;/<span class="element">configuration</span>&gt;</code></pre>
+
 <p>The class must implement the <strong>org.mockserver.client.initialize.PluginExpectationInitializer</strong> interface and have a default constructor with zero arguments, for example:</p>
 
 <pre class="prettyprint lang-java code"><code class="code">public class ExampleInitializationClass implements PluginExpectationInitializer {

@@ -1,0 +1,8 @@
+{
+  "httpRequest": {
+    "path": "/path_c"
+  },
+  "httpResponse": {
+    "body": "response_c"
+  }
+}

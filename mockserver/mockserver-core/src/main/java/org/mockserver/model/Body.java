@@ -68,6 +68,7 @@ public abstract class Body<T> extends Not {
         JSON_RPC,
         GRAPHQL,
         LOG_EVENT,
+        FILE,
     }
 
     @Override

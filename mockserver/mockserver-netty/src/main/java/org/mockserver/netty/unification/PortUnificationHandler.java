@@ -19,6 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.mockserver.codec.MockServerHttpServerCodec;
 import org.mockserver.codec.PreserveHeadersNettyRemoves;
 import org.mockserver.configuration.Configuration;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.dashboard.DashboardWebSocketHandler;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.log.model.LogEntry;
@@ -27,6 +28,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.MockServerHttpResponseToFullHttpResponse;
 import org.mockserver.mock.HttpState;
 import org.mockserver.mock.action.http.HttpActionHandler;
+import org.mockserver.model.Delay;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.netty.HttpRequestHandler;
@@ -162,6 +164,16 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) {
         ctx.channel().attr(NETTY_SSL_CONTEXT_FACTORY).set(nettySslContextFactory);
+        Delay connectionDelay = configuration.connectionDelay();
+        if (connectionDelay == null) {
+            long delayMillis = ConfigurationProperties.connectionDelayMillis();
+            if (delayMillis > 0) {
+                connectionDelay = Delay.milliseconds(delayMillis);
+            }
+        }
+        if (connectionDelay != null) {
+            connectionDelay.applyDelay();
+        }
         if (SocksDetector.isSocks4(msg, actualReadableBytes())) {
             logStage(ctx, "adding SOCKS4 decoders");
             enableSocks4(ctx, msg);

@@ -74,6 +74,7 @@ public class ConfigurationProperties {
     // socket
     private static final String MOCKSERVER_MAX_SOCKET_TIMEOUT = "mockserver.maxSocketTimeout";
     private static final String MOCKSERVER_SOCKET_CONNECTION_TIMEOUT = "mockserver.socketConnectionTimeout";
+    private static final String MOCKSERVER_CONNECTION_DELAY_MILLIS = "mockserver.connectionDelayMillis";
     private static final String MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS = "mockserver.alwaysCloseSocketConnections";
     private static final String MOCKSERVER_LOCAL_BOUND_IP = "mockserver.localBoundIP";
 
@@ -721,6 +722,14 @@ public class ConfigurationProperties {
      */
     public static void socketConnectionTimeout(long milliseconds) {
         setProperty(MOCKSERVER_SOCKET_CONNECTION_TIMEOUT, "" + milliseconds);
+    }
+
+    public static long connectionDelayMillis() {
+        return readLongProperty(MOCKSERVER_CONNECTION_DELAY_MILLIS, "MOCKSERVER_CONNECTION_DELAY_MILLIS", 0L);
+    }
+
+    public static void connectionDelayMillis(long milliseconds) {
+        setProperty(MOCKSERVER_CONNECTION_DELAY_MILLIS, "" + milliseconds);
     }
 
     /**

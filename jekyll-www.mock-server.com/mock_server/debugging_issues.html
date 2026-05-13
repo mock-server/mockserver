@@ -174,6 +174,39 @@ mockServerClient("localhost", 1080).retrieveActiveExpectations({
 
 {% include_subpage _includes/retrieve_code_example.html %}
 
+<a id="forwarding_timings" class="anchor" href="#forwarding_timings">&nbsp;</a>
+
+<h2>Request Forwarding Timings</h2>
+
+<p>When MockServer forwards a request (in proxy mode or via a forward action), the response includes a <code class="inline code">timing</code> field containing connection and total round-trip timing information. This is included in retrieved request-response pairs and can be used to monitor upstream service latency or detect connectivity issues during testing.</p>
+
+<p>The <code class="inline code">timing</code> object contains:</p>
+<ul>
+    <li><strong>connectTimeInMillis</strong> &mdash; the time taken to establish the TCP connection to the upstream server</li>
+    <li><strong>totalTimeInMillis</strong> &mdash; the total time from sending the request to receiving the complete response</li>
+</ul>
+
+<p>Example response with timing information (as returned by the retrieve request-response API):</p>
+
+<pre class="prettyprint code"><code class="code">{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/api/users"
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "...",
+        "timing": {
+            "connectTimeInMillis": 15,
+            "totalTimeInMillis": 142
+        }
+    }
+}</code></pre>
+
+<p>Timings are available when retrieving recorded request-response pairs via the REST API:</p>
+
+<pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUEST_RESPONSES&format=JSON"</code></pre>
+
 <a id="retrieving_recorded_logs" class="anchor" href="#retrieving_recorded_logs">&nbsp;</a>
 
 <h2>Retrieving Recorded Logs</h2>

@@ -44,13 +44,19 @@ import static org.slf4j.event.Level.*;
  */
 public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
 
-    private static final String PROVIDER_NAME = BouncyCastleProvider.PROVIDER_NAME;
+    private static final String PROVIDER_NAME = "BC";
+    private static volatile boolean providerRegistered;
 
     private final Configuration configuration;
     private final MockServerLogger mockServerLogger;
 
-    static {
-        Security.addProvider(new BouncyCastleProvider());
+    private static synchronized void ensureProviderRegistered() {
+        if (!providerRegistered) {
+            if (Security.getProvider("BC") == null) {
+                Security.addProvider(new BouncyCastleProvider());
+            }
+            providerRegistered = true;
+        }
     }
 
     private PrivateKey privateKey;
@@ -60,6 +66,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
     private X509Certificate certificateAuthorityX509Certificate;
 
     public BCKeyAndCertificateFactory(Configuration configuration, MockServerLogger mockServerLogger) {
+        ensureProviderRegistered();
         this.configuration = configuration;
         this.mockServerLogger = mockServerLogger;
     }

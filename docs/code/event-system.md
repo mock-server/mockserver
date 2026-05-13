@@ -358,3 +358,17 @@ Thread names follow the pattern `MockServer-<name><N>`. The pool uses `CallerRun
 | `FileWatcher` | `mockserver-core/.../persistence/FileWatcher.java` | Low-level file polling |
 | `MockServerEventLogNotifier` | `mockserver-core/.../mock/listeners/MockServerEventLogNotifier.java` | Observer pattern base for log |
 | `MockServerMatcherNotifier` | `mockserver-core/.../mock/listeners/MockServerMatcherNotifier.java` | Observer pattern base for matchers |
+
+## Custom Log Event Listener
+
+A programmatic callback can be registered to receive every log event processed by MockServer. This is useful for integrating MockServer logging into custom monitoring, alerting, or debugging systems.
+
+The listener is set via `Configuration.logEventListener(Consumer<LogEntry> listener)` or the convenience method `ClientAndServer.setLogEventListener(Consumer<LogEntry> listener)`.
+
+Implementation details:
+- The listener reference is stored as a `volatile Consumer<LogEntry>` on `MockServerLogger`
+- It is invoked synchronously on the Disruptor consumer thread (the same thread that processes all log events)
+- A slow listener will slow down all log event processing — keep the callback fast
+- The listener receives the full `LogEntry` object including type, timestamp, message, and associated HTTP objects
+- Setting the listener to `null` removes it
+- The listener is wired in `LifeCycle` constructor, which passes the `Configuration.logEventListener()` to `MockServerLogger`

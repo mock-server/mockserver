@@ -52,6 +52,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
         fieldNameToType.put("xpath".toLowerCase(), Body.Type.XPATH);
         fieldNameToType.put("jsonRpc".toLowerCase(), Body.Type.JSON_RPC);
         fieldNameToType.put("graphql".toLowerCase(), Body.Type.GRAPHQL);
+        fieldNameToType.put("filePath".toLowerCase(), Body.Type.FILE);
     }
 
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(BodyDTODeserializer.class);
@@ -137,7 +138,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                             graphQLVariablesSchema = jsonBodyObjectWriter.writeValueAsString(graphQLMap.get("variablesSchema"));
                         }
                     }
-                    if (containsIgnoreCase(key, "string", "regex", "json", "jsonSchema", "jsonPath", "xml", "xmlSchema", "xpath", "base64Bytes") && type != Body.Type.PARAMETERS) {
+                    if (containsIgnoreCase(key, "string", "regex", "json", "jsonSchema", "jsonPath", "xml", "xmlSchema", "xpath", "base64Bytes", "filePath") && type != Body.Type.PARAMETERS) {
                         String fieldName = String.valueOf(entry.getKey()).toLowerCase();
                         if (fieldNameToType.containsKey(fieldName)) {
                             type = fieldNameToType.get(fieldName);
@@ -395,6 +396,9 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                             graphQLOperationName != null ? graphQLOperationName : operationNameFieldValue,
                             graphQLVariablesSchema != null ? graphQLVariablesSchema : variablesSchemaFieldValue
                         ), not);
+                        break;
+                    case FILE:
+                        result = new FileBodyDTO(new FileBody(valueJsonValue, contentType), not);
                         break;
                 }
             } else if (body.size() > 0) {

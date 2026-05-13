@@ -311,6 +311,17 @@ class MyTest {
 4. `MockServerTestExecutionListener` injects the `ClientAndServer` into `MockServerClient` fields
 5. After each test, `reset()` clears state
 
+### Maven Plugin Glob Support
+
+The Maven plugin's `initializationJson` parameter now supports glob patterns for loading multiple expectation files. The plugin uses `FilePath.expandFilePathGlobs()` to resolve glob characters (`*`, `**`, `?`, `[]`, `{}`) into matching file paths.
+
+Example Maven configuration:
+```xml
+<initializationJson>src/test/resources/expectations/**/*.json</initializationJson>
+```
+
+When a glob pattern is detected (by checking for glob characters in the path), the plugin expands it and concatenates the contents of all matching files into a single JSON array, which is then passed to `initializationJsonPath`. Non-glob paths are passed through unchanged.
+
 ## WebSocket Callback System
 
 For object/closure callbacks, a WebSocket connection between the client JVM and MockServer enables the callback to execute on the client side:

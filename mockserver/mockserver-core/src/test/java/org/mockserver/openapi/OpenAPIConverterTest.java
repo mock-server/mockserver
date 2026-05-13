@@ -6,11 +6,14 @@ import org.mockserver.file.FilePath;
 import org.mockserver.file.FileReader;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
+import org.mockserver.model.AfterAction;
+import org.mockserver.model.HttpRequest;
 
 import java.util.List;
 
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.mock.Expectation.when;
@@ -900,6 +903,153 @@ public class OpenAPIConverterTest {
                             "}"))
                 )
         ));
+    }
+
+    @Test
+    public void shouldGenerateAfterActionsFromCallbacks() {
+        // given
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example_with_callbacks.json";
+
+        // when
+        List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
+            specUrlOrPayload,
+            ImmutableMap.<String, Object>of("createPetWithCallback", "201")
+        );
+
+        // then
+        assertThat(actualExpectations.size(), is(1));
+        Expectation expectation = actualExpectations.get(0);
+        assertThat(expectation.getAfterActions(), is(notNullValue()));
+        assertThat(expectation.getAfterActions().size(), is(1));
+        AfterAction afterAction = expectation.getAfterActions().get(0);
+        HttpRequest callbackRequest = afterAction.getHttpRequest();
+        assertThat(callbackRequest.getMethod().getValue(), is("POST"));
+        assertThat(callbackRequest.getPath().getValue(), is("/pets/notify"));
+        assertThat(callbackRequest.isSecure(), is(true));
+        assertThat(callbackRequest.getFirstHeader("Host"), is("callback.example.com"));
+        assertThat(callbackRequest.getFirstHeader("Content-Type"), is("application/json"));
+        assertThat(callbackRequest.getBody().getValue().toString(), containsString("eventType"));
+    }
+
+    @Test
+    public void shouldGenerateAfterActionsWithHttpUrlAndPort() {
+        // given
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example_with_callbacks.json";
+
+        // when
+        List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
+            specUrlOrPayload,
+            ImmutableMap.<String, Object>of("createOrderWithCallback", "201")
+        );
+
+        // then
+        assertThat(actualExpectations.size(), is(1));
+        Expectation expectation = actualExpectations.get(0);
+        assertThat(expectation.getAfterActions(), is(notNullValue()));
+        assertThat(expectation.getAfterActions().size(), is(1));
+        AfterAction afterAction = expectation.getAfterActions().get(0);
+        HttpRequest callbackRequest = afterAction.getHttpRequest();
+        assertThat(callbackRequest.getMethod().getValue(), is("PUT"));
+        assertThat(callbackRequest.getPath().getValue(), is("/orders/status"));
+        assertThat(callbackRequest.isSecure(), is(false));
+        assertThat(callbackRequest.getFirstHeader("Host"), is("notifications.example.com:8080"));
+    }
+
+    @Test
+    public void shouldGenerateAfterActionsWithRuntimeExpressionUrl() {
+        // given
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example_with_callbacks.json";
+
+        // when
+        List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
+            specUrlOrPayload,
+            ImmutableMap.<String, Object>of("createSubscriptionWithRuntimeCallback", "201")
+        );
+
+        // then
+        assertThat(actualExpectations.size(), is(1));
+        Expectation expectation = actualExpectations.get(0);
+        assertThat(expectation.getAfterActions(), is(notNullValue()));
+        assertThat(expectation.getAfterActions().size(), is(1));
+        AfterAction afterAction = expectation.getAfterActions().get(0);
+        HttpRequest callbackRequest = afterAction.getHttpRequest();
+        assertThat(callbackRequest.getMethod().getValue(), is("POST"));
+        assertThat(callbackRequest.getPath().getValue(), is("/events"));
+    }
+
+    @Test
+    public void shouldNotGenerateAfterActionsWhenNoCallbacks() {
+        // given
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example_with_callbacks.json";
+
+        // when
+        List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
+            specUrlOrPayload,
+            ImmutableMap.<String, Object>of("listItemsNoCallback", "200")
+        );
+
+        // then
+        assertThat(actualExpectations.size(), is(1));
+        Expectation expectation = actualExpectations.get(0);
+        assertThat(expectation.getAfterActions(), is(nullValue()));
+    }
+
+    @Test
+    public void shouldGenerateMultipleAfterActionsFromMultipleCallbacks() {
+        // given
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example_with_callbacks.json";
+
+        // when
+        List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
+            specUrlOrPayload,
+            ImmutableMap.<String, Object>of("registerMultipleCallbacks", "201")
+        );
+
+        // then
+        assertThat(actualExpectations.size(), is(1));
+        Expectation expectation = actualExpectations.get(0);
+        assertThat(expectation.getAfterActions(), is(notNullValue()));
+        assertThat(expectation.getAfterActions().size(), is(2));
+    }
+
+    @Test
+    public void shouldGenerateAfterActionsWithRelativePath() {
+        // given
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example_with_callbacks.json";
+
+        // when
+        List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
+            specUrlOrPayload,
+            ImmutableMap.<String, Object>of("relativeCallback", "201")
+        );
+
+        // then
+        assertThat(actualExpectations.size(), is(1));
+        Expectation expectation = actualExpectations.get(0);
+        assertThat(expectation.getAfterActions(), is(notNullValue()));
+        assertThat(expectation.getAfterActions().size(), is(1));
+        AfterAction afterAction = expectation.getAfterActions().get(0);
+        HttpRequest callbackRequest = afterAction.getHttpRequest();
+        assertThat(callbackRequest.getMethod().getValue(), is("POST"));
+        assertThat(callbackRequest.getPath().getValue(), is("/callback/done"));
+    }
+
+    @Test
+    public void shouldNotAffectExistingSpecsWithoutCallbacks() {
+        // given
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example.json";
+
+        // when
+        List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
+            specUrlOrPayload,
+            null
+        );
+
+        // then
+        shouldBuildPetStoreExpectations(specUrlOrPayload, actualExpectations);
+        for (Expectation expectation : actualExpectations) {
+            assertThat(expectation.getAfterActions(), is(nullValue()));
+        }
     }
 
     private void shouldBuildPetStoreExpectations(String specUrlOrPayload, List<Expectation> actualExpectations) {

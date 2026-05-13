@@ -14,6 +14,7 @@ import io.swagger.v3.oas.models.responses.ApiResponses;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
+import org.mockserver.model.AfterAction;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.OpenAPIDefinition;
 import org.mockserver.openapi.examples.ExampleBuilder;
@@ -21,6 +22,7 @@ import org.mockserver.openapi.examples.JsonNodeExampleSerializer;
 import org.mockserver.openapi.examples.models.StringExample;
 import org.mockserver.serialization.ObjectMapperFactory;
 
+import java.net.URI;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -80,14 +82,91 @@ public class OpenAPIConverter {
                 if (isNotBlank(contextPathPrefix)) {
                     openAPIDefinition.withContextPathPrefix(contextPathPrefix);
                 }
-                return new Expectation(openAPIDefinition)
+                Expectation expectation = new Expectation(openAPIDefinition)
                     .thenRespond(buildHttpResponse(openAPI, operation.getResponses(), apiResponseKey, exampleName));
+                List<AfterAction> afterActions = buildAfterActions(openAPI, operation);
+                if (!afterActions.isEmpty()) {
+                    expectation.withAfterActions(afterActions);
+                }
+                return expectation;
             })
             .map(expectation -> {
                 int index = expectationCounter.incrementAndGet();
                 return expectation.withId(new UUID((long) Objects.hash(specUrlOrPayload, operationsAndResponses) * index, (long) Objects.hash(specUrlOrPayload, operationsAndResponses) * index).toString());
             })
             .collect(Collectors.toList());
+    }
+
+    private List<AfterAction> buildAfterActions(OpenAPI openAPI, io.swagger.v3.oas.models.Operation operation) {
+        List<AfterAction> afterActions = new ArrayList<>();
+        Map<String, io.swagger.v3.oas.models.callbacks.Callback> callbacks = operation.getCallbacks();
+        if (callbacks == null || callbacks.isEmpty()) {
+            return afterActions;
+        }
+        for (Map.Entry<String, io.swagger.v3.oas.models.callbacks.Callback> callbackEntry : callbacks.entrySet()) {
+            io.swagger.v3.oas.models.callbacks.Callback callback = callbackEntry.getValue();
+            if (callback == null) {
+                continue;
+            }
+            for (Map.Entry<String, io.swagger.v3.oas.models.PathItem> pathEntry : callback.entrySet()) {
+                String callbackUrl = pathEntry.getKey();
+                io.swagger.v3.oas.models.PathItem pathItem = pathEntry.getValue();
+                if (pathItem == null) {
+                    continue;
+                }
+                for (Map.Entry<io.swagger.v3.oas.models.PathItem.HttpMethod, io.swagger.v3.oas.models.Operation> opEntry : pathItem.readOperationsMap().entrySet()) {
+                    io.swagger.v3.oas.models.PathItem.HttpMethod method = opEntry.getKey();
+                    io.swagger.v3.oas.models.Operation callbackOp = opEntry.getValue();
+                    try {
+                        String resolvedUrl = resolveCallbackUrl(callbackUrl);
+                        org.mockserver.model.HttpRequest callbackRequest = org.mockserver.model.HttpRequest.request()
+                            .withMethod(method.name());
+                        if (resolvedUrl.startsWith("http://") || resolvedUrl.startsWith("https://")) {
+                            URI uri = new URI(resolvedUrl);
+                            callbackRequest
+                                .withPath(uri.getPath() != null ? uri.getPath() : "/")
+                                .withHeader("Host", uri.getHost() + (uri.getPort() > 0 ? ":" + uri.getPort() : ""))
+                                .withSecure(resolvedUrl.startsWith("https://"));
+                        } else {
+                            callbackRequest.withPath(resolvedUrl);
+                        }
+                        if (callbackOp.getRequestBody() != null && callbackOp.getRequestBody().getContent() != null) {
+                            callbackOp.getRequestBody().getContent().entrySet().stream().findFirst().ifPresent(contentEntry -> {
+                                callbackRequest.withHeader("Content-Type", contentEntry.getKey());
+                                MediaType mediaType = contentEntry.getValue();
+                                if (mediaType != null && mediaType.getSchema() != null) {
+                                    org.mockserver.openapi.examples.models.Example example = ExampleBuilder.fromSchema(
+                                        mediaType.getSchema(),
+                                        openAPI.getComponents() != null ? openAPI.getComponents().getSchemas() : null
+                                    );
+                                    if (example != null) {
+                                        callbackRequest.withBody(serialise(example));
+                                    }
+                                }
+                            });
+                        }
+                        afterActions.add(new AfterAction().withHttpRequest(callbackRequest));
+                    } catch (Exception e) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setLogLevel(WARN)
+                                .setMessageFormat("failed to build callback after-action for {} {} - {}")
+                                .setArguments(method, callbackUrl, e.getMessage())
+                        );
+                    }
+                }
+            }
+        }
+        return afterActions;
+    }
+
+    private String resolveCallbackUrl(String callbackUrl) {
+        return callbackUrl
+            .replaceAll("\\{\\$request\\.body#[^}]*}", "")
+            .replaceAll("\\{\\$request\\.header\\.[^}]*}", "")
+            .replaceAll("\\{\\$request\\.query\\.[^}]*}", "")
+            .replaceAll("\\{\\$response\\.body#[^}]*}", "")
+            .replaceAll("\\{\\$url}", "");
     }
 
     private HttpResponse buildHttpResponse(OpenAPI openAPI, ApiResponses apiResponses, String apiResponseKey) {

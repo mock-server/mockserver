@@ -39,6 +39,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     private Long maxSocketTimeoutInMillis;
     private Long socketConnectionTimeoutInMillis;
+    private DelayDTO connectionDelay;
     private Boolean alwaysCloseSocketConnections;
     private String localBoundIP;
 
@@ -156,6 +157,9 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
             this.maxSocketTimeoutInMillis = configuration.maxSocketTimeoutInMillis();
             this.socketConnectionTimeoutInMillis = configuration.socketConnectionTimeoutInMillis();
+            if (configuration.connectionDelay() != null) {
+                this.connectionDelay = new DelayDTO(configuration.connectionDelay());
+            }
             this.alwaysCloseSocketConnections = configuration.alwaysCloseSocketConnections();
             this.localBoundIP = configuration.localBoundIP();
 
@@ -319,6 +323,9 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
         configuration.maxSocketTimeoutInMillis(maxSocketTimeoutInMillis);
         configuration.socketConnectionTimeoutInMillis(socketConnectionTimeoutInMillis);
+        if (connectionDelay != null) {
+            configuration.connectionDelay(connectionDelay.buildObject());
+        }
         configuration.alwaysCloseSocketConnections(alwaysCloseSocketConnections);
         configuration.localBoundIP(localBoundIP);
 
@@ -484,6 +491,9 @@ public class ConfigurationDTO implements DTO<Configuration> {
         }
         if (socketConnectionTimeoutInMillis != null) {
             target.socketConnectionTimeoutInMillis(socketConnectionTimeoutInMillis);
+        }
+        if (connectionDelay != null) {
+            target.connectionDelay(connectionDelay.buildObject());
         }
         if (alwaysCloseSocketConnections != null) {
             target.alwaysCloseSocketConnections(alwaysCloseSocketConnections);
@@ -903,6 +913,15 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setSocketConnectionTimeoutInMillis(Long socketConnectionTimeoutInMillis) {
         this.socketConnectionTimeoutInMillis = socketConnectionTimeoutInMillis;
+        return this;
+    }
+
+    public DelayDTO getConnectionDelay() {
+        return connectionDelay;
+    }
+
+    public ConfigurationDTO setConnectionDelay(DelayDTO connectionDelay) {
+        this.connectionDelay = connectionDelay;
         return this;
     }
 
