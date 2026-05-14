@@ -38,12 +38,26 @@ log_info "Lint chart"
 in_docker "$HELM_IMAGE" -w /build -- lint ./helm/mockserver/
 
 log_info "Package chart"
-mkdir -p "$REPO_ROOT/helm/charts"
-in_docker "$HELM_IMAGE" -w /build -- package ./helm/mockserver/ --destination helm/charts/
+# In dry-run write to a scratch dir so we don't touch the tracked
+# helm/charts/ (which holds the already-published release artifacts). We
+# also pass --version/--app-version because Chart.yaml isn't bumped in
+# dry-run, so otherwise the tgz would be named for the *previous* release
+# and would clobber it.
+if is_dry_run; then
+  mkdir -p "$REPO_ROOT/.tmp/helm-charts"
+  # --destination is relative to the container's /build workdir (the repo is
+  # mounted at /build by in_docker), so .tmp/helm-charts/ here = $REPO_ROOT/.tmp/helm-charts/.
+  in_docker "$HELM_IMAGE" -w /build -- package ./helm/mockserver/ \
+    --version "$RELEASE_VERSION" --app-version "$RELEASE_VERSION" \
+    --destination .tmp/helm-charts/
+else
+  mkdir -p "$REPO_ROOT/helm/charts"
+  in_docker "$HELM_IMAGE" -w /build -- package ./helm/mockserver/ --destination helm/charts/
+fi
 
 if is_dry_run; then
   log_dry "skip: aws s3 download index, repack, upload, commit/push"
-  log_info "Built chart: helm/charts/mockserver-$RELEASE_VERSION.tgz"
+  log_info "Built chart: .tmp/helm-charts/mockserver-$RELEASE_VERSION.tgz"
 else
   log_info "Sync existing charts from S3"
   if [[ -z "${WEBSITE_BUCKET:-}" ]]; then

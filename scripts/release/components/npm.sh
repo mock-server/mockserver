@@ -26,6 +26,15 @@ sync_to_origin_master
 
 publish_one() {
   local pkg="$1"
+  # In dry-run we still exercise the full "rm lockfile + npm install" path
+  # so the test stays faithful to the real release, but we restore the
+  # committed package-lock.json afterwards so the working tree is clean.
+  if is_dry_run; then
+    mkdir -p "$REPO_ROOT/.tmp"
+    cp "$REPO_ROOT/$pkg/package-lock.json" "$REPO_ROOT/.tmp/$pkg.package-lock.json.bak"
+    # shellcheck disable=SC2064  # expand $pkg now, not at trap-fire time
+    trap "cp '$REPO_ROOT/.tmp/$pkg.package-lock.json.bak' '$REPO_ROOT/$pkg/package-lock.json' 2>/dev/null || true" RETURN
+  fi
   log_info "[$pkg] build"
   in_docker "$NODE_IMAGE" \
     -w "/build/$pkg" \

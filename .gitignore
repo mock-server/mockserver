@@ -143,6 +143,11 @@ terraform/**/.terraform.lock.hcl
 ###################################################
 /.tmp/.commit-lock
 
+# Claude Code local state (per-machine) #
+##########################################
+.claude/scheduled_tasks.lock
+.claude/settings.local.json
+
 # Buildkite build log downloads #
 ##################################
 build-*/
