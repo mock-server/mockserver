@@ -150,6 +150,8 @@ build-*/
 # docker build - corporate CA certificate (local only) #
 #########################################################
 docker_build/maven/corporate-root-ca.pem
+docker/local/ca-bundle.pem
+docker/graaljs/ca-bundle.pem
 
 # soft links #
 ##############

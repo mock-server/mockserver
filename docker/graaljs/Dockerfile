@@ -13,7 +13,20 @@ ARG source=download
 # build image — downloads release artifacts from Sonatype, tcnative from Maven Central
 FROM alpine as download
 
-RUN apk add --update openssl ca-certificates bash wget
+# Optional: trust a corporate root CA before `apk add`. The build context contains
+# ca-bundle.pem (empty in CI, populated locally behind a TLS-inspecting proxy).
+COPY ca-bundle.pem /tmp/local-ca.pem
+RUN if [ -s /tmp/local-ca.pem ]; then \
+      mkdir -p /etc/ssl/certs && \
+      cp /tmp/local-ca.pem /etc/ssl/cert.pem && \
+      cp /tmp/local-ca.pem /etc/ssl/certs/ca-certificates.crt; \
+    fi && \
+    apk add --update openssl ca-certificates bash wget && \
+    if [ -s /tmp/local-ca.pem ]; then \
+      mkdir -p /usr/local/share/ca-certificates && \
+      cp /tmp/local-ca.pem /usr/local/share/ca-certificates/local-ca.crt && \
+      update-ca-certificates >/dev/null 2>&1 || true; \
+    fi
 ARG VERSION=RELEASE
 ARG REPOSITORY_URL=https://repo1.maven.org/maven2/org/mock-server/mockserver-netty/${VERSION}/mockserver-netty-${VERSION}-jar-with-dependencies.jar
 RUN wget --max-redirect=10 -O mockserver-netty-jar-with-dependencies.jar "$REPOSITORY_URL"
@@ -28,7 +41,18 @@ RUN unzip netty-tcnative-boringssl-static.jar
 # build image — copies JAR from context, downloads tcnative from Maven Central
 FROM alpine as copy
 
-RUN apk add --update ca-certificates wget
+COPY ca-bundle.pem /tmp/local-ca.pem
+RUN if [ -s /tmp/local-ca.pem ]; then \
+      mkdir -p /etc/ssl/certs && \
+      cp /tmp/local-ca.pem /etc/ssl/cert.pem && \
+      cp /tmp/local-ca.pem /etc/ssl/certs/ca-certificates.crt; \
+    fi && \
+    apk add --update ca-certificates wget && \
+    if [ -s /tmp/local-ca.pem ]; then \
+      mkdir -p /usr/local/share/ca-certificates && \
+      cp /tmp/local-ca.pem /usr/local/share/ca-certificates/local-ca.crt && \
+      update-ca-certificates >/dev/null 2>&1 || true; \
+    fi
 COPY mockserver-netty-jar-with-dependencies.jar .
 ARG TARGETARCH=amd64
 ARG NETTY_TCNATIVE=2.0.77.Final
@@ -41,7 +65,18 @@ RUN unzip netty-tcnative-boringssl-static.jar
 # download GraalJS JARs
 FROM alpine as graaljs
 
-RUN apk add --update ca-certificates wget
+COPY ca-bundle.pem /tmp/local-ca.pem
+RUN if [ -s /tmp/local-ca.pem ]; then \
+      mkdir -p /etc/ssl/certs && \
+      cp /tmp/local-ca.pem /etc/ssl/cert.pem && \
+      cp /tmp/local-ca.pem /etc/ssl/certs/ca-certificates.crt; \
+    fi && \
+    apk add --update ca-certificates wget && \
+    if [ -s /tmp/local-ca.pem ]; then \
+      mkdir -p /usr/local/share/ca-certificates && \
+      cp /tmp/local-ca.pem /usr/local/share/ca-certificates/local-ca.crt && \
+      update-ca-certificates >/dev/null 2>&1 || true; \
+    fi
 ARG GRAALJS_VERSION=24.1.1
 RUN mkdir -p /graaljs && \
     wget -O /graaljs/polyglot.jar "https://repo1.maven.org/maven2/org/graalvm/polyglot/polyglot/$GRAALJS_VERSION/polyglot-$GRAALJS_VERSION.jar" && \
