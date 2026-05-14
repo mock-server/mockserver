@@ -157,6 +157,33 @@ if [[ -n "${LOCAL_CA_BUNDLE:-${NODE_EXTRA_CA_CERTS:-${AWS_CA_BUNDLE:-}}}" ]]; th
   echo "  ℹ corp CA bundle: $ca"
 fi
 
+# Executable-bit guard: Buildkite runs scripts directly (`command: ./foo.sh`)
+# not via `bash foo.sh`, so any pipeline-invoked .sh that isn't 100755 in the
+# git index will fail at runtime with `Permission denied` (exit 126). Catch
+# that here so the only way to merge a non-executable script is to also break
+# this preflight check locally.
+echo ""
+echo "Executable-bit check for pipeline-invoked scripts:"
+REPO_ROOT_TEST="$(cd "$SCRIPT_DIR/../.." && pwd)"
+bad_perm=0
+while IFS= read -r path; do
+  [[ -z "$path" ]] && continue
+  [[ -f "$REPO_ROOT_TEST/$path" ]] || continue
+  mode=$(git -C "$REPO_ROOT_TEST" ls-files -s "$path" 2>/dev/null | awk '{print $1}')
+  if [[ "$mode" == "100755" ]]; then
+    echo "  ✓ $path"
+  else
+    echo "  ✗ $path  (git mode=$mode, expected 100755)" >&2
+    bad_perm=$((bad_perm + 1))
+  fi
+done < <(grep -rhoE '\.buildkite/scripts/[a-z0-9_-]+\.sh|scripts/release/[a-z0-9/_-]+\.sh' "$REPO_ROOT_TEST"/.buildkite/*.yml 2>/dev/null | sort -u)
+if [[ "$bad_perm" -gt 0 ]]; then
+  echo "" >&2
+  echo "ABORT: $bad_perm pipeline script(s) missing executable bit in git index." >&2
+  echo "Fix with: git update-index --chmod=+x <path>" >&2
+  exit 1
+fi
+
 for test in "${TESTS[@]}"; do
   script="${test%%:*}"
   name="${test##*:}"
