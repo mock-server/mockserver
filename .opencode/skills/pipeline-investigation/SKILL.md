@@ -1,6 +1,6 @@
 ---
 name: pipeline-investigation
-description: Investigates Buildkite pipeline failures to find root causes. MUST be launched as a Task subagent with subagent_type "pipeline-investigator" — do NOT load directly via the skill tool. Returns structured JSON to the parent for formatting. Triggers when users ask about failing pipelines, build errors, or need help debugging CI/CD issues. Accepts Buildkite build URLs or build numbers and performs deep investigation.
+description: Investigates Buildkite pipeline failures to find root causes. Returns structured JSON to the parent for formatting. Triggers when users ask about failing pipelines, build errors, or need help debugging CI/CD issues. Accepts Buildkite build URLs or build numbers and performs deep investigation.
 
 ---
 

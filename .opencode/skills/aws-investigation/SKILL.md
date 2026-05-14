@@ -1,6 +1,6 @@
 ---
 name: aws-investigation
-description: Investigates AWS infrastructure issues affecting Buildkite build agents (EC2, AutoScaling, Lambda). MUST be launched as a Task subagent with subagent_type "debugger" — do NOT load directly via the skill tool. Returns structured JSON to the parent for formatting. Triggers when users ask about build agents not running, EC2 issues, ASG scaling problems, or infrastructure health.
+description: Investigates AWS infrastructure issues affecting Buildkite build agents (EC2, AutoScaling, Lambda). Returns structured JSON to the parent for formatting. Triggers when users ask about build agents not running, EC2 issues, ASG scaling problems, or infrastructure health.
 
 ---
 

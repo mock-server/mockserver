@@ -188,9 +188,9 @@ When the user asks for a code review:
 | Design council seat | `council-seat` |
 | GitHub issue review | Direct skill (no subagent) |
 
-## Convention-Based Skill Invocation
+## Subagent Routing
 
-Follow `.opencode/rules/report-formatting.md`: any skill description containing `MUST be launched as a Task subagent with subagent_type "<type>"` MUST be routed via Task using that subagent type. NEVER load it directly with the `skill` tool.
+Follow `.opencode/rules/subagent-routing.md` for both slash-command and conversational routing. Keep skill descriptions focused on behavior; keep routing policy in command metadata and routing rules.
 
 ## Research-First Problem Solving
 

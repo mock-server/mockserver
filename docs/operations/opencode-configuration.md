@@ -390,7 +390,12 @@ The `SKILL.md` file contains:
 
 ### Subagent Routing Convention
 
-Skills whose description contains `MUST be launched as a Task subagent with subagent_type "<type>"` are never loaded directly via the skill tool. Instead, they are launched via the Task tool, which creates a separate subagent session with the correct model and permissions.
+Subagent routing is defined outside skills. Skills are never responsible for declaring their own dispatch mechanism.
+
+Use:
+- command metadata (`agent` + `subtask: true`) for slash-command routing,
+- `.opencode/rules/subagent-routing.md` for conversational routing,
+- `opencode.jsonc` permissions to prevent invalid direct loads by restricted agents.
 
 ```mermaid
 sequenceDiagram
@@ -462,7 +467,7 @@ Routing is the single biggest practical failure mode of multi-agent setups. Mock
 
 | Layer | Mechanism | Example |
 |-------|-----------|---------|
-| **Convention** | Skill descriptions contain routing markers | `MUST be launched as a Task subagent with subagent_type "debugger"` |
+| **Routing rule** | Conversational mapping in `.opencode/rules/subagent-routing.md` | `pipeline-investigation -> pipeline-investigator` |
 | **Framework** | Command files hardcode the target agent | `agent: pipeline-investigator` in frontmatter |
 | **Permission** | Read-only agents can be skill-disabled by role | `code-reviewer` has `"skill": false` in config |
 
@@ -675,7 +680,7 @@ mockserver/
 When modifying the opencode configuration:
 
 - **Adding an agent**: Add the entry to `opencode.jsonc`, create the prompt file in `.opencode/agents/`, update the routing table in `AGENTS.md`, and update this document.
-- **Adding a skill**: Create the skill directory under `.opencode/skills/`, add a `SKILL.md`, optionally add templates. If the skill requires subagent routing, add the routing marker to the skill description and create a corresponding command file.
+- **Adding a skill**: Create the skill directory under `.opencode/skills/`, add a `SKILL.md`, optionally add templates. If the skill requires subagent routing, create a corresponding command file and add the conversational mapping in `.opencode/rules/subagent-routing.md`.
 - **Adding a rule**: Create the rule file in `.opencode/rules/`. Rules are automatically loaded based on filename conventions.
 - **Changing model assignments**: Update the `model` field in the agent's entry in `opencode.jsonc`. No other files need to change.
 - **Adding a command**: Create a markdown file in `.opencode/commands/` with YAML frontmatter specifying the target agent.

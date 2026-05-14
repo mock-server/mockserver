@@ -439,11 +439,9 @@ This is why the security boundary is the **agent**, not the skill.
 
 ### Subagent-Routed Skills
 
-Some skills are designed to run in a separate subagent session. Their description contains a routing marker:
+Some skills are designed to run in a separate subagent session. Routing is defined by command metadata and routing rules, not by text inside `SKILL.md`.
 
-> `MUST be launched as a Task subagent with subagent_type "debugger"`
-
-This means: don't load the skill directly — launch a Task with the specified agent type, which will load the skill in a separate context. This keeps the parent agent's context clean and ensures the skill runs with the correct model and permissions.
+This means: don't load these skills directly from the parent agent. Launch a Task with the configured subagent type so the skill runs in a separate context with the correct model and permissions.
 
 ```mermaid
 sequenceDiagram
@@ -482,7 +480,7 @@ Routing is enforced at three layers:
 
 | Layer | Mechanism | Hardness |
 |-------|-----------|----------|
-| Convention | Skill descriptions contain routing markers (`MUST be launched as a Task subagent with subagent_type "debugger"`) | Soft — relies on LLM reading the marker |
+| Routing rule | Conversational mappings in `.opencode/rules/subagent-routing.md` | Medium — relies on policy adherence |
 | Framework | Command files hardcode the target agent in YAML frontmatter | Hard — framework routes before LLM decides |
 | Permission | Agents can be skill-disabled by role (`"skill": false`) | Hard — agent physically cannot load skills |
 

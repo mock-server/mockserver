@@ -3,25 +3,23 @@
 Some skills return **structured JSON** instead of formatted reports. The parent
 agent (you) is responsible for converting JSON into the final output.
 
-## CRITICAL: Convention-Based Subagent Detection
+## CRITICAL: Subagent Routing Source Of Truth
 
-**You do NOT need a hardcoded list.** Any skill whose description in `<available_skills>` contains the phrase
-`MUST be launched as a Task subagent with subagent_type "<type>"` MUST be launched via the **Task tool**
-with the specified `subagent_type`. NEVER load it directly with the `skill` tool.
+Do not infer routing from skill descriptions. Route subagent-required skills using:
 
-**How to detect:** When a skill is invoked (slash command or conversational), check its description in
-`<available_skills>`. If the subagent marker is present, extract the `subagent_type` and route through Task.
+- command frontmatter (`agent:` + `subtask: true`) for slash commands,
+- `.opencode/rules/subagent-routing.md` for conversational requests.
 
 **How to find the report template:** Always at `.opencode/skills/<skill-name>/report-template.md`.
 
 **Correct flow:**
 1. User invokes a skill (e.g., `/pipeline-investigation <url>` or "investigate my pipeline")
-2. Check the skill's description in `<available_skills>` for the subagent routing marker
-3. If marker found: launch a `Task` with the extracted `subagent_type`, passing the user's full message
+2. Resolve the correct subagent via command metadata or the routing table
+3. Launch a `Task` with the resolved `subagent_type`, passing the user's full message
 4. The subagent loads the skill via the `skill` tool, executes it, and returns structured JSON
 5. Parent agent reads `.opencode/skills/<skill-name>/report-template.md`, formats the JSON, displays to user
 
-**If no marker found:** Load the skill directly via the `skill` tool as normal.
+If a skill is not listed as subagent-routed, load it directly via the `skill` tool as normal.
 
 **Incorrect flow (causes raw JSON output):**
 1. Parent agent loads a subagent-required skill directly via `skill` tool

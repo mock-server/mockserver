@@ -97,35 +97,29 @@ done < <(grep -Eo '"agent"[[:space:]]*:[[:space:]]*"\.opencode/agents/[a-z0-9-]+
   | sed -E 's/.*"(\.opencode\/agents\/[a-z0-9-]+\.md)"/\1/')
 
 echo "[opencode] validating subagent-routed skills"
-for skill_file in "$repo_root"/.opencode/skills/*/SKILL.md; do
-  marker_line="$(grep -m1 -E 'MUST be launched as a Task subagent with subagent_type "[a-z0-9-]+"' "$skill_file" || true)"
-  [[ -z "$marker_line" ]] && continue
+for command_file in "$repo_root"/.opencode/commands/*.md; do
+  has_subtask="$(grep -E '^subtask:[[:space:]]*true$' "$command_file" || true)"
+  [[ -z "$has_subtask" ]] && continue
 
-  skill_name="$(basename "$(dirname "$skill_file")")"
-  required_agent="$(printf '%s' "$marker_line" | sed -E 's/.*subagent_type "([a-z0-9-]+)".*/\1/')"
-  command_file="$repo_root/.opencode/commands/$skill_name.md"
+  skill_name="$(grep -Eo 'Load the `[a-z0-9-]+` skill' "$command_file" | sed -E 's/Load the `([a-z0-9-]+)` skill/\1/' | head -n1 || true)"
+  [[ -z "$skill_name" ]] && continue
 
-  if [[ ! -f "$command_file" ]]; then
-    echo "ERROR: skill '$skill_name' requires subagent routing but command file is missing"
+  command_agent="$(grep -E '^agent:' "$command_file" | awk '{print $2}' || true)"
+  rel_command_file="${command_file#$repo_root/}"
+
+  if [[ -z "$command_agent" || "$command_agent" == "general" ]]; then
+    echo "ERROR: ${rel_command_file} sets 'subtask: true' but has no explicit non-general agent"
+    errors=1
+  fi
+
+  if [[ ! -f "$repo_root/.opencode/skills/$skill_name/SKILL.md" ]]; then
+    echo "ERROR: ${rel_command_file} routes to missing skill '$skill_name'"
     errors=1
     continue
   fi
 
-  command_agent="$(grep -E '^agent:' "$command_file" | awk '{print $2}' || true)"
-  has_subtask="$(grep -E '^subtask:[[:space:]]*true$' "$command_file" || true)"
-  if [[ "$command_agent" != "$required_agent" ]]; then
-    rel_command_file="${command_file#$repo_root/}"
-    echo "ERROR: ${rel_command_file} uses agent '$command_agent' but '$skill_name' requires '$required_agent'"
-    errors=1
-  fi
-  if [[ -z "$has_subtask" ]]; then
-    rel_command_file="${command_file#$repo_root/}"
-    echo "ERROR: ${rel_command_file} must set 'subtask: true' for subagent-routed skill '$skill_name'"
-    errors=1
-  fi
-
-  if [[ "$(agent_skill_enabled "$required_agent")" != "true" ]]; then
-    echo "ERROR: agent '$required_agent' must allow skill tool for subagent-routed skill '$skill_name'"
+  if [[ "$(agent_skill_enabled "$command_agent")" != "true" ]]; then
+    echo "ERROR: agent '$command_agent' must allow skill tool for subagent-routed skill '$skill_name'"
     errors=1
   fi
 done
