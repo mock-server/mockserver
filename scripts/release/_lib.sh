@@ -415,7 +415,28 @@ git_commit_and_push() {
   configure_git_for_push
   git -C "$REPO_ROOT" add "${paths[@]}"
   git -C "$REPO_ROOT" commit -m "$message"
-  git -C "$REPO_ROOT" push origin HEAD:master
+  # Retry on non-fast-forward: if someone pushed to master while we were
+  # building, rebase the release commit on top of the new tip and retry.
+  # Bounded retries to fail loud if there's a systemic conflict.
+  local attempts=0
+  while ! git -C "$REPO_ROOT" push origin HEAD:master 2>/tmp/push_err.$$; do
+    if ! grep -qE "non-fast-forward|rejected" /tmp/push_err.$$; then
+      cat /tmp/push_err.$$ >&2
+      rm -f /tmp/push_err.$$
+      return 1
+    fi
+    attempts=$((attempts + 1))
+    if [[ "$attempts" -gt 5 ]]; then
+      log_error "Push to master kept losing the race after $attempts retries"
+      cat /tmp/push_err.$$ >&2
+      rm -f /tmp/push_err.$$
+      return 1
+    fi
+    log_info "Push rejected (non-fast-forward) — rebasing on origin/master and retrying ($attempts)"
+    git -C "$REPO_ROOT" fetch --quiet origin master
+    git -C "$REPO_ROOT" rebase origin/master
+  done
+  rm -f /tmp/push_err.$$
 }
 
 git_tag_and_push() {
