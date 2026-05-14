@@ -103,7 +103,7 @@ export DISTRIBUTION_ID="$NEW_DISTRIBUTION_ID"
 log_info "Committing versioned site config"
 git add "$TFVARS"
 git commit -m "release: add versioned site ${SUBDOMAIN}.mock-server.com" || true
-git push origin master
+git push origin HEAD:master
 
 log_info "Versioned site ${SUBDOMAIN}.mock-server.com created"
 log_info "Main site now points to bucket: $NEW_BUCKET"

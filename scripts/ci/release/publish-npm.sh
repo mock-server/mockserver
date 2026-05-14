@@ -56,7 +56,7 @@ log_info "Committing build artifacts"
 cd "$REPO_ROOT"
 git add "$PKG_DIR"
 git commit -m "release: publish $PKG_DIR $RELEASE_VERSION" || true
-git push origin master
+git push origin HEAD:master
 
 log_info "Tagging $PKG_DIR-$RELEASE_VERSION"
 git tag "$PKG_DIR-$RELEASE_VERSION"

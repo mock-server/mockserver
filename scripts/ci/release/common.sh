@@ -41,6 +41,14 @@ latest_release_version() {
     | awk 'NR == 1 { print; exit }'
 }
 
+# Buildkite checks each step out at the build's original commit SHA. Steps
+# that come after set-release-version need the version-bumped state, so they
+# must sync the working tree to the latest origin/master.
+sync_to_origin_master() {
+  git -C "$REPO_ROOT" fetch --quiet --tags origin master
+  git -C "$REPO_ROOT" reset --quiet --hard origin/master
+}
+
 log_info()  { echo "--- $*"; }
 log_error() { echo "--- :x: $*" >&2; }
 log_step()  { echo "--- :arrow_right: $*"; }
@@ -143,6 +151,33 @@ if is_ci; then
   # Buildkite shallow-clones without tags; fetch them so latest_release_version() works
   git -C "$REPO_ROOT" fetch --tags --quiet 2>/dev/null || true
   OLD_VERSION=$(latest_release_version)
+
+  # Buildkite agents have no git identity by default; set one so the
+  # release-pipeline commits don't fail with "empty ident name".
+  if [[ -z "$(git -C "$REPO_ROOT" config user.email 2>/dev/null || true)" ]]; then
+    git -C "$REPO_ROOT" config user.email "release@mock-server.com"
+  fi
+  if [[ -z "$(git -C "$REPO_ROOT" config user.name 2>/dev/null || true)" ]]; then
+    git -C "$REPO_ROOT" config user.name "MockServer Release"
+  fi
+
+  # Auto-sync to origin/master so steps that run after set-release-version
+  # see the version bump. Scripts that need the original commit (validate,
+  # set-release-version) or do their own checkout (publish-javadoc) opt out
+  # by setting RELEASE_NO_SYNC=1 before sourcing common.sh.
+  CALLING_SCRIPT="$(basename "${BASH_SOURCE[1]:-}")"
+  case "$CALLING_SCRIPT" in
+    validate.sh|set-release-version.sh|publish-javadoc.sh|preflight.sh|\
+    poll-central-portal.sh|publish-central-portal.sh|wait-for-central.sh|\
+    notify.sh|verify-totp.sh|upload-release-steps.sh)
+      : # skip auto-sync for these
+      ;;
+    *)
+      if [[ -z "${RELEASE_NO_SYNC:-}" ]]; then
+        sync_to_origin_master
+      fi
+      ;;
+  esac
 else
   : "${RELEASE_VERSION:?Set RELEASE_VERSION}" "${NEXT_VERSION:?Set NEXT_VERSION}"
   : "${RELEASE_TYPE:=full}" "${CREATE_VERSIONED_SITE:=no}" "${CURRENT_VERSION:=}"

@@ -49,7 +49,7 @@ log_info "Creating tag mockserver-$RELEASE_VERSION"
 git tag "mockserver-$RELEASE_VERSION"
 
 log_info "Pushing to origin"
-git push origin master
+git push origin HEAD:master
 git push origin "mockserver-$RELEASE_VERSION"
 
 log_info "Release version $RELEASE_VERSION set and tagged"

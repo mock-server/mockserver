@@ -23,6 +23,9 @@ cleanup_git() {
 }
 trap cleanup_git EXIT
 
+log_info "Fetching tags"
+git fetch --quiet --tags origin
+
 log_info "Checking out release tag"
 git checkout "mockserver-$RELEASE_VERSION"
 

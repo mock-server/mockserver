@@ -58,7 +58,7 @@ git commit -m "release: set maven-plugin version $RELEASE_VERSION"
 
 log_info "Tagging maven-plugin"
 git tag "maven-plugin-$RELEASE_VERSION"
-git push origin master
+git push origin HEAD:master
 git push origin "maven-plugin-$RELEASE_VERSION"
 
 log_info "Deploying maven-plugin release (in Docker with GPG)"
@@ -130,6 +130,6 @@ log_info "Deploying maven-plugin SNAPSHOT"
 cd "$REPO_ROOT"
 git add "$PLUGIN_POM"
 git commit -m "release: set maven-plugin next version $NEXT_VERSION"
-git push origin master
+git push origin HEAD:master
 
 log_info "mockserver-maven-plugin $RELEASE_VERSION released"

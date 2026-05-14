@@ -148,6 +148,6 @@ fi
 
 git add -A
 git commit -m "release: update version references to $RELEASE_VERSION"
-git push origin master
+git push origin HEAD:master
 
 log_info "Version references updated to $RELEASE_VERSION"

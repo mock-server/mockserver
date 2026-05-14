@@ -51,6 +51,6 @@ aws s3 cp "helm/charts/index.yaml" "s3://$WEBSITE_BUCKET/"
 log_info "Committing Helm chart"
 git add helm/mockserver/Chart.yaml "helm/charts/mockserver-$RELEASE_VERSION.tgz" helm/charts/index.yaml
 git commit -m "release: add Helm chart $RELEASE_VERSION" || true
-git push origin master
+git push origin HEAD:master
 
 log_info "Helm chart $RELEASE_VERSION published"

@@ -52,6 +52,6 @@ log_info "Committing SNAPSHOT version"
 cd "$REPO_ROOT"
 git add mockserver/
 git commit -m "release: set next development version $NEXT_VERSION"
-git push origin master
+git push origin HEAD:master
 
 log_info "SNAPSHOT $NEXT_VERSION deployed and committed"
