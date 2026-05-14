@@ -161,11 +161,12 @@ if is_ci; then
     git -C "$REPO_ROOT" config user.name "MockServer Release"
   fi
 
+  CALLING_SCRIPT="$(basename "${BASH_SOURCE[1]:-}")"
+
   # Auto-sync to origin/master so steps that run after set-release-version
   # see the version bump. Scripts that need the original commit (validate,
   # set-release-version) or do their own checkout (publish-javadoc) opt out
   # by setting RELEASE_NO_SYNC=1 before sourcing common.sh.
-  CALLING_SCRIPT="$(basename "${BASH_SOURCE[1]:-}")"
   case "$CALLING_SCRIPT" in
     validate.sh|set-release-version.sh|publish-javadoc.sh|preflight.sh|\
     poll-central-portal.sh|publish-central-portal.sh|wait-for-central.sh|\
@@ -175,6 +176,22 @@ if is_ci; then
     *)
       if [[ -z "${RELEASE_NO_SYNC:-}" ]]; then
         sync_to_origin_master
+      fi
+      ;;
+  esac
+
+  # Buildkite's anonymous HTTPS clone has no push credentials. Scripts that
+  # commit and push need to set the remote URL to embed a token. We do this
+  # via git http.extraheader (token stays out of .git/config's url field
+  # and out of process argv).
+  case "$CALLING_SCRIPT" in
+    set-release-version.sh|deploy-snapshot.sh|update-versions.sh|\
+    publish-helm.sh|publish-npm.sh|create-versioned-site.sh|\
+    release-maven-plugin.sh)
+      GITHUB_PUSH_TOKEN=$(load_secret "mockserver-release/github-token" "token" 2>/dev/null || echo "")
+      if [[ -n "$GITHUB_PUSH_TOKEN" && "$GITHUB_PUSH_TOKEN" != "null" ]]; then
+        git -C "$REPO_ROOT" config "http.https://github.com/.extraheader" \
+          "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GITHUB_PUSH_TOKEN" | base64)"
       fi
       ;;
   esac
