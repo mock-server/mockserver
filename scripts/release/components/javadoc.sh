@@ -34,9 +34,7 @@ fi
 
 mkdir -p "$REPO_ROOT/.tmp/javadoc"
 log_info "Generate aggregate Javadoc"
-in_docker "$MAVEN_IMAGE" \
-  -w /build/mockserver \
-  -v mockserver-m2-cache:/root/.m2 \
+in_maven -w /build/mockserver \
   -- mvn javadoc:aggregate -P release \
        -DreportOutputDirectory="/build/.tmp/javadoc/$RELEASE_VERSION" \
        -DskipTests

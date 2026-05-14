@@ -208,9 +208,91 @@ PYEOF
 #
 # Wraps the existing run-in-docker.sh which logs the docker command for
 # local reproduction. The wrapper script redacts secrets in its log banner.
+#
+# When run behind a corporate TLS-inspecting proxy, set LOCAL_CA_BUNDLE
+# (or rely on NODE_EXTRA_CA_CERTS / AWS_CA_BUNDLE which the lib reads
+# automatically) to a PEM file on the host. The CA is:
+#   - mounted into the container at /etc/ssl/local-ca.pem
+#   - exposed via env vars that each toolchain respects (pip/npm/node/aws/gem/curl/git)
+#   - installed into the OS CA bundle (so `curl`, `wget` etc. trust it)
+#   - imported into the JDK cacerts truststore (so Maven and JVM tools trust it)
+#
+# The CA-setup prelude only runs when LOCAL_CA_BUNDLE is provided — in CI
+# there's no proxy so the wrapper is a no-op and commands run directly.
 in_docker() {
-  "$REPO_ROOT/.buildkite/scripts/run-in-docker.sh" -i "$@"
+  local -a ca_args=()
+  local ca="${LOCAL_CA_BUNDLE:-${NODE_EXTRA_CA_CERTS:-${AWS_CA_BUNDLE:-}}}"
+  if [[ -n "$ca" && -f "$ca" ]]; then
+    ca_args=(
+      -v "$ca:/etc/ssl/local-ca.pem:ro"
+      -e "NODE_EXTRA_CA_CERTS=/etc/ssl/local-ca.pem"
+      -e "AWS_CA_BUNDLE=/etc/ssl/local-ca.pem"
+      -e "SSL_CERT_FILE=/etc/ssl/local-ca.pem"
+      -e "REQUESTS_CA_BUNDLE=/etc/ssl/local-ca.pem"
+      -e "PIP_CERT=/etc/ssl/local-ca.pem"
+      -e "GIT_SSL_CAINFO=/etc/ssl/local-ca.pem"
+      -e "CURL_CA_BUNDLE=/etc/ssl/local-ca.pem"
+    )
+  fi
+  "$REPO_ROOT/.buildkite/scripts/run-in-docker.sh" -i "$1" "${ca_args[@]+"${ca_args[@]}"}" "${@:2}"
 }
+
+# Maven-specific Docker invocation that ALSO installs the host's corp CA
+# into the JDK truststore so plugins that download from HTTPS (e.g. the
+# frontend-maven-plugin downloading Node.js) work behind a TLS proxy.
+#
+# In CI, no CA is mounted, the prelude is a no-op, and behaviour matches
+# vanilla `in_docker`.
+#
+# Usage: in_maven [docker-options...] -- <mvn-args...>
+in_maven() {
+  local -a docker_opts=() mvn_args=()
+  local found_sep=false
+  for arg in "$@"; do
+    if $found_sep; then
+      mvn_args+=("$arg")
+    elif [[ "$arg" == "--" ]]; then
+      found_sep=true
+    else
+      docker_opts+=("$arg")
+    fi
+  done
+  if [[ ${#mvn_args[@]} -eq 0 ]]; then
+    log_error "in_maven: no command after --"
+    exit 2
+  fi
+
+  # Quote each mvn arg for safe embedding in the bash -ec body.
+  local quoted=""
+  for a in "${mvn_args[@]}"; do
+    quoted+=" $(printf '%q' "$a")"
+  done
+
+  in_docker "$MAVEN_IMAGE" \
+    "${docker_opts[@]+"${docker_opts[@]}"}" \
+    -v mockserver-m2-cache:/root/.m2 \
+    -- bash -ec "${ca_install_prelude}exec${quoted}"
+}
+
+# Emit a shell snippet that installs the host's corp CA bundle into the
+# container's OS trust store AND the JDK truststore. Designed to be the
+# first line of a `bash -ec '...'` heredoc passed to in_docker via
+# Maven/Java containers.
+#
+# Idempotent and silent in CI (where /etc/ssl/local-ca.pem isn't mounted)
+# so the same heredoc body works in both environments.
+ca_install_prelude='
+if [ -f /etc/ssl/local-ca.pem ]; then
+  if command -v update-ca-certificates >/dev/null 2>&1; then
+    cp /etc/ssl/local-ca.pem /usr/local/share/ca-certificates/local-ca.crt 2>/dev/null || true
+    update-ca-certificates --fresh >/dev/null 2>&1 || true
+  fi
+  if command -v keytool >/dev/null 2>&1 && [ -n "${JAVA_HOME:-}" ] && [ -f "${JAVA_HOME}/lib/security/cacerts" ]; then
+    keytool -delete -alias local-ca -keystore "${JAVA_HOME}/lib/security/cacerts" -storepass changeit >/dev/null 2>&1 || true
+    keytool -importcert -noprompt -trustcacerts -alias local-ca -file /etc/ssl/local-ca.pem -keystore "${JAVA_HOME}/lib/security/cacerts" -storepass changeit >/dev/null 2>&1 || true
+  fi
+fi
+'
 
 # -----------------------------------------------------------------------------
 # Cross-step state

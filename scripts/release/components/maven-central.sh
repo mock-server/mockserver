@@ -34,11 +34,17 @@ log_step "Release Maven Central artifacts $RELEASE_VERSION (dry-run=$DRY_RUN)"
 sync_to_origin_master
 
 # ---- Build & test ----------------------------------------------------------
-log_info "Build + test $RELEASE_VERSION (Maven in Docker)"
-in_docker "$MAVEN_IMAGE" \
-  -w /build/mockserver \
-  -v mockserver-m2-cache:/root/.m2 \
-  -- mvn -T 1C clean install -Djava.security.egd=file:/dev/./urandom
+# Build (and run unit tests). In dry-run we skip tests — they take 5-10
+# minutes and may be flaky in a one-off container. Real release runs them.
+SKIP_TESTS_FLAG=""
+if is_dry_run; then
+  SKIP_TESTS_FLAG="-DskipTests"
+  log_info "Build $RELEASE_VERSION (Maven in Docker, tests skipped in dry-run)"
+else
+  log_info "Build + test $RELEASE_VERSION (Maven in Docker)"
+fi
+in_maven -w /build/mockserver \
+  -- mvn -T 1C clean install $SKIP_TESTS_FLAG -Djava.security.egd=file:/dev/./urandom
 
 # ---- Deploy + sign ---------------------------------------------------------
 # The passphrase is delivered to Maven via the `central-portal` server's

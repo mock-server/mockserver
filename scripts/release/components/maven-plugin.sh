@@ -56,16 +56,16 @@ PYEOF
 fi
 
 log_info "Build core MockServer (in Docker)"
-in_docker "$MAVEN_IMAGE" \
-  -w /build/mockserver \
-  -v mockserver-m2-cache:/root/.m2 \
+in_maven -w /build/mockserver \
   -- mvn clean install -DskipTests
 
-log_info "Verify maven-plugin (in Docker)"
-in_docker "$MAVEN_IMAGE" \
-  -w /build/mockserver-maven-plugin \
-  -v mockserver-m2-cache:/root/.m2 \
-  -- mvn clean verify
+if is_dry_run; then
+  log_info "Verify maven-plugin (in Docker, tests skipped in dry-run)"
+  in_maven -w /build/mockserver-maven-plugin -- mvn clean install -DskipTests
+else
+  log_info "Verify maven-plugin (in Docker)"
+  in_maven -w /build/mockserver-maven-plugin -- mvn clean verify
+fi
 
 if is_dry_run; then
   log_dry "skip: commit, tag, deploy, snapshot bump, push"

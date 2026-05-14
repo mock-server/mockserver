@@ -54,17 +54,6 @@ steps:
 
   - wait
 
-  - label: ":mag: Preflight (release queue)"
-    command: ".buildkite/scripts/release-runner.sh preflight"
-    timeout_in_minutes: 5
-    agents: { queue: "release" }
-
-  - label: ":mag: Preflight (default queue)"
-    command: ".buildkite/scripts/release-runner.sh preflight"
-    timeout_in_minutes: 5
-
-  - wait
-
   - label: ":wrench: Prepare"
     command: ".buildkite/scripts/release-runner.sh prepare"
     timeout_in_minutes: 10

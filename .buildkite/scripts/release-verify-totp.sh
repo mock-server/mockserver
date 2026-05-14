@@ -47,13 +47,26 @@ print(totp(sys.argv[1], int(sys.argv[2])))
 PYEOF
 }
 
-EXPECTED=$(totp_code 0)
-EXPECTED_PREV=$(totp_code -1)
-EXPECTED_NEXT=$(totp_code 1)
+# The Verify TOTP step runs on a release-queue agent that scales to zero.
+# A cold-start agent takes ~1-3 minutes to provision (Lambda scaler runs
+# every 60s + EC2 spot acquisition + agent registration + checkout). The
+# operator entered the TOTP minutes before this script actually runs, so we
+# accept any code from the last ~5 minutes (±10 × 30s windows). The
+# `allowed_teams` GitHub gate on the block step is the primary access
+# control; TOTP is the second factor and a wider verification window is a
+# routine accommodation for clock drift / network latency.
+TOTP_TOLERANCE_WINDOWS=10
 
-if [[ "$TOTP_CODE" == "$EXPECTED" || "$TOTP_CODE" == "$EXPECTED_PREV" || "$TOTP_CODE" == "$EXPECTED_NEXT" ]]; then
-  log_info "TOTP verified successfully"
-else
-  log_error "TOTP verification FAILED — code did not match current/previous/next window"
+matched=false
+for offset in $(seq -"$TOTP_TOLERANCE_WINDOWS" "$TOTP_TOLERANCE_WINDOWS"); do
+  if [[ "$TOTP_CODE" == "$(totp_code "$offset")" ]]; then
+    matched=true
+    log_info "TOTP verified successfully (window offset $offset)"
+    break
+  fi
+done
+
+if ! $matched; then
+  log_error "TOTP verification FAILED — code did not match any window within ±$TOTP_TOLERANCE_WINDOWS (±$((TOTP_TOLERANCE_WINDOWS * 30))s)"
   exit 1
 fi

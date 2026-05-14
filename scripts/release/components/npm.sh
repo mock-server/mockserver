@@ -40,10 +40,16 @@ publish_one() {
         fi
         echo "npm install failed, retrying in 15s"; sleep 15
       done
+      # Release grunt invocation: package + lint only. The default grunt
+      # task includes integration tests that start a real MockServer JVM,
+      # which would require Java in this node container (we do not, and
+      # do not need to, install Java here).
       if [ "$PKG_DIR" = "mockserver-node" ]; then
         npm audit fix 2>/dev/null || true
+        npx grunt deleted_jars download_jar jshint
+      else
+        npx grunt jshint
       fi
-      npx grunt
     '
 
   if is_dry_run; then

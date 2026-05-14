@@ -38,7 +38,7 @@ if [[ -z "$SHADED_JAR" ]]; then
     SHADED_JAR=$(find mockserver/mockserver-netty/target -name 'mockserver-netty-*-shaded.jar' -print -quit 2>/dev/null || true)
     if [[ -z "$SHADED_JAR" ]]; then
       log_dry "no local JAR available — running 'mvn package' to produce one"
-      in_docker "$MAVEN_IMAGE" -w /build/mockserver -v mockserver-m2-cache:/root/.m2 \
+      in_maven -w /build/mockserver \
         -- mvn -DskipTests -pl mockserver-netty -am package
       SHADED_JAR=$(find mockserver/mockserver-netty/target -name 'mockserver-netty-*-shaded.jar' -print -quit 2>/dev/null || true)
     fi
@@ -64,40 +64,56 @@ FULL_TAG="mockserver-$RELEASE_VERSION"
 SHORT_TAG="$RELEASE_VERSION"
 ECR_REPO="public.ecr.aws/mockserver/mockserver"
 
-PUSH_FLAG=$(is_dry_run && echo "--load" || echo "--push")
-# --load can't be used with multi-arch builds, fall back to local single-arch
-# for dry-run.
-PLATFORMS=$(is_dry_run && echo "linux/amd64" || echo "linux/amd64,linux/arm64")
-
-log_info "Build (platforms=$PLATFORMS, mode=$PUSH_FLAG)"
-docker buildx create --use --name multiarch 2>/dev/null || docker buildx use multiarch
-
-docker buildx build \
-  --platform "$PLATFORMS" \
-  $PUSH_FLAG \
-  --tag "mockserver/mockserver:$FULL_TAG" \
-  --tag "mockserver/mockserver:$SHORT_TAG" \
-  --tag "mockserver/mockserver:latest" \
-  --tag "${ECR_REPO}:$FULL_TAG" \
-  --tag "${ECR_REPO}:$SHORT_TAG" \
-  --tag "${ECR_REPO}:latest" \
-  docker/local
-
-log_info "Build GraalJS variant"
-docker buildx build \
-  --platform "$PLATFORMS" \
-  $PUSH_FLAG \
-  --build-arg source=copy \
-  --tag "mockserver/mockserver:$FULL_TAG-graaljs" \
-  --tag "mockserver/mockserver:$SHORT_TAG-graaljs" \
-  --tag "mockserver/mockserver:latest-graaljs" \
-  --tag "${ECR_REPO}:$FULL_TAG-graaljs" \
-  --tag "${ECR_REPO}:$SHORT_TAG-graaljs" \
-  --tag "${ECR_REPO}:latest-graaljs" \
-  docker/graaljs
-
+log_info "Build images"
 if is_dry_run; then
-  log_dry "skip: push to Docker Hub + ECR (used --load instead of --push)"
+  # Local single-arch via the default daemon. Plain `docker build` reuses
+  # Docker Desktop's CA trust (whereas a fresh buildx builder does not).
+  docker build \
+    --tag "mockserver/mockserver:$FULL_TAG" \
+    --tag "mockserver/mockserver:$SHORT_TAG" \
+    --tag "mockserver/mockserver:latest" \
+    --tag "${ECR_REPO}:$FULL_TAG" \
+    --tag "${ECR_REPO}:$SHORT_TAG" \
+    --tag "${ECR_REPO}:latest" \
+    docker/local
+
+  docker build \
+    --build-arg source=copy \
+    --tag "mockserver/mockserver:$FULL_TAG-graaljs" \
+    --tag "mockserver/mockserver:$SHORT_TAG-graaljs" \
+    --tag "mockserver/mockserver:latest-graaljs" \
+    --tag "${ECR_REPO}:$FULL_TAG-graaljs" \
+    --tag "${ECR_REPO}:$SHORT_TAG-graaljs" \
+    --tag "${ECR_REPO}:latest-graaljs" \
+    docker/graaljs
+
+  log_dry "skip: push to Docker Hub + ECR (built locally, not pushed)"
+else
+  # CI: multi-arch + push via buildx.
+  docker buildx create --use --name multiarch 2>/dev/null || docker buildx use multiarch
+
+  docker buildx build \
+    --platform "linux/amd64,linux/arm64" \
+    --push \
+    --tag "mockserver/mockserver:$FULL_TAG" \
+    --tag "mockserver/mockserver:$SHORT_TAG" \
+    --tag "mockserver/mockserver:latest" \
+    --tag "${ECR_REPO}:$FULL_TAG" \
+    --tag "${ECR_REPO}:$SHORT_TAG" \
+    --tag "${ECR_REPO}:latest" \
+    docker/local
+
+  docker buildx build \
+    --platform "linux/amd64,linux/arm64" \
+    --push \
+    --build-arg source=copy \
+    --tag "mockserver/mockserver:$FULL_TAG-graaljs" \
+    --tag "mockserver/mockserver:$SHORT_TAG-graaljs" \
+    --tag "mockserver/mockserver:latest-graaljs" \
+    --tag "${ECR_REPO}:$FULL_TAG-graaljs" \
+    --tag "${ECR_REPO}:$SHORT_TAG-graaljs" \
+    --tag "${ECR_REPO}:latest-graaljs" \
+    docker/graaljs
 fi
 
 log_info "Docker publish complete"
