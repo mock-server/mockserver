@@ -1,3 +1,9 @@
+# MockServer release pipeline.
+#
+# This file is intentionally short: every step is a single command. All the
+# release logic lives in scripts/release/* which are CI-agnostic.
+# See docs/operations/release-principles.md and docs/operations/release-process.md.
+
 steps:
   - input: "Release Parameters"
     fields:
@@ -15,22 +21,16 @@ steps:
         key: "release-type"
         default: "full"
         options:
-          - label: "Full Release (all steps)"
-            value: "full"
-          - label: "Maven Central Only"
-            value: "maven-only"
-          - label: "Docker Image Only (re-publish)"
-            value: "docker-only"
-          - label: "Post-Maven (Docker, npm, Helm, docs — skip Maven Central)"
-            value: "post-maven"
+          - { label: "Full Release (all steps)",     value: "full" }
+          - { label: "Maven Central Only",           value: "maven-only" }
+          - { label: "Docker Image Only (re-pub)",   value: "docker-only" }
+          - { label: "Post-Maven (skip Central)",    value: "post-maven" }
       - select: "Create Versioned Site?"
         key: "create-versioned-site"
         default: "no"
         options:
-          - label: "No"
-            value: "no"
-          - label: "Yes (major/minor release)"
-            value: "yes"
+          - { label: "No", value: "no" }
+          - { label: "Yes (major/minor release)", value: "yes" }
 
   - block: ":lock: TOTP Authorization"
     prompt: "Enter your TOTP code to authorize this release"
@@ -43,13 +43,107 @@ steps:
         format: "[0-9]{6}"
 
   - label: ":shield: Verify TOTP"
-    command: "scripts/ci/release/verify-totp.sh"
-    agents:
-      queue: "release"
+    command: ".buildkite/scripts/release-verify-totp.sh"
+    agents: { queue: "release" }
 
   - wait
 
-  - label: ":pipeline: Upload Release Steps"
-    command: "scripts/ci/release/upload-release-steps.sh"
-    agents:
-      queue: "release"
+  - label: ":mag: Preflight (release queue)"
+    command: ".buildkite/scripts/release-runner.sh preflight"
+    timeout_in_minutes: 5
+    agents: { queue: "release" }
+
+  - label: ":mag: Preflight (default queue)"
+    command: ".buildkite/scripts/release-runner.sh preflight"
+    timeout_in_minutes: 5
+
+  - wait
+
+  - label: ":wrench: Prepare"
+    command: ".buildkite/scripts/release-runner.sh prepare"
+    timeout_in_minutes: 10
+    agents: { queue: "release" }
+
+  - wait
+
+  - label: ":maven: Maven Central"
+    command: ".buildkite/scripts/release-runner.sh maven-central"
+    timeout_in_minutes: 180
+    agents: { queue: "release" }
+
+  - wait
+
+  - block: ":rocket: Approve downstream publish"
+    prompt: "Maven Central published. Approve to publish downstream artifacts."
+    allowed_teams: ["release-managers"]
+
+  - label: ":globe_with_meridians: Versioned Site"
+    command: ".buildkite/scripts/release-runner.sh versioned-site"
+    timeout_in_minutes: 15
+    agents: { queue: "release" }
+
+  - wait
+
+  - group: ":package: Publish artifacts"
+    steps:
+      - label: ":java: Maven Plugin"
+        command: ".buildkite/scripts/release-runner.sh maven-plugin"
+        timeout_in_minutes: 60
+        agents: { queue: "release" }
+
+      - label: ":docker: Docker Image"
+        command: ".buildkite/scripts/release-runner.sh docker"
+        timeout_in_minutes: 60
+        agents: { queue: "default" }
+
+      - label: ":package: npm"
+        command: ".buildkite/scripts/release-runner.sh npm"
+        timeout_in_minutes: 30
+        agents: { queue: "release" }
+
+      - label: ":helm: Helm Chart"
+        command: ".buildkite/scripts/release-runner.sh helm"
+        timeout_in_minutes: 15
+        agents: { queue: "release" }
+
+      - label: ":book: Javadoc"
+        command: ".buildkite/scripts/release-runner.sh javadoc"
+        timeout_in_minutes: 15
+        agents: { queue: "release" }
+
+      - label: ":swagger: SwaggerHub"
+        command: ".buildkite/scripts/release-runner.sh swaggerhub"
+        timeout_in_minutes: 10
+        agents: { queue: "release" }
+
+      - label: ":globe_with_meridians: Website"
+        command: ".buildkite/scripts/release-runner.sh website"
+        timeout_in_minutes: 15
+        agents: { queue: "release" }
+
+      - label: ":page_facing_up: JSON Schema"
+        command: ".buildkite/scripts/release-runner.sh schema"
+        timeout_in_minutes: 10
+        agents: { queue: "release" }
+
+      - label: ":python: PyPI"
+        command: ".buildkite/scripts/release-runner.sh pypi"
+        timeout_in_minutes: 15
+        agents: { queue: "default" }
+
+      - label: ":gem: RubyGems"
+        command: ".buildkite/scripts/release-runner.sh rubygems"
+        timeout_in_minutes: 10
+        agents: { queue: "default" }
+
+      - label: ":github: GitHub Release"
+        command: ".buildkite/scripts/release-runner.sh github"
+        timeout_in_minutes: 10
+        agents: { queue: "release" }
+
+  - wait
+
+  - label: ":sparkles: Finalize"
+    command: ".buildkite/scripts/release-runner.sh finalize"
+    timeout_in_minutes: 30
+    agents: { queue: "release" }

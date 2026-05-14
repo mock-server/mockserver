@@ -1,6 +1,8 @@
 # Release Pipeline — Next Steps & Testing Guide
 
-**Status:** Partially Complete
+> **HISTORICAL.** This document was a checklist for the *original* `scripts/ci/release/` layout. That layout has been replaced by the CI-agnostic `scripts/release/` design — see [release-principles.md](../operations/release-principles.md) and [release-process.md](../operations/release-process.md) for the current approach. Specific script paths and code snippets here no longer match the codebase.
+
+**Status:** Superseded by the CI-agnostic refactor.
 
 ## What's Been Built
 

@@ -2,11 +2,11 @@ steps:
   - group: ":mag: Release preflight"
     steps:
       - label: ":mag: Preflight (release queue)"
-        command: "scripts/ci/release/preflight.sh release"
+        command: ".buildkite/scripts/release-runner.sh preflight"
         timeout_in_minutes: 5
         agents:
           queue: "release"
 
       - label: ":mag: Preflight (default queue)"
-        command: "scripts/ci/release/preflight.sh default"
+        command: ".buildkite/scripts/release-runner.sh preflight"
         timeout_in_minutes: 5

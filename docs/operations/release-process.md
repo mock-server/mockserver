@@ -1,340 +1,201 @@
 # Release Process
 
-## Automated Release Pipeline
+> Read [release-principles.md](release-principles.md) first if you're modifying anything in this pipeline. The principles are load-bearing: ignore them and you'll re-create the tight CI coupling we just removed.
 
-The release process is automated via the `mockserver-release` Buildkite pipeline and shared scripts. See [Release Pipeline Plan](../plans/release-pipeline.md) for historical design context.
+## Architecture
 
-### Release Preparation
+```
+scripts/release/
+├── _lib.sh                       # shared functions: logging, dry-run, AWS,
+│                                 # git, docker wrapper, version helpers
+├── release.sh                    # orchestrator (prepare → components → finalize)
+├── prepare.sh                    # validate + bump pom + tag + push
+├── finalize.sh                   # SNAPSHOT bump + update version references
+├── preflight.sh                  # verify host has docker + bash + git + jq …
+└── components/                   # one script per deployable artifact
+    ├── maven-central.sh          # build + sign + Sonatype + publish + wait
+    ├── maven-plugin.sh           # mockserver-maven-plugin release
+    ├── docker.sh                 # multi-arch Docker Hub + ECR Public
+    ├── npm.sh                    # mockserver-node + mockserver-client-node
+    ├── pypi.sh                   # mockserver-client-python
+    ├── rubygems.sh               # mockserver-client (Ruby)
+    ├── helm.sh                   # Helm chart
+    ├── javadoc.sh                # Javadoc to S3
+    ├── website.sh                # Jekyll site
+    ├── schema.sh                 # JSON Schema
+    ├── swaggerhub.sh             # OpenAPI spec to SwaggerHub
+    ├── github.sh                 # GitHub Release
+    └── versioned-site.sh         # X-Y.mock-server.com Terraform
 
-Run `/prepare-release` before triggering the pipeline. It inspects:
+.buildkite/scripts/
+├── release-runner.sh             # Buildkite adapter (meta-data → env vars)
+└── release-verify-totp.sh        # Buildkite-only TOTP gate
 
-- `changelog.md`
-- `mockserver/pom.xml`
-- the latest numeric `mockserver-X.Y.Z` tag
-- release secret readiness
-- pipeline coverage
-
-It recommends:
-
-- `release-version`
-- `next-version`
-- `old-version`
-- `release-type`
-- `create-versioned-site`
-
-Use `BREAKING:` at the start of an unreleased changelog bullet when a major version bump is intended.
-
-SemVer recommendation rules:
-
-- `BREAKING:` present: major release
-- any `Added` or `Changed` entries: minor release
-- only `Fixed` entries: patch release
-
-### Quick Start
-
-**Via Buildkite (recommended):**
-1. Run `/prepare-release` and review the recommended release parameters
-2. Trigger the "MockServer Release" pipeline in Buildkite
-3. Enter the recommended release version, next SNAPSHOT version, previous version, release type, and versioned-site choice
-4. Enter TOTP code when prompted
-5. Approve gates at each stage
-
-**Via local orchestrator:**
-```bash
-./scripts/release.sh 5.16.0 5.16.1-SNAPSHOT 5.15.0
+.buildkite/release-pipeline.yml   # flat list of steps; each step is one
+                                  # release-runner.sh invocation
 ```
 
-### Key files
-- `scripts/ci/release/` — 26 standalone release scripts
-- `scripts/release.sh` — local orchestrator
-- `.buildkite/release-pipeline.yml` — Buildkite pipeline with approval gates
-- `terraform/buildkite-agents/build-secrets.tf` — AWS Secrets Manager secrets
-- `terraform/website/` — website infrastructure (S3, CloudFront, cross-account IAM)
+## How a release happens
 
-### Automated Coverage
-
-The full pipeline automates:
-
-- Maven Central core artifacts
-- `mockserver-maven-plugin`
-- Docker Hub and AWS ECR Public images
-- `mockserver-node`
-- `mockserver-client`
-- Helm
-- Javadoc
-- SwaggerHub / OpenAPI
-- website and JSON Schema publishing
-- PyPI
-- RubyGems
-- GitHub Release
-
-Current manual follow-up:
-
-- Homebrew formula bump via `scripts/ci/release/update-homebrew.sh`
-
-### Required Release Secrets
-
-Store these credentials in AWS Secrets Manager before running the pipeline:
-- `mockserver-build/sonatype` — Sonatype username + password
-- `mockserver-build/dockerhub` — Docker Hub username + token
-- `mockserver-build/pypi` — PyPI token
-- `mockserver-build/rubygems` — RubyGems API key
-- `mockserver-release/gpg-key` — GPG private key + passphrase
-- `mockserver-release/github-token` — GitHub PAT
-- `mockserver-release/totp-seed` — TOTP shared secret
-- `mockserver-release/npm-token` — npm automation token
-- `mockserver-release/swaggerhub` — SwaggerHub API key
-- `mockserver-release/website-role` — Cross-account IAM role ARN
-
----
-
-## Legacy Manual Process
-
-The legacy manual process is documented below for reference.
-
-MockServer releases were a manual 15-step process spanning multiple registries and hosting platforms.
-
-```mermaid
-flowchart TD
-    START([Start Release]) --> MVN_REL[1. Maven Release to Central]
-    MVN_REL --> MVN_SNAP[2. Deploy new SNAPSHOT]
-    MVN_SNAP --> UPDATE_REPO[3. Update repo versions]
-    UPDATE_REPO --> NODE[4. Update mockserver-node]
-    NODE --> CLIENT_NODE[5. Update mockserver-client-node]
-    CLIENT_NODE --> MVN_PLUGIN[6. Update mockserver-maven-plugin]
-    MVN_PLUGIN --> DOCKER[7. Update Docker image]
-    DOCKER --> HELM[8. Update Helm chart]
-    HELM --> JAVADOC[9. Add Javadoc]
-    JAVADOC --> SWAGGER[10. Update SwaggerHub]
-    SWAGGER --> WEBSITE[11. Update www.mock-server.com]
-    WEBSITE --> VERSIONED[12. Create versioned website copy]
-    VERSIONED --> HOMEBREW[13. Update Homebrew]
-    HOMEBREW --> PYTHON[14. Publish Python client to PyPI]
-    PYTHON --> RUBY[15. Publish Ruby client to RubyGems]
-    RUBY --> DONE([Release Complete])
-```
-
-## Step Details
-
-### 1. Publish Release to Maven Central
+### Step-by-step, locally
 
 ```bash
-./scripts/local_release.sh
+# 1. Verify your machine has the required host tools.
+./scripts/release/preflight.sh
+
+# 2. Run the entire pipeline in dry-run mode. Builds everything, but skips
+#    every external write (npm publish, twine upload, S3 sync, gh release
+#    create, git push, etc.).
+./scripts/release/release.sh --version 6.0.0 --dry-run
+
+# 3. Run a single component.
+./scripts/release/components/npm.sh --dry-run        # exits with `RELEASE_VERSION` unset
+RELEASE_VERSION=6.0.0 ./scripts/release/components/npm.sh --dry-run
+
+# 4. Run only a few components.
+./scripts/release/release.sh --version 6.0.0 --only=npm,pypi --dry-run
+
+# 5. Skip components.
+./scripts/release/release.sh --version 6.0.0 --skip=docker --dry-run
 ```
 
-Then in the Sonatype UI:
-1. Go to https://oss.sonatype.org/index.html#stagingRepositories
-2. Find the staging repository
-3. **Close** the repository (triggers validation)
-4. **Release** the repository (auto-drops after sync to Central)
+DRY_RUN defaults to `true` unless you pass `--execute`. **Locally you almost never want `--execute`** — that publishes for real.
 
-### 2. Publish New SNAPSHOT
+### Step-by-step, on Buildkite
+
+The same scripts run; the only difference is the wrapper:
+
+1. Operator triggers the `mockserver-release` pipeline.
+2. The input step collects: release version, next SNAPSHOT, type, versioned-site flag.
+3. The TOTP block prompts for a 6-digit code; `release-verify-totp.sh` validates it.
+4. Each subsequent step calls `.buildkite/scripts/release-runner.sh <stage>`, which:
+   1. Reads Buildkite meta-data and exports it as `RELEASE_VERSION`, `NEXT_VERSION`, etc.
+   2. Sets `DRY_RUN=false` (Buildkite releases for real).
+   3. `exec`s the matching script under `scripts/release/`.
+
+The release scripts themselves see only env vars. They have no idea Buildkite exists.
+
+## Disaster recovery
+
+Buildkite outage on release day? No problem. From a developer machine with `docker`, `aws`, `git`, `jq`, `python3`, and `bash`:
 
 ```bash
-./scripts/local_deploy_snapshot.sh
+# Authenticate to AWS (for Secrets Manager + S3)
+aws sso login --profile mockserver-build
+
+# Run the same scripts the CI would have run
+RELEASE_VERSION=6.0.0 \
+NEXT_VERSION=6.0.1-SNAPSHOT \
+RELEASE_TYPE=full \
+CREATE_VERSIONED_SITE=yes \
+./scripts/release/release.sh --execute
 ```
 
-Deploys the next SNAPSHOT version to Sonatype snapshots repository.
+Every component runs in the same pinned Docker image whether you're on a laptop or a CI agent. There is no implicit CI state to recreate.
 
-### 3. Update Repository
+## Switching CI providers
 
-1. Update `changelog.md`
-2. Update `README.md`
-3. Clean build artifacts: `cd mockserver && ./mvnw clean && cd .. && rm -rf jekyll-www.mock-server.com/_site`
-4. Update `jekyll-www.mock-server.com/_config.yml` with new version numbers
-5. Find-and-replace version references across the codebase:
-   - Release version (e.g., `5.16.0`)
-   - API version (e.g., `5.16.x`)
-   - SNAPSHOT version (e.g., `5.16.0-SNAPSHOT` → `5.16.1-SNAPSHOT`)
-6. Update client library versions:
-   - `mockserver-client-python/pyproject.toml` — `version` field
-   - `mockserver-client-ruby/lib/mockserver/version.rb` — `VERSION` constant
-   - `mockserver-client-ruby/README.md` — gem version reference
-7. Commit and push
+This pipeline assumes nothing about Buildkite. If you want to run it on GitHub Actions, write a 30-line `.github/workflows/release.yml` that:
 
-### 4. Update mockserver-node (Monorepo)
+1. Receives release inputs (`workflow_dispatch` with `release_version` etc.).
+2. Exports them as env vars.
+3. Calls `./scripts/release/release.sh --execute` (or one component at a time, with explicit job dependencies).
+
+Same for any other CI provider. The release scripts don't change.
+
+## The contract
+
+Release scripts (`scripts/release/*`) read these env vars:
+
+| Variable | Required | Default | Purpose |
+|---|---|---|---|
+| `RELEASE_VERSION` | yes | — | The version being released (X.Y.Z) |
+| `NEXT_VERSION` | no | `RELEASE_VERSION` patch+1 -SNAPSHOT | Next dev version |
+| `OLD_VERSION` | no | latest `mockserver-X.Y.Z` tag | Previous release |
+| `RELEASE_TYPE` | no | `full` | One of: full, maven-only, docker-only, post-maven |
+| `CREATE_VERSIONED_SITE` | no | `no` | `yes` for major/minor releases |
+| `DRY_RUN` | no | `true` | `false` to actually publish |
+| `AWS_PROFILE` | no | (not set) | Used outside CI for Secrets Manager auth |
+
+No other vars are read. **No `BUILDKITE_*` lookups happen in release scripts** — that's the whole point.
+
+## Dry-run behaviour by component
+
+| Component | Dry-run does | Dry-run skips |
+|---|---|---|
+| `prepare` | Validate inputs, show pom diff | pom write, git commit, tag, push |
+| `maven-central` | `mvn clean install` (build + test) | Sonatype upload, publish, sync wait |
+| `maven-plugin` | Build core + verify plugin | tag, deploy, snapshot bump, push |
+| `docker` | `docker buildx build` (local `--load`, amd64 only) | `--push` to Docker Hub + ECR |
+| `npm` | `npm install`, grunt build | `git push tag`, `npm publish` (uses `--dry-run`) |
+| `pypi` | `python -m build`, `twine check` | `twine upload` |
+| `rubygems` | `gem build` | `gem push` |
+| `helm` | `helm lint`, `helm package` | S3 upload, commit/push |
+| `javadoc` | `mvn javadoc:aggregate` | S3 sync |
+| `website` | `bundle install`, `jekyll build` | S3 sync, CloudFront invalidation |
+| `schema` | jq-generate self-contained schemas | S3 sync |
+| `swaggerhub` | Validate spec file | POST to SwaggerHub |
+| `github` | Extract changelog notes, print preview | `gh release create` |
+| `versioned-site` | `terraform plan` | `terraform apply`, S3 mirror |
+| `finalize` | Show diff of version-reference rewrite | git push, mvn deploy snapshot |
+
+## Pinned Docker images
+
+All toolchain calls run inside these images. Defined in `scripts/release/_lib.sh`:
 
 ```bash
-cd mockserver-node
-rm -rf package-lock.json node_modules
-# Update version references
-nvm use v16.14.1
-npm i && npm audit fix
-grunt
-npm login
-npm publish --access=public --otp=****
-cd ..
+MAVEN_IMAGE=maven:3.9.9-eclipse-temurin-11
+NODE_IMAGE=node:20-bookworm
+RUBY_IMAGE=ruby:3.2-bookworm
+HELM_IMAGE=alpine/helm:3.16.2
+GH_IMAGE=maniator/gh:v2.62.0
+PYTHON_IMAGE=python:3.12-slim-bookworm
+TERRAFORM_IMAGE=hashicorp/terraform:1.9
 ```
 
-### 5. Update mockserver-client-node (Monorepo)
+Override any of them by exporting the corresponding env var. Change them in `_lib.sh` to update for everyone.
 
-Same process as step 4, but in `mockserver-client-node/` and without `npm audit fix`.
+## Common operations
 
-### 6. Update mockserver-maven-plugin (Monorepo)
+### Re-run a single component after a partial-pipeline failure
 
-1. Update parent POM, jar-with-dependencies, and integration-testing versions from SNAPSHOT to RELEASE in `mockserver-maven-plugin/pom.xml`
-2. Deploy snapshot: `./scripts/local_deploy_snapshot.sh`
-3. Release: `./scripts/local_release.sh`
-4. Close and release on Sonatype
-5. Update versions back to new SNAPSHOT
-6. Deploy new snapshot
-
-### 7. Update Docker Image
-
-```mermaid
-flowchart LR
-    CHECK[Verify JAR on Maven Central] --> BK["Trigger Buildkite
-docker-push-release"]
-    BK --> DH["Docker Hub
-mockserver/mockserver"]
-    BK --> ECR["ECR Public
-public.ecr.aws/mockserver/mockserver"]
-```
-
-1. Verify the release JAR is available:
-   ```bash
-   curl -v https://oss.sonatype.org/service/local/artifact/maven/redirect\?r\=releases\&g\=org.mock-server\&a\=mockserver-netty\&c\=shaded\&e\=jar\&v\=RELEASE
-   ```
-2. Trigger the Buildkite `docker-push-release` pipeline with `RELEASE_TAG=mockserver-X.Y.Z`
-3. The pipeline pushes to both Docker Hub and AWS ECR Public, including standard and `-graaljs` variants
-
-### 8. Update Helm Chart
+If, say, the Maven Central step succeeded but `npm` failed:
 
 ```bash
-# Update version in Chart.yaml
-cd helm
-helm package ./mockserver/
-mv mockserver-X.Y.Z.tgz charts/
-cd charts
-helm repo index .
-# Upload chart + index.yaml to S3 bucket
+# On Buildkite: open the build, click Retry on the failed step. The
+# release-runner.sh adapter re-reads meta-data and re-invokes.
+
+# Locally:
+RELEASE_VERSION=6.0.0 ./scripts/release/components/npm.sh --execute
 ```
 
-### 9. Add Javadoc
+### Reproduce a CI failure locally
 
 ```bash
-git checkout mockserver-X.Y.Z
-export JAVA_HOME=$(/usr/libexec/java_home -v 1.8)
-cd mockserver && ./mvnw javadoc:aggregate -P release \
-  -DreportOutputDirectory='/path/to/javadoc/X.Y.Z'
-# Upload to S3 bucket under /versions/X.Y.Z/
-git checkout master
+# Pull the same env vars Buildkite was using (or set them by hand) and run
+# the same script.
+RELEASE_VERSION=6.0.0 \
+NEXT_VERSION=6.0.1-SNAPSHOT \
+./scripts/release/components/maven-central.sh --dry-run
 ```
 
-### 10. Update SwaggerHub
+That reproduces what the agent was doing, in the same Docker image, on your laptop.
 
-1. Update OpenAPI spec in `mockserver-core/src/main/resources/org/mockserver/openapi/mock-server-openapi-embedded-model.yaml`
-2. Create new version on https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi
-3. Publish the version
+### Add a new deployable component
 
-### 11. Update www.mock-server.com
+1. Create `scripts/release/components/<name>.sh` following the pattern of an existing component.
+2. Wire it into the orchestrator: add `<name>` to `ALL_COMPONENTS` in `release.sh`.
+3. Add a step to `.buildkite/release-pipeline.yml` that runs `.buildkite/scripts/release-runner.sh <name>`.
+4. Test with `RELEASE_VERSION=X.Y.Z ./scripts/release/components/<name>.sh --dry-run`.
 
-```bash
-cd jekyll-www.mock-server.com
-rm -rf _site
-bundle exec jekyll build
-# Upload _site/ to the main website S3 bucket (see ~/mockserver-aws-ids.md)
-# Invalidate CloudFront cache for main distribution (see ~/mockserver-aws-ids.md, path /*)
-```
+## For agents / LLMs reading this in a future session
 
-### 12. Create Versioned Website Copy (Major/Minor Releases)
+If you're modifying this pipeline, **respect the principles** in [release-principles.md](release-principles.md). In particular:
 
-For significant releases, create a versioned copy of the documentation:
+- Do NOT add `buildkite-agent meta-data get` or any `BUILDKITE_*` env-var reads to a script under `scripts/release/`. If a release script needs information that currently comes from Buildkite meta-data, plumb it through as a regular env var via the adapter.
+- Do NOT call any tool natively if it has an upstream Docker image. The whole pipeline relies on language toolchains being containerised so the agents stay minimal and the scripts stay portable.
+- Do NOT introduce dynamic pipeline generation (the previous design did this and we explicitly removed it). The Buildkite YAML is meant to be flat and obvious.
+- DO add `--dry-run` support to every new component. The smoke-test pattern (`RELEASE_VERSION=99.99.0 ./scripts/release/components/<name>.sh --dry-run`) is how operators sanity-check changes locally before triggering CI.
+- DO write each component as one self-contained file: build, package, sign, publish — all in one place. No splitting across multiple steps.
 
-1. Create new S3 bucket with public access **blocked** (all 4 flags)
-2. Enable server-side encryption (AES-256)
-3. Upload built `_site/` to new bucket
-4. Create CloudFront distribution with OAC (copy existing settings, set default root object to `index.html`)
-5. Set bucket policy to allow only the new CloudFront distribution via `cloudfront.amazonaws.com` service principal
-6. Create Route53 A record aliased to new CloudFront distribution
-
-See `~/mockserver-aws-ids.md` for the OAC ID to attach to the new distribution.
-
-### 13. Update Homebrew
-
-```bash
-brew doctor
-# Fork/reset homebrew-core
-brew update
-HOMEBREW_GITHUB_API_TOKEN=<token> \
-  brew bump-formula-pr --strict mockserver \
-  --url="https://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/X.Y.Z/mockserver-netty-X.Y.Z-brew-tar.tar"
-```
-
-## Release Artifacts Summary
-
-```mermaid
-graph LR
-    REL([Release X.Y.Z])
-
-    REL --> MC["Maven Central
-JARs, POMs, Sources, Javadoc"]
-    REL --> DH["Docker Hub
-Multi-arch images"]
-    REL --> ECR["ECR Public
-Multi-arch images"]
-    REL --> NPM["npm Registry
-mockserver-node
-mockserver-client-node"]
-    REL --> S3_HELM["S3/Helm Repo
-Helm chart .tgz"]
-    REL --> S3_DOCS["S3/CloudFront
-Website + Javadoc"]
-    REL --> SWAGGER["SwaggerHub
-OpenAPI spec"]
-    REL --> BREW["Homebrew
-Formula PR"]
-    REL --> PYPI["PyPI
-mockserver-client"]
-    REL --> GEMS["RubyGems
-mockserver-client"]
-```
-
-### 14. Publish Python Client to PyPI
-
-Prerequisites:
-- `build` and `twine` installed: `pip install build twine`
-- AWS SSO session active: `aws sso login --profile mockserver-build`
-- PyPI API token stored in AWS Secrets Manager (`mockserver-build/pypi`)
-
-```bash
-./scripts/release_python.sh
-```
-
-The script fetches the PyPI token from Secrets Manager, builds the package, verifies it, and uploads to PyPI. The published package will appear at https://pypi.org/project/mockserver-client/.
-
-### 15. Publish Ruby Client to RubyGems
-
-Prerequisites:
-- AWS SSO session active: `aws sso login --profile mockserver-build`
-- RubyGems API key stored in AWS Secrets Manager (`mockserver-build/rubygems`)
-
-```bash
-./scripts/release_ruby.sh
-```
-
-The script fetches the RubyGems API key from Secrets Manager, builds the gem, and pushes to RubyGems. The published gem will appear at https://rubygems.org/gems/mockserver-client.
-
-## Cleaning Up a Failed Release
-
-If a release fails partway through:
-
-```bash
-# Revert git to pre-release state
-git reset --hard <commit-hash>
-git push --force
-
-# Delete the release tag
-git tag -d mockserver-X.Y.Z
-git push origin :refs/tags/mockserver-X.Y.Z
-
-# Drop staging repository on Sonatype
-# https://oss.sonatype.org/#stagingRepositories
-```
-
-## GPG Signing Setup
-
-Release signing requires GPG configuration. See `scripts/deploy.md` for:
-- GPG key setup
-- Sonatype `settings.xml` configuration
-- Troubleshooting `gpg: signing failed: Inappropriate ioctl for device` (fix: `export GPG_TTY=$(tty)`)
+When in doubt, ask: "could a human ship this release from their laptop with just `docker`, `aws`, `git`, and `bash` installed?" If the answer is no, you've broken a principle.

@@ -1,6 +1,8 @@
 # Release Pipeline Plan
 
-**Status:** Complete
+> **HISTORICAL.** This document captures the *original* release-pipeline design. The pipeline has since been restructured around the principles in [release-principles.md](../operations/release-principles.md) — release scripts are now CI-agnostic, every toolchain runs in Docker, and the per-step scripts have been consolidated into one-script-per-component under `scripts/release/components/`. See [release-process.md](../operations/release-process.md) for the current architecture. The contents below remain as a record of the earlier approach.
+
+**Status:** Superseded by the CI-agnostic refactor (see `scripts/release/`).
 
 ## Decision: Option A — Buildkite Release Pipeline
 

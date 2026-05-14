@@ -238,7 +238,7 @@ The Helm chart `version` and `appVersion` in `Chart.yaml` **MUST always match th
 
 - **NEVER** bump the chart version independently of the MockServer version
 - **NEVER** change `version` without also changing `appVersion` to the same value
-- The release script `scripts/ci/release/publish-helm.sh` enforces this by setting both fields to `$RELEASE_VERSION`
+- The release script `scripts/release/components/helm.sh` enforces this by setting both fields to `$RELEASE_VERSION`
 - Both charts must be kept at the same version
 
 Helm chart changes made between releases are published as part of the next MockServer release, not independently.

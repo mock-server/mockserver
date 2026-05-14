@@ -213,6 +213,34 @@ in_docker() {
 }
 
 # -----------------------------------------------------------------------------
+# Cross-step state
+#
+# Some components produce values that downstream components need (e.g.
+# versioned-site computes WEBSITE_BUCKET which helm/javadoc/website/schema
+# read). On a single host these can be exported as env vars, but in CI each
+# step runs on a different agent so we need persistent storage.
+#
+# The release scripts are CI-agnostic: they write outputs to a known file
+# (.tmp/release-outputs.env) using set_release_output. The CI adapter is
+# responsible for syncing that file to the CI's own cross-step state (e.g.
+# Buildkite meta-data) and seeding env vars for the next step.
+# -----------------------------------------------------------------------------
+
+RELEASE_OUTPUTS_FILE="$REPO_ROOT/.tmp/release-outputs.env"
+
+set_release_output() {
+  local key="$1" value="$2"
+  mkdir -p "$REPO_ROOT/.tmp"
+  # Remove any previous value for this key, then append the new one.
+  if [[ -f "$RELEASE_OUTPUTS_FILE" ]]; then
+    grep -v "^${key}=" "$RELEASE_OUTPUTS_FILE" > "$RELEASE_OUTPUTS_FILE.tmp" || true
+    mv "$RELEASE_OUTPUTS_FILE.tmp" "$RELEASE_OUTPUTS_FILE"
+  fi
+  printf '%s=%s\n' "$key" "$value" >> "$RELEASE_OUTPUTS_FILE"
+  export "$key=$value"
+}
+
+# -----------------------------------------------------------------------------
 # AWS helpers
 # -----------------------------------------------------------------------------
 
@@ -287,8 +315,10 @@ configure_git_for_push() {
   local token
   token=$(load_secret "mockserver-release/github-token" "token" 2>/dev/null || echo "")
   if [[ -n "$token" && "$token" != "null" ]]; then
+    # `base64 | tr -d '\n'` is portable across macOS base64 and GNU base64
+    # (which wraps at 76 chars by default — that breaks header parsing).
     git -C "$REPO_ROOT" config "http.https://github.com/.extraheader" \
-      "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$token" | base64)"
+      "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$token" | base64 | tr -d '\n')"
   fi
 }
 
