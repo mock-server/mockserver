@@ -31,6 +31,16 @@ skip_unless_release_type "maven-central" full,maven-only
 
 log_step "Release Maven Central artifacts $RELEASE_VERSION (dry-run=$DRY_RUN)"
 
+# Surface the URLs the operator may want to open in a browser while the step
+# runs. The Central Portal dashboard shows live deployment state (VALIDATING /
+# VALIDATED / PUBLISHED / FAILED); repo1.maven.org goes 200 once the artifact
+# has synced from Sonatype, which is the canonical "the release is live" signal.
+log_info "Monitor & verify URLs:"
+log_info "  - Sonatype Central Portal:  https://central.sonatype.com/publishing/deployments"
+log_info "  - Central artifact view:    https://central.sonatype.com/artifact/org.mock-server/mockserver-netty/$RELEASE_VERSION"
+log_info "  - Live at Maven Central:    https://repo1.maven.org/maven2/org/mock-server/mockserver-netty/$RELEASE_VERSION/"
+log_info "  - Search Maven Central:     https://central.sonatype.com/search?namespace=org.mock-server&sort=published"
+
 sync_to_origin_master
 
 # ---- Build & test ----------------------------------------------------------

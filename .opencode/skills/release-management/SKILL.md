@@ -111,6 +111,22 @@ Return a concise release-preparation report with these sections:
 - List only the steps still outside the automated pipeline
 - Today this should normally be just Homebrew
 
+### Monitor & Verify
+
+Always include this section verbatim so the operator can watch the release land. Substitute the chosen `release-version` into the URLs:
+
+- **Sonatype Central Portal (live deployment status):** https://central.sonatype.com/publishing/deployments
+- **Central Portal artifact view:** https://central.sonatype.com/artifact/org.mock-server/mockserver-netty/<release-version>
+- **Live at Maven Central (canonical "released" signal — returns 200 once synced):** https://repo1.maven.org/maven2/org/mock-server/mockserver-netty/<release-version>/
+- **Maven Central search (browse all org.mock-server artifacts):** https://central.sonatype.com/search?namespace=org.mock-server&sort=published
+- **Docker Hub tags:** https://hub.docker.com/r/mockserver/mockserver/tags
+- **npm — mockserver-node:** https://www.npmjs.com/package/mockserver-node
+- **npm — mockserver-client-node:** https://www.npmjs.com/package/mockserver-client-node
+- **PyPI:** https://pypi.org/project/mockserver-client/
+- **RubyGems:** https://rubygems.org/gems/mockserver-client
+- **GitHub Releases:** https://github.com/mock-server/mockserver/releases
+- **Buildkite pipeline:** https://buildkite.com/mockserver/mockserver-release
+
 ## Notes
 
 - Prefer explicit evidence from the repo over assumptions
