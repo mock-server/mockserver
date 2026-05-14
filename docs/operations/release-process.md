@@ -2,6 +2,118 @@
 
 > Read [release-principles.md](release-principles.md) first if you're modifying anything in this pipeline. The principles are load-bearing: ignore them and you'll re-create the tight CI coupling we just removed.
 
+## Operator runbook
+
+The end-to-end checklist a release manager follows. **Use this every release.** Everything below assumes a healthy `master` branch.
+
+### 1. Decide the version
+
+Run the `/prepare-release` slash command from this repo. It inspects `changelog.md`, `mockserver/pom.xml`, and the latest `mockserver-X.Y.Z` git tag, then recommends:
+
+- `release-version` (e.g. `6.0.0`)
+- `next-version` (e.g. `6.0.1-SNAPSHOT`)
+- `old-version` (e.g. `5.15.0` — auto-derived, you don't need to type it on the form)
+- `release-type` (almost always `full`)
+- `create-versioned-site` (`yes` for major/minor, `no` for patch)
+
+The skill applies SemVer rules:
+
+| Trigger in `## [Unreleased]` | Bump |
+|---|---|
+| Any bullet prefixed `BREAKING:` | **Major** |
+| Bullets under `### Added` or `### Changed` | **Minor** |
+| Only `### Fixed` bullets | **Patch** |
+| Empty/vague | **Block** — don't release |
+
+If you want to override the recommendation, fine — but be deliberate about it.
+
+### 2. Validate locally (optional but recommended)
+
+```bash
+./scripts/release/test-all.sh --quick
+```
+
+Runs every component in dry-run mode locally. Takes ~5 min (Maven Central / maven-plugin / javadoc are skipped under `--quick`). The full run (~25 min) is `./scripts/release/test-all.sh`. Working tree must be clean afterwards — if you see modifications, that's a bug in a dry-run, fix it before triggering CI.
+
+### 3. Trigger a dry-run on Buildkite (recommended for major releases)
+
+Open https://buildkite.com/mockserver/mockserver-release → "New Build" and fill in:
+
+| Field | Value |
+|---|---|
+| Branch | `master` |
+| Commit | (latest on master) |
+| Release Version | from step 1 |
+| Next SNAPSHOT Version | from step 1 |
+| Release Type | `Full Release (all steps)` |
+| Create Versioned Site? | `Yes` for major/minor, `No` for patch |
+| **Dry Run?** | **`Yes — build/validate only, skip publish`** |
+
+The dry-run exercises every step inside the actual Buildkite container images. Treat it as the final gate before publishing. It still requires the TOTP and downstream-approval block steps.
+
+### 4. Trigger the real release
+
+Same form as step 3, but flip **Dry Run? → `No — actually publish`**.
+
+After the form, Buildkite immediately hits a `block` step asking for a 6-digit TOTP. The token expires every 30 s; if your agent fleet is cold-starting, you may have to wait ~1 min for an agent to come up before the TOTP step actually runs. The verifier accepts ±5 minutes of clock skew, so a slow start is forgiven.
+
+### 5. Manual gate 1 — enter the TOTP
+
+The TOTP seed lives in Secrets Manager under `mockserver-release/totp-seed`. Use the same authenticator app you set up for previous releases. If you've lost the seed, see [release-pipeline-next-steps.md](../plans/release-pipeline-next-steps.md) for rotation.
+
+After this gate the pipeline runs `Prepare` (pom bump + tag + push) and then `Maven Central` (mvn deploy + Sonatype publish + sync wait). Maven Central typically takes 15–25 min.
+
+### 6. Watch Maven Central
+
+Open these URLs in tabs while step 5's job runs:
+
+- **Live deployment state at Sonatype:** https://central.sonatype.com/publishing/deployments
+  - States transition: `VALIDATING` → `VALIDATED` → `PUBLISHING` → `PUBLISHED`
+  - `FAILED` means the pipeline will abort and surface the reason
+- **Canonical "is it live?" check** (returns 200 once synced): https://repo1.maven.org/maven2/org/mock-server/mockserver-netty/<release-version>/
+  - The pipeline polls this URL itself; you can watch the same thing in your browser
+- **Central artifact view** (what end users see): https://central.sonatype.com/artifact/org.mock-server/mockserver-netty/<release-version>
+
+### 7. Manual gate 2 — approve downstream publish
+
+After Maven Central is live, the pipeline pauses at a second `block` step labelled "Approve downstream publish". Sanity-check Maven Central one more time (the link above), then click **Unblock**.
+
+Everything downstream now runs in parallel: Versioned Site, Maven Plugin, Docker, npm, Helm, Javadoc, SwaggerHub, Website, JSON Schema, PyPI, RubyGems, GitHub Release.
+
+### 8. Verify the publishes
+
+| Channel | Verification |
+|---|---|
+| Docker Hub | https://hub.docker.com/r/mockserver/mockserver/tags — `<release-version>`, `<release-version>-graaljs`, and `latest` should appear |
+| npm — mockserver-node | https://www.npmjs.com/package/mockserver-node |
+| npm — mockserver-client-node | https://www.npmjs.com/package/mockserver-client-node |
+| PyPI | https://pypi.org/project/mockserver-client/ |
+| RubyGems | https://rubygems.org/gems/mockserver-client |
+| GitHub Release | https://github.com/mock-server/mockserver/releases |
+| Helm chart | https://www.mock-server.com/index.yaml — should list the new version |
+| Versioned docs site (major/minor only) | `https://<release-version-with-dash>.mock-server.com` — e.g. `6-0.mock-server.com` |
+| Website | https://www.mock-server.com — version pin in the footer should match |
+
+### 9. Manual follow-up — Homebrew
+
+Homebrew is the **only** thing the pipeline does not automate. After the GitHub Release is created:
+
+```bash
+brew bump-formula-pr --strict --version=<release-version> mockserver
+```
+
+(Or use the Homebrew web UI / GitHub PR flow if you prefer.) This is the path of least surprise — submit a PR against `homebrew-core` / `homebrew/homebrew-core`, let it CI, and merge.
+
+### 10. Announce (optional)
+
+If this is a notable release, post to:
+
+- mockserver Slack / Discord (if you have one)
+- The `mock-server` GitHub Discussions / Releases page (the GitHub Release notes are auto-generated from the changelog by the `github.sh` component)
+- Twitter / Mastodon / etc.
+
+---
+
 ## Architecture
 
 ```
