@@ -31,6 +31,12 @@ steps:
         options:
           - { label: "No", value: "no" }
           - { label: "Yes (major/minor release)", value: "yes" }
+      - select: "Dry Run?"
+        key: "dry-run"
+        default: "false"
+        options:
+          - { label: "No — actually publish",                     value: "false" }
+          - { label: "Yes — build/validate only, skip publish",   value: "true" }
 
   - block: ":lock: TOTP Authorization"
     prompt: "Enter your TOTP code to authorize this release"

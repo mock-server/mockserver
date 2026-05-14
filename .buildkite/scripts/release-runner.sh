@@ -34,7 +34,11 @@ export CREATE_VERSIONED_SITE="${CREATE_VERSIONED_SITE:-$(get_meta create-version
 [[ -z "$RELEASE_TYPE" ]] && export RELEASE_TYPE="full"
 [[ -z "$CREATE_VERSIONED_SITE" ]] && export CREATE_VERSIONED_SITE="no"
 
-# Buildkite triggers real releases — opt out of the safer default.
+# Buildkite triggers real releases by default. The operator can flip the
+# "Dry Run?" toggle in the input step to validate the pipeline end-to-end
+# without publishing.
+DRY_RUN_META=$(get_meta dry-run)
+[[ "$DRY_RUN_META" == "true" ]] && export DRY_RUN="true"
 export DRY_RUN="${DRY_RUN:-false}"
 
 # Seed cross-step outputs from meta-data so the script sees them as env vars.
@@ -63,8 +67,13 @@ RELEASE_OUTPUTS_FILE="$REPO_ROOT/.tmp/release-outputs.env"
 rm -f "$RELEASE_OUTPUTS_FILE"
 
 # ---- Run the script -------------------------------------------------------
+# Pass the dry-run flag explicitly so scripts that ignore the env var (or
+# parse args first) still honour the operator's choice.
+SCRIPT_ARG="--execute"
+[[ "$DRY_RUN" == "true" ]] && SCRIPT_ARG="--dry-run"
+
 set +e
-"$SCRIPT" --execute
+"$SCRIPT" "$SCRIPT_ARG"
 exit_code=$?
 set -e
 
