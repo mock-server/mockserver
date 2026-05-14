@@ -25,7 +25,7 @@ RUBY_IMAGE="${RUBY_IMAGE:-ruby:3.2-bookworm}"
 HELM_IMAGE="${HELM_IMAGE:-alpine/helm:3.16.2}"
 GH_IMAGE="${GH_IMAGE:-maniator/gh:v2.62.0}"
 PYTHON_IMAGE="${PYTHON_IMAGE:-python:3.12-slim-bookworm}"
-TERRAFORM_IMAGE="${TERRAFORM_IMAGE:-hashicorp/terraform:1.9}"
+TERRAFORM_IMAGE="${TERRAFORM_IMAGE:-hashicorp/terraform:1.15}"
 export MAVEN_IMAGE NODE_IMAGE RUBY_IMAGE HELM_IMAGE GH_IMAGE PYTHON_IMAGE TERRAFORM_IMAGE
 
 REGION="${AWS_REGION:-eu-west-2}"
@@ -347,10 +347,9 @@ load_secret() {
 }
 
 assume_website_role() {
-  if is_dry_run; then
-    log_dry "skip: assume website role"
-    return
-  fi
+  # Note: NOT skipped in dry-run — terraform plan against the website account
+  # needs these creds. Callers who only want write-side actions (S3 sync,
+  # CloudFront invalidation) wrap their own dry-run guards around them.
   local role_arn
   role_arn=$(load_secret "mockserver-release/website-role" "role_arn")
   local xtrace_state

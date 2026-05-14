@@ -69,6 +69,9 @@ declare -a TESTS=(
   "$SCRIPT_DIR/components/swaggerhub.sh:swaggerhub"
   "$SCRIPT_DIR/components/github.sh:github"
   "$SCRIPT_DIR/components/versioned-site.sh:versioned-site"
+  # Exercise the active path of versioned-site (not just the CREATE_VERSIONED_SITE=no
+  # early-exit). Reuse the same script with a different name so logs separate.
+  "$SCRIPT_DIR/components/versioned-site.sh:versioned-site-active:CREATE_VERSIONED_SITE=yes"
 )
 
 # Heavy tests touch Maven/JVM downloads which take minutes.
@@ -88,7 +91,7 @@ is_in_list() {
 }
 
 run_one() {
-  local script="$1" name="$2"
+  local script="$1" name="$2" extra_env="${3:-}"
   local logfile="$LOGS_DIR/$name.log"
   if [[ -n "$ONLY" ]] && ! is_in_list "$name" "$ONLY"; then
     results_skip+=("$name (not in --only)")
@@ -113,7 +116,7 @@ run_one() {
   echo "────────────────────────────────────────────────────────────"
 
   local start=$SECONDS
-  if RELEASE_VERSION="$VERSION" "$script" --dry-run > "$logfile" 2>&1; then
+  if env RELEASE_VERSION="$VERSION" $extra_env "$script" --dry-run > "$logfile" 2>&1; then
     local elapsed=$((SECONDS - start))
     results_pass+=("$name (${elapsed}s)")
     echo "✓ PASS  ($(wc -l < "$logfile" | tr -d ' ') lines, ${elapsed}s)"
@@ -185,9 +188,9 @@ if [[ "$bad_perm" -gt 0 ]]; then
 fi
 
 for test in "${TESTS[@]}"; do
-  script="${test%%:*}"
-  name="${test##*:}"
-  run_one "$script" "$name"
+  # Format: "path:name" or "path:name:EXTRA_ENV=value"
+  IFS=":" read -r script name extra_env <<< "$test"
+  run_one "$script" "$name" "${extra_env:-}"
 done
 
 echo ""

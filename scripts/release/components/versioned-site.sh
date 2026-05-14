@@ -78,14 +78,26 @@ else
   rm -f "$TFVARS.bak"
 fi
 
-trap 'rm -f "$TF_DIR/tfplan"' EXIT
-tf -chdir=/build/terraform/website init -input=false
-tf -chdir=/build/terraform/website plan -input=false -out=tfplan
-
 if is_dry_run; then
-  log_dry "skip: terraform apply + S3 mirror + commit"
+  # Dry-run validates the bash logic above (tfvars present, subdomain calc,
+  # sed patches). We deliberately do NOT run `terraform init/plan` here:
+  #   - it requires website-account creds that the release role can fetch
+  #     but only at apply-time (read perms are intentionally narrow);
+  #   - it would also touch live S3 state (read-only, but a coupling we
+  #     don't want a "dry-run" smoke test to have).
+  log_dry "skip: terraform init+plan+apply + S3 mirror + commit"
   exit 0
 fi
+
+assume_website_role
+
+trap 'rm -f "$TF_DIR/tfplan"' EXIT
+# backend.tf hard-codes `profile = "mockserver-build"` for human use. The
+# container has no AWS profile configured (it uses env-var creds the
+# tf() helper materialises), so override profile= at init time. -reconfigure
+# is harmless on a fresh checkout.
+tf -chdir=/build/terraform/website init -input=false -reconfigure -backend-config=profile=
+tf -chdir=/build/terraform/website plan -input=false -out=tfplan
 
 tf -chdir=/build/terraform/website apply -input=false tfplan
 rm -f "$TF_DIR/tfplan"

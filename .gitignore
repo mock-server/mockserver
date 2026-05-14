@@ -128,6 +128,11 @@ terraform/**/*.tfstate
 terraform/**/*.tfstate.backup
 terraform/**/*.tfvars
 !terraform/**/*.tfvars.example
+# Allow the website tfvars in git — it contains only public deployment
+# metadata (bucket names, hosted-zone ID, ACM ARN) and the release pipeline
+# expects to read + commit it. Other tfvars (e.g. terraform/buildkite-agents)
+# contain real tokens and stay ignored.
+!terraform/website/terraform.tfvars
 terraform/**/.terraform.lock.hcl
 
 # Buildkite CLI config (local only) #
