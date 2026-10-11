@@ -204,14 +204,29 @@ def main() -> int:
 
     args = parser.parse_args()
 
-    if args.mode == "replay":
-        return run_replay(host=args.host, port=args.port, fixture_path=args.fixture)
-    elif args.mode == "capture":
-        return run_capture(host=args.host, port=args.port, output_fixture=args.fixture)
-    elif args.mode == "live":
-        return run_live()
+    try:
+        if args.mode == "replay":
+            return run_replay(host=args.host, port=args.port, fixture_path=args.fixture)
+        elif args.mode == "capture":
+            return run_capture(host=args.host, port=args.port, output_fixture=args.fixture)
+        elif args.mode == "live":
+            return run_live()
+    except KeyboardInterrupt:
+        print("\n[Aborted] Operation cancelled by user.")
+        return 130
+    except Exception as err:
+        print(f"\n[Error] {type(err).__name__}: {err}", file=sys.stderr)
+        if "Connection refused" in str(err) or "Failed to connect" in str(err):
+            print(
+                "\nTip: Ensure MockServer is running on the target port.\n"
+                "Start MockServer quickly using Docker:\n"
+                "  docker run -d --rm -p 1080:1080 mockserver/mockserver\n",
+                file=sys.stderr,
+            )
+        return 1
     return 0
 
 
 if __name__ == "__main__":
     sys.exit(main())
+
