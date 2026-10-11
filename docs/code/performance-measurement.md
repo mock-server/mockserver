@@ -2160,8 +2160,9 @@ exit code.
 timeout) in any build whose message contains `[perf-soak]`; the marker also keeps the daily guard
 and the load test out of that build. The Buildkite schedule "Weekly performance soak"
 (`perf_soak_weekly` in `terraform/buildkite-pipelines/pipelines.tf`, cron `0 8 * * 0`, Sunday
-08:00 UTC) creates such a build every week, clear of the 04:00 daily regression on the single-agent
-`perf` queue. To run it on demand:
+08:00 UTC) creates such a build every week, clear of the 04:00 daily regression on the `perf`
+queue. It first fired on 2026-10-04 (build 637): it was committed on 2026-09-17 (`3885c5b0c`) but
+`terraform/buildkite-pipelines` was not applied until 2026-09-29. To run it on demand:
 
 ```bash
 bk build create -p mockserver-performance-test -b master -m "manual performance soak [perf-soak]"
@@ -2181,12 +2182,13 @@ container's output, including one that stopped before it was ready, unless the c
 longer be inspected. When a completed soak fails only because `perf-soak.json` could not be copied
 or uploaded, the file keeps what was measured, with `soak_ok` false and a `failure_reason`.
 
-**Not yet run for real.** The provenance, drift and event-log checks below were written against
-build 637's artifacts and a local server, with `docker` and `curl` stubbed
-(`.buildkite/scripts/test/perf-soak-test.sh`). Their first real execution is the next weekly soak
-or a manual `[perf-soak]` build. What `soak.js` accepts and refuses when it starts is checked by
-`.buildkite/scripts/test/k6-soak-init-test.sh`, which `perf-test-lint.sh` runs in the k6 container
-through `k6 inspect`; so far it has run only against a local k6 1.7.1 binary.
+**First real run: build 656 (scheduled, 2026-10-11).** The provenance, drift and event-log checks
+below were written against build 637's artifacts and a local server, with `docker` and `curl`
+stubbed (`.buildkite/scripts/test/perf-soak-test.sh`). Build 656 ran all of them on the perf agent
+and passed: every `config` field populated, `event_log.binding` read, `drift.<arm>.computed` true
+for all three arms, and all four artifacts uploaded. What `soak.js` accepts and refuses when it
+starts is checked by `.buildkite/scripts/test/k6-soak-init-test.sh`, which `perf-test-lint.sh`
+runs in the k6 container's `sh`; it passed there in the same build's lint step.
 
 #### What a soak records
 
@@ -2273,13 +2275,22 @@ in every later window, and threads were flat at 49 from the second sample. The w
 of 3.115 ms means about 14,400 samples took at least that long, and at most 600 of them can lie in
 the last five minutes, so some 13,800 slow requests fell earlier. The artifact cannot place them:
 all in the first seven minutes they would be one in six of its requests, spread over the run about
-one in a hundred. The per-window series, GC log and server output answer this from the next run.
+one in a hundred.
+
+**Build 656 did not reproduce it.** Its match p99 by 5-minute window read 0.900, 0.638 and
+0.586 ms for the first three windows, then 0.568 to 0.590 ms for the other 21: a JIT warm-up that
+settles inside ten minutes, well within the 15-minute warm-up (`reference_over_quietest` 1.032).
+GC is ruled out for that run: ZGC ran 47 to 54 cycles in every window, the longest pause in any
+window was 0.086 ms, and the only allocation stall in two hours was 0.168 ms at 234 s. The event
+log reached its byte bound at 121 s with no step in latency after it. What made 637's early window
+slow stays unknown; 637 ran a different image at the 50% heap and left no GC log.
 
 #### Absolute gates
 
 The match arm's k6 gates are p95 < 150 ms and p99 < 200 ms (`K6_P95_MS`, `K6_P99_MS` in
 `perf-test-soak.sh`), set at about twice build 340's 62.644 / 96.051 ms. Build 637 observed 0.487 /
-3.115 ms, about 300 and 64 times below them, so they catch a collapse and nothing short of one.
+3.115 ms and build 656 0.499 / 0.592 ms, about 300 and 64 to 340 times below them, so they catch a
+collapse and nothing short of one.
 They are deliberately unchanged: one run is not a distribution, and thresholds here are chosen
 empirically ([performance-tuning.md](../operations/performance-tuning.md)). The rule for
 tightening them:
@@ -2303,11 +2314,17 @@ after start-up. That run predates the provenance above, so these were not record
 from the container limit and `MaxRAMPercentage`: the resolved max heap (1.0 GiB), `maxLogEntries`
 (~128.5k), the event-log byte budget, and which of the two bounded the log.
 
-**No soak has run at the 45% image heap yet.** The standard image now sets
-`-XX:MaxRAMPercentage=45.0`, so the same `--memory=2g` container resolves a 922 MiB (0.9 GiB) heap
-and a default `maxLogEntries` of 115,456 (about 115.5k), against build 637's 1.0 GiB and ~128.5k.
-The ring fills sooner and holds fewer entries, so soak figures re-baseline from the first run on a
-45% image; build 637 stays a 50% reading. The clustered A/B nodes, also 2 GB containers, move the
+**Build 656 (2026-10-11, the first soak at the 45% image heap and the first with provenance) found
+no leak, and its event log is bounded by bytes, not by `maxLogEntries`.** Image revision
+`36d302612` (harness `2f05f8b1d`, so `revision_check` `differs`; the one commit between them is a
+perf-harness test change), `--memory=2g`, `ERROR`: heap max 966,787,072 bytes, `maxLogEntries`
+115,456, event-log byte budget 47,290,368. The log held 35,370 entries (31% of `maxLogEntries`) and
+47,289,690 bytes (100% of the budget), about 1,337 bytes an entry; it first evicted at 121 s and
+evicted 2,844,362 entries in all, with 0 dropped events. Match: 1,440,001 samples, p50 0.386 ms, p95
+0.499 ms, p99 0.592 ms, 0 errors; `drift.match.p99.ratio` 0.976 and `ratio_worst` 1.018. Verify p50
+19.6 ms and retrieve p50 83.0 ms, flat across the run. Threads flat at 40; the container was still
+running, not OOM-killed, at the end. Build 637 stays a 50% reading (1.0 GiB heap, ~128.5k
+`maxLogEntries`, 52,637,696-byte budget). The clustered A/B nodes, also 2 GB containers, move the
 same way.
 
 `stress.js` passes `k6 inspect` in `perf-test-lint.sh` and is executed by no CI step. Published
