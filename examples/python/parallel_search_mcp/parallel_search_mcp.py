@@ -27,6 +27,19 @@ import os
 import sys
 from pathlib import Path
 
+# Ensure mockserver-client-python and examples/python take precedence on sys.path
+_current_dir = Path(__file__).resolve().parent
+_examples_dir = _current_dir.parent
+_repo_root = _examples_dir.parent.parent
+_client_pkg_dir = _repo_root / "mockserver-client-python"
+
+if _client_pkg_dir.is_dir() and str(_client_pkg_dir) not in sys.path:
+    sys.path.insert(0, str(_client_pkg_dir))
+if str(_examples_dir) not in sys.path:
+    sys.path.insert(0, str(_examples_dir))
+if str(_current_dir) not in sys.path:
+    sys.path.insert(0, str(_current_dir))
+
 from mockserver import MockServerClient
 
 try:
@@ -37,15 +50,13 @@ try:
     from .mockserver_setup import configure_proxy
     from .replay import configure_replay
 except ImportError:
-    # Support running script directly without installing package
-    current_dir = Path(__file__).resolve().parent
-    sys.path.insert(0, str(current_dir))
-    from capture import capture_session
-    from client import ParallelSearchMcpClient
-    from config import ClientConfig, DEFAULT_PARALLEL_MCP_URL
-    from fixtures_manager import get_default_fixture_path, save_fixture
-    from mockserver_setup import configure_proxy
-    from replay import configure_replay
+    from parallel_search_mcp.capture import capture_session
+    from parallel_search_mcp.client import ParallelSearchMcpClient
+    from parallel_search_mcp.config import ClientConfig, DEFAULT_PARALLEL_MCP_URL
+    from parallel_search_mcp.fixtures_manager import get_default_fixture_path, save_fixture
+    from parallel_search_mcp.mockserver_setup import configure_proxy
+    from parallel_search_mcp.replay import configure_replay
+
 
 
 DEFAULT_HOST = os.environ.get("MOCKSERVER_HOST", "localhost")
