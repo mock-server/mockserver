@@ -1,0 +1,4 @@
+# Dependencies for Parallel Search MCP capture/replay example
+mockserver-client>=8.0.0
+pytest>=8.0.0
+pytest-asyncio>=0.23.0

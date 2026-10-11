@@ -1,0 +1,19 @@
+[project]
+name = "parallel-search-mcp-example"
+version = "1.0.0"
+description = "MockServer Parallel Search MCP capture and replay example"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "mockserver-client>=8.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
