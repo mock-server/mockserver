@@ -10,7 +10,8 @@ goes stale silently because nothing fails when the code moves on.
 `.opencode/rules/code-comment-discipline.md` stops new narrative arriving.
 **This plan covers the historical backlog**, which the rule does not touch.
 
-Not started. No deadline — this is hygiene, not a defect.
+Not started (checked 2026-10-11: no sweep commit has landed since the rule did in
+`052c74b53`). No deadline — this is hygiene, not a defect.
 
 ## What "too much" means here
 
@@ -28,7 +29,7 @@ The material being removed is not worthless; it moves:
 
 ## Scope, worst first
 
-Ranked by comment share of file (files ≥100 lines). **Density alone is not the
+Ranked by comment share of file (files ≥100 lines; regenerated 2026-10-11). **Density alone is not the
 signal** — an SPI interface that is mostly Javadoc is correct as it stands. Each
 file needs the rule's test applied, not a threshold.
 
@@ -38,12 +39,15 @@ file needs the rule's test applied, not a threshold.
 | `mockserver-testing/.../test/DockerAvailability.java` | 73% | partly justified — the probe's hazard is genuinely non-obvious |
 | `.buildkite/scripts/steps/java-async-broker-test.sh` | 70% | sweep |
 | `mockserver-core/.../state/StateBackend.java` | 68% | likely fine — SPI Javadoc |
-| `mockserver-performance-test/k6/lib/config.js` | 66% | sweep — carries the most run narrative |
 | `mockserver-core/.../state/KeyValueStore.java` | 64% | likely fine — SPI Javadoc |
-| `mockserver-netty/.../InFlightRequest.java` | 60% | assess |
+| `mockserver-performance-test/k6/lib/config.js` | 63% | sweep — carries the most run narrative |
+| `mockserver-netty/.../InFlightRequest.java` | 61% | assess |
+| `mockserver-core/.../socket/tls/KeyAndCertificateFactory.java` | 60% | assess |
 | `mockserver-netty/.../proxy/CompositeOriginalDestinationResolver.java` | 59% | assess |
-| `mockserver-core/.../socket/tls/KeyAndCertificateFactory.java` | 59% | assess |
-| `.buildkite/scripts/steps/perf-test-guard.sh` | 58% | sweep |
+| `mockserver-netty/.../unification/ConnectionScopeHandler.java` | 58% | assess |
+| `mockserver-core/.../breakpoint/BreakpointMatcherRegistry.java` | 58% | assess |
+| `.buildkite/scripts/steps/perf-test-microbench.sh` | 57% | sweep |
+| `.buildkite/scripts/steps/perf-test-guard.sh` | 47% | sweep — fell from 58% as code grew, not because it was swept |
 
 Regenerate the ranking before starting — it will have moved:
 

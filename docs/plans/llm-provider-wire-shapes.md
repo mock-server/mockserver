@@ -10,7 +10,9 @@ without special cases. GitHub discussion
 audit of every provider on 2026-10-03 then found the same class of bug elsewhere. The items
 below are worked in batches, most SDK-breaking first. The release is **not** gated on finishing
 this plan: each item ships when it lands. When every item is closed this file is deleted in the
-same commit.
+same commit. Checked 2026-10-11: no item below has closed since the last LLM fix, `eca80be88`
+(2026-10-04); spot checks of the code (no `done_reason` in `OllamaCodec`, the streamed path still
+not calling `recordOpenAiResponsesStateIfApplicable`, `isBedrockPath` still Anthropic-only) agree.
 
 ## Why this class of bug got through
 
