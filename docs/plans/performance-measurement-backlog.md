@@ -20,7 +20,7 @@ For how each run is produced, gated and read, see
 
 | # | Item | Blocked on |
 |---|---|---|
-| 97 | A netty IT fork wedged: every forward test then timed out or got `502` until the fork timeout | a reproduction (§5) |
+| 97 | A netty IT fork wedged: every forward test then timed out or got `502` until the fork timeout | no recurrence in 272 master builds (2026-10-02 to 10-11); a safeguard that probes and replaces a dead shared echo server, with a diagnostic, has landed — close if it never fires in about 50 more master builds (§5) |
 | 108 | Under load on Linux, `ResponseWriteStallTimeoutIntegrationTest` failed 4 of 12 runs while closing #102, and the A/B against the base commit that would explain it has not been run | an A/B on pipeline agents, not on the developer Mac (§5) |
 | 140 | The HTTP/3 connection-credit allowance is narrow and not neutral (accepted by the owner on 2026-10-05 as a known limitation); only Netty's quiche client has been exercised (macOS, and Linux on CI) | a run against Chrome, ngtcp2 and quic-go (§5) |
 | 210 | The DNS start-up refusal now passes on Linux epoll in CI; a real `Permission denied` is unverified | a container check as a non-root user (§5) |

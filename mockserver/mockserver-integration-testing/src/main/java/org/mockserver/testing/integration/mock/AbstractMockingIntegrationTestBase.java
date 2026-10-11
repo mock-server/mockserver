@@ -76,16 +76,15 @@ public abstract class AbstractMockingIntegrationTestBase {
         HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text().toString()
     );
 
-    protected static EchoServer insecureEchoServer;
-    protected static EchoServer secureEchoServer;
+    // shared by every test class in the JVM; replaced (never stopped) when it stops answering
+    protected static volatile EchoServer insecureEchoServer;
+    protected static volatile EchoServer secureEchoServer;
 
     @BeforeClass
     public static void startEchoServer() {
-        if (insecureEchoServer == null) {
-            insecureEchoServer = new EchoServer(false);
-        }
-        if (secureEchoServer == null) {
-            secureEchoServer = new EchoServer(true);
+        synchronized (AbstractMockingIntegrationTestBase.class) {
+            insecureEchoServer = SharedEchoServerGuard.answeringOrReplaced(insecureEchoServer, false);
+            secureEchoServer = SharedEchoServerGuard.answeringOrReplaced(secureEchoServer, true);
         }
     }
 
