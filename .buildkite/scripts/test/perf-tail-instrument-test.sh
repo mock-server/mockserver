@@ -212,7 +212,9 @@ for how in fail term kill; do
   SPID="$(cat "$T/d-$how/pid")"
   case "$how" in term) sleep 0.5; kill -TERM "$DPID" ;; kill) sleep 0.5; kill -KILL "$DPID" ;; esac
   wait "$DPID" 2>/dev/null || true
-  check "harness exit by $how: the sampler is gone" "yes" "$(gone_within "$SPID" 30)"
+  # After SIGKILL no trap runs; the sampler only notices its parent on its next poll, which a busy host can delay.
+  limit=30; [ "$how" = kill ] && limit=100
+  check "harness exit by $how: the sampler is gone" "yes" "$(gone_within "$SPID" "$limit")"
 done
 check "  ... after a failure it was stopped by the EXIT trap" "stopped" "$(jq -r .stop_reason "$T/d-fail/host-kernel-status.json")"
 check "  ... after SIGTERM it was stopped by the EXIT trap" "stopped" "$(jq -r .stop_reason "$T/d-term/host-kernel-status.json")"
