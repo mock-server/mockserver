@@ -1,7 +1,11 @@
 package org.mockserver.netty.connection;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
@@ -24,18 +28,59 @@ import org.mockserver.responsewriter.HttpExchangeEndedEvent;
  * An exchange that ends without a {@code LastHttpContent} passing through (a raw-bytes {@code HttpError},
  * an abandoned exchange, a final {@code 1xx}) is announced by {@link HttpExchangeEndedEvent}: its start is
  * dropped unrecorded, so later exchanges on that keep-alive connection are still timed from their own start.
+ * <p>
+ * With its {@link #readMarker() read marker} added before the codec, it also times the span before that start for
+ * {@code mock_server_request_read_to_decode_duration_seconds}: from the read that delivered a request's first bytes
+ * (the first read after the previous request's last content was decoded, or the read that decoded it when the
+ * next request follows in the same bytes) to the head being decoded. That covers the handlers before the codec, the
+ * decode, a head split across reads, and pipelined requests ahead of it in the same read being handled first.
  */
 public final class HttpTransportTimer extends ChannelDuplexHandler {
 
+    private final ReadMarker readMarker = new ReadMarker();
     private long[] startNanos = new long[2];
     private int head;
     private int size;
     private boolean informationalResponseHeadWritten;
+    // confined to the channel's event loop, like the queue above
+    private boolean readSeen;
+    private long lastReadNanos;
+    private boolean awaitingRequest = true;
+    private boolean requestReadPending;
+    private long requestReadNanos;
+
+    /**
+     * The handler to add before the HTTP server codec, so the read-to-decode span starts at the read.
+     */
+    public ChannelHandler readMarker() {
+        return readMarker;
+    }
+
+    /**
+     * Removes the timer and its read marker, if present, for when the connection stops carrying HTTP/1.1.
+     */
+    public static void removeFrom(ChannelPipeline pipeline) {
+        if (pipeline.get(ReadMarker.class) != null) {
+            pipeline.remove(ReadMarker.class);
+        }
+        if (pipeline.get(HttpTransportTimer.class) != null) {
+            pipeline.remove(HttpTransportTimer.class);
+        }
+    }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         if (msg instanceof HttpRequest) {
-            enqueue(System.nanoTime());
+            long now = System.nanoTime();
+            enqueue(now);
+            if (readSeen) {
+                Metrics.observeRequestReadToDecodeDurationSeconds((now - (requestReadPending ? requestReadNanos : lastReadNanos)) / 1_000_000_000.0);
+            }
+            awaitingRequest = false;
+            requestReadPending = false;
+        }
+        if (msg instanceof LastHttpContent) {
+            awaitingRequest = true;
         }
         ctx.fireChannelRead(msg);
     }
@@ -72,7 +117,17 @@ public final class HttpTransportTimer extends ChannelDuplexHandler {
         ctx.write(msg, promise);
         if (switchingProtocols) {
             size = 0;
-            ctx.pipeline().remove(this);
+            removeFrom(ctx.pipeline());
+        }
+    }
+
+    private void onRead() {
+        long now = System.nanoTime();
+        readSeen = true;
+        lastReadNanos = now;
+        if (awaitingRequest && !requestReadPending) {
+            requestReadPending = true;
+            requestReadNanos = now;
         }
     }
 
@@ -94,5 +149,16 @@ public final class HttpTransportTimer extends ChannelDuplexHandler {
         head = (head + 1) % startNanos.length;
         size--;
         return nanos;
+    }
+
+    private final class ReadMarker extends ChannelInboundHandlerAdapter {
+
+        @Override
+        public void channelRead(ChannelHandlerContext ctx, Object msg) {
+            if (msg instanceof ByteBuf) {
+                onRead();
+            }
+            ctx.fireChannelRead(msg);
+        }
     }
 }

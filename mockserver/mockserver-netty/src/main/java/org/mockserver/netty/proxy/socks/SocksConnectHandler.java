@@ -34,7 +34,7 @@ public abstract class SocksConnectHandler<T> extends RelayConnectHandler<T> {
         removeHandler(pipeline, HttpObjectAggregator.class);
         removeHandler(pipeline, MockServerHttpServerCodec.class);
         removeHandler(pipeline, PacedLargeWriteHandler.class);
-        removeHandler(pipeline, HttpTransportTimer.class);
+        HttpTransportTimer.removeFrom(pipeline);
         if (pipeline.get(this.getClass()) != null) {
             pipeline.remove(this);
         }

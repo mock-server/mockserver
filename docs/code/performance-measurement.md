@@ -418,8 +418,18 @@ per-thread table). Build 502 is the worked case: from 44,000 rps up k6 saw 19–
 5 ms and the handler at most 0.004% (rung starts reconstructed, since that run predates
 `start_epoch_ms`), and its ceiling JFR showed no thread above ~45% of a core with the server at 275% of
 its 600% CPU. The two together, not the table alone, put that tail outside MockServer. The decode-to-flush
-timer that narrows the gap now exists (`mock_server_request_transport_duration_seconds`; 502 predates it);
-the time before the event loop reads the socket is still unmeasured.
+timer that narrows the gap now exists (`mock_server_request_transport_duration_seconds`; 502 predates it).
+
+**Read-to-decode (item 119).** The span just before it, from the socket read that delivered
+a request's first bytes to its head being decoded, is `mock_server_request_read_to_decode_duration_seconds`
+(HTTP/1.1; see [metrics.md](metrics.md#read-to-decode-request-latency-histogram)). It covers the handlers
+before the codec, the decode, a head split across reads, and pipelined requests ahead of it in one read
+being handled first. The rig does not read it yet: `diag_sampler()` and `sweep_tail_localisation()` in
+`perf-test-run.sh` need its `_count`, `_sum` and `le="0.005"` bucket appended to `diag-samples.csv` (as
+`req_read_count`, `req_read_sum`, `req_read_le_5ms`) and a `server_read_over_5ms_frac` per rung, beside the
+transport share. Until a run reports that share, whether this span contributes to the tail attributed under
+item 44 is unknown. Still unmeasured, by any histogram: the wait in the kernel receive queue before the event
+loop reads the socket, which needs kernel receive timestamps that Netty does not expose.
 
 **Ladder anchor rule.** Always include at least one rung *below* the expected knee. A ladder that
 starts above the cleanly-served region reports `saturation_rps=0` — every rung is already in

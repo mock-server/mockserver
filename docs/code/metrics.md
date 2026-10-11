@@ -187,9 +187,31 @@ flowchart LR
 | Recorded | Only when the final write succeeds; a failed write (client gone) is not recorded. An HTTP/1.1 exchange that ends without a `LastHttpContent` passing the timer — a raw-bytes `HttpError`, an `HttpError` that writes nothing and keeps the connection open, or a mocked final `1xx` other than `101` — is not recorded either: core fires `HttpExchangeEndedEvent` from `HttpServerCodec`'s context and the timer drops that exchange's start, so later exchanges on the keep-alive connection are still timed from their own start |
 | Scope | Every HTTP exchange, control plane included: expectation PUTs, dashboard traffic and the metrics scrape itself (whose own sample lands in the next scrape). Requests inside a CONNECT tunnel to MockServer are timed on its loopback connection; the CONNECT exchange itself includes setting that loopback up |
 | Streaming | A streamed (SSE, chunked, gRPC server-streaming) response records its whole duration, to the last byte |
-| Not included | Time before Netty reads the request (kernel receive queue, an event loop busy with other connections) — neither histogram can see that |
+| Not included | The span from the socket read to the head being decoded, which `mock_server_request_read_to_decode_duration_seconds` times (below); and time before Netty reads the request (kernel receive queue, an event loop busy with other connections), which no histogram can see |
 
 **Cost.** Both timers are installed only when `metricsEnabled` is on at connection (or stream) set-up, so a server with metrics off has no extra handler and pays nothing. With metrics on, `TransportTimerBenchmark` (`mockserver-benchmark`, one request read and one response written through an `EmbeddedChannel`) measured about 53 ns and 24 bytes per exchange: two `System.nanoTime()` calls, one histogram observation and one write-promise listener.
+
+### Read-To-Decode Request Latency Histogram
+
+**Outcome.** `mock_server_request_read_to_decode_duration_seconds` (HTTP/1.1 only) times the span just before the transport histogram: from the socket read that delivered a request's first bytes to its head being decoded. Added with transport it gives the server's view from the read to the last byte written; what neither covers is the time before the event loop reads the socket.
+
+```mermaid
+flowchart LR
+    A["socket read\n(read-to-decode starts)"] --> B["handlers before the codec\n+ head decode"]
+    B --> C["head decoded\n(read-to-decode ends,\ntransport starts)"]
+```
+
+| Aspect | Behaviour |
+|---|---|
+| Buckets | 0.1, 0.25, then the transport histogram's (0.5 ms to 10 s, with **5 ms**) (`Metrics.REQUEST_READ_TO_DECODE_DURATION_BUCKETS`): the usual span is microseconds, and the perf harness reads the share over 5 ms |
+| Where it starts | The read marker (`HttpTransportTimer.readMarker()`) is the first handler `switchToHttp` adds, ahead of TCP chaos, `PacedLargeWriteHandler`, the before-codec guards and `HttpServerCodec`; it timestamps every inbound `ByteBuf`. The start is the first read after the previous request's `LastHttpContent` was decoded, or the read being decoded when the next head follows in the same bytes (pipelining) For the first request on a connection, timing starts when port unification hands its bytes to the HTTP pipeline, so the reads used to detect the protocol are not included. |
+| Where it ends | `HttpTransportTimer` on the decoded `HttpRequest`, using the same `System.nanoTime()` that starts the transport span, so the two never overlap |
+| What it includes | The handlers before the codec (a TCP chaos read delay among them) and the head decode; a head split across reads, i.e. waiting for the client or network to send the rest; and, for pipelined requests in one read, the handling of the requests ahead of it, which runs on the event loop before the codec decodes the next head |
+| Not included | TLS decryption (the marker sits after `SslHandler`, so its reads are decrypted bytes); and the wait in the kernel receive queue before the event loop reads the socket, which needs kernel receive timestamps that Netty does not expose |
+| Approximation | When a request's head starts in the same read that ended the previous request's body but completes in a later read, the span starts at the later read |
+| Removed | With the transport timer, by `HttpTransportTimer.removeFrom` (CONNECT and SOCKS tunnels) or on a `101` |
+
+**Cost.** Installed only with `metricsEnabled` on at connection set-up, so a server with metrics off pays nothing; with metrics on, one `System.nanoTime()` per read and one histogram observation per request, and no allocation of its own (the state is a few primitive fields on the per-connection timer). `TransportTimerBenchmark` does not cover the marker: it feeds decoded objects, not bytes.
 
 ### Per-Upstream Forward/Proxy Observability
 
@@ -655,7 +677,7 @@ The four `heap*` columns come from `MemoryMXBean.getHeapMemoryUsage()` (so `heap
 | `MetricsHandler` | mockserver-core | `org.mockserver.metrics.MetricsHandler` |
 | `BuildInfoCollector` | mockserver-core | `org.mockserver.metrics.BuildInfoCollector` |
 | `JvmMetricsCollector` | mockserver-core | `org.mockserver.metrics.JvmMetricsCollector` |
-| `HttpTransportTimer` | mockserver-netty | `org.mockserver.netty.connection.HttpTransportTimer` (HTTP/1.1 transport-inclusive latency) |
+| `HttpTransportTimer` | mockserver-netty | `org.mockserver.netty.connection.HttpTransportTimer` (HTTP/1.1 transport-inclusive latency, and read-to-decode latency with its read marker) |
 | `Http2StreamTransportTimer` | mockserver-netty | `org.mockserver.netty.connection.Http2StreamTransportTimer` (HTTP/2 per-stream transport-inclusive latency) |
 | `ChaosAutoHaltMonitor` | mockserver-core | `org.mockserver.mock.action.http.ChaosAutoHaltMonitor` |
 | `LlmCostBudgetMonitor` | mockserver-core | `org.mockserver.mock.action.http.LlmCostBudgetMonitor` |

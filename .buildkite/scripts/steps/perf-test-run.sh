@@ -2080,6 +2080,8 @@ run_regression() {
 #   req_transport_count/_sum/_le_5ms  the transport-inclusive histogram (request head decoded -> last
 #                                 response byte written), so a tail outside the handler can still be
 #                                 placed inside MockServer; blank on an image that predates it
+#   req_read_count/_sum/_le_5ms   the read-to-decode histogram (socket read of a request's first bytes ->
+#                                 its head decoded, the span just before req_transport); blank before it
 # A BLANK JVM-metric column has THREE distinct meanings, all preserved and NOT conflated: (1) the
 # metric is absent on an older image; (2) the scrape TIMED OUT (--max-time 4) because the SUT was
 # thrashing in GC near death — common in the final rows, and itself a death signal; (3) a genuine
@@ -2094,7 +2096,7 @@ to_bytes() { awk -v s="$1" 'BEGIN{
   printf "%d", n*m }'; }
 diag_sampler() {
   local t0; t0="$(date -u +%s)"
-  echo "ts,elapsed_s,container_mem_bytes,container_mem_limit_bytes,cpu_pct,heap_used_bytes,heap_max_bytes,nonheap_used_bytes,gc_seconds,gc_count,threads,dropped_log_events,ring_occupancy,ring_capacity,in_flight_bytes,max_in_flight_bytes,retained_entries,retained_bytes,max_retained_bytes,max_retained_entries,evicted_log_entries,req_dur_count,req_dur_sum,req_dur_le_5ms,req_dur_le_10ms,req_dur_le_25ms,req_dur_le_50ms,req_dur_le_100ms,jvm_allocated_bytes,direct_buffer_used_bytes,direct_buffer_count,netty_direct_used_bytes,scrape_ts,req_transport_count,req_transport_sum,req_transport_le_5ms" > "$DIAG_SAMPLE_LOG"
+  echo "ts,elapsed_s,container_mem_bytes,container_mem_limit_bytes,cpu_pct,heap_used_bytes,heap_max_bytes,nonheap_used_bytes,gc_seconds,gc_count,threads,dropped_log_events,ring_occupancy,ring_capacity,in_flight_bytes,max_in_flight_bytes,retained_entries,retained_bytes,max_retained_bytes,max_retained_entries,evicted_log_entries,req_dur_count,req_dur_sum,req_dur_le_5ms,req_dur_le_10ms,req_dur_le_25ms,req_dur_le_50ms,req_dur_le_100ms,jvm_allocated_bytes,direct_buffer_used_bytes,direct_buffer_count,netty_direct_used_bytes,scrape_ts,req_transport_count,req_transport_sum,req_transport_le_5ms,req_read_count,req_read_sum,req_read_le_5ms" > "$DIAG_SAMPLE_LOG"
   while true; do
     local ts stats cpu memu meml metrics heap heapmax nonheap gc gcc threads dropped occ cap inflt maxinflt retent retbytes maxretbytes maxretent
     local evicted hist rq_count rq_sum rq_le5 rq_le10 rq_le25 rq_le50 rq_le100 allocd dbuf_used dbuf_count netty_direct scrape_ts
@@ -2166,9 +2168,12 @@ diag_sampler() {
       /^mock_server_request_transport_duration_seconds_count /{tc=$2}
       /^mock_server_request_transport_duration_seconds_sum /{ts=$2}
       /^mock_server_request_transport_duration_seconds_bucket\{le="0\.005"\}/{tb5=$2}
-      END{print c"|"s"|"b5"|"b10"|"b25"|"b50"|"b100"|"tc"|"ts"|"tb5}')"
-    IFS='|' read -r rq_count rq_sum rq_le5 rq_le10 rq_le25 rq_le50 rq_le100 tr_count tr_sum tr_le5 <<<"$hist"
-    printf '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' \
+      /^mock_server_request_read_to_decode_duration_seconds_count /{rc=$2}
+      /^mock_server_request_read_to_decode_duration_seconds_sum /{rs=$2}
+      /^mock_server_request_read_to_decode_duration_seconds_bucket\{le="0\.005"\}/{rb5=$2}
+      END{print c"|"s"|"b5"|"b10"|"b25"|"b50"|"b100"|"tc"|"ts"|"tb5"|"rc"|"rs"|"rb5}')"
+    IFS='|' read -r rq_count rq_sum rq_le5 rq_le10 rq_le25 rq_le50 rq_le100 tr_count tr_sum tr_le5 rd_count rd_sum rd_le5 <<<"$hist"
+    printf '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' \
       "$ts" "$((ts - t0))" \
       "$([ -n "$memu" ] && to_bytes "$memu" || echo '')" \
       "$([ -n "$meml" ] && to_bytes "$meml" || echo '')" \
@@ -2178,7 +2183,7 @@ diag_sampler() {
       "${evicted:-}" "${rq_count:-}" "${rq_sum:-}" \
       "${rq_le5:-}" "${rq_le10:-}" "${rq_le25:-}" "${rq_le50:-}" "${rq_le100:-}" \
       "${allocd:-}" "${dbuf_used:-}" "${dbuf_count:-}" "${netty_direct:-}" "$scrape_ts" \
-      "${tr_count:-}" "${tr_sum:-}" "${tr_le5:-}" >> "$DIAG_SAMPLE_LOG"
+      "${tr_count:-}" "${tr_sum:-}" "${tr_le5:-}" "${rd_count:-}" "${rd_sum:-}" "${rd_le5:-}" >> "$DIAG_SAMPLE_LOG"
     sleep "$PERF_DIAG_SAMPLE_INTERVAL"
   done
 }
@@ -2467,7 +2472,8 @@ sweep_rung_windows() { # sweep_json -> [{offered_rps, start_epoch_ms, end_epoch_
 # Notify-only. Per rung, the share of requests over 5 ms as k6 saw it (post-settle stalls) beside
 # the server's shares from histogram deltas between the diag-samples.csv rows inside the rung's
 # post-settle window: req_dur times only the request handler (decoded request to response hand-off);
-# req_transport runs from the decoded request head to the last response byte written to the socket.
+# req_transport runs from the decoded request head to the last response byte written to the socket;
+# req_read from the socket read of a request's first bytes to its head being decoded.
 sweep_tail_localisation() { # sweep_json diag_csv -> JSON
   local rungs
   rungs="$(jq -r --argjson step "$STEP_S" '(.points // [])[] | select(.start_epoch_ms != null)
@@ -2483,12 +2489,15 @@ sweep_tail_localisation() { # sweep_json diag_csv -> JSON
     FNR == 1 { n = split($0, h, ","); for (i = 1; i <= n; i++) col[h[i]] = i
                tc = ("scrape_ts" in col) ? col["scrape_ts"] : col["ts"]
                ok = ("req_dur_count" in col) && ("req_dur_le_5ms" in col)
-               tok = ("req_transport_count" in col) && ("req_transport_le_5ms" in col); next }
+               tok = ("req_transport_count" in col) && ("req_transport_le_5ms" in col)
+               rok = ("req_read_count" in col) && ("req_read_le_5ms" in col); next }
     { split($0, f, ","); t = f[tc]
       if (ok) { c = f[col["req_dur_count"]]; b = f[col["req_dur_le_5ms"]]
                 if (t != "" && c != "" && b != "") { m++; T[m] = t + 0; C[m] = c + 0; B[m] = b + 0 } }
       if (tok) { c = f[col["req_transport_count"]]; b = f[col["req_transport_le_5ms"]]
-                 if (t != "" && c != "" && b != "") { k++; XT[k] = t + 0; XC[k] = c + 0; XB[k] = b + 0 } } }
+                 if (t != "" && c != "" && b != "") { k++; XT[k] = t + 0; XC[k] = c + 0; XB[k] = b + 0 } }
+      if (rok) { c = f[col["req_read_count"]]; b = f[col["req_read_le_5ms"]]
+                 if (t != "" && c != "" && b != "") { r++; RT[r] = t + 0; RC[r] = c + 0; RB[r] = b + 0 } } }
     END { for (i = 1; i <= nr; i++) {
             first = 0; last = 0
             for (j = 1; j <= m; j++) if (T[j] >= lo[i] && T[j] <= hi[i]) { if (!first) first = j; last = j }
@@ -2500,13 +2509,19 @@ sweep_tail_localisation() { # sweep_json diag_csv -> JSON
             xsrv = ""; xreq = 0
             if (first && last > first && XC[last] > XC[first]) {
               xreq = XC[last] - XC[first]; xsrv = 1 - (XB[last] - XB[first]) / xreq }
-            printf "%s\t%s\t%s\t%d\t%d\t%s\t%d\n", off[i], cl[i], srv, req, win, xsrv, xreq } }
+            first = 0; last = 0
+            for (j = 1; j <= r; j++) if (RT[j] >= lo[i] && RT[j] <= hi[i]) { if (!first) first = j; last = j }
+            rsrv = ""; rreq = 0
+            if (first && last > first && RC[last] > RC[first]) {
+              rreq = RC[last] - RC[first]; rsrv = 1 - (RB[last] - RB[first]) / rreq }
+            printf "%s\t%s\t%s\t%d\t%d\t%s\t%d\t%s\t%d\n", off[i], cl[i], srv, req, win, xsrv, xreq, rsrv, rreq } }
   ' <(printf '%s\n' "$rungs") "$2" | jq -Rsc '
     def frac: if . == "" then null else (tonumber | . * 100000 | round / 100000) end;
     split("\n") | map(select(length > 0) | split("\t")
       | {offered_rps: (.[0] | tonumber), client_over_5ms_frac: (.[1] | frac), server_over_5ms_frac: (.[2] | frac),
          server_requests: (.[3] | tonumber), server_window_s: (.[4] | tonumber),
-         server_transport_over_5ms_frac: (.[5] | frac), server_transport_requests: (.[6] | tonumber)})
+         server_transport_over_5ms_frac: (.[5] | frac), server_transport_requests: (.[6] | tonumber),
+         server_read_over_5ms_frac: (.[7] | frac), server_read_requests: (.[8] | tonumber)})
     | {threshold_ms: 5, rungs: .}' 2>/dev/null || echo '{}'
 }
 

@@ -84,7 +84,9 @@ public class HttpConnectHandlerTest {
         HttpServerCodecResponsePairing responsePairing = new HttpServerCodecResponsePairing();
         HttpServerCodec codec = new HttpServerCodec();
         HttpLineEndSplitGuard lineEndSplitGuard = new HttpLineEndSplitGuard(codec);
+        HttpTransportTimer transportTimer = new HttpTransportTimer();
         EmbeddedChannel channel = new EmbeddedChannel(
+            transportTimer.readMarker(),
             chunkLineLimiter.beforeCodec(),
             responsePairing.beforeCodec(),
             lineEndSplitGuard.beforeCodec(),
@@ -92,7 +94,7 @@ public class HttpConnectHandlerTest {
             lineEndSplitGuard.afterCodec(),
             responsePairing.afterCodec(),
             chunkLineLimiter.afterCodec(),
-            new HttpTransportTimer(),
+            transportTimer,
             new HttpContentDecompressor(),
             new HttpObjectAggregator(1024),
             handler
@@ -119,6 +121,8 @@ public class HttpConnectHandlerTest {
                 channel.pipeline().get(HttpObjectAggregator.class), is(nullValue()));
             assertThat("HttpTransportTimer should be removed, the tunnel carries no more HTTP exchanges",
                 channel.pipeline().get(HttpTransportTimer.class), is(nullValue()));
+            assertThat("its read marker should be removed with it",
+                channel.pipeline().names(), everyItem(not(containsString("HttpTransportTimer"))));
             assertThat("the chunk-line limiter should be removed with the codec",
                 channel.pipeline().names(), everyItem(not(containsString("HttpChunkLineLimiter"))));
             assertThat("the codec's response pairing should be removed with it",

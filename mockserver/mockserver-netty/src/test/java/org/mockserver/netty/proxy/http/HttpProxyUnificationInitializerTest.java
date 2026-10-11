@@ -170,10 +170,11 @@ public class HttpProxyUnificationInitializerTest {
         // when - basic HTTP request
         embeddedChannel.writeInbound(Unpooled.wrappedBuffer("GET /somePath HTTP/1.1\r\nHost: some.random.host\r\n\r\n".getBytes(UTF_8)));
 
-        // then - the transport timer sits between the codec and everything that aggregates or answers
+        // then - the transport timer sits between the codec and everything that aggregates or answers, its read marker ahead of the codec
         assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
             "write-stall",
             "inbound-idle",
+            "HttpTransportTimer$ReadMarker#0",
             "PacedLargeWriteHandler#0",
             "HttpChunkLineLimiter$BeforeCodec#0",
             "HttpServerCodecResponsePairing$BeforeCodec#0",

@@ -57,6 +57,12 @@ public class Metrics {
     static final double[] REQUEST_TRANSPORT_DURATION_BUCKETS = {
         0.0005, 0.001, 0.002, 0.003, 0.005, 0.0075, 0.01, 0.015, 0.02, 0.03, 0.04, 0.05, 0.075, 0.1, 0.25, 0.5, 1, 2.5, 5, 10
     };
+    // The span before the transport histogram: the socket read that delivered a request's first bytes to its
+    // head being decoded (HTTP/1.1). Null until metrics are enabled, like the transport histogram.
+    private static volatile Histogram requestReadToDecodeDurationSeconds;
+    static final double[] REQUEST_READ_TO_DECODE_DURATION_BUCKETS = {
+        0.0001, 0.00025, 0.0005, 0.001, 0.002, 0.003, 0.005, 0.0075, 0.01, 0.015, 0.02, 0.03, 0.04, 0.05, 0.075, 0.1, 0.25, 0.5, 1, 2.5, 5, 10
+    };
     // Counter for slow forwarded requests. Null until metrics are enabled.
     private static volatile Counter slowRequestTotal;
     // Counter for log events dropped before being recorded, labelled by reason (ring_full or
@@ -269,6 +275,12 @@ public class Metrics {
                         .help("Time from a request's head being decoded to the last byte of its response being written to the socket, in seconds (HTTP/1.1 and HTTP/2)")
                         .classicOnly()
                         .classicUpperBounds(REQUEST_TRANSPORT_DURATION_BUCKETS)
+                        .register();
+                    requestReadToDecodeDurationSeconds = Histogram.builder()
+                        .name("mock_server_request_read_to_decode_duration_seconds")
+                        .help("Time from the socket read that delivered the first bytes of a request to its head being decoded, in seconds (HTTP/1.1)")
+                        .classicOnly()
+                        .classicUpperBounds(REQUEST_READ_TO_DECODE_DURATION_BUCKETS)
                         .register();
                     slowRequestTotal = Counter.builder()
                         .name("mock_server_slow_requests")
@@ -704,6 +716,7 @@ public class Metrics {
             requestDurationSeconds = null;
             requestDurationByMethodSeconds = null;
             requestTransportDurationSeconds = null;
+            requestReadToDecodeDurationSeconds = null;
             slowRequestTotal = null;
             droppedLogEventsTotal = null;
             evictedLogEntriesTotal = null;
@@ -810,6 +823,17 @@ public class Metrics {
      */
     public static void observeRequestTransportDurationSeconds(double seconds) {
         Histogram histogram = requestTransportDurationSeconds;
+        if (histogram != null) {
+            histogram.observe(seconds);
+        }
+    }
+
+    /**
+     * Record the time (seconds) from the socket read that delivered a request's first bytes to its head being
+     * decoded. No-op unless metrics are enabled.
+     */
+    public static void observeRequestReadToDecodeDurationSeconds(double seconds) {
+        Histogram histogram = requestReadToDecodeDurationSeconds;
         if (histogram != null) {
             histogram.observe(seconds);
         }

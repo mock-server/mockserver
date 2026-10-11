@@ -114,14 +114,49 @@ public class MetricsTest {
         assertThat(scrapeContains("mock_server_request_transport_duration_seconds"), is(false));
     }
 
+    @Test
+    public void recordsReadToDecodeDurationWithBucketBoundariesBelowAMillisecondAndAtFive() {
+        new Metrics(configuration().metricsEnabled(true));
+        Metrics.observeRequestReadToDecodeDurationSeconds(0.00005);
+        Metrics.observeRequestReadToDecodeDurationSeconds(0.004);
+        Metrics.observeRequestReadToDecodeDurationSeconds(0.006);
+
+        io.prometheus.metrics.model.snapshots.HistogramSnapshot.HistogramDataPointSnapshot dataPoint = histogramDataPoint("mock_server_request_read_to_decode_duration_seconds");
+        assertThat(dataPoint.getCount(), is(3L));
+        long atOrBelowTenthOfAMillisecond = 0;
+        long atOrBelowFiveMillis = 0;
+        for (io.prometheus.metrics.model.snapshots.ClassicHistogramBucket bucket : dataPoint.getClassicBuckets()) {
+            if (bucket.getUpperBound() <= 0.0001) {
+                atOrBelowTenthOfAMillisecond += bucket.getCount();
+            }
+            if (bucket.getUpperBound() <= 0.005) {
+                atOrBelowFiveMillis += bucket.getCount();
+            }
+        }
+        assertThat(atOrBelowTenthOfAMillisecond, is(1L));
+        assertThat(atOrBelowFiveMillis, is(2L));
+    }
+
+    @Test
+    public void doesNotRegisterReadToDecodeDurationWhenMetricsDisabled() {
+        new Metrics(configuration().metricsEnabled(false));
+        Metrics.observeRequestReadToDecodeDurationSeconds(0.01);
+
+        assertThat(scrapeContains("mock_server_request_read_to_decode_duration_seconds"), is(false));
+    }
+
     private static io.prometheus.metrics.model.snapshots.HistogramSnapshot.HistogramDataPointSnapshot transportDurationDataPoint() {
+        return histogramDataPoint("mock_server_request_transport_duration_seconds");
+    }
+
+    private static io.prometheus.metrics.model.snapshots.HistogramSnapshot.HistogramDataPointSnapshot histogramDataPoint(String name) {
         for (MetricSnapshot snapshot : PrometheusRegistry.defaultRegistry.scrape()) {
-            if (snapshot.getMetadata().getName().equals("mock_server_request_transport_duration_seconds")
+            if (snapshot.getMetadata().getName().equals(name)
                 && snapshot instanceof io.prometheus.metrics.model.snapshots.HistogramSnapshot histogramSnapshot) {
                 return histogramSnapshot.getDataPoints().get(0);
             }
         }
-        throw new AssertionError("mock_server_request_transport_duration_seconds is not registered");
+        throw new AssertionError(name + " is not registered");
     }
 
     @Test

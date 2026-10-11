@@ -189,6 +189,21 @@ rate(mock_server_requests_received_total[5m])</code></pre>
     long-lived streams show up as long requests.
 </p>
 
+<h4>Time from reading a request to decoding its headers</h4>
+
+<p>
+    <span class="inline_code">mock_server_request_read_to_decode_duration_seconds</span> is a Prometheus histogram
+    of the time just before the one above: from MockServer reading the first bytes of a request from the network
+    to it having decoded the request's headers. It covers HTTP/1.1 only. It is usually well under a millisecond;
+    it grows when a client sends its headers in pieces with pauses between them, or sends several requests at
+    once without waiting for responses (each waits for the ones before it to be handled). Its buckets start at
+    0.1 ms and include 5 ms, so the same share-over-5-ms query works with its name in place of the one above.
+</p>
+
+<p>
+    Neither histogram includes time a request spends waiting in the operating system before MockServer reads it.
+</p>
+
 <h4>Build info</h4>
 
 <p>

@@ -739,6 +739,10 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
 
             ChannelPipeline pipeline = ctx.pipeline();
 
+            HttpTransportTimer transportTimer = Boolean.TRUE.equals(configuration.metricsEnabled()) ? new HttpTransportTimer() : null;
+            if (transportTimer != null) {
+                addLastIfNotPresent(pipeline, transportTimer.readMarker());
+            }
             if (TcpChaosRegistry.getInstance().activeCount() > 0) {
                 pipeline.addLast("tcp-chaos", new TcpChaosHandler());
             }
@@ -761,8 +765,8 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
                 // the relay must hear where an exchange ends here without an encoded response
                 addLastIfNotPresent(pipeline, LoopbackRelaySignalHandler.INSTANCE);
             }
-            if (Boolean.TRUE.equals(configuration.metricsEnabled())) {
-                addLastIfNotPresent(pipeline, new HttpTransportTimer());
+            if (transportTimer != null) {
+                addLastIfNotPresent(pipeline, transportTimer);
             }
             addLastIfNotPresent(pipeline, preserveHeadersNettyRemoves);
             addLastIfNotPresent(pipeline, new MockServerHttpContentDecompressor(configuration.maxRequestBodySize()));

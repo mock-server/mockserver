@@ -12,6 +12,7 @@ final class RecordedDurations {
 
     static final String TRANSPORT = "mock_server_request_transport_duration_seconds";
     static final String HANDLER = "mock_server_request_duration_seconds";
+    static final String READ_TO_DECODE = "mock_server_request_read_to_decode_duration_seconds";
 
     private RecordedDurations() {
     }
@@ -19,6 +20,11 @@ final class RecordedDurations {
     static long count(String histogram) {
         HistogramSnapshot.HistogramDataPointSnapshot dataPoint = dataPoint(histogram);
         return dataPoint == null ? 0 : dataPoint.getCount();
+    }
+
+    static double sum(String histogram) {
+        HistogramSnapshot.HistogramDataPointSnapshot dataPoint = dataPoint(histogram);
+        return dataPoint == null ? 0 : dataPoint.getSum();
     }
 
     static long countOver(String histogram, double seconds) {

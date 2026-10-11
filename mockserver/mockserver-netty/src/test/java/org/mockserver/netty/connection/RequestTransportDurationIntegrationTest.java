@@ -29,6 +29,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.configuration.Configuration.configuration;
@@ -37,16 +38,20 @@ import static org.mockserver.model.HttpError.error;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.netty.connection.RecordedDurations.HANDLER;
+import static org.mockserver.netty.connection.RecordedDurations.READ_TO_DECODE;
 import static org.mockserver.netty.connection.RecordedDurations.TRANSPORT;
 import static org.mockserver.netty.connection.RecordedDurations.count;
 import static org.mockserver.netty.connection.RecordedDurations.countOver;
+import static org.mockserver.netty.connection.RecordedDurations.sum;
 import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
  * {@code mock_server_request_transport_duration_seconds} over real sockets: time MockServer spends after
  * its request handler returns (a chunk-delayed body, a client that will not read) is in the transport
  * histogram and not in the handler histogram, HTTP/2 streams are timed one by one, and a raw-bytes
- * response does not shift the timing of the keep-alive requests after it.
+ * response does not shift the timing of the keep-alive requests after it. The read-to-decode histogram
+ * ({@code mock_server_request_read_to_decode_duration_seconds}) takes the wait for a head split across reads, which
+ * the transport histogram does not.
  */
 public class RequestTransportDurationIntegrationTest {
 
@@ -196,6 +201,47 @@ public class RequestTransportDurationIntegrationTest {
     }
 
     @Test
+    public void shouldTimeAHeadSplitAcrossReadsInTheReadToDecodeHistogramOnly() throws Exception {
+        mockServerClient.when(request().withPath("/split")).respond(response().withBody("split"));
+        mockServerClient.when(request().withPath("/normal")).respond(response().withBody("normal"));
+        settle();
+        long readBefore = count(READ_TO_DECODE);
+        long readSlowBefore = countOver(READ_TO_DECODE, HALF_SECOND);
+        double readSumBefore = sum(READ_TO_DECODE);
+        long transportBefore = count(TRANSPORT);
+        long transportSlowBefore = countOver(TRANSPORT, HALF_SECOND);
+
+        double exchangeSeconds;
+        double splitRequestSeconds;
+        try (Socket socket = new Socket("localhost", port)) {
+            socket.setTcpNoDelay(true);
+            socket.setSoTimeout(10_000);
+            OutputStream output = socket.getOutputStream();
+            long exchangeStart = System.nanoTime();
+            output.write("GET /split HTTP/1.1\r\nHo".getBytes(StandardCharsets.UTF_8));
+            output.flush();
+            Thread.sleep(600);
+            output.write(("st: localhost:" + port + "\r\n\r\n").getBytes(StandardCharsets.UTF_8));
+            output.flush();
+            assertThat(readResponse(socket), endsWith("split"));
+            exchangeSeconds = (System.nanoTime() - exchangeStart) / 1_000_000_000.0;
+            // recorded when the head was decoded, before the response was written
+            splitRequestSeconds = sum(READ_TO_DECODE) - readSumBefore;
+
+            Thread.sleep(600);
+            assertThat(exchange(socket, "/normal"), endsWith("normal"));
+        }
+        awaitTrue(() -> count(TRANSPORT) - transportBefore >= 2);
+        assertThat(count(READ_TO_DECODE) - readBefore, is(2L));
+        assertThat("the split head waited ~600 ms for its second read; the keep-alive request after the pause did not",
+            countOver(READ_TO_DECODE, HALF_SECOND) - readSlowBefore, is(1L));
+        assertThat("the split request's span fits inside the exchange the client saw",
+            splitRequestSeconds, allOf(greaterThanOrEqualTo(0.5), lessThanOrEqualTo(exchangeSeconds)));
+        assertThat(count(TRANSPORT) - transportBefore, is(2L));
+        assertThat("the transport span starts after the head is decoded", countOver(TRANSPORT, HALF_SECOND) - transportSlowBefore, is(0L));
+    }
+
+    @Test
     public void shouldTimeEachHttp2StreamSeparately() throws Exception {
         mockServerClient.when(request().withPath("/h2-fast")).respond(response().withBody("fast"));
         mockServerClient.when(request().withPath("/h2-slow")).respond(response().withBody("slow").withDelay(TimeUnit.MILLISECONDS, 600));
@@ -227,6 +273,10 @@ public class RequestTransportDurationIntegrationTest {
         OutputStream output = socket.getOutputStream();
         output.write(("GET " + path + " HTTP/1.1\r\nHost: localhost:" + port + "\r\n\r\n").getBytes(StandardCharsets.UTF_8));
         output.flush();
+        return readResponse(socket);
+    }
+
+    private String readResponse(Socket socket) throws IOException {
         InputStream input = socket.getInputStream();
         ByteArrayOutputStream head = new ByteArrayOutputStream();
         while (!head.toString(StandardCharsets.UTF_8).endsWith("\r\n\r\n")) {

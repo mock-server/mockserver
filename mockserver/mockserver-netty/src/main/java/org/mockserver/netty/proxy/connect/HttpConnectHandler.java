@@ -38,7 +38,7 @@ public final class HttpConnectHandler extends RelayConnectHandler<HttpRequest> {
         removeHandler(pipeline, HttpObjectAggregator.class);
         removeHandler(pipeline, MockServerHttpServerCodec.class);
         removeHandler(pipeline, PacedLargeWriteHandler.class);
-        removeHandler(pipeline, HttpTransportTimer.class);
+        HttpTransportTimer.removeFrom(pipeline);
         if (pipeline.get(this.getClass()) != null) {
             pipeline.remove(this);
         }
