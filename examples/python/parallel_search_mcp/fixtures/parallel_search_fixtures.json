@@ -1,0 +1,855 @@
+{
+  "version": "1.0",
+  "initialize": {
+    "protocolVersion": "2024-11-05",
+    "capabilities": {
+      "experimental": {},
+      "prompts": {
+        "listChanged": false
+      },
+      "resources": {
+        "subscribe": false,
+        "listChanged": false
+      },
+      "tools": {
+        "listChanged": false
+      }
+    },
+    "serverInfo": {
+      "name": "Parallel Web Search MCP Server",
+      "version": "1.27.0",
+      "websiteUrl": "https://parallel.ai",
+      "icons": [
+        {
+          "src": "https://assets.parallel.ai/dark-parallel-avatar-270.svg",
+          "mimeType": "image/svg+xml",
+          "theme": "light"
+        },
+        {
+          "src": "https://assets.parallel.ai/dark-parallel-avatar-270.png",
+          "mimeType": "image/png",
+          "sizes": [
+            "270x270"
+          ],
+          "theme": "light"
+        },
+        {
+          "src": "https://assets.parallel.ai/dark-parallel-avatar-540.png",
+          "mimeType": "image/png",
+          "sizes": [
+            "540x540"
+          ],
+          "theme": "light"
+        },
+        {
+          "src": "https://assets.parallel.ai/dark-parallel-avatar-1080.png",
+          "mimeType": "image/png",
+          "sizes": [
+            "1080x1080"
+          ],
+          "theme": "light"
+        },
+        {
+          "src": "https://assets.parallel.ai/white-parallel-avatar-270.svg",
+          "mimeType": "image/svg+xml",
+          "theme": "dark"
+        },
+        {
+          "src": "https://assets.parallel.ai/white-parallel-avatar-270.png",
+          "mimeType": "image/png",
+          "sizes": [
+            "270x270"
+          ],
+          "theme": "dark"
+        },
+        {
+          "src": "https://assets.parallel.ai/white-parallel-avatar-540.png",
+          "mimeType": "image/png",
+          "sizes": [
+            "540x540"
+          ],
+          "theme": "dark"
+        },
+        {
+          "src": "https://assets.parallel.ai/white-parallel-avatar-1080.png",
+          "mimeType": "image/png",
+          "sizes": [
+            "1080x1080"
+          ],
+          "theme": "dark"
+        }
+      ]
+    },
+    "instructions": "\nThe search and fetch tools are read-only, idempotent, and safe to call\nconcurrently. When several independent search or fetch objectives are already\nknown, issue one tool call per objective concurrently; do not wait for one\nresult before starting another. Batch related search queries or URLs that share\na common objective into one call.\n\n\n\nUse web_search first for most factual, current-information, research,\ncomparison, documentation, and troubleshooting questions.\n\nThe web_search results include excerpts intended to be useful for answering\ndirectly. If the excerpts contain enough evidence, answer from them — do not\nfetch every search result by default. For broad tasks you can issue multiple\n`search_queries` in a single web_search call rather than chaining calls.\n\nUse web_fetch when the user asks about a specific URL or page, needs exact\nwording or quotes, requests full-page analysis, or when search excerpts are\nconflicting or clearly insufficient.\n\n\n\nUse web_fetch only when web_search excerpts are not enough: the user asked\nabout a specific URL or page, you need exact wording or quotes, you need\nfull-page analysis, or the excerpts are conflicting or clearly insufficient.\nDo not fetch every search result by default — search excerpts are usually\nanswer-ready.\n\nWhen you do fetch, you can pass multiple related URLs in one call along with\na common `objective`; the tool will return the parts most relevant to it.\n\n\nUse of this server is subject to the Parallel Customer Terms (https://parallel.ai/customer-terms) and Privacy Policy (https://parallel.ai/privacy-policy)."
+  },
+  "tools": [
+    {
+      "name": "web_search",
+      "description": "Purpose: Perform web searches and return\nLLM-friendly results, including excerpts that are usually sufficient to\nanswer directly without a follow-up fetch.\n\nIdeal Use Cases:\n- Answering questions that require fresh or current information\n- Research, comparison, documentation, and troubleshooting questions\n- Broad tasks where multiple `search_queries` can be issued in a single call\n\nFor multiple independent objectives, make one web_search call per objective\nconcurrently. Put related query variations for the same objective in a single\ncall's search_queries list.\n",
+      "inputSchema": {
+        "properties": {
+          "objective": {
+            "description": "Natural-language description of what the web search is trying to find.\nTry to make the search objective atomic, looking for a specific piece of information. May include guidance about preferred sources or freshness.",
+            "title": "Objective",
+            "type": "string"
+          },
+          "search_queries": {
+            "description": "Concise keyword search queries, 3-6 words\neach, which may include search operators. At least one query is required;\nprovide 2-3 for best results. For broad tasks, you can include multiple\nrelated queries in a single call instead of chaining web_search calls. The\nqueries should be related to the objective.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Search Queries",
+            "type": "array"
+          },
+          "session_id": {
+            "type": "string",
+            "description": "Stable identifier for the current conversation. Generate a random value (UUID or 32+ character hex string) at the start of your session and reuse the exact same value on every web_search / web_fetch call. Do NOT change it between turns. Used for free-tier rate limiting and correlating your tool calls in our logs; ignored on paid-tier keys.",
+            "maxLength": 100
+          },
+          "model_name": {
+            "type": "string",
+            "description": "The identifier of the LLM model making this tool call (e.g. 'claude-opus-4.7', 'gpt-5.5', 'gemini-2.5-pro'). Before the first call, verify the exact active model slug from trusted runtime/session metadata or active client configuration. Pass the full slug verbatim; never shorten or substitute a model-family alias like 'gpt-5'. Used for product analytics only; does not affect search behavior.",
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "objective",
+          "search_queries"
+        ],
+        "title": "v1_search_toolArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "$defs": {
+          "UsageItem": {
+            "description": "Usage item for a single operation.",
+            "properties": {
+              "name": {
+                "description": "Name of the SKU.",
+                "examples": [
+                  "sku_search",
+                  "sku_extract_excerpts"
+                ],
+                "title": "Name",
+                "type": "string"
+              },
+              "count": {
+                "description": "Count of the SKU.",
+                "examples": [
+                  1
+                ],
+                "title": "Count",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "name",
+              "count"
+            ],
+            "title": "UsageItem",
+            "type": "object"
+          },
+          "V1WebSearchResult": {
+            "description": "A single search result from the web search API.",
+            "properties": {
+              "url": {
+                "description": "URL associated with the search result.",
+                "title": "Url",
+                "type": "string"
+              },
+              "title": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Title of the webpage, if available.",
+                "title": "Title"
+              },
+              "publish_date": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Publish date of the webpage in YYYY-MM-DD format, if available.",
+                "title": "Publish Date"
+              },
+              "excerpts": {
+                "description": "Relevant excerpted content from the URL, formatted as markdown.",
+                "items": {
+                  "type": "string"
+                },
+                "title": "Excerpts",
+                "type": "array"
+              }
+            },
+            "required": [
+              "url",
+              "excerpts"
+            ],
+            "title": "V1WebSearchResult",
+            "type": "object"
+          },
+          "Warning": {
+            "description": "Human-readable message for a task.",
+            "properties": {
+              "type": {
+                "description": "Type of warning. Note that adding new warning types is considered a backward-compatible change.",
+                "enum": [
+                  "spec_validation_warning",
+                  "input_validation_warning",
+                  "warning"
+                ],
+                "examples": [
+                  "spec_validation_warning",
+                  "input_validation_warning"
+                ],
+                "title": "Type",
+                "type": "string"
+              },
+              "message": {
+                "description": "Human-readable message.",
+                "title": "Message",
+                "type": "string"
+              },
+              "detail": {
+                "anyOf": [
+                  {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Optional detail supporting the warning.",
+                "title": "Detail"
+              }
+            },
+            "required": [
+              "type",
+              "message"
+            ],
+            "title": "Warning",
+            "type": "object"
+          }
+        },
+        "description": "Search response.",
+        "properties": {
+          "search_id": {
+            "description": "Search ID. Example: `search_cad0a6d2dec046bd95ae900527d880e7`",
+            "title": "Search Id",
+            "type": "string"
+          },
+          "results": {
+            "description": "A list of search results, ordered by decreasing relevance.",
+            "items": {
+              "$ref": "#/$defs/V1WebSearchResult"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "warnings": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/$defs/Warning"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Warnings for the search request, if any.",
+            "title": "Warnings"
+          },
+          "usage": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/$defs/UsageItem"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Usage metrics for the search request.",
+            "title": "Usage"
+          },
+          "session_id": {
+            "description": "Session identifier, echoed back from the request if provided, otherwise generated by the server. Should be passed to future search and extract calls made by the agent as part of the same larger task.",
+            "examples": [
+              "session_8a911eb27c7a4afaa20d0d9dc98d07c0"
+            ],
+            "title": "Session Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "search_id",
+          "results",
+          "session_id"
+        ],
+        "title": "V1SearchResponse",
+        "type": "object"
+      },
+      "icons": [
+        {
+          "src": "https://assets.parallel.ai/dark-parallel-avatar-270.svg",
+          "mimeType": "image/svg+xml",
+          "theme": "light"
+        },
+        {
+          "src": "https://assets.parallel.ai/dark-parallel-avatar-270.png",
+          "mimeType": "image/png",
+          "sizes": [
+            "270x270"
+          ],
+          "theme": "light"
+        },
+        {
+          "src": "https://assets.parallel.ai/white-parallel-avatar-270.svg",
+          "mimeType": "image/svg+xml",
+          "theme": "dark"
+        },
+        {
+          "src": "https://assets.parallel.ai/white-parallel-avatar-270.png",
+          "mimeType": "image/png",
+          "sizes": [
+            "270x270"
+          ],
+          "theme": "dark"
+        }
+      ],
+      "annotations": {
+        "title": "Web search",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "web_fetch",
+      "description": "Purpose: Fetch and extract relevant content\nfrom specific web URLs. Use only when web_search excerpts are insufficient\nfor the task at hand.\n\nIdeal Use Cases:\n- The user asked about a specific URL or page\n- You need exact wording or quotes that excerpts may have truncated\n- You need full-page analysis (long article, document, or page structure)\n- web_search excerpts are conflicting or clearly insufficient to answer\n\nFor multiple independent extraction objectives, make separate web_fetch calls\nconcurrently. Put related URLs that share one objective in a single call.\n",
+      "inputSchema": {
+        "properties": {
+          "urls": {
+            "description": "List of URLs to extract content from. Must be\nvalid HTTP/HTTPS URLs. Up to 20 URLs per request.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Urls",
+            "type": "array"
+          },
+          "objective": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Natural-language description of what\ninformation you're looking for from the URLs. Limit to 200 characters.",
+            "title": "Objective"
+          },
+          "search_queries": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional keyword search queries (3-6\nwords each) used together with objective to focus excerpts on the most\nrelevant content. Pass the queries from the prior web_search call that\nsurfaced these URLs, if applicable.",
+            "title": "Search Queries"
+          },
+          "full_content": {
+            "default": false,
+            "description": "Prefer leaving this off. The default\nexcerpt mode returns LLM-optimized snippets focused on your objective — they\nare much smaller, cheaper, and usually all you need. Only set to true when\nyou explicitly need the entire page as markdown (e.g. reading a long article\nin full, or running a document through a downstream summarizer).\n\nWarning: enabling full content can return a large amount of content —\noften tens of thousands of tokens for a long article. This may exceed your\nMCP client's tool-output limit and will substantially increase response\nsize and latency.",
+            "title": "Full Content",
+            "type": "boolean"
+          },
+          "allow_live_fetch": {
+            "default": true,
+            "description": "Whether live fetching is allowed. Leave\ntrue for the freshest available content. Set false to use cached content only,\nwhich makes web_fetch much faster by avoiding the source website, but may return\nolder content.",
+            "title": "Allow Live Fetch",
+            "type": "boolean"
+          },
+          "session_id": {
+            "type": "string",
+            "description": "Stable identifier for the current conversation. Generate a random value (UUID or 32+ character hex string) at the start of your session and reuse the exact same value on every web_search / web_fetch call. Do NOT change it between turns. Used for free-tier rate limiting and correlating your tool calls in our logs; ignored on paid-tier keys.",
+            "maxLength": 100
+          },
+          "model_name": {
+            "type": "string",
+            "description": "The identifier of the LLM model making this tool call (e.g. 'claude-opus-4.7', 'gpt-5.5', 'gemini-2.5-pro'). Before the first call, verify the exact active model slug from trusted runtime/session metadata or active client configuration. Pass the full slug verbatim; never shorten or substitute a model-family alias like 'gpt-5'. Used for product analytics only; does not affect search behavior.",
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "urls"
+        ],
+        "title": "v1_extract_toolArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "$defs": {
+          "ExtractError": {
+            "description": "Extract error details.",
+            "properties": {
+              "url": {
+                "title": "Url",
+                "type": "string"
+              },
+              "error_type": {
+                "description": "Error type.",
+                "title": "Error Type",
+                "type": "string"
+              },
+              "http_status_code": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "HTTP status code, if available.",
+                "title": "Http Status Code"
+              },
+              "content": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Content returned for http client or server errors, if any.",
+                "title": "Content"
+              }
+            },
+            "required": [
+              "url",
+              "error_type",
+              "http_status_code",
+              "content"
+            ],
+            "title": "ExtractError",
+            "type": "object"
+          },
+          "UsageItem": {
+            "description": "Usage item for a single operation.",
+            "properties": {
+              "name": {
+                "description": "Name of the SKU.",
+                "examples": [
+                  "sku_search",
+                  "sku_extract_excerpts"
+                ],
+                "title": "Name",
+                "type": "string"
+              },
+              "count": {
+                "description": "Count of the SKU.",
+                "examples": [
+                  1
+                ],
+                "title": "Count",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "name",
+              "count"
+            ],
+            "title": "UsageItem",
+            "type": "object"
+          },
+          "V1ExtractResult": {
+            "description": "Extract result for a single URL.",
+            "properties": {
+              "url": {
+                "description": "URL associated with the search result.",
+                "title": "Url",
+                "type": "string"
+              },
+              "title": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Title of the webpage, if available.",
+                "title": "Title"
+              },
+              "publish_date": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Publish date of the webpage in YYYY-MM-DD format, if available.",
+                "title": "Publish Date"
+              },
+              "excerpts": {
+                "description": "Relevant excerpted content from the URL, formatted as markdown.",
+                "items": {
+                  "type": "string"
+                },
+                "title": "Excerpts",
+                "type": "array"
+              },
+              "full_content": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Full content from the URL formatted as markdown, if requested.",
+                "title": "Full Content"
+              }
+            },
+            "required": [
+              "url",
+              "excerpts"
+            ],
+            "title": "V1ExtractResult",
+            "type": "object"
+          },
+          "Warning": {
+            "description": "Human-readable message for a task.",
+            "properties": {
+              "type": {
+                "description": "Type of warning. Note that adding new warning types is considered a backward-compatible change.",
+                "enum": [
+                  "spec_validation_warning",
+                  "input_validation_warning",
+                  "warning"
+                ],
+                "examples": [
+                  "spec_validation_warning",
+                  "input_validation_warning"
+                ],
+                "title": "Type",
+                "type": "string"
+              },
+              "message": {
+                "description": "Human-readable message.",
+                "title": "Message",
+                "type": "string"
+              },
+              "detail": {
+                "anyOf": [
+                  {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Optional detail supporting the warning.",
+                "title": "Detail"
+              }
+            },
+            "required": [
+              "type",
+              "message"
+            ],
+            "title": "Warning",
+            "type": "object"
+          }
+        },
+        "description": "Extract response.",
+        "properties": {
+          "extract_id": {
+            "description": "Extract request ID, e.g. `extract_cad0a6d2dec046bd95ae900527d880e7`",
+            "title": "Extract Id",
+            "type": "string"
+          },
+          "results": {
+            "description": "Successful extract results.",
+            "items": {
+              "$ref": "#/$defs/V1ExtractResult"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "errors": {
+            "description": "Extract errors: requested URLs not in the results.",
+            "items": {
+              "$ref": "#/$defs/ExtractError"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "warnings": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/$defs/Warning"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Warnings for the extract request, if any.",
+            "title": "Warnings"
+          },
+          "usage": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/$defs/UsageItem"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Usage metrics for the extract request.",
+            "title": "Usage"
+          },
+          "session_id": {
+            "description": "Session identifier. Echoed back from the request if provided, otherwise generated by the server. Should be passed to future search and extract calls made by the agent as part of the same larger task.",
+            "examples": [
+              "session_8a911eb27c7a4afaa20d0d9dc98d07c0"
+            ],
+            "title": "Session Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "extract_id",
+          "results",
+          "errors",
+          "session_id"
+        ],
+        "title": "V1ExtractResponse",
+        "type": "object"
+      },
+      "icons": [
+        {
+          "src": "https://assets.parallel.ai/dark-parallel-avatar-270.svg",
+          "mimeType": "image/svg+xml",
+          "theme": "light"
+        },
+        {
+          "src": "https://assets.parallel.ai/dark-parallel-avatar-270.png",
+          "mimeType": "image/png",
+          "sizes": [
+            "270x270"
+          ],
+          "theme": "light"
+        },
+        {
+          "src": "https://assets.parallel.ai/white-parallel-avatar-270.svg",
+          "mimeType": "image/svg+xml",
+          "theme": "dark"
+        },
+        {
+          "src": "https://assets.parallel.ai/white-parallel-avatar-270.png",
+          "mimeType": "image/png",
+          "sizes": [
+            "270x270"
+          ],
+          "theme": "dark"
+        }
+      ],
+      "annotations": {
+        "title": "Web fetch",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    }
+  ],
+  "search": {
+    "_meta": {
+      "parallel/usage": [
+        {
+          "name": "sku_search",
+          "count": 1,
+          "cost_usd": 0.001
+        }
+      ]
+    },
+    "content": [
+      {
+        "type": "text",
+        "text": "{\n  \"search_id\": \"search_ef9cdd7da2a46cca21cc58199029d24c\",\n  \"results\": [\n    {\n      \"url\": \"https://github.com/mock-server/mockserver/tree/master/docs\",\n      \"title\": \"mockserver/docs at master · mock-server/mockserver · GitHub\",\n      \"publish_date\": null,\n      \"excerpts\": [\n        \"mockserver/docs at master · mock-server/mockserver · GitHub\\nMockServer Documentation Comprehensive internal documentation for the MockServer project covering code architecture, infrastructure, build system, CI/CD, and deployment.\"\n      ]\n    },\n    {\n      \"url\": \"https://github.com/mock-server/mockserver\",\n      \"title\": \"GitHub - mock-server/mockserver: MockServer enables easy mocking of any system you integrate with via HTTP or HTTPS with clients written in Java, JavaScript and Ruby.  MockServer also includes a proxy that introspects all proxied traffic including encrypted SSL traffic and supports Port Forwarding, Web Proxying (i.e. HTTP proxy), HTTPS Tunneling Proxying (using HTTP CONNECT) and SOCKS Proxying (i.e. dynamic port forwarding). · GitHub\",\n      \"publish_date\": null,\n      \"excerpts\": [\n        \"mock-server/mockserver\\n* Page: GitHub repository\\n* URL: https://github.com/mock-server/mockserver\\n* Description: MockServer enables easy mocking of any system you integrate with via HTTP or HTTPS with clients written in Java, JavaScript and Ruby. MockServer also includes a proxy that introspects all proxied ...\\n* Stars: 4,863\\n* Forks: 1,099\\n* .buildkite/\\n* .github/\\n* .mvn/wrapper/\\n* .run/\\n* container_integration_tests/\\n* docker/\\n* docker_build/\\n* helm/\\n* jekyll-www.mock-server.com/\\n* mockserver-client-java/\\n* mockserver-core/\\n* mockserver-examples/\\n* mockserver-integration-testing/\\n* mockserver-junit-jupiter/\\n* mockserver-junit-rule/\\n* mockserver-netty/\\n* mockserver-proxy-war/\\n* mockserver-spring-test-listener/\\n* mockserver-testing/\\n* mockserver-war/\\n* scripts/\\n* .editorconfig\\n* .gitignore\\n* CONTRIBUTING.md\\n* DEBUGGING.md\\n* LICENSE.md\\n* README.md\\n* SECURITY.md\\n* changelog.md\\n* checkstyle.xml\\n* mockserver.example.properties\\n* mvnw\\n* mvnw.cmd\\n* pom.xml\\nREADME.md\\nMockServer Tweet Build status GitHub license GitHub stars Trello Backlog Join Slack\\nDocumentation\\nFor usage guide please see: www.mock-server.com\\nChange Log\\nPlease see: Change Log\\nCommunity\\n* Chat | Join Slack\\n* Feature Requests | GitHub Issues\\n* Issues / Bugs | GitHub Issues\\n* Backlog | Trello Backlog\\nVersions\\nMaven Central mockserver\\nMaven Central contains the following MockServer artifacts:\\n* mockserver-netty - an HTTP(S) web server that mocks and records requests and responses\\n* mockserver-netty:shaded - mockserver-netty (as above) with all dependencies embedded\\n* mockserver-war - a deployable WAR for mocking HTTP(S) responses (for any JEE web server)\\n* mockserver-proxy-war - a deployable WAR that records requests and responses (for any JEE web server)\\n* mockserver-maven-plugin - a maven plugin to start, stop and fork MockServer using maven\\n* mockserver-client-java - a Java client to communicate with both the server and the proxy\\nIn addition MockServer SNAPSHOT artifacts can also be found on Sonatype .\\nNode Module & Grunt Plugin\\nNPM Registry contains the following module:\\n* mockserver-node - a Node.js module and Grunt plugin to start and stop MockServer mockserver-node\\n* mockserver-client-node - a Node.js client for both the MockServer and the proxy mockserver-client-node\\nDocker Hub\\nDocker Hub contains the following artifacts:\\n* MockServer Docker Container - a Docker container containing the Netty MockServer and proxy\\nHelm Chart\\n* MockServer Helm Chart - a Helm Chart that installs MockServer to a Kubernetes cluster, available versions:\\n* 5.15.0\\n* 5.14.0\\n* 5.13.2\\n* 5.13.1\\n* 5.13.0\\n* 5.12.0\\n* 5.11.2\\n* 5.11.1\\n* 5.11.0\\n* ...\\nMockServer Clients\\n* mockserver-client-ruby mockserver-client - Ruby client for both the MockServer and the proxy\\n* mockserver-client-java - a Java client for both the MockServer and the proxy\\n* mockserver-client-node - a Node.js and browser client for both the MockServer and the proxy\\n* kotest-extensions-kotest - Kotlin Kotest integration with MockServer\"\n      ]\n    },\n    {\n      \"url\": \"https://github.com/mock-server\",\n      \"title\": \"Mock-Server · GitHub\",\n      \"publish_date\": null,\n      \"excerpts\": [\n        \"Organization: Mock-Server (@mock-server)\\n* Page: GitHub organization profile\\n* URL: https://github.com/mock-server\\n* Website: http://mock-server.com\\n* Top languages: JavaScript, Java, Shell, PHP, Ruby, Python\\n  MockServer enables easy mocking of any system you integrate with via HTTP or HTTPS - Mock-Server\\nRepositories\\n* mock-server/mockserver-monorepo: MockServer is an HTTP(S) mock server and proxy for testing that lets you mock APIs, inspect and modify live traffic, and inject failures. It supports HTTP/1.1, HTTP/2, gRPC, WebSockets, TCP and more on a single port, with additional support for HTTP/3, message brokers, and AI/LLM APIs.\\n* mock-server/mockserver-testcontainers-php: PHP Testcontainers module for MockServer — read-only mirror of mockserver-testcontainers/php/ from github.com/mock-server/mockserver-monorepo (do not edit here; source lives in the monorepo)\\n* mock-server/mockserver-client-php: PHP client for MockServer — read-only mirror of mockserver-client-php/ from github.com/mock-server/mockserver-monorepo (do not edit here; source lives in the monorepo)\\n* mock-server/setup-mockserver: GitHub Action to start a MockServer (HTTP(S) mock server & proxy) in CI and wait until ready.\\n* mock-server/mockserver-performance-test: Performance Test Suite for MockServer http://mock-server.com\\n* mock-server/mockserver-client-ruby: A Ruby client for MockServer project. This client is code generated using the MockServer OpenAPI v3 specification.\\n* mock-server/mockserver-client-python: A Python client for MockServer project.\\nThis client is code generated using the MockServer OpenAPI v3 specification.\\n* mock-server/mockserver-client-node: MockServer javascript client for browsers, Node.js or any grunt build\\n* mock-server/mockserver-node: Node.js module and grunt plugin to start and stop MockServer and MockServer Proxy\\n* mock-server/mockserver-maven-plugin: A maven plugin to start and stop the MockServer http://www.mock-server.com\"\n      ]\n    },\n    {\n      \"url\": \"https://www.mock-server.com/\",\n      \"title\": \"MockServer — Mock any HTTP service. Record traffic. Now with MCP for AI assistants.\",\n      \"publish_date\": null,\n      \"excerpts\": [\n        \"MockServer\\nStop testing against fragile, unavailable dependencies. Mock, record and proxy any API so your tests are fast, isolated and deterministic.\\nHTTP/1.1, HTTP/2, HTTP/3, HTTPS & gRPC — with a built-in MCP server so AI assistants can drive it too.\\nFork MockServer on GitHub\\nMockServer GitHub Project Join MockServer Slack BuildKite Build Status\\nGetting Started\\nMockServer is a single, self-hosted tool that mocks and proxies the services your application depends on, so you can develop and test against realistic, controllable behaviour instead of fragile real dependencies. It is free and open-source, runs anywhere, and needs no SaaS account.\\nWhy use MockServer?\\n* Isolate the system-under-test — replace real dependencies so tests fail only on genuine bugs, not on network flakes or redeployed services.\\n* Build against APIs that don't exist yet — mock a service from its contract so teams can work in parallel before it is ready.\\nHello from MockServer!\\n* I want to… | Start here\\n* Write unit tests for a REST service | Getting Started\\n* Write Java / JUnit tests with Testcontainers | MockServer & Testcontainers\\n* Record and replay real traffic | Record and Replay\\n* Generate mocks from an OpenAPI / Swagger spec | Using OpenAPI\\n* Mock a GraphQL API | GraphQL Mocking\\nHello from MockServer!\\n* Serve HTTPS / TLS transparently | HTTPS & TLS\\n* Test an AI application that calls an LLM | LLM Response Mocking\\n* Cut my LLM / inference bill | LLM Cost Optimisation\\n* Inject chaos / test resilience | Chaos Testing\\n* Run a load / performance test against an API | Load Injection\\nHello from MockServer!\\nWhat is MockServer\\nOne tool plays three roles for any HTTP, HTTPS or gRPC service you depend on:\\nMock\\nReturn realistic, controllable responses for any request so your tests stay fast, isolated and deterministic.\\nProxy\\nHello from MockServer!\\nSit in front of a real backend to record and replay traffic, inject chaos, or pause requests at breakpoints.\\nVerify\\nAssert exactly which requests your system-under-test sent, as part of a test, on mocked or proxied traffic.\\nFor any system you integrate with via HTTP or HTTPS MockServer can be used as:\\nHello from MockServer!\\nBeyond mocking and proxying, the same MockServer instance also lets you:\\n* verify that expected requests were (or were not) made — as test assertions\\n* record and replay real traffic to reproduce how a system behaves\\nHello from MockServer!\\n* template dynamic responses with Velocity, Mustache or JavaScript so a mock can react to the incoming request\\n* custom matching and response logic via WASM in any language that compiles to WebAssembly\\n* detect mock drift be warned when a mock no longer matches the real API\\nHello from MockServer!\\n* mock LLM and AI-provider APIs including OpenAI, Anthropic, Bedrock & more with realistic token-by-token streaming\\nIt mocks far more than REST, and can build mocks from the contracts you already have:\\nHello from MockServer!\\nChaos engineering & resilience testing\"\n      ]\n    },\n    {\n      \"url\": \"https://github.com/mock-server/mockserver-monorepo/blob/master/docs/testing.md\",\n      \"title\": \"mockserver-monorepo/docs/testing.md at master · mock-server/mockserver-monorepo · GitHub\",\n      \"publish_date\": null,\n      \"excerpts\": [\n        \"mock-server/mockserver-monorepo — docs/testing.md\\n* Page: GitHub code file\\n* URL: https://github.com/mock-server/mockserver-monorepo/blob/master/docs/testing.md\\n* Repository: mock-server/mockserver-monorepo\\n* Path: docs/testing.md\\n* Ref: master\\n* Lines: 631\\nTesting\\nOverview\\n* Framework | Version | Usage\\n* JUnit 4 | 4.13.2 | Primary test framework across almost all modules\\n* JUnit Jupiter (JUnit 5) | 5.14.4 | Used exclusively in mockserver-junit-jupiter\\n* Mockito Core | 5.23.0 | Mocking framework used in most modules\\n* Mockito JUnit Jupiter | 5.23.0 | JUnit 5 Mockito integration (mockserver-junit-jupiter only)\\n* Class | Purpose\\n* AbstractMockingIntegrationTestBase | Base class with common setup/teardown (MockServerClient, EchoServer, NettyHttpClient)\\n* AbstractBasicMockingIntegrationTest | Basic mocking test cases (~50 methods)\\n* AbstractExtendedMockingIntegrationTest | Extended mocking with all action types (~123 methods)\\nEmbedded Server Infrastructure\\nIntegration tests use real embedded servers rather than mocks:\\n* mockserver-proxy-war | Tomcat catalina.properties\\n* mockserver-junit-jupiter | Mockito mock-maker-inline config\\n* mockserver-integration-testing | XML schema\\n* Pattern | Count | Details\\n* Mega-test methods (>200 lines) | 6 | Largest: shouldHandleInvalidOpenAPIJsonRequest() at 1994 lines in HttpStateTest\\n* Excessive mocking (>100 mocks) | 2 | MockServerClientTest (130), HttpActionHandlerTest (109)\"\n      ]\n    },\n    {\n      \"url\": \"http://168.138.51.227:8088/mock-server/mockserver-monorepo\",\n      \"title\": \"GitHub - mock-server/mockserver-monorepo: MockServer is an HTTP(S) mock server and proxy for testing that lets you mock APIs, inspect and modify live traffic, and inject failures. It supports HTTP/1.1, HTTP/2, gRPC, WebSockets, TCP and more on a single port, with additional support for HTTP/3, message brokers, and AI/LLM APIs. · GitHub\",\n      \"publish_date\": null,\n      \"excerpts\": [\n        \"Repository files navigation\\n* README\\n* Code of conduct\\n* Contributing\\n* Apache-2.0 license\\n* Security\\n  More items\\nMockServer Build status GitHub license GitHub stars Artifact Hub MCP Toplist\\nMockServer is an HTTP(S) mock server and proxy for testing. It does three things:\\n* Mock the APIs your application depends on, so you can develop and test against systems that are unavailable, incomplete, or hard to reproduce.\\nBeyond that core: HTTP/3 (QUIC — experimental, on its own UDP port), JSON-RPC for MCP/A2A mocking, AsyncAPI-driven message-broker testing against external Kafka and MQTT brokers, and mocked AI/LLM chat-completion APIs (OpenAI, Anthropic, Gemini, Bedrock, Azure OpenAI, Ollama).\\n* Verification — assert which requests were received, in what order, and how many times.\\n* Chaos & resilience testing — inject latency, dropped/slow connections and failures to test how your system copes with a misbehaving dependency.\\n* LLM / AI mocking — mock chat-completion APIs for OpenAI, Anthropic, Gemini, Bedrock, Azure OpenAI and Ollama (including streaming), plus a built-in MCP server for AI coding assistants.\\n* Live dashboard — watch requests, expectations and logs in real time at /mockserver/dashboard .\\nGetting started in 60 seconds\\nRun MockServer with Docker, then mock an endpoint and call it:\\n-> Hello World\\nMaven Central contains the following MockServer artifacts under the org.mock-server groupId. Every artifact ships in two forms — -no-dependencies (shaded, zero transitive deps, recommended ) and the plain form (transitive deps declared in the POM, for the rare case where you need to override versions yourself).\\nServer:\\n-> Hello World\\n* mockserver-netty-no-dependencies / mockserver-netty — Netty-based HTTP(S) mock + proxy server (embed in tests or run standalone)\\n* mockserver-war — deployable WAR for hosting MockServer in a servlet container (mock mode)\\n* mockserver-proxy-war — deployable WAR for hosting MockServer in a servlet container (proxy mode)\\n-> Hello World\\nJava client:\\n* mockserver-client-java-no-dependencies / mockserver-client-java — Java client for the MockServer REST API\\nTest framework integrations:\\n* mockserver-junit-rule-no-dependencies / mockserver-junit-rule — JUnit 4 @Rule\\n-> Hello World\\n* mockserver-junit-jupiter-no-dependencies / mockserver-junit-jupiter — JUnit 5 extension ( @MockServerSettings , @MockServerTest )\\n* mockserver-spring-test-listener-no-dependencies / mockserver-spring-test-listener — Spring TestExecutionListener\\n-> Hello World\\n* mockserver-spring-boot-starter — Spring Boot auto-configuration; set mockserver.enabled=true to start MockServer and expose a MockServerClient bean (dev/test)\\n* mockserver-integration-testing-no-dependencies / mockserver-integration-testing — shared integration-test helpers\\nBuild-tool plugin:\\n-> Hello World\\nSNAPSHOT builds are published to the Sonatype Central Portal snapshot repository at https://central.sonatype.com/repository/maven-snapshots/org/mock-server/ .\"\n      ]\n    },\n    {\n      \"url\": \"https://115.175.65.104:8004/mock-server/mockserver-monorepo\",\n      \"title\": \"GitHub - mock-server/mockserver-monorepo: MockServer is an HTTP(S) mock server and proxy for testing that lets you mock APIs, inspect and modify live traffic, and inject failures. It supports HTTP/1.1, HTTP/2, gRPC, WebSockets, TCP and more on a single port, with additional support for HTTP/3, message brokers, and AI/LLM APIs. · GitHub\",\n      \"publish_date\": null,\n      \"excerpts\": [\n        \"Repository files navigation\\n* README\\n* Code of conduct\\n* Contributing\\n* Apache-2.0 license\\n* Security\\n  More items\\nMockServer Build status GitHub license GitHub stars Artifact Hub MCP Toplist\\nMockServer is an HTTP(S) mock server and proxy for testing. It does three things:\\n* Mock the APIs your application depends on, so you can develop and test against systems that are unavailable, incomplete, or hard to reproduce.\\nBeyond that core: HTTP/3 (QUIC — experimental, on its own UDP port), JSON-RPC for MCP/A2A mocking, AsyncAPI-driven message-broker testing against external Kafka and MQTT brokers, and mocked AI/LLM chat-completion APIs (OpenAI, Anthropic, Gemini, Bedrock, Azure OpenAI, Ollama).\\n* Verification — assert which requests were received, in what order, and how many times.\\n* Chaos & resilience testing — inject latency, dropped/slow connections and failures to test how your system copes with a misbehaving dependency.\\n3. Call your mock\\ncurl http://localhost:1080/hello\\n-> Hello World\\nMaven Central contains the following MockServer artifacts under the org.mock-server groupId. Every artifact ships in two forms — -no-dependencies (shaded, zero transitive deps, recommended ) and the plain form (transitive deps declared in the POM, for the rare case where you need to override versions yourself).\\nServer:\\n-> Hello World\\n* mockserver-netty-no-dependencies / mockserver-netty — Netty-based HTTP(S) mock + proxy server (embed in tests or run standalone)\\n* mockserver-war — deployable WAR for hosting MockServer in a servlet container (mock mode)\\n* mockserver-proxy-war — deployable WAR for hosting MockServer in a servlet container (proxy mode)\\n-> Hello World\\nJava client:\\n* mockserver-client-java-no-dependencies / mockserver-client-java — Java client for the MockServer REST API\\nTest framework integrations:\\n* mockserver-junit-rule-no-dependencies / mockserver-junit-rule — JUnit 4 @Rule\\n-> Hello World\\n* mockserver-junit-jupiter-no-dependencies / mockserver-junit-jupiter — JUnit 5 extension ( @MockServerSettings , @MockServerTest )\\n* mockserver-spring-test-listener-no-dependencies / mockserver-spring-test-listener — Spring TestExecutionListener\\n-> Hello World\\n* mockserver-spring-boot-starter — Spring Boot auto-configuration; set mockserver.enabled=true to start MockServer and expose a MockServerClient bean (dev/test)\\n* mockserver-integration-testing-no-dependencies / mockserver-integration-testing — shared integration-test helpers\\nBuild-tool plugin:\\n-> Hello World\\nSNAPSHOT builds are published to the Sonatype Central Portal snapshot repository at https://central.sonatype.com/repository/maven-snapshots/org/mock-server/ .\\n-> Hello World\\n* MockServer Helm Chart - installs MockServer into a Kubernetes cluster. The chart is published to the GitHub Container Registry as an OCI artifact (no helm repo add needed):\\nhelm upgrade --install --create-namespace --namespace mockserver --version 7.6.0 mockserver oci://ghcr.io/mock-server/charts/mockserver\"\n      ]\n    },\n    {\n      \"url\": \"https://www.npmjs.com/package/mockserver\",\n      \"title\": \"mockserver - npm\",\n      \"publish_date\": null,\n      \"excerpts\": [\n        \"Build Status\\nmockserver is a library that will help you mocking your APIs in a matter of seconds : you simply organize your mocked HTTP responses in a bunch of mock files and it will serve them like they were coming from a real API; in this way you can write your frontends without caring too much whether your backend is really ready or not.\\nInstallation\\nMockserver can be installed globally if you need to run it as a command:\\n$ npm install -g mockserver\\n$ mockserver -p 8080 -m test/mocks\\nMockserver serving mocks under \\\"test/mocks\\\" at http://localhost:8080\\nor as a regular NPM module if you need to use it as a library within your code:\\nnpm install mockserver\\nthen in your test file:\\nvar  http  =   require ( ' http ' ) ;\\nvar  mockserver  =   require ( ' mockserver ' ) ;\\nhttp . createServer ( mockserver ( ' path/to/your/mocks ' ) ) . listen ( 9001 ) ;\\nThis will run a simple HTTP webserver, handled by mockserver, on port 9001.\\nAt this point you can simply define your first mock: create a file in path/to/your/mocks/example-response called GET.mock :\\nHTTP/1.1 200 OK\\nContent-Type: application/json; charset=utf-8\\n{\\n\\\"Random\\\": \\\"content\\\"\\n}\\nIf you open your browser at http://localhost:9001/example-response you will see something like this:\\nexample output\\nAnd it's over: now you can start writing your frontends without having to wait for your APIs to be ready, or without having to spend too much time mocking them, as mockserver lets you do it in seconds.\\nVerbosity\\nBy default mockserver is running in verbose mode: log messages are pushed to stdout . That will help to distinguish, which mock file matches best the request.\\n$ mockserver -p 8080 -m  ' ./mocks '\\nMockserver serving mocks {verbose: true } under  \\\" ./mocks \\\"  at http://localhost:8080\\nReading from ./mocks/api/GET--a=b.mock file: Not matched\\nQuery string parameters and POST body\\nIn order to support query string parameters in the mocked files, replace all occurrences of ? with -- , then append the entire string to the end of the file.\\nGET /hello?a=b\\nhello/GET--a=b.mock\\nGET /test?a=b&c=d?\\ntest/GET--a=b&c=d--.mock\\n(This has been introduced to overcome issues in file naming on windows)\\nTo combine custom headers and query parameters, simply add the headers then add the parameters:\\nGET /hello?a=b\\nAuthorization: 12345\\nTests run on travis, but if you wanna run them locally you simply have to run mocha or its verbose cousin ./node_modules/mocha/bin/mocha (if you don't have mocha installed globally).\\nTo run test with debug output, expose DEBUG=true environment variable:\\n$ DEBUG= true  ./node_modules/mocha/bin/mocha\\nOr as npm shortcut:\\n$ DEBUG= true  npm  test\\nReadme\\nKeywords\\n* test\\n* mock\\n* api\\n* webservice\\n* rest\\n* namshi\\nPackage Sidebar\\nInstall\\nnpm i mockserver\\nRepository\\ngithub.com/namshi/mockserver\\nHomepage\\ngithub.com/namshi/mockserver\\nWeekly Downloads\\n7,610\\nVersion\\n3.1.1\\nLicense\\nMIT\\nLast publish\\n7 years ago\\nCollaborators\"\n      ]\n    },\n    {\n      \"url\": \"https://pkg.go.dev/github.com/AntonioSun/mockserver@v1.0.1\",\n      \"title\": \"mockserver command - github.com/AntonioSun/mockserver - Go Packages\",\n      \"publish_date\": null,\n      \"excerpts\": [\n        \"1. Discover Packages\\n2. github.com/AntonioSun/mockserver\\n  Go\\nmockserver\\ncommand module\\nVersion: v1.0.1 Latest Latest Warning\\nThis package is not in the latest version of its module. Go to latest Published: Jan 30, 2022 License: MIT Imports: 10 Imported by: 0\\nMain Versions Licenses Imports Imported By\\nDetails\\nRepository\\ngithub.com/AntonioSun/mockserver\\nLinks\\n* Open Source Insights Logo Open Source Insights\\n  Jump to ...\\n* README\\n* TOC\\n* mockserver - super slim & blazing fast mock server\\n* Run\\n* Verbosity\\n* Sample mock.json file\\n* Build\\n* Download/install binaries\\n* The binary executables\\n* Install Source\\n* Author\\n* Contributors ✨\\n* Documentation\\n* Overview\\n* Source Files\\n  README\\nREADME ¶\\nmockserver\\nAll Contributors\\nMIT License GoDoc Go Report Card Build Status PoweredBy WireFrame\\nmock server to replace the Java/NPM counterpart mockserver\\nTOC\\n* mockserver - super slim & blazing fast mock server\\n* Run\\n* Verbosity\\n* Sample mock.json file\\n* Build\\n* Install Debian/Ubuntu package\\n* Download/install binaries\\n* The binary executables\\n* Install Source\\n* Author\\n* Contributors\\nmockserver - super slim & blazing fast mock server\\nWith defaults -\\n./mockserver\\nDefaults: MS_ADDR=localhost:7070 MS_FILE=mock.json MS_VERBOSE=1\\nWith custom settings -\\nexport MS_ADDR=<YOUR_HOST_AND_PORT> MS_FILE=<MOCK_JSON_FILE_LOCATION>\\nMS_VERBOSE=2 ./mockserver\\nFull list of custom environment settings:\\n* MS_ADDR : Server address (string=\\\"localhost:7070\\\")\\n* MS_COMPRESS : Enable transparent response compression (bool)\\n* MS_FILE : Mock json file location (string=\\\"mock.json\\\")\\n* MS_VERBOSE : Verbose mode (higher numbers increase the verbosity) (int=\\\"1\\\")\\nVerbosity\\nThe default verbosity setting is MS_VERBOSE=1 . It'll print all available paths on program start:\\n$ mockserver\\n] {Addr:localhost:7070 Compress:false File:mock.json Verbose:1}\\n✔ Successfully opened: mock.json\\n✔ Successfully parsed: mock.json\\nAvailable paths:\\n=> /login\\n=> /api/books/234/comments\\n=> /api/books/234\\n=> /api/books\\n=> /api/authors/523\\nStarting server on localhost:7070\\nTo suspense the printing of available paths on program start, set MS_VERBOSE=0 :\\n$ MS_VERBOSE=0 mockserver\\n✔ Successfully opened: mock.json\\n✔ Successfully parsed: mock.json\\nStarting server on localhost:7070\\n^C\\nWhen verbosity is 2 , it'll print a log of all requesting paths:\\n$ MS_VERBOSE=2 mockserver\\nSample mock.json file\\nInstall Source\\nTo install the source code instead:\\ngo get -v -u github.com/AntonioSun/mockserver\\nAuthor\\nAntonio SUN\\nPowered by WireFrame PoweredBy WireFrame the one-stop wire-framing solution for Go cli based projects, from init to deploy .\\nContributors ✨\\nThanks goes to these wonderful people ( emoji key ):\\n* AntonioSun\\n* 💻 🤔 🎨 🔣 ⚠️ 🐛 📖 📝 💡 ✅ 🔧 📦 👀 💬 🚧 🚇 | Ananto\\n* 💻 🤔 🎨 🔣 ⚠️ 📖 💡 | smicyk\\n* 🔣 ⚠️\\n  This project follows the all-contributors specification. Contributions of any kind welcome!\\n  Expand ▾ Collapse ▴\\nDocumentation ¶\\nOverview ¶\\nmock server to replace the Java/NPM counterpart mockserver\\nSource Files ¶\\nView all Source files\"\n      ]\n    },\n    {\n      \"url\": \"https://github.com/NationalResearchCorporation\",\n      \"title\": \"NRC Health\",\n      \"publish_date\": null,\n      \"excerpts\": [\n        \"NRC Health has 20 repositories available. Follow their code on GitHub. see our documentation. NRC Health 26 followers http://www.nrchealth. devinfo@nrchealth. Organization: NRC Health (@NationalResearchCorporation) Page: GitHub organization profile URL: https://github.com/NationalResearchCorporation Website: http://www.nrchealth.com/ Top languages: JavaScript, Ruby, HTML, Java Repositories [NationalResearchCorporation/interview](https://github.com/NationalResearchCorporation/interview): PatientWisdom interview example [NationalResearchCorporation/mockserver](https://github.com/NationalResearchCorporation/mockserver): MockServer enables easy mocking of any system you integrate with via HTTP or HTTPS with clients written in Java, JavaScript and Ruby. MockServer also includes a proxy that introspects all proxied traffic including encrypted SSL traffic and supports Port Forwarding, Web Proxying (i.e. HTTP proxy), HTTPS Tunneling Proxying (using HTTP CONNECT) and…\"\n      ]\n    }\n  ],\n  \"warnings\": null,\n  \"metadata\": null,\n  \"session_id\": \"f9f8899be4a5474aa75b0ad118da6da0\"\n}"
+      }
+    ],
+    "structuredContent": {
+      "search_id": "search_ef9cdd7da2a46cca21cc58199029d24c",
+      "results": [
+        {
+          "url": "https://github.com/mock-server/mockserver/tree/master/docs",
+          "title": "mockserver/docs at master · mock-server/mockserver · GitHub",
+          "publish_date": null,
+          "excerpts": [
+            "mockserver/docs at master · mock-server/mockserver · GitHub\nMockServer Documentation Comprehensive internal documentation for the MockServer project covering code architecture, infrastructure, build system, CI/CD, and deployment."
+          ]
+        },
+        {
+          "url": "https://github.com/mock-server/mockserver",
+          "title": "GitHub - mock-server/mockserver: MockServer enables easy mocking of any system you integrate with via HTTP or HTTPS with clients written in Java, JavaScript and Ruby.  MockServer also includes a proxy that introspects all proxied traffic including encrypted SSL traffic and supports Port Forwarding, Web Proxying (i.e. HTTP proxy), HTTPS Tunneling Proxying (using HTTP CONNECT) and SOCKS Proxying (i.e. dynamic port forwarding). · GitHub",
+          "publish_date": null,
+          "excerpts": [
+            "mock-server/mockserver\n* Page: GitHub repository\n* URL: https://github.com/mock-server/mockserver\n* Description: MockServer enables easy mocking of any system you integrate with via HTTP or HTTPS with clients written in Java, JavaScript and Ruby. MockServer also includes a proxy that introspects all proxied ...\n* Stars: 4,863\n* Forks: 1,099\n* .buildkite/\n* .github/\n* .mvn/wrapper/\n* .run/\n* container_integration_tests/\n* docker/\n* docker_build/\n* helm/\n* jekyll-www.mock-server.com/\n* mockserver-client-java/\n* mockserver-core/\n* mockserver-examples/\n* mockserver-integration-testing/\n* mockserver-junit-jupiter/\n* mockserver-junit-rule/\n* mockserver-netty/\n* mockserver-proxy-war/\n* mockserver-spring-test-listener/\n* mockserver-testing/\n* mockserver-war/\n* scripts/\n* .editorconfig\n* .gitignore\n* CONTRIBUTING.md\n* DEBUGGING.md\n* LICENSE.md\n* README.md\n* SECURITY.md\n* changelog.md\n* checkstyle.xml\n* mockserver.example.properties\n* mvnw\n* mvnw.cmd\n* pom.xml\nREADME.md\nMockServer Tweet Build status GitHub license GitHub stars Trello Backlog Join Slack\nDocumentation\nFor usage guide please see: www.mock-server.com\nChange Log\nPlease see: Change Log\nCommunity\n* Chat | Join Slack\n* Feature Requests | GitHub Issues\n* Issues / Bugs | GitHub Issues\n* Backlog | Trello Backlog\nVersions\nMaven Central mockserver\nMaven Central contains the following MockServer artifacts:\n* mockserver-netty - an HTTP(S) web server that mocks and records requests and responses\n* mockserver-netty:shaded - mockserver-netty (as above) with all dependencies embedded\n* mockserver-war - a deployable WAR for mocking HTTP(S) responses (for any JEE web server)\n* mockserver-proxy-war - a deployable WAR that records requests and responses (for any JEE web server)\n* mockserver-maven-plugin - a maven plugin to start, stop and fork MockServer using maven\n* mockserver-client-java - a Java client to communicate with both the server and the proxy\nIn addition MockServer SNAPSHOT artifacts can also be found on Sonatype .\nNode Module & Grunt Plugin\nNPM Registry contains the following module:\n* mockserver-node - a Node.js module and Grunt plugin to start and stop MockServer mockserver-node\n* mockserver-client-node - a Node.js client for both the MockServer and the proxy mockserver-client-node\nDocker Hub\nDocker Hub contains the following artifacts:\n* MockServer Docker Container - a Docker container containing the Netty MockServer and proxy\nHelm Chart\n* MockServer Helm Chart - a Helm Chart that installs MockServer to a Kubernetes cluster, available versions:\n* 5.15.0\n* 5.14.0\n* 5.13.2\n* 5.13.1\n* 5.13.0\n* 5.12.0\n* 5.11.2\n* 5.11.1\n* 5.11.0\n* ...\nMockServer Clients\n* mockserver-client-ruby mockserver-client - Ruby client for both the MockServer and the proxy\n* mockserver-client-java - a Java client for both the MockServer and the proxy\n* mockserver-client-node - a Node.js and browser client for both the MockServer and the proxy\n* kotest-extensions-kotest - Kotlin Kotest integration with MockServer"
+          ]
+        },
+        {
+          "url": "https://github.com/mock-server",
+          "title": "Mock-Server · GitHub",
+          "publish_date": null,
+          "excerpts": [
+            "Organization: Mock-Server (@mock-server)\n* Page: GitHub organization profile\n* URL: https://github.com/mock-server\n* Website: http://mock-server.com\n* Top languages: JavaScript, Java, Shell, PHP, Ruby, Python\n  MockServer enables easy mocking of any system you integrate with via HTTP or HTTPS - Mock-Server\nRepositories\n* mock-server/mockserver-monorepo: MockServer is an HTTP(S) mock server and proxy for testing that lets you mock APIs, inspect and modify live traffic, and inject failures. It supports HTTP/1.1, HTTP/2, gRPC, WebSockets, TCP and more on a single port, with additional support for HTTP/3, message brokers, and AI/LLM APIs.\n* mock-server/mockserver-testcontainers-php: PHP Testcontainers module for MockServer — read-only mirror of mockserver-testcontainers/php/ from github.com/mock-server/mockserver-monorepo (do not edit here; source lives in the monorepo)\n* mock-server/mockserver-client-php: PHP client for MockServer — read-only mirror of mockserver-client-php/ from github.com/mock-server/mockserver-monorepo (do not edit here; source lives in the monorepo)\n* mock-server/setup-mockserver: GitHub Action to start a MockServer (HTTP(S) mock server & proxy) in CI and wait until ready.\n* mock-server/mockserver-performance-test: Performance Test Suite for MockServer http://mock-server.com\n* mock-server/mockserver-client-ruby: A Ruby client for MockServer project. This client is code generated using the MockServer OpenAPI v3 specification.\n* mock-server/mockserver-client-python: A Python client for MockServer project.\nThis client is code generated using the MockServer OpenAPI v3 specification.\n* mock-server/mockserver-client-node: MockServer javascript client for browsers, Node.js or any grunt build\n* mock-server/mockserver-node: Node.js module and grunt plugin to start and stop MockServer and MockServer Proxy\n* mock-server/mockserver-maven-plugin: A maven plugin to start and stop the MockServer http://www.mock-server.com"
+          ]
+        },
+        {
+          "url": "https://www.mock-server.com/",
+          "title": "MockServer — Mock any HTTP service. Record traffic. Now with MCP for AI assistants.",
+          "publish_date": null,
+          "excerpts": [
+            "MockServer\nStop testing against fragile, unavailable dependencies. Mock, record and proxy any API so your tests are fast, isolated and deterministic.\nHTTP/1.1, HTTP/2, HTTP/3, HTTPS & gRPC — with a built-in MCP server so AI assistants can drive it too.\nFork MockServer on GitHub\nMockServer GitHub Project Join MockServer Slack BuildKite Build Status\nGetting Started\nMockServer is a single, self-hosted tool that mocks and proxies the services your application depends on, so you can develop and test against realistic, controllable behaviour instead of fragile real dependencies. It is free and open-source, runs anywhere, and needs no SaaS account.\nWhy use MockServer?\n* Isolate the system-under-test — replace real dependencies so tests fail only on genuine bugs, not on network flakes or redeployed services.\n* Build against APIs that don't exist yet — mock a service from its contract so teams can work in parallel before it is ready.\nHello from MockServer!\n* I want to… | Start here\n* Write unit tests for a REST service | Getting Started\n* Write Java / JUnit tests with Testcontainers | MockServer & Testcontainers\n* Record and replay real traffic | Record and Replay\n* Generate mocks from an OpenAPI / Swagger spec | Using OpenAPI\n* Mock a GraphQL API | GraphQL Mocking\nHello from MockServer!\n* Serve HTTPS / TLS transparently | HTTPS & TLS\n* Test an AI application that calls an LLM | LLM Response Mocking\n* Cut my LLM / inference bill | LLM Cost Optimisation\n* Inject chaos / test resilience | Chaos Testing\n* Run a load / performance test against an API | Load Injection\nHello from MockServer!\nWhat is MockServer\nOne tool plays three roles for any HTTP, HTTPS or gRPC service you depend on:\nMock\nReturn realistic, controllable responses for any request so your tests stay fast, isolated and deterministic.\nProxy\nHello from MockServer!\nSit in front of a real backend to record and replay traffic, inject chaos, or pause requests at breakpoints.\nVerify\nAssert exactly which requests your system-under-test sent, as part of a test, on mocked or proxied traffic.\nFor any system you integrate with via HTTP or HTTPS MockServer can be used as:\nHello from MockServer!\nBeyond mocking and proxying, the same MockServer instance also lets you:\n* verify that expected requests were (or were not) made — as test assertions\n* record and replay real traffic to reproduce how a system behaves\nHello from MockServer!\n* template dynamic responses with Velocity, Mustache or JavaScript so a mock can react to the incoming request\n* custom matching and response logic via WASM in any language that compiles to WebAssembly\n* detect mock drift be warned when a mock no longer matches the real API\nHello from MockServer!\n* mock LLM and AI-provider APIs including OpenAI, Anthropic, Bedrock & more with realistic token-by-token streaming\nIt mocks far more than REST, and can build mocks from the contracts you already have:\nHello from MockServer!\nChaos engineering & resilience testing"
+          ]
+        },
+        {
+          "url": "https://github.com/mock-server/mockserver-monorepo/blob/master/docs/testing.md",
+          "title": "mockserver-monorepo/docs/testing.md at master · mock-server/mockserver-monorepo · GitHub",
+          "publish_date": null,
+          "excerpts": [
+            "mock-server/mockserver-monorepo — docs/testing.md\n* Page: GitHub code file\n* URL: https://github.com/mock-server/mockserver-monorepo/blob/master/docs/testing.md\n* Repository: mock-server/mockserver-monorepo\n* Path: docs/testing.md\n* Ref: master\n* Lines: 631\nTesting\nOverview\n* Framework | Version | Usage\n* JUnit 4 | 4.13.2 | Primary test framework across almost all modules\n* JUnit Jupiter (JUnit 5) | 5.14.4 | Used exclusively in mockserver-junit-jupiter\n* Mockito Core | 5.23.0 | Mocking framework used in most modules\n* Mockito JUnit Jupiter | 5.23.0 | JUnit 5 Mockito integration (mockserver-junit-jupiter only)\n* Class | Purpose\n* AbstractMockingIntegrationTestBase | Base class with common setup/teardown (MockServerClient, EchoServer, NettyHttpClient)\n* AbstractBasicMockingIntegrationTest | Basic mocking test cases (~50 methods)\n* AbstractExtendedMockingIntegrationTest | Extended mocking with all action types (~123 methods)\nEmbedded Server Infrastructure\nIntegration tests use real embedded servers rather than mocks:\n* mockserver-proxy-war | Tomcat catalina.properties\n* mockserver-junit-jupiter | Mockito mock-maker-inline config\n* mockserver-integration-testing | XML schema\n* Pattern | Count | Details\n* Mega-test methods (>200 lines) | 6 | Largest: shouldHandleInvalidOpenAPIJsonRequest() at 1994 lines in HttpStateTest\n* Excessive mocking (>100 mocks) | 2 | MockServerClientTest (130), HttpActionHandlerTest (109)"
+          ]
+        },
+        {
+          "url": "http://168.138.51.227:8088/mock-server/mockserver-monorepo",
+          "title": "GitHub - mock-server/mockserver-monorepo: MockServer is an HTTP(S) mock server and proxy for testing that lets you mock APIs, inspect and modify live traffic, and inject failures. It supports HTTP/1.1, HTTP/2, gRPC, WebSockets, TCP and more on a single port, with additional support for HTTP/3, message brokers, and AI/LLM APIs. · GitHub",
+          "publish_date": null,
+          "excerpts": [
+            "Repository files navigation\n* README\n* Code of conduct\n* Contributing\n* Apache-2.0 license\n* Security\n  More items\nMockServer Build status GitHub license GitHub stars Artifact Hub MCP Toplist\nMockServer is an HTTP(S) mock server and proxy for testing. It does three things:\n* Mock the APIs your application depends on, so you can develop and test against systems that are unavailable, incomplete, or hard to reproduce.\nBeyond that core: HTTP/3 (QUIC — experimental, on its own UDP port), JSON-RPC for MCP/A2A mocking, AsyncAPI-driven message-broker testing against external Kafka and MQTT brokers, and mocked AI/LLM chat-completion APIs (OpenAI, Anthropic, Gemini, Bedrock, Azure OpenAI, Ollama).\n* Verification — assert which requests were received, in what order, and how many times.\n* Chaos & resilience testing — inject latency, dropped/slow connections and failures to test how your system copes with a misbehaving dependency.\n* LLM / AI mocking — mock chat-completion APIs for OpenAI, Anthropic, Gemini, Bedrock, Azure OpenAI and Ollama (including streaming), plus a built-in MCP server for AI coding assistants.\n* Live dashboard — watch requests, expectations and logs in real time at /mockserver/dashboard .\nGetting started in 60 seconds\nRun MockServer with Docker, then mock an endpoint and call it:\n-> Hello World\nMaven Central contains the following MockServer artifacts under the org.mock-server groupId. Every artifact ships in two forms — -no-dependencies (shaded, zero transitive deps, recommended ) and the plain form (transitive deps declared in the POM, for the rare case where you need to override versions yourself).\nServer:\n-> Hello World\n* mockserver-netty-no-dependencies / mockserver-netty — Netty-based HTTP(S) mock + proxy server (embed in tests or run standalone)\n* mockserver-war — deployable WAR for hosting MockServer in a servlet container (mock mode)\n* mockserver-proxy-war — deployable WAR for hosting MockServer in a servlet container (proxy mode)\n-> Hello World\nJava client:\n* mockserver-client-java-no-dependencies / mockserver-client-java — Java client for the MockServer REST API\nTest framework integrations:\n* mockserver-junit-rule-no-dependencies / mockserver-junit-rule — JUnit 4 @Rule\n-> Hello World\n* mockserver-junit-jupiter-no-dependencies / mockserver-junit-jupiter — JUnit 5 extension ( @MockServerSettings , @MockServerTest )\n* mockserver-spring-test-listener-no-dependencies / mockserver-spring-test-listener — Spring TestExecutionListener\n-> Hello World\n* mockserver-spring-boot-starter — Spring Boot auto-configuration; set mockserver.enabled=true to start MockServer and expose a MockServerClient bean (dev/test)\n* mockserver-integration-testing-no-dependencies / mockserver-integration-testing — shared integration-test helpers\nBuild-tool plugin:\n-> Hello World\nSNAPSHOT builds are published to the Sonatype Central Portal snapshot repository at https://central.sonatype.com/repository/maven-snapshots/org/mock-server/ ."
+          ]
+        },
+        {
+          "url": "https://115.175.65.104:8004/mock-server/mockserver-monorepo",
+          "title": "GitHub - mock-server/mockserver-monorepo: MockServer is an HTTP(S) mock server and proxy for testing that lets you mock APIs, inspect and modify live traffic, and inject failures. It supports HTTP/1.1, HTTP/2, gRPC, WebSockets, TCP and more on a single port, with additional support for HTTP/3, message brokers, and AI/LLM APIs. · GitHub",
+          "publish_date": null,
+          "excerpts": [
+            "Repository files navigation\n* README\n* Code of conduct\n* Contributing\n* Apache-2.0 license\n* Security\n  More items\nMockServer Build status GitHub license GitHub stars Artifact Hub MCP Toplist\nMockServer is an HTTP(S) mock server and proxy for testing. It does three things:\n* Mock the APIs your application depends on, so you can develop and test against systems that are unavailable, incomplete, or hard to reproduce.\nBeyond that core: HTTP/3 (QUIC — experimental, on its own UDP port), JSON-RPC for MCP/A2A mocking, AsyncAPI-driven message-broker testing against external Kafka and MQTT brokers, and mocked AI/LLM chat-completion APIs (OpenAI, Anthropic, Gemini, Bedrock, Azure OpenAI, Ollama).\n* Verification — assert which requests were received, in what order, and how many times.\n* Chaos & resilience testing — inject latency, dropped/slow connections and failures to test how your system copes with a misbehaving dependency.\n3. Call your mock\ncurl http://localhost:1080/hello\n-> Hello World\nMaven Central contains the following MockServer artifacts under the org.mock-server groupId. Every artifact ships in two forms — -no-dependencies (shaded, zero transitive deps, recommended ) and the plain form (transitive deps declared in the POM, for the rare case where you need to override versions yourself).\nServer:\n-> Hello World\n* mockserver-netty-no-dependencies / mockserver-netty — Netty-based HTTP(S) mock + proxy server (embed in tests or run standalone)\n* mockserver-war — deployable WAR for hosting MockServer in a servlet container (mock mode)\n* mockserver-proxy-war — deployable WAR for hosting MockServer in a servlet container (proxy mode)\n-> Hello World\nJava client:\n* mockserver-client-java-no-dependencies / mockserver-client-java — Java client for the MockServer REST API\nTest framework integrations:\n* mockserver-junit-rule-no-dependencies / mockserver-junit-rule — JUnit 4 @Rule\n-> Hello World\n* mockserver-junit-jupiter-no-dependencies / mockserver-junit-jupiter — JUnit 5 extension ( @MockServerSettings , @MockServerTest )\n* mockserver-spring-test-listener-no-dependencies / mockserver-spring-test-listener — Spring TestExecutionListener\n-> Hello World\n* mockserver-spring-boot-starter — Spring Boot auto-configuration; set mockserver.enabled=true to start MockServer and expose a MockServerClient bean (dev/test)\n* mockserver-integration-testing-no-dependencies / mockserver-integration-testing — shared integration-test helpers\nBuild-tool plugin:\n-> Hello World\nSNAPSHOT builds are published to the Sonatype Central Portal snapshot repository at https://central.sonatype.com/repository/maven-snapshots/org/mock-server/ .\n-> Hello World\n* MockServer Helm Chart - installs MockServer into a Kubernetes cluster. The chart is published to the GitHub Container Registry as an OCI artifact (no helm repo add needed):\nhelm upgrade --install --create-namespace --namespace mockserver --version 7.6.0 mockserver oci://ghcr.io/mock-server/charts/mockserver"
+          ]
+        },
+        {
+          "url": "https://www.npmjs.com/package/mockserver",
+          "title": "mockserver - npm",
+          "publish_date": null,
+          "excerpts": [
+            "Build Status\nmockserver is a library that will help you mocking your APIs in a matter of seconds : you simply organize your mocked HTTP responses in a bunch of mock files and it will serve them like they were coming from a real API; in this way you can write your frontends without caring too much whether your backend is really ready or not.\nInstallation\nMockserver can be installed globally if you need to run it as a command:\n$ npm install -g mockserver\n$ mockserver -p 8080 -m test/mocks\nMockserver serving mocks under \"test/mocks\" at http://localhost:8080\nor as a regular NPM module if you need to use it as a library within your code:\nnpm install mockserver\nthen in your test file:\nvar  http  =   require ( ' http ' ) ;\nvar  mockserver  =   require ( ' mockserver ' ) ;\nhttp . createServer ( mockserver ( ' path/to/your/mocks ' ) ) . listen ( 9001 ) ;\nThis will run a simple HTTP webserver, handled by mockserver, on port 9001.\nAt this point you can simply define your first mock: create a file in path/to/your/mocks/example-response called GET.mock :\nHTTP/1.1 200 OK\nContent-Type: application/json; charset=utf-8\n{\n\"Random\": \"content\"\n}\nIf you open your browser at http://localhost:9001/example-response you will see something like this:\nexample output\nAnd it's over: now you can start writing your frontends without having to wait for your APIs to be ready, or without having to spend too much time mocking them, as mockserver lets you do it in seconds.\nVerbosity\nBy default mockserver is running in verbose mode: log messages are pushed to stdout . That will help to distinguish, which mock file matches best the request.\n$ mockserver -p 8080 -m  ' ./mocks '\nMockserver serving mocks {verbose: true } under  \" ./mocks \"  at http://localhost:8080\nReading from ./mocks/api/GET--a=b.mock file: Not matched\nQuery string parameters and POST body\nIn order to support query string parameters in the mocked files, replace all occurrences of ? with -- , then append the entire string to the end of the file.\nGET /hello?a=b\nhello/GET--a=b.mock\nGET /test?a=b&c=d?\ntest/GET--a=b&c=d--.mock\n(This has been introduced to overcome issues in file naming on windows)\nTo combine custom headers and query parameters, simply add the headers then add the parameters:\nGET /hello?a=b\nAuthorization: 12345\nTests run on travis, but if you wanna run them locally you simply have to run mocha or its verbose cousin ./node_modules/mocha/bin/mocha (if you don't have mocha installed globally).\nTo run test with debug output, expose DEBUG=true environment variable:\n$ DEBUG= true  ./node_modules/mocha/bin/mocha\nOr as npm shortcut:\n$ DEBUG= true  npm  test\nReadme\nKeywords\n* test\n* mock\n* api\n* webservice\n* rest\n* namshi\nPackage Sidebar\nInstall\nnpm i mockserver\nRepository\ngithub.com/namshi/mockserver\nHomepage\ngithub.com/namshi/mockserver\nWeekly Downloads\n7,610\nVersion\n3.1.1\nLicense\nMIT\nLast publish\n7 years ago\nCollaborators"
+          ]
+        },
+        {
+          "url": "https://pkg.go.dev/github.com/AntonioSun/mockserver@v1.0.1",
+          "title": "mockserver command - github.com/AntonioSun/mockserver - Go Packages",
+          "publish_date": null,
+          "excerpts": [
+            "1. Discover Packages\n2. github.com/AntonioSun/mockserver\n  Go\nmockserver\ncommand module\nVersion: v1.0.1 Latest Latest Warning\nThis package is not in the latest version of its module. Go to latest Published: Jan 30, 2022 License: MIT Imports: 10 Imported by: 0\nMain Versions Licenses Imports Imported By\nDetails\nRepository\ngithub.com/AntonioSun/mockserver\nLinks\n* Open Source Insights Logo Open Source Insights\n  Jump to ...\n* README\n* TOC\n* mockserver - super slim & blazing fast mock server\n* Run\n* Verbosity\n* Sample mock.json file\n* Build\n* Download/install binaries\n* The binary executables\n* Install Source\n* Author\n* Contributors ✨\n* Documentation\n* Overview\n* Source Files\n  README\nREADME ¶\nmockserver\nAll Contributors\nMIT License GoDoc Go Report Card Build Status PoweredBy WireFrame\nmock server to replace the Java/NPM counterpart mockserver\nTOC\n* mockserver - super slim & blazing fast mock server\n* Run\n* Verbosity\n* Sample mock.json file\n* Build\n* Install Debian/Ubuntu package\n* Download/install binaries\n* The binary executables\n* Install Source\n* Author\n* Contributors\nmockserver - super slim & blazing fast mock server\nWith defaults -\n./mockserver\nDefaults: MS_ADDR=localhost:7070 MS_FILE=mock.json MS_VERBOSE=1\nWith custom settings -\nexport MS_ADDR=<YOUR_HOST_AND_PORT> MS_FILE=<MOCK_JSON_FILE_LOCATION>\nMS_VERBOSE=2 ./mockserver\nFull list of custom environment settings:\n* MS_ADDR : Server address (string=\"localhost:7070\")\n* MS_COMPRESS : Enable transparent response compression (bool)\n* MS_FILE : Mock json file location (string=\"mock.json\")\n* MS_VERBOSE : Verbose mode (higher numbers increase the verbosity) (int=\"1\")\nVerbosity\nThe default verbosity setting is MS_VERBOSE=1 . It'll print all available paths on program start:\n$ mockserver\n] {Addr:localhost:7070 Compress:false File:mock.json Verbose:1}\n✔ Successfully opened: mock.json\n✔ Successfully parsed: mock.json\nAvailable paths:\n=> /login\n=> /api/books/234/comments\n=> /api/books/234\n=> /api/books\n=> /api/authors/523\nStarting server on localhost:7070\nTo suspense the printing of available paths on program start, set MS_VERBOSE=0 :\n$ MS_VERBOSE=0 mockserver\n✔ Successfully opened: mock.json\n✔ Successfully parsed: mock.json\nStarting server on localhost:7070\n^C\nWhen verbosity is 2 , it'll print a log of all requesting paths:\n$ MS_VERBOSE=2 mockserver\nSample mock.json file\nInstall Source\nTo install the source code instead:\ngo get -v -u github.com/AntonioSun/mockserver\nAuthor\nAntonio SUN\nPowered by WireFrame PoweredBy WireFrame the one-stop wire-framing solution for Go cli based projects, from init to deploy .\nContributors ✨\nThanks goes to these wonderful people ( emoji key ):\n* AntonioSun\n* 💻 🤔 🎨 🔣 ⚠️ 🐛 📖 📝 💡 ✅ 🔧 📦 👀 💬 🚧 🚇 | Ananto\n* 💻 🤔 🎨 🔣 ⚠️ 📖 💡 | smicyk\n* 🔣 ⚠️\n  This project follows the all-contributors specification. Contributions of any kind welcome!\n  Expand ▾ Collapse ▴\nDocumentation ¶\nOverview ¶\nmock server to replace the Java/NPM counterpart mockserver\nSource Files ¶\nView all Source files"
+          ]
+        },
+        {
+          "url": "https://github.com/NationalResearchCorporation",
+          "title": "NRC Health",
+          "publish_date": null,
+          "excerpts": [
+            "NRC Health has 20 repositories available. Follow their code on GitHub. see our documentation. NRC Health 26 followers http://www.nrchealth. devinfo@nrchealth. Organization: NRC Health (@NationalResearchCorporation) Page: GitHub organization profile URL: https://github.com/NationalResearchCorporation Website: http://www.nrchealth.com/ Top languages: JavaScript, Ruby, HTML, Java Repositories [NationalResearchCorporation/interview](https://github.com/NationalResearchCorporation/interview): PatientWisdom interview example [NationalResearchCorporation/mockserver](https://github.com/NationalResearchCorporation/mockserver): MockServer enables easy mocking of any system you integrate with via HTTP or HTTPS with clients written in Java, JavaScript and Ruby. MockServer also includes a proxy that introspects all proxied traffic including encrypted SSL traffic and supports Port Forwarding, Web Proxying (i.e. HTTP proxy), HTTPS Tunneling Proxying (using HTTP CONNECT) and…"
+          ]
+        }
+      ],
+      "warnings": null,
+      "metadata": null,
+      "session_id": "f9f8899be4a5474aa75b0ad118da6da0"
+    },
+    "isError": false
+  },
+  "fetch": {
+    "_meta": {
+      "parallel/usage": [
+        {
+          "name": "sku_extract_excerpts",
+          "count": 1,
+          "cost_usd": 0.001
+        }
+      ]
+    },
+    "content": [
+      {
+        "type": "text",
+        "text": "{\n  \"extract_id\": \"extract_e927f1d615aa11cd501d85ca3ec52e8e\",\n  \"results\": [\n    {\n      \"url\": \"https://www.mock-server.com\",\n      \"title\": \"MockServer — Mock any HTTP service. Record traffic. Now with MCP for AI assistants.\",\n      \"publish_date\": \"2026-09-15\",\n      \"excerpts\": [\n        \"# MockServer\\n## Getting Started\\nMockServer is a single, self-hosted tool that mocks and proxies the services your application depends on, so you can develop and test against realistic, controllable behaviour instead of fragile real dependencies. It is free and open-source, runs anywhere, and needs no SaaS account.\\n\\n...\\n\\n## What is MockServer\\nOne tool plays three roles for any HTTP, HTTPS or gRPC service you depend on:\\n\\n### [Mock](https://www.mock-server.com/mock_server/getting_started.html)\\nReturn realistic, controllable responses for any request so your tests stay fast, isolated and deterministic.\\n\\n### [Proxy](https://www.mock-server.com/proxy/getting_started.html)\\nSit in front of a real backend to record and replay traffic, inject chaos, or pause requests at breakpoints.\\n\\n...\\n\\n### [Verify](https://www.mock-server.com/mock_server/verification.html)\\n* **[verify](https://www.mock-server.com/mock_server/verification.html)** that expected requests were (or were not) made — as test assertions\\n* **[record and replay](https://www.mock-server.com/proxy/record_and_replay.html)** real traffic to reproduce how a system behaves\\n* **[pause and modify requests or responses using breakpoints](https://www.mock-server.com/mock_server/interactive_breakpoints.html)** intercept a matched or proxied request in the dashboard to inspect and modify it (or its response) live, then continue, step, or fail it\\n* **[inject chaos and faults](https://www.mock-server.com/mock_server/chaos_testing.html)** introduce chaos as latency, errors, dropped connections & malformed responses — HTTP, gRPC and TCP fault injection, plus [Kubernetes](https://www.mock-server.com/mock_server/chaos_testing_kubernetes.html) and [service-mesh](https://www.mock-server.com/mock_server/service_mesh.html) chaos\\n* **[drive load and performance tests](https://www.mock-server.com/mock_server/load_injection.html)** with built-in, declarative [Load Scenarios](https://www.mock-server.com/mock_server/load_injection.html) — ramp virtual users or arrival rate, vary data across iterations, and assert SLO verdicts over the generated traffic, with no external load tool required\\n* **[template dynamic responses](https://www.mock-server.com/mock_server/response_templates.html)** with Velocity, Mustache or JavaScript so a mock can react to the incoming request\\n* **[custom matching and response logic via WASM](https://www.mock-server.com/mock_server/wasm_rules.html)** in any language that compiles to WebAssembly\\n* **[detect mock drift](https://www.mock-server.com/mock_server/drift_detection.html)** be warned when a mock no longer matches the real API\\n* **[mock LLM and AI-provider APIs](https://www.mock-server.com/mock_server/llm_response_mocking.html)** including OpenAI, Anthropic, Bedrock & more with realistic token-by-token streaming\\nIt mocks far more than REST, and can build mocks from the contracts you already have:\\n\\n...\\n\\n* generate mocks and validate traffic directly from an [OpenAPI / Swagger specification](https://www.mock-server.com/mock_server/using_openapi.html)\\n* bootstrap mocks by [importing recorded traffic from a browser HAR or a Postman collection](https://www.mock-server.com/mock_server/importing_expectations.html)\\n* serve HTTP/1.1, HTTP/2 (h2 and h2c) and HTTPS / TLS on one port — auto-detected from each connection — plus SOCKS; experimental [HTTP/3 (QUIC)](https://www.mock-server.com/mock_server/http3.html) runs on its own separate UDP port\\n\\n...\\n\\n* a built-in **[web dashboard](https://www.mock-server.com/mock_server/mockserver_ui.html)** to watch live logs, active expectations and recorded traffic, and to drive breakpoints and chaos\\n* **[Prometheus metrics and OpenTelemetry tracing](https://www.mock-server.com/mock_server/observability.html)** for visibility in CI and shared environments\\n* run via [Docker, an executable JAR, Helm / Kubernetes, Testcontainers, or a JVM-less binary](https://www.mock-server.com/mock_server/running_mock_server.html) — or scale to a shared, clustered [centralised deployment](https://www.mock-server.com/mock_server/centralized_deployment.html) for whole teams and CI pipelines\\n* drive it from clients for [Java, JavaScript, Python, Ruby, Go, .NET, Rust and PHP](https://www.mock-server.com/mock_server/mockserver_clients.html) , the command line, or a plain REST API\\nMockServer is also **AI-native** : every instance ships a built-in [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server at `/mockserver/mcp` with no extra configuration, and the documentation is published in machine-readable form for LLMs. In practice this means:\\n* AI assistants (Claude Code, Cursor, Windsurf, Cline, OpenCode) can [connect over MCP](https://www.mock-server.com/mock_server/ai_mcp_setup.html) to create expectations, verify requests, retrieve recorded traffic, and debug mismatches — see [MCP tools](https://www.mock-server.com/mock_server/ai_mcp_tools.html)\\n\\n...\\n\\nSee AI & MCP Integration below for the full list of AI capabilities.\\nWhen MockServer receives a request it matches the request against active **expectations** that have been configured. Then, if no matches are found, it proxies the request if appropriate; otherwise a 404 is returned.\\nFor each request received the following steps happen:\\n1. find matching expectation and perform action\\n2. if no matching expectation proxy request\\n3. if not a proxy request return 404\\nAn **expectation** defines the **action** that is taken, for example, a response could be returned.\\nMockServer supports the follow **actions** :\\n* **return a \\\"mock\\\" [response](https://www.mock-server.com/mock_server/creating_expectations.html)** when a request matches an [expectation](https://www.mock-server.com/mock_server/creating_expectations.html) ; including returning **[an LLM or AI-provider API](https://www.mock-server.com/mock_server/llm_response_mocking.html)** (OpenAI, Anthropic, Bedrock, etc) realistic token-by-token streamed responses\\nResponse Action Expectation\\n* **[forward](https://www.mock-server.com/mock_server/creating_expectations.html) a request** when the request matches an [expectation](https://www.mock-server.com/mock_server/creating_expectations.html) ; including injecting **[chaos and faults](https://www.mock-server.com/mock_server/chaos_testing.html)** — latency, error responses, dropped connections and malformed responses\\nForward Action Expectation\\n* **execute a [callback](https://www.mock-server.com/mock_server/creating_expectations.html)** when a request matches an [expectation](https://www.mock-server.com/mock_server/creating_expectations.html) , allowing the response to be created dynamically\\nCallback Action Expectation\\n* **return an [invalid response](https://www.mock-server.com/mock_server/creating_expectations.html)** or close the connection when a request matches an [expectation](https://www.mock-server.com/mock_server/creating_expectations.html)\\nError Action Expectation\\n* **[verify](https://www.mock-server.com/mock_server/verification.html) requests** have been sent (i.e. as a test assertion)\\nVerification\\n\\n...\\n\\n* **[inject chaos and faults](https://www.mock-server.com/mock_server/chaos_testing.html)** — latency, error responses, dropped connections and malformed responses — when a request matches an [expectation](https://www.mock-server.com/mock_server/creating_expectations.html) or is proxied\\nChaos / Fault Injection Action\\n\\n...\\n\\n### Chaos engineering & resilience testing\\n* **latency** — fixed or random delays before a response, to exercise timeouts, retries and back-pressure\\n* **error responses** — return 5xx (or any) status codes, or a configurable rate of errors across requests\\n* **dropped & reset connections** — close the socket before, during or after the response to simulate network faults\\n* **malformed responses** — truncated bodies, bad framing and protocol-level corruption\\nFaults work for **HTTP, gRPC and TCP** , on both mocked and proxied traffic, and can be applied per expectation or as a global [chaos experiment](https://www.mock-server.com/mock_server/chaos_testing.html) — including [scheduled experiments with an automatic dead-man's-switch halt](https://www.mock-server.com/mock_server/chaos_testing_orchestrators.html) , and fleet-wide chaos for\\n\\n...\\n\\n**Injecting chaos into proxied / forwarded real traffic** — MockServer can sit in front of a real backend and degrade the responses it relays. HTTP-level faults reach proxied traffic through three mechanisms:\\n* **[Forwarding expectation with a chaos clause](https://www.mock-server.com/mock_server/chaos_testing.html)** — attach a `chaos` block to an `httpForward` expectation. The expectation forwards to the real upstream; MockServer applies the chaos profile to the upstream response before returning it to the caller.\\nA catch-all forward expectation (match everything, forward to the real backend, inject faults) is the canonical \\\"misbehaving upstream\\\" pattern.\\n* **[Service-scoped chaos](https://www.mock-server.com/mock_server/chaos_testing.html)** — register a chaos profile for an upstream host with a single `PUT /mockserver/serviceChaos` call. MockServer applies it to all matched forwards to that host without touching any expectation.\\nAn optional `ttlMillis` auto-reverts the fault after a fixed window. Useful for live-patching a running deployment.\\n* **[TCP-layer chaos](https://www.mock-server.com/mock_server/chaos_testing.html)** — `PUT /mockserver/tcpChaos` registers connection-level faults (drop, reset, bandwidth throttle, latency) that operate before HTTP is parsed, so they affect all traffic on a connection including proxied responses.\\n\\n...\\n\\n## Proxying with MockServer\\n* **[proxy](https://www.mock-server.com/proxy/getting_started.html) all requests** using any of the following proxying methods:\\n+ Port Forwarding\\n+ Web Proxying (i.e. HTTP proxy)\\n+ SOCKS Proxying (i.e. dynamic port forwarding)\\n* **[verify](https://www.mock-server.com/proxy/verification.html) proxied requests** have been sent (i.e. in a test assertion)\\n* **[record](https://www.mock-server.com/proxy/record_and_replay.html) proxied requests and responses** to analyse how a system behaves\\n* **[pause proxied requests at breakpoints](https://www.mock-server.com/mock_server/interactive_breakpoints.html)** to inspect and modify the request or response in-flight, before it is forwarded upstream or returned to the client\\n* **[inject chaos and faults](https://www.mock-server.com/mock_server/chaos_testing.html) into proxied traffic** — latency, errors, dropped connections — to test how your system copes with a misbehaving upstream\\n\\n...\\n\\n* **Port Forwarding**\\n+ all requests are forwarded to a single hostname or IP and port\\n+ to proxy requests the **HTTP client** should [use the hostname and port of MockServer](https://www.mock-server.com/proxy/configuring_sut.html)\\n* **Web Proxying** (i.e. HTTP proxy)\\n+ each request is forwarded dynamically using its Host header\\n+ to proxy requests the **HTTP client** should [be configured to use an HTTP Proxy](https://www.mock-server.com/proxy/configuring_sut.html)\\n* **Secure Web Proxying** (i.e. HTTPS tunneling proxying)\\n+ requests are forwarded using a CONNECT request that sets up an HTTP tunnel\\n+ an SSL certificate is auto-generated allowing encrypted HTTPS traffic to be recorded transparently\\n+ to proxy requests the **HTTP client** should [be configured to use an HTTP Proxy](https://www.mock-server.com/proxy/configuring_sut.html)\\n* **SOCKS Proxying** (i.e. dynamic port forwarding)\\n+ requests are forwarded using a SOCK CONNECT CMD request that established a socket tunnel\\n+ if the traffic is encrypted an SSL certificate is auto-generated allowing SSL traffic to be recorded transparently\\n+ to proxy requests the **operating system (or JVM)** should [be configured to use an HTTP Proxy](https://www.mock-server.com/proxy/configuring_sut.html)\\n* **SSL & Certificates**\\n+ all SSL traffic is handled transparently by auto-generating an appropriate SSL certificate\\n+ generated certificates use a single [MockServer root CA certificate](https://github.com/mock-server/mockserver-monorepo/blob/master/mockserver/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem) enabling the root certificate to be [easily imported](https://www.mock-server.com/mock_server/HTTPS_TLS.html)\\n* **Port Unification**\\n+ to simplify configuration all protocols (i.e.\\nHTTP, HTTPS / TLS, SOCKS, etc) are supported on the same port\\n+ the protocol is detected dynamically by MockServer\\n* **Simultaneous Proxying & Mocking**\\n+ if MockServer is being used as a proxy **expectations** can also be created\\n+ when a request is received it is first matched against active **expectations** that have been configured\\n+ if an **expectation** is matched its **action** will be performed instead of proxying the request\\n\\n## AI & MCP Integration\\nMockServer is built to be **AI-native** . A built-in [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server lets AI coding assistants drive the mock server in natural language, and an OpenAPI spec provides a fallback for tools that don't yet speak MCP.\\n\\n...\\n\\n* **[MCP Setup](https://www.mock-server.com/mock_server/ai_mcp_setup.html)** — connect Claude Code, Cursor, Windsurf, Cline, or OpenCode to a running MockServer at `http://localhost:1080/mockserver/mcp` over the MCP Streamable HTTP transport\\n\\n...\\n\\n* **[OpenAPI Fallback for AI](https://www.mock-server.com/mock_server/ai_openapi.html)** — use MockServer's [OpenAPI spec](https://www.mock-server.com/mockserver-openapi.yaml) with AI tools that don't yet support MCP\\n\\n...\\n\\nThe MCP endpoint requires **no extra configuration** — start MockServer and the AI surface is on the same port:\\n```\\ndocker run -d --rm -p 1080:1080 mockserver/mockserver\\n# MCP endpoint immediately available at http://localhost:1080/mockserver/mcp\\n```\\n\\n...\\n\\n## Why use MockServer\\n+ easily set up mock responses independently for each test to ensure test data is encapsulated with each test. Avoid sharing data between tests that is difficult to manage and maintain and risks tests infecting each other\\n+ create test assertions that verify the requests the system-under-test has sent\\n* de-coupling development\\n+ start working against a service API before the service is available.\\n\\n...\\n\\n+ verify your system copes when its dependencies misbehave by [injecting chaos and faults](https://www.mock-server.com/mock_server/chaos_testing.html) — latency, errors, dropped connections and malformed responses (HTTP, gRPC and TCP) — so failure modes are tested deliberately rather than discovered in production\\n* interactive debugging\\n+ set [interactive breakpoints](https://www.mock-server.com/mock_server/interactive_breakpoints.html) to pause a matched or proxied request in the dashboard, inspect and modify the request or response live, then continue — useful for reproducing edge cases and stepping through how the system-under-test reacts\\n* isolate single service\\n\\n...\\n\\n## Why use MockServer as a proxy\\nMockServer allows you to record requests from the system-under-test, or to analyse an existing system by recording its outbound requests.\\nThis is useful in the following scenarios:\\n* testing\\n+ create test assertions that verify the requests the system-under-test has been sent, without needing to mock any requests\\n* analyse existing system\\n+ record all outbound requests so it is possible to analyse and understand what outbound requests an existing system is making\\n* debug HTTP interactions\\n+ log all outbound requests so it is possible to visualise all interactions (for example from a browser) to external services.\\n\\n...\\n\\n**Recording Requests & Analysing Behaviour**\\nMockServer can record all proxied requests, as follows:\\nRecording service requests with MockServer Proxy\\n**Verifying Requests**\\nMockServer can verify proxied service requests, as follows:\\n\\n...\\n\\nMockServer records the responses returned when it proxies requests, so a test can [verify the responses](https://www.mock-server.com/mock_server/verification.html) received using request matchers:\\nVerifying service responses with MockServer Proxy\"\n      ],\n      \"full_content\": null\n    }\n  ],\n  \"errors\": [],\n  \"warnings\": null,\n  \"metadata\": null,\n  \"session_id\": \"f9f8899be4a5474aa75b0ad118da6da0\"\n}"
+      }
+    ],
+    "structuredContent": {
+      "extract_id": "extract_e927f1d615aa11cd501d85ca3ec52e8e",
+      "results": [
+        {
+          "url": "https://www.mock-server.com",
+          "title": "MockServer — Mock any HTTP service. Record traffic. Now with MCP for AI assistants.",
+          "publish_date": "2026-09-15",
+          "excerpts": [
+            "# MockServer\n## Getting Started\nMockServer is a single, self-hosted tool that mocks and proxies the services your application depends on, so you can develop and test against realistic, controllable behaviour instead of fragile real dependencies. It is free and open-source, runs anywhere, and needs no SaaS account.\n\n...\n\n## What is MockServer\nOne tool plays three roles for any HTTP, HTTPS or gRPC service you depend on:\n\n### [Mock](https://www.mock-server.com/mock_server/getting_started.html)\nReturn realistic, controllable responses for any request so your tests stay fast, isolated and deterministic.\n\n### [Proxy](https://www.mock-server.com/proxy/getting_started.html)\nSit in front of a real backend to record and replay traffic, inject chaos, or pause requests at breakpoints.\n\n...\n\n### [Verify](https://www.mock-server.com/mock_server/verification.html)\n* **[verify](https://www.mock-server.com/mock_server/verification.html)** that expected requests were (or were not) made — as test assertions\n* **[record and replay](https://www.mock-server.com/proxy/record_and_replay.html)** real traffic to reproduce how a system behaves\n* **[pause and modify requests or responses using breakpoints](https://www.mock-server.com/mock_server/interactive_breakpoints.html)** intercept a matched or proxied request in the dashboard to inspect and modify it (or its response) live, then continue, step, or fail it\n* **[inject chaos and faults](https://www.mock-server.com/mock_server/chaos_testing.html)** introduce chaos as latency, errors, dropped connections & malformed responses — HTTP, gRPC and TCP fault injection, plus [Kubernetes](https://www.mock-server.com/mock_server/chaos_testing_kubernetes.html) and [service-mesh](https://www.mock-server.com/mock_server/service_mesh.html) chaos\n* **[drive load and performance tests](https://www.mock-server.com/mock_server/load_injection.html)** with built-in, declarative [Load Scenarios](https://www.mock-server.com/mock_server/load_injection.html) — ramp virtual users or arrival rate, vary data across iterations, and assert SLO verdicts over the generated traffic, with no external load tool required\n* **[template dynamic responses](https://www.mock-server.com/mock_server/response_templates.html)** with Velocity, Mustache or JavaScript so a mock can react to the incoming request\n* **[custom matching and response logic via WASM](https://www.mock-server.com/mock_server/wasm_rules.html)** in any language that compiles to WebAssembly\n* **[detect mock drift](https://www.mock-server.com/mock_server/drift_detection.html)** be warned when a mock no longer matches the real API\n* **[mock LLM and AI-provider APIs](https://www.mock-server.com/mock_server/llm_response_mocking.html)** including OpenAI, Anthropic, Bedrock & more with realistic token-by-token streaming\nIt mocks far more than REST, and can build mocks from the contracts you already have:\n\n...\n\n* generate mocks and validate traffic directly from an [OpenAPI / Swagger specification](https://www.mock-server.com/mock_server/using_openapi.html)\n* bootstrap mocks by [importing recorded traffic from a browser HAR or a Postman collection](https://www.mock-server.com/mock_server/importing_expectations.html)\n* serve HTTP/1.1, HTTP/2 (h2 and h2c) and HTTPS / TLS on one port — auto-detected from each connection — plus SOCKS; experimental [HTTP/3 (QUIC)](https://www.mock-server.com/mock_server/http3.html) runs on its own separate UDP port\n\n...\n\n* a built-in **[web dashboard](https://www.mock-server.com/mock_server/mockserver_ui.html)** to watch live logs, active expectations and recorded traffic, and to drive breakpoints and chaos\n* **[Prometheus metrics and OpenTelemetry tracing](https://www.mock-server.com/mock_server/observability.html)** for visibility in CI and shared environments\n* run via [Docker, an executable JAR, Helm / Kubernetes, Testcontainers, or a JVM-less binary](https://www.mock-server.com/mock_server/running_mock_server.html) — or scale to a shared, clustered [centralised deployment](https://www.mock-server.com/mock_server/centralized_deployment.html) for whole teams and CI pipelines\n* drive it from clients for [Java, JavaScript, Python, Ruby, Go, .NET, Rust and PHP](https://www.mock-server.com/mock_server/mockserver_clients.html) , the command line, or a plain REST API\nMockServer is also **AI-native** : every instance ships a built-in [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server at `/mockserver/mcp` with no extra configuration, and the documentation is published in machine-readable form for LLMs. In practice this means:\n* AI assistants (Claude Code, Cursor, Windsurf, Cline, OpenCode) can [connect over MCP](https://www.mock-server.com/mock_server/ai_mcp_setup.html) to create expectations, verify requests, retrieve recorded traffic, and debug mismatches — see [MCP tools](https://www.mock-server.com/mock_server/ai_mcp_tools.html)\n\n...\n\nSee AI & MCP Integration below for the full list of AI capabilities.\nWhen MockServer receives a request it matches the request against active **expectations** that have been configured. Then, if no matches are found, it proxies the request if appropriate; otherwise a 404 is returned.\nFor each request received the following steps happen:\n1. find matching expectation and perform action\n2. if no matching expectation proxy request\n3. if not a proxy request return 404\nAn **expectation** defines the **action** that is taken, for example, a response could be returned.\nMockServer supports the follow **actions** :\n* **return a \"mock\" [response](https://www.mock-server.com/mock_server/creating_expectations.html)** when a request matches an [expectation](https://www.mock-server.com/mock_server/creating_expectations.html) ; including returning **[an LLM or AI-provider API](https://www.mock-server.com/mock_server/llm_response_mocking.html)** (OpenAI, Anthropic, Bedrock, etc) realistic token-by-token streamed responses\nResponse Action Expectation\n* **[forward](https://www.mock-server.com/mock_server/creating_expectations.html) a request** when the request matches an [expectation](https://www.mock-server.com/mock_server/creating_expectations.html) ; including injecting **[chaos and faults](https://www.mock-server.com/mock_server/chaos_testing.html)** — latency, error responses, dropped connections and malformed responses\nForward Action Expectation\n* **execute a [callback](https://www.mock-server.com/mock_server/creating_expectations.html)** when a request matches an [expectation](https://www.mock-server.com/mock_server/creating_expectations.html) , allowing the response to be created dynamically\nCallback Action Expectation\n* **return an [invalid response](https://www.mock-server.com/mock_server/creating_expectations.html)** or close the connection when a request matches an [expectation](https://www.mock-server.com/mock_server/creating_expectations.html)\nError Action Expectation\n* **[verify](https://www.mock-server.com/mock_server/verification.html) requests** have been sent (i.e. as a test assertion)\nVerification\n\n...\n\n* **[inject chaos and faults](https://www.mock-server.com/mock_server/chaos_testing.html)** — latency, error responses, dropped connections and malformed responses — when a request matches an [expectation](https://www.mock-server.com/mock_server/creating_expectations.html) or is proxied\nChaos / Fault Injection Action\n\n...\n\n### Chaos engineering & resilience testing\n* **latency** — fixed or random delays before a response, to exercise timeouts, retries and back-pressure\n* **error responses** — return 5xx (or any) status codes, or a configurable rate of errors across requests\n* **dropped & reset connections** — close the socket before, during or after the response to simulate network faults\n* **malformed responses** — truncated bodies, bad framing and protocol-level corruption\nFaults work for **HTTP, gRPC and TCP** , on both mocked and proxied traffic, and can be applied per expectation or as a global [chaos experiment](https://www.mock-server.com/mock_server/chaos_testing.html) — including [scheduled experiments with an automatic dead-man's-switch halt](https://www.mock-server.com/mock_server/chaos_testing_orchestrators.html) , and fleet-wide chaos for\n\n...\n\n**Injecting chaos into proxied / forwarded real traffic** — MockServer can sit in front of a real backend and degrade the responses it relays. HTTP-level faults reach proxied traffic through three mechanisms:\n* **[Forwarding expectation with a chaos clause](https://www.mock-server.com/mock_server/chaos_testing.html)** — attach a `chaos` block to an `httpForward` expectation. The expectation forwards to the real upstream; MockServer applies the chaos profile to the upstream response before returning it to the caller.\nA catch-all forward expectation (match everything, forward to the real backend, inject faults) is the canonical \"misbehaving upstream\" pattern.\n* **[Service-scoped chaos](https://www.mock-server.com/mock_server/chaos_testing.html)** — register a chaos profile for an upstream host with a single `PUT /mockserver/serviceChaos` call. MockServer applies it to all matched forwards to that host without touching any expectation.\nAn optional `ttlMillis` auto-reverts the fault after a fixed window. Useful for live-patching a running deployment.\n* **[TCP-layer chaos](https://www.mock-server.com/mock_server/chaos_testing.html)** — `PUT /mockserver/tcpChaos` registers connection-level faults (drop, reset, bandwidth throttle, latency) that operate before HTTP is parsed, so they affect all traffic on a connection including proxied responses.\n\n...\n\n## Proxying with MockServer\n* **[proxy](https://www.mock-server.com/proxy/getting_started.html) all requests** using any of the following proxying methods:\n+ Port Forwarding\n+ Web Proxying (i.e. HTTP proxy)\n+ SOCKS Proxying (i.e. dynamic port forwarding)\n* **[verify](https://www.mock-server.com/proxy/verification.html) proxied requests** have been sent (i.e. in a test assertion)\n* **[record](https://www.mock-server.com/proxy/record_and_replay.html) proxied requests and responses** to analyse how a system behaves\n* **[pause proxied requests at breakpoints](https://www.mock-server.com/mock_server/interactive_breakpoints.html)** to inspect and modify the request or response in-flight, before it is forwarded upstream or returned to the client\n* **[inject chaos and faults](https://www.mock-server.com/mock_server/chaos_testing.html) into proxied traffic** — latency, errors, dropped connections — to test how your system copes with a misbehaving upstream\n\n...\n\n* **Port Forwarding**\n+ all requests are forwarded to a single hostname or IP and port\n+ to proxy requests the **HTTP client** should [use the hostname and port of MockServer](https://www.mock-server.com/proxy/configuring_sut.html)\n* **Web Proxying** (i.e. HTTP proxy)\n+ each request is forwarded dynamically using its Host header\n+ to proxy requests the **HTTP client** should [be configured to use an HTTP Proxy](https://www.mock-server.com/proxy/configuring_sut.html)\n* **Secure Web Proxying** (i.e. HTTPS tunneling proxying)\n+ requests are forwarded using a CONNECT request that sets up an HTTP tunnel\n+ an SSL certificate is auto-generated allowing encrypted HTTPS traffic to be recorded transparently\n+ to proxy requests the **HTTP client** should [be configured to use an HTTP Proxy](https://www.mock-server.com/proxy/configuring_sut.html)\n* **SOCKS Proxying** (i.e. dynamic port forwarding)\n+ requests are forwarded using a SOCK CONNECT CMD request that established a socket tunnel\n+ if the traffic is encrypted an SSL certificate is auto-generated allowing SSL traffic to be recorded transparently\n+ to proxy requests the **operating system (or JVM)** should [be configured to use an HTTP Proxy](https://www.mock-server.com/proxy/configuring_sut.html)\n* **SSL & Certificates**\n+ all SSL traffic is handled transparently by auto-generating an appropriate SSL certificate\n+ generated certificates use a single [MockServer root CA certificate](https://github.com/mock-server/mockserver-monorepo/blob/master/mockserver/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem) enabling the root certificate to be [easily imported](https://www.mock-server.com/mock_server/HTTPS_TLS.html)\n* **Port Unification**\n+ to simplify configuration all protocols (i.e.\nHTTP, HTTPS / TLS, SOCKS, etc) are supported on the same port\n+ the protocol is detected dynamically by MockServer\n* **Simultaneous Proxying & Mocking**\n+ if MockServer is being used as a proxy **expectations** can also be created\n+ when a request is received it is first matched against active **expectations** that have been configured\n+ if an **expectation** is matched its **action** will be performed instead of proxying the request\n\n## AI & MCP Integration\nMockServer is built to be **AI-native** . A built-in [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server lets AI coding assistants drive the mock server in natural language, and an OpenAPI spec provides a fallback for tools that don't yet speak MCP.\n\n...\n\n* **[MCP Setup](https://www.mock-server.com/mock_server/ai_mcp_setup.html)** — connect Claude Code, Cursor, Windsurf, Cline, or OpenCode to a running MockServer at `http://localhost:1080/mockserver/mcp` over the MCP Streamable HTTP transport\n\n...\n\n* **[OpenAPI Fallback for AI](https://www.mock-server.com/mock_server/ai_openapi.html)** — use MockServer's [OpenAPI spec](https://www.mock-server.com/mockserver-openapi.yaml) with AI tools that don't yet support MCP\n\n...\n\nThe MCP endpoint requires **no extra configuration** — start MockServer and the AI surface is on the same port:\n```\ndocker run -d --rm -p 1080:1080 mockserver/mockserver\n# MCP endpoint immediately available at http://localhost:1080/mockserver/mcp\n```\n\n...\n\n## Why use MockServer\n+ easily set up mock responses independently for each test to ensure test data is encapsulated with each test. Avoid sharing data between tests that is difficult to manage and maintain and risks tests infecting each other\n+ create test assertions that verify the requests the system-under-test has sent\n* de-coupling development\n+ start working against a service API before the service is available.\n\n...\n\n+ verify your system copes when its dependencies misbehave by [injecting chaos and faults](https://www.mock-server.com/mock_server/chaos_testing.html) — latency, errors, dropped connections and malformed responses (HTTP, gRPC and TCP) — so failure modes are tested deliberately rather than discovered in production\n* interactive debugging\n+ set [interactive breakpoints](https://www.mock-server.com/mock_server/interactive_breakpoints.html) to pause a matched or proxied request in the dashboard, inspect and modify the request or response live, then continue — useful for reproducing edge cases and stepping through how the system-under-test reacts\n* isolate single service\n\n...\n\n## Why use MockServer as a proxy\nMockServer allows you to record requests from the system-under-test, or to analyse an existing system by recording its outbound requests.\nThis is useful in the following scenarios:\n* testing\n+ create test assertions that verify the requests the system-under-test has been sent, without needing to mock any requests\n* analyse existing system\n+ record all outbound requests so it is possible to analyse and understand what outbound requests an existing system is making\n* debug HTTP interactions\n+ log all outbound requests so it is possible to visualise all interactions (for example from a browser) to external services.\n\n...\n\n**Recording Requests & Analysing Behaviour**\nMockServer can record all proxied requests, as follows:\nRecording service requests with MockServer Proxy\n**Verifying Requests**\nMockServer can verify proxied service requests, as follows:\n\n...\n\nMockServer records the responses returned when it proxies requests, so a test can [verify the responses](https://www.mock-server.com/mock_server/verification.html) received using request matchers:\nVerifying service responses with MockServer Proxy"
+          ],
+          "full_content": null
+        }
+      ],
+      "errors": [],
+      "warnings": null,
+      "metadata": null,
+      "session_id": "f9f8899be4a5474aa75b0ad118da6da0"
+    },
+    "isError": false
+  },
+  "raw_expectations": []
+}
