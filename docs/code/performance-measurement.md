@@ -2085,6 +2085,12 @@ threads.
 - *Allocation by site at the ceiling.* This can differ from the load-window view, which covers the
   whole run. In build 537 the load window's list included several JSON-unit matching sites, while the
   ceiling's top sites were Netty header and buffer objects and `LogEntry.clone`.
+- *Exception count.* `jdk.JavaErrorThrow` and `jdk.ExceptionStatistics` count throwables when they are
+  created, not when they are thrown. A run with JavaScript response templates
+  therefore shows one `StackOverflowError` per render on the `TemplateAction` threads: its class is
+  `com.oracle.truffle.host.HostContext$1`, a sentinel that GraalJS's Truffle layer pre-allocates in
+  every new polyglot context, and MockServer builds one context per render to keep renders isolated.
+  Nothing overflows and nothing is thrown; check the class name before reading an error as a fault.
 
 **Fail-safe.** Every view is notify-only, and none can fail the step. Each of these gives a one-line
 note in the ceiling section and a `warning` style: no ceiling recording, Docker unavailable, a `jfr`
