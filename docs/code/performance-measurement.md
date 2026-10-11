@@ -2296,7 +2296,9 @@ empirically ([performance-tuning.md](../operations/performance-tuning.md)). The 
 tightening them:
 
 - only from scheduled weekly runs on `master`, with `soak_ok` true, `config.revision_check`
-  `match` and the default `config.requested` values (a manual or overridden run does not count);
+  `match` (or `differs` with `config.image_revision_ancestor_of_harness` true, so the server
+  image is unchanged and only the harness is newer) and the default `config.requested` values
+  (a manual or overridden run does not count);
 - not before eight such runs exist, the same count the soak has always waited for before its
   metrics may enter a baseline;
 - set each gate from the observed distribution of that metric across those runs (the per-run
