@@ -24,10 +24,12 @@ import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.BinaryRequestDefinition;
 import org.mockserver.model.BinaryResponse;
+import org.mockserver.model.ConditionalRequestDefinition;
 import org.mockserver.model.GraphQLBody;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.MediaType;
+import org.mockserver.model.Not;
 import org.mockserver.model.RetrieveType;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
@@ -4745,24 +4747,73 @@ public class HttpStateTest {
     }
 
     @Test
-    public void shouldKnowWhetherAnyExpectationMatchesBinaryRequests() {
+    public void shouldKnowWhetherAnyExpectationMayMatchABinaryMessage() {
         String id = "binary-expectation-id";
-        assertThat(httpState.hasBinaryExpectations(), is(false));
+        byte[] message = {1, 2};
+        assertThat(httpState.mayMatchBinaryMessage(message), is(false));
 
         httpState.add(new Expectation(request().withPath("/http")).thenRespond(response()));
-        assertThat("an HTTP expectation is not one", httpState.hasBinaryExpectations(), is(false));
+        assertThat("an HTTP expectation is not one", httpState.mayMatchBinaryMessage(message), is(false));
 
         httpState.add(new Expectation(BinaryRequestDefinition.binaryRequest(new byte[]{1, 2})).withId(id).thenRespondWithBinary(BinaryResponse.binaryResponse(new byte[]{3})));
-        assertThat(httpState.hasBinaryExpectations(), is(true));
+        assertThat(httpState.mayMatchBinaryMessage(message), is(true));
+        assertThat("same length, other bytes", httpState.mayMatchBinaryMessage(new byte[]{1, 3}), is(false));
+        assertThat("a prefix", httpState.mayMatchBinaryMessage(new byte[]{1}), is(false));
+        assertThat("longer", httpState.mayMatchBinaryMessage(new byte[]{1, 2, 3}), is(false));
 
         httpState.add(new Expectation(request().withPath("/now-http")).withId(id).thenRespond(response()));
-        assertThat("updated in place to an HTTP request", httpState.hasBinaryExpectations(), is(false));
+        assertThat("updated in place to an HTTP request", httpState.mayMatchBinaryMessage(message), is(false));
 
         httpState.add(new Expectation(BinaryRequestDefinition.binaryRequest(new byte[]{1, 2})).withId(id).thenRespondWithBinary(BinaryResponse.binaryResponse(new byte[]{3})));
-        assertThat("updated in place back to a binary request", httpState.hasBinaryExpectations(), is(true));
+        assertThat("updated in place back to a binary request", httpState.mayMatchBinaryMessage(message), is(true));
+
+        httpState.add(new Expectation(BinaryRequestDefinition.binaryRequest(new byte[]{7, 8, 9})).withId(id).thenRespondWithBinary(BinaryResponse.binaryResponse(new byte[]{3})));
+        assertThat("updated in place to other bytes", httpState.mayMatchBinaryMessage(message), is(false));
+        assertThat(httpState.mayMatchBinaryMessage(new byte[]{7, 8, 9}), is(true));
 
         httpState.reset();
-        assertThat(httpState.hasBinaryExpectations(), is(false));
+        assertThat(httpState.mayMatchBinaryMessage(new byte[]{7, 8, 9}), is(false));
+    }
+
+    @Test
+    public void shouldKnowThatABinaryExpectationWithoutBytesOrNegatedMayMatchAnyBinaryMessage() {
+        byte[] message = {9, 9, 9};
+        httpState.add(new Expectation(BinaryRequestDefinition.binaryRequest(new byte[]{1, 2})).thenRespondWithBinary(BinaryResponse.binaryResponse(new byte[]{3})));
+        assertThat(httpState.mayMatchBinaryMessage(message), is(false));
+
+        Expectation negated = new Expectation(Not.not(BinaryRequestDefinition.binaryRequest(new byte[]{1, 2}))).thenRespondWithBinary(BinaryResponse.binaryResponse(new byte[]{3}));
+        httpState.add(negated);
+        assertThat("negated", httpState.mayMatchBinaryMessage(message), is(true));
+        assertThat(httpState.firstMatchingExpectation(BinaryRequestDefinition.binaryRequest(message)), is(negated));
+        httpState.getRequestMatchers().clear(expectationId(negated.getId()), "");
+        assertThat(httpState.mayMatchBinaryMessage(message), is(false));
+
+        Expectation withoutBytes = new Expectation(BinaryRequestDefinition.binaryRequest(new byte[0])).thenRespondWithBinary(BinaryResponse.binaryResponse(new byte[]{3}));
+        httpState.add(withoutBytes);
+        assertThat("no bytes", httpState.mayMatchBinaryMessage(message), is(true));
+        assertThat(httpState.firstMatchingExpectation(BinaryRequestDefinition.binaryRequest(message)), is(withoutBytes));
+        httpState.getRequestMatchers().clear(expectationId(withoutBytes.getId()), "");
+        assertThat(httpState.mayMatchBinaryMessage(message), is(false));
+
+        Expectation nullBytes = new Expectation(BinaryRequestDefinition.binaryRequest()).thenRespondWithBinary(BinaryResponse.binaryResponse(new byte[]{3}));
+        httpState.add(nullBytes);
+        assertThat("null bytes", httpState.mayMatchBinaryMessage(message), is(true));
+        assertThat(httpState.firstMatchingExpectation(BinaryRequestDefinition.binaryRequest(message)), is(nullBytes));
+    }
+
+    @Test
+    public void shouldKnowThatAConditionalExpectationMayMatchAnyBinaryMessageOnlyWhileABinaryExpectationExists() {
+        byte[] message = {9, 9, 9};
+        Expectation conditional = new Expectation(ConditionalRequestDefinition.requestIf(request().withPath("/guard"), request().withPath("/then"))).thenRespond(response());
+        httpState.add(conditional);
+        assertThat("no binary expectation, so no matcher pass, as before", httpState.mayMatchBinaryMessage(message), is(false));
+
+        httpState.add(new Expectation(BinaryRequestDefinition.binaryRequest(new byte[]{1, 2})).thenRespondWithBinary(BinaryResponse.binaryResponse(new byte[]{3})));
+        assertThat(httpState.mayMatchBinaryMessage(message), is(true));
+        assertThat("an HTTP guard that fails with no else branch matches a binary message", httpState.firstMatchingExpectation(BinaryRequestDefinition.binaryRequest(message)), is(conditional));
+
+        httpState.getRequestMatchers().clear(expectationId(conditional.getId()), "");
+        assertThat(httpState.mayMatchBinaryMessage(message), is(false));
     }
 
     @Test
@@ -4774,7 +4825,29 @@ public class HttpStateTest {
         httpState.postProcess(matched);
 
         assertThat(matched, is(notNullValue()));
-        assertThat(httpState.hasBinaryExpectations(), is(false));
+        assertThat(httpState.mayMatchBinaryMessage(new byte[]{1, 2}), is(false));
+    }
+
+    @Test
+    public void shouldForgetTheBytesOfAnEvictedBinaryExpectation() {
+        HttpState smallState = new HttpState(
+            configuration().maxExpectations(2),
+            new MockServerLogger(configuration, MockServerLogger.class),
+            mock(Scheduler.class)
+        );
+        try {
+            smallState.add(new Expectation(BinaryRequestDefinition.binaryRequest(new byte[]{1, 2})).thenRespondWithBinary(BinaryResponse.binaryResponse(new byte[]{3})));
+            smallState.add(new Expectation(BinaryRequestDefinition.binaryRequest(new byte[]{4, 5})).thenRespondWithBinary(BinaryResponse.binaryResponse(new byte[]{6})));
+            assertThat(smallState.mayMatchBinaryMessage(new byte[]{1, 2}), is(true));
+
+            smallState.add(new Expectation(BinaryRequestDefinition.binaryRequest(new byte[]{7, 8})).thenRespondWithBinary(BinaryResponse.binaryResponse(new byte[]{9})));
+
+            assertThat("evicted", smallState.mayMatchBinaryMessage(new byte[]{1, 2}), is(false));
+            assertThat(smallState.mayMatchBinaryMessage(new byte[]{4, 5}), is(true));
+            assertThat(smallState.mayMatchBinaryMessage(new byte[]{7, 8}), is(true));
+        } finally {
+            smallState.stop();
+        }
     }
 
     @Test

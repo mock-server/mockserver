@@ -292,9 +292,10 @@ This release delivers a sustained performance and memory programme alongside dat
   and the server's are each kept in order, but not against each other, and MockServer logs a warning
   when one of its replies may overtake a server reply still owed. The setting has no effect on a
   connection forwarded one message per upstream connection (`forwardBinaryRequestsUseSingleConnection`
-  set to `false`, or an upstream proxy), which logs one warning saying so. While a
-  binary expectation exists, every relayed message is matched before it is forwarded, with the usual
-  match log entries.
+  set to `false`, or an upstream proxy), which logs one warning saying so. While a binary expectation exists, a relayed message is matched only when an expectation
+  could match it (one has exactly its bytes, or a binary expectation without bytes or with `not`,
+  or a conditional expectation, exists); every other message is forwarded without being matched
+  and adds no match entries to the log.
 
 - **BREAKING: `LOG_ENTRIES` output writes each request and response body once; the `message` and
   `arguments` of an entry refer to the entry's own request and response by a short form.** A log

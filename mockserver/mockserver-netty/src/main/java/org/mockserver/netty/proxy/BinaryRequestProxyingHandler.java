@@ -185,7 +185,8 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
     /**
      * With forwardBinaryRequestsMatchExpectations, a message on a connection relayed on one upstream connection
      * whose bytes match a binary expectation is answered here and not forwarded, or, as the binary response's
-     * {@code upstream} says, answered and forwarded or forwarded with its reply replaced. Any other connection is
+     * {@code upstream} says, answered and forwarded or forwarded with its reply replaced. A message no expectation
+     * can match is forwarded without a matcher pass, so it adds no match entries to the log. Any other connection is
      * forwarded as without the setting, and says so once.
      *
      * @return whether the message was handled here, so is not to be forwarded by the caller
@@ -199,7 +200,7 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
             warnOnceThatExpectationsAreNotMatched(ctx, remoteAddress, logCorrelationId);
             return false;
         }
-        if (!httpState.hasBinaryExpectations()) {
+        if (!httpState.mayMatchBinaryMessage(binaryRequest.getBytes())) {
             return false;
         }
         Expectation matchedExpectation = firstMatchingBinaryExpectation(binaryRequest, logCorrelationId);

@@ -67,7 +67,7 @@ public class BinaryRelayAnsweredLocallyTest {
 
     @Before
     public void expectations() {
-        when(httpState.hasBinaryExpectations()).thenReturn(true);
+        when(httpState.mayMatchBinaryMessage(any(byte[].class))).thenReturn(true);
         when(httpState.firstMatchingExpectation(any(BinaryRequestDefinition.class))).thenAnswer(invocation -> {
             String received = new String(invocation.<BinaryRequestDefinition>getArgument(0).getBinaryData(), StandardCharsets.UTF_8);
             for (Expectation expectation : new Expectation[]{mocked, noReply, notBinary, delayed}) {
@@ -143,8 +143,8 @@ public class BinaryRelayAnsweredLocallyTest {
     }
 
     @Test
-    public void shouldMakeNoMatcherPassWhenNoBinaryExpectationExists() {
-        when(httpState.hasBinaryExpectations()).thenReturn(false);
+    public void shouldMakeNoMatcherPassWhenNoExpectationCanMatchTheMessage() {
+        when(httpState.mayMatchBinaryMessage(any(byte[].class))).thenReturn(false);
         clientConnection();
 
         relay.clientSends("mocked");
@@ -162,7 +162,7 @@ public class BinaryRelayAnsweredLocallyTest {
 
         assertThat(relay.receivedByUpstream(), is("mocked"));
         assertThat(relay.receivedByClient(), is(""));
-        verify(httpState, never()).hasBinaryExpectations();
+        verify(httpState, never()).mayMatchBinaryMessage(any());
         verify(httpState, never()).firstMatchingExpectation(any());
     }
 

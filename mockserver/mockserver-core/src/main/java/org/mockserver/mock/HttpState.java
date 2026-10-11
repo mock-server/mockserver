@@ -977,11 +977,11 @@ public class HttpState {
     }
 
     /**
-     * True when at least one registered expectation matches binary requests. Cheap lock-free gate for matching a
-     * proxied binary message: when false no binary expectation can match it.
+     * Cheap lock-free gate for matching a proxied binary message: when false no expectation can match a binary
+     * message of these bytes, so {@link #firstMatchingExpectation} would return null for it.
      */
-    public boolean hasBinaryExpectations() {
-        return requestMatchers.hasBinaryExpectations();
+    public boolean mayMatchBinaryMessage(byte[] bytes) {
+        return requestMatchers.mayMatchBinaryMessage(bytes);
     }
 
     @VisibleForTesting
