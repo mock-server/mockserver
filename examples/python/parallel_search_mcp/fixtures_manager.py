@@ -51,3 +51,32 @@ def load_fixture(file_path: Path | str | None = None) -> CapturedSession:
         raise FixtureValidationError(f"Root JSON entity in {path} must be a dictionary")
 
     return CapturedSession.from_dict(data)
+
+
+def validate_fixture_integrity(session: CapturedSession) -> None:
+    """Validate that a CapturedSession contains all necessary interactions."""
+    if not session.initialize:
+        raise FixtureValidationError("Fixture is missing 'initialize' handshake interaction")
+
+    if not session.tools:
+        raise FixtureValidationError("Fixture is missing 'tools' list interaction")
+
+    tool_names = {t.get("name") for t in session.tools if isinstance(t, dict)}
+    if "web_search" not in tool_names or "web_fetch" not in tool_names:
+        raise FixtureValidationError(
+            f"Fixture missing required tools ('web_search', 'web_fetch'). Found: {tool_names}"
+        )
+
+    if not session.search or not session.search.get("content"):
+        raise FixtureValidationError("Fixture is missing valid 'web_search' result content")
+
+    if not session.fetch or not session.fetch.get("content"):
+        raise FixtureValidationError("Fixture is missing valid 'web_fetch' result content")
+
+
+def validate_fixture_file(file_path: Path | str | None = None) -> CapturedSession:
+    """Load and validate integrity of a fixture file."""
+    session = load_fixture(file_path)
+    validate_fixture_integrity(session)
+    return session
+
