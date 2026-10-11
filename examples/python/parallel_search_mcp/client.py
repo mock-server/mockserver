@@ -103,6 +103,24 @@ class ParallelSearchMcpClient:
 
         return self.call_tool("web_search", arguments=args)
 
+    def search_structured(
+        self,
+        objective: str,
+        search_queries: list[str],
+        session_id: str | None = None,
+        model_name: str | None = None,
+    ) -> SearchResponse:
+        """Execute a search and return a parsed SearchResponse model."""
+        from .models import SearchResponse
+
+        result = self.search(
+            objective=objective,
+            search_queries=search_queries,
+            session_id=session_id,
+            model_name=model_name,
+        )
+        return SearchResponse.from_tool_result(result)
+
     def fetch(
         self,
         urls: list[str],
@@ -132,3 +150,26 @@ class ParallelSearchMcpClient:
             args["model_name"] = m_name
 
         return self.call_tool("web_fetch", arguments=args)
+
+    def fetch_structured(
+        self,
+        urls: list[str],
+        objective: str | None = None,
+        search_queries: list[str] | None = None,
+        full_content: bool = False,
+        session_id: str | None = None,
+        model_name: str | None = None,
+    ) -> FetchResponse:
+        """Execute a page fetch and return a parsed FetchResponse model."""
+        from .models import FetchResponse
+
+        result = self.fetch(
+            urls=urls,
+            objective=objective,
+            search_queries=search_queries,
+            full_content=full_content,
+            session_id=session_id,
+            model_name=model_name,
+        )
+        return FetchResponse.from_tool_result(result)
+
