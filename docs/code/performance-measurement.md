@@ -424,11 +424,12 @@ timer that narrows the gap now exists (`mock_server_request_transport_duration_s
 a request's first bytes to its head being decoded, is `mock_server_request_read_to_decode_duration_seconds`
 (HTTP/1.1; see [metrics.md](metrics.md#read-to-decode-request-latency-histogram)). It covers the handlers
 before the codec, the decode, a head split across reads, and pipelined requests ahead of it in one read
-being handled first. The rig does not read it yet: `diag_sampler()` and `sweep_tail_localisation()` in
-`perf-test-run.sh` need its `_count`, `_sum` and `le="0.005"` bucket appended to `diag-samples.csv` (as
-`req_read_count`, `req_read_sum`, `req_read_le_5ms`) and a `server_read_over_5ms_frac` per rung, beside the
-transport share. Until a run reports that share, whether this span contributes to the tail attributed under
-item 44 is unknown. Still unmeasured, by any histogram: the wait in the kernel receive queue before the event
+being handled first. The rig samples its `_count`, `_sum` and `le="0.005"` bucket into `diag-samples.csv`
+(`req_read_count`, `req_read_sum`, `req_read_le_5ms`), and `sweep_tail_localisation()` reports
+`server_read_over_5ms_frac` and `server_read_requests` per rung, beside the transport share. No run has
+reported that share yet: in build 658 the function's `awk` died on gawk's built-in `RT` (used as an array
+name), so `sweep_tail` was empty. Until a run reports it, whether this span contributes to the tail
+attributed under item 44 is unknown. Still unmeasured, by any histogram: the wait in the kernel receive queue before the event
 loop reads the socket, which needs kernel receive timestamps that Netty does not expose.
 
 **Ladder anchor rule.** Always include at least one rung *below* the expected knee. A ladder that
@@ -1728,6 +1729,23 @@ manual build with `JMH_INCLUDE_PROXY='org\.mockserver\.benchmark\.(RelayByteCopy
 and `EXTRA_EXPECTED=45` (37 plus its 8 rows; its params are not named like the relay's, so the
 proxy invocation's `-p` pins do not reach it). Its rows land in `perf-microbench-extra.json` as
 `microbench_extra.BinaryReadBufferBenchmark.<method>_messageBytes-<n>_readBufferSize-<n>`.
+
+Build 658 (one fork, `-prof gc`; µs/op, heap bytes/op) kept the 64 KiB read size:
+
+| Method, message | 32 KiB reads | 64 KiB reads |
+|---|---|---|
+| `readLoop`, 16 KiB | 0.414 µs, 156 B | 0.587 µs, 116 B |
+| `readLoop`, 256 KiB | 7.470 µs, 1,899 B | 7.214 µs, 915 B |
+| `allocateOnly`, 16 KiB | 0.122 µs, 156 B | 0.242 µs, 116 B |
+| `allocateOnly`, 256 KiB | 1.263 µs, 1,898 B | 1.472 µs, 914 B |
+
+The thread cache saves about 0.12–0.15 µs per buffer taken, but 32 KiB takes nine buffers for a
+256 KiB message against five, so it is 0.17 µs faster on a 16 KiB message and 0.26 µs slower
+(and twice the heap, from the larger composite) on a 256 KiB one. Both are sub-microsecond beside
+the rest of relaying a message (`RelayByteCopyBenchmark.relayResponse`, 256 KiB: 193 µs), so the
+read size stays `BinaryAwareRecvByteBufAllocator.BINARY_READ_SIZE` (64 KiB). Not measured: arena
+contention between event loops, and the 64 KiB a stalled connection keeps (JDK TLS partial record,
+handshake prefix).
 
 **`ForwardPathBenchmark` does not measure proxying.** It measures the work
 `LoadScenarioOrchestrator.RunningScenario.render()` performs before handing a request to the
