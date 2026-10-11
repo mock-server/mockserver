@@ -266,9 +266,18 @@ of connections, which only `maxInboundConnections` caps (off by default — see 
     allocation, gave the same peaks at 64 KiB reads before that copy (66 of 69 rows identical, the other 3 within 0.2%); that counts
     each buffer's requested capacity, not the pool's size-class rounding.
 
-  These figures are for cleartext h2c: over TLS a DATA frame is a slice of `SslHandler`'s output buffers instead of
-  the reads, which the copy below checks the same way (it unwraps to whatever buffer a frame slices) but which was not
-  measured. `Http2StreamPeakHeldTest` pins both sides through the codec.
+  These figures are for cleartext h2c. Over TLS a DATA frame is a slice of the buffer `SslHandler` decrypted it into
+  instead of the read: with OpenSSL (the server's provider when its native library loads) one buffer per read for all
+  its whole records, sized to the read's ciphertext; with the JDK's engine one buffer per record, up to 16 KiB of
+  plaintext. Such a buffer is pinned exactly as a read is, and the copy below bounds it the same way, because it
+  counts each piece under whatever buffer it unwraps to. Measured through a real `SslHandler` of each provider, the
+  client sending each frame in records of its own or coalescing frames into 16 KiB records
+  (`Http2StreamPeakHeldOverTlsTest`, 64 KiB reads): one 1,023-byte frame per read beside a completed ~32 KiB request
+  held 9.9 MB under Netty's aggregator with OpenSSL (32× the 0.31 MB body, the whole wire) and 5.0 MB with the JDK's
+  engine and coalesced records (16×), and 0.45 MB (1.46×) under the stream aggregator with either; 20 streams of
+  4,097-byte frames held 6.8–7.7× (OpenSSL) and 3.9× (JDK, coalesced) against 1.14–1.23×; an upload in 16 KiB frames is
+  never copied and holds 1.14–1.67×. With the JDK's engine and a record per frame each frame has a buffer of its own,
+  so nothing is pinned. `Http2StreamPeakHeldTest` pins both sides through the codec in cleartext.
 
   The forward client's streams the upstream opens (below) coalesce the same way.
 

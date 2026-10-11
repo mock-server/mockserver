@@ -22,8 +22,16 @@ import io.netty.handler.codec.http2.DefaultHttp2FrameWriter;
 import io.netty.handler.codec.http2.DefaultHttp2Headers;
 import io.netty.handler.codec.http2.Http2CodecUtil;
 import io.netty.handler.codec.http2.Http2MultiplexHandler;
+import io.netty.handler.codec.http2.Http2SecurityUtil;
 import io.netty.handler.codec.http2.Http2Settings;
 import io.netty.handler.codec.http2.Http2StreamChannel;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.SslHandler;
+import io.netty.handler.ssl.SslProvider;
+import io.netty.handler.ssl.SupportedCipherSuiteFilter;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import io.netty.handler.ssl.util.SelfSignedCertificate;
 import io.netty.util.ReferenceCountUtil;
 import org.mockito.Mockito;
 import org.mockserver.codec.CoalescingHttpObjectAggregator;
@@ -174,6 +182,9 @@ final class Http2ConnectionMemoryHarness {
     private final List<Throwable> failures = new ArrayList<>();
     // a stub's last invocation holds its own context, so Mockito keeps it, and the whole connection, until cleared
     private final List<Object> stubs = new ArrayList<>();
+    private final SslContext serverTls;
+    private final SslContext clientTls;
+    private final boolean coalesceRecords;
     private int connectionWindow = DEFAULT_WINDOW;
     private int initialStreamWindow = DEFAULT_WINDOW;
     private long wireBytes;
@@ -187,6 +198,21 @@ final class Http2ConnectionMemoryHarness {
     Http2ConnectionMemoryHarness(Configuration configuration, Variant variant, int readBytes,
                                  ByteBufAllocator readAllocator, ByteBufAllocator connectionAllocator,
                                  ByteBufAllocator streamAllocator, Supplier<Long> sampler) {
+        this(configuration, variant, readBytes, readAllocator, connectionAllocator, streamAllocator, sampler, null, false);
+    }
+
+    /**
+     * With a {@code tlsProvider}, the connection is behind TLS, as an {@code h2} connection over TLS is: the server's
+     * {@code SslHandler} from that provider, built as {@code SniHandler} builds it, reads the socket and hands the
+     * frame codec what it decrypts in buffers of its own, so a DATA frame is a slice of such a buffer instead of a
+     * read. The client either flushes each frame into records of its own or, with {@code coalesceRecords}, writes
+     * everything until the next delivery into records of up to 16 KiB, so a frame shares its records with the frames
+     * before and after it.
+     */
+    Http2ConnectionMemoryHarness(Configuration configuration, Variant variant, int readBytes,
+                                 ByteBufAllocator readAllocator, ByteBufAllocator connectionAllocator,
+                                 ByteBufAllocator streamAllocator, Supplier<Long> sampler,
+                                 SslProvider tlsProvider, boolean coalesceRecords) {
         this.configuration = configuration;
         this.variant = variant;
         this.readBytes = readBytes;
@@ -196,6 +222,13 @@ final class Http2ConnectionMemoryHarness {
         this.sampler = sampler;
         connection.config().setAllocator(connectionAllocator);
         readHandle.reset(connection.config());
+        this.coalesceRecords = coalesceRecords;
+        serverTls = tlsProvider == null ? null : serverTlsContext(tlsProvider);
+        clientTls = tlsProvider == null ? null : clientTlsContext();
+        if (tlsProvider != null) {
+            connection.pipeline().addLast("ssl", serverTls.newHandler(connectionAllocator));
+            encoder.pipeline().addFirst("ssl", clientTls.newHandler(encoder.alloc()));
+        }
         connection.pipeline().addLast(
             Http2RequestHeaderLimit.frameCodecBuilder(new MockServerLogger(Http2ConnectionMemoryHarness.class))
                 // as PortUnificationHandler.switchToHttp2Multiplex builds it
@@ -213,6 +246,36 @@ final class Http2ConnectionMemoryHarness {
                 }
             })
         );
+    }
+
+    private static SslContext serverTlsContext(SslProvider provider) {
+        try {
+            return SslContextBuilder.forServer(ServerCertificate.INSTANCE.certificate(), ServerCertificate.INSTANCE.privateKey())
+                .sslProvider(provider)
+                .ciphers(Http2SecurityUtil.CIPHERS, SupportedCipherSuiteFilter.INSTANCE)
+                .build();
+        } catch (Exception e) {
+            throw new AssertionError("could not build the server's TLS context", e);
+        }
+    }
+
+    private static SslContext clientTlsContext() {
+        try {
+            return SslContextBuilder.forClient()
+                .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                .sslProvider(SslProvider.JDK)
+                .build();
+        } catch (Exception e) {
+            throw new AssertionError("could not build the client's TLS context", e);
+        }
+    }
+
+    private void handshake() {
+        deliverPending();
+        if (!encoder.pipeline().get(SslHandler.class).handshakeFuture().isSuccess()
+            || !connection.pipeline().get(SslHandler.class).handshakeFuture().isSuccess()) {
+            throw new AssertionError("the TLS handshake did not complete", encoder.pipeline().get(SslHandler.class).handshakeFuture().cause());
+        }
     }
 
     private void initStream(Http2StreamChannel stream) {
@@ -281,10 +344,14 @@ final class Http2ConnectionMemoryHarness {
             result.bodyBytes += remaining[stream];
         }
         try {
-            pendingWire.writeBytes(Http2CodecUtil.connectionPrefaceBuf());
-            ChannelHandlerContext ctx = encoder.pipeline().firstContext();
+            ChannelHandlerContext ctx = encoder.pipeline().lastContext();
+            // over TLS the client's SslHandler holds these until its handshake completes
+            ctx.write(Http2CodecUtil.connectionPrefaceBuf());
             frameWriter.writeSettings(ctx, new Http2Settings(), ctx.newPromise());
             collectClientFrames();
+            if (clientTls != null) {
+                handshake();
+            }
             boolean[] opened = new boolean[streams];
             for (Frame frame : frames) {
                 if (frame.stream == DELIVER) {
@@ -298,7 +365,7 @@ final class Http2ConnectionMemoryHarness {
                     DefaultHttp2Headers headers = new DefaultHttp2Headers();
                     headers.method("POST").path("/upload/" + frame.stream).scheme("http").authority("localhost");
                     frameWriter.writeHeaders(ctx, streamId, headers, 0, false, ctx.newPromise());
-                    collectClientFrames();
+                    collectUnlessCoalescing();
                 }
                 while (frame.length > connectionWindow || frame.length > streamWindows.get(streamId)) {
                     int before = connectionWindow + streamWindows.get(streamId);
@@ -314,7 +381,7 @@ final class Http2ConnectionMemoryHarness {
                 ByteBuf data = Unpooled.wrappedBuffer(bodies[frame.stream], offsets[frame.stream], frame.length);
                 offsets[frame.stream] += frame.length;
                 frameWriter.writeData(ctx, streamId, data, 0, remaining[frame.stream] == 0, ctx.newPromise());
-                collectClientFrames();
+                collectUnlessCoalescing();
             }
             deliverPending();
             if (!failures.isEmpty()) {
@@ -358,7 +425,15 @@ final class Http2ConnectionMemoryHarness {
             encoder.finishAndReleaseAll();
             pendingWire.release();
             serverWire.release();
+            ReferenceCountUtil.release(serverTls);
+            ReferenceCountUtil.release(clientTls);
             stubs.forEach(Mockito.framework()::clearInlineMock);
+        }
+    }
+
+    private void collectUnlessCoalescing() {
+        if (!coalesceRecords) {
+            collectClientFrames();
         }
     }
 
@@ -377,6 +452,7 @@ final class Http2ConnectionMemoryHarness {
      * reads what the server wrote back.
      */
     private void deliverPending() {
+        collectClientFrames();
         while (pendingWire.isReadable()) {
             int event = Math.min(readBytes, pendingWire.readableBytes());
             readHandle.reset(connection.config());
@@ -420,12 +496,24 @@ final class Http2ConnectionMemoryHarness {
     private void readServerFrames() {
         Object written;
         while ((written = connection.readOutbound()) != null) {
+            if (written instanceof ByteBuf && clientTls != null) {
+                // the client's SslHandler decrypts it, taking ownership
+                encoder.writeInbound(written);
+                continue;
+            }
             if (written instanceof ByteBuf) {
                 serverWire.writeBytes((ByteBuf) written);
             }
             ReferenceCountUtil.release(written);
         }
-        ChannelHandlerContext ctx = encoder.pipeline().firstContext();
+        Object decrypted;
+        while ((decrypted = encoder.readInbound()) != null) {
+            if (decrypted instanceof ByteBuf) {
+                serverWire.writeBytes((ByteBuf) decrypted);
+            }
+            ReferenceCountUtil.release(decrypted);
+        }
+        ChannelHandlerContext ctx = encoder.pipeline().lastContext();
         while (serverWire.readableBytes() >= FRAME_HEADER_BYTES) {
             int length = serverWire.getUnsignedMedium(serverWire.readerIndex());
             if (serverWire.readableBytes() < FRAME_HEADER_BYTES + length) {
@@ -467,16 +555,39 @@ final class Http2ConnectionMemoryHarness {
      * checks every one was released.
      */
     static Result tracked(Variant variant, int readSize, List<Frame> frames, int streams) {
+        return trackedOverTls(variant, null, false, readSize, frames, streams);
+    }
+
+    /**
+     * As {@link #tracked}, over TLS from the given server provider (none: cleartext); see the constructor.
+     */
+    static Result trackedOverTls(Variant variant, SslProvider provider, boolean coalesceRecords, int readSize, List<Frame> frames, int streams) {
         Usage usage = new Usage();
         TrackingAllocator reads = new TrackingAllocator(usage);
         TrackingAllocator connection = new TrackingAllocator(usage);
         TrackingAllocator stream = new TrackingAllocator(usage);
-        Result result = new Http2ConnectionMemoryHarness(Configuration.configuration(), variant, readSize, reads, connection, stream, null)
+        Result result = new Http2ConnectionMemoryHarness(Configuration.configuration(), variant, readSize, reads, connection, stream, null,
+            provider, coalesceRecords)
             .upload(frames, streams);
         if (reads.unreleased() + connection.unreleased() + stream.unreleased() != 0) {
             throw new AssertionError("a buffer was not released");
         }
         return result;
+    }
+
+    /**
+     * Generated once: a key pair takes a while.
+     */
+    private static final class ServerCertificate {
+        static final SelfSignedCertificate INSTANCE = generate();
+
+        private static SelfSignedCertificate generate() {
+            try {
+                return new SelfSignedCertificate();
+            } catch (Exception e) {
+                throw new AssertionError("could not generate a certificate", e);
+            }
+        }
     }
 
     /**
