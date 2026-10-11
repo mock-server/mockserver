@@ -1320,6 +1320,75 @@ Vitest + React Testing Library + jsdom — see `mockserver-ui/src/__tests__/` fo
 
 Run `npm test` from `mockserver-ui/` to execute the full suite; the JUnit report is written to `mockserver-ui/test-reports/junit.xml`.
 
+#### Choosing a Test Layer
+
+Default to jsdom (Vitest): it is fast and needs no server. Use the Playwright suite in
+`mockserver-ui/e2e/` only when jsdom structurally cannot see the behaviour: anything that depends
+on real layout, on live WebSocket data arriving, or on the real server's contract.
+
+```mermaid
+flowchart LR
+    Q1{"Needs a real\nlayout engine?"}
+    Q2{"Depends on live\nWebSocket data\narriving?"}
+    Q3{"Needs the real\nserver contract?"}
+    jsdom["jsdom / Vitest"]
+    pw["Playwright\n(real browser + real jar)"]
+
+    Q1 -->|yes| pw
+    Q1 -->|no| Q2
+    Q2 -->|yes| pw
+    Q2 -->|no| Q3
+    Q3 -->|yes| pw
+    Q3 -->|no| jsdom
+```
+
+| What the test exercises | jsdom | Playwright |
+|-------------------------|-------|------------|
+| React state and derived values | yes | yes |
+| User interactions (click, type, keyboard) | yes | yes |
+| API calls and error handling | yes (mocked `fetch`) | yes (real server) |
+| `getComputedStyle` and CSS that needs layout | partial (no layout, so no percentage `calc()`) | yes |
+| `scrollTop`, `scrollHeight`, `offsetHeight` | no (always 0) | yes |
+| `ProgressiveList` windowing | no (no viewport, so every row mounts unless the suite stubs `offsetHeight`, as `perf-domWeight.test.tsx` does) | yes |
+| A row scrolled off-screen being unmounted | no | yes |
+| Live WebSocket arrival triggering a side-effect | no (suites stub `WebSocket` per file) | yes |
+| Monaco editor, workers | no (replaced by a textarea in `test-setup.ts`) | yes |
+| Focus restoration after DOM removal | partial (jsdom's focus model has diverged from browsers before) | yes |
+
+The trap this table guards against: a jsdom test asserting "the expansion state survives a live
+update" stayed green while opened rows vanished in the browser, because state really was kept;
+the row was scrolled away and unmounted by windowing. Retained state and "the row I opened is
+still on screen" are different invariants, and only the second is what a user sees. The jsdom
+tests in `selectionSurvivesLiveUpdate.test.tsx` and `openRowStopsFollowing.test.tsx` say so;
+the on-screen invariant is covered by `e2e/scroll-anchor.pw.ts` and, against a real server,
+`e2e/dashboard-live-scroll.spec.ts`.
+
+Two cheaper-looking alternatives were rejected. Stubbing `scrollTop` in jsdom tests the stub, not
+the interaction between the scroll position, the virtualizer reading it, and live data, and it
+breaks on any `ProgressiveList` refactor. A component harness (Storybook, Cypress component tests)
+would have to fake the WebSocket exactly as the jsdom suite already does, so it cannot close the
+full-stack gap and adds a third environment to maintain.
+
+#### jsdom Upgrades
+
+jsdom is pinned to a minor version (`~30.1.2` in `mockserver-ui/package.json`): patch releases
+arrive through the lockfile, and a minor bump is a deliberate change. Two consecutive releases broke
+the suite through upstream regressions rather than API changes. 30.0.0 made `getComputedStyle`
+throw on MUI Dialog's `calc(100% - 64px)`, and 30.1.0 fired focus events with the Document as
+`relatedTarget`, which crashed MUI's focus trap on unmount in every Dialog suite. Each was worked
+around in `test-setup.ts` by patching a jsdom **internal** module, and each shim was deleted once
+jsdom fixed the behaviour (the focus fix shipped in 30.1.1).
+
+On every jsdom minor bump, whether it arrives alone or inside the `npm-minor-and-patch` Dependabot
+group:
+
+1. Move the tilde pin to the new minor, regenerate the lockfile, and run the full `npm test`.
+2. If suites fail only under the new jsdom, find the throwing line in `node_modules/jsdom` before
+   guessing at the cause, and report the defect upstream.
+3. A shim in `test-setup.ts` is the fallback. It must act only on the defective input, so it goes
+   inert once jsdom is fixed, and it must say which jsdom version it targets. On each later jsdom
+   bump, disable it and rerun the affected suites: if they pass, delete it.
+
 ## Server-Side Data Assembly
 
 ### sendUpdate() Method

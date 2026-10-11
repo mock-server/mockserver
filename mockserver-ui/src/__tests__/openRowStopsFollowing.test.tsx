@@ -48,6 +48,9 @@ describe('opening a row stops the panel following', () => {
     expect(screen.queryByText('Following')).not.toBeInTheDocument();
 
     // The row the reader opened survives a push that evicts it from the window.
+    // NOTE: this proves the row is still in the DOM and expanded, NOT that it is
+    // on screen; jsdom has no scroll or windowing. e2e/dashboard-live-scroll.spec.ts
+    // covers the on-screen invariant in a real browser.
     act(() => {
       useDashboardStore.getState().applyMessage({
         logMessages: [

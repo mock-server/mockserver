@@ -56,6 +56,11 @@ afterAll(() => {
   }
 });
 
+// NOTE: these prove expansion STATE is retained across a push. They do NOT prove
+// the opened row stays on screen: that depends on real scroll and windowing,
+// which jsdom cannot model (the stubbed offsetHeight never scrolls). The
+// on-screen invariant is covered in a real browser by e2e/scroll-anchor.pw.ts
+// and, against a real server, e2e/dashboard-live-scroll.spec.ts.
 describe('dashboard row expansion survives a live update (windowed)', () => {
   beforeEach(() => {
     useDashboardStore.getState().clearUI();

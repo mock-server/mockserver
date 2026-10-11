@@ -3,64 +3,12 @@ import { vi } from 'vitest';
 import { createElement } from 'react';
 import { ensureWebStorage } from './test-setup-storage';
 
-
-// jsdom 30.1.0 changed its focus fixup: when a focused element is removed from
-// the DOM, `Node-impl._removingSteps()` now sets the document's
-// `_lastFocusedElement` to the *Document itself* (previously it was cleared to
-// null) so that `activeElement`/`hasFocus()` keep resolving to the viewport. The
-// next `.focus()` then reads that stale value as `previous` and fires the
-// `focus`/`focusin` events with `relatedTarget` set to the Document. Real
-// browsers use `null` there, never the Document node.
-//
-// MUI's FocusTrap records `nodeToRestore.current = event.relatedTarget` on the
-// sentinel's focus and, on unmount, calls `nodeToRestore.current.focus()` to
-// restore focus. A Document has no `focus()` method, so this throws
-// "nodeToRestore.current.focus is not a function" and takes out every test that
-// renders a Dialog (109 across the *Dialog suites) despite none of them
-// asserting anything focus-related.
-//
-// Normalise a Document `relatedTarget` back to null inside jsdom's own focus
-// dispatch helper, restoring the pre-30.1.0 (and real-browser) semantics while
-// leaving the intentional `activeElement`/`hasFocus()` fix untouched. The
-// wrapper only ever rewrites a nodeType-9 relatedTarget, so it neutralises
-// itself if jsdom stops emitting the Document there; delete it then, with this
-// comment. Reached by path import rather than node:module so the file stays free
-// of node typings, which the UI tsconfig does not carry.
-type FocusEventFirer = ((...args: unknown[]) => unknown) & { patched?: boolean };
-
-async function guardJsdomFocusRelatedTargetDocument(): Promise<void> {
-  try {
-    const specifier = 'jsdom/lib/jsdom/living/helpers/focusing.js';
-    const imported = (await import(/* @vite-ignore */ specifier)) as {
-      default?: { fireFocusEventWithTargetAdjustment?: FocusEventFirer };
-      fireFocusEventWithTargetAdjustment?: FocusEventFirer;
-    };
-    // A CommonJS module reached through ESM exposes module.exports as .default;
-    // that is the same object jsdom's own callers reach through `focusing.`, so
-    // reassigning the property takes effect for the live document.
-    const focusing = imported.default ?? imported;
-    const original = focusing.fireFocusEventWithTargetAdjustment;
-    if (typeof original !== 'function' || original.patched) {
-      return;
-    }
-    const guarded: FocusEventFirer = function (this: unknown, ...args: unknown[]): unknown {
-      // Signature: (name, target, relatedTarget, options?). Only the focus/
-      // focusin calls ever pass a Document as relatedTarget; blur/focusout pass
-      // an element or null, so this never rewrites those.
-      const relatedTarget = args[2] as { nodeType?: number } | null | undefined;
-      if (relatedTarget && relatedTarget.nodeType === 9) {
-        args[2] = null;
-      }
-      return original.apply(this, args);
-    };
-    guarded.patched = true;
-    focusing.fireFocusEventWithTargetAdjustment = guarded;
-  } catch {
-    // jsdom's internals are not a public API; if the path moves there is
-    // nothing to guard and the suite should still run.
-  }
-}
-await guardJsdomFocusRelatedTargetDocument();
+// jsdom has no layout engine, so these suites cannot see: scroll position
+// (scrollTop/scrollHeight/offsetHeight are 0), ProgressiveList windowing (no
+// viewport, so every row mounts unless a suite stubs offsetHeight), real
+// WebSocket traffic (suites stub it per file), or layout-dependent CSS. A test
+// that needs any of these belongs in the Playwright suite under e2e/ (see
+// docs/code/dashboard-ui.md, "Choosing a Test Layer").
 
 // jsdom does not always expose localStorage/sessionStorage (origin- and
 // build-dependent). Guarantee a working Storage so suites that clear/read it in
