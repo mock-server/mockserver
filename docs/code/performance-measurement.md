@@ -1665,12 +1665,16 @@ installed, so there is nothing to measure.
 `./run.sh -prof gc DashboardLogEntryBodyBenchmark` builds the three dashboard rows of one retained
 exchange (received, matched and response entries, each a `DashboardLogEntryDTO`), as every
 dashboard update does, for JSON, text and binary bodies of 16 KiB, 1 MiB and 10 MiB held as a
-retained entry holds them (raw bytes only). It measures what an update spends per exchange on
-bodies. Before the cut-body cache, 10 MiB JSON bodies cost about 500 ms and 1.04 GB per exchange
-per update (text 96 ms and 172 MB, binary 47 ms and 224 MB); once a body has been cut, about 2 us
-and 11 KB for every type and size over the cap. The 16 KiB arms, which are not cut, are unchanged
-(2.29 MB JSON, 277 KB text, plus about 150 bytes per row). One fork on a developer Mac, so
-directional only. The steady-state figure is what the benchmark reports, since each op after the
+retained entry holds them (raw bytes only), with `redaction` off (`OFF`), on with no body fields
+(`HEADERS`, the default when `redactSecretsInLog` is on) and on masking a body field (`FIELDS`). It
+measures what an update spends per exchange on bodies. Before the cut-body cache, 10 MiB JSON bodies
+cost about 500 ms and 1.04 GB per exchange per update (text 96 ms and 172 MB, binary 47 ms and
+224 MB); once a body has been cut, about 2 us and 11 KB for every type and size over the cap. With
+redaction on, before the cache covered it, 10 MiB JSON cost 487 ms and 1.04 GB under
+`HEADERS` and 1.28 s and 2.97 GB under `FIELDS` (text 95 ms / 417 ms, binary 55 ms / 425 ms); after,
+3 to 4 us and 20 to 23 KB for every type. The 16 KiB arms, which are not cut, are unchanged
+(2.29 MB JSON, 277 KB text, plus about 150 bytes per row; `FIELDS` 3.95 MB JSON). One fork on a
+developer Mac, so directional only. The steady-state figure is what the benchmark reports, since each op after the
 first finds the cut kept; the first update of a body still pays one decode.
 
 ### The seven promoted dark benchmarks

@@ -1116,7 +1116,11 @@ public class LogEntry implements EventTranslator<LogEntry> {
     }
 
     private Object renderArgument(Object argument, Redaction redaction, BodyRendering rendering) {
-        if (redaction != null) {
+        if (redaction != null && argument instanceof HttpRequest) {
+            return updateBodyRedacted((HttpRequest) argument, redaction.redactor, redaction.key, rendering);
+        } else if (redaction != null && argument instanceof HttpResponse) {
+            return updateBodyRedacted((HttpResponse) argument, redaction.redactor, redaction.key, rendering);
+        } else if (redaction != null) {
             return redactArgument(argument, redaction, 0);
         } else if (argument instanceof HttpRequest) {
             return updateBody((HttpRequest) argument, rendering);
@@ -1473,8 +1477,8 @@ public class LogEntry implements EventTranslator<LogEntry> {
 
     /**
      * As {@link #redactedView(org.mockserver.configuration.Configuration)}, rendering the bodies of the requests and
-     * responses it shows through {@code rendering} when redaction is off. With redaction on the standard rendering is
-     * always used, since redacting a body's fields needs the whole rendered body.
+     * responses it shows, and of those it quotes directly as arguments, through {@code rendering}. With redaction on,
+     * the body {@code rendering} is given is the body after redaction.
      */
     @JsonIgnore
     public RedactedView redactedView(org.mockserver.configuration.Configuration configuration, BodyRendering rendering) {
@@ -1485,12 +1489,39 @@ public class LogEntry implements EventTranslator<LogEntry> {
      * Renders the body of a request or response for display, given the standard rendering ({@code standard}): a
      * reader that shows only part of a large body can return what it showed before instead of decoding it again.
      * It must return {@code standard.apply(body)} or a {@link LogEntryBody}.
+     * <p>
+     * {@code variant} is everything other than the body that the standard rendering depends on: {@code null} when
+     * unredacted, else the redaction settings and the message's Content-Type. The standard rendering of one body
+     * under {@link Object#equals equal} variants is the same, so a rendering kept for later may be returned only
+     * under an equal variant.
      */
     @FunctionalInterface
     public interface BodyRendering {
-        BodyRendering STANDARD = (body, standard) -> standard.apply(body);
+        BodyRendering STANDARD = (body, variant, standard) -> standard.apply(body);
 
-        Body<?> render(Body<?> body, UnaryOperator<Body<?>> standard);
+        Body<?> render(Body<?> body, Object variant, UnaryOperator<Body<?>> standard);
+    }
+
+    private static final class RedactedBodyVariant {
+        private final String redactionKey;
+        private final String contentType;
+
+        private RedactedBodyVariant(String redactionKey, String contentType) {
+            this.redactionKey = Objects.requireNonNull(redactionKey);
+            this.contentType = contentType;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            return other instanceof RedactedBodyVariant
+                && redactionKey.equals(((RedactedBodyVariant) other).redactionKey)
+                && Objects.equals(contentType, ((RedactedBodyVariant) other).contentType);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(redactionKey, contentType);
+        }
     }
 
     public final class RedactedView {
@@ -1512,7 +1543,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
             org.mockserver.fixture.FixtureRedactor redactor = redaction == null ? null : redaction.redactor;
             return Arrays
                 .stream(httpRequests)
-                .map(requestDefinition -> updateBodyRedacted(requestDefinition, redactor, rendering))
+                .map(requestDefinition -> updateBodyRedacted(requestDefinition, redactor, redaction == null ? null : redaction.key, rendering))
                 .toArray(RequestDefinition[]::new);
         }
 
@@ -1523,7 +1554,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
             if (httpResponse == null) {
                 return null;
             }
-            return updateBodyRedacted(httpResponse, redaction == null ? null : redaction.redactor, rendering);
+            return updateBodyRedacted(httpResponse, redaction == null ? null : redaction.redactor, redaction == null ? null : redaction.key, rendering);
         }
 
         public String getMessage() {
@@ -1703,13 +1734,9 @@ public class LogEntry implements EventTranslator<LogEntry> {
 
     // updateBody renders a BinaryBody as base64, which would hide its fields from the redactor, so a binary
     // body is redacted first; every other body is rendered first so a JSON body keeps its tree rendering.
-    private RequestDefinition updateBodyRedacted(RequestDefinition requestDefinition, org.mockserver.fixture.FixtureRedactor redactor) {
-        return updateBodyRedacted(requestDefinition, redactor, BodyRendering.STANDARD);
-    }
-
-    private RequestDefinition updateBodyRedacted(RequestDefinition requestDefinition, org.mockserver.fixture.FixtureRedactor redactor, BodyRendering rendering) {
+    private static RequestDefinition updateBodyRedacted(RequestDefinition requestDefinition, org.mockserver.fixture.FixtureRedactor redactor) {
         if (redactor == null) {
-            return updateBody(requestDefinition, rendering);
+            return updateBody(requestDefinition, BodyRendering.STANDARD);
         }
         if (requestDefinition instanceof HttpRequest && ((HttpRequest) requestDefinition).getBody() instanceof BinaryBody) {
             return updateBody(redactor.redactRequestDefinition(requestDefinition), BodyRendering.STANDARD);
@@ -1717,18 +1744,56 @@ public class LogEntry implements EventTranslator<LogEntry> {
         return redactor.redactRequestDefinition(updateBody(requestDefinition, BodyRendering.STANDARD));
     }
 
-    private HttpResponse updateBodyRedacted(HttpResponse httpResponse, org.mockserver.fixture.FixtureRedactor redactor) {
-        return updateBodyRedacted(httpResponse, redactor, BodyRendering.STANDARD);
+    /**
+     * As {@link #updateBodyRedacted(RequestDefinition, org.mockserver.fixture.FixtureRedactor)}, rendering the body
+     * through {@code rendering} (which sees the body after redaction) when redaction is on.
+     */
+    private static RequestDefinition updateBodyRedacted(RequestDefinition requestDefinition, org.mockserver.fixture.FixtureRedactor redactor, String redactionKey, BodyRendering rendering) {
+        if (redactor == null) {
+            return updateBody(requestDefinition, rendering);
+        }
+        if (rendering == BodyRendering.STANDARD || !(requestDefinition instanceof HttpRequest) || ((HttpRequest) requestDefinition).getBody() == null) {
+            return updateBodyRedacted(requestDefinition, redactor);
+        }
+        HttpRequest request = (HttpRequest) requestDefinition;
+        HttpRequest[] standard = new HttpRequest[1];
+        Body<?> shown = rendering.render(request.getBody(), new RedactedBodyVariant(redactionKey, request.getFirstHeader("Content-Type")), body -> {
+            standard[0] = (HttpRequest) updateBodyRedacted(request, redactor);
+            return standard[0].getBody();
+        });
+        if (standard[0] != null && shown == standard[0].getBody()) {
+            return standard[0];
+        }
+        // a body kept from an earlier render: the rest of the request is redacted as the standard rendering does
+        return ((HttpRequest) redactor.redactRequestDefinition(request.shallowClone().withBody((Body<?>) null))).withBody(shown);
     }
 
-    private HttpResponse updateBodyRedacted(HttpResponse httpResponse, org.mockserver.fixture.FixtureRedactor redactor, BodyRendering rendering) {
+    private static HttpResponse updateBodyRedacted(HttpResponse httpResponse, org.mockserver.fixture.FixtureRedactor redactor) {
         if (redactor == null) {
-            return updateBody(httpResponse, rendering);
+            return updateBody(httpResponse, BodyRendering.STANDARD);
         }
         if (httpResponse != null && httpResponse.getBody() instanceof BinaryBody) {
             return updateBody(redactor.redactResponseObject(httpResponse), BodyRendering.STANDARD);
         }
         return redactor.redactResponseObject(updateBody(httpResponse, BodyRendering.STANDARD));
+    }
+
+    private static HttpResponse updateBodyRedacted(HttpResponse httpResponse, org.mockserver.fixture.FixtureRedactor redactor, String redactionKey, BodyRendering rendering) {
+        if (redactor == null) {
+            return updateBody(httpResponse, rendering);
+        }
+        if (rendering == BodyRendering.STANDARD || httpResponse == null || httpResponse.getBody() == null) {
+            return updateBodyRedacted(httpResponse, redactor);
+        }
+        HttpResponse[] standard = new HttpResponse[1];
+        Body<?> shown = rendering.render(httpResponse.getBody(), new RedactedBodyVariant(redactionKey, httpResponse.getFirstHeader("Content-Type")), body -> {
+            standard[0] = updateBodyRedacted(httpResponse, redactor);
+            return standard[0].getBody();
+        });
+        if (standard[0] != null && shown == standard[0].getBody()) {
+            return standard[0];
+        }
+        return redactor.redactResponseObject(httpResponse.shallowClone().withBody((BodyWithContentType<?>) null)).withBody((BodyWithContentType<?>) shown);
     }
 
     // Both updateBody forms read without caching: they render retained, released entries on retrieve and
@@ -1737,7 +1802,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
         if (requestDefinition instanceof HttpRequest) {
             HttpRequest httpRequest = (HttpRequest) requestDefinition;
             Body<?> body = httpRequest.getBody();
-            Body<?> rendered = body == null ? null : rendering.render(body, LogEntry::renderedRequestBody);
+            Body<?> rendered = body == null ? null : rendering.render(body, null, LogEntry::renderedRequestBody);
             return rendered == body ? httpRequest : httpRequest.shallowClone().withBody(rendered);
         } else {
             return null;
@@ -1757,7 +1822,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
     private static HttpResponse updateBody(HttpResponse httpResponse, BodyRendering rendering) {
         if (httpResponse != null) {
             Body<?> body = httpResponse.getBody();
-            Body<?> rendered = body == null ? null : rendering.render(body, LogEntry::renderedResponseBody);
+            Body<?> rendered = body == null ? null : rendering.render(body, null, LogEntry::renderedResponseBody);
             return rendered == body ? httpResponse : httpResponse.shallowClone().withBody((BodyWithContentType<?>) rendered);
         } else {
             return null;

@@ -63,10 +63,10 @@ public class DashboardCutBodyMemoTest {
     );
 
     // A JSON body held as a retained entry holds it (bytes only), counting every time its text is decoded.
-    private static final class CountingJsonBody extends JsonBody {
-        private final AtomicInteger decodes = new AtomicInteger();
+    static final class CountingJsonBody extends JsonBody {
+        final AtomicInteger decodes = new AtomicInteger();
 
-        private CountingJsonBody(String json) {
+        CountingJsonBody(String json) {
             super(json, json.getBytes(StandardCharsets.UTF_8), MediaType.APPLICATION_JSON_UTF_8, MatchType.ONLY_MATCHING_FIELDS);
             releaseDerivedForms();
         }
@@ -84,7 +84,7 @@ public class DashboardCutBodyMemoTest {
         }
     }
 
-    private static String jsonArray(String label, int minimumLength) {
+    static String jsonArray(String label, int minimumLength) {
         StringBuilder json = new StringBuilder("[");
         for (int i = 0; json.length() < minimumLength; i++) {
             json.append(i > 0 ? "," : "").append("{\"id\":").append(i).append(",\"name\":\"").append(label).append("-café-").append(i).append("\"}");
@@ -111,7 +111,7 @@ public class DashboardCutBodyMemoTest {
     }
 
     // The log sections of one update over these entries, as the dashboard serialises them.
-    private static String update(List<LogEntry> reverse, Configuration configuration) throws Exception {
+    static String update(List<LogEntry> reverse, Configuration configuration) throws Exception {
         List<DashboardLogEntryDTO> dtos = new ArrayList<>();
         for (LogEntry logEntry : reverse) {
             dtos.add(new DashboardLogEntryDTO(logEntry, configuration));
@@ -170,7 +170,7 @@ public class DashboardCutBodyMemoTest {
     // Bodies chosen to break a cut taken any other way than from the whole rendered body: JSON whose compact text
     // differs from its source (exponents, duplicate keys, whitespace), JSON that does not parse, text and JSON with
     // a surrogate pair across the cut, binary, XML, and lengths either side of the cap.
-    private static List<Supplier<BodyWithContentType<?>>> corpus() {
+    static List<Supplier<BodyWithContentType<?>>> corpus() {
         String emojiAtCut = repeat('x', CAP - 1) + "😀" + repeat('y', 100);
         StringBuilder exponents = new StringBuilder("[");
         for (int i = 0; exponents.length() < 2 * CAP; i++) {
@@ -208,13 +208,13 @@ public class DashboardCutBodyMemoTest {
         );
     }
 
-    private static BodyWithContentType<?> json(String json) {
+    static BodyWithContentType<?> json(String json) {
         JsonBody body = new JsonBody(json, json.getBytes(StandardCharsets.UTF_8), MediaType.APPLICATION_JSON_UTF_8, MatchType.ONLY_MATCHING_FIELDS);
         body.releaseDerivedForms();
         return body;
     }
 
-    private static BodyWithContentType<?> text(String text) {
+    static BodyWithContentType<?> text(String text) {
         StringBody body = new StringBody(text, text.getBytes(StandardCharsets.UTF_8), false, MediaType.PLAIN_TEXT_UTF_8);
         body.releaseDerivedForms();
         return body;

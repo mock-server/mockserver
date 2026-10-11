@@ -3,6 +3,8 @@ package org.mockserver.fixture;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
@@ -61,6 +63,17 @@ public class FixtureRedactor {
     }
 
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
+    // Field values found in large bodies, so each render of a retained log entry (every dashboard update) does not
+    // decode and parse its bodies again to find them. Weak keys compare by identity and go with the body, whose
+    // content never changes once built; a kept list is used only for the field names and Content-Type it was found
+    // under, so it never under-scrubs after either changes.
+    static final int KEPT_BODY_VALUES_MIN_CHARACTERS = 64 * 1024;
+    private static final Cache<Body<?>, KeptBodyValues> KEPT_BODY_VALUES = CacheBuilder.newBuilder()
+        .weakKeys()
+        .softValues()
+        .maximumWeight(4L * 1024 * 1024)
+        .weigher((Body<?> body, KeptBodyValues kept) -> kept.characters)
+        .build();
 
     /**
      * The default sensitive header names (case-insensitive), as an unmodifiable
@@ -502,8 +515,28 @@ public class FixtureRedactor {
         if (sensitiveBodyFields.isEmpty() || body == null) {
             return;
         }
+        boolean keepable = body instanceof StringBody || body instanceof JsonBody || body instanceof XmlBody || body instanceof BinaryBody;
+        KeptBodyValues kept = keepable ? KEPT_BODY_VALUES.getIfPresent(body) : null;
+        if (kept != null && kept.fields.equals(new ArrayList<>(sensitiveBodyFields)) && Objects.equals(kept.contentType, contentTypeHeader)) {
+            values.addAll(kept.values);
+            return;
+        }
         String bodyString = bodyText(body, contentTypeHeader);
-        if (bodyString == null || bodyString.isEmpty() || !mentionsSensitiveBodyField(bodyString)) {
+        if (bodyString == null || bodyString.isEmpty()) {
+            return;
+        }
+        if (!keepable || bodyString.length() < KEPT_BODY_VALUES_MIN_CHARACTERS) {
+            addBodyFieldValues(values, bodyString);
+            return;
+        }
+        Set<String> found = new LinkedHashSet<>();
+        addBodyFieldValues(found, bodyString);
+        KEPT_BODY_VALUES.put(body, new KeptBodyValues(new ArrayList<>(sensitiveBodyFields), contentTypeHeader, found));
+        values.addAll(found);
+    }
+
+    private void addBodyFieldValues(Set<String> values, String bodyString) {
+        if (!mentionsSensitiveBodyField(bodyString)) {
             return;
         }
         List<String> documents = new ArrayList<>();
@@ -523,6 +556,24 @@ public class FixtureRedactor {
             } catch (Exception notJson) {
                 // an unparseable body is replaced whole by redactBodyIfNeeded; there are no field values to find
             }
+        }
+    }
+
+    private static final class KeptBodyValues {
+        private final List<String> fields;
+        private final String contentType;
+        private final List<String> values;
+        private final int characters;
+
+        private KeptBodyValues(List<String> fields, String contentType, Collection<String> values) {
+            this.fields = fields;
+            this.contentType = contentType;
+            this.values = Collections.unmodifiableList(new ArrayList<>(values));
+            int characters = 64;
+            for (String value : values) {
+                characters += value.length();
+            }
+            this.characters = characters;
         }
     }
 

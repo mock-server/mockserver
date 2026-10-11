@@ -420,9 +420,12 @@ This release delivers a sustained performance and memory programme alongside dat
   acting, and do nothing (saying why) if it can no longer be loaded. An update is also limited to about 16 MB: when recent requests fill it, the dashboard
   shows the newest ones and says older ones are not shown. MockServer still keeps, verifies and
   retrieves full bodies; only the dashboard's live view is shortened.
-  A long body is also decoded once, when it is first shown, instead of on every live update (unless
-  `redactSecretsInLog` is on): with 10 MiB JSON bodies each exchange cost about half a second of CPU
-  and 1 GB of allocation on every update while traffic was flowing and a dashboard was open.
+  A long body is also decoded once, when it is first shown, instead of on every live update, with or
+  without `redactSecretsInLog`: with 10 MiB JSON bodies each exchange cost about half a second of CPU
+  and 1 GB of allocation on every update while traffic was flowing and a dashboard was open, and
+  about 1.3 seconds and 3 GB with `redactSecretsInLog` masking body fields. With redaction on, what
+  is kept is the redacted text, and it is never shown after redaction is turned off or on or its
+  masked fields change.
 
 - **The performance page's headline is now about 144,000 req/s on six cores at a sub-millisecond median, measured with four load generators; the earlier 60,000 req/s was the limit of a single load generator, not of MockServer.** `performance.html` used to publish a healthy ceiling of 60,000 req/s (serving 57,149 req/s, p95 21.9 ms) from a test driven by one k6 process, which ran out before a six-core MockServer did. The headline run drives one six-core MockServer from four k6 processes on the machine's other CPU socket (an AWS c6i.32xlarge). It read 144,000 req/s: the instance served 143,719 req/s with no errors at a median of 0.108 ms and a p95 of 7.3 ms, with p95 under a millisecond up to 120,000 req/s. Read the 99th percentile with care. The test also requires p99 within 10 ms, but only over the seconds in which the load generators were not pausing for their own garbage collection: counted that way it was 9.73 ms, and with every second counted it was 44.9 ms. The page's table shows both columns, and judged on every second the ceiling would be 96,000 req/s. The ceiling is also resolved to one 8,000 req/s test step. In the six like-for-like runs behind the figure (five qualifying runs and the published one) it read 136,000 req/s in three and 144,000 req/s in three; at 144,000 req/s all six held a sub-millisecond median with no errors, three kept that p99 within 10 ms, and none did with every second counted. The page publishes the higher of the two rates, says so, and tells you to provision against 136,000 req/s. The old and new figures are not a before-and-after, because the machine, the load generators and the rule all differ: the difference is the measurement, not a speed-up in MockServer. The charts and the "Latency by action" table still come from the single-load-generator run.
 - **The integration-testing helper `SSLSocketFactory.wrapSocket()` now listens on `127.0.0.1` only.** The no-argument

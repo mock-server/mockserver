@@ -21,6 +21,7 @@ import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
@@ -37,43 +38,54 @@ public final class DashboardBodyCap {
     private static final ObjectMapper JSON = new ObjectMapper();
     // Cut text of retained bodies, so a large body is decoded once rather than at every quote in every update.
     // Weak keys compare by identity and go with the body's log entry; soft values give way under heap pressure.
+    // A cut is shown only under the rendering variant (redaction settings) it was cut under.
     private static final long CUT_BODIES_MAX_CHARACTERS = 16L * 1024 * 1024;
-    private static final Cache<Body<?>, BodyText> CUT_BODIES = CacheBuilder.newBuilder()
+    private static final Cache<Body<?>, Cut> CUT_BODIES = CacheBuilder.newBuilder()
         .weakKeys()
         .softValues()
         .maximumWeight(CUT_BODIES_MAX_CHARACTERS)
-        .weigher((Body<?> body, BodyText text) -> text.text.length())
+        .weigher((Body<?> body, Cut cut) -> cut.text.text.length())
         .build();
 
     private DashboardBodyCap() {
     }
 
     /**
-     * Renders one log entry's bodies for the dashboard (only consulted with redaction off): a body already cut
-     * for an earlier row comes back as that cut text without being decoded again.
+     * Renders one log entry's bodies for the dashboard: a body already cut for an earlier row under the same
+     * variant (with redaction on, its redacted rendering) comes back as that cut text without being decoded again.
      */
     public static final class Rendering implements LogEntry.BodyRendering {
-        // each rendered body this produced, to the retained body it came from
-        private final Map<Body<?>, Body<?>> renderedFrom = new IdentityHashMap<>(4);
+        // each rendered body this produced, to the retained body it came from and the variant it was rendered under
+        private final Map<Body<?>, Map.Entry<Body<?>, Object>> renderedFrom = new IdentityHashMap<>(4);
 
         @Override
-        public Body<?> render(Body<?> body, UnaryOperator<Body<?>> standard) {
-            BodyText cut = CUT_BODIES.getIfPresent(body);
-            if (cut != null) {
-                return new CutBody(cut);
+        public Body<?> render(Body<?> body, Object variant, UnaryOperator<Body<?>> standard) {
+            Cut cut = CUT_BODIES.getIfPresent(body);
+            if (cut != null && Objects.equals(cut.variant, variant)) {
+                return new CutBody(cut.text);
             }
             Body<?> rendered = standard.apply(body);
             if (rendered != body) {
-                renderedFrom.put(rendered, body);
+                renderedFrom.put(rendered, new java.util.AbstractMap.SimpleImmutableEntry<>(body, variant));
             }
             return rendered;
         }
 
         private void cut(Body<?> rendered, BodyText text) {
-            Body<?> body = renderedFrom.get(rendered);
-            if (body != null) {
-                CUT_BODIES.put(body, text);
+            Map.Entry<Body<?>, Object> source = renderedFrom.get(rendered);
+            if (source != null) {
+                CUT_BODIES.put(source.getKey(), new Cut(source.getValue(), text));
             }
+        }
+    }
+
+    private static final class Cut {
+        private final Object variant;
+        private final BodyText text;
+
+        private Cut(Object variant, BodyText text) {
+            this.variant = variant;
+            this.text = text;
         }
     }
 

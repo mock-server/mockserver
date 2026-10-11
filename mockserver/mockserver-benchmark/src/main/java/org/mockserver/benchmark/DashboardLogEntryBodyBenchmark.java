@@ -58,13 +58,21 @@ public class DashboardLogEntryBodyBenchmark {
     @Param({"16384", "1048576", "10485760"})
     private int bodyBytes;
 
-    private final Configuration configuration = configuration();
+    // OFF: redactSecretsInLog off; HEADERS: on with no body fields (the default); FIELDS: on, masking a body field
+    @Param({"OFF", "HEADERS", "FIELDS"})
+    private String redaction;
+
+    private Configuration configuration;
     private LogEntry received;
     private LogEntry matched;
     private LogEntry responded;
 
     @Setup
     public void setup() {
+        configuration = configuration();
+        if (!"OFF".equals(redaction)) {
+            configuration.redactSecretsInLog(true).fixtureBodyRedactFields("FIELDS".equals(redaction) ? "password" : "");
+        }
         HttpRequest request = request("/orders").withMethod("POST").withBody(body("request"));
         HttpResponse response = response().withStatusCode(200).withBody(body("response"));
         Expectation expectation = new Expectation(request("/orders")).thenRespond(response().withBody("{\"ok\":true}"));
