@@ -174,8 +174,8 @@ KEEP="${PERF_RW_KEEP:-0.95}"
 XCHECK="${PERF_RW_XCHECK:-true}"
 XCHECK_MAX_RPS="${PERF_RW_XCHECK_MAX_RPS:-24000}"
 # Same-request tolerances: native histograms (bucket factor 1.1) resolve a quantile to ~5%.
-# The time cut's window differs by up to 2 push intervals of requests, which the rank band in
-# lib/perf-rw-cross-check.jq bounds. The absolute floor only matters below ~0.05 ms.
+# The time cut is held to by_tag from the same cut on (lib/perf-rw-cross-check.jq), at the same
+# tolerances. The absolute floor only matters below ~0.05 ms.
 XTOL_P50="${PERF_RW_XCHECK_TOL_P50:-0.10}"
 XTOL_P95="${PERF_RW_XCHECK_TOL_P95:-0.10}"
 XTOL_P99="${PERF_RW_XCHECK_TOL_P99:-0.15}"
@@ -979,40 +979,55 @@ if [ "$XCHECK" = true ]; then
   for a in "${_all[@]}"; do [ "$a" -le "$XCHECK_MAX_RPS" ] && XRATES="${XRATES:+$XRATES,}$a"; done
   XRATES="${PERF_RW_XCHECK_RATES:-$XRATES}"
 fi
-# The cross-check program's input (lib/perf-rw-cross-check.jq) from the work files. "levels"
-# runs before the main phase, so it reads no main merge.
-cross_input() { # mode
-  local band="$WORK/xcheck-band.json" main=/dev/null xcost="[]"
-  [ -s "$band" ] || band=/dev/null
-  if [ "$1" = cross ]; then main="$WORK/main-merged.json"; xcost="$(cpu_cost_json xcheck)"; fi
-  jq -nc --arg mode "$1" --arg live true --slurpfile pub "$WORK/xcheck-p0.json" --slurpfile bytime "$WORK/xcheck-by-time.json" \
-    --slurpfile bytag "$WORK/xcheck-by-tag.json" --slurpfile main "$main" --slurpfile band "$band" --argjson xcost "$xcost" \
+# The cross-check program's input (lib/perf-rw-cross-check.jq) from the work files.
+cross_input() {
+  local tagcut="$WORK/xcheck-tag-at-cut.json" xcost
+  [ -s "$tagcut" ] || tagcut=/dev/null
+  xcost="$(cpu_cost_json xcheck)"
+  jq -nc --arg live true --slurpfile pub "$WORK/xcheck-p0.json" --slurpfile bytime "$WORK/xcheck-by-time.json" \
+    --slurpfile bytag "$WORK/xcheck-by-tag.json" --slurpfile tagcut "$tagcut" --slurpfile main "$WORK/main-merged.json" \
+    --argjson xcost "$xcost" \
     --argjson t50 "$XTOL_P50" --argjson t95 "$XTOL_P95" --argjson t99 "$XTOL_P99" --argjson abs "$XTOL_ABS_MS" \
     --argjson push "$PUSH_S" --argjson wtol "$WINDOW_TOL" \
     --argjson ra "$RTOL_ACHIEVED" --argjson r50 "$RTOL_P50" --argjson r95 "$RTOL_P95" --argjson r99 "$RTOL_P99" '
-    {mode:$mode, live:($live == "true"), pub:$pub[0], bytime:$bytime[0], bytag:$bytag[0], main:$main[0], band:$band[0], xcost:$xcost,
+    {live:($live == "true"), pub:$pub[0], bytime:$bytime[0], bytag:$bytag[0], bytagcut:$tagcut[0], main:$main[0], xcost:$xcost,
      tol:{p50:$t50, p95:$t95, p99:$t99, abs_ms:$abs, push_s:$push, window_tol:$wtol,
           cross_run:{achieved_ratio:$ra, p50:$r50, p95:$r95, p99:$r99}}}'
 }
-# by_tag (exactly the published requests) at the levels that bound each by_time quantile, so
-# the band is as tight as the time cut allows; a failed query fails rw_prometheus_queries_ok.
-xcheck_band() {
-  local levels k q v r pts="[]"
-  levels="$(cross_input levels | jq -c -f "$CROSS_JQ")"
-  for k in $(jq -r '.[].index' <<<"$levels"); do
+# by_tag (exactly the published requests) from each process's settle cut on: the requests the
+# time cut should hold. A failed query fails rw_prometheus_queries_ok; a rung with no cut gets
+# no point, which fails the cross-check.
+xcheck_tag_at_cut() {
+  local k r steady cuts proc cut bexpr s_expr q v pt pts="[]"
+  for k in $(jq -r '.points | keys[]' "$WORK/xcheck-by-time.json"); do
     r="$(jq -r ".per_process_rates[$k]" "$WORK/xcheck-meta.json")"
-    for q in $(jq -r ".[$k].levels[]" <<<"$levels"); do
-      v="$(promv "histogram_quantile($q, sum(k6_http_req_duration_seconds{proc=~\"xcheck-p[0-9]+\",rate=\"$r\",win=\"${r}_steady\"})) * 1000")"
-      pts="$(jq -c --argjson k "$k" --argjson q "$q" --argjson v "$v" '.[$k] = ((.[$k] // []) + [[$q, $v]])' <<<"$pts")"
-    done
+    steady="k6_http_req_duration_seconds{proc=~\"xcheck-p[0-9]+\",rate=\"$r\",win=\"${r}_steady\"}"
+    cuts="$(jq -r ".points[$k].per_process[] | \"\(.proc) \(.settle_cut_s)\"" "$WORK/xcheck-by-time.json")"
+    pt=null
+    if [ -n "$cuts" ] && ! grep -q ' null$' <<<"$cuts"; then
+      bexpr=""
+      while read -r proc cut; do
+        bexpr="${bexpr:+$bexpr or }(k6_http_req_duration_seconds{proc=\"$proc\",rate=\"$r\",win=\"${r}_steady\"} @ ${cut})"
+      done <<<"$cuts"
+      # No steady sample at or before any cut: none had completed, so nothing is subtracted.
+      if [ "$(promv "histogram_count(sum(${bexpr}))")" = null ]; then s_expr="sum(${steady})"
+      else s_expr="(sum(${steady}) - sum(${bexpr}))"; fi
+      pt="$(jq -nc --argjson c "$(promv "histogram_count(${s_expr})")" '{measured_sample_count:$c}')"
+      for q in 0.5 0.95 0.99; do
+        v="$(promv "histogram_quantile($q, ${s_expr}) * 1000")"
+        pt="$(jq -c --arg q "$q" --argjson v "$v" \
+          '. + {({"0.5":"p50_ms","0.95":"p95_ms","0.99":"p99_ms"}[$q]): (if $v == null then null else ($v * 1000 | round) / 1000 end)}' <<<"$pt")"
+      done
+    fi
+    pts="$(jq -c --argjson p "$pt" '. + [$p]' <<<"$pts")"
   done
-  jq -nc --argjson p "$pts" '{points:[ $p[] | {quantiles:(. // [])} ]}' > "$WORK/xcheck-band.json"
+  jq -nc --argjson p "$pts" '{points:$p}' > "$WORK/xcheck-tag-at-cut.json"
 }
 xcheck_phase() {
   run_phase xcheck 1 "$XRATES" vu_tag false "$XCHECK_CPUS"
   merge_phase xcheck vu_tag xcheck-by-tag
   merge_phase xcheck wallclock xcheck-by-time
-  xcheck_band
+  xcheck_tag_at_cut
 }
 [ -n "$XRATES" ] && soft xcheck_phase xcheck_phase
 # A push path that broke after the pre-flight: stop before the main phase spends its rig time.
@@ -1445,7 +1460,7 @@ SLOW_FLUSHES="$( { grep -hoE 'took [0-9.]+(ms|s) while flush period' "$WORK"/*-p
 CROSS='{"attempted":false}'
 # Report-only comparisons: rungs with no single-process counterpart (above the cross-check
 # cap) or with a missing figure are labelled, never divided. Missing inputs fail the step.
-build_cross() { cross_input cross | jq -c -f "$CROSS_JQ"; }
+build_cross() { cross_input | jq -c -f "$CROSS_JQ"; }
 if [ -n "$XRATES" ]; then
   soft_capture CROSS '{"attempted":true,"error":"cross-check assembly failed (see rw_assembly_steps_ok)"}' cross_check build_cross
 fi
