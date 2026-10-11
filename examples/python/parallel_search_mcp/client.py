@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from .config import ClientConfig
+from .exceptions import McpProtocolError, McpToolError
 from .transport import StreamableHttpTransport
 
 
@@ -31,7 +32,7 @@ class ParallelSearchMcpClient:
         response = self.transport.send_json_rpc("initialize", params=params)
         if not response or "result" not in response:
             error = response.get("error") if response else "Empty response"
-            raise RuntimeError(f"MCP initialization failed: {error}")
+            raise McpProtocolError(f"MCP initialization failed: {error}")
 
         result = response["result"]
         self.protocol_version = result.get("protocolVersion")
@@ -58,7 +59,7 @@ class ParallelSearchMcpClient:
         response = self.transport.send_json_rpc("tools/list", params={})
         if not response or "result" not in response:
             error = response.get("error") if response else "Empty response"
-            raise RuntimeError(f"Failed to list tools: {error}")
+            raise McpProtocolError(f"Failed to list tools: {error}")
 
         return response["result"].get("tools", [])
 
@@ -71,15 +72,16 @@ class ParallelSearchMcpClient:
         response = self.transport.send_json_rpc("tools/call", params=params)
         if not response or "result" not in response:
             error = response.get("error") if response else "Empty response"
-            raise RuntimeError(f"Tool invocation '{name}' failed: {error}")
+            raise McpProtocolError(f"Tool invocation '{name}' failed: {error}")
 
         result = response["result"]
         if result.get("isError"):
             content = result.get("content", [])
             msg = content[0].get("text") if content else "Tool reported error"
-            raise RuntimeError(f"Tool '{name}' execution error: {msg}")
+            raise McpToolError(f"Tool '{name}' execution error: {msg}")
 
         return result
+
 
     def search(
         self,

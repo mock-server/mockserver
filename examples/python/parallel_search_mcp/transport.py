@@ -8,17 +8,10 @@ import urllib.request
 from typing import Any
 
 from .config import ClientConfig
+from .exceptions import McpConnectionError, McpProtocolError
 
 
-class TransportError(Exception):
-    """Base exception for transport failures."""
-
-
-class ConnectionError(TransportError):
-    """Raised when the connection to the MCP endpoint fails."""
-
-
-class HttpError(TransportError):
+class HttpError(McpConnectionError):
     """Raised when the HTTP response contains an error status code."""
 
     def __init__(self, status_code: int, message: str, body: str | None = None) -> None:
@@ -95,7 +88,7 @@ class StreamableHttpTransport:
                 try:
                     return json.loads(raw_body)
                 except json.JSONDecodeError as err:
-                    raise TransportError(f"Malformed JSON in server response: {err}") from err
+                    raise McpProtocolError(f"Malformed JSON in server response: {err}") from err
 
         except urllib.error.HTTPError as err:
             err_body = None
@@ -106,7 +99,8 @@ class StreamableHttpTransport:
             raise HttpError(err.code, err.reason, body=err_body) from err
 
         except urllib.error.URLError as err:
-            raise ConnectionError(f"Failed to connect to {self.config.base_url}: {err.reason}") from err
+            raise McpConnectionError(f"Failed to connect to {self.config.base_url}: {err.reason}") from err
 
         except TimeoutError as err:
-            raise ConnectionError(f"Connection timed out after {self.config.timeout_seconds}s") from err
+            raise McpConnectionError(f"Connection timed out after {self.config.timeout_seconds}s") from err
+
