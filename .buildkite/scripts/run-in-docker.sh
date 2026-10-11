@@ -12,6 +12,8 @@ MEMORY=""
 NETWORK=""
 DOCKER_SOCKET=false
 ENTRYPOINT=""
+CONTAINER_NAME=""
+INIT=false
 ENV_VARS=()
 VOLUMES=()
 CACHE_TYPES=()
@@ -42,6 +44,8 @@ Options:
   -m, --memory SIZE        Memory limit (e.g. 7g)
   -s, --docker-socket      Mount Docker socket into container
   --entrypoint CMD         Override container entrypoint
+  --name NAME              Container name (lets the caller docker kill it on cancel)
+  --init                   Run tini as PID 1 so the command receives signals
   -e, --env KEY=VALUE      Pass environment variable to container
   -v, --volume SRC:DST     Additional volume mount
   --cache TYPE             Mount dependency cache (maven|npm|pip|bundler|gradle|go|cargo|nuget)
@@ -73,6 +77,8 @@ while [[ $# -gt 0 ]]; do
     -m|--memory)  MEMORY="$2"; shift 2 ;;
     -s|--docker-socket) DOCKER_SOCKET=true; shift ;;
     --entrypoint) ENTRYPOINT="$2"; shift 2 ;;
+    --name)       CONTAINER_NAME="$2"; shift 2 ;;
+    --init)       INIT=true; shift ;;
     -e|--env)     ENV_VARS+=("$2"); shift 2 ;;
     -v|--volume)  VOLUMES+=("$2"); shift 2 ;;
     --cache)      CACHE_TYPES+=("$2"); shift 2 ;;
@@ -123,6 +129,14 @@ fi
 
 if [[ -n "$MEMORY" ]]; then
   DOCKER_ARGS+=(--memory="$MEMORY" --memory-swap="$MEMORY")
+fi
+
+if [[ -n "$CONTAINER_NAME" ]]; then
+  DOCKER_ARGS+=(--name "$CONTAINER_NAME")
+fi
+
+if [[ "$INIT" == "true" ]]; then
+  DOCKER_ARGS+=(--init)
 fi
 
 if [[ -n "$ENTRYPOINT" ]]; then

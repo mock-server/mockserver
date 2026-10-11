@@ -364,6 +364,29 @@ The queue runs up to three agents, one per c5.12xlarge, so a perf job never shar
 
 See [Performance Tuning](../operations/performance-tuning.md#performance-regression-pipeline) for the full description of behaviours, thresholds, result schema, and how to re-baseline.
 
+### Repeating One Integration Test
+
+**What it is.** The `:repeat: test repeat under load` step in `pipeline-perf-test.yml` runs one `mockserver-netty` integration test class, or one method, N times in a row on a `default`-queue agent (Linux, epoll; instance types and capacity in `terraform/buildkite-agents/`), with busy loops saturating the CPUs. It counts flakes under load, and with `TEST_REPEAT_REF` it runs an older commit's code so a change can be compared with its base. It runs only in an API-created build (`bk build create`) with `TEST_REPEAT_IT` set and no `[perf-run]` or `[perf-soak]` in its message; the k6, guard and soak steps need a UI or scheduled build or one of those markers, so such a build runs only this step and the lint step.
+
+```bash
+bk build create -y -p mockserver-performance-test -b master -c <master commit containing the step> \
+  -m "[test-repeat] <why>" \
+  -e TEST_REPEAT_IT=ResponseWriteStallTimeoutIntegrationTest \
+  -e TEST_REPEAT_COUNT=12 -e TEST_REPEAT_BUSY_LOOPS=12 \
+  -e TEST_REPEAT_REF=<full 40-character SHA whose code is tested; omit for the build's commit>
+```
+
+| Variable | Meaning | Default |
+|----------|---------|---------|
+| `TEST_REPEAT_IT` | Failsafe selector, `Class` or `Class#method` (required) | none |
+| `TEST_REPEAT_COUNT` | Runs, 1 to 50 | 12 |
+| `TEST_REPEAT_BUSY_LOOPS` | Busy-loop processes during the runs (0 for no load) | 12 |
+| `TEST_REPEAT_REF` | Full 40-character SHA whose code is built and tested | the build's commit |
+
+**Behaviour.** The step extracts `TEST_REPEAT_REF`'s tree with `git archive` (the step script itself always comes from the build's commit), builds `mockserver-netty` and its upstream modules once without tests or the dashboard UI into a private local repository chained to the Maven cache, starts the busy loops, then runs `verify -Dit.test=<selector>` N times with CI's test arguments and no reruns. Each run's failsafe reports and Maven log go to the `test-repeat/` artifacts; `test-repeat/summary.txt` and the build annotation list each run's verdict (`PASS`, `FAIL` or `NO-TESTS`, the last when a run left no report with an executed test), its duration, the load average and the failed test names. The step fails if any run did not pass. Run one arm per build, one build at a time: two builds land on different VMs.
+
+**Cancel and timeout.** The busy loops must not outlive the step, or they load the agent's next job. The container is named after the job and runs under `--init`; Maven runs in the background so the scripts' TERM traps fire at once; on TERM the step script `docker kill`s the container and the in-container script stops the loops; and each loop is bounded by `timeout` (4 h) in case the step is killed without a TERM.
+
 ### CI Build Pipeline
 
 **File:** `.buildkite/pipeline-java.yml`

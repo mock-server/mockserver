@@ -76,3 +76,21 @@ steps:
           limit: 2
         - exit_status: 255  # agent forced shutdown
           limit: 2
+
+  # Repeats one mockserver-netty integration test under CPU load, only in an API-created
+  # build with TEST_REPEAT_IT set and no perf marker, so no k6, guard or soak step shares
+  # the build. See "Repeating One Integration Test" in docs/infrastructure/ci-cd.md.
+  - label: ":repeat: test repeat under load"
+    command: ".buildkite/scripts/steps/java-test-repeat.sh"
+    if: "build.source == 'api' && build.env('TEST_REPEAT_IT') != null && build.message !~ /\\[perf-(run|soak)\\]/"
+    timeout_in_minutes: 240
+    agents:
+      queue: "default"
+    artifact_paths:
+      - "test-repeat/**/*"
+    retry:
+      automatic:
+        - exit_status: -1   # agent lost (e.g. Spot reclamation)
+          limit: 2
+        - exit_status: 255  # agent forced shutdown
+          limit: 2
