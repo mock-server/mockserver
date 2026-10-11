@@ -61,3 +61,44 @@ class ParallelSearchMcpClient:
             raise RuntimeError(f"Failed to list tools: {error}")
 
         return response["result"].get("tools", [])
+
+    def call_tool(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+        """Invoke a tool by name with arguments via tools/call."""
+        params = {
+            "name": name,
+            "arguments": arguments,
+        }
+        response = self.transport.send_json_rpc("tools/call", params=params)
+        if not response or "result" not in response:
+            error = response.get("error") if response else "Empty response"
+            raise RuntimeError(f"Tool invocation '{name}' failed: {error}")
+
+        result = response["result"]
+        if result.get("isError"):
+            content = result.get("content", [])
+            msg = content[0].get("text") if content else "Tool reported error"
+            raise RuntimeError(f"Tool '{name}' execution error: {msg}")
+
+        return result
+
+    def search(
+        self,
+        objective: str,
+        search_queries: list[str],
+        session_id: str | None = None,
+        model_name: str | None = None,
+    ) -> dict[str, Any]:
+        """Execute a web search using the Parallel Search MCP 'web_search' tool."""
+        if not search_queries:
+            raise ValueError("search_queries must contain at least one query")
+
+        args: dict[str, Any] = {
+            "objective": objective,
+            "search_queries": search_queries,
+            "session_id": session_id or self.config.session_id,
+        }
+        m_name = model_name or self.config.model_name
+        if m_name:
+            args["model_name"] = m_name
+
+        return self.call_tool("web_search", arguments=args)
