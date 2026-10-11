@@ -1,8 +1,17 @@
-"""Parallel Search MCP (Model Context Protocol) capture and replay example.
+"""Parallel Search MCP (Model Context Protocol) capture and replay example."""
 
-Demonstrates integrating with Parallel Search MCP (Streamable HTTP transport)
-to perform web searches and page fetches, capturing upstream interactions through
-MockServer, and replaying them locally for deterministic, offline testing.
-"""
+from .parallel_search_mcp import (
+    DEFAULT_FIXTURE_PATH,
+    McpClient,
+    build_replay_expectations,
+    load_fixture,
+    send_mcp_request,
+)
 
-__version__ = "1.0.0"
+__all__ = [
+    "DEFAULT_FIXTURE_PATH",
+    "McpClient",
+    "build_replay_expectations",
+    "load_fixture",
+    "send_mcp_request",
+]
