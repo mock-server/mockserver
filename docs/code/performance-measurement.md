@@ -1714,6 +1714,17 @@ by the step's `EXTRA_EXPECTED` fail-closed row guard (now 37 = 32 dark + 5 proxy
 crashed fork, **or a `-p` pin that stopped applying** (which would re-expand to the full
 cartesian) all red the build.
 
+**`BinaryReadBufferBenchmark` is on demand, not daily.** It measures the read-buffer cost of one
+message on a binary (non-HTTP) proxied connection: 64 KiB reads, the binary read size, which the
+pooled allocator does not cache per thread, against 32 KiB reads, which it does, for a 16 KiB and a
+256 KiB message (`readLoop`), with `allocateOnly` as the no-copy control. No k6 scenario drives
+binary proxying, so this is the only measurement of that path. It is in neither daily include, so
+the daily step does not run it. To run it once on the perf rig without a script change, start a
+manual build with `JMH_INCLUDE_PROXY='org\.mockserver\.benchmark\.(RelayByteCopyBenchmark|SocksHandshakeBenchmark|BinaryReadBufferBenchmark)\.'`
+and `EXTRA_EXPECTED=45` (37 plus its 8 rows; its params are not named like the relay's, so the
+proxy invocation's `-p` pins do not reach it). Its rows land in `perf-microbench-extra.json` as
+`microbench_extra.BinaryReadBufferBenchmark.<method>_messageBytes-<n>_readBufferSize-<n>`.
+
 **`ForwardPathBenchmark` does not measure proxying.** It measures the work
 `LoadScenarioOrchestrator.RunningScenario.render()` performs before handing a request to the
 Netty HTTP client: `request.clone()` plus Velocity template rendering. This is the load

@@ -36,8 +36,8 @@ For how each run is produced, gated and read, see
 | 135 | The soak's comments still describe a count-bound ~115.5k ring; build 656 measured a byte-bound log of 35,370 entries | a comment-only change in `perf-test-soak.sh` and `soak.js` (§5) |
 | 136 | Recalibrate the weekly soak's p95/p99 gates and derive a drift bound once eight counting scheduled runs exist | eight counting scheduled weekly soaks (1 so far: 656; next Sunday 2026-10-18 08:00 UTC). The owner decided on 2026-10-11 that a `differs` run counts when its server image is identical (`image_revision_ancestor_of_harness` true) (§5) |
 | 164 | Lint the hand-authored headline text against the published figure | a lint check of its own (§5) |
-| 204c | The load-measured `INFO` multiples in `memory-management.md` predate the end of message memoisation | a perf-rig run (§5) |
-| 215 | Binary connections read 64 KiB at a time, above the pooled allocator's thread-cache limit, and hold up to 256 KiB while being read: not measured under load | a measurement on the perf rig, low (§5) |
+| 204c | The load-measured `INFO` multiples in `memory-management.md` predate the end of message memoisation | a perf-harness addition: an `INFO`-arm live-heap delta across a log reset; perf builds 653 and 657 record only counted bytes (§5) |
+| 215 | Binary connections read 64 KiB at a time, above the pooled allocator's thread-cache limit, and hold up to 256 KiB while being read: not measured under load | one manual perf build running the new `BinaryReadBufferBenchmark` (`JMH_INCLUDE_PROXY` + `EXTRA_EXPECTED=45`, no script change) (§5) |
 
 ## §4 — Hardware scale and JVM profiling (added 2026-09-29)
 
