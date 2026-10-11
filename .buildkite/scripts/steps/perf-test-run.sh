@@ -2497,7 +2497,7 @@ sweep_tail_localisation() { # sweep_json diag_csv -> JSON
       if (tok) { c = f[col["req_transport_count"]]; b = f[col["req_transport_le_5ms"]]
                  if (t != "" && c != "" && b != "") { k++; XT[k] = t + 0; XC[k] = c + 0; XB[k] = b + 0 } }
       if (rok) { c = f[col["req_read_count"]]; b = f[col["req_read_le_5ms"]]
-                 if (t != "" && c != "" && b != "") { r++; RT[r] = t + 0; RC[r] = c + 0; RB[r] = b + 0 } } }
+                 if (t != "" && c != "" && b != "") { r++; RDT[r] = t + 0; RDC[r] = c + 0; RDB[r] = b + 0 } } }
     END { for (i = 1; i <= nr; i++) {
             first = 0; last = 0
             for (j = 1; j <= m; j++) if (T[j] >= lo[i] && T[j] <= hi[i]) { if (!first) first = j; last = j }
@@ -2510,10 +2510,10 @@ sweep_tail_localisation() { # sweep_json diag_csv -> JSON
             if (first && last > first && XC[last] > XC[first]) {
               xreq = XC[last] - XC[first]; xsrv = 1 - (XB[last] - XB[first]) / xreq }
             first = 0; last = 0
-            for (j = 1; j <= r; j++) if (RT[j] >= lo[i] && RT[j] <= hi[i]) { if (!first) first = j; last = j }
+            for (j = 1; j <= r; j++) if (RDT[j] >= lo[i] && RDT[j] <= hi[i]) { if (!first) first = j; last = j }
             rsrv = ""; rreq = 0
-            if (first && last > first && RC[last] > RC[first]) {
-              rreq = RC[last] - RC[first]; rsrv = 1 - (RB[last] - RB[first]) / rreq }
+            if (first && last > first && RDC[last] > RDC[first]) {
+              rreq = RDC[last] - RDC[first]; rsrv = 1 - (RDB[last] - RDB[first]) / rreq }
             printf "%s\t%s\t%s\t%d\t%d\t%s\t%d\t%s\t%d\n", off[i], cl[i], srv, req, win, xsrv, xreq, rsrv, rreq } }
   ' <(printf '%s\n' "$rungs") "$2" | jq -Rsc '
     def frac: if . == "" then null else (tonumber | . * 100000 | round / 100000) end;
