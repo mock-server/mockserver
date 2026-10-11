@@ -106,6 +106,10 @@ class LocalMockServerHandler(BaseHTTPRequestHandler):
                     continue
 
                 body_matcher = req_pattern.get("body", {})
+                if not body_matcher:
+                    matched_exp = exp
+                    break
+
                 matcher_type = body_matcher.get("type")
 
                 if matcher_type == "JSON_RPC":
@@ -119,6 +123,7 @@ class LocalMockServerHandler(BaseHTTPRequestHandler):
                         if tool_name and f"@.params.name == '{tool_name}'" in jp:
                             matched_exp = exp
                             break
+
 
             if matched_exp:
                 template_obj = matched_exp.get("httpResponseTemplate")
