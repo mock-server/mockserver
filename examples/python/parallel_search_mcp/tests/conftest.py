@@ -5,10 +5,22 @@ from __future__ import annotations
 import json
 import re
 import socket
+import sys
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import Any, Generator
+
+# Ensure mockserver-client-python and examples/python take precedence on sys.path
+_tests_dir = Path(__file__).resolve().parent
+_pkg_dir = _tests_dir.parent
+_examples_dir = _pkg_dir.parent
+_repo_root = _examples_dir.parent.parent
+_client_pkg_dir = _repo_root / "mockserver-client-python"
+
+for _p in (_client_pkg_dir, _examples_dir, _pkg_dir):
+    if _p.is_dir() and str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
 
 import pytest
 from mockserver import Expectation, MockServerClient
