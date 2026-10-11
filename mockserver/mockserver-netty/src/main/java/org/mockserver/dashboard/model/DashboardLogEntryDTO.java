@@ -62,19 +62,20 @@ public class DashboardLogEntryDTO extends ObjectWithJsonToString {
         setType(logEntry.getType());
         // Bodies are cut to DashboardBodyCap.MAX_BODY_CHARACTERS after redaction, so a cut never exposes what
         // redaction would have hidden.
-        RequestDefinition[] requests = logEntry.getHttpUpdatedRequests(configuration);
+        DashboardBodyCap.Rendering rendering = new DashboardBodyCap.Rendering();
+        LogEntry.RedactedView redacted = logEntry.redactedView(configuration, rendering);
+        RequestDefinition[] requests = redacted.getHttpUpdatedRequests();
         for (int i = 0; i < requests.length; i++) {
-            requests[i] = DashboardBodyCap.cap(requests[i], messageSizes);
+            requests[i] = DashboardBodyCap.cap(requests[i], messageSizes, rendering);
         }
         setHttpRequests(requests);
-        setHttpResponse(DashboardBodyCap.cap(logEntry.getHttpUpdatedResponse(configuration), messageSizes));
-        LogEntry.RedactedView redacted = logEntry.redactedView(configuration);
+        setHttpResponse(DashboardBodyCap.cap(redacted.getHttpUpdatedResponse(), messageSizes, rendering));
         setMessageFormat(redacted.getMessageFormat());
         Object[] arguments = redacted.getArguments();
         if (arguments != null) {
             argumentOwnMessageParts = new String[arguments.length];
             for (int i = 0; i < arguments.length; i++) {
-                arguments[i] = DashboardBodyCap.capArgument(arguments[i], argumentSizes);
+                arguments[i] = DashboardBodyCap.capArgument(arguments[i], argumentSizes, rendering);
                 argumentOwnMessageParts[i] = logEntry.argumentOwnMessagePart(i);
             }
         }

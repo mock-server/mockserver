@@ -1650,6 +1650,19 @@ transport-inclusive latency histogram with metrics on: about 53 ns and 24 B/op w
 (134 vs 187 ns/op, 136 vs 160 B/op, 2 forks on a developer Mac). With metrics off the timer is not
 installed, so there is nothing to measure.
 
+### `DashboardLogEntryBodyBenchmark` JMH — on demand, not run by CI
+
+`./run.sh -prof gc DashboardLogEntryBodyBenchmark` builds the three dashboard rows of one retained
+exchange (received, matched and response entries, each a `DashboardLogEntryDTO`), as every
+dashboard update does, for JSON, text and binary bodies of 16 KiB, 1 MiB and 10 MiB held as a
+retained entry holds them (raw bytes only). It measures what an update spends per exchange on
+bodies. Before the cut-body cache, 10 MiB JSON bodies cost about 500 ms and 1.04 GB per exchange
+per update (text 96 ms and 172 MB, binary 47 ms and 224 MB); once a body has been cut, about 2 us
+and 11 KB for every type and size over the cap. The 16 KiB arms, which are not cut, are unchanged
+(2.29 MB JSON, 277 KB text, plus about 150 bytes per row). One fork on a developer Mac, so
+directional only. The steady-state figure is what the benchmark reports, since each op after the
+first finds the cut kept; the first update of a body still pays one decode.
+
 ### The seven promoted dark benchmarks
 
 These classes existed but were run by no CI step before the performance programme:

@@ -1,9 +1,12 @@
 package org.mockserver.dashboard.model;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.Body;
 import org.mockserver.model.HttpRequest;
@@ -19,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 /**
  * Shortens the bodies the dashboard sends in its live updates. A row carries its exchange's bodies about eight
@@ -31,8 +35,56 @@ public final class DashboardBodyCap {
     // a message's headers, path and the like, which are not capped
     public static final int MESSAGE_OVERHEAD_CHARACTERS = 1024;
     private static final ObjectMapper JSON = new ObjectMapper();
+    // Cut text of retained bodies, so a large body is decoded once rather than at every quote in every update.
+    // Weak keys compare by identity and go with the body's log entry; soft values give way under heap pressure.
+    private static final long CUT_BODIES_MAX_CHARACTERS = 16L * 1024 * 1024;
+    private static final Cache<Body<?>, BodyText> CUT_BODIES = CacheBuilder.newBuilder()
+        .weakKeys()
+        .softValues()
+        .maximumWeight(CUT_BODIES_MAX_CHARACTERS)
+        .weigher((Body<?> body, BodyText text) -> text.text.length())
+        .build();
 
     private DashboardBodyCap() {
+    }
+
+    /**
+     * Renders one log entry's bodies for the dashboard (only consulted with redaction off): a body already cut
+     * for an earlier row comes back as that cut text without being decoded again.
+     */
+    public static final class Rendering implements LogEntry.BodyRendering {
+        // each rendered body this produced, to the retained body it came from
+        private final Map<Body<?>, Body<?>> renderedFrom = new IdentityHashMap<>(4);
+
+        @Override
+        public Body<?> render(Body<?> body, UnaryOperator<Body<?>> standard) {
+            BodyText cut = CUT_BODIES.getIfPresent(body);
+            if (cut != null) {
+                return new CutBody(cut);
+            }
+            Body<?> rendered = standard.apply(body);
+            if (rendered != body) {
+                renderedFrom.put(rendered, body);
+            }
+            return rendered;
+        }
+
+        private void cut(Body<?> rendered, BodyText text) {
+            Body<?> body = renderedFrom.get(rendered);
+            if (body != null) {
+                CUT_BODIES.put(body, text);
+            }
+        }
+    }
+
+    // Stands in for a rendered body whose cut text is already known; replaced by its cut copy when capped.
+    private static final class CutBody extends LogEntryBody {
+        private final BodyText text;
+
+        private CutBody(BodyText text) {
+            super(text.text);
+            this.text = text;
+        }
     }
 
     /**
@@ -100,6 +152,9 @@ public final class DashboardBodyCap {
     }
 
     static BodyText bodyText(Body<?> body, int limit) {
+        if (body instanceof CutBody && limit == MAX_BODY_CHARACTERS) {
+            return ((CutBody) body).text;
+        }
         Object value = body instanceof LogEntryBody ? body.getValue() : null;
         if (value instanceof JsonNode) {
             PrefixWriter writer = new PrefixWriter(limit);
@@ -153,7 +208,7 @@ public final class DashboardBodyCap {
      * The request with its body cut to the cap, or the same request when it fits. A cut copy is recorded in
      * {@code sizes} with the body's full length.
      */
-    static RequestDefinition cap(RequestDefinition requestDefinition, Sizes sizes) {
+    static RequestDefinition cap(RequestDefinition requestDefinition, Sizes sizes, Rendering rendering) {
         if (!(requestDefinition instanceof HttpRequest) || ((HttpRequest) requestDefinition).getBody() == null) {
             return requestDefinition;
         }
@@ -163,12 +218,13 @@ public final class DashboardBodyCap {
             sizes.shown(request, text.length);
             return request;
         }
+        rendering.cut(request.getBody(), text);
         HttpRequest capped = request.shallowClone().withBody(new LogEntryBody(text.text));
         sizes.truncated(capped, text.length, text.text.length());
         return capped;
     }
 
-    static HttpResponse cap(HttpResponse response, Sizes sizes) {
+    static HttpResponse cap(HttpResponse response, Sizes sizes, Rendering rendering) {
         if (response == null || response.getBody() == null) {
             return response;
         }
@@ -177,6 +233,7 @@ public final class DashboardBodyCap {
             sizes.shown(response, text.length);
             return response;
         }
+        rendering.cut(response.getBody(), text);
         HttpResponse capped = response.shallowClone().withBody(new LogEntryBody(text.text));
         sizes.truncated(capped, text.length, text.text.length());
         return capped;
@@ -185,19 +242,19 @@ public final class DashboardBodyCap {
     /**
      * A log message argument with any body or long text in it cut to the cap.
      */
-    static Object capArgument(Object argument, Sizes sizes) {
+    static Object capArgument(Object argument, Sizes sizes, Rendering rendering) {
         if (argument instanceof RequestDefinition) {
             sizes.displayed(MESSAGE_OVERHEAD_CHARACTERS);
-            return cap((RequestDefinition) argument, sizes);
+            return cap((RequestDefinition) argument, sizes, rendering);
         } else if (argument instanceof HttpResponse) {
             sizes.displayed(MESSAGE_OVERHEAD_CHARACTERS);
-            return cap((HttpResponse) argument, sizes);
+            return cap((HttpResponse) argument, sizes, rendering);
         } else if (argument instanceof Expectation) {
             Expectation expectation = (Expectation) argument;
             sizes.displayed(MESSAGE_OVERHEAD_CHARACTERS);
             Sizes inner = new Sizes();
-            RequestDefinition request = cap(expectation.getHttpRequest(), inner);
-            HttpResponse response = cap(expectation.getHttpResponse(), inner);
+            RequestDefinition request = cap(expectation.getHttpRequest(), inner, rendering);
+            HttpResponse response = cap(expectation.getHttpResponse(), inner, rendering);
             sizes.displayed(inner.displayedCharacters());
             if (request == expectation.getHttpRequest() && response == expectation.getHttpResponse()) {
                 return expectation;

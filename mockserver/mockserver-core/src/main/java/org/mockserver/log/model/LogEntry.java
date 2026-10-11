@@ -1102,22 +1102,26 @@ public class LogEntry implements EventTranslator<LogEntry> {
     }
 
     private Object[] argumentsFor(Redaction redaction) {
+        return argumentsFor(redaction, BodyRendering.STANDARD);
+    }
+
+    private Object[] argumentsFor(Redaction redaction, BodyRendering rendering) {
         if (arguments == null) {
             return null;
         }
         return Arrays
             .stream(arguments)
-            .map(argument -> renderArgument(argument, redaction))
+            .map(argument -> renderArgument(argument, redaction, rendering))
             .toArray(Object[]::new);
     }
 
-    private Object renderArgument(Object argument, Redaction redaction) {
+    private Object renderArgument(Object argument, Redaction redaction, BodyRendering rendering) {
         if (redaction != null) {
             return redactArgument(argument, redaction, 0);
         } else if (argument instanceof HttpRequest) {
-            return updateBody((HttpRequest) argument);
+            return updateBody((HttpRequest) argument, rendering);
         } else if (argument instanceof HttpResponse) {
-            return updateBody((HttpResponse) argument);
+            return updateBody((HttpResponse) argument, rendering);
         } else if (argument instanceof DeferredLogArgument) {
             return ((DeferredLogArgument) argument).render(null);
         } else if (argument instanceof SensitiveLogValue) {
@@ -1144,7 +1148,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
                 String compact = org.mockserver.formatting.StringFormatter.toCompactString(own);
                 serialized[i] = redaction == null ? compact : redaction.scrub(compact);
             } else {
-                serialized[i] = renderArgument(arguments[i], redaction);
+                serialized[i] = renderArgument(arguments[i], redaction, BodyRendering.STANDARD);
             }
         }
         return serialized;
@@ -1464,14 +1468,62 @@ public class LogEntry implements EventTranslator<LogEntry> {
      */
     @JsonIgnore
     public RedactedView redactedView(org.mockserver.configuration.Configuration configuration) {
-        return new RedactedView(redaction(configuration));
+        return redactedView(configuration, BodyRendering.STANDARD);
+    }
+
+    /**
+     * As {@link #redactedView(org.mockserver.configuration.Configuration)}, rendering the bodies of the requests and
+     * responses it shows through {@code rendering} when redaction is off. With redaction on the standard rendering is
+     * always used, since redacting a body's fields needs the whole rendered body.
+     */
+    @JsonIgnore
+    public RedactedView redactedView(org.mockserver.configuration.Configuration configuration, BodyRendering rendering) {
+        return new RedactedView(redaction(configuration), rendering);
+    }
+
+    /**
+     * Renders the body of a request or response for display, given the standard rendering ({@code standard}): a
+     * reader that shows only part of a large body can return what it showed before instead of decoding it again.
+     * It must return {@code standard.apply(body)} or a {@link LogEntryBody}.
+     */
+    @FunctionalInterface
+    public interface BodyRendering {
+        BodyRendering STANDARD = (body, standard) -> standard.apply(body);
+
+        Body<?> render(Body<?> body, UnaryOperator<Body<?>> standard);
     }
 
     public final class RedactedView {
         private final Redaction redaction;
+        private final BodyRendering rendering;
 
-        private RedactedView(Redaction redaction) {
+        private RedactedView(Redaction redaction, BodyRendering rendering) {
             this.redaction = redaction;
+            this.rendering = rendering;
+        }
+
+        /**
+         * As {@link LogEntry#getHttpUpdatedRequests(org.mockserver.configuration.Configuration)}.
+         */
+        public RequestDefinition[] getHttpUpdatedRequests() {
+            if (httpRequests == null) {
+                return EMPTY_REQUEST_DEFINITIONS;
+            }
+            org.mockserver.fixture.FixtureRedactor redactor = redaction == null ? null : redaction.redactor;
+            return Arrays
+                .stream(httpRequests)
+                .map(requestDefinition -> updateBodyRedacted(requestDefinition, redactor, rendering))
+                .toArray(RequestDefinition[]::new);
+        }
+
+        /**
+         * As {@link LogEntry#getHttpUpdatedResponse(org.mockserver.configuration.Configuration)}.
+         */
+        public HttpResponse getHttpUpdatedResponse() {
+            if (httpResponse == null) {
+                return null;
+            }
+            return updateBodyRedacted(httpResponse, redaction == null ? null : redaction.redactor, rendering);
         }
 
         public String getMessage() {
@@ -1503,7 +1555,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
         }
 
         public Object[] getArguments() {
-            return argumentsFor(redaction);
+            return argumentsFor(redaction, rendering);
         }
 
         public String getBecause() {
@@ -1652,93 +1704,81 @@ public class LogEntry implements EventTranslator<LogEntry> {
     // updateBody renders a BinaryBody as base64, which would hide its fields from the redactor, so a binary
     // body is redacted first; every other body is rendered first so a JSON body keeps its tree rendering.
     private RequestDefinition updateBodyRedacted(RequestDefinition requestDefinition, org.mockserver.fixture.FixtureRedactor redactor) {
+        return updateBodyRedacted(requestDefinition, redactor, BodyRendering.STANDARD);
+    }
+
+    private RequestDefinition updateBodyRedacted(RequestDefinition requestDefinition, org.mockserver.fixture.FixtureRedactor redactor, BodyRendering rendering) {
         if (redactor == null) {
-            return updateBody(requestDefinition);
+            return updateBody(requestDefinition, rendering);
         }
         if (requestDefinition instanceof HttpRequest && ((HttpRequest) requestDefinition).getBody() instanceof BinaryBody) {
-            return updateBody(redactor.redactRequestDefinition(requestDefinition));
+            return updateBody(redactor.redactRequestDefinition(requestDefinition), BodyRendering.STANDARD);
         }
-        return redactor.redactRequestDefinition(updateBody(requestDefinition));
+        return redactor.redactRequestDefinition(updateBody(requestDefinition, BodyRendering.STANDARD));
     }
 
     private HttpResponse updateBodyRedacted(HttpResponse httpResponse, org.mockserver.fixture.FixtureRedactor redactor) {
+        return updateBodyRedacted(httpResponse, redactor, BodyRendering.STANDARD);
+    }
+
+    private HttpResponse updateBodyRedacted(HttpResponse httpResponse, org.mockserver.fixture.FixtureRedactor redactor, BodyRendering rendering) {
         if (redactor == null) {
-            return updateBody(httpResponse);
+            return updateBody(httpResponse, rendering);
         }
         if (httpResponse != null && httpResponse.getBody() instanceof BinaryBody) {
-            return updateBody(redactor.redactResponseObject(httpResponse));
+            return updateBody(redactor.redactResponseObject(httpResponse), BodyRendering.STANDARD);
         }
-        return redactor.redactResponseObject(updateBody(httpResponse));
+        return redactor.redactResponseObject(updateBody(httpResponse, BodyRendering.STANDARD));
     }
 
     // Both updateBody forms read without caching: they render retained, released entries on retrieve and
     // dashboard reads, and a caching read would re-attach the decoded String to the retained body.
-    private RequestDefinition updateBody(RequestDefinition requestDefinition) {
+    private static RequestDefinition updateBody(RequestDefinition requestDefinition, BodyRendering rendering) {
         if (requestDefinition instanceof HttpRequest) {
             HttpRequest httpRequest = (HttpRequest) requestDefinition;
             Body<?> body = httpRequest.getBody();
-            if (body instanceof JsonBody) {
-                try {
-                    return httpRequest
-                        .shallowClone()
-                        .withBody(
-                            new LogEntryBody(OBJECT_MAPPER.readTree(body.toStringWithoutCaching()))
-                        );
-                } catch (Throwable throwable) {
-                    return httpRequest
-                        .shallowClone()
-                        .withBody(
-                            new LogEntryBody(body.toStringWithoutCaching())
-                        );
-                }
-            } else if (body instanceof ParameterBody) {
-                return httpRequest
-                    .shallowClone()
-                    .withBody(
-                        new LogEntryBody(body.toStringWithoutCaching())
-                    );
-            } else if (body instanceof BodyWithContentType && !(body instanceof LogEntryBody)) {
-                return httpRequest
-                    .shallowClone()
-                    .withBody(
-                        new LogEntryBody(body.toStringWithoutCaching())
-                    );
-            } else {
-                return httpRequest;
-            }
+            Body<?> rendered = body == null ? null : rendering.render(body, LogEntry::renderedRequestBody);
+            return rendered == body ? httpRequest : httpRequest.shallowClone().withBody(rendered);
         } else {
             return null;
         }
     }
 
-    private HttpResponse updateBody(HttpResponse httpResponse) {
+    private static Body<?> renderedRequestBody(Body<?> body) {
+        if (body instanceof JsonBody) {
+            return renderedJsonBody(body);
+        } else if (body instanceof ParameterBody || (body instanceof BodyWithContentType && !(body instanceof LogEntryBody))) {
+            return new LogEntryBody(body.toStringWithoutCaching());
+        } else {
+            return body;
+        }
+    }
+
+    private static HttpResponse updateBody(HttpResponse httpResponse, BodyRendering rendering) {
         if (httpResponse != null) {
             Body<?> body = httpResponse.getBody();
-            if (body != null && JsonBody.class.isAssignableFrom(body.getClass())) {
-                try {
-                    return httpResponse
-                        .shallowClone()
-                        .withBody(
-                            new LogEntryBody(OBJECT_MAPPER.readTree(body.toStringWithoutCaching()))
-                        );
-                } catch (Throwable throwable) {
-                    return httpResponse
-                        .shallowClone()
-                        .withBody(
-                            new LogEntryBody(body.toStringWithoutCaching())
-                        );
-                }
-            } else if (body != null && !(body instanceof LogEntryBody)) {
-                return httpResponse
-                    .shallowClone()
-                    .withBody(
-                        new LogEntryBody(body.toStringWithoutCaching())
-                    );
-            } else {
-                return httpResponse;
-            }
+            Body<?> rendered = body == null ? null : rendering.render(body, LogEntry::renderedResponseBody);
+            return rendered == body ? httpResponse : httpResponse.shallowClone().withBody((BodyWithContentType<?>) rendered);
         } else {
             return null;
+        }
+    }
+
+    private static Body<?> renderedResponseBody(Body<?> body) {
+        if (JsonBody.class.isAssignableFrom(body.getClass())) {
+            return renderedJsonBody(body);
+        } else if (!(body instanceof LogEntryBody)) {
+            return new LogEntryBody(body.toStringWithoutCaching());
+        } else {
+            return body;
+        }
+    }
+
+    private static LogEntryBody renderedJsonBody(Body<?> body) {
+        try {
+            return new LogEntryBody(OBJECT_MAPPER.readTree(body.toStringWithoutCaching()));
+        } catch (Throwable throwable) {
+            return new LogEntryBody(body.toStringWithoutCaching());
         }
     }
 
