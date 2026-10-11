@@ -9,6 +9,13 @@ from .exceptions import McpProtocolError, McpToolError
 from .transport import StreamableHttpTransport
 
 
+from .validation import (
+    validate_json_rpc_response,
+    validate_tool_result,
+    validate_tools_list,
+)
+
+
 class ParallelSearchMcpClient:
     """Client for discovering and executing Parallel Search MCP tools."""
 
@@ -30,9 +37,7 @@ class ParallelSearchMcpClient:
             },
         }
         response = self.transport.send_json_rpc("initialize", params=params)
-        if not response or "result" not in response:
-            error = response.get("error") if response else "Empty response"
-            raise McpProtocolError(f"MCP initialization failed: {error}")
+        validate_json_rpc_response(response)
 
         result = response["result"]
         self.protocol_version = result.get("protocolVersion")
@@ -54,14 +59,15 @@ class ParallelSearchMcpClient:
         self.send_initialized_notification()
         return result
 
-    def list_tools(self) -> list[dict[str, Any]]:
+    def list_tools(self, validate_required: bool = True) -> list[dict[str, Any]]:
         """Query available tools from the server via tools/list."""
         response = self.transport.send_json_rpc("tools/list", params={})
-        if not response or "result" not in response:
-            error = response.get("error") if response else "Empty response"
-            raise McpProtocolError(f"Failed to list tools: {error}")
+        validate_json_rpc_response(response)
 
-        return response["result"].get("tools", [])
+        tools = response["result"].get("tools", [])
+        if validate_required:
+            validate_tools_list(tools)
+        return tools
 
     def call_tool(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         """Invoke a tool by name with arguments via tools/call."""
@@ -70,17 +76,12 @@ class ParallelSearchMcpClient:
             "arguments": arguments,
         }
         response = self.transport.send_json_rpc("tools/call", params=params)
-        if not response or "result" not in response:
-            error = response.get("error") if response else "Empty response"
-            raise McpProtocolError(f"Tool invocation '{name}' failed: {error}")
+        validate_json_rpc_response(response)
 
         result = response["result"]
-        if result.get("isError"):
-            content = result.get("content", [])
-            msg = content[0].get("text") if content else "Tool reported error"
-            raise McpToolError(f"Tool '{name}' execution error: {msg}")
-
+        validate_tool_result(name, result)
         return result
+
 
 
     def search(
