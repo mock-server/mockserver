@@ -713,7 +713,7 @@ git push -u origin ${WORK_BRANCH} && gh pr create --fill --base ${BRANCH}
 **A human must reconcile the hand-authored numbers this refresh does NOT touch.**
 The patch rewrites only \`_data/perf_figures.json\`. Before merging:
   - whatever the ceiling: ${RW_TALLY_NOTE};
-  - if the headline moved: the figures in the page \`description\`, in the JSON-LD \`schema_faq\` answers (both in the front matter of \`mock_server/performance.html\`) and in the performance line in \`llms.txt\`."
+  - if any published figure moved: the figures in the page \`description\`, in the JSON-LD \`schema_faq\` answers (both in the front matter of \`mock_server/performance.html\`) and in the performance line in \`llms.txt\`."
   echo "OK: patch emitted (${PATCH_NAME}); nothing pushed, no PR opened"
   exit 0
 fi
@@ -737,7 +737,7 @@ git push -u origin ${WORK_BRANCH} && gh pr create --fill --base ${BRANCH}
 
 **A human must reconcile the hand-authored numbers this refresh does NOT touch.**
 The patch rewrites only \`_data/perf_figures.json\` (and the chart data/PNGs). The
-following in \`mock_server/performance.html\` are hand-authored — if a headline moved,
+following in \`mock_server/performance.html\` are hand-authored — if any published figure moved,
 update them to match before merging:
   - the page \`description\` (front matter) — used as the meta description;
   - the JSON-LD \`schema_faq\` answers (front matter) — Google surfaces these;

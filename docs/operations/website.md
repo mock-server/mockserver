@@ -186,6 +186,46 @@ bundle exec jekyll build
 # Output in _site/
 ```
 
+## Performance Headline Lint
+
+**The website pipeline fails when the hand-written performance headline disagrees with the
+published figure.** `.buildkite/scripts/steps/website-perf-headline-lint.sh` runs first in the
+`:jekyll: validate Jekyll site` step (`website-build.sh`), before the Jekyll build, and names
+`file:line` for every disagreement. Run it locally from the repo root; it needs only `bash`, `awk`
+and `jq`.
+
+| Checked place | Why it is hand-written |
+|---|---|
+| `description` in the front matter of `mock_server/performance.html` | Jekyll does not render Liquid in front matter; it is also the meta, Open Graph and JSON-LD description |
+| each `schema_faq` answer that states a rate (`req/s`, `req/sec`, `requests/sec`, `requests per second`, `requests a second` or `rps`, in any case) | same; Google surfaces these |
+| the `mock_server/performance.html` line in `llms.txt` | plain text |
+| "six CPU cores" / "six-core" wording in the page body | hand-written beside the Liquid figures |
+
+What it checks against `_data/perf_figures.json` (rules in
+`.buildkite/scripts/steps/lib/website-perf-headline-check.jq`):
+
+- **The headline.** A rate written `about N` (also `~N`, `ceiling of N`) states the headline and
+  must equal `headline.healthy_ceiling_rps`. Each checked place must state it that way. `144,000`,
+  `144000 RPS` and `144k` are the same figure.
+- **Every other rate** must be a published figure: the ceiling, the achieved rate (to the
+  precision it is written: `143,700` for 143,719.1), or the sub-millisecond-p95 rate. The other
+  rung the qualifying runs read (136,000 today) is allowed only while the page data carries
+  `headline_rule`, the ceiling is one of the two rungs, and the page's run-tally gate
+  (`hc == …`) names the same pair as `RW_EXPECTED_CEILING_RPS` / `RW_ADJACENT_CEILING_RPS` in
+  `perf-website-publish.sh`.
+- **Latencies** (`N ms`) must round from the headline p50, p95, p99, whole-rung p99 or the p99
+  bound; **core counts** must equal `headline.server_cores`.
+- **The run tally** ("the six like-for-like runs") must be the same number everywhere it is
+  stated. The per-rate counts ("three and three") are not in the page data, so they stay a manual
+  reconcile.
+
+It fails closed: missing or unreadable page data, a missing `healthy_ceiling_rps`,
+`healthy_ceiling_rps_display` or `server_cores`, a display figure that is not the number, a
+description or answer that is not a one-line double-quoted string, or no `llms.txt` line. Its
+fixture tests (`.buildkite/scripts/test/website-perf-headline-lint-test.sh`, on a cut-down page in
+`fixtures/website-perf-headline/`) run in the infra pipeline, which is where a change to the lint
+or to `perf-website-publish.sh` routes; they also run the lint on the committed site.
+
 ## Deployment
 
 > **Resolve the live target dynamically — do not trust hard-coded bucket/distribution

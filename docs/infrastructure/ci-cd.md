@@ -156,7 +156,10 @@ The `mockserver-infra` pipeline (`pipeline-infra.yml`) runs lightweight validati
 steps in Docker: opencode config lint, the **AI eval gate**, shell-script lint,
 the release-script **Maven `unzip` prelude guard** (`check-release-maven-prelude.sh`,
 `trigger` queue, no Docker; see [release-process.md](../operations/release-process.md#maven-runs-install-unzip-first)),
-Dockerfile sync, Helm chart validation, and **API-collection validation**. The collection step
+Dockerfile sync, Helm chart validation, the **performance headline lint fixtures**
+(`website-perf-headline-lint-test.sh`, `trigger` queue, no Docker: the lint the website pipeline
+runs, exercised on fixtures and run on the committed site; see
+[website.md](../operations/website.md#performance-headline-lint)), and **API-collection validation**. The collection step
 (`collections-validate.sh`) regenerates the Postman and Bruno collections from the
 OpenAPI spec and fails if the committed `examples/postman/**` or `examples/bruno/**`
 have drifted — so `examples/` and `jekyll-www.mock-server.com/mockserver-openapi.yaml`
@@ -222,7 +225,7 @@ All pipelines are managed via Terraform in `terraform/buildkite-pipelines/pipeli
 | `mockserver-maven-plugin` | `pipeline-maven-plugin.yml` | Orchestrator | Maven plugin build and test, then the configuration call-site guard over the plugin |
 | `mockserver-performance-test` | `pipeline-perf-test.yml` | Orchestrator + daily Buildkite schedule (04:00 UTC) + weekly soak schedule (Sunday 08:00 UTC) | Perf test script validation on orchestrator builds; on the daily schedule, the performance-regression run — guard + k6 run + JMH microbench + rolling-baseline compare; on the weekly schedule (message carries `[perf-soak]`), only the 2-hour soak step. All trigger paths are the **same** Buildkite pipeline (Terraform attaches `buildkite_pipeline_schedule.perf_regression_daily` and `perf_soak_weekly` to it); there is no separate `mockserver-perf-regression` pipeline. |
 | `mockserver-container-tests` | `pipeline-container-tests.yml` | Orchestrator | Shell script validation + k3d Helm integration tests (builds the `-clustered` + webhook images from tree-built jar artifacts) |
-| `mockserver-website` | `pipeline-website.yml` | Orchestrator | Jekyll site build |
+| `mockserver-website` | `pipeline-website.yml` | Orchestrator | Performance headline lint, then the Jekyll site build; website code examples |
 | `mockserver-infra` | `pipeline-infra.yml` | Orchestrator | Infrastructure validation |
 | `mockserver-build-image` | `docker-push-maven.yml` | Orchestrator + Manual | Build/push maven CI image |
 | `mockserver-release` | `release-pipeline.yml` | Manual | Automated release pipeline (TOTP, Maven Central, maven-plugin, Docker Hub + ECR Public, npm, Helm, Javadoc, SwaggerHub, website, JSON Schema, PyPI, RubyGems, GitHub Release, optional versioned site) |

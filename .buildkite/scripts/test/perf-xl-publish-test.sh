@@ -419,7 +419,7 @@ check "  ... with a commit subject naming the run" "docs(perf): refresh the publ
 check "  ... and a commit body and annotation saying which rung this run read: the other one, not refused" "1|yes" \
   "$(git -C "$R" log -1 --format=%b | grep -c "This run reads 136000 (the other rung the qualifying runs read: get the owner's decision before applying)" || true)|$(has "This run reads 136000 (the other rung the qualifying runs read: get the owner's decision before applying)" "$T/real.log")"
 check "  ... the annotation lists the hand-counted runs to reconcile whatever the ceiling, apart from what a moved headline needs" "yes|yes|yes" \
-  "$(has 'whatever the ceiling: the `ceiling_spread` and `ceiling_spread_detail` sentences and the `schema_faq` answers' "$T/real.log")|$(has 'so a later member run changes them even when it reads the same ceiling' "$T/real.log")|$(has 'if the headline moved: the figures in the page `description`' "$T/real.log")"
+  "$(has 'whatever the ceiling: the `ceiling_spread` and `ceiling_spread_detail` sentences and the `schema_faq` answers' "$T/real.log")|$(has 'so a later member run changes them even when it reads the same ceiling' "$T/real.log")|$(has 'if any published figure moved: the figures in the page `description`' "$T/real.log")"
 # A PERF_XL build can emit a patch from each source: this one's patch and data artifact are named apart.
 check "  ... uploading a patch and page data named apart from the daily source's" "perf_figures-multi-k6.json website-headline-multi-k6-TS.patch" \
   "$(sed 's/[0-9]\{8\}-[0-9]\{6\}/TS/' "$T/real.up" | sort | tr '\n' ' ' | sed 's/ $//')"

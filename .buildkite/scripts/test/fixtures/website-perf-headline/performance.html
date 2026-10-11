@@ -1,0 +1,28 @@
+---
+title: "MockServer Performance Benchmarks: Throughput & Latency"
+description: "MockServer benchmarks: a six-core instance serves about 144,000 requests/sec at a sub-millisecond median; p99 within 10 ms outside load-generator GC pauses."
+layout: page
+lastmod: 2026-10-05T08:00:00+01:00
+schema_faq:
+  - question: "How fast is MockServer?"
+    answer: "On six CPU cores a single instance holds a sub-millisecond median up to a healthy ceiling of about 144,000 requests/sec, serving roughly 143,700 req/s there with no errors at a median around 0.11 ms and a p95 of 7.3 ms. Client-observed p95 stays under a millisecond to 120,000 requests/sec. At the ceiling its 99th-percentile latency is 9.7 ms, within the 10 ms the test allows; with every second counted it was 44.9 ms. In the six like-for-like runs behind this figure the ceiling read 136,000 requests/sec in three and 144,000 in three. At 144,000 requests/sec all six held a sub-millisecond median, so provision against the lower rate, 136,000 requests/sec."
+  - question: "How many requests per second can MockServer handle?"
+    answer: "A single six-core instance served about 144,000 requests/sec (around 143,700 req/s achieved, no errors) at a sub-millisecond median, with a p99 within 10 ms and 44.9 ms with every second counted. In the six like-for-like runs behind this figure the ceiling read 136,000 requests/sec in three and 144,000 in three."
+  - question: "Does MockServer slow down with many expectations?"
+    answer: "No. At 5,000 expectations matching is up to 177x faster than a naive linear scan, on 2026 hardware."
+---
+
+<!--
+  Fixture for website-perf-headline-lint-test.sh. Hand-written: the description, the schema_faq
+  answers, the llms.txt line, and how many like-for-like runs read which rate.
+-->
+
+{% assign figures = site.data.perf_figures %}
+{% assign rule = figures.headline_rule %}
+{% assign hc = figures.headline.healthy_ceiling_rps %}
+{% assign spread_side = "" %}{% if rule %}{% if hc == 144000 %}{% assign spread_side = "higher" %}{% elsif hc == 136000 %}{% assign spread_side = "lower" %}{% endif %}{% endif %}
+{% capture ceiling_spread %}{% if spread_side != "" %} In the six like-for-like runs behind this figure the ceiling read 136,000&nbsp;req/s in three and 144,000&nbsp;req/s in three.{% endif %}{% endcapture %}
+<p itemprop="headline">A single MockServer instance holds a sub-millisecond median up to a healthy ceiling of {{ figures.headline.healthy_ceiling_rps_display }} requests/sec on six CPU cores.</p>
+<p>One k6 process cannot drive a six-core MockServer to its limit.</p>
+<table><tr><td>CPU cores</td><td>vs 1 core</td></tr><tr><td>{{ p.cores }}</td><td>{{ me.cores }} cores</td></tr></table>
+<p>A shell reporting 60,000 still gives a JVM 10,240; a test that opens 10,000 connections needs 20,000 ports.</p>

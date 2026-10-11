@@ -1,0 +1,3 @@
+# The two lines website-perf-headline-lint.sh reads from perf-website-publish.sh.
+RW_EXPECTED_CEILING_RPS=144000
+RW_ADJACENT_CEILING_RPS=136000

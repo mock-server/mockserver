@@ -1,0 +1,6 @@
+# MockServer
+
+> Fixture for website-perf-headline-lint-test.sh.
+
+- [Load Injection Performance](https://www.mock-server.com/mock_server/load_injection_performance.html): one instance injects ~20,000 req/s on two cores
+- [Scalability & Latency](https://www.mock-server.com/mock_server/performance.html): MockServer serving-performance benchmarks — one six-core instance serves about 144,000 requests/sec at a sub-millisecond median, with p99 within 10 ms outside the load generators' own garbage-collection pauses and 44.9 ms with every second counted (in the six like-for-like runs behind the figure the ceiling read 136,000 in three and 144,000 in three, so provision against 136,000), with flat request matching as expectations scale

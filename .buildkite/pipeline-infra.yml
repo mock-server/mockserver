@@ -29,6 +29,20 @@ steps:
         - exit_status: 255  # agent forced shutdown
           limit: 2
 
+  # The website step runs the lint on site changes; this runs its fixtures and the lint when the
+  # lint itself, or the rung pair in perf-website-publish.sh, changes (those route only here).
+  - label: ":jekyll: performance headline text matches the published figure"
+    command: ".buildkite/scripts/test/website-perf-headline-lint-test.sh"
+    timeout_in_minutes: 5
+    agents:
+      queue: "trigger"
+    retry:
+      automatic:
+        - exit_status: -1   # agent lost (e.g. Spot reclamation)
+          limit: 2
+        - exit_status: 255  # agent forced shutdown
+          limit: 2
+
   - label: ":package: release scripts install unzip before mvn"
     command: ".buildkite/scripts/steps/check-release-maven-prelude.sh"
     timeout_in_minutes: 5

@@ -1,0 +1,24 @@
+{
+  "source": {
+    "client": "multi_k6",
+    "build_number": "643"
+  },
+  "headline": {
+    "healthy_ceiling_rps": 144000,
+    "healthy_ceiling_rps_display": "144,000",
+    "healthy_ceiling_achieved_rps": 143719.1,
+    "healthy_ceiling_p50_ms": 0.108,
+    "healthy_ceiling_p95_ms": 7.309,
+    "healthy_ceiling_p99_ms": 9.73,
+    "healthy_ceiling_p99_whole_rung_ms": 44.946,
+    "p99_max_ms": 10,
+    "server_cores": 6,
+    "sub_ms_p95_through_rps": 120000,
+    "sub_ms_p95_through_rps_display": "120,000"
+  },
+  "headline_rule": {
+    "name": "gc_masked_p99",
+    "p99_max_ms": 10,
+    "unmasked_ceiling_rps": 96000
+  }
+}

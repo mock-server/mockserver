@@ -1197,8 +1197,10 @@ No run read 152k, so the page says the ceiling can land one step lower, not eith
 expected rung (`RW_EXPECTED_CEILING_RPS`) and 136k (`RW_ADJACENT_CEILING_RPS`) as the other rung
 the qualifying runs read. A later patch reading 136k would lower the published headline, which
 is the owner's decision. Any other rung, 152k included, was read by none of the six: do not
-apply it. The two constants only word the annotation and the patch's commit message; nothing
-gates on them. The owner confirmed 144k as the expected rung, and this swap, on 2026-10-05.
+apply it. The two constants word the annotation and the patch's commit message, and the
+website headline lint reads them to allow the other rung in the hand-written text; nothing in
+the publish step gates on them. The owner confirmed 144k as the expected rung, and this swap, on
+2026-10-05.
 
 **The run tally is hand-counted.** The page's `ceiling_spread` and `ceiling_spread_detail`
 sentences, the two FAQ answers and the `llms.txt` line count the like-for-like runs and the rates
@@ -1207,6 +1209,17 @@ FAQ answers and the `llms.txt` line are plain text and do not adapt. Every later
 changes the count, even one at the same ceiling that emits no patch, so the multi-k6 publish
 step asks for them to be reconciled in both its annotations: with the patch, and when the
 figures are current.
+
+**The hand-written headline is linted against the page data.** The website pipeline runs
+`website-perf-headline-lint.sh` before the Jekyll build: the `description`, every `schema_faq`
+answer that states a rate, the `llms.txt` line and the body's core count must agree with
+`_data/perf_figures.json` (the headline written `about N`, every other rate, latency and core
+count a published figure, the other rung only while the page's tally gate and the two constants
+name the same pair), and the run total must be the same everywhere. So a refresh patch applied
+without its text, or a text edit with a wrong number, fails with `file:line`. The per-rate counts
+are not in the page data and stay a manual reconcile.
+[Website: Performance Headline Lint](../operations/website.md#performance-headline-lint) has the
+rules.
 
 **From the arm to the page.**
 
@@ -2495,11 +2508,13 @@ To publish a run's figures:
    patch carries no `perf_hw_matrix.png`, or the page omits the chart). Before merging,
    reconcile the hand-authored numbers it does **not** touch in `mock_server/performance.html`:
    the front-matter `description`, the JSON-LD `schema_faq` answers, and matcher-scaling figures
-   (a separate JMH source, expected to differ). When the headline moved, also update the
+   (a separate JMH source, expected to differ). When any published figure moved, also update the
    performance line in `jekyll-www.mock-server.com/llms.txt`. The page's `ceiling_spread` and
    `ceiling_spread_detail` sentences (how many like-for-like runs read which rate) are
    hand-authored too; they render only while the published ceiling is 136k or 144k, say which
-   of the two it is, and need recounting after every member run.
+   of the two it is, and need recounting after every member run. The website pipeline's
+   headline lint fails the PR until the `description`, the FAQ answers and the `llms.txt` line
+   state the new figures; it cannot check the per-rate run counts.
 
    A `PERF_XL=true` build can attach two patches, one per source
    (`website-figures-…` and `website-headline-multi-k6-…`). Each rewrites the whole of

@@ -62,6 +62,9 @@ schema_faq:
   render only while the published ceiling is one of those rates, and the tally changes with
   every run published, even at the same ceiling), and the matcher-scaling figures (a separate
   JMH source, not in the perf result).
+  The website pipeline fails until the description, the rate-stating FAQ answers and the llms.txt
+  line agree with the data file (.buildkite/scripts/steps/website-perf-headline-lint.sh): write the
+  headline as "about N requests/sec"; the per-rate run counts stay a manual reconcile.
 -->
 
 {% assign figures = site.data.perf_figures %}
