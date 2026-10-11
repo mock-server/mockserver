@@ -102,3 +102,33 @@ class ParallelSearchMcpClient:
             args["model_name"] = m_name
 
         return self.call_tool("web_search", arguments=args)
+
+    def fetch(
+        self,
+        urls: list[str],
+        objective: str | None = None,
+        search_queries: list[str] | None = None,
+        full_content: bool = False,
+        session_id: str | None = None,
+        model_name: str | None = None,
+    ) -> dict[str, Any]:
+        """Execute a web page extraction using the Parallel Search MCP 'web_fetch' tool."""
+        if not urls:
+            raise ValueError("urls list cannot be empty")
+        if len(urls) > 20:
+            raise ValueError("web_fetch supports up to 20 URLs per request")
+
+        args: dict[str, Any] = {
+            "urls": urls,
+            "full_content": full_content,
+            "session_id": session_id or self.config.session_id,
+        }
+        if objective is not None:
+            args["objective"] = objective
+        if search_queries is not None:
+            args["search_queries"] = search_queries
+        m_name = model_name or self.config.model_name
+        if m_name:
+            args["model_name"] = m_name
+
+        return self.call_tool("web_fetch", arguments=args)
