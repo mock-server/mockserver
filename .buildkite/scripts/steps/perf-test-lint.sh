@@ -105,6 +105,9 @@ bash "$REPO_ROOT/.buildkite/scripts/test/perf-allocprofile-annotation-test.sh"
 echo "--- healthy ceiling rule checks (the climb stops at the first unhealthy measured rung; every copy of the rule agrees)"
 bash "$REPO_ROOT/.buildkite/scripts/test/perf-healthy-ceiling-test.sh"
 
+echo "--- INFO-arm live-heap reset probe checks (lib/perf-info-heap-probe.sh on stubbed docker and curl, its wiring)"
+bash "$REPO_ROOT/.buildkite/scripts/test/perf-info-heap-probe-test.sh"
+
 echo "--- SUT receive-queue sampler checks (item 44: lib/perf-sut-recvq.sh on a fake /proc, its wiring)"
 bash "$REPO_ROOT/.buildkite/scripts/test/perf-sut-recvq-test.sh"
 

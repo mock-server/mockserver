@@ -383,6 +383,8 @@ export const SWEEP = {
   startAtMs: num('K6_SWEEP_START_AT_MS', 0), // epoch ms the ladder starts; 0 = after setup
   quiet: env('K6_SWEEP_QUIET', '0s'), // idle tail after the last rung
   manageSut: bool('K6_SWEEP_MANAGE_SUT', true), // seed in setup, reset in teardown
+  // false leaves the event log full after the ladder, for the INFO arm's live-heap reset probe.
+  resetOnTeardown: bool('K6_SWEEP_RESET_ON_TEARDOWN', true),
   // Each rung's gracefulStop; null = k6's 30s default. At or below the gap, rung reservations no
   // longer overlap, so k6 initialises the largest pool instead of the sum of ~3 adjacent ones.
   gracefulStop: String(env('K6_SWEEP_GRACEFUL_STOP', '')).trim() || null,

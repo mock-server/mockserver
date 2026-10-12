@@ -2925,6 +2925,61 @@ How to read it:
 
 `.buildkite/scripts/test/perf-info-budget-test.sh` checks the sampler rows and the derivation.
 
+### INFO-arm live-heap reset probe
+
+`info_log_level_arm.live_heap_reset_probe` records how much live heap the INFO SUT's drained event
+log holds per counted byte, the multiple tabulated in `memory-management.md` under "Re-measured
+multiples". It is notify-only: nothing gates on it, the compare step does not read it, and a
+failure leaves fields `null` with a reason in `problems`, never a failed step.
+
+```mermaid
+flowchart LR
+  S["INFO sweep ends\n(log left full)"] --> D["wait for the ring\nto drain"]
+  D --> H1["GC.class_histogram\n+ gauges"]
+  H1 --> R["PUT /mockserver/reset"]
+  R --> G["GC.run"]
+  G --> H2["GC.class_histogram"]
+  H2 --> J["live_heap_reset_probe"]
+```
+
+It runs after every INFO measurement and before the INFO SUT is removed, so its stop-the-world
+histograms fall in no rung. `sweep.js` normally resets the SUT in `teardown()`, which empties the
+log; for the INFO sweep the harness passes `K6_SWEEP_RESET_ON_TEARDOWN=false`, so the log the
+probe reads is the one the ladder's last rungs left. The traffic in it is therefore the sweep's:
+bodiless `GET /simple` matches on keep-alive connections. That is a small-entry profile, not the
+JSON or proxy profiles of the `memory-management.md` table, so the figure tracks the small-entry
+end of the range from run to run rather than reproducing any row of that table.
+
+Each step is bounded: the drain wait by `PERF_INFO_HEAP_PROBE_DRAIN_S` (60 s), the wait for the
+reset to show in the gauges by 30 s, each `jcmd` by 90 s, and the whole probe by
+`PERF_INFO_HEAP_PROBE_DEADLINE_S` (240 s). `jcmd` runs from a `PERF_HISTO_JDK_IMAGE` sidecar in
+the SUT's PID namespace as the JVM's own uid, as the live-heap histogram sampler does.
+`PERF_INFO_HEAP_PROBE=false` turns it off and gives the INFO sweep its own reset back. The top of
+each histogram is kept as `info/reset-probe-histogram-before.txt` and `-after.txt` in the
+diagnostics bundle.
+
+| Field | Meaning |
+|---|---|
+| `status` | `measured`, `measured_with_problems` (a multiple, but something in `problems`, such as an undrained ring) or `failed` |
+| `gc` | the INFO SUT's own `jvm_runtime_info{gc}` label, `null` when its metrics lack it |
+| `drained` | the ring occupancy and in-flight bytes read 0 and two scrapes in a row agreed before the first histogram |
+| `retained_entries`, `retained_counted_bytes` | `mock_server_event_log_retained_entries` and `_bytes`, read just after the first histogram |
+| `residual_entries_after_reset`, `residual_counted_bytes_after_reset` | the same gauges after the reset (the reset logs an entry of its own) |
+| `released_entries`, `released_counted_bytes` | before minus after |
+| `live_heap_before_reset_bytes`, `live_heap_after_reset_bytes`, `live_heap_delta_bytes` | the histograms' `Total` bytes (each one runs a full GC first) and their difference |
+| `live_heap_per_counted_byte` | `live_heap_delta_bytes` / `released_counted_bytes`, to 3 decimals: the multiple |
+| `live_heap_bytes_per_entry` | `live_heap_delta_bytes` / `released_entries` |
+| `problems` | why a field is `null`, or what to distrust, one string each |
+| `notify_only`, `method` | `notify_only` is always `true`; `method` says how the figure was taken |
+
+The record is `null` when the probe did not run: the arm was off, the INFO SUT never became ready,
+its metrics port could not be read, or `PERF_INFO_HEAP_PROBE=false`. A reset (not `clear`, which at
+`INFO` only marks entries deleted) also drops the expectations `sweep.js` seeded and their matcher
+state, a handful of objects against a log of tens of megabytes; the `memory-management.md` method has
+the same term.
+`.buildkite/scripts/test/perf-info-heap-probe-test.sh` checks the probe against stubbed `docker`
+and `curl` (drain, order, every failure path, the deadline) and its wiring.
+
 ### GC log cycle times are not stop-the-world pause times
 
 `-Xlog:gc` records GC cycle duration, not stop-the-world (STW) pause duration. A 1,000 ms p95 cycle under generational ZGC is concurrent work and is consistent with a request p95 of ~74 ms — not 1,000 ms. For STW pauses use `-Xlog:gc+phases`. ZGC's actual STW pauses are typically under 1 ms regardless of heap size.

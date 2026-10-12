@@ -39,7 +39,7 @@ For how each run is produced, gated and read, see
 | 126 | Re-examine the optional event-log consumer wake counter, declined when #28 closed | a decision, then a change if pursued (§5) |
 | 135 | The soak's comments still describe a count-bound ~115.5k ring; build 656 measured a byte-bound log of 35,370 entries | a comment-only change in `perf-test-soak.sh` and `soak.js` (§5) |
 | 136 | Recalibrate the weekly soak's p95/p99 gates and derive a drift bound once eight counting scheduled runs exist | eight counting scheduled weekly soaks (1 so far: 656; next Sunday 2026-10-18 08:00 UTC). The owner decided on 2026-10-11 that a `differs` run counts when its server image is identical (`image_revision_ancestor_of_harness` true) (§5) |
-| 204c | The load-measured `INFO` multiples in `memory-management.md` predate the end of message memoisation | a perf-harness addition: an `INFO`-arm live-heap delta across a log reset; perf builds 653 and 657 record only counted bytes (§5) |
+| 204c | The load-measured `INFO` multiples in `memory-management.md` predate the end of message memoisation | the `INFO`-arm live-heap probe has landed; read its first daily run (`status=measured`, `drained=true`), then refresh `memory-management.md` (§5) |
 
 ## §4 — Hardware scale and JVM profiling (added 2026-09-29)
 

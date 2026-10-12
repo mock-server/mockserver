@@ -503,6 +503,13 @@ INFO_SERVER="mockserver-perf-info-${RUN_ID}"
 INFO_SERVER_ALIAS="mockserver-info"
 INFO_SWEEP_K6="k6-info-sweep-${RUN_ID}"
 PERF_INFO_ARM="${PERF_INFO_ARM:-true}"
+# After the INFO sweep (which then leaves its log in place), a live-heap histogram before and after a
+# log reset records what the retained log costs in heap: info_log_level_arm.live_heap_reset_probe.
+# Notify-only, bounded by PERF_INFO_HEAP_PROBE_DEADLINE_S; false restores the sweep's own reset.
+PERF_INFO_HEAP_PROBE="${PERF_INFO_HEAP_PROBE:-true}"
+PERF_INFO_HEAP_PROBE_DEADLINE_S="${PERF_INFO_HEAP_PROBE_DEADLINE_S:-240}"
+# shellcheck source=lib/perf-info-heap-probe.sh
+. "$SCRIPT_DIR/lib/perf-info-heap-probe.sh"
 # Upload the surviving JVM-internals diagnostics as Buildkite artifacts. Small evidence (GC log,
 # the dense resource-trajectory CSV, the followed server logs, docker-inspect .State, any tier-2 NMT
 # print + JFR chunks) always goes up as one tarball. Heap dumps are handled separately and SIZE-CAPPED
@@ -2357,8 +2364,9 @@ sweep_cpu_sampler() { # k6_container_name  out_csv
 # captured value) so derive_saturation can line each rung up with its hold window.
 # Registers the sampler PID in SWEEP_SAMPLER_PID so cleanup() reaps it on an early
 # exit, and clears it once reaped.
-run_sweep() { # k6_container_name  target_alias  out_json_host_path  cpu_log_host_path  [scheme=http|https]
-  local k6name="$1" target_alias="$2" out_json="$3" cpu_log="$4" scheme="${5:-http}"
+run_sweep() { # k6_container_name  target_alias  out_json_host_path  cpu_log_host_path  [scheme=http|https]  [keep_log=false]
+  local k6name="$1" target_alias="$2" out_json="$3" cpu_log="$4" scheme="${5:-http}" keep_env=()
+  [ "${6:-false}" != true ] || keep_env=(-e "K6_SWEEP_RESET_ON_TEARDOWN=false")
   LAST_SWEEP_T0="$(date -u +%s)"
   sweep_cpu_sampler "$k6name" "$cpu_log" & SWEEP_SAMPLER_PID=$!
   # Register this ladder so the liveness gate can stop it the instant the SUT dies.
@@ -2377,7 +2385,7 @@ run_sweep() { # k6_container_name  target_alias  out_json_host_path  cpu_log_hos
     -v "$REPO_ROOT/mockserver-performance-test/k6:/k6:ro" \
     -v "$OUT_DIR:/out" \
     -e "BASE_URL=$sweep_base" \
-    "${proto_env[@]}" \
+    "${proto_env[@]}" ${keep_env[@]+"${keep_env[@]}"} \
     -e "K6_SWEEP_RATES=$SWEEP_RATES" \
     -e "K6_SWEEP_STEP=$SWEEP_STEP" \
     -e "K6_SWEEP_GAP=$SWEEP_GAP" \
@@ -2741,6 +2749,7 @@ fi
 abort_if_sut_died
 INFO_ARM_JSON='{}'
 INFO_ARM_ATTEMPTED=false
+INFO_HEAP_PROBE_JSON=null
 if [ "$PERF_INFO_ARM" = "true" ]; then
   INFO_ARM_ATTEMPTED=true
   INFO_T_START="$(date -u +%s)"
@@ -2775,12 +2784,19 @@ if [ "$PERF_INFO_ARM" = "true" ]; then
     run_regression "https_h2" "https://${INFO_SERVER_ALIAS}:1080" "true"  "info-regression-https.json" || { echo "WARNING: INFO regression https_h2 failed — INFO arm degraded" >&2; INFO_MEASURED=false; }
     # Knee curve at INFO (same ladder as the ERROR sweep; no server-headroom test, see below).
     echo "--- INFO-log-level arm: sweep.js (knee curve at INFO)"
-    run_sweep "$INFO_SWEEP_K6" "$INFO_SERVER_ALIAS" "$OUT_DIR/info-sweep.json" "$OUT_DIR/info-sweep-k6-cpu.csv" \
+    run_sweep "$INFO_SWEEP_K6" "$INFO_SERVER_ALIAS" "$OUT_DIR/info-sweep.json" "$OUT_DIR/info-sweep-k6-cpu.csv" http "$PERF_INFO_HEAP_PROBE" \
       || { echo "WARNING: INFO sweep failed — INFO knee degraded" >&2; INFO_MEASURED=false; }
     stop_info_els_sampler
     INFO_METRICS=""
     [ -z "$INFO_METRICS_HOSTPORT" ] || INFO_METRICS="$(curl -sf --max-time 4 "http://${INFO_METRICS_HOSTPORT}/mockserver/metrics" 2>/dev/null || true)"
     IFS='|' read -r INFO_ELS_DROPPED INFO_ELS_EVICTED <<<"$(event_log_counters <<<"$INFO_METRICS")" || true
+    # After every INFO measurement, so the stop-the-world histograms land in no rung.
+    if [ "$PERF_INFO_HEAP_PROBE" = true ] && [ -n "$INFO_METRICS_HOSTPORT" ]; then
+      echo "--- INFO-log-level arm: live-heap reset probe (histogram, PUT /mockserver/reset, GC.run, histogram; at most ${PERF_INFO_HEAP_PROBE_DEADLINE_S}s)"
+      INFO_HEAP_PROBE_JSON="$(info_heap_probe_run "$INFO_SERVER" "$INFO_METRICS_HOSTPORT" "$DIAG_DIR/info" "$PERF_INFO_HEAP_PROBE_DEADLINE_S")" || true
+      jq -e 'type == "object"' >/dev/null 2>&1 <<<"$INFO_HEAP_PROBE_JSON" || INFO_HEAP_PROBE_JSON='{"notify_only":true,"status":"failed","problems":["the probe printed no record"]}'
+      echo "--- INFO live-heap reset probe: $(jq -r '"status \(.status); \(.released_entries // "n/a") entries, \(.released_counted_bytes // "n/a") counted bytes released; live heap fell \(.live_heap_delta_bytes // "n/a") bytes = \(.live_heap_per_counted_byte // "n/a")x counted, \(.live_heap_bytes_per_entry // "n/a") per entry"' <<<"$INFO_HEAP_PROBE_JSON" 2>/dev/null || echo unavailable)"
+    fi
   else
     echo "WARNING: INFO SUT did not become ready — INFO arm skipped (notify-only, ERROR baseline unaffected)" >&2
   fi
@@ -2833,6 +2849,7 @@ if [ "$PERF_INFO_ARM" = "true" ]; then
     --arg server_cpus "${SERVER_CPUS:-none}" --arg k6_cpus "${K6_CPUS:-none}" \
     --argjson event_log_budget "$INFO_ELS_JSON" \
     --argjson event_log_pressure "$INFO_ELS_PRESSURE_JSON" \
+    --argjson live_heap_reset_probe "$INFO_HEAP_PROBE_JSON" \
     --argjson behaviours "$INFO_BEHAVIOURS" \
     --argjson sweep "$INFO_SWEEP_JSON" \
     --argjson saturation "$INFO_SATURATION_JSON" '
@@ -2863,6 +2880,8 @@ if [ "$PERF_INFO_ARM" = "true" ]; then
       saturation: $saturation,
       # Report-only: per-rung drops by reason, the first rung that dropped, and the ring / in-flight peaks.
       event_log_pressure: $event_log_pressure,
+      # Notify-only: live heap the drained log held, per counted byte and per entry; null when not run.
+      live_heap_reset_probe: $live_heap_reset_probe,
       rig_valid_peak_achieved_rps: ($saturation.rig_valid_peak_achieved_rps // null),
       saturation_rps: ($saturation.saturation_rps // null)
     }')"

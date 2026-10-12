@@ -349,6 +349,7 @@ run_sweep() { # the load also moves the counters, so the arm must read them afte
 arm_run() {
   INFO_SERVER=info INFO_SERVER_ALIAS=mockserver-info OUT_DIR="$WORK" INFO_SWEEP_K6=k6 INFO_MEASURED=false
   PERF_INFO_MAX_EVENT_LOG_BYTES=""; INFO_ELS_SAMPLES="$WORK/arm-samples"; : > "$INFO_ELS_SAMPLES"
+  PERF_INFO_HEAP_PROBE=false # perf-info-heap-probe-test.sh covers the probe
   INFO_ELS_SAMPLER_PID=""; DIAG_DIR="$WORK/diag"; mkdir -p "$DIAG_DIR/info"
   eval "$PRESSURE_PATH_LINE"
   eval "$ARM_BLOCK" >/dev/null 2>&1
@@ -527,7 +528,7 @@ RECORD_BLOCK="$(awk '/^  INFO_ELS_PRESSURE_JSON=/ {p=1} p {print} p && /^    }.\
 [ -n "$RECORD_BLOCK" ] || bad "INFO arm record block not found in $F"
 record() { # pressure_csv -> the INFO arm record assembled from the arm's own files
   ( derive_saturation() { echo '{"saturation_rps":2000}'; }
-    OUT_DIR="$WORK" INFO_ELS_PRESSURE="$1" STEP_S=3600 LAST_SWEEP_T0=0 INFO_MEASURED=true INFO_ELS_JSON='{"method":"shipped-default"}'
+    OUT_DIR="$WORK" INFO_ELS_PRESSURE="$1" STEP_S=3600 LAST_SWEEP_T0=0 INFO_MEASURED=true INFO_ELS_JSON='{"method":"shipped-default"}' INFO_HEAP_PROBE_JSON=null
     INFO_LOG_LEVEL_VAL=INFO INFO_LOG_LEVEL_SRC=observed MOCKSERVER_IMAGE=img IMAGE_DIGEST=sha SERVER_CPUS="" K6_CPUS=""
     [ "${BREAK_PRESSURE:-}" != yes ] || event_log_pressure_json() { echo "not json"; }
     eval "$RECORD_BLOCK"; printf '%s' "$INFO_ARM_JSON" )

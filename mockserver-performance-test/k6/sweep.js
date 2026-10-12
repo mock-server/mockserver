@@ -477,7 +477,7 @@ export function matchAt() {
 }
 
 export function teardown() {
-  if (SWEEP.manageSut) {
+  if (SWEEP.manageSut && SWEEP.resetOnTeardown) {
     resetMockServer();
   }
 }
