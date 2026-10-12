@@ -182,6 +182,7 @@ public class ProviderDetectorTest {
     @Test
     public void detectsCohereFromRerankPath() {
         assertThat(ProviderDetector.detectFromPath("/v1/rerank"), is(Optional.of(Provider.COHERE)));
+        assertThat(ProviderDetector.detectFromPath("/v2/rerank"), is(Optional.of(Provider.COHERE)));
     }
 
     @Test

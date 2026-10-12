@@ -331,7 +331,7 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
     private HttpResponse encodeEmbeddings(EmbeddingResponse embedding, List<String> inputs, String model, Integer requestedDimensions, boolean base64) {
         EmbeddingWire.checkTotalValues(
             EmbeddingWire.dimensions(embedding, requestedDimensions, DEFAULT_EMBEDDING_DIMENSIONS) * (long) inputs.size(),
-            base64 ? EmbeddingWire.MAX_TOTAL_BASE64_VALUES : EmbeddingWire.MAX_TOTAL_VALUES
+            base64 ? EmbeddingWire.maxTotalBase64Values() : EmbeddingWire.maxTotalValues()
         );
         ObjectNode root = OBJECT_MAPPER.createObjectNode();
         root.put("object", "list");

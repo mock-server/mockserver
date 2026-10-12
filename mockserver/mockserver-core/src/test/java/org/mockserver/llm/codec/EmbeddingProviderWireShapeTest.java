@@ -319,6 +319,108 @@ public class EmbeddingProviderWireShapeTest {
         assertThat(titan.has("embeddingsByType"), is(true));
     }
 
+    private static final String PNG = "\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAfbLI3wAAAABJRU5ErkJggg==\"";
+    private static final String JPEG = "\"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=\"";
+
+    @Test
+    public void shouldReturnOneCohereV3VectorForAnImageWithEmptyTexts() throws Exception {
+        // Bedrock Cohere Embed v3: one image per call; "texts" comes back empty
+        // https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-embed-v3.html
+        String path = "/model/cohere.embed-english-v3/invoke";
+        JsonNode root = post(Provider.BEDROCK, null, deterministic(), path,
+            "{\"images\":[" + PNG + "],\"input_type\":\"image\",\"embedding_types\":[\"int8\",\"float\"]}");
+        assertThat(root.get("response_type").asText(), is("embeddings_by_type"));
+        assertThat(root.get("embeddings").get("float").size(), is(1));
+        assertThat(root.get("embeddings").get("float").get(0).size(), is(1024));
+        assertThat(root.get("embeddings").get("int8").size(), is(1));
+        assertThat(root.get("texts").isArray(), is(true));
+        assertThat(root.get("texts").size(), is(0));
+
+        JsonNode floats = post(Provider.BEDROCK, null, deterministic(), path, "{\"images\":[" + PNG + "],\"input_type\":\"image\"}");
+        assertThat(floats.get("response_type").asText(), is("embeddings_floats"));
+        assertThat(floats.get("embeddings").size(), is(1));
+        assertThat("the same image gives the same vector", floats(floats.get("embeddings").get(0)), is(floats(root.get("embeddings").get("float").get(0))));
+
+        JsonNode error = rejected(postRaw(Provider.BEDROCK, null, deterministic(), path,
+            "{\"images\":[" + PNG + "," + JPEG + "],\"input_type\":\"image\"}"));
+        assertThat(error.get("message").asText(), is("images must have at most 1 entries, got 2"));
+    }
+
+    @Test
+    public void shouldReturnOneCohereV4VectorPerImage() throws Exception {
+        // Bedrock Cohere Embed v4: up to 96 images per call
+        // https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-embed-v4.html
+        JsonNode root = post(Provider.BEDROCK, null, deterministic(), "/model/cohere.embed-v4:0/invoke",
+            "{\"images\":[" + PNG + "," + JPEG + "," + PNG + "],\"input_type\":\"search_document\",\"output_dimension\":256}");
+        JsonNode embeddings = root.get("embeddings");
+        assertThat(embeddings.size(), is(3));
+        assertThat(embeddings.get(0).size(), is(256));
+        assertThat(floats(embeddings.get(0)), is(floats(embeddings.get(2))));
+        assertThat(floats(embeddings.get(0)), is(not(floats(embeddings.get(1)))));
+        assertThat(root.get("texts").size(), is(0));
+    }
+
+    @Test
+    public void shouldPickCohereForAnImagesBodyWithNoEmbeddingModelNamed() throws Exception {
+        JsonNode root = post(Provider.BEDROCK, null, deterministic(), "/bedrock/embed", "{\"images\":[" + PNG + "]}");
+        assertThat(root.get("embeddings").size(), is(1));
+        assertThat(root.get("embeddings").get(0).size(), is(1024));
+    }
+
+    @Test
+    public void shouldRejectCohereTextsAndImagesTogether() throws Exception {
+        HttpResponse response = postRaw(Provider.BEDROCK, null, deterministic(), "/model/cohere.embed-v4:0/invoke",
+            "{\"texts\":[\"a\"],\"images\":[" + PNG + "]}");
+        assertThat(rejected(response).get("message").asText(), is("send either texts or images, not both"));
+        assertThat(response.getFirstHeader("x-amzn-ErrorType"), is("ValidationException"));
+    }
+
+    @Test
+    public void shouldRejectAnInputTooLongToHashWithTheProvidersError() throws Exception {
+        String atLimit = "{\"input\":[\"" + words(EmbeddingWire.DEFAULT_MAX_INPUT_CHARACTERS) + "\"]}";
+        String overLimit = "{\"input\":[\"short\",\"" + words(EmbeddingWire.DEFAULT_MAX_INPUT_CHARACTERS + 1) + "\"]}";
+        assertThat(post(Provider.OPENAI, null, deterministic(), "/v1/embeddings", atLimit).get("data").size(), is(1));
+
+        JsonNode error = rejected(postRaw(Provider.OPENAI, null, deterministic(), "/v1/embeddings", overLimit)).get("error");
+        assertThat(error.get("type").asText(), is("invalid_request_error"));
+        int over = EmbeddingWire.DEFAULT_MAX_INPUT_CHARACTERS + 1;
+        assertThat(error.get("message").asText(), is("an input has " + over + " characters; the limit is " + EmbeddingWire.DEFAULT_MAX_INPUT_CHARACTERS + ". Send shorter inputs"));
+        assertThat(rejected(postRaw(Provider.GEMINI, null, deterministic(), "/v1beta/models/text-embedding-004:embedContent",
+            "{\"content\":{\"parts\":[{\"text\":\"" + words(over) + "\"}]}}")).get("error").get("status").asText(), is("INVALID_ARGUMENT"));
+        assertThat(rejected(postRaw(Provider.OLLAMA, null, deterministic(), "/api/embed", overLimit)).get("error").asText(), containsString(String.valueOf(over)));
+        assertThat(rejected(postRaw(Provider.BEDROCK, null, deterministic(), "/model/amazon.titan-embed-text-v2:0/invoke",
+            "{\"inputText\":\"" + words(over) + "\"}")).get("message").asText(), containsString(String.valueOf(over)));
+
+        assertThat("a random vector does not read the text, so it has no length limit",
+            post(Provider.OPENAI, null, EmbeddingResponse.embedding(), "/v1/embeddings", overLimit).get("data").size(), is(2));
+    }
+
+    @Test
+    public void shouldFailAnExpectationWithDimensionsBelowOneAsAMockFault() throws Exception {
+        for (int dimensions : new int[]{0, -1}) {
+            for (EmbeddingResponse embedding : new EmbeddingResponse[]{deterministic().withDimensions(dimensions), EmbeddingResponse.embedding().withDimensions(dimensions)}) {
+                for (String[] call : new String[][]{
+                    {"OPENAI", "/v1/embeddings", "{\"input\":\"x\"}"},
+                    {"GEMINI", "/v1beta/models/text-embedding-004:embedContent", "{\"content\":{\"parts\":[{\"text\":\"x\"}]}}"},
+                    {"OLLAMA", "/api/embeddings", "{\"prompt\":\"x\"}"},
+                    {"BEDROCK", "/model/cohere.embed-v4:0/invoke", "{\"texts\":[\"x\"]}"}}) {
+                    HttpResponse response = postRaw(Provider.valueOf(call[0]), null, embedding, call[1], call[2]);
+                    assertThat(call[0] + " " + dimensions, response.getStatusCode(), is(502));
+                }
+            }
+        }
+    }
+
+    /** Text of exactly {@code length} characters, a few words repeated so hashing it stays cheap. */
+    private static String words(int length) {
+        StringBuilder text = new StringBuilder(length + 8);
+        for (int i = 0; text.length() < length; i++) {
+            text.append('w').append(i % 10).append(' ');
+        }
+        text.setLength(length);
+        return text.toString();
+    }
+
     // ---- Request limits ----
 
     private HttpResponse postRaw(Provider provider, String model, EmbeddingResponse embedding, String path, String body) {

@@ -11,6 +11,9 @@ import org.mockserver.model.Provider;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -19,6 +22,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import static org.mockserver.model.HttpResponse.response;
 
@@ -82,14 +86,75 @@ public final class EmbeddingWire {
     public static final int MAX_INPUTS = 2048;
 
     /**
-     * The most values one response may hold as JSON numbers, across every input and type. It
-     * keeps the largest response body under the default {@code maxRequestBodySize}, the largest
-     * body an expectation can be given by default.
+     * The default for the most values one response may hold as JSON numbers, across every input
+     * and type ({@code llmEmbeddingMaxResponseValues}). It keeps the largest response body under
+     * the default {@code maxRequestBodySize}, the largest body an expectation can be given by
+     * default. Base64 float32 vectors take a quarter of the characters, so four times as many
+     * values are allowed in that form.
      */
-    public static final long MAX_TOTAL_VALUES = 262_144L;
+    public static final int DEFAULT_MAX_TOTAL_VALUES = 262_144;
 
-    /** The same response size for base64 float32 vectors, which take a quarter of the characters. */
-    public static final long MAX_TOTAL_BASE64_VALUES = 4 * MAX_TOTAL_VALUES;
+    /**
+     * The default for the longest input text, in characters, that a {@code deterministicFromInput}
+     * embedding hashes ({@code llmEmbeddingMaxInputCharacters}). Hashing allocates in proportion
+     * to the text, so this bounds the memory one input costs. It is above the largest input a real
+     * provider accepts (Cohere Embed v4's 128k tokens at 8 characters a token), so no request a
+     * provider would take is rejected.
+     */
+    public static final int DEFAULT_MAX_INPUT_CHARACTERS = 1_048_576;
+
+    /** The limits one request is checked against. */
+    public static final class Limits {
+        private final long maxTotalValues;
+        private final int maxInputCharacters;
+
+        public Limits(long maxTotalValues, int maxInputCharacters) {
+            this.maxTotalValues = maxTotalValues;
+            this.maxInputCharacters = maxInputCharacters;
+        }
+    }
+
+    private static final Limits DEFAULT_LIMITS = new Limits(DEFAULT_MAX_TOTAL_VALUES, DEFAULT_MAX_INPUT_CHARACTERS);
+
+    private static final ThreadLocal<Limits> LIMITS = new ThreadLocal<>();
+
+    /**
+     * Runs {@code encode} with {@code limits} in force on this thread. The action handler builds
+     * them from the server's configuration; without them the defaults apply.
+     */
+    public static <T> T withLimits(Limits limits, Supplier<T> encode) {
+        Limits previous = LIMITS.get();
+        LIMITS.set(limits);
+        try {
+            return encode.get();
+        } finally {
+            if (previous != null) {
+                LIMITS.set(previous);
+            } else {
+                LIMITS.remove();
+            }
+        }
+    }
+
+    private static Limits limits() {
+        Limits limits = LIMITS.get();
+        return limits != null ? limits : DEFAULT_LIMITS;
+    }
+
+    /** The most values one response may hold as JSON numbers. */
+    public static long maxTotalValues() {
+        return limits().maxTotalValues;
+    }
+
+    /** The most values one response may hold as base64 float32 vectors. */
+    public static long maxTotalBase64Values() {
+        return 4 * maxTotalValues();
+    }
+
+    /** The longest input text a {@code deterministicFromInput} embedding hashes. */
+    public static int maxInputCharacters() {
+        return limits().maxInputCharacters;
+    }
 
     /**
      * A request the real provider would reject, or that would make an unbounded response.
@@ -140,11 +205,11 @@ public final class EmbeddingWire {
     }
 
     /**
-     * Rejects a response that would hold more than {@link #MAX_TOTAL_VALUES} values: {@code arrays}
+     * Rejects a response that would hold more than {@link #maxTotalValues()} values: {@code arrays}
      * arrays of the vector length the expectation or request resolves to.
      */
     public static void checkTotalValues(EmbeddingResponse embedding, Integer requestedDimensions, int providerDefault, long arrays) {
-        checkTotalValues(dimensions(embedding, requestedDimensions, providerDefault) * arrays, MAX_TOTAL_VALUES);
+        checkTotalValues(dimensions(embedding, requestedDimensions, providerDefault) * arrays, maxTotalValues());
     }
 
     public static void checkTotalValues(long totalValues, long limit) {
@@ -175,15 +240,40 @@ public final class EmbeddingWire {
 
     /** The vector length used: the expectation's, then the request's, then the provider default. */
     public static int dimensions(EmbeddingResponse embedding, Integer requestedDimensions, int providerDefault) {
+        checkExpectationDimensions(embedding);
         return embedding.getDimensions() != null ? embedding.getDimensions()
             : requestedDimensions != null ? requestedDimensions : providerDefault;
     }
 
     /**
+     * Rejects an expectation whose {@code dimensions} is below 1. The expectation schema refuses
+     * one; this covers an expectation built without it. The handler answers {@code 502}, because
+     * the fault is in the mock, not in the client's request.
+     */
+    private static void checkExpectationDimensions(EmbeddingResponse embedding) {
+        if (embedding.getDimensions() != null && embedding.getDimensions() < 1) {
+            throw new IllegalArgumentException("the expectation's embedding dimensions must be at least 1, got " + embedding.getDimensions());
+        }
+    }
+
+    /**
+     * Rejects an input too long to hash for a {@code deterministicFromInput} embedding. A random
+     * vector does not read the text, so it has no such limit.
+     */
+    private static void checkInputLength(EmbeddingResponse embedding, String input) {
+        if (input != null && Boolean.TRUE.equals(embedding.getDeterministicFromInput()) && input.length() > maxInputCharacters()) {
+            throw new InvalidEmbeddingRequestException(null,
+                "an input has " + input.length() + " characters; the limit is " + maxInputCharacters()
+                    + ". Send shorter inputs");
+        }
+    }
+
+    /**
      * A 400 in the provider's own invalid-request error shape: the OpenAI error envelope
      * (also Azure and the OpenAI-compatible providers), Google's {@code INVALID_ARGUMENT},
-     * Bedrock's {@code ValidationException}, Ollama's {@code {"error":...}}, and otherwise a
-     * plain {@code {"error":...}}.
+     * Bedrock's {@code ValidationException}, Cohere's {@code {"message":...}}, Voyage's
+     * {@code {"detail":...}}, Ollama's {@code {"error":...}}, and otherwise a plain
+     * {@code {"error":...}}.
      */
     public static HttpResponse invalidRequest(Provider provider, InvalidEmbeddingRequestException e) {
         ObjectNode body = OBJECT_MAPPER.createObjectNode();
@@ -199,11 +289,15 @@ public final class EmbeddingWire {
                 body.put("message", e.getMessage());
                 response.withHeader("x-amzn-ErrorType", "ValidationException");
                 break;
+            case COHERE:
+                body.put("message", e.getMessage());
+                break;
+            case VOYAGE:
+                body.put("detail", e.getMessage());
+                break;
             case OLLAMA:
             case ANTHROPIC:
             case OPENAI_RESPONSES:
-            case COHERE:
-            case VOYAGE:
                 body.put("error", e.getMessage());
                 break;
             default:
@@ -258,6 +352,25 @@ public final class EmbeddingWire {
         return true;
     }
 
+    /**
+     * The text a vector for an image input is built from: a digest of the image's data URI, so
+     * the same image always gets the same {@code deterministicFromInput} vector and a large image
+     * costs no more to hash than a short text.
+     */
+    public static String imageInput(JsonNode image) {
+        String uri = image == null ? "" : image.isTextual() ? image.asText() : image.toString();
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256").digest(uri.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder(digest.length * 2);
+            for (byte b : digest) {
+                hex.append(Character.forDigit((b >> 4) & 0xf, 16)).append(Character.forDigit(b & 0xf, 16));
+            }
+            return hex.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 not available", e);
+        }
+    }
+
     /** The text of a Gemini {@code Content}: its {@code parts[].text} values joined by newlines. */
     public static String geminiContentText(JsonNode content) {
         return joinTextParts(content != null ? content.get("parts") : null, null);
@@ -290,15 +403,20 @@ public final class EmbeddingWire {
     /**
      * The vector for one input. The expectation's {@code dimensions} wins, then the size the
      * request asked for, then the provider default. A vector longer than
-     * {@link #MAX_TOTAL_VALUES} is rejected.
+     * {@link #maxTotalValues()} is rejected.
      */
     public static double[] vector(EmbeddingResponse embedding, String input, Integer requestedDimensions, int providerDefault) {
         checkTotalValues(embedding, requestedDimensions, providerDefault, 1);
         return build(embedding, input, requestedDimensions, providerDefault);
     }
 
-    /** As {@link #vector}, for a caller that has already checked the whole response's size. */
+    /**
+     * As {@link #vector}, for a caller that has already checked the whole response's size. An
+     * input longer than {@link #maxInputCharacters()} is rejected when the vector is hashed from it.
+     */
     public static double[] build(EmbeddingResponse embedding, String input, Integer requestedDimensions, int providerDefault) {
+        checkExpectationDimensions(embedding);
+        checkInputLength(embedding, input);
         return EmbeddingVectors.build(embedding, input, requestedDimensions != null ? requestedDimensions : providerDefault);
     }
 

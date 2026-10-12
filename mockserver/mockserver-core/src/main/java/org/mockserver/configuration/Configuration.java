@@ -477,6 +477,8 @@ public class Configuration {
     private volatile Boolean llmInferUsageEnabled;
     private volatile Boolean llmVcrStrict;
     private volatile Integer llmOptimisationMaxCalls;
+    private volatile Integer llmEmbeddingMaxResponseValues;
+    private volatile Integer llmEmbeddingMaxInputCharacters;
     private volatile String fixtureBodyRedactFields;
 
     // OpenTelemetry
@@ -6822,6 +6824,43 @@ public class Configuration {
      */
     public Configuration llmOptimisationMaxCalls(Integer llmOptimisationMaxCalls) {
         this.llmOptimisationMaxCalls = llmOptimisationMaxCalls;
+        return this;
+    }
+
+    public Integer llmEmbeddingMaxResponseValues() {
+        if (llmEmbeddingMaxResponseValues == null) {
+            return ConfigurationProperties.llmEmbeddingMaxResponseValues();
+        }
+        return llmEmbeddingMaxResponseValues;
+    }
+
+    /**
+     * The most values a mocked embedding response may hold as JSON numbers, over every input and
+     * embedding type; four times as many as base64 float32. A request for more gets a {@code 400}.
+     * Default 262,144.
+     *
+     * @param llmEmbeddingMaxResponseValues the most values in one embedding response
+     */
+    public Configuration llmEmbeddingMaxResponseValues(Integer llmEmbeddingMaxResponseValues) {
+        this.llmEmbeddingMaxResponseValues = llmEmbeddingMaxResponseValues;
+        return this;
+    }
+
+    public Integer llmEmbeddingMaxInputCharacters() {
+        if (llmEmbeddingMaxInputCharacters == null) {
+            return ConfigurationProperties.llmEmbeddingMaxInputCharacters();
+        }
+        return llmEmbeddingMaxInputCharacters;
+    }
+
+    /**
+     * The longest input text, in characters, that a {@code deterministicFromInput} embedding
+     * hashes. A longer input gets a {@code 400}. Default 1,048,576.
+     *
+     * @param llmEmbeddingMaxInputCharacters the longest input text hashed into a vector
+     */
+    public Configuration llmEmbeddingMaxInputCharacters(Integer llmEmbeddingMaxInputCharacters) {
+        this.llmEmbeddingMaxInputCharacters = llmEmbeddingMaxInputCharacters;
         return this;
     }
 

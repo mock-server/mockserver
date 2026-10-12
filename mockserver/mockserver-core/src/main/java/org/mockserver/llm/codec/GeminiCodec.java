@@ -367,7 +367,7 @@ public class GeminiCodec implements ProviderCodec {
                 for (JsonNode embedRequest : requests) {
                     totalValues += EmbeddingWire.dimensions(embedding, outputDimensionality(embedRequest), DEFAULT_EMBEDDING_DIMENSIONS);
                 }
-                EmbeddingWire.checkTotalValues(totalValues, EmbeddingWire.MAX_TOTAL_VALUES);
+                EmbeddingWire.checkTotalValues(totalValues, EmbeddingWire.maxTotalValues());
                 for (JsonNode embedRequest : requests) {
                     String text = EmbeddingWire.geminiContentText(embedRequest.get("content"));
                     inputs.add(text);

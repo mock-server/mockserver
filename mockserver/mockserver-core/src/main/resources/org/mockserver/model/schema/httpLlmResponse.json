@@ -137,7 +137,8 @@
       "additionalProperties": false,
       "properties": {
         "dimensions": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 1
         },
         "deterministicFromInput": {
           "type": "boolean"

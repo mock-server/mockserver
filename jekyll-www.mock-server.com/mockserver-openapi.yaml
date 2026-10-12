@@ -7293,6 +7293,7 @@ components:
           properties:
             dimensions:
               type: integer
+              minimum: 1
             deterministicFromInput:
               type: boolean
             seed:

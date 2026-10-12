@@ -77,8 +77,8 @@ public class CohereCodecTest {
         HttpResponse r1 = codec.encodeRerank(rerank, documents);
         HttpResponse r2 = codec.encodeRerank(rerank, documents);
 
-        // then
-        assertThat(r1.getBodyAsString(), is(r2.getBodyAsString()));
+        // then — the scores repeat; each response has its own id
+        assertThat(OBJECT_MAPPER.readTree(r1.getBodyAsString()).get("results"), is(OBJECT_MAPPER.readTree(r2.getBodyAsString()).get("results")));
     }
 
     @Test

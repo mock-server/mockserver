@@ -339,6 +339,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private Boolean llmInferUsageEnabled;
     private Boolean llmVcrStrict;
     private Integer llmOptimisationMaxCalls;
+    private Integer llmEmbeddingMaxResponseValues;
+    private Integer llmEmbeddingMaxInputCharacters;
     private String fixtureBodyRedactFields;
     private String otelEndpoint;
     private Boolean otelMetricsEnabled;
@@ -709,6 +711,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
             this.llmInferUsageEnabled = configuration.llmInferUsageEnabled();
             this.llmVcrStrict = configuration.llmVcrStrict();
             this.llmOptimisationMaxCalls = configuration.llmOptimisationMaxCalls();
+            this.llmEmbeddingMaxResponseValues = configuration.llmEmbeddingMaxResponseValues();
+            this.llmEmbeddingMaxInputCharacters = configuration.llmEmbeddingMaxInputCharacters();
             this.fixtureBodyRedactFields = configuration.fixtureBodyRedactFields();
             this.otelEndpoint = configuration.otelEndpoint();
             this.otelMetricsEnabled = configuration.otelMetricsEnabled();
@@ -1183,6 +1187,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
         configuration.llmInferUsageEnabled(llmInferUsageEnabled);
         configuration.llmVcrStrict(llmVcrStrict);
         configuration.llmOptimisationMaxCalls(llmOptimisationMaxCalls);
+        configuration.llmEmbeddingMaxResponseValues(llmEmbeddingMaxResponseValues);
+        configuration.llmEmbeddingMaxInputCharacters(llmEmbeddingMaxInputCharacters);
         configuration.fixtureBodyRedactFields(fixtureBodyRedactFields);
         configuration.otelEndpoint(otelEndpoint);
         configuration.otelMetricsEnabled(otelMetricsEnabled);
@@ -2261,6 +2267,12 @@ public class ConfigurationDTO implements DTO<Configuration> {
         }
         if (llmOptimisationMaxCalls != null) {
             target.llmOptimisationMaxCalls(llmOptimisationMaxCalls);
+        }
+        if (llmEmbeddingMaxResponseValues != null) {
+            target.llmEmbeddingMaxResponseValues(llmEmbeddingMaxResponseValues);
+        }
+        if (llmEmbeddingMaxInputCharacters != null) {
+            target.llmEmbeddingMaxInputCharacters(llmEmbeddingMaxInputCharacters);
         }
         if (fixtureBodyRedactFields != null) {
             target.fixtureBodyRedactFields(fixtureBodyRedactFields);
@@ -5071,6 +5083,24 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setLlmOptimisationMaxCalls(Integer llmOptimisationMaxCalls) {
         this.llmOptimisationMaxCalls = llmOptimisationMaxCalls;
+        return this;
+    }
+
+    public Integer getLlmEmbeddingMaxResponseValues() {
+        return llmEmbeddingMaxResponseValues;
+    }
+
+    public ConfigurationDTO setLlmEmbeddingMaxResponseValues(Integer llmEmbeddingMaxResponseValues) {
+        this.llmEmbeddingMaxResponseValues = llmEmbeddingMaxResponseValues;
+        return this;
+    }
+
+    public Integer getLlmEmbeddingMaxInputCharacters() {
+        return llmEmbeddingMaxInputCharacters;
+    }
+
+    public ConfigurationDTO setLlmEmbeddingMaxInputCharacters(Integer llmEmbeddingMaxInputCharacters) {
+        this.llmEmbeddingMaxInputCharacters = llmEmbeddingMaxInputCharacters;
         return this;
     }
 

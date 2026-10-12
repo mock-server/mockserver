@@ -83,6 +83,14 @@ public interface ProviderCodec {
         throw new UnsupportedOperationException("encodeRerank not implemented for provider " + provider());
     }
 
+    /**
+     * As {@link #encodeRerank(RerankResponse, java.util.List)}, for a codec that also honours the
+     * request's own fields, such as how many results to return and whether to echo the documents.
+     */
+    default HttpResponse encodeRerank(RerankResponse rerank, java.util.List<String> documents, HttpRequest request) {
+        return encodeRerank(rerank, documents);
+    }
+
     default ParsedConversation decode(HttpRequest request) {
         throw new UnsupportedOperationException("decode not implemented for provider " + provider());
     }

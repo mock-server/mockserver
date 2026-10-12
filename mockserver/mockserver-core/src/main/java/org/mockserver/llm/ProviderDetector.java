@@ -48,9 +48,9 @@ public final class ProviderDetector {
             + "|/v1/models/gemini-[^/]+:(generateContent|streamGenerateContent)"
             + "|/publishers/google/models/[^/]+:(generateContent|streamGenerateContent)");
 
-    // Cohere: /v1/rerank, or /v1/chat as a terminal segment (NOT /v1/chat/completions).
-    // /v1/rerank is shared with Voyage; on path alone it defaults to Cohere.
-    private static final Pattern COHERE_PATH = Pattern.compile("/v1/rerank|/v1/chat(/?$|\\?)");
+    // Cohere: /v2/rerank or /v1/rerank, or /v1/chat as a terminal segment (NOT
+    // /v1/chat/completions). /v1/rerank is shared with Voyage; on path alone it defaults to Cohere.
+    private static final Pattern COHERE_PATH = Pattern.compile("/v[12]/rerank|/v1/chat(/?$|\\?)");
 
     // Ollama: /api/chat (as a complete path segment)
     private static final Pattern OLLAMA_PATH = Pattern.compile("(^|/)api/chat(/|$|\\?)");

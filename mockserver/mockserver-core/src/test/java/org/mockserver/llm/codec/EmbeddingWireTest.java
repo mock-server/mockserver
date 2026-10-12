@@ -97,11 +97,11 @@ public class EmbeddingWireTest {
 
     @Test
     public void shouldRejectOneValueOverTheTotal() {
-        assertThat(EmbeddingWire.MAX_TOTAL_VALUES, is(262_144L));
-        assertThat(EmbeddingWire.MAX_TOTAL_BASE64_VALUES, is(1_048_576L));
-        EmbeddingWire.checkTotalValues(EmbeddingWire.MAX_TOTAL_VALUES, EmbeddingWire.MAX_TOTAL_VALUES);
+        assertThat(EmbeddingWire.maxTotalValues(), is(262_144L));
+        assertThat(EmbeddingWire.maxTotalBase64Values(), is(1_048_576L));
+        EmbeddingWire.checkTotalValues(EmbeddingWire.maxTotalValues(), EmbeddingWire.maxTotalValues());
         assertThrows(InvalidEmbeddingRequestException.class,
-            () -> EmbeddingWire.checkTotalValues(EmbeddingWire.MAX_TOTAL_VALUES + 1, EmbeddingWire.MAX_TOTAL_VALUES));
+            () -> EmbeddingWire.checkTotalValues(EmbeddingWire.maxTotalValues() + 1, EmbeddingWire.maxTotalValues()));
 
         EmbeddingResponse expectationSets512 = EmbeddingResponse.embedding().withDimensions(512);
         EmbeddingWire.checkTotalValues(expectationSets512, 8192, 1536, 512);
@@ -110,6 +110,66 @@ public class EmbeddingWireTest {
         assertThrows(InvalidEmbeddingRequestException.class, () -> EmbeddingWire.checkTotalValues(EmbeddingResponse.embedding(), 129, 1536, 2048));
         EmbeddingWire.checkTotalValues(EmbeddingResponse.embedding(), null, 1536, 170);
         assertThrows(InvalidEmbeddingRequestException.class, () -> EmbeddingWire.checkTotalValues(EmbeddingResponse.embedding(), null, 1536, 171));
+    }
+
+    @Test
+    public void shouldApplyLimitsOnlyWhileInForceAndRestoreTheOuterOnes() {
+        EmbeddingWire.Limits outer = new EmbeddingWire.Limits(1_000, 50);
+        EmbeddingWire.Limits inner = new EmbeddingWire.Limits(10, 5);
+        long[] seen = EmbeddingWire.withLimits(outer, () -> {
+            long innerValues = EmbeddingWire.withLimits(inner, () -> EmbeddingWire.maxTotalValues() * 100 + EmbeddingWire.maxInputCharacters());
+            return new long[]{innerValues, EmbeddingWire.maxTotalValues(), EmbeddingWire.maxTotalBase64Values(), EmbeddingWire.maxInputCharacters()};
+        });
+        assertThat(seen[0], is(1_005L));
+        assertThat(seen[1], is(1_000L));
+        assertThat(seen[2], is(4_000L));
+        assertThat(seen[3], is(50L));
+        assertThat(EmbeddingWire.maxTotalValues(), is((long) EmbeddingWire.DEFAULT_MAX_TOTAL_VALUES));
+        assertThat(EmbeddingWire.maxInputCharacters(), is(EmbeddingWire.DEFAULT_MAX_INPUT_CHARACTERS));
+
+        assertThrows(IllegalStateException.class, () -> EmbeddingWire.withLimits(inner, () -> {
+            throw new IllegalStateException("encode failed");
+        }));
+        assertThat(EmbeddingWire.maxTotalValues(), is((long) EmbeddingWire.DEFAULT_MAX_TOTAL_VALUES));
+    }
+
+    @Test
+    public void shouldOnlyLimitTheInputLengthOfVectorsHashedFromTheInput() {
+        String atLimit = repeat('a', 5);
+        String overLimit = repeat('a', 6);
+        EmbeddingResponse deterministic = EmbeddingResponse.embedding().withDeterministicFromInput(true);
+        EmbeddingWire.withLimits(new EmbeddingWire.Limits(1_000, 5), () -> {
+            assertThat(EmbeddingWire.build(deterministic, atLimit, null, 8).length, is(8));
+            InvalidEmbeddingRequestException e = assertThrows(InvalidEmbeddingRequestException.class,
+                () -> EmbeddingWire.build(deterministic, overLimit, null, 8));
+            assertThat(e.getMessage(), is("an input has 6 characters; the limit is 5. Send shorter inputs"));
+            assertThat(EmbeddingWire.build(EmbeddingResponse.embedding(), overLimit, null, 8).length, is(8));
+            return null;
+        });
+    }
+
+    @Test
+    public void shouldRejectAnExpectationDimensionBelowOne() {
+        for (int dimensions : new int[]{0, -1, Integer.MIN_VALUE}) {
+            EmbeddingResponse embedding = EmbeddingResponse.embedding().withDimensions(dimensions);
+            assertThrows(IllegalArgumentException.class, () -> EmbeddingWire.dimensions(embedding, null, 1536));
+            assertThrows(IllegalArgumentException.class, () -> EmbeddingWire.build(embedding, "x", null, 1536));
+            assertThrows(IllegalArgumentException.class, () -> EmbeddingWire.build(embedding.withDeterministicFromInput(true), "x", null, 1536));
+        }
+    }
+
+    @Test
+    public void shouldDigestImageInputsSoTheSameImageGivesTheSameInput() throws Exception {
+        String image = EmbeddingWire.imageInput(json("\"data:image/png;base64,iVBORw0KGgo=\""));
+        assertThat(image.length(), is(64));
+        assertThat(EmbeddingWire.imageInput(json("\"data:image/png;base64,iVBORw0KGgo=\"")), is(image));
+        assertThat(EmbeddingWire.imageInput(json("\"data:image/png;base64,iVBORw0KGgp=\"")).equals(image), is(false));
+    }
+
+    private static String repeat(char c, int count) {
+        char[] chars = new char[count];
+        Arrays.fill(chars, c);
+        return new String(chars);
     }
 
     @Test

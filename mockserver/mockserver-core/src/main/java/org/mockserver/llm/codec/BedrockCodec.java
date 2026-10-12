@@ -141,8 +141,11 @@ public class BedrockCodec implements ProviderCodec {
 
     private enum EmbeddingFamily { TITAN_V1, TITAN_V2, TITAN_IMAGE, COHERE_V3, COHERE_V4 }
 
-    /** Cohere Embed on Bedrock accepts at most 96 texts or inputs per call. */
+    /** Cohere Embed on Bedrock accepts at most 96 texts or inputs per call, and v4 96 images. */
     private static final int COHERE_MAX_INPUTS = 96;
+
+    /** Cohere Embed v3 on Bedrock accepts one image per call. */
+    private static final int COHERE_V3_MAX_IMAGES = 1;
 
     private static final Pattern MODEL_IN_PATH = Pattern.compile("/model/([^/]+)/");
 
@@ -172,8 +175,8 @@ public class BedrockCodec implements ProviderCodec {
      * Encodes a Bedrock {@code InvokeModel} embedding response in the shape of the model
      * family. The model id comes from the {@code /model/{modelId}/invoke} path, then the
      * expectation's {@code model}; region prefixes ({@code us.cohere...}) and ARNs match. With no
-     * embedding model named, a {@code texts} or {@code inputs} body selects Cohere and anything
-     * else Titan.
+     * embedding model named, a {@code texts}, {@code inputs} or {@code images} body selects Cohere
+     * and anything else Titan.
      * <ul>
      *   <li><strong>Titan Text Embeddings G1</strong> ({@code amazon.titan-embed-text-v1}):
      *       {@code inputText} in; {@code {"embedding":[...],"inputTextTokenCount":N}} out,
@@ -187,8 +190,9 @@ public class BedrockCodec implements ProviderCodec {
      *       {@code inputText} in; {@code {"embedding":[...],"inputTextTokenCount":N}} out, 1024
      *       dimensions or {@code embeddingConfig.outputEmbeddingLength} (256, 384 or 1024).</li>
      *   <li><strong>Cohere Embed v3 / v4</strong> ({@code cohere.embed-english-v3},
-     *       {@code cohere.embed-v4:0}): one vector per {@code texts} entry (or v4
-     *       {@code inputs} item) in {@code {"id":...,"embeddings":[[...]],
+     *       {@code cohere.embed-v4:0}): one vector per {@code texts} entry, {@code images}
+     *       entry (one on v3, with {@code texts} returned empty) or v4 {@code inputs} item, in
+     *       {@code {"id":...,"embeddings":[[...]],
      *       "response_type":"embeddings_floats","texts":[...]}}; with {@code embedding_types}
      *       the embeddings are an object keyed by type and {@code response_type} is
      *       {@code embeddings_by_type}. v3 has 1024 dimensions; v4 1536 or
@@ -205,7 +209,7 @@ public class BedrockCodec implements ProviderCodec {
             family = familyFromModel(model);
         }
         if (family == null) {
-            if (body.has("texts") || body.has("inputs")) {
+            if (body.has("texts") || body.has("inputs") || body.has("images")) {
                 family = body.has("inputs") || body.has("output_dimension") ? EmbeddingFamily.COHERE_V4 : EmbeddingFamily.COHERE_V3;
             } else {
                 family = EmbeddingFamily.TITAN_V2;
@@ -293,6 +297,10 @@ public class BedrockCodec implements ProviderCodec {
         List<String> inputs = new ArrayList<>();
         JsonNode texts = body.get("texts");
         JsonNode items = body.get("inputs");
+        JsonNode images = body.get("images");
+        if (texts != null && texts.isArray() && images != null && images.isArray()) {
+            throw new EmbeddingWire.InvalidEmbeddingRequestException("images", "send either texts or images, not both");
+        }
         if (texts != null && texts.isArray()) {
             EmbeddingWire.checkInputCount(texts.size(), COHERE_MAX_INPUTS, "texts");
             for (JsonNode text : texts) {
@@ -302,6 +310,11 @@ public class BedrockCodec implements ProviderCodec {
             EmbeddingWire.checkInputCount(items.size(), COHERE_MAX_INPUTS, "inputs");
             for (JsonNode item : items) {
                 inputs.add(EmbeddingWire.joinTextParts(item.get("content"), "text"));
+            }
+        } else if (images != null && images.isArray()) {
+            EmbeddingWire.checkInputCount(images.size(), family == EmbeddingFamily.COHERE_V4 ? COHERE_MAX_INPUTS : COHERE_V3_MAX_IMAGES, "images");
+            for (JsonNode image : images) {
+                inputs.add(EmbeddingWire.imageInput(image));
             }
         }
         Integer requested = family == EmbeddingFamily.COHERE_V4

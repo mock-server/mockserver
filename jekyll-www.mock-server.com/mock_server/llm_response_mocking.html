@@ -498,7 +498,7 @@ curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
         </tr>
         <tr>
             <td><span class="inline_code">COHERE</span></td>
-            <td><span class="inline_code">/v1/rerank</span></td>
+            <td><span class="inline_code">/v2/rerank</span>, <span class="inline_code">/v1/rerank</span></td>
             <td>Cohere rerank API format (rerank only &mdash; see <a href="#rerank">Rerank</a>)</td>
         </tr>
         <tr>
@@ -860,8 +860,8 @@ data: [DONE]</code></pre>
         <tr><td><span class="inline_code">BEDROCK</span> Titan Text Embeddings V2 (<span class="inline_code">amazon.titan-embed-text-v2:0</span>, also the default when no embedding model is named)</td><td><span class="inline_code">inputText</span></td><td><span class="inline_code">{"embedding":[...],"inputTextTokenCount":N,"embeddingsByType":{"float":[...]}}</span>. <span class="inline_code">embeddingTypes</span> can add <span class="inline_code">binary</span></td><td>1024</td></tr>
         <tr><td><span class="inline_code">BEDROCK</span> Titan Embeddings G1 (<span class="inline_code">amazon.titan-embed-text-v1</span>)</td><td><span class="inline_code">inputText</span></td><td><span class="inline_code">{"embedding":[...],"inputTextTokenCount":N}</span></td><td>1536</td></tr>
         <tr><td><span class="inline_code">BEDROCK</span> Titan Multimodal Embeddings G1 (<span class="inline_code">amazon.titan-embed-image-v1</span>)</td><td><span class="inline_code">inputText</span></td><td><span class="inline_code">{"embedding":[...],"inputTextTokenCount":N}</span></td><td>1024</td></tr>
-        <tr><td><span class="inline_code">BEDROCK</span> Cohere Embed v3 (<span class="inline_code">cohere.embed-english-v3</span>, <span class="inline_code">cohere.embed-multilingual-v3</span>)</td><td><span class="inline_code">texts</span></td><td><span class="inline_code">{"id":...,"embeddings":[[...], ...],"response_type":"embeddings_floats","texts":[...]}</span>, one per text. With <span class="inline_code">embedding_types</span>, <span class="inline_code">embeddings</span> is an object keyed by type (<span class="inline_code">float</span>, <span class="inline_code">int8</span>, <span class="inline_code">uint8</span>, <span class="inline_code">binary</span>, <span class="inline_code">ubinary</span>) and <span class="inline_code">response_type</span> is <span class="inline_code">embeddings_by_type</span></td><td>1024</td></tr>
-        <tr><td><span class="inline_code">BEDROCK</span> Cohere Embed v4 (<span class="inline_code">cohere.embed-v4:0</span>)</td><td><span class="inline_code">texts</span>, or the text parts of each <span class="inline_code">inputs</span> item</td><td>As Cohere Embed v3</td><td>1536</td></tr>
+        <tr><td><span class="inline_code">BEDROCK</span> Cohere Embed v3 (<span class="inline_code">cohere.embed-english-v3</span>, <span class="inline_code">cohere.embed-multilingual-v3</span>)</td><td><span class="inline_code">texts</span>, or one image in <span class="inline_code">images</span></td><td><span class="inline_code">{"id":...,"embeddings":[[...], ...],"response_type":"embeddings_floats","texts":[...]}</span>, one per text or image (for an image, <span class="inline_code">texts</span> is empty). With <span class="inline_code">embedding_types</span>, <span class="inline_code">embeddings</span> is an object keyed by type (<span class="inline_code">float</span>, <span class="inline_code">int8</span>, <span class="inline_code">uint8</span>, <span class="inline_code">binary</span>, <span class="inline_code">ubinary</span>) and <span class="inline_code">response_type</span> is <span class="inline_code">embeddings_by_type</span></td><td>1024</td></tr>
+        <tr><td><span class="inline_code">BEDROCK</span> Cohere Embed v4 (<span class="inline_code">cohere.embed-v4:0</span>)</td><td><span class="inline_code">texts</span>, up to 96 <span class="inline_code">images</span>, or the text parts of each <span class="inline_code">inputs</span> item</td><td>As Cohere Embed v3</td><td>1536</td></tr>
     </tbody>
 </table>
 
@@ -869,8 +869,11 @@ data: [DONE]</code></pre>
     For <span class="inline_code">BEDROCK</span>, the model comes from the request path
     (<span class="inline_code">/model/{modelId}/invoke</span>), then from the expectation's
     <span class="inline_code">model</span>. Region-prefixed IDs such as <span class="inline_code">us.cohere.embed-v4:0</span>
-    work. If neither names an embedding model, a request with <span class="inline_code">texts</span> or
-    <span class="inline_code">inputs</span> gets the Cohere shape and any other request gets the Titan V2 shape.
+    work. If neither names an embedding model, a request with <span class="inline_code">texts</span>,
+    <span class="inline_code">inputs</span> or <span class="inline_code">images</span> gets the Cohere shape and any
+    other request gets the Titan V2 shape. With <span class="inline_code">deterministicFromInput</span>, the same image
+    always gets the same vector. Sending both <span class="inline_code">texts</span> and
+    <span class="inline_code">images</span> is rejected, as on Bedrock.
 </p>
 
 <p>
@@ -878,6 +881,7 @@ data: [DONE]</code></pre>
     request asks for (<span class="inline_code">dimensions</span>, <span class="inline_code">outputDimensionality</span> or
     <span class="inline_code">output_dimension</span>) is used, and then the default above.
     <span class="inline_code">seed</span> makes the deterministic vector reproducible across runs.
+    <span class="inline_code">dimensions</span> on the expectation must be at least 1.
 </p>
 
 <p>
@@ -902,12 +906,19 @@ data: [DONE]</code></pre>
         number of Cohere embedding types), for example 171 inputs at 1,536 dimensions. An OpenAI-style request with
         <span class="inline_code">"encoding_format":"base64"</span>, which the OpenAI SDKs send by default, may hold
         four times as many, 1,048,576 (682 inputs at 1,536 dimensions), because a base64 value is about a quarter of
-        the size.</li>
+        the size;</li>
+    <li>with <span class="inline_code">deterministicFromInput</span>, an input is longer than 1,048,576 characters
+        (building a vector from text uses memory in proportion to its length; random vectors have no such limit).
+        This is more than any real embedding provider accepts in one input, so it only stops oversized test data.</li>
 </ul>
 <p>
     These limits keep the largest embedding response at about 5.6 MB, so a small request cannot make MockServer build a
-    very large one. If a test needs a bigger batch, send it in several requests, or set a smaller
-    <span class="inline_code">dimensions</span> on the expectation: 2,048 inputs fit at 128 dimensions.
+    very large one. If a test needs a bigger batch, raise the
+    <a href="/mock_server/configuration_properties.html">configuration property</a>
+    <span class="inline_code">llmEmbeddingMaxResponseValues</span> (for example to <span class="inline_code">384000</span>
+    for a LangChain batch of 1,000 inputs at 1,536 dimensions), send the batch in several requests, or set a smaller
+    <span class="inline_code">dimensions</span> on the expectation: 2,048 inputs fit at 128 dimensions. For longer
+    inputs, raise <span class="inline_code">llmEmbeddingMaxInputCharacters</span>.
 </p>
 <p>
     <span class="inline_code">ANTHROPIC</span> and <span class="inline_code">OPENAI_RESPONSES</span> have no embeddings
@@ -924,7 +935,9 @@ data: [DONE]</code></pre>
     result per document &mdash; each with its original <span class="inline_code">index</span> and a
     <span class="inline_code">relevance_score</span> &mdash; sorted from most to least relevant. Set
     <span class="inline_code">deterministicFromInput</span> to <span class="inline_code">true</span> so the same documents
-    always score the same way. Use <span class="inline_code">topN</span> to return only the top few results.
+    always score the same way. MockServer returns as many results as the request asks for (Cohere
+    <span class="inline_code">top_n</span>, Voyage <span class="inline_code">top_k</span>); set
+    <span class="inline_code">topN</span> on the expectation to override that.
 </p>
 
 <pre class="prettyprint lang-json code"><code class="code">{
@@ -952,8 +965,8 @@ data: [DONE]</code></pre>
         <tr><th>Provider</th><th>Response shape</th></tr>
     </thead>
     <tbody>
-        <tr><td><span class="inline_code">COHERE</span></td><td><span class="inline_code">{"results": [{"index": 1, "relevance_score": 0.9123}, ...]}</span></td></tr>
-        <tr><td><span class="inline_code">VOYAGE</span></td><td><span class="inline_code">{"object": "list", "data": [{"index": 1, "relevance_score": 0.9123}, ...], "usage": {"total_tokens": 0}}</span></td></tr>
+        <tr><td><span class="inline_code">COHERE</span></td><td><span class="inline_code">{"results": [{"index": 1, "relevance_score": 0.9123}, ...], "id": "...", "meta": {"api_version": {"version": "2"}, "billed_units": {"search_units": 1}}}</span>. The version is <span class="inline_code">"2"</span> for <span class="inline_code">/v2/rerank</span> and <span class="inline_code">"1"</span> otherwise. On v1, <span class="inline_code">"return_documents": true</span> adds <span class="inline_code">"document": {"text": "..."}</span> to each result</td></tr>
+        <tr><td><span class="inline_code">VOYAGE</span></td><td><span class="inline_code">{"object": "list", "data": [{"index": 1, "relevance_score": 0.9123}, ...], "model": "rerank-2.5", "usage": {"total_tokens": 0}}</span>, echoing the request's <span class="inline_code">model</span>. <span class="inline_code">"return_documents": true</span> adds each <span class="inline_code">"document"</span> as a string</td></tr>
     </tbody>
 </table>
 

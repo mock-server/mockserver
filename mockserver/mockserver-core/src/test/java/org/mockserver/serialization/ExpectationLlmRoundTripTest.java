@@ -8,6 +8,8 @@ import org.mockserver.model.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
+import static org.hamcrest.core.StringContains.containsString;
+import static org.junit.Assert.assertThrows;
 import static org.mockserver.character.Character.NEW_LINE;
 import org.mockserver.llm.ParsedMessage;
 import org.mockserver.model.ConversationPredicates;
@@ -398,6 +400,19 @@ public class ExpectationLlmRoundTripTest {
         assertThat(result.getHttpLlmResponse().getModel(), is("text-embedding-3-small"));
         assertThat(result.getHttpLlmResponse().getEmbedding().getDimensions(), is(1536));
         assertThat(result.getHttpLlmResponse().getEmbedding().getDeterministicFromInput(), is(true));
+    }
+
+    @Test
+    public void shouldRejectEmbeddingDimensionsBelowOne() {
+        for (int dimensions : new int[]{0, -1}) {
+            String json = "{\"httpRequest\":{\"path\":\"/v1/embeddings\"},\"httpLlmResponse\":{\"provider\":\"OPENAI\","
+                + "\"embedding\":{\"dimensions\":" + dimensions + "}}}";
+            IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> serializer.deserializeArray(json, false));
+            assertThat(e.getMessage(), containsString("dimensions"));
+        }
+        String one = "{\"httpRequest\":{\"path\":\"/v1/embeddings\"},\"httpLlmResponse\":{\"provider\":\"OPENAI\","
+            + "\"embedding\":{\"dimensions\":1}}}";
+        assertThat(serializer.deserializeArray(one, false)[0].getHttpLlmResponse().getEmbedding().getDimensions(), is(1));
     }
 
     @Test

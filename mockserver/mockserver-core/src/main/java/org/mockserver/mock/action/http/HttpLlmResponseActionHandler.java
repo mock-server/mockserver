@@ -130,7 +130,8 @@ public class HttpLlmResponseActionHandler {
             // Embedding path
             if (httpLlmResponse.getEmbedding() != null) {
                 try {
-                    return codecInstance.encodeEmbedding(httpLlmResponse.getEmbedding(), request, model);
+                    return EmbeddingWire.withLimits(embeddingLimits(),
+                        () -> codecInstance.encodeEmbedding(httpLlmResponse.getEmbedding(), request, model));
                 } catch (EmbeddingWire.InvalidEmbeddingRequestException e) {
                     return EmbeddingWire.invalidRequest(provider, e);
                 }
@@ -139,7 +140,11 @@ public class HttpLlmResponseActionHandler {
             // Rerank path
             if (httpLlmResponse.getRerank() != null) {
                 List<String> documents = extractDocumentsFromRequest(request);
-                return codecInstance.encodeRerank(httpLlmResponse.getRerank(), documents);
+                try {
+                    return codecInstance.encodeRerank(httpLlmResponse.getRerank(), documents, request);
+                } catch (EmbeddingWire.InvalidEmbeddingRequestException e) {
+                    return EmbeddingWire.invalidRequest(provider, e);
+                }
             }
 
             // Non-streaming completion path
@@ -879,6 +884,17 @@ public class HttpLlmResponseActionHandler {
                 response.withHeader("Retry-After", retryAfter);
             }
         }
+    }
+
+    /** The embedding limits from the server's configuration, so a runtime change takes effect. */
+    private EmbeddingWire.Limits embeddingLimits() {
+        int maxResponseValues = configuration != null
+            ? configuration.llmEmbeddingMaxResponseValues()
+            : ConfigurationProperties.llmEmbeddingMaxResponseValues();
+        int maxInputCharacters = configuration != null
+            ? configuration.llmEmbeddingMaxInputCharacters()
+            : ConfigurationProperties.llmEmbeddingMaxInputCharacters();
+        return new EmbeddingWire.Limits(Math.max(1, maxResponseValues), Math.max(1, maxInputCharacters));
     }
 
     /**

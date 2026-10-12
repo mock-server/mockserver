@@ -9,6 +9,7 @@ import com.google.common.net.InetAddresses;
 import org.apache.commons.lang3.StringUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.mockserver.file.FileReader;
+import org.mockserver.llm.codec.EmbeddingWire;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.ProxyPassMapping;
@@ -209,6 +210,8 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_FIXTURE_BODY_REDACT_FIELDS = "mockserver.fixtureBodyRedactFields";
     private static final String MOCKSERVER_LLM_VCR_STRICT = "mockserver.llmVcrStrict";
     private static final String MOCKSERVER_LLM_OPTIMISATION_MAX_CALLS = "mockserver.llmOptimisationMaxCalls";
+    private static final String MOCKSERVER_LLM_EMBEDDING_MAX_RESPONSE_VALUES = "mockserver.llmEmbeddingMaxResponseValues";
+    private static final String MOCKSERVER_LLM_EMBEDDING_MAX_INPUT_CHARACTERS = "mockserver.llmEmbeddingMaxInputCharacters";
     private static final String MOCKSERVER_OTEL_METRICS_ENABLED = "mockserver.otelMetricsEnabled";
     private static final String MOCKSERVER_OTEL_TRACES_ENABLED = "mockserver.otelTracesEnabled";
     private static final String MOCKSERVER_OTEL_ENDPOINT = "mockserver.otelEndpoint";
@@ -3695,6 +3698,34 @@ public class ConfigurationProperties {
 
     public static void llmOptimisationMaxCalls(int maxCalls) {
         setProperty(MOCKSERVER_LLM_OPTIMISATION_MAX_CALLS, "" + maxCalls);
+    }
+
+    /**
+     * The most values a mocked embedding response may hold as JSON numbers, counted over every
+     * input and embedding type; four times as many are allowed as base64 float32. A request for
+     * more gets a {@code 400} in the provider's error shape. Default 262,144 (a response of about
+     * 5.6 MB). Raising it lets larger batches through at the cost of larger responses in memory.
+     */
+    public static int llmEmbeddingMaxResponseValues() {
+        return Math.max(1, readIntegerProperty(MOCKSERVER_LLM_EMBEDDING_MAX_RESPONSE_VALUES, "MOCKSERVER_LLM_EMBEDDING_MAX_RESPONSE_VALUES", EmbeddingWire.DEFAULT_MAX_TOTAL_VALUES));
+    }
+
+    public static void llmEmbeddingMaxResponseValues(int maxValues) {
+        setProperty(MOCKSERVER_LLM_EMBEDDING_MAX_RESPONSE_VALUES, "" + maxValues);
+    }
+
+    /**
+     * The longest input text, in characters, that a {@code deterministicFromInput} embedding
+     * hashes into a vector. A longer input gets a {@code 400} in the provider's error shape,
+     * because hashing allocates memory in proportion to the text. Default 1,048,576, above the
+     * largest input a real embedding provider accepts.
+     */
+    public static int llmEmbeddingMaxInputCharacters() {
+        return Math.max(1, readIntegerProperty(MOCKSERVER_LLM_EMBEDDING_MAX_INPUT_CHARACTERS, "MOCKSERVER_LLM_EMBEDDING_MAX_INPUT_CHARACTERS", EmbeddingWire.DEFAULT_MAX_INPUT_CHARACTERS));
+    }
+
+    public static void llmEmbeddingMaxInputCharacters(int maxCharacters) {
+        setProperty(MOCKSERVER_LLM_EMBEDDING_MAX_INPUT_CHARACTERS, "" + maxCharacters);
     }
 
     /**
