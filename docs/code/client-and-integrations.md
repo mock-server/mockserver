@@ -821,17 +821,17 @@ The extension is built with TypeScript and bundled via `vsce`. It contributes th
 **Plugin ID:** `com.mock-server.mockserver`
 **Registry:** JetBrains Marketplace
 
-The plugin is written in Kotlin and built with the IntelliJ Platform Gradle Plugin 2.x. It targets IntelliJ Platform 2023.3+ (build 233) and is compatible through 2025.3.x (build 253).
+The plugin is written in Kotlin and built with the IntelliJ Platform Gradle Plugin 2.x. It targets IntelliJ Platform 2024.3+ (build 243) with no upper bound (open-ended compatibility).
 
 | Feature | Detail |
 |---------|--------|
 | Actions | `MockServer.OpenDashboard`, `MockServer.StartDocker` — added to the **Tools > MockServer** menu group |
 | Tool window | Bottom-panel **MockServer** window with buttons for the same two actions |
 | Notifications | Balloon notification group `MockServer Notifications` |
-| Minimum platform | 2023.3 (build `sinceBuild=243`) |
+| Minimum platform | 2024.3 (build `sinceBuild=243`) |
 | Language | Kotlin 2.1.x, JVM toolchain 17 |
 
-**Plugin Verifier (`verifyPlugin`).** The `./gradlew verifyPlugin` gate (IntelliJ Plugin Verifier) is stricter than the JetBrains Marketplace upload check and must pass before publishing. The `untilBuild` target in `gradle.properties` drifts as new IDE EAP builds are released, making this a recurring breakage risk — bump `untilBuild` whenever verifyPlugin fails on a new EAP range. Two stable patterns avoid common verifyPlugin failures:
+**Plugin Verifier (`verifyPlugin`).** The `./gradlew verifyPlugin` gate (IntelliJ Plugin Verifier) is stricter than the JetBrains Marketplace upload check and must pass before publishing. It verifies against `ides { recommended() }`, a set that moves as JetBrains publishes new EAP builds, so it can go red with no plugin change: a newer EAP can deprecate an API the plugin calls. There is no `untilBuild` to bump (compatibility is open-ended); replace the deprecated call with one that exists on the `sinceBuild` floor. Two stable patterns avoid common verifyPlugin failures:
 
 - **Plugin version**: derive the version at runtime via `(MockServerSettings::class.java.classLoader as? PluginAwareClassLoader)?.pluginDescriptor?.version` (`MockServerSettings.kt`) rather than a hardcoded build constant. `PluginAwareClassLoader` is a public, stable IntelliJ API that exposes the plugin descriptor.
 - **Action dispatch**: invoke actions programmatically via `AnActionEvent.createEvent(action, dataContext, place, ...)` (`MockServerToolWindowFactory.kt`) rather than constructing an `AnActionEvent` directly. The factory method is the stable API surface the verifier checks.

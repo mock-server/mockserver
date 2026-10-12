@@ -1,7 +1,6 @@
 package com.mockserver.jetbrains
 
 import com.intellij.json.JsonFileType
-import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.fileTypes.PlainTextFileType
 import com.intellij.openapi.project.Project
@@ -17,8 +16,6 @@ object MockServerEditors {
     fun openJsonInEditor(project: Project, fileName: String, content: String) {
         val virtualFile = LightVirtualFile(fileName, JsonFileType.INSTANCE, content)
         OpenFileDescriptor(project, virtualFile).navigate(true)
-        // Fallback for environments where navigate() does not focus the editor.
-        FileEditorManager.getInstance(project).openFile(virtualFile, true)
     }
 
     /**
@@ -29,7 +26,5 @@ object MockServerEditors {
     fun openTextInEditor(project: Project, fileName: String, content: String) {
         val virtualFile = LightVirtualFile(fileName, PlainTextFileType.INSTANCE, content)
         OpenFileDescriptor(project, virtualFile).navigate(true)
-        // Fallback for environments where navigate() does not focus the editor.
-        FileEditorManager.getInstance(project).openFile(virtualFile, true)
     }
 }
