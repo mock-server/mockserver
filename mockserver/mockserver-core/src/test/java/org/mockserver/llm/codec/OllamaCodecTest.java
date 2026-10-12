@@ -352,27 +352,37 @@ public class OllamaCodecTest {
     }
 
     @Test
-    public void shouldEmitToolCallsInStreamingFinalChunk() throws Exception {
-        // Regression: previously encodeStreaming() silently dropped tool calls;
-        // the final chunk must carry the tool_calls list under message.tool_calls.
+    public void shouldStreamToolCallsInADoneFalseMessageThenAnEmptyFinalMessage() throws Exception {
+        // Ollama docs/api.md "Chat request (Streaming with tools)": the tool calls arrive in a
+        // done:false message; the done:true message is empty and carries done_reason and the counts.
         Completion completion = Completion.completion()
             .withToolCall(ToolUse.toolUse("search").withArguments("{\"q\":\"weather\"}"))
-            .withToolCall(ToolUse.toolUse("get_weather").withArguments("{\"city\":\"Paris\"}"));
+            .withToolCall(ToolUse.toolUse("get_weather").withArguments("{\"city\":\"Paris\"}"))
+            .withUsage(Usage.usage().withInputTokens(169).withOutputTokens(15));
 
         List<SseEvent> events = codec.encodeStreaming(completion, "llama3.1", null);
 
-        // Last event is the done:true chunk.
-        SseEvent finalEvent = events.get(events.size() - 1);
-        JsonNode finalChunk = new ObjectMapper().readTree(finalEvent.getData());
-        assertThat(finalChunk.path("done").asBoolean(), is(true));
-
-        JsonNode toolCalls = finalChunk.path("message").path("tool_calls");
-        assertThat(toolCalls.isArray(), is(true));
+        assertThat(events, hasSize(2));
+        JsonNode toolCallChunk = OBJECT_MAPPER.readTree(events.get(0).getData());
+        assertThat(toolCallChunk.path("done").isBoolean(), is(true));
+        assertThat(toolCallChunk.path("done").asBoolean(), is(false));
+        assertThat(toolCallChunk.has("done_reason"), is(false));
+        assertThat(toolCallChunk.has("eval_count"), is(false));
+        assertThat(toolCallChunk.path("message").path("role").asText(), is("assistant"));
+        assertThat(toolCallChunk.path("message").path("content").asText(), is(""));
+        JsonNode toolCalls = toolCallChunk.path("message").path("tool_calls");
         assertThat(toolCalls.size(), is(2));
         assertThat(toolCalls.path(0).path("function").path("name").asText(), is("search"));
         assertThat(toolCalls.path(0).path("function").path("arguments").path("q").asText(), is("weather"));
         assertThat(toolCalls.path(1).path("function").path("name").asText(), is("get_weather"));
         assertThat(toolCalls.path(1).path("function").path("arguments").path("city").asText(), is("Paris"));
+
+        JsonNode finalChunk = OBJECT_MAPPER.readTree(events.get(1).getData());
+        assertThat(finalChunk.path("done").asBoolean(), is(true));
+        assertThat(finalChunk.path("done_reason").asText(), is("stop"));
+        assertThat(finalChunk.path("prompt_eval_count").asInt(), is(169));
+        assertThat(finalChunk.path("eval_count").asInt(), is(15));
+        assertThat(finalChunk.path("message"), is(OBJECT_MAPPER.readTree("{\"role\":\"assistant\",\"content\":\"\"}")));
     }
 
     @Test
@@ -383,9 +393,8 @@ public class OllamaCodecTest {
 
         List<SseEvent> events = codec.encodeStreaming(completion, "llama3.1", null);
 
-        SseEvent finalEvent = events.get(events.size() - 1);
-        JsonNode finalChunk = new ObjectMapper().readTree(finalEvent.getData());
-        JsonNode args = finalChunk.path("message").path("tool_calls").path(0).path("function").path("arguments");
+        JsonNode toolCallChunk = OBJECT_MAPPER.readTree(events.get(0).getData());
+        JsonNode args = toolCallChunk.path("message").path("tool_calls").path(0).path("function").path("arguments");
         assertThat(args.isObject(), is(true));
         assertThat(args.path("value").asText(), is("raw_string_args"));
     }
@@ -480,8 +489,7 @@ public class OllamaCodecTest {
     }
 
     @Test
-    public void shouldProduceNdjsonWithToolCallsInFinalChunk() throws Exception {
-        // Verifies that tool calls appear in the final NDJSON line
+    public void shouldStreamTextThenToolCallsThenAnEmptyFinalLine() throws Exception {
         Completion completion = Completion.completion()
             .withText("checking")
             .withToolCall(ToolUse.toolUse("search").withArguments("{\"q\":\"test\"}"))
@@ -489,19 +497,32 @@ public class OllamaCodecTest {
 
         List<SseEvent> events = codec.encodeStreaming(completion, "llama3.1", null);
 
-        // Assemble NDJSON stream and parse each line
         List<JsonNode> lines = new ArrayList<>();
         for (SseEvent event : events) {
             lines.add(OBJECT_MAPPER.readTree(event.getData()));
         }
+        assertThat(lines.size(), greaterThanOrEqualTo(3));
+        StringBuilder text = new StringBuilder();
+        for (int i = 0; i < lines.size() - 2; i++) {
+            assertThat(lines.get(i).path("done").asBoolean(), is(false));
+            assertThat(lines.get(i).path("message").has("tool_calls"), is(false));
+            text.append(lines.get(i).path("message").path("content").asText());
+        }
+        assertThat(text.toString(), is("checking"));
 
-        // Final line should have done:true and tool_calls
-        JsonNode finalLine = lines.get(lines.size() - 1);
-        assertThat(finalLine.get("done").asBoolean(), is(true));
-        assertThat(finalLine.path("message").path("tool_calls").isArray(), is(true));
-        assertThat(finalLine.path("message").path("tool_calls").size(), is(1));
-        assertThat(finalLine.path("message").path("tool_calls").path(0)
+        JsonNode toolCallLine = lines.get(lines.size() - 2);
+        assertThat(toolCallLine.path("done").asBoolean(), is(false));
+        assertThat(toolCallLine.path("message").path("content").asText(), is(""));
+        assertThat(toolCallLine.path("message").path("tool_calls").size(), is(1));
+        assertThat(toolCallLine.path("message").path("tool_calls").path(0)
             .path("function").path("name").asText(), is("search"));
+
+        JsonNode finalLine = lines.get(lines.size() - 1);
+        assertThat(finalLine.path("done").asBoolean(), is(true));
+        assertThat(finalLine.path("message").has("tool_calls"), is(false));
+        assertThat(finalLine.path("message").path("content").asText(), is(""));
+        assertThat(finalLine.path("prompt_eval_count").asInt(), is(3));
+        assertThat(finalLine.path("eval_count").asInt(), is(2));
     }
 
     // --- Decode: POST /api/generate (https://github.com/ollama/ollama/blob/main/docs/api.md) ---

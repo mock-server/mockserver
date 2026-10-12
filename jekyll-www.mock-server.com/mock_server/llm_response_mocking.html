@@ -457,7 +457,8 @@ curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     Bedrock InvokeModel, <span class="inline_code">MAX_TOKENS</span> for Gemini, and <span class="inline_code">done_reason: "length"</span>
     for Ollama; <span class="inline_code">stop</span> becomes <span class="inline_code">end_turn</span> for Anthropic.
     Ollama's final message always has a <span class="inline_code">done_reason</span>: <span class="inline_code">stop</span> unless you set a
-    max-tokens value.
+    max-tokens value. When an Ollama reply is streamed, its tool calls arrive in a message before that final one, as Ollama sends them,
+    and the final message holds only the stop reason and token counts.
 </p>
 
 <a id="supported_providers" class="anchor" href="#supported_providers">&nbsp;</a>

@@ -87,33 +87,7 @@ public class OllamaCodec implements ProviderCodec {
         List<ToolUse> toolCalls = completion.getToolCalls();
         boolean hasToolCalls = toolCalls != null && !toolCalls.isEmpty();
         if (hasToolCalls) {
-            ArrayNode toolCallsArray = message.putArray("tool_calls");
-            for (ToolUse toolCall : toolCalls) {
-                ObjectNode tc = toolCallsArray.addObject();
-                if (toolCall.getId() != null && !toolCall.getId().isEmpty()) {
-                    tc.put("id", toolCall.getId());
-                }
-                ObjectNode function = tc.putObject("function");
-                function.put("name", toolCall.getName());
-                // Ollama puts arguments as a JSON object, not a string
-                String args = toolCall.getArguments();
-                if (args != null) {
-                    try {
-                        JsonNode parsed = OBJECT_MAPPER.readTree(args);
-                        if (parsed.isObject()) {
-                            function.set("arguments", parsed);
-                        } else {
-                            ObjectNode argsObj = function.putObject("arguments");
-                            argsObj.put("value", args);
-                        }
-                    } catch (Exception e) {
-                        ObjectNode argsObj = function.putObject("arguments");
-                        argsObj.put("value", args);
-                    }
-                } else {
-                    function.putObject("arguments");
-                }
-            }
+            writeToolCalls(message, toolCalls);
         }
 
         root.put("done", true);
@@ -174,15 +148,28 @@ public class OllamaCodec implements ProviderCodec {
             }
         }
 
-        // Final chunk with done: true and token counts.
-        // Ollama's native wire format sends tool calls as a single block on the
-        // final chunk (no per-call deltas), so we embed them there.
+        // Ollama streams tool calls in a done:false message, then ends with an empty done:true
+        // message carrying done_reason and the counts (docs/api.md "Streaming with tools").
+        List<ToolUse> toolCalls = completion.getToolCalls();
+        if (toolCalls != null && !toolCalls.isEmpty()) {
+            ObjectNode toolCallChunk = OBJECT_MAPPER.createObjectNode();
+            toolCallChunk.put("model", modelName);
+            toolCallChunk.put("created_at", Instant.now().toString());
+            ObjectNode toolCallMessage = toolCallChunk.putObject("message");
+            toolCallMessage.put("role", "assistant");
+            toolCallMessage.put("content", "");
+            writeToolCalls(toolCallMessage, toolCalls);
+            toolCallChunk.put("done", false);
+            try {
+                events.add(sseEvent().withData(OBJECT_MAPPER.writeValueAsString(toolCallChunk)));
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to encode Ollama tool call streaming chunk", e);
+            }
+        }
+
         Usage completionUsage = completion.getUsage();
         int promptEvalCount = completionUsage != null && completionUsage.getInputTokens() != null ? completionUsage.getInputTokens() : 0;
         int evalCount = completionUsage != null && completionUsage.getOutputTokens() != null ? completionUsage.getOutputTokens() : 0;
-
-        List<ToolUse> toolCalls = completion.getToolCalls();
-        boolean hasToolCalls = toolCalls != null && !toolCalls.isEmpty();
 
         ObjectNode finalChunk = OBJECT_MAPPER.createObjectNode();
         finalChunk.put("model", modelName);
@@ -190,34 +177,6 @@ public class OllamaCodec implements ProviderCodec {
         ObjectNode message = finalChunk.putObject("message");
         message.put("role", "assistant");
         message.put("content", "");
-        if (hasToolCalls) {
-            ArrayNode toolCallsArray = message.putArray("tool_calls");
-            for (ToolUse toolCall : toolCalls) {
-                ObjectNode tc = toolCallsArray.addObject();
-                if (toolCall.getId() != null && !toolCall.getId().isEmpty()) {
-                    tc.put("id", toolCall.getId());
-                }
-                ObjectNode function = tc.putObject("function");
-                function.put("name", toolCall.getName());
-                String args = toolCall.getArguments();
-                if (args != null) {
-                    try {
-                        JsonNode parsed = OBJECT_MAPPER.readTree(args);
-                        if (parsed != null && parsed.isObject()) {
-                            function.set("arguments", parsed);
-                        } else {
-                            ObjectNode argsObj = function.putObject("arguments");
-                            argsObj.put("value", args);
-                        }
-                    } catch (Exception e) {
-                        ObjectNode argsObj = function.putObject("arguments");
-                        argsObj.put("value", args);
-                    }
-                } else {
-                    function.putObject("arguments");
-                }
-            }
-        }
         finalChunk.put("done", true);
         finalChunk.put("done_reason", mapDoneReason(completion.getStopReason()));
         finalChunk.put("total_duration", 1234567890L);
@@ -430,6 +389,34 @@ public class OllamaCodec implements ProviderCodec {
                 return ParsedMessage.Role.SYSTEM;
             default:
                 return ParsedMessage.Role.USER;
+        }
+    }
+
+    /** Ollama sends tool-call arguments as a JSON object, so a non-object value is wrapped as {"value": ...}. */
+    private static void writeToolCalls(ObjectNode message, List<ToolUse> toolCalls) {
+        ArrayNode toolCallsArray = message.putArray("tool_calls");
+        for (ToolUse toolCall : toolCalls) {
+            ObjectNode tc = toolCallsArray.addObject();
+            if (toolCall.getId() != null && !toolCall.getId().isEmpty()) {
+                tc.put("id", toolCall.getId());
+            }
+            ObjectNode function = tc.putObject("function");
+            function.put("name", toolCall.getName());
+            String args = toolCall.getArguments();
+            if (args != null) {
+                try {
+                    JsonNode parsed = OBJECT_MAPPER.readTree(args);
+                    if (parsed != null && parsed.isObject()) {
+                        function.set("arguments", parsed);
+                    } else {
+                        function.putObject("arguments").put("value", args);
+                    }
+                } catch (Exception e) {
+                    function.putObject("arguments").put("value", args);
+                }
+            } else {
+                function.putObject("arguments");
+            }
         }
     }
 

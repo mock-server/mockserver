@@ -58,12 +58,5 @@
   "format": "EVENTS",
   "wireFormat": "NDJSON",
   "partial": true,
-  "allowed": [
-    {
-      "kind": "VALUE",
-      "path": "done",
-      "reason": "Ollama streams the tool call in a done:false message and ends with an empty done:true one; MockServer puts the tool call in its single done:true message",
-      "openItem": "37"
-    }
-  ]
+  "allowed": []
 }
