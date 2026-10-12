@@ -116,10 +116,10 @@ KEEP_FRAC="${PUBLISH_KEEP_FRAC:-0.95}"
 BEH_FIX_DATE="${PUBLISH_REGRESSION_FIX_DATE:-2026-09-16}"
 REGION="${AWS_REGION:-eu-west-2}"
 
-# The two rungs the qualifying runs read (docs/code/performance-measurement.md, "The published
-# run"): the published one, and the other, which would lower the headline and needs a decision.
-RW_EXPECTED_CEILING_RPS=144000
-RW_ADJACENT_CEILING_RPS=136000
+# The published rung, and the rung below it that qualifying runs also read, which would lower the
+# headline and needs a decision (docs/code/performance-measurement.md, "The published run").
+RW_EXPECTED_CEILING_RPS=136000
+RW_ADJACENT_CEILING_RPS=128000
 # The page counts the like-for-like runs per rung by hand, so every member run changes that count.
 RW_TALLY_NOTE="the \`ceiling_spread\` and \`ceiling_spread_detail\` sentences and the \`schema_faq\` answers in \`mock_server/performance.html\`, and the performance line in \`llms.txt\`, count the like-for-like runs behind the headline and the rates they read, so a later member run changes them even when it reads the same ceiling"
 RW_DATA_ARTIFACT="perf_figures-multi-k6.json"

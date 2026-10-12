@@ -302,8 +302,8 @@ publish dry PERF_PUBLISH_DRY_RUN=true PERF_PUBLISH_OUT="$T/dry.json"
 check "a member over legacy figures: a patch would be emitted (dry-run exit 0)" "0|yes" "$(cat "$T/dry.rc")|$(has 'WOULD emit a patch' "$T/dry.log")"
 check "  ... because nothing from this source is committed yet" "yes" "$(has 'hold nothing from the perf-xl multi-k6 arm yet' "$T/dry.log")"
 check "  ... annotating under its own context, which the daily publish in the same build cannot replace" "perf-website-publish-rw" "$(contexts "$T/dry.ann")"
-check "  ... and saying which rung is expected: 144000 is, and this run read the other one the qualifying runs read" "yes|yes" \
-  "$(has 'a ceiling of 144000 req/s is expected; 136000 is the other rung the qualifying runs read and would lower the headline' "$T/dry.log")|$(has "This run reads 136000 (the other rung the qualifying runs read: get the owner's decision before applying)" "$T/dry.log")"
+check "  ... and saying which rung is expected: 136000 is, and this run read it" "yes|yes" \
+  "$(has 'a ceiling of 136000 req/s is expected; 128000 is the other rung the qualifying runs read and would lower the headline' "$T/dry.log")|$(has 'This run reads 136000 (the expected rung)' "$T/dry.log")"
 check "the headline is the run's own, with its rule" "136000|8.1|20.1|gc_masked_p99|10|3" \
   "$(jq -r '[.headline.healthy_ceiling_rps, .headline.healthy_ceiling_p99_ms, .headline.healthy_ceiling_p99_whole_rung_ms, .headline_rule.name, .headline_rule.p99_max_ms, .headline_rule.min_quiet_s] | join("|")' "$T/dry.json")"
 check "the provenance is the run's" "c6i.32xlarge|perf-xl|634|4|standard" \
@@ -359,13 +359,13 @@ uses() { [ -f "$PAGE" ] || { echo MISSING; return 0; }; grep -cF -- "$1" "$PAGE"
 check "the page renders the first failure once, and only when it has a masked p99" "1|1|0" \
   "$(uses 'rule.first_failure.offered_display')|$(uses '{% if rule.first_failure and rule.first_failure.p99_gc_masked_ms %} The next rate tested, {{ rule.first_failure.offered_display }}')|$(uses '{% if rule.first_failure %}')"
 # The page counts the like-for-like runs per rate by hand: those sentences render only while the
-# published ceiling is one of the two rates they name, and say which side it is.
+# published ceiling is one of the two rates the publish step names, and say where it falls.
 check "the page gates the run tally on both rates the runs read, and on the multi-k6 state" "1|1|1" \
-  "$(uses '{% if rule %}{% if hc == 144000 %}{% assign spread_side = "higher" %}{% elsif hc == 136000 %}{% assign spread_side = "lower" %}{% endif %}{% endif %}')|$(uses '{% capture ceiling_spread %}{% if spread_side != "" %}')|$(uses '{% capture ceiling_spread_detail %}{% if spread_side != "" %}')"
-check "  ... states it beside the headline bullet, under the table and in the per-instance paragraph, with the three-of-six detail once" "3|1" \
+  "$(uses '{% if rule %}{% if hc == 136000 %}{% assign spread_side = "most common" %}{% elsif hc == 128000 %}{% assign spread_side = "lowest" %}{% endif %}{% endif %}')|$(uses '{% capture ceiling_spread %}{% if spread_side != "" %}')|$(uses '{% capture ceiling_spread_detail %}{% if spread_side != "" %}')"
+check "  ... states it beside the headline bullet, under the table and in the per-instance paragraph, with the near-miss detail once" "3|1" \
   "$(uses '{{ ceiling_spread }}')|$(uses '{{ ceiling_spread_detail }}')"
-check "  ... and says to provision against the lower rate only while the higher one is published" "2|1" \
-  "$(uses '{% if spread_side == "higher" %} Provision against the lower of those two rates (136,000&nbsp;req/s).')|$(uses '{% else %} Provision against the healthy ceiling.{% endif %}')"
+check "  ... and says to provision against the lowest rate only while the most common one is published" "2|1" \
+  "$(uses '{% if spread_side == "most common" %} Provision against the lowest of those rates (128,000&nbsp;req/s).')|$(uses '{% else %} Provision against the healthy ceiling.{% endif %}')"
 check "the page labels the masked p99 wherever it states the bound, and shows the whole-step ceiling from the data" "1|1|1" \
   "$(uses 'its p99 with load-generator garbage collection left out was {{ rule.first_failure.p99_gc_masked_ms }}')|$(uses 'its p99 with load-generator garbage collection left out (the second p99 column')|$(uses "Judged on the first column, this run's ceiling would be {{ rule.unmasked_ceiling_rps_display }}")"
 check "  ... the excluded rung is not in the ladder, and the rung that could not keep up is marked past the ceiling" "120000,128000,136000,152000|144000:true" \
@@ -375,24 +375,26 @@ check "  ... the rung with no masked figure is listed without one" "null:true" \
 mut '.serving_rw_multik6 = "x"' > "$T/p-err.json"; put "$T/p-err.json" "$RW_KEY"; publish p-err
 check "a run the series check errors on is never published" "1|yes|yes" "$(refused p-err 'SERIES CHECK FAILED TO RUN')"
 # The rung to publish is a manual check, so the step says what it read.
-EXP='.serving_rw_multik6.headline |= (.healthy_ceiling_rps = 144000 | .healthy_ceiling_achieved_rps = 143344.1 | .healthy_ceiling_p99_ms = 9.5)
-    | .serving_rw_multik6.gc_masked.healthy_ceiling.rps = 144000 | .serving_rw_multik6.gc_masked.rungs[3].p99_ms = 9.5
-    | .serving_rw_multik6.headline_rule.condition_3.first_failure = null'
-mut "$EXP" > "$T/p-exp.json"; put "$T/p-exp.json" "$RW_KEY"; publish exp PERF_PUBLISH_DRY_RUN=true
-check "the expected rung is said to be the expected one" "0|yes" \
-  "$(cat "$T/exp.rc")|$(has 'This run reads 144000 (the expected rung)' "$T/exp.log")"
 LOW='.serving_rw_multik6.headline |= (.healthy_ceiling_rps = 128000 | .healthy_ceiling_achieved_rps = 127966.2 | .healthy_ceiling_p99_ms = 4.5)
     | .serving_rw_multik6.gc_masked.healthy_ceiling.rps = 128000'
 mut "$LOW" > "$T/p-low.json"; put "$T/p-low.json" "$RW_KEY"; publish low PERF_PUBLISH_DRY_RUN=true
-check "any other rung is marked do-not-apply" "0|yes" "$(cat "$T/low.rc")|$(has 'This run reads 128000 (neither: do not apply)' "$T/low.log")"
-# 152k is one step above the expected rung, but no qualifying run read it.
+check "the rung below the expected one needs the owner's decision" "0|yes" \
+  "$(cat "$T/low.rc")|$(has "This run reads 128000 (the other rung the qualifying runs read: get the owner's decision before applying)" "$T/low.log")"
+# Qualifying runs read 144k too, but the owner chose the rung below it: a run there is not applied.
+ABOVE='.serving_rw_multik6.headline |= (.healthy_ceiling_rps = 144000 | .healthy_ceiling_achieved_rps = 143344.1 | .healthy_ceiling_p99_ms = 9.5)
+    | .serving_rw_multik6.gc_masked.healthy_ceiling.rps = 144000 | .serving_rw_multik6.gc_masked.rungs[3].p99_ms = 9.5
+    | .serving_rw_multik6.headline_rule.condition_3.first_failure = null'
+mut "$ABOVE" > "$T/p-above.json"; put "$T/p-above.json" "$RW_KEY"; publish above PERF_PUBLISH_DRY_RUN=true
+check "any other rung is marked do-not-apply, the one above the expected rung included" "0|yes|no" \
+  "$(cat "$T/above.rc")|$(has 'This run reads 144000 (neither: do not apply)' "$T/above.log")|$(has 'This run reads 144000 (the' "$T/above.log")"
+# 152k is two steps above the expected rung, and no qualifying run read it.
 HIGH="$ADD152 | .serving_rw_multik6.headline |= (.healthy_ceiling_rps = 152000 | .healthy_ceiling_achieved_rps = 151731.2 | .healthy_ceiling_p95_ms = 9.1 | .healthy_ceiling_p99_ms = 9.9)
     | .serving_rw_multik6.gc_masked.healthy_ceiling = {rps: 152000, p99_ms: 9.9}
     | (.serving_rw_multik6.gc_masked.rungs[] | select(.offered_rps == 144000) | .p99_ms) = 9.5
     | (.serving_rw_multik6.gc_masked.rungs[] | select(.offered_rps == 152000) | .p99_ms) = 9.9
     | .serving_rw_multik6.headline_rule.condition_3.first_failure = null"
 mut "$HIGH" > "$T/p-high.json"; put "$T/p-high.json" "$RW_KEY"; publish high PERF_PUBLISH_DRY_RUN=true
-check "  ... the rung above the expected one included: no qualifying run read 152000" "0|yes|no" \
+check "  ... and a rung no qualifying run read" "0|yes|no" \
   "$(cat "$T/high.rc")|$(has 'This run reads 152000 (neither: do not apply)' "$T/high.log")|$(has 'This run reads 152000 (the' "$T/high.log")"
 put "$T/member.json" "$RW_KEY"
 publish p-daily-key PERF_PUBLISH_PERSISTED_KEY="runs/master/2026-10-03T15-52-14Z__0123456789.json"
@@ -416,8 +418,8 @@ check "  ... stamped with the key, the build and the series result it was publis
   "$(jq -r '.source.published_from | [.key, .publish_build_number, (.dry_run | tostring), (.series_unmet | tojson)] | join("|")' "$COMMITTED")"
 check "  ... leaving the chart data and the rest of the checkout untouched" "" "$(git -C "$R" status --porcelain 2>&1 || echo GIT-FAILED)"
 check "  ... with a commit subject naming the run" "docs(perf): refresh the published multi-k6 headline from ${RW_KEY##*/}" "$(git -C "$R" log -1 --format=%s)"
-check "  ... and a commit body and annotation saying which rung this run read: the other one, not refused" "1|yes" \
-  "$(git -C "$R" log -1 --format=%b | grep -c "This run reads 136000 (the other rung the qualifying runs read: get the owner's decision before applying)" || true)|$(has "This run reads 136000 (the other rung the qualifying runs read: get the owner's decision before applying)" "$T/real.log")"
+check "  ... and a commit body and annotation saying which rung this run read: the expected one" "1|yes" \
+  "$(git -C "$R" log -1 --format=%b | grep -c 'This run reads 136000 (the expected rung)' || true)|$(has 'This run reads 136000 (the expected rung)' "$T/real.log")"
 check "  ... the annotation lists the hand-counted runs to reconcile whatever the ceiling, apart from what a moved headline needs" "yes|yes|yes" \
   "$(has 'whatever the ceiling: the `ceiling_spread` and `ceiling_spread_detail` sentences and the `schema_faq` answers' "$T/real.log")|$(has 'so a later member run changes them even when it reads the same ceiling' "$T/real.log")|$(has 'if any published figure moved: the figures in the page `description`' "$T/real.log")"
 # A PERF_XL build can emit a patch from each source: this one's patch and data artifact are named apart.

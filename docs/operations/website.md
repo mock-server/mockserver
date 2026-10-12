@@ -205,19 +205,20 @@ What it checks against `_data/perf_figures.json` (rules in
 `.buildkite/scripts/steps/lib/website-perf-headline-check.jq`):
 
 - **The headline.** A rate written `about N` (also `~N`, `ceiling of N`) states the headline and
-  must equal `headline.healthy_ceiling_rps`. Each checked place must state it that way. `144,000`,
-  `144000 RPS` and `144k` are the same figure.
+  must equal `headline.healthy_ceiling_rps`. Each checked place must state it that way. `136,000`,
+  `136000 RPS` and `136k` are the same figure.
 - **Every other rate** must be a published figure: the ceiling, the achieved rate (to the
-  precision it is written: `143,700` for 143,719.1), or the sub-millisecond-p95 rate. The other
-  rung the qualifying runs read (136,000 today) is allowed only while the page data carries
+  precision it is written: `136,300` for 136,327.2), or the sub-millisecond-p95 rate. The other
+  rung the qualifying runs read (128,000 today) is allowed only while the page data carries
   `headline_rule`, the ceiling is one of the two rungs, and the page's run-tally gate
   (`hc == …`) names the same pair as `RW_EXPECTED_CEILING_RPS` / `RW_ADJACENT_CEILING_RPS` in
-  `perf-website-publish.sh`.
+  `perf-website-publish.sh`. A third rung the runs read (144,000) is not a published figure, so
+  the FAQ answers and the `llms.txt` line call it "a higher rate".
 - **Latencies** (`N ms`) must round from the headline p50, p95, p99, whole-rung p99 or the p99
   bound; **core counts** must equal `headline.server_cores`.
-- **The run tally** ("the six like-for-like runs") must be the same number everywhere it is
-  stated. The per-rate counts ("three and three") are not in the page data, so they stay a manual
-  reconcile.
+- **The run tally** ("the ten like-for-like runs") must be the same number everywhere it is
+  stated. The per-rate counts ("in five, … in three and … in two") are not in the page data, so
+  they stay a manual reconcile.
 
 It fails closed: missing or unreadable page data, a missing `healthy_ceiling_rps`,
 `healthy_ceiling_rps_display` or `server_cores`, a display figure that is not the number, a

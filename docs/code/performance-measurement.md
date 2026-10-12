@@ -1185,26 +1185,46 @@ rung. The owner decided on 2026-10-05 to publish 643's 144k as read instead of r
 | masked p99 within 10 ms | 3 | 7.487, 9.963, 9.730 ms (632, 633, 643); 10.792, 13.244, 10.456 ms (630, 631, 634) |
 | whole-rung p99 within 10 ms | 0 | 35.6 to 49.3 ms |
 
-So the public claim is a sub-millisecond median at 144k, with the p99 inside the bound only when
-the load generators' GC seconds are left out, and in half the runs. The page says that wherever
-it states the figure: the description, the headline, the at-a-glance bullet, both FAQ answers
-and `llms.txt` qualify the p99, the table's caption and the bullet state the three-and-three
-split, and the page tells readers to provision against 136k while 144k is published. It also
+So the claim at the time (superseded on 2026-10-12, below) was a sub-millisecond median at 144k,
+with the p99 inside the bound only when the load generators' GC seconds were left out, and in half
+the runs. The page then qualified the p99 wherever it stated the figure, stated the
+three-and-three split, and told readers to provision against 136k while 144k was published. It
 prints the whole-rung ceiling (96k in 643) from `headline_rule.unmasked_ceiling_rps_display`.
-No run read 152k, so the page says the ceiling can land one step lower, not either way.
 
-**The rung a later run is held against.** `perf-website-publish.sh` now names 144k as the
-expected rung (`RW_EXPECTED_CEILING_RPS`) and 136k (`RW_ADJACENT_CEILING_RPS`) as the other rung
-the qualifying runs read. A later patch reading 136k would lower the published headline, which
-is the owner's decision. Any other rung, 152k included, was read by none of the six: do not
-apply it. The two constants word the annotation and the patch's commit message, and the
-website headline lint reads them to allow the other rung in the hand-written text; nothing in
-the publish step gates on them. The owner confirmed 144k as the expected rung, and this swap, on
-2026-10-05.
+**Builds 664–670 and the decision of 2026-10-12: 136k.** Four further members (664, 667, 668,
+670; images `ba2211b380` twice, `dcf8e4b024` and `ff5188621e`; `PERF_JVM_DIAGNOSTICS` `standard`)
+read:
+
+| Build | Masked ceiling | Its masked p99 | Whole-rung ceiling | First masked failure above it | Quiet seconds there |
+|---|---|---|---|---|---|
+| 664 | 136k | 6.495 ms | 96k | 144k, 10.114 ms | 8 |
+| 667 | 136k | 9.572 ms | 96k | 144k, 13.651 ms | 8 |
+| 668 | 128k | 6.263 ms | 128k | 136k, 13.097 ms | 8 |
+| 670 | 128k | 5.485 ms | 96k | 136k, 10.067 ms | 10 |
+
+None read 144k: their masked p99 there was 10.114, 13.651, 10.927 and 13.298 ms. Over the ten
+qualifying runs the ceiling is 136k five times (630, 631, 634, 664, 667), 144k three times (632,
+633, 643) and 128k twice (668, 670). 664, 667 and 668 run the same server code yet read 136k,
+136k and 128k, and 670 missed the bound at 136k by 0.067 ms, so the spread is run-to-run variance
+at a bound the ceiling sits close to; it does not show a regression since 643. Over the latest
+five members criterion (2) names 128k. The owner decided on 2026-10-12 to publish 136k, the most
+common rung. The committed page data is build 667's patch as emitted
+(`runs-perf-xl/master/2026-10-12T06-40-10Z__ba2211b380.json`), the newest member that read 136k.
+The page states the ten-run tally, tells readers to provision against 128k, the lowest rung any
+qualifying run read, and says the ceiling can land one step either way.
+
+**The rung a later run is held against.** `perf-website-publish.sh` names 136k as the expected
+rung (`RW_EXPECTED_CEILING_RPS`) and 128k (`RW_ADJACENT_CEILING_RPS`) as the rung below it that
+qualifying runs also read. A later patch reading 128k would lower the published headline, which
+is the owner's decision. Any other rung, 144k included, is marked do-not-apply: three qualifying
+runs read 144k, but the owner chose 136k. The two constants word the annotation and the patch's
+commit message, and the website headline lint reads them to allow the other rung in the
+hand-written text; nothing in the publish step gates on them. The owner set them on 2026-10-12
+(144k and 136k from 2026-10-05).
 
 **The run tally is hand-counted.** The page's `ceiling_spread` and `ceiling_spread_detail`
 sentences, the two FAQ answers and the `llms.txt` line count the like-for-like runs and the rates
-they read. The two page sentences render only while the published ceiling is 136k or 144k; the
+they read. The two page sentences render only while the published ceiling is 128k or 136k; the
 FAQ answers and the `llms.txt` line are plain text and do not adapt. Every later member run
 changes the count, even one at the same ceiling that emits no patch, so the multi-k6 publish
 step asks for them to be reconciled in both its annotations: with the patch, and when the
@@ -2433,14 +2453,15 @@ Before publishing any figure:
   from `sweep.js` is the top of an overload curve. The healthy operating ceiling is a lower
   number; publish both, labelled distinctly.
 
-**Currently published, headline (build 643, 2026-10-05, image `e8d0466ca3`, harness
-`33d29b2fc4`, `perf-xl` `c6i.32xlarge`, 6 physical cores, four k6 processes of 16 CPUs each on
+**Currently published, headline (build 667, 2026-10-12, image `ba2211b380`, harness
+`b4141574dc`, `perf-xl` `c6i.32xlarge`, 6 physical cores, four k6 processes of 16 CPUs each on
 the other socket, ZGC with a 922 MiB heap, JDK 25.0.4.1+1, `MOCKSERVER_LOG_LEVEL=ERROR`,
-`MOCKSERVER_DISABLE_SYSTEM_OUT=true`, SUT GC file log on):** `healthy_ceiling_rps` **144,000**
-under `gc_masked_p99` with the 10 ms bound (achieved 143,719.1, p50 0.108 ms, p95 7.309 ms, masked
-p99 9.73 ms, whole-rung p99 44.946 ms; whole-rung ceiling 96,000). The first failure is 152,000
-at a masked p99 of 13.861 ms, and `peak_achieved_rps` is **159,555.8** at 160,000 offered.
-144,000 is the upper of the two adjacent rungs the six qualifying runs read, three each
+`MOCKSERVER_DISABLE_SYSTEM_OUT=true`, `PERF_JVM_DIAGNOSTICS` `standard`):** `healthy_ceiling_rps`
+**136,000** under `gc_masked_p99` with the 10 ms bound (achieved 136,327.2, p50 0.104 ms, p95
+3.347 ms, masked p99 9.572 ms, whole-rung p99 17.788 ms; whole-rung ceiling 96,000). The first
+failure is 144,000 at a masked p99 of 13.651 ms, and `peak_achieved_rps` is **158,854.5** at
+160,000 offered. 136,000 is the most common rung of the ten qualifying runs (five; 144,000 three
+and 128,000 two), published by the owner's decision of 2026-10-12
 ([the published run](#the-headline-rule-item-44)).
 
 **Currently published, `single_k6` (build 464, 2026-09-27, `efdc5227b2`, `c5.12xlarge`, 6 cores,
@@ -2513,8 +2534,8 @@ To publish a run's figures:
    (a separate JMH source, expected to differ). When any published figure moved, also update the
    performance line in `jekyll-www.mock-server.com/llms.txt`. The page's `ceiling_spread` and
    `ceiling_spread_detail` sentences (how many like-for-like runs read which rate) are
-   hand-authored too; they render only while the published ceiling is 136k or 144k, say which
-   of the two it is, and need recounting after every member run. The website pipeline's
+   hand-authored too; they render only while the published ceiling is 128k or 136k, say where
+   it falls among the rungs the runs read, and need recounting after every member run. The website pipeline's
    headline lint fails the PR until the `description`, the FAQ answers and the `llms.txt` line
    state the new figures; it cannot check the per-rate run counts.
 
@@ -2530,12 +2551,12 @@ rung adjacent to the one the criterion named, so applying it was the owner's dec
 ([the published run](#the-headline-rule-item-44)).
 
 **A later headline refresh** is the same kind of patch, from a `PERF_XL=true` `[perf-run]` build
-with `PERF_JVM_DIAGNOSTICS=gc`:
+at a series-member diagnostics tier (`standard` or `gc`):
 
 1. Check the patch's ceiling before applying it; the publish annotation and the patch's commit
-   message state the same check. 144k is the rung expected. 136k is the other rung the
-   qualifying runs read, and applying it lowers the published figure, so it is a decision. Any
-   other rung means those runs no longer describe the current image: do not apply it.
+   message state the same check. 136k is the rung expected. 128k is the rung below it that
+   qualifying runs also read, and applying it lowers the published figure, so it is a decision.
+   Any other rung, 144k included, is not applied without a new owner decision.
 2. Apply it, and in the same change bring the page `description`, the two `schema_faq` answers,
    the `ceiling_spread` sentences and the `llms.txt` line into line with it, and add a short
    past-tense changelog entry if the published figure changed.
