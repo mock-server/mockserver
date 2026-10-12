@@ -1,0 +1,36 @@
+{
+  "description": "/api/generate, streamed text reply. The docs show the first and the final object of the NDJSON stream; each is stored as {\"data\": object}",
+  "source": "https://github.com/ollama/ollama/blob/efe43c5561047d8baf8c862730b2151249d51fd5/docs/api.md#generate-request-streaming",
+  "retrieved": "2026-10-12",
+  "request": {
+    "method": "POST",
+    "path": "/api/generate",
+    "body": {
+      "model": "llama3.2",
+      "prompt": "Why is the sky blue?"
+    }
+  },
+  "httpLlmResponse": {
+    "provider": "OLLAMA",
+    "model": "llama3.2",
+    "completion": {
+      "text": "The sky is blue",
+      "streaming": true,
+      "usage": {
+        "inputTokens": 26,
+        "outputTokens": 259
+      }
+    }
+  },
+  "response": "generate-stream-text.response.events.json",
+  "format": "EVENTS",
+  "wireFormat": "NDJSON",
+  "partial": true,
+  "allowed": [
+    {
+      "kind": "EXTRA",
+      "path": "done_reason",
+      "reason": "this docs example predates done_reason; the current server writes it on every final object (api/types.go GenerateResponse.DoneReason, server/routes.go GenerateHandler), as the suffix example in the same document shows"
+    }
+  ]
+}

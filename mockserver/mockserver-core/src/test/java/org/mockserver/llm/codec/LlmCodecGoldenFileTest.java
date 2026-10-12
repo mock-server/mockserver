@@ -472,6 +472,31 @@ public class LlmCodecGoldenFileTest {
         }
     }
 
+    /**
+     * Ollama serves two wire APIs under one provider; a request to {@code /api/generate} gets the
+     * generate shape (text in a top-level {@code response}), pinned here beside the chat goldens.
+     */
+    @Test
+    public void shouldEncodeOllamaGenerateShape() throws Exception {
+        ProviderCodec ollama = ProviderCodecRegistry.getInstance().lookup(Provider.OLLAMA).orElseThrow(AssertionError::new);
+        String model = CANONICAL_MODELS.get(Provider.OLLAMA);
+        HttpRequest generate = HttpRequest.request().withPath("/api/generate")
+            .withBody("{\"model\":\"llama3.1\",\"prompt\":\"Hello\"}");
+        Path ollamaDir = fixturesBasePath().resolve("ollama");
+
+        List<String> failures = new ArrayList<>();
+        JsonNode text = OBJECT_MAPPER.readTree(ollama.encode(TEXT_COMPLETION, model, generate).getBodyAsString());
+        normalizeJsonTree(text);
+        handleGolden(ollamaDir.resolve("generate-text-completion.json"), OBJECT_MAPPER.writeValueAsString(text),
+            isUpdateMode(), "OLLAMA_GENERATE", "generate-text-completion", failures);
+        handleGolden(ollamaDir.resolve("generate-streaming-text.jsonl"),
+            normalizeStreamingEvents(ollama.encodeStreaming(TEXT_COMPLETION, model, null, generate)),
+            isUpdateMode(), "OLLAMA_GENERATE", "generate-streaming-text", failures);
+        if (!failures.isEmpty()) {
+            fail(String.join("\n", failures));
+        }
+    }
+
     private void assertStreamedUsageChunk(Provider provider, List<SseEvent> events, int expectedInput, int expectedOutput)
         throws JsonProcessingException {
         String ctx = provider.name() + " streaming usage";

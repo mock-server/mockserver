@@ -563,4 +563,168 @@ public class OllamaCodecTest {
 
         assertThat(codec.decode(request).getMessages(), is(empty()));
     }
+
+    // --- Encode: POST /api/generate (docs/api.md "Generate a completion"; api/types.go GenerateResponse) ---
+
+    private static HttpRequest generateRequest(String body) {
+        return request().withMethod("POST").withPath("/api/generate").withBody(body);
+    }
+
+    private List<JsonNode> streamedLines(List<SseEvent> events) throws Exception {
+        List<JsonNode> lines = new ArrayList<>();
+        for (SseEvent event : events) {
+            assertThat(event.getEvent(), is(nullValue()));
+            lines.add(OBJECT_MAPPER.readTree(event.getData()));
+        }
+        return lines;
+    }
+
+    @Test
+    public void shouldEncodeGenerateReplyWithTextInTopLevelResponseField() throws Exception {
+        Completion completion = completion()
+            .withText("The sky is blue because it is the color of the sky.")
+            .withUsage(Usage.usage().withInputTokens(26).withOutputTokens(290));
+
+        HttpResponse response = codec.encode(completion, "llama3.2",
+            generateRequest("{\"model\":\"llama3.2\",\"prompt\":\"Why is the sky blue?\",\"stream\":false}"));
+
+        assertThat(response.getStatusCode(), is(200));
+        assertThat(response.getFirstHeader("content-type"), is("application/json"));
+        JsonNode root = OBJECT_MAPPER.readTree(response.getBodyAsString());
+        assertThat(root.path("model").asText(), is("llama3.2"));
+        assertThat(root.path("created_at").isTextual(), is(true));
+        assertThat(root.path("response").asText(), is("The sky is blue because it is the color of the sky."));
+        assertThat(root.has("message"), is(false));
+        assertThat(root.has("thinking"), is(false));
+        assertThat(root.has("tool_calls"), is(false));
+        assertThat(root.path("done").isBoolean(), is(true));
+        assertThat(root.path("done").asBoolean(), is(true));
+        assertThat(root.path("done_reason").asText(), is("stop"));
+        assertThat(root.path("context").isArray(), is(true));
+        assertThat(root.path("context").size(), greaterThan(0));
+        for (JsonNode token : root.path("context")) {
+            assertThat(token.isInt(), is(true));
+        }
+        assertThat(root.path("prompt_eval_count").asInt(), is(26));
+        assertThat(root.path("eval_count").asInt(), is(290));
+        for (String duration : new String[]{"total_duration", "load_duration", "prompt_eval_duration", "eval_duration"}) {
+            assertThat(duration, root.path(duration).isIntegralNumber(), is(true));
+        }
+    }
+
+    @Test
+    public void shouldEncodeGenerateReplyWithLengthDoneReasonThinkingAndToolCalls() throws Exception {
+        Completion completion = completion()
+            .withText("partial")
+            .withReasoningText("Let me think.")
+            .withStopReason("max_tokens")
+            .withToolCall(toolUse("get_weather").withArguments("{\"city\":\"Tokyo\"}"));
+
+        JsonNode root = OBJECT_MAPPER.readTree(codec.encode(completion, "qwen3",
+            generateRequest("{\"model\":\"qwen3\",\"prompt\":\"hi\",\"think\":true,\"stream\":false}")).getBodyAsString());
+
+        assertThat(root.path("response").asText(), is("partial"));
+        assertThat(root.path("thinking").asText(), is("Let me think."));
+        assertThat(root.path("done_reason").asText(), is("length"));
+        assertThat(root.path("tool_calls").size(), is(1));
+        assertThat(root.path("tool_calls").path(0).path("function").path("name").asText(), is("get_weather"));
+        assertThat(root.path("tool_calls").path(0).path("function").path("arguments").path("city").asText(), is("Tokyo"));
+        assertThat(root.has("message"), is(false));
+    }
+
+    @Test
+    public void shouldOmitGenerateContextForRawPrompt() throws Exception {
+        JsonNode root = OBJECT_MAPPER.readTree(codec.encode(completion().withText("x"), "llama3.2",
+            generateRequest("{\"model\":\"llama3.2\",\"prompt\":\"[INST] hi [/INST]\",\"raw\":true,\"stream\":false}")).getBodyAsString());
+
+        assertThat(root.path("response").asText(), is("x"));
+        assertThat(root.has("context"), is(false));
+    }
+
+    @Test
+    public void shouldEncodeGenerateReplyForPrefixedPathAndAnyCase() throws Exception {
+        HttpRequest request = request().withPath("/ollama/API/Generate").withBody("{\"prompt\":\"hi\"}");
+
+        JsonNode root = OBJECT_MAPPER.readTree(codec.encode(completion().withText("hello"), "llama3.2", request).getBodyAsString());
+
+        assertThat(root.path("response").asText(), is("hello"));
+    }
+
+    @Test
+    public void shouldKeepChatShapeForChatPathAndPathlessEncode() throws Exception {
+        HttpRequest chat = request().withPath("/api/chat").withBody("{\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]}");
+
+        JsonNode viaChat = OBJECT_MAPPER.readTree(codec.encode(completion().withText("hello"), "llama3.2", chat).getBodyAsString());
+        JsonNode pathless = OBJECT_MAPPER.readTree(codec.encode(completion().withText("hello"), "llama3.2").getBodyAsString());
+
+        for (JsonNode root : new JsonNode[]{viaChat, pathless}) {
+            assertThat(root.path("message").path("content").asText(), is("hello"));
+            assertThat(root.has("response"), is(false));
+            assertThat(root.has("context"), is(false));
+        }
+        assertThat(codec.encodeStreaming(completion().withText("hello"), "llama3.2", null, chat).get(0).getData(),
+            containsString("\"message\""));
+    }
+
+    @Test
+    public void shouldStreamGenerateReplyAsResponsePiecesThenAFinalLine() throws Exception {
+        Completion completion = completion()
+            .withText("The sky is blue")
+            .withUsage(Usage.usage().withInputTokens(26).withOutputTokens(259))
+            .withStreaming(true);
+
+        List<JsonNode> lines = streamedLines(codec.encodeStreaming(completion, "llama3.2", null,
+            generateRequest("{\"model\":\"llama3.2\",\"prompt\":\"Why is the sky blue?\"}")));
+
+        assertThat(lines.size(), greaterThanOrEqualTo(2));
+        StringBuilder text = new StringBuilder();
+        for (JsonNode line : lines.subList(0, lines.size() - 1)) {
+            assertThat(line.path("model").asText(), is("llama3.2"));
+            assertThat(line.path("created_at").isTextual(), is(true));
+            assertThat(line.path("response").isTextual(), is(true));
+            assertThat(line.path("done").asBoolean(true), is(false));
+            assertThat(line.has("message"), is(false));
+            assertThat(line.has("done_reason"), is(false));
+            assertThat(line.has("context"), is(false));
+            assertThat(line.has("eval_count"), is(false));
+            text.append(line.path("response").asText());
+        }
+        assertThat(text.toString(), is("The sky is blue"));
+
+        JsonNode last = lines.get(lines.size() - 1);
+        assertThat(last.path("response").isTextual(), is(true));
+        assertThat(last.path("response").asText(), is(""));
+        assertThat(last.path("done").asBoolean(), is(true));
+        assertThat(last.path("done_reason").asText(), is("stop"));
+        assertThat(last.path("context").isArray(), is(true));
+        assertThat(last.path("prompt_eval_count").asInt(), is(26));
+        assertThat(last.path("eval_count").asInt(), is(259));
+        assertThat(last.has("message"), is(false));
+        assertThat(last.has("tool_calls"), is(false));
+    }
+
+    @Test
+    public void shouldStreamGenerateThinkingFirstAndToolCallsOnTheFinalLine() throws Exception {
+        Completion completion = completion()
+            .withReasoningText("Thinking it over.")
+            .withText("ok")
+            .withToolCall(toolUse("get_weather").withArguments("{\"city\":\"Tokyo\"}"))
+            .withStreaming(true);
+
+        List<JsonNode> lines = streamedLines(codec.encodeStreaming(completion, "qwen3", null,
+            generateRequest("{\"model\":\"qwen3\",\"prompt\":\"hi\",\"think\":true,\"raw\":true}")));
+
+        JsonNode first = lines.get(0);
+        assertThat(first.path("thinking").asText(), is("Thinking it over."));
+        assertThat(first.path("response").asText("missing"), is(""));
+        assertThat(first.path("done").asBoolean(true), is(false));
+        for (JsonNode line : lines.subList(0, lines.size() - 1)) {
+            assertThat(line.has("tool_calls"), is(false));
+        }
+        JsonNode last = lines.get(lines.size() - 1);
+        assertThat(last.path("done").asBoolean(), is(true));
+        assertThat(last.path("tool_calls").path(0).path("function").path("name").asText(), is("get_weather"));
+        assertThat(last.path("tool_calls").path(0).path("function").path("arguments").path("city").asText(), is("Tokyo"));
+        assertThat(last.has("context"), is(false));
+    }
 }

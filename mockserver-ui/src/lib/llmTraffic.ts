@@ -191,7 +191,7 @@ export interface OllamaParsed {
   streamTruncated: boolean;
   /**
    * Set for /api/generate traffic. Its system and prompt fields are shown as messages and its
-   * response (and thinking) fields as the assistant reply; absent for /api/chat.
+   * response, thinking and tool_calls fields as the assistant reply; absent for /api/chat.
    */
   endpoint?: 'generate';
 }
@@ -1279,8 +1279,15 @@ function parseOllamaRequest(
     if (generate) {
       const response = getString(res, 'response');
       const thinking = getString(res, 'thinking');
-      result.responseMessage = response !== null || thinking
-        ? { role: 'assistant', content: response ?? '', ...(thinking ? { thinking } : {}) }
+      // Ollama puts generate tool calls at the top level of the final object.
+      const toolCalls = getArray(res, 'tool_calls');
+      result.responseMessage = response !== null || thinking || toolCalls
+        ? {
+            role: 'assistant',
+            content: response ?? '',
+            ...(thinking ? { thinking } : {}),
+            ...(toolCalls ? { tool_calls: toolCalls } : {}),
+          }
         : null;
     } else {
       result.responseMessage = res['message'] ?? null;

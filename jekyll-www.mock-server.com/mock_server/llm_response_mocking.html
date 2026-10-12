@@ -503,8 +503,8 @@ curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
         </tr>
         <tr>
             <td><span class="inline_code">OLLAMA</span></td>
-            <td><span class="inline_code">/api/chat</span></td>
-            <td>Ollama local model API format</td>
+            <td><span class="inline_code">/api/chat</span>, <span class="inline_code">/api/generate</span></td>
+            <td>Ollama local model API format; a request to <span class="inline_code">/api/generate</span> gets the text in a top-level <span class="inline_code">response</span> field, as Ollama returns it</td>
         </tr>
         <tr>
             <td><span class="inline_code">COHERE</span></td>

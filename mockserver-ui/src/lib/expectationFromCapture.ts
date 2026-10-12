@@ -315,8 +315,7 @@ export function isLlmTraffic(parsed: ParsedTraffic): boolean {
     parsed.kind === 'openai' ||
     parsed.kind === 'openai_responses' ||
     parsed.kind === 'gemini' ||
-    // The OLLAMA mock answers /api/chat only, so /api/generate is captured as plain HTTP.
-    (parsed.kind === 'ollama' && parsed.endpoint !== 'generate')
+    parsed.kind === 'ollama'
   );
 }
 

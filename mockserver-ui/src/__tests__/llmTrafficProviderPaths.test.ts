@@ -955,9 +955,9 @@ describe('parseTraffic — Ollama /api/generate', () => {
     expect(parsed.sseEvents).toHaveLength(4);
   });
 
-  it('is captured as plain HTTP, since the Ollama mock answers /api/chat only', () => {
+  it('is captured as an OLLAMA expectation on its own path, since the Ollama mock answers /api/generate', () => {
     const generate = parseTraffic({
-      httpRequest: { method: 'POST', path: '/api/generate', body: { type: 'JSON', json: '{"model":"llama3.2","prompt":"Hi"}' } },
+      httpRequest: { method: 'POST', path: '/api/generate', body: { type: 'JSON', json: '{"model":"llama3.2","prompt":"Hi","stream":false}' } },
       httpResponse: { statusCode: 200, body: { type: 'JSON', json: '{"model":"llama3.2","response":"Hello","done":true}' } },
     });
     const chat = parseTraffic({
@@ -965,9 +965,34 @@ describe('parseTraffic — Ollama /api/generate', () => {
       httpResponse: { statusCode: 200, body: { type: 'JSON', json: '{"model":"llama3.2","message":{"role":"assistant","content":"x"},"done":true}' } },
     });
     expect(generate.kind).toBe('ollama');
-    expect(isLlmTraffic(generate)).toBe(false);
+    expect(isLlmTraffic(generate)).toBe(true);
     expect(isLlmTraffic(chat)).toBe(true);
     if (chat.kind === 'ollama') expect(chat.endpoint).toBeUndefined();
+    const draft = extractLlmExpectationFromCapture(generate, '/api/generate');
+    expect(draft).toMatchObject({ kind: 'llm', path: '/api/generate', provider: 'OLLAMA', model: 'llama3.2', text: 'Hello', streaming: false });
+  });
+
+  it('reads tool calls from the top level of the final generate object', () => {
+    const ndjson = [
+      '{"model":"qwen3","created_at":"2025-10-17T23:14:07.1Z","response":"","done":false}',
+      '{"model":"qwen3","created_at":"2025-10-17T23:14:07.2Z","response":"","done":true,"done_reason":"stop",'
+        + '"tool_calls":[{"function":{"name":"get_weather","arguments":{"city":"Tokyo"}}}],"prompt_eval_count":11,"eval_count":19}',
+      '',
+    ].join('\n');
+    const parsed = parseTraffic({
+      httpRequest: { method: 'POST', path: '/api/generate', body: { type: 'JSON', json: '{"model":"qwen3","prompt":"Weather in Tokyo?"}' } },
+      httpResponse: { statusCode: 200, headers: [{ name: 'content-type', values: ['application/x-ndjson'] }], body: { type: 'STRING', string: ndjson } },
+    });
+    expect(parsed.kind).toBe('ollama');
+    if (parsed.kind !== 'ollama') return;
+    expect(parsed.responseMessage).toEqual({
+      role: 'assistant',
+      content: '',
+      tool_calls: [{ function: { name: 'get_weather', arguments: { city: 'Tokyo' } } }],
+    });
+    expect(extractLlmExpectationFromCapture(parsed, '/api/generate').toolCalls).toEqual([
+      { name: 'get_weather', arguments: '{"city":"Tokyo"}' },
+    ]);
   });
 
   it('does not take other paths that start with /api/generate', () => {

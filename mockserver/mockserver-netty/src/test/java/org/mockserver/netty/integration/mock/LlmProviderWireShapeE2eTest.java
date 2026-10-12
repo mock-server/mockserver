@@ -30,7 +30,8 @@ import static org.mockserver.stop.Stop.stopQuietly;
 /**
  * Provider wire shapes that real SDKs read, asserted over HTTP: stop reasons translated from an
  * expectation shared across providers, Gemini thoughts token accounting, and Bedrock chaos
- * responses that follow the wire API (InvokeModel or Converse) the request used.
+ * responses that follow the wire API (InvokeModel or Converse) the request used, and Ollama
+ * {@code /api/generate} replies in that endpoint's own shape.
  */
 public class LlmProviderWireShapeE2eTest {
 
@@ -132,6 +133,36 @@ public class LlmProviderWireShapeE2eTest {
             assertThat(body.path("message").isTextual(), is(true));
             assertThat(body.has("error"), is(false));
         }
+    }
+
+    @Test
+    public void shouldAnswerOllamaGenerateWithATopLevelResponseWholeAndStreamed() throws Exception {
+        expect("/api/generate", Provider.OLLAMA, completion().withText("The sky is blue").withUsage(usage().withInputTokens(26).withOutputTokens(4)), null);
+
+        JsonNode whole = json(post("/api/generate", "{\"model\":\"llama3.2\",\"prompt\":\"Why is the sky blue?\",\"stream\":false}"));
+        assertThat(whole.path("response").asText(), is("The sky is blue"));
+        assertThat(whole.has("message"), is(false));
+        assertThat(whole.path("done").asBoolean(false), is(true));
+        assertThat(whole.path("context").isArray(), is(true));
+        assertThat(whole.path("eval_count").asInt(-1), is(4));
+
+        mockServerClient.reset();
+        expect("/api/generate", Provider.OLLAMA, completion().withText("The sky is blue").withStreaming(true), null);
+        HttpResponse<String> streamed = post("/api/generate", "{\"model\":\"llama3.2\",\"prompt\":\"Why is the sky blue?\"}");
+        assertThat(streamed.headers().firstValue("content-type").orElse(""), is("application/x-ndjson"));
+        String[] lines = streamed.body().split("\n");
+        StringBuilder text = new StringBuilder();
+        for (int i = 0; i < lines.length - 1; i++) {
+            JsonNode line = OBJECT_MAPPER.readTree(lines[i]);
+            assertThat(line.path("done").asBoolean(true), is(false));
+            assertThat(line.has("message"), is(false));
+            text.append(line.path("response").asText());
+        }
+        assertThat(text.toString(), is("The sky is blue"));
+        JsonNode last = OBJECT_MAPPER.readTree(lines[lines.length - 1]);
+        assertThat(last.path("done").asBoolean(false), is(true));
+        assertThat(last.path("response").asText("missing"), is(""));
+        assertThat(last.path("done_reason").asText(), is("stop"));
     }
 
     private static void expect(String path, Provider provider, Completion completion, LlmChaosProfile chaos) {

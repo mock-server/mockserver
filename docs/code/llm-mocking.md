@@ -44,7 +44,7 @@ Currently registered codecs:
 | GEMINI | `GeminiCodec` | Complete (chat + embeddings). A streamed `streamGenerateContent` reply is SSE only when the request has `?alt=sse`; otherwise it is one JSON array (`StreamingFormat.JSON_ARRAY`, `application/json`: `[`, chunks separated by `,\r\n`, `]`), as the Gemini REST API returns and Google's REST clients (google-api-core `rest_streaming`) parse |
 | BEDROCK | `BedrockCodec` | Complete. Two wire APIs selected per request: InvokeModel (delegates chat to `AnthropicCodec`) and Converse (delegates to `BedrockConverseCodec`); both stream with `application/vnd.amazon.eventstream` binary framing via `BedrockEventStreamEncoder`; automatic AWS SigV4 request signing implemented via `AwsSigV4Signer` on the client path; embeddings = Titan G1/V2 or Cohere v3/v4 by path model, expectation model, then body shape |
 | AZURE_OPENAI | `AzureOpenAiCodec` | Complete (delegates to `OpenAiChatCompletionsCodec`) |
-| OLLAMA | `OllamaCodec` | Complete (chat + embeddings; see security audit for NDJSON wire-format limitation) |
+| OLLAMA | `OllamaCodec` | Complete (`/api/chat`, `/api/generate` + embeddings; see security audit for NDJSON wire-format limitation) |
 | COHERE | `CohereCodec` | Rerank only (`/v2/rerank`, `/v1/rerank`) |
 | VOYAGE | `VoyageCodec` | Rerank only (`/v1/rerank`) |
 | MISTRAL | `MistralCodec` | Complete (delegates to `OpenAiChatCompletionsCodec`) |
@@ -97,6 +97,8 @@ flowchart LR
 With no `stopReason`, each codec writes its normal end-of-turn value, or its tool-call value when the completion has tool calls (Ollama and Gemini have none, so `stop` and `STOP`).
 
 A streamed Ollama `/api/chat` reply sends its tool calls the way Ollama does: in a `done: false` message after any text, then an empty `done: true` message that carries only `done_reason`, the durations and the counts (Ollama `docs/api.md`, "Chat request (Streaming with tools)").
+
+A request whose path ends in `/api/generate` (any prefix, any case) gets Ollama's generate shape instead (`GenerateResponse` in Ollama's `api/types.go`; `docs/api.md`, "Generate a completion"): no `message` object, the text in a top-level `response` string and reasoning in a top-level `thinking` string. The final (`done: true`) object adds `done_reason`, `context`, the durations, the counts and any `tool_calls` at the top level. `context` is an opaque, deprecated token encoding that clients only send back, so it is a fixed `[1,2,3]`, left out when the request sets `raw: true`, as Ollama does. Streamed, each NDJSON line is a `response` piece (after a leading `thinking` piece when reasoning is set) and the final object's `response` is empty; tool calls come only on that final object, as Ollama's generate handler sends them.
 
 ### OpenAI-compatible provider aliases
 
@@ -364,7 +366,7 @@ An OpenAI Chat Completions stream (`OPENAI`, `AZURE_OPENAI` and the OpenAI-compa
 | BEDROCK (Converse) | leading `{"reasoningContent":{"reasoningText":{"text":…,"signature":…}}}` block | `contentBlockDelta` with `delta.reasoningContent.text` → optional `.signature` → `contentBlockStop`, at index 0 before the text block |
 | OPENAI_RESPONSES | leading `{"type":"reasoning","summary":[{"type":"summary_text","text":…}]}` output item | `response.output_item.added`(reasoning) → `response.reasoning_summary_part.added` → `response.reasoning_summary_text.delta`/`.done` → `…part.done` → `output_item.done` |
 | GEMINI | leading `{"text":…,"thought":true}` part | a thought chunk (`parts:[{text,thought:true}]`) before the text chunks |
-| OLLAMA | `message.thinking` sibling string | a leading chunk with `message.thinking` set |
+| OLLAMA | `message.thinking` sibling string (`/api/generate`: top-level `thinking`) | a leading chunk with `message.thinking` set (`/api/generate`: top-level `thinking`) |
 | DEEPSEEK / XAI | `message.reasoning_content` string | `delta.reasoning_content` chunks before the content chunks |
 | GROQ / OPENROUTER | `message.reasoning` string | `delta.reasoning` chunks before the content chunks |
 

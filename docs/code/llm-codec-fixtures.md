@@ -165,9 +165,10 @@ test reads no golden file.
 Current coverage: OpenAI Chat Completions (text, tool call, stream), OpenAI Responses (text,
 function call, stream), Anthropic Messages (text, stream, stream with text then tool use),
 Gemini (text, thinking with function call, `alt=sse` stream), Bedrock Converse (text,
-stream), Azure OpenAI (text), Ollama `/api/chat` (text, tool call, both streamed), DeepSeek
-(text) and Groq (text). Not yet covered: Bedrock InvokeModel, the other OpenAI-compatible
-providers (Mistral, xAI, OpenRouter, OrcaRouter), embeddings and rerank,
+stream), Azure OpenAI (text), Ollama `/api/chat` (text, tool call, both streamed), Ollama
+`/api/generate` (text, streamed text), DeepSeek (text) and Groq (text). Not yet covered: Bedrock
+InvokeModel, the other OpenAI-compatible providers (Mistral, xAI, OpenRouter, OrcaRouter),
+embeddings and rerank,
 and a recorded Gemini JSON-array stream (that framing is tested by
 `GeminiJsonArrayStreamingTest` and `LlmAgentLoopE2eTest`).
 
@@ -290,6 +291,11 @@ goldens use no request, so the opt-in shape has its own golden,
 `shouldEncodeStreamingUsageChunkForOpenAiChatFamilyWhenIncludeUsageRequested`, which
 also pins the usage-chunk token counts for OpenAI, Azure OpenAI and every
 OpenAI-compatible alias, and each alias's non-streaming counts.
+
+Ollama answers a request to `/api/generate` in a different shape from `/api/chat` (text in a
+top-level `response`, no `message`), so that shape has two goldens of its own,
+`ollama/generate-text-completion.json` and `ollama/generate-streaming-text.jsonl`, written
+and asserted by `shouldEncodeOllamaGenerateShape`.
 
 ## Live provider capture (optional)
 

@@ -24,11 +24,13 @@ import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.SseEvent.sseEvent;
 
 /**
- * Codec for Ollama {@code /api/chat} endpoint (version ollama-2025).
+ * Codec for Ollama {@code /api/chat} and {@code /api/generate} endpoints (version ollama-2025).
  * <p>
  * Ollama uses a distinct JSON shape with a top-level {@code message} object
  * (not an array of choices). Token counts are exposed as {@code prompt_eval_count}
- * and {@code eval_count}.
+ * and {@code eval_count}. A request to {@code /api/generate} gets that endpoint's
+ * shape instead: the text in a top-level {@code response} string (see
+ * {@link #encode(Completion, String, HttpRequest)}).
  * <p>
  * <strong>Streaming format:</strong> Ollama's native wire format is NDJSON
  * (newline-delimited JSON, {@code application/x-ndjson}), not SSE. Each
@@ -92,24 +94,119 @@ public class OllamaCodec implements ProviderCodec {
 
         root.put("done", true);
         root.put("done_reason", mapDoneReason(completion.getStopReason()));
-        root.put("total_duration", 1234567890L);
-        root.put("load_duration", 12345L);
+        putMetrics(root, completion);
+        return jsonResponse(root);
+    }
 
-        // Token counts
+    /**
+     * Chooses the wire API by path: {@code /api/generate} (with any prefix, any case) gets the
+     * generate shape, everything else the {@code /api/chat} shape.
+     */
+    @Override
+    public HttpResponse encode(Completion completion, String model, HttpRequest request) {
+        return isGenerate(request) ? encodeGenerate(completion, model, request) : encode(completion, model);
+    }
+
+    @Override
+    public List<SseEvent> encodeStreaming(Completion completion, String model, StreamingPhysics physics, HttpRequest request) {
+        return isGenerate(request) ? encodeGenerateStreaming(completion, model, physics, request) : encodeStreaming(completion, model, physics);
+    }
+
+    private static boolean isGenerate(HttpRequest request) {
+        return EmbeddingWire.path(request).endsWith("/api/generate");
+    }
+
+    /**
+     * {@code POST /api/generate} reply, as {@code GenerateResponse} in Ollama's {@code api/types.go}:
+     * {@code response} holds the text (top level, no {@code message}), {@code thinking} the
+     * reasoning text, and the final object adds {@code done_reason}, {@code context}, the metrics
+     * and any {@code tool_calls}. {@code context} is an opaque token encoding that clients only
+     * send back, so a fixed placeholder is returned; Ollama omits it for a {@code raw} prompt.
+     */
+    private HttpResponse encodeGenerate(Completion completion, String model, HttpRequest request) {
+        ObjectNode root = generateObject(model, completion.getText());
+        String reasoningText = completion.getReasoningText();
+        if (reasoningText != null && !reasoningText.isEmpty()) {
+            root.put("thinking", reasoningText);
+        }
+        putGenerateFinalFields(root, completion, request);
+        return jsonResponse(root);
+    }
+
+    /**
+     * Streamed {@code /api/generate}: a {@code thinking} piece when reasoning is set, one
+     * {@code response} piece per token, then a final object with an empty {@code response}.
+     * Ollama emits generate tool calls only on that final object ({@code server/routes.go}).
+     */
+    private List<SseEvent> encodeGenerateStreaming(Completion completion, String model, StreamingPhysics physics, HttpRequest request) {
+        List<SseEvent> events = new ArrayList<>();
+        String reasoningText = completion.getReasoningText();
+        if (reasoningText != null && !reasoningText.isEmpty()) {
+            ObjectNode thinkingChunk = generateObject(model, "");
+            thinkingChunk.put("thinking", reasoningText);
+            thinkingChunk.put("done", false);
+            events.add(sseEvent().withData(toJson(thinkingChunk)));
+        }
+        String text = completion.getText();
+        if (text != null && !text.isEmpty()) {
+            for (String token : TokenCounter.streamingTextTokens(text, physics)) {
+                if (!token.isEmpty()) {
+                    ObjectNode chunk = generateObject(model, token);
+                    chunk.put("done", false);
+                    events.add(sseEvent().withData(toJson(chunk)));
+                }
+            }
+        }
+        ObjectNode finalChunk = generateObject(model, "");
+        putGenerateFinalFields(finalChunk, completion, request);
+        events.add(sseEvent().withData(toJson(finalChunk)));
+        return StreamingPhysicsExpander.applyPhysics(events, physics);
+    }
+
+    private static ObjectNode generateObject(String model, String response) {
+        ObjectNode node = OBJECT_MAPPER.createObjectNode();
+        node.put("model", model != null ? model : "unknown");
+        node.put("created_at", Instant.now().toString());
+        node.put("response", response != null ? response : "");
+        return node;
+    }
+
+    private static void putGenerateFinalFields(ObjectNode node, Completion completion, HttpRequest request) {
+        node.put("done", true);
+        node.put("done_reason", mapDoneReason(completion.getStopReason()));
+        if (!EmbeddingWire.body(request).path("raw").asBoolean(false)) {
+            node.putArray("context").add(1).add(2).add(3);
+        }
+        putMetrics(node, completion);
+        List<ToolUse> toolCalls = completion.getToolCalls();
+        if (toolCalls != null && !toolCalls.isEmpty()) {
+            writeToolCalls(node, toolCalls);
+        }
+    }
+
+    /** The durations and token counts Ollama puts on a final ({@code done: true}) object. */
+    private static void putMetrics(ObjectNode node, Completion completion) {
         Usage completionUsage = completion.getUsage();
         int promptEvalCount = completionUsage != null && completionUsage.getInputTokens() != null ? completionUsage.getInputTokens() : 0;
         int evalCount = completionUsage != null && completionUsage.getOutputTokens() != null ? completionUsage.getOutputTokens() : 0;
-        root.put("prompt_eval_count", promptEvalCount);
-        root.put("prompt_eval_duration", 67890L);
-        root.put("eval_count", evalCount);
-        root.put("eval_duration", 12345L);
+        node.put("total_duration", 1234567890L);
+        node.put("load_duration", 12345L);
+        node.put("prompt_eval_count", promptEvalCount);
+        node.put("prompt_eval_duration", 67890L);
+        node.put("eval_count", evalCount);
+        node.put("eval_duration", 12345L);
+    }
 
+    private static HttpResponse jsonResponse(ObjectNode root) {
+        return response()
+            .withStatusCode(200)
+            .withHeader("content-type", "application/json")
+            .withBody(toJson(root));
+    }
+
+    private static String toJson(ObjectNode node) {
         try {
-            String json = OBJECT_MAPPER.writeValueAsString(root);
-            return response()
-                .withStatusCode(200)
-                .withHeader("content-type", "application/json")
-                .withBody(json);
+            return OBJECT_MAPPER.writeValueAsString(node);
         } catch (Exception e) {
             throw new RuntimeException("Failed to encode Ollama response", e);
         }
@@ -167,10 +264,6 @@ public class OllamaCodec implements ProviderCodec {
             }
         }
 
-        Usage completionUsage = completion.getUsage();
-        int promptEvalCount = completionUsage != null && completionUsage.getInputTokens() != null ? completionUsage.getInputTokens() : 0;
-        int evalCount = completionUsage != null && completionUsage.getOutputTokens() != null ? completionUsage.getOutputTokens() : 0;
-
         ObjectNode finalChunk = OBJECT_MAPPER.createObjectNode();
         finalChunk.put("model", modelName);
         finalChunk.put("created_at", Instant.now().toString());
@@ -179,12 +272,7 @@ public class OllamaCodec implements ProviderCodec {
         message.put("content", "");
         finalChunk.put("done", true);
         finalChunk.put("done_reason", mapDoneReason(completion.getStopReason()));
-        finalChunk.put("total_duration", 1234567890L);
-        finalChunk.put("load_duration", 12345L);
-        finalChunk.put("prompt_eval_count", promptEvalCount);
-        finalChunk.put("prompt_eval_duration", 67890L);
-        finalChunk.put("eval_count", evalCount);
-        finalChunk.put("eval_duration", 12345L);
+        putMetrics(finalChunk, completion);
 
         try {
             events.add(sseEvent().withData(OBJECT_MAPPER.writeValueAsString(finalChunk)));
@@ -393,8 +481,8 @@ public class OllamaCodec implements ProviderCodec {
     }
 
     /** Ollama sends tool-call arguments as a JSON object, so a non-object value is wrapped as {"value": ...}. */
-    private static void writeToolCalls(ObjectNode message, List<ToolUse> toolCalls) {
-        ArrayNode toolCallsArray = message.putArray("tool_calls");
+    private static void writeToolCalls(ObjectNode parent, List<ToolUse> toolCalls) {
+        ArrayNode toolCallsArray = parent.putArray("tool_calls");
         for (ToolUse toolCall : toolCalls) {
             ObjectNode tc = toolCallsArray.addObject();
             if (toolCall.getId() != null && !toolCall.getId().isEmpty()) {

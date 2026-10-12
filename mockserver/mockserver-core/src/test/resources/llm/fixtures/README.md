@@ -19,7 +19,7 @@ fixtures/
   bedrock/            AWS Bedrock InvokeModel (Anthropic-on-Bedrock) codec output
   bedrock-converse/   AWS Bedrock Converse / ConverseStream codec output
   azure-openai/       Azure OpenAI Chat Completions codec output
-  ollama/             Ollama /api/chat codec output
+  ollama/             Ollama /api/chat codec output (generate-* files: /api/generate)
   embeddings/         every embedding wire shape (LlmEmbeddingGoldenFileTest)
 ```
 

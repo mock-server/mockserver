@@ -1,0 +1,12 @@
+{"model":"llama3.1","created_at":"<timestamp>","response":"Hell","done":false}
+{"model":"llama3.1","created_at":"<timestamp>","response":"o","done":false}
+{"model":"llama3.1","created_at":"<timestamp>","response":"!","done":false}
+{"model":"llama3.1","created_at":"<timestamp>","response":" How","done":false}
+{"model":"llama3.1","created_at":"<timestamp>","response":" can","done":false}
+{"model":"llama3.1","created_at":"<timestamp>","response":" I","done":false}
+{"model":"llama3.1","created_at":"<timestamp>","response":" help","done":false}
+{"model":"llama3.1","created_at":"<timestamp>","response":" you","done":false}
+{"model":"llama3.1","created_at":"<timestamp>","response":" toda","done":false}
+{"model":"llama3.1","created_at":"<timestamp>","response":"y","done":false}
+{"model":"llama3.1","created_at":"<timestamp>","response":"?","done":false}
+{"model":"llama3.1","created_at":"<timestamp>","response":"","done":true,"done_reason":"stop","context":[1,2,3],"total_duration":0,"load_duration":0,"prompt_eval_count":0,"prompt_eval_duration":0,"eval_count":0,"eval_duration":0}

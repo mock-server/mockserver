@@ -1,0 +1,14 @@
+{
+  "model" : "llama3.1",
+  "created_at" : "<timestamp>",
+  "response" : "Hello! How can I help you today?",
+  "done" : true,
+  "done_reason" : "stop",
+  "context" : [ 1, 2, 3 ],
+  "total_duration" : 0,
+  "load_duration" : 0,
+  "prompt_eval_count" : 0,
+  "prompt_eval_duration" : 0,
+  "eval_count" : 0,
+  "eval_duration" : 0
+}
