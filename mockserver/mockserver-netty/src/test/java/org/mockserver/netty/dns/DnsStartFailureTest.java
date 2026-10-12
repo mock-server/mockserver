@@ -208,13 +208,43 @@ public class DnsStartFailureTest {
         }
     }
 
-    // what a process that may not bind the port is told; a real "Permission denied" needs a host that withholds the port
+    // a real "Permission denied" needs a Linux host that withholds the port, such as a container run as a non-root user
     @Test
-    public void shouldNameAPortTheProcessMayNotBind() {
+    public void shouldTellAProcessThatMayNotBindAPortBelow1024HowToGetOne() {
         DnsStartupException refused = DnsStartupException.portCouldNotBeOpenedOrBound(53, new java.net.BindException("Permission denied"));
 
-        assertThat(refused.getMessage(), is(portCouldNotBeOpenedOrBound(53) + "BindException: Permission denied)"));
+        assertThat(refused.getMessage(), is(privilegedPortNotPermitted(53) + "BindException: Permission denied)"));
         assertThat(refused.isPortUnavailable(), is(true));
+    }
+
+    @Test
+    public void shouldTellAProcessThatMayNotBindAPortBelow1024HowToGetOneOnEpoll() {
+        DnsStartupException refused = DnsStartupException.portCouldNotBeOpenedOrBound(53, new IOException("bind(..) failed with error(-13): Permission denied"));
+
+        assertThat(refused.getMessage(), is(privilegedPortNotPermitted(53) + "IOException: bind(..) failed with error(-13): Permission denied)"));
+    }
+
+    @Test
+    public void shouldNotBlamePrivilegesForAPortBelow1024ThatIsHeld() {
+        DnsStartupException refused = DnsStartupException.portCouldNotBeOpenedOrBound(53, new IOException("bind(..) failed with error(-98): Address already in use"));
+
+        assertThat(refused.getMessage(), is(portCouldNotBeOpenedOrBound(53) + "IOException: bind(..) failed with error(-98): Address already in use)"));
+    }
+
+    @Test
+    public void shouldNotBlameThePortNumberForAPermissionDeniedOnAPortFrom1024() {
+        DnsStartupException refused = DnsStartupException.portCouldNotBeOpenedOrBound(1024, new java.net.BindException("Permission denied"));
+
+        assertThat(refused.getMessage(), is(portCouldNotBeOpenedOrBound(1024) + "BindException: Permission denied)"));
+    }
+
+    // dnsPort 0: every port MockServer chose was refused, so no port below 1024 is to blame
+    @Test
+    public void shouldNotBlameThePortNumberWhenNoChosenPortCouldBeBound() {
+        DnsStartupException refused = DnsStartupException.serverCouldNotStart(0, new java.net.BindException("Permission denied"));
+
+        assertThat(refused.getMessage(), is("DNS mocking is enabled (dnsEnabled=true, dnsPort=0) but its server could not start on UDP port 0, so MockServer cannot start:"
+            + " fix the underlying error or set dnsEnabled=false to run without DNS mocking (underlying error: BindException: Permission denied)"));
     }
 
     // the epoll transport, the default on Linux, reports a failed bind with an IOException of its own
@@ -229,6 +259,14 @@ public class DnsStartFailureTest {
     private static String portCouldNotBeOpenedOrBound(int udpPort) {
         return "DNS mocking is enabled (dnsEnabled=true, dnsPort=" + udpPort + ") but UDP port " + udpPort + " could not be opened or bound, so MockServer cannot start:"
             + " free the port if another application holds it, choose a different dnsPort (0 picks a free port, and a port below 1024 can need extra privileges),"
+            + " or set dnsEnabled=false to run without DNS mocking (underlying error: ";
+    }
+
+    private static String privilegedPortNotPermitted(int udpPort) {
+        return "DNS mocking is enabled (dnsEnabled=true, dnsPort=" + udpPort + ") but this process is not permitted to bind UDP port " + udpPort
+            + ", a port below 1024, so MockServer cannot start: choose a dnsPort of 1024 or above (in Docker, publish it as port " + udpPort
+            + ", for example -p " + udpPort + ":5053/udp with dnsPort=5053), run MockServer as root, or lower the sysctl net.ipv4.ip_unprivileged_port_start"
+            + " to " + udpPort + " (adding the NET_BIND_SERVICE capability to a container does not give it to a non-root user),"
             + " or set dnsEnabled=false to run without DNS mocking (underlying error: ";
     }
 }

@@ -2271,6 +2271,7 @@ and set again after it (the same private method serves every refusal path; see
 | Failure | Message (one line, the cause kept as `getCause()`) | CLI output |
 |---|---|---|
 | The channel for an explicit `dnsPort` could not be created, registered or bound (usually the bind: the port is held, or the process may not bind it) | `DNS mocking is enabled (dnsEnabled=true, dnsPort=N) but UDP port N could not be opened or bound, so MockServer cannot start: free the port if another application holds it, choose a different dnsPort (0 picks a free port, and a port below 1024 can need extra privileges), or set dnsEnabled=false to run without DNS mocking (underlying error: ...)` | The message alone, exit status 1 |
+| The same, with a `dnsPort` below 1024 and a root cause whose message contains `Permission denied` (`EACCES` on either transport: a non-root process on Linux) | `DNS mocking is enabled (dnsEnabled=true, dnsPort=N) but this process is not permitted to bind UDP port N, a port below 1024, so MockServer cannot start: choose a dnsPort of 1024 or above (in Docker, publish it as port N, for example -p N:5053/udp with dnsPort=5053), run MockServer as root, or lower the sysctl net.ipv4.ip_unprivileged_port_start to N (adding the NET_BIND_SERVICE capability to a container does not give it to a non-root user), or set dnsEnabled=false to run without DNS mocking (underlying error: ...)` | The message alone, exit status 1 |
 | Anything else (a `dnsPort` that is not a port, a failed bind of port 0, an `Error`) | `DNS mocking is enabled (dnsEnabled=true, dnsPort=N) but its server could not start on UDP port N, so MockServer cannot start: fix the underlying error or set dnsEnabled=false to run without DNS mocking (underlying error: <root cause simple name>: <first message line>)` | `exception while starting:` with the stack trace, exit status 1 |
 
 Which row applies is decided by where the start failed (the future of `Bootstrap.bind` for an explicit
@@ -2326,9 +2327,14 @@ chosen port (which must answer a query) and DNS switched off. It runs each refus
 group of its own and checks, as soon as the constructor has thrown, that the stop is complete and the TCP
 port refuses connections, then that no thread of the group is left alive. `MainTest` covers the exit
 status and the CLI output, and `DnsStartupRefusalIntegrationTest` runs the real jar against a held port
-on the platform's default transport. `Permission denied` is covered only as a message: macOS lets any
-process bind a low port on every address, and so does a container whose
-`net.ipv4.ip_unprivileged_port_start` is 0.
+on the platform's default transport. `Permission denied` is covered in tests only as a message: macOS lets
+any process bind a low port on every address, and so does a Docker container, whose
+`net.ipv4.ip_unprivileged_port_start` is 0 by default. It was checked once by hand on Linux epoll
+(Docker Engine 29) with the standard image, which runs as `nonroot`: `dnsPort=53` with that sysctl
+set to 1024, or with `--network host`, printed the permission message and exited 1, and so did
+`--cap-add NET_BIND_SERVICE`, because Docker does not raise a non-root user's effective capabilities.
+`--user 0`, the sysctl at 53, Docker's default sysctl, and `dnsPort=5053` published with
+`-p 15353:5053/udp` all started, and the published port answered a query sent from the host.
 
 ## Binary Protocol Handling
 
