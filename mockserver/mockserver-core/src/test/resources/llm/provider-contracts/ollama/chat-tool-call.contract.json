@@ -1,0 +1,59 @@
+{
+  "description": "/api/chat, tool call",
+  "source": "https://github.com/ollama/ollama/blob/efe43c5561047d8baf8c862730b2151249d51fd5/docs/api.md#chat-request-no-streaming-with-tools",
+  "retrieved": "2026-10-12",
+  "request": {
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "model": "llama3.2",
+      "messages": [
+        {
+          "role": "user",
+          "content": "what is the weather in tokyo?"
+        }
+      ],
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_weather",
+            "description": "Get the weather in a given city",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "city": {
+                  "type": "string",
+                  "description": "The city to get the weather for"
+                }
+              },
+              "required": [
+                "city"
+              ]
+            }
+          }
+        }
+      ],
+      "stream": false
+    }
+  },
+  "httpLlmResponse": {
+    "provider": "OLLAMA",
+    "model": "llama3.2",
+    "completion": {
+      "toolCalls": [
+        {
+          "name": "get_weather",
+          "arguments": "{\"city\": \"Tokyo\"}"
+        }
+      ],
+      "usage": {
+        "inputTokens": 169,
+        "outputTokens": 18
+      }
+    }
+  },
+  "response": "chat-tool-call.response.json",
+  "format": "JSON",
+  "allowed": []
+}

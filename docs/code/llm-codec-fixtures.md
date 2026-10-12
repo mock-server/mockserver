@@ -24,6 +24,10 @@ drift in our codecs.
 >    reads live codec output only — it never reads the golden files and is not
 >    affected by `-Dmockserver.updateLlmGoldens=true`. See
 >    [Structural contract test](#structural-contract-test-breaks-self-derivation).
+>
+> 3. **`LlmProviderContractTest`** compares MockServer's response with **real
+>    provider responses** (API reference examples and SDK-recorded fixtures,
+>    each cited). See [Provider contract tests](#provider-contract-tests-real-responses).
 
 ## How it works
 
@@ -99,6 +103,72 @@ confirmed to turn this test red **without** regenerating any golden:
 | Gemini                   | dropped `finishReason` emission                   | non-streaming body |
 | OpenAI-Responses         | renamed `status` → `state`                        | non-streaming body |
 | Ollama                   | renamed terminal `done` → `finished`              | non-streaming body |
+
+## Provider contract tests (real responses)
+
+`LlmProviderContractTest` checks MockServer against what each provider actually
+sends. Each case is a `<case>.contract.json` under
+`mockserver/mockserver-core/src/test/resources/llm/provider-contracts/<provider>/`
+next to the real response it names (`.response.json`, `.response.sse`, or
+`.response.events.json` for a stream the source printed as separate objects).
+
+```mermaid
+flowchart LR
+    S["Provider API reference example\nor SDK-recorded response"] --> F["committed fixture\n+ cited source"]
+    R["fixture's request"] --> H["HttpLlmResponseActionHandler\n(httpLlmResponse from the contract)"]
+    F --> C["ProviderContractShape\nstructural compare"]
+    H --> C
+    C --> A{"difference listed\nin 'allowed'?"}
+    A -- no --> X["test fails"]
+```
+
+| Contract field | Meaning |
+|---|---|
+| `source`, `retrieved` | where the real response comes from (a pinned commit URL where one exists) and when it was copied |
+| `request` | method, path, `queryStringParameters` and JSON `body` sent to the handler, so request-dependent shapes (Bedrock Converse paths, Gemini `alt=sse`, OpenAI `include_usage`) are exercised |
+| `httpLlmResponse` | the action, in expectation JSON, that asks MockServer for the same content as the real response |
+| `response`, `format` | the real response file and its format: `JSON`, `SSE`, or `EVENTS` |
+| `wireFormat` | for a stream, the `StreamingFormat` the real provider uses; MockServer must choose the same for this request |
+| `partial` | the source elides part of the stream (for example `: Intermediate chunks omitted`); event order need only be a subsequence and discriminator values a subset |
+| `ignoreRealEvents` | real events a client must tolerate but a mock need not send (Anthropic `ping`), with the reason |
+| `allowed` | every remaining difference: `kind`, `path`, optional `scope`, a `reason`, and an `openItem` when a plan item will remove it |
+
+**Normalisation.** The comparison is structural, so ids, timestamps, token counts and
+generated text never need masking: each document becomes a map of field paths (array
+elements merged under `[]`, as in `choices[].message.content`) to JSON types. Values are
+compared only for the discriminators clients branch on (`type`, `object`, `role`,
+`status`, `finish_reason`, `stop_reason`, `finishReason`, `stopReason`, `done`,
+`done_reason`). `null` matches any type, because a schema that allows null allows the
+value. Streams are compared by event order, with consecutive repeats collapsed (an event's
+name, or `<data>` for an unnamed JSON payload, or the literal for a sentinel such as
+`[DONE]`), then by each event name's merged payload shape. SSE is parsed with the WHATWG
+rules, so `:` comment lines are ignored.
+
+**Differences.** `MISSING` (real has it, MockServer does not), `EXTRA`, `TYPE`, `VALUE`,
+`SEQUENCE` and `FORMAT`. Only the topmost missing or extra path is reported. An `allowed`
+entry without `openItem` is a permanent, reasoned difference (an optional field MockServer
+does not model, for example); an entry with `openItem` names the plan item whose fix will
+remove it. Either kind fails the test once it stops occurring, so the change that closes an
+item must delete its entries, and the list cannot go stale.
+
+**Proven to bite.** Each of these codec defects turns the provider's contracts red: OpenAI
+`finish_reason` renamed (OpenAI and Azure), Anthropic `content_block_delta` renamed, Gemini
+`finishReason` dropped, Responses `status` renamed, Ollama `done` renamed, and Converse
+`stopReason` renamed.
+
+**Adding a case.** Copy the provider's response verbatim from its API reference or an SDK's
+recorded test data (never from MockServer output, never invented), remove any credential,
+cite the source, write the request and the `httpLlmResponse`, run the test, and fix the
+codec or justify each reported difference. Do not regenerate anything to make it pass: this
+test reads no golden file.
+
+Current coverage: OpenAI Chat Completions (text, tool call, stream), OpenAI Responses (text,
+function call, stream), Anthropic Messages (text, stream, stream with text then tool use),
+Gemini (text, thinking with function call, `alt=sse` stream), Bedrock Converse (text,
+stream), Azure OpenAI (text) and Ollama `/api/chat` (text, tool call, both streamed). Not
+yet covered: Bedrock InvokeModel, the OpenAI-compatible providers, embeddings and rerank,
+and a recorded Gemini JSON-array stream (that framing is tested by
+`GeminiJsonArrayStreamingTest` and `LlmAgentLoopE2eTest`).
 
 ## Where fixtures live
 

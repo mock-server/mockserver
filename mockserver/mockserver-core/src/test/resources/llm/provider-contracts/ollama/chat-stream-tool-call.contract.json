@@ -1,0 +1,69 @@
+{
+  "description": "/api/chat, streamed tool call. The docs show the first and the final object of the NDJSON stream; each is stored as {\"data\": object}",
+  "source": "https://github.com/ollama/ollama/blob/efe43c5561047d8baf8c862730b2151249d51fd5/docs/api.md#chat-request-streaming-with-tools",
+  "retrieved": "2026-10-12",
+  "request": {
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "model": "llama3.2",
+      "messages": [
+        {
+          "role": "user",
+          "content": "what is the weather in tokyo?"
+        }
+      ],
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_weather",
+            "description": "Get the weather in a given city",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "city": {
+                  "type": "string",
+                  "description": "The city to get the weather for"
+                }
+              },
+              "required": [
+                "city"
+              ]
+            }
+          }
+        }
+      ],
+      "stream": true
+    }
+  },
+  "httpLlmResponse": {
+    "provider": "OLLAMA",
+    "model": "llama3.2",
+    "completion": {
+      "toolCalls": [
+        {
+          "name": "get_weather",
+          "arguments": "{\"city\": \"Tokyo\"}"
+        }
+      ],
+      "streaming": true,
+      "usage": {
+        "inputTokens": 169,
+        "outputTokens": 15
+      }
+    }
+  },
+  "response": "chat-stream-tool-call.response.events.json",
+  "format": "EVENTS",
+  "wireFormat": "NDJSON",
+  "partial": true,
+  "allowed": [
+    {
+      "kind": "VALUE",
+      "path": "done",
+      "reason": "Ollama streams the tool call in a done:false message and ends with an empty done:true one; MockServer puts the tool call in its single done:true message",
+      "openItem": "37"
+    }
+  ]
+}

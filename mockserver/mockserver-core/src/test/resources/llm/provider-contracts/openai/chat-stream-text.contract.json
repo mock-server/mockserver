@@ -1,0 +1,47 @@
+{
+  "description": "Chat Completions, streamed text reply (the example omits the intermediate chunks)",
+  "source": "https://github.com/openai/openai-openapi/blob/e95c0fe615f45a19e8878af923a729948445a6bd/openapi.json (paths./chat/completions.post.x-oaiMeta.examples \"Streaming\")",
+  "retrieved": "2026-10-12",
+  "request": {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "body": {
+      "model": "gpt-6-astra",
+      "messages": [
+        {
+          "role": "developer",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "user",
+          "content": "Hello!"
+        }
+      ],
+      "stream": true
+    }
+  },
+  "httpLlmResponse": {
+    "provider": "OPENAI",
+    "model": "gpt-6-astra",
+    "completion": {
+      "text": "Hello",
+      "streaming": true
+    }
+  },
+  "response": "chat-stream-text.response.sse",
+  "format": "SSE",
+  "wireFormat": "SSE",
+  "partial": true,
+  "allowed": [
+    {
+      "kind": "MISSING",
+      "path": "choices[].logprobs",
+      "reason": "optional on a stream chunk: CreateChatCompletionStreamResponse choices[] require only delta and index"
+    },
+    {
+      "kind": "MISSING",
+      "path": "system_fingerprint",
+      "reason": "optional: not in CreateChatCompletionStreamResponse's required list"
+    }
+  ]
+}

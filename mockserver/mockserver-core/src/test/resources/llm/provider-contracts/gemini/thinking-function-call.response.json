@@ -1,0 +1,38 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "**Thinking Through the New Year's Eve Calculation**\n\nOkay, so the user wants to know how many days until New Year's Eve.  My first thought is, \"Right, I need the current date.\" The `now()` tool seems perfect for that. It takes no parameters, which makes it simple. I'll call `now()`.\n\nTo actually *answer* the question though, I'll need a bit more.  I'll have to figure out the date of the *next* New Year's Eve. And then, crucially, calculate the difference in days between *today's* date (from `now()`) and that New Year's Eve.\n\nThe user is asking *until* New Year's Eve, so that clarifies it. I'll determine the year, and if it's already after December 31st of the current year, then it's December 31st of the *next* year.  That's how I need to do it.\n\nFor instance, if it's October 26, 2023, the answer is 66 days to December 31, 2023. But if it's January 1, 2024, the answer will be 365, because 2024 is a leap year, and I'll be calculating to December 31, 2024.\n\nThe plan is straightforward: get the current date, then perform the calculation. The final output will be a clear sentence stating the number of days.\n\nI also need to consider some edge cases.  If it *is* New Year's Eve, then it's 0 days. If it's December 30th, then it's 1 day. I'll need to check for leap years as well. I think this will all work.\n",
+            "thought": true
+          },
+          {
+            "functionCall": {
+              "name": "now",
+              "args": {}
+            },
+            "thoughtSignature": "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"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 38,
+    "candidatesTokenCount": 8,
+    "totalTokenCount": 547,
+    "promptTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 38
+      }
+    ],
+    "thoughtsTokenCount": 501
+  },
+  "modelVersion": "gemini-2.5-pro",
+  "responseId": "38CHaLjMG6TujrEPtvTiuQk"
+}

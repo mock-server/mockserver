@@ -1,0 +1,114 @@
+{
+  "description": "Responses API, function call",
+  "source": "https://github.com/openai/openai-openapi/blob/e95c0fe615f45a19e8878af923a729948445a6bd/openapi.json (paths./responses.post.x-oaiMeta.examples \"Functions\")",
+  "retrieved": "2026-10-12",
+  "request": {
+    "method": "POST",
+    "path": "/v1/responses",
+    "body": {
+      "model": "gpt-6-astra",
+      "input": "What is the weather like in Boston today?",
+      "tools": [
+        {
+          "type": "function",
+          "name": "get_current_weather",
+          "description": "Get the current weather in a given location",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "location": {
+                "type": "string",
+                "description": "The city and state, e.g. San Francisco, CA"
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "celsius",
+                  "fahrenheit"
+                ]
+              }
+            },
+            "required": [
+              "location",
+              "unit"
+            ]
+          }
+        }
+      ],
+      "tool_choice": "auto"
+    }
+  },
+  "httpLlmResponse": {
+    "provider": "OPENAI_RESPONSES",
+    "model": "gpt-6-astra",
+    "completion": {
+      "toolCalls": [
+        {
+          "name": "get_current_weather",
+          "arguments": "{\"location\":\"Boston, MA\",\"unit\":\"celsius\"}"
+        }
+      ],
+      "usage": {
+        "inputTokens": 291,
+        "outputTokens": 23
+      }
+    }
+  },
+  "response": "function-call.response.json",
+  "format": "JSON",
+  "allowed": [
+    {
+      "kind": "MISSING",
+      "path": "access_programs",
+      "reason": "required (nullable) on Response in the OpenAI OpenAPI spec; openai-python and async-openai declare it optional, so SDKs accept its absence",
+      "openItem": "36"
+    },
+    {
+      "kind": "MISSING",
+      "path": "temperature",
+      "reason": "required (nullable) on Response in the OpenAI OpenAPI spec; openai-python and async-openai declare it optional, so SDKs accept its absence",
+      "openItem": "36"
+    },
+    {
+      "kind": "MISSING",
+      "path": "top_p",
+      "reason": "required (nullable) on Response in the OpenAI OpenAPI spec; openai-python and async-openai declare it optional, so SDKs accept its absence",
+      "openItem": "36"
+    },
+    {
+      "kind": "MISSING",
+      "path": "max_output_tokens",
+      "reason": "optional: not in the OpenAI OpenAPI spec's Response required list, and Optional in openai-python Response; it reflects request settings MockServer does not model"
+    },
+    {
+      "kind": "MISSING",
+      "path": "reasoning",
+      "reason": "optional: not in the OpenAI OpenAPI spec's Response required list, and Optional in openai-python Response; it reflects request settings MockServer does not model"
+    },
+    {
+      "kind": "MISSING",
+      "path": "store",
+      "reason": "optional: not in the OpenAI OpenAPI spec's Response required list, and Optional in openai-python Response; it reflects request settings MockServer does not model"
+    },
+    {
+      "kind": "MISSING",
+      "path": "text",
+      "reason": "optional: not in the OpenAI OpenAPI spec's Response required list, and Optional in openai-python Response; it reflects request settings MockServer does not model"
+    },
+    {
+      "kind": "MISSING",
+      "path": "truncation",
+      "reason": "optional: not in the OpenAI OpenAPI spec's Response required list, and Optional in openai-python Response; it reflects request settings MockServer does not model"
+    },
+    {
+      "kind": "MISSING",
+      "path": "user",
+      "reason": "optional: not in the OpenAI OpenAPI spec's Response required list, and Optional in openai-python Response; it reflects request settings MockServer does not model"
+    },
+    {
+      "kind": "MISSING",
+      "path": "tools[].strict",
+      "reason": "MockServer echoes the request's tool definitions, which set no strict flag; the API fills in its default; FunctionTool.strict is Optional in openai-python"
+    }
+  ]
+}

@@ -13,6 +13,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.configuration.Configuration;
+import org.mockserver.llm.StreamingFormat;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.action.http.HttpSseResponseActionHandler;
 import org.mockserver.mock.breakpoint.BreakpointCallbackDispatcher;
@@ -151,6 +152,30 @@ public class MockSseStreamBreakpointTest {
         assertThat(StreamFrameBreakpointRegistry.getInstance().nextSequenceNumber(first.getStreamId()), is(0));
     }
 
+    @Test
+    public void shouldKeepAJsonArrayValidWhenItsFirstElementIsDropped() throws Exception {
+        registerStreamBreakpoint();
+        startStream(StreamingFormat.JSON_ARRAY, "{\"a\":1}", "{\"b\":2}");
+
+        deliver(readPausedFrame(), "DROP", null);
+        deliver(readPausedFrame(), "CONTINUE", null);
+
+        assertThat(readBody(), is("[{\"b\":2}]"));
+    }
+
+    @Test
+    public void shouldHoldABareJsonArrayElementAndSeparateReplacedAndInjectedOnes() throws Exception {
+        registerStreamBreakpoint();
+        startStream(StreamingFormat.JSON_ARRAY, "{\"a\":1}", "{\"b\":2}");
+
+        deliver(readPausedFrame(), "INJECT", "{\"x\":0}");
+        PausedStreamFrameDTO second = readPausedFrame();
+        assertThat("the operator sees the element without its separator", decode(second.getBody()), is("{\"b\":2}"));
+        deliver(second, "MODIFY", "{\"c\":3}");
+
+        assertThat(readBody(), is("[{\"a\":1},\r\n{\"x\":0},\r\n{\"c\":3}]"));
+    }
+
     private void registerStreamBreakpoint() {
         BreakpointMatcherRegistry.getInstance().register(
             request().withPath("/sse"),
@@ -165,14 +190,22 @@ public class MockSseStreamBreakpointTest {
         startStream(java.util.Arrays.stream(data).map(event -> SseEvent.sseEvent().withData(event)).toArray(SseEvent[]::new));
     }
 
+    private void startStream(StreamingFormat format, String... data) {
+        startStream(format, java.util.Arrays.stream(data).map(event -> SseEvent.sseEvent().withData(event)).toArray(SseEvent[]::new));
+    }
+
     private void startStream(SseEvent... events) {
+        startStream(StreamingFormat.SSE, events);
+    }
+
+    private void startStream(StreamingFormat format, SseEvent... events) {
         HttpSseResponse sseResponse = HttpSseResponse.sseResponse();
         for (SseEvent event : events) {
             sseResponse.withEvent(event);
         }
         ChannelHandlerContext ctx = dataChannel.pipeline().firstContext();
         new HttpSseResponseActionHandler(mockServerLogger, mock(Scheduler.class), configuration, registry)
-            .handle(sseResponse, ctx, request("/sse").withKeepAlive(true));
+            .handle(sseResponse, ctx, request("/sse").withKeepAlive(true), format);
         dataChannel.runPendingTasks();
         Object head = dataChannel.readOutbound();
         assertThat("the response head is written first", head, is(instanceOf(HttpResponse.class)));
@@ -207,6 +240,19 @@ public class MockSseStreamBreakpointTest {
         String body = content.content().toString(StandardCharsets.UTF_8);
         content.release();
         return body;
+    }
+
+    /** Reads every content chunk written so far, through the end of the response. */
+    private String readBody() {
+        StringBuilder body = new StringBuilder();
+        Object outbound;
+        while ((outbound = dataChannel.readOutbound()) != null) {
+            if (outbound instanceof HttpContent) {
+                body.append(((HttpContent) outbound).content().toString(StandardCharsets.UTF_8));
+            }
+            ReferenceCountUtil.release(outbound);
+        }
+        return body.toString();
     }
 
     private static String decode(String base64) {

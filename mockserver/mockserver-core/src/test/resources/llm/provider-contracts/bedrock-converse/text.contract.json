@@ -1,0 +1,35 @@
+{
+  "description": "Converse, text reply",
+  "source": "https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html (Converse response example)",
+  "retrieved": "2026-10-12",
+  "request": {
+    "method": "POST",
+    "path": "/model/anthropic.claude-3-sonnet-20240229-v1:0/converse",
+    "body": {
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "text": "Create a list of 3 pop songs."
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "httpLlmResponse": {
+    "provider": "BEDROCK",
+    "model": "anthropic.claude-3-sonnet-20240229-v1:0",
+    "completion": {
+      "text": "Here is a list of 3 pop songs by artists from the United Kingdom.",
+      "usage": {
+        "inputTokens": 125,
+        "outputTokens": 60
+      }
+    }
+  },
+  "response": "text.response.json",
+  "format": "JSON",
+  "allowed": []
+}

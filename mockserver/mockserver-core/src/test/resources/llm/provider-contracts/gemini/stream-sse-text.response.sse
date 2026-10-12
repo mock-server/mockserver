@@ -1,0 +1,6 @@
+data: {"candidates": [{"content": {"parts": [{"text": "The"}],"role": "model"}}],"usageMetadata": {"promptTokenCount": 7,"totalTokenCount": 7,"promptTokensDetails": [{"modality": "TEXT","tokenCount": 7}]},"modelVersion": "gemini-3.1-flash-lite"}
+
+data: {"candidates": [{"content": {"parts": [{"text": " capital of Wyoming"}],"role": "model"}}],"usageMetadata": {"promptTokenCount": 7,"totalTokenCount": 7,"promptTokensDetails": [{"modality": "TEXT","tokenCount": 7}]},"modelVersion": "gemini-3.1-flash-lite"}
+
+data: {"candidates": [{"content": {"parts": [{"text": " is **Cheyenne**.\n"}],"role": "model"},"finishReason": "STOP"}],"usageMetadata": {"promptTokenCount": 7,"candidatesTokenCount": 10,"totalTokenCount": 17,"promptTokensDetails": [{"modality": "TEXT","tokenCount": 7}],"candidatesTokensDetails": [{"modality": "TEXT","tokenCount": 10}]},"modelVersion": "gemini-3.1-flash-lite"}
+

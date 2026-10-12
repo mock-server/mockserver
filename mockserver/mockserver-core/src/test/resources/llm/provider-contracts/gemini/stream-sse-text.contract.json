@@ -1,0 +1,56 @@
+{
+  "description": "streamGenerateContent?alt=sse, streamed text reply. The SDK test data records the response only; the request is the documented shape",
+  "source": "https://github.com/FirebaseExtended/vertexai-sdk-test-data/blob/be42a0137c50bf399243b185e2849294f64c934c/mock-responses/googleai/streaming-success-basic-reply-short.txt",
+  "retrieved": "2026-10-12",
+  "request": {
+    "method": "POST",
+    "path": "/v1beta/models/gemini-3.1-flash-lite:streamGenerateContent",
+    "queryStringParameters": {
+      "alt": "sse"
+    },
+    "body": {
+      "contents": [
+        {
+          "role": "user",
+          "parts": [
+            {
+              "text": "What is the capital of Wyoming?"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "httpLlmResponse": {
+    "provider": "GEMINI",
+    "model": "gemini-3.1-flash-lite",
+    "completion": {
+      "text": "The capital of Wyoming is **Cheyenne**.\n",
+      "streaming": true,
+      "usage": {
+        "inputTokens": 7,
+        "outputTokens": 10
+      }
+    }
+  },
+  "response": "stream-sse-text.response.sse",
+  "format": "SSE",
+  "wireFormat": "SSE",
+  "allowed": [
+    {
+      "kind": "MISSING",
+      "path": "usageMetadata.promptTokensDetails",
+      "reason": "output-only per-modality breakdown (Gemini API reference, UsageMetadata); MockServer does not model modalities"
+    },
+    {
+      "kind": "MISSING",
+      "path": "usageMetadata.candidatesTokensDetails",
+      "reason": "output-only per-modality breakdown (Gemini API reference, UsageMetadata); MockServer does not model modalities"
+    },
+    {
+      "kind": "EXTRA",
+      "path": "candidates[].index",
+      "reason": "Candidate.index; the real API sends it too, for example in the recorded thinking-function-call response"
+    }
+  ]
+}

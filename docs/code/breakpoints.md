@@ -88,8 +88,11 @@ completed when the client replies or the timeout fires. No thread is blocked.
     responses (A1c). The `StreamingBody.subscribe()` onChunk callback intercepts
     each chunk before writing as a `DefaultHttpContent`.
   - `HttpSseResponseActionHandler.scheduleEvents` — `httpSseResponse` mocks and the
-    LLM streams written through it (SSE, NDJSON, AWS event stream). Each event is held
-    before it is written; the next event is scheduled only once it is decided.
+    LLM streams written through it (SSE, NDJSON, AWS event stream, and Gemini's JSON
+    array). Each event is held before it is written; the next event is scheduled only
+    once it is decided. A JSON-array element is held without its `,\r\n` separator,
+    which is added only when an element is actually written, so a DROP, MODIFY or
+    INJECT keeps the array valid.
   - `GrpcStreamResponseActionHandler.scheduleMessages` — gRPC server-streaming mock
     responses (A1d). Each gRPC message frame is intercepted before `ctx.writeAndFlush`.
   - `HttpWebSocketResponseActionHandler.scheduleMessages` — WebSocket eager/scripted

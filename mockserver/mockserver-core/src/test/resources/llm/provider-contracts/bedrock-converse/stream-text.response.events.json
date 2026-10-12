@@ -1,0 +1,9 @@
+[
+  {"event": "messageStart", "data": {"role": "assistant"}},
+  {"event": "contentBlockDelta", "data": {"delta": {"text": ""}, "contentBlockIndex": 0}},
+  {"event": "contentBlockDelta", "data": {"delta": {"text": " Title"}, "contentBlockIndex": 0}},
+  {"event": "contentBlockDelta", "data": {"delta": {"text": ":"}, "contentBlockIndex": 0}},
+  {"event": "contentBlockDelta", "data": {"delta": {"text": " The"}, "contentBlockIndex": 0}},
+  {"event": "messageStop", "data": {"stopReason": "max_tokens"}},
+  {"event": "metadata", "data": {"usage": {"inputTokens": 47, "outputTokens": 20, "totalTokens": 67}, "metrics": {"latencyMs": 100.0}}}
+]

@@ -1,0 +1,39 @@
+{
+  "description": "/api/chat, text reply",
+  "source": "https://github.com/ollama/ollama/blob/efe43c5561047d8baf8c862730b2151249d51fd5/docs/api.md#chat-request-no-streaming",
+  "retrieved": "2026-10-12",
+  "request": {
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "model": "llama3.2",
+      "messages": [
+        {
+          "role": "user",
+          "content": "why is the sky blue?"
+        }
+      ],
+      "stream": false
+    }
+  },
+  "httpLlmResponse": {
+    "provider": "OLLAMA",
+    "model": "llama3.2",
+    "completion": {
+      "text": "Hello! How are you today?",
+      "usage": {
+        "inputTokens": 26,
+        "outputTokens": 298
+      }
+    }
+  },
+  "response": "chat-text.response.json",
+  "format": "JSON",
+  "allowed": [
+    {
+      "kind": "EXTRA",
+      "path": "done_reason",
+      "reason": "this docs example predates done_reason; the current server writes it on every final message (api/types.go ChatResponse.DoneReason), as the tool-call examples in the same document show"
+    }
+  ]
+}

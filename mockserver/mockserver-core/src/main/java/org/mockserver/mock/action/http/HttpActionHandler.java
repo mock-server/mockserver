@@ -767,6 +767,9 @@ public class HttpActionHandler {
                                     case AWS_CONVERSE_EVENT_STREAM:
                                         contentType = org.mockserver.llm.codec.BedrockEventStreamEncoder.CONTENT_TYPE;
                                         break;
+                                    case JSON_ARRAY:
+                                        contentType = "application/json";
+                                        break;
                                     default:
                                         contentType = "text/event-stream";
                                         break;

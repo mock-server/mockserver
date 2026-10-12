@@ -1,0 +1,33 @@
+{
+  "description": "Messages API, text reply",
+  "source": "https://platform.claude.com/docs/en/build-with-claude/working-with-messages (Basic request and response, Output)",
+  "retrieved": "2026-10-12",
+  "request": {
+    "method": "POST",
+    "path": "/v1/messages",
+    "body": {
+      "model": "claude-opus-5-5",
+      "max_tokens": 1024,
+      "messages": [
+        {
+          "role": "user",
+          "content": "Hello, Claude"
+        }
+      ]
+    }
+  },
+  "httpLlmResponse": {
+    "provider": "ANTHROPIC",
+    "model": "claude-opus-5-5",
+    "completion": {
+      "text": "Hello!",
+      "usage": {
+        "inputTokens": 12,
+        "outputTokens": 6
+      }
+    }
+  },
+  "response": "text.response.json",
+  "format": "JSON",
+  "allowed": []
+}

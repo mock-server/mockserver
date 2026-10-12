@@ -28,12 +28,17 @@ import org.slf4j.event.Level;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.mockserver.exception.ExceptionHandling.causeDescription;
 import static org.mockserver.exception.ExceptionHandling.clientGoneException;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_RESPONSE;
 
 public class HttpSseResponseActionHandler {
+
+    private static final byte[] JSON_ARRAY_OPEN = "[".getBytes(StandardCharsets.UTF_8);
+    private static final byte[] JSON_ARRAY_CLOSE = "]".getBytes(StandardCharsets.UTF_8);
+    private static final byte[] JSON_ARRAY_SEPARATOR = ",\r\n".getBytes(StandardCharsets.UTF_8);
 
     private final MockServerLogger mockServerLogger;
     private final Scheduler scheduler;
@@ -86,6 +91,9 @@ public class HttpSseResponseActionHandler {
             case AWS_CONVERSE_EVENT_STREAM:
                 defaultContentType = BedrockEventStreamEncoder.CONTENT_TYPE;
                 break;
+            case JSON_ARRAY:
+                defaultContentType = "application/json";
+                break;
             default:
                 defaultContentType = "text/event-stream";
                 break;
@@ -119,12 +127,17 @@ public class HttpSseResponseActionHandler {
         Http2StreamIds.stampFromRequest(initialResponse, request);
 
         ctx.writeAndFlush(initialResponse);
+        if (format == StreamingFormat.JSON_ARRAY) {
+            ctx.writeAndFlush(chunkContent(JSON_ARRAY_OPEN, request));
+        }
 
         StreamBreakpoint streamBreakpoint = streamBreakpoint(ctx, request);
+        AtomicBoolean elementWritten = format == StreamingFormat.JSON_ARRAY ? new AtomicBoolean() : null;
         List<SseEvent> events = httpSseResponse.getEvents();
         if (events != null && !events.isEmpty()) {
-            scheduleEvents(events, 0, ctx, httpSseResponse, request, format, streamBreakpoint, responseEnded);
+            scheduleEvents(events, 0, ctx, httpSseResponse, request, format, elementWritten, streamBreakpoint, responseEnded);
         } else {
+            closeJsonArray(ctx, request, format);
             finishStream(ctx, httpSseResponse, request, streamBreakpoint, responseEnded);
         }
     }
@@ -153,8 +166,11 @@ public class HttpSseResponseActionHandler {
         return new StreamBreakpoint(matcher, streamId, releaseOnClose);
     }
 
-    private void scheduleEvents(List<SseEvent> events, int index, ChannelHandlerContext ctx, HttpSseResponse httpSseResponse, org.mockserver.model.HttpRequest request, StreamingFormat format, StreamBreakpoint streamBreakpoint, Runnable responseEnded) {
+    private void scheduleEvents(List<SseEvent> events, int index, ChannelHandlerContext ctx, HttpSseResponse httpSseResponse, org.mockserver.model.HttpRequest request, StreamingFormat format, AtomicBoolean elementWritten, StreamBreakpoint streamBreakpoint, Runnable responseEnded) {
         if (index >= events.size() || !ctx.channel().isActive()) {
+            if (index >= events.size()) {
+                closeJsonArray(ctx, request, format);
+            }
             finishStream(ctx, httpSseResponse, request, streamBreakpoint, responseEnded);
             return;
         }
@@ -178,12 +194,12 @@ public class HttpSseResponseActionHandler {
                         request.getReceivedTimestamp(), configuration, mockServerLogger, webSocketClientRegistry)
                     : null;
                 if (decisionFuture == null) {
-                    writeChunk(chunkBytes, null, events, index, ctx, httpSseResponse, request, format, streamBreakpoint, responseEnded);
+                    writeChunk(chunkBytes, null, events, index, ctx, httpSseResponse, request, format, elementWritten, streamBreakpoint, responseEnded);
                 } else {
                     // the next event is scheduled only once this one is decided and written, so the
                     // end of the stream waits for every held event
                     decisionFuture.thenAccept(decision -> ctx.channel().eventLoop().execute(() ->
-                        applyDecision(decision, chunkBytes, events, index, ctx, httpSseResponse, request, format, streamBreakpoint, responseEnded)));
+                        applyDecision(decision, chunkBytes, events, index, ctx, httpSseResponse, request, format, elementWritten, streamBreakpoint, responseEnded)));
                 }
             } catch (Exception e) {
                 if (mockServerLogger.isEnabledForInstance(Level.WARN)) {
@@ -209,27 +225,27 @@ public class HttpSseResponseActionHandler {
     }
 
     private void applyDecision(StreamFrameDecision decision, byte[] chunkBytes, List<SseEvent> events, int index, ChannelHandlerContext ctx,
-                               HttpSseResponse httpSseResponse, org.mockserver.model.HttpRequest request, StreamingFormat format, StreamBreakpoint streamBreakpoint, Runnable responseEnded) {
+                               HttpSseResponse httpSseResponse, org.mockserver.model.HttpRequest request, StreamingFormat format, AtomicBoolean elementWritten, StreamBreakpoint streamBreakpoint, Runnable responseEnded) {
         if (!ctx.channel().isActive()) {
             finishStream(ctx, httpSseResponse, request, streamBreakpoint, responseEnded);
             return;
         }
         switch (decision.getAction()) {
             case MODIFY:
-                writeChunk(decision.getReplacementBody(), null, events, index, ctx, httpSseResponse, request, format, streamBreakpoint, responseEnded);
+                writeChunk(decision.getReplacementBody(), null, events, index, ctx, httpSseResponse, request, format, elementWritten, streamBreakpoint, responseEnded);
                 break;
             case DROP:
-                scheduleEvents(events, index + 1, ctx, httpSseResponse, request, format, streamBreakpoint, responseEnded);
+                scheduleEvents(events, index + 1, ctx, httpSseResponse, request, format, elementWritten, streamBreakpoint, responseEnded);
                 break;
             case INJECT:
-                writeChunk(chunkBytes, decision.getInjectedBody(), events, index, ctx, httpSseResponse, request, format, streamBreakpoint, responseEnded);
+                writeChunk(chunkBytes, decision.getInjectedBody(), events, index, ctx, httpSseResponse, request, format, elementWritten, streamBreakpoint, responseEnded);
                 break;
             case CLOSE:
                 finishStream(ctx, httpSseResponse, request, streamBreakpoint, responseEnded);
                 break;
             case CONTINUE:
             default:
-                writeChunk(chunkBytes, null, events, index, ctx, httpSseResponse, request, format, streamBreakpoint, responseEnded);
+                writeChunk(chunkBytes, null, events, index, ctx, httpSseResponse, request, format, elementWritten, streamBreakpoint, responseEnded);
                 break;
         }
     }
@@ -247,8 +263,12 @@ public class HttpSseResponseActionHandler {
     }
 
     private void writeChunk(byte[] chunkBytes, byte[] injectedBytes, List<SseEvent> events, int index, ChannelHandlerContext ctx,
-                            HttpSseResponse httpSseResponse, org.mockserver.model.HttpRequest request, StreamingFormat format, StreamBreakpoint streamBreakpoint, Runnable responseEnded) {
+                            HttpSseResponse httpSseResponse, org.mockserver.model.HttpRequest request, StreamingFormat format, AtomicBoolean elementWritten, StreamBreakpoint streamBreakpoint, Runnable responseEnded) {
         try {
+            if (format == StreamingFormat.JSON_ARRAY) {
+                chunkBytes = separatedJsonArrayElement(chunkBytes, elementWritten);
+                injectedBytes = separatedJsonArrayElement(injectedBytes, elementWritten);
+            }
             if (injectedBytes != null) {
                 ctx.write(chunkContent(chunkBytes, request));
             }
@@ -266,7 +286,7 @@ public class HttpSseResponseActionHandler {
                                 .setArguments(index + 1, events.size(), request)
                         );
                     }
-                    scheduleEvents(events, index + 1, ctx, httpSseResponse, request, format, streamBreakpoint, responseEnded);
+                    scheduleEvents(events, index + 1, ctx, httpSseResponse, request, format, elementWritten, streamBreakpoint, responseEnded);
                 } else if (clientGoneException(future.cause())) {
                     // a client that has gone is an ordinary end of the response
                     if (mockServerLogger.isEnabledForInstance(Level.DEBUG)) {
@@ -328,6 +348,27 @@ public class HttpSseResponseActionHandler {
             .withData(renderedData)
             .withId(event.getId())
             .withRetry(event.getRetry());
+    }
+
+    /** Ends a {@link StreamingFormat#JSON_ARRAY} stream that ran to completion with its closing bracket. */
+    private static void closeJsonArray(ChannelHandlerContext ctx, org.mockserver.model.HttpRequest request, StreamingFormat format) {
+        if (format == StreamingFormat.JSON_ARRAY && ctx.channel().isActive()) {
+            ctx.writeAndFlush(chunkContent(JSON_ARRAY_CLOSE, request));
+        }
+    }
+
+    /**
+     * Prefixes a {@link StreamingFormat#JSON_ARRAY} element with its {@code ,\r\n} separator unless it
+     * is the first element actually written, so a breakpoint DROP of the first element keeps the array valid.
+     */
+    private static byte[] separatedJsonArrayElement(byte[] element, AtomicBoolean elementWritten) {
+        if (element == null || !elementWritten.getAndSet(true)) {
+            return element;
+        }
+        byte[] separated = new byte[JSON_ARRAY_SEPARATOR.length + element.length];
+        System.arraycopy(JSON_ARRAY_SEPARATOR, 0, separated, 0, JSON_ARRAY_SEPARATOR.length);
+        System.arraycopy(element, 0, separated, JSON_ARRAY_SEPARATOR.length, element.length);
+        return separated;
     }
 
     private void finishStream(ChannelHandlerContext ctx, HttpSseResponse httpSseResponse, org.mockserver.model.HttpRequest request, StreamBreakpoint streamBreakpoint, Runnable responseEnded) {
@@ -402,8 +443,13 @@ public class HttpSseResponseActionHandler {
      * produce UTF-8 text; AWS_EVENT_STREAM produces a binary event-stream
      * message wrapping the chunk data; AWS_CONVERSE_EVENT_STREAM produces one
      * whose {@code :event-type} is the event name and whose payload is the raw data.
+     * JSON_ARRAY produces the bare element; its separator is added when it is written, and the
+     * array's brackets when the stream opens and ends.
      */
     private byte[] formatChunkBytes(SseEvent event, StreamingFormat format) {
+        if (format == StreamingFormat.JSON_ARRAY) {
+            return (event.getData() != null ? event.getData() : "").getBytes(StandardCharsets.UTF_8);
+        }
         if (format == StreamingFormat.AWS_EVENT_STREAM) {
             String data = event.getData();
             if (data == null) {

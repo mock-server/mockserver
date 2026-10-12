@@ -1,0 +1,49 @@
+{
+  "description": "Azure OpenAI chat completions, text reply",
+  "source": "https://github.com/Azure/azure-rest-api-specs/blob/e9369ed0ffbd1acfd34db5e669e66b6ba6798f5c/specification/cognitiveservices/data-plane/OpenAIInference/stable/2024-10-21/examples/chat_completions.json",
+  "retrieved": "2026-10-12",
+  "request": {
+    "method": "POST",
+    "path": "/openai/deployments/gpt-4o/chat/completions",
+    "queryStringParameters": {
+      "api-version": "2024-10-21"
+    },
+    "body": {
+      "messages": [
+        {
+          "role": "system",
+          "content": "you are a helpful assistant that talks like a pirate"
+        },
+        {
+          "role": "user",
+          "content": "can you tell me how to care for a parrot?"
+        }
+      ]
+    }
+  },
+  "httpLlmResponse": {
+    "provider": "AZURE_OPENAI",
+    "model": "gpt-4o",
+    "completion": {
+      "text": "Ahoy matey! So ye be wantin' to care for a fine squawkin' parrot, eh?",
+      "usage": {
+        "inputTokens": 33,
+        "outputTokens": 557
+      }
+    }
+  },
+  "response": "chat-text.response.json",
+  "format": "JSON",
+  "allowed": [
+    {
+      "kind": "EXTRA",
+      "path": "model",
+      "reason": "required by createChatCompletionResponse in the same 2024-10-21 spec; its example omits it"
+    },
+    {
+      "kind": "EXTRA",
+      "path": "object",
+      "reason": "required by createChatCompletionResponse in the same 2024-10-21 spec; its example omits it"
+    }
+  ]
+}

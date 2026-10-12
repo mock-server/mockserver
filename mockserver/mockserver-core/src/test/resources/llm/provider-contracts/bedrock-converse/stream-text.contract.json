@@ -1,0 +1,39 @@
+{
+  "description": "ConverseStream, streamed text cut off at max_tokens. The guide prints the boto3 event dicts and elides the middle; each printed dict {name: body} is stored as {\"event\": name, \"data\": body}, the same event-type header and JSON payload the event-stream frame carries",
+  "source": "https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html (ConverseStream response, partial example)",
+  "retrieved": "2026-10-12",
+  "request": {
+    "method": "POST",
+    "path": "/model/anthropic.claude-3-sonnet-20240229-v1:0/converse-stream",
+    "body": {
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "text": "Create a list of 3 pop songs."
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "httpLlmResponse": {
+    "provider": "BEDROCK",
+    "model": "anthropic.claude-3-sonnet-20240229-v1:0",
+    "completion": {
+      "text": " Title: The",
+      "stopReason": "max_tokens",
+      "streaming": true,
+      "usage": {
+        "inputTokens": 47,
+        "outputTokens": 20
+      }
+    }
+  },
+  "response": "stream-text.response.events.json",
+  "format": "EVENTS",
+  "wireFormat": "AWS_CONVERSE_EVENT_STREAM",
+  "partial": true,
+  "allowed": []
+}

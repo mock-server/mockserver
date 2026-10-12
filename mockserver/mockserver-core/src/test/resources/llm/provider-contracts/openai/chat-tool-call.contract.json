@@ -1,0 +1,78 @@
+{
+  "description": "Chat Completions, function tool call",
+  "source": "https://github.com/openai/openai-openapi/blob/e95c0fe615f45a19e8878af923a729948445a6bd/openapi.json (paths./chat/completions.post.x-oaiMeta.examples \"Functions\")",
+  "retrieved": "2026-10-12",
+  "request": {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "body": {
+      "model": "gpt-6-astra",
+      "messages": [
+        {
+          "role": "user",
+          "content": "What is the weather like in Boston today?"
+        }
+      ],
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_current_weather",
+            "description": "Get the current weather in a given location",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "string",
+                  "description": "The city and state, e.g. San Francisco, CA"
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": [
+                    "celsius",
+                    "fahrenheit"
+                  ]
+                }
+              },
+              "required": [
+                "location"
+              ]
+            }
+          }
+        }
+      ],
+      "tool_choice": "auto"
+    }
+  },
+  "httpLlmResponse": {
+    "provider": "OPENAI",
+    "model": "gpt-6-astra",
+    "completion": {
+      "toolCalls": [
+        {
+          "name": "get_current_weather",
+          "arguments": "{\n\"location\": \"Boston, MA\"\n}"
+        }
+      ],
+      "usage": {
+        "inputTokens": 82,
+        "outputTokens": 17
+      }
+    }
+  },
+  "response": "chat-tool-call.response.json",
+  "format": "JSON",
+  "allowed": [
+    {
+      "kind": "MISSING",
+      "path": "choices[].logprobs",
+      "reason": "required (nullable) on CreateChatCompletionResponse choices[] in the OpenAI OpenAPI spec; openai-python declares it Optional, so SDKs accept its absence",
+      "openItem": "36"
+    },
+    {
+      "kind": "MISSING",
+      "path": "usage.completion_tokens_details",
+      "reason": "optional in CompletionUsage (requires prompt_tokens, completion_tokens, total_tokens); MockServer adds it when the expectation sets reasoning tokens"
+    }
+  ]
+}

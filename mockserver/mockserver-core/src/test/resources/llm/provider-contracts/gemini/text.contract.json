@@ -1,0 +1,61 @@
+{
+  "description": "generateContent, text reply. The SDK test data records the response only; the request is the documented generateContent shape (https://ai.google.dev/api/generate-content)",
+  "source": "https://github.com/FirebaseExtended/vertexai-sdk-test-data/blob/be42a0137c50bf399243b185e2849294f64c934c/mock-responses/googleai/unary-success-basic-reply-short.json",
+  "retrieved": "2026-10-12",
+  "request": {
+    "method": "POST",
+    "path": "/v1beta/models/gemini-3.1-flash-lite:generateContent",
+    "body": {
+      "contents": [
+        {
+          "role": "user",
+          "parts": [
+            {
+              "text": "Where is Google headquartered?"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "httpLlmResponse": {
+    "provider": "GEMINI",
+    "model": "gemini-3.1-flash-lite",
+    "completion": {
+      "text": "Google's headquarters, also known as the Googleplex, is located in **Mountain View, California**.\n",
+      "usage": {
+        "inputTokens": 7,
+        "outputTokens": 22
+      }
+    }
+  },
+  "response": "text.response.json",
+  "format": "JSON",
+  "allowed": [
+    {
+      "kind": "MISSING",
+      "path": "candidates[].avgLogprobs",
+      "reason": "output-only, optional; MockServer does not model log probabilities"
+    },
+    {
+      "kind": "MISSING",
+      "path": "candidates[].safetyRatings",
+      "reason": "output-only, optional; MockServer reports no safety ratings unless a content-filter block is configured"
+    },
+    {
+      "kind": "MISSING",
+      "path": "usageMetadata.promptTokensDetails",
+      "reason": "output-only per-modality breakdown (Gemini API reference, UsageMetadata); MockServer does not model modalities"
+    },
+    {
+      "kind": "MISSING",
+      "path": "usageMetadata.candidatesTokensDetails",
+      "reason": "output-only per-modality breakdown (Gemini API reference, UsageMetadata); MockServer does not model modalities"
+    },
+    {
+      "kind": "EXTRA",
+      "path": "candidates[].index",
+      "reason": "Candidate.index; the real API sends it too, for example in the recorded thinking-function-call response"
+    }
+  ]
+}

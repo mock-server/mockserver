@@ -41,7 +41,7 @@ Currently registered codecs:
 | ANTHROPIC | `AnthropicCodec` | Complete (no embeddings endpoint) |
 | OPENAI | `OpenAiChatCompletionsCodec` | Complete (chat + embeddings) |
 | OPENAI_RESPONSES | `OpenAiResponsesCodec` | Complete (no embeddings endpoint) |
-| GEMINI | `GeminiCodec` | Complete (chat + embeddings) |
+| GEMINI | `GeminiCodec` | Complete (chat + embeddings). A streamed `streamGenerateContent` reply is SSE only when the request has `?alt=sse`; otherwise it is one JSON array (`StreamingFormat.JSON_ARRAY`, `application/json`: `[`, chunks separated by `,\r\n`, `]`), as the Gemini REST API returns and Google's REST clients (google-api-core `rest_streaming`) parse |
 | BEDROCK | `BedrockCodec` | Complete. Two wire APIs selected per request: InvokeModel (delegates chat to `AnthropicCodec`) and Converse (delegates to `BedrockConverseCodec`); both stream with `application/vnd.amazon.eventstream` binary framing via `BedrockEventStreamEncoder`; automatic AWS SigV4 request signing implemented via `AwsSigV4Signer` on the client path; embeddings = Titan G1/V2 or Cohere v3/v4 by path model, expectation model, then body shape |
 | AZURE_OPENAI | `AzureOpenAiCodec` | Complete (delegates to `OpenAiChatCompletionsCodec`) |
 | OLLAMA | `OllamaCodec` | Complete (chat + embeddings; see security audit for NDJSON wire-format limitation) |
@@ -643,7 +643,7 @@ flowchart LR
 | xAI, DeepSeek, OrcaRouter | read as OpenAI Chat Completions; not separately validated | none |
 | OpenAI Responses | `response.usage` on `response.completed` (or `response.incomplete`) | openai-python `ResponseCompletedEvent`, `ResponseUsage` |
 | Anthropic | `message.usage` on `message_start`, then cumulative `usage` on `message_delta` | anthropic-sdk-python `RawMessageStartEvent`, `MessageDeltaUsage` |
-| Gemini | `usageMetadata` on each chunk, the last one complete; as SSE with `alt=sse`, otherwise one JSON array | Gemini API reference (`UsageMetadata`); the JSON-array form was not checked against a primary source |
+| Gemini | `usageMetadata` on each chunk, the last one complete; as SSE with `alt=sse`, otherwise one JSON array | Gemini API reference (`UsageMetadata`); the JSON-array form against google-api-core `_rest_streaming_base.py`, which Google's REST clients use for `streamGenerateContent` |
 | Bedrock ConverseStream | `usage` on the `metadata` event of the AWS event stream | AWS API reference, ConverseStream |
 | Bedrock InvokeModelWithResponseStream | Anthropic events, each base64 in a `chunk` event's `bytes` | AWS API reference, InvokeModelWithResponseStream |
 | Ollama | `prompt_eval_count` and `eval_count` on the `done: true` line of the NDJSON | Ollama `docs/api.md` |

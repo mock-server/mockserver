@@ -8,6 +8,7 @@ import org.mockserver.llm.JsonEscape;
 import org.mockserver.llm.ParsedConversation;
 import org.mockserver.llm.ParsedMessage;
 import org.mockserver.llm.ProviderCodec;
+import org.mockserver.llm.StreamingFormat;
 import org.mockserver.llm.StreamingPhysicsExpander;
 import org.mockserver.llm.TokenCounter;
 import org.mockserver.model.*;
@@ -41,6 +42,20 @@ public class GeminiCodec implements ProviderCodec {
     @Override
     public String apiVersion() {
         return "v1beta-2025";
+    }
+
+    /**
+     * Gemini streams server-sent events only when the request asks for {@code alt=sse}; otherwise
+     * {@code streamGenerateContent} returns one JSON array of response chunks, which Google's REST
+     * client libraries parse (google-api-core {@code rest_streaming}).
+     */
+    @Override
+    public StreamingFormat streamingFormat(HttpRequest request) {
+        if (request == null || request.getPath() == null || !request.getPath().getValue().contains(":streamGenerateContent")) {
+            return StreamingFormat.SSE;
+        }
+        String alt = request.getFirstQueryStringParameter("alt");
+        return "sse".equalsIgnoreCase(alt) ? StreamingFormat.SSE : StreamingFormat.JSON_ARRAY;
     }
 
     @Override

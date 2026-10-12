@@ -18,7 +18,7 @@ schema_faq:
   - question: "Can I test an AI agent without paying for LLM API calls?"
     answer: "Yes. MockServer returns deterministic, instant LLM responses with no network calls to the real provider. Create an httpLlmResponse expectation with your chosen provider and completion text, point your agent at MockServer instead of the real API endpoint, and every call costs nothing and returns the same result every run — ideal for CI pipelines."
   - question: "Does MockServer support streaming (SSE) LLM responses?"
-    answer: "Yes. Set streaming to true on the completion object. MockServer splits the text into token-sized chunks and emits them as Server-Sent Events in the provider's native streaming format (SSE for OpenAI, Anthropic, and Gemini; NDJSON for Ollama). Use the streamingPhysics field to control time-to-first-token, tokens-per-second rate, and jitter for realistic timing."
+    answer: "Yes. Set streaming to true on the completion object. MockServer splits the text into token-sized chunks and emits them as Server-Sent Events in the provider's native streaming format (SSE for OpenAI and Anthropic; SSE for Gemini when the request has ?alt=sse, otherwise a JSON array; NDJSON for Ollama). Use the streamingPhysics field to control time-to-first-token, tokens-per-second rate, and jitter for realistic timing."
   - question: "Which LLM providers can MockServer mock?"
     answer: "MockServer supports OPENAI (Chat Completions), OPENAI_RESPONSES (Responses API), ANTHROPIC, GEMINI, BEDROCK (AWS Bedrock: the Converse API for /converse and /converse-stream requests, the InvokeModel Anthropic Claude body for /invoke requests, both streaming with binary event-stream framing), AZURE_OPENAI, OLLAMA, COHERE (rerank), and VOYAGE (rerank), plus the OpenAI-chat-compatible providers MISTRAL, XAI, DEEPSEEK, GROQ, OPENROUTER, and ORCAROUTER. Each provider value produces the wire format that the corresponding SDK expects, including correct headers and JSON structure."
   - question: "How do I mock tool/function calls from an LLM?"
@@ -643,6 +643,9 @@ curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     a stream instead of a single JSON response.
     MockServer splits the text into token-sized chunks and sends them as streaming
     chunks in the provider's native streaming format (SSE for most providers; NDJSON for Ollama; binary AWS event-stream for Bedrock).
+    Gemini follows the request, as the real API does: a <span class="inline_code">streamGenerateContent</span> request with
+    <span class="inline_code">?alt=sse</span> gets SSE, and one without it gets a single JSON array of response chunks
+    (<span class="inline_code">application/json</span>), which is what Google's REST client libraries expect.
 </p>
 
 <p>

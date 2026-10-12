@@ -866,9 +866,9 @@ public class LlmAgentLoopE2eTest {
             .applyTo(mockServerClient);
 
         String body = "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"Hi\"}]}]}";
-        String rawResponse = sendPost("/v1beta/models/gemini-1.5-pro:streamGenerateContent", body);
+        String rawResponse = sendPost("/v1beta/models/gemini-1.5-pro:streamGenerateContent?alt=sse", body);
 
-        // (a) Gemini streams as Server-Sent Events (text/event-stream).
+        // (a) With ?alt=sse Gemini streams as Server-Sent Events (text/event-stream).
         assertThat(rawResponse, containsString("200"));
         assertThat(rawResponse, containsString("text/event-stream"));
         assertThat(rawResponse, containsString("\"candidates\""));
@@ -877,6 +877,40 @@ public class LlmAgentLoopE2eTest {
         // deltas (subword-sized by default). Concatenating them must reconstruct the
         // completion text exactly.
         assertThat(reconstructFromJsonStringField(rawResponse, "text"), is(completionText));
+    }
+
+    @Test
+    public void shouldStreamGeminiJsonArrayWithoutAltSseThroughNettyPipeline() throws Exception {
+        // Without ?alt=sse the Gemini REST API streams one JSON array of response chunks.
+        String completionText = "Hello from streaming Gemini";
+        llmMock("/v1beta/models/gemini-1.5-pro:streamGenerateContent")
+            .withProvider(GEMINI)
+            .withModel("gemini-1.5-pro")
+            .respondingWith(completion()
+                .withText(completionText)
+                .withStreaming(true))
+            .applyTo(mockServerClient);
+
+        String body = "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"Hi\"}]}]}";
+        byte[] rawBytes = sendPostRaw("/v1beta/models/gemini-1.5-pro:streamGenerateContent", body);
+
+        int headerEnd = indexOfSequence(rawBytes, "\r\n\r\n".getBytes(StandardCharsets.US_ASCII), 0);
+        assertThat("response must have a header/body boundary", headerEnd, greaterThanOrEqualTo(0));
+        String headerText = new String(rawBytes, 0, headerEnd, StandardCharsets.US_ASCII);
+        assertThat(headerText, containsString("200"));
+        assertThat(headerText.toLowerCase(), containsString("content-type: application/json"));
+
+        byte[] payload = deChunkHttpBody(java.util.Arrays.copyOfRange(rawBytes, headerEnd + 4, rawBytes.length));
+        String json = new String(payload, StandardCharsets.UTF_8);
+        assertThat(json, startsWith("["));
+        JsonNode chunks = new ObjectMapper().readTree(json);
+        assertThat(chunks.isArray(), is(true));
+        StringBuilder text = new StringBuilder();
+        for (JsonNode chunk : chunks) {
+            text.append(chunk.path("candidates").path(0).path("content").path("parts").path(0).path("text").asText(""));
+        }
+        assertThat(text.toString(), is(completionText));
+        assertThat(chunks.get(chunks.size() - 1).path("candidates").path(0).path("finishReason").asText(), is("STOP"));
     }
 
     @Test

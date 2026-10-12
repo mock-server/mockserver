@@ -1,0 +1,68 @@
+{
+  "description": "Chat Completions, text reply",
+  "source": "https://github.com/openai/openai-openapi/blob/e95c0fe615f45a19e8878af923a729948445a6bd/openapi.json (paths./chat/completions.post.x-oaiMeta.examples \"Default\")",
+  "retrieved": "2026-10-12",
+  "request": {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "body": {
+      "model": "gpt-6-astra",
+      "messages": [
+        {
+          "role": "developer",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "user",
+          "content": "Hello!"
+        }
+      ]
+    }
+  },
+  "httpLlmResponse": {
+    "provider": "OPENAI",
+    "model": "gpt-6-astra",
+    "completion": {
+      "text": "Hello! How can I assist you today?",
+      "usage": {
+        "inputTokens": 19,
+        "outputTokens": 10
+      }
+    }
+  },
+  "response": "chat-text.response.json",
+  "format": "JSON",
+  "allowed": [
+    {
+      "kind": "MISSING",
+      "path": "choices[].logprobs",
+      "reason": "required (nullable) on CreateChatCompletionResponse choices[] in the OpenAI OpenAPI spec; openai-python declares it Optional, so SDKs accept its absence",
+      "openItem": "36"
+    },
+    {
+      "kind": "MISSING",
+      "path": "choices[].message.annotations",
+      "reason": "optional: ChatCompletionResponseMessage requires only role and content; the API adds annotations for web search results"
+    },
+    {
+      "kind": "MISSING",
+      "path": "choices[].message.refusal",
+      "reason": "optional: not in ChatCompletionResponseMessage's required list; openai-python declares it Optional"
+    },
+    {
+      "kind": "MISSING",
+      "path": "service_tier",
+      "reason": "optional: not in CreateChatCompletionResponse's required list; openai-python declares it Optional"
+    },
+    {
+      "kind": "MISSING",
+      "path": "usage.completion_tokens_details",
+      "reason": "optional in CompletionUsage (requires prompt_tokens, completion_tokens, total_tokens); MockServer adds it when the expectation sets reasoning tokens"
+    },
+    {
+      "kind": "MISSING",
+      "path": "usage.prompt_tokens_details",
+      "reason": "optional in CompletionUsage; MockServer adds it when the expectation sets cached input tokens"
+    }
+  ]
+}

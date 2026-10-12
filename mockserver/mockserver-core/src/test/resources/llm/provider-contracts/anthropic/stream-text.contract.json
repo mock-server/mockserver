@@ -1,0 +1,39 @@
+{
+  "description": "Messages API, streamed text reply",
+  "source": "https://platform.claude.com/docs/en/build-with-claude/streaming (Full HTTP stream response, Basic streaming request)",
+  "retrieved": "2026-10-12",
+  "request": {
+    "method": "POST",
+    "path": "/v1/messages",
+    "body": {
+      "model": "claude-opus-5-5",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Hello"
+        }
+      ],
+      "max_tokens": 256,
+      "stream": true
+    }
+  },
+  "httpLlmResponse": {
+    "provider": "ANTHROPIC",
+    "model": "claude-opus-5-5",
+    "completion": {
+      "text": "Hello!",
+      "streaming": true,
+      "usage": {
+        "inputTokens": 25,
+        "outputTokens": 15
+      }
+    }
+  },
+  "response": "stream-text.response.sse",
+  "format": "SSE",
+  "wireFormat": "SSE",
+  "ignoreRealEvents": {
+    "ping": "a keep-alive the API may send at any point; the Messages streaming docs tell clients to handle it, so a stream without one is valid"
+  },
+  "allowed": []
+}

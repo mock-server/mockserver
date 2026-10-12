@@ -19,11 +19,16 @@ package org.mockserver.llm;
  *       {@code :event-type} header is the event name ({@code messageStart},
  *       {@code contentBlockDelta}, ...) and the payload is the event's raw JSON,
  *       with no base64 {@code bytes} wrapper.</li>
+ *   <li>{@link #JSON_ARRAY} — one JSON array written incrementally
+ *       ({@code application/json}): {@code [} before the first chunk, {@code ,\r\n}
+ *       between chunks and {@code ]} at the end. Used by Gemini
+ *       {@code streamGenerateContent} when the request does not ask for {@code alt=sse}.</li>
  * </ul>
  */
 public enum StreamingFormat {
     SSE,
     NDJSON,
     AWS_EVENT_STREAM,
-    AWS_CONVERSE_EVENT_STREAM
+    AWS_CONVERSE_EVENT_STREAM,
+    JSON_ARRAY
 }

@@ -1,0 +1,73 @@
+{
+  "description": "generateContent, thought summary then a function call. The SDK test data records the response only; the request is the documented generateContent shape with a function declaration",
+  "source": "https://github.com/FirebaseExtended/vertexai-sdk-test-data/blob/be42a0137c50bf399243b185e2849294f64c934c/mock-responses/googleai/unary-success-thinking-function-call-thought-summary-signature.json",
+  "retrieved": "2026-10-12",
+  "request": {
+    "method": "POST",
+    "path": "/v1beta/models/gemini-2.5-pro:generateContent",
+    "body": {
+      "contents": [
+        {
+          "role": "user",
+          "parts": [
+            {
+              "text": "How many days until New Year's Eve?"
+            }
+          ]
+        }
+      ],
+      "tools": [
+        {
+          "functionDeclarations": [
+            {
+              "name": "now",
+              "description": "Returns the current date and time"
+            }
+          ]
+        }
+      ],
+      "generationConfig": {
+        "thinkingConfig": {
+          "includeThoughts": true
+        }
+      }
+    }
+  },
+  "httpLlmResponse": {
+    "provider": "GEMINI",
+    "model": "gemini-2.5-pro",
+    "completion": {
+      "reasoningText": "**Thinking Through the New Year's Eve Calculation**",
+      "toolCalls": [
+        {
+          "name": "now",
+          "arguments": "{}"
+        }
+      ],
+      "usage": {
+        "inputTokens": 38,
+        "outputTokens": 8,
+        "reasoningTokens": 501
+      }
+    }
+  },
+  "response": "thinking-function-call.response.json",
+  "format": "JSON",
+  "allowed": [
+    {
+      "kind": "MISSING",
+      "path": "candidates[].content.parts[].thoughtSignature",
+      "reason": "an opaque token the real API checks when a client sends it back; MockServer issues none and SDKs pass it through only when present"
+    },
+    {
+      "kind": "MISSING",
+      "path": "responseId",
+      "reason": "output-only, optional (Gemini API reference, GenerateContentResponse)"
+    },
+    {
+      "kind": "MISSING",
+      "path": "usageMetadata.promptTokensDetails",
+      "reason": "output-only per-modality breakdown (Gemini API reference, UsageMetadata); MockServer does not model modalities"
+    }
+  ]
+}
