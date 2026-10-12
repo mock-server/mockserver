@@ -2,6 +2,7 @@ package org.mockserver.llm.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.LongNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.netty.buffer.ByteBuf;
 import org.mockserver.serialization.ObjectMapperFactory;
@@ -20,7 +21,7 @@ import java.util.Map;
  * <p>
  * Bounded whatever the stream sends: one captured value of at most {@link #MAX_VALUE_BYTES} bytes
  * (a larger one is dropped), and a merged usage of at most {@value #MAX_USAGE_FIELDS} fields, each a
- * whole number or an object of at most {@value #MAX_USAGE_DETAIL_FIELDS} whole numbers, under
+ * count or an object of at most {@value #MAX_USAGE_DETAIL_FIELDS} counts, under
  * names of at most {@value #MAX_USAGE_NAME_CHARS} characters (under 64 KiB as JSON text).
  * Not thread-safe; {@link #accept} never throws.
  */
@@ -37,6 +38,10 @@ public final class LlmStreamUsageScanner {
     public static final int MAX_USAGE_NAME_CHARS = 64;
     /** The longest model name or stop reason kept; a longer one is ignored. */
     public static final int MAX_TEXT_CHARS = 128;
+    // a count sent as text is parsed only up to this length
+    private static final int MAX_COUNT_TEXT_CHARS = 32;
+    // Long.MAX_VALUE has 19 digits
+    private static final int MAX_COUNT_WHOLE_DIGITS = 19;
     // an AWS event stream message is at most 16 MiB of payload and 128 KiB of headers
     private static final int MAX_EVENT_STREAM_MESSAGE_BYTES = 16 * 1024 * 1024 + 128 * 1024 + 16;
     private static final byte[] SSE_DATA_FIELD = {'d', 'a', 't', 'a'};
@@ -317,7 +322,8 @@ public final class LlmStreamUsageScanner {
                 break;
             case PROMPT_EVAL_COUNT:
             case EVAL_COUNT:
-                if (isCount(value) && keep(name.text, value)) {
+                JsonNode count = count(value);
+                if (count != null && keep(name.text, count)) {
                     finalUsageSeen = true;
                 }
                 break;
@@ -345,8 +351,42 @@ public final class LlmStreamUsageScanner {
         return value.isTextual() && !value.asText().isEmpty() && value.asText().length() <= MAX_TEXT_CHARS;
     }
 
-    private static boolean isCount(JsonNode value) {
-        return value.isIntegralNumber() && value.canConvertToLong();
+    /**
+     * A token count as a whole number, read as the whole-response path reads it ({@code JsonNode.asInt()}):
+     * a decimal is truncated and a numeric string is parsed. Anything else is not a count. The size of the
+     * whole part is checked from precision and scale before converting, because a short value such as
+     * {@code 1e30000000} would otherwise expand to millions of digits on the event loop.
+     *
+     * @return the count, or null when the value is not one
+     */
+    private static JsonNode count(JsonNode value) {
+        if (value.isIntegralNumber()) {
+            return value.canConvertToLong() ? value : null;
+        }
+        java.math.BigDecimal number;
+        if (value.isNumber()) {
+            if (!Double.isFinite(value.doubleValue())) {
+                return null;
+            }
+            number = value.decimalValue();
+        } else if (value.isTextual() && value.asText().trim().length() <= MAX_COUNT_TEXT_CHARS) {
+            try {
+                number = new java.math.BigDecimal(value.asText().trim());
+            } catch (NumberFormatException notANumber) {
+                return null;
+            }
+        } else {
+            return null;
+        }
+        long wholeDigits = (long) number.precision() - number.scale();
+        if (wholeDigits <= 0) {
+            return LongNode.valueOf(0);
+        }
+        if (wholeDigits > MAX_COUNT_WHOLE_DIGITS) {
+            return null;
+        }
+        java.math.BigInteger whole = number.toBigInteger();
+        return whole.bitLength() < Long.SIZE ? LongNode.valueOf(whole.longValue()) : null;
     }
 
     // a field already kept is replaced; a new one is refused once the usage is full
@@ -365,7 +405,7 @@ public final class LlmStreamUsageScanner {
     }
 
     /**
-     * Merge one usage event into the usage kept for the stream. Only whole-number counts are kept,
+     * Merge one usage event into the usage kept for the stream. Only counts are kept, as whole numbers,
      * directly or one object down, so the usage kept cannot grow with the stream: a null, text or
      * array field is ignored and leaves the value an earlier event gave.
      *
@@ -376,7 +416,10 @@ public final class LlmStreamUsageScanner {
         Iterator<Map.Entry<String, JsonNode>> fields = update.fields();
         while (fields.hasNext()) {
             Map.Entry<String, JsonNode> field = fields.next();
-            JsonNode counts = isCount(field.getValue()) ? field.getValue() : counts(field.getValue());
+            JsonNode counts = count(field.getValue());
+            if (counts == null) {
+                counts = counts(field.getValue());
+            }
             if (counts != null && keep(field.getKey(), counts)) {
                 merged = true;
             }
@@ -393,8 +436,9 @@ public final class LlmStreamUsageScanner {
         Iterator<Map.Entry<String, JsonNode>> fields = details.fields();
         while (fields.hasNext() && counts.size() < MAX_USAGE_DETAIL_FIELDS) {
             Map.Entry<String, JsonNode> field = fields.next();
-            if (isCount(field.getValue()) && field.getKey().length() <= MAX_USAGE_NAME_CHARS) {
-                counts.set(field.getKey(), field.getValue());
+            JsonNode count = count(field.getValue());
+            if (count != null && field.getKey().length() <= MAX_USAGE_NAME_CHARS) {
+                counts.set(field.getKey(), count);
             }
         }
         return counts.isEmpty() ? null : counts;

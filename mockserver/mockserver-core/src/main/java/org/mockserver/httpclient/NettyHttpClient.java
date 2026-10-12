@@ -164,8 +164,8 @@ public class NettyHttpClient {
      * Codex backend used by the opencode CLI ({@code chatgpt.com/backend-api/codex/responses}),
      * whose SSE response carries no content-type at all; without this hint MockServer would
      * aggregate the whole 10–30s stream and the client would time out waiting for response headers.
-     * Detected from the client's own intent: an {@code Accept: text/event-stream} header, or a JSON
-     * request body containing {@code "stream": true}.
+     * Detected from the client's own intent: an {@code Accept: text/event-stream} header, a JSON
+     * request body containing {@code "stream": true}, or a Gemini {@code :streamGenerateContent} path.
      */
     static boolean requestExpectsStreamingResponse(HttpRequest request) {
         if (request == null) {
@@ -173,6 +173,9 @@ public class NettyHttpClient {
         }
         String accept = request.getFirstHeader("accept");
         if (accept != null && accept.toLowerCase().contains("text/event-stream")) {
+            return true;
+        }
+        if (request.getPath() != null && org.mockserver.codec.StreamingAwareHttpObjectAggregator.isStreamingRequestPath(request.getPath().getValue())) {
             return true;
         }
         String contentType = request.getFirstHeader("content-type");

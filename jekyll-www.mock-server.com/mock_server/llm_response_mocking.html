@@ -1293,8 +1293,10 @@ geminiLive()
         </tr>
         <tr>
             <td>AWS Bedrock</td>
-            <td>Always sent by ConverseStream, for every model. Tokens are counted, but a Converse call is not
-                yet priced, so it does not add to the budget. For InvokeModelWithResponseStream only Anthropic
+            <td>Always sent by ConverseStream, for every model. The price comes from the model named in the request
+                path, including a cross-Region inference profile such as
+                <span class="inline_code">us.anthropic.claude-...</span>; only Anthropic Claude models have a price, so
+                other models are counted in tokens only. For InvokeModelWithResponseStream only Anthropic
                 models are counted; streams from other model families (Nova, Titan, Llama, Mistral) are
                 <strong>not counted</strong>.</td>
         </tr>
@@ -1314,8 +1316,11 @@ geminiLive()
 </table>
 
 <p>
-    Calls through <span class="inline_code">proxyPassMappings</span> reverse-proxy routes are blocked once the
-    budget is exceeded, but are not yet counted towards it.
+    Calls through <span class="inline_code">proxyPassMappings</span> reverse-proxy routes are counted the same way,
+    by the host the mapping forwards to. Only completions are counted: a stream from another endpoint of an LLM
+    host, such as Ollama's <span class="inline_code">/api/pull</span> download progress, is relayed but not
+    treated as an LLM call. Behind a gateway or private endpoint that is not a known provider host, set
+    <span class="inline_code">llmProvider</span> so Gemini and Bedrock calls through it are recognised and counted.
 </p>
 
 <a id="moderation" class="anchor" href="#moderation">&nbsp;</a>

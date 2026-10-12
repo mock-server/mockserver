@@ -406,4 +406,47 @@ public class StreamingAwareHttpObjectAggregatorTest {
             streaming.finishAndReleaseAll();
         }
     }
+
+    @Test
+    public void shouldDetectBedrockAndOllamaStreamsByTheirContentType() {
+        for (String contentType : new String[]{"application/vnd.amazon.eventstream", "application/x-ndjson", "application/x-ndjson; charset=utf-8", "Application/X-NDJSON"}) {
+            DefaultHttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+            response.headers().set(HttpHeaderNames.CONTENT_TYPE, contentType);
+
+            assertThat(contentType, StreamingAwareHttpObjectAggregator.isStreamingResponse(response), is(true));
+        }
+    }
+
+    @Test
+    public void shouldRelayAnAwsEventStreamAndAnNdjsonResponseAsStreams() {
+        for (String contentType : new String[]{"application/vnd.amazon.eventstream", "application/x-ndjson"}) {
+            Configuration configuration = new Configuration();
+            configuration.streamingResponsesEnabled(true);
+            EmbeddedChannel channel = new EmbeddedChannel(new StreamingAwareHttpObjectAggregator(Integer.MAX_VALUE, configuration, null));
+            CompletableFuture<Message> responseFuture = new CompletableFuture<>();
+            channel.attr(AttributeKey.<CompletableFuture<Message>>valueOf("RESPONSE_FUTURE")).set(responseFuture);
+            try {
+                DefaultHttpResponse head = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+                head.headers().set(HttpHeaderNames.CONTENT_TYPE, contentType);
+                HttpUtil.setTransferEncodingChunked(head, true);
+                channel.writeInbound(head);
+
+                assertThat(contentType + " head relayed before its body", responseFuture.isDone(), is(true));
+                org.mockserver.model.StreamingBody body = ((org.mockserver.model.HttpResponse) responseFuture.getNow(null)).getStreamingBody();
+                assertThat(contentType, body, notNullValue());
+                List<String> relayed = new ArrayList<>();
+                body.subscribe(chunk -> relayed.add(chunk.toString(StandardCharsets.UTF_8)), () -> {
+                }, error -> {
+                });
+                channel.writeInbound(new DefaultHttpContent(Unpooled.copiedBuffer("{\"done\":false}\n", StandardCharsets.UTF_8)));
+
+                assertThat(contentType + " first chunk relayed before the response ends", relayed, contains("{\"done\":false}\n"));
+                channel.writeInbound(new DefaultLastHttpContent(Unpooled.copiedBuffer("{\"done\":true}\n", StandardCharsets.UTF_8)));
+                assertThat(contentType, relayed, contains("{\"done\":false}\n", "{\"done\":true}\n"));
+                assertThat(channel.readInbound(), is(nullValue()));
+            } finally {
+                channel.finishAndReleaseAll();
+            }
+        }
+    }
 }

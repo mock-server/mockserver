@@ -216,8 +216,8 @@ public class LlmStreamUsageScannerTest {
         LlmStreamUsageScanner scanner = scan(utf8("data: {\"usage\":{\"cpu\":87,\"memory\":40}}\n\n"));
 
         assertThat(usage(Provider.OPENAI, scanner), is(expected(null, null, null, null, null)));
-        // and a usage object with no whole-number count at all is not kept
-        assertThat(scan(utf8("data: {\"usage\":{\"cpu\":0.87,\"tier\":\"gold\",\"hosts\":[1,2],\"none\":null,\"empty\":{}}}\n\n")).usage(), is(nullValue()));
+        // and a usage object with no count at all is not kept
+        assertThat(scan(utf8("data: {\"usage\":{\"cpu\":\"87%\",\"tier\":\"gold\",\"hosts\":[1,2],\"none\":null,\"empty\":{}}}\n\n")).usage(), is(nullValue()));
     }
 
     @Test
@@ -331,7 +331,7 @@ public class LlmStreamUsageScannerTest {
         assertThat(scan(eventStreamWithAbsurdLength, noise).usage(), is(nullValue()));
         assertThat(scan(eventStreamWithHeadersLongerThanMessage, noise).usage(), is(nullValue()));
         assertThat(scan(utf8("data: {\"usage\":}\n\ndata: {\"usage\":{\"prompt_tokens\":\n\ndata: {\"usage\":{{{{\n\n")).usage(), is(nullValue()));
-        assertThat(scan(utf8("{\"prompt_eval_count\":\"26\",\"eval_count\":{\"n\":282}}\n")).usage(), is(nullValue()));
+        assertThat(scan(utf8("{\"prompt_eval_count\":\"twenty-six\",\"eval_count\":{\"n\":282}}\n")).usage(), is(nullValue()));
         assertThat(scan(utf8("")).usage(), is(nullValue()));
     }
 
@@ -365,5 +365,66 @@ public class LlmStreamUsageScannerTest {
 
         assertThat(scanner.streamed(), is(false));
         assertThat(usage(Provider.OPENAI, scanner), is(expected(1, 2, null, null, null)));
+    }
+
+    @Test
+    public void shouldKeepAUsageFieldNamedUpToTheBoundAndDropALongerOne() {
+        String atBound = "t".repeat(LlmStreamUsageScanner.MAX_USAGE_NAME_CHARS);
+        String overBound = "t".repeat(LlmStreamUsageScanner.MAX_USAGE_NAME_CHARS + 1);
+        LlmStreamUsageScanner scanner = scan(utf8("data: {\"usage\":{\"" + atBound + "\":5,\"" + overBound + "\":6,"
+            + "\"prompt_tokens_details\":{\"" + atBound + "\":7,\"" + overBound + "\":8},\"prompt_tokens\":3}}\n\n"));
+
+        assertThat(scanner.usage().has(atBound), is(true));
+        assertThat(scanner.usage().has(overBound), is(false));
+        assertThat(scanner.usage().get("prompt_tokens_details").has(atBound), is(true));
+        assertThat(scanner.usage().get("prompt_tokens_details").has(overBound), is(false));
+        assertThat(scanner.usage().get("prompt_tokens").asInt(), is(3));
+        // the same bound applies to Ollama's top-level counts, which are kept under their own names
+        assertThat(scan(utf8("{\"" + overBound + "\":9}\n")).usage(), is(nullValue()));
+    }
+
+    @Test
+    public void shouldReadADecimalOrNumericStringCountAsTheWholeResponsePathDoes() {
+        String[] counts = {"12.0", "12.7", "\"150\"", "\" 7 \"", "\"1e3\"", "0.4", "\"1e-100000000\""};
+        for (String count : counts) {
+            String usage = "\"usage\":{\"prompt_tokens\":" + count + ",\"completion_tokens\":" + count
+                + ",\"prompt_tokens_details\":{\"cached_tokens\":" + count + "}}";
+            Usage wholeResponse = new OpenAiLlmClient().parseCompletionResponse(response().withBody(
+                "{\"model\":\"gpt-4o\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"hi\"},\"finish_reason\":\"stop\"}]," + usage + "}")).getUsage();
+            Usage streamed = usage(Provider.OPENAI, scan(utf8("data: {\"model\":\"gpt-4o\",\"choices\":[]," + usage + "}\n\ndata: [DONE]\n\n")));
+
+            assertThat(count, streamed, is(wholeResponse));
+            assertThat(count, streamed.getInputTokens(), is(wholeResponse.getInputTokens()));
+        }
+        Usage ollamaWhole = new OllamaLlmClient().parseCompletionResponse(response().withBody(
+            "{\"model\":\"llama3.2\",\"message\":{\"role\":\"assistant\",\"content\":\"\"},\"done\":true,\"prompt_eval_count\":\"26\",\"eval_count\":282.0}")).getUsage();
+        Usage ollamaStreamed = usage(Provider.OLLAMA, scan(utf8(
+            "{\"model\":\"llama3.2\",\"done\":false}\n{\"model\":\"llama3.2\",\"done\":true,\"prompt_eval_count\":\"26\",\"eval_count\":282.0}\n")));
+        assertThat(ollamaStreamed, is(expected(26, 282, null, null, null)));
+        assertThat(ollamaStreamed, is(ollamaWhole));
+    }
+
+    @Test
+    public void shouldNotReadAStringThatIsNotANumberOrACountTooLargeToHold() {
+        LlmStreamUsageScanner scanner = scan(utf8("data: {\"usage\":{\"prompt_tokens\":\"many\",\"completion_tokens\":1e300,"
+            + "\"total_tokens\":\"" + "9".repeat(40) + "\",\"cached\":\"\"}}\n\n"));
+
+        assertThat(scanner.usage(), is(nullValue()));
+    }
+
+    // a short exponent must not be expanded to millions of digits on the event loop
+    @Test(timeout = 3_000)
+    public void shouldRejectACountWithAHugeExponentWithoutExpandingIt() {
+        LlmStreamUsageScanner scanner = scan(utf8("data: {\"usage\":{\"prompt_tokens\":\"1e30000000\",\"completion_tokens\":\"-1e30000000\"}}\n\n"));
+
+        assertThat(scanner.usage(), is(nullValue()));
+    }
+
+    @Test(timeout = 3_000)
+    public void shouldReadACountWithAHugeNegativeExponentAsZeroWithoutExpandingIt() {
+        LlmStreamUsageScanner scanner = scan(utf8("data: {\"usage\":{\"prompt_tokens\":\"1e-100000000\",\"completion_tokens\":1e-100000000}}\n\n"));
+
+        assertThat(scanner.usage().get("prompt_tokens").asLong(), is(0L));
+        assertThat(scanner.usage().get("completion_tokens").asLong(), is(0L));
     }
 }

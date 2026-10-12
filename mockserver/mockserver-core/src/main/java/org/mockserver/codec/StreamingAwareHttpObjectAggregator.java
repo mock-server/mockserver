@@ -38,8 +38,8 @@ import java.util.regex.Pattern;
  * When streaming is not detected (or not enabled), the handler delegates to
  * {@link HttpObjectAggregator} so the non-streaming path stays byte-identical.
  * <p>
- * Only the {@code text/event-stream} content type triggers streaming detection.
- * Ordinary chunked responses (e.g. Tomcat/servlet responses that use chunked
+ * An event-stream content type (see {@link #isStreamingResponse}) or a request that asked for a
+ * stream triggers streaming detection. Ordinary chunked responses (e.g. Tomcat/servlet responses that use chunked
  * transfer-encoding without {@code Content-Length}) are aggregated normally.
  */
 public class StreamingAwareHttpObjectAggregator extends CoalescingHttpObjectAggregator {
@@ -98,21 +98,34 @@ public class StreamingAwareHttpObjectAggregator extends CoalescingHttpObjectAggr
     }
 
     /**
-     * A response should be relayed as a stream rather than aggregated when it is a
-     * Server-Sent Events stream ({@code Content-Type: text/event-stream}).
+     * A response should be relayed as a stream rather than aggregated when its content type is a
+     * stream of events: Server-Sent Events ({@code text/event-stream}, used by Anthropic, OpenAI and
+     * MCP streamable-HTTP), the AWS event stream ({@code application/vnd.amazon.eventstream}, used by
+     * Bedrock's streaming APIs) or newline-delimited JSON ({@code application/x-ndjson}, used by Ollama).
      * <p>
-     * Only SSE responses are detected as streaming. Ordinary chunked responses
-     * (e.g. those produced by servlet containers like Tomcat, which strip
-     * {@code Content-Length} and use chunked transfer-encoding for all responses)
-     * are aggregated normally. Real streaming APIs — Anthropic, OpenAI, and MCP
-     * streamable-HTTP — all use {@code text/event-stream}.
+     * Ordinary chunked responses (e.g. those produced by servlet containers like Tomcat, which strip
+     * {@code Content-Length} and use chunked transfer-encoding for all responses) are aggregated normally.
      *
      * @param response the response head (status line and headers)
      * @return true when the response body should be streamed through incrementally
      */
     public static boolean isStreamingResponse(HttpResponse response) {
         String contentType = response.headers().get(HttpHeaderNames.CONTENT_TYPE);
-        return contentType != null && contentType.toLowerCase(Locale.US).contains("text/event-stream");
+        if (contentType == null) {
+            return false;
+        }
+        String lowerContentType = contentType.toLowerCase(Locale.US);
+        return lowerContentType.contains("text/event-stream")
+            || lowerContentType.contains("application/vnd.amazon.eventstream")
+            || lowerContentType.contains("application/x-ndjson");
+    }
+
+    /**
+     * Whether the request path names Gemini's streaming method, whose response is a JSON array sent
+     * an element at a time with {@code Content-Type: application/json} unless {@code alt=sse} is set.
+     */
+    public static boolean isStreamingRequestPath(String path) {
+        return path != null && path.toLowerCase(Locale.US).contains(":streamgeneratecontent");
     }
 
     /**
@@ -186,6 +199,9 @@ public class StreamingAwareHttpObjectAggregator extends CoalescingHttpObjectAggr
         if (accept != null && accept.toLowerCase(Locale.US).contains("text/event-stream")) {
             return true;
         }
+        if (isStreamingRequestPath(requestPath(request.uri()))) {
+            return true;
+        }
         String contentType = request.headers().get(HttpHeaderNames.CONTENT_TYPE);
         if (contentType != null && contentType.toLowerCase(Locale.US).contains("json")
             && request instanceof FullHttpRequest) {
@@ -201,6 +217,16 @@ public class StreamingAwareHttpObjectAggregator extends CoalescingHttpObjectAggr
             }
         }
         return false;
+    }
+
+    // a malformed percent-escape must not stop the request being relayed, so fall back to the raw path
+    private static String requestPath(String uri) {
+        QueryStringDecoder decoder = new QueryStringDecoder(uri);
+        try {
+            return decoder.path();
+        } catch (IllegalArgumentException malformedEscape) {
+            return decoder.rawPath();
+        }
     }
 
     private static final int SCAN_SLICE_BYTES = 1024;

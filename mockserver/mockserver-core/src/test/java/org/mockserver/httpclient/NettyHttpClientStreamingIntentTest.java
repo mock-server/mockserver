@@ -79,4 +79,16 @@ public class NettyHttpClientStreamingIntentTest {
     public void handlesRequestWithNoBodyOrHeaders() {
         assertThat(NettyHttpClient.requestExpectsStreamingResponse(request()), is(false));
     }
+
+    @Test
+    public void detectsGeminisStreamingMethodWhichSendsItsJsonArrayAsApplicationJson() {
+        assertThat(NettyHttpClient.requestExpectsStreamingResponse(
+            request().withPath("/v1beta/models/gemini-2.5-flash:streamGenerateContent")
+                .withHeader("content-type", "application/json").withBody("{\"contents\":[]}")), is(true));
+        assertThat(NettyHttpClient.requestExpectsStreamingResponse(
+            request().withPath("/v1/projects/p/locations/us-central1/publishers/google/models/gemini-2.5-pro:streamGenerateContent")), is(true));
+        assertThat(NettyHttpClient.requestExpectsStreamingResponse(
+            request().withPath("/v1beta/models/gemini-2.5-flash:generateContent")
+                .withHeader("content-type", "application/json").withBody("{\"contents\":[]}")), is(false));
+    }
 }

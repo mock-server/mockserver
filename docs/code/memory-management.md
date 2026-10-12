@@ -410,7 +410,7 @@ more than the same limit of decoded bytes not yet written to the client: past it
 | Request, every inbound protocol (HTTP/1.1, HTTP/2, HTTP/3) and the relay's streaming scan | `MockServerHttpContentDecompressor` | `maxRequestBodySize` (`413`) |
 | Forwarded response, HTTP/1.1 and HTTP/2 (`HttpClientInitializer`, `Http2ForwardStreamChildInitializer`) | `BoundedZstdHttpContentDecompressor` | `maxResponseBodySize` (`502`) |
 | MockServer's own response on the CONNECT relay's loopback, HTTP/1.1 / HTTP/2 (`RelayConnectHandler`) | `BoundedZstdHttpContentDecompressor` / `BoundedZstdDecompressorFrameListener` | `maxRequestBodySize` |
-| Streamed response (`text/event-stream`, or a client that asked to stream) | the forward client's or the relay's, as above | bytes not yet written to the client: `maxResponseBodySize` (forward) or `maxRequestBodySize` (relay), then the stream is aborted |
+| Streamed response (`text/event-stream`, `application/vnd.amazon.eventstream`, `application/x-ndjson`, or a client that asked to stream) | the forward client's or the relay's, as above | bytes not yet written to the client: `maxResponseBodySize` (forward) or `maxRequestBodySize` (relay), then the stream is aborted |
 
 Both limits are read as at least 1 byte (`Configuration` and `ConfigurationProperties` clamp them), so
 every consumer sees the same positive limit. An aggregator refuses every body at a limit of 0 and cannot be

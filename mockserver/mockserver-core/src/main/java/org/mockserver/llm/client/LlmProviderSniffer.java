@@ -84,9 +84,30 @@ public final class LlmProviderSniffer {
         "/embeddings",
         "/v1/",
         ":generatecontent",
+        ":streamgeneratecontent",
         "/api/generate",
         "/api/chat",
     };
+
+    /**
+     * Path fragments of the endpoints that return a model's completion, the only responses whose
+     * stream is accounted as an LLM call. Checked case-insensitively; Bedrock and Cohere chat are
+     * matched by pattern.
+     */
+    private static final String[] COMPLETION_PATH_FRAGMENTS = {
+        "/chat/completions",
+        "/completions",
+        "/responses",
+        "/messages",
+        ":generatecontent",
+        ":streamgeneratecontent",
+        "/api/generate",
+        "/api/chat",
+    };
+    private static final java.util.regex.Pattern COHERE_CHAT_PATH_PATTERN = java.util.regex.Pattern.compile(
+        "/v[12]/chat(/?$|\\?)");
+    private static final java.util.regex.Pattern BEDROCK_MODEL_PATH_PATTERN = java.util.regex.Pattern.compile(
+        "/model/([^/]+)/(?:invoke|invoke-with-response-stream|converse|converse-stream)(?:[/?]|$)");
 
     // Path-shape patterns for offline analysis detection (sniffByPath), mirroring
     // the dashboard's llmTraffic.ts. Matched against the original (case-sensitive)
@@ -495,7 +516,69 @@ public final class LlmProviderSniffer {
                 return true;
             }
         }
-        return false;
+        return BEDROCK_PATH_PATTERN.matcher(lowerPath).find();
+    }
+
+    /**
+     * Whether the path is a completion endpoint (chat, messages, responses, generate, converse or
+     * invoke), as opposed to another endpoint of an LLM host, such as Ollama's {@code /api/pull}
+     * progress stream or a realtime event stream, whose stream is not a model's completion.
+     */
+    public static boolean isCompletionPath(String path) {
+        if (path == null || path.isEmpty()) {
+            return false;
+        }
+        String lowerPath = path.toLowerCase();
+        for (String fragment : COMPLETION_PATH_FRAGMENTS) {
+            if (lowerPath.contains(fragment)) {
+                return true;
+            }
+        }
+        return BEDROCK_PATH_PATTERN.matcher(lowerPath).find() || COHERE_CHAT_PATH_PATTERN.matcher(lowerPath).find();
+    }
+
+    /**
+     * The model a Bedrock Runtime request names in its path ({@code /model/{modelId}/converse} and
+     * the other invocation paths), URL-decoded. A foundation-model or inference-profile ARN is reduced
+     * to its id, and a cross-Region inference profile id ({@code us.anthropic.claude-...}) to the
+     * foundation model id it names, so it can be priced. Any other id, such as an application
+     * inference profile ARN, is returned as given.
+     *
+     * @return the model id, or null when the path is not a Bedrock invocation path
+     */
+    public static String extractBedrockModelFromPath(String path) {
+        if (path == null) {
+            return null;
+        }
+        java.util.regex.Matcher matcher = BEDROCK_MODEL_PATH_PATTERN.matcher(path);
+        if (!matcher.find()) {
+            return null;
+        }
+        String modelId;
+        try {
+            modelId = java.net.URLDecoder.decode(matcher.group(1).replace("+", "%2B"), java.nio.charset.StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException malformed) {
+            modelId = matcher.group(1);
+        }
+        if (modelId.isEmpty()) {
+            return null;
+        }
+        if (modelId.startsWith("arn:")) {
+            int slash = modelId.lastIndexOf('/');
+            String resource = slash > 0 ? modelId.substring(modelId.lastIndexOf(':', slash) + 1, slash) : "";
+            if (!resource.equals("foundation-model") && !resource.equals("inference-profile")) {
+                return modelId;
+            }
+            modelId = modelId.substring(slash + 1);
+        }
+        // a foundation model id has one dot (provider.model); a geographic prefix adds a second
+        int versionColon = modelId.indexOf(':');
+        String beforeVersion = versionColon < 0 ? modelId : modelId.substring(0, versionColon);
+        int firstDot = beforeVersion.indexOf('.');
+        if (firstDot > 0 && beforeVersion.indexOf('.', firstDot + 1) > 0) {
+            modelId = modelId.substring(firstDot + 1);
+        }
+        return modelId;
     }
 
     /**

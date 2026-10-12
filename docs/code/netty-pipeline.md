@@ -1097,8 +1097,8 @@ When `streamingResponsesEnabled` is `true` (default), the `HttpObjectAggregator`
 
 `StreamingAwareHttpObjectAggregator` is a subclass of `HttpObjectAggregator`, by way of `CoalescingHttpObjectAggregator` (`mockserver-core` `org.mockserver.codec`): past its component limit it merges only the pieces added since its last merge, and on upstream-opened HTTP/2 streams it also copies runs of tiny frames into blocks. It inspects the first response head and switches to streaming when **either** signal is present:
 
-- **Response says so** — `Content-Type: text/event-stream`.
-- **The client asked for a stream** — `NettyHttpClient` sets an `EXPECT_STREAMING_RESPONSE` channel attribute when the forwarded *request* declares streaming intent (an `Accept: text/event-stream` header, or a JSON body with `"stream": true`). This covers streaming backends that omit the content type — notably the OpenAI **Codex** backend used by the opencode CLI (`chatgpt.com/backend-api/codex/responses`), whose SSE response carries **no content type at all**. Without it MockServer would aggregate the whole (10–30s) response before sending any headers, and the client would time out waiting for response headers.
+- **Response says so** — `Content-Type: text/event-stream`, `application/vnd.amazon.eventstream` (Bedrock's streaming APIs) or `application/x-ndjson` (Ollama). This is checked for every proxied response, whatever the host.
+- **The client asked for a stream** — `NettyHttpClient` sets an `EXPECT_STREAMING_RESPONSE` channel attribute when the forwarded *request* declares streaming intent (an `Accept: text/event-stream` header, a JSON body with `"stream": true`, or a Gemini `:streamGenerateContent` path, whose JSON array arrives as `application/json` unless `alt=sse` is set). This covers streaming backends that omit the content type — notably the OpenAI **Codex** backend used by the opencode CLI (`chatgpt.com/backend-api/codex/responses`), whose SSE response carries **no content type at all**. Without it MockServer would aggregate the whole (10–30s) response before sending any headers, and the client would time out waiting for response headers.
 
 Then:
 

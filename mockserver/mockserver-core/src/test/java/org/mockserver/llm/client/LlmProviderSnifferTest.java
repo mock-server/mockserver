@@ -634,4 +634,121 @@ public class LlmProviderSnifferTest {
             .withBody("{\"results\":[{\"index\":0,\"relevance_score\":0.97},{\"index\":1,\"relevance_score\":0.12}]}");
         assertThat(LlmProviderSniffer.detectForAnalysis(req, res), is(Optional.of(Provider.COHERE)));
     }
+
+    // --- configured-provider fallback: Gemini streaming and Bedrock paths ---
+
+    @Test
+    public void fallsBackToConfiguredProviderForGeminiStreamingOnAGateway() {
+        ConfigurationProperties.llmProvider("GEMINI");
+        assertThat(LlmProviderSniffer.sniffByHostAndPath("llm-gateway.internal",
+                "/v1beta/models/gemini-2.5-flash:streamGenerateContent"),
+            is(Optional.of(Provider.GEMINI)));
+        assertThat(LlmProviderSniffer.sniffByHostAndPath("llm-gateway.internal",
+                "/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse"),
+            is(Optional.of(Provider.GEMINI)));
+    }
+
+    @Test
+    public void fallsBackToConfiguredProviderForEveryBedrockRuntimePath() {
+        ConfigurationProperties.llmProvider("BEDROCK");
+        for (String operation : new String[]{"converse", "converse-stream", "invoke", "invoke-with-response-stream"}) {
+            assertThat(operation, LlmProviderSniffer.sniffByHostAndPath("vpce-0abc.bedrock-runtime.vpce.example.internal",
+                    "/model/anthropic.claude-sonnet-4-5-20250929-v1%3A0/" + operation),
+                is(Optional.of(Provider.BEDROCK)));
+        }
+    }
+
+    @Test
+    public void doesNotFallBackForANonLlmPathThatOnlyMentionsAModel() {
+        ConfigurationProperties.llmProvider("BEDROCK");
+        assertThat(LlmProviderSniffer.sniffByHostAndPath("internal.example.com", "/model/123/details"),
+            is(Optional.empty()));
+    }
+
+    // --- completion endpoints ---
+
+    @Test
+    public void recognisesEachProvidersCompletionEndpoints() {
+        String[] completionPaths = {
+            "/v1/chat/completions",
+            "/openai/deployments/gpt-4o/chat/completions",
+            "/v1/completions",
+            "/v1/responses",
+            "/backend-api/codex/responses",
+            "/v1/messages",
+            "/v1beta/models/gemini-2.5-flash:streamGenerateContent",
+            "/v1beta/models/gemini-2.5-flash:generateContent",
+            "/model/anthropic.claude-sonnet-4-5-20250929-v1%3A0/converse-stream",
+            "/model/amazon.nova-pro-v1%3A0/invoke-with-response-stream",
+            "/api/chat",
+            "/api/generate",
+            "/v1/chat",
+            "/v2/chat",
+        };
+        for (String path : completionPaths) {
+            assertThat(path, LlmProviderSniffer.isCompletionPath(path), is(true));
+        }
+    }
+
+    @Test
+    public void doesNotTreatOtherEndpointsOfAnLlmHostAsCompletions() {
+        String[] otherPaths = {
+            "/api/pull",
+            "/api/push",
+            "/api/create",
+            "/api/tags",
+            "/v1/realtime/events",
+            "/v1/models",
+            "/v1/embeddings",
+            "/v1/files",
+            "/v2/chatbots",
+            "",
+        };
+        for (String path : otherPaths) {
+            assertThat(path, LlmProviderSniffer.isCompletionPath(path), is(false));
+        }
+        assertThat(LlmProviderSniffer.isCompletionPath(null), is(false));
+    }
+
+    // --- Bedrock model id from the request path ---
+
+    @Test
+    public void readsTheBedrockModelIdFromEachInvocationPath() {
+        for (String operation : new String[]{"converse", "converse-stream", "invoke", "invoke-with-response-stream"}) {
+            assertThat(operation, LlmProviderSniffer.extractBedrockModelFromPath(
+                    "/model/anthropic.claude-sonnet-4-5-20250929-v1%3A0/" + operation),
+                is("anthropic.claude-sonnet-4-5-20250929-v1:0"));
+        }
+        assertThat(LlmProviderSniffer.extractBedrockModelFromPath("/model/anthropic.claude-sonnet-4-5-20250929-v1:0/converse"),
+            is("anthropic.claude-sonnet-4-5-20250929-v1:0"));
+    }
+
+    @Test
+    public void mapsAnInferenceProfileOrArnToTheFoundationModelItNames() {
+        assertThat(LlmProviderSniffer.extractBedrockModelFromPath("/model/us.anthropic.claude-sonnet-4-5-20250929-v1%3A0/converse"),
+            is("anthropic.claude-sonnet-4-5-20250929-v1:0"));
+        assertThat(LlmProviderSniffer.extractBedrockModelFromPath("/model/global.anthropic.claude-sonnet-4-5-20250929-v1%3A0/converse-stream"),
+            is("anthropic.claude-sonnet-4-5-20250929-v1:0"));
+        assertThat(LlmProviderSniffer.extractBedrockModelFromPath("/model/us-gov.anthropic.claude-sonnet-4-5-20250929-v1%3A0/invoke"),
+            is("anthropic.claude-sonnet-4-5-20250929-v1:0"));
+        assertThat(LlmProviderSniffer.extractBedrockModelFromPath(
+                "/model/arn%3Aaws%3Abedrock%3Aus-east-1%3A%3Afoundation-model%2Famazon.nova-pro-v1%3A0/converse"),
+            is("amazon.nova-pro-v1:0"));
+        assertThat(LlmProviderSniffer.extractBedrockModelFromPath(
+                "/model/arn%3Aaws%3Abedrock%3Aeu-west-1%3A123456789012%3Ainference-profile%2Feu.anthropic.claude-haiku-4-5-20251001-v1%3A0/converse"),
+            is("anthropic.claude-haiku-4-5-20251001-v1:0"));
+    }
+
+    @Test
+    public void keepsABedrockIdThatNamesNoFoundationModel() {
+        String applicationProfile = "arn:aws:bedrock:us-east-1:123456789012:application-inference-profile/a1b2c3d4e5f6";
+        assertThat(LlmProviderSniffer.extractBedrockModelFromPath(
+                "/model/arn%3Aaws%3Abedrock%3Aus-east-1%3A123456789012%3Aapplication-inference-profile%2Fa1b2c3d4e5f6/converse"),
+            is(applicationProfile));
+        assertThat(LlmProviderSniffer.extractBedrockModelFromPath("/model/amazon.titan-embed-text-v2%3A0/invoke"),
+            is("amazon.titan-embed-text-v2:0"));
+        assertThat(LlmProviderSniffer.extractBedrockModelFromPath("/v1/chat/completions"), is((String) null));
+        assertThat(LlmProviderSniffer.extractBedrockModelFromPath("/model/x/details"), is((String) null));
+        assertThat(LlmProviderSniffer.extractBedrockModelFromPath(null), is((String) null));
+    }
 }

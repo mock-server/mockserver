@@ -128,4 +128,34 @@ public class StreamingAwareHttpObjectAggregatorStreamingIntentTest {
         }
         return out.toByteArray();
     }
+
+    @Test
+    public void shouldSignalStreamingForGeminisStreamingMethodWhateverTheBody() {
+        FullHttpRequest streaming = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST,
+            "/v1beta/models/gemini-2.5-flash:streamGenerateContent?key=abc", Unpooled.copiedBuffer(NOT_STREAMING));
+        FullHttpRequest whole = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST,
+            "/v1beta/models/gemini-2.5-flash:generateContent", Unpooled.copiedBuffer(NOT_STREAMING));
+        try {
+            assertThat(requestExpectsStreamingResponse(streaming, MAX_DECODED), is(true));
+            assertThat(requestExpectsStreamingResponse(whole, MAX_DECODED), is(false));
+        } finally {
+            streaming.release();
+            whole.release();
+        }
+    }
+
+    @Test
+    public void shouldReadTheRawPathOfAUriWithAMalformedEscapeRatherThanThrow() {
+        FullHttpRequest malformed = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST,
+            "/files/100%?key=abc", Unpooled.copiedBuffer(NOT_STREAMING));
+        FullHttpRequest malformedStreaming = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST,
+            "/v1beta/models/a%zz:streamGenerateContent", Unpooled.copiedBuffer(NOT_STREAMING));
+        try {
+            assertThat(requestExpectsStreamingResponse(malformed, MAX_DECODED), is(false));
+            assertThat(requestExpectsStreamingResponse(malformedStreaming, MAX_DECODED), is(true));
+        } finally {
+            malformed.release();
+            malformedStreaming.release();
+        }
+    }
 }

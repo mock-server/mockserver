@@ -1610,6 +1610,7 @@ public class HttpActionHandler {
                             // Note: enforce mode cannot replace a streaming response since the body
                             // has already been written to the client — violations are logged (report-only).
                             final HttpResponse streamingResponse = response;
+                            final LlmStreamUsageScanner streamUsage = observeForwardedLlmStream(clonedRequest, streamingResponse, mapping.getTargetHost());
                             responseWriter.writeResponse(request, streamingResponse, false);
                             final long streamForwardStartNanos = forwardStartNanos;
                             streamingResponse.getStreamingBody().addCompletionListener(() -> {
@@ -1634,12 +1635,14 @@ public class HttpActionHandler {
                                         .setMessageFormat("returning response:{}for proxy pass forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}")
                                         .setArguments(logResponse, request, deferredCurl(request, targetAddress))
                                 );
+                                emitStreamedForwardGenAiSpan(clonedRequest, logResponse, streamingResponse.getStreamingBody(), streamUsage, mapping.getTargetHost());
                             });
                         } else {
                             // validation proxy: validate non-streaming response (enforce mode returns 502)
                             if (validationEnabled) {
                                 response = validateProxyResponse(request, response, false);
                             }
+                            emitForwardGenAiSpan(clonedRequest, response, null, false, false, mapping.getTargetHost());
                             HttpResponse logResponse = response.clone();
                             logResponse.withHeader(RESPONSE_TIME_HEADER, String.valueOf(effectiveForwardLatencyMs(response, responseTimeMs)));
                             mockServerLogger.logEvent(
@@ -4521,7 +4524,7 @@ public class HttpActionHandler {
      * token/cost tracking works without requiring full OTLP tracing.
      */
     private void emitForwardGenAiSpan(HttpRequest forwardedRequest, HttpResponse upstreamResponse) {
-        emitForwardGenAiSpan(forwardedRequest, upstreamResponse, null, false);
+        emitForwardGenAiSpan(forwardedRequest, upstreamResponse, null, false, false, null);
     }
 
     private boolean isForwardLlmAccountingEnabled() {
@@ -4537,9 +4540,18 @@ public class HttpActionHandler {
      * @return the scanner, or null when this is not LLM traffic or nothing would use the result
      */
     private LlmStreamUsageScanner observeForwardedLlmStream(HttpRequest forwardedRequest, HttpResponse streamingResponse) {
+        return observeForwardedLlmStream(forwardedRequest, streamingResponse, null);
+    }
+
+    /**
+     * @param targetHost the upstream host when the forwarded request does not name it (a proxy-pass
+     *                   mapping), or null to sniff the provider from the request
+     */
+    private LlmStreamUsageScanner observeForwardedLlmStream(HttpRequest forwardedRequest, HttpResponse streamingResponse, String targetHost) {
         try {
             if (!isForwardLlmAccountingEnabled()
-                || org.mockserver.llm.client.LlmProviderSniffer.sniff(forwardedRequest).isEmpty()) {
+                || forwardedLlmProvider(forwardedRequest, targetHost).isEmpty()
+                || !org.mockserver.llm.client.LlmProviderSniffer.isCompletionPath(pathOf(forwardedRequest))) {
                 return null;
             }
             LlmStreamUsageScanner streamUsage = new LlmStreamUsageScanner();
@@ -4553,27 +4565,50 @@ public class HttpActionHandler {
 
     private void emitStreamedForwardGenAiSpan(HttpRequest forwardedRequest, HttpResponse logResponse,
                                               StreamingBody streamingBody, LlmStreamUsageScanner streamUsage) {
+        emitStreamedForwardGenAiSpan(forwardedRequest, logResponse, streamingBody, streamUsage, null);
+    }
+
+    private void emitStreamedForwardGenAiSpan(HttpRequest forwardedRequest, HttpResponse logResponse,
+                                              StreamingBody streamingBody, LlmStreamUsageScanner streamUsage, String targetHost) {
         if (streamUsage == null) {
-            emitForwardGenAiSpan(forwardedRequest, logResponse, null, false);
+            emitForwardGenAiSpan(forwardedRequest, logResponse, null, false, true, targetHost);
         } else {
-            streamingBody.afterChunksObserved(() -> emitForwardGenAiSpan(forwardedRequest, logResponse, streamUsage, streamingBody.getError() != null));
+            streamingBody.afterChunksObserved(() -> emitForwardGenAiSpan(forwardedRequest, logResponse, streamUsage, streamingBody.getError() != null, true, targetHost));
         }
+    }
+
+    private static java.util.Optional<Provider> forwardedLlmProvider(HttpRequest forwardedRequest, String targetHost) {
+        if (targetHost != null) {
+            return org.mockserver.llm.client.LlmProviderSniffer.sniffByHostAndPath(targetHost, pathOf(forwardedRequest));
+        }
+        return org.mockserver.llm.client.LlmProviderSniffer.sniff(forwardedRequest);
+    }
+
+    private static String pathOf(HttpRequest request) {
+        return request != null && request.getPath() != null ? request.getPath().getValue() : null;
     }
 
     /**
      * @param streamUsage  the usage read from the response as it was relayed as a stream, or null
      *                     when the whole body is in {@code upstreamResponse}
      * @param streamCutOff whether the relayed stream ended in an error rather than completing
+     * @param relayedStream whether the response was relayed as a stream
+     * @param targetHost   the upstream host when the forwarded request does not name it, or null
      */
-    private void emitForwardGenAiSpan(HttpRequest forwardedRequest, HttpResponse upstreamResponse, LlmStreamUsageScanner streamUsage, boolean streamCutOff) {
+    private void emitForwardGenAiSpan(HttpRequest forwardedRequest, HttpResponse upstreamResponse, LlmStreamUsageScanner streamUsage,
+                                      boolean streamCutOff, boolean relayedStream, String targetHost) {
         boolean spanEnabled = GenAiSpans.isEnabled();
         if (!isForwardLlmAccountingEnabled()) {
             return;
         }
         try {
-            java.util.Optional<Provider> providerOpt =
-                org.mockserver.llm.client.LlmProviderSniffer.sniff(forwardedRequest);
+            java.util.Optional<Provider> providerOpt = forwardedLlmProvider(forwardedRequest, targetHost);
             if (providerOpt.isEmpty()) {
+                return;
+            }
+            String path = pathOf(forwardedRequest);
+            boolean completionPath = org.mockserver.llm.client.LlmProviderSniffer.isCompletionPath(path);
+            if (relayedStream && !completionPath) {
                 return;
             }
             Provider provider = providerOpt.get();
@@ -4597,6 +4632,9 @@ public class HttpActionHandler {
                 if (completion == null || completion.getUsage() == null) {
                     // an event stream that was aggregated rather than relayed as a stream
                     scanned = scanBody(upstreamResponse);
+                    if (scanned != null && scanned.streamed() && !completionPath) {
+                        return;
+                    }
                     if (scanned != null && (scanned.usage() != null || scanned.streamed())) {
                         completion = streamedCompletion(client, scanned);
                     } else {
@@ -4613,6 +4651,10 @@ public class HttpActionHandler {
             }
             // Prefer the model from the parsed completion; fall back to the request body
             String model = completion.getModel();
+            if (model == null && provider == Provider.BEDROCK) {
+                // a Bedrock request names its model in the path, and a Converse response has none
+                model = org.mockserver.llm.client.LlmProviderSniffer.extractBedrockModelFromPath(path);
+            }
             if (model == null) {
                 model = org.mockserver.llm.client.LlmProviderSniffer.extractModelFromRequest(forwardedRequest);
             }

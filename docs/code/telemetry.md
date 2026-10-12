@@ -15,7 +15,7 @@ Emits explicit OpenTelemetry GenAI semantic-convention spans for LLM completions
 
 GenAI spans fire on two paths:
 1. **Mock action path** — `HttpLlmResponseActionHandler` calls `GenAiSpans.recordCompletion()` for mocked LLM responses (streaming and non-streaming).
-2. **Forward/proxy path** — `HttpActionHandler.emitForwardGenAiSpan()` detects LLM traffic via `LlmProviderSniffer`, reads the upstream response's usage using the provider's `LlmClient`, and records a completion span. Covers matched-expectation forwards, breakpoint-continuation forwards and the unmatched proxy path. A streamed response is read as it is relayed, by `LlmStreamUsageScanner`, and its span is emitted when the stream ends; a stream that reports no usage gets a span with no `gen_ai.usage.*` attributes and a log line saying it was not counted. See [Proxied LLM usage and cost](llm-mocking.md#proxied-llm-usage-and-cost).
+2. **Forward/proxy path** — `HttpActionHandler.emitForwardGenAiSpan()` detects LLM traffic via `LlmProviderSniffer`, reads the upstream response's usage using the provider's `LlmClient`, and records a completion span. Covers matched-expectation forwards, breakpoint-continuation forwards, the unmatched proxy path and `proxyPassMappings` routes. A streamed response is read as it is relayed, by `LlmStreamUsageScanner`, and its span is emitted when the stream ends; a stream that reports no usage gets a span with no `gen_ai.usage.*` attributes and a log line saying it was not counted. See [Proxied LLM usage and cost](llm-mocking.md#proxied-llm-usage-and-cost).
 
 ### LLM Provider Sniffer (`LlmProviderSniffer`)
 

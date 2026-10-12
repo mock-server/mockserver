@@ -21,13 +21,19 @@ import org.mockserver.llm.cost.LlmPricing;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.metrics.Metrics;
+import org.mockserver.closurecallback.websocketregistry.WebSocketRequestCallback;
+import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.mock.Expectation;
+import org.mockserver.mock.breakpoint.BreakpointCallbackDispatcher;
+import org.mockserver.mock.breakpoint.BreakpointMatcherRegistry;
+import org.mockserver.mock.breakpoint.BreakpointPhase;
 import org.mockserver.mock.HttpState;
 import org.mockserver.mock.crud.CrudDispatcher;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.Provider;
+import org.mockserver.model.ProxyPassMapping;
 import org.mockserver.model.StreamingBody;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
@@ -40,6 +46,7 @@ import java.io.ByteArrayOutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -60,9 +67,12 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -104,6 +114,10 @@ public class HttpActionHandlerStreamedLlmUsageTest {
     private GenAiSpanExporter exporter;
     private double originalBudget;
     private String originalLlmBaseUrl;
+    private String originalLlmProvider;
+    private Configuration configuration;
+    @Mock
+    private WebSocketClientRegistry mockWebSocketClientRegistry;
 
     @ClassRule
     public static final FixedTime fixedTime = new FixedTime();
@@ -112,11 +126,12 @@ public class HttpActionHandlerStreamedLlmUsageTest {
     public void setupMocks() {
         originalBudget = ConfigurationProperties.llmCostBudgetUsd();
         originalLlmBaseUrl = ConfigurationProperties.llmBaseUrl();
+        originalLlmProvider = ConfigurationProperties.llmProvider();
         ConfigurationProperties.llmCostBudgetUsd(100.0);
         LlmProviderSniffer.resetConfiguration();
         Metrics.resetAdditionalMetricsForTesting();
         LlmCostBudgetMonitor.getInstance().reset();
-        Configuration configuration = configuration().logLevel(Level.INFO).metricsEnabled(true);
+        configuration = configuration().logLevel(Level.INFO).metricsEnabled(true).breakpointTimeoutMillis(30000L).breakpointMaxHeld(50);
 
         mockHttpStateHandler = mock(HttpState.class);
         scheduler = new Scheduler(configuration, mockServerLogger);
@@ -130,7 +145,9 @@ public class HttpActionHandlerStreamedLlmUsageTest {
         // stubbed once, before any forward: a forward's drift analysis calls mockHttpStateHandler from a
         // scheduler thread, and a stubbing made while it does can attach to that thread's invocation
         when(mockHttpStateHandler.firstMatchingExpectation(any(HttpRequest.class)))
-            .thenAnswer(invocation -> new Expectation(invocation.getArgument(0, HttpRequest.class)).thenForward(nextForward));
+            .thenAnswer(invocation -> nextForward == null ? null : new Expectation(invocation.getArgument(0, HttpRequest.class)).thenForward(nextForward));
+        when(mockHttpStateHandler.getWebSocketClientRegistry()).thenReturn(mockWebSocketClientRegistry);
+        when(mockWebSocketClientRegistry.sendClientMessage(anyString(), any(HttpRequest.class), any())).thenReturn(true);
         when(mockHttpForwardActionHandler.handle(any(HttpForward.class), any(HttpRequest.class)))
             .thenAnswer(invocation -> nextForwardResult);
 
@@ -144,7 +161,10 @@ public class HttpActionHandlerStreamedLlmUsageTest {
         exporter.stop();
         ConfigurationProperties.llmCostBudgetUsd(originalBudget);
         ConfigurationProperties.llmBaseUrl(originalLlmBaseUrl == null ? "" : originalLlmBaseUrl);
+        ConfigurationProperties.llmProvider(originalLlmProvider == null ? "" : originalLlmProvider);
         LlmCostBudgetMonitor.getInstance().reset();
+        BreakpointMatcherRegistry.getInstance().clear();
+        BreakpointCallbackDispatcher.getInstance().reset();
     }
 
     // ---- driving the forward path ----
@@ -481,10 +501,9 @@ public class HttpActionHandlerStreamedLlmUsageTest {
             .withDelay(milliseconds(0)));
 
         SpanData span = singleGenAiSpan();
-        assertThat(span.getAttributes().get(stringKey("gen_ai.system")), is("aws.bedrock"));
-        assertThat(span.getAttributes().get(longKey("gen_ai.usage.input_tokens")), is(25L));
-        assertThat(span.getAttributes().get(longKey("gen_ai.usage.output_tokens")), is(15L));
+        assertTokens(span, "aws.bedrock", "anthropic.claude-sonnet-4-5-20250929-v1:0", 25L, 15L);
         assertThat(span.getAttributes().get(longKey("mockserver.gen_ai.usage.cached_input_tokens")), is(6L));
+        assertCost(Provider.BEDROCK, "anthropic.claude-sonnet-4-5-20250929-v1:0", 25, 15);
         assertThat(usageLogEntries(), is(empty()));
     }
 
@@ -548,15 +567,47 @@ public class HttpActionHandlerStreamedLlmUsageTest {
     }
 
     @Test
-    public void shouldCountNoTokensForANonLlmEventStreamFromAnLlmHost() {
+    public void shouldNotTreatANonCompletionEventStreamFromAnLlmHostAsACompletion() {
         forwardStream("api.openai.com", "/v1/realtime/events", "{}", utf8(""
             + "event: metric\ndata: {\"host\":\"web-1\",\"usage\":\"87%\",\"cpu\":{\"usage\":{\"prompt_tokens\":5,\"completion_tokens\":6}}}\n\n"
             + "event: metric\ndata: {\"hosts\":[{\"usage\":{\"prompt_tokens\":7,\"completion_tokens\":8}}],\"usage\":{\"cpu\":0.87}}\n\n"));
 
-        SpanData span = singleGenAiSpan();
-        assertThat(span.getAttributes().get(longKey("gen_ai.usage.input_tokens")), is(nullValue()));
-        assertThat(span.getAttributes().get(longKey("gen_ai.usage.output_tokens")), is(nullValue()));
+        assertThat(genAiSpans(), is(empty()));
         assertThat(recordedCostUsd(), is(0.0));
+        assertThat(usageLogEntries(), is(empty()));
+    }
+
+    @Test
+    public void shouldGiveNoSpanOrMissingUsageWarningToAnOllamaPullProgressStream() {
+        ConfigurationProperties.llmBaseUrl("http://ollama.internal:11434");
+        String pullProgress = ""
+            + "{\"status\":\"pulling manifest\"}\n"
+            + "{\"status\":\"pulling dde5aa3fc5ff\",\"digest\":\"sha256:dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff\",\"total\":2019377376,\"completed\":241970}\n"
+            + "{\"status\":\"verifying sha256 digest\"}\n"
+            + "{\"status\":\"success\"}\n";
+
+        forwardStream("ollama.internal:11434", "/api/pull", "{\"model\":\"llama3.2\"}", utf8(pullProgress));
+        // a model already pulled streams a single line, captured whole for the log, which reads as one JSON document
+        StreamingBody alreadyPulled = new StreamingBody(1024);
+        forwardResponse("ollama.internal:11434", "/api/pull", "{\"model\":\"llama3.2\"}", response()
+            .withStatusCode(200)
+            .withHeader("Content-Type", "application/x-ndjson")
+            .withStreamingBody(alreadyPulled)
+            .withDelay(milliseconds(0)));
+        feed(alreadyPulled, utf8("{\"status\":\"success\"}\n"));
+        alreadyPulled.complete();
+        forwardResponse("ollama.internal:11434", "/api/pull", "{\"model\":\"llama3.2\"}", response()
+            .withStatusCode(200)
+            .withHeader("Content-Type", "application/x-ndjson")
+            .withBody(pullProgress)
+            .withDelay(milliseconds(0)));
+
+        assertThat(genAiSpans(), is(empty()));
+        assertThat(usageLogEntries(), is(empty()));
+        // a completion stream from the same host is still counted
+        forwardStream("ollama.internal:11434", "/api/chat", "{\"model\":\"llama3.2\",\"messages\":[]}",
+            utf8(ProviderStreamFixtures.OLLAMA_CHAT));
+        assertTokens(singleGenAiSpan(), "ollama", "llama3.2", 26L, 282L);
     }
 
     @Test
@@ -587,5 +638,172 @@ public class HttpActionHandlerStreamedLlmUsageTest {
         assertThat(streamingBody.getError(), is(nullValue()));
         assertThat(recordedCostUsd(), is(0.0));
         assertTokens(singleGenAiSpan(), "openai", "gpt-4o", null, null);
+    }
+
+    // ---- a Bedrock call names its model in the request path ----
+
+    @Test
+    public void shouldPriceABedrockConverseCallByTheModelInItsPath() {
+        forwardResponse("bedrock-runtime.us-east-1.amazonaws.com", "/model/us.anthropic.claude-sonnet-4-5-20250929-v1%3A0/converse",
+            "{\"messages\":[{\"role\":\"user\",\"content\":[{\"text\":\"Hello\"}]}]}", response()
+                .withStatusCode(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("{\"output\":{\"message\":{\"role\":\"assistant\",\"content\":[{\"text\":\"Hi there\"}]}},"
+                    + "\"stopReason\":\"end_turn\",\"usage\":{\"inputTokens\":25,\"outputTokens\":15,\"totalTokens\":40},"
+                    + "\"metrics\":{\"latencyMs\":312}}")
+                .withDelay(milliseconds(0)));
+
+        assertTokens(singleGenAiSpan(), "aws.bedrock", "anthropic.claude-sonnet-4-5-20250929-v1:0", 25L, 15L);
+        assertCost(Provider.BEDROCK, "anthropic.claude-sonnet-4-5-20250929-v1:0", 25, 15);
+    }
+
+    // ---- an LLM gateway reached through the configured provider ----
+
+    @Test
+    public void shouldCountAGeminiStreamFromAGatewayWhenGeminiIsTheConfiguredProvider() {
+        ConfigurationProperties.llmProvider("GEMINI");
+
+        forwardStream("llm-gateway.internal", "/v1beta/models/gemini-2.5-flash:streamGenerateContent", "{\"contents\":[]}",
+            utf8(ProviderStreamFixtures.GEMINI_SSE));
+
+        assertTokens(singleGenAiSpan(), "gcp.gemini", "gemini-2.5-flash", 8L, 39L);
+        assertCost(Provider.GEMINI, "gemini-2.5-flash", 8, 39);
+    }
+
+    @Test
+    public void shouldCountABedrockStreamFromAPrivateEndpointWhenBedrockIsTheConfiguredProvider() {
+        ConfigurationProperties.llmProvider("BEDROCK");
+
+        forwardResponse("bedrock.vpce.internal", "/model/anthropic.claude-sonnet-4-5-20250929-v1%3A0/converse-stream", "{\"messages\":[]}", response()
+            .withStatusCode(200)
+            .withHeader("Content-Type", "application/vnd.amazon.eventstream")
+            .withBody(ProviderStreamFixtures.bedrockConverseStream())
+            .withDelay(milliseconds(0)));
+
+        assertTokens(singleGenAiSpan(), "aws.bedrock", "anthropic.claude-sonnet-4-5-20250929-v1:0", 25L, 15L);
+        assertCost(Provider.BEDROCK, "anthropic.claude-sonnet-4-5-20250929-v1:0", 25, 15);
+    }
+
+    // ---- a proxyPassMappings route ----
+
+    private void proxyPass(String pathPrefix, String targetUri, String path, String requestBody, HttpResponse upstreamResponse) {
+        configuration.proxyPassMappings(List.of(ProxyPassMapping.proxyPass(pathPrefix, targetUri).withPreserveHost(true)));
+        CompletableFuture<HttpResponse> future = new CompletableFuture<>();
+        future.complete(upstreamResponse);
+        when(mockNettyHttpClient.sendRequest(any(HttpRequest.class), any(InetSocketAddress.class))).thenReturn(future);
+
+        // the inbound Host names MockServer, so only the mapping's target says this is LLM traffic
+        actionHandler.processAction(request(path).withMethod("POST").withHeader("Host", "localhost:1080").withBody(requestBody),
+            mockResponseWriter, null, new HashSet<>(), false, true);
+    }
+
+    @Test
+    public void shouldCountAWholeResponseForwardedThroughAProxyPassMapping() {
+        proxyPass("/claude/", "https://api.anthropic.com/", "/claude/v1/messages", "{\"model\":\"claude-sonnet-4-5\",\"messages\":[]}", response()
+            .withStatusCode(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody("{\"id\":\"msg_01\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"claude-sonnet-4-5-20250929\","
+                + "\"content\":[{\"type\":\"text\",\"text\":\"Hello\"}],\"stop_reason\":\"end_turn\",\"stop_sequence\":null,"
+                + "\"usage\":{\"input_tokens\":25,\"output_tokens\":15}}"));
+
+        verify(mockResponseWriter).writeResponse(any(HttpRequest.class), any(HttpResponse.class), eq(false));
+        assertTokens(singleGenAiSpan(), "anthropic", "claude-sonnet-4-5-20250929", 25L, 15L);
+        assertCost(Provider.ANTHROPIC, "claude-sonnet-4-5-20250929", 25, 15);
+    }
+
+    @Test
+    public void shouldCountAStreamForwardedThroughAProxyPassMappingAndThenEnforceTheBudget() {
+        ConfigurationProperties.llmCostBudgetUsd(0.0001);
+        StreamingBody streamingBody = new StreamingBody(16);
+        proxyPass("/openai/", "https://api.openai.com/", "/openai/v1/chat/completions",
+            "{\"model\":\"gpt-4o\",\"stream\":true,\"stream_options\":{\"include_usage\":true}}", response()
+                .withStatusCode(200)
+                .withHeader("Content-Type", "text/event-stream")
+                .withStreamingBody(streamingBody));
+        feed(streamingBody, utf8(ProviderStreamFixtures.OPENAI_CHAT_WITH_USAGE));
+        streamingBody.complete();
+
+        assertTokens(singleGenAiSpan(), "openai", "gpt-4o-2024-08-06", 19L, 10L);
+        assertCost(Provider.OPENAI, "gpt-4o-2024-08-06", 19, 10);
+
+        proxyPass("/openai/", "https://api.openai.com/", "/openai/v1/chat/completions", "{\"model\":\"gpt-4o\"}",
+            response().withStatusCode(200));
+        ArgumentCaptor<HttpResponse> written = ArgumentCaptor.forClass(HttpResponse.class);
+        verify(mockResponseWriter, times(2)).writeResponse(any(HttpRequest.class), written.capture(), eq(false));
+        assertThat(written.getAllValues().get(1).getStatusCode(), is(429));
+        verify(mockNettyHttpClient, times(1)).sendRequest(any(HttpRequest.class), any(InetSocketAddress.class));
+    }
+
+    @Test
+    public void shouldNotCountAProxyPassToAHostThatIsNotAnLlmProvider() {
+        StreamingBody streamingBody = new StreamingBody(16);
+        proxyPass("/events/", "https://events.example.com/", "/events/v1/chat/completions", "{\"stream\":true}", response()
+            .withStatusCode(200)
+            .withHeader("Content-Type", "text/event-stream")
+            .withStreamingBody(streamingBody));
+        feed(streamingBody, utf8(ProviderStreamFixtures.OPENAI_CHAT_WITH_USAGE));
+        streamingBody.complete();
+
+        assertThat(genAiSpans(), is(empty()));
+        assertThat(recordedCostUsd(), is(0.0));
+    }
+
+    // ---- the uncounted-call warning is rate limited per provider and model ----
+
+    @Test
+    public void shouldRepeatAMissingUsageWarningOnceItsKeyIsClearedToBoundTheRateLimiter() {
+        String unseenModel = "gpt-4o-2024-08-06";
+        for (int model = 0; model < 256; model++) {
+            forwardStream("api.openai.com", "/v1/chat/completions", "{\"stream\":true}",
+                utf8(ProviderStreamFixtures.OPENAI_CHAT_WITHOUT_USAGE.replace(unseenModel, "model-" + model)));
+        }
+        assertThat(usageLogEntries(), hasSize(256));
+
+        // the clock does not move, so a repeat is held back while its key is still kept
+        forwardStream("api.openai.com", "/v1/chat/completions", "{\"stream\":true}",
+            utf8(ProviderStreamFixtures.OPENAI_CHAT_WITHOUT_USAGE.replace(unseenModel, "model-0")));
+        assertThat(usageLogEntries(), hasSize(256));
+
+        // a 257th key clears the 256 kept, so the first model's warning can be given again
+        forwardStream("api.openai.com", "/v1/chat/completions", "{\"stream\":true}",
+            utf8(ProviderStreamFixtures.OPENAI_CHAT_WITHOUT_USAGE.replace(unseenModel, "model-256")));
+        forwardStream("api.openai.com", "/v1/chat/completions", "{\"stream\":true}",
+            utf8(ProviderStreamFixtures.OPENAI_CHAT_WITHOUT_USAGE.replace(unseenModel, "model-0")));
+        List<LogEntry> logged = usageLogEntries();
+        assertThat(logged, hasSize(258));
+        assertThat(Arrays.asList(logged.get(257).getArguments()), contains(Provider.OPENAI, "model-0"));
+    }
+
+    // ---- a stream forwarded after a request breakpoint is continued ----
+
+    @Test
+    public void shouldCountAStreamForwardedAfterARequestBreakpointIsContinued() throws InterruptedException {
+        BreakpointMatcherRegistry.getInstance().register(
+            request().withPath("/v1/messages"), EnumSet.of(BreakpointPhase.REQUEST), "dashboard-client-1", configuration, mockServerLogger);
+        StreamingBody streamingBody = new StreamingBody(16);
+        CompletableFuture<HttpResponse> upstream = new CompletableFuture<>();
+        upstream.complete(response().withStatusCode(200).withHeader("Content-Type", "text/event-stream").withStreamingBody(streamingBody));
+        when(mockNettyHttpClient.sendRequest(any(HttpRequest.class), any(), any())).thenReturn(upstream);
+
+        actionHandler.processAction(request("/v1/messages").withMethod("POST").withHeader("Host", "api.anthropic.com")
+                .withBody("{\"model\":\"claude-sonnet-4-5\",\"stream\":true,\"messages\":[]}"),
+            mockResponseWriter, null, new HashSet<>(), true, false);
+
+        ArgumentCaptor<WebSocketRequestCallback> paused = ArgumentCaptor.forClass(WebSocketRequestCallback.class);
+        verify(mockWebSocketClientRegistry, timeout(5000)).registerForwardCallbackHandler(anyString(), paused.capture());
+        verify(mockNettyHttpClient, never()).sendRequest(any(HttpRequest.class), any(), any());
+        // the client replies without a modified request, which continues the original
+        paused.getValue().handleError(response());
+
+        verify(mockResponseWriter, timeout(5000)).writeResponse(any(HttpRequest.class), any(HttpResponse.class), eq(false));
+        feed(streamingBody, utf8(ProviderStreamFixtures.ANTHROPIC_MESSAGES));
+        streamingBody.complete();
+
+        long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(10);
+        while (genAiSpans().isEmpty() && System.nanoTime() < deadline) {
+            Thread.sleep(10);
+        }
+        assertTokens(singleGenAiSpan(), "anthropic", "claude-sonnet-4-5-20250929", 25L, 15L);
+        assertCost(Provider.ANTHROPIC, "claude-sonnet-4-5-20250929", 25, 15);
     }
 }

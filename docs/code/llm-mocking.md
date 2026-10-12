@@ -610,7 +610,7 @@ Optional, off-by-default OTLP export, in two independent parts (both fail-soft �
 - **Metrics** (`org.mockserver.metrics.OtelMetricsExporter`, `mockserver.otelMetricsEnabled`) — bridges the existing `Metrics.Name` gauges (the same set exposed for Prometheus, including the LLM/SSE/chaos counters) to OTLP as observable gauges that read the current values, so Prometheus and OTLP stay consistent. An alternative to the Prometheus endpoint.
 - **GenAI spans** (`org.mockserver.telemetry.GenAiSpanExporter` + `GenAiSpans`, `mockserver.otelTracesEnabled`) — emits one span per LLM completion with GenAI semantic-convention attributes (`gen_ai.system`, `gen_ai.request.model`, `gen_ai.usage.*`, `gen_ai.response.finish_reasons`, tool-call count). When a provider reports them, cached-input and reasoning token counts are also emitted under the `mockserver.gen_ai.usage.*` namespace (`cached_input_tokens`, `cache_creation_tokens`, `reasoning_tokens`) — there is no GenAI semconv attribute for these yet, and they are omitted entirely when absent. These are spans MockServer codes deliberately — **no auto-instrumentation**. `GenAiSpans` is a process-wide no-op until `GenAiSpanExporter` installs a tracer. Spans fire on two paths:
   - **Mock action path** — `HttpLlmResponseActionHandler` calls `GenAiSpans.recordCompletion()` for mocked responses (streaming and non-streaming).
-  - **Forward/proxy path** — `HttpActionHandler.emitForwardGenAiSpan()` detects LLM traffic via `LlmProviderSniffer` (maps the forwarded request's target host to a `Provider`), reads the upstream response's usage with the provider's `LlmClient`, and records a completion span. Covers matched-expectation forwards, breakpoint-continuation forwards and the unmatched proxy path. A whole JSON response is parsed by `parseCompletionResponse()`; a streamed response is read as it passes and the span is emitted when the stream ends (see [Proxied LLM usage and cost](#proxied-llm-usage-and-cost)). Model is extracted from the response (most providers include it), falling back to the request body.
+  - **Forward/proxy path** — `HttpActionHandler.emitForwardGenAiSpan()` detects LLM traffic via `LlmProviderSniffer` (maps the forwarded request's target host to a `Provider`), reads the upstream response's usage with the provider's `LlmClient`, and records a completion span. Covers matched-expectation forwards, breakpoint-continuation forwards, the unmatched proxy path and `proxyPassMappings` routes (sniffed by the mapping's target host). A whole JSON response is parsed by `parseCompletionResponse()`; a streamed response is read as it passes and the span is emitted when the stream ends (see [Proxied LLM usage and cost](#proxied-llm-usage-and-cost)). Model is extracted from the response (most providers include it), then for Bedrock from the request path (`/model/{modelId}/...`), then from the request body.
 
 Both use the OTLP HTTP/protobuf exporter with the JDK HttpClient sender (no gRPC/OkHttp) and share `mockserver.otelEndpoint` (a base collector URL; `/v1/metrics` and `/v1/traces` appended per signal, resolved by `telemetry.OtelEndpoints`).
 
@@ -653,9 +653,12 @@ only its first `maxStreamingCaptureBytes` (256 KiB by default), and usage is at 
 `HttpActionHandler` attaches an `LlmStreamUsageScanner` to the `StreamingBody`
 (`observeChunks`) before the response is written. The scanner sees every chunk as it arrives from
 the upstream, after decompression (`Content-Encoding` is decoded ahead of the relay on both the
-HTTP/1.1 and HTTP/2 client pipelines). The same scanner reads an aggregated body that is really an
-event stream: Ollama NDJSON whose request did not say `"stream": true`, a Gemini JSON array, a
-Bedrock event stream, or SSE when `streamingResponsesEnabled` is off.
+HTTP/1.1 and HTTP/2 client pipelines). The forward client relays as a stream a response whose
+`Content-Type` is `text/event-stream`, `application/vnd.amazon.eventstream` (Bedrock) or
+`application/x-ndjson` (Ollama), and the response to a request that asked for one (`Accept:
+text/event-stream`, a JSON body with `"stream": true`, or a Gemini `:streamGenerateContent` path,
+whose JSON array arrives as `application/json`). The same scanner reads an aggregated body that is
+really an event stream, such as any of these when `streamingResponsesEnabled` is off.
 
 **What the scanner keeps.** It follows the framing (Server-Sent Events, newline-delimited or
 concatenated JSON, AWS event stream) and skims the JSON one byte at a time, tracking only nesting
@@ -674,7 +677,7 @@ Everything it holds for the life of the stream is bounded, whatever the upstream
 |---|---|
 | The value being captured | 8 KiB (`MAX_VALUE_BYTES`); a larger value is dropped, not truncated |
 | The field name being read | 32 bytes |
-| The merged usage | 32 fields (`MAX_USAGE_FIELDS`). A field already kept is replaced by a later event; a further new field is refused. Only whole-number counts are kept, directly or as an object of at most 16 of them (`MAX_USAGE_DETAIL_FIELDS`), under names of at most 64 characters: under 64 KiB as JSON. Nulls, text, decimals and arrays are ignored, so a `null` in a later event leaves the earlier count |
+| The merged usage | 32 fields (`MAX_USAGE_FIELDS`). A field already kept is replaced by a later event; a further new field is refused. Only whole-number counts are kept, directly or as an object of at most 16 of them (`MAX_USAGE_DETAIL_FIELDS`), under names of at most 64 characters: under 64 KiB as JSON. A count is read as `JsonNode.asInt()` reads it on the whole-response path: a decimal is truncated and a numeric string (up to 32 characters) is parsed. Nulls, other text and arrays are ignored, so a `null` in a later event leaves the earlier count |
 | Model name, stop reason | 128 characters each (`MAX_TEXT_CHARS`); a longer one is ignored |
 
 The merge keeps counts only because an unfiltered merge grew with the stream: usage events with
@@ -694,23 +697,34 @@ its final usage event, emits a span with no token attributes and logs one line, 
 - `the streamed {provider} response for model {model} ended before its final usage event, so only the tokens reported before it ended are counted ...`: an Anthropic stream cut off after `message_start` is counted with its input tokens and the output tokens reported so far. Gemini repeats its counts on every chunk, so its stream is reported this way only when the upstream connection failed before a chunk with a `finishReason`.
 
 Each line is written at most once a minute for each provider and model, so a client that never
-sends usage does not flood the log; every call still gets its span. The line is also written for a
-streamed `2xx` response from an LLM host that is not a completion, such as Ollama's `/api/pull`
-(plan item 30).
+sends usage does not flood the log; every call still gets its span. The rate limiter keeps at most
+256 provider-and-model keys and clears them all when a new one would exceed that, so after the clear
+a line can repeat within the minute.
+
+**Only completions are accounted.** A stream from an LLM host whose path is not a completion endpoint
+(`LlmProviderSniffer.isCompletionPath`: chat, completions, messages, responses, Gemini
+`generateContent`/`streamGenerateContent`, Bedrock `converse`/`invoke` and their streaming forms,
+Ollama `/api/chat` and `/api/generate`, Cohere `/v1/chat` and `/v2/chat`) gets no span and no log line,
+whether it was relayed or aggregated. Ollama's `/api/pull` progress stream is the case this is for. A
+whole JSON response is accounted on any LLM path, as before, so embeddings stay counted.
+
+**Bedrock model ids.** A Bedrock request names its model in the path and a Converse response has
+none, so the model is read from `/model/{modelId}/...` (URL-decoded). A foundation-model or
+inference-profile ARN is reduced to the id after its last `/`, and a cross-Region inference profile
+id (`us.anthropic.claude-...`, `global.`, `eu.` and so on: an id with two dots before its version) to
+the foundation model id, which `LlmPricing` prices. An application inference profile or provisioned
+model ARN names no model, so it is kept as given and is not priced.
+
+**Gateways.** On a host that is not a known provider, the configured `llmProvider` applies only to a
+path that looks like an LLM endpoint; that check includes Gemini's `:streamGenerateContent` and the
+four Bedrock Runtime invocation paths, so a Gemini or Bedrock gateway or private endpoint is counted.
 
 **Limits.**
 
 - The budget is checked before a forward is sent and a streamed call is added when its stream ends,
   so calls already in flight when the budget is reached still complete.
-- `proxyPassMappings` routes check the budget but do not record usage, streamed or not (plan item 25).
-- The breakpoint-continuation forward is wired like the other two paths but has no test of its own;
-  the matched forward and the unmatched proxy path are tested end to end.
 - For Bedrock `InvokeModelWithResponseStream` only Anthropic-shaped events are read, so streams from
   other model families (Nova, Titan, Llama, Mistral) are not counted.
-- Azure OpenAI Responses API traffic is read with the Chat Completions mapping and is not counted,
-  streamed or not (plan item 29).
-- Bedrock model ids are in the request path, not the body, so a proxied Converse call has tokens
-  but no model and no cost (plan item 27).
 - A scanner or parse failure is swallowed in the accounting path: `StreamingBody` drops an observer
   that throws, and the relayed bytes are never changed.
 
