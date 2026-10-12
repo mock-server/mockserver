@@ -490,6 +490,77 @@ describe('TrafficInspector — per-request timing display', () => {
   });
 });
 
+// Bedrock InvokeModel bodies of the non-Anthropic families, from the AWS model-parameters
+// pages (model-parameters-meta.html, model-parameters-mistral-text-completion.html under
+// https://docs.aws.amazon.com/bedrock/latest/userguide/). Mistral reports token counts
+// only in the x-amzn-bedrock-*-token-count response headers.
+describe('TrafficInspector — Bedrock InvokeModel on other model families', () => {
+  beforeEach(() => {
+    useDashboardStore.setState({ proxiedRequests: [], activeExpectations: [], trafficSearch: '', selectedTrafficKey: null });
+  });
+
+  function bedrockInvoke(key: string, modelId: string, request: unknown, response: unknown, headers: unknown[] = []) {
+    return {
+      key,
+      value: {
+        httpRequest: {
+          method: 'POST',
+          path: `/model/${modelId}/invoke`,
+          headers: [{ name: 'host', values: ['bedrock-runtime.us-east-1.amazonaws.com'] }],
+          body: { type: 'JSON', json: JSON.stringify(request) },
+        },
+        httpResponse: {
+          statusCode: 200,
+          headers: [{ name: 'content-type', values: ['application/json'] }, ...headers],
+          body: { type: 'JSON', json: JSON.stringify(response) },
+        },
+      },
+    };
+  }
+
+  it('shows the reply and token counts of a Llama call', async () => {
+    const user = userEvent.setup();
+    useDashboardStore.setState({
+      proxiedRequests: [
+        bedrockInvoke(
+          'llama-1',
+          'meta.llama3-70b-instruct-v1:0',
+          { prompt: 'Describe a hello world program.', max_gen_len: 512 },
+          { generation: 'It prints a greeting.', prompt_token_count: 12, generation_token_count: 4, stop_reason: 'stop' },
+        ),
+      ],
+    });
+    renderTrafficInspector();
+    expect(screen.getByText('12 in / 4 out')).toBeInTheDocument();
+    await user.click(screen.getAllByText(/meta\.llama3-70b-instruct/)[0]!);
+    await user.click(screen.getByRole('tab', { name: 'Conversation' }));
+    expect(screen.getByText('It prints a greeting.')).toBeInTheDocument();
+  });
+
+  it('shows the reply of a Mistral call and its token counts from the response headers', async () => {
+    const user = userEvent.setup();
+    useDashboardStore.setState({
+      proxiedRequests: [
+        bedrockInvoke(
+          'mistral-1',
+          'mistral.mistral-7b-instruct-v0:2',
+          { prompt: '<s>[INST] Name a condiment [/INST]', max_tokens: 400 },
+          { outputs: [{ text: 'Mustard.', stop_reason: 'stop' }] },
+          [
+            { name: 'X-Amzn-Bedrock-Input-Token-Count', values: ['11'] },
+            { name: 'X-Amzn-Bedrock-Output-Token-Count', values: ['3'] },
+          ],
+        ),
+      ],
+    });
+    renderTrafficInspector();
+    expect(screen.getByText('11 in / 3 out')).toBeInTheDocument();
+    await user.click(screen.getAllByText(/mistral\.mistral-7b-instruct/)[0]!);
+    await user.click(screen.getByRole('tab', { name: 'Conversation' }));
+    expect(screen.getByText('Mustard.')).toBeInTheDocument();
+  });
+});
+
 describe('TrafficInspector — compare two requests (diff)', () => {
   beforeEach(() => {
     useDashboardStore.setState({

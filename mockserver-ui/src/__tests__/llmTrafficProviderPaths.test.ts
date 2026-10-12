@@ -434,6 +434,240 @@ describe('parseTraffic — Bedrock InvokeModel', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Bedrock InvokeModel, native bodies of the other model families
+// ---------------------------------------------------------------------------
+
+// Request and response bodies from the AWS model-parameters pages:
+// https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-meta.html
+// https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-titan-text.html
+// https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-mistral-text-completion.html
+// https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-cohere-command.html
+// https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-cohere-command-r-plus.html
+// Mistral and Cohere bodies carry no token counts; Bedrock returns them in the
+// x-amzn-bedrock-input-token-count / x-amzn-bedrock-output-token-count response headers.
+function invokeModel(modelId: string, request: unknown, response: unknown, headers: unknown[] = []) {
+  return parseTraffic({
+    httpRequest: {
+      method: 'POST',
+      path: `/model/${modelId}/invoke`,
+      headers: [{ name: 'host', values: ['bedrock-runtime.us-east-1.amazonaws.com'] }],
+      body: { type: 'JSON', json: JSON.stringify(request) },
+    },
+    httpResponse: {
+      statusCode: 200,
+      headers: [{ name: 'content-type', values: ['application/json'] }, ...headers],
+      body: { type: 'JSON', json: JSON.stringify(response) },
+    },
+  });
+}
+
+const TOKEN_COUNT_HEADERS = [
+  { name: 'X-Amzn-Bedrock-Input-Token-Count', values: ['17'] },
+  { name: 'X-Amzn-Bedrock-Output-Token-Count', values: ['6'] },
+];
+
+describe('parseTraffic — Bedrock InvokeModel on Llama, Titan, Mistral and Cohere', () => {
+  it('shows a Llama generation with its prompt and token counts', () => {
+    const parsed = invokeModel(
+      'meta.llama3-70b-instruct-v1:0',
+      { prompt: '<|begin_of_text|>What is a hello world program?', max_gen_len: 512, temperature: 0.5 },
+      { generation: '\n\nA first program.', prompt_token_count: 12, generation_token_count: 4, stop_reason: 'stop' },
+    );
+    expect(parsed.kind).toBe('anthropic');
+    if (parsed.kind !== 'anthropic') return;
+    expect(parsed.platform).toBe('bedrock');
+    expect(parsed.model).toBe('meta.llama3-70b-instruct-v1:0');
+    expect(parsed.messages).toEqual([{ role: 'user', content: '<|begin_of_text|>What is a hello world program?' }]);
+    expect(parsed.maxTokens).toBe(512);
+    expect(parsed.responseContent).toEqual([{ type: 'text', text: '\n\nA first program.' }]);
+    expect(parsed.stopReason).toBe('stop');
+    expect(getTokenSummary(parsed)).toBe('12 in / 4 out');
+  });
+
+  it('shows Titan Text results with their token counts', () => {
+    const parsed = invokeModel(
+      'amazon.titan-text-express-v1',
+      { inputText: 'User: Name a colour\nBot:', textGenerationConfig: { maxTokenCount: 4096, temperature: 0, topP: 1, stopSequences: [] } },
+      { inputTextTokenCount: 9, results: [{ tokenCount: 3, outputText: '\nBlue.\n', completionReason: 'FINISHED' }] },
+    );
+    expect(parsed.kind).toBe('anthropic');
+    if (parsed.kind !== 'anthropic') return;
+    expect(parsed.messages).toEqual([{ role: 'user', content: 'User: Name a colour\nBot:' }]);
+    expect(parsed.maxTokens).toBe(4096);
+    expect(parsed.responseContent).toEqual([{ type: 'text', text: '\nBlue.\n' }]);
+    expect(parsed.stopReason).toBe('FINISHED');
+    expect(getTokenSummary(parsed)).toBe('9 in / 3 out');
+  });
+
+  it('shows Mistral outputs, taking the token counts from the response headers', () => {
+    const parsed = invokeModel(
+      'mistral.mistral-7b-instruct-v0:2',
+      { prompt: '<s>[INST] What is your favourite condiment? [/INST]', max_tokens: 400, temperature: 0.7, top_p: 0.7, top_k: 50 },
+      { outputs: [{ text: 'Lemon juice.', stop_reason: 'stop' }] },
+      TOKEN_COUNT_HEADERS,
+    );
+    expect(parsed.kind).toBe('anthropic');
+    if (parsed.kind !== 'anthropic') return;
+    expect(parsed.messages).toEqual([{ role: 'user', content: '<s>[INST] What is your favourite condiment? [/INST]' }]);
+    expect(parsed.maxTokens).toBe(400);
+    expect(parsed.responseContent).toEqual([{ type: 'text', text: 'Lemon juice.' }]);
+    expect(parsed.stopReason).toBe('stop');
+    expect(getTokenSummary(parsed)).toBe('17 in / 6 out');
+  });
+
+  it('shows every Cohere Command generation, taking the token counts from the response headers', () => {
+    const parsed = invokeModel(
+      'cohere.command-text-v14',
+      { prompt: 'Summarize this dialogue', max_tokens: 200, temperature: 0.6, p: 1, k: 0, num_generations: 2 },
+      {
+        generations: [
+          { finish_reason: 'COMPLETE', id: 'g1', text: 'A password reset.' },
+          { finish_reason: 'COMPLETE', id: 'g2', text: 'Lost access.' },
+        ],
+        id: 'r1',
+        prompt: 'Summarize this dialogue',
+      },
+      TOKEN_COUNT_HEADERS,
+    );
+    expect(parsed.kind).toBe('anthropic');
+    if (parsed.kind !== 'anthropic') return;
+    expect(parsed.maxTokens).toBe(200);
+    expect(parsed.responseContent).toEqual([
+      { type: 'text', text: 'A password reset.' },
+      { type: 'text', text: 'Lost access.' },
+    ]);
+    expect(parsed.stopReason).toBe('COMPLETE');
+    expect(getTokenSummary(parsed)).toBe('17 in / 6 out');
+  });
+
+  it('shows a Cohere Command R reply, chat history, preamble and tool calls', () => {
+    const parsed = invokeModel(
+      'cohere.command-r-v1:0',
+      {
+        message: 'What are some skills I should have?',
+        chat_history: [
+          { role: 'USER', message: 'What is an interesting new role in AI?' },
+          { role: 'CHATBOT', message: 'You could explore being a prompt engineer!' },
+        ],
+        preamble: 'You are a careers adviser.',
+        max_tokens: 2000,
+      },
+      {
+        response_id: 'r1',
+        text: 'Writing and testing.',
+        generation_id: 'g1',
+        finish_reason: 'COMPLETE',
+        tool_calls: [{ name: 'top_song', parameters: { sign: 'WZPZ' } }],
+      },
+      TOKEN_COUNT_HEADERS,
+    );
+    expect(parsed.kind).toBe('anthropic');
+    if (parsed.kind !== 'anthropic') return;
+    expect(parsed.messages).toEqual([
+      { role: 'user', content: 'What is an interesting new role in AI?' },
+      { role: 'assistant', content: 'You could explore being a prompt engineer!' },
+      { role: 'user', content: 'What are some skills I should have?' },
+    ]);
+    expect(parsed.system).toBe('You are a careers adviser.');
+    expect(parsed.maxTokens).toBe(2000);
+    expect(parsed.responseContent).toEqual([
+      { type: 'text', text: 'Writing and testing.' },
+      { type: 'tool_use', name: 'top_song', input: { sign: 'WZPZ' } },
+    ]);
+    expect(parsed.stopReason).toBe('COMPLETE');
+    expect(getTokenSummary(parsed)).toBe('17 in / 6 out');
+  });
+
+  it('prefers the token counts in a Cohere Command R meta.billed_units over the headers', () => {
+    const parsed = invokeModel(
+      'cohere.command-r-plus-v1:0',
+      { message: 'Hi' },
+      { response_id: 'r1', text: 'Hello.', finish_reason: 'COMPLETE', meta: { billed_units: { input_tokens: 2, output_tokens: 3 } } },
+      TOKEN_COUNT_HEADERS,
+    );
+    expect(getTokenSummary(parsed)).toBe('2 in / 3 out');
+  });
+
+  // InvokeModelWithResponseStream chunk fields: Titan from its model-parameters page;
+  // Llama `generation`, Mistral `outputs`, Cohere `text`/`is_finished` and the
+  // `amazon-bedrock-invocationMetrics` on the last chunk as read by langchain-aws
+  // (libs/aws/langchain_aws/llms/bedrock.py, prepare_output_stream).
+  function invokeModelStream(modelId: string, chunks: unknown[]) {
+    const stream = concat(chunks.map((c) => eventFrame('chunk', { bytes: btoa(JSON.stringify(c)) })));
+    return parseTraffic({
+      httpRequest: {
+        method: 'POST',
+        path: `/model/${modelId}/invoke-with-response-stream`,
+        headers: [{ name: 'host', values: ['bedrock-runtime.us-east-1.amazonaws.com'] }],
+        body: { type: 'JSON', json: '{"prompt":"Hi"}' },
+      },
+      httpResponse: { statusCode: 200, headers: EVENT_STREAM_HEADERS, body: binaryBody(stream) },
+    });
+  }
+  const METRICS = { 'amazon-bedrock-invocationMetrics': { inputTokenCount: 8, outputTokenCount: 5, invocationLatency: 300, firstByteLatency: 100 } };
+
+  it.each([
+    ['Llama', 'meta.llama3-8b-instruct-v1:0', [
+      { generation: 'Hello', prompt_token_count: 8, generation_token_count: 1, stop_reason: null },
+      { generation: ' there', prompt_token_count: null, generation_token_count: 5, stop_reason: 'stop', ...METRICS },
+    ], 'stop'],
+    ['Titan', 'amazon.titan-text-lite-v1', [
+      { index: 0, inputTextTokenCount: 8, totalOutputTextTokenCount: 1, outputText: 'Hello', completionReason: null },
+      { index: 1, inputTextTokenCount: 8, totalOutputTextTokenCount: 5, outputText: ' there', completionReason: 'FINISHED', ...METRICS },
+    ], 'FINISHED'],
+    ['Mistral', 'mistral.mixtral-8x7b-instruct-v0:1', [
+      { outputs: [{ text: 'Hello', stop_reason: null }] },
+      { outputs: [{ text: ' there', stop_reason: 'stop' }], ...METRICS },
+    ], 'stop'],
+    ['Cohere', 'cohere.command-light-text-v14', [
+      { text: 'Hello', is_finished: false },
+      { text: ' there', is_finished: false },
+      { is_finished: true, finish_reason: 'COMPLETE', ...METRICS },
+    ], 'COMPLETE'],
+    // Cohere chat stream events: https://docs.cohere.com/v1/reference/chat-stream. The
+    // stream-end event repeats the whole reply in `response`, which must not be added again.
+    ['Cohere Command R', 'cohere.command-r-v1:0', [
+      { is_finished: false, event_type: 'stream-start', generation_id: 'g1' },
+      { is_finished: false, event_type: 'text-generation', text: 'Hello' },
+      { is_finished: false, event_type: 'text-generation', text: ' there' },
+      { is_finished: true, event_type: 'stream-end', finish_reason: 'COMPLETE', response: { response_id: 'r1', text: 'Hello there', generation_id: 'g1', finish_reason: 'COMPLETE' }, ...METRICS },
+    ], 'COMPLETE'],
+  ])('reassembles a streamed %s reply and its invocation metrics', (_family, modelId, chunks, stopReason) => {
+    const parsed = invokeModelStream(modelId as string, chunks as unknown[]);
+    expect(parsed.kind).toBe('anthropic');
+    if (parsed.kind !== 'anthropic') return;
+    expect(parsed.stream).toBe(true);
+    expect(parsed.responseContent).toEqual([{ type: 'text', text: 'Hello there' }]);
+    expect(parsed.stopReason).toBe(stopReason);
+    expect(getTokenSummary(parsed)).toBe('8 in / 5 out');
+  });
+
+  it('keeps the text streamed before an exception frame, and the exception in the stream events', () => {
+    const stream = concat([
+      eventFrame('chunk', { bytes: btoa(JSON.stringify({ generation: 'Hello', prompt_token_count: 8, generation_token_count: 1, stop_reason: null })) }),
+      eventFrame('chunk', { bytes: btoa(JSON.stringify({ generation: ' there', prompt_token_count: null, generation_token_count: 2, stop_reason: null })) }),
+      frame(
+        { ':exception-type': 'modelStreamErrorException', ':content-type': 'application/json', ':message-type': 'exception' },
+        JSON.stringify({ message: 'The model stream failed', originalStatusCode: 500 }),
+      ),
+    ]);
+    const parsed = parseTraffic({
+      httpRequest: {
+        method: 'POST',
+        path: '/model/meta.llama3-8b-instruct-v1:0/invoke-with-response-stream',
+        body: { type: 'JSON', json: '{"prompt":"Hi"}' },
+      },
+      httpResponse: { statusCode: 200, headers: EVENT_STREAM_HEADERS, body: binaryBody(stream) },
+    });
+    expect(parsed.kind).toBe('anthropic');
+    if (parsed.kind !== 'anthropic') return;
+    expect(parsed.responseContent).toEqual([{ type: 'text', text: 'Hello there' }]);
+    expect(parsed.sseEvents!.map((e) => e.event)).toEqual(['chunk', 'chunk', 'modelStreamErrorException']);
+    expect(parsed.sseEvents![2]!.data).toContain('The model stream failed');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Ollama streaming (NDJSON)
 // ---------------------------------------------------------------------------
 

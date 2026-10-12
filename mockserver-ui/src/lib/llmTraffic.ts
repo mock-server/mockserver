@@ -529,11 +529,24 @@ function isOpenAiPath(path: string | null): boolean {
   return path !== null && path.includes('/chat/completions');
 }
 
+// Mirrors the server's OpenAI Responses path pattern: /v1/responses (also Azure's
+// /openai/v1/responses), Azure's dated-version /openai/responses, and the OpenAI Codex
+// backend used by coding CLIs (chatgpt.com/backend-api/codex/responses). The codex/ and
+// openai/ arms end at a path-segment boundary so /mycodex/responses cannot match.
+const OPENAI_RESPONSES_PATH = /\/v1\/responses|(^|\/)(codex|openai)\/responses(?:[/?]|$)/i;
+
 function isOpenAiResponsesPath(path: string | null): boolean {
-  // The standard hosted path (/v1/responses) and the OpenAI Codex backend used by
-  // coding CLIs such as opencode, which serves the same Responses wire format at
-  // chatgpt.com/backend-api/codex/responses.
-  return path !== null && /\/v1\/responses|\/codex\/responses/.test(path);
+  return path !== null && OPENAI_RESPONSES_PATH.test(path);
+}
+
+/**
+ * An Azure OpenAI endpoint, as the server's LlmProviderSniffer.isAzureOpenAiHost: any
+ * *.openai.azure.com host, or the *.services.ai.azure.com Foundry host on an /openai/ path
+ * (that host also serves non-OpenAI model APIs).
+ */
+function isAzureOpenAiHost(host: string, path: string | null): boolean {
+  return host.endsWith('.openai.azure.com')
+    || (host.endsWith('.services.ai.azure.com') && path !== null && path.toLowerCase().startsWith('/openai/'));
 }
 
 function isGeminiPath(path: string | null): boolean {
@@ -588,7 +601,7 @@ function isOllamaGeneratePath(path: string | null): boolean {
  * non-chat paths (e.g. /v1/models) to a known host. Returns the parser kind to
  * use, or null when the host is unknown (callers then fall back to path / body
  * shape). Maps to the parsers the dashboard implements: Azure -> openai (same
- * wire format), Vertex -> gemini (or anthropic for Claude on Vertex), Bedrock ->
+ * wire format) or openai_responses on a Responses path, Vertex -> gemini (or anthropic for Claude on Vertex), Bedrock ->
  * the Bedrock parser, which yields the anthropic shape.
  *
  * Note: embeddings-only hosts (api.cohere.com, api.voyageai.com) are recognised
@@ -607,7 +620,7 @@ function detectByHost(
     // Distinguish the Responses API (/responses) from Chat Completions.
     return path !== null && /\/responses/.test(path.toLowerCase()) ? 'openai_responses' : 'openai';
   }
-  if (h.endsWith('.openai.azure.com')) return 'openai';
+  if (isAzureOpenAiHost(h, path)) return isOpenAiResponsesPath(path) ? 'openai_responses' : 'openai';
   if (h === 'api.anthropic.com') return 'anthropic';
   // OpenAI Codex backend used by coding CLIs (opencode): chatgpt.com serves the
   // Responses API. Path-gated so non-LLM chatgpt.com traffic stays generic.
@@ -1293,6 +1306,10 @@ function parseOllamaRequest(
 // Bedrock parser (InvokeModel and Converse, normalised to the Anthropic shape)
 // ---------------------------------------------------------------------------
 
+const ANTHROPIC_STREAM_EVENTS = new Set([
+  'message_start', 'content_block_start', 'content_block_delta', 'content_block_stop', 'message_delta', 'message_stop',
+]);
+
 const CONVERSE_STREAM_EVENTS = [
   'messageStart', 'contentBlockStart', 'contentBlockDelta', 'contentBlockStop', 'messageStop', 'metadata',
 ];
@@ -1449,6 +1466,115 @@ function bedrockEventStreamEvents(frames: AwsEventStreamMessage[]): SseEvent[] {
   });
 }
 
+function tokenUsage(input: number | null, output: number | null): AnthropicUsage | null {
+  if (input === null && output === null) return null;
+  const usage: AnthropicUsage = {};
+  if (input !== null) usage.input_tokens = input;
+  if (output !== null) usage.output_tokens = output;
+  return usage;
+}
+
+/** Bedrock reports InvokeModel token counts in response headers for every model family. */
+function bedrockHeaderUsage(responseHeaders: unknown): AnthropicUsage | null {
+  const count = (name: string): number | null => {
+    const value = getHeaderValue(responseHeaders, name);
+    const n = value === null ? NaN : Number(value);
+    return Number.isFinite(n) ? n : null;
+  };
+  return tokenUsage(count('x-amzn-bedrock-input-token-count'), count('x-amzn-bedrock-output-token-count'));
+}
+
+function textBlocks(items: unknown[], key: string): AnthropicContentBlock[] {
+  return items.flatMap((item) => {
+    const text = getString(item, key);
+    return text === null ? [] : [{ type: 'text', text }];
+  });
+}
+
+interface NativeInvokeReply {
+  content: AnthropicContentBlock[];
+  usage: AnthropicUsage | null;
+  stopReason: string | null;
+}
+
+/**
+ * The native InvokeModel response bodies of the non-Anthropic, non-Nova model
+ * families: Llama `generation`, Titan Text `results`, Mistral `outputs`, Cohere
+ * Command `generations` and Cohere Command R `text`.
+ */
+function nativeInvokeReply(res: unknown): NativeInvokeReply | null {
+  const generation = getString(res, 'generation');
+  if (generation !== null) {
+    return {
+      content: [{ type: 'text', text: generation }],
+      usage: tokenUsage(getNumber(res, 'prompt_token_count'), getNumber(res, 'generation_token_count')),
+      stopReason: getString(res, 'stop_reason'),
+    };
+  }
+  const results = getArray(res, 'results');
+  if (results) {
+    const outputTokens = results.reduce<number | null>((sum, r) => {
+      const n = getNumber(r, 'tokenCount');
+      return n === null ? sum : (sum ?? 0) + n;
+    }, null);
+    return {
+      content: textBlocks(results, 'outputText'),
+      usage: tokenUsage(getNumber(res, 'inputTextTokenCount'), outputTokens),
+      stopReason: getString(results[0], 'completionReason'),
+    };
+  }
+  const outputs = getArray(res, 'outputs');
+  if (outputs) {
+    return { content: textBlocks(outputs, 'text'), usage: null, stopReason: getString(outputs[0], 'stop_reason') };
+  }
+  const generations = getArray(res, 'generations');
+  if (generations) {
+    return { content: textBlocks(generations, 'text'), usage: null, stopReason: getString(generations[0], 'finish_reason') };
+  }
+  const text = getString(res, 'text');
+  if (text !== null) {
+    const toolCalls = (getArray(res, 'tool_calls') ?? []).map((call) => ({
+      type: 'tool_use',
+      name: getString(call, 'name') ?? undefined,
+      input: getObject(call, 'parameters') ?? undefined,
+    }));
+    const billed = getObject(getObject(res, 'meta'), 'billed_units');
+    return {
+      content: [...(text.length > 0 ? [{ type: 'text', text }] : []), ...toolCalls],
+      usage: tokenUsage(getNumber(billed, 'input_tokens'), getNumber(billed, 'output_tokens')),
+      stopReason: getString(res, 'finish_reason'),
+    };
+  }
+  return null;
+}
+
+/**
+ * Reassemble InvokeModelWithResponseStream chunks of the native model families.
+ * Each chunk carries the next piece of text in its family's reply field; the last
+ * chunk carries `amazon-bedrock-invocationMetrics` with the token counts.
+ */
+function reassembleNativeInvokeStream(events: SseEvent[]): NativeInvokeReply {
+  let text = '';
+  let stopReason: string | null = null;
+  let usage: AnthropicUsage | null = null;
+  for (const evt of events) {
+    if (evt.event !== undefined && evt.event !== 'chunk') continue;
+    const chunk = safeParseJson(evt.data);
+    if (!chunk || typeof chunk !== 'object') continue;
+    const outputs = getArray(chunk, 'outputs');
+    const eventType = getString(chunk, 'event_type');
+    const cohereText = getBoolean(chunk, 'is_finished') !== true && (eventType === null || eventType === 'text-generation')
+      ? getString(chunk, 'text') : null;
+    text += getString(chunk, 'generation') ?? getString(chunk, 'outputText')
+      ?? (outputs ? textBlocks(outputs, 'text').map((b) => b.text).join('') : null) ?? cohereText ?? '';
+    stopReason = getString(chunk, 'stop_reason') ?? getString(chunk, 'completionReason')
+      ?? getString(outputs?.[0], 'stop_reason') ?? getString(chunk, 'finish_reason') ?? stopReason;
+    const metrics = getObject(chunk, 'amazon-bedrock-invocationMetrics');
+    if (metrics) usage = tokenUsage(getNumber(metrics, 'inputTokenCount'), getNumber(metrics, 'outputTokenCount'));
+  }
+  return { content: text.length > 0 ? [{ type: 'text', text }] : [], usage, stopReason };
+}
+
 function parseBedrockRequest(
   requestBody: unknown,
   responseBody: unknown,
@@ -1492,10 +1618,11 @@ function parseBedrockRequest(
       result.tools = tools ? tools.map(converseToolToAnthropic) : null;
       result.maxTokens = getNumber(getObject(req, 'inferenceConfig'), 'maxTokens');
     } else {
-      result.messages = getArray(req, 'messages') ?? [];
-      result.system = req['system'] ?? null;
+      result.messages = getArray(req, 'messages') ?? nativeInvokePrompt(req);
+      result.system = req['system'] ?? req['preamble'] ?? null;
       result.tools = getArray(req, 'tools');
-      result.maxTokens = getNumber(req, 'max_tokens');
+      result.maxTokens = getNumber(req, 'max_tokens') ?? getNumber(req, 'max_gen_len')
+        ?? getNumber(getObject(req, 'textGenerationConfig'), 'maxTokenCount');
     }
   }
 
@@ -1511,6 +1638,18 @@ function parseBedrockRequest(
   if (events) {
     result.sseEvents = events;
     const converseStream = events.some((e) => e.event !== undefined && CONVERSE_STREAM_EVENTS.includes(e.event));
+    // Chunks with no Anthropic `type` and no Converse event key are a native model family's. An
+    // exception frame (named by its :exception-type) may end such a stream; it stays in sseEvents.
+    const nativeStream = !converseStream
+      && events.some((e) => e.event === undefined || e.event === 'chunk')
+      && !events.some((e) => e.event !== undefined && ANTHROPIC_STREAM_EVENTS.has(e.event));
+    if (nativeStream) {
+      const reassembled = reassembleNativeInvokeStream(events);
+      result.responseContent = reassembled.content;
+      result.usage = reassembled.usage ?? bedrockHeaderUsage(responseHeaders);
+      result.stopReason = reassembled.stopReason;
+      return result;
+    }
     const reassembled = converseStream ? reassembleConverseStream(events) : reassembleAnthropicSse(events);
     result.responseContent = reassembled.content;
     result.usage = reassembled.usage;
@@ -1521,10 +1660,15 @@ function parseBedrockRequest(
 
   const res = safeParseJson(responseBody);
   const message = getObject(getObject(res, 'output'), 'message');
+  const native = message || getArray(res, 'content') ? null : nativeInvokeReply(res);
   if (message) {
     result.responseContent = (getArray(message, 'content') ?? []).map(converseBlockToAnthropic);
     result.usage = converseUsageToAnthropic(getObject(res, 'usage'));
     result.stopReason = getString(res, 'stopReason');
+  } else if (native) {
+    result.responseContent = native.content;
+    result.usage = native.usage ?? bedrockHeaderUsage(responseHeaders);
+    result.stopReason = native.stopReason;
   } else if (res && typeof res === 'object') {
     result.responseContent = (getArray(res, 'content') ?? []) as AnthropicContentBlock[];
     result.usage = getObject(res, 'usage') as AnthropicUsage | null;
@@ -1532,6 +1676,21 @@ function parseBedrockRequest(
     if (!result.model) result.model = getString(res, 'model');
   }
   return result;
+}
+
+/** The prompt of a native InvokeModel request (Llama, Titan, Mistral, Cohere) as messages. */
+function nativeInvokePrompt(req: Record<string, unknown>): unknown[] {
+  const message = getString(req, 'message');
+  if (message !== null) {
+    // Cohere Command R: earlier turns are in chat_history, with roles USER and CHATBOT.
+    const history = (getArray(req, 'chat_history') ?? []).map((turn) => ({
+      role: getString(turn, 'role') === 'CHATBOT' ? 'assistant' : 'user',
+      content: getString(turn, 'message') ?? '',
+    }));
+    return [...history, { role: 'user', content: message }];
+  }
+  const prompt = getString(req, 'prompt') ?? getString(req, 'inputText');
+  return prompt === null ? [] : [{ role: 'user', content: prompt }];
 }
 
 // ---------------------------------------------------------------------------

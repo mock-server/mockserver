@@ -1881,6 +1881,76 @@ describe('parseTraffic — host-based detection', () => {
     expect(parsed.kind).toBe('openai');
   });
 
+  // Azure OpenAI Responses API: /openai/v1/responses (v1 GA) and /openai/responses
+  // with a dated api-version; Azure AI Foundry resources serve the same /openai/ API
+  // on *.services.ai.azure.com. Mirrors LlmProviderSniffer.isAzureOpenAiHost.
+  // https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/responses
+  function azureCall(host: string, path: string, method = 'POST') {
+    return parseTraffic({
+      httpRequest: {
+        method,
+        path,
+        headers: [{ name: 'host', values: [host] }],
+        body: method === 'GET' ? null : { type: 'JSON', json: '{"model":"gpt-4.1","input":"Hello"}' },
+      },
+      httpResponse: {
+        statusCode: 200,
+        body: {
+          type: 'JSON',
+          json: JSON.stringify({
+            id: 'resp_1',
+            object: 'response',
+            output: [{ type: 'message', role: 'assistant', content: [{ type: 'output_text', text: 'Hi from Azure' }] }],
+            usage: { input_tokens: 5, output_tokens: 2, total_tokens: 7 },
+          }),
+        },
+      },
+    });
+  }
+
+  it.each([
+    ['myresource.openai.azure.com', '/openai/v1/responses'],
+    ['myresource.openai.azure.com', '/openai/responses?api-version=2025-04-01-preview'],
+    ['myresource.services.ai.azure.com', '/openai/v1/responses'],
+    ['myresource.services.ai.azure.com:443', '/openai/responses?api-version=2025-04-01-preview'],
+  ])('classifies Azure Responses traffic on %s%s as OpenAI Responses', (host, path) => {
+    const parsed = azureCall(host, path);
+    expect(parsed.kind).toBe('openai_responses');
+    expect(getTokenSummary(parsed)).toBe('5 in / 2 out');
+  });
+
+  it('classifies the Azure AI Foundry host on an /openai/ path as Azure OpenAI', () => {
+    expect(azureCall('myresource.services.ai.azure.com', '/openai/v1/models', 'GET').kind).toBe('openai');
+    expect(azureCall('myresource.services.ai.azure.com', '/openai/deployments/gpt4/embeddings?api-version=2024-10-21').kind).toBe('openai');
+  });
+
+  it('leaves the Azure AI Foundry host on a non-/openai/ path to path and body detection', () => {
+    const parsed = parseTraffic({
+      httpRequest: {
+        method: 'GET',
+        path: '/api/projects/demo/connections',
+        headers: [{ name: 'host', values: ['myresource.services.ai.azure.com'] }],
+        body: null,
+      },
+      httpResponse: { statusCode: 200, body: { type: 'JSON', json: '{"value":[]}' } },
+    });
+    expect(parsed.kind).toBe('generic');
+  });
+
+  it('classifies Azure Responses paths without a host, and not lookalike paths', () => {
+    const call = (path: string) =>
+      parseTraffic({
+        httpRequest: { method: 'POST', path, body: null },
+        httpResponse: { statusCode: 200, body: { type: 'JSON', json: '{}' } },
+      }).kind;
+    expect(call('/openai/v1/responses')).toBe('openai_responses');
+    expect(call('/openai/responses?api-version=2025-04-01-preview')).toBe('openai_responses');
+    expect(call('/OpenAI/Responses')).toBe('openai_responses');
+    expect(call('/myopenai/responses')).toBe('generic');
+    expect(call('/mycodex/responses')).toBe('generic');
+    expect(call('/backend-api/codex/responses')).toBe('openai_responses');
+  });
+
   it('ignores a host:port suffix when matching', () => {
     const parsed = parseTraffic({
       httpRequest: {
