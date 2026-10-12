@@ -70,6 +70,12 @@ public class Http3Server {
 
     private static final Logger LOG = LoggerFactory.getLogger(Http3Server.class);
     private static final long STOP_TIMEOUT_SECONDS = 5;
+    /**
+     * The listener's UDP receive buffer. At the platform default the kernel drops client datagrams, ACKs and
+     * flow-control credit among them, while a large response is sent, and a client that does not resend lost credit
+     * stalls. The operating system caps it (Linux at {@code net.core.rmem_max}).
+     */
+    static final int RECEIVE_BUFFER_BYTES = 4 * 1024 * 1024;
 
     private final AtomicInteger activeHttp3Connections = new AtomicInteger(0);
 
@@ -240,6 +246,7 @@ public class Http3Server {
                 .group(localGroup)
                 .channel(NioDatagramChannel.class)
                 .option(ChannelOption.ALLOCATOR, NettyAllocator.ALLOCATOR)
+                .option(ChannelOption.SO_RCVBUF, RECEIVE_BUFFER_BYTES)
                 .handler(new ChannelInitializer<Channel>() {
                     @Override
                     protected void initChannel(Channel listener) {

@@ -398,6 +398,40 @@ tolerance), a positive serial (RFC 5280 §4.1.2.2), a SAN covering
 When metrics are enabled, HTTP/3 requests increment the `REQUESTS_RECEIVED_COUNT`
 counter, consistent with HTTP/1.1 and HTTP/2 request counting.
 
+### UDP receive buffer
+
+**The listener asks for a 4 MiB UDP receive buffer (`Http3Server.RECEIVE_BUFFER_BYTES`), and the
+operating system grants what it allows** (Linux caps it at `net.core.rmem_max`, often 208 KiB, which
+the kernel doubles).
+
+While MockServer sends a large response, the client sends a stream of small datagrams back: ACKs and
+flow-control credit (`MAX_DATA`, `MAX_STREAM_DATA`). The listener's single event loop is busy
+writing, so at the platform default these overflowed the socket's receive buffer and the kernel
+dropped them (`RcvbufErrors` in `/proc/net/snmp`). Most clients resend lost credit and only slow
+down. curl built on OpenSSL's QUIC stack (Debian 13's `curl --http3`, OpenSSL 3.5) does not: the
+server is left with no credit, the client with no data, and the response stalls until the client
+gives up or `responseWriteStallTimeoutMillis` resets the stream. A plain Netty HTTP/3 server with
+MockServer's transport parameters stalled the same way, and stopped stalling with the larger buffer.
+
+These figures come from Linux containers in Docker Desktop's VM on a Mac, whose `rmem_max` is
+4 MiB, so the listener got the whole 4 MiB there. **Nothing has run on a real Linux host or a CI
+agent.** A stock Linux cap was simulated by having the listener ask for 212,992 bytes (granted about
+416 KiB after the kernel doubles it).
+
+| Client against the `-http3` jar (Docker Desktop VM, one bridge network) | Platform default buffer | 4 MiB granted (VM `rmem_max` 4 MiB) | About 416 KiB granted (stock Linux cap, simulated) |
+|---|---|---|---|
+| curl 8.14.1, OpenSSL 3.5 QUIC + nghttp3: 30 GETs of a 20 MiB body, per run | 0 to 11 stalled (rising with host load), up to 29,243 datagrams dropped | 30 complete in each of 3 runs, none dropped | 1 of 30 stalled, 4,631 datagrams dropped (one run) |
+| libcurl 8.14.1 with ngtcp2 1.11 + GnuTLS, quic-go 0.48.2, Chromium (Playwright 1.63) | all complete | all complete, except one Chromium fetch that failed once under heavy host load and did not recur in 8 further runs | not run |
+
+**Operator note: the 4 MiB request is capped by `net.core.rmem_max`.** On a stock Linux host the
+listener gets a fraction of it; in the one capped run above fewer datagrams were dropped but a
+download still stalled. Where large HTTP/3 responses
+matter, raise the cap on the host so the full buffer takes effect: `sysctl -w
+net.core.rmem_max=4194304`. It is a host setting, not one a container can set. The size is
+deliberately not a configuration property: where the cap is below 4 MiB, the cap decides the
+buffer, not the size asked for. Measuring this on a real Linux host is open (performance backlog
+row 541).
+
 ## Native QUIC Platform Requirement
 
 The QUIC transport requires a native BoringSSL library. The

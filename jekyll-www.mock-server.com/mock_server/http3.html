@@ -171,6 +171,7 @@ Fix it with one of:
 
 <ul>
     <li><strong>Codec API maturity</strong> &mdash; the HTTP/3 codec has graduated from the Netty incubator into mainline Netty 4.2, but the API may still evolve in future releases</li>
+    <li><strong>Large responses on Linux</strong> &mdash; MockServer asks for a 4 MiB UDP receive buffer for its HTTP/3 port, but Linux limits it to <span class="inline_code">net.core.rmem_max</span> (often only 208 KiB). With a small buffer, packets the client sends back while a large response is downloading can be dropped; most clients recover, but some (for example <span class="inline_code">curl --http3</span> on Debian or Ubuntu, which uses OpenSSL's QUIC support) can stall on a response of several megabytes. If you serve large HTTP/3 responses from a Linux host, raise the limit on the host with <span class="inline_code">sysctl -w net.core.rmem_max=4194304</span> (a Docker container cannot change it)</li>
 </ul>
 
 <a id="http3_parity" class="anchor" href="#http3_parity">&nbsp;</a>
