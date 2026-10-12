@@ -27,9 +27,10 @@
 // gated (notify-only until ~8 weekly runs of variance exist), and the soak step
 // samples requests_received_count / heap alongside so the recorded verify /
 // retrieve latency can be read AGAINST log occupancy. This is what finally
-// DEMONSTRATES the ring-buffer bound under load rather than asserting it: the
-// count-bounded ring stays pinned at maxLogEntries while requests_received climbs
-// unboundedly, so query latency and live-set stay flat.
+// DEMONSTRATES the ring-buffer bound under load rather than asserting it: the log
+// stays at whichever bound binds first (at the default budgets the byte budget, not
+// maxLogEntries; the step records it as event_log.binding) while requests_received
+// climbs unboundedly, so query latency and live-set stay flat.
 //
 import http from 'k6/http';
 import { check } from 'k6';

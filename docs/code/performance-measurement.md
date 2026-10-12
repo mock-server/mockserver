@@ -2370,8 +2370,10 @@ perf-harness test change), `--memory=2g`, `ERROR`: heap max 966,787,072 bytes, `
 47,289,690 bytes (100% of the budget), about 1,337 bytes an entry; it first evicted at 121 s and
 evicted 2,844,362 entries in all, with 0 dropped events. Match: 1,440,001 samples, p50 0.386 ms, p95
 0.499 ms, p99 0.592 ms, 0 errors; `drift.match.p99.ratio` 0.976 and `ratio_worst` 1.018. Verify p50
-19.6 ms and retrieve p50 83.0 ms, flat across the run. Threads flat at 40; the container was still
-running, not OOM-killed, at the end. Build 637 stays a 50% reading (1.0 GiB heap, ~128.5k
+19.6 ms and retrieve p50 83.0 ms, flat across the run. Each retrieve call scanned about 35,400
+entries, some 18 times the 2,000-entry ring of the local proof run, and match p99 still read 0.568
+to 0.590 ms in every window after the warm-up, so the retrieve arm does not perturb the gated
+metric. Threads flat at 40; the container was still running, not OOM-killed, at the end. Build 637 stays a 50% reading (1.0 GiB heap, ~128.5k
 `maxLogEntries`, 52,637,696-byte budget). The clustered A/B nodes, also 2 GB containers, move the
 same way.
 

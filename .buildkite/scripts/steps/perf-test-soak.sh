@@ -80,12 +80,13 @@ SOAK_RATE="${K6_SOAK_RATE:-200}"
 #
 # k6/lib/config.js LIMITS is documented as "standard thresholds shared by the load/stress/soak
 # scenarios": p95 25 ms, p99 100 ms. Those were calibrated for a SHORT load test against a nearly
-# empty event log. This soak runs for two hours against a log that fills its ~115.5k ring in the first
-# ~305 s and stays pinned there, so it measures a different subject and the inherited numbers do not
-# describe it. Build #340 - the first VALID soak, on the fixed harness - measured the match arm at
-# p95 62.644 ms and p99 96.051 ms. The p95 gate therefore reds this build every week on a number
-# that was never about this scenario, while p99 "passes" with 4% headroom, which is not a pass so
-# much as a coin toss on a contended agent.
+# empty event log. This soak runs for two hours against a log that reaches its bound (at the default
+# budgets the byte budget, well below maxLogEntries) early in the warm-up and stays full, so it
+# measures a different subject and the inherited numbers do not describe it. Build #340 - the
+# first VALID soak, on the fixed harness - measured the match arm at p95 62.644 ms and p99
+# 96.051 ms. The p95 gate therefore reds this build every week on a number that was never about
+# this scenario, while p99 "passes" with 4% headroom, which is not a pass so much as a coin toss
+# on a contended agent.
 #
 # These values are PROVISIONAL and derived from a SINGLE valid run, so they are set with enough
 # headroom to stop a false weekly red without pretending to be calibrated: roughly 2x the one
@@ -350,14 +351,10 @@ sampler() {
 }
 sampler & SAMPLER_PID=$!
 
-# OPEN QUESTION for the first weekly run (not settled): local validation used a
-# small (~2000-entry) ring, where a `type=REQUESTS` full scan is cheap. At the
-# production default (~115.5k entries on this 2 GB SUT) that scan is roughly 58x heavier per call, so
-# its effect on the GATED match p99 and on the drift figures is UNVERIFIED. Gate headroom
-# is large (local match p99 ~2.3 ms against the 200 ms gate), so a false red is
-# unlikely — but the FIRST weekly run should be read as validating that assumption,
-# not as an established baseline. If the retrieve arm ever perturbs match p99,
-# lower K6_SOAK_RETRIEVE_RATE.
+# The retrieve arm's `type=REQUESTS` call scans the whole event log, which at the
+# default budgets holds far more entries than a local proof run's small ring. It
+# must not perturb the GATED match p99 or the drift figures (see the soak section of
+# docs/code/performance-measurement.md); if it ever does, lower K6_SOAK_RETRIEVE_RATE.
 echo "--- soak.js ($SOAK_DURATION)"
 K6_START_TS="$(date -u +%s)"
 SOAK_EXIT=0
