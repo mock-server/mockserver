@@ -191,7 +191,8 @@ public class BedrockCodec implements ProviderCodec {
      *       dimensions or {@code embeddingConfig.outputEmbeddingLength} (256, 384 or 1024).</li>
      *   <li><strong>Cohere Embed v3 / v4</strong> ({@code cohere.embed-english-v3},
      *       {@code cohere.embed-v4:0}): one vector per {@code texts} entry, {@code images}
-     *       entry (one on v3, with {@code texts} returned empty) or v4 {@code inputs} item, in
+     *       entry (one on v3, with {@code texts} returned empty and {@code images} describing
+     *       the image) or v4 {@code inputs} item (text and {@code image_url} parts), in
      *       {@code {"id":...,"embeddings":[[...]],
      *       "response_type":"embeddings_floats","texts":[...]}}; with {@code embedding_types}
      *       the embeddings are an object keyed by type and {@code response_type} is
@@ -309,7 +310,7 @@ public class BedrockCodec implements ProviderCodec {
         } else if (items != null && items.isArray()) {
             EmbeddingWire.checkInputCount(items.size(), COHERE_MAX_INPUTS, "inputs");
             for (JsonNode item : items) {
-                inputs.add(EmbeddingWire.joinTextParts(item.get("content"), "text"));
+                inputs.add(cohereInputText(item.get("content")));
             }
         } else if (images != null && images.isArray()) {
             EmbeddingWire.checkInputCount(images.size(), family == EmbeddingFamily.COHERE_V4 ? COHERE_MAX_INPUTS : COHERE_V3_MAX_IMAGES, "images");
@@ -352,7 +353,42 @@ public class BedrockCodec implements ProviderCodec {
             root.set("inputs", items.deepCopy());
         } else {
             root.putArray("texts");
+            if (family == EmbeddingFamily.COHERE_V3 && images != null && images.isArray()) {
+                ArrayNode descriptions = root.putArray("images");
+                for (JsonNode image : images) {
+                    CohereImageDescription.describe(image).writeTo(descriptions.addObject());
+                }
+            }
         }
         return EmbeddingWire.json(root, "Bedrock Cohere");
+    }
+
+    /**
+     * The text of a v4 {@code inputs} item: its parts in order, each text part as its text and
+     * each {@code image_url} part as the digest of its URL, so its images change its vector.
+     */
+    private static String cohereInputText(JsonNode content) {
+        if (content == null || !content.isArray()) {
+            return "";
+        }
+        StringBuilder text = new StringBuilder();
+        for (JsonNode part : content) {
+            String type = part.path("type").asText("");
+            String value = null;
+            if ("text".equals(type)) {
+                JsonNode partText = part.get("text");
+                value = partText != null && partText.isTextual() ? partText.asText() : null;
+            } else if ("image_url".equals(type)) {
+                JsonNode imageUrl = part.get("image_url");
+                value = EmbeddingWire.imageInput(imageUrl != null && imageUrl.isObject() ? imageUrl.get("url") : imageUrl);
+            }
+            if (value != null) {
+                if (text.length() > 0) {
+                    text.append('\n');
+                }
+                text.append(value);
+            }
+        }
+        return text.toString();
     }
 }

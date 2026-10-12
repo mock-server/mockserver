@@ -1625,7 +1625,7 @@ This release delivers a sustained performance and memory programme alongside dat
   provider's error format when it asks for more than 8,192 dimensions, more than 2,048 inputs or 96
   Cohere texts, a Titan or Cohere size or embedding type the provider does not have, or more than
   262,144 values in total (1,048,576 with `encoding_format: "base64"`), which keeps the largest
-  response at about 5. The total is configurable with `llmEmbeddingMaxResponseValues`. A Bedrock Cohere request with only `images` returns one vector per image.6 MB. The same text, seed and dimensions give the same vector on every provider.
+  response at about 5.6 MB. The total is configurable with `llmEmbeddingMaxResponseValues`. A Bedrock Cohere request with only `images` returns one vector per image, and Cohere Embed v3 also returns `images` giving each image's `width`, `height`, `format` and `bit_depth`, read from its PNG or JPEG header. A Cohere Embed v4 `inputs` item is embedded from its images as well as its text, so two items with different images get different vectors. The same text, seed and dimensions give the same vector on every provider.
 - **Inbound WebSocket and GraphQL breakpoints now actually stop the connection reading while a frame is paused.**
   A decompression handler left in the WebSocket pipeline kept requesting reads, so later frames were
   still read, and could be parked or processed, while the first frame waited for its decision.
