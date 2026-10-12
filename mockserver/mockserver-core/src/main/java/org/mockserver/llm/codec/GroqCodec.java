@@ -12,13 +12,19 @@ import org.mockserver.model.Usage;
  * in {@code usage} (seconds, from the expectation's streaming physics when set, else 0), and
  * the {@code x_groq} object: its request {@code id} on the response and on a stream's first
  * chunk, and its {@code usage} on the chunk carrying {@code finish_reason}, which Groq sends
- * without {@code stream_options.include_usage}.
+ * without {@code stream_options.include_usage}. Each choice carries {@code logprobs} (null),
+ * as in the API reference's example response.
  */
 public class GroqCodec extends OpenAiCompatibleChatCodec {
 
     @Override
     public Provider provider() {
         return Provider.GROQ;
+    }
+
+    @Override
+    protected boolean emitsChoiceLogprobs() {
+        return true;
     }
 
     @Override

@@ -165,8 +165,9 @@ test reads no golden file.
 Current coverage: OpenAI Chat Completions (text, tool call, stream), OpenAI Responses (text,
 function call, stream), Anthropic Messages (text, stream, stream with text then tool use),
 Gemini (text, thinking with function call, `alt=sse` stream), Bedrock Converse (text,
-stream), Azure OpenAI (text) and Ollama `/api/chat` (text, tool call, both streamed). Not
-yet covered: Bedrock InvokeModel, the OpenAI-compatible providers, embeddings and rerank,
+stream), Azure OpenAI (text), Ollama `/api/chat` (text, tool call, both streamed), DeepSeek
+(text) and Groq (text). Not yet covered: Bedrock InvokeModel, the other OpenAI-compatible
+providers (Mistral, xAI, OpenRouter, OrcaRouter), embeddings and rerank,
 and a recorded Gemini JSON-array stream (that framing is tested by
 `GeminiJsonArrayStreamingTest` and `LlmAgentLoopE2eTest`).
 

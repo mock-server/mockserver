@@ -22,6 +22,11 @@ public class OpenRouterCodec extends OpenAiCompatibleChatCodec {
     }
 
     @Override
+    protected boolean emitsChoiceLogprobs() {
+        return true;
+    }
+
+    @Override
     protected String reasoningField() {
         return "reasoning";
     }

@@ -1,0 +1,42 @@
+{
+  "description": "Groq chat completions, text reply",
+  "source": "https://console.groq.com/docs/api-reference#chat-create (Example Response)",
+  "retrieved": "2026-10-12",
+  "request": {
+    "method": "POST",
+    "path": "/openai/v1/chat/completions",
+    "body": {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "user",
+          "content": "Explain the importance of fast language models"
+        }
+      ],
+      "model": "llama-3.3-70b-versatile"
+    }
+  },
+  "httpLlmResponse": {
+    "provider": "GROQ",
+    "model": "openai/gpt-oss-20b",
+    "completion": {
+      "text": "Fast language models have gained significant attention in recent years due to their ability to process and generate human-like text quickly and efficiently.",
+      "usage": {
+        "inputTokens": 18,
+        "outputTokens": 556
+      }
+    }
+  },
+  "response": "chat-text.response.json",
+  "format": "JSON",
+  "allowed": [
+    {
+      "kind": "MISSING",
+      "path": "system_fingerprint",
+      "reason": "optional: groq-python (src/groq/types/chat/chat_completion.py at 55066d94acca) declares ChatCompletion.system_fingerprint Optional with a None default"
+    }
+  ]
+}

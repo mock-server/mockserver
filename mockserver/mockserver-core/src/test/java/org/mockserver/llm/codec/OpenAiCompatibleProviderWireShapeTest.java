@@ -283,6 +283,31 @@ public class OpenAiCompatibleProviderWireShapeTest {
         }
     }
 
+    // ---- choice logprobs ----
+
+    @Test
+    public void deepSeekGroqAndOpenRouterChoicesCarryNullLogprobsAndTheOthersOmitIt() throws Exception {
+        // DeepSeek's reference marks it required (nullable); Groq's example and OpenRouter's
+        // ChatChoice example and recorded responses send it; Mistral, xAI and OrcaRouter do not
+        Completion[] completions = {
+            completion().withText("Hello"),
+            completion().withToolCall(toolUse("get_weather").withArguments("{}"))
+        };
+        for (Provider provider : Provider.values()) {
+            if (!(codec(provider) instanceof OpenAiCompatibleChatCodec)) {
+                continue;
+            }
+            boolean expected = provider == Provider.DEEPSEEK || provider == Provider.GROQ || provider == Provider.OPENROUTER;
+            for (Completion completion : completions) {
+                JsonNode choice = encode(provider, completion, "m").path("choices").path(0);
+                assertThat(provider + " logprobs present", choice.has("logprobs"), is(expected));
+                if (expected) {
+                    assertThat(provider + " logprobs null", choice.get("logprobs").isNull(), is(true));
+                }
+            }
+        }
+    }
+
     // ---- OpenAI itself is unchanged ----
 
     @Test

@@ -7,14 +7,20 @@ import org.mockserver.model.Usage;
 
 /**
  * Codec for DeepSeek ({@code api.deepseek.com}). The OpenAI Chat Completions shape, plus
- * the reasoning text in {@code reasoning_content} and the prompt-cache split in
- * {@code usage.prompt_cache_hit_tokens} and {@code usage.prompt_cache_miss_tokens}.
+ * the reasoning text in {@code reasoning_content}, the prompt-cache split in
+ * {@code usage.prompt_cache_hit_tokens} and {@code usage.prompt_cache_miss_tokens}, and the
+ * {@code logprobs} (null) that DeepSeek's API reference requires on each choice.
  */
 public class DeepSeekCodec extends OpenAiCompatibleChatCodec {
 
     @Override
     public Provider provider() {
         return Provider.DEEPSEEK;
+    }
+
+    @Override
+    protected boolean emitsChoiceLogprobs() {
+        return true;
     }
 
     @Override
