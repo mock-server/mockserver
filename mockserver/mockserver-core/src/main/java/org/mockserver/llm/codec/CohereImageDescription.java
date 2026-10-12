@@ -11,8 +11,8 @@ import java.util.Locale;
  * {@code IHDR} chunk or the JPEG start-of-frame segment of a base64 data URI. Only the header
  * bytes are decoded, straight from the base64 text, and the image is never decoded. An image
  * whose header cannot be read gets zero width, height and bit depth, and the format its data URI
- * names; nothing here throws. {@code bit_depth} is bits per pixel, as Cohere's example (an
- * 8-bit RGB JPEG is 24).
+ * names; {@link #describe} never throws. {@code bit_depth} is bits per pixel, as Cohere's example
+ * (an 8-bit RGB JPEG is 24).
  */
 final class CohereImageDescription {
 
@@ -33,6 +33,19 @@ final class CohereImageDescription {
         this.height = height;
         this.format = format;
         this.bitDepth = bitDepth;
+    }
+
+    /**
+     * Rejects a v3 {@code images} entry the real API refuses: AWS accepts only a data URI of
+     * {@code image/jpeg} or {@code image/png} ({@code image/jpg} is AWS's own example's spelling).
+     */
+    static void checkSupported(JsonNode image) {
+        String mediaType = image != null && image.isTextual() ? mediaType(image.asText()) : null;
+        if (!"image/png".equals(mediaType) && !"image/jpeg".equals(mediaType) && !"image/jpg".equals(mediaType)) {
+            throw new EmbeddingWire.InvalidEmbeddingRequestException("images",
+                "images must be data URIs in image/jpeg or image/png format"
+                    + (mediaType != null && !mediaType.isEmpty() ? ", got " + mediaType : ""));
+        }
     }
 
     static CohereImageDescription describe(JsonNode image) {
@@ -132,8 +145,21 @@ final class CohereImageDescription {
     }
 
     private static String formatFromMediaType(String uri) {
-        if (!uri.regionMatches(true, 0, "data:", 0, 5)) {
+        String mediaType = mediaType(uri);
+        if (mediaType == null) {
             return "";
+        }
+        String subtype = mediaType.substring(mediaType.indexOf('/') + 1);
+        return "jpg".equals(subtype) ? "jpeg" : subtype;
+    }
+
+    /**
+     * The lower-cased media type of a data URI, read from at most {@code MAX_MEDIA_TYPE_LENGTH}
+     * characters, or {@code null} when {@code uri} is not a data URI or its media type is longer.
+     */
+    private static String mediaType(String uri) {
+        if (!uri.regionMatches(true, 0, "data:", 0, 5)) {
+            return null;
         }
         int limit = Math.min(uri.length(), 5 + MAX_MEDIA_TYPE_LENGTH);
         int end = 5;
@@ -141,11 +167,9 @@ final class CohereImageDescription {
             end++;
         }
         if (end == limit && limit < uri.length()) {
-            return "";
+            return null;
         }
-        String mediaType = uri.substring(5, end).trim().toLowerCase(Locale.ROOT);
-        String subtype = mediaType.substring(mediaType.indexOf('/') + 1);
-        return "jpg".equals(subtype) ? "jpeg" : subtype;
+        return uri.substring(5, end).trim().toLowerCase(Locale.ROOT);
     }
 
     /**

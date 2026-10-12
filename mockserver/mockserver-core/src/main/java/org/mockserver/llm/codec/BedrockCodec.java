@@ -315,6 +315,9 @@ public class BedrockCodec implements ProviderCodec {
         } else if (images != null && images.isArray()) {
             EmbeddingWire.checkInputCount(images.size(), family == EmbeddingFamily.COHERE_V4 ? COHERE_MAX_INPUTS : COHERE_V3_MAX_IMAGES, "images");
             for (JsonNode image : images) {
+                if (family == EmbeddingFamily.COHERE_V3) {
+                    CohereImageDescription.checkSupported(image);
+                }
                 inputs.add(EmbeddingWire.imageInput(image));
             }
         }

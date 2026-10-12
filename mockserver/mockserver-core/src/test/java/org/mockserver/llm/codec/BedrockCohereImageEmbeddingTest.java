@@ -11,6 +11,7 @@ import org.mockserver.model.Provider;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -37,11 +38,15 @@ public class BedrockCohereImageEmbeddingTest {
 
     private final HttpLlmResponseActionHandler handler = new HttpLlmResponseActionHandler(new MockServerLogger());
 
-    private JsonNode post(String path, String body) throws Exception {
-        HttpResponse response = handler.handle(
+    private HttpResponse send(String path, String body) {
+        return handler.handle(
             llmResponse().withProvider(Provider.BEDROCK).withEmbedding(EmbeddingResponse.embedding().withDeterministicFromInput(true).withSeed(7L)),
             request().withMethod("POST").withPath(path).withBody(body)
         );
+    }
+
+    private JsonNode post(String path, String body) throws Exception {
+        HttpResponse response = send(path, body);
         assertThat(response.getBodyAsString(), response.getStatusCode(), is(200));
         return OBJECT_MAPPER.readTree(response.getBodyAsString());
     }
@@ -88,6 +93,46 @@ public class BedrockCohereImageEmbeddingTest {
         JsonNode root = post(V3, "{\"images\":[\"data:image/png;base64,AAAA\"],\"input_type\":\"image\"}");
         assertThat(root.get("embeddings").size(), is(1));
         assertThat(root.get("images").toString(), is("[{\"width\":0,\"height\":0,\"format\":\"png\",\"bit_depth\":0}]"));
+    }
+
+    @Test
+    public void shouldRejectACohereV3ImageThatIsNotAJpegOrPngDataUri() throws Exception {
+        String webp = "data:image/webp;base64,UklGRg==";
+        String gif = dataUri("image/gif", encode(4, 4, BufferedImage.TYPE_INT_RGB, "gif"));
+        String[][] cases = {
+            {quoted(webp), ", got image/webp"},
+            {quoted(gif), ", got image/gif"},
+            {quoted("data:image/svg+xml;base64,PHN2Zy8+"), ", got image/svg+xml"},
+            {quoted("https://example.com/cat.png"), ""},
+            {quoted(Base64.getEncoder().encodeToString(encode(4, 4, BufferedImage.TYPE_INT_RGB, "png"))), ""},
+            {"7", ""},
+            {"null", ""},
+            {quoted("data:image/" + "p".repeat(100) + ";base64,AAAA"), ""}
+        };
+        for (String[] image : cases) {
+            HttpResponse response = send(V3, "{\"images\":[" + image[0] + "],\"input_type\":\"image\"}");
+            assertThat(image[0], response.getStatusCode(), is(400));
+            assertThat(response.getFirstHeader("x-amzn-ErrorType"), is("ValidationException"));
+            assertThat(response.getBodyAsString(),
+                is("{\"message\":\"images must be data URIs in image/jpeg or image/png format" + image[1] + "\"}"));
+        }
+    }
+
+    @Test
+    public void shouldAcceptTheJpegAndPngMediaTypeSpellingsAwsSends() throws Exception {
+        byte[] jpeg = encode(3, 2, BufferedImage.TYPE_INT_RGB, "jpg");
+        for (String mediaType : new String[]{"image/jpg", "image/jpeg", "IMAGE/JPEG", "image/jpeg;name=x.jpg"}) {
+            JsonNode root = post(V3, "{\"images\":[" + quoted(dataUri(mediaType, jpeg)) + "],\"input_type\":\"image\"}");
+            assertThat(mediaType, root.get("images").toString(), is("[{\"width\":3,\"height\":2,\"format\":\"jpeg\",\"bit_depth\":24}]"));
+        }
+    }
+
+    @Test
+    public void shouldAcceptWebpAndGifImagesOnCohereV4() throws Exception {
+        String gif = dataUri("image/gif", encode(4, 4, BufferedImage.TYPE_INT_RGB, "gif"));
+        JsonNode root = post(V4, "{\"images\":[" + quoted(gif) + ",\"data:image/webp;base64,UklGRg==\"],\"input_type\":\"search_document\"}");
+        assertThat(root.get("embeddings").size(), is(2));
+        assertThat(root.has("images"), is(false));
     }
 
     @Test
