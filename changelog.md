@@ -853,6 +853,7 @@ This release delivers a sustained performance and memory programme alongside dat
   truncated body, and show it as base64, because a truncated body is kept as bytes.
 ### Fixed
 
+- **Mocked Voyage rerank responses report token usage.** `usage.total_tokens` was always `0`, which the real API never returns. It is now an estimate sized the way Voyage documents a rerank request's token limit: the query's tokens times the number of documents plus every document's tokens, estimated from the text at about four characters per token. In 8.0.0 and earlier.
 - **LLM calls through a `proxyPassMappings` route are now counted.** In 8.0.0 and earlier such a route checked `llmCostBudgetUsd` before forwarding but never recorded the call: no GenAI span, no token counts and no cost, so its calls could never use up the budget they were checked against. They are now counted as on the other forward paths, whole or streamed, by the host the mapping forwards to.
 - **Proxied AWS Bedrock calls are now priced.** A Bedrock request names its model in the URL path and a Converse response names none, so in 8.0.0 and earlier a proxied Bedrock call had no model: it was not priced and did not count towards `llmCostBudgetUsd`. The model is now read from the request path, including a cross-Region inference profile such as `us.anthropic.claude-sonnet-4-5-20250929-v1:0` or a model or inference-profile ARN, so Anthropic Claude models on Bedrock are priced; other Bedrock models are counted in tokens only, as before.
 - **Gemini streaming and Bedrock calls through an LLM gateway or private endpoint are recognised when `llmProvider` is set.** On a host that is not a known provider, 8.0.0 and earlier applied `llmProvider` only to paths that looked like an LLM endpoint, and that check missed Gemini's `:streamGenerateContent` on a `/v1beta/` path and every Bedrock Runtime path (`/model/{id}/converse`, `/converse-stream`, `/invoke`, `/invoke-with-response-stream`), so those calls were not observed, counted or held to the budget.
@@ -872,8 +873,7 @@ This release delivers a sustained performance and memory programme alongside dat
   set `topN`, because the request's Cohere `top_n` and Voyage `top_k` were ignored; the expectation's
   `topN` still wins when it is set. Cohere's current `/v2/rerank` path is now recognised alongside
   `/v1/rerank`. Cohere responses carry `id` and `meta` (`api_version`, `billed_units.search_units`)
-  instead of a `model` the real API never returns, and on `/v1/rerank` `return_documents: true` adds
-  each document's text. Voyage responses echo the request's `model` rather than always saying
+  instead of a `model` the real API never returns, and on `/v1/rerank` `return_documents: true` adds each document as it was sent, keeping every field of a structured document. Voyage responses echo the request's `model` rather than always saying
   `rerank-2`, and `return_documents: true` adds each document. A `top_n` or `top_k` that is not a
   positive whole number gets a 400 in the provider's own error format.
 - **An embedding expectation's `dimensions` must now be at least 1.** In 8.0.0 and earlier a

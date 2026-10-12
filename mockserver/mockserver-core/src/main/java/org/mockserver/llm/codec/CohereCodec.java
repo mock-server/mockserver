@@ -18,8 +18,10 @@ import java.util.List;
  * participate in the chat/completion encode/decode paths. The response is
  * {@code {"results":[{"index":N,"relevance_score":F}, ...],"id":...,"meta":{"api_version":
  * {"version":...},"billed_units":{"search_units":N}}}}, sorted by descending relevance and
- * capped to the request's {@code top_n}. On v1, {@code return_documents: true} adds
- * {@code "document":{"text":...}} to each result; v2 has no such option.
+ * capped to the request's {@code top_n}. On v1, {@code return_documents: true} adds each
+ * document as sent, a string as {@code {"text":...}}; v2 has no such option. v1's
+ * {@code rank_fields} only changes real relevance scores, which a mock never reproduces,
+ * so it is not read.
  */
 public class CohereCodec implements ProviderCodec {
 
@@ -47,6 +49,7 @@ public class CohereCodec implements ProviderCodec {
         boolean v2 = EmbeddingWire.path(request).contains("/v2/rerank");
         List<RerankScoring.Scored> scored = RerankScoring.score(rerank, documents, RerankScoring.requestedTopN(body.get("top_n"), "top_n"));
         boolean returnDocuments = !v2 && RerankScoring.returnDocuments(body);
+        JsonNode requestDocuments = body.path("documents");
 
         ObjectNode root = RerankScoring.object();
         ArrayNode results = root.putArray("results");
@@ -55,7 +58,12 @@ public class CohereCodec implements ProviderCodec {
             result.put("index", s.index);
             result.put("relevance_score", s.score);
             if (returnDocuments) {
-                result.putObject("document").put("text", documents.get(s.index));
+                JsonNode requestDocument = requestDocuments.path(s.index);
+                if (requestDocument.isObject()) {
+                    result.set("document", requestDocument.deepCopy());
+                } else {
+                    result.putObject("document").put("text", documents.get(s.index));
+                }
             }
         }
         root.put("id", UUIDService.getNonSecureUUID());

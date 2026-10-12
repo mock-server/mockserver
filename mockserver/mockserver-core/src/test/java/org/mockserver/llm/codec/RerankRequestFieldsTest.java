@@ -132,6 +132,19 @@ public class RerankRequestFieldsTest {
     }
 
     @Test
+    public void shouldReturnEachStructuredCohereV1DocumentWithAllItsFields() throws Exception {
+        JsonNode root = ok(post(Provider.COHERE, RerankResponse.rerank(), "/v1/rerank",
+            "{\"query\":\"q\",\"documents\":[{\"text\":\"carson city\",\"title\":\"Nevada\"},\"washington dc\","
+                + "{\"title\":\"Saipan\",\"body\":\"island\"}],\"rank_fields\":[\"title\",\"body\"],\"return_documents\":true}"));
+
+        JsonNode[] byIndex = new JsonNode[3];
+        root.get("results").forEach(result -> byIndex[result.get("index").asInt()] = result.get("document"));
+        assertThat(byIndex[0].toString(), is("{\"text\":\"carson city\",\"title\":\"Nevada\"}"));
+        assertThat(byIndex[1].toString(), is("{\"text\":\"washington dc\"}"));
+        assertThat(byIndex[2].toString(), is("{\"title\":\"Saipan\",\"body\":\"island\"}"));
+    }
+
+    @Test
     public void shouldOmitDocumentsOnCohereV1ByDefault() throws Exception {
         JsonNode root = ok(post(Provider.COHERE, RerankResponse.rerank(), "/v1/rerank",
             "{\"query\":\"q\",\"documents\":" + DOCUMENTS + "}"));
@@ -162,6 +175,23 @@ public class RerankRequestFieldsTest {
             assertThat(result.get("document").isTextual(), is(true));
             assertThat(result.get("document").asText(), is(documents.get(result.get("index").asInt())));
         }
+    }
+
+    @Test
+    public void shouldCountVoyageTokensAsQueryTokensPerDocumentPlusDocumentTokens() throws Exception {
+        String query = "what is the capital of the united states";
+        List<String> documents = documents();
+        int expected = EmbeddingVectors.approximateTokens(query) * documents.size();
+        for (String document : documents) {
+            expected += EmbeddingVectors.approximateTokens(document);
+        }
+        JsonNode root = ok(post(Provider.VOYAGE, RerankResponse.rerank(), "/v1/rerank",
+            "{\"query\":\"" + query + "\",\"documents\":" + DOCUMENTS + ",\"model\":\"rerank-2.5\",\"top_k\":1}"));
+
+        assertThat(root.get("data").size(), is(1));
+        assertThat(root.get("usage").get("total_tokens").isIntegralNumber(), is(true));
+        assertThat(root.get("usage").get("total_tokens").asInt(), is(expected));
+        assertThat(expected, is(10 * 5 + 2 + 3 + 4 + 1 + 3));
     }
 
     @Test

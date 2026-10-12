@@ -140,11 +140,11 @@ public final class LlmProviderSniffer {
     // to anthropic.* — non-Anthropic models use the same path shape.
     private static final java.util.regex.Pattern BEDROCK_PATH_PATTERN = java.util.regex.Pattern.compile(
         "/model/[^/]+/(invoke|invoke-with-response-stream|converse|converse-stream)");
-    // Cohere rerank (/v1/rerank) and chat (/v1/chat as a terminal segment, NOT
-    // /v1/chat/completions). Path-only /v1/rerank is shared with Voyage, so on an
+    // Cohere rerank (/v2/rerank, /v1/rerank) and chat (/v1/chat as a terminal segment,
+    // NOT /v1/chat/completions). Path-only /v1/rerank is shared with Voyage, so on an
     // unknown host it defaults to Cohere; the host check disambiguates the two.
     private static final java.util.regex.Pattern COHERE_PATH_PATTERN = java.util.regex.Pattern.compile(
-        "/v1/rerank|/v1/chat(/?$|\\?)");
+        "/v[12]/rerank|/v1/chat(/?$|\\?)");
     // Body-shape markers requiring the JSON value to actually be an array, so a
     // string-valued field (e.g. embeddings "input":"hi") does not match.
     private static final java.util.regex.Pattern INPUT_ARRAY_PATTERN = java.util.regex.Pattern.compile(

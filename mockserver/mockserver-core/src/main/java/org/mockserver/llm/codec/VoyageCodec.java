@@ -17,7 +17,8 @@ import java.util.List;
  * The response is the list envelope
  * {@code {"object":"list","data":[{"index":N,"relevance_score":F}, ...],"model":...,"usage":{"total_tokens":N}}},
  * sorted by descending relevance and capped to the request's {@code top_k}. The request's
- * {@code model} is echoed, and {@code return_documents: true} adds each {@code document}.
+ * {@code model} is echoed, {@code return_documents: true} adds each {@code document}, and
+ * {@code total_tokens} is estimated from the query and documents.
  */
 public class VoyageCodec implements ProviderCodec {
 
@@ -56,7 +57,23 @@ public class VoyageCodec implements ProviderCodec {
             }
         }
         root.put("model", EmbeddingWire.firstNonBlank(EmbeddingWire.text(body, "model"), DEFAULT_MODEL));
-        root.putObject("usage").put("total_tokens", 0);
+        root.putObject("usage").put("total_tokens", totalTokens(EmbeddingWire.text(body, "query"), documents));
         return RerankScoring.json(root);
+    }
+
+    /**
+     * Sized as Voyage documents a rerank request's token limit: query tokens times the number of
+     * documents, plus every document's tokens (https://docs.voyageai.com/reference/reranker-api),
+     * each estimated as the embedding codecs do.
+     */
+    static long totalTokens(String query, List<String> documents) {
+        if (documents == null) {
+            return 0;
+        }
+        long total = (long) EmbeddingVectors.approximateTokens(query) * documents.size();
+        for (String document : documents) {
+            total += EmbeddingVectors.approximateTokens(document);
+        }
+        return total;
     }
 }

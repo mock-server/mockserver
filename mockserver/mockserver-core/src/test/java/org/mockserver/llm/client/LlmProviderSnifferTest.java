@@ -572,6 +572,23 @@ public class LlmProviderSnifferTest {
     }
 
     @Test
+    public void sniffByPathDetectsCohereV2Rerank() {
+        assertThat(LlmProviderSniffer.sniffByPath(request().withPath("/v2/rerank")), is(Optional.of(Provider.COHERE)));
+    }
+
+    @Test
+    public void detectForAnalysisRecognisesCohereV2RerankByPathWhenTheBodiesDoNotShowIt() {
+        HttpRequest req = request()
+            .withHeader("Host", "gateway.internal.example")
+            .withPath("/v2/rerank")
+            .withBody("{\"model\":\"rerank-v3.5\"}");
+        org.mockserver.model.HttpResponse res = org.mockserver.model.HttpResponse.response()
+            .withStatusCode(429)
+            .withBody("{\"message\":\"too many requests\"}");
+        assertThat(LlmProviderSniffer.detectForAnalysis(req, res), is(Optional.of(Provider.COHERE)));
+    }
+
+    @Test
     public void sniffByPathDetectsCohereChat() {
         assertThat(LlmProviderSniffer.sniffByPath(request().withPath("/v1/chat")), is(Optional.of(Provider.COHERE)));
     }
