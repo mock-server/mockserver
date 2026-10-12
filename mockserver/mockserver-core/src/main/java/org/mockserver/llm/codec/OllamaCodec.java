@@ -114,6 +114,7 @@ public class OllamaCodec implements ProviderCodec {
         }
 
         root.put("done", true);
+        root.put("done_reason", mapDoneReason(completion.getStopReason()));
         root.put("total_duration", 1234567890L);
         root.put("load_duration", 12345L);
 
@@ -212,6 +213,7 @@ public class OllamaCodec implements ProviderCodec {
             }
         }
         finalChunk.put("done", true);
+        finalChunk.put("done_reason", mapDoneReason(completion.getStopReason()));
         finalChunk.put("total_duration", 1234567890L);
         finalChunk.put("load_duration", 12345L);
         finalChunk.put("prompt_eval_count", promptEvalCount);
@@ -365,6 +367,31 @@ public class OllamaCodec implements ProviderCodec {
         root.put("load_duration", 1019500L);
         root.put("prompt_eval_count", EmbeddingWire.tokens(inputs));
         return EmbeddingWire.json(root, "Ollama");
+    }
+
+    /**
+     * Ollama's {@code done_reason} is {@code stop} or {@code length} for a generation ({@code load}
+     * and {@code unload} for model management), with no separate value for tool calls. Native
+     * values pass through; other providers' max-token values map to {@code length}, and
+     * everything else, including tool-call values, to {@code stop}.
+     */
+    static String mapDoneReason(String stopReason) {
+        if (stopReason == null) {
+            return "stop";
+        }
+        switch (stopReason) {
+            case "stop":
+            case "length":
+            case "load":
+            case "unload":
+                return stopReason;
+            case "max_tokens":
+            case "MAX_TOKENS":
+            case "model_context_window_exceeded":
+                return "length";
+            default:
+                return "stop";
+        }
     }
 
     private static ParsedMessage.Role mapOllamaRole(String rawRole) {

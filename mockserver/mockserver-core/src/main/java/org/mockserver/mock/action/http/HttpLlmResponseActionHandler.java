@@ -453,6 +453,14 @@ public class HttpLlmResponseActionHandler {
      * a normal HTTP response, not an SSE stream.
      */
     public HttpResponse chaosErrorResponseOrNull(HttpLlmResponse httpLlmResponse) {
+        return chaosErrorResponseOrNull(httpLlmResponse, null);
+    }
+
+    /**
+     * As {@link #chaosErrorResponseOrNull(HttpLlmResponse)}, with the request so a provider that
+     * serves several wire APIs (Bedrock InvokeModel and Converse) gets the matching block body.
+     */
+    public HttpResponse chaosErrorResponseOrNull(HttpLlmResponse httpLlmResponse, HttpRequest request) {
         LlmChaosProfile chaos = httpLlmResponse.getChaos();
         if (chaos == null) {
             return null;
@@ -474,7 +482,7 @@ public class HttpLlmResponseActionHandler {
         if (chaos.getContentFilterBlockProbability() != null
             && ChaosProbability.shouldInject(chaos.getContentFilterBlockProbability(), chaos.getSeed())) {
             LlmContentFilterBodies.Block block =
-                LlmContentFilterBodies.blockFor(httpLlmResponse.getProvider(), httpLlmResponse.getContentFilter());
+                LlmContentFilterBodies.blockFor(httpLlmResponse.getProvider(), httpLlmResponse.getContentFilter(), request);
             return response()
                 .withStatusCode(block.getStatusCode())
                 .withHeader("content-type", "application/json")

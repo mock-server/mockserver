@@ -9,4 +9,4 @@
 {"model":"llama3.1","created_at":"<timestamp>","message":{"role":"assistant","content":" toda"},"done":false}
 {"model":"llama3.1","created_at":"<timestamp>","message":{"role":"assistant","content":"y"},"done":false}
 {"model":"llama3.1","created_at":"<timestamp>","message":{"role":"assistant","content":"?"},"done":false}
-{"model":"llama3.1","created_at":"<timestamp>","message":{"role":"assistant","content":""},"done":true,"total_duration":0,"load_duration":0,"prompt_eval_count":0,"prompt_eval_duration":0,"eval_count":0,"eval_duration":0}
+{"model":"llama3.1","created_at":"<timestamp>","message":{"role":"assistant","content":""},"done":true,"done_reason":"stop","total_duration":0,"load_duration":0,"prompt_eval_count":0,"prompt_eval_duration":0,"eval_count":0,"eval_duration":0}

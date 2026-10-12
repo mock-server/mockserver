@@ -15,6 +15,7 @@
     } ]
   },
   "done" : true,
+  "done_reason" : "stop",
   "total_duration" : 0,
   "load_duration" : 0,
   "prompt_eval_count" : 0,

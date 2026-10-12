@@ -80,9 +80,21 @@ flowchart LR
 - **Reasoning.** `reasoningText` becomes a leading `{"reasoningContent":{"reasoningText":{"text","signature"}}}` block, or in a stream `contentBlockDelta` events with `delta.reasoningContent.text` / `.signature`.
 - **Decode.** `system[].text`, `messages[].content[]` `text` / `image` (`format` → `image/<format>`) / `audio` / `toolUse` (id kept, so `whenContainsToolResultFor` correlates) / `toolResult` (role `TOOL`, `text` and `json` parts). `toolConfig` is not part of `ParsedConversation`, as Anthropic `tools` is not.
 - **Runtime client.** `BedrockLlmClient.parseCompletionResponse` also recognises a Converse body, so proxied `/converse` traffic gets token/cost observability. The client still *calls* real Bedrock through InvokeModel.
-- **Limitations.**
-  - The chaos `contentFilterBlockProbability` block for `BEDROCK` returns the Anthropic refusal body on Converse paths too (`LlmContentFilterBodies` is not request-aware).
-  - Chaos `errorStatus` errors and structured-output enforcement errors for `BEDROCK` use the Anthropic `{"type":"error",...}` envelope (`LlmErrorBodies.bodyFor`) on both APIs. Only the explicit-`errorKind` path emits the AWS `{"__type":...,"message":...}` shape.
+- **Chaos and errors.** `chaosErrorResponseOrNull` takes the request, so the `contentFilterBlockProbability` block on a Converse request is a Converse HTTP 200 with `stopReason` `content_filtered` and empty `content` (`LlmContentFilterBodies.blockFor(provider, filter, request)`); InvokeModel keeps the Anthropic `stop_reason` `refusal` body. Error bodies are AWS exceptions on both APIs, because Bedrock Runtime returns them for InvokeModel and Converse alike (see [Provider-specific error bodies](#provider-specific-error-bodies)).
+
+### Stop reasons
+
+`Completion.stopReason` is written in the target provider's own vocabulary, so one expectation can be shared across providers. Each codec passes its native values through and translates the others:
+
+| Provider | Field | Translation |
+|---|---|---|
+| OPENAI family | `choices[].finish_reason` | `end_turn` → `stop`, `max_tokens` → `length`, `tool_use` → `tool_calls`; unrecognised values pass through |
+| ANTHROPIC, BEDROCK InvokeModel | `stop_reason` | `stop`/`STOP` → `end_turn`, `length`/`MAX_TOKENS` → `max_tokens`, `tool_calls`/`function_call` → `tool_use`, `content_filter`/`content_filtered`/`guardrail_intervened`/`SAFETY` → `refusal`; unrecognised values pass through, because Anthropic adds values over time and its SDKs accept unknown ones |
+| BEDROCK Converse | `stopReason` | always one of the 9 Converse values (see above) |
+| GEMINI | `finishReason` | `stop`/`end_turn`/tool-call values → `STOP`, `length`/`max_tokens` → `MAX_TOKENS`; unrecognised values pass through |
+| OLLAMA | `done_reason`, on the final (`done: true`) message only | `stop`, `length`, `load`, `unload` pass through; `max_tokens`/`MAX_TOKENS`/`model_context_window_exceeded` → `length`; everything else, tool calls included, → `stop`, as Ollama has no tool-call value |
+
+With no `stopReason`, each codec writes its normal end-of-turn value, or its tool-call value when the completion has tool calls (Ollama and Gemini have none, so `stop` and `STOP`).
 
 ### OpenAI-compatible provider aliases
 
@@ -335,7 +347,7 @@ The `Usage` optional fields and the `Completion` reasoning fields are **encoded*
 | BEDROCK (Converse) | `usage.cacheReadInputTokens` | `usage.cacheWriteInputTokens` | — (no native field) |
 | OPENAI / AZURE_OPENAI | `usage.prompt_tokens_details.cached_tokens` | — | `usage.completion_tokens_details.reasoning_tokens` |
 | OPENAI_RESPONSES | `usage.input_tokens_details.cached_tokens` | `usage.input_tokens_details.cache_write_tokens` | `usage.output_tokens_details.reasoning_tokens` |
-| GEMINI | `usageMetadata.cachedContentTokenCount` | — | `usageMetadata.thoughtsTokenCount` |
+| GEMINI | `usageMetadata.cachedContentTokenCount` | — | `usageMetadata.thoughtsTokenCount`; `candidatesTokenCount` is then `outputTokens` minus it, and `totalTokenCount` prompt + candidates + thoughts, because Gemini's candidates count excludes thoughts |
 | OLLAMA | — (no native field) | — | — (no native field) |
 
 The Anthropic `cache_read`/`cache_creation` keys are mirrored into the streaming `message_start` usage; the OpenAI Responses details into the `response.completed` usage; the Gemini counts into the final streaming chunk's `usageMetadata`. (Bedrock InvokeModel and Azure inherit the Anthropic/OpenAI behaviour by delegation; Bedrock Converse mirrors its usage into the final `metadata` stream event.)
@@ -376,7 +388,7 @@ The `moderation` and `contentFilter` fields round-trip as top-level fields on `H
 - **Mid-stream truncation** — `applyStreamingChaos(...)` keeps a leading `truncateAtFraction` of the SSE events (default 0.5) so the stream ends early.
 - **Malformed SSE** — appends a deliberately broken-JSON chunk so the client must handle a corrupt event.
 - **Stateful request quota** — a deterministic fixed-window rate limit (`quotaName` + `quotaLimit` + `quotaWindowMillis`, optional `quotaErrorStatus` default 429). `quotaErrorResponseOrNull(...)` (called first inside `chaosErrorResponseOrNull`) records one request against `org.mockserver.llm.LlmQuotaRegistry` and returns the quota error once the in-window count exceeds the limit. The registry is a process-wide singleton keyed by `quotaName` (expectations sharing a name share one counter — model an upstream account limit), thread-safe via `ConcurrentHashMap`, with an injectable clock for testing, cleared on `HttpState.reset()`. A misconfigured/partial quota fails open (never rate-limits).
-- **Content-filter block** — `contentFilterBlockProbability` (0.0–1.0, seeded-deterministic, shares `seed`) emits the **provider-correct** content-filter block via the pure `LlmContentFilterBodies` helper (`org.mockserver.llm`): OpenAI-family → HTTP 400 `content_filter` error; `AZURE_OPENAI` → HTTP 400 whose `innererror` carries the per-category `content_filter_result` (severities from the response's `contentFilter`, defaulting to hate at `high`); `ANTHROPIC`/`BEDROCK` → HTTP 200 `stop_reason:"refusal"`; `GEMINI` → HTTP 200 `finishReason:"SAFETY"`; unknown provider → generic 400. Checked (after the quota) inside `chaosErrorResponseOrNull` and takes **priority over the generic probabilistic error**, so a would-be stream short-circuits to the block. Content-filter is a distinct wire shape, so it lives in a sibling helper rather than `LlmErrorBodies`' overload/rate-limit/server kinds.
+- **Content-filter block** — `contentFilterBlockProbability` (0.0–1.0, seeded-deterministic, shares `seed`) emits the **provider-correct** content-filter block via the pure `LlmContentFilterBodies` helper (`org.mockserver.llm`): OpenAI-family → HTTP 400 `content_filter` error; `AZURE_OPENAI` → HTTP 400 whose `innererror` carries the per-category `content_filter_result` (severities from the response's `contentFilter`, defaulting to hate at `high`); `ANTHROPIC` and `BEDROCK` InvokeModel → HTTP 200 `stop_reason:"refusal"`; `BEDROCK` Converse → HTTP 200 `stopReason:"content_filtered"`; `GEMINI` → HTTP 200 `finishReason:"SAFETY"`; unknown provider → generic 400. Checked (after the quota) inside `chaosErrorResponseOrNull` and takes **priority over the generic probabilistic error**, so a would-be stream short-circuits to the block. Content-filter is a distinct wire shape, so it lives in a sibling helper rather than `LlmErrorBodies`' overload/rate-limit/server kinds.
 
 Truncation, malformed-SSE, and the stateful quota are fully deterministic; the probabilistic error path is deterministic at probability 0.0/1.0. Each injection increments the `LLM_CHAOS_INJECTED_COUNT` metric. The profile round-trips as the top-level `chaos` field on `HttpLlmResponse` (alongside `completion`, `embedding`, and `conversationPredicates`) and is exposed per turn in the dashboard wizard and via the `chaos` MCP parameter.
 
@@ -388,7 +400,8 @@ The error `Kind` is derived from the status: `429 → RATE_LIMIT`, `529 → OVER
 
 | Provider | Body shape (by error kind) |
 |----------|----------------------------|
-| ANTHROPIC / BEDROCK | `{"type":"error","error":{"type":"overloaded_error"\|"rate_limit_error"\|"api_error","message":...}}` — Bedrock delivers the Anthropic body unchanged |
+| ANTHROPIC | `{"type":"error","error":{"type":"overloaded_error"\|"rate_limit_error"\|"api_error","message":...}}` |
+| BEDROCK (InvokeModel and Converse) | `{"__type":"<exception>","message":...}`, the exception named by the status as in the Bedrock Runtime API reference: 400 `ValidationException`, 403 `AccessDeniedException`, 404 `ResourceNotFoundException`, 408 `ModelTimeoutException`, 424 `ModelErrorException`, 429 `ThrottlingException`, 503 `ServiceUnavailableException`; any other status by kind (`ServiceUnavailableException` for 529, otherwise `InternalServerException`) |
 | OPENAI / OPENAI_RESPONSES / AZURE_OPENAI | `{"error":{"message":...,"type":"rate_limit_exceeded"\|"server_error","param":null,"code":...}}` — `code` is the numeric status for `server_error`, the string `"rate_limit_exceeded"` for a 429 |
 | GEMINI | `{"error":{"code":<status>,"message":...,"status":"UNAVAILABLE"\|"RESOURCE_EXHAUSTED"\|"INTERNAL"}}` |
 | OLLAMA | `{"error":"<message>"}` (a plain message string) |
@@ -667,8 +680,9 @@ ever-new field names added to one object for as long as the stream ran.
 
 **One mapping.** The merged usage object goes through `LlmClient.parseUsage`, which
 `parseCompletionResponse` also uses, so a streamed and a whole response with the same usage are
-counted the same. Gemini's `thoughtsTokenCount` is therefore still reported as reasoning tokens and
-not added to output on either path (plan item 6).
+counted the same. Gemini's `candidatesTokenCount` excludes thoughts, so `GeminiLlmClient` counts
+output as `candidatesTokenCount` + `thoughtsTokenCount` (Gemini bills thoughts as output) and reports
+`thoughtsTokenCount` as reasoning tokens, a subset of output as for the other providers.
 
 **When a stream has no usage.** A `2xx` streamed response with no usage, or one that ended before
 its final usage event, emits a span with no token attributes and logs one line, at `WARN` when

@@ -99,15 +99,7 @@ public class AnthropicCodec implements ProviderCodec {
             }
         }
 
-        // stop_reason
-        String stopReason = completion.getStopReason();
-        if (stopReason != null) {
-            root.put("stop_reason", stopReason);
-        } else if (hasToolCalls) {
-            root.put("stop_reason", "tool_use");
-        } else {
-            root.put("stop_reason", "end_turn");
-        }
+        root.put("stop_reason", mapStopReason(completion.getStopReason(), hasToolCalls));
         root.putNull("stop_sequence");
 
         // usage
@@ -251,10 +243,7 @@ public class AnthropicCodec implements ProviderCodec {
         }
 
         // 4. message_delta
-        String stopReason = completion.getStopReason();
-        if (stopReason == null) {
-            stopReason = hasToolCalls ? "tool_use" : "end_turn";
-        }
+        String stopReason = mapStopReason(completion.getStopReason(), hasToolCalls);
         String messageDeltaData = "{\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"" + escapeJson(stopReason) +
             "\",\"stop_sequence\":null},\"usage\":{\"output_tokens\":" + outputTokens + "}}";
         events.add(sseEvent().withEvent("message_delta").withData(messageDeltaData));
@@ -437,6 +426,36 @@ public class AnthropicCodec implements ProviderCodec {
             uuid = uuid + UUIDService.getNonSecureUUID().replace("-", "");
         }
         return uuid.substring(0, length);
+    }
+
+    /**
+     * Anthropic's {@code stop_reason} is one of {@code end_turn}, {@code max_tokens},
+     * {@code stop_sequence}, {@code tool_use}, {@code pause_turn}, {@code refusal} and
+     * {@code model_context_window_exceeded}. Other providers' values, from an expectation shared
+     * across providers, are translated; native and unrecognised values pass through.
+     */
+    static String mapStopReason(String stopReason, boolean hasToolCalls) {
+        if (stopReason == null) {
+            return hasToolCalls ? "tool_use" : "end_turn";
+        }
+        switch (stopReason) {
+            case "stop":
+            case "STOP":
+                return "end_turn";
+            case "length":
+            case "MAX_TOKENS":
+                return "max_tokens";
+            case "tool_calls":
+            case "function_call":
+                return "tool_use";
+            case "content_filter":
+            case "content_filtered":
+            case "guardrail_intervened":
+            case "SAFETY":
+                return "refusal";
+            default:
+                return stopReason;
+        }
     }
 
     private static String escapeJson(String value) {

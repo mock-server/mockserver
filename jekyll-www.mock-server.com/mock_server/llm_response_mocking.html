@@ -451,6 +451,15 @@ curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     that the OpenAI SDK expects.
 </p>
 
+<p>
+    A <span class="inline_code">stopReason</span> is converted to the value each provider uses, so you can share one expectation across
+    providers. For example, <span class="inline_code">length</span> becomes <span class="inline_code">max_tokens</span> for Anthropic and
+    Bedrock InvokeModel, <span class="inline_code">MAX_TOKENS</span> for Gemini, and <span class="inline_code">done_reason: "length"</span>
+    for Ollama; <span class="inline_code">stop</span> becomes <span class="inline_code">end_turn</span> for Anthropic.
+    Ollama's final message always has a <span class="inline_code">done_reason</span>: <span class="inline_code">stop</span> unless you set a
+    max-tokens value.
+</p>
+
 <a id="supported_providers" class="anchor" href="#supported_providers">&nbsp;</a>
 <h2>Supported Providers</h2>
 
@@ -614,16 +623,17 @@ curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     <span class="inline_code">end_turn</span>.
 </p>
 
-<p>Current limitations:</p>
-<ul>
-    <li>The chaos <span class="inline_code">contentFilterBlockProbability</span> block for <span class="inline_code">BEDROCK</span> returns the
-        InvokeModel (Anthropic) refusal body, even on a Converse path.</li>
-    <li>Chaos <span class="inline_code">errorStatus</span> errors and structured-output enforcement errors for <span class="inline_code">BEDROCK</span>
-        use the Anthropic <span class="inline_code">{"type":"error",...}</span> error body on both APIs. Setting
-        <span class="inline_code">errorKind</span> instead returns the AWS-style <span class="inline_code">{"__type":...,"message":...}</span> error.</li>
-    <li>The dashboard shows Bedrock Converse and InvokeModel traffic as Bedrock, with the messages, reply and token counts.
-        InvokeModel calls to models other than Claude and Nova (for example Llama or Titan) are labelled Bedrock but show no reply or token counts.</li>
-</ul>
+<p>
+    Chaos follows the API too. A <span class="inline_code">contentFilterBlockProbability</span> block on a Converse request returns a
+    Converse response with <span class="inline_code">stopReason</span> <span class="inline_code">content_filtered</span>; on InvokeModel it
+    returns the Anthropic refusal (<span class="inline_code">stop_reason</span> <span class="inline_code">refusal</span>).
+    Injected errors and structured-output enforcement errors use the AWS error body on both APIs, as Bedrock does, for example
+    <span class="inline_code">{"__type":"ThrottlingException","message":"..."}</span> for a 429.
+</p>
+<p>
+    The dashboard shows Bedrock Converse and InvokeModel traffic as Bedrock, with the messages, reply and token counts.
+    InvokeModel calls to models other than Claude and Nova (for example Llama or Titan) are labelled Bedrock but show no reply or token counts.
+</p>
 
 <a id="streaming" class="anchor" href="#streaming">&nbsp;</a>
 <h2>Streaming Responses</h2>
@@ -1453,7 +1463,7 @@ geminiLive()
         <tr>
             <td><code>reasoningTokens</code></td>
             <td>Reasoning/thinking tokens billed as output but not part of the visible completion. A <strong>subset</strong> of <code>outputTokens</code> (not additive).</td>
-            <td>OpenAI: <code>usage.completion_tokens_details.reasoning_tokens</code><br/>OpenAI Responses: <code>usage.output_tokens_details.reasoning_tokens</code><br/>Gemini: <code>usageMetadata.thoughtsTokenCount</code></td>
+            <td>OpenAI: <code>usage.completion_tokens_details.reasoning_tokens</code><br/>OpenAI Responses: <code>usage.output_tokens_details.reasoning_tokens</code><br/>Gemini: <code>usageMetadata.thoughtsTokenCount</code>. Gemini counts thoughts separately from the answer, so <code>candidatesTokenCount</code> is <code>outputTokens</code> minus <code>reasoningTokens</code>, and <code>totalTokenCount</code> includes both.</td>
         </tr>
     </tbody>
 </table>

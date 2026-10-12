@@ -374,9 +374,9 @@ public class HttpActionHandlerStreamedLlmUsageTest {
             utf8(ProviderStreamFixtures.GEMINI_SSE));
 
         SpanData span = singleGenAiSpan();
-        assertTokens(span, "gcp.gemini", "gemini-2.5-flash", 8L, 12L);
+        assertTokens(span, "gcp.gemini", "gemini-2.5-flash", 8L, 39L);
         assertThat(span.getAttributes().get(longKey("mockserver.gen_ai.usage.reasoning_tokens")), is(27L));
-        assertCost(Provider.GEMINI, "gemini-2.5-flash", 8, 12);
+        assertCost(Provider.GEMINI, "gemini-2.5-flash", 8, 39);
         assertThat(usageLogEntries(), is(empty()));
     }
 
@@ -468,8 +468,8 @@ public class HttpActionHandlerStreamedLlmUsageTest {
             .withBody(ProviderStreamFixtures.GEMINI_JSON_ARRAY)
             .withDelay(milliseconds(0)));
 
-        assertTokens(singleGenAiSpan(), "gcp.gemini", "gemini-2.5-flash", 8L, 12L);
-        assertCost(Provider.GEMINI, "gemini-2.5-flash", 8, 12);
+        assertTokens(singleGenAiSpan(), "gcp.gemini", "gemini-2.5-flash", 8L, 39L);
+        assertCost(Provider.GEMINI, "gemini-2.5-flash", 8, 39);
     }
 
     @Test

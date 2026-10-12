@@ -2,6 +2,8 @@ package org.mockserver.llm;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.mockserver.llm.codec.BedrockCodec;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.model.LlmContentFilter;
 import org.mockserver.model.Provider;
 
@@ -19,7 +21,8 @@ import org.mockserver.model.Provider;
  *       provider returns when it refuses to answer on safety grounds. The shape is
  *       provider-specific: OpenAI-family → HTTP 400 with a {@code content_filter}
  *       error; Azure → HTTP 400 whose {@code innererror} carries the filter result;
- *       Anthropic/Bedrock → HTTP 200 with {@code stop_reason:"refusal"}; Gemini →
+ *       Anthropic and Bedrock InvokeModel → HTTP 200 with {@code stop_reason:"refusal"};
+ *       Bedrock Converse → HTTP 200 with {@code stopReason:"content_filtered"}; Gemini →
  *       HTTP 200 with {@code finishReason:"SAFETY"}; otherwise a generic 400.</li>
  * </ul>
  *
@@ -77,6 +80,24 @@ public final class LlmContentFilterBodies {
         ObjectNode category = parent.putObject(key);
         category.put("filtered", LlmContentFilter.isFilteredSeverity(severity));
         category.put("severity", LlmContentFilter.severityOrSafe(severity));
+    }
+
+    /** A Converse response whose output was removed by a content filter. */
+    static final String BEDROCK_CONVERSE_CONTENT_FILTERED_BODY =
+        "{\"output\":{\"message\":{\"role\":\"assistant\",\"content\":[]}},"
+            + "\"stopReason\":\"content_filtered\","
+            + "\"usage\":{\"inputTokens\":0,\"outputTokens\":0,\"totalTokens\":0},"
+            + "\"metrics\":{\"latencyMs\":0}}";
+
+    /**
+     * As {@link #blockFor(Provider, LlmContentFilter)}, but picks the Bedrock wire API from the
+     * request: a Converse request gets a Converse body, not an Anthropic one.
+     */
+    public static Block blockFor(Provider provider, LlmContentFilter filter, HttpRequest request) {
+        if (provider == Provider.BEDROCK && BedrockCodec.isConverse(request)) {
+            return new Block(200, BEDROCK_CONVERSE_CONTENT_FILTERED_BODY);
+        }
+        return blockFor(provider, filter);
     }
 
     /**

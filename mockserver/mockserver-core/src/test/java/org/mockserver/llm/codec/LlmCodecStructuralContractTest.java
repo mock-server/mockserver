@@ -183,6 +183,7 @@ public class LlmCodecStructuralContractTest {
             case OLLAMA: {
                 assertThat(ctx + " model present", root.has("model"), is(true));
                 assertThat(ctx + " done", root.path("done").asBoolean(false), is(true));
+                assertThat(ctx + " done_reason", root.path("done_reason").asText(ABSENT), is("stop"));
                 JsonNode msg = root.path("message");
                 assertThat(ctx + " message.role", msg.path("role").asText(ABSENT), is("assistant"));
                 assertThat(ctx + " message.content", msg.path("content").asText(ABSENT), is(TEXT));
@@ -245,6 +246,8 @@ public class LlmCodecStructuralContractTest {
             }
             case OLLAMA: {
                 assertThat(ctx + " done", root.path("done").asBoolean(false), is(true));
+                // Ollama has no tool-call done_reason: a tool call ends with stop.
+                assertThat(ctx + " done_reason", root.path("done_reason").asText(ABSENT), is("stop"));
                 JsonNode fn = root.path("message").path("tool_calls").path(0).path("function");
                 assertThat(ctx + " function.name", fn.path("name").asText(ABSENT), is("get_weather"));
                 // Ollama emits tool-call arguments as a structured object.
@@ -351,6 +354,7 @@ public class LlmCodecStructuralContractTest {
                     concat(chunks, c -> c.path("message").path("content").asText("")), is(TEXT));
                 JsonNode last = chunks.get(chunks.size() - 1);
                 assertThat(ctx + " terminal done=true", last.path("done").asBoolean(false), is(true));
+                assertThat(ctx + " terminal done_reason", last.path("done_reason").asText(ABSENT), is("stop"));
                 for (int i = 0; i < chunks.size() - 1; i++) {
                     assertThat(ctx + " non-terminal done=false", chunks.get(i).path("done").asBoolean(true), is(false));
                 }
@@ -434,6 +438,7 @@ public class LlmCodecStructuralContractTest {
                 assertThat(ctx + " arguments.city", fn.path("arguments").path("city").asText(ABSENT), is("London"));
                 JsonNode last = chunks.get(chunks.size() - 1);
                 assertThat(ctx + " terminal done=true", last.path("done").asBoolean(false), is(true));
+                assertThat(ctx + " terminal done_reason", last.path("done_reason").asText(ABSENT), is("stop"));
                 break;
             }
             default:

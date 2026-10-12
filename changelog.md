@@ -868,6 +868,10 @@ This release delivers a sustained performance and memory programme alongside dat
 - **An embedding expectation's `dimensions` must now be at least 1.** In 8.0.0 and earlier a
   `dimensions` of `0` returned empty vectors and a negative value failed every matching request with a
   502; such an expectation is now refused when it is created.
+- **Mocked Gemini responses count thinking tokens the way Gemini does.** A mocked Gemini response put every output token, thinking tokens included, in `candidatesTokenCount` and left thinking tokens out of `totalTokenCount`, so a client adding `candidatesTokenCount` and `thoughtsTokenCount` counted the thinking tokens twice. `candidatesTokenCount` now excludes them and `totalTokenCount` includes them, as in the real API. Proxied Gemini calls now count thinking tokens as output, so Gemini 2.5 token and cost metrics include them. In 8.0.0 and earlier.
+- **Mocked Ollama responses include `done_reason`.** The final Ollama message now carries `done_reason`, so a client can tell a complete reply (`stop`) from one cut off at the token limit (`length`, from a `stopReason` of `length` or `max_tokens`). In 8.0.0 and earlier.
+- **Anthropic and Bedrock stop reasons are always valid values.** A `stopReason` written for another provider, such as `stop`, `length` or `tool_calls`, was sent to Anthropic and Bedrock InvokeModel clients unchanged. It is now converted to Anthropic's value (`end_turn`, `max_tokens`, `tool_use`, or `refusal` for a content filter), so one expectation can be shared across providers. In 8.0.0 and earlier.
+- **Bedrock chaos and enforcement errors use the AWS error body.** Injected errors, quota errors and structured-output enforcement errors for `BEDROCK` returned Anthropic's `{"type":"error",...}` body, which Bedrock never sends. They now return the AWS shape, for example `{"__type":"ThrottlingException","message":"..."}` for a 429, so AWS SDKs read the error type. In 8.0.0 and earlier.
 - **The dashboard shows AWS Bedrock traffic correctly.** Traffic to a Bedrock host was always treated as Anthropic, so Converse API calls and streamed Bedrock replies were labelled Anthropic with no reply or token counts; without a Bedrock host (for example through a gateway), Converse calls and calls to models other than Anthropic Claude showed as plain HTTP traffic. Bedrock traffic is now labelled Bedrock, with the model, messages, reply, stop reason and token counts, streamed or not, and "create mock from capture" picks the BEDROCK provider. Shipped in 8.0.0 and earlier.
 - **Streamed Ollama replies show in full in the dashboard.** A streamed `/api/chat` reply, which is Ollama's default, was shown as an unreadable or truncated response; the dashboard now joins the streamed lines into the reply and shows its token counts. Shipped in 8.0.0 and earlier.
 - **The dashboard shows Vertex AI traffic correctly.** Claude models called on a Vertex AI host were labelled Gemini with no reply, and Gemini streams returned as a JSON array (requested without `alt=sse`) showed no reply or token counts. Claude on Vertex AI is now shown as Anthropic with its model, JSON-array streams are joined into the reply, and Vertex Gemini calls are also recognised by their path, including error replies. Shipped in 8.0.0 and earlier.
@@ -1556,9 +1560,9 @@ This release delivers a sustained performance and memory programme alongside dat
   request body selects the Converse format; anything else gets InvokeModel as before. Conversation
   matchers now also read Converse requests (`system`, `messages[].content[]` text, `toolUse` and
   `toolResult` blocks), and token and cost tracking of proxied Bedrock traffic now reads Converse
-  responses. Some limitations remain. For `BEDROCK`, the chaos content-filter block and the `errorStatus` and
-  structured-output error bodies still use the Anthropic format on Converse paths, and the dashboard does
-  not yet show Converse traffic as LLM traffic.
+  responses. A chaos content-filter block on a Converse request returns a Converse response with `stopReason`
+  `content_filtered`, and injected and structured-output errors use the AWS error body on Converse as on
+  InvokeModel.
 - **A streamed OpenAI Chat Completions mock now reports token usage when the request asks for it.**
   With `"stream_options": {"include_usage": true}` in the request, the stream ends, before
   `data: [DONE]`, with one extra chunk whose `choices` is `[]` and whose `usage` holds `prompt_tokens`,

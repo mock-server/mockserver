@@ -29,9 +29,11 @@ import org.mockserver.model.Provider;
  *
  * <h3>Provider body reference</h3>
  * <ul>
- *   <li><strong>ANTHROPIC / BEDROCK</strong> (Anthropic Messages API errors) —
- *       {@code {"type":"error","error":{"type":"overloaded_error"|"rate_limit_error"|"api_error","message":..}}}.
- *       Bedrock delivers the Anthropic body unchanged.</li>
+ *   <li><strong>ANTHROPIC</strong> (Anthropic Messages API errors) —
+ *       {@code {"type":"error","error":{"type":"overloaded_error"|"rate_limit_error"|"api_error","message":..}}}.</li>
+ *   <li><strong>BEDROCK</strong> (AWS Bedrock Runtime errors, the same for InvokeModel and Converse) —
+ *       {@code {"__type":"ThrottlingException"|"ServiceUnavailableException"|"InternalServerException"|..,"message":..}},
+ *       the exception named by the status where Bedrock documents one.</li>
  *   <li><strong>OPENAI / OPENAI_RESPONSES / AZURE_OPENAI</strong> (OpenAI error envelope) —
  *       {@code {"error":{"message":..,"type":"server_error"|"rate_limit_exceeded","code":..,"param":null}}}.</li>
  *   <li><strong>GEMINI</strong> (Google API error envelope) —
@@ -95,8 +97,9 @@ public final class LlmErrorBodies {
         String safeMessage = escape(message);
         switch (provider) {
             case ANTHROPIC:
-            case BEDROCK:
                 return anthropicBody(kind, safeMessage);
+            case BEDROCK:
+                return bedrockBody(kind, status, safeMessage);
             case OPENAI:
             case OPENAI_RESPONSES:
             case AZURE_OPENAI:
@@ -125,6 +128,39 @@ public final class LlmErrorBodies {
                 break;
         }
         return "{\"type\":\"error\",\"error\":{\"type\":\"" + type + "\",\"message\":\"" + message + "\"}}";
+    }
+
+    /** Bedrock Runtime error names by HTTP status, from the InvokeModel and Converse API references. */
+    private static String bedrockBody(Kind kind, int status, String message) {
+        String type;
+        switch (status) {
+            case 400:
+                type = "ValidationException";
+                break;
+            case 403:
+                type = "AccessDeniedException";
+                break;
+            case 404:
+                type = "ResourceNotFoundException";
+                break;
+            case 408:
+                type = "ModelTimeoutException";
+                break;
+            case 424:
+                type = "ModelErrorException";
+                break;
+            case 429:
+                type = "ThrottlingException";
+                break;
+            case 503:
+                type = "ServiceUnavailableException";
+                break;
+            default:
+                type = kind == Kind.OVERLOADED ? "ServiceUnavailableException"
+                    : kind == Kind.RATE_LIMIT ? "ThrottlingException" : "InternalServerException";
+                break;
+        }
+        return "{\"__type\":\"" + type + "\",\"message\":\"" + message + "\"}";
     }
 
     private static String openAiBody(Kind kind, int status, String message) {

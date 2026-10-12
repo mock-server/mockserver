@@ -106,24 +106,20 @@ public class GeminiCodec implements ProviderCodec {
         candidate.put("index", 0);
 
         // usageMetadata
-        ObjectNode usageMetadata = root.putObject("usageMetadata");
         Usage completionUsage = completion.getUsage();
-        int promptTokens = completionUsage != null && completionUsage.getInputTokens() != null ? completionUsage.getInputTokens() : 0;
-        int candidatesTokens = completionUsage != null && completionUsage.getOutputTokens() != null ? completionUsage.getOutputTokens() : 0;
-        usageMetadata.put("promptTokenCount", promptTokens);
-        usageMetadata.put("candidatesTokenCount", candidatesTokens);
-        usageMetadata.put("totalTokenCount", promptTokens + candidatesTokens);
-        // Cached-content and reasoning ("thoughts") token counts, emitted only when set (non-null,
-        // non-zero) under Gemini's native usageMetadata keys, so existing fixtures stay byte-identical.
-        if (completionUsage != null) {
-            Integer cachedInputTokens = completionUsage.getCachedInputTokens();
-            if (cachedInputTokens != null && cachedInputTokens != 0) {
-                usageMetadata.put("cachedContentTokenCount", cachedInputTokens);
-            }
-            Integer reasoningTokens = completionUsage.getReasoningTokens();
-            if (reasoningTokens != null && reasoningTokens != 0) {
-                usageMetadata.put("thoughtsTokenCount", reasoningTokens);
-            }
+        ObjectNode usageMetadata = root.putObject("usageMetadata");
+        usageMetadata.put("promptTokenCount", promptTokens(completionUsage));
+        usageMetadata.put("candidatesTokenCount", candidatesTokens(completionUsage));
+        usageMetadata.put("totalTokenCount", totalTokens(completionUsage));
+        // Cached-content and thoughts counts are emitted only when set (non-null, non-zero),
+        // so existing fixtures stay byte-identical.
+        int cachedInputTokens = cachedInputTokens(completionUsage);
+        if (cachedInputTokens != 0) {
+            usageMetadata.put("cachedContentTokenCount", cachedInputTokens);
+        }
+        int thoughtsTokens = thoughtsTokens(completionUsage);
+        if (thoughtsTokens != 0) {
+            usageMetadata.put("thoughtsTokenCount", thoughtsTokens);
         }
 
         root.put("modelVersion", model != null ? model : "unknown");
@@ -145,8 +141,6 @@ public class GeminiCodec implements ProviderCodec {
         String modelName = model != null ? model : "unknown";
 
         Usage completionUsage = completion.getUsage();
-        int promptTokens = completionUsage != null && completionUsage.getInputTokens() != null ? completionUsage.getInputTokens() : 0;
-        int candidatesTokens = completionUsage != null && completionUsage.getOutputTokens() != null ? completionUsage.getOutputTokens() : 0;
 
         String text = completion.getText();
         List<ToolUse> toolCalls = completion.getToolCalls();
@@ -203,18 +197,16 @@ public class GeminiCodec implements ProviderCodec {
         // Omitted when unset so existing streaming fixtures stay byte-identical.
         String finishReason = mapFinishReason(completion.getStopReason(), hasToolCalls);
         StringBuilder finalUsage = new StringBuilder();
-        finalUsage.append("{\"promptTokenCount\":").append(promptTokens)
-            .append(",\"candidatesTokenCount\":").append(candidatesTokens)
-            .append(",\"totalTokenCount\":").append(promptTokens + candidatesTokens);
-        if (completionUsage != null) {
-            Integer cachedInputTokens = completionUsage.getCachedInputTokens();
-            if (cachedInputTokens != null && cachedInputTokens != 0) {
-                finalUsage.append(",\"cachedContentTokenCount\":").append(cachedInputTokens);
-            }
-            Integer reasoningTokens = completionUsage.getReasoningTokens();
-            if (reasoningTokens != null && reasoningTokens != 0) {
-                finalUsage.append(",\"thoughtsTokenCount\":").append(reasoningTokens);
-            }
+        finalUsage.append("{\"promptTokenCount\":").append(promptTokens(completionUsage))
+            .append(",\"candidatesTokenCount\":").append(candidatesTokens(completionUsage))
+            .append(",\"totalTokenCount\":").append(totalTokens(completionUsage));
+        int cachedInputTokens = cachedInputTokens(completionUsage);
+        if (cachedInputTokens != 0) {
+            finalUsage.append(",\"cachedContentTokenCount\":").append(cachedInputTokens);
+        }
+        int thoughtsTokens = thoughtsTokens(completionUsage);
+        if (thoughtsTokens != 0) {
+            finalUsage.append(",\"thoughtsTokenCount\":").append(thoughtsTokens);
         }
         finalUsage.append("}");
         String finalData = "{\"candidates\":[{\"content\":{\"parts\":[],\"role\":\"model\"},\"finishReason\":\"" +
@@ -406,6 +398,32 @@ public class GeminiCodec implements ProviderCodec {
             default:
                 return ParsedMessage.Role.USER;
         }
+    }
+
+    private static int promptTokens(Usage usage) {
+        return usage != null && usage.getInputTokens() != null ? usage.getInputTokens() : 0;
+    }
+
+    private static int cachedInputTokens(Usage usage) {
+        return usage != null && usage.getCachedInputTokens() != null ? usage.getCachedInputTokens() : 0;
+    }
+
+    private static int thoughtsTokens(Usage usage) {
+        return usage != null && usage.getReasoningTokens() != null ? usage.getReasoningTokens() : 0;
+    }
+
+    /**
+     * {@code Usage.outputTokens} includes reasoning tokens, but Gemini's {@code candidatesTokenCount}
+     * excludes them: thoughts are reported separately in {@code thoughtsTokenCount} and
+     * {@code totalTokenCount} is prompt + candidates + thoughts.
+     */
+    private static int candidatesTokens(Usage usage) {
+        int outputTokens = usage != null && usage.getOutputTokens() != null ? usage.getOutputTokens() : 0;
+        return Math.max(0, outputTokens - thoughtsTokens(usage));
+    }
+
+    private static int totalTokens(Usage usage) {
+        return promptTokens(usage) + candidatesTokens(usage) + thoughtsTokens(usage);
     }
 
     private static String mapFinishReason(String stopReason, boolean hasToolCalls) {

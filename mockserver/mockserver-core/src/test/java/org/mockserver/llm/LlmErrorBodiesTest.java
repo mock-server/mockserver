@@ -65,10 +65,10 @@ public class LlmErrorBodiesTest {
     }
 
     @Test
-    public void bedrockUsesAnthropicShape() {
+    public void bedrockUsesTheAwsErrorShape() {
         JsonNode body = parse(LlmErrorBodies.bodyFor(Provider.BEDROCK, LlmErrorBodies.Kind.OVERLOADED, 529, "Overloaded"));
-        assertThat(body.get("type").asText(), is("error"));
-        assertThat(body.get("error").get("type").asText(), is("overloaded_error"));
+        assertThat(body.get("__type").asText(), is("ServiceUnavailableException"));
+        assertThat(body.get("message").asText(), is("Overloaded"));
     }
 
     // ---- OpenAI family ----

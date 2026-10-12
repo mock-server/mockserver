@@ -104,14 +104,18 @@ public class GeminiLlmClient extends AbstractLlmClient {
         if (usageNode.has("promptTokenCount")) {
             usage.withInputTokens(usageNode.path("promptTokenCount").asInt());
         }
-        if (usageNode.has("candidatesTokenCount")) {
-            usage.withOutputTokens(usageNode.path("candidatesTokenCount").asInt());
+        // candidatesTokenCount excludes thoughts, which Gemini bills as output, so output is
+        // candidates + thoughts and reasoning stays a subset of output as for other providers.
+        boolean hasCandidates = usageNode.has("candidatesTokenCount");
+        boolean hasThoughts = usageNode.has("thoughtsTokenCount");
+        if (hasCandidates || hasThoughts) {
+            long output = (long) usageNode.path("candidatesTokenCount").asInt(0) + usageNode.path("thoughtsTokenCount").asInt(0);
+            usage.withOutputTokens((int) Math.min(Integer.MAX_VALUE, output));
         }
         if (usageNode.has("cachedContentTokenCount")) {
             usage.withCachedInputTokens(usageNode.path("cachedContentTokenCount").asInt());
         }
-        // Gemini reports reasoning ("thinking") tokens as thoughtsTokenCount.
-        if (usageNode.has("thoughtsTokenCount")) {
+        if (hasThoughts) {
             usage.withReasoningTokens(usageNode.path("thoughtsTokenCount").asInt());
         }
         return usage;

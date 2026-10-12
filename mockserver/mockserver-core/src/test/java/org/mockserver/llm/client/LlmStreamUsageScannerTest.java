@@ -125,13 +125,13 @@ public class LlmStreamUsageScannerTest {
     @Test
     public void shouldReadGeminiUsageMetadataFromTheLastSseChunk() {
         assertUsageHoweverChunked(Provider.GEMINI, utf8(ProviderStreamFixtures.GEMINI_SSE),
-            expected(8, 12, null, null, 27), "gemini-2.5-flash", "STOP");
+            expected(8, 39, null, null, 27), "gemini-2.5-flash", "STOP");
     }
 
     @Test
     public void shouldReadGeminiUsageMetadataFromAStreamedJsonArray() {
         assertUsageHoweverChunked(Provider.GEMINI, utf8(ProviderStreamFixtures.GEMINI_JSON_ARRAY),
-            expected(8, 12, null, null, 27), "gemini-2.5-flash", "STOP");
+            expected(8, 39, null, null, 27), "gemini-2.5-flash", "STOP");
         assertThat(scan(utf8(ProviderStreamFixtures.GEMINI_JSON_ARRAY)).streamed(), is(true));
     }
 

@@ -721,7 +721,7 @@ public class HttpActionHandler {
                 HttpLlmResponse llmAction = (HttpLlmResponse) action;
                 // Chaos: a probabilistic provider error short-circuits to a normal
                 // (non-streaming) HTTP error response, even for a would-be stream.
-                final HttpResponse chaosErrorResponse = getHttpLlmResponseActionHandler().chaosErrorResponseOrNull(llmAction);
+                final HttpResponse chaosErrorResponse = getHttpLlmResponseActionHandler().chaosErrorResponseOrNull(llmAction, request);
                 // Strict structured-output enforcement: when enabled and the configured body
                 // does not conform to the declared schema, fail loudly with a provider-correct
                 // error (also a non-streaming response, so a strict stream never begins). Chaos
