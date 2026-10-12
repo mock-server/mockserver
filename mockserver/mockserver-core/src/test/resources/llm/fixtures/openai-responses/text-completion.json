@@ -1,6 +1,7 @@
 {
   "id" : "<id>",
   "object" : "response",
+  "access_programs" : null,
   "created_at" : 0,
   "status" : "completed",
   "completed_at" : 0,
@@ -24,6 +25,8 @@
   "previous_response_id" : null,
   "tool_choice" : "auto",
   "tools" : [ ],
+  "temperature" : null,
+  "top_p" : null,
   "usage" : {
     "input_tokens" : 0,
     "input_tokens_details" : {

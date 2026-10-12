@@ -15,4 +15,9 @@ public abstract class OpenAiCompatibleChatCodec extends OpenAiChatCompletionsCod
 
     @Override
     public abstract Provider provider();
+
+    @Override
+    protected boolean emitsChoiceLogprobs() {
+        return false;
+    }
 }

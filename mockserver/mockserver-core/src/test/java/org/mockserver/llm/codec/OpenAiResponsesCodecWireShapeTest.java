@@ -123,6 +123,30 @@ public class OpenAiResponsesCodecWireShapeTest {
     }
 
     @Test
+    public void everyResponseObjectCarriesTheSpecRequiredNullableFields() throws Exception {
+        for (JsonNode response : allResponseObjects(null)) {
+            assertNullField(response, "access_programs");
+            assertNullField(response, "temperature");
+            assertNullField(response, "top_p");
+        }
+        for (JsonNode response : allResponseObjects("{\"temperature\":\"0.2\",\"top_p\":true,\"input\":\"x\"}")) {
+            assertNullField(response, "temperature");
+            assertNullField(response, "top_p");
+        }
+    }
+
+    @Test
+    public void everyResponseObjectEchoesTheRequestsSamplingSettings() throws Exception {
+        for (JsonNode response : allResponseObjects("{\"temperature\":0.2,\"top_p\":0.9,\"input\":\"x\"}")) {
+            assertThat(response.path("temperature").isNumber(), is(true));
+            assertThat(response.path("temperature").asDouble(), is(0.2));
+            assertThat(response.path("top_p").isNumber(), is(true));
+            assertThat(response.path("top_p").asDouble(), is(0.9));
+            assertNullField(response, "access_programs");
+        }
+    }
+
+    @Test
     public void configuredToolChoiceWinsOverTheRequestsAndAnUnparseableRequestIsIgnored() throws Exception {
         JsonNode configured = OBJECT_MAPPER.readTree(codec.encode(completion().withToolChoice("none").withText("hi"), "gpt-4o",
             request().withBody("{\"tool_choice\":\"required\",\"input\":\"x\"}")).getBodyAsString());
@@ -316,6 +340,31 @@ public class OpenAiResponsesCodecWireShapeTest {
                 strip(child);
             }
         }
+    }
+
+    /** The non-streaming body and the response of response.created, .in_progress and .completed. */
+    private List<JsonNode> allResponseObjects(String requestBody) throws Exception {
+        List<JsonNode> responses = new ArrayList<>();
+        List<SseEvent> events;
+        if (requestBody == null) {
+            responses.add(OBJECT_MAPPER.readTree(codec.encode(completion().withText("hi"), "gpt-4o").getBodyAsString()));
+            events = codec.encodeStreaming(completion().withText("hi"), "gpt-4o", null);
+        } else {
+            responses.add(OBJECT_MAPPER.readTree(codec.encode(completion().withText("hi"), "gpt-4o",
+                request().withBody(requestBody)).getBodyAsString()));
+            events = codec.encodeStreaming(completion().withText("hi"), "gpt-4o", null, request().withBody(requestBody));
+        }
+        for (String name : List.of("response.created", "response.in_progress", "response.completed")) {
+            List<JsonNode> named = dataOf(events, name);
+            assertThat(name, named, hasSize(1));
+            responses.add(named.get(0).path("response"));
+        }
+        return responses;
+    }
+
+    private static void assertNullField(JsonNode response, String field) {
+        assertThat(field + " present", response.has(field), is(true));
+        assertThat(field + " null", response.get(field).isNull(), is(true));
     }
 
     private static List<String> eventNames(List<SseEvent> events) {

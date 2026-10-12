@@ -17,6 +17,7 @@
         }
       } ]
     },
+    "logprobs" : null,
     "finish_reason" : "tool_calls"
   } ],
   "usage" : {

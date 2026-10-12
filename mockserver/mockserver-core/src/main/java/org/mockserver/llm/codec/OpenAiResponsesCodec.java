@@ -134,7 +134,7 @@ public class OpenAiResponsesCodec implements ProviderCodec {
      * The Response object as the real API returns it on the non-streaming body and on the
      * response.created / in_progress / completed events; the Agents SDK reads its final turn
      * from response.completed's output. Request fields the real API echoes are copied from the
-     * request body when there is one.
+     * request body when there is one; the spec's required nullable fields are null otherwise.
      */
     private static ObjectNode responseObject(String id, long createdAt, String model, String status,
                                              ArrayNode output, ObjectNode usage, String toolChoice,
@@ -143,6 +143,7 @@ public class OpenAiResponsesCodec implements ProviderCodec {
         ObjectNode root = OBJECT_MAPPER.createObjectNode();
         root.put("id", id);
         root.put("object", "response");
+        root.putNull("access_programs");
         root.put("created_at", createdAt);
         root.put("status", status);
         if ("completed".equals(status)) {
@@ -159,6 +160,8 @@ public class OpenAiResponsesCodec implements ProviderCodec {
             && (echo.path("tool_choice").isTextual() || echo.path("tool_choice").isObject());
         root.set("tool_choice", echoToolChoice ? echo.get("tool_choice").deepCopy() : toolChoiceNode(toolChoice));
         root.set("tools", echo.path("tools").isArray() ? echo.get("tools").deepCopy() : OBJECT_MAPPER.createArrayNode());
+        root.set("temperature", echo.path("temperature").isNumber() ? echo.get("temperature") : NullNode.getInstance());
+        root.set("top_p", echo.path("top_p").isNumber() ? echo.get("top_p") : NullNode.getInstance());
         if (usage != null) {
             root.set("usage", usage);
         } else {

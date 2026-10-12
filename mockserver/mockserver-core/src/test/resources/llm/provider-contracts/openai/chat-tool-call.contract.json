@@ -65,12 +65,6 @@
   "allowed": [
     {
       "kind": "MISSING",
-      "path": "choices[].logprobs",
-      "reason": "required (nullable) on CreateChatCompletionResponse choices[] in the OpenAI OpenAPI spec; openai-python declares it Optional, so SDKs accept its absence",
-      "openItem": "36"
-    },
-    {
-      "kind": "MISSING",
       "path": "usage.completion_tokens_details",
       "reason": "optional in CompletionUsage (requires prompt_tokens, completion_tokens, total_tokens); MockServer adds it when the expectation sets reasoning tokens"
     }

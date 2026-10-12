@@ -86,6 +86,9 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
             }
         }
 
+        if (emitsChoiceLogprobs()) {
+            choice.putNull("logprobs");
+        }
         // finish_reason mapping
         choice.put("finish_reason", mapFinishReason(completion.getStopReason(), hasToolCalls, completion.getToolChoice()));
 
@@ -491,6 +494,15 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
         }
         addUsageFields(usage, completionUsage, model, physics);
         return usage;
+    }
+
+    /**
+     * Whether each non-streaming choice carries {@code "logprobs": null}, which the OpenAI and
+     * Azure OpenAI specs require (nullable) on every choice. OpenAI-compatible providers opt in
+     * individually, because not all of them send it.
+     */
+    protected boolean emitsChoiceLogprobs() {
+        return true;
     }
 
     // Hooks for the OpenAI-compatible providers' additions to the OpenAI shape; OpenAI adds nothing.

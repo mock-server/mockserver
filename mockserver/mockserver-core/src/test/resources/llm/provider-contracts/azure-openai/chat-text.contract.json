@@ -37,6 +37,11 @@
   "allowed": [
     {
       "kind": "EXTRA",
+      "path": "choices[].logprobs",
+      "reason": "required (nullable) on createChatCompletionResponse choices[] in the same 2024-10-21 spec; its example omits it"
+    },
+    {
+      "kind": "EXTRA",
       "path": "model",
       "reason": "required by createChatCompletionResponse in the same 2024-10-21 spec; its example omits it"
     },

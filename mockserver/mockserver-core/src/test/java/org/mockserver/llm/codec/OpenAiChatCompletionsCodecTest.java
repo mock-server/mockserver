@@ -3,6 +3,7 @@ package org.mockserver.llm.codec;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
+import org.mockserver.llm.ProviderCodec;
 import org.mockserver.model.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -54,6 +55,23 @@ public class OpenAiChatCompletionsCodecTest {
         assertThat(usage.get("prompt_tokens").asInt(), is(10));
         assertThat(usage.get("completion_tokens").asInt(), is(3));
         assertThat(usage.get("total_tokens").asInt(), is(13));
+    }
+
+    @Test
+    public void everyChoiceCarriesTheSpecRequiredNullLogprobs() throws Exception {
+        Completion[] completions = {
+            completion().withText("Hello"),
+            completion().withToolCall(toolUse("get_weather").withArguments("{}"))
+        };
+        ProviderCodec[] codecs = {codec, new AzureOpenAiCodec()};
+        for (ProviderCodec providerCodec : codecs) {
+            for (Completion completion : completions) {
+                JsonNode choice = OBJECT_MAPPER.readTree(providerCodec.encode(completion, "gpt-4o").getBodyAsString())
+                    .path("choices").path(0);
+                assertThat(providerCodec.provider() + " logprobs present", choice.has("logprobs"), is(true));
+                assertThat(providerCodec.provider() + " logprobs null", choice.get("logprobs").isNull(), is(true));
+            }
+        }
     }
 
     @Test

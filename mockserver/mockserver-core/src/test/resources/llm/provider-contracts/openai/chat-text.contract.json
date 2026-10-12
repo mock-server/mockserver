@@ -35,12 +35,6 @@
   "allowed": [
     {
       "kind": "MISSING",
-      "path": "choices[].logprobs",
-      "reason": "required (nullable) on CreateChatCompletionResponse choices[] in the OpenAI OpenAPI spec; openai-python declares it Optional, so SDKs accept its absence",
-      "openItem": "36"
-    },
-    {
-      "kind": "MISSING",
       "path": "choices[].message.annotations",
       "reason": "optional: ChatCompletionResponseMessage requires only role and content; the API adds annotations for web search results"
     },

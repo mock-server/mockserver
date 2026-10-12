@@ -59,24 +59,6 @@
   "allowed": [
     {
       "kind": "MISSING",
-      "path": "access_programs",
-      "reason": "required (nullable) on Response in the OpenAI OpenAPI spec; openai-python and async-openai declare it optional, so SDKs accept its absence",
-      "openItem": "36"
-    },
-    {
-      "kind": "MISSING",
-      "path": "temperature",
-      "reason": "required (nullable) on Response in the OpenAI OpenAPI spec; openai-python and async-openai declare it optional, so SDKs accept its absence",
-      "openItem": "36"
-    },
-    {
-      "kind": "MISSING",
-      "path": "top_p",
-      "reason": "required (nullable) on Response in the OpenAI OpenAPI spec; openai-python and async-openai declare it optional, so SDKs accept its absence",
-      "openItem": "36"
-    },
-    {
-      "kind": "MISSING",
       "path": "max_output_tokens",
       "reason": "optional: not in the OpenAI OpenAPI spec's Response required list, and Optional in openai-python Response; it reflects request settings MockServer does not model"
     },
