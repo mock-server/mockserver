@@ -3,9 +3,14 @@ package org.mockserver.llm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.mockserver.llm.codec.BedrockCodec;
+import org.mockserver.model.Completion;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.LlmContentFilter;
 import org.mockserver.model.Provider;
+import org.mockserver.model.SseEvent;
+import org.mockserver.model.StreamingPhysics;
+
+import java.util.List;
 
 /**
  * Pure, deterministic helper for content-filter / guardrail simulation across
@@ -23,7 +28,8 @@ import org.mockserver.model.Provider;
  *       error; Azure → HTTP 400 whose {@code innererror} carries the filter result;
  *       Anthropic and Bedrock InvokeModel → HTTP 200 with {@code stop_reason:"refusal"};
  *       Bedrock Converse → HTTP 200 with {@code stopReason:"content_filtered"}; Gemini →
- *       HTTP 200 with {@code finishReason:"SAFETY"}; otherwise a generic 400.</li>
+ *       HTTP 200 with {@code finishReason:"SAFETY"}; otherwise a generic 400. A streaming
+ *       request gets the HTTP 200 blocks as an event stream ({@link #streamedBlockOrNull}).</li>
  * </ul>
  *
  * <p>This is the content-filter counterpart to {@link LlmErrorBody} (overload /
@@ -129,6 +135,35 @@ public final class LlmContentFilterBodies {
                 return geminiBlock();
             default:
                 return genericBlock();
+        }
+    }
+
+    /**
+     * The block as the provider's event stream, for a streaming request: real providers answer a
+     * streamed request with HTTP 200 and a stream that ends with the filtered stop reason. Anthropic
+     * and Bedrock (InvokeModel and Converse) stream an empty message whose stop reason is the
+     * refusal, through {@code codec}; Gemini streams the block body as its only chunk. Returns
+     * {@code null} for a block that is an HTTP 400, which providers send before any stream starts.
+     */
+    public static List<SseEvent> streamedBlockOrNull(Provider provider, Block block, ProviderCodec codec,
+                                                     String model, StreamingPhysics physics, HttpRequest request) {
+        if (provider == null || block == null || block.getStatusCode() != 200) {
+            return null;
+        }
+        switch (provider) {
+            case ANTHROPIC:
+            case BEDROCK:
+                if (codec == null) {
+                    return null;
+                }
+                Completion refusal = Completion.completion()
+                    .withStopReason(LlmRefusalPresets.ANTHROPIC_REFUSAL_STOP_REASON)
+                    .withStreaming(true);
+                return codec.encodeStreaming(refusal, model, physics, request);
+            case GEMINI:
+                return StreamingPhysicsExpander.applyPhysics(List.of(SseEvent.sseEvent().withData(block.getJsonBody())), physics);
+            default:
+                return null;
         }
     }
 

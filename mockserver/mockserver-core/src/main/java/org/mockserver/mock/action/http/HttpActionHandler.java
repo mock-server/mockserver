@@ -720,13 +720,16 @@ public class HttpActionHandler {
             case LLM_RESPONSE -> {
                 HttpLlmResponse llmAction = (HttpLlmResponse) action;
                 // Chaos: a probabilistic provider error short-circuits to a normal
-                // (non-streaming) HTTP error response, even for a would-be stream.
-                final HttpResponse chaosErrorResponse = getHttpLlmResponseActionHandler().chaosErrorResponseOrNull(llmAction, request);
+                // (non-streaming) HTTP error response, even for a would-be stream; a content-filter
+                // block the provider answers with HTTP 200 is streamed instead (WAR cannot stream).
+                final HttpLlmResponseActionHandler.ChaosOutcome chaosOutcome = getHttpLlmResponseActionHandler().chaosOutcome(llmAction, request);
+                final java.util.List<SseEvent> streamedChaosBlock = ctx != null ? chaosOutcome.getStreamedBlock() : null;
+                final HttpResponse chaosErrorResponse = streamedChaosBlock == null ? chaosOutcome.getErrorResponse() : null;
                 // Strict structured-output enforcement: when enabled and the configured body
                 // does not conform to the declared schema, fail loudly with a provider-correct
                 // error (also a non-streaming response, so a strict stream never begins). Chaos
                 // takes priority — it models a transport-level failure independent of the body.
-                final HttpResponse enforcementErrorResponse = chaosErrorResponse == null
+                final HttpResponse enforcementErrorResponse = chaosErrorResponse == null && streamedChaosBlock == null
                     ? getHttpLlmResponseActionHandler().enforcementErrorResponseOrNull(llmAction, request)
                     : null;
                 final HttpResponse preEmptiveErrorResponse = chaosErrorResponse != null ? chaosErrorResponse : enforcementErrorResponse;
@@ -750,11 +753,13 @@ public class HttpActionHandler {
                                         .setMessageFormat("returning streaming LLM response for request:{}for action:{}from expectation:{}")
                                         .setArguments(request, action, action.getExpectationId())
                                 );
-                                java.util.List<SseEvent> sseEvents = getHttpLlmResponseActionHandler().handleStreaming(llmAction, request);
-                                if (!sseEvents.isEmpty()
+                                java.util.List<SseEvent> sseEvents = streamedChaosBlock != null
+                                    ? streamedChaosBlock
+                                    : getHttpLlmResponseActionHandler().handleStreaming(llmAction, request);
+                                if (streamedChaosBlock != null || (!sseEvents.isEmpty()
                                     && llmAction.getChaos() != null
                                     && (llmAction.getChaos().getTruncateMode() == org.mockserver.model.LlmChaosProfile.TruncateMode.MID_STREAM
-                                    || Boolean.TRUE.equals(llmAction.getChaos().getMalformedSse()))) {
+                                    || Boolean.TRUE.equals(llmAction.getChaos().getMalformedSse())))) {
                                     metrics.increment(org.mockserver.metrics.Metrics.Name.LLM_CHAOS_INJECTED_COUNT);
                                 }
                                 org.mockserver.llm.StreamingFormat streamingFormat = getHttpLlmResponseActionHandler().streamingFormatFor(llmAction.getProvider(), request);

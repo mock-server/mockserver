@@ -351,7 +351,7 @@ public class HttpLlmResponseActionHandler {
      * guarantees schema-valid output: a non-conforming strict fixture is a configuration
      * error and surfaces as an error rather than silently passing. Applies to both the
      * streaming and non-streaming paths (checked before dispatch by {@code HttpActionHandler},
-     * mirroring {@link #chaosErrorResponseOrNull}), so a strict streaming completion with a
+     * mirroring {@link #chaosOutcome}), so a strict streaming completion with a
      * non-conforming body never begins streaming.
      */
     public HttpResponse enforcementErrorResponseOrNull(HttpLlmResponse httpLlmResponse, HttpRequest request) {
@@ -470,9 +470,43 @@ public class HttpLlmResponseActionHandler {
      * serves several wire APIs (Bedrock InvokeModel and Converse) gets the matching block body.
      */
     public HttpResponse chaosErrorResponseOrNull(HttpLlmResponse httpLlmResponse, HttpRequest request) {
+        return chaosOutcome(httpLlmResponse, request).getErrorResponse();
+    }
+
+    /**
+     * The chaos decision for one matched LLM request, drawn once: an error response, and for a
+     * streaming completion whose provider answers a content-filter block with HTTP 200, the
+     * block as the provider's event stream. Both are {@code null} when no chaos fires.
+     */
+    public static final class ChaosOutcome {
+        private static final ChaosOutcome NONE = new ChaosOutcome(null, null);
+        private final HttpResponse errorResponse;
+        private final List<SseEvent> streamedBlock;
+
+        ChaosOutcome(HttpResponse errorResponse, List<SseEvent> streamedBlock) {
+            this.errorResponse = errorResponse;
+            this.streamedBlock = streamedBlock;
+        }
+
+        /** The non-streaming response; for a streamed block, the same block as one JSON body. */
+        public HttpResponse getErrorResponse() {
+            return errorResponse;
+        }
+
+        /** The content-filter block as stream events, or {@code null} when it is not streamed. */
+        public List<SseEvent> getStreamedBlock() {
+            return streamedBlock;
+        }
+    }
+
+    /**
+     * As {@link #chaosErrorResponseOrNull(HttpLlmResponse, HttpRequest)}, also returning the
+     * streamed form of a content-filter block when the completion streams.
+     */
+    public ChaosOutcome chaosOutcome(HttpLlmResponse httpLlmResponse, HttpRequest request) {
         LlmChaosProfile chaos = httpLlmResponse.getChaos();
         if (chaos == null) {
-            return null;
+            return ChaosOutcome.NONE;
         }
         // Compute token count for this response (used by the token-based quota).
         long requestTokens = estimateTokenCount(httpLlmResponse);
@@ -482,7 +516,7 @@ public class HttpLlmResponseActionHandler {
         // error before any probabilistic-error decision.
         HttpResponse quotaError = quotaErrorResponseOrNull(chaos, requestTokens, httpLlmResponse.getProvider());
         if (quotaError != null) {
-            return quotaError;
+            return new ChaosOutcome(quotaError, null);
         }
         // Content-filter block (probabilistic, seeded-deterministic, shares seed) takes
         // priority over the generic probabilistic error: it emits the PROVIDER-CORRECT
@@ -492,19 +526,20 @@ public class HttpLlmResponseActionHandler {
             && ChaosProbability.shouldInject(chaos.getContentFilterBlockProbability(), chaos.getSeed())) {
             LlmContentFilterBodies.Block block =
                 LlmContentFilterBodies.blockFor(httpLlmResponse.getProvider(), httpLlmResponse.getContentFilter(), request);
-            return response()
+            HttpResponse blockResponse = response()
                 .withStatusCode(block.getStatusCode())
                 .withHeader("content-type", "application/json")
                 .withBody(block.getJsonBody());
+            return new ChaosOutcome(blockResponse, streamedBlockOrNull(httpLlmResponse, block, request));
         }
         // The probabilistic error fires when an errorStatus is set, OR when only an
         // errorKind is declared (the provider's natural status then supplies the code).
         LlmErrorBody.Kind kind = parseErrorKind(chaos.getErrorKind());
         if (chaos.getErrorStatus() == null && kind == null) {
-            return null;
+            return ChaosOutcome.NONE;
         }
         if (!ChaosProbability.shouldInject(chaos.getErrorProbability(), chaos.getSeed())) {
-            return null;
+            return ChaosOutcome.NONE;
         }
         Provider provider = httpLlmResponse.getProvider();
         ProviderError providerError = resolveProviderError(provider, kind, chaos.getErrorStatus());
@@ -515,7 +550,18 @@ public class HttpLlmResponseActionHandler {
         // applyRateLimitHeaders is the single owner of the Retry-After header (and the
         // provider-specific rate-limit headers) so it is never emitted twice.
         applyRateLimitHeaders(errorResponse, provider, true, chaos);
-        return errorResponse;
+        return new ChaosOutcome(errorResponse, null);
+    }
+
+    private List<SseEvent> streamedBlockOrNull(HttpLlmResponse httpLlmResponse, LlmContentFilterBodies.Block block, HttpRequest request) {
+        Completion completion = httpLlmResponse.getCompletion();
+        if (completion == null || !Boolean.TRUE.equals(completion.getStreaming())) {
+            return null;
+        }
+        Provider provider = httpLlmResponse.getProvider();
+        ProviderCodec codec = provider != null ? ProviderCodecRegistry.getInstance().lookup(provider).orElse(null) : null;
+        return LlmContentFilterBodies.streamedBlockOrNull(provider, block, codec,
+            httpLlmResponse.getModel(), completion.getStreamingPhysics(), request);
     }
 
     /** Parse a case-insensitive errorKind string to an {@link LlmErrorBody.Kind}, or null when unset/unrecognised. */
@@ -702,7 +748,7 @@ public class HttpLlmResponseActionHandler {
      * ({@code quotaName} for request-count, {@code quotaName + ":tokens"} for
      * token-based).
      * <p>
-     * Called once per matched LLM request (via {@link #chaosErrorResponseOrNull})
+     * Called once per matched LLM request (via {@link #chaosOutcome})
      * regardless of whether the response path ultimately delivers an LLM payload,
      * so the count reflects requests received, not payloads returned.
      *
