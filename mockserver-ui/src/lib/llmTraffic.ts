@@ -5,6 +5,8 @@
  * All functions are defensive — they never throw on malformed input.
  */
 
+import { decodeAwsEventStream, type AwsEventStreamMessage } from './awsEventStream';
+
 // ---------------------------------------------------------------------------
 // SSE types
 // ---------------------------------------------------------------------------
@@ -49,6 +51,12 @@ export interface AnthropicParsed {
   sseEvents: SseEvent[] | null;
   streamed: boolean;
   streamTruncated: boolean;
+  /**
+   * Set for AWS Bedrock Runtime traffic. Both Bedrock APIs are normalised into this
+   * Anthropic shape: InvokeModel on Claude already uses it, and Converse blocks,
+   * usage and stream events are mapped onto it.
+   */
+  platform?: 'bedrock';
 }
 
 // ---------------------------------------------------------------------------
@@ -505,11 +513,28 @@ function isGeminiPath(path: string | null): boolean {
   // /v1/models/* paths from other providers as Gemini.
   if (path === null) return false;
   return /\/v1beta\/models\/[^/]+:(generateContent|streamGenerateContent)/.test(path)
-    || /\/v1\/models\/gemini-[^/]+:(generateContent|streamGenerateContent)/.test(path);
+    || /\/v1\/models\/gemini-[^/]+:(generateContent|streamGenerateContent)/.test(path)
+    || /\/publishers\/google\/models\/[^/]+:(generateContent|streamGenerateContent)/.test(path);
 }
 
-function isBedrockPath(path: string | null): boolean {
-  return path !== null && /\/model\/anthropic\./.test(path) && path.includes('/invoke');
+// Claude on Vertex AI: .../publishers/anthropic/models/{model}:rawPredict or
+// :streamRawPredict, carrying the Anthropic Messages wire shape.
+const VERTEX_ANTHROPIC_PATH = /\/publishers\/anthropic\/models\/([^/:?]+):(?:rawPredict|streamRawPredict)/;
+
+// Bedrock Runtime: /model/{modelId}/{operation} for every model family. The model
+// id may be an inference-profile id (us.anthropic...), or a URL-encoded ARN.
+const BEDROCK_RUNTIME_PATH = /\/model\/(.+?)\/(invoke-with-response-stream|invoke|converse-stream|converse)(?=[/?]|$)/i;
+
+function bedrockPathParts(path: string | null): { modelId: string; operation: string } | null {
+  const m = path === null ? null : path.match(BEDROCK_RUNTIME_PATH);
+  if (!m) return null;
+  let modelId = m[1]!;
+  try {
+    modelId = decodeURIComponent(modelId);
+  } catch {
+    // keep the raw segment when it is not valid percent-encoding
+  }
+  return { modelId, operation: m[2]!.toLowerCase() };
 }
 
 function isAzureOpenAiPath(path: string | null): boolean {
@@ -530,7 +555,8 @@ function isOllamaPath(path: string | null): boolean {
  * non-chat paths (e.g. /v1/models) to a known host. Returns the parser kind to
  * use, or null when the host is unknown (callers then fall back to path / body
  * shape). Maps to the parsers the dashboard implements: Azure -> openai (same
- * wire format), Bedrock and Vertex map to the anthropic / gemini parsers.
+ * wire format), Vertex -> gemini (or anthropic for Claude on Vertex), Bedrock ->
+ * the Bedrock parser, which yields the anthropic shape.
  *
  * Note: embeddings-only hosts (api.cohere.com, api.voyageai.com) are recognised
  * by the server but have no dedicated dashboard parser, so they are not mapped
@@ -539,7 +565,7 @@ function isOllamaPath(path: string | null): boolean {
 function detectByHost(
   host: string | null,
   path: string | null,
-): 'anthropic' | 'openai' | 'openai_responses' | 'gemini' | null {
+): 'anthropic' | 'openai' | 'openai_responses' | 'gemini' | 'bedrock' | null {
   if (!host) return null;
   // Strip any port suffix before matching (Host headers may include :443).
   const h = host.toLowerCase().replace(/:\d+$/, '');
@@ -560,9 +586,11 @@ function detectByHost(
   // Fully anchored so an arbitrary host cannot be glued in front (e.g.
   // evil.com-aiplatform.googleapis.com): the region label is [a-z0-9-]+ and
   // contains no dot, so only genuine *.googleapis.com Vertex hosts match.
-  if (/^(?:[a-z0-9-]+-)?aiplatform\.googleapis\.com$/.test(h)) return 'gemini';
-  // Bedrock: bedrock*.amazonaws.com — uses the native Anthropic wire shape.
-  if (h.endsWith('.amazonaws.com') && (h.startsWith('bedrock') || h.includes('.bedrock'))) return 'anthropic';
+  if (/^(?:[a-z0-9-]+-)?aiplatform\.googleapis\.com$/.test(h)) {
+    return path !== null && VERTEX_ANTHROPIC_PATH.test(path) ? 'anthropic' : 'gemini';
+  }
+  // Bedrock: bedrock*.amazonaws.com (InvokeModel and Converse).
+  if (h.endsWith('.amazonaws.com') && (h.startsWith('bedrock') || h.includes('.bedrock'))) return 'bedrock';
 
   return null;
 }
@@ -708,6 +736,7 @@ function parseAnthropicRequest(
   requestBody: unknown,
   responseBody: unknown,
   responseHeaders: unknown,
+  pathModel: string | null = null,
 ): AnthropicParsed {
   const req = safeParseJson(requestBody) as Record<string, unknown> | undefined;
   const { streamed, truncated } = hasStreamingHeaders(responseHeaders);
@@ -718,7 +747,8 @@ function parseAnthropicRequest(
 
   const result: AnthropicParsed = {
     kind: 'anthropic',
-    model: req ? getString(req, 'model') : null,
+    // Vertex and Bedrock carry the model in the URL, not the body.
+    model: (req ? getString(req, 'model') : null) ?? pathModel,
     stream: req ? (getBoolean(req, 'stream') ?? false) : false,
     messages: req ? (getArray(req, 'messages') ?? []) : [],
     system: req ? (req['system'] ?? null) : null,
@@ -1042,7 +1072,8 @@ function parseGeminiRequest(
   const result: GeminiParsed = {
     kind: 'gemini',
     model: null,
-    stream: false,
+    // Gemini selects streaming by method in the URL, not by a body field.
+    stream: path !== null && path.includes(':streamGenerateContent'),
     contents: req ? (getArray(req, 'contents') ?? []) : [],
     tools: req ? (getArray(req, 'tools') ?? null) : null,
     candidates: [],
@@ -1064,6 +1095,16 @@ function parseGeminiRequest(
   }
 
   const res = safeParseJson(responseBody) as Record<string, unknown> | undefined;
+  if (Array.isArray(res)) {
+    // streamGenerateContent without ?alt=sse returns a JSON array of response chunks.
+    const events = res.map((chunk) => ({ data: JSON.stringify(chunk) }));
+    result.sseEvents = events;
+    const reassembled = reassembleGeminiSse(events);
+    result.candidates = reassembled.candidates;
+    result.usage = reassembled.usage;
+    result.model = reassembled.model ?? pathModel;
+    return result;
+  }
   if (res) {
     result.candidates = getArray(res, 'candidates') ?? [];
     const usageMeta = getObject(res, 'usageMetadata');
@@ -1087,6 +1128,50 @@ function parseGeminiRequest(
 // Ollama parser
 // ---------------------------------------------------------------------------
 
+/** Parse newline-delimited JSON (application/x-ndjson), skipping lines that are not JSON objects. */
+function parseNdjsonLines(text: string): { line: string; value: Record<string, unknown> }[] {
+  const out: { line: string; value: Record<string, unknown> }[] = [];
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line) continue;
+    const value = safeParseJson(line);
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      out.push({ line, value: value as Record<string, unknown> });
+    }
+  }
+  return out;
+}
+
+/**
+ * Fold a streamed Ollama /api/chat reply into one response object: message
+ * content, thinking and tool_calls accumulate across chunks; top-level fields
+ * (done, done_reason, prompt_eval_count, eval_count, model) take the last value.
+ */
+function mergeOllamaChunks(chunks: Record<string, unknown>[]): Record<string, unknown> {
+  const merged: Record<string, unknown> = {};
+  let role = 'assistant';
+  let content = '';
+  let thinking = '';
+  const toolCalls: unknown[] = [];
+  for (const chunk of chunks) {
+    for (const [key, value] of Object.entries(chunk)) {
+      if (key !== 'message') merged[key] = value;
+    }
+    const message = getObject(chunk, 'message');
+    if (message) {
+      role = getString(message, 'role') ?? role;
+      content += getString(message, 'content') ?? '';
+      thinking += getString(message, 'thinking') ?? '';
+      toolCalls.push(...(getArray(message, 'tool_calls') ?? []));
+    }
+  }
+  const message: Record<string, unknown> = { role, content };
+  if (thinking) message['thinking'] = thinking;
+  if (toolCalls.length > 0) message['tool_calls'] = toolCalls;
+  merged['message'] = message;
+  return merged;
+}
+
 function parseOllamaRequest(
   requestBody: unknown,
   responseBody: unknown,
@@ -1098,7 +1183,8 @@ function parseOllamaRequest(
   const result: OllamaParsed = {
     kind: 'ollama',
     model: req ? getString(req, 'model') : null,
-    stream: req ? (getBoolean(req, 'stream') ?? false) : false,
+    // Ollama streams unless the request sets "stream": false.
+    stream: req ? (getBoolean(req, 'stream') ?? true) : false,
     messages: req ? (getArray(req, 'messages') ?? []) : [],
     tools: req ? (getArray(req, 'tools') ?? null) : null,
     responseMessage: null,
@@ -1109,7 +1195,14 @@ function parseOllamaRequest(
     streamTruncated: truncated,
   };
 
-  const res = safeParseJson(responseBody) as Record<string, unknown> | undefined;
+  let res = safeParseJson(responseBody) as Record<string, unknown> | undefined;
+  if (!res && typeof responseBody === 'string') {
+    const lines = parseNdjsonLines(responseBody);
+    if (lines.length > 0) {
+      res = mergeOllamaChunks(lines.map((l) => l.value));
+      result.sseEvents = lines.map((l) => ({ data: l.line }));
+    }
+  }
   if (res) {
     result.responseMessage = res['message'] ?? null;
     result.done = getBoolean(res, 'done') ?? false;
@@ -1126,6 +1219,251 @@ function parseOllamaRequest(
     }
   }
 
+  return result;
+}
+
+// ---------------------------------------------------------------------------
+// Bedrock parser (InvokeModel and Converse, normalised to the Anthropic shape)
+// ---------------------------------------------------------------------------
+
+const CONVERSE_STREAM_EVENTS = [
+  'messageStart', 'contentBlockStart', 'contentBlockDelta', 'contentBlockStop', 'messageStop', 'metadata',
+];
+
+function base64ToBytes(base64: string): Uint8Array | null {
+  try {
+    return Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+  } catch {
+    return null;
+  }
+}
+
+/** Raw bytes of a MockServer BINARY body, which is how binary event-stream captures are stored. */
+function extractBinaryBodyBytes(body: unknown): Uint8Array | null {
+  if (typeof body !== 'object' || body === null) return null;
+  const obj = body as Record<string, unknown>;
+  if (obj['type'] !== 'BINARY' || typeof obj['base64Bytes'] !== 'string') return null;
+  return base64ToBytes(obj['base64Bytes']);
+}
+
+function converseBlockToAnthropic(block: unknown): AnthropicContentBlock {
+  if (typeof block !== 'object' || block === null) return { type: 'unknown' };
+  const b = block as Record<string, unknown>;
+  if (typeof b['text'] === 'string') return { type: 'text', text: b['text'] };
+  const toolUse = getObject(b, 'toolUse');
+  if (toolUse) {
+    return {
+      type: 'tool_use',
+      id: getString(toolUse, 'toolUseId') ?? undefined,
+      name: getString(toolUse, 'name') ?? undefined,
+      input: toolUse['input'],
+    };
+  }
+  const toolResult = getObject(b, 'toolResult');
+  if (toolResult) {
+    const content = getArray(toolResult, 'content') ?? [];
+    const allText = content.length > 0 && content.every((c) => getString(c, 'text') !== null);
+    return {
+      type: 'tool_result',
+      tool_use_id: getString(toolResult, 'toolUseId') ?? undefined,
+      content: allText ? content.map((c) => getString(c, 'text')).join('') : content,
+    } as AnthropicContentBlock;
+  }
+  const reasoning = getObject(getObject(b, 'reasoningContent'), 'reasoningText');
+  if (reasoning) {
+    return { type: 'thinking', thinking: getString(reasoning, 'text') ?? '' } as AnthropicContentBlock;
+  }
+  // Other ContentBlock union members (image, document, cachePoint, ...) keep their name.
+  return { type: Object.keys(b)[0] ?? 'unknown' };
+}
+
+function converseUsageToAnthropic(usage: Record<string, unknown> | null): AnthropicUsage | null {
+  if (!usage) return null;
+  const out: AnthropicUsage = {};
+  const input = getNumber(usage, 'inputTokens');
+  if (input !== null) out.input_tokens = input;
+  const output = getNumber(usage, 'outputTokens');
+  if (output !== null) out.output_tokens = output;
+  const cacheRead = getNumber(usage, 'cacheReadInputTokens');
+  if (cacheRead !== null) out.cache_read_input_tokens = cacheRead;
+  const cacheWrite = getNumber(usage, 'cacheWriteInputTokens');
+  if (cacheWrite !== null) out.cache_creation_input_tokens = cacheWrite;
+  return out;
+}
+
+function converseToolToAnthropic(tool: unknown): unknown {
+  const spec = getObject(tool, 'toolSpec');
+  if (!spec) return tool;
+  return {
+    name: getString(spec, 'name'),
+    description: getString(spec, 'description') ?? undefined,
+    input_schema: getObject(spec, 'inputSchema')?.['json'],
+  };
+}
+
+/** Reassemble ConverseStream events (event name in `event`, event payload in `data`). */
+function reassembleConverseStream(events: SseEvent[]): ReassembledAnthropic {
+  const result: ReassembledAnthropic = { content: [], usage: {}, model: null, stopReason: null };
+  const text = new Map<number, string>();
+  const toolInput = new Map<number, string>();
+  const thinking = new Map<number, string>();
+  const blockAt = (index: number | null): boolean => {
+    if (index === null || index < 0 || index > MAX_ANTHROPIC_CONTENT_BLOCKS) return false;
+    while (result.content.length <= index) result.content.push({ type: 'text' });
+    return true;
+  };
+  const append = (map: Map<number, string>, index: number, part: string) => map.set(index, (map.get(index) ?? '') + part);
+
+  for (const evt of events) {
+    const data = safeParseJson(evt.data);
+    if (!data || typeof data !== 'object') continue;
+    const index = getNumber(data, 'contentBlockIndex');
+    if (evt.event === 'contentBlockStart') {
+      const toolUse = getObject(getObject(data, 'start'), 'toolUse');
+      if (toolUse && blockAt(index)) {
+        result.content[index!] = {
+          type: 'tool_use',
+          id: getString(toolUse, 'toolUseId') ?? undefined,
+          name: getString(toolUse, 'name') ?? undefined,
+        };
+      }
+    } else if (evt.event === 'contentBlockDelta') {
+      const delta = getObject(data, 'delta');
+      if (!delta || !blockAt(index)) continue;
+      const deltaText = getString(delta, 'text');
+      if (deltaText !== null) append(text, index!, deltaText);
+      const inputPart = getString(getObject(delta, 'toolUse'), 'input');
+      if (inputPart !== null) append(toolInput, index!, inputPart);
+      const reasoningPart = getString(getObject(delta, 'reasoningContent'), 'text');
+      if (reasoningPart !== null) append(thinking, index!, reasoningPart);
+    } else if (evt.event === 'messageStop') {
+      result.stopReason = getString(data, 'stopReason');
+    } else if (evt.event === 'metadata') {
+      result.usage = converseUsageToAnthropic(getObject(data, 'usage')) ?? {};
+    }
+  }
+
+  for (const [index, value] of text) result.content[index] = { ...result.content[index]!, text: value };
+  for (const [index, value] of thinking) {
+    result.content[index] = { type: 'thinking', thinking: value } as AnthropicContentBlock;
+  }
+  for (const [index, value] of toolInput) {
+    result.content[index] = { ...result.content[index]!, input: safeParseJson(value) ?? value };
+  }
+  return result;
+}
+
+/**
+ * Name a Bedrock stream event. Anthropic chunks (InvokeModel on Claude) carry
+ * their name in `type`; ConverseStream frames carry it in `:event-type`, and
+ * InvokeModel on Nova wraps the payload in a single key named after the event.
+ */
+function normaliseBedrockEvent(name: string | undefined, data: string): SseEvent {
+  const obj = safeParseJson(data);
+  const type = getString(obj, 'type');
+  if (type && (!name || name === 'chunk')) return { event: type, data };
+  if (name && name !== 'chunk') return { event: name, data };
+  const key = CONVERSE_STREAM_EVENTS.find((k) => getObject(obj, k) !== null);
+  return key ? { event: key, data: JSON.stringify(getObject(obj, key)) } : { event: name, data };
+}
+
+function bedrockEventStreamEvents(frames: AwsEventStreamMessage[]): SseEvent[] {
+  const decoder = new TextDecoder();
+  return frames.map((frame) => {
+    const name = frame.headers[':event-type'] ?? frame.headers[':exception-type'];
+    let data = decoder.decode(frame.payload);
+    if (name === 'chunk') {
+      // InvokeModelWithResponseStream: the model's own chunk is base64 in `bytes`.
+      const encoded = getString(safeParseJson(data), 'bytes');
+      const bytes = encoded ? base64ToBytes(encoded) : null;
+      if (bytes) data = decoder.decode(bytes);
+    }
+    return normaliseBedrockEvent(name, data);
+  });
+}
+
+function parseBedrockRequest(
+  requestBody: unknown,
+  responseBody: unknown,
+  responseHeaders: unknown,
+  path: string | null,
+  responseBytes: Uint8Array | null,
+): AnthropicParsed {
+  const parts = bedrockPathParts(path);
+  const operation = parts?.operation ?? null;
+  const req = safeParseJson(requestBody) as Record<string, unknown> | undefined;
+  const { streamed, truncated } = hasStreamingHeaders(responseHeaders);
+
+  const result: AnthropicParsed = {
+    kind: 'anthropic',
+    platform: 'bedrock',
+    model: (req ? getString(req, 'model') : null) ?? parts?.modelId ?? null,
+    stream: operation === 'invoke-with-response-stream' || operation === 'converse-stream'
+      || (req ? (getBoolean(req, 'stream') ?? false) : false),
+    messages: [],
+    system: null,
+    tools: null,
+    maxTokens: null,
+    responseContent: [],
+    usage: null,
+    stopReason: null,
+    sseEvents: null,
+    streamed,
+    streamTruncated: truncated,
+  };
+
+  if (req) {
+    const converseRequest = operation?.startsWith('converse') || 'inferenceConfig' in req || 'toolConfig' in req;
+    if (converseRequest) {
+      result.messages = (getArray(req, 'messages') ?? []).map((m) => {
+        const content = getArray(m, 'content');
+        return content ? { role: getString(m, 'role'), content: content.map(converseBlockToAnthropic) } : m;
+      });
+      const system = getArray(req, 'system');
+      result.system = system ? system.map(converseBlockToAnthropic) : null;
+      const tools = getArray(getObject(req, 'toolConfig'), 'tools');
+      result.tools = tools ? tools.map(converseToolToAnthropic) : null;
+      result.maxTokens = getNumber(getObject(req, 'inferenceConfig'), 'maxTokens');
+    } else {
+      result.messages = getArray(req, 'messages') ?? [];
+      result.system = req['system'] ?? null;
+      result.tools = getArray(req, 'tools');
+      result.maxTokens = getNumber(req, 'max_tokens');
+    }
+  }
+
+  const frames = responseBytes ? decodeAwsEventStream(responseBytes) : [];
+  let events: SseEvent[] | null = null;
+  if (frames.length > 0) {
+    events = bedrockEventStreamEvents(frames);
+  } else if ((streamed || isStreamResponse(responseHeaders, responseBody)) && typeof responseBody === 'string') {
+    // SSE, as MockServer emits when streamingResponsesEnabled is off.
+    events = parseSseStream(responseBody).map((e) => normaliseBedrockEvent(e.event, e.data));
+  }
+
+  if (events) {
+    result.sseEvents = events;
+    const converseStream = events.some((e) => e.event !== undefined && CONVERSE_STREAM_EVENTS.includes(e.event));
+    const reassembled = converseStream ? reassembleConverseStream(events) : reassembleAnthropicSse(events);
+    result.responseContent = reassembled.content;
+    result.usage = reassembled.usage;
+    result.stopReason = reassembled.stopReason;
+    if (!result.model) result.model = reassembled.model;
+    return result;
+  }
+
+  const res = safeParseJson(responseBody);
+  const message = getObject(getObject(res, 'output'), 'message');
+  if (message) {
+    result.responseContent = (getArray(message, 'content') ?? []).map(converseBlockToAnthropic);
+    result.usage = converseUsageToAnthropic(getObject(res, 'usage'));
+    result.stopReason = getString(res, 'stopReason');
+  } else if (res && typeof res === 'object') {
+    result.responseContent = (getArray(res, 'content') ?? []) as AnthropicContentBlock[];
+    result.usage = getObject(res, 'usage') as AnthropicUsage | null;
+    result.stopReason = getString(res, 'stop_reason');
+    if (!result.model) result.model = getString(res, 'model');
+  }
   return result;
 }
 
@@ -1158,9 +1496,12 @@ export function parseTraffic(value: Record<string, unknown>): ParsedTraffic {
     // a call to a well-known provider host is that provider regardless of path,
     // so non-chat paths to a known host classify consistently with the server.
     const host = getHeaderValue(requestHeaders, 'host');
+    const vertexAnthropicModel = path?.match(VERTEX_ANTHROPIC_PATH)?.[1] ?? null;
     switch (detectByHost(host, path)) {
       case 'anthropic':
-        return parseAnthropicRequest(reqBodyContent, resBodyContent, responseHeaders);
+        return parseAnthropicRequest(reqBodyContent, resBodyContent, responseHeaders, vertexAnthropicModel);
+      case 'bedrock':
+        return parseBedrockRequest(reqBodyContent, resBodyContent, responseHeaders, path, extractBinaryBodyBytes(responseBody));
       case 'openai':
         return parseOpenAiRequest(reqBodyContent, resBodyContent, responseHeaders);
       case 'openai_responses':
@@ -1180,9 +1521,12 @@ export function parseTraffic(value: Record<string, unknown>): ParsedTraffic {
       return parseOpenAiRequest(reqBodyContent, resBodyContent, responseHeaders);
     }
 
-    // Bedrock Anthropic uses the native Anthropic wire shape.
-    if (isBedrockPath(path)) {
-      return parseAnthropicRequest(reqBodyContent, resBodyContent, responseHeaders);
+    if (bedrockPathParts(path) !== null) {
+      return parseBedrockRequest(reqBodyContent, resBodyContent, responseHeaders, path, extractBinaryBodyBytes(responseBody));
+    }
+
+    if (vertexAnthropicModel !== null) {
+      return parseAnthropicRequest(reqBodyContent, resBodyContent, responseHeaders, vertexAnthropicModel);
     }
 
     // OpenAI Responses API (/v1/responses) — must be checked before

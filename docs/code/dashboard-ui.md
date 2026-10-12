@@ -610,7 +610,7 @@ Provider-specific chat renderers"]
 | Column | Source |
 |--------|--------|
 | Time | When the request was received (the row number only when there is no timestamp) |
-| Provider chip | Detected kind: Anthropic / OpenAI / OpenAI Resp / Gemini / Ollama / MCP / HTTP |
+| Provider chip | Detected kind: Anthropic / Bedrock / OpenAI / OpenAI Resp / Gemini / Ollama / MCP / HTTP |
 | Method | `httpRequest.method` |
 | Host + path | `httpRequest.headers.host` + `httpRequest.path` |
 | Status chip | `httpResponse.statusCode` |
@@ -660,14 +660,18 @@ The component is a pure renderer — it receives a parsed object from `llmTraffi
 | Anthropic Messages API | Path ends with `/v1/messages`; extracts `model`, `usage.input_tokens`, `usage.output_tokens`, `stop_reason`, messages array, tool-use blocks, SSE events |
 | OpenAI Chat Completions | Path ends with `/v1/chat/completions`; extracts `model`, `usage.prompt_tokens`, `usage.completion_tokens`, `finish_reason`, messages array, `tool_calls` |
 | OpenAI Responses API | Path ends with `/v1/responses`; extracts `model`, input/output items |
-| Gemini | Path contains `/models/` and `/generateContent`; extracts `model`, contents, candidates |
-| Ollama | Path ends with `/api/chat` or `/api/generate`; extracts `model`, messages, response message |
+| Anthropic on Vertex AI | `.../publishers/anthropic/models/{model}:rawPredict` or `:streamRawPredict`; parsed as Anthropic, model taken from the path |
+| AWS Bedrock Runtime | `/model/{modelId}/invoke`, `/invoke-with-response-stream`, `/converse` or `/converse-stream` for any model id (region-prefixed inference profiles and URL-encoded ARNs included), or a `bedrock*.amazonaws.com` host. Parsed into the Anthropic shape with `platform: 'bedrock'` (chip "Bedrock"): InvokeModel on Claude is already that shape; Converse `text` / `toolUse` / `toolResult` / `reasoningContent` blocks, `system`, `toolConfig`, `inferenceConfig.maxTokens` and `usage` (`inputTokens`, `outputTokens`, `cacheReadInputTokens`, `cacheWriteInputTokens`) are mapped onto it. The model comes from the path unless the body names one. InvokeModel bodies of other model families (Llama `generation`, Titan `results`, ...) are labelled Bedrock but show no text or usage |
+| Gemini | `/v1beta/models/{model}:generateContent`, `/v1/models/gemini-*:…`, or Vertex `.../publishers/google/models/{model}:…` (`generateContent` / `streamGenerateContent`); extracts `model`, contents, candidates |
+| Ollama | Path is `/api/chat`; extracts `model`, messages, response message. `stream` defaults to true, as in Ollama |
 | MCP JSON-RPC | `Content-Type: application/json` body with a `jsonrpc` field; extracts `method`, `id`, `params`, `result`, `error` |
 | Fallback | Generic display — Raw JSON only |
 
 **SSE reassembly:** For streamed responses (body contains `data:` lines), `llmTraffic.ts` splits the captured body on `\n\n`, parses each `data:` chunk as JSON, and merges incremental delta fields to reconstruct the final message content. The per-chunk elapsed timestamps are preserved for the SSE Timeline tab.
 
 **Base64 body decoding:** When a response body has a `BINARY` body type, the content is base64-encoded. `llmTraffic.ts` detects the `BINARY` type and decodes before parsing. Textual streaming responses are normally delivered as `STRING` bodies; this is a defensive fallback.
+
+**Other stream formats:** Ollama streams newline-delimited JSON (`application/x-ndjson`); each line is a chunk, and message content, `thinking` and `tool_calls` are concatenated while `done`, `done_reason` and the eval counts come from the final line. Gemini `streamGenerateContent` without `?alt=sse` returns a JSON array of response chunks, reassembled like the SSE form. Bedrock streams use the AWS event-stream binary framing (`application/vnd.amazon.eventstream`), stored as a `BINARY` body: `src/lib/awsEventStream.ts` decodes the frames from the raw bytes (checking each frame's message CRC and stopping at a truncated frame), `InvokeModelWithResponseStream` `chunk` frames are unwrapped from their base64 `bytes` into Anthropic events, and `ConverseStream` frames are reassembled by their `:event-type` (`contentBlockStart`, `contentBlockDelta`, `messageStop`, `metadata`). In all three the chunks also fill the SSE Timeline tab.
 
 ## Trace (Sessions) Inspector
 

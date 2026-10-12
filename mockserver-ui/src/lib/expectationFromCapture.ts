@@ -36,8 +36,8 @@ export type MatcherPrecision = (typeof MATCHER_PRECISIONS)[number];
 // Provider enum (matches Java org.mockserver.model.Provider)
 // ---------------------------------------------------------------------------
 
-// BEDROCK and AZURE_OPENAI are user-selectable-only — kindToProvider() never
-// auto-detects them because no parser kind maps to those providers.
+// AZURE_OPENAI is user-selectable-only: Azure traffic parses as kind 'openai'.
+// BEDROCK is detected from the Anthropic-shaped parse's `platform` marker.
 export const PROVIDERS = [
   'ANTHROPIC',
   'OPENAI',
@@ -109,10 +109,10 @@ export type ExpectationDraft = LlmExpectationDraft | GenericExpectationDraft;
 // Provider detection from ParsedTraffic kind
 // ---------------------------------------------------------------------------
 
-function kindToProvider(kind: ParsedTraffic['kind']): ProviderName {
-  switch (kind) {
+function kindToProvider(parsed: ParsedTraffic): ProviderName {
+  switch (parsed.kind) {
     case 'anthropic':
-      return 'ANTHROPIC';
+      return parsed.platform === 'bedrock' ? 'BEDROCK' : 'ANTHROPIC';
     case 'openai':
       return 'OPENAI';
     case 'openai_responses':
@@ -339,7 +339,7 @@ export function extractLlmExpectationFromCapture(
   parsed: ParsedTraffic,
   path: string,
 ): LlmExpectationDraft {
-  const provider = kindToProvider(parsed.kind);
+  const provider = kindToProvider(parsed);
   let extracted: Partial<LlmExpectationDraft> = {};
 
   switch (parsed.kind) {

@@ -122,7 +122,7 @@ function statusColor(code: number | null): 'success' | 'error' | 'warning' | 'de
 
 function kindLabel(parsed: ParsedTraffic): string {
   switch (parsed.kind) {
-    case 'anthropic': return 'Anthropic';
+    case 'anthropic': return parsed.platform === 'bedrock' ? 'Bedrock' : 'Anthropic';
     case 'openai': return 'OpenAI';
     case 'openai_responses': return 'OpenAI Resp';
     case 'gemini': return 'Gemini';

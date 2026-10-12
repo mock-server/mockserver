@@ -83,7 +83,6 @@ flowchart LR
 - **Limitations.**
   - The chaos `contentFilterBlockProbability` block for `BEDROCK` returns the Anthropic refusal body on Converse paths too (`LlmContentFilterBodies` is not request-aware).
   - Chaos `errorStatus` errors and structured-output enforcement errors for `BEDROCK` use the Anthropic `{"type":"error",...}` envelope (`LlmErrorBodies.bodyFor`) on both APIs. Only the explicit-`errorKind` path emits the AWS `{"__type":...,"message":...}` shape.
-  - The dashboard's `isBedrockPath` (`mockserver-ui/src/lib/llmTraffic.ts`) recognises only `/model/anthropic.*…/invoke`. Converse traffic shows as plain HTTP traffic, not LLM traffic.
 
 ### OpenAI-compatible provider aliases
 

@@ -41,14 +41,14 @@ function extractTokens(parsed: ParsedTraffic): TokenCounts | null {
   return null;
 }
 
-function providerLabel(kind: ParsedTraffic['kind']): string {
-  switch (kind) {
-    case 'anthropic': return 'Anthropic';
+function providerLabel(parsed: ParsedTraffic): string {
+  switch (parsed.kind) {
+    case 'anthropic': return parsed.platform === 'bedrock' ? 'Bedrock' : 'Anthropic';
     case 'openai': return 'OpenAI';
     case 'openai_responses': return 'OpenAI Responses';
     case 'gemini': return 'Gemini';
     case 'ollama': return 'Ollama';
-    default: return kind;
+    default: return parsed.kind;
   }
 }
 
@@ -120,7 +120,7 @@ export default function LlmUsageDetail({ parsed }: LlmUsageDetailProps) {
       }}
     >
       <Chip
-        label={providerLabel(parsed.kind)}
+        label={providerLabel(parsed)}
         size="small"
         color="primary"
         variant="outlined"
