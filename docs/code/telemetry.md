@@ -21,7 +21,7 @@ GenAI spans fire on two paths:
 
 Maps a forwarded request's target host to an LLM `Provider` for forward-path GenAI observability. Detection order:
 
-1. Well-known hosts: `api.openai.com` (OPENAI), `*.openai.azure.com` (AZURE_OPENAI), `api.anthropic.com` (ANTHROPIC), `generativelanguage.googleapis.com` (GEMINI), `bedrock*.amazonaws.com` (BEDROCK)
+1. Well-known hosts: `api.openai.com` (OPENAI), `*.openai.azure.com` and `*.services.ai.azure.com` on an `/openai/` path (AZURE_OPENAI; OPENAI_RESPONSES on a `/responses` path, whose usage is the Responses shape), `api.anthropic.com` (ANTHROPIC), `generativelanguage.googleapis.com` (GEMINI), `bedrock*.amazonaws.com` (BEDROCK)
 2. Configured `mockserver.llmBaseUrl` host match (OLLAMA)
 3. Fallback to configured `mockserver.llmProvider` — **path-gated**: only applies when the request path looks like an LLM endpoint (case-insensitive contains any of `/chat/completions`, `/messages`, `/completions`, `/responses`, `/embeddings`, `/v1/`, `:generatecontent`, `/api/generate`, `/api/chat`). This prevents a forward to e.g. `example.com/api/users` from being misclassified as LLM traffic when a provider is configured.
 4. Empty Optional (not LLM traffic — skip GenAI span)

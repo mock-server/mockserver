@@ -90,6 +90,9 @@ public class OllamaCodec implements ProviderCodec {
             ArrayNode toolCallsArray = message.putArray("tool_calls");
             for (ToolUse toolCall : toolCalls) {
                 ObjectNode tc = toolCallsArray.addObject();
+                if (toolCall.getId() != null && !toolCall.getId().isEmpty()) {
+                    tc.put("id", toolCall.getId());
+                }
                 ObjectNode function = tc.putObject("function");
                 function.put("name", toolCall.getName());
                 // Ollama puts arguments as a JSON object, not a string
@@ -191,6 +194,9 @@ public class OllamaCodec implements ProviderCodec {
             ArrayNode toolCallsArray = message.putArray("tool_calls");
             for (ToolUse toolCall : toolCalls) {
                 ObjectNode tc = toolCallsArray.addObject();
+                if (toolCall.getId() != null && !toolCall.getId().isEmpty()) {
+                    tc.put("id", toolCall.getId());
+                }
                 ObjectNode function = tc.putObject("function");
                 function.put("name", toolCall.getName());
                 String args = toolCall.getArguments();

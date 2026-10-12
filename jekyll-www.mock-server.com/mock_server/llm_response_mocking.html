@@ -703,9 +703,13 @@ curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
 
 <p>
     <strong>Token usage in an OpenAI stream.</strong> For <span class="inline_code">OPENAI</span>,
-    <span class="inline_code">AZURE_OPENAI</span> and the OpenAI-compatible providers, a stream carries the
-    <span class="inline_code">usage</span> above only when the request asks for it, as the real OpenAI and Azure
-    APIs do (the OpenAI-compatible providers follow the same rule in MockServer). Some AI SDKs ask by default
+    <span class="inline_code">AZURE_OPENAI</span>, <span class="inline_code">DEEPSEEK</span>,
+    <span class="inline_code">XAI</span> and <span class="inline_code">ORCAROUTER</span>, a stream carries the
+    <span class="inline_code">usage</span> above only when the request asks for it, as the real APIs do. Three
+    providers send it without being asked, as their real APIs do: <span class="inline_code">MISTRAL</span> puts
+    <span class="inline_code">usage</span> on the chunk with the <span class="inline_code">finish_reason</span>,
+    <span class="inline_code">GROQ</span> puts it in <span class="inline_code">x_groq.usage</span> on that chunk, and
+    <span class="inline_code">OPENROUTER</span> always ends the stream with the usage chunk shown below. Some AI SDKs ask by default
     (the Vercel AI SDK does); in LangChain set <span class="inline_code">stream_usage</span>, and with the OpenAI
     SDKs pass <span class="inline_code">stream_options</span>.
     The request sets <span class="inline_code">stream_options</span>:
@@ -763,6 +767,17 @@ data: [DONE]</code></pre>
     }
   }
 }</code></pre>
+
+<p>
+    A tool call's <span class="inline_code">id</span> is returned as the tool-call id your client sends back with
+    the tool result: <span class="inline_code">tool_calls[].id</span> for OpenAI and the OpenAI-compatible
+    providers, the <span class="inline_code">tool_use</span> block's <span class="inline_code">id</span> for
+    Anthropic and Bedrock, <span class="inline_code">call_id</span> for the OpenAI Responses API,
+    <span class="inline_code">toolUseId</span> for the Bedrock Converse API, and
+    <span class="inline_code">functionCall.id</span> for Gemini and <span class="inline_code">tool_calls[].id</span>
+    for Ollama. Leave it out and MockServer generates one in the provider's format (Gemini and Ollama then send
+    none, as their APIs allow).
+</p>
 
 <p>
     For OpenAI-compatible mocks you can also set <span class="inline_code">toolChoice</span> on the completion to
@@ -862,7 +877,7 @@ data: [DONE]</code></pre>
         <tr><th>Provider and endpoint</th><th>Input read from the request</th><th>Response shape</th><th>Default dimensions</th></tr>
     </thead>
     <tbody>
-        <tr><td><span class="inline_code">OPENAI</span>, <span class="inline_code">AZURE_OPENAI</span> and the OpenAI-compatible providers (for example <span class="inline_code">MISTRAL</span>)</td><td><span class="inline_code">input</span>: a string, an array of strings, or token arrays</td><td><span class="inline_code">{"object":"list","data":[{"object":"embedding","index":0,"embedding":[...]}, ...],"model":...,"usage":{...}}</span>, one <span class="inline_code">data</span> entry per input. The request's <span class="inline_code">model</span> is echoed. With <span class="inline_code">"encoding_format":"base64"</span>, which the OpenAI SDKs send by default, each embedding is a base64 string</td><td>1536</td></tr>
+        <tr><td><span class="inline_code">OPENAI</span>, <span class="inline_code">AZURE_OPENAI</span> and the OpenAI-compatible providers (for example <span class="inline_code">MISTRAL</span>)</td><td><span class="inline_code">input</span>: a string, an array of strings, or token arrays</td><td><span class="inline_code">{"object":"list","data":[{"object":"embedding","index":0,"embedding":[...]}, ...],"model":...,"usage":{...}}</span>, one <span class="inline_code">data</span> entry per input. An empty <span class="inline_code">input</span> (<span class="inline_code">""</span>, <span class="inline_code">[]</span>, or an empty entry in the array) is rejected with a 400 <span class="inline_code">invalid_request_error</span>, as the real API does. The request's <span class="inline_code">model</span> is echoed. With <span class="inline_code">"encoding_format":"base64"</span>, which the OpenAI SDKs send by default, each embedding is a base64 string</td><td>1536</td></tr>
         <tr><td><span class="inline_code">GEMINI</span> <span class="inline_code">:embedContent</span></td><td><span class="inline_code">content.parts[].text</span></td><td><span class="inline_code">{"embedding":{"values":[...]},"usageMetadata":{...}}</span></td><td>768</td></tr>
         <tr><td><span class="inline_code">GEMINI</span> <span class="inline_code">:batchEmbedContents</span></td><td><span class="inline_code">requests[].content.parts[].text</span></td><td><span class="inline_code">{"embeddings":[{"values":[...]}, ...],"usageMetadata":{...}}</span>, one per request</td><td>768</td></tr>
         <tr><td><span class="inline_code">OLLAMA</span> <span class="inline_code">/api/embed</span></td><td><span class="inline_code">input</span>: a string or an array of strings</td><td><span class="inline_code">{"model":...,"embeddings":[[...], ...],"prompt_eval_count":N,...}</span>, one per input</td><td>768</td></tr>
@@ -1467,6 +1482,20 @@ geminiLive()
         </tr>
     </tbody>
 </table>
+
+<p>
+    The OpenAI-compatible providers report these counts the way their real APIs do. <code>DEEPSEEK</code> also
+    returns <code>prompt_cache_hit_tokens</code> and <code>prompt_cache_miss_tokens</code>. <code>XAI</code>
+    leaves reasoning tokens out of <code>completion_tokens</code> and adds them to <code>total_tokens</code>, so
+    <code>outputTokens: 103</code> with <code>reasoningTokens: 94</code> is returned as
+    <code>completion_tokens: 9</code>. <code>GROQ</code> adds its timing fields (<code>queue_time</code>,
+    <code>prompt_time</code>, <code>completion_time</code>, <code>total_time</code>, in seconds, taken from the
+    completion's <code>streamingPhysics</code> when set, else 0) and an <code>x_groq</code> request id.
+    <code>OPENROUTER</code> adds <code>cost</code> (when MockServer knows the model's price) and
+    <code>is_byok</code>. A completion's <code>reasoningText</code> is returned as
+    <code>reasoning_content</code> by <code>DEEPSEEK</code> and <code>XAI</code>, and as <code>reasoning</code>
+    by <code>GROQ</code> and <code>OPENROUTER</code>, streamed or not.
+</p>
 
 <p>
     Set these fields on the <code>usage</code> object in your expectation JSON to simulate provider responses

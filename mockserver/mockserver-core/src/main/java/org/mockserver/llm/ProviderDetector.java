@@ -1,5 +1,6 @@
 package org.mockserver.llm;
 
+import org.mockserver.llm.client.LlmProviderSniffer;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.Provider;
 
@@ -29,12 +30,13 @@ public final class ProviderDetector {
     private static final Pattern BEDROCK_PATH = Pattern.compile(
         "/model/[^/]+/(invoke|invoke-with-response-stream|converse|converse-stream)");
 
-    // OpenAI Responses: the standard /v1/responses, and the OpenAI Codex backend
-    // used by coding CLIs such as opencode (chatgpt.com/backend-api/codex/responses),
-    // which serves the same Responses wire format. The codex/responses arm is anchored
+    // OpenAI Responses: the standard /v1/responses (also Azure's /openai/v1/responses),
+    // Azure's dated-version /openai/responses, and the OpenAI Codex backend used by
+    // coding CLIs such as opencode (chatgpt.com/backend-api/codex/responses), which
+    // serves the same Responses wire format. The codex/ and openai/ arms are anchored
     // to a path-segment boundary so /mycodex/responses cannot match.
     private static final Pattern OPENAI_RESPONSES_PATH = Pattern.compile(
-        "/v1/responses|(^|/)codex/responses(?:[/?]|$)");
+        "/v1/responses|(^|/)(codex|openai)/responses(?:[/?]|$)");
 
     // OpenAI Chat Completions: /chat/completions (but not Azure pattern)
     private static final Pattern OPENAI_PATH = Pattern.compile("/chat/completions");
@@ -66,15 +68,22 @@ public final class ProviderDetector {
         if (request == null) {
             return Optional.empty();
         }
-        // Host is checked first for the OpenAI-chat-compatible providers only. Their
-        // path is the shared /chat/completions, so path-based detection cannot tell them
-        // apart from OpenAI — the host is the only distinguishing signal. All other
-        // providers continue to be detected purely by path (behaviour unchanged).
-        Optional<Provider> fromHost = detectFromHost(extractHost(request));
+        // Host is checked first for the OpenAI-chat-compatible providers and Azure OpenAI.
+        // Their path is the shared /chat/completions, so path-based detection cannot tell
+        // them apart from OpenAI — the host is the only distinguishing signal. All other
+        // providers are detected by path.
+        String host = extractHost(request);
+        Optional<Provider> fromHost = detectFromHost(host);
         if (fromHost.isPresent()) {
             return fromHost;
         }
         String path = request.getPath() != null ? request.getPath().getValue() : null;
+        // Azure's v1 GA path (/openai/v1/chat/completions) is also Groq's, so only the
+        // host tells Azure OpenAI apart from OpenAI on it.
+        if (host != null && LlmProviderSniffer.isAzureOpenAiHost(host.toLowerCase(), path)) {
+            boolean responses = path != null && OPENAI_RESPONSES_PATH.matcher(path.toLowerCase()).find();
+            return Optional.of(responses ? Provider.OPENAI_RESPONSES : Provider.AZURE_OPENAI);
+        }
         if (path != null) {
             Optional<Provider> fromPath = detectFromPath(path);
             if (fromPath.isPresent()) {

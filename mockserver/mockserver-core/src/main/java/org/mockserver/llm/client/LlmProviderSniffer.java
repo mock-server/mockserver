@@ -100,14 +100,15 @@ public final class LlmProviderSniffer {
             + "|/publishers/google/models/[^/]+:(generateContent|streamGenerateContent)");
     private static final java.util.regex.Pattern OLLAMA_CHAT_PATTERN = java.util.regex.Pattern.compile(
         "(^|/)api/chat(/?$|\\?)");
-    // OpenAI Responses API path: the standard hosted path (/v1/responses) and the
-    // OpenAI Codex backend used by coding CLIs such as opencode, which serves the
-    // same Responses wire format at chatgpt.com/backend-api/codex/responses.
-    // The codex/responses arm is anchored to a path-segment boundary so a host such
-    // as /mycodex/responses cannot match. Matched case-insensitively (callers
-    // lower-case the path before matching).
+    // OpenAI Responses API path: the standard hosted path (/v1/responses, also Azure's
+    // /openai/v1/responses), Azure's dated-version /openai/responses, and the OpenAI
+    // Codex backend used by coding CLIs such as opencode, which serves the same
+    // Responses wire format at chatgpt.com/backend-api/codex/responses. The
+    // codex/responses and openai/responses arms are anchored to a path-segment
+    // boundary so /mycodex/responses cannot match. Matched case-insensitively
+    // (callers lower-case the path before matching).
     private static final java.util.regex.Pattern OPENAI_RESPONSES_PATH_PATTERN = java.util.regex.Pattern.compile(
-        "/v1/responses|(^|/)codex/responses(?:[/?]|$)");
+        "/v1/responses|(^|/)(codex|openai)/responses(?:[/?]|$)");
     // Vertex AI Gemini host: global aiplatform.googleapis.com or regional
     // <region>-aiplatform.googleapis.com. Fully anchored (the region label has no
     // dot) so an arbitrary host cannot be glued in front. Compiled once.
@@ -359,7 +360,11 @@ public final class LlmProviderSniffer {
             }
             return Optional.of(Provider.OPENAI);
         }
-        if (lowerHost.endsWith(".openai.azure.com")) {
+        if (isAzureOpenAiHost(lowerHost, path)) {
+            // Azure also serves the Responses API, whose usage is input_tokens/output_tokens
+            if (path != null && OPENAI_RESPONSES_PATH_PATTERN.matcher(path.toLowerCase()).find()) {
+                return Optional.of(Provider.OPENAI_RESPONSES);
+            }
             return Optional.of(Provider.AZURE_OPENAI);
         }
         if (lowerHost.equals("api.anthropic.com")) {
@@ -428,6 +433,16 @@ public final class LlmProviderSniffer {
 
         // Fallback: configured mockserver.llmProvider — path-gated
         return fallbackToConfiguredProvider(path);
+    }
+
+    /**
+     * An Azure OpenAI endpoint: any {@code *.openai.azure.com} host, or the
+     * {@code *.services.ai.azure.com} Foundry host on an {@code /openai/} path (that host
+     * also serves non-OpenAI APIs).
+     */
+    public static boolean isAzureOpenAiHost(String lowerHost, String path) {
+        return lowerHost.endsWith(".openai.azure.com")
+            || (lowerHost.endsWith(".services.ai.azure.com") && path != null && path.toLowerCase().startsWith("/openai/"));
     }
 
     /**

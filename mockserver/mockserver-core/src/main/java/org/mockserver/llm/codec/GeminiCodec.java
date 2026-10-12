@@ -77,6 +77,9 @@ public class GeminiCodec implements ProviderCodec {
             for (ToolUse toolCall : toolCalls) {
                 ObjectNode fcPart = parts.addObject();
                 ObjectNode functionCall = fcPart.putObject("functionCall");
+                if (toolCall.getId() != null && !toolCall.getId().isEmpty()) {
+                    functionCall.put("id", toolCall.getId());
+                }
                 functionCall.put("name", toolCall.getName());
                 // args as a JSON object
                 String args = toolCall.getArguments();
@@ -185,7 +188,9 @@ public class GeminiCodec implements ProviderCodec {
                 } catch (Exception e) {
                     safeArgs = "{\"value\":\"" + escapeJson(args) + "\"}";
                 }
-                String chunkData = "{\"candidates\":[{\"content\":{\"parts\":[{\"functionCall\":{\"name\":\"" +
+                String callId = toolCall.getId() != null && !toolCall.getId().isEmpty()
+                    ? "\"id\":\"" + escapeJson(toolCall.getId()) + "\"," : "";
+                String chunkData = "{\"candidates\":[{\"content\":{\"parts\":[{\"functionCall\":{" + callId + "\"name\":\"" +
                     escapeJson(toolCall.getName()) + "\",\"args\":" + safeArgs +
                     "}}],\"role\":\"model\"},\"index\":0}],\"modelVersion\":\"" + escapeJson(modelName) + "\"}";
                 events.add(sseEvent().withData(chunkData));

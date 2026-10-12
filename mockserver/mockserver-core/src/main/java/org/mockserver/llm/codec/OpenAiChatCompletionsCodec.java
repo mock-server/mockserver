@@ -67,13 +67,17 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
         } else {
             message.put("content", text != null ? text : "");
         }
+        String reasoningText = completion.getReasoningText();
+        if (reasoningField() != null && reasoningText != null && !reasoningText.isEmpty()) {
+            message.put(reasoningField(), reasoningText);
+        }
 
         // tool_calls: omitted entirely when no tool calls; never emit empty array
         if (hasToolCalls) {
             ArrayNode toolCallsArray = message.putArray("tool_calls");
             for (ToolUse toolCall : toolCalls) {
                 ObjectNode tc = toolCallsArray.addObject();
-                tc.put("id", "call_" + randomId(24));
+                tc.put("id", toolCallId(toolCall));
                 tc.put("type", "function");
                 ObjectNode function = tc.putObject("function");
                 function.put("name", toolCall.getName());
@@ -85,7 +89,9 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
         // finish_reason mapping
         choice.put("finish_reason", mapFinishReason(completion.getStopReason(), hasToolCalls, completion.getToolChoice()));
 
-        root.set("usage", usageNode(completion.getUsage()));
+        ObjectNode usage = usageNode(completion.getUsage(), model, completion.getStreamingPhysics());
+        root.set("usage", usage);
+        addResponseFields(root, usage, newProviderRequestId());
 
         try {
             String json = OBJECT_MAPPER.writeValueAsString(root);
@@ -115,15 +121,29 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
         return encodeStreamingChunks(completion, model, physics, includeUsageRequested(request));
     }
 
-    private List<SseEvent> encodeStreamingChunks(Completion completion, String model, StreamingPhysics physics, boolean includeUsage) {
+    private List<SseEvent> encodeStreamingChunks(Completion completion, String model, StreamingPhysics physics, boolean includeUsageRequested) {
         List<SseEvent> events = new ArrayList<>();
+        boolean includeUsage = streamsUsageChunk(includeUsageRequested);
         String id = "chatcmpl-" + randomId(29);
+        String providerRequestId = newProviderRequestId();
         long created = System.currentTimeMillis() / 1000;
         String modelName = model != null ? model : "unknown";
+        ObjectNode usage = usageNode(completion.getUsage(), model, physics != null ? physics : completion.getStreamingPhysics());
 
         // 1. First chunk: role-only
         events.add(sseEvent().withData(buildChunk(id, created, modelName,
-            "{\"role\":\"assistant\",\"content\":\"\"}", null, includeUsage)));
+            "{\"role\":\"assistant\",\"content\":\"\"}", null, includeUsage, firstChunkFields(providerRequestId))));
+
+        // 2a. Reasoning chunks, for providers that stream reasoning text in the delta
+        String reasoningText = completion.getReasoningText();
+        if (reasoningField() != null && reasoningText != null && !reasoningText.isEmpty()) {
+            for (String token : TokenCounter.streamingTextTokens(reasoningText, physics)) {
+                if (!token.isEmpty()) {
+                    events.add(sseEvent().withData(buildChunk(id, created, modelName,
+                        "{\"" + reasoningField() + "\":\"" + escapeJson(token) + "\"}", null, includeUsage, "")));
+                }
+            }
+        }
 
         // 2. Text content chunks
         String text = completion.getText();
@@ -132,7 +152,7 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
             for (String token : tokens) {
                 if (!token.isEmpty()) {
                     events.add(sseEvent().withData(buildChunk(id, created, modelName,
-                        "{\"content\":\"" + escapeJson(token) + "\"}", null, includeUsage)));
+                        "{\"content\":\"" + escapeJson(token) + "\"}", null, includeUsage, "")));
                 }
             }
         }
@@ -143,22 +163,23 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
         if (hasToolCalls) {
             for (int i = 0; i < toolCalls.size(); i++) {
                 ToolUse toolCall = toolCalls.get(i);
-                String toolCallId = "call_" + randomId(24);
+                String toolCallId = toolCallId(toolCall);
                 String args = toolCall.getArguments() != null ? toolCall.getArguments() : "{}";
-                String delta = "{\"tool_calls\":[{\"index\":" + i + ",\"id\":\"" + toolCallId +
+                String delta = "{\"tool_calls\":[{\"index\":" + i + ",\"id\":\"" + escapeJson(toolCallId) +
                     "\",\"type\":\"function\",\"function\":{\"name\":\"" + escapeJson(toolCall.getName()) +
                     "\",\"arguments\":\"" + escapeJson(args) + "\"}}]}";
-                events.add(sseEvent().withData(buildChunk(id, created, modelName, delta, null, includeUsage)));
+                events.add(sseEvent().withData(buildChunk(id, created, modelName, delta, null, includeUsage, "")));
             }
         }
 
         // 4. Final chunk with finish_reason
         String finishReason = mapFinishReason(completion.getStopReason(), hasToolCalls, completion.getToolChoice());
-        events.add(sseEvent().withData(buildChunk(id, created, modelName, "{}", finishReason, includeUsage)));
+        events.add(sseEvent().withData(buildChunk(id, created, modelName, "{}", finishReason, includeUsage,
+            finishChunkFields(providerRequestId, usage))));
 
-        // 5. Usage chunk (only when the request set stream_options.include_usage)
+        // 5. Usage chunk (when the request set stream_options.include_usage, or the provider always sends it)
         if (includeUsage) {
-            events.add(sseEvent().withData(buildUsageChunk(id, created, modelName, completion.getUsage())));
+            events.add(sseEvent().withData(buildUsageChunk(id, created, modelName, usage)));
         }
 
         // 6. [DONE] sentinel
@@ -314,11 +335,14 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
      * array of token integers (one input) or an array of token arrays. The request's
      * {@code model} is echoed, its {@code dimensions} is honoured unless the expectation sets
      * dimensions, and {@code encoding_format: "base64"} returns each vector as base64
-     * little-endian float32, which the OpenAI SDKs request by default.
+     * little-endian float32, which the OpenAI SDKs request by default. An empty {@code input}
+     * ({@code ""}, {@code []}, or an empty string or token array inside the array) is rejected
+     * with a 400, as the real API does.
      */
     @Override
     public HttpResponse encodeEmbedding(EmbeddingResponse embedding, HttpRequest request, String model) {
         JsonNode body = EmbeddingWire.body(request);
+        rejectEmptyEmbeddingInput(body.get("input"));
         return encodeEmbeddings(
             embedding,
             EmbeddingWire.stringOrArrayInputs(body.get("input")),
@@ -326,6 +350,30 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
             EmbeddingWire.requestedDimensions(body.get("dimensions"), "dimensions"),
             "base64".equals(EmbeddingWire.text(body, "encoding_format"))
         );
+    }
+
+    private static void rejectEmptyEmbeddingInput(JsonNode input) {
+        if (input == null || input.isNull()) {
+            return;
+        }
+        boolean empty = isEmptyInput(input);
+        if (!empty && input.isArray()) {
+            for (JsonNode element : input) {
+                if (isEmptyInput(element)) {
+                    empty = true;
+                    break;
+                }
+            }
+        }
+        if (empty) {
+            // the real API reports this error with param null
+            throw new EmbeddingWire.InvalidEmbeddingRequestException(null,
+                "input must not be empty: send a non-empty string, or an array of non-empty strings or token arrays");
+        }
+    }
+
+    private static boolean isEmptyInput(JsonNode input) {
+        return (input.isTextual() && input.asText().isEmpty()) || (input.isArray() && input.isEmpty());
     }
 
     private HttpResponse encodeEmbeddings(EmbeddingResponse embedding, List<String> inputs, String model, Integer requestedDimensions, boolean base64) {
@@ -363,7 +411,7 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
         EmbeddingVectors.normalizeL2(vector);
     }
 
-    private String buildChunk(String id, long created, String model, String deltaJson, String finishReason, boolean includeUsage) {
+    private String buildChunk(String id, long created, String model, String deltaJson, String finishReason, boolean includeUsage, String extraFields) {
         StringBuilder sb = chunkPrefix(id, created, model);
         sb.append("\"choices\":[{\"index\":0,\"delta\":").append(deltaJson).append(",");
         if (finishReason != null) {
@@ -375,15 +423,15 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
         if (includeUsage) {
             sb.append(",\"usage\":null");
         }
-        sb.append("}");
+        sb.append(extraFields).append("}");
         return sb.toString();
     }
 
-    private String buildUsageChunk(String id, long created, String model, Usage usage) {
+    private String buildUsageChunk(String id, long created, String model, ObjectNode usage) {
         try {
             return chunkPrefix(id, created, model)
                 .append("\"choices\":[],\"usage\":")
-                .append(OBJECT_MAPPER.writeValueAsString(usageNode(usage)))
+                .append(OBJECT_MAPPER.writeValueAsString(usage))
                 .append("}")
                 .toString();
         } catch (Exception e) {
@@ -423,7 +471,7 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
      * set (non-null, non-zero), under OpenAI's native nested-details keys, so existing
      * fixtures stay byte-identical when these optional fields are unset.
      */
-    private static ObjectNode usageNode(Usage completionUsage) {
+    private ObjectNode usageNode(Usage completionUsage, String model, StreamingPhysics physics) {
         ObjectNode usage = OBJECT_MAPPER.createObjectNode();
         int promptTokens = completionUsage != null && completionUsage.getInputTokens() != null ? completionUsage.getInputTokens() : 0;
         int completionTokens = completionUsage != null && completionUsage.getOutputTokens() != null ? completionUsage.getOutputTokens() : 0;
@@ -440,7 +488,55 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
                 usage.putObject("completion_tokens_details").put("reasoning_tokens", reasoningTokens);
             }
         }
+        addUsageFields(usage, completionUsage, model, physics);
         return usage;
+    }
+
+    // Hooks for the OpenAI-compatible providers' additions to the OpenAI shape; OpenAI adds nothing.
+
+    /** The message and delta field that carries {@link Completion#getReasoningText()}, or null for none. */
+    protected String reasoningField() {
+        return null;
+    }
+
+    /** Whether a stream ends with the {@code choices: []} usage chunk, given the request's opt-in. */
+    protected boolean streamsUsageChunk(boolean includeUsageRequested) {
+        return includeUsageRequested;
+    }
+
+    /** A provider-assigned request id echoed in the response and stream, or null for none. */
+    protected String newProviderRequestId() {
+        return null;
+    }
+
+    protected void addUsageFields(ObjectNode usage, Usage completionUsage, String model, StreamingPhysics physics) {
+    }
+
+    protected void addResponseFields(ObjectNode root, ObjectNode usage, String providerRequestId) {
+    }
+
+    /** JSON members, each with a leading comma, added to the first chunk of a stream. */
+    protected String firstChunkFields(String providerRequestId) {
+        return "";
+    }
+
+    /** JSON members, each with a leading comma, added to the chunk carrying {@code finish_reason}. */
+    protected String finishChunkFields(String providerRequestId, ObjectNode usage) {
+        return "";
+    }
+
+    static String toJson(ObjectNode node) {
+        try {
+            return OBJECT_MAPPER.writeValueAsString(node);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to encode OpenAI-compatible response field", e);
+        }
+    }
+
+    /** The configured {@link ToolUse#getId()}, so a test can fix the id its client sends back; else a generated one. */
+    private static String toolCallId(ToolUse toolCall) {
+        String configured = toolCall.getId();
+        return configured != null && !configured.isEmpty() ? configured : "call_" + randomId(24);
     }
 
     private static String mapFinishReason(String stopReason, boolean hasToolCalls, String toolChoice) {
@@ -469,7 +565,7 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
         }
     }
 
-    private static String randomId(int length) {
+    static String randomId(int length) {
         String uuid = UUIDService.getNonSecureUUID().replace("-", "");
         while (uuid.length() < length) {
             uuid = uuid + UUIDService.getNonSecureUUID().replace("-", "");

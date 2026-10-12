@@ -81,12 +81,10 @@ public class LlmCodecGoldenFileTest {
 
     /**
      * OpenAI-chat-compatible alias providers (Mistral, xAI/Grok, DeepSeek, Groq,
-     * OpenRouter, OrcaRouter). Their codecs delegate to {@code OpenAiChatCompletionsCodec}, so
-     * their wire shape is byte-identical to the {@code openai} fixtures already
-     * asserted here — dedicated golden files would be pure duplicates. They are
-     * instead exercised by {@code OpenAiCompatibleProviderCodecTest}, which proves
-     * each alias produces exactly the OpenAI codec's output. Excluded from golden
-     * coverage the same way as the rerank-only providers.
+     * OpenRouter, OrcaRouter). Their codecs extend {@code OpenAiChatCompletionsCodec}, so
+     * they share the {@code openai} fixtures' shape; each provider's additions to it are
+     * pinned against its published API by {@code OpenAiCompatibleProviderWireShapeTest}.
+     * Excluded from golden coverage the same way as the rerank-only providers.
      */
     private static final Set<Provider> OPENAI_COMPATIBLE_ALIAS_PROVIDERS =
         Collections.unmodifiableSet(EnumSet.of(
@@ -455,13 +453,20 @@ public class LlmCodecGoldenFileTest {
 
         List<Provider> family = new ArrayList<>(Arrays.asList(Provider.OPENAI, Provider.AZURE_OPENAI));
         family.addAll(OPENAI_COMPATIBLE_ALIAS_PROVIDERS);
+        // providers with no additions to the OpenAI shape stream exactly what OpenAI streams
+        Set<Provider> sameAsOpenAi = EnumSet.of(Provider.OPENAI, Provider.AZURE_OPENAI, Provider.ORCAROUTER);
         for (Provider provider : family) {
             ProviderCodec codec = registry.lookup(provider).orElseThrow(AssertionError::new);
-            assertStreamedUsageChunk(provider, codec.encodeStreaming(TEXT_COMPLETION, model, null, includeUsage), 12, 8);
-            assertStreamedUsageChunk(provider, codec.encodeStreaming(TOOL_CALL_COMPLETION, model, null, includeUsage), 25, 15);
-            assertThat(provider + " streams the OpenAI include_usage shape",
-                normalizeStreamingEvents(codec.encodeStreaming(TEXT_COMPLETION, model, null, includeUsage)),
-                is(normalizeStreamingEvents(openAi.encodeStreaming(TEXT_COMPLETION, model, null, includeUsage))));
+            // Mistral has no stream_options and puts usage on its finish_reason chunk instead
+            if (provider != Provider.MISTRAL) {
+                assertStreamedUsageChunk(provider, codec.encodeStreaming(TEXT_COMPLETION, model, null, includeUsage), 12, 8);
+                assertStreamedUsageChunk(provider, codec.encodeStreaming(TOOL_CALL_COMPLETION, model, null, includeUsage), 25, 15);
+            }
+            if (sameAsOpenAi.contains(provider)) {
+                assertThat(provider + " streams the OpenAI include_usage shape",
+                    normalizeStreamingEvents(codec.encodeStreaming(TEXT_COMPLETION, model, null, includeUsage)),
+                    is(normalizeStreamingEvents(openAi.encodeStreaming(TEXT_COMPLETION, model, null, includeUsage))));
+            }
             assertEncodedUsage(Provider.OPENAI, encodeToTree(codec, TEXT_COMPLETION, model), 12, 8);
             assertEncodedUsage(Provider.OPENAI, encodeToTree(codec, TOOL_CALL_COMPLETION, model), 25, 15);
         }

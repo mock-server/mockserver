@@ -82,7 +82,7 @@ public class AnthropicCodec implements ProviderCodec {
             for (ToolUse toolCall : toolCalls) {
                 ObjectNode toolBlock = content.addObject();
                 toolBlock.put("type", "tool_use");
-                toolBlock.put("id", "toolu_" + randomBase62(24));
+                toolBlock.put("id", toolUseId(toolCall));
                 toolBlock.put("name", toolCall.getName());
                 // Try to parse arguments as JSON; otherwise emit as raw string
                 String args = toolCall.getArguments();
@@ -221,11 +221,11 @@ public class AnthropicCodec implements ProviderCodec {
         boolean hasToolCalls = toolCalls != null && !toolCalls.isEmpty();
         if (hasToolCalls) {
             for (ToolUse toolCall : toolCalls) {
-                String toolId = "toolu_" + randomBase62(24);
+                String toolId = toolUseId(toolCall);
 
                 // content_block_start for tool_use
                 String toolStartData = "{\"type\":\"content_block_start\",\"index\":" + contentIndex +
-                    ",\"content_block\":{\"type\":\"tool_use\",\"id\":\"" + toolId +
+                    ",\"content_block\":{\"type\":\"tool_use\",\"id\":\"" + escapeJson(toolId) +
                     "\",\"name\":\"" + escapeJson(toolCall.getName()) + "\",\"input\":{}}}";
                 events.add(sseEvent().withEvent("content_block_start").withData(toolStartData));
 
@@ -460,5 +460,11 @@ public class AnthropicCodec implements ProviderCodec {
 
     private static String escapeJson(String value) {
         return JsonEscape.escape(value);
+    }
+
+    /** The configured {@link ToolUse#getId()}, so a test can fix the id its client sends back; else a generated one. */
+    private static String toolUseId(ToolUse toolCall) {
+        String configured = toolCall.getId();
+        return configured != null && !configured.isEmpty() ? configured : "toolu_" + randomBase62(24);
     }
 }
