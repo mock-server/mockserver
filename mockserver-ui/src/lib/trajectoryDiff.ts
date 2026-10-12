@@ -279,7 +279,10 @@ function getTokens(parsed: Record<string, unknown>): { input: number | null; out
 
   if (kind === 'gemini') {
     const input = typeof u['promptTokenCount'] === 'number' ? u['promptTokenCount'] : null;
-    const output = typeof u['candidatesTokenCount'] === 'number' ? u['candidatesTokenCount'] : null;
+    const candidates = typeof u['candidatesTokenCount'] === 'number' ? u['candidatesTokenCount'] : null;
+    const thoughts = typeof u['thoughtsTokenCount'] === 'number' ? u['thoughtsTokenCount'] : null;
+    // Gemini bills thinking tokens as output.
+    const output = candidates === null && thoughts === null ? null : (candidates ?? 0) + (thoughts ?? 0);
     return { input, output };
   }
 

@@ -550,6 +550,14 @@ describe('extractTrajectory — provider coverage', () => {
     expect(traj.turns[0]!.outputTokens).toBe(9);
   });
 
+  it('counts Gemini thinking tokens as output (candidates + thoughts)', () => {
+    const turn = (usage: Record<string, number>) =>
+      extractTrajectory(makeSession([makeRequest({ kind: 'gemini', candidates: [], usage }, '/v1beta/models/x:generateContent')])).turns[0]!;
+    expect(turn({ promptTokenCount: 20, candidatesTokenCount: 9, thoughtsTokenCount: 120 }).outputTokens).toBe(129);
+    expect(turn({ promptTokenCount: 20, thoughtsTokenCount: 120 }).outputTokens).toBe(120);
+    expect(turn({ promptTokenCount: 20 }).outputTokens).toBeNull();
+  });
+
   it('extracts tool calls from Ollama (responseMessage.tool_calls)', () => {
     const parsed = {
       kind: 'ollama',

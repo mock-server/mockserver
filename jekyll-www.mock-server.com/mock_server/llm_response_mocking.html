@@ -621,7 +621,8 @@ curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     <li>Chaos <span class="inline_code">errorStatus</span> errors and structured-output enforcement errors for <span class="inline_code">BEDROCK</span>
         use the Anthropic <span class="inline_code">{"type":"error",...}</span> error body on both APIs. Setting
         <span class="inline_code">errorKind</span> instead returns the AWS-style <span class="inline_code">{"__type":...,"message":...}</span> error.</li>
-    <li>The dashboard doesn't recognise Converse traffic as LLM traffic yet. It shows Converse requests as ordinary HTTP requests.</li>
+    <li>The dashboard shows Bedrock Converse and InvokeModel traffic as Bedrock, with the messages, reply and token counts.
+        InvokeModel calls to models other than Claude and Nova (for example Llama or Titan) are labelled Bedrock but show no reply or token counts.</li>
 </ul>
 
 <a id="streaming" class="anchor" href="#streaming">&nbsp;</a>

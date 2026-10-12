@@ -1,7 +1,7 @@
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
-import type { ParsedTraffic } from '../lib/llmTraffic';
+import { geminiOutputTokens, type ParsedTraffic } from '../lib/llmTraffic';
 import { estimateCostUsd } from '../lib/llmPricing';
 
 // ---------------------------------------------------------------------------
@@ -33,7 +33,7 @@ function extractTokens(parsed: ParsedTraffic): TokenCounts | null {
     return toCounts(parsed.usage.input_tokens, parsed.usage.output_tokens);
   }
   if (parsed.kind === 'gemini' && parsed.usage) {
-    return toCounts(parsed.usage.promptTokenCount, parsed.usage.candidatesTokenCount);
+    return toCounts(parsed.usage.promptTokenCount, geminiOutputTokens(parsed.usage));
   }
   if (parsed.kind === 'ollama' && parsed.usage) {
     return toCounts(parsed.usage.prompt_eval_count, parsed.usage.eval_count);

@@ -21,6 +21,7 @@ import type {
   ParsedTraffic,
   ConversationGroup,
 } from '../lib/llmTraffic';
+import { geminiOutputTokens } from '../lib/llmTraffic';
 
 // ---------------------------------------------------------------------------
 // Shared bubble styling constants
@@ -731,7 +732,7 @@ function renderGeminiParts(parts: unknown, side: 'left' | 'right') {
 
 export function GeminiConversationView({ parsed, rawResponseBody }: { parsed: GeminiParsed; rawResponseBody?: string | null }) {
   const inputTokens = parsed.usage?.promptTokenCount;
-  const outputTokens = parsed.usage?.candidatesTokenCount;
+  const outputTokens = geminiOutputTokens(parsed.usage);
 
   // Pull the first candidate's finishReason (if any) for the metadata strip.
   const firstCandidate = parsed.candidates[0] as Record<string, unknown> | undefined;

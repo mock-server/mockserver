@@ -26,6 +26,7 @@ import {
   getNumericTokens,
   summarizeTraffic,
   groupConversationTurns,
+  type ParsedTraffic,
 } from '../lib/llmTraffic';
 import { estimateCostUsd } from '../lib/llmPricing';
 import {
@@ -181,7 +182,9 @@ const PROVIDER_LABELS: Record<string, string> = {
   gemini: 'Gemini',
   ollama: 'Ollama',
 };
-const providerLabel = (kind: string): string => PROVIDER_LABELS[kind] ?? kind;
+// Bedrock traffic is parsed into the Anthropic shape, so its label comes from the platform marker.
+const providerLabel = (parsed: ParsedTraffic): string =>
+  parsed.kind === 'anthropic' && parsed.platform === 'bedrock' ? 'Bedrock' : (PROVIDER_LABELS[parsed.kind] ?? parsed.kind);
 
 /**
  * Session-level conversation view. A stateless agent CLI resends its whole
@@ -274,7 +277,7 @@ function SessionConversation({ requests }: { requests: SessionRequest[] }) {
                   variant="overline"
                   sx={{ display: 'block', fontSize: '0.6rem', color: 'text.secondary', mt: i > 0 ? 1 : 0 }}
                 >
-                  {providerLabel(group.kind)} thread {i + 1}
+                  {providerLabel(group.turns[0]!.parsed)} thread {i + 1}
                 </Typography>
               )}
               <GroupedConversationView group={group} />
@@ -370,7 +373,11 @@ function SessionLane({ session, connectionParams, onOpenChange }: SessionLanePro
 
   // Derive a provider + path for the correlated call-graph lookup.
   const graphRequest = session.requests.find((r) => KIND_TO_PROVIDER[r.parsed.kind] != null);
-  const graphProvider = graphRequest ? KIND_TO_PROVIDER[graphRequest.parsed.kind] : null;
+  const graphProvider = graphRequest
+    ? graphRequest.parsed.kind === 'anthropic' && graphRequest.parsed.platform === 'bedrock'
+      ? 'BEDROCK'
+      : KIND_TO_PROVIDER[graphRequest.parsed.kind]
+    : null;
   const graphPath = graphRequest ? graphRequest.path : null;
 
   // Derive the isolation scope for this lane so the call graph can be filtered to

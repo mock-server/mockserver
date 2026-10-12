@@ -1,13 +1,16 @@
 import { describe, it, expect } from 'vitest';
-import { parseTraffic, getTokenSummary, getModelLabel } from '../lib/llmTraffic';
+import { parseTraffic, getTokenSummary, getModelLabel, getNumericTokens } from '../lib/llmTraffic';
 import { decodeAwsEventStream } from '../lib/awsEventStream';
-import { extractLlmExpectationFromCapture } from '../lib/expectationFromCapture';
+import { extractLlmExpectationFromCapture, isLlmTraffic } from '../lib/expectationFromCapture';
 
 // Wire shapes below follow the provider references:
 // - Bedrock Converse / ConverseStream / InvokeModelWithResponseStream:
 //   https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html (and _ConverseStream, _InvokeModelWithResponseStream)
 // - AWS event-stream framing: prelude (total, headers length, CRC32), headers, payload, CRC32
 // - Ollama /api/chat streaming (NDJSON, stream defaults to true): https://docs.ollama.com/api/chat
+// - Ollama /api/generate (prompt in, response out, NDJSON when streamed): https://docs.ollama.com/api/generate
+// - Gemini usageMetadata (thoughtsTokenCount apart from candidatesTokenCount): https://ai.google.dev/api/generate-content
+//   and https://ai.google.dev/gemini-api/docs/pricing ("Output price (including thinking tokens)")
 // - Vertex AI generateContent / streamGenerateContent and Claude rawPredict on Vertex
 
 // ---------------------------------------------------------------------------
@@ -568,5 +571,176 @@ describe('parseTraffic — Vertex AI paths', () => {
       expect(parsed.model).toBe('claude-opus-4-1@20250805');
       expect(parsed.responseContent).toEqual([{ type: 'text', text: 'Hello' }]);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Gemini thinking tokens
+// ---------------------------------------------------------------------------
+
+describe('parseTraffic — Gemini thinking tokens count as output', () => {
+  const usageMetadata = { promptTokenCount: 12, candidatesTokenCount: 40, thoughtsTokenCount: 300, totalTokenCount: 352 };
+  const request = {
+    method: 'POST',
+    headers: [{ name: 'host', values: ['generativelanguage.googleapis.com'] }],
+    body: { type: 'JSON', json: '{"contents":[{"role":"user","parts":[{"text":"Why is the sky blue?"}]}]}' },
+  };
+
+  it('adds thoughtsTokenCount to candidatesTokenCount on a generateContent reply', () => {
+    const parsed = parseTraffic({
+      httpRequest: { ...request, path: '/v1beta/models/gemini-2.5-pro:generateContent' },
+      httpResponse: {
+        statusCode: 200,
+        body: {
+          type: 'JSON',
+          json: JSON.stringify({
+            candidates: [{ content: { role: 'model', parts: [{ text: 'Rayleigh scattering.' }] }, finishReason: 'STOP' }],
+            usageMetadata,
+            modelVersion: 'gemini-2.5-pro',
+          }),
+        },
+      },
+    });
+    expect(parsed.kind).toBe('gemini');
+    if (parsed.kind !== 'gemini') return;
+    expect(parsed.usage).toEqual({ promptTokenCount: 12, candidatesTokenCount: 40, thoughtsTokenCount: 300 });
+    expect(getNumericTokens(parsed)).toEqual({ inputTokens: 12, outputTokens: 340 });
+    expect(getTokenSummary(parsed)).toBe('12 in / 340 out (300 thinking)');
+  });
+
+  it('takes the thinking count from the last chunk of a streamed reply', () => {
+    const sse = [
+      `data: ${JSON.stringify({ candidates: [{ content: { role: 'model', parts: [{ text: 'Rayleigh' }] } }], usageMetadata: { promptTokenCount: 12, thoughtsTokenCount: 300, totalTokenCount: 312 } })}`,
+      `data: ${JSON.stringify({ candidates: [{ content: { role: 'model', parts: [{ text: ' scattering.' }] }, finishReason: 'STOP' }], usageMetadata })}`,
+      '',
+    ].join('\n\n');
+    const parsed = parseTraffic({
+      httpRequest: { ...request, path: '/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse' },
+      httpResponse: { statusCode: 200, headers: [{ name: 'content-type', values: ['text/event-stream'] }], body: { type: 'STRING', string: sse } },
+    });
+    expect(parsed.kind).toBe('gemini');
+    if (parsed.kind !== 'gemini') return;
+    expect(getNumericTokens(parsed)).toEqual({ inputTokens: 12, outputTokens: 340 });
+  });
+
+  it('counts the thinking tokens of a streamed reply returned as a JSON array', () => {
+    const parsed = parseTraffic({
+      httpRequest: { ...request, path: '/v1beta/models/gemini-2.5-flash:streamGenerateContent' },
+      httpResponse: {
+        statusCode: 200,
+        body: { type: 'JSON', json: JSON.stringify([{ candidates: [{ content: { role: 'model', parts: [{ text: 'x' }] }, finishReason: 'STOP' }], usageMetadata }]) },
+      },
+    });
+    expect(parsed.kind).toBe('gemini');
+    if (parsed.kind !== 'gemini') return;
+    expect(getNumericTokens(parsed)).toEqual({ inputTokens: 12, outputTokens: 340 });
+  });
+
+  it('shows a reply of thoughts only, and leaves a non-thinking reply unchanged', () => {
+    const reply = (usage: Record<string, number>) =>
+      parseTraffic({
+        httpRequest: { ...request, path: '/v1beta/models/gemini-2.5-pro:generateContent' },
+        httpResponse: { statusCode: 200, body: { type: 'JSON', json: JSON.stringify({ candidates: [], usageMetadata: usage }) } },
+      });
+    const thoughtsOnly = reply({ promptTokenCount: 5, thoughtsTokenCount: 64, totalTokenCount: 69 });
+    expect(getNumericTokens(thoughtsOnly)).toEqual({ inputTokens: 5, outputTokens: 64 });
+    expect(getTokenSummary(thoughtsOnly)).toBe('5 in / 64 out (64 thinking)');
+    const plain = reply({ promptTokenCount: 5, candidatesTokenCount: 7, totalTokenCount: 12 });
+    expect(getTokenSummary(plain)).toBe('5 in / 7 out');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Ollama /api/generate
+// ---------------------------------------------------------------------------
+
+describe('parseTraffic — Ollama /api/generate', () => {
+  it('shows system and prompt as messages and response as the reply', () => {
+    const parsed = parseTraffic({
+      httpRequest: {
+        method: 'POST',
+        path: '/api/generate',
+        body: {
+          type: 'JSON',
+          json: JSON.stringify({ model: 'llava', system: 'Be brief.', prompt: 'What is in this picture?', images: ['iVBORw0KGgo='], stream: false }),
+        },
+      },
+      httpResponse: {
+        statusCode: 200,
+        body: {
+          type: 'JSON',
+          json: JSON.stringify({
+            model: 'llava',
+            created_at: '2025-10-17T23:14:07.414671Z',
+            response: 'A cat.',
+            done: true,
+            done_reason: 'stop',
+            context: [1, 2, 3],
+            total_duration: 5043500667,
+            prompt_eval_count: 26,
+            eval_count: 4,
+          }),
+        },
+      },
+    });
+    expect(parsed.kind).toBe('ollama');
+    if (parsed.kind !== 'ollama') return;
+    expect(parsed.endpoint).toBe('generate');
+    expect(parsed.model).toBe('llava');
+    expect(parsed.stream).toBe(false);
+    expect(parsed.messages).toEqual([
+      { role: 'system', content: 'Be brief.' },
+      { role: 'user', content: 'What is in this picture?', images: ['iVBORw0KGgo='] },
+    ]);
+    expect(parsed.tools).toBeNull();
+    expect(parsed.responseMessage).toEqual({ role: 'assistant', content: 'A cat.' });
+    expect(parsed.done).toBe(true);
+    expect(parsed.sseEvents).toBeNull();
+    expect(getTokenSummary(parsed)).toBe('26 in / 4 out');
+  });
+
+  it('reassembles a streamed NDJSON reply, with thinking, and defaults stream to true', () => {
+    const ndjson = [
+      '{"model":"qwen3","created_at":"2025-10-17T23:14:07.1Z","response":"","thinking":"Short answer.","done":false}',
+      '{"model":"qwen3","created_at":"2025-10-17T23:14:07.2Z","response":"The sky","done":false}',
+      '{"model":"qwen3","created_at":"2025-10-17T23:14:07.3Z","response":" is blue.","done":false}',
+      '{"model":"qwen3","created_at":"2025-10-17T23:14:07.4Z","response":"","done":true,"done_reason":"stop","prompt_eval_count":11,"eval_count":19}',
+      '',
+    ].join('\n');
+    const parsed = parseTraffic({
+      httpRequest: { method: 'POST', path: '/api/generate', body: { type: 'JSON', json: '{"model":"qwen3","prompt":"Why is the sky blue?","think":true}' } },
+      httpResponse: { statusCode: 200, headers: [{ name: 'content-type', values: ['application/x-ndjson'] }], body: { type: 'STRING', string: ndjson } },
+    });
+    expect(parsed.kind).toBe('ollama');
+    if (parsed.kind !== 'ollama') return;
+    expect(parsed.stream).toBe(true);
+    expect(parsed.messages).toEqual([{ role: 'user', content: 'Why is the sky blue?' }]);
+    expect(parsed.responseMessage).toEqual({ role: 'assistant', content: 'The sky is blue.', thinking: 'Short answer.' });
+    expect(parsed.done).toBe(true);
+    expect(parsed.usage).toEqual({ prompt_eval_count: 11, eval_count: 19 });
+    expect(parsed.sseEvents).toHaveLength(4);
+  });
+
+  it('is captured as plain HTTP, since the Ollama mock answers /api/chat only', () => {
+    const generate = parseTraffic({
+      httpRequest: { method: 'POST', path: '/api/generate', body: { type: 'JSON', json: '{"model":"llama3.2","prompt":"Hi"}' } },
+      httpResponse: { statusCode: 200, body: { type: 'JSON', json: '{"model":"llama3.2","response":"Hello","done":true}' } },
+    });
+    const chat = parseTraffic({
+      httpRequest: { method: 'POST', path: '/api/chat', body: { type: 'JSON', json: '{"model":"llama3.2","messages":[]}' } },
+      httpResponse: { statusCode: 200, body: { type: 'JSON', json: '{"model":"llama3.2","message":{"role":"assistant","content":"x"},"done":true}' } },
+    });
+    expect(generate.kind).toBe('ollama');
+    expect(isLlmTraffic(generate)).toBe(false);
+    expect(isLlmTraffic(chat)).toBe(true);
+    if (chat.kind === 'ollama') expect(chat.endpoint).toBeUndefined();
+  });
+
+  it('does not take other paths that start with /api/generate', () => {
+    const parsed = parseTraffic({
+      httpRequest: { method: 'POST', path: '/api/generated-reports', body: { type: 'JSON', json: '{"prompt":"x"}' } },
+      httpResponse: { statusCode: 200, body: { type: 'JSON', json: '{"response":"y"}' } },
+    });
+    expect(parsed.kind).toBe('generic');
   });
 });

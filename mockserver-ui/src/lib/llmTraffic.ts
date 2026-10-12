@@ -143,10 +143,34 @@ export interface GeminiParsed {
   contents: unknown[];
   tools: unknown[] | null;
   candidates: unknown[];
-  usage: { promptTokenCount?: number; candidatesTokenCount?: number } | null;
+  usage: GeminiUsage | null;
   sseEvents: SseEvent[] | null;
   streamed: boolean;
   streamTruncated: boolean;
+}
+
+/** Gemini usageMetadata. Thinking models report thoughtsTokenCount apart from candidatesTokenCount. */
+export interface GeminiUsage {
+  promptTokenCount?: number;
+  candidatesTokenCount?: number;
+  thoughtsTokenCount?: number;
+}
+
+/**
+ * Output tokens of a Gemini reply: candidates plus thoughts, as Gemini bills thinking tokens
+ * at the output price. Undefined when neither count is present.
+ */
+export function geminiOutputTokens(usage: GeminiUsage | null | undefined): number | undefined {
+  if (!usage || (usage.candidatesTokenCount == null && usage.thoughtsTokenCount == null)) return undefined;
+  return (usage.candidatesTokenCount ?? 0) + (usage.thoughtsTokenCount ?? 0);
+}
+
+function geminiUsageFrom(usageMeta: Record<string, unknown>): GeminiUsage {
+  return {
+    promptTokenCount: getNumber(usageMeta, 'promptTokenCount') ?? undefined,
+    candidatesTokenCount: getNumber(usageMeta, 'candidatesTokenCount') ?? undefined,
+    thoughtsTokenCount: getNumber(usageMeta, 'thoughtsTokenCount') ?? undefined,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -165,6 +189,11 @@ export interface OllamaParsed {
   sseEvents: SseEvent[] | null;
   streamed: boolean;
   streamTruncated: boolean;
+  /**
+   * Set for /api/generate traffic. Its system and prompt fields are shown as messages and its
+   * response (and thinking) fields as the assistant reply; absent for /api/chat.
+   */
+  endpoint?: 'generate';
 }
 
 // ---------------------------------------------------------------------------
@@ -546,6 +575,10 @@ function isOllamaPath(path: string | null): boolean {
   // `/api/chatbot`, `/api/chats`, or any generic chat endpoint.
   if (path === null) return false;
   return /(^|\/)api\/chat(?:\/?$|\?)/.test(path);
+}
+
+function isOllamaGeneratePath(path: string | null): boolean {
+  return path !== null && /(^|\/)api\/generate(?:\/?$|\?)/.test(path);
 }
 
 /**
@@ -1032,12 +1065,7 @@ function reassembleGeminiSse(events: SseEvent[]): { candidates: unknown[]; usage
       if (typeof c0['finishReason'] === 'string') finishReason = c0['finishReason'];
     }
     const usageMeta = getObject(data, 'usageMetadata');
-    if (usageMeta) {
-      usage = {
-        promptTokenCount: getNumber(usageMeta, 'promptTokenCount') ?? undefined,
-        candidatesTokenCount: getNumber(usageMeta, 'candidatesTokenCount') ?? undefined,
-      };
-    }
+    if (usageMeta) usage = geminiUsageFrom(usageMeta);
     if (!model) model = getString(data, 'modelVersion') ?? getString(data, 'model');
   }
   const candidates = parts.length > 0 || finishReason
@@ -1108,12 +1136,7 @@ function parseGeminiRequest(
   if (res) {
     result.candidates = getArray(res, 'candidates') ?? [];
     const usageMeta = getObject(res, 'usageMetadata');
-    if (usageMeta) {
-      result.usage = {
-        promptTokenCount: getNumber(usageMeta, 'promptTokenCount') ?? undefined,
-        candidatesTokenCount: getNumber(usageMeta, 'candidatesTokenCount') ?? undefined,
-      };
-    }
+    if (usageMeta) result.usage = geminiUsageFrom(usageMeta);
     if (!result.model) {
       result.model = getString(res, 'modelVersion') ?? getString(res, 'model');
     }
@@ -1172,11 +1195,45 @@ function mergeOllamaChunks(chunks: Record<string, unknown>[]): Record<string, un
   return merged;
 }
 
+/**
+ * Fold a streamed Ollama /api/generate reply into one response object: response and
+ * thinking accumulate across chunks; other fields take the last value.
+ */
+function mergeOllamaGenerateChunks(chunks: Record<string, unknown>[]): Record<string, unknown> {
+  const merged: Record<string, unknown> = {};
+  let response = '';
+  let thinking = '';
+  for (const chunk of chunks) {
+    Object.assign(merged, chunk);
+    response += getString(chunk, 'response') ?? '';
+    thinking += getString(chunk, 'thinking') ?? '';
+  }
+  merged['response'] = response;
+  if (thinking) merged['thinking'] = thinking;
+  else delete merged['thinking'];
+  return merged;
+}
+
+/** The system and prompt fields of an /api/generate request, as chat-style messages. */
+function ollamaGenerateMessages(req: Record<string, unknown>): unknown[] {
+  const messages: unknown[] = [];
+  const system = getString(req, 'system');
+  if (system) messages.push({ role: 'system', content: system });
+  const prompt = getString(req, 'prompt');
+  const images = getArray(req, 'images');
+  if (prompt !== null || images) {
+    messages.push({ role: 'user', content: prompt ?? '', ...(images ? { images } : {}) });
+  }
+  return messages;
+}
+
 function parseOllamaRequest(
   requestBody: unknown,
   responseBody: unknown,
   responseHeaders: unknown,
+  endpoint: 'chat' | 'generate' = 'chat',
 ): OllamaParsed {
+  const generate = endpoint === 'generate';
   const req = safeParseJson(requestBody) as Record<string, unknown> | undefined;
   const { streamed, truncated } = hasStreamingHeaders(responseHeaders);
 
@@ -1185,26 +1242,36 @@ function parseOllamaRequest(
     model: req ? getString(req, 'model') : null,
     // Ollama streams unless the request sets "stream": false.
     stream: req ? (getBoolean(req, 'stream') ?? true) : false,
-    messages: req ? (getArray(req, 'messages') ?? []) : [],
-    tools: req ? (getArray(req, 'tools') ?? null) : null,
+    messages: req ? (generate ? ollamaGenerateMessages(req) : (getArray(req, 'messages') ?? [])) : [],
+    tools: req && !generate ? (getArray(req, 'tools') ?? null) : null,
     responseMessage: null,
     done: false,
     usage: null,
     sseEvents: null,
     streamed,
     streamTruncated: truncated,
+    ...(generate ? { endpoint: 'generate' as const } : {}),
   };
 
   let res = safeParseJson(responseBody) as Record<string, unknown> | undefined;
   if (!res && typeof responseBody === 'string') {
     const lines = parseNdjsonLines(responseBody);
     if (lines.length > 0) {
-      res = mergeOllamaChunks(lines.map((l) => l.value));
+      const chunks = lines.map((l) => l.value);
+      res = generate ? mergeOllamaGenerateChunks(chunks) : mergeOllamaChunks(chunks);
       result.sseEvents = lines.map((l) => ({ data: l.line }));
     }
   }
   if (res) {
-    result.responseMessage = res['message'] ?? null;
+    if (generate) {
+      const response = getString(res, 'response');
+      const thinking = getString(res, 'thinking');
+      result.responseMessage = response !== null || thinking
+        ? { role: 'assistant', content: response ?? '', ...(thinking ? { thinking } : {}) }
+        : null;
+    } else {
+      result.responseMessage = res['message'] ?? null;
+    }
     result.done = getBoolean(res, 'done') ?? false;
     if (!result.model) {
       result.model = getString(res, 'model');
@@ -1547,6 +1614,10 @@ export function parseTraffic(value: Record<string, unknown>): ParsedTraffic {
       return parseOllamaRequest(reqBodyContent, resBodyContent, responseHeaders);
     }
 
+    if (isOllamaGeneratePath(path)) {
+      return parseOllamaRequest(reqBodyContent, resBodyContent, responseHeaders, 'generate');
+    }
+
     // Check MCP on request or response body. Handles a single JSON-RPC object, a
     // JSON-RPC batch (top-level array), and JSON-RPC carried over SSE.
     const reqRpc = firstJsonRpcMessage(reqBodyContent);
@@ -1739,7 +1810,11 @@ export function getTokenSummary(parsed: ParsedTraffic): string | null {
   if (parsed.kind === 'gemini' && parsed.usage) {
     const parts: string[] = [];
     if (parsed.usage.promptTokenCount != null) parts.push(`${parsed.usage.promptTokenCount} in`);
-    if (parsed.usage.candidatesTokenCount != null) parts.push(`${parsed.usage.candidatesTokenCount} out`);
+    const output = geminiOutputTokens(parsed.usage);
+    if (output != null) {
+      const thoughts = parsed.usage.thoughtsTokenCount;
+      parts.push(thoughts ? `${output} out (${thoughts} thinking)` : `${output} out`);
+    }
     return parts.length > 0 ? parts.join(' / ') : null;
   }
   if (parsed.kind === 'ollama' && parsed.usage) {
@@ -1778,7 +1853,7 @@ export function getNumericTokens(parsed: ParsedTraffic): { inputTokens: number; 
   if (parsed.kind === 'gemini' && parsed.usage) {
     return {
       inputTokens: parsed.usage.promptTokenCount ?? 0,
-      outputTokens: parsed.usage.candidatesTokenCount ?? 0,
+      outputTokens: geminiOutputTokens(parsed.usage) ?? 0,
     };
   }
   if (parsed.kind === 'ollama' && parsed.usage) {

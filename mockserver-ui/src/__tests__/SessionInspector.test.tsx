@@ -89,6 +89,36 @@ function makeOpenAiRequest(key: string, host = 'api.openai.com'): JsonListItem {
   };
 }
 
+// Bedrock Converse wire shape: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html
+function makeBedrockConverseRequest(key: string, text: string, agentId?: string): JsonListItem {
+  const headers: Array<{ name: string; values: string[] }> = [
+    { name: 'host', values: ['bedrock-runtime.us-east-1.amazonaws.com'] },
+  ];
+  if (agentId) headers.push({ name: 'x-agent-id', values: [agentId] });
+  return {
+    key,
+    value: {
+      httpRequest: {
+        method: 'POST',
+        path: '/model/anthropic.claude-3-5-haiku-20241022-v1:0/converse',
+        headers,
+        body: { type: 'JSON', json: JSON.stringify({ messages: [{ role: 'user', content: [{ text }] }] }) },
+      },
+      httpResponse: {
+        statusCode: 200,
+        body: {
+          type: 'JSON',
+          json: JSON.stringify({
+            output: { message: { role: 'assistant', content: [{ text: 'Sure.' }] } },
+            stopReason: 'end_turn',
+            usage: { inputTokens: 9, outputTokens: 2, totalTokens: 11 },
+          }),
+        },
+      },
+    },
+  };
+}
+
 function makeIsolatedExpectation(scenarioName: string): JsonListItem {
   return {
     key: `exp-${scenarioName}`,
@@ -351,6 +381,49 @@ describe('SessionInspector', () => {
     const convBtn = screen.getByText(/Conversations \(2\)/);
     await user.click(convBtn);
     expect(screen.getByText(/2 separate conversation threads/)).toBeInTheDocument();
+  });
+
+  it('labels Bedrock threads Bedrock, not Anthropic', async () => {
+    const user = userEvent.setup();
+    useDashboardStore.setState({
+      proxiedRequests: [makeBedrockConverseRequest('b1', 'First question'), makeBedrockConverseRequest('b2', 'Totally separate')],
+      activeExpectations: [],
+    });
+
+    renderInspector();
+
+    await user.click(screen.getByText(/Conversations \(2\)/));
+    expect(screen.getByText('Bedrock thread 1')).toBeInTheDocument();
+    expect(screen.getByText('Bedrock thread 2')).toBeInTheDocument();
+    expect(screen.queryByText(/Anthropic thread/)).not.toBeInTheDocument();
+  });
+
+  it('asks for the call graph of a Bedrock session with the BEDROCK provider', async () => {
+    const user = userEvent.setup();
+    const toolCalls: Array<Record<string, unknown>> = [];
+    vi.stubGlobal('fetch', vi.fn(async (_input: unknown, init?: RequestInit) => {
+      const body = typeof init?.body === 'string' ? (JSON.parse(init.body) as Record<string, unknown>) : {};
+      if (body['method'] === 'initialize') {
+        return new Response('{}', { status: 200, headers: { 'Mcp-Session-Id': 'bedrock-graph-session' } });
+      }
+      if (body['method'] === 'tools/call') toolCalls.push(body['params'] as Record<string, unknown>);
+      return new Response(JSON.stringify({ jsonrpc: '2.0', id: 1, error: { code: -32000, message: 'none' } }), { status: 200 });
+    }));
+    try {
+      useDashboardStore.setState({
+        proxiedRequests: [makeBedrockConverseRequest('bg1', 'Plan a trip', 'agent-B')],
+        activeExpectations: [makeIsolatedExpectation('__llm_conv_chat__iso=header:x-agent-id')],
+      });
+
+      renderInspector();
+
+      await user.click(screen.getByText('Show graph'));
+      await waitFor(() => expect(toolCalls).toHaveLength(1));
+      expect(toolCalls[0]!['name']).toBe('explain_agent_run');
+      expect((toolCalls[0]!['arguments'] as Record<string, unknown>)['provider']).toBe('BEDROCK');
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('collapses a growing multi-turn conversation into one thread of turn deltas', async () => {

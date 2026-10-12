@@ -5,12 +5,13 @@ import { ThemeProvider } from '@mui/material/styles';
 import { buildTheme } from '../theme';
 import {
   AnthropicConversationView,
+  GeminiConversationView,
   OpenAiConversationView,
   ScriptedTurnsPanel,
   responseLooksUnparseable,
 } from '../components/ConversationView';
 import type { ScriptedTurn } from '../components/ConversationView';
-import type { AnthropicParsed, OpenAiParsed } from '../lib/llmTraffic';
+import type { AnthropicParsed, GeminiParsed, OpenAiParsed } from '../lib/llmTraffic';
 import { useDashboardStore } from '../store';
 
 function wrap(ui: React.ReactElement) {
@@ -425,5 +426,33 @@ describe('ConversationView — truncated non-stream response warning', () => {
       />,
     );
     expect(screen.queryByTestId('truncated-response-notice')).not.toBeInTheDocument();
+  });
+});
+
+describe('GeminiConversationView token strip', () => {
+  function makeGeminiParsed(usage: GeminiParsed['usage']): GeminiParsed {
+    return {
+      kind: 'gemini',
+      model: 'gemini-2.5-pro',
+      stream: false,
+      contents: [{ role: 'user', parts: [{ text: 'Why is the sky blue?' }] }],
+      tools: null,
+      candidates: [{ content: { role: 'model', parts: [{ text: 'Rayleigh scattering.' }] }, finishReason: 'STOP' }],
+      usage,
+      sseEvents: null,
+      streamed: false,
+      streamTruncated: false,
+    };
+  }
+
+  it('shows candidates plus thinking tokens as the output count', () => {
+    wrap(<GeminiConversationView parsed={makeGeminiParsed({ promptTokenCount: 12, candidatesTokenCount: 40, thoughtsTokenCount: 300 })} />);
+    expect(screen.getByText('In: 12')).toBeInTheDocument();
+    expect(screen.getByText('Out: 340')).toBeInTheDocument();
+  });
+
+  it('shows only the candidates count when the reply has no thinking', () => {
+    wrap(<GeminiConversationView parsed={makeGeminiParsed({ promptTokenCount: 12, candidatesTokenCount: 40 })} />);
+    expect(screen.getByText('Out: 40')).toBeInTheDocument();
   });
 });
