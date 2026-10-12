@@ -1,5 +1,6 @@
 package org.mockserver.llm;
 
+import org.mockserver.llm.codec.AnthropicCodec;
 import org.mockserver.model.Completion;
 
 /**
@@ -24,14 +25,16 @@ public final class LlmRefusalPresets {
     public static final String ANTHROPIC_REFUSAL_STOP_REASON = "refusal";
 
     /**
-     * A fixed Anthropic refusal wire body (empty content, {@code stop_reason:"refusal"}),
+     * A fixed Anthropic refusal wire body (empty content, {@code stop_reason:"refusal"} and its
+     * {@code stop_details}),
      * used by {@link LlmContentFilterBodies} for a content-filter block. Deterministic
      * test fixture — the id is fixed rather than random.
      */
     public static final String ANTHROPIC_REFUSAL_BODY =
         "{\"id\":\"msg_refusal\",\"type\":\"message\",\"role\":\"assistant\","
             + "\"model\":\"claude\",\"content\":[],\"stop_reason\":\"refusal\","
-            + "\"stop_sequence\":null,\"usage\":{\"input_tokens\":0,\"output_tokens\":0}}";
+            + "\"stop_sequence\":null,\"stop_details\":" + AnthropicCodec.REFUSAL_STOP_DETAILS + ","
+            + "\"usage\":{\"input_tokens\":0,\"output_tokens\":0}}";
 
     private LlmRefusalPresets() {
     }

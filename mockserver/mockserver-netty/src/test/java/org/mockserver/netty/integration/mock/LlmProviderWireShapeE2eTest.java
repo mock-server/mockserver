@@ -116,6 +116,7 @@ public class LlmProviderWireShapeE2eTest {
 
         assertThat(response.statusCode(), is(200));
         assertThat(json(response).path("stop_reason").asText(), is("refusal"));
+        assertThat(json(response).at("/stop_details/type").asText(), is("refusal"));
     }
 
     @Test

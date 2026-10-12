@@ -29,6 +29,13 @@ import static org.mockserver.model.SseEvent.sseEvent;
 public class AnthropicCodec implements ProviderCodec {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final String REFUSAL = "refusal";
+
+    /**
+     * The {@code stop_details} Anthropic sends with every {@code stop_reason} {@code refusal}; its
+     * {@code category} and {@code explanation} are null when the refusal maps to no named category.
+     */
+    public static final String REFUSAL_STOP_DETAILS = "{\"type\":\"refusal\",\"category\":null,\"explanation\":null}";
 
     @Override
     public Provider provider() {
@@ -99,8 +106,15 @@ public class AnthropicCodec implements ProviderCodec {
             }
         }
 
-        root.put("stop_reason", mapStopReason(completion.getStopReason(), hasToolCalls));
+        String stopReason = mapStopReason(completion.getStopReason(), hasToolCalls);
+        root.put("stop_reason", stopReason);
         root.putNull("stop_sequence");
+        if (REFUSAL.equals(stopReason)) {
+            ObjectNode stopDetails = root.putObject("stop_details");
+            stopDetails.put("type", REFUSAL);
+            stopDetails.putNull("category");
+            stopDetails.putNull("explanation");
+        }
 
         // usage
         ObjectNode usage = root.putObject("usage");
@@ -244,8 +258,9 @@ public class AnthropicCodec implements ProviderCodec {
 
         // 4. message_delta
         String stopReason = mapStopReason(completion.getStopReason(), hasToolCalls);
+        String stopDetails = REFUSAL.equals(stopReason) ? ",\"stop_details\":" + REFUSAL_STOP_DETAILS : "";
         String messageDeltaData = "{\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"" + escapeJson(stopReason) +
-            "\",\"stop_sequence\":null},\"usage\":{\"output_tokens\":" + outputTokens + "}}";
+            "\",\"stop_sequence\":null" + stopDetails + "},\"usage\":{\"output_tokens\":" + outputTokens + "}}";
         events.add(sseEvent().withEvent("message_delta").withData(messageDeltaData));
 
         // 5. message_stop

@@ -107,6 +107,7 @@ public class LlmRefusalQuotaRateLimitIntegrationTest {
         // (limit + reset) but no Retry-After (not limited)
         assertThat(first, containsString("200"));
         assertThat("refusal stop_reason must reach the client", first, containsString("\"stop_reason\":\"refusal\""));
+        assertThat(first, containsString("\"stop_details\":{\"type\":\"refusal\",\"category\":null,\"explanation\":null}"));
         assertThat(first, containsString("anthropic-ratelimit-requests-limit: 2"));
         assertThat(first, containsString("anthropic-ratelimit-requests-reset:"));
         assertThat("a within-quota response must not carry Retry-After", first, not(containsString("Retry-After:")));

@@ -76,6 +76,7 @@ public class LlmStreamedContentFilterE2eTest {
         JsonNode messageDelta = data.get(data.size() - 2);
         assertThat(messageDelta.path("type").asText(), is("message_delta"));
         assertThat(messageDelta.at("/delta/stop_reason").asText(), is("refusal"));
+        assertThat(messageDelta.at("/delta/stop_details/type").asText(), is("refusal"));
         assertThat(data.get(data.size() - 1).path("type").asText(), is("message_stop"));
     }
 
@@ -141,6 +142,7 @@ public class LlmStreamedContentFilterE2eTest {
         assertThat(response.statusCode(), is(200));
         assertThat(contentType(response), is(BedrockEventStreamEncoder.CONTENT_TYPE));
         List<String> stopReasons = new ArrayList<>();
+        List<String> stopDetailsTypes = new ArrayList<>();
         for (BedrockEventStreamEncoder.DecodedMessage message : BedrockEventStreamEncoder.decode(response.body())) {
             assertThat(message.getHeaders().get(":event-type"), is("chunk"));
             String chunkJson = new String(Base64.getDecoder().decode(
@@ -148,9 +150,11 @@ public class LlmStreamedContentFilterE2eTest {
             JsonNode chunk = OBJECT_MAPPER.readTree(chunkJson);
             if ("message_delta".equals(chunk.path("type").asText())) {
                 stopReasons.add(chunk.at("/delta/stop_reason").asText());
+                stopDetailsTypes.add(chunk.at("/delta/stop_details/type").asText());
             }
         }
         assertThat(stopReasons, contains("refusal"));
+        assertThat(stopDetailsTypes, contains("refusal"));
     }
 
     @Test

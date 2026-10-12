@@ -627,7 +627,8 @@ curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
 <p>
     Chaos follows the API too. A <span class="inline_code">contentFilterBlockProbability</span> block on a Converse request returns a
     Converse response with <span class="inline_code">stopReason</span> <span class="inline_code">content_filtered</span>; on InvokeModel it
-    returns the Anthropic refusal (<span class="inline_code">stop_reason</span> <span class="inline_code">refusal</span>).
+    returns the Anthropic refusal (<span class="inline_code">stop_reason</span> <span class="inline_code">refusal</span> with a
+    <span class="inline_code">stop_details</span> object).
     Injected errors and structured-output enforcement errors use the AWS error body on both APIs, as Bedrock does, for example
     <span class="inline_code">{"__type":"ThrottlingException","message":"..."}</span> for a 429.
 </p>
@@ -1378,7 +1379,11 @@ geminiLive()
 
 <p>
     <strong>Refusals &amp; content-filter blocks</strong> &mdash; an Anthropic refusal is just a completion with
-    <span class="inline_code">"stopReason": "refusal"</span>. To inject a block probabilistically across providers,
+    <span class="inline_code">"stopReason": "refusal"</span>. As the real API does, every Anthropic refusal (whole or streamed, including
+    one returned through Bedrock InvokeModel) carries a <span class="inline_code">stop_details</span> object,
+    <span class="inline_code">{"type": "refusal", "category": null, "explanation": null}</span>; a stream carries it in the
+    <span class="inline_code">message_delta</span> event's <span class="inline_code">delta</span>, so SDK code that reads
+    <span class="inline_code">stop_details</span> works against the mock. To inject a block probabilistically across providers,
     use the <span class="inline_code">contentFilterBlockProbability</span> chaos field (see below), which emits the
     provider-correct shape.
 </p>
