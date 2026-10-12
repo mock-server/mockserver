@@ -135,8 +135,10 @@ check "both histograms land in the diagnostics dir with their Total" "2" \
 
 reset_state; touch "$S/long_histo"
 probe
+last_line="$(tail -1 "$T/diag/reset-probe-histogram-before.txt")"
+case "$last_line" in Total*1234567*550000000) keeps_total=true ;; *) keeps_total=false ;; esac
 check "a long histogram is cut to its top rows and keeps its Total" "44 true" \
-  "$(wc -l < "$T/diag/reset-probe-histogram-before.txt" | tr -d ' ') $(tail -1 "$T/diag/reset-probe-histogram-before.txt" | grep -q '^Total  *1234567  *550000000$' && echo true || echo false)"
+  "$(wc -l < "$T/diag/reset-probe-histogram-before.txt" | tr -d ' ') $keeps_total"
 check "a long histogram's total still counts" "2.5" "$(j .live_heap_per_counted_byte)"
 
 echo "--- 3. jcmd cannot attach: counted fields kept, heap fields null, no reset"
