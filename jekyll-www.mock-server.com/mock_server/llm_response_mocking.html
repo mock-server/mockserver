@@ -815,8 +815,8 @@ data: [DONE]</code></pre>
     that becomes the <span class="inline_code">call_id</span>. Your agent sends the tool's
     result back as a <span class="inline_code">function_call_output</span> carrying that
     <span class="inline_code">call_id</span>, and that is what <span class="inline_code">containsToolResultFor</span>
-    matches on. After a non-streamed turn, this also works when the next request sends only the result plus
-    <span class="inline_code">previous_response_id</span>. When streaming, the arguments arrive as
+    matches on. This also works when the next request sends only the result plus
+    <span class="inline_code">previous_response_id</span>, whether or not the earlier turn was streamed. When streaming, the arguments arrive as
     <span class="inline_code">response.function_call_arguments.delta</span> events, and the final
     <span class="inline_code">response.completed</span> event carries the whole response, including its
     <span class="inline_code">output</span>. The OpenAI Agents SDK reads each turn from that event.

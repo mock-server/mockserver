@@ -118,6 +118,8 @@ public class ConfigurationEnforcementClassificationTest {
             "org.mockserver.mock.HttpStateConfigurationUpdateTest#shouldResizeEventLogWhenMaxLogEntriesReduced");
         ENFORCEMENT_VERIFIED.put("maxExpectations",
             "org.mockserver.mock.HttpStateConfigurationUpdateTest#shouldResizeExpectationStoreWhenMaxExpectationsReduced");
+        ENFORCEMENT_VERIFIED.put("maxOpenAiResponsesSizeInBytes",
+            "org.mockserver.mock.HttpStateConfigurationUpdateTest#shouldApplyAndResizeOpenAiResponsesByteBudget");
         ENFORCEMENT_VERIFIED.put("maxExpectationsSizeInBytes",
             "org.mockserver.mock.RequestMatchersStateBackendTest#byteBudgetEvictsLargeExpectationsAndStaysUnderBudget");
         // an instance-set limit refuses the request over it with a 503 through the real dispatch path

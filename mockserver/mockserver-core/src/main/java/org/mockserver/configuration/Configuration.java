@@ -198,6 +198,7 @@ public class Configuration {
     private volatile Integer maxGrpcMessageSize;
     private volatile Integer maxResponseBodySize;
     private volatile Integer maxLlmConversationBodySize;
+    private volatile Long maxOpenAiResponsesSizeInBytes;
     private volatile Boolean driftDetectionEnabled;
     private volatile Double driftSampleRate;
     private volatile Boolean driftSemanticAnalysisEnabled;
@@ -2902,6 +2903,28 @@ public class Configuration {
      */
     public Configuration maxLlmConversationBodySize(Integer maxLlmConversationBodySize) {
         this.maxLlmConversationBodySize = maxLlmConversationBodySize;
+        return this;
+    }
+
+    public Long maxOpenAiResponsesSizeInBytes() {
+        if (maxOpenAiResponsesSizeInBytes == null) {
+            return ConfigurationProperties.maxOpenAiResponsesSizeInBytes();
+        }
+        return maxOpenAiResponsesSizeInBytes;
+    }
+
+    /**
+     * Maximum total estimated size in bytes of the OpenAI Responses API turns kept for
+     * {@code previous_response_id} chaining and {@code GET /v1/responses/{id}}; least recently used
+     * responses are evicted first and the most recent one is always kept. The default is a twentieth
+     * of the heap ceiling budget; {@code 0} bounds the store by count (10,000) only. The store is
+     * shared by every server in the JVM, so the most recently started or reconfigured server's value
+     * applies.
+     *
+     * @param maxOpenAiResponsesSizeInBytes maximum total size in bytes of stored Responses API turns (0 disables the limit)
+     */
+    public Configuration maxOpenAiResponsesSizeInBytes(Long maxOpenAiResponsesSizeInBytes) {
+        this.maxOpenAiResponsesSizeInBytes = maxOpenAiResponsesSizeInBytes;
         return this;
     }
 

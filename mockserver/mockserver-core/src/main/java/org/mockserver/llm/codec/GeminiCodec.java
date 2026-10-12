@@ -248,15 +248,22 @@ public class GeminiCodec implements ProviderCodec {
             if (root == null || !root.isObject()) {
                 return ParsedConversation.empty();
             }
-            JsonNode contentsNode = root.get("contents");
-            if (contentsNode == null || !contentsNode.isArray()) {
+            JsonNode contentsNode = asArray(root.get("contents"));
+            if (contentsNode == null) {
                 return ParsedConversation.empty();
             }
 
             List<ParsedMessage> parsed = new ArrayList<>();
+            // The REST API takes the system prompt as a top-level Content, not as a message;
+            // the protobuf JSON mapping accepts both systemInstruction and system_instruction.
+            JsonNode systemInstruction = root.has("systemInstruction") ? root.get("systemInstruction") : root.get("system_instruction");
+            String systemText = systemInstructionText(systemInstruction);
+            if (!systemText.isEmpty()) {
+                parsed.add(new ParsedMessage(ParsedMessage.Role.SYSTEM, systemText, null, null, null));
+            }
             for (JsonNode contentNode : contentsNode) {
                 String rawRole = contentNode.has("role") ? contentNode.get("role").asText("") : "user";
-                JsonNode partsNode = contentNode.get("parts");
+                JsonNode partsNode = asArray(contentNode.get("parts"));
 
                 String textContent = "";
                 List<ToolUse> toolCalls = new ArrayList<>();
@@ -264,7 +271,7 @@ public class GeminiCodec implements ProviderCodec {
                 List<ParsedMessage.ImagePart> images = new ArrayList<>();
                 boolean hasToolResult = false;
 
-                if (partsNode != null && partsNode.isArray()) {
+                if (partsNode != null) {
                     StringBuilder textBuilder = new StringBuilder();
                     int partIndex = 0;
                     for (JsonNode part : partsNode) {
@@ -404,6 +411,36 @@ public class GeminiCodec implements ProviderCodec {
         }
         JsonNode config = embedRequest.get("embedContentConfig");
         return config != null ? EmbeddingWire.requestedDimensions(config.get("outputDimensionality"), "embedContentConfig.outputDimensionality") : null;
+    }
+
+    /** A repeated field as an array: the REST API also accepts a single object in its place. */
+    private static JsonNode asArray(JsonNode node) {
+        if (node == null || node.isArray()) {
+            return node;
+        }
+        if (node.isObject()) {
+            ArrayNode single = OBJECT_MAPPER.createArrayNode();
+            single.add(node);
+            return single;
+        }
+        return null;
+    }
+
+    private static String systemInstructionText(JsonNode systemInstruction) {
+        if (systemInstruction == null || !systemInstruction.isObject()) {
+            return "";
+        }
+        JsonNode parts = asArray(systemInstruction.get("parts"));
+        if (parts == null) {
+            return "";
+        }
+        StringBuilder text = new StringBuilder();
+        for (JsonNode part : parts) {
+            if (part.path("text").isTextual()) {
+                text.append(part.get("text").asText());
+            }
+        }
+        return text.toString();
     }
 
     private static ParsedMessage.Role mapGeminiRole(String rawRole) {

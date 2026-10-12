@@ -4,6 +4,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.configuration.Configuration;
+import org.mockserver.llm.OpenAiResponsesStore;
+import org.mockserver.llm.ParsedConversation;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.audit.AuditStore;
@@ -110,6 +112,8 @@ public class HttpStateConfigurationUpdateTest {
     @After
     public void restoreAuditStore() {
         AuditStore.getInstance().setMaxSize(originalAuditMaxSize);
+        OpenAiResponsesStore.getInstance().reset();
+        OpenAiResponsesStore.getInstance().setMaxSizeInBytes(configuration().maxOpenAiResponsesSizeInBytes());
         if (httpState != null) {
             httpState.stop();
         }
@@ -164,6 +168,27 @@ public class HttpStateConfigurationUpdateTest {
 
         // then - the new bound is enforced on the running log
         assertThat(httpState.getMockServerLog().size(), is(3));
+    }
+
+    @Test
+    public void shouldApplyAndResizeOpenAiResponsesByteBudget() {
+        // given - the server's own budget was applied when it started
+        assertThat(OpenAiResponsesStore.getInstance().getMaxSizeInBytes(), is(configuration.maxOpenAiResponsesSizeInBytes()));
+        String body = "{\"tools\":\"" + new String(new char[10_000]).replace('\0', 't') + "\"}";
+        for (int i = 0; i < 4; i++) {
+            OpenAiResponsesStore.getInstance().put(new OpenAiResponsesStore.StoredResponse("resp_" + i, ParsedConversation.empty(), body));
+        }
+        assertThat(OpenAiResponsesStore.getInstance().size(), is(4));
+
+        // when - the budget is lowered, as a PUT /mockserver/configuration would
+        configuration.maxOpenAiResponsesSizeInBytes(25_000L);
+        httpState.applyConfigurationUpdate();
+
+        // then - the least recently used responses are evicted from the running store immediately
+        assertThat(OpenAiResponsesStore.getInstance().getMaxSizeInBytes(), is(25_000L));
+        assertThat(OpenAiResponsesStore.getInstance().size(), is(2));
+        assertThat(OpenAiResponsesStore.getInstance().get("resp_3").isPresent(), is(true));
+        assertThat(OpenAiResponsesStore.getInstance().get("resp_0").isPresent(), is(false));
     }
 
     @Test

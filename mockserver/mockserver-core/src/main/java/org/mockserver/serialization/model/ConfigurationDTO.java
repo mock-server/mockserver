@@ -270,6 +270,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private Integer maxGrpcMessageSize;
     private Integer maxResponseBodySize;
     private Integer maxLlmConversationBodySize;
+    private Long maxOpenAiResponsesSizeInBytes;
     private Boolean driftDetectionEnabled;
     private Double driftSampleRate;
     private Boolean driftSemanticAnalysisEnabled;
@@ -641,6 +642,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
             this.maxGrpcMessageSize = configuration.maxGrpcMessageSize();
             this.maxResponseBodySize = configuration.maxResponseBodySize();
             this.maxLlmConversationBodySize = configuration.maxLlmConversationBodySize();
+            this.maxOpenAiResponsesSizeInBytes = configuration.maxOpenAiResponsesSizeInBytes();
             this.driftDetectionEnabled = configuration.driftDetectionEnabled();
             this.driftSampleRate = configuration.driftSampleRate();
             this.driftSemanticAnalysisEnabled = configuration.driftSemanticAnalysisEnabled();
@@ -756,6 +758,9 @@ public class ConfigurationDTO implements DTO<Configuration> {
         }
         if (maxExpectationsSizeInBytes != null && maxExpectationsSizeInBytes < 0) {
             throw new IllegalArgumentException("maxExpectationsSizeInBytes must be greater than or equal to 0, got: " + maxExpectationsSizeInBytes);
+        }
+        if (maxOpenAiResponsesSizeInBytes != null && maxOpenAiResponsesSizeInBytes < 0) {
+            throw new IllegalArgumentException("maxOpenAiResponsesSizeInBytes must be greater than or equal to 0, got: " + maxOpenAiResponsesSizeInBytes);
         }
         if (maxLoggedBodyBytes != null && maxLoggedBodyBytes < 0) {
             throw new IllegalArgumentException("maxLoggedBodyBytes must be greater than or equal to 0, got: " + maxLoggedBodyBytes);
@@ -1106,6 +1111,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
         configuration.maxGrpcMessageSize(maxGrpcMessageSize);
         configuration.maxResponseBodySize(maxResponseBodySize);
         configuration.maxLlmConversationBodySize(maxLlmConversationBodySize);
+        configuration.maxOpenAiResponsesSizeInBytes(maxOpenAiResponsesSizeInBytes);
         configuration.driftDetectionEnabled(driftDetectionEnabled);
         configuration.driftSampleRate(driftSampleRate);
         configuration.driftSemanticAnalysisEnabled(driftSemanticAnalysisEnabled);
@@ -2045,6 +2051,9 @@ public class ConfigurationDTO implements DTO<Configuration> {
         }
         if (maxLlmConversationBodySize != null) {
             target.maxLlmConversationBodySize(maxLlmConversationBodySize);
+        }
+        if (maxOpenAiResponsesSizeInBytes != null) {
+            target.maxOpenAiResponsesSizeInBytes(maxOpenAiResponsesSizeInBytes);
         }
         if (driftDetectionEnabled != null) {
             target.driftDetectionEnabled(driftDetectionEnabled);
@@ -4443,6 +4452,15 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setMaxLlmConversationBodySize(Integer maxLlmConversationBodySize) {
         this.maxLlmConversationBodySize = maxLlmConversationBodySize;
+        return this;
+    }
+
+    public Long getMaxOpenAiResponsesSizeInBytes() {
+        return maxOpenAiResponsesSizeInBytes;
+    }
+
+    public ConfigurationDTO setMaxOpenAiResponsesSizeInBytes(Long maxOpenAiResponsesSizeInBytes) {
+        this.maxOpenAiResponsesSizeInBytes = maxOpenAiResponsesSizeInBytes;
         return this;
     }
 

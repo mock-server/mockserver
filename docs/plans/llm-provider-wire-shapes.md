@@ -10,9 +10,8 @@ without special cases. GitHub discussion
 audit of every provider on 2026-10-03 then found the same class of bug elsewhere. The items
 below are worked in batches, most SDK-breaking first. The release is **not** gated on finishing
 this plan: each item ships when it lands. When every item is closed this file is deleted in the
-same commit. Checked 2026-10-11: no item below has closed since the last LLM fix, `eca80be88`
-(2026-10-04); spot checks of the code (no `done_reason` in `OllamaCodec`, the streamed path still
-not calling `recordOpenAiResponsesStateIfApplicable`, `isBedrockPath` still Anthropic-only) agree.
+same commit. Updated 2026-10-12: every item listed below is still open; items closed on
+2026-10-12 have been removed.
 
 ## Why this class of bug got through
 
@@ -32,9 +31,6 @@ this gap.
 
 | # | Item | Batch |
 |---|---|---|
-| 11 | Request-decode gaps leave conversation matchers blind | 3 |
-| 17 | Streamed Responses turns are not stored, so they cannot be chained or retrieved | 2 |
-| 19 | `OpenAiResponsesStore` has no byte bound | 5 |
 | 24a | Per-provider embedding batch limits do not match the real APIs | 5 |
 | 33 | Chaos blocks and errors on a streaming request are plain JSON, not the provider's stream | 5 |
 | 36 | OpenAI spec-required nullable fields are omitted | 5 |
@@ -42,14 +38,12 @@ this gap.
 | 38 | OpenRouter choices lack `native_finish_reason` | 5 |
 | 39 | Whole non-completion responses from LLM hosts get a GenAI span | 5 |
 | 40 | Bedrock Cohere v3 describes unsupported images as zeros instead of rejecting them | 5 |
+| 41 | Ollama /api/generate returns the chat shape | 3 |
 
 ## Items
 
 | # | Problem | Fix |
 |---|---|---|
-| 11 | Gemini decode ignores `systemInstruction`. The OpenAI Chat decoder maps the `developer` role to user (the Responses decoder's `developer` role and `instructions` were fixed with item 2, and the Responses codec now uses a configured `ToolUse.id` as the `call_id`; the other codecs still generate their tool-call ids). Ollama `/api/generate` (`prompt` in, `response` out) decodes to an empty conversation. | Decode each into the conversation model. |
-| 17 | A streamed `OPENAI_RESPONSES` turn is never recorded in `OpenAiResponsesStore`: `HttpLlmResponseActionHandler.handleStreaming` returns the events without calling `recordOpenAiResponsesStateIfApplicable`, which only the non-streaming path does. A streaming client that chains with `previous_response_id` and sends only the `function_call_output` therefore gets no match on `whenContainsToolResultFor`, and `GET /v1/responses/{id}` does not find a streamed response. | Record the streamed turn from the response object of its `response.completed` event, honouring `store:false`. |
-| 19 | `OpenAiResponsesStore` is bounded by count only (10,000 responses, least recently used evicted first). Since item 2 each stored turn also holds the request's echoed `tools`, `instructions` and `metadata`, so a long run that sends large tool definitions can retain far more heap than the count suggests (see [memory-management.md](../code/memory-management.md#openai-responses-store)). | Add a byte budget next to the count cap, evicting least recently used first. |
 | 24a | From item 24's review: the per-request embedding batch limits are not each provider's own. Gemini `:batchEmbedContents` accepts up to `EmbeddingWire.MAX_INPUTS` (2,048) requests (`GeminiCodec.encodeEmbedding`), where the real API allows 100. Voyage's 1,000-document rerank limit (MockServer mocks Voyage only for rerank) and OpenAI's 300,000-token total per embedding request are not enforced. | Give each codec its provider's own input count (Gemini 100, Voyage rerank 1,000 documents), and reject an OpenAI request whose inputs total over 300,000 tokens by the codec's token estimate. |
 | 33 | Chaos blocks and errors on a streaming request are plain JSON, not the provider's stream | A chaos content-filter block on a streaming request (Bedrock ConverseStream and InvokeModelWithResponseStream, Gemini streamGenerateContent, Anthropic stream) is returned as one HTTP 200 JSON body, not as the provider's event stream, so a streaming SDK may fail to parse it. Real providers end the stream with the filtered stop reason. Errors are fine as plain JSON because providers return them before streaming starts. | Check each provider's documented streamed refusal, then encode the block through the codec's streaming path when the completion streams. |
 | 36 | Found by the item 16 contract tests: the OpenAI OpenAPI spec lists `logprobs` as required (nullable) on each Chat Completions `choices[]` entry, and `access_programs`, `temperature` and `top_p` as required on the Responses `Response` object (non-streaming, and in `response.created` / `.in_progress` / `.completed`). MockServer omits all four. openai-python and async-openai declare them optional, so those SDKs accept the omission; a client generated strictly from the spec may not. Tolerated in `provider-contracts/openai/*` and `openai-responses/*` with `"openItem": "36"`. | Emit them as `null` (or the request's value for `temperature` / `top_p`), regenerate the openai, azure-openai and openai-responses goldens, and delete the `openItem: 36` allowances (the contract test fails while they remain once the gap is closed). |
@@ -57,3 +51,4 @@ this gap.
 | 38 | Found while closing item 14: OpenRouter's documented `NonStreamingChoice` and `StreamingChoice` types carry `native_finish_reason` (string or null, the upstream model's own value) beside `finish_reason` (openrouter.ai/docs/api-reference/overview). Item 8 added OpenRouter's `reasoning`, usage chunk, `cost` and `is_byok` but not this field, so a client that reads it gets nothing. | Write `native_finish_reason` on each OpenRouter choice, streamed and whole, and add an OpenRouter case under `provider-contracts/` from the API reference. |
 | 39 | Found while fixing item 30: the completion-path gate added for item 30 applies only to streamed responses. A whole JSON response from an LLM host on a non-completion path, such as `GET /v1/models` on `api.openai.com`, is still parsed as a completion and gets a GenAI span named `chat unknown` with no tokens (no cost and no uncounted-call log line). Whole responses were left alone because embeddings and rerank responses carry usage and are counted today. | Extend `LlmProviderSniffer.isCompletionPath` into an "accountable endpoint" check that also admits embeddings and rerank paths, then apply it to whole responses too. |
 | 40 | Found in the item 22a review: Bedrock Cohere Embed v3 describes an image it cannot read (a WebP or GIF data URI, which AWS rejects for v3, or line-wrapped base64) with zero width and height instead of returning the 400 the real API sends for an unsupported image. | Check the AWS v3 page's accepted formats and the real error body, then return that error for an unsupported format; accept line-wrapped base64 if the real API does. |
+| 41 | `OllamaCodec` decodes an `/api/generate` request (`system` and `prompt`) but always encodes the `/api/chat` shape, a `message` object, while `/api/generate` returns its text in a top-level `response` field (streamed: one `response` piece per NDJSON line, then a final object with `done: true`; https://github.com/ollama/ollama/blob/main/docs/api.md). A client of `/api/generate` therefore reads no text from the mock. | Encode the `/api/generate` shape (non-streamed and NDJSON-streamed) when the request path is `/api/generate`, with a golden file and a test against the documented fields. |

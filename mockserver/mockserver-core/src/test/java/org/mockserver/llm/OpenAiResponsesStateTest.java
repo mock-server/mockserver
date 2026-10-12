@@ -225,4 +225,72 @@ public class OpenAiResponsesStateTest {
         assertThat(messages.get(1).getTextContent(), is("hi"));
         assertThat(messages.get(3).getTextContent(), is("again"));
     }
+
+    // --- streamed turns ------------------------------------------------------
+
+    /** Stream a POST /v1/responses turn and return the response object of its response.completed event. */
+    private JsonNode streamTurn(String requestBody, org.mockserver.model.Completion completion) throws Exception {
+        List<org.mockserver.model.SseEvent> events = handler.handleStreaming(
+            llmResponse()
+                .withProvider(Provider.OPENAI_RESPONSES)
+                .withModel("gpt-4o")
+                .withCompletion(completion.withStreaming(true)),
+            request().withMethod("POST").withPath("/v1/responses").withBody(requestBody));
+        JsonNode completed = null;
+        for (org.mockserver.model.SseEvent event : events) {
+            JsonNode data = OBJECT_MAPPER.readTree(event.getData());
+            if ("response.completed".equals(data.path("type").asText())) {
+                completed = data.path("response");
+            }
+        }
+        assertThat(completed, is(notNullValue()));
+        return completed;
+    }
+
+    @Test
+    public void streamedTurnIsStoredAndRetrievableAsItsCompletedResponse() throws Exception {
+        JsonNode completed = streamTurn("{\"model\":\"gpt-4o\",\"input\":\"hello\",\"stream\":true}",
+            completion().withText("Hi there"));
+        String id = completed.path("id").asText();
+
+        HttpResponse retrieved = OpenAiResponsesStore.getInstance().retrievalResponseOrNull(
+            request().withMethod("GET").withPath("/v1/responses/" + id));
+        assertThat(retrieved, is(notNullValue()));
+        assertThat(retrieved.getStatusCode(), is(200));
+        JsonNode retrievedRoot = OBJECT_MAPPER.readTree(retrieved.getBodyAsString());
+        assertThat(retrievedRoot, is(completed));
+        assertThat(retrievedRoot.path("status").asText(), is("completed"));
+        assertThat(retrievedRoot.path("output").path(0).path("content").path(0).path("text").asText(), is("Hi there"));
+
+        List<ParsedMessage> messages = OpenAiResponsesStore.getInstance().get(id).get().getConversation().getMessages();
+        assertThat(messages, hasSize(2));
+        assertThat(messages.get(0).getTextContent(), is("hello"));
+        assertThat(messages.get(1).getRole(), is(ParsedMessage.Role.ASSISTANT));
+        assertThat(messages.get(1).getTextContent(), is("Hi there"));
+    }
+
+    @Test
+    public void streamedToolCallTurnChainsAFunctionCallOutputByPreviousResponseId() throws Exception {
+        JsonNode completed = streamTurn("{\"model\":\"gpt-4o\",\"input\":\"weather?\",\"stream\":true}",
+            completion().withToolCall(toolUse("get_weather").withId("call_abc123").withArguments("{\"city\":\"Paris\"}")));
+        String firstId = completed.path("id").asText();
+        assertThat(completed.path("output").path(0).path("call_id").asText(), is("call_abc123"));
+
+        HttpRequest chained = request().withMethod("POST").withPath("/v1/responses")
+            .withBody("{\"model\":\"gpt-4o\",\"stream\":true,\"previous_response_id\":\"" + firstId + "\","
+                + "\"input\":[{\"type\":\"function_call_output\",\"call_id\":\"call_abc123\",\"output\":\"18C\"}]}");
+
+        assertThat(new LlmConversationMatcher().withProvider(Provider.OPENAI_RESPONSES)
+            .withContainsToolResultFor("get_weather").matches(chained), is(true));
+        assertThat(new LlmConversationMatcher().withProvider(Provider.OPENAI_RESPONSES)
+            .withTurnIndex(1).matches(chained), is(true));
+    }
+
+    @Test
+    public void streamedTurnWithStoreFalseIsNotStored() throws Exception {
+        JsonNode completed = streamTurn("{\"model\":\"gpt-4o\",\"input\":\"secret\",\"stream\":true,\"store\":false}",
+            completion().withText("unstored"));
+
+        assertThat(OpenAiResponsesStore.getInstance().get(completed.path("id").asText()).isPresent(), is(false));
+    }
 }

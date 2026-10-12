@@ -714,6 +714,38 @@ public class ConfigurationTest {
     }
 
     @Test
+    public void shouldSetAndGetMaxOpenAiResponsesSizeInBytes() {
+        try {
+            // default - a twentieth of the heap ceiling budget, 0 when the ceiling is undefined
+            clearPropertyAndCache("mockserver.maxOpenAiResponsesSizeInBytes");
+            long expectedDefault = ConfigurationProperties.defaultMaxOpenAiResponsesSizeInBytes(ConfigurationProperties.heapAvailableInKB());
+            assertThat(expectedDefault, equalTo((ConfigurationProperties.heapAvailableInKB() / 20) * 1024L));
+            assertThat(ConfigurationProperties.defaultMaxOpenAiResponsesSizeInBytes(0), equalTo(0L));
+            assertThat(ConfigurationProperties.maxOpenAiResponsesSizeInBytes(), equalTo(expectedDefault));
+            assertThat(new Configuration().maxOpenAiResponsesSizeInBytes(), equalTo(expectedDefault));
+
+            // system property -> property
+            clearPropertyAndCache("mockserver.maxOpenAiResponsesSizeInBytes");
+            System.setProperty("mockserver.maxOpenAiResponsesSizeInBytes", "4194304");
+            assertThat(ConfigurationProperties.maxOpenAiResponsesSizeInBytes(), equalTo(4194304L));
+
+            // static setter -> property
+            ConfigurationProperties.maxOpenAiResponsesSizeInBytes(1048576L);
+            assertThat(ConfigurationProperties.maxOpenAiResponsesSizeInBytes(), equalTo(1048576L));
+            assertThat(new Configuration().maxOpenAiResponsesSizeInBytes(), equalTo(1048576L));
+
+            // fluent setter -> property (instance value overrides the static one)
+            assertThat(configuration.maxOpenAiResponsesSizeInBytes(2097152L).maxOpenAiResponsesSizeInBytes(), equalTo(2097152L));
+
+            // validation: negative values clamp to 0 (0 = count bound only)
+            ConfigurationProperties.maxOpenAiResponsesSizeInBytes(-5L);
+            assertThat(ConfigurationProperties.maxOpenAiResponsesSizeInBytes(), equalTo(0L));
+        } finally {
+            clearPropertyAndCache("mockserver.maxOpenAiResponsesSizeInBytes");
+        }
+    }
+
+    @Test
     public void shouldDeriveEventLogInFlightCapFromTheRetentionBudget() {
         String originalLogLevel = ConfigurationProperties.logLevel().name();
         try {

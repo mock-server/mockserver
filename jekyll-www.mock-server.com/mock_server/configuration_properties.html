@@ -2415,6 +2415,23 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxLlmConversationBodySize="2097152"</code></pre>
 </div>
 
+<button id="button_configuration_max_open_ai_responses_size_in_bytes" class="accordion title"><strong>Maximum OpenAI Responses Store Size</strong></button>
+<div class="panel title">
+    <p>An <span class="inline_code">OPENAI_RESPONSES</span> mock keeps each response it returns, streamed or not, so a client can continue the conversation with <span class="inline_code">previous_response_id</span> or fetch the response again with <span class="inline_code">GET /v1/responses/{id}</span>, as the real OpenAI Responses API allows. Each kept response includes the <span class="inline_code">tools</span>, <span class="inline_code">instructions</span> and <span class="inline_code">metadata</span> the request sent, so an agent that sends large tool definitions on every turn can make these responses hold a lot of memory.</p>
+    <p>This setting caps the estimated memory they hold. When the cap is reached, the least recently used responses are discarded first; the most recent one is always kept, so a client can always continue from its latest turn. A discarded response can no longer be chained from or fetched. At most 10,000 responses are kept whatever this value. Lower it on a memory-constrained host; raise it if a long agent run needs to fetch or chain from older turns. Set it to <span class="this_value">0</span> to limit by count only. A request that sends <span class="inline_code">"store": false</span> is never kept. The value can also be changed on a running server with <span class="inline_code">PUT /mockserver/configuration</span>.</p>
+    <p>Type: <span class="keyword">long</span> Default: <span class="this_value">a twentieth of the JVM heap</span> (about 50 MB with <span class="inline_code">-Xmx1g</span>)</p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxOpenAiResponsesSizeInBytes(long bytes)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxOpenAiResponsesSizeInBytes=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_MAX_OPEN_AI_RESPONSES_SIZE_IN_BYTES=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.maxOpenAiResponsesSizeInBytes=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxOpenAiResponsesSizeInBytes="104857600"</code></pre>
+</div>
+
 <button id="button_configuration_llm_backend" class="accordion title"><strong>Runtime LLM Backend (optional)</strong></button>
 <div class="panel title">
     <p>Some optional LLM features need MockServer to call a <em>real</em> LLM you already run — for example drift detection (replaying recorded fixtures against the live provider) and exploratory semantic prompt matching. These features are <strong>off unless a backend is configured</strong>, and they fail closed: if a configured backend times out or errors, the feature behaves exactly as if it were unconfigured and logs a single line. A real LLM call is never placed on the deterministic assertion/matching path.</p>

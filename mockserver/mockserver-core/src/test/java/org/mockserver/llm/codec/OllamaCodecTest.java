@@ -503,4 +503,43 @@ public class OllamaCodecTest {
         assertThat(finalLine.path("message").path("tool_calls").path(0)
             .path("function").path("name").asText(), is("search"));
     }
+
+    // --- Decode: POST /api/generate (https://github.com/ollama/ollama/blob/main/docs/api.md) ---
+
+    @Test
+    public void shouldDecodeGenerateRequestPromptAndSystem() {
+        HttpRequest request = request()
+            .withPath("/api/generate")
+            .withBody("{\"model\": \"llama3.2\", \"system\": \"You are terse.\", \"prompt\": \"Why is the sky blue?\", \"stream\": false}");
+
+        ParsedConversation parsed = codec.decode(request);
+
+        assertThat(parsed.getMessages(), hasSize(2));
+        assertThat(parsed.getMessages().get(0).getRole(), is(ParsedMessage.Role.SYSTEM));
+        assertThat(parsed.getMessages().get(0).getTextContent(), is("You are terse."));
+        assertThat(parsed.getMessages().get(1).getRole(), is(ParsedMessage.Role.USER));
+        assertThat(parsed.getMessages().get(1).getTextContent(), is("Why is the sky blue?"));
+    }
+
+    @Test
+    public void shouldDecodeGenerateRequestWithoutSystem() {
+        HttpRequest request = request()
+            .withPath("/api/generate")
+            .withBody("{\"model\": \"llama3.2\", \"prompt\": \"Why is the sky blue?\"}");
+
+        ParsedConversation parsed = codec.decode(request);
+
+        assertThat(parsed.getMessages(), hasSize(1));
+        assertThat(parsed.getMessages().get(0).getRole(), is(ParsedMessage.Role.USER));
+        assertThat(parsed.getMessages().get(0).getTextContent(), is("Why is the sky blue?"));
+    }
+
+    @Test
+    public void shouldDecodeBodyWithNeitherMessagesNorPromptAsEmpty() {
+        HttpRequest request = request()
+            .withPath("/api/generate")
+            .withBody("{\"model\": \"llama3.2\"}");
+
+        assertThat(codec.decode(request).getMessages(), is(empty()));
+    }
 }

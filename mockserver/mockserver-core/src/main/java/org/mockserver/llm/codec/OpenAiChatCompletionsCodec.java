@@ -315,6 +315,7 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
             case "tool":
                 return ParsedMessage.Role.TOOL;
             case "system":
+            case "developer":
                 return ParsedMessage.Role.SYSTEM;
             default:
                 return ParsedMessage.Role.USER;

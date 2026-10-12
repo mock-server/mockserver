@@ -249,7 +249,7 @@ public class OllamaCodec implements ProviderCodec {
             }
             JsonNode messagesNode = root.get("messages");
             if (messagesNode == null || !messagesNode.isArray()) {
-                return ParsedConversation.empty();
+                return decodeGenerate(root);
             }
 
             List<ParsedMessage> parsed = new ArrayList<>();
@@ -309,6 +309,21 @@ public class OllamaCodec implements ProviderCodec {
         } catch (Exception e) {
             return ParsedConversation.empty();
         }
+    }
+
+    /** {@code POST /api/generate}: an optional {@code system} prompt and one {@code prompt}, no messages. */
+    private static ParsedConversation decodeGenerate(JsonNode root) {
+        JsonNode prompt = root.get("prompt");
+        if (prompt == null || !prompt.isTextual()) {
+            return ParsedConversation.empty();
+        }
+        List<ParsedMessage> parsed = new ArrayList<>();
+        JsonNode system = root.get("system");
+        if (system != null && system.isTextual() && !system.asText().isEmpty()) {
+            parsed.add(new ParsedMessage(ParsedMessage.Role.SYSTEM, system.asText(), null, null));
+        }
+        parsed.add(new ParsedMessage(ParsedMessage.Role.USER, prompt.asText(), null, null));
+        return ParsedConversation.of(parsed);
     }
 
     private static final String DEFAULT_EMBEDDING_MODEL = "nomic-embed-text";

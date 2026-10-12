@@ -862,4 +862,30 @@ public class LlmConversationMatcherTest {
         }
         pool.shutdownNow();
     }
+
+    // --- request shapes other than a messages array ---
+
+    @Test
+    public void shouldMatchLatestMessageOfOllamaGenerateRequest() {
+        LlmConversationMatcher matcher = new LlmConversationMatcher()
+            .withProvider(Provider.OLLAMA)
+            .withLatestMessageContains("sky blue");
+
+        HttpRequest request = request().withPath("/api/generate")
+            .withBody("{\"model\": \"llama3.2\", \"prompt\": \"Why is the sky blue?\"}");
+
+        assertThat(matcher.matches(request), is(true));
+    }
+
+    @Test
+    public void shouldCountGeminiSystemInstructionAsLeadingMessage() {
+        LlmConversationMatcher matcher = new LlmConversationMatcher()
+            .withProvider(Provider.GEMINI)
+            .withLatestMessageRole(ParsedMessage.Role.SYSTEM);
+
+        HttpRequest request = request()
+            .withBody("{\"systemInstruction\": {\"parts\": [{\"text\": \"Be brief.\"}]}, \"contents\": []}");
+
+        assertThat(matcher.matches(request), is(true));
+    }
 }

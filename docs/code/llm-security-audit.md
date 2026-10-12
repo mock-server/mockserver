@@ -85,11 +85,11 @@ flowchart LR
 
 | Aspect | Behaviour |
 |--------|-----------|
-| What is stored | The encoded body of each non-streamed `OPENAI_RESPONSES` turn, which echoes the request's `instructions`, `tools`, `metadata`, `tool_choice` and `previous_response_id`, plus the decoded conversation used for `previous_response_id` chaining |
+| What is stored | The encoded body of each `OPENAI_RESPONSES` turn (for a streamed turn, the response object of its `response.completed` event), which echoes the request's `instructions`, `tools`, `metadata`, `tool_choice` and `previous_response_id`, plus the decoded conversation used for `previous_response_id` chaining |
 | Who can read it | Any data-plane caller that knows the `resp_` id. Retrieval is not a control-plane call, so control-plane authentication does not apply. It runs only when no expectation matched and the server is not proxying |
 | Guard | The id is `resp_` plus 24 hex characters of a `UUIDService.getUUID()` value (`SecureRandom`, 90 random bits). `getNonSecureUUID()` must not be used for it |
-| Not stored | A turn whose request sets `store:false`, and streamed turns |
-| Lifetime | Until `reset`, or until evicted as the least recently used of 10,000 entries |
+| Not stored | A turn whose request sets `store:false` |
+| Lifetime | Until `reset`, or until evicted as least recently used once the store holds 10,000 entries or its byte budget (`maxOpenAiResponsesSizeInBytes`) is exceeded |
 
 The id is a bearer token for that one body: it is returned to the client that made the request and appears in the event log, so anyone who can read either can read the stored body. That matches the body the client already received. A chained request (`previous_response_id`) uses the stored conversation for matching only and never returns it.
 

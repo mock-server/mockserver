@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.startsWith;
 import static org.mockserver.client.LlmConversationBuilder.conversation;
 import static org.mockserver.model.Completion.completion;
 import static org.mockserver.model.Provider.OPENAI_RESPONSES;
+import static org.mockserver.model.ToolUse.toolUse;
 import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
@@ -117,6 +118,86 @@ public class OpenAiResponsesStateEndToEndTest {
         assertThat("retrieved body must carry the requested id",
             retrievedNode.path("id").asText(), is(firstId));
         assertThat(outputText(retrievedNode), containsString("The capital of France is Paris."));
+    }
+
+    @Test
+    public void chainsAndRetrievesAStreamedToolCallTurnOverTheWire() throws Exception {
+        // Turn 1 streams a tool call whose call_id the test fixes.
+        conversation()
+            .withPath("/v1/responses")
+            .withProvider(OPENAI_RESPONSES)
+            .withModel("gpt-4o")
+            .turn()
+                .whenTurnIndex(0)
+                .respondingWith(completion()
+                    .withToolCall(toolUse("get_weather").withId("call_abc123").withArguments("{\"city\":\"Paris\"}"))
+                    .withStreaming(true))
+            .andThen()
+            .applyTo(mockServerClient);
+        // Turn 2 matches only once the streamed turn's tool call is reconstructed from
+        // previous_response_id: the request itself carries only the function_call_output.
+        conversation()
+            .withPath("/v1/responses")
+            .withProvider(OPENAI_RESPONSES)
+            .withModel("gpt-4o")
+            .turn()
+                .whenContainsToolResultFor("get_weather")
+                .respondingWith(completion().withText("It is 18C in Paris."))
+            .andThen()
+            .applyTo(mockServerClient);
+
+        String streamed = sendPost("/v1/responses",
+            "{\"model\":\"gpt-4o\",\"input\":\"weather in Paris?\",\"stream\":true}");
+        assertThat(streamed, containsString("200"));
+        JsonNode completed = completedResponse(streamed);
+        String firstId = completed.path("id").asText();
+        assertThat(firstId, startsWith("resp_"));
+        assertThat(completed.path("output").path(0).path("call_id").asText(), is("call_abc123"));
+
+        String turn2Response = sendPost("/v1/responses",
+            "{\"model\":\"gpt-4o\",\"previous_response_id\":\"" + firstId + "\","
+                + "\"input\":[{\"type\":\"function_call_output\",\"call_id\":\"call_abc123\",\"output\":\"18C\"}]}");
+        assertThat("chained turn must match the streamed turn's tool call", turn2Response, containsString("200"));
+        assertThat(outputText(OBJECT_MAPPER.readTree(extractJsonBody(turn2Response))), containsString("It is 18C in Paris."));
+
+        String getResponse = sendGet("/v1/responses/" + firstId);
+        assertThat("GET of a streamed response id must return 200", getResponse, containsString("200"));
+        assertThat(OBJECT_MAPPER.readTree(extractJsonBody(getResponse)), is(completed));
+    }
+
+    /** The response object of the response.completed event in a raw SSE response. */
+    private static JsonNode completedResponse(String rawSse) throws Exception {
+        for (String line : dechunked(rawSse).split("\r?\n")) {
+            if (line.startsWith("data:")) {
+                JsonNode data = OBJECT_MAPPER.readTree(line.substring("data:".length()).trim());
+                if ("response.completed".equals(data.path("type").asText())) {
+                    return data.path("response");
+                }
+            }
+        }
+        throw new AssertionError("no response.completed event in: " + rawSse);
+    }
+
+    /** The body of a raw HTTP/1.1 response, with any chunked transfer framing removed. */
+    private static String dechunked(String httpResponse) {
+        int headerEnd = httpResponse.indexOf("\r\n\r\n");
+        String headers = httpResponse.substring(0, headerEnd).toLowerCase(java.util.Locale.ROOT);
+        String body = httpResponse.substring(headerEnd + 4);
+        if (!headers.contains("transfer-encoding: chunked")) {
+            return body;
+        }
+        StringBuilder content = new StringBuilder();
+        int position = 0;
+        while (position < body.length()) {
+            int lineEnd = body.indexOf("\r\n", position);
+            int size = Integer.parseInt(body.substring(position, lineEnd).split(";")[0].trim(), 16);
+            if (size == 0) {
+                break;
+            }
+            content.append(body, lineEnd + 2, lineEnd + 2 + size);
+            position = lineEnd + 2 + size + 2;
+        }
+        return content.toString();
     }
 
     @Test

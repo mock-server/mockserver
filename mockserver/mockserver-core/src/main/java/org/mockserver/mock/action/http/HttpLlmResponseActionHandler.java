@@ -221,17 +221,20 @@ public class HttpLlmResponseActionHandler {
             return;
         }
         String requestBody = request != null ? request.getBodyAsText() : null;
-        // decode() returns the fully-chained conversation (prior turns already prepended
-        // when the request carried a previous_response_id), so the stored record captures
-        // the entire dialogue as of this turn.
-        ParsedConversation chained;
-        try {
-            chained = codec.decode(request);
-        } catch (Exception e) {
-            chained = ParsedConversation.empty();
-        }
         OpenAiResponsesStore.getInstance().recordIfStored(
-            requestBody, chained, completion, encoded.getBodyAsString());
+            requestBody, chainedConversation(codec, request), completion, encoded.getBodyAsString());
+    }
+
+    /**
+     * decode() returns the fully-chained conversation (prior turns already prepended when the
+     * request carried a previous_response_id), so a stored record captures the entire dialogue.
+     */
+    private static ParsedConversation chainedConversation(ProviderCodec codec, HttpRequest request) {
+        try {
+            return codec.decode(request);
+        } catch (Exception e) {
+            return ParsedConversation.empty();
+        }
     }
 
     static final String STRUCTURED_OUTPUT_INVALID_HEADER = "x-mockserver-structured-output-invalid";
@@ -435,6 +438,12 @@ public class HttpLlmResponseActionHandler {
         StreamingPhysics physics = completion.getStreamingPhysics();
 
         List<SseEvent> events = codecInstance.encodeStreaming(completion, model, physics, request);
+        if (provider == Provider.OPENAI_RESPONSES) {
+            // recorded from the full stream, before chaos truncation, as the real server keeps
+            // the response it generated whether or not the client read all of it
+            OpenAiResponsesStore.getInstance().recordStreamedIfStored(
+                request != null ? request.getBodyAsText() : null, chainedConversation(codecInstance, request), completion, events);
+        }
         validateStructuredOutput(completion, null, provider, request);
         org.mockserver.telemetry.GenAiSpans.recordCompletion(provider, model, completion);
         HttpActionHandler.recordLlmUsageMetrics(provider, model, completion);

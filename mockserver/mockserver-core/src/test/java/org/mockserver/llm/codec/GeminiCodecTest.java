@@ -393,4 +393,54 @@ public class GeminiCodecTest {
         JsonNode chunk = new ObjectMapper().readTree(toolEvent.getData());
         assertThat(chunk.path("candidates").path(0).path("content").path("parts").path(0).path("functionCall").path("args").isObject(), is(true));
     }
+
+    // --- Decode: systemInstruction (https://ai.google.dev/api/generate-content#request-body) ---
+
+    @Test
+    public void shouldDecodeSystemInstructionAsLeadingSystemMessage() {
+        HttpRequest request = request()
+            .withBody("{\n" +
+                "  \"systemInstruction\": {\"parts\": [{\"text\": \"You are a cat. \"}, {\"text\": \"Your name is Neko.\"}]},\n" +
+                "  \"contents\": [{\"role\": \"user\", \"parts\": [{\"text\": \"Hello there\"}]}]\n" +
+                "}");
+
+        ParsedConversation parsed = codec.decode(request);
+
+        assertThat(parsed.getMessages(), hasSize(2));
+        assertThat(parsed.getMessages().get(0).getRole(), is(ParsedMessage.Role.SYSTEM));
+        assertThat(parsed.getMessages().get(0).getTextContent(), is("You are a cat. Your name is Neko."));
+        assertThat(parsed.getMessages().get(1).getRole(), is(ParsedMessage.Role.USER));
+        assertThat(parsed.getMessages().get(1).getTextContent(), is("Hello there"));
+    }
+
+    @Test
+    public void shouldDecodeSnakeCaseSystemInstructionWithSingleObjectPartsAndContents() {
+        // the documented curl example: system_instruction, and parts / contents as single objects
+        HttpRequest request = request()
+            .withBody("{ \"system_instruction\": {\n" +
+                "    \"parts\":\n" +
+                "      { \"text\": \"You are a cat. Your name is Neko.\"}},\n" +
+                "    \"contents\": {\n" +
+                "      \"parts\": {\n" +
+                "        \"text\": \"Hello there\"}}}");
+
+        ParsedConversation parsed = codec.decode(request);
+
+        assertThat(parsed.getMessages(), hasSize(2));
+        assertThat(parsed.getMessages().get(0).getRole(), is(ParsedMessage.Role.SYSTEM));
+        assertThat(parsed.getMessages().get(0).getTextContent(), is("You are a cat. Your name is Neko."));
+        assertThat(parsed.getMessages().get(1).getRole(), is(ParsedMessage.Role.USER));
+        assertThat(parsed.getMessages().get(1).getTextContent(), is("Hello there"));
+    }
+
+    @Test
+    public void shouldNotAddSystemMessageWithoutSystemInstruction() {
+        HttpRequest request = request()
+            .withBody("{\"contents\": [{\"role\": \"user\", \"parts\": [{\"text\": \"Hello\"}]}]}");
+
+        ParsedConversation parsed = codec.decode(request);
+
+        assertThat(parsed.getMessages(), hasSize(1));
+        assertThat(parsed.getMessages().get(0).getRole(), is(ParsedMessage.Role.USER));
+    }
 }

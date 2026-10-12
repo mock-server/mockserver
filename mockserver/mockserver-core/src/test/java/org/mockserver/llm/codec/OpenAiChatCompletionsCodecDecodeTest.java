@@ -231,4 +231,25 @@ public class OpenAiChatCompletionsCodecDecodeTest {
         assertThat(parsed.getMessages(), hasSize(1));
         assertThat(parsed.getMessages().get(0).getTextContent(), is(""));
     }
+
+    @Test
+    public void shouldDecodeDeveloperMessageAsSystem() {
+        // "With o1 models and newer, developer messages replace the previous system messages."
+        // (openai-python types/chat/chat_completion_developer_message_param.py)
+        HttpRequest request = request()
+            .withBody("{\n" +
+                "  \"model\": \"o3\",\n" +
+                "  \"messages\": [\n" +
+                "    {\"role\": \"developer\", \"content\": [{\"type\": \"text\", \"text\": \"Answer in French.\"}]},\n" +
+                "    {\"role\": \"user\", \"content\": \"Hello\"}\n" +
+                "  ]\n" +
+                "}");
+
+        ParsedConversation parsed = codec.decode(request);
+
+        assertThat(parsed.getMessages(), hasSize(2));
+        assertThat(parsed.getMessages().get(0).getRole(), is(ParsedMessage.Role.SYSTEM));
+        assertThat(parsed.getMessages().get(0).getTextContent(), is("Answer in French."));
+        assertThat(parsed.getMessages().get(1).getRole(), is(ParsedMessage.Role.USER));
+    }
 }

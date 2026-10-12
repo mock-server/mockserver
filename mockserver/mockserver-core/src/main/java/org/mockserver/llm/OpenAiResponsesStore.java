@@ -5,14 +5,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mockserver.model.Completion;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.SseEvent;
 import org.mockserver.model.ToolUse;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,8 +43,10 @@ import static org.mockserver.model.HttpResponse.response;
  *       body verbatim.</li>
  * </ul>
  *
- * <p>Bounded (LRU) so a long-running proxy cannot grow it without limit, thread-safe,
- * and cleared on {@link org.mockserver.mock.HttpState#reset()} for test isolation.
+ * <p>Bounded (LRU) by count and by an estimated byte budget, which
+ * {@link org.mockserver.mock.HttpState} sets from {@code maxOpenAiResponsesSizeInBytes}, so a
+ * long-running proxy cannot grow it without limit; thread-safe, and cleared on
+ * {@link org.mockserver.mock.HttpState#reset()} for test isolation.
  * Mirrors the singleton shape of {@link LlmQuotaRegistry}.
  */
 public final class OpenAiResponsesStore {
@@ -48,25 +54,28 @@ public final class OpenAiResponsesStore {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     // Cap retained responses so an unbounded proxy stream cannot leak memory. LRU by
-    // access order; the oldest entry is evicted past the cap. 10k mirrors the quota
-    // registry's window cap and is far more than any realistic single agent run.
+    // access order; the least recently used entry is evicted past either bound.
     static final int MAX_RESPONSES = 10_000;
+
+    // Per-entry (record, map node, conversation list) and per-message costs on top of the
+    // characters held, on the same basis as the expectation and event-log weighers.
+    static final long ENTRY_OVERHEAD_BYTES = 256;
+    static final long MESSAGE_OVERHEAD_BYTES = 128;
 
     // GET /v1/responses/{id} (and the codex-backend equivalent .../responses/{id}). The
     // id segment must be non-empty and not itself contain a slash/query/fragment.
     private static final Pattern RETRIEVAL_PATH = Pattern.compile("(?:^|/)responses/([^/?#]+)$");
 
-    private static final OpenAiResponsesStore INSTANCE = new OpenAiResponsesStore();
+    private static final OpenAiResponsesStore INSTANCE = new OpenAiResponsesStore(MAX_RESPONSES);
 
-    private final Map<String, StoredResponse> responses = Collections.synchronizedMap(
-        new LinkedHashMap<String, StoredResponse>(64, 0.75f, true) {
-            @Override
-            protected boolean removeEldestEntry(Map.Entry<String, StoredResponse> eldest) {
-                return size() > MAX_RESPONSES;
-            }
-        });
+    private final Object lock = new Object();
+    private final LinkedHashMap<String, StoredResponse> responses = new LinkedHashMap<>(64, 0.75f, true);
+    private final int maxResponses;
+    private long totalBytes;
+    private long maxSizeInBytes;
 
-    private OpenAiResponsesStore() {
+    OpenAiResponsesStore(int maxResponses) {
+        this.maxResponses = maxResponses;
     }
 
     public static OpenAiResponsesStore getInstance() {
@@ -78,6 +87,7 @@ public final class OpenAiResponsesStore {
         private final String id;
         private final ParsedConversation conversation;
         private final String responseBodyJson;
+        private long estimatedSize;
 
         public StoredResponse(String id, ParsedConversation conversation, String responseBodyJson) {
             this.id = id;
@@ -100,8 +110,25 @@ public final class OpenAiResponsesStore {
     }
 
     public void put(StoredResponse record) {
-        if (record != null && record.getId() != null && !record.getId().isEmpty()) {
-            responses.put(record.getId(), record);
+        put(record, null);
+    }
+
+    /**
+     * Stores {@code record}, charging the byte budget only for the messages it does not share with
+     * {@code chainedFrom}: a chained turn's conversation reuses the prior turn's message objects.
+     */
+    private void put(StoredResponse record, StoredResponse chainedFrom) {
+        if (record == null || record.getId() == null || record.getId().isEmpty()) {
+            return;
+        }
+        record.estimatedSize = estimatedSize(record, chainedFrom);
+        synchronized (lock) {
+            StoredResponse replaced = responses.put(record.getId(), record);
+            if (replaced != null) {
+                totalBytes -= replaced.estimatedSize;
+            }
+            totalBytes += record.estimatedSize;
+            evictOverBounds();
         }
     }
 
@@ -109,12 +136,87 @@ public final class OpenAiResponsesStore {
         if (id == null || id.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.ofNullable(responses.get(id));
+        synchronized (lock) {
+            return Optional.ofNullable(responses.get(id));
+        }
+    }
+
+    /**
+     * Bounds the total estimated size of the stored responses; {@code 0} leaves only the count
+     * bound. A lower budget evicts least recently used responses at once.
+     */
+    public void setMaxSizeInBytes(long maxSizeInBytes) {
+        synchronized (lock) {
+            this.maxSizeInBytes = Math.max(0L, maxSizeInBytes);
+            evictOverBounds();
+        }
+    }
+
+    public long getMaxSizeInBytes() {
+        synchronized (lock) {
+            return maxSizeInBytes;
+        }
+    }
+
+    /** The estimated bytes held by the stored responses, as charged against the byte budget. */
+    public long getTotalBytes() {
+        synchronized (lock) {
+            return totalBytes;
+        }
+    }
+
+    public int size() {
+        synchronized (lock) {
+            return responses.size();
+        }
     }
 
     /** Clear all stored responses. Called on server reset and for test isolation. */
     public void reset() {
-        responses.clear();
+        synchronized (lock) {
+            responses.clear();
+            totalBytes = 0;
+        }
+    }
+
+    // The most recently stored response is kept even when it alone exceeds the byte budget,
+    // so the turn a client chains from next is never the one evicted.
+    private void evictOverBounds() {
+        Iterator<StoredResponse> leastRecentlyUsed = responses.values().iterator();
+        while (responses.size() > 1
+            && (responses.size() > maxResponses || (maxSizeInBytes > 0 && totalBytes > maxSizeInBytes))) {
+            totalBytes -= leastRecentlyUsed.next().estimatedSize;
+            leastRecentlyUsed.remove();
+        }
+    }
+
+    static long estimatedSize(StoredResponse record, StoredResponse chainedFrom) {
+        long size = ENTRY_OVERHEAD_BYTES + length(record.getResponseBodyJson());
+        if (record.getConversation() == null) {
+            return size;
+        }
+        Set<ParsedMessage> shared = Collections.newSetFromMap(new IdentityHashMap<>());
+        if (chainedFrom != null && chainedFrom.getConversation() != null) {
+            shared.addAll(chainedFrom.getConversation().getMessages());
+        }
+        for (ParsedMessage message : record.getConversation().getMessages()) {
+            size += Long.BYTES;
+            if (message == null || shared.contains(message)) {
+                continue;
+            }
+            size += MESSAGE_OVERHEAD_BYTES + length(message.getTextContent());
+            for (ToolUse toolCall : message.getToolCalls()) {
+                size += length(toolCall.getId()) + length(toolCall.getName()) + length(toolCall.getArguments());
+            }
+            for (Map.Entry<String, String> toolResult : message.getToolResults().entrySet()) {
+                size += length(toolResult.getKey()) + length(toolResult.getValue());
+            }
+        }
+        return size;
+    }
+
+    private static long length(String value) {
+        return value != null ? value.length() : 0;
     }
 
     // --- chaining ------------------------------------------------------------
@@ -185,9 +287,41 @@ public final class OpenAiResponsesStore {
                 dropLeadingInstructions(requestBody, messages);
             }
             messages.add(assistantMessage(completion, encodedBody));
-            put(new StoredResponse(id, ParsedConversation.of(messages), encodedBody));
+            String previousId = extractPreviousResponseId(requestBody);
+            put(new StoredResponse(id, ParsedConversation.of(messages), encodedBody),
+                previousId != null ? get(previousId).orElse(null) : null);
         } catch (Exception ignored) {
             // fail-soft: state recording must never affect the served response
+        }
+    }
+
+    /**
+     * As {@link #recordIfStored} for a streamed turn: the stored body is the response object carried
+     * by the stream's {@code response.completed} event, which is what {@code GET /v1/responses/{id}}
+     * returns for it. No-op when the events carry no such event.
+     */
+    public void recordStreamedIfStored(String requestBody, ParsedConversation chainedConversation,
+                                       Completion completion, List<SseEvent> events) {
+        try {
+            if (events == null) {
+                return;
+            }
+            // response.completed ends the stream, so search from the end and parse only candidates
+            for (int i = events.size() - 1; i >= 0; i--) {
+                SseEvent event = events.get(i);
+                if (event == null || event.getData() == null || !event.getData().contains("response.completed")) {
+                    continue;
+                }
+                JsonNode data = OBJECT_MAPPER.readTree(event.getData());
+                if (data != null && "response.completed".equals(data.path("type").asText(""))
+                    && data.path("response").isObject()) {
+                    recordIfStored(requestBody, chainedConversation, completion,
+                        OBJECT_MAPPER.writeValueAsString(data.get("response")));
+                    return;
+                }
+            }
+        } catch (Exception ignored) {
+            // fail-soft: state recording must never affect the served stream
         }
     }
 

@@ -189,6 +189,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_MAX_GRPC_MESSAGE_SIZE = "mockserver.maxGrpcMessageSize";
     private static final String MOCKSERVER_MAX_RESPONSE_BODY_SIZE = "mockserver.maxResponseBodySize";
     private static final String MOCKSERVER_MAX_LLM_CONVERSATION_BODY_SIZE = "mockserver.maxLlmConversationBodySize";
+    private static final String MOCKSERVER_MAX_OPEN_AI_RESPONSES_SIZE_IN_BYTES = "mockserver.maxOpenAiResponsesSizeInBytes";
     private static final String MOCKSERVER_LLM_PROVIDER = "mockserver.llmProvider";
     private static final String MOCKSERVER_LLM_API_KEY = "mockserver.llmApiKey";
     private static final String MOCKSERVER_LLM_MODEL = "mockserver.llmModel";
@@ -3376,6 +3377,34 @@ public class ConfigurationProperties {
      */
     public static void maxLlmConversationBodySize(int size) {
         setProperty(MOCKSERVER_MAX_LLM_CONVERSATION_BODY_SIZE, "" + size);
+    }
+
+    public static long maxOpenAiResponsesSizeInBytes() {
+        return Math.max(0L, readLongProperty(MOCKSERVER_MAX_OPEN_AI_RESPONSES_SIZE_IN_BYTES, "MOCKSERVER_MAX_OPEN_AI_RESPONSES_SIZE_IN_BYTES",
+            defaultMaxOpenAiResponsesSizeInBytes(heapAvailableInKB())));
+    }
+
+    static long defaultMaxOpenAiResponsesSizeInBytes(long heapAvailableInKB) {
+        return heapFraction(heapAvailableInKB, DEFAULT_OPEN_AI_RESPONSES_BYTES_HEAP_DIVISOR);
+    }
+
+    static final int DEFAULT_OPEN_AI_RESPONSES_BYTES_HEAP_DIVISOR = 20;
+
+    /**
+     * Maximum total estimated size in bytes of the OpenAI Responses API turns kept for
+     * {@code previous_response_id} chaining and {@code GET /v1/responses/{id}}. Each stored turn holds
+     * the response body, which echoes the request's {@code tools}, {@code instructions} and
+     * {@code metadata}, so a few large tool definitions per turn can hold far more memory than the
+     * 10,000-response count bound suggests. Least recently used responses are evicted first; the most
+     * recent one is always kept.
+     * <p>
+     * The default is a twentieth of the heap ceiling budget, the same share the event log keeps at
+     * WARN; {@code 0} bounds the store by count only.
+     *
+     * @param maxOpenAiResponsesSizeInBytes maximum total size in bytes of stored Responses API turns (0 disables the limit)
+     */
+    public static void maxOpenAiResponsesSizeInBytes(long maxOpenAiResponsesSizeInBytes) {
+        setProperty(MOCKSERVER_MAX_OPEN_AI_RESPONSES_SIZE_IN_BYTES, "" + maxOpenAiResponsesSizeInBytes);
     }
 
     /**

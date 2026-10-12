@@ -383,6 +383,7 @@ public class HttpState {
         this.webSocketClientRegistry = new WebSocketClientRegistry(configuration, mockServerLogger);
         LocalCallbackRegistry.setMaxWebSocketExpectations(configuration.maxWebSocketExpectations());
         this.maxWebSocketExpectationsInForce = configuration.maxWebSocketExpectations();
+        org.mockserver.llm.OpenAiResponsesStore.getInstance().setMaxSizeInBytes(configuration.maxOpenAiResponsesSizeInBytes());
         this.mockServerLog = new MockServerEventLog(configuration, mockServerLogger, scheduler, true);
         try {
             // G10 phase 2a: create the pluggable state backend (default in-memory, clustered in 2b+).
@@ -6829,6 +6830,7 @@ public class HttpState {
         mockServerLog.applyConfigurationCapacity();
         requestMatchers.applyConfigurationCapacity();
         org.mockserver.mock.audit.AuditStore.getInstance().setMaxSize(configuration.controlPlaneAuditMaxEntries());
+        org.mockserver.llm.OpenAiResponsesStore.getInstance().setMaxSizeInBytes(configuration.maxOpenAiResponsesSizeInBytes());
         if (scheduler != null) {
             scheduler.applyConfigurationCapacity();
         }

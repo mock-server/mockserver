@@ -1115,18 +1115,23 @@ An expectation id must stay resolvable after the expectation is gone: verifying 
 
 ## OpenAI Responses Store
 
-`OpenAiResponsesStore` keeps each non-streamed `OPENAI_RESPONSES` turn so a later request can chain to it with `previous_response_id` or fetch it with `GET /v1/responses/{id}`. It is bounded **by count only**: 10,000 responses, least recently used evicted first, with no byte budget. It is not covered by `maxLogEntries`, `maxExpectations` or their byte budgets.
+`OpenAiResponsesStore` keeps each `OPENAI_RESPONSES` turn, streamed or not, so a later request can chain to it with `previous_response_id` or fetch it with `GET /v1/responses/{id}`. It has two bounds, and whichever is reached first evicts the least recently used response: a count of 10,000 and an estimated byte budget, `maxOpenAiResponsesSizeInBytes`, on by default at `(heapAvailableInKB / 20) * 1024`. It is not covered by `maxLogEntries`, `maxExpectations` or their byte budgets.
 
 | Aspect | Behaviour |
 |--------|-----------|
-| What an entry holds | The encoded response body (one JSON string) and the decoded conversation up to that turn |
-| What drives its size | The body echoes the request's `tools`, `instructions` and `metadata`, so an entry is at least as large as the tool definitions the client sent with that turn |
+| What an entry holds | The response body (one JSON string; for a streamed turn, the response object of its `response.completed` event) and the decoded conversation up to that turn |
+| What drives its size | The body echoes the request's `tools`, `instructions` and `metadata`, so an entry is at least as large as the tool definitions the client sent with that turn; large tool outputs in the input add to it |
 | Count bound | 10,000 (`OpenAiResponsesStore.MAX_RESPONSES`), not configurable |
-| Byte bound | None |
-| Not stored | A turn whose request sets `store:false`, and streamed turns |
+| Byte bound | `maxOpenAiResponsesSizeInBytes`: default a twentieth of the heap ceiling budget (the share the event log keeps at `WARN`), `0` when the heap ceiling is undefined or when set to `0` (count bound only). Resized by `PUT /mockserver/configuration`; a lower value evicts at once |
+| Weigher | `OpenAiResponsesStore.estimatedSize`: 256 bytes per entry plus the body's characters, 8 bytes per conversation message, and for each message the entry adds (not ones shared with the turn it chains from) 128 bytes plus its text, tool-call and tool-result characters |
+| Oversized entry | The most recently stored response is kept even when it alone exceeds the budget, so the turn a client chains from next is never the one evicted |
+| Not stored | A turn whose request sets `store:false` |
 | Cleared by | `reset` |
+| Scope | One store per JVM; each `HttpState` applies its server's budget when it starts and on a configuration update, so with several servers in one JVM the last one applied wins |
 
-Before the echo was added the stored body held little more than the completion's own text and tool calls. An agent that sends, say, 50 KB of tool definitions on every turn now retains about 50 KB per stored turn, which is about 500 MB if the store fills to its cap. A byte budget is tracked as item 19 of [llm-provider-wire-shapes.md](../plans/llm-provider-wire-shapes.md); until then, a long-running mock for such an agent should `reset` between runs or have the client send `store:false`.
+A chained turn's decoded conversation reuses the prior turn's message objects, so the weigher charges each message once, to the turn that added it. Once that turn is evicted, a later turn that still references its messages keeps them reachable without being charged for them: the budget can under-count by at most the conversation history of the chains still stored. The body, which carries the echoed tool definitions and usually dominates, is always charged in full.
+
+Before the byte bound, an agent that sends, say, 50 KB of tool definitions on every turn retained about 50 KB per stored turn, about 500 MB if the store filled to its count cap. With the default budget at `-Xmx1g` (about 50 MB) such an agent keeps roughly its last 1,000 turns.
 
 ## How the Estimates Were Chosen
 
@@ -1154,6 +1159,7 @@ For workloads with very large request/response bodies (>10 KB), the automatic de
 | Max expectations | `mockserver.maxExpectations` | `MOCKSERVER_MAX_EXPECTATIONS` | `min(heapAvailableKB / 10, 15000)` |
 | Max pending delayed responses | `mockserver.maxPendingDelayedResponses` | `MOCKSERVER_MAX_PENDING_DELAYED_RESPONSES` | `min(heapAvailableKB / 64, 100000)`; `0` = unbounded |
 | Max queued template actions | `mockserver.maxQueuedTemplateActions` | `MOCKSERVER_MAX_QUEUED_TEMPLATE_ACTIONS` | `min(heapAvailableKB / 64, 100000)`; `0` = unbounded |
+| Max OpenAI Responses store size (bytes) | `mockserver.maxOpenAiResponsesSizeInBytes` | `MOCKSERVER_MAX_OPEN_AI_RESPONSES_SIZE_IN_BYTES` | `(heapAvailableKB / 20) * 1024`; `0` = count bound (10,000) only (see [OpenAI Responses Store](#openai-responses-store)) |
 
 The last two bound transient, not retained, memory: requests held while waiting for a delay or a template
 thread, each with its request, response writer and channel. The 64 KB per entry is an unmeasured,
