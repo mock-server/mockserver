@@ -195,6 +195,11 @@ about the case where it is scarce.
 - A per-core ladder's `healthy_ceiling_rps` can only take a RUNG's value, so a doubling ladder
   carries factor-of-two uncertainty. Build 358 read 4,000 and looked like a flat server curve;
   a finer ladder measured 6,000.
+- An allocation bound measured on a warmed JIT shows what C2's escape analysis can remove, not what
+  the code allocates. The `JAVA` retrieve arms of `HttpStateRetrieveAllocationTest` passed for days and
+  then failed at about 33 bytes per response byte on a busy CI agent, where the escaping loop was still
+  C1 code allocating an iterator per character. Run an allocation test once with
+  `-XX:TieredStopAtLevel=1` before trusting its bound; that test now always runs that way too.
 
 **Two shapes worth knowing by name.**
 

@@ -1153,6 +1153,27 @@
                             </includes>
                         </configuration>
                     </execution>
+                    <!-- Runs the allocation bounds again with C1 only, which never removes an allocation, so a bound
+                         that holds only once C2's escape analysis has compiled the loop fails every run here
+                         rather than now and then in the parallel phase. The flag must stay last to win. -->
+                    <execution>
+                        <id>allocation-tests-without-c2</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <parallel>none</parallel>
+                            <forkCount>1</forkCount>
+                            <reuseForks>false</reuseForks>
+                            <!-- set here, not as includes, so a -Dtest run does not run its classes here too, and a
+                                 rename fails the build rather than running nothing -->
+                            <test>HttpStateRetrieveAllocationTest</test>
+                            <argLine>@{argLine} -Duser.language=en -Duser.country=GB -Dmockserver.testOutput=${mockserver.testOutput} -Dmockserver.maxLogEntries=1000 ${mockserver.leakArgLine} ${mockserver.testArgLine} -XX:TieredStopAtLevel=1</argLine>
+                            <!-- its own report files, so the parallel phase's report of the class is kept -->
+                            <reportNameSuffix>without-c2</reportNameSuffix>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <!-- jacoco:check minimum set ~3 points below the measured unit-test floor of 0.6858 (M6 ratchet, 2026-05-28). Tighter threshold catches genuine coverage regressions without flaking on small natural variation.

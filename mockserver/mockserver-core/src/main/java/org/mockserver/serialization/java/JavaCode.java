@@ -52,12 +52,36 @@ final class JavaCode {
         if (value == null) {
             return append((String) null);
         }
+        // ESCAPE_JAVA allocates for every character it reads, so it is given only the characters it changes
         try {
-            StringEscapeUtils.ESCAPE_JAVA.translate(value, writer);
+            int length = value.length();
+            int index = 0;
+            while (index < length) {
+                int start = index;
+                while (index < length && unchangedByEscapeJava(value.charAt(index))) {
+                    index++;
+                }
+                if (index > start) {
+                    writer.write(value, start, index - start);
+                }
+                // each of these is one code point that ESCAPE_JAVA translates
+                while (index < length && !unchangedByEscapeJava(value.charAt(index))) {
+                    StringEscapeUtils.ESCAPE_JAVA.translate(value, index, writer);
+                    index += Character.charCount(Character.codePointAt(value, index));
+                }
+            }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
         return this;
+    }
+
+    /**
+     * Whether {@link StringEscapeUtils#ESCAPE_JAVA} writes {@code c} as it is: it escapes {@code "}, {@code \}
+     * and every UTF-16 unit outside 32 to 0x7f, so both halves of a surrogate pair are always given to it.
+     */
+    private static boolean unchangedByEscapeJava(char c) {
+        return c >= ' ' && c <= 0x7f && c != '"' && c != '\\';
     }
 
     /**
