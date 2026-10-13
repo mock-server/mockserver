@@ -2492,7 +2492,8 @@ one message each"]
 ### Forwarding Without Waiting for a Response
 
 - **Forwards**: a connection's messages wait in a per-connection queue (`ForwardQueue`, a channel attribute used only on that connection's event loop). The next message's upstream connection is opened only once the previous message has been connected and written, which `NettyHttpClient.sendRequest(BinaryMessage, ...)` reports through its `onRequestSent` callback. So a message can wait for the previous one's connect, up to `socketConnectionTimeoutInMillis`. Without this the connections are opened from different forward-client event loops and the upstream can accept them in either order. The queue is bounded by backpressure, below.
-- **Listener calls**: the listener is user code and may block on the response future, so it runs on the `Scheduler` local-callback pool (`scheduleLocalCallback`), never on the worker event loop, which would otherwise forward nothing more on that thread until the listener returned. One connection's messages are reported one at a time, in arrival order; a listener that throws closes the client connection, as it did when it ran on the event loop.
+- **Listener calls**: the listener is user code and may block on the response future, so it runs on the `Scheduler` local-callback pool (`scheduleLocalCallback`), never on the worker event loop, which would otherwise forward nothing more on that thread until the listener returned. One connection's messages are reported one at a time, in arrival order; a listener that throws closes the client connection, as it did when it ran on the event loop. Calls not yet returned are counted towards the read pause, below.
+- **Unanswered forwards**: each forwarded message keeps its upstream connection open for a response. At most `MAX_UNANSWERED_FORWARDS` (32) of one client connection's forwards wait at once: starting another gives up the oldest. A forward is also given up once it has waited, from being written, as long as an HTTP forward waits for its response: `maxSocketTimeout`, or `maxFutureTimeout` where that is shorter or `maxSocketTimeout` is `0`. A forward given up completes with no response, exactly as when the upstream closes without answering in this mode: nothing is written to the client, its connection stays open, and the listener's future completes with `null`. One INFO entry per forward given up, with the message's correlation id, says which reason applied. Completing the future that `NettyHttpClient.sendRequest(BinaryMessage, ...)` returned closes its upstream connection, which is how giving up closes it.
 
 What this does and does not give:
 
@@ -2503,6 +2504,9 @@ What this does and does not give:
 | A forward fails (connect, write, or cannot be started) | The client connection is closed, as before; messages still queued behind it are not attempted, their responses fail, and one WARN reports how many |
 | The client closes after sending | Every message it sent is still forwarded |
 | Queue size | Bounded by not reading the client: at most 64 messages or 256 KiB waiting, plus the message that takes it past either (at most 256 KiB) and whatever else the read that completed that message held (under 64 KiB) |
+| Listener backlog | Bounded by not reading the client: at most 64 messages waiting to be reported, plus what the read that took it past the limit held |
+| Upstream connections | At most 32 unanswered per client connection, counting the one being connected; each for at most `maxSocketTimeout` (or `maxFutureTimeout`, as above) after it was written, which also bounds those left by a client that has closed |
+| An upstream that never answers | Its connections are closed by MockServer as above; the client is not held back for it and its connection is not closed |
 
 **Backpressure, not loss.** The queue only has to absorb what a client sends while one message is connected and written. A client that stays ahead of the upstream is slowed down instead of being held in heap:
 
@@ -2511,25 +2515,32 @@ flowchart LR
     READ["Client message read"] --> ADD["Queue it, start it
 if nothing is in flight"]
     ADD --> OVER{"More than 64 messages
-or 256 KiB waiting?"}
+or 256 KiB waiting, or
+64 listener calls?"}
     OVER -->|Yes| PAUSE["ChannelReadPause.pause
 client is not read"]
     SENT["Previous message written,
 or a forward failed"] --> NEXT["Start the next,
 or fail all that wait"]
-    NEXT --> LOW{"At most 32 messages
-and 128 KiB waiting?"}
+    RETURNED["A listener call returned"] --> LOW
+    NEXT --> LOW{"At most 32 messages,
+128 KiB and 32 listener
+calls waiting?"}
     LOW -->|Yes| RESUME["ChannelReadPause.resume"]
 ```
 
-- **The limits** (`MAX_WAITING_MESSAGES`, `MAX_WAITING_BYTES`) count messages not yet started; the one in flight is not counted. Both are needed: bytes alone would let a client queue a great many tiny messages, each with its own bookkeeping, and messages alone would allow 64 reads of any size. Reading resumes at half of each, so a client held at the limit is not paused and resumed once per message.
+- **The limits** (`MAX_WAITING_MESSAGES`, `MAX_WAITING_BYTES`) count messages not yet started; the one in flight is not counted. `MAX_PENDING_LISTENER_CALLS` (64, as in the relay) counts messages read and not yet reported to a listener that has returned; with no listener it counts nothing. All three share one hold on `ChannelReadPause`, taken when any limit is passed and given up when every count is at or below half its limit. Both are needed: bytes alone would let a client queue a great many tiny messages, each with its own bookkeeping, and messages alone would allow 64 reads of any size. Reading resumes at half of each, so a client held at the limit is not paused and resumed once per message.
 - **Why not pause whenever a forward is in flight**: that is the tightest bound, but while a connection is not read the client's writes run together in the socket buffers and are read back as fewer, larger messages. With a limit of zero that would happen to any two messages sent close together; with these limits it happens only to a client that would otherwise be held in memory.
 - **What the client sees**: its writes stop being accepted once the socket buffers fill, like any slow TCP peer. Nothing is dropped and order is kept.
 - **Overshoot**: auto-read is turned off from inside a read, when a gathered message takes the queue past a limit, so the read loop stops after the buffer in hand. `BinaryMessageGatherer` passes a message on as soon as it reaches 256 KiB instead of at the end of the loop for exactly this reason: a loop can bring 1 MiB, and the pause has to be able to stop it part way. What the buffer in hand held beyond that message is passed on when the loop ends, as one more message.
 - **Every path resumes**: the next message starting, a failed forward (which fails everything waiting, so the queue is empty), and the handler being removed (which also happens when the channel closes). A closed client's queued messages are still forwarded. Resuming never depends on reading the client, so the pause cannot deadlock with TLS. `SslHandler` asks for a read of its own only after one that delivered nothing, and a pause always begins inside a read that delivered a message; where the `ChannelReadPause` gate sits ahead of it (a connection that started with TLS) such a request would wait for the resume anyway.
-- **Not bounded here**: a message already written holds its upstream connection until the upstream answers or closes, as in 8.0.0; and listener calls for one connection are chained, so a listener slower than the client builds a backlog of its own.
+- **Why the unanswered limit is half the listener limit**: a listener that waits for each response, from an upstream that sends none, returns for message *k* only once message *k* + 32 starts and gives *k* up, so it runs 33 calls behind, under the listener limit, and the client is never held back for it. If the client is held back for another reason, the listener catches up to 32 calls behind, which is the level at which reading resumes. With the two limits equal, such a listener would hold the client back until `maxSocketTimeout` gave up its forwards.
+- **Why give up the oldest rather than stop reading**: this mode is for protocols in which many messages have no reply. An upstream that keeps each such connection open waiting for more would otherwise hold back the client once 32 were open, for up to `maxSocketTimeout` each time. A reply that arrives after its forward is given up is lost; a client that keeps more than 32 messages waiting for replies on one connection should use the relay (`forwardBinaryRequestsUseSingleConnection`) or, where the relay does not apply (a connection whose only upstream proxy is `forwardHttpProxy`), waiting mode, which has no such limit.
+- **Memory for unanswered forwards**: the callbacks on an unanswered forward's response keep its `QueuedForward`, and so its bytes, until it is answered or given up: at most 32 gathered messages (each at most 256 KiB) per client connection.
 
-Waiting mode is unchanged: forwards are not queued and the listener is called from the scheduler once the response has arrived.
+**Tests.** `BinaryRequestProxyingHandlerBacklogBoundTest` (each limit, its hysteresis, the timeout, and the listener's empty response, on an embedded channel) and `BinaryForwardWithoutWaitingBacklogIntegrationTest` (a real MockServer flooded against an upstream that accepts, reads and never answers or closes: once with a listener that waits for each response, which must never hold the client back, and once with a listener that does not return, which must).
+
+Waiting mode is unchanged: forwards are not queued and the listener is called from the scheduler once the response has arrived. A message there still holds its upstream connection until the upstream answers or closes.
 
 ### One Upstream Connection for a Binary Connection
 

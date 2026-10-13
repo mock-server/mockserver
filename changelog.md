@@ -1597,7 +1597,13 @@ This release delivers a sustained performance and memory programme alongside dat
   is dropped and the order is kept (what the client sends meanwhile may arrive as fewer, larger
   messages). Nothing is ordered between different client connections. If a message cannot be forwarded
   the client's connection is closed, as before, and the messages still waiting behind it are not sent
-  (one warning reports how many).
+  (one warning reports how many). A `binaryProxyListener` more than 64 messages behind now slows the
+  client down too, as a slow upstream does. Each forwarded message also kept its upstream connection
+  open until the upstream answered or closed it, so an upstream that did neither collected one open
+  connection per message for as long as MockServer ran. Now at most 32 messages per client connection
+  wait for a reply: forwarding another closes the oldest, and each is closed anyway once it has waited
+  `maxSocketTimeout` (or `maxFutureTimeout`, if that is shorter). A message closed this way gets no
+  reply, as if the upstream had closed the connection, and the client's connection stays open.
 - **The internal connection behind an HTTP/2 CONNECT or SOCKS proxy tunnel is now closed as soon as its client disconnects, or as soon as a request that client had finished sending has been received.** When a client left with a request still unanswered, MockServer kept its own half of the tunnel open, and went on working on that request, until it was answered or for up to 30 seconds. A request the client had sent in full before it left is still received, recorded and matched, as it would be on a direct connection; only its response is no longer waited for.
 - **A SOCKS client that connects and then disconnects without sending anything no longer leaves a connection open inside MockServer.** Each such client left MockServer's internal connection for the tunnel open until MockServer was stopped.
 - **`httpLlmResponse` with `provider: BEDROCK` now returns the AWS Bedrock Converse format on

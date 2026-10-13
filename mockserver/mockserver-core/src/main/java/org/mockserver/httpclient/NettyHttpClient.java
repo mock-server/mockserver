@@ -657,6 +657,7 @@ public class NettyHttpClient {
      * @param onRequestSent called exactly once, with {@code null} once the request has been written to the upstream
      *                      connection, or with the cause when it could not be connected or written; may be
      *                      {@code null}
+     * @return the response; a caller that completes it first, to stop waiting, closes the upstream connection
      */
     @SuppressWarnings("deprecation")
     public CompletableFuture<BinaryMessage> sendRequest(final BinaryMessage binaryRequest, final boolean isSecure, InetSocketAddress remoteAddress, Long connectionTimeoutMillis, final Consumer<Throwable> onRequestSent) throws SocketConnectionException {
@@ -700,8 +701,10 @@ public class NettyHttpClient {
                 .handler(new HttpClientInitializer(upstreamProxies, mockServerLogger, forwardProxyClient, nettySslContextFactory, null, configuration));
             applyForwardSocketKeepAlive(binaryBootstrap);
             resolveAtTunnelProxy(binaryBootstrap, upstreamProxies, isSecure);
-            binaryBootstrap
-                .connect(remoteAddress)
+            ChannelFuture connected = binaryBootstrap.connect(remoteAddress);
+            // a caller that completes the future itself has stopped waiting, so the connection is not kept for it
+            binaryResponseFuture.whenComplete((response, failure) -> connected.channel().close());
+            connected
                 .addListener((ChannelFutureListener) future -> {
                     if (future.isSuccess()) {
                         relay(channelResponseFuture, responseFuture);
