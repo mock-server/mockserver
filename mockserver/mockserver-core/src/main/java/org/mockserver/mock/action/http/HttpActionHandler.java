@@ -96,6 +96,7 @@ public class HttpActionHandler {
      * populate per-call upstream latency.
      */
     public static final String RESPONSE_TIME_HEADER = "x-mockserver-response-time-ms";
+    static final String TEMPLATE_ERROR_HEADER = "x-mockserver-template-error";
 
     private final Configuration configuration;
     private final HttpState httpStateHandler;
@@ -1714,7 +1715,11 @@ public class HttpActionHandler {
             logFileBodyError(request, fileBodyException);
             writeResponseActionResponse(fileBodyErrorResponse(), responseWriter, request, action, synchronous, null, postProcessor);
         } catch (Throwable throwable) {
-            writeResponseActionResponse(notFoundResponse(), responseWriter, request, action, synchronous, null, postProcessor);
+            // a failed template keeps the 404 unless templateFailureAsServerError is set; it is logged as the engine's own failure
+            TemplateFailureException templateFailure = throwable instanceof TemplateFailureException failure ? failure : null;
+            Throwable cause = templateFailure != null ? templateFailure.getCause() : throwable;
+            HttpResponse response = templateFailure != null && Boolean.TRUE.equals(configuration.templateFailureAsServerError()) ? templateFailureResponse(templateFailure) : notFoundResponse();
+            writeResponseActionResponse(response, responseWriter, request, action, synchronous, null, postProcessor);
             if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
@@ -1722,11 +1727,24 @@ public class HttpActionHandler {
                         .setLogLevel(Level.INFO)
                         .setCorrelationId(request.getLogCorrelationId())
                         .setHttpRequest(request)
-                        .setMessageFormat(throwable.getMessage())
-                        .setThrowable(throwable)
+                        .setMessageFormat(cause.getMessage())
+                        .setThrowable(cause)
                 );
             }
         }
+    }
+
+    /**
+     * The answer to a failed template when templateFailureAsServerError is set: a 500 whose header tells it apart from a
+     * mocked 500 and whose text body is the engine's own error message, without the whole template and request.
+     */
+    private static HttpResponse templateFailureResponse(TemplateFailureException templateFailure) {
+        return response()
+            .withStatusCode(500)
+            .withReasonPhrase("Internal Server Error")
+            .withHeader(TEMPLATE_ERROR_HEADER, "true")
+            .withHeader(CONTENT_TYPE.toString(), MediaType.PLAIN_TEXT_UTF_8.toString())
+            .withBody(templateFailure.getDetail());
     }
 
     private void dispatchSecondaryAction(final Action secondaryAction, final HttpRequest request, final boolean synchronous) {

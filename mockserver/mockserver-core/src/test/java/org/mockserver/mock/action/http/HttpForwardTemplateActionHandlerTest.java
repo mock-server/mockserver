@@ -14,8 +14,10 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsSame.sameInstance;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -71,6 +73,19 @@ public class HttpForwardTemplateActionHandlerTest {
         } else {
             assertThat(actualHttpResponse.get(), is(badGatewayResponse()));
         }
+    }
+
+    @Test
+    public void shouldReportTemplateThatThrowsAsTemplateFailure() {
+        // given - a template whose parse fails
+        HttpTemplate template = template(HttpTemplate.TemplateType.VELOCITY, "#foreach(");
+
+        // when
+        TemplateFailureException failure = assertThrows(TemplateFailureException.class, () -> httpForwardTemplateActionHandler.handle(template, request().withPath("/somePath")));
+
+        // then
+        assertThat(failure.getDetail(), startsWith("VELOCITY forward template failed: "));
+        verifyNoInteractions(mockHttpClient);
     }
 
     @Test

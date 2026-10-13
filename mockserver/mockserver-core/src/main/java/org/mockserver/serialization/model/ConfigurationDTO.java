@@ -104,6 +104,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private String javascriptAllowedClasses;
     private String javascriptDisallowedText;
     private Long javascriptTemplateExecutionTimeout;
+    private Long velocityTemplateExecutionTimeout;
+    private Boolean templateFailureAsServerError;
     private Boolean velocityDisallowClassLoading;
     private String velocityDisallowedText;
     private String mustacheDisallowedText;
@@ -466,6 +468,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
             this.javascriptAllowedClasses = configuration.javascriptAllowedClasses();
             this.javascriptDisallowedText = configuration.javascriptDisallowedText();
             this.javascriptTemplateExecutionTimeout = configuration.javascriptTemplateExecutionTimeout();
+            this.velocityTemplateExecutionTimeout = configuration.velocityTemplateExecutionTimeout();
+            this.templateFailureAsServerError = configuration.templateFailureAsServerError();
             this.velocityDisallowClassLoading = configuration.velocityDisallowClassLoading();
             this.velocityDisallowedText = configuration.velocityDisallowedText();
             this.mustacheDisallowedText = configuration.mustacheDisallowedText();
@@ -934,6 +938,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
         configuration.javascriptAllowedClasses(javascriptAllowedClasses);
         configuration.javascriptDisallowedText(javascriptDisallowedText);
         configuration.javascriptTemplateExecutionTimeout(javascriptTemplateExecutionTimeout);
+        configuration.velocityTemplateExecutionTimeout(velocityTemplateExecutionTimeout);
+        configuration.templateFailureAsServerError(templateFailureAsServerError);
         configuration.velocityDisallowClassLoading(velocityDisallowClassLoading);
         configuration.velocityDisallowedText(velocityDisallowedText);
         configuration.mustacheDisallowedText(mustacheDisallowedText);
@@ -1561,6 +1567,12 @@ public class ConfigurationDTO implements DTO<Configuration> {
         }
         if (javascriptTemplateExecutionTimeout != null) {
             target.javascriptTemplateExecutionTimeout(javascriptTemplateExecutionTimeout);
+        }
+        if (velocityTemplateExecutionTimeout != null) {
+            target.velocityTemplateExecutionTimeout(velocityTemplateExecutionTimeout);
+        }
+        if (templateFailureAsServerError != null) {
+            target.templateFailureAsServerError(templateFailureAsServerError);
         }
         if (velocityDisallowClassLoading != null) {
             target.velocityDisallowClassLoading(velocityDisallowClassLoading);
@@ -3076,6 +3088,24 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setJavascriptTemplateExecutionTimeout(Long javascriptTemplateExecutionTimeout) {
         this.javascriptTemplateExecutionTimeout = javascriptTemplateExecutionTimeout;
+        return this;
+    }
+
+    public Long getVelocityTemplateExecutionTimeout() {
+        return velocityTemplateExecutionTimeout;
+    }
+
+    public ConfigurationDTO setVelocityTemplateExecutionTimeout(Long velocityTemplateExecutionTimeout) {
+        this.velocityTemplateExecutionTimeout = velocityTemplateExecutionTimeout;
+        return this;
+    }
+
+    public Boolean getTemplateFailureAsServerError() {
+        return templateFailureAsServerError;
+    }
+
+    public ConfigurationDTO setTemplateFailureAsServerError(Boolean templateFailureAsServerError) {
+        this.templateFailureAsServerError = templateFailureAsServerError;
         return this;
     }
 

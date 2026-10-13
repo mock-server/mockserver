@@ -314,6 +314,8 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_JAVASCRIPT_ALLOWED_CLASSES = "mockserver.javascriptAllowedClasses";
     private static final String MOCKSERVER_JAVASCRIPT_DISALLOWED_TEXT = "mockserver.javascriptDisallowedText";
     private static final String MOCKSERVER_JAVASCRIPT_TEMPLATE_EXECUTION_TIMEOUT = "mockserver.javascriptTemplateExecutionTimeout";
+    private static final String MOCKSERVER_VELOCITY_TEMPLATE_EXECUTION_TIMEOUT = "mockserver.velocityTemplateExecutionTimeout";
+    private static final String MOCKSERVER_TEMPLATE_FAILURE_AS_SERVER_ERROR = "mockserver.templateFailureAsServerError";
     private static final String MOCKSERVER_VELOCITY_DISALLOW_CLASS_LOADING = "mockserver.velocityDisallowClassLoading";
     private static final String MOCKSERVER_VELOCITY_DISALLOWED_TEXT = "mockserver.velocityDisallowedText";
     private static final String MOCKSERVER_MUSTACHE_DISALLOWED_TEXT = "mockserver.mustacheDisallowedText";
@@ -4774,6 +4776,40 @@ public class ConfigurationProperties {
      */
     public static void javascriptTemplateExecutionTimeout(long millis) {
         setProperty(MOCKSERVER_JAVASCRIPT_TEMPLATE_EXECUTION_TIMEOUT, "" + millis);
+    }
+
+    public static long velocityTemplateExecutionTimeout() {
+        return readLongProperty(MOCKSERVER_VELOCITY_TEMPLATE_EXECUTION_TIMEOUT, "MOCKSERVER_VELOCITY_TEMPLATE_EXECUTION_TIMEOUT", 5_000L);
+    }
+
+    /**
+     * Maximum time in milliseconds a Velocity template is allowed to run. Past it, the template fails with
+     * a timeout error at its next {@code #foreach} iteration, macro call, {@code #parse}, {@code #evaluate} or
+     * {@code #define} block render, so a runaway loop, recursive macro or chain of blocks does not hold a
+     * template thread until the server restarts. A
+     * single long Java call made by the template, such as a backtracking regular expression, is not
+     * interrupted. Default is 5000 (5 seconds). Set to 0 (or a negative value) to disable the limit.
+     *
+     * @param millis template execution timeout in milliseconds, 0 or negative to disable
+     */
+    public static void velocityTemplateExecutionTimeout(long millis) {
+        setProperty(MOCKSERVER_VELOCITY_TEMPLATE_EXECUTION_TIMEOUT, "" + millis);
+    }
+
+    public static boolean templateFailureAsServerError() {
+        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_TEMPLATE_FAILURE_AS_SERVER_ERROR, "MOCKSERVER_TEMPLATE_FAILURE_AS_SERVER_ERROR", "" + false));
+    }
+
+    /**
+     * If true, a response or forward template that fails (it throws, does not parse, or exceeds its
+     * execution timeout) is answered with a 500 carrying an {@code x-mockserver-template-error} header
+     * and the template error in a text body, instead of the 404 a request matching no expectation
+     * gets. Defaults to false, which keeps the 404.
+     *
+     * @param enable answer a failed template with a 500 instead of a 404
+     */
+    public static void templateFailureAsServerError(boolean enable) {
+        setProperty(MOCKSERVER_TEMPLATE_FAILURE_AS_SERVER_ERROR, "" + enable);
     }
 
 

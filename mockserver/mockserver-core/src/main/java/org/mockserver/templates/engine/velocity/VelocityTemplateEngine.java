@@ -36,6 +36,10 @@ import org.mockserver.templates.engine.model.HttpRequestTemplateObject;
 import org.mockserver.templates.engine.model.HttpResponseTemplateObject;
 import org.mockserver.templates.engine.serializer.HttpTemplateOutputDeserializer;
 import org.mockserver.templates.engine.velocity.directives.Ifnull;
+import org.mockserver.templates.engine.velocity.directives.TimeLimitedDefine;
+import org.mockserver.templates.engine.velocity.directives.TimeLimitedEvaluate;
+import org.mockserver.templates.engine.velocity.directives.TimeLimitedForeach;
+import org.mockserver.templates.engine.velocity.directives.TimeLimitedParse;
 import org.slf4j.event.Level;
 
 import java.io.StringWriter;
@@ -306,11 +310,31 @@ public class VelocityTemplateEngine implements TemplateEngine {
      */
     private void renderTemplate(EngineHolder holder, String template, VelocityContext context, Writer writer) throws Exception {
         Template parsed = parsedTemplate(holder, template);
-        if (parsed != null) {
-            parsed.merge(context, writer);
-        } else {
-            holder.velocityEngine.evaluate(context, writer, "VelocityResponseTemplate", template);
+        Long timeoutMillis = configuration.velocityTemplateExecutionTimeout();
+        try (RenderDeadline.Scope ignored = RenderDeadline.start(timeoutMillis != null ? timeoutMillis : 0L)) {
+            if (parsed != null) {
+                parsed.merge(context, writer);
+            } else {
+                holder.velocityEngine.evaluate(context, writer, "VelocityResponseTemplate", template);
+            }
         }
+    }
+
+    /**
+     * A render stopped by velocityTemplateExecutionTimeout is logged once at WARN and rethrown as is, like a
+     * JavaScript template timeout, so it is not reported as a generic transform failure. Velocity passes
+     * runtime exceptions through unwrapped, so the timeout arrives as itself.
+     */
+    private VelocityTemplateTimeoutException loggedTimeout(VelocityTemplateTimeoutException exception, HttpRequest request) {
+        if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(Level.WARN)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(Level.WARN)
+                    .setHttpRequest(request)
+                    .setMessageFormat(exception.getMessage())
+            );
+        }
+        return exception;
     }
 
     private VelocityEngine buildVelocityEngine(String templateRepositoryName, boolean disallowClassLoading) {
@@ -336,7 +360,9 @@ public class VelocityTemplateEngine implements TemplateEngine {
         velocityProperties.put(RuntimeConstants.PARSER_POOL_SIZE, "50");
         velocityProperties.put(RuntimeConstants.SPACE_GOBBLING, "lines");
         velocityProperties.put(RuntimeConstants.PARSER_HYPHEN_ALLOWED, "true");
-        velocityProperties.put(RuntimeConstants.CUSTOM_DIRECTIVES, Ifnull.class.getName());
+        // the TimeLimited directives replace the built-in ones so that every construct that can repeat work is bounded by time
+        velocityProperties.put(RuntimeConstants.CUSTOM_DIRECTIVES, String.join(",", Ifnull.class.getName(), TimeLimitedForeach.class.getName(),
+            TimeLimitedParse.class.getName(), TimeLimitedEvaluate.class.getName(), TimeLimitedDefine.class.getName()));
         velocityProperties.put(RuntimeConstants.RESOURCE_MANAGER_CLASS, org.apache.velocity.runtime.resource.ResourceManagerImpl.class.getName());
         velocityProperties.put(RuntimeConstants.RESOURCE_MANAGER_CACHE_CLASS, org.apache.velocity.runtime.resource.ResourceCacheImpl.class.getName());
         // bound the engine's parsed-Template (AST) cache with a native LRU matching the cache we keep
@@ -459,6 +485,8 @@ public class VelocityTemplateEngine implements TemplateEngine {
             context.put("xPath", new RequestBodyExtractionHelper.XPathTool(bodyExtractionHelper));
             renderTemplate(holder, template, context, writer);
             return writer.toString();
+        } catch (VelocityTemplateTimeoutException e) {
+            throw loggedTimeout(e, request);
         } catch (Exception e) {
             throw transformFailure(e, template, request);
         }
@@ -508,6 +536,8 @@ public class VelocityTemplateEngine implements TemplateEngine {
                 );
             }
             result = httpTemplateOutputDeserializer.deserializer(request, writer.toString(), dtoClass);
+        } catch (VelocityTemplateTimeoutException e) {
+            throw loggedTimeout(e, request);
         } catch (Exception e) {
             throw transformFailure(e, template, request);
         }
@@ -531,7 +561,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
     private VelocityContext newRenderContext(EngineHolder holder, HttpRequest request) {
         // fresh per render: $json/$xml are request-scoped and hold per-request parse state
         VelocityContext functionsLayer = new VelocityContext(sharedFunctionsAndHelpers, holder.toolManager.createContext());
-        VelocityContext context = new VelocityContext(functionsLayer);
+        VelocityContext context = new MacroCallCheckingContext(functionsLayer);
         context.put("request", new HttpRequestTemplateObject(request));
         return context;
     }
@@ -594,6 +624,22 @@ public class VelocityTemplateEngine implements TemplateEngine {
             }
         });
         return eventCartridge;
+    }
+
+    /**
+     * The outermost per-render context. Velocity records every macro call on it, so each call counts
+     * towards the render's {@link RenderDeadline} and a recursive macro is stopped like a loop.
+     */
+    private static final class MacroCallCheckingContext extends VelocityContext {
+        private MacroCallCheckingContext(VelocityContext innerContext) {
+            super(innerContext);
+        }
+
+        @Override
+        public void pushCurrentMacroName(String macroName) {
+            RenderDeadline.check();
+            super.pushCurrentMacroName(macroName);
+        }
     }
 
     private void validateTemplate(String template) {

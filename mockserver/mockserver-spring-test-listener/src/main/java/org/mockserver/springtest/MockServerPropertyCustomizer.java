@@ -301,6 +301,9 @@ public class MockServerPropertyCustomizer implements ContextCustomizer {
             case "velocityDisallowClassLoading":
                 config.velocityDisallowClassLoading(parseStrictBoolean(value, key));
                 break;
+            case "templateFailureAsServerError":
+                config.templateFailureAsServerError(parseStrictBoolean(value, key));
+                break;
             case "openAPIResponseValidation":
                 config.openAPIResponseValidation(parseStrictBoolean(value, key));
                 break;
@@ -429,6 +432,9 @@ public class MockServerPropertyCustomizer implements ContextCustomizer {
                 break;
             case "javascriptTemplateExecutionTimeout":
                 config.javascriptTemplateExecutionTimeout(Long.parseLong(value));
+                break;
+            case "velocityTemplateExecutionTimeout":
+                config.velocityTemplateExecutionTimeout(Long.parseLong(value));
                 break;
 
             // --- InetSocketAddress properties ---

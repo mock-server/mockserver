@@ -2601,6 +2601,56 @@ public class ConfigurationTest {
     }
 
     @Test
+    public void shouldSetAndGetVelocityTemplateExecutionTimeout() {
+        long original = ConfigurationProperties.velocityTemplateExecutionTimeout();
+        try {
+            // then - default value
+            assertThat(configuration.velocityTemplateExecutionTimeout(), equalTo(5000L));
+
+            // when - system property setter
+            ConfigurationProperties.velocityTemplateExecutionTimeout(250L);
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.velocityTemplateExecutionTimeout(), equalTo(250L));
+            assertThat(System.getProperty("mockserver.velocityTemplateExecutionTimeout"), equalTo("250"));
+            assertThat(configuration.velocityTemplateExecutionTimeout(), equalTo(250L));
+
+            // when - setter
+            configuration.velocityTemplateExecutionTimeout(0L);
+
+            // then - getter
+            assertThat(configuration.velocityTemplateExecutionTimeout(), equalTo(0L));
+        } finally {
+            ConfigurationProperties.velocityTemplateExecutionTimeout(original);
+        }
+    }
+
+    @Test
+    public void shouldSetAndGetTemplateFailureAsServerError() {
+        boolean original = ConfigurationProperties.templateFailureAsServerError();
+        try {
+            // then - default value keeps the 404
+            assertThat(configuration.templateFailureAsServerError(), equalTo(false));
+
+            // when - system property setter
+            ConfigurationProperties.templateFailureAsServerError(true);
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.templateFailureAsServerError(), equalTo(true));
+            assertThat(System.getProperty("mockserver.templateFailureAsServerError"), equalTo("true"));
+            assertThat(configuration.templateFailureAsServerError(), equalTo(true));
+
+            // when - setter
+            configuration.templateFailureAsServerError(false);
+
+            // then - getter
+            assertThat(configuration.templateFailureAsServerError(), equalTo(false));
+        } finally {
+            ConfigurationProperties.templateFailureAsServerError(original);
+        }
+    }
+
+    @Test
     public void shouldSetAndGetVelocityDisallowedText() {
         String original = ConfigurationProperties.velocityDisallowedText();
         try {

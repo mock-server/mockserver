@@ -151,11 +151,13 @@ public class MockServerPropertyCustomizerConfigurationTest {
         Configuration config = MockServerPropertyCustomizer.buildConfiguration(
             Arrays.asList(
                 "mockserver.breakpointTimeoutMillis=45000",
-                "mockserver.javascriptTemplateExecutionTimeout=2500"
+                "mockserver.javascriptTemplateExecutionTimeout=2500",
+                "mockserver.velocityTemplateExecutionTimeout=1500"
             )
         );
         assertThat(config.breakpointTimeoutMillis(), is(45000L));
         assertThat(config.javascriptTemplateExecutionTimeout(), is(2500L));
+        assertThat(config.velocityTemplateExecutionTimeout(), is(1500L));
     }
 
     @Test
@@ -167,12 +169,14 @@ public class MockServerPropertyCustomizerConfigurationTest {
             Arrays.asList(
                 "mockserver.javascriptAllowedClasses=java.util.UUID,java.time.*",
                 "mockserver.javascriptDisallowedClasses=java.lang.Runtime",
-                "mockserver.velocityDisallowClassLoading=false"
+                "mockserver.velocityDisallowClassLoading=false",
+                "mockserver.templateFailureAsServerError=true"
             )
         );
         assertThat(config.javascriptAllowedClasses(), is("java.util.UUID,java.time.*"));
         assertThat(config.javascriptDisallowedClasses(), is("java.lang.Runtime"));
         assertThat(config.velocityDisallowClassLoading(), is(false));
+        assertThat(config.templateFailureAsServerError(), is(true));
     }
 
     @Test

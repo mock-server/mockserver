@@ -234,6 +234,7 @@ curl_close($ch);</code></pre>
             <li><a href="#yaml_helper">YAML Helper</a> &mdash; convert YAML to JSON and read a field from a YAML document</li>
         </ul>
     </li>
+    <li><a href="#response_template_failures"><strong>When a Template Fails or Runs Too Long</strong></a> &mdash; time limits for JavaScript and Velocity, and what the client receives when a template fails</li>
     <li><a href="#response_template_security"><strong>Security Considerations</strong></a> &mdash; templates cannot reach Java classes by default; grant what a template needs via <code class="inline code">javascriptAllowedClasses</code> or <code class="inline code">velocityDisallowClassLoading</code></li>
 </ul>
 
@@ -2506,6 +2507,14 @@ return {
   "statusCode" : 200,
   "body" : "{'headers': ['mock-server.com', 'plain/text']}"
 }</code></pre>
+
+<a id="response_template_failures" class="anchor" href="#response_template_failures">&nbsp;</a>
+
+<h2>When a Template Fails or Runs Too Long</h2>
+
+<p><strong>Time limits.</strong> A JavaScript template is stopped after <code class="inline code">javascriptTemplateExecutionTimeout</code> milliseconds. A Velocity template is stopped after <code class="inline code">velocityTemplateExecutionTimeout</code> milliseconds at its next <code class="inline code">#foreach</code> iteration, macro call, <code class="inline code">#parse</code>, <code class="inline code">#evaluate</code> or use of a <code class="inline code">#define</code> block, so a runaway loop, recursive macro or chain of blocks fails instead of tying up the server. Both default to 5000 (5 seconds), far longer than a normal template needs. Set either to <code class="inline code">0</code> to remove the limit. A single slow Java call inside a Velocity template, such as a regular expression in <code class="inline code">$s.matches(...)</code> that backtracks heavily or a method that walks a very large range, cannot be stopped part-way and runs until it finishes. The limit is on time, not memory. Mustache has no loops of its own and needs no limit.</p>
+
+<p><strong>What the client receives.</strong> By default a template that fails (it throws an error, does not parse, or hits its time limit) answers the request with a <code class="inline code">404 Not Found</code>, the same status as a request that matched no expectation. The log always records the template error. To make a template failure easy to tell apart, set <code class="inline code">-Dmockserver.templateFailureAsServerError=true</code>: a failed response or forward template then answers <code class="inline code">500 Internal Server Error</code> with an <code class="inline code">x-mockserver-template-error: true</code> header and the template error as a plain-text body, which names the engine and gives its error, for example <code class="inline code">VELOCITY response template failed: Encountered ... at VelocityResponseTemplate[line 1, column 10]</code> for a syntax error. The body carries the engine's error message, which can quote part of the template, so leave this off if the callers of your mock should not see template details. A template that runs but produces output that is not a valid response still answers 404.</p>
 
 <a id="response_template_security" class="anchor" href="#response_template_security">&nbsp;</a>
 

@@ -10,6 +10,10 @@ import org.mockserver.templates.engine.javascript.JavaScriptTemplateEngine;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.startsWith;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -204,6 +208,22 @@ public class HttpResponseTemplateActionHandlerTest {
         // The failure itself is surfaced as a TEMPLATE_GENERATION_FAILED log event (asserted in
         // MustacheTemplateEngineTest at the shared HttpTemplateOutputDeserializer layer).
         assertThat(actualHttpResponse, is(notFoundResponse()));
+    }
+
+    @Test
+    public void shouldReportTemplateThatThrowsAsTemplateFailure() {
+        // given - a template whose parse fails
+        HttpTemplate template = template(HttpTemplate.TemplateType.VELOCITY, "#foreach(");
+
+        // when
+        TemplateFailureException failure = assertThrows(TemplateFailureException.class, () -> httpResponseTemplateActionHandler.handle(template, request().withPath("/somePath")));
+
+        // then - the message is still the engine's transform failure, and the detail drops the template and request
+        assertThat(failure.getMessage(), startsWith("Exception:"));
+        assertThat(failure.getMessage(), containsString("transforming template:"));
+        assertThat(failure.getDetail(), startsWith("VELOCITY response template failed: "));
+        assertThat(failure.getDetail(), not(containsString("transforming template")));
+        assertThat(failure.getDetail(), not(containsString("/somePath")));
     }
 
     @Test

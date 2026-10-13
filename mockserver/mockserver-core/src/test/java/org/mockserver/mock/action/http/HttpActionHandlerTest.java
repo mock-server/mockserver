@@ -28,14 +28,18 @@ import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
 import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.Assert.assertArrayEquals;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
@@ -578,6 +582,103 @@ public class HttpActionHandlerTest {
                 .setMessageFormat(throwable.getMessage())
                 .setThrowable(throwable)
         );
+    }
+
+    @Test
+    public void shouldAnswerFailedResponseTemplateWithNotFoundByDefault() {
+        // given
+        HttpTemplate template = template(HttpTemplate.TemplateType.VELOCITY, "some_template");
+        expectation = new Expectation(request).thenRespond(template);
+        when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
+        RuntimeException engineFailure = new RuntimeException("Exception: TEST_EXCEPTION transforming template", new IllegalStateException("TEST_EXCEPTION"));
+        when(mockHttpResponseTemplateActionHandler.handle(any(HttpTemplate.class), any(HttpRequest.class)))
+            .thenThrow(new TemplateFailureException(HttpTemplate.TemplateType.VELOCITY, "response", engineFailure));
+
+        // when
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
+
+        // then - the 404 is unchanged and the engine's own failure, not the marker, is what is logged
+        verify(mockResponseWriter).writeResponse(request, notFoundResponse(), false);
+        assertThat(loggedWarningThrowables(), hasItem(sameInstance(engineFailure)));
+        assertThat(loggedWarningThrowables(), not(hasItem(instanceOf(TemplateFailureException.class))));
+    }
+
+    private List<Throwable> loggedWarningThrowables() {
+        ArgumentCaptor<LogEntry> logEntries = ArgumentCaptor.forClass(LogEntry.class);
+        verify(mockServerLogger, atLeastOnce()).logEvent(logEntries.capture());
+        return logEntries.getAllValues().stream().filter(entry -> entry.getType() == WARN).map(LogEntry::getThrowable).collect(Collectors.toList());
+    }
+
+    @Test
+    public void shouldAnswerFailedResponseTemplateWithServerErrorWhenConfigured() {
+        // given
+        configuration.templateFailureAsServerError(true);
+        HttpTemplate template = template(HttpTemplate.TemplateType.VELOCITY, "some_template");
+        expectation = new Expectation(request).thenRespond(template);
+        when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
+        RuntimeException engineFailure = new RuntimeException("Exception: TEST_EXCEPTION transforming template", new IllegalStateException("TEST_EXCEPTION"));
+        when(mockHttpResponseTemplateActionHandler.handle(any(HttpTemplate.class), any(HttpRequest.class)))
+            .thenThrow(new TemplateFailureException(HttpTemplate.TemplateType.VELOCITY, "response", engineFailure));
+
+        // when
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
+
+        // then
+        HttpResponse templateError = response()
+            .withStatusCode(500)
+            .withReasonPhrase("Internal Server Error")
+            .withHeader("x-mockserver-template-error", "true")
+            .withHeader("content-type", "text/plain; charset=utf-8")
+            .withBody("VELOCITY response template failed: TEST_EXCEPTION");
+        verify(mockResponseWriter).writeResponse(request, templateError, false);
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(WARN)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request)
+                .setMessageFormat(engineFailure.getMessage())
+                .setThrowable(engineFailure)
+        );
+    }
+
+    @Test
+    public void shouldAnswerFailedForwardTemplateWithServerErrorWhenConfigured() {
+        // given
+        configuration.templateFailureAsServerError(true);
+        HttpTemplate template = template(HttpTemplate.TemplateType.MUSTACHE, "some_template");
+        expectation = new Expectation(request).thenForward(template);
+        when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
+        RuntimeException engineFailure = new RuntimeException("Exception: TEST_EXCEPTION transforming template", new IllegalStateException("TEST_EXCEPTION"));
+        when(mockHttpForwardTemplateActionHandler.handle(any(HttpTemplate.class), any(HttpRequest.class)))
+            .thenThrow(new TemplateFailureException(HttpTemplate.TemplateType.MUSTACHE, "forward", engineFailure));
+
+        // when
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
+
+        // then
+        HttpResponse templateError = response()
+            .withStatusCode(500)
+            .withReasonPhrase("Internal Server Error")
+            .withHeader("x-mockserver-template-error", "true")
+            .withHeader("content-type", "text/plain; charset=utf-8")
+            .withBody("MUSTACHE forward template failed: TEST_EXCEPTION");
+        verify(mockResponseWriter).writeResponse(request, templateError, false);
+    }
+
+    @Test
+    public void shouldKeepNotFoundForFailureThatIsNotATemplateWhenConfigured() {
+        // given - templateFailureAsServerError applies to template failures only
+        configuration.templateFailureAsServerError(true);
+        HttpClassCallback callback = callback("some_class").withDelay(milliseconds(0));
+        expectation = new Expectation(request).thenRespond(callback);
+        when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
+        when(mockHttpResponseClassCallbackActionHandler.handle(any(HttpClassCallback.class), any(HttpRequest.class))).thenThrow(new RuntimeException("TEST_EXCEPTION"));
+
+        // when
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
+
+        // then
+        verify(mockResponseWriter).writeResponse(request, notFoundResponse(), false);
     }
 
     @Test

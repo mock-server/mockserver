@@ -71,6 +71,40 @@
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.javascriptTemplateExecutionTimeout="2000"</code></pre>
 </div>
 
+<button id="button_configuration_velocity_template_execution_timeout" class="accordion title"><strong>Velocity template execution timeout</strong></button>
+<div class="panel title">
+    <p>Maximum time in milliseconds a Velocity template is allowed to run. When the time is up, the template is stopped with a clear timeout error at its next <code>#foreach</code> iteration, macro call, <code>#parse</code>, <code>#evaluate</code> or use of a <code>#define</code> block, so a loop that never ends (for example over <code>[1..2147483647]</code>, or loops nested inside each other), a recursive macro or a chain of blocks cannot keep a template thread busy until MockServer is restarted. A single slow Java call made by the template, such as a regular expression that backtracks heavily or a method that walks a very large range, cannot be stopped part-way, and the limit is on time, not memory.</p>
+    <p>The default of <code>5000</code> (5 seconds) is far longer than a normal template needs, so it will not affect real templates. Increase it only if you run unusually heavy templates, or set it to <code>0</code> (or a negative value) to remove the limit.</p>
+    <p>Type: <span class="keyword">long</span> Default: <span class="this_value">5000</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.velocityTemplateExecutionTimeout(long millis)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.velocityTemplateExecutionTimeout=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_VELOCITY_TEMPLATE_EXECUTION_TIMEOUT=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.velocityTemplateExecutionTimeout=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.velocityTemplateExecutionTimeout="2000"</code></pre>
+</div>
+
+<button id="button_configuration_template_failure_as_server_error" class="accordion title"><strong>Answer a failed template with a 500</strong></button>
+<div class="panel title">
+    <p>If true, a response or forward template that fails (it throws an error, does not parse, or hits its execution timeout) answers the request with <code>500 Internal Server Error</code>, an <code>x-mockserver-template-error: true</code> header and the template error as a plain-text body. If false (the default) it answers <code>404 Not Found</code>, which looks the same as a request that matched no expectation; the template error is in the log either way.</p>
+    <p>Turn it on while writing templates so a template bug is obvious. The body carries the template engine's error message, which can quote part of the template, so leave it off if the callers of your mock should not see template details.</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.templateFailureAsServerError(boolean enable)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.templateFailureAsServerError=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_TEMPLATE_FAILURE_AS_SERVER_ERROR=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.templateFailureAsServerError=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.templateFailureAsServerError="true"</code></pre>
+</div>
+
 <button id="button_configuration_disable_class_loading_in_velocity_templates" class="accordion title"><strong>Disable class loading in velocity templates</strong></button>
 <div class="panel title">
     <p>If true class loading is not allowed in velocity templates</p>

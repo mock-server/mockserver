@@ -29,7 +29,12 @@ public class HttpForwardTemplateActionHandler extends HttpForwardAction {
     public HttpForwardActionResult handle(HttpTemplate httpTemplate, HttpRequest originalRequest) {
         TemplateEngine templateEngine = resolveTemplateEngine(httpTemplate);
         if (templateEngine != null) {
-            HttpRequest templatedRequest = templateEngine.executeTemplate(httpTemplate.getTemplateContent(), originalRequest, HttpRequestDTO.class);
+            HttpRequest templatedRequest;
+            try {
+                templatedRequest = templateEngine.executeTemplate(httpTemplate.getTemplateContent(), originalRequest, HttpRequestDTO.class);
+            } catch (RuntimeException failure) {
+                throw new TemplateFailureException(httpTemplate.getTemplateType(), "forward", failure);
+            }
             if (templatedRequest != null) {
                 String originalHost = originalRequest.getFirstHeader("Host");
                 String templatedHost = templatedRequest.getFirstHeader("Host");
