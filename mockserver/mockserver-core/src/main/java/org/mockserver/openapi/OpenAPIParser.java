@@ -35,20 +35,25 @@ public class OpenAPIParser {
     private final static LRUCache<CacheKey, OpenAPI> openAPILRUCache = new LRUCache<>(new MockServerLogger(), 250, MINUTES.toMillis(30));
 
     public static final String OPEN_API_LOAD_ERROR = "Unable to load API spec";
+    private static final String SPEC_PROBLEMS = "loaded OpenAPI spec with problems that may stop parts of it working as expected, {}";
+    private static final String INLINE_JSON_SCHEMA_PROBLEMS = "inline JSON Schema for a generated response body breaks OpenAPI 3.0 rules, so the body may ignore parts of it (the schema is read as #/components/schemas/" + JsonSchemaResponseSynthesizer.ROOT_SCHEMA_NAME + "), {}";
 
     // An inline spec always holds whitespace or starts with '{' or a YAML key, so it never matches.
     private static final Pattern ABSOLUTE_URL = Pattern.compile("(?i)(https?|file):\\S+");
 
     /**
      * A parse made with forwardProxyBlockPrivateNetworks off fetched without the check, so it must never answer a
-     * parse for a server with the setting on: the setting is part of the key.
+     * parse for a server with the setting on: the setting is part of the key. An inline JSON Schema parse logs its
+     * problems differently from a spec load, so that is part of the key too.
      */
-    private record CacheKey(String specUrlOrPayload, boolean fetchesChecked) {
+    private record CacheKey(String specUrlOrPayload, boolean fetchesChecked, boolean inlineJsonSchema) {
     }
 
     public static void clearCache(String specUrlOrPayload) {
-        openAPILRUCache.delete(new CacheKey(specUrlOrPayload, false));
-        openAPILRUCache.delete(new CacheKey(specUrlOrPayload, true));
+        for (boolean fetchesChecked : new boolean[]{false, true}) {
+            openAPILRUCache.delete(new CacheKey(specUrlOrPayload, fetchesChecked, false));
+            openAPILRUCache.delete(new CacheKey(specUrlOrPayload, fetchesChecked, true));
+        }
     }
 
     /**
@@ -70,18 +75,30 @@ public class OpenAPIParser {
      *                      (a client), for the global properties
      */
     public static OpenAPI buildOpenAPI(String specUrlOrPayload, MockServerLogger mockServerLogger, @Nullable Configuration configuration) {
+        return buildOpenAPI(specUrlOrPayload, mockServerLogger, configuration, false);
+    }
+
+    /**
+     * For a JSON Schema the synthesizer wrapped in an OpenAPI document: the user loaded no spec, and valid JSON Schema
+     * such as {@code $schema}, {@code const} or a list of types breaks OpenAPI 3.0 rules, so problems are not a WARN.
+     */
+    static OpenAPI buildOpenAPIForInlineJsonSchema(String wrappedJsonSchema, MockServerLogger mockServerLogger, @Nullable Configuration configuration) {
+        return buildOpenAPI(wrappedJsonSchema, mockServerLogger, configuration, true);
+    }
+
+    private static OpenAPI buildOpenAPI(String specUrlOrPayload, MockServerLogger mockServerLogger, @Nullable Configuration configuration, boolean inlineJsonSchema) {
         if (specUrlOrPayload == null) {
-            return SpecFetchGuard.whileParsing(InetAddressValidator.isEnabled(configuration), () -> parseOpenAPI(null, mockServerLogger));
+            return SpecFetchGuard.whileParsing(InetAddressValidator.isEnabled(configuration), () -> parseOpenAPI(null, mockServerLogger, inlineJsonSchema));
         }
         // getOrCompute is atomic (ConcurrentHashMap.computeIfAbsent semantics): for an absent key the
         // parse + addMissingOperationIds runs at most once and the single resulting OpenAPI is shared by
         // all racing callers. A previous get-then-put allowed two threads to each parse and then mutate
         // (operationId dedup) their own copy and clobber the cache, racing on the shared instance.
-        CacheKey cacheKey = new CacheKey(specUrlOrPayload, InetAddressValidator.isEnabled(configuration));
-        return openAPILRUCache.getOrCompute(cacheKey, key -> SpecFetchGuard.whileParsing(key.fetchesChecked(), () -> parseOpenAPI(key.specUrlOrPayload(), mockServerLogger)));
+        CacheKey cacheKey = new CacheKey(specUrlOrPayload, InetAddressValidator.isEnabled(configuration), inlineJsonSchema);
+        return openAPILRUCache.getOrCompute(cacheKey, key -> SpecFetchGuard.whileParsing(key.fetchesChecked(), () -> parseOpenAPI(key.specUrlOrPayload(), mockServerLogger, key.inlineJsonSchema())));
     }
 
-    private static OpenAPI parseOpenAPI(String specUrlOrPayload, MockServerLogger mockServerLogger) {
+    private static OpenAPI parseOpenAPI(String specUrlOrPayload, MockServerLogger mockServerLogger, boolean inlineJsonSchema) {
         OpenAPI openAPI = null;
         SwaggerParseResult swaggerParseResult = null;
         List<AuthorizationValue> auths = null;
@@ -124,7 +141,7 @@ public class OpenAPIParser {
                 throw new IllegalArgumentException(OPEN_API_LOAD_ERROR);
             }
         }
-        logLoadProblems(swaggerParseResult.getMessages(), mockServerLogger);
+        logLoadProblems(swaggerParseResult.getMessages(), mockServerLogger, inlineJsonSchema);
         addMissingOperationIds(openAPI, mockServerLogger);
         return openAPI;
     }
@@ -133,12 +150,13 @@ public class OpenAPIParser {
      * swagger-parser still returns a usable spec alongside these messages, so they are advisory: the spec loads and
      * the problems are logged once, when the spec is parsed (not on each cache hit).
      */
-    private static void logLoadProblems(List<String> messages, MockServerLogger mockServerLogger) {
-        if (mockServerLogger != null && messages != null && messages.stream().anyMatch(StringUtils::isNotBlank) && mockServerLogger.isEnabledForInstance(Level.WARN)) {
+    private static void logLoadProblems(List<String> messages, MockServerLogger mockServerLogger, boolean inlineJsonSchema) {
+        Level level = inlineJsonSchema ? Level.DEBUG : Level.WARN;
+        if (mockServerLogger != null && messages != null && messages.stream().anyMatch(StringUtils::isNotBlank) && mockServerLogger.isEnabledForInstance(level)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setLogLevel(Level.WARN)
-                    .setMessageFormat("loaded OpenAPI spec with problems that may stop parts of it working as expected, {}")
+                    .setLogLevel(level)
+                    .setMessageFormat(inlineJsonSchema ? INLINE_JSON_SCHEMA_PROBLEMS : SPEC_PROBLEMS)
                     .setArguments(OpenAPILoadProblems.describe(messages))
             );
         }

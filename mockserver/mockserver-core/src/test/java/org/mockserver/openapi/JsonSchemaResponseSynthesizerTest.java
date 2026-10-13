@@ -3,13 +3,28 @@ package org.mockserver.openapi;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.slf4j.event.Level;
+
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Verifies that {@link JsonSchemaResponseSynthesizer} generates schema-valid bodies from a plain inline
@@ -91,5 +106,58 @@ public class JsonSchemaResponseSynthesizerTest {
     @Test(expected = JsonSchemaResponseSynthesisException.class)
     public void shouldThrowSynthesisExceptionForUnparseableSchema() {
         synthesizer.synthesizeResponse("this is not valid json <<<");
+    }
+
+    // valid JSON Schema that breaks OpenAPI 3.0 rules; the unique description keeps it out of the shared parse cache
+    private static String jsonSchemaOutsideOpenAPI30() {
+        return "{" +
+            "\"$schema\":\"http://json-schema.org/draft-07/schema#\"," +
+            "\"description\":\"" + UUID.randomUUID() + "\"," +
+            "\"type\":\"object\"," +
+            "\"properties\":{" +
+            "\"kind\":{\"const\":\"pet\"}," +
+            "\"name\":{\"type\":[\"string\",\"null\"]}" +
+            "}}";
+    }
+
+    private static List<LogEntry> logged(MockServerLogger logger, Level level) {
+        ArgumentCaptor<LogEntry> entries = ArgumentCaptor.forClass(LogEntry.class);
+        verify(logger, atLeast(0)).logEvent(entries.capture());
+        return entries.getAllValues().stream().filter(entry -> entry.getLogLevel() == level).collect(Collectors.toList());
+    }
+
+    private static MockServerLogger loggerEnabledForEveryLevel() {
+        MockServerLogger logger = mock(MockServerLogger.class);
+        when(logger.isEnabledForInstance(any())).thenReturn(true);
+        return logger;
+    }
+
+    @Test
+    public void shouldNotWarnAboutAnOpenAPISpecForAnInlineJsonSchema() throws Exception {
+        MockServerLogger logger = loggerEnabledForEveryLevel();
+
+        JsonNode body = MAPPER.readTree(new JsonSchemaResponseSynthesizer(logger).synthesizeResponse(jsonSchemaOutsideOpenAPI30()));
+
+        assertTrue("object", body.isObject());
+        assertThat(logged(logger, Level.WARN), is(empty()));
+        List<LogEntry> debug = logged(logger, Level.DEBUG);
+        assertThat(debug, hasSize(1));
+        assertThat(debug.get(0).getMessageFormat(), containsString("inline JSON Schema"));
+        assertThat((String) debug.get(0).getArguments()[0], containsString("#/components/schemas/GeneratedResponse/"));
+    }
+
+    @Test
+    public void shouldStillWarnWhenTheSameDocumentIsLoadedAsAnOpenAPISpec() throws Exception {
+        String jsonSchema = jsonSchemaOutsideOpenAPI30();
+        MockServerLogger synthesizerLogger = loggerEnabledForEveryLevel();
+        MockServerLogger specLogger = loggerEnabledForEveryLevel();
+
+        new JsonSchemaResponseSynthesizer(synthesizerLogger).synthesizeResponse(jsonSchema);
+        OpenAPIParser.buildOpenAPI(JsonSchemaResponseSynthesizer.wrapInOpenAPIDocument(jsonSchema), specLogger, null);
+
+        assertThat(logged(synthesizerLogger, Level.WARN), is(empty()));
+        List<LogEntry> warnings = logged(specLogger, Level.WARN);
+        assertThat(warnings, hasSize(1));
+        assertThat(warnings.get(0).getMessageFormat(), containsString("loaded OpenAPI spec with problems"));
     }
 }

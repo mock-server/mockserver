@@ -75,7 +75,7 @@ public class JsonSchemaResponseSynthesizer {
             return null;
         }
         try {
-            OpenAPI openAPI = OpenAPIParser.buildOpenAPI(wrapInOpenAPIDocument(jsonSchema), mockServerLogger, configuration);
+            OpenAPI openAPI = OpenAPIParser.buildOpenAPIForInlineJsonSchema(wrapInOpenAPIDocument(jsonSchema), mockServerLogger, configuration);
             Map<String, Schema> schemas = openAPI.getComponents() != null ? openAPI.getComponents().getSchemas() : null;
             if (schemas == null || !schemas.containsKey(ROOT_SCHEMA_NAME)) {
                 return null;
@@ -99,7 +99,7 @@ public class JsonSchemaResponseSynthesizer {
      * typed swagger {@link Schema} the example engine expects. The schema is embedded as a parsed JSON
      * node (not string-interpolated) so any quoting inside the user's schema is preserved.
      */
-    private String wrapInOpenAPIDocument(String jsonSchema) throws Exception {
+    static String wrapInOpenAPIDocument(String jsonSchema) throws Exception {
         JsonNode schemaNode = OBJECT_MAPPER.readTree(jsonSchema);
 
         ObjectNode root = OBJECT_MAPPER.createObjectNode();
