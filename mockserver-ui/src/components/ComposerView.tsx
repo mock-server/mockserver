@@ -48,6 +48,7 @@ import HumanErrorAlert from './HumanErrorAlert';
 import LintWarningsBadge from './LintWarningsBadge';
 import StandardReview from './StandardReview';
 import MatcherPlaygroundDialog from './MatcherPlaygroundDialog';
+import TemplateTestDialog from './TemplateTestDialog';
 import LiveResponseWidget from './LiveResponseWidget';
 import {
   buildExpectationJson,
@@ -116,6 +117,7 @@ import ImportForm from './ImportForm';
 import JsonEditor from './JsonEditorLazy';
 import SnippetPalette from './SnippetPalette';
 import type { TemplateEngine as SnippetEngine } from '../lib/templateSnippets';
+import type { TemplateTestActionType, TemplateTestEngine } from '../lib/templateTest';
 import { trackFeature } from '../lib/analytics';
 
 // ---------------------------------------------------------------------------
@@ -2159,6 +2161,49 @@ function CallbackPanel({
 // Response template
 // ---------------------------------------------------------------------------
 
+/** Opens the template dry run (PUT /mockserver/template/test) for the inline template. */
+function TestTemplateButton({
+  connectionParams,
+  templateType,
+  template,
+  actionType,
+}: {
+  connectionParams: ConnectionParams;
+  templateType: TemplateTestEngine;
+  template: string;
+  actionType: TemplateTestActionType;
+}) {
+  const [open, setOpen] = useState(false);
+  const blank = !template.trim();
+  return (
+    <>
+      <Tooltip title={blank ? 'Write an inline template to test it; a template file cannot be tested here' : 'Render this template against a recorded request without registering it'}>
+        <span>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<ScienceOutlinedIcon fontSize="small" />}
+            disabled={blank}
+            onClick={() => setOpen(true)}
+          >
+            Test Template
+          </Button>
+        </span>
+      </Tooltip>
+      {open && (
+        <TemplateTestDialog
+          open
+          onClose={() => setOpen(false)}
+          connectionParams={connectionParams}
+          templateType={templateType}
+          template={template}
+          actionType={actionType}
+        />
+      )}
+    </>
+  );
+}
+
 type TemplateType = 'VELOCITY' | 'JAVASCRIPT' | 'MUSTACHE';
 
 interface TemplateState {
@@ -2177,9 +2222,11 @@ const TEMPLATE_PLACEHOLDERS: Record<TemplateType, string> = {
 function TemplatePanel({
   state,
   setState,
+  connectionParams,
 }: {
   state: TemplateState;
   setState: (s: TemplateState) => void;
+  connectionParams: ConnectionParams;
 }) {
   const handleSnippetInsert = useCallback(
     (snippet: string) => {
@@ -2199,7 +2246,7 @@ function TemplatePanel({
         Build the response dynamically from the incoming request. The template engine
         receives a <code>request</code> object exposing method / path / headers / body.
       </Typography>
-      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
         <TextField
           label="Template engine"
           size="small"
@@ -2215,6 +2262,12 @@ function TemplatePanel({
         <SnippetPalette
           engine={state.templateType as SnippetEngine}
           onInsert={handleSnippetInsert}
+        />
+        <TestTemplateButton
+          connectionParams={connectionParams}
+          templateType={state.templateType}
+          template={state.template}
+          actionType="RESPONSE_TEMPLATE"
         />
       </Box>
       <TextField
@@ -3126,9 +3179,11 @@ function DnsResponsePanel({
 function ForwardTemplatePanel({
   state,
   setState,
+  connectionParams,
 }: {
   state: StandardForwardTemplateState;
   setState: (s: StandardForwardTemplateState) => void;
+  connectionParams: ConnectionParams;
 }) {
   const handleSnippetInsert = useCallback(
     (snippet: string) => {
@@ -3148,7 +3203,7 @@ function ForwardTemplatePanel({
         Build the forwarded request dynamically using a template engine. The template receives
         a <code>request</code> object. This is the forward-direction counterpart of the response template.
       </Typography>
-      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
         <TextField
           label="Template engine"
           size="small"
@@ -3164,6 +3219,12 @@ function ForwardTemplatePanel({
         <SnippetPalette
           engine={state.templateType as SnippetEngine}
           onInsert={handleSnippetInsert}
+        />
+        <TestTemplateButton
+          connectionParams={connectionParams}
+          templateType={state.templateType}
+          template={state.template}
+          actionType="FORWARD_TEMPLATE"
         />
       </Box>
       <TextField
@@ -5352,7 +5413,7 @@ export default function ComposerView({ connectionParams }: ComposerViewProps) {
                 <CallbackPanel state={callbackState} setState={setCallbackState} />
               )}
               {actionType === 'template' && (
-                <TemplatePanel state={templateState} setState={setTemplateState} />
+                <TemplatePanel state={templateState} setState={setTemplateState} connectionParams={connectionParams} />
               )}
               {actionType === 'error' && (
                 <ErrorPanel state={errorState} setState={setErrorState} />
@@ -5373,7 +5434,7 @@ export default function ComposerView({ connectionParams }: ComposerViewProps) {
                 <DnsResponsePanel state={dnsResponseState} setState={setDnsResponseState} />
               )}
               {actionType === 'forward_template' && (
-                <ForwardTemplatePanel state={forwardTemplateState} setState={setForwardTemplateState} />
+                <ForwardTemplatePanel state={forwardTemplateState} setState={setForwardTemplateState} connectionParams={connectionParams} />
               )}
               {actionType === 'forward_class_callback' && (
                 <ForwardClassCallbackPanel state={forwardClassCallbackState} setState={setForwardClassCallbackState} />

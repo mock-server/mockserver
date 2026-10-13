@@ -576,6 +576,8 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
 
 <p>A dry run does not change scenario state and does not appear in the event log or dashboard. A JavaScript template is stopped after <a href="configuration_properties.html">javascriptTemplateExecutionTimeout</a>, and after 5 seconds even when that is <code>0</code>. Velocity and Mustache templates cannot be stopped, so MockServer answers once the timeout plus a few seconds' grace has passed, and at most two dry runs run at once: a third gets a <code>429</code> until one finishes. When <a href="control_plane_authorisation.html">control plane authorisation</a> is on, a dry run needs the <strong>mutate</strong> role, because it runs the template you send.</p>
 
+<p>In the dashboard, the <strong>Mocks</strong> view's response template and forward template steps have a <a href="/mock_server/mockserver_ui.html#ui_test_template_section">Test Template</a> button that runs a dry run of the template you are writing against a recently received request.</p>
+
 <p>An AI assistant connected to MockServer's MCP server can run the same dry run with the <a href="/mock_server/ai_mcp_tools.html#test_template"><code>test_template</code></a> tool, which needs the same role.</p>
 
 <p>When a template fails while serving, the same position appears in the log: Velocity and Mustache messages already give the line (Velocity as <code>[line 3, column 7]</code>, Mustache as <code>@ line 4</code>), and a JavaScript failure adds <code>at template line 2, column 29</code>, counted from the first line of your template, followed by a hint when one applies.</p>

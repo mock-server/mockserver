@@ -570,6 +570,21 @@ sitemap:
 
 <p>The palette is <strong>engine-aware</strong>: it shows the correct syntax for whichever template engine is currently selected in the form — Velocity, Mustache, or JavaScript. Each snippet entry shows the expression syntax as a chip, a short description, and an example rendered value. Click any snippet to insert it at the cursor position in the template body field.</p>
 
+<a id="ui_test_template_section" class="anchor" href="#ui_test_template_section">&nbsp;</a>
+
+<h3>Test Template</h3>
+
+<p>The <strong>Response template</strong> and <strong>Forward template</strong> steps have a <strong>Test Template</strong> button next to <strong>Insert snippet</strong>. It renders the template you are writing against a sample request, without registering anything, using the server's <a href="/mock_server/response_templates.html#template_dry_run">template dry run</a>. Choose the sample request from your recently received requests, or edit it as JSON (it starts as <code>GET /</code>), then click <strong>Run Test</strong>. The dialog shows:</p>
+
+<ul>
+    <li>whether the template produced a valid response (or, for a forward template, a valid request), and the rendered result</li>
+    <li>when it fails, the error message, the template line and column, a hint for common mistakes, and the failing line of your template with a marker under the column</li>
+    <li>warnings, such as a Velocity variable that did not resolve, each with its line and column</li>
+    <li>the raw rendered text, when it is not a valid response or request</li>
+</ul>
+
+<p>A server tests at most two templates at once; if two are already running, the dialog says so and you can try again shortly. A template that runs too long is shown as <strong>Timed Out</strong>. The button needs a template typed into the form: a template loaded from a file cannot be tested here.</p>
+
 <a id="ui_import_section" class="anchor" href="#ui_import_section">&nbsp;</a>
 
 <h3>Import</h3>
