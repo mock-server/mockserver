@@ -315,6 +315,28 @@ A scan over the expectations (`firstMatchingExpectation`, `findClosestMatchHint`
 - **Why not a thread-local.** The previous per-thread cache kept the last body and its tree on every matching thread for the life of the JVM, surviving `reset`. XML is deliberately not shared: a DOM `Document` is mutable, and an earlier per-request DOM cache (`92b1c8f79`) was reverted. `StringToXmlDocumentParser` instead reuses one hardened `DocumentBuilderFactory` per namespace mode and builds a fresh `DocumentBuilder` and `Document` per parse (the JDK factory's `newDocumentBuilder()` only reads its configuration).
 - **Evidence.** `BodyParseDifferentialTest` pins verdicts, differences and log entries for a JSON/JSONPath/XPath corpus against digests captured before the change; `ParsedBodyCacheTest` asserts one parse per scan and an empty, detached cache afterwards.
 
+#### 404 closest-match hint — capped and memoised per (method, path)
+
+**On an unmatched request, `findClosestMatchHint` (the `x-mockserver-closest-match-hint` header, the opt-in mismatch diagnostic and the DEBUG diff log) checks at most 1,000 expectations in serving order, and reuses work per (method, path) until the store changes, giving the same hint as a full scan of those expectations.** Before, every 404 re-evaluated every expectation.
+
+```mermaid
+flowchart TD
+    MISS([unmatched request]) --> ELIG{"plain method and path,\nnot a NOT request,\nkey <= 1024 chars,\nbelow TRACE?"}
+    ELIG -->|No| SCAN["capped scan\nfirst 1,000 in serving order"]
+    ELIG -->|Yes| TAG{"memo tag = store generation,\nmodification count, fail-fast?"}
+    TAG -->|changed| NEW["new empty memo"] --> ENTRY
+    TAG -->|same| ENTRY{"entry for\n(method, path)?"}
+    ENTRY -->|No| REC["capped scan, recording\nwhich non-matches are reusable"] --> PUT["store entry\n(empty the memo first if 256 entries)"]
+    ENTRY -->|Yes| REPLAY["re-evaluate only the other matchers,\nmerged in serving order with\nthe kept reusable non-matches"]
+```
+
+- **What is reusable.** `HttpRequestPropertiesMatcher` marks its `MatchDifference` (`isDecidedByMethodOrPath`) when it returns from the METHOD or PATH fail-fast check, so it read nothing but the request's method and path. Such a non-match is reused for every request with that method and path, provided the expectation has unlimited `Times` and time to live (otherwise it can go inactive without any store change) and the matcher is exactly `HttpRequestPropertiesMatcher`: a `ConditionalRequestMatcher` passes one context to its guard and then its branch, so a guard that fails on PATH marks it and the `else` branch then records the request's header or body values. Every other matcher, including any that matched, is re-evaluated against the live request, in order.
+- **Why it is exact.** The scan keeps the first matcher with strictly fewest differences. A reusable non-match with no fewer differences than an earlier reusable one can never win, so an entry keeps only the strictly improving ones (usually one) and replays them at their original positions. Nothing that depends on headers, body, query or cookies is ever reused, so one client's values cannot appear in another's hint.
+- **Invalidation.** The memo is tagged with the `CircularPriorityQueue` generation (bumped inside every structural change, including the in-place update before its backend write returns), the `markMatchersModified` counter and `matchersFailFast`; any change replaces the whole memo, and `markMatchersModified` also drops it at once so it does not hold removed expectations until the next miss. `lastModifiedEpochMillis` is not used: two changes within one millisecond share a value.
+- **Bounds.** At most 256 entries (emptied when full, because paths are client-controlled), keys up to 1,024 characters, and an entry that would re-evaluate more than 256 matchers stores only "scan everything". Requests that are not eligible always take the capped scan.
+- **The cap.** With more than 1,000 expectations the hint is the closest among the first 1,000 in serving order, and the header ends with `; only the first 1000 expectations were checked`; the opt-in diagnostic body adds `"truncated": true` and `expectationsChecked`, and the DEBUG diff line names the count. The INFO closest-match log line on the serving path (`fullScanClosestMatchAndLazyRemoval`) is not capped or memoised.
+- **Evidence.** `RequestMatchersClosestMatchMemoTest` compares every hint with a verbatim copy of the old scan over a 600-request corpus across add, remove, in-place update (including one whose backend write is still in flight), `once()`/`exactly(2)` exhaustion, time-to-live expiry, a fail-fast change and reset, and also pins the bounds, the cap, the TRACE and NOT bypasses, and that concurrent callers never see each other's header values.
+
 #### Mutator serialization — concurrent control-plane writes (issue #2579)
 
 Control-plane mutations do **not** run under an external single-writer lock: `PUT /mockserver/expectation` executes `RequestMatchers.add` on the connection's Netty worker thread, and there are `nioEventLoopThreadCount` of them, so multiple adds genuinely race. `RequestMatchers` keeps its node-local cache correct with two internal mechanisms:

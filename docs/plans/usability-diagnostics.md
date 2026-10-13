@@ -42,7 +42,8 @@ flowchart LR
   masked; the non-default properties, or any property by name).
 - **404 hints:** `findClosestMatchHint` feeds the `x-mockserver-closest-match(-hint)` headers
   (`closestMatchHintEnabled`, default true), the optional mismatch diagnostic body, and a DEBUG
-  log.
+  log. It checks at most 1,000 expectations and memoises per (method, path) until the store
+  changes (A2).
 - **Verification:** failures include the closest-request diff (`detailedVerificationFailures`,
   default true), and a failed request-count verification ends with a `verification summary:`
   block: expected vs matched count, the three closest non-matching requests with every differing
@@ -84,7 +85,6 @@ run.
 
 | # | Problem → proposal | Cost | Performance reasoning | Effort | Risks | Priority |
 |---|---|---|---|---|---|---|
-| A2 | A 404 flood rescans every expectation per miss for the closest-match hint → cap the scan and memoise per (method, path) until expectations change | (ii) | 404-heavy and proxy-miss loads currently pay O(expectations) per miss | S | A capped hint can miss the true closest match; say so in the header | P1 |
 | A4 | Partly done: TLS, HTTP/2, set-up and decode failures are named in the 502 (`7a8b8c424`). A plain connect failure still says only "failed to connect to remote socket" → split it into DNS, refused and timeout, add pooled-connection close and proxy loop, and add a suggested fix to each named cause | (ii) | Runs only on failure; a lookup | S | Must not reveal more of the target than the 502 already does | P1 |
 | A5 | Template errors are hard to locate → `PUT /template/test` dry run, plus line/column and missing-variable hints in the failure event | (iii) / (ii) | Dry run on demand; enrichment only on failure | M | Reuse the hardened template-engine sandbox; rate-limit | P1 |
 | A8 | Unreachable or suspicious expectations go unnoticed → lint: shadowed expectations, regex paths that look literal, missing leading slash, STRICT array bodies, `times=0`; surfaced as PUT `warnings`, in the UI, and via `mockserver lint file.json` | (iv) / (iii) | Control plane only; the pairwise shadowing check is O(n²), so on demand, not on every PUT | M | Advisory only, never rejecting | P1 |
@@ -99,6 +99,8 @@ run.
 | B1b | `diagnose_config` reports only values and sources → once A7 lands, append its `unrecognisedConfiguration()` result (names, setAs, suggestions, systemPropertyOnly; names only, never values), add the defaults comparison from A11, and replace the tool's local `normalisedPropertyName` with core's public `suggestRecognisedKeys` / name normaliser | (iii) | On demand; one pass over the recognised keys | S | Must never echo the value of an unrecognised key, which may be a credential | P1 |
 | B1c | Diagnosis tools still missing from MCP → add `explain_forward_failure` when A4 lands, `test_template` with A5, `lint_expectations` with A8 and `suggest_expectation_fix` with B3; each in `READING_TOOLS`, delegating to the item's endpoint, with redacted output | (iii) | On demand; the item's own cost | S | Tool output carries user traffic: redact as the endpoint does | P1 |
 | B7 | `prompts/get` with a required argument missing returns the template with its literal `{{placeholder}}` (pinned by `McpPromptRegistryTest.shouldLeavePlaceholdersWhenArgumentsMissing`) → answer `INVALID_PARAMS` (-32602) naming the argument, as the MCP prompts spec expects, in `McpRequestProcessor.handlePromptsGet` | (iii) | Control plane only | S | A client relying on the placeholder text breaks: give it a changelog Changed entry and update the consumer page's `prompts/get` row | P3 |
+| A2b | At INFO an unmatched request still walks every expectation for the closest-match log line (`fullScanClosestMatchAndLazyRemoval`, which also schedules lazy removal and counts namespace skips), so a 404 flood at INFO stays O(expectations) per miss after A2 → measure it with `MatchingBenchmark` at INFO and 1,000 expectations, then cap it at 1,000 like the hint if it dominates, keeping lazy removal reachable for every inactive expectation | (ii) | Today O(expectations) per miss at INFO; A2's memo cannot be reused because the walk drives lazy removal | S | A cap must say so in the log line and must not strand inactive expectations | P2 |
+| A2c | An expired or used-up expectation still in the store fails with no recorded differences, so every closest-match scan ranks it closest and the hint header disappears until lazy removal runs (at WARN with 64 or more expectations this may never happen for an expectation outside the requests' buckets; not verified) → skip inactive expectations in the hint, the INFO closest-match line and explainUnmatched, then update `RequestMatchersClosestMatchMemoTest`'s masked phases | (ii) | Removes work; one `isActive` check per candidate already paid | S | Changes the hint for stores holding inactive expectations | P2 |
 
 ## Approach to LLM features
 
@@ -112,7 +114,7 @@ run.
 
 ## Sequence
 
-1. **Wave 0 — hygiene and performance:** A2, C1.
+1. **Wave 0 — hygiene and performance:** C1, A2b, A2c. (A2 landed.)
 2. **Wave 1 — explain engine:** done (A3, A10 and B1 landed).
 3. **Wave 2 — failure classes:** A4, A5, A6, each with an MCP tool (see B1b and B1c) and a dashboard entry.
 4. **Wave 3 — fixes:** A8 (including the CLI), B3, A9b. (B2 landed.)

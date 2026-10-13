@@ -3600,11 +3600,13 @@ public class HttpActionHandler {
             }
             java.util.Map<org.mockserver.matchers.MatchDifference.Field, java.util.List<String>> closestDiff =
                 closestMatchHint == null ? null : closestMatchHint.getDifferences();
+            // the number of expectations checked when the capped scan stopped early, else 0
+            int truncatedAt = closestMatchHint != null && closestMatchHint.isTruncated() ? closestMatchHint.getExpectationsChecked() : 0;
             if (wantDebugDiffLog) {
-                logClosestMatchDiff(request, closestDiff);
+                logClosestMatchDiff(request, closestDiff, truncatedAt);
             }
             if (wantVerboseDiagnostic) {
-                attachMismatchDiagnostic(response, closestDiff);
+                attachMismatchDiagnostic(response, closestDiff, truncatedAt);
             }
             if (wantHintHeader) {
                 attachClosestMatchHint(response, closestMatchHint);
@@ -3634,19 +3636,25 @@ public class HttpActionHandler {
      * Emit the DEBUG closest-match diff log for an unmatched request using a precomputed diff
      * (shared with the other closest-match consumers in {@link #returnNotFound}).
      */
-    private void logClosestMatchDiff(HttpRequest request, java.util.Map<org.mockserver.matchers.MatchDifference.Field, java.util.List<String>> closestDiff) {
+    private void logClosestMatchDiff(HttpRequest request, java.util.Map<org.mockserver.matchers.MatchDifference.Field, java.util.List<String>> closestDiff, int truncatedAt) {
         try {
             if (closestDiff != null && !closestDiff.isEmpty()) {
                 String diffBody = org.mockserver.matchers.MatchDifferenceFormatter.formatDifferences(closestDiff);
                 if (isNotBlank(diffBody)) {
                     if (mockServerLogger.isEnabledForInstance(Level.DEBUG)) {
-                        mockServerLogger.logEvent(
-                            new LogEntry()
-                                .setLogLevel(Level.DEBUG)
-                                .setHttpRequest(request)
+                        LogEntry logEntry = new LogEntry()
+                            .setLogLevel(Level.DEBUG)
+                            .setHttpRequest(request);
+                        if (truncatedAt > 0) {
+                            logEntry
+                                .setMessageFormat("closest match diff for unmatched request, among the first {} expectations only:{}")
+                                .setArguments(truncatedAt, diffBody);
+                        } else {
+                            logEntry
                                 .setMessageFormat("closest match diff for unmatched request:{}")
-                                .setArguments(diffBody)
-                        );
+                                .setArguments(diffBody);
+                        }
+                        mockServerLogger.logEvent(logEntry);
                     }
                 }
             }
@@ -3663,7 +3671,7 @@ public class HttpActionHandler {
         }
     }
 
-    private void attachMismatchDiagnostic(HttpResponse response, java.util.Map<org.mockserver.matchers.MatchDifference.Field, java.util.List<String>> closestDiff) {
+    private void attachMismatchDiagnostic(HttpResponse response, java.util.Map<org.mockserver.matchers.MatchDifference.Field, java.util.List<String>> closestDiff, int truncatedAt) {
         try {
             if (closestDiff != null && !closestDiff.isEmpty()) {
                 String summary = org.mockserver.matchers.MatchDifferenceFormatter.formatDifferences(closestDiff);
@@ -3686,6 +3694,10 @@ public class HttpActionHandler {
                         }
                     }
                     diagnosticNode.set("differences", differencesNode);
+                    if (truncatedAt > 0) {
+                        diagnosticNode.put("truncated", true);
+                        diagnosticNode.put("expectationsChecked", truncatedAt);
+                    }
                     response.withBody(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(diagnosticNode), MediaType.JSON_UTF_8);
                 }
             } else {
@@ -3744,9 +3756,13 @@ public class HttpActionHandler {
                 sb.append("; +").append(extraFields).append(" more field(s) differ");
             }
             String headerValue = sb.toString().replaceAll("[\\r\\n]+", " ").trim();
-            if (headerValue.length() > CLOSEST_MATCH_HINT_MAX_LENGTH) {
-                headerValue = headerValue.substring(0, CLOSEST_MATCH_HINT_MAX_LENGTH - 3) + "...";
+            // a capped scan may have missed a closer expectation; the note survives the length bound
+            String truncationNote = hint.isTruncated() ? "; only the first " + hint.getExpectationsChecked() + " expectations were checked" : "";
+            int maxLength = CLOSEST_MATCH_HINT_MAX_LENGTH - truncationNote.length();
+            if (headerValue.length() > maxLength) {
+                headerValue = headerValue.substring(0, maxLength - 3) + "...";
             }
+            headerValue = headerValue + truncationNote;
             if (isNotBlank(headerValue)) {
                 response.withHeader(CLOSEST_MATCH_HINT_HEADER_NAME, headerValue);
             }

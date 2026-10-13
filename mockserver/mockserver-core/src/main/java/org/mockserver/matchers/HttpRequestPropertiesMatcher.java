@@ -352,6 +352,9 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                 if (request != null) {
                     boolean methodMatches = StringUtils.isBlank(request.getMethod().getValue()) || matches(METHOD, context, compiled.methodMatcher, request.getMethod());
                     if (failFast(compiled, compiled.methodMatcher, context, matchDifferenceCount, becauseBuilder, methodMatches, METHOD)) {
+                        if (context != null) {
+                            context.decidedByMethodOrPath();
+                        }
                         return false;
                     }
 
@@ -380,6 +383,9 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                         }
                     }
                     if (failFast(compiled, compiled.pathMatcher, context, matchDifferenceCount, becauseBuilder, pathMatches, PATH)) {
+                        if (context != null) {
+                            context.decidedByMethodOrPath();
+                        }
                         return false;
                     }
 

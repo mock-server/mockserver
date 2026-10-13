@@ -422,6 +422,15 @@ public class CircularPriorityQueue<K, V, SLK extends Keyed<K>> {
         return sorted;
     }
 
+    /**
+     * A counter bumped by every structural mutation, before the mutation listener runs. A list returned by
+     * {@link #toSortedList()} after reading this value reflects every mutation it counts, so a cache built
+     * from that list and tagged with the value must be discarded once the counter moves on.
+     */
+    public long generation() {
+        return sortedGeneration.get();
+    }
+
     // Call AFTER the store change and BEFORE notifying the mutation listener.
     private void invalidateSortedCache() {
         sortedGeneration.incrementAndGet();

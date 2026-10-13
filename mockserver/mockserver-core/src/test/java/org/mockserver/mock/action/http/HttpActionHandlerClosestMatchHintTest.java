@@ -7,6 +7,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.httpclient.NettyHttpClient;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatchDifference;
 import org.mockserver.mock.HttpState;
@@ -25,7 +26,9 @@ import java.util.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.emptyOrNullString;
+import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -227,6 +230,84 @@ public class HttpActionHandlerClosestMatchHintTest {
         assertThat(header.length() <= 256, is(true));
         assertThat(header, containsString("..."));
         assertThat(writtenResponse.getBodyAsString(), is(emptyOrNullString()));
+    }
+
+    @Test
+    public void truncatedScan_headerSaysHowManyExpectationsWereChecked_evenWhenTheReasonIsLong() {
+        // given - a capped scan with a reason long enough to hit the length bound
+        HttpRequest request = request("some_path");
+        when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(null);
+
+        Map<MatchDifference.Field, List<String>> diff = new LinkedHashMap<>();
+        diff.put(MatchDifference.Field.PATH, List.of("y".repeat(2000)));
+        when(mockHttpStateHandler.findClosestMatchHint(request)).thenReturn(new RequestMatchers.ClosestMatchHint("E1", diff, 1000, true));
+
+        // when
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
+
+        // then - the note is kept whole at the end and the header stays within its bound
+        String header = capturedNotFound(request).getFirstHeader(HINT_HEADER);
+        assertThat(header, startsWith("expectation E1: path did not match (yyy"));
+        assertThat(header, endsWith("...; only the first 1000 expectations were checked"));
+        assertThat(header.length(), is(256));
+    }
+
+    @Test
+    public void truncatedScan_diagnosticBodyAndDebugLogSayHowManyExpectationsWereChecked() {
+        // given - every closest-match consumer active and a capped scan
+        configuration.attachMismatchDiagnosticToResponse(true);
+        HttpRequest request = request("some_path");
+        when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(null);
+        Map<MatchDifference.Field, List<String>> diff = new LinkedHashMap<>();
+        diff.put(MatchDifference.Field.METHOD, List.of("expected POST but was GET"));
+        when(mockHttpStateHandler.findClosestMatchHint(request)).thenReturn(new RequestMatchers.ClosestMatchHint("E1", diff, 1000, true));
+
+        // when
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
+
+        // then
+        assertThat(capturedNotFound(request).getBodyAsString(), containsString("\"expectationsChecked\" : 1000"));
+        ArgumentCaptor<LogEntry> logEntries = ArgumentCaptor.forClass(LogEntry.class);
+        verify(mockServerLogger, atLeastOnce()).logEvent(logEntries.capture());
+        assertThat(logEntries.getAllValues().stream().anyMatch(entry -> entry.getMessageFormat() != null
+            && entry.getMessageFormat().startsWith("closest match diff for unmatched request, among the first {} expectations only")), is(true));
+    }
+
+    @Test
+    public void untruncatedScan_diagnosticBodyAndDebugLogHaveNoNote() {
+        // given
+        configuration.attachMismatchDiagnosticToResponse(true);
+        HttpRequest request = request("some_path");
+        when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(null);
+        Map<MatchDifference.Field, List<String>> diff = new LinkedHashMap<>();
+        diff.put(MatchDifference.Field.METHOD, List.of("expected POST but was GET"));
+        when(mockHttpStateHandler.findClosestMatchHint(request)).thenReturn(new RequestMatchers.ClosestMatchHint("E1", diff, 3, false));
+
+        // when
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
+
+        // then
+        assertThat(capturedNotFound(request).getBodyAsString(), not(containsString("truncated")));
+        ArgumentCaptor<LogEntry> logEntries = ArgumentCaptor.forClass(LogEntry.class);
+        verify(mockServerLogger, atLeastOnce()).logEvent(logEntries.capture());
+        assertThat(logEntries.getAllValues().stream().anyMatch(entry -> "closest match diff for unmatched request:{}".equals(entry.getMessageFormat())), is(true));
+    }
+
+    @Test
+    public void untruncatedScan_headerHasNoNote() {
+        // given
+        HttpRequest request = request("some_path");
+        when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(null);
+
+        Map<MatchDifference.Field, List<String>> diff = new LinkedHashMap<>();
+        diff.put(MatchDifference.Field.METHOD, List.of("expected POST but was GET"));
+        when(mockHttpStateHandler.findClosestMatchHint(request)).thenReturn(new RequestMatchers.ClosestMatchHint("E1", diff, 3, false));
+
+        // when
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
+
+        // then
+        assertThat(capturedNotFound(request).getFirstHeader(HINT_HEADER), is("expectation E1: method did not match (expected POST but was GET)"));
     }
 
     @Test

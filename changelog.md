@@ -876,6 +876,7 @@ This release delivers a sustained performance and memory programme alongside dat
     QUIC channel that is already closed.
 
   Set `logLevel` to `DEBUG` to see them.
+- **A flood of unmatched requests no longer re-checks every expectation for the closest-match hint.** When a request matches nothing, MockServer finds the closest expectation for the `x-mockserver-closest-match-hint` header (on by default), the opt-in mismatch diagnostic and the DEBUG log. It used to compare the request with every expectation on every 404. It now remembers, for each method and path, which expectations already differ in method or path, and re-checks only the rest until the expectations change, so repeated 404s for the same endpoint cost a fraction of a full comparison. The hint is the same as before. The comparison also stops after the first 1,000 expectations in serving order: with more expectations than that, the hint names the closest of those 1,000 and the header ends with `; only the first 1000 expectations were checked` (the opt-in mismatch diagnostic body says `"truncated": true` with `expectationsChecked`).
 
 ### Removed
 

@@ -89,6 +89,9 @@ public class MatchDifference {
     // applyNotOperators(failures == 0, ...) computed once all fields are evaluated, which
     // is the same verdict the short-circuit reaches by a shorter route.
     private boolean collectAllDifferences;
+    // Set when an HttpRequestPropertiesMatcher returned non-match from its METHOD or PATH fail-fast
+    // check. A composite matcher sharing this context may evaluate more after that (see the javadoc).
+    private boolean decidedByMethodOrPath;
 
     public MatchDifference(boolean detailedMatchFailures, RequestDefinition httpRequest) {
         this.detailedMatchFailures = detailedMatchFailures;
@@ -125,6 +128,21 @@ public class MatchDifference {
 
     public boolean isCollectAllDifferences() {
         return collectAllDifferences;
+    }
+
+    void decidedByMethodOrPath() {
+        this.decidedByMethodOrPath = true;
+    }
+
+    /**
+     * True when an {@link HttpRequestPropertiesMatcher} evaluated with this context stopped at a failed METHOD
+     * or PATH check (fail-fast). Only when that matcher evaluated the context alone do the outcome and the
+     * recorded differences depend on nothing but the request's method and path: a composite matcher that
+     * passes the same context to several children, such as {@link ConditionalRequestMatcher}'s guard and
+     * branches, can set this and then record differences carrying other request values.
+     */
+    public boolean isDecidedByMethodOrPath() {
+        return decidedByMethodOrPath;
     }
 
     @SuppressWarnings("UnusedReturnValue")

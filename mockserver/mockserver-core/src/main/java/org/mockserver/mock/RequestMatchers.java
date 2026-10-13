@@ -8,6 +8,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.llm.IsolationSource;
 import org.mockserver.llm.LlmScenarioNames;
 import org.mockserver.matchers.HttpRequestMatcher;
+import org.mockserver.matchers.HttpRequestPropertiesMatcher;
 import org.mockserver.matchers.LlmConversationMatcher;
 import org.mockserver.matchers.MatchDifference;
 import org.mockserver.matchers.MatcherBuilder;
@@ -192,6 +193,15 @@ public class RequestMatchers extends MockServerMatcherNotifier {
     // not consulted for the Expectation overload), so each cold-path diagnostic
     // allocates a matcher — acceptable on this already-gated, no-match cold path.
     private volatile MatcherBuilder nonFailFastMatcherBuilder;
+    // The 404 closest-match hint checks at most this many expectations, in serving order, so a miss
+    // never costs more than this many evaluations however many expectations are stored.
+    static final int DEFAULT_CLOSEST_MATCH_MAX_EVALUATIONS = 1000;
+    static final int CLOSEST_MATCH_MEMO_MAX_ENTRIES = 256;
+    static final int CLOSEST_MATCH_MEMO_MAX_RECHECKED = 256;
+    static final int CLOSEST_MATCH_MEMO_MAX_KEY_LENGTH = 1024;
+    private int closestMatchMaxEvaluations = DEFAULT_CLOSEST_MATCH_MAX_EVALUATIONS;
+    private volatile ClosestMatchMemo closestMatchMemo;
+    private final java.util.concurrent.atomic.LongAdder closestMatchMemoHits = new java.util.concurrent.atomic.LongAdder();
 
     // T1-C1: candidate-index engagement threshold. Below this many expectations
     // firstMatchingExpectation runs the UNTOUCHED linear scan so small scenarios are
@@ -797,6 +807,8 @@ public class RequestMatchers extends MockServerMatcherNotifier {
     private void markMatchersModified() {
         matchersModificationCount.incrementAndGet();
         lastModifiedEpochMillis = EpochService.currentTimeMillis();
+        // the memo's tag already makes it stale; dropping it also releases the removed matchers it holds
+        closestMatchMemo = null;
     }
 
     /**
@@ -2232,14 +2244,24 @@ public class RequestMatchers extends MockServerMatcherNotifier {
      * expectation and the field differences that kept it from matching, so the
      * caller can render a short, safe one-line hint (expectation id + first
      * differing field + reason) without serialising the whole expectation.
+     * {@link #isTruncated()} is true when only the first {@link #getExpectationsChecked()}
+     * expectations, in serving order, were checked, so a closer one may exist further on.
      */
     public static final class ClosestMatchHint {
         private final String expectationId;
         private final Map<MatchDifference.Field, List<String>> differences;
+        private final int expectationsChecked;
+        private final boolean truncated;
 
         public ClosestMatchHint(String expectationId, Map<MatchDifference.Field, List<String>> differences) {
+            this(expectationId, differences, 0, false);
+        }
+
+        public ClosestMatchHint(String expectationId, Map<MatchDifference.Field, List<String>> differences, int expectationsChecked, boolean truncated) {
             this.expectationId = expectationId;
             this.differences = differences;
+            this.expectationsChecked = expectationsChecked;
+            this.truncated = truncated;
         }
 
         public String getExpectationId() {
@@ -2249,6 +2271,14 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         public Map<MatchDifference.Field, List<String>> getDifferences() {
             return differences;
         }
+
+        public int getExpectationsChecked() {
+            return expectationsChecked;
+        }
+
+        public boolean isTruncated() {
+            return truncated;
+        }
     }
 
     /**
@@ -2256,6 +2286,9 @@ public class RequestMatchers extends MockServerMatcherNotifier {
      * differences) together with its id and field diff. Cold-path only — invoked when
      * a request matched nothing and a diagnostic is being produced. Returns {@code null}
      * when there are no expectations (or none produced a usable diff).
+     * <p>
+     * At most {@link #DEFAULT_CLOSEST_MATCH_MAX_EVALUATIONS} expectations are checked, in serving
+     * order, and the work is memoised per (method, path); see {@link ClosestMatchMemo}.
      */
     public ClosestMatchHint findClosestMatchHint(HttpRequest httpRequest) {
         boolean parsedBodyCacheOpened = openParsedBodyCache(httpRequest);
@@ -2267,31 +2300,330 @@ public class RequestMatchers extends MockServerMatcherNotifier {
     }
 
     private ClosestMatchHint findClosestMatchHintWithParsedBodyCache(HttpRequest httpRequest) {
-        int closestMatchFailures = Integer.MAX_VALUE;
-        Map<MatchDifference.Field, List<String>> closestDifferences = null;
-        String closestExpectationId = null;
+        ClosestMatchKey key = closestMatchKey(httpRequest);
+        if (key == null) {
+            return scanForClosestMatch(httpRequest, httpRequestMatchers.toSortedList(), null);
+        }
+        // read every validity input BEFORE the sorted list, so a memo is never tagged newer than its list
+        long generation = httpRequestMatchers.generation();
+        long modificationCount = matchersModificationCount.get();
+        boolean failFast = configuration.matchersFailFast();
+        ClosestMatchMemo memo = closestMatchMemo;
+        if (memo == null || !memo.isFor(generation, modificationCount, failFast)) {
+            memo = new ClosestMatchMemo(generation, modificationCount, failFast);
+            closestMatchMemo = memo;
+        }
+        ClosestMatchMemoEntry entry = memo.get(key);
+        if (entry != null) {
+            closestMatchMemoHits.increment();
+            return entry.rescanEverything
+                ? scanForClosestMatch(httpRequest, httpRequestMatchers.toSortedList(), null)
+                : entry.replay(httpRequest);
+        }
+        ClosestMatchRecorder recorder = new ClosestMatchRecorder();
+        ClosestMatchHint hint = scanForClosestMatch(httpRequest, httpRequestMatchers.toSortedList(), recorder);
+        memo.put(key, recorder.build());
+        return hint;
+    }
 
-        for (HttpRequestMatcher httpRequestMatcher : httpRequestMatchers.toSortedList()) {
-            // suppressMatchResultLogging: this is a read-only diagnostic re-evaluation (it runs
-            // AFTER the request already failed to match), so it must NOT emit a second round of
-            // EXPECTATION_NOT_MATCHED events into the event log — those would be uncorrelated and
-            // would shift/duplicate the recorded log sequence. Especially important now the hint
-            // header is on by default, so this scan runs on the common no-match path.
-            MatchDifference matchDifference = new MatchDifference(true, httpRequest).suppressMatchResultLogging();
-            if (!httpRequestMatcher.matches(matchDifference, httpRequest)) {
-                Map<MatchDifference.Field, List<String>> differences = matchDifference.getAllDifferences();
-                int failures = differences.size();
-                if (failures < closestMatchFailures && httpRequestMatcher.getExpectation() != null) {
-                    closestMatchFailures = failures;
-                    closestDifferences = differences;
-                    closestExpectationId = httpRequestMatcher.getExpectation().getId();
+    /**
+     * The memo key, or {@code null} when this request must not use the memo: a NOT request, a method
+     * or path that is not a plain string, an over-long key, or TRACE logging (where each difference
+     * the scan records is also logged, so skipping evaluations would drop log lines).
+     */
+    private ClosestMatchKey closestMatchKey(HttpRequest httpRequest) {
+        if (httpRequest.isNot() || mockServerLogger.isEnabledForInstance(TRACE)) {
+            return null;
+        }
+        NottableString method = httpRequest.getMethod();
+        NottableString path = httpRequest.getPath();
+        if (method == null || path == null
+            || method.getClass() != NottableString.class || path.getClass() != NottableString.class
+            || method.isNot() || path.isNot()) {
+            return null;
+        }
+        String methodValue = method.getValue();
+        String pathValue = path.getValue();
+        if (methodValue == null || pathValue == null || methodValue.length() + pathValue.length() > CLOSEST_MATCH_MEMO_MAX_KEY_LENGTH) {
+            return null;
+        }
+        return new ClosestMatchKey(methodValue, pathValue);
+    }
+
+    /**
+     * The original closest-match scan over the first {@code closestMatchMaxEvaluations} matchers in serving
+     * order: the first matcher with the fewest differences wins. With a recorder it also notes, per
+     * matcher, whether the outcome can be reused for any request with the same method and path.
+     */
+    private ClosestMatchHint scanForClosestMatch(HttpRequest httpRequest, List<HttpRequestMatcher> sortedMatchers, ClosestMatchRecorder recorder) {
+        int size = sortedMatchers.size();
+        int limit = Math.min(size, closestMatchMaxEvaluations);
+        ClosestMatchState state = new ClosestMatchState();
+        for (int position = 0; position < limit; position++) {
+            HttpRequestMatcher httpRequestMatcher = sortedMatchers.get(position);
+            MatchDifference matchDifference = closestMatchDifference(httpRequest);
+            Map<MatchDifference.Field, List<String>> differences = evaluateForClosestMatch(httpRequestMatcher, matchDifference, httpRequest, state);
+            if (recorder != null) {
+                if (differences != null && isReusableForSameMethodAndPath(httpRequestMatcher, matchDifference)) {
+                    recorder.reusable(position, httpRequestMatcher.getExpectation().getId(), differences);
+                } else {
+                    recorder.recheck(position, httpRequestMatcher);
                 }
             }
         }
-        if (closestDifferences == null) {
+        if (recorder != null) {
+            recorder.limit(limit, limit < size);
+        }
+        return state.toHint(limit, limit < size);
+    }
+
+    private static MatchDifference closestMatchDifference(HttpRequest httpRequest) {
+        // suppressMatchResultLogging: this is a read-only diagnostic re-evaluation (it runs
+        // AFTER the request already failed to match), so it must NOT emit a second round of
+        // EXPECTATION_NOT_MATCHED events into the event log — those would be uncorrelated and
+        // would shift/duplicate the recorded log sequence.
+        return new MatchDifference(true, httpRequest).suppressMatchResultLogging();
+    }
+
+    /**
+     * Evaluates one matcher for the closest-match scan and folds a non-match into {@code state}. Returns
+     * the differences of a non-match, or {@code null} for a match.
+     */
+    private static Map<MatchDifference.Field, List<String>> evaluateForClosestMatch(HttpRequestMatcher httpRequestMatcher, MatchDifference matchDifference, HttpRequest httpRequest, ClosestMatchState state) {
+        if (httpRequestMatcher.matches(matchDifference, httpRequest)) {
             return null;
         }
-        return new ClosestMatchHint(closestExpectationId, closestDifferences);
+        Map<MatchDifference.Field, List<String>> differences = matchDifference.getAllDifferences();
+        if (httpRequestMatcher.getExpectation() != null) {
+            state.offer(differences.size(), differences, httpRequestMatcher.getExpectation().getId());
+        }
+        return differences;
+    }
+
+    /**
+     * A non-match can be reused for every request with the same method and path when the property
+     * matcher stopped at its METHOD or PATH check (so it read nothing else) and its expectation can
+     * never expire or run out of matches (so it stays active until the store itself changes).
+     */
+    private static boolean isReusableForSameMethodAndPath(HttpRequestMatcher httpRequestMatcher, MatchDifference matchDifference) {
+        Expectation expectation = httpRequestMatcher.getExpectation();
+        return matchDifference.isDecidedByMethodOrPath()
+            // exact class: a conditional's failed guard sets the flag, then its else branch records header and body values
+            && httpRequestMatcher.getClass() == HttpRequestPropertiesMatcher.class
+            && expectation != null
+            && (expectation.getTimes() == null || expectation.getTimes().isUnlimited())
+            && (expectation.getTimeToLive() == null || expectation.getTimeToLive().isUnlimited());
+    }
+
+    /**
+     * Instance-scoped override of the closest-match evaluation cap, for tests; production keeps
+     * {@link #DEFAULT_CLOSEST_MATCH_MAX_EVALUATIONS}.
+     */
+    RequestMatchers withClosestMatchMaxEvaluations(int maxEvaluations) {
+        this.closestMatchMaxEvaluations = Math.max(1, maxEvaluations);
+        return this;
+    }
+
+    int closestMatchMemoSizeForTesting() {
+        ClosestMatchMemo memo = closestMatchMemo;
+        return memo == null ? 0 : memo.entries.size();
+    }
+
+    long closestMatchMemoHitsForTesting() {
+        return closestMatchMemoHits.sum();
+    }
+
+    /**
+     * For tests: {@code {kept reusable non-matches, re-evaluated matchers}} of the memo entry for this
+     * method and path, {@code {-1, -1}} for a "scan everything" entry, or {@code null} when there is none.
+     */
+    int[] closestMatchMemoShapeForTesting(String method, String path) {
+        ClosestMatchMemo memo = closestMatchMemo;
+        ClosestMatchMemoEntry entry = memo == null ? null : memo.get(new ClosestMatchKey(method, path));
+        if (entry == null) {
+            return null;
+        }
+        return entry.rescanEverything ? new int[]{-1, -1} : new int[]{entry.reusablePositions.length, entry.recheckMatchers.length};
+    }
+
+    private record ClosestMatchKey(String method, String path) {
+    }
+
+    /** The running minimum of the closest-match scan: strictly fewer differences replaces the current best. */
+    private static final class ClosestMatchState {
+        private int closestMatchFailures = Integer.MAX_VALUE;
+        private Map<MatchDifference.Field, List<String>> closestDifferences;
+        private String closestExpectationId;
+
+        private void offer(int failures, Map<MatchDifference.Field, List<String>> differences, String expectationId) {
+            if (failures < closestMatchFailures) {
+                closestMatchFailures = failures;
+                closestDifferences = differences;
+                closestExpectationId = expectationId;
+            }
+        }
+
+        private ClosestMatchHint toHint(int expectationsChecked, boolean truncated) {
+            return closestDifferences == null ? null : new ClosestMatchHint(closestExpectationId, closestDifferences, expectationsChecked, truncated);
+        }
+    }
+
+    /**
+     * Memo of closest-match scans for one state of the expectation store, keyed by (method, path).
+     * <p>
+     * A matcher whose non-match is reusable (see {@link #isReusableForSameMethodAndPath}) gives the same
+     * difference for every request with that method and path, so an entry keeps only the reusable
+     * non-matches that could still win (each with strictly fewer differences than every earlier one)
+     * and re-evaluates every other matcher in serving order. That yields the same hint as a full scan.
+     * <p>
+     * The memo is replaced whenever the store's generation, the modification count or fail-fast changes,
+     * so it only ever holds one state. It is bounded: at most {@link #CLOSEST_MATCH_MEMO_MAX_ENTRIES}
+     * entries (emptied when full, since paths are client-controlled), keys of at most
+     * {@link #CLOSEST_MATCH_MEMO_MAX_KEY_LENGTH} characters, and entries that would re-evaluate more than
+     * {@link #CLOSEST_MATCH_MEMO_MAX_RECHECKED} matchers store nothing but "scan everything".
+     */
+    private static final class ClosestMatchMemo {
+        private final long generation;
+        private final long modificationCount;
+        private final boolean failFast;
+        private final ConcurrentHashMap<ClosestMatchKey, ClosestMatchMemoEntry> entries = new ConcurrentHashMap<>();
+
+        private ClosestMatchMemo(long generation, long modificationCount, boolean failFast) {
+            this.generation = generation;
+            this.modificationCount = modificationCount;
+            this.failFast = failFast;
+        }
+
+        private boolean isFor(long generation, long modificationCount, boolean failFast) {
+            return this.generation == generation && this.modificationCount == modificationCount && this.failFast == failFast;
+        }
+
+        private ClosestMatchMemoEntry get(ClosestMatchKey key) {
+            return entries.get(key);
+        }
+
+        private void put(ClosestMatchKey key, ClosestMatchMemoEntry entry) {
+            if (entries.size() >= CLOSEST_MATCH_MEMO_MAX_ENTRIES) {
+                entries.clear();
+            }
+            entries.put(key, entry);
+        }
+    }
+
+    private static final class ClosestMatchMemoEntry {
+        private static final ClosestMatchMemoEntry RESCAN_EVERYTHING = new ClosestMatchMemoEntry(true, new int[0], new int[0], new String[0], null, new int[0], new HttpRequestMatcher[0], 0, false);
+
+        private final boolean rescanEverything;
+        private final int[] reusablePositions;
+        private final int[] reusableFailures;
+        private final String[] reusableExpectationIds;
+        private final List<Map<MatchDifference.Field, List<String>>> reusableDifferences;
+        private final int[] recheckPositions;
+        private final HttpRequestMatcher[] recheckMatchers;
+        private final int expectationsChecked;
+        private final boolean truncated;
+
+        private ClosestMatchMemoEntry(boolean rescanEverything, int[] reusablePositions, int[] reusableFailures, String[] reusableExpectationIds, List<Map<MatchDifference.Field, List<String>>> reusableDifferences, int[] recheckPositions, HttpRequestMatcher[] recheckMatchers, int expectationsChecked, boolean truncated) {
+            this.rescanEverything = rescanEverything;
+            this.reusablePositions = reusablePositions;
+            this.reusableFailures = reusableFailures;
+            this.reusableExpectationIds = reusableExpectationIds;
+            this.reusableDifferences = reusableDifferences;
+            this.recheckPositions = recheckPositions;
+            this.recheckMatchers = recheckMatchers;
+            this.expectationsChecked = expectationsChecked;
+            this.truncated = truncated;
+        }
+
+        /** The scan, in the original serving order, over the kept reusable non-matches and the re-evaluated matchers. */
+        private ClosestMatchHint replay(HttpRequest httpRequest) {
+            ClosestMatchState state = new ClosestMatchState();
+            int reusable = 0;
+            for (int recheck = 0; recheck < recheckMatchers.length; recheck++) {
+                while (reusable < reusablePositions.length && reusablePositions[reusable] < recheckPositions[recheck]) {
+                    state.offer(reusableFailures[reusable], reusableDifferences.get(reusable), reusableExpectationIds[reusable]);
+                    reusable++;
+                }
+                evaluateForClosestMatch(recheckMatchers[recheck], closestMatchDifference(httpRequest), httpRequest, state);
+            }
+            while (reusable < reusablePositions.length) {
+                state.offer(reusableFailures[reusable], reusableDifferences.get(reusable), reusableExpectationIds[reusable]);
+                reusable++;
+            }
+            return state.toHint(expectationsChecked, truncated);
+        }
+    }
+
+    private static final class ClosestMatchRecorder {
+        private final List<Integer> reusablePositions = new ArrayList<>();
+        private final List<Integer> reusableFailures = new ArrayList<>();
+        private final List<String> reusableExpectationIds = new ArrayList<>();
+        private final List<Map<MatchDifference.Field, List<String>>> reusableDifferences = new ArrayList<>();
+        private final List<Integer> recheckPositions = new ArrayList<>();
+        private final List<HttpRequestMatcher> recheckMatchers = new ArrayList<>();
+        private int fewestReusableFailures = Integer.MAX_VALUE;
+        private boolean tooManyRechecks;
+        private int expectationsChecked;
+        private boolean truncated;
+
+        private void reusable(int position, String expectationId, Map<MatchDifference.Field, List<String>> differences) {
+            // a later reusable non-match with no fewer differences can never become the closest
+            if (differences.size() < fewestReusableFailures) {
+                fewestReusableFailures = differences.size();
+                reusablePositions.add(position);
+                reusableFailures.add(differences.size());
+                reusableExpectationIds.add(expectationId);
+                reusableDifferences.add(immutableCopy(differences));
+            }
+        }
+
+        private void recheck(int position, HttpRequestMatcher httpRequestMatcher) {
+            if (recheckMatchers.size() >= CLOSEST_MATCH_MEMO_MAX_RECHECKED) {
+                tooManyRechecks = true;
+            } else if (!tooManyRechecks) {
+                recheckPositions.add(position);
+                recheckMatchers.add(httpRequestMatcher);
+            }
+        }
+
+        private void limit(int expectationsChecked, boolean truncated) {
+            this.expectationsChecked = expectationsChecked;
+            this.truncated = truncated;
+        }
+
+        private ClosestMatchMemoEntry build() {
+            if (tooManyRechecks || reusablePositions.isEmpty()) {
+                return ClosestMatchMemoEntry.RESCAN_EVERYTHING;
+            }
+            return new ClosestMatchMemoEntry(
+                false,
+                toIntArray(reusablePositions),
+                toIntArray(reusableFailures),
+                reusableExpectationIds.toArray(new String[0]),
+                List.copyOf(reusableDifferences),
+                toIntArray(recheckPositions),
+                recheckMatchers.toArray(new HttpRequestMatcher[0]),
+                expectationsChecked,
+                truncated
+            );
+        }
+
+        private static int[] toIntArray(List<Integer> values) {
+            int[] array = new int[values.size()];
+            for (int i = 0; i < array.length; i++) {
+                array[i] = values.get(i);
+            }
+            return array;
+        }
+
+        private static Map<MatchDifference.Field, List<String>> immutableCopy(Map<MatchDifference.Field, List<String>> differences) {
+            // keeps the iteration order, which picks the field the hint header names first
+            Map<MatchDifference.Field, List<String>> copy = new LinkedHashMap<>();
+            for (Map.Entry<MatchDifference.Field, List<String>> entry : differences.entrySet()) {
+                copy.put(entry.getKey(), Collections.unmodifiableList(new ArrayList<>(entry.getValue())));
+            }
+            return Collections.unmodifiableMap(copy);
+        }
     }
 
     public boolean isEmpty() {
