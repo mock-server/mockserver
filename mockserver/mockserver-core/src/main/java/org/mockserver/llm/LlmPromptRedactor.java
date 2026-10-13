@@ -8,7 +8,12 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import org.mockserver.fixture.FixtureRedactor;
 import org.mockserver.imports.ImportRedaction;
 import org.mockserver.model.Body;
+import org.mockserver.model.Header;
+import org.mockserver.model.Headers;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.NottableString;
+import org.mockserver.model.Parameter;
+import org.mockserver.model.Parameters;
 import org.mockserver.model.RequestDefinition;
 import org.mockserver.serialization.ObjectMapperFactory;
 
@@ -66,7 +71,10 @@ public class LlmPromptRedactor {
     // scheme://user:pass@host (or scheme://user@host) — mask the whole userinfo.
     private static final Pattern URL_USERINFO = Pattern.compile("(?i)([a-z][a-z0-9+.-]*://)([^/?#\\s@]+)@");
 
+    private static final String DRIFT_HEADER_FIELD_PREFIX = "header.";
+
     private final FixtureRedactor fixtureRedactor;
+    private final Set<String> sensitiveHeaders;
     private final Set<String> sensitiveBodyFields;
     private final Pattern keyValueCredential;
 
@@ -81,11 +89,15 @@ public class LlmPromptRedactor {
         if (additionalSensitiveHeaderName != null && !additionalSensitiveHeaderName.isBlank()) {
             headers.add(additionalSensitiveHeaderName);
         }
+        this.sensitiveHeaders = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        this.sensitiveHeaders.addAll(headers);
         this.sensitiveBodyFields = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         this.sensitiveBodyFields.addAll(ImportRedaction.DEFAULT_SENSITIVE_BODY_FIELDS);
         this.sensitiveBodyFields.add("id_token");
         this.sensitiveBodyFields.add("idToken");
-        this.fixtureRedactor = new FixtureRedactor(headers, this.sensitiveBodyFields);
+        Set<String> queryParams = new LinkedHashSet<>(FixtureRedactor.defaultSensitiveQueryParams());
+        queryParams.addAll(this.sensitiveBodyFields);
+        this.fixtureRedactor = new FixtureRedactor(headers, this.sensitiveBodyFields, queryParams);
         this.keyValueCredential = compileKeyValuePattern(this.sensitiveBodyFields);
     }
 
@@ -106,13 +118,44 @@ public class LlmPromptRedactor {
 
     /**
      * Redact sensitive headers and query-string parameters in a request, returning a
-     * clone. The original is never mutated. The clone's body is not used by callers
+     * clone. The original is never mutated. Values of sensitive headers and of query
+     * parameters named like a credential (the query defaults plus the body-field set)
+     * are replaced whole; every other header and query value has {@code key=value}
+     * credentials, JWTs and URL userinfo masked. The clone's body is not used by callers
      * (bodies are handled by {@link #redactBodyForPrompt}), so only the header/query
      * masking of the returned clone is relied upon.
      */
     public HttpRequest redactHeadersAndQuery(HttpRequest request) {
-        RequestDefinition redacted = fixtureRedactor.redactRequestDefinition(request);
-        return redacted instanceof HttpRequest ? (HttpRequest) redacted : request;
+        RequestDefinition redactedDefinition = fixtureRedactor.redactRequestDefinition(request);
+        if (!(redactedDefinition instanceof HttpRequest)) {
+            return request;
+        }
+        HttpRequest redacted = (HttpRequest) redactedDefinition;
+        List<Header> headerList = redacted.getHeaderList();
+        if (headerList != null && !headerList.isEmpty()) {
+            Headers headers = new Headers();
+            for (Header header : headerList) {
+                headers.withEntry(header.getName(), maskValues(header.getValues()));
+            }
+            redacted.withHeaders(headers);
+        }
+        List<Parameter> parameterList = redacted.getQueryStringParameterList();
+        if (parameterList != null && !parameterList.isEmpty()) {
+            Parameters parameters = new Parameters();
+            for (Parameter parameter : parameterList) {
+                parameters.withEntry(parameter.getName(), maskValues(parameter.getValues()));
+            }
+            redacted.withQueryStringParameters(parameters);
+        }
+        return redacted;
+    }
+
+    private List<NottableString> maskValues(List<NottableString> values) {
+        List<NottableString> masked = new ArrayList<>(values.size());
+        for (NottableString value : values) {
+            masked.add(NottableString.string(maskFreeText(value.getValue()), value.isNot()));
+        }
+        return masked;
     }
 
     /**
@@ -124,6 +167,22 @@ public class LlmPromptRedactor {
             return value;
         }
         return URL_USERINFO.matcher(value).replaceAll("$1" + Matcher.quoteReplacement(FixtureRedactor.REDACTED_PLACEHOLDER) + "@");
+    }
+
+    /**
+     * Mask credentials in a request or expectation path: URL userinfo, JWTs (such as a
+     * magic-link token) and {@code key=value} credential pairs (such as a
+     * {@code ;token=} matrix parameter).
+     */
+    public String maskPath(String path) {
+        return maskFreeText(path);
+    }
+
+    private String maskFreeText(String value) {
+        if (value == null || value.isEmpty()) {
+            return value;
+        }
+        return finishText(maskKeyValue(value));
     }
 
     /**
@@ -260,18 +319,25 @@ public class LlmPromptRedactor {
     }
 
     /**
-     * Mask a single drift-record value when its field name is credential-like or the
-     * value is itself a JWT / carries URL userinfo — the drift prompt lists field
-     * names with their expected/actual values verbatim.
+     * Mask a single drift-record value — the drift prompt lists field names with their
+     * expected/actual values verbatim. The whole value is masked when the field is a
+     * credential-like body field or a sensitive response header ({@code header.<name>});
+     * otherwise {@code key=value} credentials, JWTs and URL userinfo within it are masked.
      */
     public String maskDriftValue(String field, String value) {
         if (value == null) {
             return null;
         }
-        if (field != null && sensitiveBodyFields.contains(field)) {
+        if (field != null && (sensitiveBodyFields.contains(field) || isSensitiveHeaderField(field))) {
             return FixtureRedactor.REDACTED_PLACEHOLDER;
         }
-        return finishText(value);
+        return maskFreeText(value);
+    }
+
+    private boolean isSensitiveHeaderField(String field) {
+        int prefixLength = DRIFT_HEADER_FIELD_PREFIX.length();
+        return field.regionMatches(true, 0, DRIFT_HEADER_FIELD_PREFIX, 0, prefixLength)
+            && sensitiveHeaders.contains(field.substring(prefixLength));
     }
 
     private static String truncate(String body) {

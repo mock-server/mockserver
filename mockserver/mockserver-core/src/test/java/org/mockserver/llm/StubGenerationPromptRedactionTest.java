@@ -259,4 +259,80 @@ public class StubGenerationPromptRedactionTest {
         assertThat(prompt, not(containsString("dash-secret")));
         assertThat(prompt, containsString("tokenizer=on"));
     }
+
+    @Test
+    public void shouldMaskJwtAndKeyValueCredentialsInRequestAndContextPaths() {
+        String jwt = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJwYXRoIn0.pathJwtSignature_-123";
+        HttpRequest request = HttpRequest.request().withMethod("GET")
+            .withPath("/magic-link/" + jwt + "/session;token=path-kv-secret");
+        List<Expectation> context = Collections.singletonList(new Expectation(
+            HttpRequest.request().withMethod("GET").withPath("/reset;access_token=ctx-kv-secret")));
+
+        String prompt = builder.build(request, context);
+
+        assertThat(prompt, not(containsString(jwt)));
+        assertThat(prompt, not(containsString("path-kv-secret")));
+        assertThat(prompt, not(containsString("ctx-kv-secret")));
+        assertThat(prompt, containsString("Path: /magic-link/" + REDACTED + "/session;token=" + REDACTED));
+        assertThat(prompt, containsString("- GET /reset;access_token=" + REDACTED));
+    }
+
+    @Test
+    public void shouldMaskQueryParametersNamedLikeBodyCredentialFields() {
+        HttpRequest request = HttpRequest.request().withMethod("GET").withPath("/api/callback")
+            .withQueryStringParameter("password", "qp-password-secret")
+            .withQueryStringParameter("client_secret", "qp-client-secret")
+            .withQueryStringParameter("refresh_token", "qp-refresh-secret")
+            .withQueryStringParameter("id_token", "qp-idtoken-secret")
+            .withQueryStringParameter("page", "2");
+
+        String prompt = builder.build(request, Collections.emptyList());
+
+        assertThat(prompt, not(containsString("qp-password-secret")));
+        assertThat(prompt, not(containsString("qp-client-secret")));
+        assertThat(prompt, not(containsString("qp-refresh-secret")));
+        assertThat(prompt, not(containsString("qp-idtoken-secret")));
+        assertThat(prompt, containsString("page"));
+        assertThat(prompt, containsString("\"2\""));
+    }
+
+    @Test
+    public void shouldMaskJwtInAnyQueryParameter() {
+        String jwt = "eyJhbGciOiJIUzI1NiJ9.eyJzdGF0ZSI6InEifQ.queryJwtSignature_-456";
+        HttpRequest request = HttpRequest.request().withMethod("GET").withPath("/oauth/callback")
+            .withQueryStringParameter("state", jwt)
+            .withQueryStringParameter("code", "plain-code-value");
+
+        String prompt = builder.build(request, Collections.emptyList());
+
+        assertThat(prompt, not(containsString(jwt)));
+        assertThat(prompt, containsString("state"));
+        assertThat(prompt, containsString("plain-code-value"));
+        assertThat(prompt, containsString(REDACTED));
+    }
+
+    @Test
+    public void shouldMaskJwtAndKeyValueCredentialsInNonSensitiveHeaderValues() {
+        String jwt = "eyJhbGciOiJIUzI1NiJ9.eyJzZXNzIjoiaCJ9.headerJwtSignature_-789";
+        HttpRequest request = HttpRequest.request().withMethod("GET").withPath("/api")
+            .withHeader("X-Session", jwt)
+            .withHeader("X-Debug", "user=bob token=hdr-kv-secret")
+            .withHeader("Accept", "text/html;q=0.9");
+
+        String prompt = builder.build(request, Collections.emptyList());
+
+        assertThat(prompt, not(containsString(jwt)));
+        assertThat(prompt, not(containsString("hdr-kv-secret")));
+        assertThat(prompt, containsString("user=bob token=" + REDACTED));
+        assertThat(prompt, containsString("text/html;q=0.9"));
+    }
+
+    @Test
+    public void shouldLeaveOrdinaryPathsUnchanged() {
+        HttpRequest request = HttpRequest.request().withMethod("GET").withPath("/api/v1.2/orders/42");
+
+        String prompt = builder.build(request, Collections.emptyList());
+
+        assertThat(prompt, containsString("Path: /api/v1.2/orders/42\n"));
+    }
 }

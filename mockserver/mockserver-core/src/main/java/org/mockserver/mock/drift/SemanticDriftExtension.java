@@ -31,13 +31,22 @@ public class SemanticDriftExtension {
     private final LlmCompletionService completionService;
     private final LlmBackend backend;
     // Redacts credentials before the drift prompt (response bodies + drift values)
-    // leaves the process to the external LLM. Drift sends no headers, so no
-    // data-plane header name is needed.
-    private final LlmPromptRedactor redactor = new LlmPromptRedactor(null);
+    // leaves the process to the external LLM.
+    private final LlmPromptRedactor redactor;
 
     public SemanticDriftExtension(LlmCompletionService completionService, LlmBackend backend) {
+        this(completionService, backend, null);
+    }
+
+    /**
+     * @param dataPlaneApiKeyHeaderName the configured data-plane API-key header name, whose
+     *                                  drift values are masked in addition to the default
+     *                                  sensitive headers, or {@code null}/blank when none is configured
+     */
+    public SemanticDriftExtension(LlmCompletionService completionService, LlmBackend backend, String dataPlaneApiKeyHeaderName) {
         this.completionService = completionService;
         this.backend = backend;
+        this.redactor = new LlmPromptRedactor(dataPlaneApiKeyHeaderName);
     }
 
     /**

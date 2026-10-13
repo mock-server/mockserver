@@ -45,7 +45,7 @@ public class StubGenerationPromptBuilder {
 
         prompt.append("UNMATCHED REQUEST:\n");
         prompt.append("Method: ").append(methodOrDefault(unmatchedRequest)).append("\n");
-        prompt.append("Path: ").append(redactor.maskUrlUserInfo(pathOrDefault(unmatchedRequest))).append("\n");
+        prompt.append("Path: ").append(redactor.maskPath(pathOrDefault(unmatchedRequest))).append("\n");
         if (redactedRequest.getQueryStringParameterList() != null && !redactedRequest.getQueryStringParameterList().isEmpty()) {
             prompt.append("Query Parameters: ").append(redactedRequest.getQueryStringParameterList()).append("\n");
         }
@@ -63,7 +63,7 @@ public class StubGenerationPromptBuilder {
                 Expectation e = contextExpectations.get(i);
                 if (e.getHttpRequest() instanceof HttpRequest httpReq) {
                     prompt.append("- ").append(methodOrDefault(httpReq))
-                        .append(" ").append(redactor.maskUrlUserInfo(pathOrDefault(httpReq))).append("\n");
+                        .append(" ").append(redactor.maskPath(pathOrDefault(httpReq))).append("\n");
                 }
             }
             prompt.append("\n");

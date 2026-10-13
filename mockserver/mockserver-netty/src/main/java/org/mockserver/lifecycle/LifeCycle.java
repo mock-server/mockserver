@@ -228,7 +228,7 @@ public abstract class LifeCycle implements Stoppable {
             org.mockserver.llm.client.LlmCompletionService service =
                 new org.mockserver.llm.client.LlmCompletionService(new org.mockserver.llm.client.NettyHttpClientLlmTransport(httpClient), configuration);
             org.mockserver.mock.drift.SemanticDriftExtension extension =
-                new org.mockserver.mock.drift.SemanticDriftExtension(service, backend.get());
+                new org.mockserver.mock.drift.SemanticDriftExtension(service, backend.get(), configuration.dataPlaneApiKeyAuthenticationHeader());
             org.mockserver.mock.drift.DriftAnalyzer.getInstance().setSemanticExtension(extension);
             org.slf4j.LoggerFactory.getLogger(LifeCycle.class)
                 .info("semantic drift analysis enabled (backend: {})", backend.get().provider());

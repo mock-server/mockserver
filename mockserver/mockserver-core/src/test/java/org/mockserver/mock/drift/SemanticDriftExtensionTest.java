@@ -204,6 +204,59 @@ public class SemanticDriftExtensionTest {
         assertThat(prompt, containsString("***REDACTED***"));
     }
 
+    @Test
+    public void buildPromptMasksKeyValueCredentialInDriftValueOfNonCredentialField() {
+        SemanticDriftExtension ext = new SemanticDriftExtension(new StubLlmCompletionService(null), LlmBackend.of(Provider.OPENAI, "test-key"));
+        List<DriftRecord> records = List.of(
+            new DriftRecord().setDriftType(DriftType.HEADER_CHANGED).setField("header.x-debug")
+                .setExpectedValue("user=bob token=stub-kv-secret")
+                .setActualValue("user=bob api_key=live-kv-secret")
+        );
+
+        String prompt = ext.buildPrompt(records, response().withStatusCode(200), response().withStatusCode(200));
+
+        assertThat(prompt, not(containsString("stub-kv-secret")));
+        assertThat(prompt, not(containsString("live-kv-secret")));
+        assertThat(prompt, containsString("expected=user=bob token=***REDACTED***"));
+        assertThat(prompt, containsString("actual=user=bob api_key=***REDACTED***"));
+    }
+
+    @Test
+    public void buildPromptMasksDriftValuesOfSensitiveResponseHeaders() {
+        SemanticDriftExtension ext = new SemanticDriftExtension(new StubLlmCompletionService(null), LlmBackend.of(Provider.OPENAI, "test-key"));
+        List<DriftRecord> records = List.of(
+            new DriftRecord().setDriftType(DriftType.HEADER_CHANGED).setField("header.set-cookie")
+                .setExpectedValue("SESSIONID=stub-cookie-secret; Path=/")
+                .setActualValue("SESSIONID=live-cookie-secret; Path=/"),
+            new DriftRecord().setDriftType(DriftType.HEADER_ADDED).setField("header.X-Auth-Token")
+                .setActualValue("opaque-auth-secret"),
+            new DriftRecord().setDriftType(DriftType.HEADER_CHANGED).setField("header.content-type")
+                .setExpectedValue("application/json").setActualValue("text/plain")
+        );
+
+        String prompt = ext.buildPrompt(records, response().withStatusCode(200), response().withStatusCode(200));
+
+        assertThat(prompt, not(containsString("stub-cookie-secret")));
+        assertThat(prompt, not(containsString("live-cookie-secret")));
+        assertThat(prompt, not(containsString("opaque-auth-secret")));
+        assertThat(prompt, containsString("'header.set-cookie': expected=***REDACTED***, actual=***REDACTED***"));
+        assertThat(prompt, containsString("'header.content-type': expected=application/json, actual=text/plain"));
+    }
+
+    @Test
+    public void buildPromptMasksDriftValuesOfConfiguredDataPlaneApiKeyHeader() {
+        SemanticDriftExtension ext = new SemanticDriftExtension(new StubLlmCompletionService(null), LlmBackend.of(Provider.OPENAI, "test-key"), "X-Tenant-Key");
+        List<DriftRecord> records = List.of(
+            new DriftRecord().setDriftType(DriftType.HEADER_ADDED).setField("header.x-tenant-key")
+                .setActualValue("tenant-header-secret")
+        );
+
+        String prompt = ext.buildPrompt(records, response().withStatusCode(200), response().withStatusCode(200));
+
+        assertThat(prompt, not(containsString("tenant-header-secret")));
+        assertThat(prompt, containsString("'header.x-tenant-key': expected=null, actual=***REDACTED***"));
+    }
+
     /**
      * Stub that returns a fixed completion text for any prompt.
      */
