@@ -1,0 +1,10 @@
+{
+  "model": "llama3.2",
+  "created_at": "2024-09-12T21:33:17.547535Z",
+  "message": {
+    "role": "assistant",
+    "content": ""
+  },
+  "done_reason": "unload",
+  "done": true
+}

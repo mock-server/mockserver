@@ -727,4 +727,166 @@ public class OllamaCodecTest {
         assertThat(last.path("tool_calls").path(0).path("function").path("arguments").path("city").asText(), is("Tokyo"));
         assertThat(last.has("context"), is(false));
     }
+
+    // --- Load-only and unload requests (docs/api.md "Load a model" / "Unload a model"; server/routes.go) ---
+
+    private static HttpRequest chatRequest(String body) {
+        return request().withMethod("POST").withPath("/api/chat").withBody(body);
+    }
+
+    private static List<String> fieldNames(JsonNode node) {
+        List<String> names = new ArrayList<>();
+        node.fieldNames().forEachRemaining(names::add);
+        return names;
+    }
+
+    private static Completion generatedText() {
+        return completion().withText("should not be sent").withUsage(Usage.usage().withInputTokens(3).withOutputTokens(4));
+    }
+
+    @Test
+    public void shouldAnswerGenerateWithNoPromptWithTheLoadReply() throws Exception {
+        HttpResponse response = codec.encode(generatedText(), "llama3.2", generateRequest("{\"model\":\"llama3.2\"}"));
+
+        assertThat(response.getStatusCode(), is(200));
+        assertThat(response.getFirstHeader("content-type"), is("application/json"));
+        JsonNode root = OBJECT_MAPPER.readTree(response.getBodyAsString());
+        assertThat(fieldNames(root), containsInAnyOrder("model", "created_at", "response", "done", "done_reason"));
+        assertThat(root.get("model").asText(), is("llama3.2"));
+        assertThat(root.get("created_at").isTextual(), is(true));
+        assertThat(root.get("response").isTextual(), is(true));
+        assertThat(root.get("response").asText(), is(""));
+        assertThat(root.get("done").isBoolean(), is(true));
+        assertThat(root.get("done").asBoolean(), is(true));
+        assertThat(root.get("done_reason").asText(), is("load"));
+    }
+
+    @Test
+    public void shouldAnswerGenerateWithEmptyOrNullPromptWithTheLoadReply() throws Exception {
+        for (String body : new String[]{"{\"model\":\"m\",\"prompt\":\"\"}", "{\"model\":\"m\",\"prompt\":null}", "{\"model\":\"m\",\"prompt\":\"\",\"keep_alive\":\"5m\"}"}) {
+            JsonNode root = OBJECT_MAPPER.readTree(codec.encode(generatedText(), "m", generateRequest(body)).getBodyAsString());
+            assertThat(body, root.path("done_reason").asText(), is("load"));
+            assertThat(body, root.path("response").asText("missing"), is(""));
+            assertThat(body, root.has("eval_count"), is(false));
+        }
+    }
+
+    @Test
+    public void shouldAnswerGenerateWithNoPromptAndZeroKeepAliveWithTheUnloadReply() throws Exception {
+        HttpResponse response = codec.encode(generatedText(), "llama3.2", generateRequest("{\"model\":\"llama3.2\",\"keep_alive\":0}"));
+
+        JsonNode root = OBJECT_MAPPER.readTree(response.getBodyAsString());
+        assertThat(fieldNames(root), containsInAnyOrder("model", "created_at", "response", "done", "done_reason"));
+        assertThat(root.get("model").asText(), is("llama3.2"));
+        assertThat(root.get("response").asText("missing"), is(""));
+        assertThat(root.get("done").asBoolean(), is(true));
+        assertThat(root.get("done_reason").asText(), is("unload"));
+    }
+
+    @Test
+    public void shouldAnswerChatWithEmptyMessagesWithTheLoadReply() throws Exception {
+        HttpResponse response = codec.encode(generatedText(), "llama3.2", chatRequest("{\"model\":\"llama3.2\",\"messages\":[]}"));
+
+        assertThat(response.getStatusCode(), is(200));
+        JsonNode root = OBJECT_MAPPER.readTree(response.getBodyAsString());
+        assertThat(fieldNames(root), containsInAnyOrder("model", "created_at", "message", "done", "done_reason"));
+        assertThat(root.get("model").asText(), is("llama3.2"));
+        assertThat(fieldNames(root.get("message")), containsInAnyOrder("role", "content"));
+        assertThat(root.get("message").get("role").asText(), is("assistant"));
+        assertThat(root.get("message").get("content").isTextual(), is(true));
+        assertThat(root.get("message").get("content").asText(), is(""));
+        assertThat(root.get("done").asBoolean(), is(true));
+        assertThat(root.get("done_reason").asText(), is("load"));
+    }
+
+    @Test
+    public void shouldAnswerChatWithNoMessagesFieldWithTheLoadReply() throws Exception {
+        JsonNode root = OBJECT_MAPPER.readTree(codec.encode(generatedText(), "m", chatRequest("{\"model\":\"m\"}")).getBodyAsString());
+
+        assertThat(root.path("done_reason").asText(), is("load"));
+        assertThat(root.path("message").path("content").asText("missing"), is(""));
+    }
+
+    @Test
+    public void shouldAnswerChatWithEmptyMessagesAndZeroKeepAliveWithTheUnloadReply() throws Exception {
+        JsonNode root = OBJECT_MAPPER.readTree(codec.encode(generatedText(), "llama3.2",
+            chatRequest("{\"model\":\"llama3.2\",\"messages\":[],\"keep_alive\":0}")).getBodyAsString());
+
+        assertThat(fieldNames(root), containsInAnyOrder("model", "created_at", "message", "done", "done_reason"));
+        assertThat(root.get("message").get("role").asText(), is("assistant"));
+        assertThat(root.get("message").get("content").asText(), is(""));
+        assertThat(root.get("done_reason").asText(), is("unload"));
+    }
+
+    @Test
+    public void shouldReadKeepAliveAsOllamaDoesWhenChoosingUnload() throws Exception {
+        String[] zero = {"0", "0.0", "-0.0", "1e-10", "\"0\"", "\"+0\"", "\"0s\"", "\"0m\"", "\"0h0m0s\"", "\"0.0ms\"", "\"0.s\"", "\"-0s\"", "\"0\\u00b5s\"", "\"0\\u03bcs\""};
+        String[] notZero = {"300", "-1", "-1e-10", "1e-6", "\"5m\"", "\"-1s\"", "\"0.1s\"", "\"00\"", "\"1\"", "\"s\"", "\".s\"", "\"\"", "null", "true", "{}"};
+        for (String keepAlive : zero) {
+            JsonNode root = OBJECT_MAPPER.readTree(codec.encode(generatedText(), "m",
+                chatRequest("{\"model\":\"m\",\"messages\":[],\"keep_alive\":" + keepAlive + "}")).getBodyAsString());
+            assertThat("keep_alive " + keepAlive, root.path("done_reason").asText(), is("unload"));
+        }
+        for (String keepAlive : notZero) {
+            JsonNode root = OBJECT_MAPPER.readTree(codec.encode(generatedText(), "m",
+                generateRequest("{\"model\":\"m\",\"keep_alive\":" + keepAlive + "}")).getBodyAsString());
+            assertThat("keep_alive " + keepAlive, root.path("done_reason").asText(), is("load"));
+        }
+    }
+
+    @Test
+    public void shouldStillGenerateWhenThereIsSomethingToGenerateEvenWithZeroKeepAlive() throws Exception {
+        JsonNode chat = OBJECT_MAPPER.readTree(codec.encode(generatedText(), "m",
+            chatRequest("{\"model\":\"m\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"keep_alive\":0}")).getBodyAsString());
+        assertThat(chat.path("message").path("content").asText(), is("should not be sent"));
+        assertThat(chat.path("done_reason").asText(), is("stop"));
+        assertThat(chat.path("eval_count").asInt(), is(4));
+
+        JsonNode generate = OBJECT_MAPPER.readTree(codec.encode(generatedText(), "m",
+            generateRequest("{\"model\":\"m\",\"prompt\":\" \",\"keep_alive\":0}")).getBodyAsString());
+        assertThat(generate.path("response").asText(), is("should not be sent"));
+        assertThat(generate.path("done_reason").asText(), is("stop"));
+    }
+
+    @Test
+    public void shouldGenerateForRequestsThatAreNotOllamaLoadRequests() throws Exception {
+        HttpRequest[] requests = {
+            chatRequest("not json"),
+            request().withMethod("POST").withPath("/api/chat"),
+            request().withMethod("POST").withPath("/v1/chat/completions").withBody("{\"model\":\"m\",\"messages\":[]}"),
+            chatRequest("{\"model\":\"m\",\"messages\":{}}"),
+            generateRequest("{\"model\":\"m\",\"prompt\":[]}")
+        };
+        for (HttpRequest request : requests) {
+            JsonNode root = OBJECT_MAPPER.readTree(codec.encode(generatedText(), "m", request).getBodyAsString());
+            assertThat(request.toString(), root.path("done_reason").asText(), is("stop"));
+            assertThat(request.toString(), root.path("eval_count").asInt(), is(4));
+        }
+    }
+
+    @Test
+    public void shouldNameTheRequestModelInTheLoadReplyWhenTheExpectationHasNone() throws Exception {
+        JsonNode root = OBJECT_MAPPER.readTree(codec.encode(generatedText(), null,
+            generateRequest("{\"model\":\"qwen3:8b\"}")).getBodyAsString());
+
+        assertThat(root.path("model").asText(), is("qwen3:8b"));
+    }
+
+    @Test
+    public void shouldSendTheLoadAndUnloadRepliesAsOneObjectWhenTheExpectationStreams() throws Exception {
+        Completion streamed = generatedText().withStreaming(true);
+
+        List<JsonNode> generateLines = streamedLines(codec.encodeStreaming(streamed, "llama3.2", null,
+            generateRequest("{\"model\":\"llama3.2\"}")));
+        assertThat(generateLines, hasSize(1));
+        assertThat(fieldNames(generateLines.get(0)), containsInAnyOrder("model", "created_at", "response", "done", "done_reason"));
+        assertThat(generateLines.get(0).path("done_reason").asText(), is("load"));
+
+        List<JsonNode> chatLines = streamedLines(codec.encodeStreaming(streamed, "llama3.2", null,
+            chatRequest("{\"model\":\"llama3.2\",\"messages\":[],\"keep_alive\":\"0s\"}")));
+        assertThat(chatLines, hasSize(1));
+        assertThat(fieldNames(chatLines.get(0)), containsInAnyOrder("model", "created_at", "message", "done", "done_reason"));
+        assertThat(chatLines.get(0).path("message").path("content").asText("missing"), is(""));
+        assertThat(chatLines.get(0).path("done_reason").asText(), is("unload"));
+    }
 }

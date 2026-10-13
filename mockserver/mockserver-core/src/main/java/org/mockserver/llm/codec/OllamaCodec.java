@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.SseEvent.sseEvent;
@@ -104,16 +105,95 @@ public class OllamaCodec implements ProviderCodec {
      */
     @Override
     public HttpResponse encode(Completion completion, String model, HttpRequest request) {
+        ObjectNode modelReply = modelManagementReply(model, request);
+        if (modelReply != null) {
+            return jsonResponse(modelReply);
+        }
         return isGenerate(request) ? encodeGenerate(completion, model, request) : encode(completion, model);
     }
 
     @Override
     public List<SseEvent> encodeStreaming(Completion completion, String model, StreamingPhysics physics, HttpRequest request) {
+        ObjectNode modelReply = modelManagementReply(model, request);
+        if (modelReply != null) {
+            return Collections.singletonList(sseEvent().withData(toJson(modelReply)));
+        }
         return isGenerate(request) ? encodeGenerateStreaming(completion, model, physics, request) : encodeStreaming(completion, model, physics);
     }
 
     private static boolean isGenerate(HttpRequest request) {
         return EmbeddingWire.path(request).endsWith("/api/generate");
+    }
+
+    /** A Go {@code time.ParseDuration} string whose value is zero, such as {@code 0}, {@code 0s} or {@code 0.0m}. */
+    private static final Pattern ZERO_GO_DURATION = Pattern.compile("[-+]?(0|((0+(\\.0*)?|\\.0+)(ns|us|\u00b5s|\u03bcs|ms|s|m|h))+)");
+
+    /**
+     * Ollama's reply to a request that only loads or unloads the model ({@code server/routes.go},
+     * {@code GenerateHandler} and {@code ChatHandler}; {@code docs/api.md} "Load a model" and
+     * "Unload a model"): an {@code /api/generate} body with an empty {@code prompt}, or an
+     * {@code /api/chat} body with no {@code messages}, gets one JSON object with no text and no
+     * metrics, whose {@code done_reason} is {@code unload} when {@code keep_alive} is zero and
+     * {@code load} otherwise. Returns null for any other request.
+     */
+    private static ObjectNode modelManagementReply(String model, HttpRequest request) {
+        String path = EmbeddingWire.path(request);
+        boolean generate = path.endsWith("/api/generate");
+        if (!generate && !path.endsWith("/api/chat")) {
+            return null;
+        }
+        JsonNode body = jsonObjectBody(request);
+        if (body == null) {
+            return null;
+        }
+        JsonNode input = body.get(generate ? "prompt" : "messages");
+        boolean nothingToGenerate = input == null || input.isNull()
+            || (generate ? input.isTextual() && input.asText().isEmpty() : input.isArray() && input.isEmpty());
+        if (!nothingToGenerate) {
+            return null;
+        }
+        String modelName = EmbeddingWire.firstNonBlank(model, EmbeddingWire.text(body, "model"), "unknown");
+        ObjectNode reply;
+        if (generate) {
+            reply = generateObject(modelName, "");
+        } else {
+            reply = OBJECT_MAPPER.createObjectNode();
+            reply.put("model", modelName);
+            reply.put("created_at", Instant.now().toString());
+            reply.putObject("message").put("role", "assistant").put("content", "");
+        }
+        reply.put("done", true);
+        reply.put("done_reason", isZeroKeepAlive(body.get("keep_alive")) ? "unload" : "load");
+        return reply;
+    }
+
+    private static JsonNode jsonObjectBody(HttpRequest request) {
+        String text = request != null ? request.getBodyAsText() : null;
+        if (text == null || text.isEmpty()) {
+            return null;
+        }
+        try {
+            JsonNode node = OBJECT_MAPPER.readTree(text);
+            return node != null && node.isObject() ? node : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * Whether {@code keep_alive} decodes to a zero duration as Ollama's {@code api.Duration} reads
+     * it: a number of seconds, truncated to whole nanoseconds, or a Go duration string. A negative
+     * value means "keep loaded forever", not zero.
+     */
+    private static boolean isZeroKeepAlive(JsonNode keepAlive) {
+        if (keepAlive == null) {
+            return false;
+        }
+        if (keepAlive.isNumber()) {
+            double seconds = keepAlive.asDouble();
+            return seconds >= 0 && (long) (seconds * 1_000_000_000d) == 0;
+        }
+        return keepAlive.isTextual() && ZERO_GO_DURATION.matcher(keepAlive.asText()).matches();
     }
 
     /**

@@ -517,7 +517,7 @@ curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
         <tr>
             <td><span class="inline_code">OLLAMA</span></td>
             <td><span class="inline_code">/api/chat</span>, <span class="inline_code">/api/generate</span></td>
-            <td>Ollama local model API format; a request to <span class="inline_code">/api/generate</span> gets the text in a top-level <span class="inline_code">response</span> field, as Ollama returns it</td>
+            <td>Ollama local model API format; a request to <span class="inline_code">/api/generate</span> gets the text in a top-level <span class="inline_code">response</span> field, as Ollama returns it. A request with no prompt (or an empty <span class="inline_code">messages</span> list) only loads the model, so it gets Ollama's empty reply with <span class="inline_code">done_reason: "load"</span>, or <span class="inline_code">"unload"</span> when <span class="inline_code">keep_alive</span> is <span class="inline_code">0</span>, instead of the expectation's text</td>
         </tr>
         <tr>
             <td><span class="inline_code">COHERE</span></td>

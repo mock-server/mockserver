@@ -1,0 +1,28 @@
+{
+  "description": "/api/chat with an empty messages array and keep_alive 0 unloads the model",
+  "source": "https://github.com/ollama/ollama/blob/efe43c5561047d8baf8c862730b2151249d51fd5/docs/api.md#unload-a-model-1",
+  "retrieved": "2026-10-13",
+  "request": {
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "model": "llama3.2",
+      "messages": [],
+      "keep_alive": 0
+    }
+  },
+  "httpLlmResponse": {
+    "provider": "OLLAMA",
+    "model": "llama3.2",
+    "completion": {
+      "text": "Text that a load or unload request must not receive.",
+      "usage": {
+        "inputTokens": 26,
+        "outputTokens": 290
+      }
+    }
+  },
+  "response": "chat-unload.response.json",
+  "format": "JSON",
+  "allowed": []
+}
