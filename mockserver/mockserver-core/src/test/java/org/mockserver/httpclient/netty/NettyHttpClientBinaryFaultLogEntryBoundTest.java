@@ -103,7 +103,8 @@ public class NettyHttpClientBinaryFaultLogEntryBoundTest {
                 .collect(Collectors.toList());
             assertThat(aboutTheFailure.toString(), aboutTheFailure, is(empty()));
             for (LogEntry entry : logged) {
-                assertThat(entry.getMessage(configuration()), not(containsString("4141")));
+                // eight hex digits, so a five-digit port such as 41415 cannot match
+                assertThat(entry.getMessage(configuration()), not(containsString("41".repeat(4))));
             }
         } finally {
             clientEventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
