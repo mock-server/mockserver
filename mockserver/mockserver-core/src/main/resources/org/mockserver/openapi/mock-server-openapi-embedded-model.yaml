@@ -4360,7 +4360,7 @@ paths:
                       description: the property name, or the unrecognised key as it was set
                     value:
                       type: string
-                      description: the resolved value, `(default)`, `***REDACTED***` for a credential, or `(ignored)` for an unrecognised key
+                      description: the resolved value (for a property at its built-in default, that default's value), `***REDACTED***` for a credential, `(ignored)` for an unrecognised key, or `(default)` only when a default could not be read
                     source:
                       type: string
                       enum: [ "system-property", "properties-file", "environment-variable", "default", "runtime-set", "unrecognised" ]

@@ -815,7 +815,7 @@ keywords: "mcp tools, mockserver mcp tools, create_expectation, verify_request, 
 
 <h3>diagnose_config</h3>
 
-<p>Shows which configuration settings are in effect and where each came from: a system property, the properties file, an environment variable or a runtime setter. Without parameters it lists only the settings changed from their default. Pass <code>name</code> to check one setting, in any form (<code>maxExpectations</code>, <code>mockserver.maxExpectations</code> or <code>MOCKSERVER_MAX_EXPECTATIONS</code>); a name that matches nothing returns a <code>hint</code>, which usually means a typo. Credential values, such as passwords, tokens and API keys, are always shown as <code>***REDACTED***</code>.</p>
+<p>Shows which configuration settings are in effect and where each came from: a system property, the properties file, an environment variable or a runtime setter. Without parameters it lists only the settings changed from their default. Pass <code>name</code> to check one setting, in any form (<code>maxExpectations</code>, <code>mockserver.maxExpectations</code>, <code>MOCKSERVER_MAX_EXPECTATIONS</code> or <code>max-expectations</code>); a name that matches nothing returns a <code>hint</code> and the <code>suggestions</code> it was probably meant to be. Every answer also lists, under <code>unrecognised</code>, each <code>mockserver.*</code> or <code>MOCKSERVER_*</code> key you set that MockServer does not recognise and so ignores, with the setting it was probably meant to be. Credential values, such as passwords, tokens and API keys, are always shown as <code>***REDACTED***</code>, and an unrecognised key is shown by name only, never its value.</p>
 
 <p><strong>Note:</strong> This reports the same values and sources as <code>GET /mockserver/config</code> and the <code>--print-config</code> command-line flag, which list every setting, including those at their default. A value set only on the <code>Configuration</code> object of an embedded server, or through <code>PUT /mockserver/configuration</code>, is not shown; <code>GET /mockserver/configuration</code> returns those.</p>
 
@@ -824,7 +824,7 @@ keywords: "mcp tools, mockserver mcp tools, create_expectation, verify_request, 
         <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
     </thead>
     <tbody>
-        <tr><td><code>name</code></td><td>string</td><td>No</td><td>A setting name, or part of one, to look up, including settings at their default</td></tr>
+        <tr><td><code>name</code></td><td>string</td><td>No</td><td>A setting name, or part of one, to look up, including settings at their default (shown with the default's value)</td></tr>
     </tbody>
 </table>
 
@@ -850,10 +850,13 @@ keywords: "mcp tools, mockserver mcp tools, create_expectation, verify_request, 
   ],
   "count": 1,
   "explicitlySetCount": 3,
+  "unrecognised": [
+    { "name": "MOCKSERVER_MAX_EXPECTATONS", "setAs": "environment variable", "suggestions": [ "MOCKSERVER_MAX_EXPECTATIONS" ], "systemPropertyOnly": false }
+  ],
   "note": "values come from system properties, the properties file, environment variables and runtime setters; ..."
 }</code></pre>
 
-<p>A setting at its default shows the value <code>(default)</code> and the source <code>default</code>. <code>explicitlySetCount</code> is the number of settings changed from their default, and <code>totalProperties</code> (left out above) the number of settings MockServer recognises.</p>
+<p>A setting at its default shows the default's value, for example <code>"value": "false", "source": "default"</code>; a default worked out from the JVM heap size or from another setting shows the value worked out now, and a credential at its default is still shown as <code>***REDACTED***</code>. <code>explicitlySetCount</code> is the number of settings changed from their default, and <code>totalProperties</code> (left out above) the number of settings MockServer recognises. In <code>unrecognised</code>, <code>setAs</code> says how the key was set (<code>system property</code>, <code>environment variable</code> or <code>properties-file key</code>), and <code>systemPropertyOnly</code> is <code>true</code> for a setting MockServer reads only as a <code>-D</code> JVM system property, which has no effect where it was set.</p>
 
 <a id="stop_server" class="anchor" href="#stop_server">&nbsp;</a>
 

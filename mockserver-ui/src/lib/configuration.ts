@@ -36,7 +36,7 @@ export const LOG_LEVELS = ['TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'OFF'] as 
 /**
  * The source tier a resolved configuration value came from. Matches the exact
  * strings emitted by the server's `effectiveConfiguration()` (`--print-config`
- * twin). `default` means the built-in default (value is rendered as `(default)`);
+ * twin). `default` means the built-in default (value is that default's value);
  * sensitive values are redacted server-side to `***REDACTED***`. `unrecognised`
  * is a `mockserver.*` / `MOCKSERVER_*` key that is not a property, so is ignored
  * (value `(ignored)`, never the value that was set).

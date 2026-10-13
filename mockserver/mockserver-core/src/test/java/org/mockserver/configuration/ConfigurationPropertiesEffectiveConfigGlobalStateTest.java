@@ -16,8 +16,8 @@ import static org.mockserver.configuration.ConfigurationProperties.SOURCE_SYSTEM
 /**
  * End-to-end verification of the effective-configuration diagnostic against REAL system
  * properties: a non-sensitive key set via a JVM system property reports its value and the
- * {@code system-property} source, a sensitive key is redacted, and an unset key reports the
- * built-in default.
+ * {@code system-property} source, a sensitive key is redacted, and an unset key reports its
+ * built-in default value.
  *
  * <p>This test MUTATES global state (sets JVM system properties), so it is registered in the
  * sequential Surefire phase and excluded from the parallel phase in mockserver-core/pom.xml,
@@ -71,10 +71,10 @@ public class ConfigurationPropertiesEffectiveConfigGlobalStateTest {
             assertThat(sensitive.getValue(), not(containsString("super-secret-token-value")));
             assertThat(sensitive.getSource(), is(SOURCE_SYSTEM_PROPERTY));
 
-            // Unset key reports the built-in default.
+            // Unset key reports its built-in default value.
             ConfigurationProperties.ResolvedProperty unset = find(properties, DEFAULT_KEY)
                 .orElseThrow(() -> new AssertionError("expected " + DEFAULT_KEY + " in effective configuration"));
-            assertThat(unset.getValue(), is("(default)"));
+            assertThat(unset.getValue(), is("false"));
             assertThat(unset.getSource(), is(SOURCE_DEFAULT));
         } finally {
             restoreCacheEntry(NON_SENSITIVE_KEY, previousCachedNonSensitive);
@@ -279,8 +279,8 @@ public class ConfigurationPropertiesEffectiveConfigGlobalStateTest {
 
             ConfigurationProperties.ResolvedProperty resolved = find(ConfigurationProperties.effectiveConfiguration(), DEFAULT_KEY)
                 .orElseThrow(() -> new AssertionError("expected " + DEFAULT_KEY + " in effective configuration"));
-            // The memoised default must be reported as the default, NOT runtime-set with the value false.
-            assertThat(resolved.getValue(), is("(default)"));
+            // The memoised default must be reported as the default, NOT runtime-set.
+            assertThat(resolved.getValue(), is("false"));
             assertThat(resolved.getSource(), is(SOURCE_DEFAULT));
         } finally {
             clearCacheEntry(DEFAULT_KEY);
@@ -317,6 +317,111 @@ public class ConfigurationPropertiesEffectiveConfigGlobalStateTest {
             restoreCacheEntry(DEFAULT_KEY, previousCachedDefault);
             restore(DEFAULT_KEY, previousDefault);
         }
+    }
+
+    @Test
+    public void aPropertyAtItsDefaultReportsItsDefaultValueWithoutCachingIt() throws Exception {
+        // perExpectationMetricsEnabled's default is read from a second key, so both must be left uncached
+        String derivedKey = "mockserver.perExpectationMetricsEnabled";
+        String legacyKey = "mockserver.perExpectationMetrics";
+        java.util.List<String> keys = java.util.List.of(DEFAULT_KEY, derivedKey, legacyKey);
+        java.util.Map<String, String> previous = new java.util.HashMap<>();
+        java.util.Map<String, String> previousCached = new java.util.HashMap<>();
+        java.util.Map<String, Boolean> previousProgrammatic = new java.util.HashMap<>();
+        for (String key : keys) {
+            previous.put(key, System.getProperty(key));
+            previousCached.put(key, getCacheEntry(key));
+            previousProgrammatic.put(key, isProgrammaticallySet(key));
+        }
+        try {
+            for (String key : keys) {
+                System.clearProperty(key);
+                clearCacheEntry(key);
+                removeProgrammaticallySet(key);
+            }
+
+            List<ConfigurationProperties.ResolvedProperty> properties = ConfigurationProperties.effectiveConfiguration();
+
+            for (String key : List.of(DEFAULT_KEY, derivedKey)) {
+                ConfigurationProperties.ResolvedProperty resolved = find(properties, key)
+                    .orElseThrow(() -> new AssertionError("expected " + key + " in effective configuration"));
+                assertThat(key, resolved.getValue(), is("false"));
+                assertThat(key, resolved.getSource(), is(SOURCE_DEFAULT));
+            }
+            for (String key : keys) {
+                assertThat("the view must not memoise " + key + ", or a later system property would be ignored",
+                    getCacheEntry(key), org.hamcrest.Matchers.nullValue());
+            }
+        } finally {
+            for (String key : keys) {
+                restoreProgrammaticallySet(key, previousProgrammatic.get(key));
+                restoreCacheEntry(key, previousCached.get(key));
+                restore(key, previous.get(key));
+            }
+        }
+    }
+
+    @Test
+    public void aDefaultDerivedFromAnotherPropertyReportsTheValueItsGetterComputes() throws Exception {
+        // ringBufferSize defaults to min(maxLogEntries, 16384) and is never cached, so its value comes from its getter
+        String key = "mockserver.ringBufferSize";
+        String previous = System.getProperty(key);
+        String previousCached = getCacheEntry(key);
+        boolean wasProgrammaticallySet = isProgrammaticallySet(key);
+        try {
+            System.clearProperty(key);
+            clearCacheEntry(key);
+            removeProgrammaticallySet(key);
+            assertThat("MOCKSERVER_RING_BUFFER_SIZE must not be set for this test", System.getenv("MOCKSERVER_RING_BUFFER_SIZE"), org.hamcrest.Matchers.nullValue());
+
+            ConfigurationProperties.ResolvedProperty resolved = find(ConfigurationProperties.effectiveConfiguration(), key)
+                .orElseThrow(() -> new AssertionError("expected " + key + " in effective configuration"));
+
+            assertThat(resolved.getSource(), is(SOURCE_DEFAULT));
+            assertThat(resolved.getValue(), is(String.valueOf(ConfigurationProperties.ringBufferSize())));
+        } finally {
+            restoreProgrammaticallySet(key, wasProgrammaticallySet);
+            restoreCacheEntry(key, previousCached);
+            restore(key, previous);
+        }
+    }
+
+    @Test
+    public void everyCredentialPropertyAtItsDefaultIsMaskedAndNoDefaultValueIsLeftUnresolved() {
+        int credentialsAtDefault = 0;
+        for (ConfigurationProperties.ResolvedProperty property : ConfigurationProperties.effectiveConfiguration()) {
+            if (!SOURCE_DEFAULT.equals(property.getSource())) {
+                continue;
+            }
+            assertThat(property.getName(), property.getValue(), not("(default)"));
+            if (ConfigurationProperties.isSensitivePropertyName(property.getName())) {
+                credentialsAtDefault++;
+                assertThat(property.getName(), property.getValue(), is(REDACTED_VALUE));
+            }
+        }
+        assertThat(credentialsAtDefault, org.hamcrest.Matchers.greaterThan(10));
+    }
+
+    @Test
+    public void aDefaultValueGoesThroughTheSameRedactionAsASetValue() {
+        // the built-in defaults hold no credential today, so the rule is checked directly on the default-value path
+        assertThat(ConfigurationProperties.redactedDefaultValue("mockserver.llmApiKey", "sk-built-in-default-must-not-appear"), is(REDACTED_VALUE));
+        assertThat(ConfigurationProperties.redactedDefaultValue("mockserver.prometheusRemoteWriteHeaders", "Authorization=Bearer built-in-must-not-appear,X-Scope-OrgID=t"),
+            is("Authorization=" + REDACTED_VALUE + ",X-Scope-OrgID=t"));
+        assertThat(ConfigurationProperties.redactedDefaultValue("mockserver.metricsEnabled", "false"), is("false"));
+        assertThat(ConfigurationProperties.redactedDefaultValue("mockserver.metricsEnabled", null), is("(default)"));
+    }
+
+    @Test
+    public void everyRecognisedPropertyHasAGetterTheViewCanReadItsDefaultFrom() {
+        java.util.List<String> withoutGetter = new java.util.ArrayList<>();
+        for (ConfigurationProperties.ResolvedProperty property : ConfigurationProperties.effectiveConfiguration()) {
+            if (ConfigurationProperties.defaultValueGetter(property.getName()) == null) {
+                withoutGetter.add(property.getName());
+            }
+        }
+        assertThat("properties whose built-in default the effective-configuration view cannot show: " + withoutGetter,
+            withoutGetter, is(java.util.Collections.<String>emptyList()));
     }
 
     @SuppressWarnings("unchecked")

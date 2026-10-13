@@ -47,7 +47,8 @@ flowchart LR
   gate order to the serving loop.
 - **MCP diagnosis tools (B1):** `explain_request` (A3's explainer by correlation id, redacted as the
   event log is) and `diagnose_config` (the effective configuration with each value's source, credentials
-  masked; the non-default properties, or any property by name).
+  masked; the non-default properties, or any property by name with a default shown by its value; plus each
+  unrecognised key by name with its suggestions, using core's normaliser and "did you mean").
 - **404 hints:** `findClosestMatchHint` feeds the `x-mockserver-closest-match(-hint)` headers
   (`closestMatchHintEnabled`, default true), the optional mismatch diagnostic body, and a DEBUG
   log. It checks at most 1,000 expectations and memoises per (method, path) until the store
@@ -101,8 +102,9 @@ flowchart LR
 - **Configuration (was A7):** the startup WARN for an unknown `mockserver.*` / `MOCKSERVER_*` key
   names the key it was most likely meant to be ("did you mean"); the effective configuration
   (`--print-config`, `GET /mockserver/config` with `?nonDefault=true`, dashboard Server Info tab)
-  shows each value and its source, credentials redacted, and lists the unrecognised keys by name
-  with their suggestions.
+  shows each value and its source, a property at its default with the default's value (A11, read
+  from the property's getter), credentials redacted, and lists the unrecognised keys by name with
+  their suggestions.
 
 **Gaps:** lint in the dashboard and at initialisation-file load.
 
@@ -113,14 +115,13 @@ flowchart LR
 | A8b | Lint results are REST, CLI and log only → a dashboard "Lint" view over `PUT /mockserver/lint` (rule, severity, message, a link to the shadowing expectation), and a badge from `x-mockserver-lint-warnings` when the dashboard creates an expectation | (iii) | On demand; calls the existing endpoint | S | Keep clear of B3's Explain Unmatched work | P2 |
 | A8d | `control_plane_authorisation.html` lists read operations by example and does not name `lint` (left out of A8 to avoid a conflict with A5's edit of the adjacent mutate row) → add `lint` (and `explain` if still missing) to the read row | (iv) | Docs only | S | None | P3 |
 | A8c | Expectations loaded from `initializationJsonPath` (and `--watch` reloads) never pass through `PUT /mockserver/expectation`, so they get no lint warnings → run `ExpectationLinter`'s per-expectation rules (and optionally the budgeted shadowing check) once per load and log a WARN summary | (iv) | Once per file load; linear rules, shadowing within its 100,000-pair budget | S | A large initialiser must not log thousands of lines: cap as `adviseOnUpsert` does | P2 |
-| A11 | The effective-config view reports `(default)` for a property at its default, not the default's value → expose each typed getter's built-in default (one table the getters and the view both read) so the view can show effective and default side by side | (iv) | Startup / on demand only | M | Some defaults are derived (heap size, another property); show the derivation rather than a guessed number | P3 |
+| A11b | An overridden property shows only its effective value → show its built-in default beside it in the effective-config view, `nonDefault` and `diagnose_config`. Today the default is read from the property's getter, which returns the effective value while a tier supplies one, so this needs a way to ask a getter for its default (for example a default table the getters read, or a read mode that ignores the tiers) | (iv) / (iii) | Startup / on demand only | M | Must not add work to the per-request property read (`readPropertyHierarchically` is on the hot path); the default must go through `redactSensitiveValue` | P3 |
 | B5 | Optional plain-language summary of explain results from a configured LLM (`?narrate=true`) | (iii) | On demand, asynchronous, timeout-bounded, never inline in a 404 | S | Off by default; label as AI-generated; always return the deterministic facts too | P3 |
 | A3b | Only the Java client has a typed `explain(correlationId)` → add it to the Node, Python, Ruby, Go, Rust, .NET and PHP clients, together with typed `debugMismatch` / `explainUnmatched`, since none of the seven has a diagnostic-call pattern to extend yet; reuse the `RequestExplanation` / `ExplainedExpectation` OpenAPI schemas | (iii) | Zero hot-path cost: calls the existing endpoint | M | Seven model copies to keep in step with the schema; generate from it where the client already does | P3 |
 | A6b | Surface OpenAPI load problems outside the log | (iv) | Load time only | S | Return the advisory problems of a spec that loads in the PUT /mockserver/openapi 201 response (needs HttpState, which was off-limits for A6) and list them in the dashboard and an MCP tool | P2 |
 | A5b | The template dry run is REST-only → a "Test template" action in the expectation editor that posts the template and a chosen recorded request to `PUT /mockserver/template/test` and shows output, error position and warnings; a strict Mustache pass could warn about missing variables, which Mustache renders as empty text | (iii) | On demand; calls the existing endpoint | M | Keep the 429 and timeout visible in the UI | P2 |
 | A5c | Velocity templates have no execution time limit: serving sets `MAX_NUMBER_LOOPS` to -1 and Velocity cannot be cancelled, so a runaway `#foreach` holds a template-pool thread until restart → a configurable loop bound or a deadline check | (ii) | One counter check per loop iteration on the template path only; measure it before and after | M | A bound that is too low breaks legitimate large templates | P2 |
 | A5d | A template that throws answers the client with a plain 404 (`handleAnyException`), so a template bug looks like a missing expectation → a distinguishable status (for example 500 with an error header) behind a flag, or by default in a major release | (ii) | Failure path only | S | Behaviour change for clients that expect the 404 | P2 |
-| B1b | `diagnose_config` reports only values and sources → once A7 lands, append its `unrecognisedConfiguration()` result (names, setAs, suggestions, systemPropertyOnly; names only, never values), add the defaults comparison from A11, and replace the tool's local `normalisedPropertyName` with core's public `suggestRecognisedKeys` / name normaliser | (iii) | On demand; one pass over the recognised keys | S | Must never echo the value of an unrecognised key, which may be a credential | P1 |
 | B1c | Diagnosis tools still missing from MCP → add `explain_forward_failure` when A4 lands, `test_template` with A5, `lint_expectations` with A8 and `suggest_expectation_fix` with B3; each in `READING_TOOLS`, delegating to the item's endpoint, with redacted output | (iii) | On demand; the item's own cost | S | Tool output carries user traffic: redact as the endpoint does | P1 |
 | A2b | At INFO an unmatched request still walks every expectation for the closest-match log line (`fullScanClosestMatchAndLazyRemoval`, which also schedules lazy removal and counts namespace skips), so a 404 flood at INFO stays O(expectations) per miss after A2 → measure it with `MatchingBenchmark` at INFO and 1,000 expectations, then cap it at 1,000 like the hint if it dominates, keeping lazy removal reachable for every inactive expectation | (ii) | Today O(expectations) per miss at INFO; A2's memo cannot be reused because the walk drives lazy removal | S | A cap must say so in the log line and must not strand inactive expectations | P2 |
 | C1b | The LLM prompt redactor still sends an OAuth authorization `?code=` query value, because `code` is not a credential field name | (iv) | Prompt build only | S | `code` is a common non-secret parameter name; mask it only alongside OAuth signals such as `state`, `redirect_uri` or an `/authorize` or `/callback` path | P3 |
@@ -142,9 +143,9 @@ flowchart LR
 
 1. **Wave 0 — hygiene and performance:** A2b, C1b. (A2, A2c and C1 landed.)
 2. **Wave 1 — explain engine:** done (A3, A10 and B1 landed).
-3. **Wave 2 — failure classes:** A6, each with an MCP tool (see B1b and B1c) and a dashboard entry. (A4 landed; A5 landed REST-only, and A5b adds its dashboard entry.)
+3. **Wave 2 — failure classes:** A6, each with an MCP tool (see B1c) and a dashboard entry. (A4 landed; A5 landed REST-only, and A5b adds its dashboard entry.)
 4. **Wave 3 — fixes:** A8b, A8c. (B2, B3, A9b and A8, including the CLI, landed.)
-5. **Wave 4 — optional:** B5, A11. (B6 and B7 landed.)
+5. **Wave 4 — optional:** B5, A11b. (B6, B7, A11 and B1b landed.)
 
 ## Performance rules for every item
 

@@ -161,12 +161,72 @@ public class McpDiagnosisToolsTest {
     public void shouldLookUpAPropertyByAnyFormOfItsNameIncludingAtItsDefault() throws Exception {
         McpToolRegistry registry = new McpToolRegistry(newHttpState(configuration()), server());
 
-        for (String name : new String[]{"MOCKSERVER_MAX_LOGGED_BODY_BYTES", "mockserver.maxLoggedBodyBytes", "maxloggedbodybytes"}) {
+        for (String name : new String[]{"MOCKSERVER_MAX_LOGGED_BODY_BYTES", "mockserver.maxLoggedBodyBytes", "maxloggedbodybytes", " max-logged-body-bytes "}) {
             JsonNode result = callTool(registry, "diagnose_config", objectMapper.createObjectNode().put("name", name));
 
             JsonNode property = propertyNode(result, "mockserver.maxLoggedBodyBytes");
             assertThat(name, property.path("name").asText(), is("mockserver.maxLoggedBodyBytes"));
             assertThat(name, result.path("count").asInt(), is(1));
+        }
+    }
+
+    @Test
+    public void shouldShowTheValueOfAPropertyAtItsDefaultAndMaskACredentialAtItsDefault() throws Exception {
+        McpToolRegistry registry = new McpToolRegistry(newHttpState(configuration()), server());
+
+        JsonNode bodyBytes = propertyNode(callTool(registry, "diagnose_config", objectMapper.createObjectNode().put("name", "maxLoggedBodyBytes")), "mockserver.maxLoggedBodyBytes");
+        JsonNode apiKey = propertyNode(callTool(registry, "diagnose_config", objectMapper.createObjectNode().put("name", "llmApiKey")), "mockserver.llmApiKey");
+
+        assertThat(bodyBytes.path("source").asText(), is(ConfigurationProperties.SOURCE_DEFAULT));
+        assertThat(bodyBytes.path("value").asText(), is(String.valueOf(ConfigurationProperties.maxLoggedBodyBytes())));
+        assertThat(apiKey.path("source").asText(), is(ConfigurationProperties.SOURCE_DEFAULT));
+        assertThat(apiKey.path("value").asText(), is("***REDACTED***"));
+    }
+
+    @Test
+    public void shouldListUnrecognisedKeysByNameWithSuggestionsAndNeverTheirValues() throws Exception {
+        String typoKey = "mockserver.maxExpectatons";
+        String fileOnlyKey = "mockserver.candidateIndexThreshold";
+        String typoSecret = "mcp-unrecognised-typo-secret";
+        String fileSecret = "mcp-unrecognised-file-secret";
+        String previousTypo = System.getProperty(typoKey);
+        String previousFileOnly = System.getProperty(fileOnlyKey);
+        Object previousFileEntry = ConfigurationProperties.PROPERTIES.get(fileOnlyKey);
+        try {
+            System.setProperty(typoKey, typoSecret);
+            // a system-property-only key in the properties file is ignored unless the system property is set
+            System.clearProperty(fileOnlyKey);
+            ConfigurationProperties.PROPERTIES.setProperty(fileOnlyKey, fileSecret);
+            McpToolRegistry registry = new McpToolRegistry(newHttpState(configuration()), server());
+
+            for (JsonNode result : List.of(
+                callTool(registry, "diagnose_config", objectMapper.createObjectNode()),
+                callTool(registry, "diagnose_config", objectMapper.createObjectNode().put("name", "maxLoggedBodyBytes")))) {
+                JsonNode typo = unrecognisedNode(result, typoKey);
+                assertThat(typo.path("setAs").asText(), is("system property"));
+                assertThat(typo.path("suggestions").toString(), is("[\"mockserver.maxExpectations\"]"));
+                assertThat(typo.path("systemPropertyOnly").asBoolean(true), is(false));
+                assertThat(typo.has("value"), is(false));
+                JsonNode fileOnly = unrecognisedNode(result, fileOnlyKey);
+                assertThat(fileOnly.path("setAs").asText(), is("properties-file key"));
+                assertThat(fileOnly.path("systemPropertyOnly").asBoolean(false), is(true));
+                assertThat(result.toString(), not(containsString(typoSecret)));
+                assertThat(result.toString(), not(containsString(fileSecret)));
+            }
+        } finally {
+            if (previousTypo != null) {
+                System.setProperty(typoKey, previousTypo);
+            } else {
+                System.clearProperty(typoKey);
+            }
+            if (previousFileOnly != null) {
+                System.setProperty(fileOnlyKey, previousFileOnly);
+            }
+            if (previousFileEntry != null) {
+                ConfigurationProperties.PROPERTIES.put(fileOnlyKey, previousFileEntry);
+            } else {
+                ConfigurationProperties.PROPERTIES.remove(fileOnlyKey);
+            }
         }
     }
 
@@ -177,7 +237,8 @@ public class McpDiagnosisToolsTest {
         JsonNode result = callTool(registry, "diagnose_config", objectMapper.createObjectNode().put("name", "maxExpectatons"));
 
         assertThat(result.path("count").asInt(), is(0));
-        assertThat(result.path("hint").asText(), containsString("no recognised configuration property name contains 'maxExpectatons'"));
+        assertThat(result.path("hint").asText(), is("no recognised configuration property name contains 'maxExpectatons'; did you mean mockserver.maxExpectations?"));
+        assertThat(result.path("suggestions").toString(), is("[\"mockserver.maxExpectations\"]"));
     }
 
     // ---- helpers ----
@@ -239,6 +300,15 @@ public class McpDiagnosisToolsTest {
             }
         }
         throw new AssertionError("no property '" + name + "' in " + result);
+    }
+
+    private static JsonNode unrecognisedNode(JsonNode result, String name) {
+        for (JsonNode property : result.path("unrecognised")) {
+            if (name.equals(property.path("name").asText())) {
+                return property;
+            }
+        }
+        throw new AssertionError("no unrecognised key '" + name + "' in " + result);
     }
 
     private interface ThrowingRunnable {

@@ -21,6 +21,7 @@ import org.slf4j.event.Level;
 import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -7532,9 +7533,10 @@ public class ConfigurationProperties {
         return null;
     }
 
-    static final int FORM_SYSTEM_PROPERTY = 0;
-    static final int FORM_ENVIRONMENT_VARIABLE = 1;
-    static final int FORM_PROPERTIES_FILE = 2;
+    /** The form {@link #suggestRecognisedKeys(String, int)} returns its suggestions in. */
+    public static final int FORM_SYSTEM_PROPERTY = 0;
+    public static final int FORM_ENVIRONMENT_VARIABLE = 1;
+    public static final int FORM_PROPERTIES_FILE = 2;
 
     // normalised name -> the key as a system property, environment variable and properties-file key (null: no such form)
     private static volatile Map<String, String[]> recognisedKeysByNormalisedName;
@@ -7560,7 +7562,7 @@ public class ConfigurationProperties {
      * Lower case, without the {@code mockserver} prefix and without separators, so {@code mockserver.maxExpectations},
      * {@code MOCKSERVER_MAX_EXPECTATIONS} and {@code mockserver.max_expectations} all normalise to the same name.
      */
-    static String normaliseKeyForSuggestion(String key) {
+    public static String normaliseKeyForSuggestion(String key) {
         String lowerCase = key.toLowerCase(Locale.ROOT);
         if (lowerCase.startsWith("mockserver")) {
             lowerCase = lowerCase.substring("mockserver".length());
@@ -7580,7 +7582,7 @@ public class ConfigurationProperties {
      * edit distance between normalised names (so a key differing only in case or separators is at distance zero), at
      * most one edit per four characters and at most three, all equally close ones, sorted.
      */
-    static List<String> suggestRecognisedKeys(String unrecognisedKey, int form) {
+    public static List<String> suggestRecognisedKeys(String unrecognisedKey, int form) {
         String normalised = normaliseKeyForSuggestion(unrecognisedKey);
         if (normalised.isEmpty()) {
             return Collections.emptyList();
@@ -7672,8 +7674,8 @@ public class ConfigurationProperties {
     // together with the tier that supplied it. The reporting is PURELY OBSERVATIONAL:
     // it inspects the same three tiers in the same precedence order as
     // readPropertyHierarchically(...) (system property > properties file > env var,
-    // then the built-in default) but NEVER mutates the property cache or changes how
-    // any value resolves. Sensitive values are redacted via isSensitivePropertyName(...).
+    // then the built-in default), leaves the property cache as it found it and never
+    // changes how any value resolves. Sensitive values are redacted via redactSensitiveValue(...).
     // ------------------------------------------------------------------------
 
     /** Source-tier labels for a resolved configuration property. */
@@ -7763,9 +7765,8 @@ public class ConfigurationProperties {
     /**
      * Returns the value an explicitly-set property would resolve to, reading the SAME
      * tiers in the SAME order as {@link #readPropertyHierarchically} but without touching
-     * the property cache. Returns {@code null} when the key is at its built-in default
-     * (the typed default is computed at the individual read sites, so it is reported as
-     * {@code (default)} rather than guessed here).
+     * the property cache. Returns {@code null} when the key is at its built-in default,
+     * which {@link #builtInDefaultValues(List)} reads from the property's getter instead.
      */
     private static String resolveExplicitValue(String systemPropertyKey, String environmentVariableKey) {
         return resolveExplicitValue(
@@ -7844,22 +7845,23 @@ public class ConfigurationProperties {
     /**
      * The effective configuration: one {@link ResolvedProperty} per recognised
      * {@code mockserver.*} property, sorted by name, with sensitive values redacted.
-     * Properties at their built-in default report a {@code (default)} value and the
-     * {@link #SOURCE_DEFAULT} source.
+     * Properties at their built-in default report that default's value (see
+     * {@link #builtInDefaultValues(List)}) and the {@link #SOURCE_DEFAULT} source.
      *
      * <p>Cache-first, exactly like {@link #readPropertyHierarchically}: if the in-memory property
      * cache holds a value for a key (populated by a programmatic setter or by a first read), that
      * is the value MockServer actually uses and is what is reported. When that cached value also
      * resolves from one of the static tiers, the originating tier is reported; otherwise it is a
-     * runtime override ({@link #SOURCE_RUNTIME_SET}). Purely observational — reads the cache and
-     * the tiers but never mutates them and never changes how any value resolves.</p>
+     * runtime override ({@link #SOURCE_RUNTIME_SET}). Purely observational — leaves the cache and
+     * the tiers as it found them and never changes how any value resolves.</p>
      */
     public static List<ResolvedProperty> effectiveConfiguration() {
         Map<String, String> cache = getPropertyCache();
         Map<String, String> systemPropertyKeyToEnvKey = systemPropertyKeyToEnvironmentVariableKey();
 
         Set<String> programmaticKeys = getProgrammaticallySetKeys();
-        List<ResolvedProperty> resolved = new ArrayList<>();
+        List<String[]> rows = new ArrayList<>();
+        List<String> keysAtDefault = new ArrayList<>();
         for (Map.Entry<String, String> entry : systemPropertyKeyToEnvKey.entrySet()) {
             String systemPropertyKey = entry.getKey();
             String environmentVariableKey = entry.getValue();
@@ -7892,17 +7894,100 @@ public class ConfigurationProperties {
                 source = SOURCE_DEFAULT;
             }
 
-            String value;
             if (resolvedValue == null) {
-                value = "(default)";
-            } else {
+                keysAtDefault.add(systemPropertyKey);
+            }
+            rows.add(new String[]{systemPropertyKey, resolvedValue, source});
+        }
+        Map<String, String> defaults = builtInDefaultValues(keysAtDefault);
+        List<ResolvedProperty> resolved = new ArrayList<>(rows.size());
+        for (String[] row : rows) {
+            String value = row[1] != null
                 // one rule for every disclosing surface: whole-value credentials masked whole, and
                 // credentials embedded in a structured value redacted per header / per JSON field
-                value = redactSensitiveValue(systemPropertyKey, resolvedValue);
-            }
-            resolved.add(new ResolvedProperty(systemPropertyKey, value, source));
+                ? redactSensitiveValue(row[0], row[1])
+                : redactedDefaultValue(row[0], defaults.get(row[0]));
+            resolved.add(new ResolvedProperty(row[0], value, row[2]));
         }
         return resolved;
+    }
+
+    /**
+     * A built-in default as the view shows it: through {@link #redactSensitiveValue(String, String)} like any other
+     * value, or {@code (default)} when the default could not be read.
+     */
+    static String redactedDefaultValue(String systemPropertyKey, String defaultValue) {
+        return defaultValue == null ? "(default)" : redactSensitiveValue(systemPropertyKey, defaultValue);
+    }
+
+    private static final Object BUILT_IN_DEFAULTS_LOCK = new Object();
+
+    /**
+     * The built-in default of each property, read from the property's own getter so the view and the getter share
+     * one default; a default derived from the heap size or another property is the value derived now. The raw
+     * value the getter resolved is preferred to its typed result. Anything the getters memoise is removed again, so
+     * the view stays observational and a later system property is still honoured.
+     */
+    private static Map<String, String> builtInDefaultValues(List<String> systemPropertyKeys) {
+        Map<String, String> defaults = new HashMap<>();
+        if (systemPropertyKeys.isEmpty()) {
+            return defaults;
+        }
+        Map<String, String> cache = getPropertyCache();
+        synchronized (BUILT_IN_DEFAULTS_LOCK) {
+            Set<String> cachedBefore = new HashSet<>(cache.keySet());
+            try {
+                for (String systemPropertyKey : systemPropertyKeys) {
+                    Method getter = defaultValueGetter(systemPropertyKey);
+                    if (getter == null) {
+                        continue;
+                    }
+                    try {
+                        Object typed = getter.invoke(null);
+                        String raw = cache.get(systemPropertyKey);
+                        if (raw != null) {
+                            defaults.put(systemPropertyKey, raw);
+                        } else if (getter.getName().equals(systemPropertyKey.substring("mockserver.".length()))) {
+                            defaults.put(systemPropertyKey, typed == null ? "" : String.valueOf(typed));
+                        }
+                    } catch (Throwable throwable) {
+                        // a getter that cannot run leaves this property's value unknown, never the whole view
+                    }
+                }
+            } finally {
+                Set<String> programmaticKeys = getProgrammaticallySetKeys();
+                cache.keySet().removeIf(key -> !cachedBefore.contains(key) && !programmaticKeys.contains(key));
+            }
+        }
+        return defaults;
+    }
+
+    /**
+     * The no-argument static getter that reads a property: the one named after it, else for a legacy or
+     * {@code InMillis} alias key the getter of the property it aliases (whose typed result is then not this key's
+     * value). Null when there is none.
+     */
+    static Method defaultValueGetter(String systemPropertyKey) {
+        if (!systemPropertyKey.startsWith("mockserver.")) {
+            return null;
+        }
+        String name = systemPropertyKey.substring("mockserver.".length());
+        List<String> candidates = new ArrayList<>(List.of(name, name + "Enabled"));
+        if (name.endsWith("InMillis")) {
+            candidates.add(name.substring(0, name.length() - "InMillis".length()));
+        }
+        for (String candidate : candidates) {
+            try {
+                Method method = ConfigurationProperties.class.getDeclaredMethod(candidate);
+                if (Modifier.isStatic(method.getModifiers()) && method.getReturnType() != void.class) {
+                    method.setAccessible(true);
+                    return method;
+                }
+            } catch (NoSuchMethodException | RuntimeException exception) {
+                // not this candidate
+            }
+        }
+        return null;
     }
 
     /**

@@ -1231,16 +1231,16 @@ public class ConfigurationDTOCredentialMaskingTest {
                 continue;
             }
             // The name comes from the diagnostic output itself, not from this guard's filter, so this
-            // is not the filter asserting on itself. Driven with a value rather than read off the
-            // resolved one because an unset property renders as "(default)" here, and giving it a value
-            // would mean writing a system property — global state this class must not touch.
+            // is not the filter asserting on itself. Also driven with a value, because giving the
+            // property a real one would mean writing a system property — global state this class must
+            // not touch.
             if (!MASK.equals(redactSensitiveValue(resolved.getName(), "a-real-credential"))) {
                 problems.add(credential + " (the surface does not mask <" + resolved.getName() + ">)");
             }
-            if (!"(default)".equals(resolved.getValue()) && !MASK.equals(resolved.getValue())) {
-                // an ambient property file / environment variable supplied a real value, so the actual
-                // rendered output is observable here — and it must be the mask
-                problems.add(credential + " (ambient value rendered as <" + resolved.getValue()
+            if (!MASK.equals(resolved.getValue())) {
+                // the rendered value, whether the built-in default or an ambient property file /
+                // environment variable value, must be the mask
+                problems.add(credential + " (value rendered as <" + resolved.getValue()
                     + "> not the mask)");
             }
         }

@@ -1649,12 +1649,13 @@ public class McpToolRegistry {
         schema.put("type", "object");
         ObjectNode properties = schema.putObject("properties");
         properties.putObject("name").put("type", "string").put("description", "Optional property name or fragment to look up, in any form (maxExpectations, mockserver.maxExpectations or MOCKSERVER_MAX_EXPECTATIONS); "
-            + "returns every matching property, including those at their default. Without it, only the properties set away from their default are returned.");
+            + "returns every matching property, including those at their default with the default's value. Without it, only the properties set away from their default are returned.");
 
         tools.put("diagnose_config", new ToolDefinition(
             "diagnose_config",
             "Reports MockServer's effective configuration: each mockserver.* property set away from its default, its value and the source that supplied it "
                 + "(system-property, properties-file, environment-variable or runtime-set). Pass 'name' to check whether a particular setting took effect. "
+                + "Also lists each unrecognised mockserver.* / MOCKSERVER_* key, which MockServer ignores, by name only with the property it was probably meant to be. "
                 + "Credential values are always redacted. Reports the same values and sources as GET /mockserver/config, which lists every property.",
             schema,
             this::handleDiagnoseConfig
@@ -1664,7 +1665,8 @@ public class McpToolRegistry {
     private JsonNode handleDiagnoseConfig(JsonNode params) {
         try {
             JsonNode nameNode = params.path("name");
-            String filter = nameNode.isTextual() ? normalisedPropertyName(nameNode.asText()) : "";
+            String requestedName = nameNode.isTextual() ? nameNode.asText().trim() : "";
+            String filter = ConfigurationProperties.normaliseKeyForSuggestion(requestedName);
             List<ConfigurationProperties.ResolvedProperty> resolved = ConfigurationProperties.effectiveConfiguration();
             ArrayNode matching = objectMapper.createArrayNode();
             int explicitlySet = 0;
@@ -1673,7 +1675,7 @@ public class McpToolRegistry {
                 if (!atDefault) {
                     explicitlySet++;
                 }
-                if (filter.isEmpty() ? !atDefault : normalisedPropertyName(property.getName()).contains(filter)) {
+                if (filter.isEmpty() ? !atDefault : ConfigurationProperties.normaliseKeyForSuggestion(property.getName()).contains(filter)) {
                     ObjectNode propertyNode = matching.addObject();
                     propertyNode.put("name", property.getName());
                     propertyNode.put("value", property.getValue());
@@ -1685,22 +1687,30 @@ public class McpToolRegistry {
             resultNode.put("count", matching.size());
             resultNode.put("explicitlySetCount", explicitlySet);
             resultNode.put("totalProperties", resolved.size());
+            // names only: an unrecognised key's value may be a credential, so it is never read
+            ArrayNode unrecognised = resultNode.putArray("unrecognised");
+            for (ConfigurationProperties.UnrecognisedProperty property : ConfigurationProperties.unrecognisedConfiguration()) {
+                ObjectNode unrecognisedNode = unrecognised.addObject();
+                unrecognisedNode.put("name", property.getName());
+                unrecognisedNode.put("setAs", property.getSetAs());
+                ArrayNode suggestions = unrecognisedNode.putArray("suggestions");
+                property.getSuggestions().forEach(suggestions::add);
+                unrecognisedNode.put("systemPropertyOnly", property.isSystemPropertyOnly());
+            }
             resultNode.put("note", "values come from system properties, the properties file, environment variables and runtime setters; "
-                + "a value set only on an embedded server's Configuration object or through PUT /mockserver/configuration is not shown, "
-                + "and an unrecognised mockserver.* key is ignored with a WARN at startup");
+                + "a value set only on an embedded server's Configuration object or through PUT /mockserver/configuration is not shown; "
+                + "each key in 'unrecognised' is ignored, so set the suggested property instead");
             if (!filter.isEmpty() && matching.isEmpty()) {
-                resultNode.put("hint", "no recognised configuration property name contains '" + nameNode.asText().trim() + "'; check the spelling");
+                List<String> suggestions = ConfigurationProperties.suggestRecognisedKeys(requestedName, ConfigurationProperties.FORM_SYSTEM_PROPERTY);
+                resultNode.put("hint", "no recognised configuration property name contains '" + requestedName + "'; "
+                    + (suggestions.isEmpty() ? "check the spelling" : "did you mean " + String.join(" or ", suggestions) + "?"));
+                ArrayNode suggestionsNode = resultNode.putArray("suggestions");
+                suggestions.forEach(suggestionsNode::add);
             }
             return resultNode;
         } catch (Exception e) {
             return errorResult("Failed to diagnose configuration", e);
         }
-    }
-
-    /** Lower-cases and drops the prefix, dots and underscores, so the property, system-property and environment-variable forms compare equal. */
-    private static String normalisedPropertyName(String name) {
-        String normalised = name.trim().toLowerCase(Locale.ROOT).replace(".", "").replace("_", "");
-        return normalised.startsWith("mockserver") ? normalised.substring("mockserver".length()) : normalised;
     }
 
     private void registerCreateExpectationFromOpenApi() {

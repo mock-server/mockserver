@@ -25,7 +25,7 @@ public class EffectiveConfigurationRenderingTest {
     private static final List<ResolvedProperty> PROPERTIES = List.of(
         new ResolvedProperty("mockserver.llmApiKey", REDACTED_VALUE, SOURCE_ENVIRONMENT_VARIABLE),
         new ResolvedProperty("mockserver.maxExpectations", "4242", SOURCE_SYSTEM_PROPERTY),
-        new ResolvedProperty("mockserver.metricsEnabled", "(default)", SOURCE_DEFAULT)
+        new ResolvedProperty("mockserver.metricsEnabled", "false", SOURCE_DEFAULT)
     );
 
     private static List<UnrecognisedProperty> unrecognisedWithSecretValues() {
