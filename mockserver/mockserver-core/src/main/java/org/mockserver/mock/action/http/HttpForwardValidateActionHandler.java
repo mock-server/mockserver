@@ -90,12 +90,12 @@ public class HttpForwardValidateActionHandler extends HttpForwardAction {
                             : org.mockserver.model.SocketAddress.Scheme.HTTP);
                 adjustHostHeader(requestToSend);
 
-                return sendRequest(requestToSend, remoteAddress, responseValidator);
+                return sendRequest(request, requestToSend, remoteAddress, responseValidator);
             } else {
-                return sendRequest(requestToSend, null, responseValidator);
+                return sendRequest(request, requestToSend, null, responseValidator);
             }
         }
-        return sendRequest(request, null, httpResponse -> httpResponse);
+        return sendRequest(request, request, null, httpResponse -> httpResponse);
     }
 
     private String findOperationId(HttpForwardValidateAction action, HttpRequest request) {

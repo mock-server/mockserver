@@ -76,7 +76,7 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
             if (expectationForwardCallback != null || expectationForwardResponseCallback != null) {
                 try {
                     HttpRequest request = expectationForwardCallback != null ? expectationForwardCallback.handle(httpRequest) : httpRequest;
-                    return sendRequest(request, null, response -> {
+                    return sendRequest(httpRequest, request, null, response -> {
                         try {
                             return expectationForwardResponseCallback != null ? expectationForwardResponseCallback.handle(request, response) : response;
                         } catch (Throwable throwable) {
@@ -101,7 +101,7 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
                     return badGatewayFuture(httpRequest);
                 }
             } else {
-                return sendRequest(httpRequest, null, null);
+                return sendRequest(httpRequest, httpRequest, null, null);
             }
         } else {
             return badGatewayFuture(null);

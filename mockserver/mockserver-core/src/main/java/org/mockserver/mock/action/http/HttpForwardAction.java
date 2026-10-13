@@ -39,6 +39,7 @@ public abstract class HttpForwardAction {
     // upstream call and the upstream response is decoded back to JSON. Null (the default) leaves
     // ordinary HTTP forwarding byte-for-byte unchanged.
     private GrpcProtoDescriptorStore grpcDescriptorStore;
+    private ForwardLoopGuard forwardLoopGuard;
 
     HttpForwardAction(MockServerLogger mockServerLogger, Configuration configuration, NettyHttpClient httpClient) {
         this.mockServerLogger = mockServerLogger;
@@ -50,6 +51,10 @@ public abstract class HttpForwardAction {
         this.grpcDescriptorStore = grpcDescriptorStore;
     }
 
+    void setForwardLoopGuard(ForwardLoopGuard forwardLoopGuard) {
+        this.forwardLoopGuard = forwardLoopGuard;
+    }
+
     /**
      * How the action is named in the warning logged when forwardProxyBlockPrivateNetworks refuses its target.
      */
@@ -57,11 +62,15 @@ public abstract class HttpForwardAction {
         return "forward action";
     }
 
-    protected HttpForwardActionResult sendRequest(HttpRequest request, @Nullable InetSocketAddress remoteAddress, Function<HttpResponse, HttpResponse> overrideHttpResponse) {
-        return sendRequest(request, remoteAddress, overrideHttpResponse, false);
+    /**
+     * @param received the request MockServer received, whose forward-loop entries the forwarded request carries on
+     * @param request  the request to forward, which a template or callback may have built afresh
+     */
+    protected HttpForwardActionResult sendRequest(HttpRequest received, HttpRequest request, @Nullable InetSocketAddress remoteAddress, Function<HttpResponse, HttpResponse> overrideHttpResponse) {
+        return sendRequest(received, request, remoteAddress, overrideHttpResponse, false);
     }
 
-    protected HttpForwardActionResult sendRequest(HttpRequest request, @Nullable InetSocketAddress remoteAddress, Function<HttpResponse, HttpResponse> overrideHttpResponse, boolean disableStreaming) {
+    protected HttpForwardActionResult sendRequest(HttpRequest received, HttpRequest request, @Nullable InetSocketAddress remoteAddress, Function<HttpResponse, HttpResponse> overrideHttpResponse, boolean disableStreaming) {
         // every forward action sends through here, so this is where forwardProxyBlockPrivateNetworks is applied
         try {
             InetAddressValidator.validateForwardTarget(configuration, request, remoteAddress, httpClient != null && httpClient.sendsThroughHttpProxy(request, remoteAddress));
@@ -78,6 +87,22 @@ public abstract class HttpForwardAction {
                 );
             }
             return badGatewayFuture(request);
+        }
+        HttpResponse loopDetected = forwardLoopGuard != null ? forwardLoopGuard.loopDetectedResponse(received) : null;
+        if (loopDetected != null) {
+            if (mockServerLogger.isEnabledForInstance(Level.WARN)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(Level.WARN)
+                        .setCorrelationId(received.getLogCorrelationId())
+                        .setHttpRequest(received)
+                        .setMessageFormat("returning 508 Loop Detected in place of forwarding request:{}because:{}")
+                        .setArguments(received, loopDetected.getBodyAsString())
+                );
+            }
+            CompletableFuture<HttpResponse> loopFuture = new CompletableFuture<>();
+            loopFuture.complete(loopDetected);
+            return new HttpForwardActionResult(request, loopFuture, null, remoteAddress);
         }
         // Resolved once outside the try so the catch block can feed a synchronous failure back into
         // the circuit breaker (otherwise a half-open trial that throws synchronously would never
@@ -148,6 +173,9 @@ public abstract class HttpForwardAction {
             // methods on a transient failure (connection error or 502/503/504) with linear back-off.
             final int maxRetries = configuration != null ? configuration.forwardProxyRetryCount() : 0;
             final long backoffMillis = configuration != null ? configuration.forwardProxyRetryBackoffMillis() : 0L;
+            if (forwardLoopGuard != null) {
+                toSend = forwardLoopGuard.markForwarded(received, toSend);
+            }
             final HttpRequest finalToSend = toSend;
             final Supplier<CompletableFuture<HttpResponse>> attempt = () -> disableStreaming
                 ? httpClient.sendRequest(finalToSend, remoteAddress, configuration.socketConnectionTimeoutInMillis(), true)

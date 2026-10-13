@@ -924,6 +924,15 @@ This release delivers a sustained performance and memory programme alongside dat
 ### Fixed
 
 - **The dashboard's Preview Diff now shows the changes when it is the first editor you open.** In Capture as Mock, opening the Preview Diff tab before any other code editor in the page showed both documents with no added or changed lines highlighted, and the browser console reported that the editor's worker script failed to load. The diff is now computed whichever editor opens first.
+- **A forward expectation that sends requests back to MockServer itself now stops after 10 forwards with a
+  `508 Loop Detected`, instead of repeating until MockServer runs out of local ports.** Each forward matched the
+  same expectation again and opened another connection, and the client waited for an eventual `502`. Every forward action now adds an
+  `x-mockserver-forwarded-by` header naming this MockServer (a random value, new each start), and a request this
+  MockServer has already forwarded `forwardLoopMaxHops` times (default 10) is answered with a `508` whose body
+  says what to check. Only a MockServer's own entries count, so a forward to another MockServer, a chain of them,
+  and a deliberate forward back to the same MockServer (to a path another expectation answers) still work.
+  Upstreams now see the extra header; recorded expectations leave it out, so recordings still match requests
+  without it. Set `forwardLoopMaxHops` to `0` to stop sending it.
 - **A forward whose connection could not be made now says why, and what to change, in the `502`.** A forward,
   a proxied request or a `proxyPass` mapping whose upstream could not be reached got an empty
   `502 Bad Gateway`, and the log said only "failed to connect to remote socket" (at `TRACE`) or, for a host

@@ -175,6 +175,7 @@ public class Configuration {
     private volatile Integer forwardSocketKeepAliveIntervalSeconds;
     private volatile Integer forwardSocketKeepAliveCount;
     private volatile Integer forwardProxyRetryCount;
+    private volatile Integer forwardLoopMaxHops;
     private volatile Long forwardProxyRetryBackoffMillis;
     private volatile Boolean forwardProxyHttp2Enabled;
     private volatile Boolean forwardProxyHttp2Upgrade;
@@ -2544,6 +2545,27 @@ public class Configuration {
      */
     public Configuration forwardProxyRetryCount(Integer forwardProxyRetryCount) {
         this.forwardProxyRetryCount = forwardProxyRetryCount;
+        return this;
+    }
+
+    public Integer forwardLoopMaxHops() {
+        if (forwardLoopMaxHops == null) {
+            return ConfigurationProperties.forwardLoopMaxHops();
+        }
+        return forwardLoopMaxHops;
+    }
+
+    /**
+     * How many times one request may be forwarded by this MockServer before it is answered with
+     * {@code 508 Loop Detected}: each forward action adds this MockServer's identifier to the request's
+     * {@code x-mockserver-forwarded-by} header, so a forward whose target leads back here stops instead of
+     * repeating until local ports run out. Default 10; 0 turns loop detection off and stops the header
+     * being sent.
+     *
+     * @param forwardLoopMaxHops times one request may be forwarded by this MockServer, 0 to turn loop detection off
+     */
+    public Configuration forwardLoopMaxHops(Integer forwardLoopMaxHops) {
+        this.forwardLoopMaxHops = forwardLoopMaxHops;
         return this;
     }
 

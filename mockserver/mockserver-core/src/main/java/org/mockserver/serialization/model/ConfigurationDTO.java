@@ -259,6 +259,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private Integer forwardSocketKeepAliveIntervalSeconds;
     private Integer forwardSocketKeepAliveCount;
     private Integer forwardProxyRetryCount;
+    private Integer forwardLoopMaxHops;
     private Long forwardProxyRetryBackoffMillis;
     private Boolean forwardProxyHttp2Enabled;
     private Boolean forwardProxyHttp2Upgrade;
@@ -631,6 +632,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
             this.forwardSocketKeepAliveIntervalSeconds = configuration.forwardSocketKeepAliveIntervalSeconds();
             this.forwardSocketKeepAliveCount = configuration.forwardSocketKeepAliveCount();
             this.forwardProxyRetryCount = configuration.forwardProxyRetryCount();
+            this.forwardLoopMaxHops = configuration.forwardLoopMaxHops();
             this.forwardProxyRetryBackoffMillis = configuration.forwardProxyRetryBackoffMillis();
             this.forwardProxyHttp2Enabled = configuration.forwardProxyHttp2Enabled();
             this.forwardProxyHttp2Upgrade = configuration.forwardProxyHttp2Upgrade();
@@ -1100,6 +1102,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
         configuration.forwardSocketKeepAliveIntervalSeconds(forwardSocketKeepAliveIntervalSeconds);
         configuration.forwardSocketKeepAliveCount(forwardSocketKeepAliveCount);
         configuration.forwardProxyRetryCount(forwardProxyRetryCount);
+        configuration.forwardLoopMaxHops(forwardLoopMaxHops);
         configuration.forwardProxyRetryBackoffMillis(forwardProxyRetryBackoffMillis);
         configuration.forwardProxyHttp2Enabled(forwardProxyHttp2Enabled);
         configuration.forwardProxyHttp2Upgrade(forwardProxyHttp2Upgrade);
@@ -2018,6 +2021,9 @@ public class ConfigurationDTO implements DTO<Configuration> {
         }
         if (forwardProxyRetryCount != null) {
             target.forwardProxyRetryCount(forwardProxyRetryCount);
+        }
+        if (forwardLoopMaxHops != null) {
+            target.forwardLoopMaxHops(forwardLoopMaxHops);
         }
         if (forwardProxyRetryBackoffMillis != null) {
             target.forwardProxyRetryBackoffMillis(forwardProxyRetryBackoffMillis);
@@ -4353,6 +4359,15 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setForwardProxyRetryCount(Integer forwardProxyRetryCount) {
         this.forwardProxyRetryCount = forwardProxyRetryCount;
+        return this;
+    }
+
+    public Integer getForwardLoopMaxHops() {
+        return forwardLoopMaxHops;
+    }
+
+    public ConfigurationDTO setForwardLoopMaxHops(Integer forwardLoopMaxHops) {
+        this.forwardLoopMaxHops = forwardLoopMaxHops;
         return this;
     }
 

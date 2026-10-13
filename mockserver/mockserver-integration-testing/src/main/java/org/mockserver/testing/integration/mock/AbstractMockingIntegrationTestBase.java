@@ -71,6 +71,8 @@ public abstract class AbstractMockingIntegrationTestBase {
         "x-cors",
         // closest-match hint header (on by default on unmatched 404s)
         "x-mockserver-closest-match-hint",
+        // forward-loop count a forward adds, which the echo server returns
+        "x-mockserver-forwarded-by",
         // HTTP2 headers
         HttpConversionUtil.ExtensionHeaderNames.STREAM_WEIGHT.text().toString(),
         HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text().toString()

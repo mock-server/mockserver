@@ -104,6 +104,7 @@ public class HttpActionHandler {
     // two NottableStrings on every received request.
     private final NottableString loopPreventionHeaderName;
     private final NottableString loopPreventionHeaderValue;
+    private final ForwardLoopGuard forwardLoopGuard;
     private final Scheduler scheduler;
     // Drift analyses submitted but not yet finished (queued or running); bounded by maxPendingDriftAnalyses().
     private final AtomicInteger pendingDriftAnalyses = new AtomicInteger();
@@ -160,6 +161,8 @@ public class HttpActionHandler {
         this.httpStateHandler = httpStateHandler;
         this.loopPreventionHeaderName = string(httpStateHandler.getUniqueLoopPreventionHeaderName());
         this.loopPreventionHeaderValue = string(httpStateHandler.getUniqueLoopPreventionHeaderValue());
+        // its own id: upstreams see this one, and a request carrying the x-forwarded-by value goes unlogged
+        this.forwardLoopGuard = new ForwardLoopGuard(configuration, "MockServer_" + java.util.UUID.randomUUID());
         this.scheduler = httpStateHandler.getScheduler();
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         this.httpRequestToCurlSerializer = new HttpRequestToCurlSerializer(mockServerLogger);
@@ -1756,7 +1759,7 @@ public class HttpActionHandler {
                         if (LocalCallbackRegistry.forwardClientExists(clientId)) {
                             HttpRequest callbackRequest = LocalCallbackRegistry.retrieveForwardCallback(clientId).handle(request);
                             if (callbackRequest != null) {
-                                HttpForwardActionResult result = getHttpForwardObjectCallbackActionHandler().forward(callbackRequest);
+                                HttpForwardActionResult result = getHttpForwardObjectCallbackActionHandler().forward(request, callbackRequest);
                                 logForwardResultAsync(result, request, secondaryAction);
                             }
                         }
@@ -4051,6 +4054,7 @@ public class HttpActionHandler {
         if (httpForwardActionHandler == null) {
             httpForwardActionHandler = new HttpForwardActionHandler(mockServerLogger, configuration, httpClient);
             httpForwardActionHandler.setGrpcDescriptorStore(httpStateHandler.getGrpcDescriptorStore());
+            httpForwardActionHandler.setForwardLoopGuard(forwardLoopGuard);
         }
         return httpForwardActionHandler;
     }
@@ -4059,6 +4063,7 @@ public class HttpActionHandler {
         if (httpForwardTemplateActionHandler == null) {
             httpForwardTemplateActionHandler = new HttpForwardTemplateActionHandler(mockServerLogger, configuration, httpClient);
             httpForwardTemplateActionHandler.setGrpcDescriptorStore(httpStateHandler.getGrpcDescriptorStore());
+            httpForwardTemplateActionHandler.setForwardLoopGuard(forwardLoopGuard);
         }
         return httpForwardTemplateActionHandler;
     }
@@ -4067,6 +4072,7 @@ public class HttpActionHandler {
         if (httpForwardClassCallbackActionHandler == null) {
             httpForwardClassCallbackActionHandler = new HttpForwardClassCallbackActionHandler(mockServerLogger, configuration, httpClient);
             httpForwardClassCallbackActionHandler.setGrpcDescriptorStore(httpStateHandler.getGrpcDescriptorStore());
+            httpForwardClassCallbackActionHandler.setForwardLoopGuard(forwardLoopGuard);
         }
         return httpForwardClassCallbackActionHandler;
     }
@@ -4075,6 +4081,7 @@ public class HttpActionHandler {
         if (httpForwardObjectCallbackActionHandler == null) {
             httpForwardObjectCallbackActionHandler = new HttpForwardObjectCallbackActionHandler(httpStateHandler, configuration, httpClient);
             httpForwardObjectCallbackActionHandler.setGrpcDescriptorStore(httpStateHandler.getGrpcDescriptorStore());
+            httpForwardObjectCallbackActionHandler.setForwardLoopGuard(forwardLoopGuard);
         }
         return httpForwardObjectCallbackActionHandler;
     }
@@ -4083,6 +4090,7 @@ public class HttpActionHandler {
         if (httpOverrideForwardedRequestCallbackActionHandler == null) {
             httpOverrideForwardedRequestCallbackActionHandler = new HttpOverrideForwardedRequestActionHandler(mockServerLogger, configuration, httpClient);
             httpOverrideForwardedRequestCallbackActionHandler.setGrpcDescriptorStore(httpStateHandler.getGrpcDescriptorStore());
+            httpOverrideForwardedRequestCallbackActionHandler.setForwardLoopGuard(forwardLoopGuard);
         }
         return httpOverrideForwardedRequestCallbackActionHandler;
     }
@@ -4091,6 +4099,7 @@ public class HttpActionHandler {
         if (httpForwardValidateActionHandler == null) {
             httpForwardValidateActionHandler = new HttpForwardValidateActionHandler(mockServerLogger, configuration, httpClient);
             httpForwardValidateActionHandler.setGrpcDescriptorStore(httpStateHandler.getGrpcDescriptorStore());
+            httpForwardValidateActionHandler.setForwardLoopGuard(forwardLoopGuard);
         }
         return httpForwardValidateActionHandler;
     }
@@ -4099,6 +4108,7 @@ public class HttpActionHandler {
         if (httpForwardWithFallbackActionHandler == null) {
             httpForwardWithFallbackActionHandler = new HttpForwardWithFallbackActionHandler(mockServerLogger, configuration, httpClient);
             httpForwardWithFallbackActionHandler.setGrpcDescriptorStore(httpStateHandler.getGrpcDescriptorStore());
+            httpForwardWithFallbackActionHandler.setForwardLoopGuard(forwardLoopGuard);
         }
         return httpForwardWithFallbackActionHandler;
     }

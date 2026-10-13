@@ -67,7 +67,9 @@ public abstract class AbstractMockingIntegrationTestBase {
         "version",
         "x-cors",
         // closest-match hint header (on by default on unmatched 404s)
-        "x-mockserver-closest-match-hint"
+        "x-mockserver-closest-match-hint",
+        // forward-loop count a forward adds, which the echo server returns
+        "x-mockserver-forwarded-by"
     );
 
     protected static EchoServer insecureEchoServer;

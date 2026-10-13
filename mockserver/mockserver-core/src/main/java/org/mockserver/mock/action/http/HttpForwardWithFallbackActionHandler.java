@@ -66,6 +66,7 @@ public class HttpForwardWithFallbackActionHandler extends HttpForwardAction {
         // calling thread rather than resolving synchronously in the InetSocketAddress constructor.
         HttpForwardActionResult forwardResult = sendRequest(
             httpRequest,
+            httpRequest,
             InetSocketAddress.createUnresolved(httpForward.getHost(), httpForward.getPort()),
             null
         );

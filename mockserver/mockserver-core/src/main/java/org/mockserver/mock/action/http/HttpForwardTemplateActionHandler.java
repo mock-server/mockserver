@@ -40,7 +40,7 @@ public class HttpForwardTemplateActionHandler extends HttpForwardAction {
                 HttpResponse responseOverride = httpTemplate.getResponseOverride();
                 HttpResponseModifier responseModifier = httpTemplate.getResponseModifier();
                 if (responseOverride != null || responseModifier != null) {
-                    return sendRequest(templatedRequest, null, httpResponse -> {
+                    return sendRequest(originalRequest, templatedRequest, null, httpResponse -> {
                         if (httpResponse == null) {
                             return responseOverride;
                         } else {
@@ -48,7 +48,7 @@ public class HttpForwardTemplateActionHandler extends HttpForwardAction {
                         }
                     });
                 }
-                return sendRequest(templatedRequest, null, null);
+                return sendRequest(originalRequest, templatedRequest, null, null);
             }
         }
 

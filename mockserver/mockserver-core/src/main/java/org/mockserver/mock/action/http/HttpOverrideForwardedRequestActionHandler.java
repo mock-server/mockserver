@@ -48,7 +48,7 @@ public class HttpOverrideForwardedRequestActionHandler extends HttpForwardAction
             boolean disableStreaming = hasResponseModification
                 && !isHeaderOnlyResponseModification(httpOverrideForwardedRequest);
             HttpTemplate responseTemplate = httpOverrideForwardedRequest.getResponseTemplate();
-            return sendRequest(requestToSend, null, httpResponse -> {
+            return sendRequest(request, requestToSend, null, httpResponse -> {
                 HttpResponse result = httpResponse;
                 if (result == null) {
                     result = httpOverrideForwardedRequest.getResponseOverride();
@@ -69,7 +69,7 @@ public class HttpOverrideForwardedRequestActionHandler extends HttpForwardAction
                 return result;
             }, disableStreaming);
         } else {
-            return sendRequest(request, null, httpResponse -> httpResponse);
+            return sendRequest(request, request, null, httpResponse -> httpResponse);
         }
     }
 

@@ -27,7 +27,7 @@ public class HttpForwardActionHandler extends HttpForwardAction {
         httpRequest.replaceHeader(new Header("Host", hostHeader));
         // Unresolved so Netty's event-loop resolver performs the (blocking) DNS lookup off the calling
         // thread; sendRequest applies forwardProxyBlockPrivateNetworks first.
-        return sendRequest(httpRequest, InetSocketAddress.createUnresolved(httpForward.getHost(), httpForward.getPort()), null);
+        return sendRequest(httpRequest, httpRequest, InetSocketAddress.createUnresolved(httpForward.getHost(), httpForward.getPort()), null);
     }
 
 }

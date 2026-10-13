@@ -72,6 +72,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
         try {
             HttpRequest callbackRequest = expectationForwardCallback.handle(request);
             final HttpForwardActionResult responseFuture = sendRequest(
+                request,
                 callbackRequest,
                 null,
                 null
@@ -139,6 +140,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                     );
                 }
                 final HttpForwardActionResult responseFuture = sendRequest(
+                    request,
                     callbackRequest.removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME),
                     null,
                     null
@@ -262,11 +264,11 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
     }
 
     /**
-     * Forwards a request a local forward callback returned, as a secondary action does, through the same checks as
-     * any forward action.
+     * Forwards a request a local forward callback returned for {@code received}, as a secondary action does, through
+     * the same checks as any forward action.
      */
-    HttpForwardActionResult forward(HttpRequest callbackRequest) {
-        return sendRequest(callbackRequest, null, null);
+    HttpForwardActionResult forward(HttpRequest received, HttpRequest callbackRequest) {
+        return sendRequest(received, callbackRequest, null, null);
     }
 
     @Override

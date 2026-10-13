@@ -1527,6 +1527,28 @@ public class ConfigurationTest {
     }
 
     @Test
+    public void shouldSetAndGetForwardLoopMaxHops() {
+        int original = ConfigurationProperties.forwardLoopMaxHops();
+        try {
+            assertThat(configuration.forwardLoopMaxHops(), equalTo(10));
+
+            ConfigurationProperties.forwardLoopMaxHops(3);
+            assertThat(ConfigurationProperties.forwardLoopMaxHops(), equalTo(3));
+            assertThat(System.getProperty("mockserver.forwardLoopMaxHops"), equalTo("3"));
+            assertThat(configuration.forwardLoopMaxHops(), equalTo(3));
+
+            ConfigurationProperties.forwardLoopMaxHops(-1);
+            assertThat(ConfigurationProperties.forwardLoopMaxHops(), equalTo(0));
+            ConfigurationProperties.forwardLoopMaxHops(original);
+
+            configuration.forwardLoopMaxHops(0);
+            assertThat(configuration.forwardLoopMaxHops(), equalTo(0));
+        } finally {
+            ConfigurationProperties.forwardLoopMaxHops(original);
+        }
+    }
+
+    @Test
     public void shouldSetAndGetForwardProxyRetryBackoffMillis() {
         long original = ConfigurationProperties.forwardProxyRetryBackoffMillis();
         try {

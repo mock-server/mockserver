@@ -154,6 +154,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_FORWARD_SOCKET_KEEP_ALIVE_INTERVAL_SECONDS = "mockserver.forwardSocketKeepAliveIntervalSeconds";
     private static final String MOCKSERVER_FORWARD_SOCKET_KEEP_ALIVE_COUNT = "mockserver.forwardSocketKeepAliveCount";
     private static final String MOCKSERVER_FORWARD_PROXY_RETRY_COUNT = "mockserver.forwardProxyRetryCount";
+    private static final String MOCKSERVER_FORWARD_LOOP_MAX_HOPS = "mockserver.forwardLoopMaxHops";
     private static final String MOCKSERVER_FORWARD_PROXY_RETRY_BACKOFF_MILLIS = "mockserver.forwardProxyRetryBackoffMillis";
     private static final String MOCKSERVER_FORWARD_PROXY_HTTP2_ENABLED = "mockserver.forwardProxyHttp2Enabled";
     private static final String MOCKSERVER_FORWARD_PROXY_HTTP2_UPGRADE = "mockserver.forwardProxyHttp2Upgrade";
@@ -2947,6 +2948,26 @@ public class ConfigurationProperties {
      */
     public static void forwardProxyRetryCount(int retryCount) {
         setProperty(MOCKSERVER_FORWARD_PROXY_RETRY_COUNT, "" + retryCount);
+    }
+
+    public static int forwardLoopMaxHops() {
+        return Math.max(0, readIntegerProperty(MOCKSERVER_FORWARD_LOOP_MAX_HOPS, "MOCKSERVER_FORWARD_LOOP_MAX_HOPS", 10));
+    }
+
+    /**
+     * How many times one request may be forwarded by the same MockServer before it is answered with
+     * {@code 508 Loop Detected}. Each forward action adds this MockServer's identifier to the request's
+     * {@code x-mockserver-forwarded-by} header, so a forward whose target leads back to this MockServer
+     * stops after this many hops instead of repeating until local ports run out. Forwards through other
+     * MockServer instances are not counted.
+     * <p>
+     * Default is 10. 0 turns loop detection off and stops the header being sent. Negative values are
+     * treated as 0.
+     *
+     * @param maxHops times one request may be forwarded by this MockServer, 0 to turn loop detection off
+     */
+    public static void forwardLoopMaxHops(int maxHops) {
+        setProperty(MOCKSERVER_FORWARD_LOOP_MAX_HOPS, "" + maxHops);
     }
 
     public static long forwardProxyRetryBackoffMillis() {

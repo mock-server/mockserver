@@ -17,8 +17,9 @@ import java.util.Set;
  * send the same value: the same request from another client gets a 404.
  * <p>
  * Covers the hop-by-hop headers of RFC 9110 section 7.6.1 (including any header the request's own
- * {@code Connection} header nominates), every {@code Proxy-*} header, and {@code Content-Length}, which the
- * body already determines. {@code Host} is kept by default: it is what tells recordings of two upstreams
+ * {@code Connection} header nominates), every {@code Proxy-*} header, {@code Content-Length}, which the
+ * body already determines, and {@code x-mockserver-forwarded-by}, the forward-loop count whose values identify one
+ * run of a MockServer instance. {@code Host} is kept by default: it is what tells recordings of two upstreams
  * apart. Promoting recordings to active mocks also drops it, so an application calling MockServer directly
  * (with its own {@code Host}) matches the promoted mock.
  */
@@ -31,7 +32,8 @@ public final class TransportHeaderFilter {
         "trailer",
         "transfer-encoding",
         "upgrade",
-        "content-length"
+        "content-length",
+        "x-mockserver-forwarded-by"
     );
 
     private TransportHeaderFilter() {
