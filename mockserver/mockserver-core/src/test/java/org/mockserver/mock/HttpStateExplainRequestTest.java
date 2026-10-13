@@ -260,7 +260,94 @@ public class HttpStateExplainRequestTest {
         assertThat(missing.getBodyAsString(), containsString("requires a correlationId"));
     }
 
+    @Test
+    public void shouldReturnExactlyTheFieldsTheOpenApiSchemaDocuments() throws Exception {
+        httpState.add(
+            new Expectation(request().withMethod("GET").withPath("/schema").withHeader("X-Tenant", "gold"))
+                .withId("high").withPriority(10).thenRespond(response()),
+            new Expectation(request().withPath("/schema")).withId("served").withPriority(5).thenRespond(response()),
+            new Expectation(request().withPath("/schema")).withId("shadowed").thenRespond(response()),
+            new Expectation(request().withMethod("POST").withPath("/schema/far")).withId("far").thenRespond(response())
+        );
+        recordMatched("s1", request().withMethod("GET").withPath("/schema").withHeader("X-Tenant", "silver"), "served", afterLastChange());
+        recordMatched("s2", request().withMethod("POST").withPath("/schema/near")
+            .withHeader(MockServerEventLog.TRUNCATED_BODY_HEADER, "100000").withBody("abc"), null, afterLastChange());
+        List<Expectation> many = new ArrayList<>();
+        for (int i = 0; i <= HttpState.EXPLAIN_REQUEST_EVALUATION_BUDGET; i++) {
+            many.add(new Expectation(request().withPath("/budget/" + i)).withId("b" + i).thenRespond(response()));
+        }
+        httpState.add(many.toArray(new Expectation[0]));
+        recordMatched("s3", request().withMethod("GET").withPath("/budget/none"), null, afterLastChange());
+
+        JsonNode spec = new ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory()).readTree(
+            new java.io.File("src/main/resources/org/mockserver/openapi/mock-server-openapi-embedded-model.yaml"));
+        JsonNode schema = spec.path("paths").path("/mockserver/explain").path("put").path("responses").path("200")
+            .path("content").path("application/json").path("schema");
+        java.util.Set<String> documented = new java.util.TreeSet<>();
+        collectDocumented(spec, schema, "", documented);
+        java.util.Set<String> returned = new java.util.TreeSet<>();
+        for (String correlationId : new String[]{"s1", "s2", "s3"}) {
+            assertUndocumentedFieldsAbsent(spec, schema, explain(correlationId), "", returned);
+        }
+
+        assertThat("documented but never returned", documented.stream().filter(path -> !returned.contains(path))
+            .collect(java.util.stream.Collectors.toList()), is(java.util.Collections.emptyList()));
+    }
+
     // ---- helpers ----
+
+    private static final String COMPONENT = "#/components/schemas/";
+
+    private static JsonNode resolve(JsonNode spec, JsonNode schema) {
+        String ref = schema.path("$ref").asText("");
+        return ref.startsWith(COMPONENT) ? spec.path("components").path("schemas").path(ref.substring(COMPONENT.length())) : schema;
+    }
+
+    /** Fields of a referenced component are keyed by the component's name, wherever it is referenced from. */
+    private static String pathOf(JsonNode schema, String path) {
+        String ref = schema.path("$ref").asText("");
+        return ref.startsWith(COMPONENT) ? ref.substring(COMPONENT.length()) : path;
+    }
+
+    /** Every field path the schema names, with array items written as {@code []}. */
+    private static void collectDocumented(JsonNode spec, JsonNode schema, String parentPath, java.util.Set<String> documented) {
+        JsonNode resolved = resolve(spec, schema);
+        String path = pathOf(schema, parentPath);
+        resolved.path("properties").fields().forEachRemaining(property -> {
+            String child = path + "/" + property.getKey();
+            documented.add(child);
+            collectDocumented(spec, property.getValue(), child, documented);
+        });
+        if (resolved.has("items")) {
+            collectDocumented(spec, resolved.path("items"), path + "[]", documented);
+        }
+        if (resolved.path("additionalProperties").isObject()) {
+            collectDocumented(spec, resolved.path("additionalProperties"), path + "{}", documented);
+        }
+    }
+
+    private static void assertUndocumentedFieldsAbsent(JsonNode spec, JsonNode schema, JsonNode value, String parentPath, java.util.Set<String> returned) {
+        JsonNode resolved = resolve(spec, schema);
+        String path = pathOf(schema, parentPath);
+        String type = resolved.path("type").asText("");
+        String actual = value.isObject() ? "object" : value.isArray() ? "array" : value.isBoolean() ? "boolean" : value.isIntegralNumber() ? "integer" : value.isTextual() ? "string" : value.getNodeType().name();
+        assertThat("type of " + path, actual, is(type));
+        if (value.isObject()) {
+            value.fields().forEachRemaining(field -> {
+                boolean named = resolved.path("properties").has(field.getKey());
+                String child = path + (named ? "/" + field.getKey() : "{}");
+                assertThat("field " + path + "/" + field.getKey() + " is returned but not in the OpenAPI schema",
+                    named || resolved.path("additionalProperties").isObject(), is(true));
+                returned.add(child);
+                assertUndocumentedFieldsAbsent(spec, named ? resolved.path("properties").path(field.getKey()) : resolved.path("additionalProperties"), field.getValue(), child, returned);
+            });
+        } else if (value.isArray()) {
+            for (JsonNode item : value) {
+                assertUndocumentedFieldsAbsent(spec, resolved.path("items"), item, path + "[]", returned);
+            }
+        }
+    }
+
 
     /** An arrival time after the last expectation change, so the expectations count as unchanged since. */
     private long afterLastChange() {

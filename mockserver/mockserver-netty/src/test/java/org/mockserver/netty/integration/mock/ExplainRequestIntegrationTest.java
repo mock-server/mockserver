@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockserver.client.ClientException;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.client.RequestExplanation;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.netty.MockServer;
 import org.mockserver.serialization.ObjectMapperFactory;
@@ -17,6 +19,8 @@ import java.util.Arrays;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertThrows;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.HttpRequest.request;
@@ -69,6 +73,50 @@ public class ExplainRequestIntegrationTest {
         assertThat(loser.path("expectationId").asText(), is("gold-tenant"));
         assertThat(loser.path("reason").asText(), is("FIELDS_DIFFER"));
         assertThat(loser.path("explanation").asText(), containsString("headers"));
+    }
+
+    @Test
+    public void shouldExplainThroughTheTypedJavaClient() throws Exception {
+        // priorities below the other tests' highest (10) keep this server-wide state out of their first skipped entry
+        client.when(request().withMethod("GET").withPath("/explain-typed/orders").withHeader("X-Tenant", "gold"), org.mockserver.matchers.Times.unlimited(), org.mockserver.matchers.TimeToLive.unlimited(), 7)
+            .withId("typed-gold-tenant")
+            .respond(response().withStatusCode(201));
+        client.when(request().withMethod("GET").withPath("/explain-typed/orders"), org.mockserver.matchers.Times.unlimited(), org.mockserver.matchers.TimeToLive.unlimited(), 5)
+            .withId("typed-catch-all")
+            .respond(response().withStatusCode(200));
+        client.when(request().withPath("/explain-typed/orders"))
+            .withId("typed-shadowed")
+            .respond(response().withStatusCode(202));
+
+        java.net.http.HttpResponse<String> served = HTTP.send(java.net.http.HttpRequest.newBuilder(URI.create(base() + "/explain-typed/orders"))
+            .header("X-Tenant", "silver").GET().build(), java.net.http.HttpResponse.BodyHandlers.ofString());
+        assertThat(served.statusCode(), is(200));
+
+        RequestExplanation explanation = client.explain(correlationIdOf("/explain-typed/orders"));
+
+        assertThat(explanation.request().path(), is("/explain-typed/orders"));
+        assertThat(explanation.atArrival().outcome(), is(RequestExplanation.Outcome.MATCHED));
+        assertThat(explanation.atArrival().expectationId(), is("typed-catch-all"));
+        assertThat(explanation.sameOutcomeAsAtArrival(), is(true));
+        assertThat(explanation.matchedExpectation().expectationId(), is("typed-catch-all"));
+        assertThat(explanation.matchedExpectation().reason(), is(nullValue()));
+        RequestExplanation.ExplainedExpectation loser = explanation.skippedExpectations().stream()
+            .filter(skipped -> "typed-gold-tenant".equals(skipped.expectationId())).findFirst().orElseThrow();
+        assertThat(loser.reason(), is(RequestExplanation.Reason.FIELDS_DIFFER));
+        assertThat(loser.priority(), is(7));
+        assertThat(loser.differences().containsKey("headers"), is(true));
+        RequestExplanation.ExplainedExpectation shadowed = explanation.shadowedExpectations().stream()
+            .filter(candidate -> "typed-shadowed".equals(candidate.expectationId())).findFirst().orElseThrow();
+        assertThat(shadowed.reason(), is(RequestExplanation.Reason.LOWER_PRIORITY));
+        assertThat(explanation.evaluatedExpectations(), is(explanation.totalExpectations()));
+        assertThat(explanation.note(), containsString("recomputed"));
+    }
+
+    @Test
+    public void shouldRaiseTheServersReasonThroughTheJavaClientForAnUnknownCorrelationId() {
+        ClientException failure = assertThrows(ClientException.class, () -> client.explain("never-recorded-typed"));
+
+        assertThat(failure.getMessage(), containsString("no request is recorded"));
     }
 
     @Test

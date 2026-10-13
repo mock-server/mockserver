@@ -24,6 +24,10 @@ public class DashboardLogEntryDTOGroupSerializer extends StdSerializer<Dashboard
                 jsonGenerator.writeStartObject();
                 DashboardLogEntryDTO firstLogEntry = logEntryGroup.getLogEntryDTOS().get(0);
                 jsonGenerator.writeObjectField("key", firstLogEntry.getId() + "_log_group");
+                // every entry in a group shares this id; the dashboard needs it for PUT /mockserver/explain
+                if (firstLogEntry.getCorrelationId() != null) {
+                    jsonGenerator.writeObjectField("correlationId", firstLogEntry.getCorrelationId());
+                }
                 jsonGenerator.writeObjectField("group", new DashboardLogEntryDTO(firstLogEntry.getId(), firstLogEntry.getCorrelationId(), firstLogEntry.getTimestamp(), firstLogEntry.getType()).setDescription(logEntryGroup.getDescriptionProcessor().description(firstLogEntry)));
                 jsonGenerator.writeObjectField("value", logEntryGroup.getLogEntryDTOS());
                 jsonGenerator.writeEndObject();

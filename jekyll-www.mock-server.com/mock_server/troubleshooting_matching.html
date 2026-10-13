@@ -827,6 +827,7 @@ echo (string) $response-&gt;getBody();</code></pre></div>
     </thead>
     <tbody>
     <tr><td><code>FIELDS_DIFFER</code></td><td>The request differs on one or more fields (method, path, headers, body, &hellip;)</td></tr>
+    <tr><td><code>NOT_OPERATOR</code></td><td>The expectation's request matcher is wrapped in <code>not(...)</code> and the request matches everything inside it, so the expectation excludes this request</td></tr>
     <tr><td><code>NAMESPACE</code></td><td>The expectation belongs to a different namespace from the request</td></tr>
     <tr><td><code>INACTIVE</code></td><td>Its <code>Times</code> are used up or its time to live has expired</td></tr>
     <tr><td><code>SCENARIO_STATE</code></td><td>It needs its scenario to be in a different state from the current one</td></tr>
@@ -837,17 +838,21 @@ echo (string) $response-&gt;getBody();</code></pre></div>
 
 <p>The answer is <strong>worked out again when you ask</strong>, not recorded when the request arrived, so it costs nothing on normal requests. This also means it reflects the expectations, scenario states and remaining <code>Times</code> as they are <em>now</em>: an expectation limited to <code>once()</code> that served the request will usually show as gone (<code>atArrival.expectationStillStored</code> is <code>false</code>). If the request body was cut short in the log by <code>maxLoggedBodyBytes</code>, <code>request.bodyTruncated</code> is <code>true</code> and body matching is checked against the shortened copy. Request values in the output are redacted in the same way as the log. At most 500 expectations are checked; <code>truncated</code> says when that limit was reached. A correlation ID that is not in the log (never received, cleared, or dropped once <code>maxLogEntries</code> was reached) returns <code>404</code>.</p>
 
+<p>In the dashboard, each group of log messages for a request has an <strong>Explain</strong> button next to its correlation ID, which shows the same answer: the matched expectation, the skipped ones with their reasons and differences, and the shadowed ones. The Java client has a typed <code>explain(correlationId)</code> method; from the other clients, call the REST endpoint.</p>
+
 <button id="button_troubleshoot_explain_request" class="accordion">explain one request by correlation ID</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
-    <div class="panel"><pre class="prettyprint lang-java code"><code class="code">// no typed method in the Java client - call the REST endpoint
-java.net.http.HttpResponse&lt;String&gt; response = java.net.http.HttpClient.newHttpClient().send(
-    java.net.http.HttpRequest.newBuilder(
-            java.net.URI.create("http://localhost:1080/mockserver/explain?correlationId=abc-123-def-456"))
-        .PUT(java.net.http.HttpRequest.BodyPublishers.noBody())
-        .build(),
-    java.net.http.HttpResponse.BodyHandlers.ofString());
-System.out.println(response.body());</code></pre></div>
+    <div class="panel"><pre class="prettyprint lang-java code"><code class="code">RequestExplanation explanation = new MockServerClient("localhost", 1080)
+    .explain("abc-123-def-456");
+
+if (explanation.matchedExpectation() != null) {
+    System.out.println("served now by " + explanation.matchedExpectation().expectationId());
+}
+for (RequestExplanation.ExplainedExpectation skipped : explanation.skippedExpectations()) {
+    System.out.println(skipped.expectationId() + " " + skipped.reason() + ": " + skipped.explanation());
+}
+// an unknown or evicted correlation ID throws a ClientException</code></pre></div>
     <button class="accordion inner">JavaScript</button>
     <div class="panel"><pre class="prettyprint lang-javascript code"><code class="code">// no typed method in the Node client - call the REST endpoint
 const response = await fetch(

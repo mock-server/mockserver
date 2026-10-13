@@ -63,6 +63,8 @@ export interface LogEntry {
 
 export interface LogGroup {
   key: string;
+  /** Shared by every entry in the group; absent from servers older than the Explain action. */
+  correlationId?: string;
   group: LogEntry;
   value: LogEntry[];
 }

@@ -2658,7 +2658,7 @@ paths:
         Re-checks one recorded request, identified by the correlationId of its log entries, against the current
         expectations in the order MockServer evaluates them. Returns the expectation that would serve the request
         now, why each expectation evaluated ahead of it was passed over (reason NAMESPACE, INACTIVE, FIELDS_DIFFER,
-        CONVERSATION, SCENARIO_STATE or PERCENTAGE, with per-field differences and remediation hints), which
+        NOT_OPERATOR, CONVERSATION, SCENARIO_STATE or PERCENTAGE, with per-field differences and remediation hints), which
         lower-priority expectations it shadows, and how the request was handled when it arrived. The result is
         recomputed on demand, so it reports whether the expectations changed since the request arrived. Values
         quoting the request are redacted as the event log is. At most 500 expectations are evaluated.
@@ -2678,38 +2678,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  correlationId:
-                    type: string
-                  recomputed:
-                    type: boolean
-                  expectationsChangedSince:
-                    type: boolean
-                    description: true when the expectations changed at or after the moment the request arrived
-                  atArrival:
-                    type: object
-                    description: how the request was handled when it arrived, read from the event log
-                  sameOutcomeAsAtArrival:
-                    type: boolean
-                  matchedExpectation:
-                    type: object
-                    description: the expectation that would serve the request now (absent when none would)
-                  closestExpectationId:
-                    type: string
-                    description: when no expectation would serve the request now, the one with the fewest differing fields
-                  skippedExpectations:
-                    type: array
-                    description: expectations evaluated ahead of the matched one, each with a reason and explanation
-                    items:
-                      type: object
-                  shadowedExpectations:
-                    type: array
-                    description: lower-priority expectations that also match but are never reached
-                    items:
-                      type: object
-                  truncated:
-                    type: boolean
+                $ref: '#/components/schemas/RequestExplanation'
         '400':
           description: no correlationId was supplied, or the recorded request is not an HTTP request
           content:
@@ -8001,3 +7970,147 @@ components:
         - source
         - expression
         - into
+    RequestExplanation:
+      description: >-
+        which expectation would serve a recorded request now, why each expectation evaluated ahead of it was passed
+        over, and how the request was handled when it arrived (PUT /mockserver/explain)
+      type: object
+      properties:
+        correlationId:
+          type: string
+          description: the correlationId of the explained request's log entries
+        timestamp:
+          type: string
+          format: date-time
+          description: when this explanation was computed
+        recomputed:
+          type: boolean
+          description: always true; the explanation is recomputed on demand, not recorded when the request arrived
+        note:
+          type: string
+          description: a reminder that the result reflects the current expectations, scenario states and remaining Times
+        request:
+          type: object
+          description: the recorded request that was explained
+          properties:
+            timestamp:
+              type: string
+              description: when the request was recorded, as the event log formats it (yyyy-MM-dd HH:mm:ss.SSS)
+            method:
+              type: string
+            path:
+              type: string
+            bodyTruncated:
+              type: boolean
+              description: present and true when the event log kept only the first maxLoggedBodyBytes of the body
+            bodyTruncatedNote:
+              type: string
+        atArrival:
+          type: object
+          description: how the request was handled when it arrived, read from the event log
+          properties:
+            outcome:
+              type: string
+              enum:
+                - MATCHED
+                - NO_MATCH
+                - FORWARDED_WITHOUT_EXPECTATION
+                - RESPONDED_WITHOUT_EXPECTATION
+                - UNKNOWN
+            expectationId:
+              type: string
+              description: the expectation that served the request when it arrived (outcome MATCHED only)
+            expectationStillStored:
+              type: boolean
+              description: whether that expectation is still stored (outcome MATCHED only)
+        sameOutcomeAsAtArrival:
+          type: boolean
+          description: >-
+            whether the request would be handled the same way now; absent when the outcome at arrival is
+            RESPONDED_WITHOUT_EXPECTATION or UNKNOWN
+        expectationsChangedSince:
+          type: boolean
+          description: true when the expectations changed at or after the moment the request arrived
+        expectationsLastChanged:
+          type: string
+          format: date-time
+          description: when the expectations last changed; absent when they never have
+        matchedExpectation:
+          $ref: '#/components/schemas/ExplainedExpectation'
+        closestExpectationId:
+          type: string
+          description: when no expectation would serve the request now, the one with the fewest differing fields
+        skippedExpectations:
+          type: array
+          description: expectations evaluated ahead of the matched one, each with a reason and explanation
+          items:
+            $ref: '#/components/schemas/ExplainedExpectation'
+        shadowedExpectations:
+          type: array
+          description: lower-priority expectations that also match but are never reached (reason LOWER_PRIORITY)
+          items:
+            $ref: '#/components/schemas/ExplainedExpectation'
+        totalExpectations:
+          type: integer
+          description: how many expectations are stored
+        evaluatedExpectations:
+          type: integer
+          description: how many expectations were evaluated, at most maxExpectationsEvaluated
+        truncated:
+          type: boolean
+          description: true when the evaluation budget ran out before every expectation was evaluated
+        maxExpectationsEvaluated:
+          type: integer
+          description: the evaluation budget (500); present only when truncated is true
+    ExplainedExpectation:
+      description: >-
+        one expectation as PUT /mockserver/explain evaluated it; the matched expectation has no reason, every
+        skipped or shadowed one has a reason and an explanation
+      type: object
+      properties:
+        expectationId:
+          type: string
+        expectationMethod:
+          type: string
+        expectationPath:
+          type: string
+        position:
+          type: integer
+          description: the expectation's 1-based position in the order MockServer evaluates expectations
+        priority:
+          type: integer
+        reason:
+          type: string
+          enum:
+            - NAMESPACE
+            - INACTIVE
+            - FIELDS_DIFFER
+            - NOT_OPERATOR
+            - CONVERSATION
+            - SCENARIO_STATE
+            - PERCENTAGE
+            - LOWER_PRIORITY
+        explanation:
+          type: string
+          description: why the expectation was passed over, in plain language
+        matches:
+          type: boolean
+          description: whether the request matches the expectation's request matcher; absent when an earlier gate decided
+        matchedFieldCount:
+          type: integer
+        totalFieldCount:
+          type: integer
+        differingFieldCount:
+          type: integer
+        differences:
+          type: object
+          description: for each differing field, the differences found
+          additionalProperties:
+            type: array
+            items:
+              type: string
+        remediation:
+          type: object
+          description: for each differing field, a hint on how to change the expectation
+          additionalProperties:
+            type: string

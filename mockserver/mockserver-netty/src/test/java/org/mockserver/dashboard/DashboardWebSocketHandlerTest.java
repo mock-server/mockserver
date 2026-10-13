@@ -863,6 +863,7 @@ public class DashboardWebSocketHandlerTest {
         String renderedList = "{" + NEW_LINE +
             "  \"logMessages\" : [ {" + NEW_LINE +
             "    \"key\" : \"" + logEntries.get(1).id() + "_log_group\"," + NEW_LINE +
+            "    \"correlationId\" : \"" + logCorrelationId + "\"," + NEW_LINE +
             "    \"group\" : {" + NEW_LINE +
             "      \"key\" : \"" + logEntries.get(1).id() + "_log\"," + NEW_LINE +
             "      \"value\" : {" + NEW_LINE +
@@ -996,6 +997,7 @@ public class DashboardWebSocketHandlerTest {
             "    }" + NEW_LINE +
             "  }, {" + NEW_LINE +
             "    \"key\" : \"" + logEntries.get(1).id() + "_log_group\"," + NEW_LINE +
+            "    \"correlationId\" : \"" + logCorrelationIdShared + "\"," + NEW_LINE +
             "    \"group\" : {" + NEW_LINE +
             "      \"key\" : \"" + logEntries.get(1).id() + "_log\"," + NEW_LINE +
             "      \"value\" : {" + NEW_LINE +

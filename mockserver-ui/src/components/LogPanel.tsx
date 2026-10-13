@@ -1,4 +1,4 @@
-import { useCallback, memo, useEffect, useRef, useMemo } from 'react';
+import { useCallback, memo, useEffect, useRef, useMemo, useState } from 'react';
 import Typography from '@mui/material/Typography';
 import { useDashboardStore } from '../store';
 import { isLogGroup } from '../types';
@@ -6,6 +6,8 @@ import Panel from './Panel';
 import LogEntry from './LogEntry';
 import LogGroup from './LogGroup';
 import ProgressiveList from './ProgressiveList';
+import ExplainRequestDialog from './ExplainRequestDialog';
+import { useConnectionParams } from '../hooks/useConnectionParams';
 import { useExpansion } from '../hooks/useExpansion';
 import { useHeldItems } from '../hooks/useHeldItems';
 import { useFollow } from '../hooks/useFollow';
@@ -70,6 +72,17 @@ function LogPanel() {
     [expansion, setFollow],
   );
 
+  // The Explain dialog lives here, not in the row: a row unmounts when it leaves the
+  // virtualized window, which would close the dialog mid-read. Explaining is reading too.
+  const params = useConnectionParams();
+  const [explaining, setExplaining] = useState<string | null>(null);
+  const explain = useCallback(
+    (correlationId: string) => {
+      setFollow(false);
+      setExplaining(correlationId);
+    },
+    [setFollow],
+  );
 
   return (
     <Panel
@@ -101,6 +114,7 @@ function LogPanel() {
                 group={message}
                 open={expansion.isExpanded(message.key)}
                 onToggleOpen={openRow}
+                onExplain={explain}
               />
             ) : (
               <LogEntry
@@ -113,6 +127,14 @@ function LogPanel() {
               />
             );
           }}
+        />
+      )}
+      {explaining && (
+        <ExplainRequestDialog
+          open
+          onClose={() => setExplaining(null)}
+          correlationId={explaining}
+          connectionParams={params}
         />
       )}
     </Panel>

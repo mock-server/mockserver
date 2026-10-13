@@ -95,6 +95,28 @@ public class DashboardLogEntryDTOGroupSerializerTest {
     }
 
     @Test
+    public void shouldNameTheCorrelationIdTheGroupedEventsShare() throws Exception {
+        // given
+        DashboardLogEntryDTOGroup dashboardLogEntryDTOGroup = new DashboardLogEntryDTOGroup(descriptionProcessor);
+        for (LogEntry.LogMessageType type : new LogEntry.LogMessageType[]{LogEntry.LogMessageType.RECEIVED_REQUEST, LogEntry.LogMessageType.EXPECTATION_RESPONSE}) {
+            LogEntry logEntry = new LogEntry()
+                .setLogLevel(Level.INFO)
+                .setEpochTime(epochTime)
+                .setType(type)
+                .setCorrelationId("a-correlation-id")
+                .setMessageFormat("message");
+            dashboardLogEntryDTOGroup.getLogEntryDTOS().add(new DashboardLogEntryDTO(logEntry).setDescription(getDescription(logEntry)));
+        }
+
+        // when
+        com.fasterxml.jackson.databind.JsonNode json = ObjectMapperFactory.createObjectMapper().readTree(objectWriter.writeValueAsString(dashboardLogEntryDTOGroup));
+
+        // then
+        assertThat(json.path("correlationId").asText(), is("a-correlation-id"));
+        assertThat(json.path("key").asText().startsWith("a-correlation-id"), is(false));
+    }
+
+    @Test
     public void shouldSerialiseGroupWithMultipleEvents() throws JsonProcessingException {
         // given
         DashboardLogEntryDTOGroup dashboardLogEntryDTOGroup = new DashboardLogEntryDTOGroup(descriptionProcessor);

@@ -299,7 +299,7 @@ sitemap:
     </tbody>
 </table>
 
-<p>Related log events (e.g. request received → expectation matched → response sent) are grouped together by correlation ID and displayed with an orange left border. Click the expand button to see all related events within a group.</p>
+<p>Related log events (e.g. request received → expectation matched → response sent) are grouped together by correlation ID and displayed with an orange left border. Click the expand button to see all related events within a group. Click the correlation ID chip to copy it, or click <strong>Explain</strong> to see which expectation would serve that request now, why each expectation ahead of it was skipped, and which lower-priority expectations it shadows (see <a href="troubleshooting_matching.html#explain_request">explaining why a request matched</a>).</p>
 
 <p>The <strong>because</strong> section in <code>EXPECTATION_NOT_MATCHED</code> entries can be expanded to show which properties matched and which did not, making it easy to debug why a request was not matched.</p>
 

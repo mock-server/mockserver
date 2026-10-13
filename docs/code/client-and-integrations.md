@@ -111,6 +111,15 @@ constructor always targets `localhost` with an empty context path). The `Builder
 | `retrieveLogMessages(RequestDefinition)` | `String` | Log messages as text |
 | `retrieveLogMessagesArray(RequestDefinition)` | `String[]` | Log messages as array |
 
+#### Diagnostics
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `debugMismatch(RequestDefinition)` | `String` | Per-expectation match analysis for a request, as JSON. Wraps `PUT /mockserver/debugMismatch`. |
+| `explain(String correlationId)` | `RequestExplanation` | Which expectation would serve a recorded request now, why each one ahead of it was skipped (`Reason`: `NAMESPACE`, `INACTIVE`, `FIELDS_DIFFER`, `NOT_OPERATOR`, `CONVERSATION`, `SCENARIO_STATE`, `PERCENTAGE`), which it shadows (`LOWER_PRIORITY`), and the outcome at arrival. Wraps `PUT /mockserver/explain`. A blank id or non-HTTP request throws `IllegalArgumentException`; an unknown or evicted id throws `ClientException` with the server's reason. |
+
+`RequestExplanation` (`org.mockserver.client`) is a record with nested `ExplainedRequest`, `Arrival` and `ExplainedExpectation` records; an unknown enum value from a newer server parses as `UNKNOWN` (both `Reason` and `Outcome`) rather than failing, so a skipped expectation never has a `null` reason; only the matched one does. Only the Java client has a typed method: the Node, Python, Ruby, Go, Rust, .NET and PHP clients have no diagnostic-call pattern to extend (none wraps `debugMismatch` or `explainUnmatched`), so they call the REST endpoint directly.
+
 #### Clear & Reset
 
 | Method | Description |

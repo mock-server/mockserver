@@ -37,9 +37,10 @@
           }
         },
         "group": {
-          "_comment": "LogGroup reads group.key, group.group (a nested entry) and group.value (the entry array).",
+          "_comment": "LogGroup reads group.key, group.correlationId (shared by every grouped entry; the Explain action sends it), group.group (a nested entry) and group.value (the entry array).",
           "requiredFields": {
             "key": "string",
+            "correlationId": "string",
             "group": "object",
             "value": "array"
           }
@@ -102,6 +103,7 @@
       },
       {
         "key": "srv-log-0002_log_group",
+        "correlationId": "srv-correlation-0002",
         "group": {
           "key": "srv-log-0002_log",
           "value": {

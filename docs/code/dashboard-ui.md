@@ -603,6 +603,25 @@ sequenceDiagram
 - The before and after panes are plain `<pre>` blocks, not the Monaco diff viewer, so opening a
   preview loads no editor bundle.
 
+### Explain a Request From a Log Group
+
+Every log group (the correlation-ID roll-up in **Log Messages**) carries the `correlationId` its
+entries share, sent by `DashboardLogEntryDTOGroupSerializer` as a top-level field and pinned in
+`dashboardFrameContract.json`. The group header shows it as a click-to-copy chip and, when one of the
+group's entries holds a request the server can explain (`RECEIVED_REQUEST`, `EXPECTATION_RESPONSE`,
+`FORWARDED_REQUEST` or `NO_MATCH_RESPONSE`, decided by `isExplainableGroup` in `lib/explainRequest.ts`),
+an **Explain** button. It opens `ExplainRequestDialog`, which calls
+`PUT /mockserver/explain?correlationId=` and shows what happened at arrival, what would happen now, and
+three sections: **Matched**, **Skipped** (reason chip, plain-language explanation, per-field
+differences and remediation hints) and **Shadowed**. `LogPanel` owns the dialog, not the row: a row
+unmounts as soon as it leaves the virtualized window, which would close a row-owned dialog mid-read.
+Like opening a row, Explain turns the panel's Follow off. The dialog keeps its state locally (no store
+fields) and shows the server's own reason for a `400`/`404` (an evicted or unknown correlation ID)
+instead of the generic "feature not available" message.
+
+Before this, the chip parsed its value from the group `key`, which is the first entry's log id, not the
+correlation ID; servers that do not send `correlationId` now show no chip and no Explain button.
+
 ### Row Layout in Requests and Expectations
 
 Each collapsed item row has two lines:

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import LogGroup from '../components/LogGroup';
@@ -79,5 +79,43 @@ describe('LogGroup', () => {
     const { container } = render(<LogGroup group={descOnlyGroup} />);
     const groupCopyBtn = container.querySelector('.group-copy-btn button');
     expect(groupCopyBtn).toBeInTheDocument();
+  });
+});
+
+describe('LogGroup Explain action', () => {
+  const requestGroup: LogGroupType = {
+    ...mockGroup,
+    key: 'entry-id_log_group',
+    correlationId: 'corr-123456789',
+    group: {
+      key: 'entry-id_log',
+      value: { description: { json: false, first: '10:00:00', second: 'RECEIVED_REQUEST' }, messageParts: [{ key: 'm', value: 'received request' }] },
+    },
+  };
+
+  it('copies the group correlation ID, not the log entry id in its key', () => {
+    render(<LogGroup group={requestGroup} />);
+    expect(screen.getByText('corr-123')).toBeInTheDocument();
+    expect(screen.queryByText('entry-id')).not.toBeInTheDocument();
+  });
+
+  it('offers Explain on a request group and hands the panel its correlation ID', async () => {
+    const onExplain = vi.fn();
+    const user = userEvent.setup();
+    render(<LogGroup group={requestGroup} onExplain={onExplain} />);
+
+    await user.click(screen.getByRole('button', { name: 'Explain' }));
+
+    expect(onExplain).toHaveBeenCalledWith('corr-123456789');
+  });
+
+  it('offers no Explain without a correlation ID, a request entry or a panel to open it', () => {
+    const onExplain = vi.fn();
+    const { rerender } = render(<LogGroup group={{ ...requestGroup, correlationId: undefined }} onExplain={onExplain} />);
+    expect(screen.queryByRole('button', { name: 'Explain' })).not.toBeInTheDocument();
+    rerender(<LogGroup group={{ ...mockGroup, correlationId: 'corr-123456789', group: { key: 'g', value: { description: { json: false, first: '10:00:00', second: 'CREATED_EXPECTATION' } } } }} onExplain={onExplain} />);
+    expect(screen.queryByRole('button', { name: 'Explain' })).not.toBeInTheDocument();
+    rerender(<LogGroup group={requestGroup} />);
+    expect(screen.queryByRole('button', { name: 'Explain' })).not.toBeInTheDocument();
   });
 });

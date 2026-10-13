@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import LogPanel from '../components/LogPanel';
 import { useDashboardStore } from '../store';
@@ -144,5 +144,57 @@ describe('LogPanel', () => {
 
     render(<LogPanel />);
     expect(screen.getByText('group summary')).toBeInTheDocument();
+  });
+});
+
+describe('LogPanel Explain dialog', () => {
+  const requestGroup = {
+    key: 'entry-1_log_group',
+    correlationId: 'corr-1',
+    group: { key: 'entry-1_log', value: { description: { json: false as const, first: '10:00:00', second: 'RECEIVED_REQUEST' }, messageParts: [{ key: 'm', value: 'received request' }] } },
+    value: [{ key: 'entry-2_log', value: { messageParts: [{ key: 'm2', value: 'returning response' }] } }],
+  };
+
+  beforeEach(() => {
+    useDashboardStore.setState({ logMessages: [requestGroup], logSearch: '', autoScroll: true, logShowForwarded: true });
+  });
+
+  it('keeps the dialog open when the explained row leaves the live window', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      correlationId: 'corr-1',
+      request: { method: 'GET', path: '/orders' },
+      atArrival: { outcome: 'MATCHED', expectationId: 'orders' },
+      matchedExpectation: { expectationId: 'orders' },
+      skippedExpectations: [],
+      shadowedExpectations: [],
+      totalExpectations: 1,
+      evaluatedExpectations: 1,
+    }), { status: 200 })));
+    try {
+      const user = userEvent.setup();
+      render(<LogPanel />);
+
+      await user.click(screen.getByRole('button', { name: 'Explain' }));
+      expect(await screen.findByRole('dialog', { name: 'Explain Request' })).toBeInTheDocument();
+      // Explaining stops the panel following, as opening a row does.
+      expect(screen.getByText('Follow')).toBeInTheDocument();
+
+      // Resume following through the toolbar's master switch, so the panel no longer holds
+      // evicted rows, then let newer traffic push the explained group out of the window.
+      act(() => useDashboardStore.setState({ autoScroll: false }));
+      act(() => useDashboardStore.setState({ autoScroll: true }));
+      act(() => {
+        useDashboardStore.setState({
+          logMessages: [{ key: 'newer_log', value: { messageParts: [{ key: 'n', value: 'newer traffic' }] } }],
+        });
+      });
+
+      expect(screen.getByText('newer traffic')).toBeInTheDocument();
+      expect(screen.queryByText('received request')).not.toBeInTheDocument();
+      expect(screen.getByRole('dialog', { name: 'Explain Request' })).toBeInTheDocument();
+      expect(await screen.findByText(/Now it would be served by expectation/)).toBeInTheDocument();
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

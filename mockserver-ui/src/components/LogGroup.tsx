@@ -4,6 +4,7 @@ import Chip from '@mui/material/Chip';
 import Collapse from '@mui/material/Collapse';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
+import Button from '@mui/material/Button';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import type { LogGroup as LogGroupType } from '../types';
@@ -11,6 +12,7 @@ import LogEntry from './LogEntry';
 import { entryToText } from '../lib/logEntryText';
 import CopyButton from './CopyButton';
 import { monospaceFontFamily } from '../theme';
+import { isExplainableGroup } from '../lib/explainRequest';
 
 interface LogGroupProps {
   group: LogGroupType;
@@ -26,25 +28,22 @@ interface LogGroupProps {
    * which would otherwise defeat this component's `memo`.
    */
   onToggleOpen?: (key: string) => void;
+  /**
+   * Opens the Explain dialog for this group's correlation ID. The panel owns the dialog,
+   * because a virtualized row unmounts when it scrolls out of the window. No button without it.
+   */
+  onExplain?: (correlationId: string) => void;
 }
 
-function extractCorrelationId(group: LogGroupType): string | null {
-  const key = group.group.key;
-  if (key) {
-    const match = key.match(/^(.+?)_log/);
-    if (match) return match[1]!;
-  }
-  return null;
-}
-
-function LogGroup({ group, open: openProp, onToggleOpen }: LogGroupProps) {
+function LogGroup({ group, open: openProp, onToggleOpen, onExplain }: LogGroupProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const open = openProp ?? internalOpen;
   const handleToggleOpen = () => {
     if (onToggleOpen) onToggleOpen(group.key);
     else setInternalOpen((prev) => !prev);
   };
-  const correlationId = useMemo(() => extractCorrelationId(group), [group]);
+  const correlationId = group.correlationId ?? null;
+  const explainable = useMemo(() => isExplainableGroup(group), [group]);
 
   const groupText = useMemo(() => {
     const parts = [entryToText(group.group.value)];
@@ -93,6 +92,21 @@ function LogGroup({ group, open: openProp, onToggleOpen }: LogGroupProps) {
                 }}
                 sx={{ fontFamily: monospaceFontFamily, typography: 'caption', height: 18, cursor: 'pointer', flexShrink: 0 }}
               />
+            </Tooltip>
+          )}
+          {correlationId && explainable && onExplain && (
+            <Tooltip describeChild title="Explain which expectation would serve this request now, and why others were skipped">
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onExplain(correlationId);
+                }}
+                sx={{ typography: 'caption', height: 18, minWidth: 0, px: 0.75, py: 0, flexShrink: 0, textTransform: 'none' }}
+              >
+                Explain
+              </Button>
             </Tooltip>
           )}
         </Box>

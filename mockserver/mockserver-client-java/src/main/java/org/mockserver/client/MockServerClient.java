@@ -66,6 +66,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_ACCEPTABLE;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpResponseStatus.UNAUTHORIZED;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -3042,6 +3043,44 @@ public class MockServerClient implements Stoppable {
             true
         );
         return httpResponse.getBodyAsString();
+    }
+
+    /**
+     * Explain how a recorded request would be served now: re-checks it against the current expectations, in the
+     * order MockServer evaluates them, and returns the expectation that would serve it, why each expectation ahead
+     * of that one was passed over, and which lower-priority expectations it shadows. Wraps
+     * {@code PUT /mockserver/explain}. Read-only: it consumes no Times and moves no scenario.
+     *
+     * @param correlationId the correlation ID of the request's log entries (see {@link #retrieveLogEntries})
+     * @return the explanation
+     * @throws IllegalArgumentException if {@code correlationId} is blank, or the recorded request is not an HTTP request
+     * @throws ClientException          if no request is recorded with this correlation ID (never received, cleared or
+     *                                  evicted from the event log), or the server fails
+     */
+    public RequestExplanation explain(String correlationId) {
+        if (isBlank(correlationId)) {
+            throw new IllegalArgumentException("explain(correlationId) requires a non blank correlationId");
+        }
+        HttpResponse httpResponse = sendRequest(
+            request()
+                .withMethod("PUT")
+                .withPath(calculatePath("explain"))
+                .withQueryStringParameter("correlationId", correlationId),
+            false
+        );
+        String body = httpResponse != null ? httpResponse.getBodyAsString() : null;
+        try {
+            JsonNode root = CONTRACT_OBJECT_MAPPER.readTree(isBlank(body) ? "{}" : body);
+            if (httpResponse == null || httpResponse.getStatusCode() == null || httpResponse.getStatusCode() != OK.code()) {
+                throw new ClientException("explain failed for correlationId \"" + correlationId + "\": "
+                    + (root.hasNonNull("error") ? root.path("error").asText() : body));
+            }
+            return RequestExplanation.fromJson(root);
+        } catch (ClientException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ClientException("Unable to parse explain response: " + body, e);
+        }
     }
 
     /**

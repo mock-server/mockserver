@@ -129,15 +129,22 @@ final class RequestMatchExplainer {
             } else {
                 node = compareFields(objectMapper, matcher, expectation, request, sensitiveValues);
                 if (!node.path("matches").asBoolean()) {
-                    reason = "FIELDS_DIFFER";
                     List<String> differingFields = fieldNames(node);
-                    explanation = differingFields.isEmpty()
-                        ? "the request does not satisfy its request matcher"
-                        : "the request differs on: " + String.join(", ", differingFields);
-                    int failures = node.path("differingFieldCount").asInt();
-                    if (winner == null && failures < closestFailures) {
-                        closestFailures = failures;
-                        closestExpectationId = expectation.getId();
+                    if (differingFields.isEmpty() && expectation.getHttpRequest() != null && expectation.getHttpRequest().isNot()) {
+                        // a negated matcher fails exactly when every inner field matches, so it is the farthest
+                        // candidate, not the closest
+                        reason = "NOT_OPERATOR";
+                        explanation = "the request matches every field of its request matcher, which is wrapped in not(...), so it excludes this request";
+                    } else {
+                        reason = "FIELDS_DIFFER";
+                        explanation = differingFields.isEmpty()
+                            ? "the request does not satisfy its request matcher"
+                            : "the request differs on: " + String.join(", ", differingFields);
+                        int failures = node.path("differingFieldCount").asInt();
+                        if (winner == null && failures < closestFailures) {
+                            closestFailures = failures;
+                            closestExpectationId = expectation.getId();
+                        }
                     }
                 } else if (!conversationMatches(expectation, request, configuration)) {
                     reason = "CONVERSATION";
