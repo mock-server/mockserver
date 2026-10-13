@@ -178,7 +178,8 @@ public class HttpStateExplainRequestTest {
     @Test
     public void shouldSayWhenTheExpectationThatServedTheRequestHasGoneAndTheExpectationsChanged() throws Exception {
         httpState.add(new Expectation(request().withPath("/once"), Times.once(), TimeToLive.unlimited(), 0).withId("once").thenRespond(response()));
-        long arrival = afterLastChange();
+        // the arrival shares the add's millisecond, so the changes below can never be recorded before it
+        long arrival = httpState.getRequestMatchers().lastModifiedEpochMillis();
         httpState.getRequestMatchers().clear(org.mockserver.model.ExpectationId.expectationId("once"), "test");
         httpState.add(new Expectation(request().withPath("/once")).withId("replacement").thenRespond(response()));
         recordMatched("c7", request().withMethod("GET").withPath("/once"), "once", arrival);
