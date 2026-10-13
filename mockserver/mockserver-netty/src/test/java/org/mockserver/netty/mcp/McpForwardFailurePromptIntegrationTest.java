@@ -87,7 +87,7 @@ public class McpForwardFailurePromptIntegrationTest {
         }
         assertThat("a 502 for the request from retrieve_request_responses", failedPair, notNullValue());
         assertThat("a 'failed to forward request' entry from retrieve_logs", forwardFailure, notNullValue());
-        assertThat(forwardFailure.toString(), forwardFailure.path("message").toString(), containsString("failed to connect to remote socket while forwarding request"));
+        assertThat(forwardFailure.toString(), forwardFailure.path("message").toString(), containsString("upstream refused the connection"));
 
         String correlationId = forwardFailure.path("correlationId").asText();
         assertThat(forwardFailure.toString(), correlationId.isEmpty(), is(false));
