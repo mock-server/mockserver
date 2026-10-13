@@ -31,6 +31,8 @@ import static org.hamcrest.Matchers.endsWith;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockserver.configuration.Configuration.configuration;
+import static org.hamcrest.Matchers.contains;
+import static org.junit.Assert.assertThrows;
 
 public class McpPromptRegistryTest {
 
@@ -94,12 +96,82 @@ public class McpPromptRegistryTest {
     }
 
     @Test
-    public void shouldLeavePlaceholdersWhenArgumentsMissing() {
-        ArrayNode messages = promptRegistry.getMessages("debug_unmatched_request", null);
+    public void shouldRejectMissingRequiredArgumentsNamingEachOne() {
+        McpPromptRegistry.MissingPromptArgumentsException exception = assertThrows(
+            McpPromptRegistry.MissingPromptArgumentsException.class,
+            () -> promptRegistry.getMessages("debug_unmatched_request", null)
+        );
 
-        assertThat(messages, notNullValue());
-        String text = messages.get(0).path("content").path("text").asText();
-        assertThat(text.contains("{{method}}"), is(true));
+        assertThat(exception.getMissingArguments(), contains("method", "path"));
+        assertThat(exception.getMessage(), is("Missing required arguments for prompt 'debug_unmatched_request': method, path"));
+    }
+
+    @Test
+    public void shouldRejectRequiredArgumentThatIsAbsentOrNull() {
+        ObjectNode arguments = objectMapper.createObjectNode();
+        arguments.putNull("method");
+        arguments.put("unrelated", "GET");
+
+        McpPromptRegistry.MissingPromptArgumentsException exception = assertThrows(
+            McpPromptRegistry.MissingPromptArgumentsException.class,
+            () -> promptRegistry.getMessages("debug_unmatched_request", arguments)
+        );
+
+        assertThat(exception.getMissingArguments(), contains("method", "path"));
+    }
+
+    @Test
+    public void shouldNameOnlyTheRequiredArgumentThatIsMissing() {
+        ObjectNode arguments = objectMapper.createObjectNode();
+        arguments.put("method", "GET");
+
+        McpPromptRegistry.MissingPromptArgumentsException exception = assertThrows(
+            McpPromptRegistry.MissingPromptArgumentsException.class,
+            () -> promptRegistry.getMessages("debug_unmatched_request", arguments)
+        );
+
+        assertThat(exception.getMissingArguments(), contains("path"));
+        assertThat(exception.getMessage(), is("Missing required argument for prompt 'debug_unmatched_request': path"));
+    }
+
+    @Test
+    public void shouldRejectEveryPromptCalledWithoutItsRequiredArguments() {
+        for (McpPromptRegistry.PromptDefinition prompt : promptRegistry.getPrompts().values()) {
+            List<String> required = new ArrayList<>();
+            for (McpPromptRegistry.PromptArgument argument : prompt.getArguments()) {
+                if (argument.isRequired()) {
+                    required.add(argument.getName());
+                }
+            }
+            if (required.isEmpty()) {
+                continue;
+            }
+            McpPromptRegistry.MissingPromptArgumentsException exception = assertThrows(
+                McpPromptRegistry.MissingPromptArgumentsException.class,
+                () -> promptRegistry.getMessages(prompt.getName(), objectMapper.createObjectNode())
+            );
+            assertThat(prompt.getName(), exception.getMissingArguments(), is(required));
+        }
+    }
+
+    @Test
+    public void shouldNotRequireOptionalArguments() {
+        promptRegistry.getPrompts().put("with_optional", new McpPromptRegistry.PromptDefinition(
+            "with_optional",
+            "a prompt with one required and one optional argument",
+            List.of(
+                new McpPromptRegistry.PromptArgument("subject", "required", true),
+                new McpPromptRegistry.PromptArgument("detail", "optional", false)
+            ),
+            "user",
+            "About {{subject}}."
+        ));
+        ObjectNode arguments = objectMapper.createObjectNode();
+        arguments.put("subject", "orders");
+
+        ArrayNode messages = promptRegistry.getMessages("with_optional", arguments);
+
+        assertThat(messages.get(0).path("content").path("text").asText(), is("About orders."));
     }
 
     @Test
@@ -125,7 +197,8 @@ public class McpPromptRegistryTest {
 
     @Test
     public void shouldNarrowMessageContentToTextType() {
-        ArrayNode messages = promptRegistry.getMessages("create_mock_from_description", objectMapper.createObjectNode());
+        ArrayNode messages = promptRegistry.getMessages("create_mock_from_description",
+            objectMapper.createObjectNode().put("description", "GET /health returns 200"));
         JsonNode content = messages.get(0).path("content");
         assertThat(content.path("type").asText(), is("text"));
     }

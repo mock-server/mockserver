@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.mockserver.serialization.ObjectMapperFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -167,11 +168,17 @@ public class McpPromptRegistry {
     /**
      * Build the messages for a named prompt, substituting {@code {{argument}}} placeholders
      * with the supplied argument values. Returns {@code null} when the prompt is unknown.
+     *
+     * @throws MissingPromptArgumentsException when a required argument is absent or {@code null}
      */
     public ArrayNode getMessages(String name, JsonNode arguments) {
         PromptDefinition prompt = prompts.get(name);
         if (prompt == null) {
             return null;
+        }
+        List<String> missingArguments = missingRequiredArguments(prompt, arguments);
+        if (!missingArguments.isEmpty()) {
+            throw new MissingPromptArgumentsException(name, missingArguments);
         }
 
         String text = prompt.template;
@@ -200,6 +207,19 @@ public class McpPromptRegistry {
         return messages;
     }
 
+    private static List<String> missingRequiredArguments(PromptDefinition prompt, JsonNode arguments) {
+        List<String> missing = new ArrayList<>();
+        for (PromptArgument argument : prompt.arguments) {
+            if (argument.required) {
+                JsonNode value = arguments != null && arguments.isObject() ? arguments.get(argument.name) : null;
+                if (value == null || value.isNull()) {
+                    missing.add(argument.name);
+                }
+            }
+        }
+        return missing;
+    }
+
     /** Matches a {@code {{name}}} placeholder where {@code name} is a typical argument identifier. */
     private static final Pattern PLACEHOLDER = Pattern.compile("\\{\\{([A-Za-z0-9_]+)}}");
 
@@ -219,6 +239,24 @@ public class McpPromptRegistry {
         }
         matcher.appendTail(result);
         return result.toString();
+    }
+
+    /**
+     * Thrown by {@link #getMessages} when a {@code prompts/get} call omits a required argument, which
+     * the MCP prompts specification answers with JSON-RPC error {@code -32602} (invalid params).
+     */
+    public static class MissingPromptArgumentsException extends IllegalArgumentException {
+        private final List<String> missingArguments;
+
+        public MissingPromptArgumentsException(String promptName, List<String> missingArguments) {
+            super("Missing required argument" + (missingArguments.size() == 1 ? "" : "s") +
+                " for prompt '" + promptName + "': " + String.join(", ", missingArguments));
+            this.missingArguments = List.copyOf(missingArguments);
+        }
+
+        public List<String> getMissingArguments() {
+            return missingArguments;
+        }
     }
 
     public static class PromptArgument {

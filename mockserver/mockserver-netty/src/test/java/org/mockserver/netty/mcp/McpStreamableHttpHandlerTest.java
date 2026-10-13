@@ -599,6 +599,34 @@ public class McpStreamableHttpHandlerTest {
     }
 
     @Test
+    public void shouldReturnInvalidParamsNamingMissingRequiredPromptArgument() throws Exception {
+        String sessionId = initializeAndGetSessionId();
+
+        ObjectNode params = objectMapper.createObjectNode();
+        params.put("name", "debug_unmatched_request");
+        params.putObject("arguments").put("method", "GET");
+
+        ObjectNode rpcRequest = objectMapper.createObjectNode();
+        rpcRequest.put("jsonrpc", "2.0");
+        rpcRequest.put("id", 23);
+        rpcRequest.put("method", "prompts/get");
+        rpcRequest.set("params", params);
+
+        FullHttpResponse response = sendPost(objectMapper.writeValueAsString(rpcRequest), sessionId);
+
+        assertThat(response.status(), is(HttpResponseStatus.OK));
+        JsonNode json = parseResponse(response);
+        assertThat(json.path("id").asInt(), is(23));
+        assertThat(json.has("result"), is(false));
+        assertThat(json.path("error").path("code").asInt(), is(JsonRpcMessage.INVALID_PARAMS));
+        assertThat(json.path("error").path("message").asText(),
+            is("Missing required argument for prompt 'debug_unmatched_request': path"));
+        assertThat(json.path("error").path("data").path("missingArguments").toString(), is("[\"path\"]"));
+
+        response.release();
+    }
+
+    @Test
     public void shouldHandleSamplingCreateMessage() throws Exception {
         String sessionId = initializeAndGetSessionId();
 

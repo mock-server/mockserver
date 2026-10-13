@@ -743,7 +743,15 @@ public class McpRequestProcessor {
         }
 
         JsonNode arguments = params.path("arguments");
-        ArrayNode messages = promptRegistry.getMessages(name, arguments.isMissingNode() ? null : arguments);
+        ArrayNode messages;
+        try {
+            messages = promptRegistry.getMessages(name, arguments.isMissingNode() ? null : arguments);
+        } catch (McpPromptRegistry.MissingPromptArgumentsException e) {
+            ObjectNode data = objectMapper.createObjectNode();
+            ArrayNode missingArguments = data.putArray("missingArguments");
+            e.getMissingArguments().forEach(missingArguments::add);
+            return JsonRpcMessage.JsonRpcResponse.error(rpcRequest.getId(), JsonRpcMessage.INVALID_PARAMS, e.getMessage(), data);
+        }
 
         ObjectNode result = objectMapper.createObjectNode();
         result.put("description", promptDef.getDescription());
