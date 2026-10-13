@@ -495,4 +495,106 @@ public class BedrockCodecTest {
                     .get("bytes").asText()), StandardCharsets.UTF_8));
         assertThat(lastPayload.get("type").asText(), is("message_stop"));
     }
+
+    // --- amazon-bedrock-invocationMetrics on the last chunk ---
+    // Shape and location as in recorded Bedrock streams for Claude: the event inside the last chunk is
+    // {"type":"message_stop","amazon-bedrock-invocationMetrics":{"inputTokenCount":..,"outputTokenCount":..,
+    // "invocationLatency":..,"firstByteLatency":..}}, read by langchain-aws (llms/bedrock.py, _get_invocation_metrics_chunk).
+
+    @Test
+    public void shouldCarryInvocationMetricsWithTheCompletionsTokenCountsInTheLastChunk() throws Exception {
+        Completion completion = completion()
+            .withText("Hello world")
+            .withUsage(Usage.usage().withInputTokens(25).withOutputTokens(15));
+
+        List<SseEvent> events = codec.encodeStreaming(completion, "anthropic.claude-sonnet-4-5-20250929-v1:0", null);
+
+        JsonNode lastEvent = lastChunkEvent(events);
+        assertThat(lastEvent.get("type").asText(), is("message_stop"));
+        JsonNode metrics = lastEvent.get("amazon-bedrock-invocationMetrics");
+        assertThat(metrics.isObject(), is(true));
+        assertThat(fieldNames(metrics), contains("inputTokenCount", "outputTokenCount", "invocationLatency", "firstByteLatency"));
+        assertThat(metrics.get("inputTokenCount").isInt(), is(true));
+        assertThat(metrics.get("inputTokenCount").asInt(), is(25));
+        assertThat(metrics.get("outputTokenCount").asInt(), is(15));
+        assertThat(metrics.get("firstByteLatency").asLong(), is(greaterThanOrEqualTo(1L)));
+        assertThat(metrics.get("invocationLatency").asLong(), is(greaterThanOrEqualTo(metrics.get("firstByteLatency").asLong())));
+        for (SseEvent event : events.subList(0, events.size() - 1)) {
+            assertThat(OBJECT_MAPPER.readTree(event.getData()).has("amazon-bedrock-invocationMetrics"), is(false));
+        }
+    }
+
+    @Test
+    public void shouldReportZeroTokenCountsInInvocationMetricsWhenTheCompletionHasNoUsage() throws Exception {
+        List<SseEvent> events = codec.encodeStreaming(completion().withText("Hi"), "anthropic.claude-3-haiku-20240307-v1:0", null);
+
+        JsonNode metrics = lastChunkEvent(events).get("amazon-bedrock-invocationMetrics");
+        assertThat(metrics.get("inputTokenCount").asInt(), is(0));
+        assertThat(metrics.get("outputTokenCount").asInt(), is(0));
+        assertThat(metrics.has("cacheReadInputTokenCount"), is(false));
+        assertThat(metrics.has("cacheWriteInputTokenCount"), is(false));
+    }
+
+    @Test
+    public void shouldAddCacheCountsToInvocationMetricsWhenTheUsageHasEither() throws Exception {
+        Completion completion = completion()
+            .withText("Hello")
+            .withUsage(Usage.usage().withInputTokens(9).withOutputTokens(145).withCacheCreationTokens(4773));
+
+        JsonNode metrics = lastChunkEvent(codec.encodeStreaming(completion, "model", null)).get("amazon-bedrock-invocationMetrics");
+
+        assertThat(metrics.get("inputTokenCount").asInt(), is(9));
+        assertThat(metrics.get("outputTokenCount").asInt(), is(145));
+        assertThat(metrics.get("cacheReadInputTokenCount").asInt(), is(0));
+        assertThat(metrics.get("cacheWriteInputTokenCount").asInt(), is(4773));
+    }
+
+    @Test
+    public void shouldDeriveInvocationLatenciesFromTheStreamingPhysics() throws Exception {
+        Completion completion = completion()
+            .withText("Hello there, how are you today?")
+            .withUsage(Usage.usage().withInputTokens(12).withOutputTokens(8));
+        StreamingPhysics physics = StreamingPhysics.streamingPhysics()
+            .withTimeToFirstToken(Delay.milliseconds(350))
+            .withTokensPerSecond(50)
+            .withJitter(0.0)
+            .withSeed(7L);
+
+        List<SseEvent> events = codec.encodeStreaming(completion, "anthropic.claude-3-5-haiku-20241022-v1:0", physics);
+
+        JsonNode metrics = lastChunkEvent(events).get("amazon-bedrock-invocationMetrics");
+        assertThat(metrics.get("firstByteLatency").asLong(), is(350L));
+        // each event after the first is 1000 / 50 = 20 ms after the one before
+        assertThat(metrics.get("invocationLatency").asLong(), is(350L + 20L * (events.size() - 1)));
+    }
+
+    @Test
+    public void shouldNotAddInvocationMetricsToAConverseStream() throws Exception {
+        HttpRequest converseStream = request()
+            .withMethod("POST")
+            .withPath("/model/anthropic.claude-3-haiku-20240307-v1:0/converse-stream");
+        Completion completion = completion()
+            .withText("Hello")
+            .withUsage(Usage.usage().withInputTokens(3).withOutputTokens(2));
+
+        for (SseEvent event : codec.encodeStreaming(completion, "model", null, converseStream)) {
+            assertThat(event.getData(), not(containsString("amazon-bedrock-invocationMetrics")));
+        }
+    }
+
+    private static JsonNode lastChunkEvent(List<SseEvent> events) throws Exception {
+        java.io.ByteArrayOutputStream stream = new java.io.ByteArrayOutputStream();
+        for (SseEvent event : events) {
+            stream.write(BedrockEventStreamEncoder.encodeChunk(event.getData()));
+        }
+        List<BedrockEventStreamEncoder.DecodedMessage> decoded = BedrockEventStreamEncoder.decode(stream.toByteArray());
+        String bytes = OBJECT_MAPPER.readTree(decoded.get(decoded.size() - 1).getPayloadAsString()).get("bytes").asText();
+        return OBJECT_MAPPER.readTree(new String(Base64.getDecoder().decode(bytes), StandardCharsets.UTF_8));
+    }
+
+    private static List<String> fieldNames(JsonNode node) {
+        List<String> names = new java.util.ArrayList<>();
+        node.fieldNames().forEachRemaining(names::add);
+        return names;
+    }
 }

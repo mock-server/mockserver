@@ -41,7 +41,8 @@ import java.util.regex.Pattern;
  * such as langchain-aws read usage only from these headers. A completion whose usage has a cache read
  * or cache write count also carries {@code X-Amzn-Bedrock-Cache-Read-Input-Token-Count} and
  * {@code X-Amzn-Bedrock-Cache-Write-Input-Token-Count}, as Bedrock sends them for the models that support
- * prompt caching. Converse and streaming responses carry none.
+ * prompt caching. Converse and streaming responses carry none; an InvokeModel stream carries its
+ * counts in the {@code amazon-bedrock-invocationMetrics} of its last chunk instead.
  * <p>
  * <strong>SigV4 signing</strong> applies to the runtime client path ({@code BedrockLlmClient}),
  * not to this codec.
@@ -147,17 +148,50 @@ public class BedrockCodec implements ProviderCodec {
      * <p>
      * Each event's data becomes one event-stream chunk whose payload is
      * {@code {"bytes":"<base64(data)>"}}.
+     * <p>
+     * As real Bedrock does, the last event ({@code message_stop}) also carries
+     * {@code amazon-bedrock-invocationMetrics}: the completion's token counts, the cache read and
+     * write counts when its usage has either, and latencies in milliseconds taken from the stream's
+     * event delays, each at least 1. langchain-aws {@code ChatBedrock} reads a streamed call's
+     * usage only from this object.
      */
     @Override
     public List<SseEvent> encodeStreaming(Completion completion, String model, StreamingPhysics physics) {
         // Get the Anthropic-format SSE events (with physics already applied)
         List<SseEvent> anthropicEvents = delegate.encodeStreaming(completion, model, physics);
+        SseEvent messageStop = anthropicEvents.get(anthropicEvents.size() - 1);
+        messageStop.withData("{\"type\":\"message_stop\",\"amazon-bedrock-invocationMetrics\":"
+            + invocationMetrics(completion != null ? completion.getUsage() : null, anthropicEvents) + "}");
 
-        // Return events as-is — the data payloads are the raw Anthropic chunk JSON.
-        // The HttpSseResponseActionHandler will wrap each chunk in event-stream
+        // The HttpSseResponseActionHandler wraps each chunk in event-stream
         // binary framing (including base64 encoding) when it detects
         // StreamingFormat.AWS_EVENT_STREAM.
         return anthropicEvents;
+    }
+
+    private static String invocationMetrics(Usage usage, List<SseEvent> events) {
+        long firstByteLatency = Math.max(1, delayMillis(events.get(0)));
+        long invocationLatency = 0;
+        for (SseEvent event : events) {
+            invocationLatency += delayMillis(event);
+        }
+        invocationLatency = Math.max(firstByteLatency, invocationLatency);
+        StringBuilder metrics = new StringBuilder()
+            .append("{\"inputTokenCount\":").append(tokenCount(usage != null ? usage.getInputTokens() : null))
+            .append(",\"outputTokenCount\":").append(tokenCount(usage != null ? usage.getOutputTokens() : null))
+            .append(",\"invocationLatency\":").append(invocationLatency)
+            .append(",\"firstByteLatency\":").append(firstByteLatency);
+        if (usage != null && (usage.getCachedInputTokens() != null || usage.getCacheCreationTokens() != null)) {
+            metrics
+                .append(",\"cacheReadInputTokenCount\":").append(tokenCount(usage.getCachedInputTokens()))
+                .append(",\"cacheWriteInputTokenCount\":").append(tokenCount(usage.getCacheCreationTokens()));
+        }
+        return metrics.append('}').toString();
+    }
+
+    private static long delayMillis(SseEvent event) {
+        Delay delay = event.getDelay();
+        return delay != null && delay.getTimeUnit() != null ? Math.max(0, delay.getTimeUnit().toMillis(delay.getValue())) : 0;
     }
 
     @Override

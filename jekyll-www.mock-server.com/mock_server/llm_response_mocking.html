@@ -610,7 +610,13 @@ curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
         <tr>
             <td><span class="inline_code">/invoke-with-response-stream</span></td>
             <td>InvokeModelWithResponseStream: binary AWS event-stream where each <span class="inline_code">chunk</span> event wraps an
-                Anthropic streaming event as <span class="inline_code">{"bytes":"&lt;base64&gt;"}</span>.</td>
+                Anthropic streaming event as <span class="inline_code">{"bytes":"&lt;base64&gt;"}</span>. As on Bedrock, the
+                last event (<span class="inline_code">message_stop</span>) also carries
+                <span class="inline_code">amazon-bedrock-invocationMetrics</span>: the completion's
+                <span class="inline_code">inputTokenCount</span> and <span class="inline_code">outputTokenCount</span>, cache read and
+                write counts when its usage sets either, and <span class="inline_code">invocationLatency</span> and
+                <span class="inline_code">firstByteLatency</span> in milliseconds, taken from the streaming physics. LangChain's
+                <span class="inline_code">ChatBedrock</span> reads a streamed call's token usage from this object.</td>
         </tr>
     </tbody>
 </table>
