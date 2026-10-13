@@ -54,6 +54,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.mock.action.http.HttpActionHandler.REMOTE_SOCKET;
+import static org.mockserver.netty.proxy.BinaryRequestProxyingHandler.MAX_UNANSWERED_FORWARDS;
 import static org.mockserver.netty.proxy.BinaryRequestProxyingHandler.MAX_WAITING_BYTES;
 import static org.mockserver.netty.proxy.BinaryRequestProxyingHandler.MAX_WAITING_MESSAGES;
 
@@ -339,7 +340,8 @@ public class BinaryRequestProxyingHandlerBackpressureTest {
         channel.attr(REMOTE_SOCKET).set(new InetSocketAddress("127.0.0.1", 1234));
         channel.pipeline().addLast(new BinaryRequestProxyingHandler(waiting, mock(MockServerLogger.class), mock(Scheduler.class), httpClient, mock(HttpState.class)));
 
-        for (int message = 0; message < MAX_WAITING_MESSAGES * 3; message++) {
+        // below that mode's own limit, on forwards not yet answered (BinaryRequestProxyingHandlerWaitingBoundTest)
+        for (int message = 0; message < MAX_UNANSWERED_FORWARDS - 1; message++) {
             clientSends(channel, 8);
         }
 

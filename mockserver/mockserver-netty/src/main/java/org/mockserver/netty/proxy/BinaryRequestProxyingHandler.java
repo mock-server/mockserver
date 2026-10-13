@@ -11,6 +11,7 @@ import io.netty.util.AttributeKey;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.httpclient.HeaderLimitExceededException;
 import org.mockserver.httpclient.NettyHttpClient;
+import org.mockserver.httpclient.SocketCommunicationException;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.log.model.SensitiveLogValue;
 import org.mockserver.logging.MockServerLogger;
@@ -38,6 +39,7 @@ import java.util.Deque;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
+import java.util.function.LongConsumer;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mockserver.exception.ExceptionHandling.boundedFault;
@@ -83,7 +85,8 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
      * The most forwarded messages of one client connection that keep their upstream connection open waiting for a
      * response: forwarding one more closes the oldest, which then gets no response, as if the upstream had closed it.
      * Half the listener limit, so a listener that waits for each response, from an upstream that sends none, has its
-     * wait ended before the client is held back for it, and a client held back is read again.
+     * wait ended before the client is held back for it, and a client held back is read again. Waiting for responses,
+     * a client with this many not yet answered is not read instead, so that no response it waits for is lost.
      */
     static final int MAX_UNANSWERED_FORWARDS = MAX_PENDING_LISTENER_CALLS / 2;
 
@@ -352,15 +355,38 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
             CompletableFuture<BinaryMessage> binaryResponseFuture = sendInArrivalOrder(ctx, queue, binaryRequest, logCorrelationId, remoteAddress);
             processNotWaitingForResponse(ctx, queue, binaryRequest, logCorrelationId, remoteAddress, binaryResponseFuture);
         } else {
-            CompletableFuture<BinaryMessage> binaryResponseFuture = httpClient
-                .sendRequest(
-                    binaryRequest,
-                    isSslEnabledUpstream(ctx.channel()),
-                    remoteAddress,
-                    configuration.socketConnectionTimeoutInMillis()
-                );
-            processWaitingForResponse(ctx, binaryRequest, logCorrelationId, remoteAddress, binaryResponseFuture);
+            forwardWaitingForResponse(ctx, binaryRequest, logCorrelationId, remoteAddress);
         }
+    }
+
+    /**
+     * Waiting for responses, each message is forwarded as it is read, on an upstream connection of its own. The client
+     * is not read while {@link #MAX_UNANSWERED_FORWARDS} of its forwards are not yet answered and handled, and is read
+     * again once no more than half are. A forward with no response within the response timeout fails, which closes
+     * the client connection, as any failed forward in this mode does.
+     */
+    private void forwardWaitingForResponse(ChannelHandlerContext ctx, BinaryMessage binaryRequest, String logCorrelationId, InetSocketAddress remoteAddress) {
+        CompletableFuture<BinaryMessage> binaryResponseFuture = httpClient
+            .sendRequest(
+                binaryRequest,
+                isSslEnabledUpstream(ctx.channel()),
+                remoteAddress,
+                configuration.socketConnectionTimeoutInMillis()
+            );
+        ForwardQueue queue = forwardQueue(ctx);
+        queue.awaitingResponse++;
+        pauseReadsIfBehind(ctx, queue);
+        // completing the future, if the response has not done so first, closes its upstream connection
+        ScheduledFuture<?> timeout = afterResponseTimeout(ctx, timeoutMillis -> binaryResponseFuture.completeExceptionally(
+            new SocketCommunicationException("no response within " + timeoutMillis + "ms (maxSocketTimeout, at most maxFutureTimeout)", null)
+        ));
+        processWaitingForResponse(ctx, binaryRequest, logCorrelationId, remoteAddress, binaryResponseFuture, () -> onEventLoop(ctx, () -> {
+            if (timeout != null) {
+                timeout.cancel(false);
+            }
+            queue.awaitingResponse--;
+            resumeReadsOnceDrained(ctx, queue);
+        }));
     }
 
     /**
@@ -389,14 +415,14 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
     }
 
     private static void pauseReadsIfBehind(ChannelHandlerContext ctx, ForwardQueue queue) {
-        if (!queue.readsPaused && (queue.waiting.size() > MAX_WAITING_MESSAGES || queue.waitingBytes > MAX_WAITING_BYTES || queue.pendingListenerCalls > MAX_PENDING_LISTENER_CALLS)) {
+        if (!queue.readsPaused && (queue.waiting.size() > MAX_WAITING_MESSAGES || queue.waitingBytes > MAX_WAITING_BYTES || queue.pendingListenerCalls > MAX_PENDING_LISTENER_CALLS || queue.awaitingResponse >= MAX_UNANSWERED_FORWARDS)) {
             queue.readsPaused = true;
             ChannelReadPause.pause(ctx.channel());
         }
     }
 
     private static void resumeReadsOnceDrained(ChannelHandlerContext ctx, ForwardQueue queue) {
-        if (queue.readsPaused && queue.waiting.size() <= MAX_WAITING_MESSAGES / 2 && queue.waitingBytes <= MAX_WAITING_BYTES / 2 && queue.pendingListenerCalls <= MAX_PENDING_LISTENER_CALLS / 2) {
+        if (queue.readsPaused && queue.waiting.size() <= MAX_WAITING_MESSAGES / 2 && queue.waitingBytes <= MAX_WAITING_BYTES / 2 && queue.pendingListenerCalls <= MAX_PENDING_LISTENER_CALLS / 2 && queue.awaitingResponse <= MAX_UNANSWERED_FORWARDS / 2) {
             queue.readsPaused = false;
             ChannelReadPause.resume(ctx.channel());
         }
@@ -497,31 +523,45 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
     }
 
     /**
-     * A forwarded message that has had no response within maxSocketTimeoutInMillis of being written, or
-     * maxFutureTimeoutInMillis where that is shorter or maxSocketTimeoutInMillis is 0, is given up, as an HTTP forward
-     * is, so an upstream that keeps connections open and never answers does not keep them all.
+     * A forwarded message that has had no response within maxSocketTimeoutInMillis of being written is given up, as
+     * an HTTP forward is, so an upstream that keeps connections open and never answers does not keep them all.
      */
     private void stopWaitingAfterMaxSocketTimeout(ChannelHandlerContext ctx, ForwardQueue queue, Unanswered unanswered) {
+        if (queue.unanswered.contains(unanswered)) {
+            unanswered.timeout = afterResponseTimeout(ctx, afterMillis -> {
+                if (giveUp(queue, unanswered) && mockServerLogger.isEnabledForInstance(Level.INFO)) {
+                    mockServerLogger.logEvent(
+                        givenUpEntry(unanswered)
+                            .setMessageFormat("closing the upstream connection to:{}of a forwarded binary request without its response, because none arrived within{}ms (maxSocketTimeout, at most maxFutureTimeout)")
+                            .setArguments(unanswered.remoteAddress, afterMillis)
+                    );
+                }
+            });
+        }
+    }
+
+    /**
+     * Runs {@code giveUp}, on the client connection's event loop, once a forwarded message has waited as long for its
+     * response as an HTTP forward would: maxSocketTimeoutInMillis, or maxFutureTimeoutInMillis where that is shorter
+     * or maxSocketTimeoutInMillis is 0.
+     *
+     * @return the scheduled give-up, or null where both are 0 or the event loop has shut down
+     */
+    private ScheduledFuture<?> afterResponseTimeout(ChannelHandlerContext ctx, LongConsumer giveUp) {
         long timeoutMillis = configuration.maxFutureTimeoutInMillis();
         long maxSocketTimeoutInMillis = configuration.maxSocketTimeoutInMillis();
         if (maxSocketTimeoutInMillis > 0 && maxSocketTimeoutInMillis < timeoutMillis) {
             timeoutMillis = maxSocketTimeoutInMillis;
         }
-        if (timeoutMillis > 0 && queue.unanswered.contains(unanswered)) {
-            long afterMillis = timeoutMillis;
-            try {
-                unanswered.timeout = ctx.executor().schedule(() -> {
-                    if (giveUp(queue, unanswered) && mockServerLogger.isEnabledForInstance(Level.INFO)) {
-                        mockServerLogger.logEvent(
-                            givenUpEntry(unanswered)
-                                .setMessageFormat("closing the upstream connection to:{}of a forwarded binary request without its response, because none arrived within{}ms (maxSocketTimeout, at most maxFutureTimeout)")
-                                .setArguments(unanswered.remoteAddress, afterMillis)
-                        );
-                    }
-                }, afterMillis, MILLISECONDS);
-            } catch (RejectedExecutionException serverStopping) {
-                // the event loop has shut down, and the forward client's connections with it
-            }
+        if (timeoutMillis <= 0) {
+            return null;
+        }
+        long afterMillis = timeoutMillis;
+        try {
+            return ctx.executor().schedule(() -> giveUp.accept(afterMillis), afterMillis, MILLISECONDS);
+        } catch (RejectedExecutionException serverStopping) {
+            // the event loop has shut down, and the forward client's connections with it
+            return null;
         }
     }
 
@@ -580,6 +620,8 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
         private final Deque<Unanswered> unanswered = new ArrayDeque<>();
         private long waitingBytes;
         private int pendingListenerCalls;
+        /** Forwarded waiting for a response, not yet answered, or answered and not yet written to the client. */
+        private int awaitingResponse;
         private boolean readsPaused;
         private boolean inFlight;
         private boolean failed;
@@ -691,7 +733,10 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
         }, false);
     }
 
-    private void processWaitingForResponse(ChannelHandlerContext ctx, BinaryMessage binaryRequest, String logCorrelationId, InetSocketAddress remoteAddress, CompletableFuture<BinaryMessage> binaryResponseFuture) {
+    /**
+     * @param handled run once the response has been written, or the failure logged and the client connection closed
+     */
+    private void processWaitingForResponse(ChannelHandlerContext ctx, BinaryMessage binaryRequest, String logCorrelationId, InetSocketAddress remoteAddress, CompletableFuture<BinaryMessage> binaryResponseFuture, Runnable handled) {
         scheduler.submit(binaryResponseFuture, () -> {
             try {
                 BinaryMessage binaryResponse = binaryResponseFuture.get(configuration.maxFutureTimeoutInMillis(), MILLISECONDS);
@@ -710,6 +755,8 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
             } catch (Throwable throwable) {
                 logFailedForward(binaryRequest, logCorrelationId, remoteAddress, throwable);
                 ctx.close();
+            } finally {
+                handled.run();
             }
         }, false);
     }

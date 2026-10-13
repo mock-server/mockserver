@@ -1632,7 +1632,8 @@ This release delivers a sustained performance and memory programme alongside dat
   delivered to a client connected directly, and through a tunnel over HTTP/1.1. Response headers
   are now relayed whatever their size.
 - **Forwarding binary (non-HTTP) messages without waiting for a response no longer stalls behind a
-  `binaryProxyListener`, and keeps one connection's messages in order.** With
+  `binaryProxyListener`, and keeps one connection's messages in order; with or without waiting, an
+  upstream server that never answers no longer collects an open connection per message.** With
   `forwardBinaryRequestsWithoutWaitingForResponse` enabled, the listener was called on the thread that
   reads the client's connection. A listener that waited on the response it is handed stopped MockServer
   forwarding that client's next message, and anything else that thread serves, until the listener
@@ -1655,6 +1656,14 @@ This release delivers a sustained performance and memory programme alongside dat
   wait for a reply: forwarding another closes the oldest, and each is closed anyway once it has waited
   `maxSocketTimeout` (or `maxFutureTimeout`, if that is shorter). A message closed this way gets no
   reply, as if the upstream had closed the connection, and the client's connection stays open.
+  Forwarding that waits for each response (`forwardBinaryRequestsWithoutWaitingForResponse` off, its
+  default) had no limit either: each message waited for its reply, with its own upstream connection
+  open, for as long as the upstream kept it open, and a client could have any number waiting. Now a
+  client with 32 replies outstanding is not read until half of them have arrived, so no reply is lost (a `binaryProxyListener` slower than the client slows
+  it down too), and a message with no reply within `maxSocketTimeout` (or `maxFutureTimeout`, if that
+  is shorter) fails like any message that cannot be forwarded: its upstream connection and the
+  client's are closed, with one warning for each such message (so up to 32 per client connection when
+  the upstream never answers).
 - **The internal connection behind an HTTP/2 CONNECT or SOCKS proxy tunnel is now closed as soon as its client disconnects, or as soon as a request that client had finished sending has been received.** When a client left with a request still unanswered, MockServer kept its own half of the tunnel open, and went on working on that request, until it was answered or for up to 30 seconds. A request the client had sent in full before it left is still received, recorded and matched, as it would be on a direct connection; only its response is no longer waited for.
 - **A SOCKS client that connects and then disconnects without sending anything no longer leaves a connection open inside MockServer.** Each such client left MockServer's internal connection for the tunnel open until MockServer was stopped.
 - **`httpLlmResponse` with `provider: BEDROCK` now returns the AWS Bedrock Converse format on

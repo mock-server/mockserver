@@ -1,27 +1,13 @@
 package org.mockserver.netty.proxy;
 
-import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.util.AttributeKey;
 import org.junit.After;
 import org.junit.Test;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.model.BinaryProxyListener;
 import org.mockserver.netty.MockServer;
 
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
@@ -30,13 +16,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BooleanSupplier;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.Matchers.nullValue;
+import static org.mockserver.netty.proxy.BinaryForwardUpstream.await;
+import static org.mockserver.netty.proxy.BinaryForwardUpstream.awaitNoLongerGrowing;
+import static org.mockserver.netty.proxy.BinaryForwardUpstream.readsNothing;
 import static org.mockserver.netty.proxy.BinaryRequestProxyingHandler.MAX_PENDING_LISTENER_CALLS;
 import static org.mockserver.netty.proxy.BinaryRequestProxyingHandler.MAX_UNANSWERED_FORWARDS;
 import static org.mockserver.stop.Stop.stopQuietly;
@@ -53,7 +41,7 @@ public class BinaryForwardWithoutWaitingBacklogIntegrationTest {
     /** A connection closed by MockServer is seen closed by the upstream a little later. */
     private static final int CLOSE_LAG = 8;
 
-    private final SilentUpstream upstream = new SilentUpstream();
+    private final BinaryForwardUpstream upstream = BinaryForwardUpstream.silent();
     private final AtomicInteger listenerCalls = new AtomicInteger();
     private final AtomicLong bytesReported = new AtomicLong();
     private final AtomicInteger responsesReported = new AtomicInteger();
@@ -188,113 +176,6 @@ public class BinaryForwardWithoutWaitingBacklogIntegrationTest {
                 stopWriting.set(true);
                 listenerMayReturn.countDown();
             }
-        }
-    }
-
-    /** @return true when nothing arrives before the read times out: not a byte, and not the end of the stream */
-    private static boolean readsNothing(InputStream input) throws Exception {
-        try {
-            input.read();
-            return false;
-        } catch (SocketTimeoutException nothingToRead) {
-            return true;
-        }
-    }
-
-    private static void await(String what, BooleanSupplier condition) throws InterruptedException {
-        await(what, TimeUnit.SECONDS.toMillis(60), condition);
-    }
-
-    private static void await(String what, long withinMillis, BooleanSupplier condition) throws InterruptedException {
-        long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(withinMillis);
-        while (!condition.getAsBoolean()) {
-            if (System.nanoTime() > deadline) {
-                throw new AssertionError("not within " + withinMillis + " ms: " + what);
-            }
-            TimeUnit.MILLISECONDS.sleep(2);
-        }
-    }
-
-    /** @return the value once it has stopped changing for two seconds, or has reached {@code limit} */
-    private static long awaitNoLongerGrowing(AtomicLong value, long limit) throws InterruptedException {
-        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(120);
-        long last = -1;
-        long unchangedSince = System.nanoTime();
-        while (System.nanoTime() < deadline) {
-            long now = value.get();
-            if (now >= limit) {
-                return now;
-            }
-            if (now != last) {
-                last = now;
-                unchangedSince = System.nanoTime();
-            } else if (now > 0 && System.nanoTime() - unchangedSince > TimeUnit.SECONDS.toNanos(2)) {
-                return now;
-            }
-            TimeUnit.MILLISECONDS.sleep(20);
-        }
-        throw new AssertionError("still changing after 120 seconds, last " + last);
-    }
-
-    /** Accepts every connection and reads everything sent on it; never writes and never closes. */
-    private static final class SilentUpstream {
-        private static final AttributeKey<Boolean> COUNTED = AttributeKey.valueOf("SILENT_UPSTREAM_COUNTED");
-        private final EventLoopGroup group = new NioEventLoopGroup(1);
-        private final AtomicInteger accepted = new AtomicInteger();
-        private final AtomicInteger open = new AtomicInteger();
-        private final AtomicInteger mostOpen = new AtomicInteger();
-        private final AtomicLong bytesReceived = new AtomicLong();
-        private final Channel server;
-
-        private SilentUpstream() {
-            try {
-                server = new ServerBootstrap()
-                    .group(group)
-                    .channel(NioServerSocketChannel.class)
-                    .childHandler(new ChannelInitializer<SocketChannel>() {
-                        @Override
-                        protected void initChannel(SocketChannel channel) {
-                            channel.pipeline().addLast(new SimpleChannelInboundHandler<ByteBuf>() {
-                                @Override
-                                public void channelActive(ChannelHandlerContext ctx) {
-                                    ctx.channel().attr(COUNTED).set(Boolean.TRUE);
-                                    accepted.incrementAndGet();
-                                    mostOpen.accumulateAndGet(open.incrementAndGet(), Math::max);
-                                }
-
-                                @Override
-                                protected void channelRead0(ChannelHandlerContext ctx, ByteBuf message) {
-                                    bytesReceived.addAndGet(message.readableBytes());
-                                }
-
-                                @Override
-                                public void channelInactive(ChannelHandlerContext ctx) {
-                                    if (ctx.channel().attr(COUNTED).getAndSet(null) != null) {
-                                        open.decrementAndGet();
-                                    }
-                                }
-
-                                @Override
-                                public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-                                    ctx.close();
-                                }
-                            });
-                        }
-                    })
-                    .bind(new InetSocketAddress("127.0.0.1", 0)).sync().channel();
-            } catch (InterruptedException interrupted) {
-                Thread.currentThread().interrupt();
-                throw new IllegalStateException(interrupted);
-            }
-        }
-
-        private int port() {
-            return ((InetSocketAddress) server.localAddress()).getPort();
-        }
-
-        private void close() throws InterruptedException {
-            server.close().sync();
-            group.shutdownGracefully(0, 0, TimeUnit.MILLISECONDS).sync();
         }
     }
 }
