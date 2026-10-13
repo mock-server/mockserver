@@ -258,6 +258,18 @@ sequenceDiagram
 
 The request matcher (`VerificationDTO.httpRequest`, `VerificationSequenceDTO.httpRequests`) is read by `RequestDefinitionDTODeserializer`, the same polymorphic reader expectations, retrieve and clear use, so an OpenAPI matcher (`specUrlOrPayload` plus optional `operationId`) counts only the recorded requests that match that operation. Binding the field to `HttpRequestDTO` instead silently drops the OpenAPI fields and leaves an empty matcher that counts every request.
 
+#### Verification Summary on Failure
+
+When `detailedVerificationFailures` is on (the default) and a request-count verification fails, `VerificationFailureSummary` appends a `verification summary:` block after the existing message and its `closest match diff:`. Clients parse the message by prefix (the Node client cuts it at `, expected:<`), so the block is only ever appended, never inserted. It states:
+
+- the expected times and the matched count, naming matches counted on other cluster nodes, and the number of recorded requests;
+- up to three closest **non-matching** recorded requests (method, path, every differing field), fewest differing fields first and most recent first on a tie. Each is evaluated with `collectAllDifferences()` and `suppressMatchResultLogging()`, so it names every differing field and writes nothing to the event log. Only the 500 most recent recorded requests are ranked, and the block says when it ranked fewer than were recorded. A "found too often" failure skips this list;
+- how many recorded requests arrived after the verification started: log entries whose `epochTime` is later than the instant `verify(...)` was called. This is mainly useful for a waiting (`timeout > 0`) verification. With cluster verify fan-in, the matched count includes the peers' matches but the recorded requests, near misses and late-arrival count cover only the node that answered the verify.
+
+Near misses are ranked against the same copies the failure message shows: with `redactSecretsInLog` on, those are the redacted requests, so a field that differs only in a redacted value (a masked header, for example) can rank differently than the raw request would. A waiting verification builds the block only on its final, logged evaluation; the in-between re-evaluations discard their message and skip the ranking.
+
+The block is left out when it would add nothing: no non-matching request to list, nothing arrived late, and the verification did not wait. Response and sequence failures do not get it. For a verification by expectation id, the recorded requests are those that matched any expectation, the same set the closest-match diff uses. It is built on the failure path only; a passing verification pays nothing.
+
 #### Server-Side Eventual Verification (`timeout`) — #1713
 
 Both `Verification` and `VerificationSequence` carry an optional `timeout` (milliseconds). When it is

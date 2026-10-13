@@ -1731,6 +1731,7 @@ In `MockServerEventLog.verify()`, after determining verification failed:
 2. Tests each received request against it with `detailedMatchFailures=true`
 3. Identifies the closest match (fewest diff fields)
 4. Appends formatted diff using `MatchDifferenceFormatter`
+5. For a request-count verification, appends a `verification summary:` block after the diff: expected vs matched count, the three closest non-matching requests with every differing field, and how many requests arrived after the verification started (see [event-system.md](event-system.md#verification-summary-on-failure))
 
 ### 404 Closest Match Logging
 

@@ -168,6 +168,7 @@
 <button id="button_configuration_detailed_verification_failures" class="accordion title"><strong>Detailed Verification Failures</strong></button>
 <div class="panel title">
     <p>If true (the default) verification failure messages will include a detailed diff showing how each recorded request differed from the expected request. This makes it easier to identify why a verification failed by highlighting per-field mismatches between the expected and actual requests.</p>
+    <p>For a request verification it also adds a <code>verification summary:</code> block at the end of the message: how many times the request was expected and how many times it matched, the three recorded requests that came closest without matching (with every field that differed), and how many requests arrived after the verification started. That last figure tells you whether a waiting verification (one with a <code>timeout</code>) saw any traffic at all. The block is always added after the existing text, so code that reads the start of the message keeps working.</p>
     <p>Disable this if verification failure messages are too verbose or if you prefer concise failure output.</p>
     <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">true</span></p>
     <p>Java Code:</p>

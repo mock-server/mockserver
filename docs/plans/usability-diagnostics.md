@@ -41,7 +41,9 @@ flowchart LR
   (`closestMatchHintEnabled`, default true), the optional mismatch diagnostic body, and a DEBUG
   log.
 - **Verification:** failures include the closest-request diff (`detailedVerificationFailures`,
-  default true).
+  default true), and a failed request-count verification ends with a `verification summary:`
+  block: expected vs matched count, the three closest non-matching requests with every differing
+  field, and how many requests arrived after the verification started (A9).
 - **Other failures:** forward failures return a 502 with the raw error; OpenAPI load returns the
   parser messages grouped by kind with JSON-pointer locations, and logs the problems of a spec that
   still loads; unknown `mockserver.*` / `MOCKSERVER_*` keys log a WARN at startup.
@@ -79,7 +81,7 @@ run.
 | A8 | Unreachable or suspicious expectations go unnoticed → lint: shadowed expectations, regex paths that look literal, missing leading slash, STRICT array bodies, `times=0`; surfaced as PUT `warnings`, in the UI, and via `mockserver lint file.json` | (iv) / (iii) | Control plane only; the pairwise shadowing check is O(n²), so on demand, not on every PUT | M | Advisory only, never rejecting | P1 |
 | B3 | "Fix my expectation" → turn the diff into a minimal JSON patch with a preview-and-apply action in Explain Unmatched | (iii) | On demand | M | Never auto-apply | P1 |
 | B2 | More MCP prompts: `why_did_verify_fail`, `fix_my_expectation`, `why_forward_failed`, chaining the tools above | (iii) | Static text | S | Keep deterministic facts separate from model prose | P1 |
-| A9 | Verification failures could say more → "expected 2, got 1; closest 3 requests; 1 arrived after verify started" | (iii) | Verify path only | S | Add fields; do not rewrite the existing message | P2 |
+| A9b | Response and sequence verification failures get no summary block → append the same `verification summary:` (counts, closest misses, late arrivals) to response-aware and sequence failures, and say how many recorded requests matched the fields but had the other disposition | (iii) | Failure path only; reuse the request summary's 500-request ranking budget | S | Append only; keep the "left out when it adds nothing" rule | P3 |
 | B6 | Natural-language → expectation without an LLM inside MockServer → document and test the `create_mock_from_description` prompt, with precise schema errors the assistant can act on | (iii) | None | S | Validate against the real schema | P2 |
 | C1 | From the prompt-redaction audit (`f5e1e6ce0`): a drift value in a non-credential field gets JWT and URL-userinfo masking but not the `key=value` credential sweep (`LlmPromptRedactor.maskDriftValue`) → apply `maskKeyValue` there too | (iii) | Only when an LLM drift prompt is built | S | None | P2 |
 | B5 | Optional plain-language summary of explain results from a configured LLM (`?narrate=true`) | (iii) | On demand, asynchronous, timeout-bounded, never inline in a 404 | S | Off by default; label as AI-generated; always return the deterministic facts too | P3 |
@@ -102,7 +104,7 @@ run.
 1. **Wave 0 — hygiene and performance:** A2, C1.
 2. **Wave 1 — explain engine:** B1 (the A3 explainer plus existing tools with redacted output). (A3 and A10 landed.)
 3. **Wave 2 — failure classes:** A4, A5, A6, A7, each with an MCP tool and a dashboard entry.
-4. **Wave 3 — fixes:** A8 (including the CLI), B3, B2, A9.
+4. **Wave 3 — fixes:** A8 (including the CLI), B3, B2, A9b.
 5. **Wave 4 — optional:** B5, B6.
 
 ## Performance rules for every item

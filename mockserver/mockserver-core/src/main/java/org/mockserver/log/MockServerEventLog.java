@@ -26,6 +26,7 @@ import org.mockserver.model.RequestDefinition;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.HttpResponseSerializer;
 import org.mockserver.serialization.RequestDefinitionSerializer;
+import org.mockserver.time.EpochService;
 import org.mockserver.uuid.UUIDService;
 import org.mockserver.verify.Disposition;
 import org.mockserver.verify.Verification;
@@ -1200,6 +1201,24 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         }
     }
 
+    private void retrieveAllRecordedRequests(boolean matchingExpectationsOnly, Consumer<List<VerificationFailureSummary.RecordedRequest>> listConsumer) {
+        Function<LogEntry, Stream<VerificationFailureSummary.RecordedRequest>> toRecordedRequests = logEntry -> {
+            RequestDefinition[] requests = logEntryToRequest.apply(logEntry);
+            long arrivedAtMillis = logEntry.getEpochTime();
+            return requests == null ? Stream.empty() : Arrays.stream(requests).map(request -> new VerificationFailureSummary.RecordedRequest(request, arrivedAtMillis));
+        };
+        Consumer<Stream<Stream<VerificationFailureSummary.RecordedRequest>>> collector = logEventStream -> listConsumer.accept(
+            logEventStream
+                .flatMap(Function.identity())
+                .collect(Collectors.toList())
+        );
+        if (matchingExpectationsOnly) {
+            retrieveLogEntries((List<String>) null, expectationLogPredicate, toRecordedRequests, collector);
+        } else {
+            retrieveLogEntries((RequestDefinition) null, requestLogPredicate, toRecordedRequests, collector);
+        }
+    }
+
     public void retrieveAllRequests(List<String> expectationIds, Consumer<List<RequestAndExpectationId>> listConsumer) {
         retrieveLogEntries(
             expectationIds,
@@ -1467,6 +1486,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
      * request verification; response-aware verification always receives {@code 0}.
      */
     public void verify(Verification verification, int additionalRemoteMatchCount, Consumer<String> resultConsumer) {
+        final long verificationStartedAtMillis = EpochService.currentTimeMillis();
         drainDisruptor();
         final String logCorrelationId = UUIDService.getNonSecureUUID();
         if (verification != null) {
@@ -1493,7 +1513,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                     verifyResponse(verification, logCorrelationId, logResult, consumer);
                 } else {
                     // original request-only verification (plus any cluster-peer remote match count)
-                    verifyRequest(verification, additionalRemoteMatchCount, logCorrelationId, logResult, consumer);
+                    verifyRequest(verification, additionalRemoteMatchCount, verificationStartedAtMillis, logCorrelationId, logResult, consumer);
                 }
             };
             eventuallyVerify(verification.getTimeout(), singleEvaluation, resultConsumer);
@@ -1502,14 +1522,15 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         }
     }
 
-    private void verifyRequest(Verification verification, int additionalRemoteMatchCount, String logCorrelationId, boolean logResult, Consumer<String> resultConsumer) {
+    private void verifyRequest(Verification verification, int additionalRemoteMatchCount, long verificationStartedAtMillis, String logCorrelationId, boolean logResult, Consumer<String> resultConsumer) {
         retrieveRequests(verification, logCorrelationId, httpRequests -> {
             try {
                 final int totalMatchedCount = httpRequests.size() + additionalRemoteMatchCount;
                 if (!verification.getTimes().matches(totalMatchedCount)) {
                     final int matchedCount = totalMatchedCount;
                     boolean matchByExpectationId = verification.getExpectationId() != null;
-                    retrieveAllRequests(matchByExpectationId, allRequests -> {
+                    retrieveAllRecordedRequests(matchByExpectationId, recordedRequests -> {
+                        final List<RequestDefinition> allRequests = recordedRequests.stream().map(VerificationFailureSummary.RecordedRequest::request).collect(Collectors.toList());
                         String failureMessage;
                         String serializedRequestToBeVerified = requestDefinitionSerializer.serialize(true, verification.getHttpRequest());
                         Integer maximumNumberOfRequestToReturnInVerificationFailure = verification.getMaximumNumberOfRequestToReturnInVerificationFailure() != null ? verification.getMaximumNumberOfRequestToReturnInVerificationFailure() : configuration.maximumNumberOfRequestToReturnInVerificationFailure();
@@ -1524,6 +1545,11 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                             if (isNotBlank(diffSummary)) {
                                 failureMessage += diffSummary;
                             }
+                        }
+                        // only the logged (final) evaluation's message reaches the caller; a waiting
+                        // verify's in-between evaluations discard theirs, so skip the ranking there
+                        if (logResult && configuration.detailedVerificationFailures() && verification.getHttpRequest() instanceof HttpRequest) {
+                            failureMessage += buildVerificationSummary(verification, matchedCount, additionalRemoteMatchCount, recordedRequests, verificationStartedAtMillis);
                         }
                         final Object received = allRequests.size() == 1 ? allRequests.get(0) : allRequests;
                         if (logResult && mockServerLogger.isEnabledForInstance(Level.INFO)) {
@@ -1716,7 +1742,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         return subject + " not found " + times;
     }
 
-    private static boolean foundTooOften(VerificationTimes times, int matchedCount) {
+    static boolean foundTooOften(VerificationTimes times, int matchedCount) {
         return times.getAtMost() != -1 && matchedCount > times.getAtMost();
     }
 
@@ -2175,6 +2201,25 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             }
         }
         return "";
+    }
+
+    private String buildVerificationSummary(Verification verification, int matchedCount, int remoteMatchedCount, List<VerificationFailureSummary.RecordedRequest> recordedRequests, long verificationStartedAtMillis) {
+        try {
+            HttpRequestMatcher verificationMatcher = matcherBuilder.transformsToMatcher(verification.getHttpRequest());
+            boolean waited = verification.getTimeout() != null && verification.getTimeout() > 0;
+            return VerificationFailureSummary.build(verificationMatcher, verification.getTimes(), matchedCount, remoteMatchedCount, recordedRequests, verificationStartedAtMillis, waited);
+        } catch (Exception e) {
+            if (mockServerLogger.isEnabledForInstance(Level.TRACE)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(Level.TRACE)
+                        .setMessageFormat("exception generating verification summary:{}")
+                        .setArguments(e.getMessage())
+                        .setThrowable(e)
+                );
+            }
+            return "";
+        }
     }
 
     /**
