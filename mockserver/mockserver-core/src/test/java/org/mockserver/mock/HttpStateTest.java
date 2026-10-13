@@ -1242,14 +1242,16 @@ public class HttpStateTest {
         // then
         assertThat(handle, is(true));
         assertThat(responseWriter.response.getStatusCode(), is(400));
-        assertThat(responseWriter.response.getBodyAsString(), is("Unable to load API spec, while parsing a block mapping" + NEW_LINE +
-            " in 'reader', line 1, column 1:" + NEW_LINE +
-            "    \"openapi\": \"3.0.0\"," + NEW_LINE +
-            "    ^" + NEW_LINE +
-            "expected <block end>, but found ','" + NEW_LINE +
-            " in 'reader', line 1, column 19:" + NEW_LINE +
-            "    \"openapi\": \"3.0.0\"," + NEW_LINE +
-            "                      ^"));
+        assertThat(responseWriter.response.getBodyAsString(), is("Unable to load API spec, 1 problem found:" + NEW_LINE + NEW_LINE +
+            "  syntax error (1):" + NEW_LINE +
+            "    - line 1, column 19: while parsing a block mapping" + NEW_LINE +
+            "       in 'reader', line 1, column 1:" + NEW_LINE +
+            "          \"openapi\": \"3.0.0\"," + NEW_LINE +
+            "          ^" + NEW_LINE +
+            "      expected <block end>, but found ','" + NEW_LINE +
+            "       in 'reader', line 1, column 19:" + NEW_LINE +
+            "          \"openapi\": \"3.0.0\"," + NEW_LINE +
+            "                            ^"));
     }
 
     @Test
@@ -1315,14 +1317,16 @@ public class HttpStateTest {
         // then
         assertThat(handle, is(true));
         assertThat(responseWriter.response.getStatusCode(), is(400));
-        assertThat(responseWriter.response.getBodyAsString(), is("Unable to load API spec, while scanning a simple key" + NEW_LINE +
-            " in 'reader', line 8, column 1:" + NEW_LINE +
-            "    servers" + NEW_LINE +
-            "    ^" + NEW_LINE +
-            "could not find expected ':'" + NEW_LINE +
-            " in 'reader', line 8, column 8:" + NEW_LINE +
-            "    servers" + NEW_LINE +
-            "           ^"));
+        assertThat(responseWriter.response.getBodyAsString(), is("Unable to load API spec, 1 problem found:" + NEW_LINE + NEW_LINE +
+            "  syntax error (1):" + NEW_LINE +
+            "    - line 8, column 8: while scanning a simple key" + NEW_LINE +
+            "       in 'reader', line 8, column 1:" + NEW_LINE +
+            "          servers" + NEW_LINE +
+            "          ^" + NEW_LINE +
+            "      could not find expected ':'" + NEW_LINE +
+            "       in 'reader', line 8, column 8:" + NEW_LINE +
+            "          servers" + NEW_LINE +
+            "                 ^"));
     }
 
     @Test

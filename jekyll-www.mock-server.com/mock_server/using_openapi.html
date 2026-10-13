@@ -1397,6 +1397,33 @@ curl_close($ch);</code></pre>
     <p>For the complete Petstore specification used by the examples on this page, see <a href="https://github.com/mock-server/mockserver/search?q=openapi_petstore_example.json" target="_blank" rel="noopener noreferrer">openapi_petstore_example.json</a> in the MockServer repository.</p>
 </div>
 
+<a id="openapi_load_problems" class="anchor" href="#openapi_load_problems">&nbsp;</a>
+
+<h2>When A Spec Has Problems</h2>
+
+<p>MockServer reads specs with the <a target="_blank" href="https://github.com/swagger-api/swagger-parser" rel="noopener noreferrer">swagger-parser</a> library and reports what it finds grouped by kind, with the location of each problem:</p>
+<ul>
+    <li><strong>a spec that cannot be read</strong> (a YAML or JSON syntax error, or a file, classpath resource or URL that does not exist) is rejected with the same status code as before, for example <span class="inline_code">400 Bad Request</span> from <span class="inline_code">PUT /mockserver/openapi</span>; a syntax error gives the line and column, counted from the first line of the spec file or string</li>
+    <li><strong>a spec that can be read but breaks the OpenAPI rules</strong> (an unresolved <span class="inline_code">$ref</span>, a value of the wrong type, a missing required field, a repeated operationId, a path that does not start with <span class="inline_code">/</span>) is still loaded, and the problems are logged as a <span class="inline_code">WARN</span> when the spec is loaded; the parts with problems may not behave as you expect, so check the log (or the dashboard) when a mock does not match</li>
+</ul>
+<p>Each problem is located by a JSON pointer into the spec, where <span class="inline_code">~1</span> stands for <span class="inline_code">/</span> and <span class="inline_code">~0</span> for <span class="inline_code">~</span>, so <span class="inline_code">#/paths/~1pets/get/responses/200</span> is the <span class="inline_code">200</span> response of <span class="inline_code">GET /pets</span>. The pointer names the nearest object the parser reports: for a missing field it is the object the field belongs in, and for a parameter it is the <span class="inline_code">parameters</span> list. For common causes, such as a tab used for YAML indentation, an unresolved <span class="inline_code">$ref</span> or a list of types in an OpenAPI 3.0 schema, a hint says what to change. For example, a YAML spec indented with a tab is rejected with:</p>
+<pre class="code"><code class="code">Unable to load API spec, 1 problem found:
+
+  syntax error (1):
+    - line 7, column 1: while scanning for the next token
+      found character '\t(TAB)' that cannot start any token. (Do not use \t(TAB) for indentation)
+       in 'reader', line 7, column 1:
+          	get:
+          ^
+      hint: YAML does not allow tabs for indentation: replace each tab with spaces</code></pre>
+<p>and a spec with a <span class="inline_code">$ref</span> to a schema that does not exist loads with this warning:</p>
+<pre class="code"><code class="code">1 problem found:
+
+  unresolved or mistyped $ref (1):
+    - #/paths/~1pets/get/responses/200/content/application~1json/schema/$ref: $ref target #/components/schemas/Missing does not exist
+      hint: check that the $ref target exists (names are case-sensitive) and that any referenced file can be read</code></pre>
+<p>The parser does not check every rule: for example a misspelt schema type such as <span class="inline_code">type: strin</span> is not reported.</p>
+
 <a id="openapi_incremental_sync" class="anchor" href="#openapi_incremental_sync">&nbsp;</a>
 
 <h2>Incremental / Idempotent Re-import</h2>

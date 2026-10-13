@@ -1,6 +1,5 @@
 package org.mockserver.openapi;
 
-import com.google.common.base.Joiner;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
@@ -9,21 +8,22 @@ import io.swagger.v3.parser.core.extensions.SwaggerParserExtension;
 import io.swagger.v3.parser.core.models.AuthorizationValue;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mockserver.cache.LRUCache;
 import org.mockserver.configuration.Configuration;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.proxyconfiguration.InetAddressValidator;
+import org.slf4j.event.Level;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static io.swagger.v3.parser.OpenAPIV3Parser.getExtensions;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -115,18 +115,33 @@ public class OpenAPIParser {
                 }
             }
         } catch (Throwable throwable) {
-            throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + (errorMessage.isEmpty() ? ", " + throwable.getMessage() : ", " + Joiner.on(", ").skipNulls().join(errorMessage)), throwable);
+            throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + ", " + (errorMessage.stream().anyMatch(StringUtils::isNotBlank) ? OpenAPILoadProblems.describe(errorMessage) : throwable.getMessage()), throwable);
         }
         if (openAPI == null) {
-            if (swaggerParseResult != null) {
-                String message = errorMessage.stream().filter(Objects::nonNull).collect(Collectors.joining(" and ")).trim();
-                throw new IllegalArgumentException((OPEN_API_LOAD_ERROR + (isNotBlank(message) ? ", " + message : "")));
+            if (errorMessage.stream().anyMatch(StringUtils::isNotBlank)) {
+                throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + ", " + OpenAPILoadProblems.describe(errorMessage));
             } else {
                 throw new IllegalArgumentException(OPEN_API_LOAD_ERROR);
             }
         }
+        logLoadProblems(swaggerParseResult.getMessages(), mockServerLogger);
         addMissingOperationIds(openAPI, mockServerLogger);
         return openAPI;
+    }
+
+    /**
+     * swagger-parser still returns a usable spec alongside these messages, so they are advisory: the spec loads and
+     * the problems are logged once, when the spec is parsed (not on each cache hit).
+     */
+    private static void logLoadProblems(List<String> messages, MockServerLogger mockServerLogger) {
+        if (mockServerLogger != null && messages != null && messages.stream().anyMatch(StringUtils::isNotBlank) && mockServerLogger.isEnabledForInstance(Level.WARN)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(Level.WARN)
+                    .setMessageFormat("loaded OpenAPI spec with problems that may stop parts of it working as expected, {}")
+                    .setArguments(OpenAPILoadProblems.describe(messages))
+            );
+        }
     }
 
     /**

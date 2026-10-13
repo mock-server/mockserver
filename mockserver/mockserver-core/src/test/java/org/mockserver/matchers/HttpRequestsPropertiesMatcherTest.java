@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.hamcrest.core.StringContains.containsString;
+import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.matchers.MatchDifference.Field.*;
@@ -6193,7 +6194,9 @@ public class HttpRequestsPropertiesMatcherTest {
             // then
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec, Unexpected end-of-input in field name"));
+            assertThat(iae.getMessage(), is("Unable to load API spec, 1 problem found:" + NEW_LINE + NEW_LINE +
+                "  syntax error (1):" + NEW_LINE +
+                "    - Unexpected end-of-input in field name"));
         }
     }
 
@@ -6213,14 +6216,16 @@ public class HttpRequestsPropertiesMatcherTest {
             // then
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec, while scanning a simple key" + NEW_LINE +
-                " in 'reader', line 8, column 1:" + NEW_LINE +
-                "    servers" + NEW_LINE +
-                "    ^" + NEW_LINE +
-                "could not find expected ':'" + NEW_LINE +
-                " in 'reader', line 8, column 8:" + NEW_LINE +
-                "    servers" + NEW_LINE +
-                "           ^"));
+            assertThat(iae.getMessage(), is("Unable to load API spec, 1 problem found:" + NEW_LINE + NEW_LINE +
+                "  syntax error (1):" + NEW_LINE +
+                "    - line 8, column 8: while scanning a simple key" + NEW_LINE +
+                "       in 'reader', line 8, column 1:" + NEW_LINE +
+                "          servers" + NEW_LINE +
+                "          ^" + NEW_LINE +
+                "      could not find expected ':'" + NEW_LINE +
+                "       in 'reader', line 8, column 8:" + NEW_LINE +
+                "          servers" + NEW_LINE +
+                "                 ^"));
         }
     }
 
@@ -6240,14 +6245,16 @@ public class HttpRequestsPropertiesMatcherTest {
             // then
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec, while scanning a simple key" + NEW_LINE +
-                " in 'reader', line 8, column 1:" + NEW_LINE +
-                "    servers" + NEW_LINE +
-                "    ^" + NEW_LINE +
-                "could not find expected ':'" + NEW_LINE +
-                " in 'reader', line 8, column 8:" + NEW_LINE +
-                "    servers" + NEW_LINE +
-                "           ^"));
+            assertThat(iae.getMessage(), is("Unable to load API spec, 1 problem found:" + NEW_LINE + NEW_LINE +
+                "  syntax error (1):" + NEW_LINE +
+                "    - line 8, column 8: while scanning a simple key" + NEW_LINE +
+                "       in 'reader', line 8, column 1:" + NEW_LINE +
+                "          servers" + NEW_LINE +
+                "          ^" + NEW_LINE +
+                "      could not find expected ':'" + NEW_LINE +
+                "       in 'reader', line 8, column 8:" + NEW_LINE +
+                "          servers" + NEW_LINE +
+                "                 ^"));
         }
     }
 
@@ -6267,7 +6274,9 @@ public class HttpRequestsPropertiesMatcherTest {
             // then
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), containsString("Unable to load API spec, Unable to read location `org/mockserver/mock/does_not_exist.json`"));
+            assertThat(iae.getMessage(), startsWith("Unable to load API spec, 1 problem found:" + NEW_LINE + NEW_LINE +
+                "  spec could not be read (1):" + NEW_LINE +
+                "    - Unable to read location `org/mockserver/mock/does_not_exist.json`"));
         }
     }
 

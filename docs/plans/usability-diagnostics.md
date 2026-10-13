@@ -43,7 +43,8 @@ flowchart LR
 - **Verification:** failures include the closest-request diff (`detailedVerificationFailures`,
   default true).
 - **Other failures:** forward failures return a 502 with the raw error; OpenAPI load returns the
-  parser messages; unknown `mockserver.*` / `MOCKSERVER_*` keys log a WARN at startup.
+  parser messages grouped by kind with JSON-pointer locations, and logs the problems of a spec that
+  still loads; unknown `mockserver.*` / `MOCKSERVER_*` keys log a WARN at startup.
 - **Dashboard:** Explain Unmatched, Debug Mismatch, Matcher Playground, create-expectation-from-
   unmatched, Verification, Drift, Diff Requests and Baseline Compare views, plus log-pressure and
   dropped-event banners.
@@ -64,7 +65,7 @@ flowchart LR
 
 **Gaps:** expectation lint and
 shadowing detection; config did-you-mean; the remaining forward-failure causes; a template dry
-run; located OpenAPI errors.
+run.
 
 ## Items
 
@@ -74,7 +75,6 @@ run; located OpenAPI errors.
 | B1 | MCP diagnosis tools as the primary AI route: `explain_request` (A3), `explain_forward_failure` (A4), `lint_expectations` (A8), `test_template` (A5), `diagnose_config` (A7), `suggest_expectation_fix` (B3); `explain_request` can delegate to `HttpState.explain(HttpRequest)`, whose output is already redacted | (iii) | MockServer runs deterministic computation only; the user's assistant does the reasoning | M | Tool output carries user traffic to the assistant: apply the log redaction settings to tool results by default | P0 |
 | A4 | Partly done: TLS, HTTP/2, set-up and decode failures are named in the 502 (`7a8b8c424`). A plain connect failure still says only "failed to connect to remote socket" → split it into DNS, refused and timeout, add pooled-connection close and proxy loop, and add a suggested fix to each named cause | (ii) | Runs only on failure; a lookup | S | Must not reveal more of the target than the 502 already does | P1 |
 | A5 | Template errors are hard to locate → `PUT /template/test` dry run, plus line/column and missing-variable hints in the failure event | (iii) / (ii) | Dry run on demand; enrichment only on failure | M | Reuse the hardened template-engine sandbox; rate-limit | P1 |
-| A6 | OpenAPI load errors are raw → group parser messages, add the JSON-pointer location, flag common causes (unresolved `$ref`, wrong path, YAML tab) | (iv) | Load time only | S | None | P1 |
 | A7 | Config typos only get a WARN → did-you-mean suggestions against known keys, plus an "effective config vs defaults" view | (iv) | Once at startup | S | Redact secrets in the effective-config view | P1 |
 | A8 | Unreachable or suspicious expectations go unnoticed → lint: shadowed expectations, regex paths that look literal, missing leading slash, STRICT array bodies, `times=0`; surfaced as PUT `warnings`, in the UI, and via `mockserver lint file.json` | (iv) / (iii) | Control plane only; the pairwise shadowing check is O(n²), so on demand, not on every PUT | M | Advisory only, never rejecting | P1 |
 | B3 | "Fix my expectation" → turn the diff into a minimal JSON patch with a preview-and-apply action in Explain Unmatched | (iii) | On demand | M | Never auto-apply | P1 |
@@ -84,6 +84,8 @@ run; located OpenAPI errors.
 | C1 | From the prompt-redaction audit (`f5e1e6ce0`): a drift value in a non-credential field gets JWT and URL-userinfo masking but not the `key=value` credential sweep (`LlmPromptRedactor.maskDriftValue`) → apply `maskKeyValue` there too | (iii) | Only when an LLM drift prompt is built | S | None | P2 |
 | B5 | Optional plain-language summary of explain results from a configured LLM (`?narrate=true`) | (iii) | On demand, asynchronous, timeout-bounded, never inline in a 404 | S | Off by default; label as AI-generated; always return the deterministic facts too | P3 |
 | A3a | Explain is REST-only → an "Explain" action on a dashboard log group and typed `explain(correlationId)` methods in the clients; also complete the explain endpoint's OpenAPI 200 schema (`request`, `note`, `timestamp`, `expectationsLastChanged`, `totalExpectations`, `evaluatedExpectations`, `maxExpectationsEvaluated`) and add a guard test tying the explainer's gate order to the serving path, plus a `not`-matcher case | (iii) | Zero hot-path cost: calls the existing endpoint | M | The gate-order copy can drift from serving without the guard | P2 |
+| A6b | Surface OpenAPI load problems outside the log | (iv) | Load time only | S | Return the advisory problems of a spec that loads in the PUT /mockserver/openapi 201 response (needs HttpState, which was off-limits for A6) and list them in the dashboard and an MCP tool | P2 |
+| A6c | A JSON Schema response body logs "loaded OpenAPI spec with problems" although the user loaded no spec (`JsonSchemaResponseSynthesizer` wraps the schema in an OpenAPI document; `$schema`, `const` or a type list trigger it, once per schema every 30 minutes) | (iv) | Response path, cached | S | Suppress or reword the WARN for synthesizer-wrapped schemas | P3 |
 
 ## Approach to LLM features
 

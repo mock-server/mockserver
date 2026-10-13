@@ -121,10 +121,16 @@ public class HttpRequestPropertiesMatcherLogTest {
         openApiMatcher.update(new Expectation(
             new OpenAPIDefinition().withSpecUrlOrPayload("---" + NEW_LINE +
                 "openapi: 3.0.0" + NEW_LINE +
+                "info:" + NEW_LINE +
+                "  title: someTitle" + NEW_LINE +
+                "  version: \"1\"" + NEW_LINE +
                 "paths:" + NEW_LINE +
                 "  \"/somePath\":" + NEW_LINE +
                 "    get:" + NEW_LINE +
-                "      operationId: someOperation" + NEW_LINE)
+                "      operationId: someOperation" + NEW_LINE +
+                "      responses:" + NEW_LINE +
+                "        \"200\":" + NEW_LINE +
+                "          description: ok" + NEW_LINE)
         ));
 
         // when - a non-matching request is evaluated with match-result logging suppressed (POST != GET)
