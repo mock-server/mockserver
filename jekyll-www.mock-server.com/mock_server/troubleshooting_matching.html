@@ -989,56 +989,151 @@ echo (string) $response-&gt;getBody();</code></pre></div>
 <button id="button_troubleshoot_lint_expectations" class="accordion">lint the active expectations</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
-    <div class="panel"><pre class="prettyprint lang-java code"><code class="code">// no typed method in the Java client - call the REST endpoint
-java.net.http.HttpResponse&lt;String&gt; response = java.net.http.HttpClient.newHttpClient().send(
-    java.net.http.HttpRequest.newBuilder(java.net.URI.create("http://localhost:1080/mockserver/lint"))
-        .PUT(java.net.http.HttpRequest.BodyPublishers.noBody())
+    <div class="panel"><pre class="prettyprint lang-java code"><code class="code">import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
+// no typed method in the Java client - call the REST endpoint
+HttpClient http = HttpClient.newHttpClient();
+URI lint = URI.create("http://localhost:1080/mockserver/lint");
+
+// lint the active expectations
+HttpResponse&lt;String&gt; response = http.send(
+    HttpRequest.newBuilder(lint).PUT(HttpRequest.BodyPublishers.noBody()).build(),
+    HttpResponse.BodyHandlers.ofString());
+System.out.println(response.body());
+
+// lint expectations without storing them
+String expectations = """
+    [
+        { "httpRequest": { "method": "GET", "path": "/users/.*" }, "httpResponse": { "statusCode": 200 } },
+        { "httpRequest": { "method": "GET", "path": "/users/1" }, "httpResponse": { "statusCode": 404 } }
+    ]""";
+response = http.send(
+    HttpRequest.newBuilder(lint)
+        .header("Content-Type", "application/json")
+        .PUT(HttpRequest.BodyPublishers.ofString(expectations))
         .build(),
-    java.net.http.HttpResponse.BodyHandlers.ofString());
+    HttpResponse.BodyHandlers.ofString());
 System.out.println(response.body());</code></pre></div>
     <button class="accordion inner">JavaScript</button>
     <div class="panel"><pre class="prettyprint lang-javascript code"><code class="code">// no typed method in the Node client - call the REST endpoint
+// lint the active expectations
 const response = await fetch("http://localhost:1080/mockserver/lint", { method: "PUT" });
-console.log(await response.json());</code></pre></div>
+console.log(await response.json());
+
+// lint expectations without storing them
+const checked = await fetch("http://localhost:1080/mockserver/lint", {
+  method: "PUT",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify([
+    { httpRequest: { method: "GET", path: "/users/.*" }, httpResponse: { statusCode: 200 } },
+    { httpRequest: { method: "GET", path: "/users/1" }, httpResponse: { statusCode: 404 } }
+  ])
+});
+console.log(await checked.json());</code></pre></div>
     <button class="accordion inner">Python</button>
     <div class="panel"><pre class="prettyprint lang-python code"><code class="code">import requests
 
 # no typed method - call the REST endpoint
+# lint the active expectations
 response = requests.put("http://localhost:1080/mockserver/lint")
+print(response.json())
+
+# lint expectations without storing them
+response = requests.put(
+    "http://localhost:1080/mockserver/lint",
+    json=[
+        {"httpRequest": {"method": "GET", "path": "/users/.*"}, "httpResponse": {"statusCode": 200}},
+        {"httpRequest": {"method": "GET", "path": "/users/1"}, "httpResponse": {"statusCode": 404}},
+    ],
+)
 print(response.json())</code></pre></div>
     <button class="accordion inner">Ruby</button>
     <div class="panel"><pre class="prettyprint lang-ruby code"><code class="code">require 'net/http'
+require 'json'
 
 # no typed method - call the REST endpoint
 uri = URI('http://localhost:1080/mockserver/lint')
-response = Net::HTTP.start(uri.host, uri.port) { |http| http.request(Net::HTTP::Put.new(uri)) }
-puts response.body</code></pre></div>
+Net::HTTP.start(uri.host, uri.port) do |http|
+  # lint the active expectations
+  puts http.request(Net::HTTP::Put.new(uri)).body
+
+  # lint expectations without storing them
+  req = Net::HTTP::Put.new(uri, 'Content-Type' =&gt; 'application/json')
+  req.body = JSON.generate([
+    { httpRequest: { method: 'GET', path: '/users/.*' }, httpResponse: { statusCode: 200 } },
+    { httpRequest: { method: 'GET', path: '/users/1' }, httpResponse: { statusCode: 404 } }
+  ])
+  puts http.request(req).body
+end</code></pre></div>
     <button class="accordion inner">Go</button>
     <div class="panel"><pre class="prettyprint lang-go code"><code class="code">import (
     "log"
     "net/http"
+    "strings"
 )
 
 // no typed method - call the REST endpoint
+// lint the active expectations
 req, _ := http.NewRequest("PUT", "http://localhost:1080/mockserver/lint", nil)
 resp, err := http.DefaultClient.Do(req)
+if err != nil {
+    log.Fatal(err)
+}
+resp.Body.Close()
+
+// lint expectations without storing them
+expectations := `[
+    {"httpRequest": {"method": "GET", "path": "/users/.*"}, "httpResponse": {"statusCode": 200}},
+    {"httpRequest": {"method": "GET", "path": "/users/1"}, "httpResponse": {"statusCode": 404}}
+]`
+req, _ = http.NewRequest("PUT", "http://localhost:1080/mockserver/lint", strings.NewReader(expectations))
+req.Header.Set("Content-Type", "application/json")
+resp, err = http.DefaultClient.Do(req)
 if err != nil {
     log.Fatal(err)
 }
 defer resp.Body.Close()</code></pre></div>
     <button class="accordion inner">.NET</button>
     <div class="panel"><pre class="prettyprint lang-csharp code"><code class="code">using System.Net.Http;
+using System.Text;
 
 // no typed method - call the REST endpoint
 using var http = new HttpClient();
+
+// lint the active expectations
 var response = await http.PutAsync("http://localhost:1080/mockserver/lint", null);
+Console.WriteLine(await response.Content.ReadAsStringAsync());
+
+// lint expectations without storing them
+var expectations = new StringContent("""
+    [
+        { "httpRequest": { "method": "GET", "path": "/users/.*" }, "httpResponse": { "statusCode": 200 } },
+        { "httpRequest": { "method": "GET", "path": "/users/1" }, "httpResponse": { "statusCode": 404 } }
+    ]
+    """, Encoding.UTF8, "application/json");
+response = await http.PutAsync("http://localhost:1080/mockserver/lint", expectations);
 Console.WriteLine(await response.Content.ReadAsStringAsync());</code></pre></div>
     <button class="accordion inner">Rust</button>
     <div class="panel"><pre class="prettyprint lang-rust code"><code class="code">use reqwest::blocking::Client;
 
 // no typed method - call the REST endpoint
-let report = Client::new()
+let http = Client::new();
+
+// lint the active expectations
+let report = http.put("http://localhost:1080/mockserver/lint").send().unwrap().text().unwrap();
+println!("{}", report);
+
+// lint expectations without storing them
+let report = http
     .put("http://localhost:1080/mockserver/lint")
+    .header("Content-Type", "application/json")
+    .body(r#"[
+        {"httpRequest": {"method": "GET", "path": "/users/.*"}, "httpResponse": {"statusCode": 200}},
+        {"httpRequest": {"method": "GET", "path": "/users/1"}, "httpResponse": {"statusCode": 404}}
+    ]"#)
     .send()
     .unwrap()
     .text()
@@ -1049,7 +1144,18 @@ println!("{}", report);</code></pre></div>
 
 // no typed method - call the REST endpoint
 $http = new Client();
+
+// lint the active expectations
 $response = $http-&gt;put('http://localhost:1080/mockserver/lint');
+echo (string) $response-&gt;getBody();
+
+// lint expectations without storing them
+$response = $http-&gt;put('http://localhost:1080/mockserver/lint', [
+    'json' =&gt; [
+        ['httpRequest' =&gt; ['method' =&gt; 'GET', 'path' =&gt; '/users/.*'], 'httpResponse' =&gt; ['statusCode' =&gt; 200]],
+        ['httpRequest' =&gt; ['method' =&gt; 'GET', 'path' =&gt; '/users/1'], 'httpResponse' =&gt; ['statusCode' =&gt; 404]],
+    ],
+]);
 echo (string) $response-&gt;getBody();</code></pre></div>
     <button class="accordion inner">REST API</button>
     <div class="panel"><pre class="prettyprint code"><code class="code"># lint the active expectations
