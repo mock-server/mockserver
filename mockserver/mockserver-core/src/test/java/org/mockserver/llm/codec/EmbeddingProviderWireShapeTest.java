@@ -562,6 +562,56 @@ public class EmbeddingProviderWireShapeTest {
             "{\"input\":[100257,100258,100259]}").get("usage").get("prompt_tokens").asInt(), is(3));
     }
 
+    /** One token array of {@code length} tokens, as a JSON array of integers. */
+    private static String tokenArray(int length) {
+        String nested = tokenArrays(length);
+        return nested.substring(1, nested.length() - 1);
+    }
+
+    private static final String OVER_INPUT_LIMIT_MESSAGE = "This model's maximum context length is 8192 tokens, however you requested 8193 tokens"
+        + " (8193 in your prompt; 0 for the completion). Please reduce your prompt; or completion length.";
+
+    @Test
+    public void shouldRejectASingleOpenAiTokenArrayOverTheInputLimitWithOpenAisError() throws Exception {
+        EmbeddingResponse small = EmbeddingResponse.embedding().withDimensions(4);
+        JsonNode atLimit = post(Provider.OPENAI, null, small, "/v1/embeddings", "{\"input\":" + tokenArray(8192) + "}");
+        assertThat(atLimit.get("data").size(), is(1));
+        assertThat(atLimit.get("usage").get("prompt_tokens").asInt(), is(8192));
+
+        String overLimit = "{\"input\":" + tokenArray(8193) + "}";
+        JsonNode error = rejected(postRaw(Provider.OPENAI, null, small, "/v1/embeddings", overLimit)).get("error");
+        assertThat(error.get("message").asText(), is(OVER_INPUT_LIMIT_MESSAGE));
+        assertThat(error.get("type").asText(), is("invalid_request_error"));
+        assertThat(error.get("param").isNull(), is(true));
+        assertThat(error.get("code").isNull(), is(true));
+
+        JsonNode azure = rejected(postRaw(Provider.AZURE_OPENAI, null, small, "/openai/deployments/e/embeddings", overLimit)).get("error");
+        assertThat(azure.get("message").asText(), is(OVER_INPUT_LIMIT_MESSAGE));
+        assertThat("the limit is OpenAI's own, not every OpenAI-compatible provider's",
+            post(Provider.MISTRAL, null, small, "/v1/embeddings", overLimit).get("data").size(), is(1));
+    }
+
+    @Test
+    public void shouldRejectTheFirstOpenAiTokenArrayInABatchOverTheInputLimit() throws Exception {
+        EmbeddingResponse small = EmbeddingResponse.embedding().withDimensions(4);
+        assertThat(post(Provider.OPENAI, null, small, "/v1/embeddings", "{\"input\":" + plus(tokenArrays(8192, 3, 8192), "abc") + "}")
+            .get("data").size(), is(4));
+
+        JsonNode error = rejected(postRaw(Provider.OPENAI, null, small, "/v1/embeddings",
+            "{\"input\":" + plus(tokenArrays(3, 8193, 9000), "abc") + "}")).get("error");
+        assertThat(error.get("message").asText(), is(OVER_INPUT_LIMIT_MESSAGE));
+        assertThat(error.get("type").asText(), is("invalid_request_error"));
+    }
+
+    @Test
+    public void shouldNotRejectAnOpenAiTextWhoseEstimateIsOverTheInputLimit() throws Exception {
+        // 40,000 characters estimate 10,000 tokens, but only a tokeniser could tell the real count
+        JsonNode accepted = post(Provider.OPENAI, null, EmbeddingResponse.embedding().withDimensions(4), "/v1/embeddings",
+            "{\"input\":" + texts(1, 40_000) + "}");
+        assertThat(accepted.get("data").size(), is(1));
+        assertThat(accepted.get("usage").get("prompt_tokens").asInt(), is(10_000));
+    }
+
     @Test
     public void shouldRejectResponsesOverTheTotalValueLimit() throws Exception {
         JsonNode error = rejected(postRaw(Provider.OPENAI, null, deterministic(), "/v1/embeddings",

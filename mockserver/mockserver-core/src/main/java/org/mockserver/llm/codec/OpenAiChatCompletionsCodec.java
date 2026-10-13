@@ -337,6 +337,7 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
     private static final String DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small";
     private static final int DEFAULT_EMBEDDING_DIMENSIONS = 1536;
     private static final long MAX_EMBEDDING_REQUEST_TOKENS = 300_000;
+    private static final int MAX_EMBEDDING_INPUT_TOKENS = 8192;
 
     @Override
     public HttpResponse encodeEmbedding(EmbeddingResponse embedding, String input) {
@@ -355,6 +356,8 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
      * with a 400, as the real API does. For {@link Provider#OPENAI} and Azure OpenAI, so is a
      * request certainly over the 300,000-token total: token arrays count their length and each
      * text one token, the least it can encode to, so nothing the real API accepts is rejected.
+     * A token array over the 8,192-token input limit is rejected too; a text never is, as only a
+     * tokeniser could tell.
      */
     @Override
     public HttpResponse encodeEmbedding(EmbeddingResponse embedding, HttpRequest request, String model) {
@@ -367,6 +370,9 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
             throw new EmbeddingWire.InvalidEmbeddingRequestException(null,
                 "Requested " + tokens + " tokens, max " + MAX_EMBEDDING_REQUEST_TOKENS + " tokens per request",
                 "max_tokens_per_request", "max_tokens_per_request");
+        }
+        if (provider() == Provider.OPENAI) {
+            rejectTokenArraysOverTheInputLimit(input, inputs);
         }
         return encodeEmbeddings(
             embedding,
@@ -387,7 +393,7 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
         if (input == null || !input.isArray()) {
             return lowerBound ? 1 : EmbeddingWire.tokens(inputs);
         }
-        if (inputs.size() == 1 && input.size() > 0 && input.get(0).isNumber()) {
+        if (isSingleTokenArray(input, inputs)) {
             return input.size();
         }
         int total = 0;
@@ -396,6 +402,34 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
             total += element.isArray() ? element.size() : lowerBound ? 1 : EmbeddingVectors.approximateTokens(inputs.get(i));
         }
         return total;
+    }
+
+    private static boolean isSingleTokenArray(JsonNode input, List<String> inputs) {
+        return inputs.size() == 1 && input.size() > 0 && input.get(0).isNumber();
+    }
+
+    /** Rejects the first token array longer than the model's input limit, in OpenAI's error. */
+    private static void rejectTokenArraysOverTheInputLimit(JsonNode input, List<String> inputs) {
+        if (input == null || !input.isArray()) {
+            return;
+        }
+        if (isSingleTokenArray(input, inputs)) {
+            rejectTokenArrayOverTheInputLimit(input.size());
+            return;
+        }
+        for (JsonNode element : input) {
+            if (element.isArray()) {
+                rejectTokenArrayOverTheInputLimit(element.size());
+            }
+        }
+    }
+
+    private static void rejectTokenArrayOverTheInputLimit(int tokens) {
+        if (tokens > MAX_EMBEDDING_INPUT_TOKENS) {
+            throw new EmbeddingWire.InvalidEmbeddingRequestException(null,
+                "This model's maximum context length is " + MAX_EMBEDDING_INPUT_TOKENS + " tokens, however you requested "
+                    + tokens + " tokens (" + tokens + " in your prompt; 0 for the completion). Please reduce your prompt; or completion length.");
+        }
     }
 
     private static void rejectEmptyEmbeddingInput(JsonNode input) {
