@@ -58,7 +58,9 @@ flowchart LR
 - **Verification:** failures include the closest-request diff (`detailedVerificationFailures`,
   default true), and a failed request-count verification ends with a `verification summary:`
   block: expected vs matched count, the three closest non-matching requests with every differing
-  field, and how many requests arrived after the verification started (A9).
+  field, and how many requests arrived after the verification started (A9). Response and sequence
+  failures get the same block: response counts and near misses, the sequence step that failed with
+  its near misses and out-of-order matches, and requests matching with the other disposition (A9b).
 - **Other failures:** forward failures return a 502 with the raw error; OpenAPI load returns the
   parser messages grouped by kind with JSON-pointer locations, and logs the problems of a spec that
   still loads; unknown `mockserver.*` / `MOCKSERVER_*` keys log a WARN at startup.
@@ -111,7 +113,6 @@ flowchart LR
 | A8b | Lint results are REST, CLI and log only → a dashboard "Lint" view over `PUT /mockserver/lint` (rule, severity, message, a link to the shadowing expectation), and a badge from `x-mockserver-lint-warnings` when the dashboard creates an expectation | (iii) | On demand; calls the existing endpoint | S | Keep clear of B3's Explain Unmatched work | P2 |
 | A8d | `control_plane_authorisation.html` lists read operations by example and does not name `lint` (left out of A8 to avoid a conflict with A5's edit of the adjacent mutate row) → add `lint` (and `explain` if still missing) to the read row | (iv) | Docs only | S | None | P3 |
 | A8c | Expectations loaded from `initializationJsonPath` (and `--watch` reloads) never pass through `PUT /mockserver/expectation`, so they get no lint warnings → run `ExpectationLinter`'s per-expectation rules (and optionally the budgeted shadowing check) once per load and log a WARN summary | (iv) | Once per file load; linear rules, shadowing within its 100,000-pair budget | S | A large initialiser must not log thousands of lines: cap as `adviseOnUpsert` does | P2 |
-| A9b | Response and sequence verification failures get no summary block → append the same `verification summary:` (counts, closest misses, late arrivals) to response-aware and sequence failures, and say how many recorded requests matched the fields but had the other disposition | (iii) | Failure path only; reuse the request summary's 500-request ranking budget | S | Append only; keep the "left out when it adds nothing" rule | P3 |
 | A11 | The effective-config view reports `(default)` for a property at its default, not the default's value → expose each typed getter's built-in default (one table the getters and the view both read) so the view can show effective and default side by side | (iv) | Startup / on demand only | M | Some defaults are derived (heap size, another property); show the derivation rather than a guessed number | P3 |
 | B5 | Optional plain-language summary of explain results from a configured LLM (`?narrate=true`) | (iii) | On demand, asynchronous, timeout-bounded, never inline in a 404 | S | Off by default; label as AI-generated; always return the deterministic facts too | P3 |
 | A3b | Only the Java client has a typed `explain(correlationId)` → add it to the Node, Python, Ruby, Go, Rust, .NET and PHP clients, together with typed `debugMismatch` / `explainUnmatched`, since none of the seven has a diagnostic-call pattern to extend yet; reuse the `RequestExplanation` / `ExplainedExpectation` OpenAPI schemas | (iii) | Zero hot-path cost: calls the existing endpoint | M | Seven model copies to keep in step with the schema; generate from it where the client already does | P3 |
@@ -142,7 +143,7 @@ flowchart LR
 1. **Wave 0 — hygiene and performance:** A2b, C1b. (A2, A2c and C1 landed.)
 2. **Wave 1 — explain engine:** done (A3, A10 and B1 landed).
 3. **Wave 2 — failure classes:** A6, each with an MCP tool (see B1b and B1c) and a dashboard entry. (A4 landed; A5 landed REST-only, and A5b adds its dashboard entry.)
-4. **Wave 3 — fixes:** A9b, A8b, A8c. (B2, B3 and A8, including the CLI, landed.)
+4. **Wave 3 — fixes:** A8b, A8c. (B2, B3, A9b and A8, including the CLI, landed.)
 5. **Wave 4 — optional:** B5, A11. (B6 and B7 landed.)
 
 ## Performance rules for every item

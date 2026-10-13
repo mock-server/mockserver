@@ -39,7 +39,14 @@
     2. GET /orderz differs in: path
     3. POST /other differs in: method, path
   1 request arrived after verification started</code></pre>
-<p>The closest requests are only listed when the request was found too few times; MockServer ranks the 500 most recent recorded requests. The last line appears when a request arrived after the verification started, or whenever the verification waited (<code>timeout</code>), where <code>0 requests arrived</code> means nothing reached MockServer during the wait. The block is left out when it would only repeat the count.</p>
+<p>The closest requests are only listed when the request was found too few times; MockServer ranks the 500 most recent recorded requests. The last line appears when a request arrived after the verification started, or whenever the verification waited (<code>timeout</code>), where <code>0 requests arrived</code> means nothing reached MockServer during the wait. For a verification by disposition it also says how many recorded requests matched but were handled the other way (for example <code>1 recorded request matched but was forwarded, not mocked</code>). The block is left out when it would only repeat the count.</p>
+<p>A failed <strong>response verification</strong> gets the same block, counting recorded responses and naming each near miss by its request and status, for example <code>1. GET /orders returned 500 differs in: response status</code>. A failed <strong>verification sequence</strong> says which step failed and lists the closest misses for that step, for example:</p>
+<pre class="code" style="padding: 2px;"><code class="code">verification summary:
+  step 2 of 3 not found in the 2 recorded requests after step 1 matched recorded request 1 of 3
+  closest non-matching requests for step 2 (fewest differing fields first):
+    1. POST /b differs in: method
+    2. GET /x differs in: method, path</code></pre>
+<p>When a request that matches the failed step arrived before the previous step's match, the block says so (<code>1 recorded request matched step 2 but came before step 1's match</code>), which usually means the requests were sent in a different order. The summary only names methods, paths, status codes and field names, never header or body values.</p>
 
 <p><strong>Verifying by disposition (forwarded vs mocked):</strong> By default a request-count verification counts every matching received request regardless of how it was handled. Use <code>withDisposition(Disposition.FORWARDED)</code> to count only requests that MockServer forwarded/proxied to an upstream server, or <code>withDisposition(Disposition.MOCKED)</code> to count only requests that matched an expectation and received a mocked response. This is useful when MockServer is acting as a proxy for some paths and a mock for others, and you want to assert that a particular request was (or was not) sent upstream. When no disposition is set the original behaviour is unchanged. (Disposition applies to request-count verification only — it is ignored for response and expectation-id verifications.)</p>
 

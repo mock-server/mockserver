@@ -260,15 +260,27 @@ The request matcher (`VerificationDTO.httpRequest`, `VerificationSequenceDTO.htt
 
 #### Verification Summary on Failure
 
-When `detailedVerificationFailures` is on (the default) and a request-count verification fails, `VerificationFailureSummary` appends a `verification summary:` block after the existing message and its `closest match diff:`. Clients parse the message by prefix (the Node client cuts it at `, expected:<`), so the block is only ever appended, never inserted. It states:
+When `detailedVerificationFailures` is on (the default) and a request-count, response or sequence verification fails, `VerificationFailureSummary` appends a `verification summary:` block after the existing message and its `closest match diff:`. Clients parse the message by prefix (the Node client cuts it at `, expected:<`), so the block is only ever appended, never inserted. For a request-count verification it states:
 
 - the expected times and the matched count, naming matches counted on other cluster nodes, and the number of recorded requests;
+- for a verification by disposition, how many recorded requests matched the request but were handled the other way (forwarded instead of mocked, or the reverse). This is one extra failure-path query over the log entries of the other disposition;
 - up to three closest **non-matching** recorded requests (method, path, every differing field), fewest differing fields first and most recent first on a tie. Each is evaluated with `collectAllDifferences()` and `suppressMatchResultLogging()`, so it names every differing field and writes nothing to the event log. Only the 500 most recent recorded requests are ranked, and the block says when it ranked fewer than were recorded. A "found too often" failure skips this list;
 - how many recorded requests arrived after the verification started: log entries whose `epochTime` is later than the instant `verify(...)` was called. This is mainly useful for a waiting (`timeout > 0`) verification. With cluster verify fan-in, the matched count includes the peers' matches but the recorded requests, near misses and late-arrival count cover only the node that answered the verify.
 
 Near misses are ranked against the same copies the failure message shows: with `redactSecretsInLog` on, those are the redacted requests, so a field that differs only in a redacted value (a masked header, for example) can rank differently than the raw request would. A waiting verification builds the block only on its final, logged evaluation; the in-between re-evaluations discard their message and skip the ranking.
 
-The block is left out when it would add nothing: no non-matching request to list, nothing arrived late, and the verification did not wait. Response and sequence failures do not get it. For a verification by expectation id, the recorded requests are those that matched any expectation, the same set the closest-match diff uses. It is built on the failure path only; a passing verification pays nothing.
+The block is left out when it would add nothing: no non-matching request to list, no request with the other disposition, nothing arrived late, and the verification did not wait. For a verification by expectation id, the recorded requests are those that matched any expectation, the same set the closest-match diff uses. It is built on the failure path only; a passing verification pays nothing.
+
+The other verification kinds get the same block, with the same 500-entry budget, three near misses and "left out when it adds nothing" rule:
+
+| Verification | What the block states |
+|---|---|
+| Response count (`httpResponse` set) | expected vs matched count among the recorded responses (already narrowed by any request matcher); the three closest non-matching responses as `METHOD /path returned STATUS`, with the differing response fields (`response status`, `response headers`, `response cookies`, `response body`); responses logged after the verification started. Ranked against the raw responses, as the count is; described from the redacted copies. "Found too often" skips the list |
+| Request sequence | which step failed (`step 2 of 3`) and where its search began (after the recorded request that matched the previous step); how many earlier requests matched the failed step but came before the previous step's match (out of order), excluding that match itself; the three closest non-matching requests for the failed step; late arrivals. The step line is always new, so the block is always appended |
+| Response-aware sequence | as for a request sequence, over request-response pairs; a near miss names request fields (`path`) and response fields (`response status`) together |
+| Expectation-id sequence | the failed step and the out-of-order count only: steps match by id, so there are no fields to rank, and these entries carry no arrival time |
+
+For a sequence, the 500-entry budget covers the near misses and the out-of-order count together (the most recent 500 recorded entries), and the block says so with `only the 500 most recent of N recorded requests were checked`. A sequence step whose request is not an `HttpRequest` (an OpenAPI matcher) gets the step line only, with no near misses and no out-of-order count, in request and response-aware sequences alike: judging a pair on its response alone would report matches that are not there.
 
 #### Server-Side Eventual Verification (`timeout`) — #1713
 
