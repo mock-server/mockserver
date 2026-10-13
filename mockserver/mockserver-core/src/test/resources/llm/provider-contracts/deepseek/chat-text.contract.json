@@ -32,18 +32,5 @@
   },
   "response": "chat-text.response.json",
   "format": "JSON",
-  "allowed": [
-    {
-      "kind": "MISSING",
-      "path": "system_fingerprint",
-      "reason": "required by the same API reference's chat completion object; MockServer does not send it for any provider yet",
-      "openItem": "42a"
-    },
-    {
-      "kind": "MISSING",
-      "path": "usage.prompt_tokens_details",
-      "reason": "required by the same API reference's usage object; MockServer adds it only when the expectation sets cached input tokens",
-      "openItem": "42a"
-    }
-  ]
+  "allowed": []
 }

@@ -1519,7 +1519,9 @@ geminiLive()
 
 <p>
     The OpenAI-compatible providers report these counts the way their real APIs do. <code>DEEPSEEK</code> also
-    returns <code>prompt_cache_hit_tokens</code> and <code>prompt_cache_miss_tokens</code>. <code>XAI</code>
+    returns <code>prompt_cache_hit_tokens</code> and <code>prompt_cache_miss_tokens</code>, always returns
+    <code>prompt_tokens_details.cached_tokens</code> (0 when <code>cachedInputTokens</code> is not set), and sends a
+    <code>system_fingerprint</code> on the response and on every streamed chunk, as DeepSeek's API does. <code>XAI</code>
     leaves reasoning tokens out of <code>completion_tokens</code> and adds them to <code>total_tokens</code>, so
     <code>outputTokens: 103</code> with <code>reasoningTokens: 94</code> is returned as
     <code>completion_tokens: 9</code>. <code>GROQ</code> adds its timing fields (<code>queue_time</code>,

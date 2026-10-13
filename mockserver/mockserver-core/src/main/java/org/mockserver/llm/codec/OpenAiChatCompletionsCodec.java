@@ -49,6 +49,10 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
         root.put("object", "chat.completion");
         root.put("created", System.currentTimeMillis() / 1000);
         root.put("model", model != null ? model : "unknown");
+        String systemFingerprint = newSystemFingerprint();
+        if (systemFingerprint != null) {
+            root.put("system_fingerprint", systemFingerprint);
+        }
 
         ArrayNode choices = root.putArray("choices");
         ObjectNode choice = choices.addObject();
@@ -131,13 +135,15 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
         boolean includeUsage = streamsUsageChunk(includeUsageRequested);
         String id = "chatcmpl-" + randomId(29);
         String providerRequestId = newProviderRequestId();
+        String systemFingerprint = newSystemFingerprint();
         long created = System.currentTimeMillis() / 1000;
         String modelName = model != null ? model : "unknown";
+        String prefix = chunkPrefix(id, created, modelName, systemFingerprint);
         ObjectNode usage = usageNode(completion.getUsage(), model, physics != null ? physics : completion.getStreamingPhysics());
         String openChoiceFields = streamChoiceFields(completion, null);
 
         // 1. First chunk: role-only
-        events.add(sseEvent().withData(buildChunk(id, created, modelName,
+        events.add(sseEvent().withData(buildChunk(prefix,
             "{\"role\":\"assistant\",\"content\":\"\"}", null, openChoiceFields, includeUsage, firstChunkFields(providerRequestId))));
 
         // 2a. Reasoning chunks, for providers that stream reasoning text in the delta
@@ -145,7 +151,7 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
         if (reasoningField() != null && reasoningText != null && !reasoningText.isEmpty()) {
             for (String token : TokenCounter.streamingTextTokens(reasoningText, physics)) {
                 if (!token.isEmpty()) {
-                    events.add(sseEvent().withData(buildChunk(id, created, modelName,
+                    events.add(sseEvent().withData(buildChunk(prefix,
                         "{\"" + reasoningField() + "\":\"" + escapeJson(token) + "\"}", null, openChoiceFields, includeUsage, "")));
                 }
             }
@@ -157,7 +163,7 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
             List<String> tokens = TokenCounter.streamingTextTokens(text, physics);
             for (String token : tokens) {
                 if (!token.isEmpty()) {
-                    events.add(sseEvent().withData(buildChunk(id, created, modelName,
+                    events.add(sseEvent().withData(buildChunk(prefix,
                         "{\"content\":\"" + escapeJson(token) + "\"}", null, openChoiceFields, includeUsage, "")));
                 }
             }
@@ -174,18 +180,18 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
                 String delta = "{\"tool_calls\":[{\"index\":" + i + ",\"id\":\"" + escapeJson(toolCallId) +
                     "\",\"type\":\"function\",\"function\":{\"name\":\"" + escapeJson(toolCall.getName()) +
                     "\",\"arguments\":\"" + escapeJson(args) + "\"}}]}";
-                events.add(sseEvent().withData(buildChunk(id, created, modelName, delta, null, openChoiceFields, includeUsage, "")));
+                events.add(sseEvent().withData(buildChunk(prefix, delta, null, openChoiceFields, includeUsage, "")));
             }
         }
 
         // 4. Final chunk with finish_reason
         String finishReason = finishReason(completion, hasToolCalls);
-        events.add(sseEvent().withData(buildChunk(id, created, modelName, "{}", finishReason,
+        events.add(sseEvent().withData(buildChunk(prefix, "{}", finishReason,
             streamChoiceFields(completion, finishReason), includeUsage, finishChunkFields(providerRequestId, usage))));
 
         // 5. Usage chunk (when the request set stream_options.include_usage, or the provider always sends it)
         if (includeUsage) {
-            events.add(sseEvent().withData(buildUsageChunk(id, created, modelName, usageChunkChoices(completion, finishReason), usage)));
+            events.add(sseEvent().withData(buildUsageChunk(prefix, usageChunkChoices(completion, finishReason), usage)));
         }
 
         // 6. [DONE] sentinel
@@ -418,8 +424,8 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
         EmbeddingVectors.normalizeL2(vector);
     }
 
-    private String buildChunk(String id, long created, String model, String deltaJson, String finishReason, String choiceFields, boolean includeUsage, String extraFields) {
-        StringBuilder sb = chunkPrefix(id, created, model);
+    private String buildChunk(String prefix, String deltaJson, String finishReason, String choiceFields, boolean includeUsage, String extraFields) {
+        StringBuilder sb = new StringBuilder(prefix);
         sb.append("\"choices\":[{\"index\":0,\"delta\":").append(deltaJson).append(",");
         if (finishReason != null) {
             sb.append("\"finish_reason\":\"").append(escapeJson(finishReason)).append("\"");
@@ -434,9 +440,9 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
         return sb.toString();
     }
 
-    private String buildUsageChunk(String id, long created, String model, String choices, ObjectNode usage) {
+    private String buildUsageChunk(String prefix, String choices, ObjectNode usage) {
         try {
-            return chunkPrefix(id, created, model)
+            return new StringBuilder(prefix)
                 .append("\"choices\":").append(choices).append(",\"usage\":")
                 .append(OBJECT_MAPPER.writeValueAsString(usage))
                 .append("}")
@@ -446,13 +452,16 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
         }
     }
 
-    private StringBuilder chunkPrefix(String id, long created, String model) {
+    private String chunkPrefix(String id, long created, String model, String systemFingerprint) {
         StringBuilder sb = new StringBuilder();
         sb.append("{\"id\":\"").append(id).append("\",");
         sb.append("\"object\":\"chat.completion.chunk\",");
         sb.append("\"created\":").append(created).append(",");
         sb.append("\"model\":\"").append(escapeJson(model)).append("\",");
-        return sb;
+        if (systemFingerprint != null) {
+            sb.append("\"system_fingerprint\":\"").append(escapeJson(systemFingerprint)).append("\",");
+        }
+        return sb.toString();
     }
 
     /**
@@ -522,6 +531,11 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
 
     /** A provider-assigned request id echoed in the response and stream, or null for none. */
     protected String newProviderRequestId() {
+        return null;
+    }
+
+    /** The {@code system_fingerprint} of a response, or of every chunk of one stream; null for none. */
+    protected String newSystemFingerprint() {
         return null;
     }
 

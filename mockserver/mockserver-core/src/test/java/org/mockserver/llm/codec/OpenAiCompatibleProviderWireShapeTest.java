@@ -23,6 +23,7 @@ import java.util.List;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.startsWith;
 import static org.mockserver.model.Completion.completion;
 import static org.mockserver.model.Delay.milliseconds;
@@ -133,6 +134,58 @@ public class OpenAiCompatibleProviderWireShapeTest {
         assertThat(usageChunk.path("choices").size(), is(0));
         assertThat(usageChunk.path("usage").path("prompt_cache_hit_tokens").asInt(-1), is(5));
         assertThat(usageChunk.path("usage").path("prompt_cache_miss_tokens").asInt(-1), is(15));
+    }
+
+    @Test
+    public void deepSeekAlwaysSendsASystemFingerprintAndPromptTokensDetails() throws Exception {
+        JsonNode noCache = encode(Provider.DEEPSEEK, completion().withText("x").withUsage(usage().withInputTokens(7).withOutputTokens(1)), "deepseek-chat");
+        assertThat(noCache.path("system_fingerprint").asText(), matchesPattern("fp_[0-9a-f]{10}"));
+        assertThat(noCache.path("usage").path("prompt_tokens_details").path("cached_tokens").isInt(), is(true));
+        assertThat(noCache.path("usage").path("prompt_tokens_details").path("cached_tokens").asInt(), is(0));
+
+        JsonNode noUsage = encode(Provider.DEEPSEEK, completion().withText("x"), "deepseek-chat").path("usage");
+        assertThat(noUsage.path("prompt_tokens_details").path("cached_tokens").isInt(), is(true));
+        assertThat(noUsage.path("prompt_tokens_details").path("cached_tokens").asInt(), is(0));
+
+        // the reference: cached_tokens is "Same as prompt_cache_hit_tokens"
+        JsonNode overCached = encode(Provider.DEEPSEEK, completion().withText("x")
+            .withUsage(usage().withInputTokens(4).withOutputTokens(1).withCachedInputTokens(9)), "deepseek-chat").path("usage");
+        assertThat(overCached.path("prompt_tokens_details").path("cached_tokens").asInt(-1), is(4));
+        assertThat(overCached.path("prompt_cache_hit_tokens").asInt(-1), is(4));
+        assertThat(overCached.path("prompt_cache_miss_tokens").asInt(-1), is(0));
+    }
+
+    @Test
+    public void deepSeekStreamsOneSystemFingerprintOnEveryChunkAndPromptTokensDetailsInTheUsage() throws Exception {
+        Completion completion = completion().withText("Hello there").withUsage(usage().withInputTokens(17).withOutputTokens(9));
+        for (HttpRequest request : new HttpRequest[]{INCLUDE_USAGE, NO_OPT_IN}) {
+            List<JsonNode> chunks = stream(Provider.DEEPSEEK, completion, "deepseek-chat", request);
+            String fingerprint = chunks.get(0).path("system_fingerprint").asText();
+            assertThat(fingerprint, matchesPattern("fp_[0-9a-f]{10}"));
+            for (JsonNode chunk : chunks) {
+                assertThat(chunk.path("system_fingerprint").asText(), is(fingerprint));
+            }
+        }
+        JsonNode usage = stream(Provider.DEEPSEEK, completion, "deepseek-chat", INCLUDE_USAGE).stream()
+            .filter(chunk -> chunk.path("usage").isObject()).findFirst().orElseThrow(AssertionError::new).path("usage");
+        assertThat(usage.path("prompt_tokens_details").path("cached_tokens").isInt(), is(true));
+        assertThat(usage.path("prompt_tokens_details").path("cached_tokens").asInt(), is(0));
+        assertThat(usage.path("prompt_cache_miss_tokens").asInt(-1), is(17));
+    }
+
+    @Test
+    public void onlyDeepSeekSendsASystemFingerprint() throws Exception {
+        // optional in the OpenAI, Groq (groq-python) and xAI references, so left out there
+        for (Provider provider : new Provider[]{Provider.OPENAI, Provider.AZURE_OPENAI, Provider.MISTRAL, Provider.XAI,
+            Provider.GROQ, Provider.OPENROUTER, Provider.ORCAROUTER}) {
+            Completion completion = completion().withText("Hello").withUsage(usage().withInputTokens(3).withOutputTokens(1));
+            assertThat(provider + " response", encode(provider, completion, "m").has("system_fingerprint"), is(false));
+            for (JsonNode chunk : stream(provider, completion, "m", INCLUDE_USAGE)) {
+                assertThat(provider + " chunk", chunk.has("system_fingerprint"), is(false));
+            }
+        }
+        JsonNode openAiUsage = encode(Provider.OPENAI, completion().withText("x").withUsage(usage().withInputTokens(3).withOutputTokens(1)), "m").path("usage");
+        assertThat(openAiUsage.has("prompt_tokens_details"), is(false));
     }
 
     // ---- xAI ----
