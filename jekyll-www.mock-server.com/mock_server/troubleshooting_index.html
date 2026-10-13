@@ -95,7 +95,7 @@ keywords: "mockserver troubleshooting, mockserver 404, mockserver 502, mockserve
 <ul>
     <li>The response carries an <code class="inline_code">x-mockserver-closest-match-hint</code> header (enabled by default, <code class="inline_code">closestMatchHintEnabled</code>) naming the closest-matching expectation and what differed.</li>
     <li><code class="inline_code">PUT /mockserver/debugMismatch</code> re-runs the request against every active expectation and returns, per expectation, which fields matched and which didn't — see <a href="/mock_server/troubleshooting_matching.html#debug_mismatch_endpoint">Programmatic Mismatch Debugging</a>.</li>
-    <li><code class="inline_code">PUT /mockserver/explainUnmatched</code> re-evaluates recent unmatched requests already recorded in the log against the current expectations and ranks the closest matches, within a bounded evaluation budget.</li>
+    <li><code class="inline_code">PUT /mockserver/explainUnmatched</code> re-evaluates recent unmatched requests already recorded in the log against the current expectations and ranks the closest matches, within a bounded evaluation budget. With <code class="inline_code">"suggestFixes": true</code> it also suggests the smallest change to each close expectation that would make it match, which you can preview and apply from the dashboard &mdash; see <a href="/mock_server/troubleshooting_matching.html#suggested_fixes">Suggested Fixes</a>.</li>
 </ul>
 
 <p>For the full step-by-step checklist (is the expectation still active, did the request arrive, common pitfalls like trailing slashes or regex metacharacters), see <a href="/mock_server/troubleshooting_matching.html">Troubleshooting Matching</a>.</p>

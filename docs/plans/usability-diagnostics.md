@@ -34,6 +34,11 @@ flowchart LR
   request); `PUT /mockserver/explainUnmatched` re-runs recent unmatched requests against the
   current matchers, ranks the closest expectations and adds remediation hints, within a budget
   (50 expectations, 500 evaluations) — already category (iii).
+- **Suggested fixes (B3):** `PUT /mockserver/explainUnmatched` with `"suggestFixes": true` adds,
+  to each of the five closest non-matching expectations, a guarded RFC 6902 patch of its
+  `httpRequest`, the fields it could not patch and `matchesAfterPatch`; the dashboard's Explain
+  Unmatched view previews it (Preview Fix) and applies it only on Apply Fix, through
+  `PUT /mockserver/expectation`.
 - **Explain one request (A3):** `PUT /mockserver/explain?correlationId=` re-checks a recorded
   request against the current expectations in serving order; names the winner, a reason for each
   expectation ahead of it, the ones it shadows, the outcome at arrival and `expectationsChangedSince`.
@@ -93,7 +98,6 @@ shadowing detection.
 | # | Problem → proposal | Cost | Performance reasoning | Effort | Risks | Priority |
 |---|---|---|---|---|---|---|
 | A8 | Unreachable or suspicious expectations go unnoticed → lint: shadowed expectations, regex paths that look literal, missing leading slash, STRICT array bodies, `times=0`; surfaced as PUT `warnings`, in the UI, and via `mockserver lint file.json` | (iv) / (iii) | Control plane only; the pairwise shadowing check is O(n²), so on demand, not on every PUT | M | Advisory only, never rejecting | P1 |
-| B3 | "Fix my expectation" → turn the diff into a minimal JSON patch with a preview-and-apply action in Explain Unmatched | (iii) | On demand | M | Never auto-apply | P1 |
 | A9b | Response and sequence verification failures get no summary block → append the same `verification summary:` (counts, closest misses, late arrivals) to response-aware and sequence failures, and say how many recorded requests matched the fields but had the other disposition | (iii) | Failure path only; reuse the request summary's 500-request ranking budget | S | Append only; keep the "left out when it adds nothing" rule | P3 |
 | A11 | The effective-config view reports `(default)` for a property at its default, not the default's value → expose each typed getter's built-in default (one table the getters and the view both read) so the view can show effective and default side by side | (iv) | Startup / on demand only | M | Some defaults are derived (heap size, another property); show the derivation rather than a guessed number | P3 |
 | B5 | Optional plain-language summary of explain results from a configured LLM (`?narrate=true`) | (iii) | On demand, asynchronous, timeout-bounded, never inline in a 404 | S | Off by default; label as AI-generated; always return the deterministic facts too | P3 |
@@ -108,6 +112,7 @@ shadowing detection.
 | A2c | An expired or used-up expectation still in the store fails with no recorded differences, so every closest-match scan ranks it closest and the hint header disappears until lazy removal runs (at WARN with 64 or more expectations this may never happen for an expectation outside the requests' buckets; not verified) → skip inactive expectations in the hint, the INFO closest-match line and explainUnmatched, then update `RequestMatchersClosestMatchMemoTest`'s masked phases | (ii) | Removes work; one `isActive` check per candidate already paid | S | Changes the hint for stores holding inactive expectations | P2 |
 | C1b | The LLM prompt redactor still sends an OAuth authorization `?code=` query value, because `code` is not a credential field name | (iv) | Prompt build only | S | `code` is a common non-secret parameter name; mask it only alongside OAuth signals such as `state`, `redirect_uri` or an `/authorize` or `/callback` path | P3 |
 | A12 | A forward expectation whose target is MockServer itself loops: each hop matches the same expectation and opens a new connection until local ports run out (about 9 s on macOS); A4 only explains the failure in the 502 → warn at expectation PUT (an A8 lint: an `httpForward` to a loopback host on a port MockServer listens on), or send the loop-prevention header on forward actions and answer a request carrying it with a 502 naming the loop | (iv) / (i) | The lint is control-plane only; the header option adds a header to every forward (hot path), so prefer the lint | S | A loopback target on that port can be another process when MockServer binds one address: warn, never reject | P2 |
+| B3b | The dashboard's `JsonDiffViewer` Monaco worker fails to load when it is the first editor opened (found during B3; pre-existing) | (iv) | UI only | S | Load the Monaco worker eagerly or retry on first mount; add a test that opens the diff viewer first | P3 |
 
 ## Approach to LLM features
 
@@ -124,7 +129,7 @@ shadowing detection.
 1. **Wave 0 — hygiene and performance:** A2b, A2c, C1b. (A2 and C1 landed.)
 2. **Wave 1 — explain engine:** done (A3, A10 and B1 landed).
 3. **Wave 2 — failure classes:** A6, each with an MCP tool (see B1b and B1c) and a dashboard entry. (A4 landed; A5 landed REST-only, and A5b adds its dashboard entry.)
-4. **Wave 3 — fixes:** A8 (including the CLI), B3, A9b. (B2 landed.)
+4. **Wave 3 — fixes:** A8 (including the CLI), A9b. (B2 and B3 landed.)
 5. **Wave 4 — optional:** B5, A11. (B6 and B7 landed.)
 
 ## Performance rules for every item

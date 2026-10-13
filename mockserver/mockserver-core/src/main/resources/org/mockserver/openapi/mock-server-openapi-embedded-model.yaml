@@ -2617,7 +2617,12 @@ paths:
       description: >-
         Returns a diagnostic report for recently recorded unmatched requests, including the closest-matching
         expectations and the per-field differences that prevented a match. An optional 'limit' in the body
-        bounds how many unmatched requests are analysed (default 10).
+        bounds how many unmatched requests are analysed (default 10). With 'suggestFixes' set to true, each of the
+        five closest non-matching expectations also carries a 'suggestedFix': an RFC 6902 JSON patch of that
+        expectation (as PUT /mockserver/retrieve?type=active_expectations returns it) that would make it match the
+        request, the fields it patches and cannot patch, and whether the patched expectation matches. Nothing is
+        applied: to apply a fix, patch the retrieved expectation and send it to PUT /mockserver/expectation, which
+        updates the expectation with the same id. Values the event log redacts are never copied into a patch.
       responses:
         '200':
           description: unmatched-request explanation returned
@@ -2636,6 +2641,10 @@ paths:
                   type: integer
                   default: 10
                   description: maximum number of recent unmatched requests to analyse
+                suggestFixes:
+                  type: boolean
+                  default: false
+                  description: add a suggested JSON patch to each of the five closest non-matching expectations
             example:
               limit: 5
         description: optional limit on the number of unmatched requests to analyse

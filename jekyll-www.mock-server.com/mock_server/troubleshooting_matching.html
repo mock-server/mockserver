@@ -679,6 +679,41 @@ curl -X PUT "http://localhost:1080/mockserver/debugMismatch" -d '{
 
 <p>This endpoint is also available via the <a href="/mock_server/ai_mcp_tools.html">MCP <code>debug_request_mismatch</code> tool</a> for AI-assisted debugging.</p>
 
+<a id="suggested_fixes" class="anchor" href="#suggested_fixes">&nbsp;</a>
+
+<h2>Suggested Fixes for Unmatched Requests</h2>
+
+<p>When a request got a 404 because an expectation was <em>almost</em> right, MockServer can suggest the smallest change to that expectation that would make it match. Nothing is changed until you choose to apply the fix.</p>
+
+<p><strong>In the dashboard:</strong> open <strong>Explain Unmatched Requests</strong>, select <strong>Preview Fix</strong> next to one of the closest expectations, check the changes and the request matcher before and after, then select <strong>Apply Fix</strong>. Apply re-reads the expectation first: if anything the fix changes was edited since the explanation was computed, the fix is refused rather than overwriting the edit.</p>
+
+<p><strong>Over REST:</strong> add <code>"suggestFixes": true</code> to the <code>PUT /mockserver/explainUnmatched</code> body. Each of the five closest non-matching expectations then carries a <code>suggestedFix</code>:</p>
+
+<pre class="prettyprint code"><code class="code">curl -X PUT "http://localhost:1080/mockserver/explainUnmatched" \
+  -H "Content-Type: application/json" \
+  -d '{ "limit": 5, "suggestFixes": true }'</code></pre>
+
+<pre class="prettyprint lang-json code"><code class="code">"suggestedFix" : {
+  "patch" : [
+    { "op" : "test", "path" : "/httpRequest/path", "value" : "/api/order" },
+    { "op" : "replace", "path" : "/httpRequest/path", "value" : "/api/orders" },
+    { "op" : "test", "path" : "/httpRequest/headers/X-Tenant", "value" : [ "blue" ] },
+    { "op" : "replace", "path" : "/httpRequest/headers/X-Tenant", "value" : [ "green" ] }
+  ],
+  "patchedFields" : [ "path", "headers" ],
+  "unpatchedFields" : [ ],
+  "matchesAfterPatch" : true
+}</code></pre>
+
+<ul>
+    <li><code>patch</code> is a standard <a href="https://www.rfc-editor.org/rfc/rfc6902">JSON Patch</a> of the expectation as <code>PUT /mockserver/retrieve?type=active_expectations</code> returns it. Each change is guarded by a <code>test</code> of the current value (for an addition, of the object it adds to), so applying it fails if anything it changes has been edited since; edits to other parts of the expectation are kept. To apply it yourself, patch the retrieved expectation and send the result to <code>PUT /mockserver/expectation</code>, which updates the expectation with the same <code>id</code>.</li>
+    <li>Only the fields that differ are changed. For headers, query parameters and cookies, only the entries the request contradicts are changed (or removed if the request does not send them). For a JSON body matched on its listed fields (the default), only the fields the request contradicts are changed, fields the request lacks are removed, and placeholders such as <code>${json-unit.any-string}</code> are kept; a <code>STRICT</code> JSON body, or any other kind of body, is replaced by the request's body.</li>
+    <li><code>unpatchedFields</code> lists anything that could not be fixed automatically and why &mdash; for example a client certificate or JWT matcher, a body the log kept only part of (<code>maxLoggedBodyBytes</code>), or a value the log redacts (<code>redactSecretsInLog</code>), which is never copied into a patch.</li>
+    <li><code>matchesAfterPatch</code> says whether the patched expectation matches the request. When it is <code>false</code>, the fields in <code>unpatchedFields</code> still need editing by hand.</li>
+</ul>
+
+<p>A suggested fix makes the expectation match <em>this</em> request: replacing a regex path or a placeholder value with the literal value from the request can make it narrower than you intended, so check the preview before applying.</p>
+
 <a id="correlation_id_retrieval" class="anchor" href="#correlation_id_retrieval">&nbsp;</a>
 
 <h2>Retrieving Logs by Correlation ID</h2>

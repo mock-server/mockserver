@@ -1160,12 +1160,16 @@ public class HttpState {
 
     private static final int EXPLAIN_UNMATCHED_MAX_EXPECTATIONS = 50;
     static final int EXPLAIN_UNMATCHED_EVALUATION_BUDGET = 500;
+    static final int EXPLAIN_UNMATCHED_FIXES_PER_REQUEST = 5;
 
     /**
      * Retrieves recent requests that matched no expectation and, for each, computes
      * ranked closest-expectation diagnostics with remediation hints.
      *
-     * @param request the control-plane request (body may contain {@code {"limit":N}})
+     * With {@code "suggestFixes": true}, each of the closest five non-matching expectations also carries a
+     * {@code suggestedFix}: a JSON patch that would make it match the request. Nothing is applied.
+     *
+     * @param request the control-plane request (body may contain {@code {"limit":N, "suggestFixes":true}})
      * @return a JSON response containing an array of unmatched requests with diagnostics
      */
     public HttpResponse explainUnmatched(HttpRequest request) {
@@ -1174,18 +1178,23 @@ public class HttpState {
         try {
             com.fasterxml.jackson.databind.ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
-            // parse optional limit from body
+            // parse optional limit and suggestFixes from body
             int limit = 10;
+            boolean suggestFixes = false;
             if (isNotBlank(request.getBodyAsString())) {
                 try {
                     com.fasterxml.jackson.databind.JsonNode body = objectMapper.readTree(request.getBodyAsJsonOrXmlString());
                     if (body.has("limit")) {
                         limit = body.get("limit").asInt(10);
                     }
+                    suggestFixes = body.path("suggestFixes").asBoolean(false);
                 } catch (Exception ignored) {
                     // no valid JSON body -- use default
                 }
             }
+            final ExpectationFixSuggester fixSuggester = suggestFixes
+                ? new ExpectationFixSuggester(objectMapper, getExpectationSerializer(), getRequestDefinitionSerializer(), new org.mockserver.matchers.MatcherBuilder(configuration, mockServerLogger))
+                : null;
 
             CompletableFuture<HttpResponse> responseFuture = new CompletableFuture<>();
 
@@ -1218,6 +1227,7 @@ public class HttpState {
 
                         // collect results with their failure count for sorting
                         List<com.fasterxml.jackson.databind.node.ObjectNode> expResults = new ArrayList<>();
+                        java.util.Map<com.fasterxml.jackson.databind.node.ObjectNode, Expectation> expectationsByResult = new java.util.IdentityHashMap<>();
 
                         for (int i = 0; i < evaluateCount; i++) {
                             if (totalEvaluations >= EXPLAIN_UNMATCHED_EVALUATION_BUDGET) {
@@ -1232,6 +1242,7 @@ public class HttpState {
                             com.fasterxml.jackson.databind.node.ObjectNode expResult = RequestMatchExplainer.compareFields(objectMapper, matcher, expectation, unmatchedRequest, sensitiveValues);
                             totalEvaluations++;
                             expResults.add(expResult);
+                            expectationsByResult.put(expResult, expectation);
                         }
 
                         // sort by fewest differing fields first (closest match first)
@@ -1241,7 +1252,12 @@ public class HttpState {
                         ));
 
                         com.fasterxml.jackson.databind.node.ArrayNode closestExpectations = objectMapper.createArrayNode();
+                        int fixesSuggested = 0;
                         for (com.fasterxml.jackson.databind.node.ObjectNode expResult : expResults) {
+                            if (fixSuggester != null && fixesSuggested < EXPLAIN_UNMATCHED_FIXES_PER_REQUEST && !expResult.path("matches").asBoolean()) {
+                                expResult.set("suggestedFix", fixSuggester.suggest(expectationsByResult.get(expResult), unmatchedRequest, ExpectationFixSuggester.differingFields(expResult), sensitiveValues));
+                                fixesSuggested++;
+                            }
                             closestExpectations.add(expResult);
                         }
                         requestNode.set("closestExpectations", closestExpectations);

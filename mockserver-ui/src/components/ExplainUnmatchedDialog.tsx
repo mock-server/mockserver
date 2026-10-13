@@ -13,12 +13,20 @@ import Alert from '@mui/material/Alert';
 import Paper from '@mui/material/Paper';
 import CircularProgress from '@mui/material/CircularProgress';
 import type { ConnectionParams } from '../hooks/useConnectionParams';
-import { explainUnmatched, type ExplainUnmatchedResult, type ClosestExpectation } from '../lib/explainUnmatched';
+import { explainUnmatched, type ExplainUnmatchedResult, type ClosestExpectation, type SuggestedFix } from '../lib/explainUnmatched';
 import { monospaceFontFamily } from '../theme';
 import { humanizeError, type HumanError } from '../lib/errorMessage';
 import HumanErrorAlert from './HumanErrorAlert';
+import ExpectationFixDialog from './ExpectationFixDialog';
 
-function ClosestRow({ exp }: { exp: ClosestExpectation }) {
+interface SelectedFix {
+  expectationId: string;
+  requestLabel: string;
+  fix: SuggestedFix;
+}
+
+function ClosestRow({ exp, onPreviewFix }: { exp: ClosestExpectation; onPreviewFix: (fix: SuggestedFix) => void }) {
+  const fix = exp.suggestedFix;
   return (
     <Box sx={{ pl: 1.5, py: 0.5, borderLeft: 2, borderColor: 'divider', mb: 0.5 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
@@ -31,6 +39,12 @@ function ClosestRow({ exp }: { exp: ClosestExpectation }) {
           color={exp.matches ? 'success' : exp.differingFieldCount <= 2 ? 'warning' : 'error'}
           label={exp.matches ? 'matches' : `differs on ${exp.differingFieldCount} field${exp.differingFieldCount === 1 ? '' : 's'}`}
         />
+        {fix && exp.expectationId && fix.patch.length > 0 && (
+          <Button size="small" sx={{ py: 0, minHeight: 0 }} onClick={() => onPreviewFix(fix)}
+            aria-label={`Preview fix for expectation ${exp.expectationId}`}>
+            Preview Fix
+          </Button>
+        )}
       </Box>
       {exp.differences && Object.keys(exp.differences).length > 0 && (
         <Box sx={{ mt: 0.5 }}>
@@ -60,6 +74,7 @@ export default function ExplainUnmatchedDialog({
   const [result, setResult] = useState<ExplainUnmatchedResult | null>(null);
   const [error, setError] = useState<HumanError | null>(null);
   const [refreshTick, setRefreshTick] = useState(0);
+  const [selectedFix, setSelectedFix] = useState<SelectedFix | null>(null);
 
   // Clearing result/error here (event-handler setState is fine) makes the loading spinner show
   // again; the effect re-runs and reloads.
@@ -70,7 +85,7 @@ export default function ExplainUnmatchedDialog({
     let cancelled = false;
     async function load(): Promise<void> {
       try {
-        const next = await explainUnmatched(connectionParams);
+        const next = await explainUnmatched(connectionParams, 10, undefined, true);
         if (cancelled) return;
         setResult(next);
         setError(null);
@@ -96,7 +111,8 @@ export default function ExplainUnmatchedDialog({
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
           For each recent request that matched no expectation, the closest expectations are ranked by
-          how few match fields they differ on, with the differences and remediation hints.
+          how few match fields they differ on, with the differences and remediation hints. Preview Fix shows
+          the smallest change that would make an expectation match; nothing changes until you apply it.
         </Typography>
         {error && <HumanErrorAlert error={error} sx={{ mb: 1.5 }} />}
         {loading && <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}><CircularProgress size={24} /></Box>}
@@ -115,13 +131,30 @@ export default function ExplainUnmatchedDialog({
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
               {req.totalExpectationsEvaluated === 0 ? 'No expectations to compare against.' : `Closest of ${req.totalExpectationsEvaluated} expectations:`}
             </Typography>
-            {req.closestExpectations.slice(0, 5).map((exp, j) => <ClosestRow key={j} exp={exp} />)}
+            {req.closestExpectations.slice(0, 5).map((exp, j) => (
+              <ClosestRow
+                key={j}
+                exp={exp}
+                onPreviewFix={(fix) => setSelectedFix({ expectationId: exp.expectationId ?? '', requestLabel: `${req.method} ${req.path}`, fix })}
+              />
+            ))}
           </Paper>
         ))}
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Close</Button>
       </DialogActions>
+      {selectedFix && (
+        <ExpectationFixDialog
+          open
+          onClose={() => setSelectedFix(null)}
+          onApplied={refresh}
+          connectionParams={connectionParams}
+          expectationId={selectedFix.expectationId}
+          requestLabel={selectedFix.requestLabel}
+          fix={selectedFix.fix}
+        />
+      )}
     </Dialog>
   );
 }

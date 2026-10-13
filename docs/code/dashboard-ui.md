@@ -570,6 +570,39 @@ backed by the `useGenerateStub` hook and Zustand UI state (`generateStubOpen` /
 with the returned suggestion(s) and confidence so the user can register the stub or open it in
 the Composer. The button is gated to unmatched entries only and hidden when no context is provided.
 
+### Fix an Expectation from Explain Unmatched
+
+`ExplainUnmatchedDialog` asks `PUT /mockserver/explainUnmatched` for suggested fixes
+(`suggestFixes: true`), and each of the closest expectations the server returned a non-empty
+`suggestedFix` for shows a **Preview Fix** button. It never applies anything by itself:
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant D as ExpectationFixDialog
+    participant S as MockServer
+    U->>D: Preview Fix
+    D->>S: retrieve the expectation by id
+    D->>D: applyJsonPatch (test ops guard)
+    D-->>U: changes list, matcher now and after
+    U->>D: Apply Fix
+    D->>S: retrieve again, re-apply patch
+    D->>S: PUT /mockserver/expectation (same id)
+    D-->>U: Expectation updated, list refreshed
+```
+
+- `lib/jsonPatch.ts` applies the RFC 6902 subset the server emits (`add`, `remove`, `replace`,
+  `test`) to a copy; a failed `test` throws `JsonPatchTestFailedError`, which the dialog reports
+  as "changed since the explanation" and leaves Apply Fix disabled.
+- `lib/expectationFix.ts` previews with `fetchExpectation` (the whole expectation, not the capped
+  live list) and applies by re-reading and re-patching before `registerExpectation`, so an edit
+  made between preview and apply to a value the patch changes fails the patch instead of being
+  overwritten.
+- When `matchesAfterPatch` is false, or some fields could not be patched (`unpatchedFields`, for
+  example a value the event log redacts or a truncated body), the dialog says so before Apply.
+- The before and after panes are plain `<pre>` blocks, not the Monaco diff viewer, so opening a
+  preview loads no editor bundle.
+
 ### Row Layout in Requests and Expectations
 
 Each collapsed item row has two lines:

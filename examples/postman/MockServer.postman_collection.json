@@ -2470,7 +2470,7 @@
                 "explainUnmatched"
               ]
             },
-            "description": "Returns a diagnostic report for recently recorded unmatched requests, including the closest-matching expectations and the per-field differences that prevented a match. An optional 'limit' in the body bounds how many unmatched requests are analysed (default 10).\n\noptional limit on the number of unmatched requests to analyse\n\nFull API reference: https://www.mock-server.com/mock_server/mockserver_clients.html",
+            "description": "Returns a diagnostic report for recently recorded unmatched requests, including the closest-matching expectations and the per-field differences that prevented a match. An optional 'limit' in the body bounds how many unmatched requests are analysed (default 10). With 'suggestFixes' set to true, each of the five closest non-matching expectations also carries a 'suggestedFix': an RFC 6902 JSON patch of that expectation (as PUT /mockserver/retrieve?type=active_expectations returns it) that would make it match the request, the fields it patches and cannot patch, and whether the patched expectation matches. Nothing is applied: to apply a fix, patch the retrieved expectation and send it to PUT /mockserver/expectation, which updates the expectation with the same id. Values the event log redacts are never copied into a patch.\n\noptional limit on the number of unmatched requests to analyse\n\nFull API reference: https://www.mock-server.com/mock_server/mockserver_clients.html",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"limit\": 5\n}",
