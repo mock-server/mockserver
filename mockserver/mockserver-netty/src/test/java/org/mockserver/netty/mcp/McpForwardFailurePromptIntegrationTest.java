@@ -105,6 +105,30 @@ public class McpForwardFailurePromptIntegrationTest {
         assertThat(target.path("scheme").asText(), is("HTTP"));
     }
 
+    @Test
+    public void explainForwardFailureNamesTheCauseOfARealFailedForwardInOneCall() throws Exception {
+        int closedPort = PortFactory.findFreePort();
+        callTool("create_forward_expectation", objectMapper.createObjectNode()
+            .put("path", "/stock").put("host", "127.0.0.1").put("port", closedPort).put("scheme", "HTTP"));
+        HttpResponse<String> forwarded = httpClient.send(
+            HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + mockServer.getLocalPort() + "/stock"))
+                .timeout(Duration.ofSeconds(60)).GET().build(),
+            HttpResponse.BodyHandlers.ofString());
+        assertThat(forwarded.statusCode(), is(502));
+
+        JsonNode failures = callTool("explain_forward_failure", objectMapper.createObjectNode()).path("forwardFailures");
+        assertThat(failures.toString(), failures.size(), is(1));
+        JsonNode failure = failures.get(0);
+        assertThat(failure.path("path").asText(), is("/stock"));
+        assertThat(failure.path("statusCode").asInt(), is(502));
+        assertThat(failure.path("reason").asText(), containsString("upstream refused the connection"));
+        assertThat(failure.path("causeNamed").asBoolean(), is(true));
+        assertThat(failure.path("reason").asText(), is(forwarded.body()));
+
+        JsonNode byId = callTool("explain_forward_failure", objectMapper.createObjectNode().put("correlationId", failure.path("correlationId").asText()));
+        assertThat(byId.path("forwardFailures").get(0).path("reason").asText(), is(failure.path("reason").asText()));
+    }
+
     private JsonNode callTool(String name, ObjectNode arguments) throws Exception {
         ObjectNode call = objectMapper.createObjectNode().put("jsonrpc", "2.0").put("id", ++requestId + 1).put("method", "tools/call");
         call.putObject("params").put("name", name).set("arguments", arguments);

@@ -49,6 +49,11 @@ flowchart LR
   event log is) and `diagnose_config` (the effective configuration with each value's source, credentials
   masked; the non-default properties, or any property by name with a default shown by its value; plus each
   unrecognised key by name with its suggestions, using core's normaliser and "did you mean").
+  Then (B1c) `explain_forward_failure` (A4's 502 reasons, read back from the event log's failed-forward
+  entries, by correlation id or the most recent; redacted, reason capped at 2,048 characters),
+  `suggest_expectation_fix` (B3's guarded patches, only the expectations that carry one),
+  `lint_expectations` (A8, at most `maxIssues`, errors first) and `test_template` (A5's dry run; a
+  MUTATE tool, because it runs the template it is sent, as its REST route does).
 - **404 hints:** `findClosestMatchHint` feeds the `x-mockserver-closest-match(-hint)` headers
   (`closestMatchHintEnabled`, default true), the optional mismatch diagnostic body, and a DEBUG
   log. It checks at most 1,000 expectations and memoises per (method, path) until the store
@@ -126,10 +131,11 @@ flowchart LR
 | A5b | The template dry run is REST-only → a "Test template" action in the expectation editor that posts the template and a chosen recorded request to `PUT /mockserver/template/test` and shows output, error position and warnings; a strict Mustache pass could warn about missing variables, which Mustache renders as empty text | (iii) | On demand; calls the existing endpoint | M | Keep the 429 and timeout visible in the UI | P2 |
 | A5c | Velocity templates have no execution time limit: serving sets `MAX_NUMBER_LOOPS` to -1 and Velocity cannot be cancelled, so a runaway `#foreach` holds a template-pool thread until restart → a configurable loop bound or a deadline check | (ii) | One counter check per loop iteration on the template path only; measure it before and after | M | A bound that is too low breaks legitimate large templates | P2 |
 | A5d | A template that throws answers the client with a plain 404 (`handleAnyException`), so a template bug looks like a missing expectation → a distinguishable status (for example 500 with an error header) behind a flag, or by default in a major release | (ii) | Failure path only | S | Behaviour change for clients that expect the 404 | P2 |
-| B1c | Diagnosis tools still missing from MCP → add `explain_forward_failure` when A4 lands, `test_template` with A5, `lint_expectations` with A8 and `suggest_expectation_fix` with B3; each in `READING_TOOLS`, delegating to the item's endpoint, with redacted output | (iii) | On demand; the item's own cost | S | Tool output carries user traffic: redact as the endpoint does | P1 |
+| B1d | MCP prompts still chain the older tools: `why_forward_failed` walks `retrieve_request_responses`, `retrieve_logs` and `list_expectations`, and `fix_my_expectation` has the assistant derive the change itself from `debug_request_mismatch` → start `why_forward_failed` with `explain_forward_failure` (keeping `list_expectations` for the target), have `fix_my_expectation` try `suggest_expectation_fix` before a hand-made change, and update `McpDiagnosisPromptChainTest` and the prompt docs | (iii) | On demand; prompt text only | S | Keep the "Facts from MockServer" split; a prompt must still work when no fix is suggested or no failure is recorded | P2 |
 | A2b | At INFO an unmatched request still walks every expectation for the closest-match log line (`fullScanClosestMatchAndLazyRemoval`, which also schedules lazy removal and counts namespace skips), so a 404 flood at INFO stays O(expectations) per miss after A2 → measure it with `MatchingBenchmark` at INFO and 1,000 expectations, then cap it at 1,000 like the hint if it dominates, keeping lazy removal reachable for every inactive expectation | (ii) | Today O(expectations) per miss at INFO; A2's memo cannot be reused because the walk drives lazy removal | S | A cap must say so in the log line and must not strand inactive expectations | P2 |
 | A3d | `PUT /mockserver/clear` with body `{}` (and so a client's `clear(request())`, if it sends `{}`) reverse-matches the empty filter against each expectation's definition, like retrieve did before A3c: a `not(...)` definition fails it, and `clear` has no non-HTTP bypass, so DNS and binary expectations fail it too and are not cleared, while an empty body resets everything → add a reproducing test, then treat an empty HTTP clear filter as "clear all expectations" (the same `request()`-equality test A3c added) | (iv) | Control plane only | S | A user relying on `{}` to keep `not(...)` or DNS expectations would lose them: changelog Fixed entry | P3 |
 | A12b | A `proxyPassMappings` entry whose target is MockServer itself, and a WebSocket upgrade a plain forward relays back to MockServer, still loop until local ports run out: A12's loop count covers forward expectations only → carry and check `x-mockserver-forwarded-by` on the proxy-pass route (`handleProxyPass`) and on the WebSocket passthrough upgrade, answering `508` past `forwardLoopMaxHops` | (i) | One header lookup and one header added per proxied request, only when a mapping or a WebSocket forward applies | S | Same false-positive rules as A12: count only this instance's entries | P3 |
+| B3c | `MockServerEventLog.retrieveUnmatchedRequests` returns every `NO_MATCH_RESPONSE` entry, and a failed forward's 502 is logged as one, so `explainUnmatched` (and `suggest_expectation_fix` and the dashboard's Explain Unmatched through it) can treat a request that matched a forward expectation whose upstream failed as unmatched and suggest patching another expectation to catch it → exclude entries with `FORWARD_FAILURE_MESSAGE_FORMAT` (as `retrieveForwardFailures` selects them), or mark them and point at `explain_forward_failure` instead | (iii) | On demand; one more predicate on the existing scan | S | The `limit` then counts only true misses; check `ExplainUnmatchedIntegrationTest` and the dashboard view still show what users expect | P2 |
 
 ## Approach to LLM features
 
@@ -145,7 +151,7 @@ flowchart LR
 
 1. **Wave 0 — hygiene and performance:** A2b. (A2, A2c, C1 and C1b landed.)
 2. **Wave 1 — explain engine:** done (A3, A10 and B1 landed).
-3. **Wave 2 — failure classes:** each with an MCP tool (see B1c) and a dashboard entry. (A4, A6 and A6b landed; A5 landed REST-only, and A5b adds its dashboard entry.)
+3. **Wave 2 — failure classes:** each with an MCP tool and a dashboard entry. (A4, A6 and A6b landed; B1c added the MCP tools for A4, A5, A8 and B3; A5 landed REST-only, and A5b adds its dashboard entry.)
 4. **Wave 3 — fixes:** A8b, A8c. (B2, B3, A9b and A8, including the CLI, landed.)
 5. **Wave 4 — optional:** B5, A11b. (B6, B7, A11 and B1b landed.)
 

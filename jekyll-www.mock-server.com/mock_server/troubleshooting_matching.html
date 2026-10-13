@@ -714,6 +714,8 @@ curl -X PUT "http://localhost:1080/mockserver/debugMismatch" -d '{
 
 <p>A suggested fix makes the expectation match <em>this</em> request: replacing a regex path or a placeholder value with the literal value from the request can make it narrower than you intended, so check the preview before applying.</p>
 
+<p>AI assistants can ask for the same fixes through the <a href="/mock_server/ai_mcp_tools.html#suggest_expectation_fix">MCP <code>suggest_expectation_fix</code> tool</a>.</p>
+
 <a id="correlation_id_retrieval" class="anchor" href="#correlation_id_retrieval">&nbsp;</a>
 
 <h2>Retrieving Logs by Correlation ID</h2>
@@ -958,11 +960,12 @@ echo (string) $response-&gt;getBody();</code></pre></div>
 
 <p>Some expectations can never match, however the request is sent: one evaluated earlier catches every request it would match, a path is missing its leading <code>/</code>, or <code>times</code> allows 0 matches. <strong>Lint</strong> finds these before you spend time debugging a <code>404</code>. It is advisory: it never rejects or changes an expectation.</p>
 
-<p>Lint runs in three places:</p>
+<p>Lint runs in four places:</p>
 <ul>
     <li><strong>When you create expectations</strong> &mdash; <code>PUT /mockserver/expectation</code> (and every client's create or upsert call) still stores the expectations, but when a quick check finds a problem the response carries an <code>x-mockserver-lint-warnings</code> header with the number of problems, and each one is written to the log as a <code>WARN</code>. This quick check looks at each expectation on its own; it does not look for shadowing.</li>
     <li><strong>On demand</strong> &mdash; <code>PUT /mockserver/lint</code> with an empty body checks all your active expectations, including for shadowing. Send expectations in the body (one, or an array) to check them <em>without</em> storing them. It only reads, so a client with the <code>read</code> role may call it.</li>
     <li><strong>From the command line</strong> &mdash; <code>mockserver lint expectations.json</code> checks expectation files with no server running (see <a href="/mock_server/running_mock_server.html#command_line_subcommands">command line subcommands</a>).</li>
+    <li><strong>From an AI assistant</strong> &mdash; the <a href="/mock_server/ai_mcp_tools.html#lint_expectations">MCP <code>lint_expectations</code> tool</a> runs the on-demand check.</li>
 </ul>
 
 <table class="table table-striped">

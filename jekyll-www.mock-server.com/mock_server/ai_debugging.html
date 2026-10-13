@@ -204,6 +204,14 @@ agent = create_react_agent(model, tools=tools)</code></pre>
 
 <p>Both tools return redacted output: <code class="code inline">diagnose_config</code> always masks credentials, and <code class="code inline">explain_request</code> masks credentials quoted from your traffic when <code class="code inline">redactSecretsInLog</code> is enabled.</p>
 
+<h3>"Why did my forwarded request get a 502?"</h3>
+
+<p>The assistant will use <a href="/mock_server/ai_mcp_tools.html#explain_forward_failure"><code class="code inline">explain_forward_failure</code></a> to list the recent failed forwards with the reason MockServer gave for each, such as a refused connection, a host name that does not resolve, a TLS failure or a forward that points back at MockServer itself, and what to change.</p>
+
+<h3>"Fix my mock so this request matches"</h3>
+
+<p>The assistant will use <a href="/mock_server/ai_mcp_tools.html#suggest_expectation_fix"><code class="code inline">suggest_expectation_fix</code></a> to get a ready-made patch for each expectation that nearly matched a recent unmatched request, show you the change, and apply it with <code class="code inline">raw_expectation</code> only once you agree. <a href="/mock_server/ai_mcp_tools.html#lint_expectations"><code class="code inline">lint_expectations</code></a> finds expectations that can never match, and <a href="/mock_server/ai_mcp_tools.html#test_template"><code class="code inline">test_template</code></a> checks a response template before you use it.</p>
+
 <h3>"Why are my test requests getting 404s?"</h3>
 
 <p>After a failed test run where requests returned 404 (no matching expectation), the assistant can diagnose all mismatches at once:</p>

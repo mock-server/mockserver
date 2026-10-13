@@ -1471,6 +1471,44 @@ public class HttpState {
         }
     }
 
+    static final int EXPLAIN_FORWARD_FAILURES_MAX = 20;
+
+    /**
+     * The most recent failed forwards in the event log, or the one with {@code correlationId}, each with the reason its
+     * {@code 502} gave, redacted as the event log is. See {@link ForwardFailureExplainer}. Answers {@code 404} when a
+     * {@code correlationId} is given and no failed forward is recorded with it.
+     *
+     * @param correlationId one request's log correlation id, or {@code null} for the most recent failures
+     * @param limit         how many of the most recent failures, capped at {@value #EXPLAIN_FORWARD_FAILURES_MAX}
+     */
+    public HttpResponse explainForwardFailures(String correlationId, int limit) throws Exception {
+        final String timestamp = java.time.Instant.now().toString();
+        com.fasterxml.jackson.databind.ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+        CompletableFuture<List<LogEntry>> failuresFuture = new CompletableFuture<>();
+        mockServerLog.retrieveForwardFailures(isBlank(correlationId) ? null : correlationId, Math.max(1, Math.min(limit, EXPLAIN_FORWARD_FAILURES_MAX)), failuresFuture::complete);
+        List<LogEntry> failures = failuresFuture.get(configuration.maxFutureTimeoutInMillis(), java.util.concurrent.TimeUnit.MILLISECONDS);
+        if (isNotBlank(correlationId) && failures.isEmpty()) {
+            return explainError(objectMapper, NOT_FOUND.code(), "no failed forward is recorded with this correlationId: the request may not have been forwarded, its forward may have succeeded, "
+                + "or the entry was cleared or evicted from the event log (see maxLogEntries); failed forwards are recorded only at logLevel INFO or more detailed", correlationId, timestamp);
+        }
+        com.fasterxml.jackson.databind.node.ObjectNode result = ForwardFailureExplainer.explain(objectMapper, failures, configuration);
+        result.put("timestamp", timestamp);
+        if (failures.isEmpty()) {
+            result.put("note", "no failed forward is recorded; failed forwards are recorded only at logLevel INFO or more detailed, and are cleared or evicted with the event log (see maxLogEntries)");
+        }
+        return response()
+            .withStatusCode(OK.code())
+            .withBody(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(result), MediaType.JSON_UTF_8);
+    }
+
+    /**
+     * Renders a template against a sample request without an expectation, as {@code PUT /mockserver/template/test}
+     * does: on the dry run's own threads, completed within the template timeout plus a grace period.
+     */
+    public CompletableFuture<HttpResponse> testTemplate(HttpRequest request) {
+        return getTemplateDryRun().test(request);
+    }
+
     private static HttpResponse explainError(com.fasterxml.jackson.databind.ObjectMapper objectMapper, int statusCode, String error, String correlationId, String timestamp) throws com.fasterxml.jackson.core.JsonProcessingException {
         com.fasterxml.jackson.databind.node.ObjectNode errorNode = objectMapper.createObjectNode();
         errorNode.put("error", error);
@@ -3105,7 +3143,7 @@ public class HttpState {
 
                 if (controlPlaneRequestAuthenticated(request, responseWriter)) {
                     // rendered on the dry run's own threads, never this one; join() is bounded by its deadline
-                    CompletableFuture<HttpResponse> dryRun = getTemplateDryRun().test(request);
+                    CompletableFuture<HttpResponse> dryRun = testTemplate(request);
                     if (warDeployment) {
                         responseWriter.writeResponse(request, dryRun.join(), true);
                     } else {

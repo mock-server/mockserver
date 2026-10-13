@@ -7,6 +7,7 @@ import org.mockserver.collections.CircularConcurrentLinkedDeque;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.filters.TransportHeaderFilter;
 import org.mockserver.log.model.LogEntry;
+import org.mockserver.log.model.LogEntryMessages;
 import org.mockserver.log.model.RequestAndExpectationId;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
@@ -1444,6 +1445,27 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                 .collect(Collectors.toList());
             listConsumer.accept(entries);
         });
+    }
+
+    /**
+     * Retrieves the most recent failed forwards: the {@code failed to forward request} entries the forward action
+     * writes with its {@code 502}, most recent first.
+     *
+     * @param correlationId only this request's entries, or {@code null} for any request
+     * @param limit         maximum number of entries to return (capped at 100)
+     * @param listConsumer  callback receiving the list of matching log entries
+     */
+    public void retrieveForwardFailures(String correlationId, int limit, Consumer<List<LogEntry>> listConsumer) {
+        drainDisruptor();
+        final int effectiveLimit = Math.max(1, Math.min(limit, 100));
+        querySnapshot(true, snapshot -> listConsumer.accept(snapshot
+            .stream()
+            .filter(notDeletedPredicate)
+            .filter(logItem -> logItem.getType() == NO_MATCH_RESPONSE && LogEntryMessages.FORWARD_FAILURE_MESSAGE_FORMAT.equals(logItem.getMessageFormat()))
+            .filter(logItem -> correlationId == null || correlationId.equals(logItem.getCorrelationId()))
+            .limit(effectiveLimit)
+            .collect(Collectors.toList())
+        ));
     }
 
     public <T> void retrieveLogEntriesInReverseForUI(RequestDefinition requestDefinition, Predicate<LogEntry> logEntryPredicate, Function<LogEntry, T> logEntryMapper, Consumer<Stream<T>> consumer) {

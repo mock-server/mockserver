@@ -67,7 +67,10 @@ public class McpRequestProcessor {
             "diffs and a remediation hint — no need to reconstruct the request. 'debug_request_mismatch' does the " +
             "same for a request you supply. 'explain_request' takes one received request's correlation id (from " +
             "'retrieve_logs') and says which expectation serves it now and why each one ahead of it lost; " +
-            "'diagnose_config' shows which settings are in effect and where they came from.\n" +
+            "'diagnose_config' shows which settings are in effect and where they came from. 'suggest_expectation_fix' " +
+            "proposes a guarded JSON patch for each close expectation; 'lint_expectations' finds expectations that can " +
+            "never match; 'explain_forward_failure' says why a forward or proxied request got a 502; 'test_template' " +
+            "dry-runs a response or forward template.\n" +
             "- Verify an implementation: 'verify_request' / 'verify_request_sequence' check requests were made; " +
             "'verify_traffic_against_openapi' checks recorded traffic conforms to an OpenAPI contract; " +
             "'run_contract_test' sends spec-derived example requests to a running service and checks the responses; " +

@@ -44,6 +44,10 @@ keywords: "mcp tools, mockserver mcp tools, create_expectation, verify_request, 
         <tr><td><a href="#explain_unmatched_requests"><code>explain_unmatched_requests</code></a></td><td>Explain recent unmatched requests with ranked diagnostics</td><td>High</td></tr>
         <tr><td><a href="#explain_request"><code>explain_request</code></a></td><td>Explain why one received request matched one expectation and not another</td><td>High</td></tr>
         <tr><td><a href="#diagnose_config"><code>diagnose_config</code></a></td><td>Show which configuration settings are in effect and where each came from</td><td>High</td></tr>
+        <tr><td><a href="#explain_forward_failure"><code>explain_forward_failure</code></a></td><td>Explain why a forwarded or proxied request got a 502</td><td>High</td></tr>
+        <tr><td><a href="#suggest_expectation_fix"><code>suggest_expectation_fix</code></a></td><td>Suggest a JSON patch that makes a close expectation match an unmatched request</td><td>High</td></tr>
+        <tr><td><a href="#lint_expectations"><code>lint_expectations</code></a></td><td>Find expectations that can never match, or will not match the way they read</td><td>High</td></tr>
+        <tr><td><a href="#test_template"><code>test_template</code></a></td><td>Dry-run a response or forward template against a sample request</td><td>High</td></tr>
         <tr><td><a href="#stop_server"><code>stop_server</code></a></td><td>Stop the MockServer instance</td><td>High</td></tr>
         <tr><td><a href="#create_expectation_from_openapi"><code>create_expectation_from_openapi</code></a></td><td>Generate expectations from an OpenAPI spec</td><td>High</td></tr>
         <tr><td><a href="#create_expectations_from_recorded_traffic"><code>create_expectations_from_recorded_traffic</code></a></td><td>Convert recorded proxy traffic into mock expectations</td><td>High</td></tr>
@@ -857,6 +861,195 @@ keywords: "mcp tools, mockserver mcp tools, create_expectation, verify_request, 
 }</code></pre>
 
 <p>A setting at its default shows the default's value, for example <code>"value": "false", "source": "default"</code>; a default worked out from the JVM heap size or from another setting shows the value worked out now, and a credential at its default is still shown as <code>***REDACTED***</code>. <code>explicitlySetCount</code> is the number of settings changed from their default, and <code>totalProperties</code> (left out above) the number of settings MockServer recognises. In <code>unrecognised</code>, <code>setAs</code> says how the key was set (<code>system property</code>, <code>environment variable</code> or <code>properties-file key</code>), and <code>systemPropertyOnly</code> is <code>true</code> for a setting MockServer reads only as a <code>-D</code> JVM system property, which has no effect where it was set.</p>
+
+<a id="explain_forward_failure" class="anchor" href="#explain_forward_failure">&nbsp;</a>
+
+<h3>explain_forward_failure</h3>
+
+<p>Explains why MockServer could not forward or proxy a request. Without parameters it returns the most recent failed forwards, newest first; pass <code>correlationId</code> to get one request's. Each failure gives the request's method and path, the status code (502) and the <code>reason</code> MockServer gave. When MockServer can name the cause, the reason says what went wrong and what to change: a TLS failure, an HTTP/2 error, a connection it could not set up from its configuration, an upstream response it could not decode, a host name that does not resolve, a refused or timed-out connection, no route to the upstream, local ports or open files running out, an upstream proxy it could not reach, or a keep-alive connection the upstream closed. <code>causeNamed</code> is <code>true</code> for those, and <code>forwardLoopSuspected</code> is <code>true</code> when the forward went back to MockServer itself. When the cause could not be named, the reason is the raw error and a <code>hint</code> suggests <a href="#retrieve_logs"><code>retrieve_logs</code></a> with the correlation ID.</p>
+
+<p>MockServer records a failed forward only when <code>logLevel</code> is <code>INFO</code> (the default) or more detailed, and keeps it until the event log is cleared or the entry is evicted (see <code>maxLogEntries</code>). The forward-failure causes are described in <a href="/mock_server/debugging_issues.html">Debugging Issues</a>.</p>
+
+<p><strong>Redaction:</strong> a credential from the request quoted in the reason is masked when <code>redactSecretsInLog</code> is enabled, exactly as in the event log. A reason longer than 2,048 characters is cut and marked <code>reasonTruncated</code>.</p>
+
+<table>
+    <thead>
+        <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>correlationId</code></td><td>string</td><td>No</td><td>Correlation ID of one request whose forward failed</td></tr>
+        <tr><td><code>limit</code></td><td>integer</td><td>No</td><td>How many of the most recent failed forwards to return (default 5, maximum 20)</td></tr>
+    </tbody>
+</table>
+
+<p><strong>Example request:</strong></p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 23,
+  "method": "tools/call",
+  "params": {
+    "name": "explain_forward_failure",
+    "arguments": {}
+  }
+}</code></pre>
+
+<p><strong>Example response</strong> (the <code>text</code> content, formatted and shortened):</p>
+
+<pre class="prettyprint code"><code class="code">{
+  "forwardFailureCount": 1,
+  "forwardFailures": [
+    {
+      "correlationId": "abc-123-def-456",
+      "method": "GET",
+      "path": "/inventory",
+      "statusCode": 502,
+      "forwardLoopSuspected": false,
+      "reason": "upstream refused the connection: check the upstream is running and listening on the port forwarded to",
+      "causeNamed": true
+    }
+  ]
+}</code></pre>
+
+<p>A <code>correlationId</code> with no failed forward recorded returns <code>"isError": true</code>. With no parameters and no failed forward recorded, the result is empty and has a <code>note</code>.</p>
+
+<a id="suggest_expectation_fix" class="anchor" href="#suggest_expectation_fix">&nbsp;</a>
+
+<h3>suggest_expectation_fix</h3>
+
+<p>For each recent request that matched no expectation, suggests a fix to each of its closest expectations (at most five): a JSON patch (RFC 6902) of the expectation, as <a href="#list_expectations"><code>list_expectations</code></a> returns it, that changes only its <code>httpRequest</code> so it would match the request. Each suggestion also lists the fields it could not patch, with a reason, and <code>matchesAfterPatch</code>. Every change in the patch is preceded by a <code>test</code> of the current value, so the patch fails, rather than overwriting, if the expectation has been edited since. Pass <code>expectationId</code> to get fixes for one expectation only.</p>
+
+<p>Nothing is applied. To apply a fix, patch the expectation's JSON and send it with <a href="#raw_expectation"><code>raw_expectation</code></a>, keeping its <code>id</code> so it replaces the original. The fixes are described in <a href="/mock_server/troubleshooting_matching.html#suggested_fixes">Troubleshooting Matching</a>.</p>
+
+<p><strong>Note:</strong> This is <code>PUT /mockserver/explainUnmatched</code> with <code>"suggestFixes": true</code>, keeping only the expectations that have a suggested fix. <a href="#explain_unmatched_requests"><code>explain_unmatched_requests</code></a> returns every comparison.</p>
+
+<p><strong>Redaction:</strong> a value the event log would mask is never copied into a patch; that field is listed as unpatched instead.</p>
+
+<table>
+    <thead>
+        <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>limit</code></td><td>integer</td><td>No</td><td>How many of the most recent unmatched requests to suggest fixes for (default 5, maximum 20)</td></tr>
+        <tr><td><code>expectationId</code></td><td>string</td><td>No</td><td>Only suggest fixes to this expectation</td></tr>
+    </tbody>
+</table>
+
+<p><strong>Example response</strong> (the <code>text</code> content, formatted and shortened):</p>
+
+<pre class="prettyprint code"><code class="code">{
+  "unmatchedRequestCount": 1,
+  "suggestedFixCount": 1,
+  "unmatchedRequests": [
+    {
+      "method": "GET",
+      "path": "/api/orders",
+      "closestExpectations": [
+        {
+          "expectationId": "orders",
+          "matches": false,
+          "differingFieldCount": 1,
+          "differences": { "path": ["string or regex match failed expected: /api/order found: /api/orders"] },
+          "suggestedFix": {
+            "patch": [
+              { "op": "test", "path": "/httpRequest/path", "value": "/api/order" },
+              { "op": "replace", "path": "/httpRequest/path", "value": "/api/orders" }
+            ],
+            "patchedFields": ["path"],
+            "unpatchedFields": [],
+            "matchesAfterPatch": true
+          }
+        }
+      ]
+    }
+  ]
+}</code></pre>
+
+<a id="lint_expectations" class="anchor" href="#lint_expectations">&nbsp;</a>
+
+<h3>lint_expectations</h3>
+
+<p>Finds expectations that can never match, or will not match the way they read: one hidden by an earlier expectation that matches everything it does, <code>times</code>, time to live or percentage of 0, sequential responses that are never reached, path mistakes (no leading slash, a scheme and host or a query string in the path, a glob wildcard, an OpenAPI <code>{param}</code> with no path parameters), method and header-name typos, duplicate ids, and <code>STRICT</code> JSON bodies with arrays. Without parameters it checks the active expectations; pass <code>expectations</code> to check expectations before you create them. It is advisory: nothing is rejected or changed, and expectations passed in are not stored.</p>
+
+<p><strong>Note:</strong> This functionality is also available as a REST API endpoint (<code>PUT /mockserver/lint</code>) and from the command line (<code>mockserver lint</code>); the rules are described in <a href="/mock_server/troubleshooting_matching.html#lint_expectations">Troubleshooting Matching</a>.</p>
+
+<table>
+    <thead>
+        <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>expectations</code></td><td>object or array</td><td>No</td><td>One expectation, or an array of them, in MockServer's JSON format, to check without storing</td></tr>
+        <tr><td><code>maxIssues</code></td><td>integer</td><td>No</td><td>Most issues to return, errors first (default 100, maximum 1000); the counts always cover every issue found</td></tr>
+    </tbody>
+</table>
+
+<p><strong>Example response</strong> (the <code>text</code> content, formatted and shortened):</p>
+
+<pre class="prettyprint code"><code class="code">{
+  "source": "stored",
+  "expectationsChecked": 2,
+  "issueCount": 1,
+  "errorCount": 0,
+  "warningCount": 1,
+  "issues": [
+    {
+      "rule": "SHADOWED",
+      "severity": "WARNING",
+      "expectationId": "get-orders",
+      "message": "...",
+      "relatedExpectationId": "all-orders"
+    }
+  ]
+}</code></pre>
+
+<p>When more issues are found than <code>maxIssues</code>, <code>issuesReturned</code> and <code>issuesOmitted</code> say how many were left out.</p>
+
+<a id="test_template" class="anchor" href="#test_template">&nbsp;</a>
+
+<h3>test_template</h3>
+
+<p>Renders a Velocity, Mustache or JavaScript response or forward template against a sample request without creating an expectation, using the same template engines, security settings and JavaScript timeout MockServer uses when serving. It returns the rendered response or request, or why the template failed with its line and column and a hint, plus warnings for Velocity references that did not resolve and for <code>scenario.set</code> calls, which a dry run reports instead of applying. Nothing reaches the event log.</p>
+
+<p><strong>Note:</strong> This is the same dry run as <code>PUT /mockserver/template/test</code>, described in <a href="/mock_server/response_templates.html#template_dry_run">Response Templates</a>. Because it runs the template code it is sent, it needs the same permission as creating an expectation: with control-plane authorisation enabled, a principal that may only read cannot call it.</p>
+
+<table>
+    <thead>
+        <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>templateType</code></td><td>string</td><td>Yes</td><td><code>VELOCITY</code>, <code>MUSTACHE</code> or <code>JAVASCRIPT</code></td></tr>
+        <tr><td><code>template</code></td><td>string</td><td>Yes</td><td>The template text</td></tr>
+        <tr><td><code>actionType</code></td><td>string</td><td>No</td><td><code>RESPONSE_TEMPLATE</code> (default) or <code>FORWARD_TEMPLATE</code></td></tr>
+        <tr><td><code>request</code></td><td>object</td><td>No</td><td>Sample request in MockServer's JSON format; defaults to <code>GET /</code></td></tr>
+    </tbody>
+</table>
+
+<p><strong>Example request:</strong></p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 24,
+  "method": "tools/call",
+  "params": {
+    "name": "test_template",
+    "arguments": {
+      "templateType": "VELOCITY",
+      "template": "{ \"statusCode\": 200, \"body\": \"$request.path\" }",
+      "request": { "path": "/sample" }
+    }
+  }
+}</code></pre>
+
+<p><strong>Example response</strong> (the <code>text</code> content, formatted and shortened):</p>
+
+<pre class="prettyprint code"><code class="code">{
+  "templateType": "VELOCITY",
+  "actionType": "RESPONSE_TEMPLATE",
+  "valid": true,
+  "renderedResponse": { "statusCode": 200, "body": "/sample" }
+}</code></pre>
+
+<p>A missing or unknown <code>templateType</code>, or a missing <code>template</code>, returns <code>"isError": true</code>, as does a call made while two dry runs are already running.</p>
 
 <a id="stop_server" class="anchor" href="#stop_server">&nbsp;</a>
 

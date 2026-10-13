@@ -880,6 +880,10 @@ MCP tools map to MockServer control-plane operations:
 | `debug_request_mismatch` | Diagnose why a request did not match any expectation |
 | `explain_request` | Explain one received request, by correlation id: which expectation serves it now and why each one ahead of it lost |
 | `diagnose_config` | Report the effective configuration and the source of each setting, credentials masked |
+| `explain_forward_failure` | Explain why a forwarded or proxied request got a 502: the recorded failed forwards with the reason MockServer gave |
+| `lint_expectations` | Lint the active expectations, or ones passed in, for mistakes that make them never match |
+| `suggest_expectation_fix` | Suggest a guarded JSON patch that makes a close expectation match a recent unmatched request |
+| `test_template` | Dry-run a response or forward template against a sample request (needs the mutate role) |
 | `stop_server` | Stop the MockServer instance |
 | `raw_expectation` | Full expectation JSON passthrough |
 | `raw_retrieve` | Full retrieve parameters passthrough |

@@ -140,7 +140,8 @@ public class McpToolRegistry {
         "mock_llm_failover",
         "mock_adversarial_llm_response",
         "set_operating_mode",
-        "promote_recordings"
+        "promote_recordings",
+        "test_template"
     );
 
     /**
@@ -185,6 +186,9 @@ public class McpToolRegistry {
         "explain_unmatched_requests",
         "explain_request",
         "diagnose_config",
+        "explain_forward_failure",
+        "lint_expectations",
+        "suggest_expectation_fix",
         "explain_agent_run",
         "export_optimisation_report",
         "diff_agent_runs",
@@ -222,6 +226,10 @@ public class McpToolRegistry {
         registerExplainUnmatchedRequests();
         registerExplainRequest();
         registerDiagnoseConfig();
+        registerExplainForwardFailure();
+        registerTestTemplate();
+        registerLintExpectations();
+        registerSuggestExpectationFix();
         registerCreateExpectationFromOpenApi();
         registerCreateExpectationsFromRecordedTraffic();
         registerStopServer();
@@ -1711,6 +1719,246 @@ public class McpToolRegistry {
             return resultNode;
         } catch (Exception e) {
             return errorResult("Failed to diagnose configuration", e);
+        }
+    }
+
+    private void registerExplainForwardFailure() {
+        ObjectNode schema = objectMapper.createObjectNode();
+        schema.put("type", "object");
+        ObjectNode properties = schema.putObject("properties");
+        properties.putObject("correlationId").put("type", "string").put("description", "Optional correlation id of one request whose forward failed, as shown by retrieve_logs; without it, the most recent failed forwards are returned");
+        properties.putObject("limit").put("type", "integer").put("description", "How many of the most recent failed forwards to return when no correlationId is given (default 5, max " + EXPLAIN_FORWARD_FAILURE_MAX + ")");
+
+        tools.put("explain_forward_failure", new ToolDefinition(
+            "explain_forward_failure",
+            "Explains why MockServer could not forward or proxy a request: returns the recorded failed forwards (most recent first, or the one with "
+                + "'correlationId'), each with its method, path, status code and the reason its 502 gave. MockServer names the cause and what to change "
+                + "when it can (causeNamed true): a TLS failure, an HTTP/2 error, a connection it could not set up, an upstream response it could not "
+                + "decode, an unresolvable host, a refused or timed-out connection, no route, local ports or files running out, an unreachable upstream "
+                + "proxy, a pooled connection closed under a non-idempotent request; forwardLoopSuspected is true when the forward went back to MockServer "
+                + "itself. Reasons are redacted as in the event log (redactSecretsInLog). Failed forwards are recorded only at logLevel INFO or more detailed.",
+            schema,
+            this::handleExplainForwardFailure
+        ));
+    }
+
+    private static final int EXPLAIN_FORWARD_FAILURE_MAX = 20;
+
+    private JsonNode handleExplainForwardFailure(JsonNode params) {
+        try {
+            JsonNode correlationIdNode = params.path("correlationId");
+            if (!correlationIdNode.isMissingNode() && !correlationIdNode.isNull() && (!correlationIdNode.isTextual() || correlationIdNode.asText().isBlank())) {
+                return errorResult("'correlationId' must be a non-blank string");
+            }
+            int limit = params.path("limit").asInt(5);
+            if (limit < 1 || limit > EXPLAIN_FORWARD_FAILURE_MAX) {
+                return errorResult("'limit' must be between 1 and " + EXPLAIN_FORWARD_FAILURE_MAX);
+            }
+            String correlationId = correlationIdNode.isTextual() ? correlationIdNode.asText() : null;
+            HttpResponse response = httpState.explainForwardFailures(correlationId, limit);
+            JsonNode body = objectMapper.readTree(response.getBodyAsString());
+            if (response.getStatusCode() == null || response.getStatusCode() != 200) {
+                ObjectNode error = errorResult(body.path("error").asText("Failed to explain forward failure"));
+                if (correlationId != null) {
+                    error.put("correlationId", correlationId);
+                }
+                return error;
+            }
+            return body;
+        } catch (Exception e) {
+            return errorResult("Failed to explain forward failure", e);
+        }
+    }
+
+    private void registerTestTemplate() {
+        ObjectNode schema = objectMapper.createObjectNode();
+        schema.put("type", "object");
+        ObjectNode properties = schema.putObject("properties");
+        ObjectNode templateType = properties.putObject("templateType");
+        templateType.put("type", "string").put("description", "Template engine");
+        templateType.putArray("enum").add("VELOCITY").add("MUSTACHE").add("JAVASCRIPT");
+        properties.putObject("template").put("type", "string").put("description", "The template text, as it would appear in an httpResponseTemplate or httpForwardTemplate");
+        ObjectNode actionType = properties.putObject("actionType");
+        actionType.put("type", "string").put("description", "RESPONSE_TEMPLATE (default) renders a response; FORWARD_TEMPLATE renders the request to forward");
+        actionType.putArray("enum").add("RESPONSE_TEMPLATE").add("FORWARD_TEMPLATE");
+        properties.putObject("request").put("type", "object").put("description", "Optional sample request in MockServer's JSON request format (method, path, queryStringParameters, headers, body); defaults to GET /");
+        schema.putArray("required").add("templateType").add("template");
+
+        tools.put("test_template", new ToolDefinition(
+            "test_template",
+            "Dry-runs a Velocity, Mustache or JavaScript response or forward template against a sample request without creating an expectation, "
+                + "using the server's own engines, sandbox and time limit. Returns the rendered response or request, or the failure with its template "
+                + "line and column and a hint, plus warnings for unresolved Velocity references and scenario.set calls (reported, never applied). "
+                + "Nothing reaches the event log. It runs the template code it is sent, so it needs the same mutate role as "
+                + "PUT /mockserver/template/test, which it is equivalent to.",
+            schema,
+            this::handleTestTemplate
+        ));
+    }
+
+    private JsonNode handleTestTemplate(JsonNode params) {
+        try {
+            ObjectNode body = objectMapper.createObjectNode();
+            for (String field : new String[]{"templateType", "template", "actionType", "request"}) {
+                if (params.hasNonNull(field)) {
+                    body.set(field, params.get(field));
+                }
+            }
+            // completes within the template time limit plus the dry run's grace period, so join() is bounded
+            HttpResponse response = httpState.testTemplate(request()
+                .withMethod("PUT")
+                .withPath("/mockserver/template/test")
+                .withBody(objectMapper.writeValueAsString(body))).join();
+            JsonNode result = objectMapper.readTree(response.getBodyAsString());
+            if (response.getStatusCode() == null || response.getStatusCode() != 200) {
+                return errorResult(result.path("error").asText("Failed to test template"));
+            }
+            return result;
+        } catch (Exception e) {
+            return errorResult("Failed to test template", e);
+        }
+    }
+
+    private static final int LINT_MAX_ISSUES_RETURNED = 1000;
+
+    private void registerLintExpectations() {
+        ObjectNode schema = objectMapper.createObjectNode();
+        schema.put("type", "object");
+        ObjectNode properties = schema.putObject("properties");
+        ObjectNode expectationsProperty = properties.putObject("expectations");
+        expectationsProperty.putArray("type").add("object").add("array");
+        expectationsProperty.put("description", "Optional expectation, or array of expectations, in MockServer's JSON format to lint without storing them; "
+            + "without it, the active expectations are linted");
+        properties.putObject("maxIssues").put("type", "integer").put("description", "Most issues to return, errors first (default 100, max " + LINT_MAX_ISSUES_RETURNED + "); the counts always cover every issue found");
+
+        tools.put("lint_expectations", new ToolDefinition(
+            "lint_expectations",
+            "Lints expectations for mistakes that make them never match or never answer: an expectation shadowed by an earlier one, times / time to "
+                + "live / percentage of 0, unreachable sequential responses, path mistakes (no leading slash, a scheme and host or a query string in "
+                + "the path, a glob wildcard, an OpenAPI {param} with no path parameters), method and header-name typos, duplicate ids, invalid "
+                + "expectations (error) and STRICT JSON bodies with arrays (info). Lints the active expectations, or the ones passed in without storing "
+                + "them. Advisory only: nothing is rejected or changed. Equivalent to PUT /mockserver/lint.",
+            schema,
+            this::handleLintExpectations
+        ));
+    }
+
+    private JsonNode handleLintExpectations(JsonNode params) {
+        try {
+            int maxIssues = params.path("maxIssues").asInt(100);
+            if (maxIssues < 1 || maxIssues > LINT_MAX_ISSUES_RETURNED) {
+                return errorResult("'maxIssues' must be between 1 and " + LINT_MAX_ISSUES_RETURNED);
+            }
+            JsonNode expectations = params.path("expectations");
+            if (!expectations.isMissingNode() && !expectations.isNull() && !expectations.isObject() && !expectations.isArray()) {
+                return errorResult("'expectations' must be an expectation object or an array of expectations");
+            }
+            HttpRequest lintRequest = request().withMethod("PUT").withPath("/mockserver/lint");
+            if (expectations.isObject() || expectations.isArray()) {
+                lintRequest.withBody(objectMapper.writeValueAsString(expectations));
+            }
+            HttpResponse response = httpState.lint(lintRequest);
+            JsonNode result = objectMapper.readTree(response.getBodyAsString());
+            if (response.getStatusCode() == null || response.getStatusCode() != 200) {
+                return errorResult(result.path("error").asText("Failed to lint expectations"));
+            }
+            JsonNode issues = result.path("issues");
+            if (result.isObject() && issues.isArray() && issues.size() > maxIssues) {
+                List<JsonNode> ordered = new ArrayList<>();
+                issues.forEach(ordered::add);
+                ordered.sort(Comparator.comparingInt(issue -> severityRank(issue.path("severity").asText())));
+                ArrayNode returned = objectMapper.createArrayNode();
+                ordered.subList(0, maxIssues).forEach(returned::add);
+                ((ObjectNode) result).set("issues", returned);
+                ((ObjectNode) result).put("issuesReturned", maxIssues);
+                ((ObjectNode) result).put("issuesOmitted", ordered.size() - maxIssues);
+            }
+            return result;
+        } catch (Exception e) {
+            return errorResult("Failed to lint expectations", e);
+        }
+    }
+
+    private static int severityRank(String severity) {
+        switch (severity) {
+            case "ERROR":
+                return 0;
+            case "WARNING":
+                return 1;
+            default:
+                return 2;
+        }
+    }
+
+    private static final int SUGGEST_FIX_MAX_REQUESTS = 20;
+
+    private void registerSuggestExpectationFix() {
+        ObjectNode schema = objectMapper.createObjectNode();
+        schema.put("type", "object");
+        ObjectNode properties = schema.putObject("properties");
+        properties.putObject("limit").put("type", "integer").put("description", "How many of the most recent unmatched requests to suggest fixes for (default 5, max " + SUGGEST_FIX_MAX_REQUESTS + ")");
+        properties.putObject("expectationId").put("type", "string").put("description", "Optional: only suggest fixes to this expectation");
+
+        tools.put("suggest_expectation_fix", new ToolDefinition(
+            "suggest_expectation_fix",
+            "For each recent request that matched no expectation, suggests a fix to each of its five closest expectations: a guarded RFC 6902 JSON "
+                + "patch of the expectation, as list_expectations returns it, that changes only its httpRequest so it would match, the fields it "
+                + "could not patch with a reason, and matchesAfterPatch. Each change is preceded by a test of the current value, so the patch fails "
+                + "if the expectation changed since. Nothing is applied: to apply one, patch the expectation's JSON and send it with raw_expectation "
+                + "keeping its id. Values the event log redacts are never copied into a patch. Equivalent to PUT /mockserver/explainUnmatched with "
+                + "\"suggestFixes\": true, keeping only the expectations with a suggested fix.",
+            schema,
+            this::handleSuggestExpectationFix
+        ));
+    }
+
+    private JsonNode handleSuggestExpectationFix(JsonNode params) {
+        try {
+            int limit = params.path("limit").asInt(5);
+            if (limit < 1 || limit > SUGGEST_FIX_MAX_REQUESTS) {
+                return errorResult("'limit' must be between 1 and " + SUGGEST_FIX_MAX_REQUESTS);
+            }
+            JsonNode expectationIdNode = params.path("expectationId");
+            if (!expectationIdNode.isMissingNode() && !expectationIdNode.isNull() && (!expectationIdNode.isTextual() || expectationIdNode.asText().isBlank())) {
+                return errorResult("'expectationId' must be a non-blank string");
+            }
+            String expectationId = expectationIdNode.isTextual() ? expectationIdNode.asText() : null;
+            HttpResponse response = httpState.explainUnmatched(request()
+                .withMethod("PUT")
+                .withBody(objectMapper.writeValueAsString(objectMapper.createObjectNode().put("limit", limit).put("suggestFixes", true))));
+            JsonNode result = objectMapper.readTree(response.getBodyAsString());
+            if (response.getStatusCode() == null || response.getStatusCode() != 200 || !result.isObject()) {
+                return errorResult(result.path("error").asText("Failed to suggest expectation fixes"));
+            }
+            ArrayNode requests = objectMapper.createArrayNode();
+            int fixCount = 0;
+            for (JsonNode unmatched : result.path("unmatchedRequests")) {
+                ArrayNode withFix = objectMapper.createArrayNode();
+                for (JsonNode closest : unmatched.path("closestExpectations")) {
+                    if (closest.has("suggestedFix") && (expectationId == null || expectationId.equals(closest.path("expectationId").asText()))) {
+                        withFix.add(closest);
+                    }
+                }
+                if (withFix.isEmpty() && expectationId != null) {
+                    continue;
+                }
+                ObjectNode requestNode = unmatched.isObject() ? ((ObjectNode) unmatched).deepCopy() : objectMapper.createObjectNode();
+                requestNode.set("closestExpectations", withFix);
+                requests.add(requestNode);
+                fixCount += withFix.size();
+            }
+            ObjectNode reshaped = (ObjectNode) result;
+            reshaped.set("unmatchedRequests", requests);
+            reshaped.put("unmatchedRequestCount", requests.size());
+            reshaped.put("suggestedFixCount", fixCount);
+            if (fixCount == 0) {
+                reshaped.put("note", expectationId != null
+                    ? "no recent unmatched request has a suggested fix for expectation '" + expectationId + "'"
+                    : "no recent unmatched request has a close expectation to fix; explain_unmatched_requests shows every comparison");
+            }
+            return reshaped;
+        } catch (Exception e) {
+            return errorResult("Failed to suggest expectation fixes", e);
         }
     }
 

@@ -638,6 +638,8 @@ $activeExpectations = $client-&gt;retrieveActiveExpectations(
 
 <p>Other failures, such as an HTTP/2 error from the upstream or a response MockServer could not decode, are also named in the body. A <span class="inline_code">502</span> with an empty body is a failure MockServer could not classify; run MockServer with <span class="inline_code">logLevel</span> set to <span class="inline_code">TRACE</span> to see the underlying exception.</p>
 
+<p>An AI assistant connected to MockServer's MCP server can read the same reasons with the <a href="/mock_server/ai_mcp_tools.html#explain_forward_failure"><code>explain_forward_failure</code></a> tool.</p>
+
 <a id="retrieving_recorded_logs" class="anchor" href="#retrieving_recorded_logs">&nbsp;</a>
 
 <h2>Retrieving Recorded Logs</h2>

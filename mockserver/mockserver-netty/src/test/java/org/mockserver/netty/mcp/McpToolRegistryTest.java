@@ -100,7 +100,11 @@ public class McpToolRegistryTest {
         assertThat(tools.containsKey("promote_recordings"), is(true));
         assertThat(tools.containsKey("explain_request"), is(true));
         assertThat(tools.containsKey("diagnose_config"), is(true));
-        assertThat(tools.size(), is(42));
+        assertThat(tools.containsKey("explain_forward_failure"), is(true));
+        assertThat(tools.containsKey("test_template"), is(true));
+        assertThat(tools.containsKey("lint_expectations"), is(true));
+        assertThat(tools.containsKey("suggest_expectation_fix"), is(true));
+        assertThat(tools.size(), is(46));
     }
 
     @Test
@@ -2552,7 +2556,8 @@ public class McpToolRegistryTest {
             "mock_llm_failover",
             "mock_adversarial_llm_response",
             "set_operating_mode",
-            "promote_recordings")) {
+            "promote_recordings",
+            "test_template")) {
             assertThat("expected '" + tool + "' to be classified as mutating",
                 McpToolRegistry.isMutatingTool(tool), is(true));
         }
@@ -2575,6 +2580,9 @@ public class McpToolRegistryTest {
             "explain_unmatched_requests",
             "explain_request",
             "diagnose_config",
+            "explain_forward_failure",
+            "lint_expectations",
+            "suggest_expectation_fix",
             "explain_agent_run",
             "export_optimisation_report",
             "diff_agent_runs",
