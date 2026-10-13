@@ -19,6 +19,12 @@ final class CohereImageDescription {
     /** Bounds the JPEG marker walk, so a stream of tiny segments cannot make it long. */
     static final int MAX_JPEG_SEGMENTS = 1024;
 
+    /**
+     * Bedrock's Cohere Embed v3 and v4 pages cap each image at 5 MB without saying which megabyte;
+     * the larger reading, 5 MiB of decoded bytes, never rejects an image the real API accepts.
+     */
+    static final long MAX_IMAGE_BYTES = 5L * 1024 * 1024;
+
     private static final int MAX_MEDIA_TYPE_LENGTH = 64;
 
     private static final int[] PNG_SIGNATURE = {0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A};
@@ -45,6 +51,14 @@ final class CohereImageDescription {
             throw new EmbeddingWire.InvalidEmbeddingRequestException("images",
                 "images must be data URIs in image/jpeg or image/png format"
                     + (mediaType != null && !mediaType.isEmpty() ? ", got " + mediaType : ""));
+        }
+    }
+
+    /** Rejects a data URI image, in {@code param}, that decodes to more than {@link #MAX_IMAGE_BYTES}. */
+    static void checkSize(JsonNode image, String param) {
+        if (image != null && image.isTextual() && image.asText().regionMatches(true, 0, "data:", 0, 5)
+            && Base64Bytes.payloadOf(image.asText()).decodesToMoreThan(MAX_IMAGE_BYTES)) {
+            throw new EmbeddingWire.InvalidEmbeddingRequestException(param, param + " must each be at most 5MB");
         }
     }
 
@@ -213,6 +227,23 @@ final class CohereImageDescription {
                 default:
                     return ((a & 0x03) << 6) | b;
             }
+        }
+
+        /**
+         * Whether the payload decodes to more than {@code limit} bytes, counting only base64
+         * characters (not padding or line breaks), and scanning only when the raw length alone could exceed the limit.
+         */
+        boolean decodesToMoreThan(long limit) {
+            if ((text.length() - start) * 3L / 4 <= limit) {
+                return false;
+            }
+            long characters = 0;
+            for (int i = start; i < text.length(); i++) {
+                if (value(text.charAt(i)) >= 0 && ++characters * 3 / 4 > limit) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         int unsigned16(long index) {

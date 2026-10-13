@@ -133,6 +133,17 @@ public class CohereImageDescriptionTest {
     }
 
     @Test
+    public void shouldMeasureTheDecodedSizeOfABase64PayloadWithoutPaddingOrLineBreaks() {
+        String[][] payloads = {{"QQ==", "1"}, {"QUI=", "2"}, {"QUJD", "3"}, {"QUJDRA==", "4"}, {"QU\r\nJD\n", "3"}, {"-_-_", "3"}};
+        for (String[] payload : payloads) {
+            CohereImageDescription.Base64Bytes bytes = CohereImageDescription.Base64Bytes.payloadOf("data:image/png;base64," + payload[0]);
+            long size = Long.parseLong(payload[1]);
+            assertThat(payload[0], bytes.decodesToMoreThan(size - 1), is(true));
+            assertThat(payload[0], bytes.decodesToMoreThan(size), is(false));
+        }
+    }
+
+    @Test
     public void shouldReadEachByteOfABase64PayloadAsTheJdkDecoderDoes() {
         Random random = new Random(42);
         for (int length = 0; length < 40; length++) {

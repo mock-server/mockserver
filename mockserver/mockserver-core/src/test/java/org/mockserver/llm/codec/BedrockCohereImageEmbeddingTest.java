@@ -11,6 +11,7 @@ import org.mockserver.model.Provider;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 
@@ -35,6 +36,8 @@ public class BedrockCohereImageEmbeddingTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String V3 = "/model/cohere.embed-english-v3/invoke";
     private static final String V4 = "/model/cohere.embed-v4:0/invoke";
+    /** Both model pages cap each image at 5 MB; the mock reads that as 5 MiB of decoded bytes. */
+    private static final int FIVE_MB = 5 * 1024 * 1024;
 
     private final HttpLlmResponseActionHandler handler = new HttpLlmResponseActionHandler(new MockServerLogger());
 
@@ -133,6 +136,47 @@ public class BedrockCohereImageEmbeddingTest {
         JsonNode root = post(V4, "{\"images\":[" + quoted(gif) + ",\"data:image/webp;base64,UklGRg==\"],\"input_type\":\"search_document\"}");
         assertThat(root.get("embeddings").size(), is(2));
         assertThat(root.has("images"), is(false));
+    }
+
+    /** A PNG data URI of exactly {@code size} decoded bytes: a real PNG header, then zeros. */
+    private static String pngOfSize(int size) throws Exception {
+        byte[] bytes = Arrays.copyOf(encode(9, 8, BufferedImage.TYPE_INT_RGB, "png"), size);
+        return dataUri("image/png", bytes);
+    }
+
+    private void assertTooLarge(String path, String body, String param) {
+        HttpResponse response = send(path, body);
+        assertThat(param, response.getStatusCode(), is(400));
+        assertThat(response.getFirstHeader("x-amzn-ErrorType"), is("ValidationException"));
+        assertThat(response.getBodyAsString(), is("{\"message\":\"" + param + " must each be at most 5MB\"}"));
+    }
+
+    @Test
+    public void shouldRejectACohereImageOverFiveMegabytes() throws Exception {
+        String tooLarge = quoted(pngOfSize(FIVE_MB + 1));
+        assertTooLarge(V3, "{\"images\":[" + tooLarge + "],\"input_type\":\"image\"}", "images");
+        assertTooLarge(V4, "{\"images\":[" + tooLarge + "],\"input_type\":\"search_document\"}", "images");
+        assertTooLarge(V4, "{\"input_type\":\"search_document\",\"inputs\":[{\"content\":["
+            + "{\"type\":\"text\",\"text\":\"page\"}," + imagePart(pngOfSize(FIVE_MB + 1)) + "]}]}", "inputs");
+    }
+
+    @Test
+    public void shouldAcceptACohereImageOfExactlyFiveMegabytes() throws Exception {
+        String atLimit = pngOfSize(FIVE_MB);
+        JsonNode root = post(V3, "{\"images\":[" + quoted(atLimit) + "],\"input_type\":\"image\"}");
+        assertThat(root.get("images").toString(), is("[{\"width\":9,\"height\":8,\"format\":\"png\",\"bit_depth\":24}]"));
+        assertThat(post(V4, "{\"images\":[" + quoted(atLimit) + "],\"input_type\":\"search_document\"}").get("embeddings").size(), is(1));
+        assertThat(post(V4, "{\"input_type\":\"search_document\",\"inputs\":[{\"content\":[" + imagePart(atLimit) + "]}]}")
+            .get("embeddings").size(), is(1));
+    }
+
+    @Test
+    public void shouldNotCountLineBreaksInTheBase64TowardsTheImageSize() throws Exception {
+        String wrapped = Base64.getMimeEncoder().encodeToString(Arrays.copyOf(encode(9, 8, BufferedImage.TYPE_INT_RGB, "png"), FIVE_MB))
+            .replace("\r\n", "\\r\\n");
+        assertThat("the line breaks alone take the text over the limit", wrapped.length() * 3L / 4 > FIVE_MB, is(true));
+        JsonNode root = post(V4, "{\"images\":[" + quoted("data:image/png;base64," + wrapped) + "],\"input_type\":\"search_document\"}");
+        assertThat(root.get("embeddings").size(), is(1));
     }
 
     @Test

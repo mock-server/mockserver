@@ -197,7 +197,8 @@ public class BedrockCodec implements ProviderCodec {
      *       "response_type":"embeddings_floats","texts":[...]}}; with {@code embedding_types}
      *       the embeddings are an object keyed by type and {@code response_type} is
      *       {@code embeddings_by_type}. v3 has 1024 dimensions; v4 1536 or
-     *       {@code output_dimension} (256, 512, 1024 or 1536). At most 96 texts or inputs.</li>
+     *       {@code output_dimension} (256, 512, 1024 or 1536). At most 96 texts or inputs;
+     *       each data URI image at most 5MB once decoded.</li>
      * </ul>
      * A request the real API rejects on these limits throws
      * {@link EmbeddingWire.InvalidEmbeddingRequestException}.
@@ -318,6 +319,7 @@ public class BedrockCodec implements ProviderCodec {
                 if (family == EmbeddingFamily.COHERE_V3) {
                     CohereImageDescription.checkSupported(image);
                 }
+                CohereImageDescription.checkSize(image, "images");
                 inputs.add(EmbeddingWire.imageInput(image));
             }
         }
@@ -383,7 +385,9 @@ public class BedrockCodec implements ProviderCodec {
                 value = partText != null && partText.isTextual() ? partText.asText() : null;
             } else if ("image_url".equals(type)) {
                 JsonNode imageUrl = part.get("image_url");
-                value = EmbeddingWire.imageInput(imageUrl != null && imageUrl.isObject() ? imageUrl.get("url") : imageUrl);
+                JsonNode url = imageUrl != null && imageUrl.isObject() ? imageUrl.get("url") : imageUrl;
+                CohereImageDescription.checkSize(url, "inputs");
+                value = EmbeddingWire.imageInput(url);
             }
             if (value != null) {
                 if (text.length() > 0) {
