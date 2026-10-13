@@ -29,5 +29,11 @@
   },
   "response": "text.response.json",
   "format": "JSON",
-  "allowed": []
+  "allowed": [
+    {
+      "kind": "EXTRA",
+      "path": "stop_details",
+      "reason": "Message.stop_details is required and nullable in anthropic-sdk-typescript (src/resources/messages/messages.ts) and null for every stop reason but refusal (platform.claude.com/docs/en/build-with-claude/refusals-and-fallback); this documentation example predates the field"
+    }
+  ]
 }

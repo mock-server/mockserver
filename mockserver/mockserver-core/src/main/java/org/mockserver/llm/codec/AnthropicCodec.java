@@ -34,6 +34,7 @@ public class AnthropicCodec implements ProviderCodec {
     /**
      * The {@code stop_details} Anthropic sends with every {@code stop_reason} {@code refusal}; its
      * {@code category} and {@code explanation} are null when the refusal maps to no named category.
+     * Every other message, including the one in {@code message_start}, sends {@code "stop_details": null}.
      */
     public static final String REFUSAL_STOP_DETAILS = "{\"type\":\"refusal\",\"category\":null,\"explanation\":null}";
 
@@ -114,6 +115,8 @@ public class AnthropicCodec implements ProviderCodec {
             stopDetails.put("type", REFUSAL);
             stopDetails.putNull("category");
             stopDetails.putNull("explanation");
+        } else {
+            root.putNull("stop_details");
         }
 
         // usage
@@ -175,7 +178,7 @@ public class AnthropicCodec implements ProviderCodec {
         messageStartUsage.append("}");
         String messageStartData = "{\"type\":\"message_start\",\"message\":{\"id\":\"" + messageId +
             "\",\"type\":\"message\",\"role\":\"assistant\",\"content\":[],\"model\":\"" + escapeJson(modelName) +
-            "\",\"stop_reason\":null,\"stop_sequence\":null,\"usage\":" + messageStartUsage + "}}";
+            "\",\"stop_reason\":null,\"stop_sequence\":null,\"stop_details\":null,\"usage\":" + messageStartUsage + "}}";
         events.add(sseEvent().withEvent("message_start").withData(messageStartData));
 
         int contentIndex = 0;
@@ -258,9 +261,9 @@ public class AnthropicCodec implements ProviderCodec {
 
         // 4. message_delta
         String stopReason = mapStopReason(completion.getStopReason(), hasToolCalls);
-        String stopDetails = REFUSAL.equals(stopReason) ? ",\"stop_details\":" + REFUSAL_STOP_DETAILS : "";
+        String stopDetails = REFUSAL.equals(stopReason) ? REFUSAL_STOP_DETAILS : "null";
         String messageDeltaData = "{\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"" + escapeJson(stopReason) +
-            "\",\"stop_sequence\":null" + stopDetails + "},\"usage\":{\"output_tokens\":" + outputTokens + "}}";
+            "\",\"stop_sequence\":null,\"stop_details\":" + stopDetails + "},\"usage\":{\"output_tokens\":" + outputTokens + "}}";
         events.add(sseEvent().withEvent("message_delta").withData(messageDeltaData));
 
         // 5. message_stop

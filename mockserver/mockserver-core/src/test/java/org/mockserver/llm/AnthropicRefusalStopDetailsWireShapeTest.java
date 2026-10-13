@@ -9,11 +9,13 @@ import org.mockserver.model.Completion;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.Provider;
 import org.mockserver.model.SseEvent;
+import org.mockserver.model.ToolUse;
 
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.model.Completion.completion;
 import static org.mockserver.model.HttpRequest.request;
@@ -22,8 +24,10 @@ import static org.mockserver.model.HttpRequest.request;
  * Every Anthropic Messages response with {@code stop_reason} {@code refusal} carries a
  * {@code stop_details} object ({@code type} {@code refusal}, nullable {@code category} and
  * {@code explanation}); a stream carries it in the {@code message_delta} event's {@code delta}.
- * Sources: https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback and
- * anthropic-sdk-python {@code types/refusal_stop_details.py}, {@code types/raw_message_delta_event.py}.
+ * Every other message carries {@code "stop_details": null}, including the message in
+ * {@code message_start}. Sources: https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback and
+ * anthropic-sdk-python {@code types/refusal_stop_details.py}, {@code types/raw_message_delta_event.py}, and
+ * anthropic-sdk-typescript {@code Message.stop_details} (required, nullable).
  */
 public class AnthropicRefusalStopDetailsWireShapeTest {
 
@@ -59,11 +63,21 @@ public class AnthropicRefusalStopDetailsWireShapeTest {
     }
 
     @Test
-    public void nonRefusalMessageCarriesNoStopDetailsObject() throws Exception {
-        JsonNode body = MAPPER.readTree(new AnthropicCodec().encode(completion().withText("hi"), "m").getBodyAsString());
+    public void nonRefusalMessageCarriesNullStopDetails() throws Exception {
+        for (Completion nonRefusal : nonRefusals()) {
+            JsonNode body = MAPPER.readTree(new AnthropicCodec().encode(nonRefusal, "m").getBodyAsString());
+
+            assertThat(body.path("stop_reason").asText(), is(not("refusal")));
+            assertPresentAndNull(body.path("stop_reason").asText(), body, "stop_details");
+        }
+    }
+
+    @Test
+    public void bedrockInvokeModelNonRefusalCarriesNullStopDetails() throws Exception {
+        JsonNode body = MAPPER.readTree(new BedrockCodec().encode(completion().withText("hi"), "m", INVOKE).getBodyAsString());
 
         assertThat(body.path("stop_reason").asText(), is("end_turn"));
-        assertThat(body.path("stop_details").isObject(), is(false));
+        assertPresentAndNull("bedrock", body, "stop_details");
     }
 
     @Test
@@ -78,11 +92,25 @@ public class AnthropicRefusalStopDetailsWireShapeTest {
     }
 
     @Test
-    public void streamedNonRefusalCarriesNoStopDetailsObject() throws Exception {
-        JsonNode messageDelta = messageDelta(new AnthropicCodec().encodeStreaming(completion().withText("hi").withStreaming(true), "m", null));
+    public void streamedNonRefusalCarriesNullStopDetailsOnTheMessageDeltaDelta() throws Exception {
+        for (Completion nonRefusal : nonRefusals()) {
+            JsonNode messageDelta = messageDelta(new AnthropicCodec().encodeStreaming(nonRefusal.withStreaming(true), "m", null));
 
-        assertThat(messageDelta.at("/delta/stop_reason").asText(), is("end_turn"));
-        assertThat(messageDelta.at("/delta/stop_details").isObject(), is(false));
+            String stopReason = messageDelta.at("/delta/stop_reason").asText();
+            assertThat(stopReason, is(not("refusal")));
+            assertPresentAndNull(stopReason, messageDelta.path("delta"), "stop_details");
+            assertThat(stopReason, messageDelta.has("stop_details"), is(false));
+        }
+    }
+
+    @Test
+    public void streamedMessageStartCarriesNullStopDetails() throws Exception {
+        for (Completion completion : List.of(completion().withText("hi"), LlmRefusalPresets.anthropicRefusal("I can't help with that."))) {
+            JsonNode messageStart = event("message_start", new AnthropicCodec().encodeStreaming(completion.withStreaming(true), "m", null));
+
+            assertThat(messageStart.at("/message/stop_reason").isNull(), is(true));
+            assertPresentAndNull("message_start", messageStart.path("message"), "stop_details");
+        }
     }
 
     @Test
@@ -114,13 +142,31 @@ public class AnthropicRefusalStopDetailsWireShapeTest {
         assertRefusalStopDetails(messageDelta.at("/delta/stop_details"));
     }
 
+    private static List<Completion> nonRefusals() {
+        return List.of(
+            completion().withText("hi"),
+            completion().withText("hi").withStopReason("max_tokens"),
+            completion().withText("hi").withStopReason("stop_sequence"),
+            completion().withToolCalls(List.of(new ToolUse().withName("get_weather").withArguments("{}")))
+        );
+    }
+
     private static JsonNode messageDelta(List<SseEvent> events) throws Exception {
+        return event("message_delta", events);
+    }
+
+    private static JsonNode event(String name, List<SseEvent> events) throws Exception {
         for (SseEvent event : events) {
-            if ("message_delta".equals(event.getEvent())) {
+            if (name.equals(event.getEvent())) {
                 return MAPPER.readTree(event.getData());
             }
         }
-        throw new AssertionError("no message_delta event in " + events);
+        throw new AssertionError("no " + name + " event in " + events);
+    }
+
+    private static void assertPresentAndNull(String reason, JsonNode parent, String field) {
+        assertThat(reason + ": " + field + " present in " + parent, parent.has(field), is(true));
+        assertThat(reason + ": " + field + " null in " + parent, parent.get(field).isNull(), is(true));
     }
 
     private static void assertRefusalStopDetails(JsonNode stopDetails) {

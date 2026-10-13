@@ -1403,7 +1403,8 @@ geminiLive()
     one returned through Bedrock InvokeModel) carries a <span class="inline_code">stop_details</span> object,
     <span class="inline_code">{"type": "refusal", "category": null, "explanation": null}</span>; a stream carries it in the
     <span class="inline_code">message_delta</span> event's <span class="inline_code">delta</span>, so SDK code that reads
-    <span class="inline_code">stop_details</span> works against the mock. To inject a block probabilistically across providers,
+    <span class="inline_code">stop_details</span> works against the mock. Every other Anthropic message sends
+    <span class="inline_code">"stop_details": null</span>, also as the real API does. To inject a block probabilistically across providers,
     use the <span class="inline_code">contentFilterBlockProbability</span> chaos field (see below), which emits the
     provider-correct shape.
 </p>

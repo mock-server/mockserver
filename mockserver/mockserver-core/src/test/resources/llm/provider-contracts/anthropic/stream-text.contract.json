@@ -35,5 +35,18 @@
   "ignoreRealEvents": {
     "ping": "a keep-alive the API may send at any point; the Messages streaming docs tell clients to handle it, so a stream without one is valid"
   },
-  "allowed": []
+  "allowed": [
+    {
+      "kind": "EXTRA",
+      "path": "message.stop_details",
+      "scope": "message_start",
+      "reason": "Message.stop_details is required and nullable in anthropic-sdk-typescript (src/resources/messages/messages.ts) and null for every stop reason but refusal (platform.claude.com/docs/en/build-with-claude/refusals-and-fallback); this documentation example predates the field"
+    },
+    {
+      "kind": "EXTRA",
+      "path": "delta.stop_details",
+      "scope": "message_delta",
+      "reason": "RawMessageDeltaEvent.Delta.stop_details is required and nullable in anthropic-sdk-typescript (src/resources/messages/messages.ts) and null for every stop reason but refusal (platform.claude.com/docs/en/build-with-claude/refusals-and-fallback); this documentation example predates the field"
+    }
+  ]
 }
