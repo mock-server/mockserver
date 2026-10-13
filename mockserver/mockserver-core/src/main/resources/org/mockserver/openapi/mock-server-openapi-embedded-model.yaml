@@ -4068,16 +4068,50 @@ paths:
       description: >-
         Returns every configuration property with its resolved value and the source tier that supplied
         it, so an operator can see which of the property file, system properties, environment variables
-        or defaults won. Values detected as sensitive are redacted. Distinct from
-        `/mockserver/configuration`, which reads and writes the mutable runtime configuration.
+        or defaults won. Values detected as sensitive are redacted. Any `mockserver.*` system property,
+        `MOCKSERVER_*` environment variable or properties-file key that is not a known property follows,
+        with source `unrecognised`, value `(ignored)` and the known properties it was most likely meant to
+        be; the value it was set to is never returned. Distinct from `/mockserver/configuration`, which
+        reads and writes the mutable runtime configuration.
+      parameters:
+        - in: query
+          name: nonDefault
+          schema:
+            type: boolean
+            default: false
+          required: false
+          description: when true, the properties at their built-in default are left out
       responses:
         '200':
           description: effective configuration returned
           content:
             application/json:
               schema:
-                type: object
-                description: property name to resolved value and source tier
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      description: the property name, or the unrecognised key as it was set
+                    value:
+                      type: string
+                      description: the resolved value, `(default)`, `***REDACTED***` for a credential, or `(ignored)` for an unrecognised key
+                    source:
+                      type: string
+                      enum: [ "system-property", "properties-file", "environment-variable", "default", "runtime-set", "unrecognised" ]
+                    setAs:
+                      type: string
+                      description: for an unrecognised key, how it was set
+                      enum: [ "system property", "environment variable", "properties-file key" ]
+                    suggestions:
+                      type: array
+                      description: for an unrecognised key, the known properties it was most likely meant to be
+                      items:
+                        type: string
+                    systemPropertyOnly:
+                      type: boolean
+                      description: present and true for a setting read only as a JVM system property that was set in the properties file or the environment instead
   /mockserver/proxyConfiguration:
     get:
       tags:

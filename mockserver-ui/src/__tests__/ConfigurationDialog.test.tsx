@@ -372,6 +372,35 @@ describe('ConfigurationDialog', () => {
     expect(screen.getByText('1443')).toBeInTheDocument();
   });
 
+  it('lists unrecognised configuration keys first, with the key each was probably meant to be', async () => {
+    const effective = [
+      { name: 'mockserver.logLevel', value: 'INFO', source: 'system-property' },
+      { name: 'MOCKSERVER_METRICS_ENABLE', value: '(ignored)', source: 'unrecognised', setAs: 'environment variable', suggestions: ['MOCKSERVER_METRICS_ENABLED'] },
+      { name: 'mockserver.typoOne', value: '(ignored)', source: 'unrecognised', setAs: 'system property', suggestions: [] },
+    ];
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      if (url.endsWith('/mockserver/config')) return { ok: true, json: async () => effective };
+      if (url.endsWith('/mockserver/status') && init?.method === 'PUT') return { ok: true, json: async () => ({ ports: [1080] }) };
+      return { ok: true, json: async () => fullConfig() };
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const user = userEvent.setup();
+    renderDialog();
+    await waitFor(() => { expect(screen.getByText('Log level')).toBeInTheDocument(); });
+    await user.click(screen.getByRole('tab', { name: 'Server Info' }));
+
+    await waitFor(() => { expect(screen.getByText('Unrecognised (ignored) (2)')).toBeInTheDocument(); });
+    const typoRow = screen.getByText('MOCKSERVER_METRICS_ENABLE').closest('tr')!;
+    expect(typoRow.textContent).toContain('(ignored) did you mean MOCKSERVER_METRICS_ENABLED?');
+    const unsuggestedRow = screen.getByText('mockserver.typoOne').closest('tr')!;
+    expect(unsuggestedRow.textContent).not.toContain('did you mean');
+    // the ignored keys are listed before every resolved source tier
+    const unrecognisedLabel = screen.getByText('Unrecognised (ignored) (2)');
+    const systemPropertyLabel = screen.getByText(/System property \(1\)/);
+    expect(unrecognisedLabel.compareDocumentPosition(systemPropertyLabel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('renders the Proxy setup section and binds an additional port on the Server Info tab', async () => {
     const effective = [{ name: 'mockserver.logLevel', value: 'INFO', source: 'system-property' }];
     const proxy = {

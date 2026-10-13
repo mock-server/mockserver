@@ -3358,11 +3358,13 @@ public class HttpState {
             }
             if (request.matches("GET", PATH_PREFIX + "/config", "/config")) {
                 // Effective configuration: each property's resolved value and the source tier that
-                // supplied it, with sensitive values redacted (mirrors the --print-config CLI flag).
+                // supplied it, with sensitive values redacted (mirrors the --print-config CLI flag);
+                // ?nonDefault=true leaves out the properties at their built-in default.
                 if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    boolean nonDefaultOnly = "true".equalsIgnoreCase(request.getFirstQueryStringParameter("nonDefault"));
                     responseWriter.writeResponse(request, withDashboardCORS(request, response()
                         .withStatusCode(OK.code())
-                        .withBody(ConfigurationProperties.effectiveConfigurationAsJson(), MediaType.JSON_UTF_8)), true);
+                        .withBody(ConfigurationProperties.effectiveConfigurationAsJson(nonDefaultOnly), MediaType.JSON_UTF_8)), true);
                 }
                 return true;
             }

@@ -4,6 +4,7 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.util.NetUtil;
 import org.mockserver.configuration.Configuration;
+import org.mockserver.configuration.UpcomingDefaultChanges;
 import org.mockserver.socket.NettyTransport;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
@@ -814,6 +815,7 @@ public abstract class LifeCycle implements Stoppable {
         final String message = "started on port" + (ports.size() == 1 ? ": " + ports.get(0) : "s: " + ports);
         setPort(ports);
         logSettingsOverriddenByAnother();
+        logUpcomingDefaultChanges();
         if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(INFO)) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -824,6 +826,28 @@ public abstract class LifeCycle implements Stoppable {
         }
         logProxySetup(ports);
         startupWarmup(ports);
+    }
+
+    /**
+     * Warns, once per JVM, about each insecure default left in place that a future major release changes. Fail-soft.
+     */
+    private void logUpcomingDefaultChanges() {
+        try {
+            if (configuration == null || mockServerLogger == null || !mockServerLogger.isEnabledForInstance(WARN)
+                || !UpcomingDefaultChanges.claimStartupWarning()) {
+                return;
+            }
+            for (String message : UpcomingDefaultChanges.warnings(configuration)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(SERVER_CONFIGURATION)
+                        .setLogLevel(WARN)
+                        .setMessageFormat(message)
+                );
+            }
+        } catch (Throwable throwable) {
+            // a start-up notice must never prevent the server from starting
+        }
     }
 
     /**

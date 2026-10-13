@@ -4967,6 +4967,48 @@ public class HttpStateTest {
         }
     }
 
+    @Test
+    public void shouldReturnOnlyNonDefaultEffectiveConfigurationWhenAsked() throws Exception {
+        String previous = System.getProperty("mockserver.llmApiKey");
+        try {
+            System.setProperty("mockserver.llmApiKey", "non-default-endpoint-secret");
+
+            FakeResponseWriter allWriter = new FakeResponseWriter();
+            httpState.handle(request("/mockserver/config").withMethod("GET"), allWriter, false);
+            FakeResponseWriter nonDefaultWriter = new FakeResponseWriter();
+            httpState.handle(request("/mockserver/config").withMethod("GET").withQueryStringParameter("nonDefault", "true"), nonDefaultWriter, false);
+
+            String all = allWriter.response.getBodyAsString();
+            String nonDefault = nonDefaultWriter.response.getBodyAsString();
+            assertThat(nonDefaultWriter.response.getStatusCode(), is(200));
+            // other tests in this JVM may leave properties set, so assert on the parsed entries, not on neighbours
+            com.fasterxml.jackson.databind.JsonNode allEntries = new com.fasterxml.jackson.databind.ObjectMapper().readTree(all);
+            com.fasterxml.jackson.databind.JsonNode nonDefaultEntries = new com.fasterxml.jackson.databind.ObjectMapper().readTree(nonDefault);
+            java.util.List<String> allSources = new java.util.ArrayList<>();
+            allEntries.forEach(entry -> allSources.add(entry.get("source").asText()));
+            assertThat(allSources, hasItem("default"));
+            java.util.List<String> nonDefaultSources = new java.util.ArrayList<>();
+            com.fasterxml.jackson.databind.JsonNode llmApiKey = null;
+            for (com.fasterxml.jackson.databind.JsonNode entry : nonDefaultEntries) {
+                nonDefaultSources.add(entry.get("source").asText());
+                if ("mockserver.llmApiKey".equals(entry.get("name").asText())) {
+                    llmApiKey = entry;
+                }
+            }
+            assertThat(nonDefaultSources, not(hasItem("default")));
+            assertThat(nonDefaultEntries.size(), lessThan(allEntries.size()));
+            assertThat("a credential set in this test is listed", llmApiKey, notNullValue());
+            assertThat(llmApiKey.get("value").asText(), is("***REDACTED***"));
+            assertThat(nonDefault, not(containsString("non-default-endpoint-secret")));
+        } finally {
+            if (previous != null) {
+                System.setProperty("mockserver.llmApiKey", previous);
+            } else {
+                System.clearProperty("mockserver.llmApiKey");
+            }
+        }
+    }
+
     // --- Clock endpoint tests ---
 
     @Test

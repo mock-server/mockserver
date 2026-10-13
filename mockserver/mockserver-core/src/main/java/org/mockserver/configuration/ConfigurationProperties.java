@@ -647,6 +647,13 @@ public class ConfigurationProperties {
         "mockserver.launcherName"
     );
 
+    // Documented tuning knobs read only with System.getProperty (RequestMatchers, JsonSchemaValidator): recognised as
+    // system properties, but a properties-file entry or environment variable for them is ignored, so is still reported.
+    private static final Set<String> SYSTEM_PROPERTY_ONLY_KEYS = Set.of(
+        "mockserver.candidateIndexThreshold",
+        "mockserver.jsonSchemaAllowRemoteRefs"
+    );
+
     //   MOCKSERVER_SERVER_PORT - Arguments.serverPort.longEnvironmentVariableName(); the documented
     //                            Docker port env var (the short form SERVER_PORT lacks the MOCKSERVER_
     //                            prefix so is never flagged). Resolved in Main.startServer.
@@ -7353,6 +7360,7 @@ public class ConfigurationProperties {
         // Union in the keys handled by the CLI launcher / launcher scripts rather than by a
         // MOCKSERVER_* constant here (see the allowlist declarations above for why each belongs).
         systemPropertyKeys.addAll(EXTRA_RECOGNISED_SYSTEM_PROPERTY_KEYS);
+        systemPropertyKeys.addAll(SYSTEM_PROPERTY_ONLY_KEYS);
         environmentVariableKeys.addAll(EXTRA_RECOGNISED_ENV_KEYS);
         recognisedSystemPropertyKeys = systemPropertyKeys;
         recognisedEnvironmentVariableKeys = environmentVariableKeys;
@@ -7377,6 +7385,77 @@ public class ConfigurationProperties {
     }
 
     /**
+     * A key in the {@code mockserver.}/{@code MOCKSERVER_} namespace that is not a recognised property: its name, how
+     * it was set, and the recognised keys (in the same form) it was most likely meant to be. It holds the name only,
+     * never the value, so a mistyped credential property cannot disclose the credential.
+     */
+    public static final class UnrecognisedProperty {
+        private final String name;
+        private final String setAs;
+        private final List<String> suggestions;
+        private final String systemPropertyOnlyKey;
+
+        UnrecognisedProperty(String name, String setAs, List<String> suggestions) {
+            this(name, setAs, suggestions, null);
+        }
+
+        private UnrecognisedProperty(String name, String setAs, List<String> suggestions, String systemPropertyOnlyKey) {
+            this.name = name;
+            this.setAs = setAs;
+            this.suggestions = Collections.unmodifiableList(new ArrayList<>(suggestions));
+            this.systemPropertyOnlyKey = systemPropertyOnlyKey;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        /**
+         * How the key was set: {@code system property}, {@code environment variable} or {@code properties-file key}.
+         */
+        public String getSetAs() {
+            return setAs;
+        }
+
+        /**
+         * The recognised keys this one was most likely meant to be, in the same form (empty when none is close).
+         */
+        public List<String> getSuggestions() {
+            return suggestions;
+        }
+
+        /**
+         * True for a known property that is read only as a system property, set somewhere else.
+         */
+        public boolean isSystemPropertyOnly() {
+            return systemPropertyOnlyKey != null;
+        }
+
+        String getDescription() {
+            return setAs + " [" + name + "]";
+        }
+
+        /**
+         * What to do about it: the suggested keys, or how to set a system-property-only key; null when nothing is known.
+         */
+        String getHint() {
+            if (systemPropertyOnlyKey != null) {
+                return "read only as a system property: set -D" + systemPropertyOnlyKey + " instead";
+            }
+            return suggestions.isEmpty() ? null : "did you mean " + String.join(" or ", suggestions) + "?";
+        }
+
+        String getWarning() {
+            if (systemPropertyOnlyKey != null) {
+                return "unrecognised MockServer configuration " + getDescription() + " - " + systemPropertyOnlyKey
+                    + " is read only as a system property, so this will be ignored (set -D" + systemPropertyOnlyKey + " instead)";
+            }
+            return "unrecognised MockServer configuration " + getDescription() + " - it is not a known configuration property and will be ignored "
+                + (suggestions.isEmpty() ? "(check for a typo)" : "(did you mean " + String.join(" or ", suggestions) + "?)");
+        }
+    }
+
+    /**
      * Pure detection helper (no I/O, no global-state reads) used by both the startup
      * warning and the tests: returns, sorted, the description of every supplied key that
      * is in the {@code mockserver.}/{@code MOCKSERVER_} namespace but is not recognised.
@@ -7386,13 +7465,25 @@ public class ConfigurationProperties {
      * @param propertiesFile          loaded properties file (may be {@code null})
      */
     static List<String> findUnknownConfigurationKeys(Set<String> systemPropertyNames, Set<String> environmentVariableNames, Properties propertiesFile) {
+        return findUnrecognisedConfigurationKeys(systemPropertyNames, environmentVariableNames, propertiesFile)
+            .stream()
+            .map(UnrecognisedProperty::getDescription)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * As {@link #findUnknownConfigurationKeys}, with each key's suggested correction. Only key NAMES are read from the
+     * properties file, never values.
+     */
+    static List<UnrecognisedProperty> findUnrecognisedConfigurationKeys(Set<String> systemPropertyNames, Set<String> environmentVariableNames, Properties propertiesFile) {
         enumerateRecognisedKeys();
-        Set<String> warnings = new TreeSet<>();
+        Map<String, UnrecognisedProperty> unrecognised = new TreeMap<>();
 
         if (systemPropertyNames != null) {
             for (String name : systemPropertyNames) {
                 if (name != null && name.startsWith("mockserver.") && !recognisedSystemPropertyKeys.contains(name)) {
-                    warnings.add("system property [" + name + "]");
+                    UnrecognisedProperty property = new UnrecognisedProperty(name, "system property", suggestRecognisedKeys(name, FORM_SYSTEM_PROPERTY));
+                    unrecognised.put(property.getDescription(), property);
                 }
             }
         }
@@ -7400,7 +7491,11 @@ public class ConfigurationProperties {
         if (environmentVariableNames != null) {
             for (String name : environmentVariableNames) {
                 if (name != null && name.startsWith("MOCKSERVER_") && !recognisedEnvironmentVariableKeys.contains(name)) {
-                    warnings.add("environment variable [" + name + "]");
+                    String systemPropertyOnlyKey = systemPropertyOnlyKeyFor(name);
+                    UnrecognisedProperty property = systemPropertyOnlyKey != null
+                        ? new UnrecognisedProperty(name, "environment variable", Collections.emptyList(), systemPropertyOnlyKey)
+                        : new UnrecognisedProperty(name, "environment variable", suggestRecognisedKeys(name, FORM_ENVIRONMENT_VARIABLE));
+                    unrecognised.put(property.getDescription(), property);
                 }
             }
         }
@@ -7409,25 +7504,139 @@ public class ConfigurationProperties {
             Enumeration<?> propertyNames = propertiesFile.propertyNames();
             while (propertyNames.hasMoreElements()) {
                 String name = String.valueOf(propertyNames.nextElement());
+                // a system-property-only key in the file is ignored, so reported, unless the system property is set too
+                boolean systemPropertyOnly = SYSTEM_PROPERTY_ONLY_KEYS.contains(name)
+                    && (systemPropertyNames == null || !systemPropertyNames.contains(name));
                 if (name.startsWith("mockserver.")
-                    && !recognisedSystemPropertyKeys.contains(name)
-                    // mockserver.propertyFile itself can legitimately be set in a file; it is a recognised key,
-                    // so this is covered by the recognised-set check above. No extra exclusions are needed.
-                    && !warnings.contains("system property [" + name + "]")) {
-                    warnings.add("properties-file key [" + name + "]");
+                    && (!recognisedSystemPropertyKeys.contains(name) || systemPropertyOnly)
+                    // a key set both as a system property and in the file is reported once, as the system property
+                    && !unrecognised.containsKey("system property [" + name + "]")) {
+                    UnrecognisedProperty property = systemPropertyOnly
+                        ? new UnrecognisedProperty(name, "properties-file key", Collections.emptyList(), name)
+                        : new UnrecognisedProperty(name, "properties-file key", suggestRecognisedKeys(name, FORM_PROPERTIES_FILE));
+                    unrecognised.put(property.getDescription(), property);
                 }
             }
         }
 
-        return new ArrayList<>(warnings);
+        return new ArrayList<>(unrecognised.values());
+    }
+
+    private static String systemPropertyOnlyKeyFor(String environmentVariable) {
+        String normalised = normaliseKeyForSuggestion(environmentVariable);
+        for (String key : SYSTEM_PROPERTY_ONLY_KEYS) {
+            if (normaliseKeyForSuggestion(key).equals(normalised)) {
+                return key;
+            }
+        }
+        return null;
+    }
+
+    static final int FORM_SYSTEM_PROPERTY = 0;
+    static final int FORM_ENVIRONMENT_VARIABLE = 1;
+    static final int FORM_PROPERTIES_FILE = 2;
+
+    // normalised name -> the key as a system property, environment variable and properties-file key (null: no such form)
+    private static volatile Map<String, String[]> recognisedKeysByNormalisedName;
+
+    private static Map<String, String[]> recognisedKeysByNormalisedName() {
+        Map<String, String[]> index = recognisedKeysByNormalisedName;
+        if (index != null) {
+            return index;
+        }
+        index = new TreeMap<>();
+        for (Map.Entry<String, String> entry : systemPropertyKeyToEnvironmentVariableKey().entrySet()) {
+            index.putIfAbsent(normaliseKeyForSuggestion(entry.getKey()), new String[]{entry.getKey(), entry.getValue(), entry.getKey()});
+        }
+        // keys recognised but not declared as MOCKSERVER_* constants; the plugin and launcher internals are not offered
+        index.putIfAbsent(normaliseKeyForSuggestion("mockserver.serverPort"), new String[]{"mockserver.serverPort", "MOCKSERVER_SERVER_PORT", "mockserver.serverPort"});
+        index.putIfAbsent(normaliseKeyForSuggestion("mockserver.candidateIndexThreshold"), new String[]{"mockserver.candidateIndexThreshold", null, null});
+        index.putIfAbsent(normaliseKeyForSuggestion("mockserver.jsonSchemaAllowRemoteRefs"), new String[]{"mockserver.jsonSchemaAllowRemoteRefs", null, null});
+        recognisedKeysByNormalisedName = index;
+        return index;
+    }
+
+    /**
+     * Lower case, without the {@code mockserver} prefix and without separators, so {@code mockserver.maxExpectations},
+     * {@code MOCKSERVER_MAX_EXPECTATIONS} and {@code mockserver.max_expectations} all normalise to the same name.
+     */
+    static String normaliseKeyForSuggestion(String key) {
+        String lowerCase = key.toLowerCase(Locale.ROOT);
+        if (lowerCase.startsWith("mockserver")) {
+            lowerCase = lowerCase.substring("mockserver".length());
+        }
+        StringBuilder normalised = new StringBuilder(lowerCase.length());
+        for (int i = 0; i < lowerCase.length(); i++) {
+            char character = lowerCase.charAt(i);
+            if ((character >= 'a' && character <= 'z') || (character >= '0' && character <= '9')) {
+                normalised.append(character);
+            }
+        }
+        return normalised.toString();
+    }
+
+    /**
+     * The recognised keys an unrecognised key was most likely meant to be, in the form it was set in: the closest by
+     * edit distance between normalised names (so a key differing only in case or separators is at distance zero), at
+     * most one edit per four characters and at most three, all equally close ones, sorted.
+     */
+    static List<String> suggestRecognisedKeys(String unrecognisedKey, int form) {
+        String normalised = normaliseKeyForSuggestion(unrecognisedKey);
+        if (normalised.isEmpty()) {
+            return Collections.emptyList();
+        }
+        Map<String, String[]> index = recognisedKeysByNormalisedName();
+        int closestDistance = Math.max(1, Math.min(3, normalised.length() / 4));
+        List<String> closest = new ArrayList<>();
+        for (Map.Entry<String, String[]> candidate : index.entrySet()) {
+            String suggestion = candidate.getValue()[form];
+            if (suggestion == null) {
+                continue;
+            }
+            int distance = editDistance(normalised, candidate.getKey());
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closest.clear();
+                closest.add(suggestion);
+            } else if (distance == closestDistance) {
+                closest.add(suggestion);
+            }
+        }
+        Collections.sort(closest);
+        return closest;
+    }
+
+    /**
+     * Optimal string alignment distance: insertions, deletions, substitutions and adjacent transpositions each cost one.
+     */
+    static int editDistance(String left, String right) {
+        int[][] distance = new int[left.length() + 1][right.length() + 1];
+        for (int i = 0; i <= left.length(); i++) {
+            distance[i][0] = i;
+        }
+        for (int j = 0; j <= right.length(); j++) {
+            distance[0][j] = j;
+        }
+        for (int i = 1; i <= left.length(); i++) {
+            for (int j = 1; j <= right.length(); j++) {
+                int cost = left.charAt(i - 1) == right.charAt(j - 1) ? 0 : 1;
+                int best = Math.min(Math.min(distance[i - 1][j] + 1, distance[i][j - 1] + 1), distance[i - 1][j - 1] + cost);
+                if (i > 1 && j > 1 && left.charAt(i - 1) == right.charAt(j - 2) && left.charAt(i - 2) == right.charAt(j - 1)) {
+                    best = Math.min(best, distance[i - 2][j - 2] + 1);
+                }
+                distance[i][j] = best;
+            }
+        }
+        return distance[left.length()][right.length()];
     }
 
     /**
      * Logs a WARN for every {@code mockserver.*} system property, {@code MOCKSERVER_*}
      * environment variable, or {@code mockserver.*} properties-file key that is not a
      * recognised configuration property — the common "I set it but nothing happened"
-     * typo (e.g. {@code -Dmockserver.maxExpectatons=...}). Runs at most once and can
-     * never throw, so it cannot break startup.
+     * typo (e.g. {@code -Dmockserver.maxExpectatons=...}) — naming the recognised key it
+     * was most likely meant to be. Runs at most once and can never throw, so it cannot
+     * break startup.
      */
     static void warnAboutUnknownConfigurationProperties() {
         // compareAndSet ensures the check runs at most once even under concurrent callers, so two
@@ -7438,15 +7647,16 @@ public class ConfigurationProperties {
         try {
             Set<String> systemPropertyNames = System.getProperties().stringPropertyNames();
             Set<String> environmentVariableNames = System.getenv().keySet();
-            List<String> unknownKeys = findUnknownConfigurationKeys(systemPropertyNames, environmentVariableNames, PROPERTIES);
+            List<UnrecognisedProperty> unknownKeys = findUnrecognisedConfigurationKeys(systemPropertyNames, environmentVariableNames, PROPERTIES);
             if (!unknownKeys.isEmpty() && LoggerHolder.LOGGER != null) {
-                for (String unknownKey : unknownKeys) {
+                for (UnrecognisedProperty unknownKey : unknownKeys) {
+                    String description = unknownKey.getWarning();
                     LoggerHolder.LOGGER.logEvent(
                         new LogEntry()
                             .setAlwaysLog(true)
                             .setType(SERVER_CONFIGURATION)
                             .setLogLevel(Level.WARN)
-                            .setMessageFormat("unrecognised MockServer configuration " + unknownKey + " - it is not a known configuration property and will be ignored (check for a typo)")
+                            .setMessageFormat(description)
                     );
                 }
             }
@@ -7478,6 +7688,10 @@ public class ConfigurationProperties {
      * only when the cached value does not also resolve from one of the static tiers.
      */
     public static final String SOURCE_RUNTIME_SET = "runtime-set";
+    /**
+     * Not a recognised property, so ignored: a {@code mockserver.*} / {@code MOCKSERVER_*} key that is probably a typo.
+     */
+    public static final String SOURCE_UNRECOGNISED = "unrecognised";
 
     /**
      * A single resolved configuration property: its {@code mockserver.*} key, the value
@@ -7587,23 +7801,11 @@ public class ConfigurationProperties {
     }
 
     /**
-     * The effective configuration: one {@link ResolvedProperty} per recognised
-     * {@code mockserver.*} property, sorted by name, with sensitive values redacted.
-     * Properties at their built-in default report a {@code (default)} value and the
-     * {@link #SOURCE_DEFAULT} source.
-     *
-     * <p>Cache-first, exactly like {@link #readPropertyHierarchically}: if the in-memory property
-     * cache holds a value for a key (populated by a programmatic setter or by a first read), that
-     * is the value MockServer actually uses and is what is reported. When that cached value also
-     * resolves from one of the static tiers, the originating tier is reported; otherwise it is a
-     * runtime override ({@link #SOURCE_RUNTIME_SET}). Purely observational — reads the cache and
-     * the tiers but never mutates them and never changes how any value resolves.</p>
+     * Every recognised {@code mockserver.*} key, sorted, mapped to its {@code MOCKSERVER_*} environment-variable key:
+     * the constant VALUE is the {@code mockserver.*} key and the constant NAME is the environment-variable key (see
+     * {@link #enumerateRecognisedKeys()}).
      */
-    public static List<ResolvedProperty> effectiveConfiguration() {
-        Map<String, String> cache = getPropertyCache();
-        // Build (systemPropertyKey -> environmentVariableKey) pairs from the MOCKSERVER_*
-        // constants: the constant VALUE is the mockserver.* key and the constant NAME is
-        // the literal MOCKSERVER_* environment-variable key (see enumerateRecognisedKeys()).
+    private static Map<String, String> systemPropertyKeyToEnvironmentVariableKey() {
         Map<String, String> systemPropertyKeyToEnvKey = new TreeMap<>();
         for (Field field : ConfigurationProperties.class.getDeclaredFields()) {
             if (Modifier.isStatic(field.getModifiers())
@@ -7621,6 +7823,40 @@ public class ConfigurationProperties {
                 }
             }
         }
+        return systemPropertyKeyToEnvKey;
+    }
+
+    /**
+     * Whether the named property (for example {@code localBoundIP}) takes its value from a system property, the
+     * properties file, an environment variable or a programmatic setter rather than from its built-in default. Reads
+     * the tiers without changing them or the property cache.
+     */
+    public static boolean isExplicitlyConfigured(String propertyName) {
+        String systemPropertyKey = "mockserver." + propertyName;
+        String environmentVariableKey = systemPropertyKeyToEnvironmentVariableKey().get(systemPropertyKey);
+        if (environmentVariableKey == null) {
+            return false;
+        }
+        return getProgrammaticallySetKeys().contains(systemPropertyKey)
+            || !SOURCE_DEFAULT.equals(resolveEffectiveSource(systemPropertyKey, environmentVariableKey));
+    }
+
+    /**
+     * The effective configuration: one {@link ResolvedProperty} per recognised
+     * {@code mockserver.*} property, sorted by name, with sensitive values redacted.
+     * Properties at their built-in default report a {@code (default)} value and the
+     * {@link #SOURCE_DEFAULT} source.
+     *
+     * <p>Cache-first, exactly like {@link #readPropertyHierarchically}: if the in-memory property
+     * cache holds a value for a key (populated by a programmatic setter or by a first read), that
+     * is the value MockServer actually uses and is what is reported. When that cached value also
+     * resolves from one of the static tiers, the originating tier is reported; otherwise it is a
+     * runtime override ({@link #SOURCE_RUNTIME_SET}). Purely observational — reads the cache and
+     * the tiers but never mutates them and never changes how any value resolves.</p>
+     */
+    public static List<ResolvedProperty> effectiveConfiguration() {
+        Map<String, String> cache = getPropertyCache();
+        Map<String, String> systemPropertyKeyToEnvKey = systemPropertyKeyToEnvironmentVariableKey();
 
         Set<String> programmaticKeys = getProgrammaticallySetKeys();
         List<ResolvedProperty> resolved = new ArrayList<>();
@@ -7670,14 +7906,31 @@ public class ConfigurationProperties {
     }
 
     /**
+     * The {@code mockserver.*} system properties, {@code MOCKSERVER_*} environment variables and properties-file keys
+     * set right now that are not recognised, each with its suggested correction. Names only, never values.
+     */
+    public static List<UnrecognisedProperty> unrecognisedConfiguration() {
+        try {
+            return findUnrecognisedConfigurationKeys(System.getProperties().stringPropertyNames(), System.getenv().keySet(), PROPERTIES);
+        } catch (Throwable throwable) {
+            return Collections.emptyList();
+        }
+    }
+
+    /**
      * Renders the effective configuration as plain text — one
-     * {@code name = value   [source]} line per property — suitable for the
+     * {@code name = value   [source]} line per property, then any unrecognised keys
+     * with the key each was probably meant to be — suitable for the
      * {@code --print-config} CLI flag.
      */
     public static String effectiveConfigurationAsText() {
+        return effectiveConfigurationAsText(effectiveConfiguration(), unrecognisedConfiguration());
+    }
+
+    static String effectiveConfigurationAsText(List<ResolvedProperty> properties, List<UnrecognisedProperty> unrecognised) {
         StringBuilder builder = new StringBuilder();
         builder.append("MockServer effective configuration (value and the source that supplied it):").append(NEW_LINE);
-        for (ResolvedProperty property : effectiveConfiguration()) {
+        for (ResolvedProperty property : properties) {
             builder.append("  ")
                 .append(property.getName())
                 .append(" = ")
@@ -7686,6 +7939,20 @@ public class ConfigurationProperties {
                 .append(property.getSource())
                 .append("]")
                 .append(NEW_LINE);
+        }
+        if (!unrecognised.isEmpty()) {
+            builder.append("Unrecognised configuration, ignored (names only):").append(NEW_LINE);
+            for (UnrecognisedProperty property : unrecognised) {
+                builder.append("  ")
+                    .append(property.getName())
+                    .append("   [")
+                    .append(property.getSetAs())
+                    .append("]");
+                if (property.getHint() != null) {
+                    builder.append("   ").append(property.getHint());
+                }
+                builder.append(NEW_LINE);
+            }
         }
         return builder.toString();
     }
@@ -7701,18 +7968,55 @@ public class ConfigurationProperties {
      * — see {@link EmbeddedCredentialRedaction} — which carries none of that coupling.
      */
     public static String effectiveConfigurationAsJson() {
+        return effectiveConfigurationAsJson(false);
+    }
+
+    /**
+     * As {@link #effectiveConfigurationAsJson()}; when {@code nonDefaultOnly} is true, the properties at their built-in
+     * default are left out. Any unrecognised key follows the properties as an entry whose source is
+     * {@value #SOURCE_UNRECOGNISED}, value {@code (ignored)}, with {@code setAs} and {@code suggestions}.
+     */
+    public static String effectiveConfigurationAsJson(boolean nonDefaultOnly) {
+        return effectiveConfigurationAsJson(effectiveConfiguration(), unrecognisedConfiguration(), nonDefaultOnly);
+    }
+
+    static String effectiveConfigurationAsJson(List<ResolvedProperty> properties, List<UnrecognisedProperty> unrecognised, boolean nonDefaultOnly) {
         StringBuilder builder = new StringBuilder();
         builder.append("[");
-        List<ResolvedProperty> properties = effectiveConfiguration();
-        for (int i = 0; i < properties.size(); i++) {
-            ResolvedProperty property = properties.get(i);
-            if (i > 0) {
+        boolean first = true;
+        for (ResolvedProperty property : properties) {
+            if (nonDefaultOnly && SOURCE_DEFAULT.equals(property.getSource())) {
+                continue;
+            }
+            if (!first) {
                 builder.append(",");
             }
+            first = false;
             builder.append("{\"name\":\"").append(jsonEscape(property.getName()))
                 .append("\",\"value\":\"").append(jsonEscape(property.getValue()))
                 .append("\",\"source\":\"").append(jsonEscape(property.getSource()))
                 .append("\"}");
+        }
+        for (UnrecognisedProperty property : unrecognised) {
+            if (!first) {
+                builder.append(",");
+            }
+            first = false;
+            builder.append("{\"name\":\"").append(jsonEscape(property.getName()))
+                .append("\",\"value\":\"(ignored)\",\"source\":\"").append(SOURCE_UNRECOGNISED)
+                .append("\",\"setAs\":\"").append(jsonEscape(property.getSetAs()))
+                .append("\",\"suggestions\":[");
+            for (int i = 0; i < property.getSuggestions().size(); i++) {
+                if (i > 0) {
+                    builder.append(",");
+                }
+                builder.append("\"").append(jsonEscape(property.getSuggestions().get(i))).append("\"");
+            }
+            builder.append("]");
+            if (property.isSystemPropertyOnly()) {
+                builder.append(",\"systemPropertyOnly\":true");
+            }
+            builder.append("}");
         }
         builder.append("]");
         return builder.toString();

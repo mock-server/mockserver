@@ -366,6 +366,29 @@ This release delivers a sustained performance and memory programme alongside dat
   count it, so a log of 1 MiB zero-byte bodies held about 7 times the heap the budget allowed
   (2.3 times for binary bodies). Such a message is now rendered again whenever it is read, and a
   retained entry holds about what the budget counts. Log output is unchanged.
+
+- **A warning at startup for each insecure default that the next major release will change.** While
+  `forwardProxyBlockPrivateNetworks` (to become `true`), `localBoundIP` (to become `127.0.0.1`),
+  `attemptToProxyIfNoMatchingExpectation` (to become `false`) or the HTTP parsing limits
+  `maxInitialLineLength`, `maxHeaderSize` and `maxChunkSize` (to become 8192, 16384 and 16384 bytes)
+  are left unset, MockServer logs a `WARN` at startup saying what will change and how to keep the
+  current behaviour. It appears once per JVM, however many servers it starts. Setting a property
+  removes its warning (either value for the three switches, any value for the limits), so you can
+  choose now and not be surprised by the major release. No default changes in this release.
+
+- **"Did you mean" for misspelt configuration properties.** The startup warning for a `mockserver.*`
+  system property or properties-file key, or a `MOCKSERVER_*` environment variable, that is not a
+  known property now names the property you most likely meant, in the form you used:
+  `MOCKSERVER_METRICS_ENABLE` suggests `MOCKSERVER_METRICS_ENABLED`, and
+  `mockserver.max_expectations` suggests `mockserver.maxExpectations`. Only the name is shown, never
+  the value.
+
+- **`--print-config`, `GET /mockserver/config` and the dashboard's Server Info tab list the
+  configuration MockServer ignored.** After the properties in effect they list each unrecognised
+  `mockserver.*` / `MOCKSERVER_*` key with its suggested correction (name only, never the value it
+  was set to), and `GET /mockserver/config?nonDefault=true` lists only the properties not at their
+  built-in default, which is everything you have changed. Credentials are still shown only as
+  `***REDACTED***`.
 ### Changed
 
 - **OpenAPI spec problems are now grouped by kind and located.** A spec MockServer cannot read is rejected with the same status code as before, but the message now lists each problem under its kind (syntax error, unreadable location, unresolved `$ref`, wrong value type, missing field, duplicate value, invalid path) with its location: a JSON pointer such as `#/paths/~1pets/get/responses/200`, or the line and column of a YAML or JSON syntax error. Common causes get a hint, such as a tab used for YAML indentation, a `$ref` to a missing schema, or a list of types in an OpenAPI 3.0 schema. A spec that loads but breaks the OpenAPI rules, whose problems were silently dropped, now loads as before and logs them as one `WARN`.
@@ -2110,6 +2133,11 @@ This release delivers a sustained performance and memory programme alongside dat
   was, and in a form `redactSecretsInLog` could not match a credential in. The entry now says how
   many bytes there were (`not an SSL/TLS record: 2000 bytes`) and keeps its stack trace, and the
   message of each exception in it is cut to 256 characters. This covers every entry for such a fault: while a connection's protocol is being detected (including a failed TLS handshake), once its requests are being served, the callback WebSocket, dashboard, MCP and SOCKS handlers, the CONNECT tunnel relays (including a failed TLS handshake with the proxy client and a request or response that could not be relayed), binary proxying (including a binary forward that failed, on MockServer's side and the forward client's), a direct HTTP/2 connection (which showed the start of the dump), a connection to an upstream, a failed forward, and the callback WebSocket client. With `redactSecretsInLog` on, a failed forward's entry masks the request's credentials before a message is cut, so no part of a credential is left at the cut, and the reason in the `502` answer to that request is masked the same way.
+- **Setting `mockserver.candidateIndexThreshold` or `mockserver.jsonSchemaAllowRemoteRefs` as a
+  system property no longer logs a warning that it is not a known configuration property.** Both are
+  documented tuning settings read only as system properties, and as system properties they were
+  always applied; only the warning was wrong. Set in the properties file or as an environment
+  variable they are still ignored, and the warning now says to set them with `-D` instead.
 
 ## [8.0.0] - 2026-09-15
 

@@ -37,14 +37,17 @@ export const LOG_LEVELS = ['TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'OFF'] as 
  * The source tier a resolved configuration value came from. Matches the exact
  * strings emitted by the server's `effectiveConfiguration()` (`--print-config`
  * twin). `default` means the built-in default (value is rendered as `(default)`);
- * sensitive values are redacted server-side to `***REDACTED***`.
+ * sensitive values are redacted server-side to `***REDACTED***`. `unrecognised`
+ * is a `mockserver.*` / `MOCKSERVER_*` key that is not a property, so is ignored
+ * (value `(ignored)`, never the value that was set).
  */
 export type ConfigSource =
   | 'system-property'
   | 'properties-file'
   | 'environment-variable'
   | 'default'
-  | 'runtime-set';
+  | 'runtime-set'
+  | 'unrecognised';
 
 /** One resolved property from the effective configuration. */
 export interface EffectiveConfigProperty {
@@ -54,10 +57,13 @@ export interface EffectiveConfigProperty {
   value: string;
   /** Where the value came from. */
   source: ConfigSource | string;
+  /** For an `unrecognised` key: the recognised keys it was most likely meant to be. */
+  suggestions?: string[];
 }
 
 /** Human-readable label + ordering weight for each known source tier. */
 export const CONFIG_SOURCE_LABELS: Record<string, string> = {
+  unrecognised: 'Unrecognised (ignored)',
   'runtime-set': 'Runtime',
   'system-property': 'System property',
   'environment-variable': 'Environment variable',

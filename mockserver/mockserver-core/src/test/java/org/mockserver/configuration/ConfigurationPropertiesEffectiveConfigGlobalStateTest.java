@@ -132,6 +132,81 @@ public class ConfigurationPropertiesEffectiveConfigGlobalStateTest {
     }
 
     @Test
+    public void viewOfOnlyNonDefaultsMasksEveryCredentialAndShowsNoValueOfAnUnrecognisedKey() throws Exception {
+        java.util.Map<String, String> previous = new java.util.HashMap<>();
+        java.util.List<String> credentialKeys = new java.util.ArrayList<>();
+        for (String key : ConfigurationProperties.recognisedSystemPropertyKeys()) {
+            if (ConfigurationProperties.isSensitivePropertyName(key)) {
+                credentialKeys.add(key);
+            }
+        }
+        String typoKey = "mockserver.maxExpectatons";
+        java.util.List<String> touched = new java.util.ArrayList<>(credentialKeys);
+        touched.add(typoKey);
+        touched.add(EMBEDDED_CREDENTIAL_KEY);
+        touched.add(DEFAULT_KEY);
+        for (String key : touched) {
+            previous.put(key, System.getProperty(key));
+        }
+        // an earlier test may have set DEFAULT_KEY with a setter, which the view rightly reports as runtime-set
+        String previousCachedDefault = getCacheEntry(DEFAULT_KEY);
+        boolean defaultWasProgrammaticallySet = isProgrammaticallySet(DEFAULT_KEY);
+        try {
+            clearCacheEntry(DEFAULT_KEY);
+            removeProgrammaticallySet(DEFAULT_KEY);
+            for (int i = 0; i < credentialKeys.size(); i++) {
+                System.setProperty(credentialKeys.get(i), "credential-value-" + i + "-must-not-appear");
+            }
+            System.setProperty(typoKey, "typo-value-must-not-appear");
+            System.setProperty(EMBEDDED_CREDENTIAL_KEY, "X-Api-Key=embedded-value-must-not-appear");
+            System.clearProperty(DEFAULT_KEY);
+
+            String json = ConfigurationProperties.effectiveConfigurationAsJson(true);
+            String text = ConfigurationProperties.effectiveConfigurationAsText();
+
+            assertThat(credentialKeys.size(), org.hamcrest.Matchers.greaterThan(20));
+            for (String output : java.util.List.of(json, text)) {
+                assertThat(output, not(containsString("must-not-appear")));
+                assertThat(output, containsString(typoKey));
+                assertThat(output, containsString("mockserver.llmApiKey"));
+            }
+            for (String key : credentialKeys) {
+                assertThat(key, json, containsString("{\"name\":\"" + key + "\",\"value\":\"" + REDACTED_VALUE + "\""));
+            }
+            assertThat(json, containsString("\"name\":\"" + typoKey + "\",\"value\":\"(ignored)\",\"source\":\"unrecognised\",\"setAs\":\"system property\",\"suggestions\":[\"mockserver.maxExpectations\"]"));
+            assertThat(json, not(containsString("\"source\":\"" + SOURCE_DEFAULT + "\"")));
+            assertThat(json, not(containsString("\"name\":\"" + DEFAULT_KEY + "\"")));
+            assertThat(ConfigurationProperties.effectiveConfigurationAsJson(false), containsString("\"name\":\"" + DEFAULT_KEY + "\""));
+            assertThat(text, containsString(typoKey + "   [system property]   did you mean mockserver.maxExpectations?"));
+        } finally {
+            for (String key : touched) {
+                restore(key, previous.get(key));
+            }
+            restoreCacheEntry(DEFAULT_KEY, previousCachedDefault);
+            restoreProgrammaticallySet(DEFAULT_KEY, defaultWasProgrammaticallySet);
+        }
+    }
+
+    @Test
+    public void aPropertyIsExplicitlyConfiguredOnlyWhileATierSuppliesIt() throws Exception {
+        String key = "mockserver.localBoundIP";
+        String previous = System.getProperty(key);
+        boolean wasProgrammaticallySet = isProgrammaticallySet(key);
+        try {
+            System.clearProperty(key);
+            removeProgrammaticallySet(key);
+            assertThat("MOCKSERVER_LOCAL_BOUND_IP must not be set for this test", System.getenv("MOCKSERVER_LOCAL_BOUND_IP"), org.hamcrest.Matchers.nullValue());
+            assertThat(ConfigurationProperties.isExplicitlyConfigured("localBoundIP"), is(false));
+            System.setProperty(key, "0.0.0.0");
+            assertThat(ConfigurationProperties.isExplicitlyConfigured("localBoundIP"), is(true));
+            assertThat(ConfigurationProperties.isExplicitlyConfigured("notAProperty"), is(false));
+        } finally {
+            restoreProgrammaticallySet(key, wasProgrammaticallySet);
+            restore(key, previous);
+        }
+    }
+
+    @Test
     public void redactsACredentialEmbeddedInsideAStructuredValueOnEverySurface() throws Exception {
         // GET /mockserver/config is the SIBLING of GET /mockserver/configuration on the same, by
         // default unauthenticated, control plane. Redacting by whole property name only leaves this

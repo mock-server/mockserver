@@ -4,21 +4,21 @@
 2026-07-27 in response to
 [GHSA-7pwj-xvc2-hfpc](https://github.com/mock-server/mockserver-monorepo/security/advisories/GHSA-7pwj-xvc2-hfpc)
 and are removed from this plan; evidence of what shipped is in `changelog.md` and the advisory, not
-here. The remaining six items are still open (last verified 2026-06-19: every other property and
-mitigation is wired in `ConfigurationProperties.java` / `Configuration.java`, and every other default is still
-the insecure value below). The "ship every flip in one release" goal below was deliberately broken for the two
+here. DEF-4 (TLSv1/TLSv1.1 off by default) also shipped, in 8.0.0 (commit 387f904a0:
+`tlsAllowInsecureProtocols` defaults to `false` and `tlsProtocols` to `TLSv1.2,TLSv1.3`), and is removed
+too. The remaining five items are still open: their defaults are still the insecure values below. The "ship every flip in one release" goal below was deliberately broken for the two
 template items, because leaving a reported RCE default in place until the next major release was not
 defensible; the rest still travel together. Insecure-by-default configuration values to flip in a single major
 release.
 **Created:** 2026-05-26 (supersedes `security-remediation.md`)
-**Last verified against code:** 2026-06-19
+**Last verified against code:** 2026-10-13
 **Scope:** Configuration default changes only. All underlying mitigations (timeouts, validators, body limits, secure RNG, XXE blocks) have already shipped and are wired behind these properties; only the defaults remain.
 
 ## Goals
 
 1. Ship every insecure default flip in one release so users perform a single migration.
 2. Each flip is **fully reversible** by setting one property — no functionality is removed.
-3. DEF-1 and DEF-4 already emit a WARN today when set to their insecure values, so users of those properties have had a deprecation window. DEF-5, DEF-6, DEF-7, and DEF-8 do **not** currently warn — each implementation PR for those four items must add a startup WARN in a prior minor release before the default is flipped.
+3. DEF-1 already emits a WARN when set to its insecure value, so its users have had a deprecation window. DEF-5, DEF-6, DEF-7 and DEF-8 warn at startup since the release after 8.0.0 (`UpcomingDefaultChanges`, logged once per JVM from `LifeCycle.startedServer`, only while the property is not set), so their deprecation window has started and the flips may land in the next major release.
 4. One consolidated migration guide. One major version bump.
 
 ## Items
@@ -26,7 +26,6 @@ release.
 | ID | Property | Old default | New default | Breaking? |
 |----|----------|-------------|-------------|-----------|
 | DEF-1 | `forwardProxyTLSX509CertificatesTrustManagerType` | `ANY` | `JVM` | Yes |
-| DEF-4 | `tlsAllowInsecureProtocols` | `true` | `false` | Yes (drops TLSv1/1.1) |
 | DEF-5 | `forwardProxyBlockPrivateNetworks` | `false` | `true` | Yes |
 | DEF-6 | `localBoundIP` | `""` (all interfaces, `0.0.0.0`) | `127.0.0.1` | Yes (large impact) |
 | DEF-7 | `attemptToProxyIfNoMatchingExpectation` | `true` | `false` | Yes |
@@ -42,17 +41,6 @@ release.
 **Flip:** Default to `JVM` so the JDK trust store validates upstream certificates the same way any standard Java HTTPS client would.
 **Opt-out:** `mockserver.forwardProxyTLSX509CertificatesTrustManagerType=ANY` (a WARN is logged when this is in effect — already implemented). Users with a small set of trusted self-signed CAs should prefer `=CUSTOM` plus `mockserver.forwardProxyTLSCustomTrustX509Certificates` pointing at the CA bundle, rather than disabling validation entirely.
 **Why it's safe to flip now:** the WARN has been in place since the prior security remediation pass; no functionality is removed.
-
----
-
-## DEF-4 — Drop TLSv1 and TLSv1.1 by default
-
-**Property:** `mockserver.tlsAllowInsecureProtocols`
-**Today:** Defaults to `true`. The `tlsProtocols` default is `"TLSv1,TLSv1.1,TLSv1.2"`, so deprecated TLSv1 and TLSv1.1 (vulnerable to BEAST, POODLE; deprecated per RFC 8996) are still honoured. A WARN is logged when `tlsProtocols` includes them.
-**Flip:** Default `tlsAllowInsecureProtocols` to `false`. TLSv1 and TLSv1.1 entries are stripped from `tlsProtocols`, leaving **TLSv1.2 only** out of the box. TLSv1.3 is *not* added by this flip — users who want TLSv1.3 must add it to `tlsProtocols` explicitly.
-**Opt-out:** `mockserver.tlsAllowInsecureProtocols=true`.
-**Affected users:** Anyone whose tests still target ancient TLS stacks (very rare in 2026). Opt-out is one property.
-**Consider also:** flipping the `tlsProtocols` default to `"TLSv1.2,TLSv1.3"` in the same release so TLSv1.3 is on by default. Out of scope of this plan as written, but worth deciding at implementation time.
 
 ---
 
@@ -72,6 +60,7 @@ release.
 **Today:** Defaults to `""` which resolves to `0.0.0.0`, listening on every interface. A developer on a shared / corporate network exposes their MockServer instance to the LAN by default.
 **Flip:** Default to `127.0.0.1` (IPv4 loopback). Inside containers users must set `0.0.0.0` explicitly to reach MockServer from the host.
 **Opt-out:** `mockserver.localBoundIP=0.0.0.0` or any specific interface.
+**Startup warning:** while `localBoundIP` is not set, the warning tells container users to set `MOCKSERVER_LOCAL_BOUND_IP=0.0.0.0`; when this flip lands, bake that ENV into the Dockerfiles and Helm chart as planned, and the warning needs no change for them.
 **Compatibility risk:** **This is the most disruptive flip in this release.** Every Docker / Kubernetes / Helm deployment will need to set `MOCKSERVER_LOCAL_BOUND_IP=0.0.0.0`. Bundle this change with:
 - An updated Dockerfile `ENV MOCKSERVER_LOCAL_BOUND_IP=0.0.0.0` (so the container image keeps working out-of-the-box; the loopback default only takes effect for raw JAR / WAR users)
 - Updated `docker-compose` and Helm chart examples
@@ -125,7 +114,7 @@ For the record so future contributors don't re-litigate:
 
 - **Version:** Single major version bump.
 - **Migration guide:** One document with one section per `DEF-*` ID, each containing: *what changed*, *how to detect if you're affected*, and *one-line opt-out*.
-- **Release notes:** Top-line summary "secure-by-default" framing; explicit BREAKING block listing the remaining flips (DEF-2 and DEF-3 already shipped 2026-07-27 and are not part of this release).
+- **Release notes:** Top-line summary "secure-by-default" framing; explicit BREAKING block listing the remaining flips (DEF-2 and DEF-3 already shipped 2026-07-27, and DEF-4 in 8.0.0, so they are not part of this release).
 - **Container image:** Set `ENV MOCKSERVER_LOCAL_BOUND_IP=0.0.0.0` in the Dockerfile so the container experience is unchanged. Document this carve-out clearly so users running the raw JAR/WAR know they're getting the loopback default.
 - **Helm chart:** Pass `MOCKSERVER_LOCAL_BOUND_IP=0.0.0.0` (already needed for in-cluster reachability).
 - **Pre-release validation:** Run the full Buildkite suite plus a manual smoke test against the official Docker image and the Helm chart to confirm `DEF-6` does not break the default container path.
@@ -134,8 +123,8 @@ For the record so future contributors don't re-litigate:
 
 All flips are independent property changes; order does not matter functionally. Suggested PR sequencing for review clarity:
 
-0. **Prerequisite (prior minor release):** add startup WARN logs for DEF-5, DEF-6, DEF-7, and DEF-8 when set to their insecure defaults. These four items have no existing deprecation log, so a release window with a WARN must precede the default flip.
-1. DEF-1, DEF-4 — single-character default changes; trivial review.
+0. **Done:** startup WARNs for DEF-5, DEF-6, DEF-7 and DEF-8 (`UpcomingDefaultChanges`, logged from `LifeCycle.startedServer`). When the flips land, delete the flipped entries from `UpcomingDefaultChanges`, their tests and the "Default changing in the next major release" notes in `configuration_properties.html`. The WAR deployments do not emit these warnings; decide whether they should before the flip (DEF-5 and DEF-7 apply to the WAR; DEF-6 and DEF-8 do not, as the servlet container binds and parses).
+1. DEF-1 — a single-value default change; trivial review.
 2. DEF-5, DEF-7 — boolean flips on existing well-tested validators.
 3. DEF-8 — three numeric defaults; verify all integration tests still pass.
 4. DEF-6 — bind-address change; bundled with Dockerfile ENV and Helm chart updates.

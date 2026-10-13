@@ -304,8 +304,9 @@ export default function ConfigurationDialog({
 // Server Info tab — read-only effective configuration + bound ports
 // ---------------------------------------------------------------------------
 
-/** Preferred display order of the source tiers (most specific override first). */
+/** Preferred display order of the source tiers (ignored keys, then most specific override first). */
 const SOURCE_ORDER = [
+  'unrecognised',
   'runtime-set',
   'system-property',
   'environment-variable',
@@ -412,6 +413,7 @@ function ServerInfoPanel({
                     </TableCell>
                     <TableCell sx={{ typography: 'subtitle2', fontWeight: 400, fontFamily: monospaceFontFamily, wordBreak: 'break-all' }}>
                       {p.value}
+                      {p.suggestions && p.suggestions.length > 0 && ` did you mean ${p.suggestions.join(' or ')}?`}
                     </TableCell>
                   </TableRow>
                 ))}

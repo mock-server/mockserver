@@ -969,9 +969,16 @@
               "path": [
                 "mockserver",
                 "config"
+              ],
+              "query": [
+                {
+                  "key": "nonDefault",
+                  "value": "false",
+                  "disabled": true
+                }
               ]
             },
-            "description": "Returns every configuration property with its resolved value and the source tier that supplied it, so an operator can see which of the property file, system properties, environment variables or defaults won. Values detected as sensitive are redacted. Distinct from `/mockserver/configuration`, which reads and writes the mutable runtime configuration.\n\nFull API reference: https://www.mock-server.com/mock_server/mockserver_clients.html"
+            "description": "Returns every configuration property with its resolved value and the source tier that supplied it, so an operator can see which of the property file, system properties, environment variables or defaults won. Values detected as sensitive are redacted. Any `mockserver.*` system property, `MOCKSERVER_*` environment variable or properties-file key that is not a known property follows, with source `unrecognised`, value `(ignored)` and the known properties it was most likely meant to be; the value it was set to is never returned. Distinct from `/mockserver/configuration`, which reads and writes the mutable runtime configuration.\n\nFull API reference: https://www.mock-server.com/mock_server/mockserver_clients.html"
           }
         },
         {

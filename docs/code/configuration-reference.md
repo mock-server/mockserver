@@ -29,7 +29,33 @@ A misspelled property (e.g. `-Dmockserver.maxExpectatons=…` or `MOCKSERVER_MET
 - an environment variable whose name starts with `MOCKSERVER_` but isn't a known key,
 - a `mockserver.*` key in the loaded properties file that isn't a known key.
 
-The recognised-key set is derived **reflectively from the `MOCKSERVER_*` constant fields** in `ConfigurationProperties` (the constant's value is the `mockserver.*` key; the constant's field name is the `MOCKSERVER_*` env-var key), so it can never drift from the actual properties — adding a new property automatically extends recognition. Keys outside the `mockserver.`/`MOCKSERVER_` namespace (e.g. `JAVA_HOME`, `PATH`) are never flagged, so unrelated environment variables do not produce false positives. The check can never throw, so it cannot break startup. Only key **names** are logged, never values.
+The recognised-key set is derived **reflectively from the `MOCKSERVER_*` constant fields** in `ConfigurationProperties` (the constant's value is the `mockserver.*` key; the constant's field name is the `MOCKSERVER_*` env-var key), so it can never drift from the actual properties — adding a new property automatically extends recognition. A short allowlist adds the keys read elsewhere: the launcher's `serverPort` / `MOCKSERVER_SERVER_PORT` and the Maven plugin and launcher internals. The two tuning knobs read only with `System.getProperty`, `mockserver.candidateIndexThreshold` and `mockserver.jsonSchemaAllowRemoteRefs` (`SYSTEM_PROPERTY_ONLY_KEYS`), are recognised as system properties only: in the properties file, or as the matching `MOCKSERVER_*` environment variable, they are still reported, with a warning that they are read only as a system property and the `-D` form to use. Keys outside the `mockserver.`/`MOCKSERVER_` namespace (e.g. `JAVA_HOME`, `PATH`) are never flagged, so unrelated environment variables do not produce false positives. The check can never throw, so it cannot break startup. Only key **names** are logged, never values.
+
+**Did you mean.** Each warning names the recognised key the typo was most likely meant to be, in the form it was set in (`suggestRecognisedKeys`): names are normalised (lower case, `mockserver` prefix and separators removed) so `mockserver.max_expectations` and `MOCKSERVER_MAXEXPECTATIONS` match exactly; otherwise the closest normalised names by optimal-string-alignment edit distance are offered, up to one edit per four characters and at most three; every equally close key is offered. Without a suggestion the warning still ends `(check for a typo)`. It runs only at startup and on demand from the effective-configuration view (below), over every recognised key (one per `MOCKSERVER_*` constant plus the allowlist), never on the request path. The launcher and plugin internals are recognised but never suggested; the two system-property-only knobs are suggested only for a mistyped system property, never for a properties-file key or an environment variable, where they would be ignored too.
+
+## Effective-configuration view
+
+`--print-config`, `GET /mockserver/config` and the dashboard's Server Info tab show every recognised property's resolved value and the tier that supplied it (`ConfigurationProperties.effectiveConfiguration()`; see [cli.md](cli.md#--print-config-top-level-diagnostic)). Every value goes through `redactSensitiveValue`, so a credential-shaped name is masked whole and a credential inside `prometheusRemoteWriteHeaders` / `llmBackendsConfig` per header / field. Two additions answer "what have I changed, and what did MockServer ignore?":
+
+| Addition | Behaviour |
+|---|---|
+| `GET /mockserver/config?nonDefault=true` | leaves out the properties whose source is `default`, so what remains is everything set by a system property, the properties file, an environment variable or a programmatic setter |
+| unrecognised keys | after the properties, each unrecognised key from `unrecognisedConfiguration()` (the same detection as the startup warning, read live): in JSON `{"name", "value": "(ignored)", "source": "unrecognised", "setAs", "suggestions": [...]}`, in text a trailing `Unrecognised configuration, ignored (names only)` section. `UnrecognisedProperty` carries the key's name only, so its value cannot reach any output |
+
+Showing each property's built-in default value beside its effective value was not done: the default is computed inside each typed getter (some from the heap size or another property), so the view reports `(default)` rather than a value it would have to guess. `ConfigurationPropertiesEffectiveConfigGlobalStateTest` sets every credential-shaped recognised key and a mistyped key to secret values and asserts none appears in the `nonDefault` JSON or the text.
+
+## Warnings about upcoming default changes
+
+The next major release changes four groups of insecure defaults (`docs/plans/later/security-defaults.md`, DEF-5 to DEF-8). Until then `UpcomingDefaultChanges` gives a startup `WARN` for each one left in place:
+
+| Property | Warned while | Future default |
+|---|---|---|
+| `forwardProxyBlockPrivateNetworks` | not set and not `true` | `true` |
+| `localBoundIP` | not set and blank (every interface) | `127.0.0.1` |
+| `attemptToProxyIfNoMatchingExpectation` | not set and `true` | `false` |
+| `maxInitialLineLength`, `maxHeaderSize`, `maxChunkSize` | each not set and above its future default (one warning lists them) | `8192`, `16384`, `16384` |
+
+"Set" means set on the server's `Configuration` instance (its field is non-null) or resolved from a system property, the properties file, an environment variable or a programmatic setter (`ConfigurationProperties.isExplicitlyConfigured`), so setting a property (to either value for the three switches, any value for the limits) removes its warning. `LifeCycle.startedServer` emits them once per JVM — the first server whose logger is enabled for `WARN` claims the latch — so tests that start many servers log them once, and nothing on the request path changes. The Netty server only: the WAR deployments do not emit them.
 
 ## Configuration forms
 
@@ -295,7 +321,7 @@ Controls when `RequestMatchers` switches from the full linear scan of the `Circu
 
 **Read in**: `RequestMatchers.resolveCandidateIndexThreshold()` via `System.getProperty("mockserver.candidateIndexThreshold")`, called once per `RequestMatchers` construction. Changing it at runtime after construction has no effect (the resolved value is stored as an instance field). In tests, use `RequestMatchers.withCandidateIndexThreshold(int)` to inject a low threshold without mutating global state.
 
-**How to set**: pass `-Dmockserver.candidateIndexThreshold=N` on the JVM command line. This property is **not** recognised by the unknown-key warning scan (it is not a `MOCKSERVER_*` constant in `ConfigurationProperties`), so no warning is emitted if it is misspelled.
+**How to set**: pass `-Dmockserver.candidateIndexThreshold=N` on the JVM command line. It is not a `MOCKSERVER_*` constant in `ConfigurationProperties`, so the unknown-key scan recognises it through its allowlist: the correct name is not flagged as a system property, and a misspelt system property is flagged with this name suggested. It has no environment-variable or properties-file form: set there, it is reported as ignored, with the `-D` form to use.
 
 **When to change**: the default of `64` is set above the measured ≈16 no-regression floor and at the n=100 clear-win point. Raising it delays index engagement (more expectations are handled by the linear scan). Lowering it engages the index earlier — useful only for benchmarking or high-expectation-count workloads where the index is observed to help but the default threshold is not reached.
 
