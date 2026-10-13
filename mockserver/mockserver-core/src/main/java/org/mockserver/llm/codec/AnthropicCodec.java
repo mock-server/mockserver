@@ -38,19 +38,29 @@ public class AnthropicCodec implements ProviderCodec {
      */
     public static final String REFUSAL_STOP_DETAILS = "{\"type\":\"refusal\",\"category\":null,\"explanation\":null}";
 
-    private final boolean sendsDiagnostics;
+    /**
+     * The {@code service_tier} the real API reports for a request that did not run on the priority tier.
+     */
+    static final String SERVICE_TIER = "standard";
+
+    /**
+     * The {@code inference_geo} the Claude API reports by default: inference may run in any geography.
+     */
+    static final String INFERENCE_GEO = "global";
+
+    private final boolean claudeApi;
 
     public AnthropicCodec() {
         this(true);
     }
 
     /**
-     * Every message carries {@code "container": null} unless a container tool ran, and the Claude API
-     * also sends {@code "diagnostics": null} unless the request opted in to cache diagnostics, which
-     * Bedrock does not support; {@code sendsDiagnostics} false leaves that field out for Bedrock.
+     * Every message carries {@code "container": null} unless a container tool ran. Only the Claude API
+     * sends {@code "diagnostics": null} (unless the request opted in to cache diagnostics) and
+     * {@code usage.inference_geo}; {@code claudeApi} false leaves both out for Bedrock InvokeModel.
      */
-    AnthropicCodec(boolean sendsDiagnostics) {
-        this.sendsDiagnostics = sendsDiagnostics;
+    AnthropicCodec(boolean claudeApi) {
+        this.claudeApi = claudeApi;
     }
 
     @Override
@@ -135,27 +145,10 @@ public class AnthropicCodec implements ProviderCodec {
             root.putNull("stop_details");
         }
 
-        // usage
-        ObjectNode usage = root.putObject("usage");
-        if (sendsDiagnostics) {
-            root.putNull("diagnostics");
-        }
         Usage completionUsage = completion.getUsage();
-        int inputTokens = completionUsage != null && completionUsage.getInputTokens() != null ? completionUsage.getInputTokens() : 0;
-        int outputTokens = completionUsage != null && completionUsage.getOutputTokens() != null ? completionUsage.getOutputTokens() : 0;
-        usage.put("input_tokens", inputTokens);
-        usage.put("output_tokens", outputTokens);
-        // Cached/cache-creation tokens are emitted only when set (non-null, non-zero) so existing
-        // fixtures stay byte-identical when these optional fields are unset. Native Anthropic keys.
-        if (completionUsage != null) {
-            Integer cachedInputTokens = completionUsage.getCachedInputTokens();
-            if (cachedInputTokens != null && cachedInputTokens != 0) {
-                usage.put("cache_read_input_tokens", cachedInputTokens);
-            }
-            Integer cacheCreationTokens = completionUsage.getCacheCreationTokens();
-            if (cacheCreationTokens != null && cacheCreationTokens != 0) {
-                usage.put("cache_creation_input_tokens", cacheCreationTokens);
-            }
+        root.set("usage", messageUsage(completionUsage, outputTokens(completionUsage), true));
+        if (claudeApi) {
+            root.putNull("diagnostics");
         }
 
         try {
@@ -176,29 +169,12 @@ public class AnthropicCodec implements ProviderCodec {
         String modelName = model != null ? model : "unknown";
 
         Usage completionUsage = completion.getUsage();
-        int inputTokens = completionUsage != null && completionUsage.getInputTokens() != null ? completionUsage.getInputTokens() : 0;
-        int outputTokens = completionUsage != null && completionUsage.getOutputTokens() != null ? completionUsage.getOutputTokens() : 0;
 
-        // 1. message_start — mirror cached/cache-creation tokens into the message_start usage when
-        // set (non-null, non-zero), matching the non-streaming encode(). Omitted when unset so
-        // existing streaming fixtures stay byte-identical.
-        StringBuilder messageStartUsage = new StringBuilder();
-        messageStartUsage.append("{\"input_tokens\":").append(inputTokens).append(",\"output_tokens\":1");
-        if (completionUsage != null) {
-            Integer cachedInputTokens = completionUsage.getCachedInputTokens();
-            if (cachedInputTokens != null && cachedInputTokens != 0) {
-                messageStartUsage.append(",\"cache_read_input_tokens\":").append(cachedInputTokens);
-            }
-            Integer cacheCreationTokens = completionUsage.getCacheCreationTokens();
-            if (cacheCreationTokens != null && cacheCreationTokens != 0) {
-                messageStartUsage.append(",\"cache_creation_input_tokens\":").append(cacheCreationTokens);
-            }
-        }
-        messageStartUsage.append("}");
+        // 1. message_start — the real API reports one output token so far and no output breakdown yet
         String messageStartData = "{\"type\":\"message_start\",\"message\":{\"id\":\"" + messageId +
             "\",\"type\":\"message\",\"role\":\"assistant\",\"content\":[],\"container\":null,\"model\":\"" + escapeJson(modelName) +
-            "\",\"stop_reason\":null,\"stop_sequence\":null,\"stop_details\":null,\"usage\":" + messageStartUsage +
-            (sendsDiagnostics ? ",\"diagnostics\":null" : "") + "}}";
+            "\",\"stop_reason\":null,\"stop_sequence\":null,\"stop_details\":null,\"usage\":" + messageUsage(completionUsage, 1, false) +
+            (claudeApi ? ",\"diagnostics\":null" : "") + "}}";
         events.add(sseEvent().withEvent("message_start").withData(messageStartData));
 
         int contentIndex = 0;
@@ -283,7 +259,7 @@ public class AnthropicCodec implements ProviderCodec {
         String stopReason = mapStopReason(completion.getStopReason(), hasToolCalls);
         String stopDetails = REFUSAL.equals(stopReason) ? REFUSAL_STOP_DETAILS : "null";
         String messageDeltaData = "{\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"" + escapeJson(stopReason) +
-            "\",\"stop_sequence\":null,\"stop_details\":" + stopDetails + ",\"container\":null},\"usage\":{\"output_tokens\":" + outputTokens + "}}";
+            "\",\"stop_sequence\":null,\"stop_details\":" + stopDetails + ",\"container\":null},\"usage\":" + messageDeltaUsage(completionUsage) + "}";
         events.add(sseEvent().withEvent("message_delta").withData(messageDeltaData));
 
         // 5. message_stop
@@ -291,6 +267,63 @@ public class AnthropicCodec implements ProviderCodec {
 
         // Apply streaming physics
         return StreamingPhysicsExpander.applyPhysics(events, physics);
+    }
+
+    /**
+     * The {@code Usage} of a whole message or of the message in {@code message_start}, in the field
+     * order the real API sends. The cache counts are always present, 0 when unset; the default
+     * 5-minute cache TTL receives every cache write.
+     */
+    private ObjectNode messageUsage(Usage completionUsage, int outputTokens, boolean withOutputDetails) {
+        ObjectNode usage = OBJECT_MAPPER.createObjectNode();
+        putInputUsage(usage, completionUsage);
+        ObjectNode cacheCreation = usage.putObject("cache_creation");
+        cacheCreation.put("ephemeral_5m_input_tokens", cacheCreationTokens(completionUsage));
+        cacheCreation.put("ephemeral_1h_input_tokens", 0);
+        usage.put("output_tokens", outputTokens);
+        if (withOutputDetails) {
+            putOutputTokensDetails(usage, completionUsage);
+        }
+        usage.put("service_tier", SERVICE_TIER);
+        if (claudeApi) {
+            usage.put("inference_geo", INFERENCE_GEO);
+        }
+        return usage;
+    }
+
+    /**
+     * The cumulative {@code MessageDeltaUsage} on {@code message_delta}.
+     */
+    private static ObjectNode messageDeltaUsage(Usage completionUsage) {
+        ObjectNode usage = OBJECT_MAPPER.createObjectNode();
+        putInputUsage(usage, completionUsage);
+        usage.put("output_tokens", outputTokens(completionUsage));
+        putOutputTokensDetails(usage, completionUsage);
+        return usage;
+    }
+
+    private static void putInputUsage(ObjectNode usage, Usage completionUsage) {
+        usage.put("input_tokens", completionUsage != null && completionUsage.getInputTokens() != null ? completionUsage.getInputTokens() : 0);
+        usage.put("cache_creation_input_tokens", cacheCreationTokens(completionUsage));
+        usage.put("cache_read_input_tokens", completionUsage != null && completionUsage.getCachedInputTokens() != null ? completionUsage.getCachedInputTokens() : 0);
+    }
+
+    /**
+     * The real API sends {@code output_tokens_details} only for models that report reasoning, so it is
+     * present only when the completion sets {@code reasoningTokens}.
+     */
+    private static void putOutputTokensDetails(ObjectNode usage, Usage completionUsage) {
+        if (completionUsage != null && completionUsage.getReasoningTokens() != null) {
+            usage.putObject("output_tokens_details").put("thinking_tokens", completionUsage.getReasoningTokens());
+        }
+    }
+
+    private static int outputTokens(Usage completionUsage) {
+        return completionUsage != null && completionUsage.getOutputTokens() != null ? completionUsage.getOutputTokens() : 0;
+    }
+
+    private static int cacheCreationTokens(Usage completionUsage) {
+        return completionUsage != null && completionUsage.getCacheCreationTokens() != null ? completionUsage.getCacheCreationTokens() : 0;
     }
 
     @Override

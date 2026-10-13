@@ -17,7 +17,8 @@ import static org.mockserver.model.Usage.usage;
  * cache-creation, and reasoning token counts ({@link Usage}) into its response
  * usage block using the provider's native key names — and, crucially, OMITS
  * them entirely (byte-identical to before) when those fields are unset or zero,
- * so existing fixtures/golden files are unchanged.
+ * so existing fixtures/golden files are unchanged. Anthropic is the exception: the
+ * real Messages API always sends both cache counts, so they are 0 when unset.
  *
  * <p>Covers both the non-streaming {@code encode()} and the streaming
  * {@code encodeStreaming()} usage paths where the provider emits usage.
@@ -50,19 +51,21 @@ public class LlmCachedReasoningTokenEncodingTest {
     }
 
     @Test
-    public void anthropicOmitsCachedAndCacheCreationTokensWhenUnset() throws Exception {
+    public void anthropicSendsZeroCachedAndCacheCreationTokensWhenUnset() throws Exception {
         Completion completion = completion()
             .withText("hi")
             .withUsage(usage().withInputTokens(100).withOutputTokens(20));
 
         JsonNode usage = parse(new AnthropicCodec().encode(completion, "claude-sonnet-4-20250514")).get("usage");
 
-        assertThat(usage.has("cache_read_input_tokens"), is(false));
-        assertThat(usage.has("cache_creation_input_tokens"), is(false));
+        assertThat(usage.get("cache_read_input_tokens").isInt(), is(true));
+        assertThat(usage.get("cache_read_input_tokens").asInt(), is(0));
+        assertThat(usage.get("cache_creation_input_tokens").isInt(), is(true));
+        assertThat(usage.get("cache_creation_input_tokens").asInt(), is(0));
     }
 
     @Test
-    public void anthropicOmitsCachedTokensWhenZero() throws Exception {
+    public void anthropicSendsZeroCachedTokensWhenZero() throws Exception {
         Completion completion = completion()
             .withText("hi")
             .withUsage(usage().withInputTokens(100).withOutputTokens(20)
@@ -70,8 +73,10 @@ public class LlmCachedReasoningTokenEncodingTest {
 
         JsonNode usage = parse(new AnthropicCodec().encode(completion, "claude-sonnet-4-20250514")).get("usage");
 
-        assertThat(usage.has("cache_read_input_tokens"), is(false));
-        assertThat(usage.has("cache_creation_input_tokens"), is(false));
+        assertThat(usage.get("cache_read_input_tokens").isInt(), is(true));
+        assertThat(usage.get("cache_read_input_tokens").asInt(), is(0));
+        assertThat(usage.get("cache_creation_input_tokens").isInt(), is(true));
+        assertThat(usage.get("cache_creation_input_tokens").asInt(), is(0));
     }
 
     @Test
@@ -90,7 +95,7 @@ public class LlmCachedReasoningTokenEncodingTest {
     }
 
     @Test
-    public void anthropicStreamingOmitsCachedTokensWhenUnset() throws Exception {
+    public void anthropicStreamingSendsZeroCachedTokensWhenUnset() throws Exception {
         Completion completion = completion()
             .withText("hi")
             .withUsage(usage().withInputTokens(100).withOutputTokens(20));
@@ -98,8 +103,10 @@ public class LlmCachedReasoningTokenEncodingTest {
         List<SseEvent> events = new AnthropicCodec().encodeStreaming(completion, "claude-sonnet-4-20250514", null);
 
         JsonNode usage = OBJECT_MAPPER.readTree(events.get(0).getData()).get("message").get("usage");
-        assertThat(usage.has("cache_read_input_tokens"), is(false));
-        assertThat(usage.has("cache_creation_input_tokens"), is(false));
+        assertThat(usage.get("cache_read_input_tokens").isInt(), is(true));
+        assertThat(usage.get("cache_read_input_tokens").asInt(), is(0));
+        assertThat(usage.get("cache_creation_input_tokens").isInt(), is(true));
+        assertThat(usage.get("cache_creation_input_tokens").asInt(), is(0));
     }
 
     // -------------------------------------------------------------------

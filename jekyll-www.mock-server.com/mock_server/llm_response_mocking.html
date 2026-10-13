@@ -1544,10 +1544,14 @@ geminiLive()
 <p>
     <code>org.mockserver.model.Usage</code> has three optional fields in addition to the baseline
     <code>inputTokens</code> / <code>outputTokens</code> pair. These are <strong>back-compatible and optional</strong>:
-    omitting them leaves the response without the matching provider fields. The one exception is
-    <code>OPENAI_RESPONSES</code>, which always returns <code>usage.input_tokens_details</code> and
+    omitting them leaves the response without the matching provider fields. There are two exceptions.
+    <code>OPENAI_RESPONSES</code> always returns <code>usage.input_tokens_details</code> and
     <code>usage.output_tokens_details</code>, as the real Responses API does, with <code>0</code> for each count you
-    do not set.
+    do not set. <code>ANTHROPIC</code> and <code>BEDROCK</code> (InvokeModel) always return
+    <code>cache_creation_input_tokens</code>, <code>cache_read_input_tokens</code> and the <code>cache_creation</code>
+    breakdown, with <code>0</code> for a count you do not set, plus <code>service_tier</code> and, for
+    <code>ANTHROPIC</code> only, <code>inference_geo</code>, as the real APIs do. Streamed Anthropic responses repeat the
+    input and cache counts in the final <code>message_delta</code> usage.
 </p>
 
 <table class="table table-bordered table-striped">
@@ -1568,7 +1572,7 @@ geminiLive()
         <tr>
             <td><code>reasoningTokens</code></td>
             <td>Reasoning/thinking tokens billed as output but not part of the visible completion. A <strong>subset</strong> of <code>outputTokens</code> (not additive).</td>
-            <td>OpenAI: <code>usage.completion_tokens_details.reasoning_tokens</code><br/>OpenAI Responses: <code>usage.output_tokens_details.reasoning_tokens</code><br/>Gemini: <code>usageMetadata.thoughtsTokenCount</code>. Gemini counts thoughts separately from the answer, so <code>candidatesTokenCount</code> is <code>outputTokens</code> minus <code>reasoningTokens</code>, and <code>totalTokenCount</code> includes both.</td>
+            <td>OpenAI: <code>usage.completion_tokens_details.reasoning_tokens</code><br/>OpenAI Responses: <code>usage.output_tokens_details.reasoning_tokens</code><br/>Anthropic: <code>usage.output_tokens_details.thinking_tokens</code> (on the streamed <code>message_delta</code> usage when streaming)<br/>Gemini: <code>usageMetadata.thoughtsTokenCount</code>. Gemini counts thoughts separately from the answer, so <code>candidatesTokenCount</code> is <code>outputTokens</code> minus <code>reasoningTokens</code>, and <code>totalTokenCount</code> includes both.</td>
         </tr>
     </tbody>
 </table>

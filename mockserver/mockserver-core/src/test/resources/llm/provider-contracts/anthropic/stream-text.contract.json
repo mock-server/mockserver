@@ -65,6 +65,54 @@
       "path": "delta.container",
       "scope": "message_delta",
       "reason": "RawMessageDeltaEvent.delta.container is required and nullable in the Messages API reference (platform.claude.com/docs/en/api/messages/create); the recorded response in stream-text-recorded (2026-09-28) carries it as null; this documentation example predates the field"
+    },
+    {
+      "kind": "EXTRA",
+      "path": "message.usage.cache_creation",
+      "scope": "message_start",
+      "reason": "Usage.cache_creation is required and nullable in the Messages API reference (platform.claude.com/docs/en/api/messages/create); the recorded responses in stream-text-recorded and thinking-text-recorded (2026-09-28) carry it; this documentation example shows only input_tokens and output_tokens"
+    },
+    {
+      "kind": "EXTRA",
+      "path": "message.usage.cache_creation_input_tokens",
+      "scope": "message_start",
+      "reason": "Usage.cache_creation_input_tokens is required and nullable in the Messages API reference (platform.claude.com/docs/en/api/messages/create); the recorded responses in stream-text-recorded and thinking-text-recorded (2026-09-28) carry it; this documentation example shows only input_tokens and output_tokens"
+    },
+    {
+      "kind": "EXTRA",
+      "path": "message.usage.cache_read_input_tokens",
+      "scope": "message_start",
+      "reason": "Usage.cache_read_input_tokens is required and nullable in the Messages API reference (platform.claude.com/docs/en/api/messages/create); the recorded responses in stream-text-recorded and thinking-text-recorded (2026-09-28) carry it; this documentation example shows only input_tokens and output_tokens"
+    },
+    {
+      "kind": "EXTRA",
+      "path": "message.usage.inference_geo",
+      "scope": "message_start",
+      "reason": "Usage.inference_geo is required and nullable in the Messages API reference (platform.claude.com/docs/en/api/messages/create); the recorded responses in stream-text-recorded and thinking-text-recorded (2026-09-28) carry it; this documentation example shows only input_tokens and output_tokens"
+    },
+    {
+      "kind": "EXTRA",
+      "path": "message.usage.service_tier",
+      "scope": "message_start",
+      "reason": "Usage.service_tier is required and nullable in the Messages API reference (platform.claude.com/docs/en/api/messages/create); the recorded responses in stream-text-recorded and thinking-text-recorded (2026-09-28) carry it; this documentation example shows only input_tokens and output_tokens"
+    },
+    {
+      "kind": "EXTRA",
+      "path": "usage.cache_creation_input_tokens",
+      "scope": "message_delta",
+      "reason": "MessageDeltaUsage.cache_creation_input_tokens is required and nullable in the Messages API reference (platform.claude.com/docs/en/api/messages/create); the recorded message_delta in stream-text-recorded (2026-09-28) carries it; this documentation example shows only output_tokens"
+    },
+    {
+      "kind": "EXTRA",
+      "path": "usage.cache_read_input_tokens",
+      "scope": "message_delta",
+      "reason": "MessageDeltaUsage.cache_read_input_tokens is required and nullable in the Messages API reference (platform.claude.com/docs/en/api/messages/create); the recorded message_delta in stream-text-recorded (2026-09-28) carries it; this documentation example shows only output_tokens"
+    },
+    {
+      "kind": "EXTRA",
+      "path": "usage.input_tokens",
+      "scope": "message_delta",
+      "reason": "MessageDeltaUsage.input_tokens is required and nullable in the Messages API reference (platform.claude.com/docs/en/api/messages/create); the recorded message_delta in stream-text-recorded (2026-09-28) carries it; this documentation example shows only output_tokens"
     }
   ]
 }

@@ -41,43 +41,5 @@
     }
   },
   "response": "thinking-text-recorded.response.json",
-  "format": "JSON",
-  "allowed": [
-    {
-      "kind": "MISSING",
-      "path": "usage.cache_creation",
-      "reason": "required in the Usage type of the Messages API reference (platform.claude.com/docs/en/api/messages/create) and sent by the real API on every message; MockServer omits it",
-      "openItem": "33e"
-    },
-    {
-      "kind": "MISSING",
-      "path": "usage.cache_creation_input_tokens",
-      "reason": "required in the Usage type of the Messages API reference (platform.claude.com/docs/en/api/messages/create) and sent by the real API on every message; MockServer omits it when zero",
-      "openItem": "33e"
-    },
-    {
-      "kind": "MISSING",
-      "path": "usage.cache_read_input_tokens",
-      "reason": "required in the Usage type of the Messages API reference (platform.claude.com/docs/en/api/messages/create) and sent by the real API on every message; MockServer omits it when zero",
-      "openItem": "33e"
-    },
-    {
-      "kind": "MISSING",
-      "path": "usage.inference_geo",
-      "reason": "required in the Usage type of the Messages API reference (platform.claude.com/docs/en/api/messages/create) and sent by the real API on every message; MockServer omits it",
-      "openItem": "33e"
-    },
-    {
-      "kind": "MISSING",
-      "path": "usage.service_tier",
-      "reason": "required in the Usage type of the Messages API reference (platform.claude.com/docs/en/api/messages/create) and sent by the real API on every message; MockServer omits it",
-      "openItem": "33e"
-    },
-    {
-      "kind": "MISSING",
-      "path": "usage.output_tokens_details",
-      "reason": "required and nullable in the Usage type of the Messages API reference; the real API sends thinking_tokens in it, but MockServer does not emit it even when the completion sets reasoningTokens",
-      "openItem": "33e"
-    }
-  ]
+  "format": "JSON"
 }
