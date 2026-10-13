@@ -13,6 +13,15 @@ goes stale silently because nothing fails when the code moves on.
 Not started (checked 2026-10-11: no sweep commit has landed since the rule did in
 `052c74b53`). No deadline — this is hygiene, not a defect.
 
+Swept 2026-10-13: assessed the netty connection/pipeline cluster below (InFlightRequest,
+CompositeOriginalDestinationResolver, ConnectionScopeHandler, BreakpointMatcherRegistry) — all
+fine as written, no narrative to remove. Also swept three files below the ≥58% cutoff that had
+real narrative: `mockserver-testcontainers/.../MockServerContainer.java` (readiness-wait comment
+carried measured timing figures), `mockserver-core/.../model/KeysToMultiValues.java` and
+`mockserver-core/.../mock/CandidateIndex.java` (both carried a historical-calibration/ticket
+reference alongside the invariant); all three compressed to the invariant/constraint, proven
+comment-only via identical `javap -c` before/after.
+
 ## What "too much" means here
 
 The rule's test: a comment earns its place only if a reader **of that code** would
@@ -41,11 +50,11 @@ file needs the rule's test applied, not a threshold.
 | `mockserver-core/.../state/StateBackend.java` | 68% | likely fine — SPI Javadoc |
 | `mockserver-core/.../state/KeyValueStore.java` | 64% | likely fine — SPI Javadoc |
 | `mockserver-performance-test/k6/lib/config.js` | 63% | sweep — carries the most run narrative |
-| `mockserver-netty/.../InFlightRequest.java` | 61% | assess |
+| `mockserver-netty/.../InFlightRequest.java` | 61% | fine — invariant/design Javadoc, no narrative |
 | `mockserver-core/.../socket/tls/KeyAndCertificateFactory.java` | 60% | swept 2026-10-13 — rest of the Javadoc was already rule-compliant (invariants, constraints); only ticket numbers and roadmap narrative removed |
-| `mockserver-netty/.../proxy/CompositeOriginalDestinationResolver.java` | 59% | assess |
-| `mockserver-netty/.../unification/ConnectionScopeHandler.java` | 58% | assess |
-| `mockserver-core/.../breakpoint/BreakpointMatcherRegistry.java` | 58% | assess |
+| `mockserver-netty/.../proxy/CompositeOriginalDestinationResolver.java` | 59% | fine — strategy-chain Javadoc, no narrative |
+| `mockserver-netty/.../unification/ConnectionScopeHandler.java` | 58% | fine — invariant/design Javadoc, no narrative |
+| `mockserver-core/.../breakpoint/BreakpointMatcherRegistry.java` | 58% | fine — API Javadoc, no narrative |
 | `.buildkite/scripts/steps/perf-test-microbench.sh` | 57% | sweep |
 | `.buildkite/scripts/steps/perf-test-guard.sh` | 47% | sweep — fell from 58% as code grew, not because it was swept |
 

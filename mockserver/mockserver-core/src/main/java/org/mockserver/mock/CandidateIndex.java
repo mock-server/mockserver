@@ -472,8 +472,8 @@ class CandidateIndex {
         // folded index. That index exists exactly when matchExactCase is OFF (caseInsensitiveNow ==
         // true); when exact-case is ON the maintained buckets are case-sensitive and cannot serve a
         // case-insensitive clear without under-removing (e.g. clear "/a2" must still remove "/A2"),
-        // so fall back to the full scan. matchExactCase is off by default and is where the measured
-        // G9 win sits, so this fallback does not cost the common case.
+        // so fall back to the full scan. matchExactCase is off by default, so this fallback does not
+        // cost the common case.
         if (!caseInsensitiveNow) {
             return null;
         }

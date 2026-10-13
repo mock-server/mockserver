@@ -19,9 +19,9 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     private static final NottableString[] EMPTY = new NottableString[0];
 
     // Above this size the per-key grouping used by getEntries/getValues/getFirstValue/equals/hashCode
-    // switches from an O(n^2) linear scan to an O(n) HashMap pass. Below it the linear scan is faster and
-    // allocation-free (measured crossover ~n=10); above it the quadratic cost on caller-controlled input
-    // (a large form body or query string) is capped. Typical headers/parameters sit well below this.
+    // switches from an O(n^2) linear scan to an O(n) HashMap pass. Below it the linear scan is faster
+    // and allocation-free; above it the quadratic cost on caller-controlled input (a large form body or
+    // query string) is capped. Typical headers/parameters sit well below this.
     private static final int GROUPING_THRESHOLD = 16;
 
     private KeyMatchStyle keyMatchStyle = KeyMatchStyle.SUB_SET;
