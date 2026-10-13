@@ -31,7 +31,7 @@ public interface KeyAndCertificateFactory {
      * anchor users pin into their trust stores, so it needs to outlive a typical test/CI lifetime rather
      * than expiring after a single year and silently breaking pinned-CA deployments. Ten years is long
      * enough to avoid surprise expiry while staying well below the X.509 ceiling that older clients
-     * (e.g. Apple iOS 8, issue #6) reject.
+     * (e.g. Apple iOS 8) reject.
      * <p>
      * This governs the CA only. The short-lived <em>leaf</em> (server) certificate has its own, much
      * shorter validity — see {@link #LEAF_CERTIFICATE_VALIDITY_DAYS_DEFAULT}. It also governs the HTTP/3
@@ -43,15 +43,12 @@ public interface KeyAndCertificateFactory {
      * Default number of days the auto-generated <em>leaf</em> (server) certificate remains valid: 397.
      * <p>
      * The operative constraint is Apple's <strong>825-day</strong> maximum for TLS server certificates
-     * (iOS 13 / macOS 10.15, support.apple.com/en-us/103769), which the previous 3650-day (10-year) leaf
-     * blew straight through — the likely cause of handshake failures on Apple platforms (issue #2531).
-     * That 825-day cap has no carve-out for user-added roots. (Apple's better-known <em>398-day</em> ATS
-     * limit does <em>not</em> apply here: it explicitly exempts certificates issued from user-added or
-     * administrator-added roots, which is exactly MockServer's dynamically generated CA — so the 398/ATS
-     * reasoning cited by the reporter is not the rule that bites.) 397 days sits comfortably inside the
-     * 825-day cap and inside the CA/Browser Forum's tightening trend, while the Wave 1 proactive renewal
-     * (leaf regenerated at {@link #RENEWAL_ELAPSED_FRACTION} of validity elapsed, ~318 days here) keeps a
-     * long-running server from ever serving an expired leaf. Override via
+     * (iOS 13 / macOS 10.15, support.apple.com/en-us/103769), which has no carve-out for user-added
+     * roots. Apple's shorter <em>398-day</em> ATS limit does <em>not</em> apply here: it explicitly
+     * exempts certificates issued from user-added or administrator-added roots, which is exactly
+     * MockServer's dynamically generated CA. 397 days sits comfortably inside the 825-day cap, and
+     * proactive renewal at {@link #RENEWAL_ELAPSED_FRACTION} of validity elapsed (~318 days here)
+     * keeps a long-running server from ever serving an expired leaf. Override via
      * {@code mockserver.sslCertificateLeafValidityInDays} to restore the old long-lived behaviour.
      */
     long LEAF_CERTIFICATE_VALIDITY_DAYS_DEFAULT = 397;
@@ -75,7 +72,7 @@ public interface KeyAndCertificateFactory {
      * <p>
      * An unbounded override could push {@code notAfter} past the X.509 year-9999 ceiling
      * (9999-12-31, {@code new Date(253402300799000L)}) — or, well before that, past the point older Apple
-     * clients accept (iOS 8, ~24 Jan 6084, issue #6) — producing an unusable certificate. A leaf can never
+     * clients accept (iOS 8, ~24 Jan 6084) — producing an unusable certificate. A leaf can never
      * usefully outlive the CA that signs it ({@link #CERTIFICATE_VALIDITY_YEARS} years) anyway, so this cap
      * both restores the historical long-lived (10-year) leaf exactly and keeps {@code notAfter} safely in
      * range. A value above the cap is clamped DOWN to it with a WARN.
@@ -83,9 +80,9 @@ public interface KeyAndCertificateFactory {
     long LEAF_CERTIFICATE_VALIDITY_DAYS_MAX = CERTIFICATE_VALIDITY_YEARS * 365;
     /**
      * Fraction of a certificate's validity window that must elapse before it is proactively renewed.
-     * Renewing at 80% elapsed keeps a comfortable safety margin for both today's 10-year certificates
-     * and the short-lived certificates a later hardening wave will introduce, so a long-running server
-     * never keeps serving an expired leaf from its cached SSL context.
+     * Renewing at 80% elapsed keeps a comfortable safety margin for both long- and short-lived
+     * certificates, so a long-running server never keeps serving an expired leaf from its cached SSL
+     * context.
      */
     double RENEWAL_ELAPSED_FRACTION = 0.8;
 
@@ -139,7 +136,7 @@ public interface KeyAndCertificateFactory {
      * <p>
      * The maximum possible value in the X.509 specification is 9999-12-31 23:59:59
      * (new Date(253402300799000L)), but Apple iOS 8 fails with a certificate
-     * expiration date greater than Mon, 24 Jan 6084 02:07:59 GMT (issue #6).
+     * expiration date greater than Mon, 24 Jan 6084 02:07:59 GMT.
      * <p>
      * Computed per issuance (rather than once at class load) so that on-the-fly generated certificates
      * are anchored to issuance time rather than to JVM start time.

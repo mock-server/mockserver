@@ -42,7 +42,7 @@ file needs the rule's test applied, not a threshold.
 | `mockserver-core/.../state/KeyValueStore.java` | 64% | likely fine — SPI Javadoc |
 | `mockserver-performance-test/k6/lib/config.js` | 63% | sweep — carries the most run narrative |
 | `mockserver-netty/.../InFlightRequest.java` | 61% | assess |
-| `mockserver-core/.../socket/tls/KeyAndCertificateFactory.java` | 60% | assess |
+| `mockserver-core/.../socket/tls/KeyAndCertificateFactory.java` | 60% | swept 2026-10-13 — rest of the Javadoc was already rule-compliant (invariants, constraints); only ticket numbers and roadmap narrative removed |
 | `mockserver-netty/.../proxy/CompositeOriginalDestinationResolver.java` | 59% | assess |
 | `mockserver-netty/.../unification/ConnectionScopeHandler.java` | 58% | assess |
 | `mockserver-core/.../breakpoint/BreakpointMatcherRegistry.java` | 58% | assess |
