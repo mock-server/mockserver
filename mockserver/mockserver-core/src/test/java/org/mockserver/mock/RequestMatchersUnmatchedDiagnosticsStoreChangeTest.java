@@ -6,6 +6,7 @@ import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
+import org.mockserver.model.ExpectationId;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.scheduler.Scheduler;
 
@@ -28,13 +29,15 @@ import static org.mockserver.model.HttpResponse.response;
 
 /**
  * An indexed miss reconciles the closest match over a fresh full list after the narrowed scan, so the
- * store can change in between, e.g. when the lazy removal of an expired candidate (usually the closest,
- * with no recorded differences), scheduled by the narrowed scan, completes first. The synchronous
- * {@link Scheduler} used here runs that removal inline, so it always lands between the two scans.
+ * store can change in between, e.g. when the lazy removal of an expired candidate, scheduled by the
+ * narrowed scan, completes first. The synchronous {@link Scheduler} used here runs that removal inline,
+ * so it always lands between the two scans.
  *
  * <p>Fixture: bucket {@code GET /a} holds A, X (expired) and B in that order, and N ({@code GET /b}) is
- * a non-candidate; the request is {@code GET /a} with a header none of them expects. A scheduler hook
- * can apply one more mutation when the request schedules its first lazy removal.
+ * a non-candidate; the request is {@code GET /a} with a header none of them expects. Each active
+ * expectation fails on one field under fail-fast, so the first active one in serving order is closest;
+ * X is inactive and never closest. A scheduler hook can apply one more mutation when the request
+ * schedules its first lazy removal (X's), e.g. removing the closest candidate A.
  */
 public class RequestMatchersUnmatchedDiagnosticsStoreChangeTest {
 
@@ -99,6 +102,10 @@ public class RequestMatchersUnmatchedDiagnosticsStoreChangeTest {
             Times.unlimited(), TimeToLive.exactly(TimeUnit.SECONDS, 60L).setEndDate(1L), 0).withId(id).thenRespond(response().withBody(id));
     }
 
+    private static void removeA(RequestMatchers matchers) {
+        matchers.clear(new ExpectationId().withId("A"), null);
+    }
+
     private static boolean isClosestMatchEntry(String entry) {
         return entry.contains("closest expectation");
     }
@@ -130,28 +137,38 @@ public class RequestMatchersUnmatchedDiagnosticsStoreChangeTest {
     }
 
     @Test
-    public void expiredClosestCandidateRemovedByTheNarrowedScanGivesTheUnindexedDiagnostics() {
+    public void expiredCandidateRemovedByTheNarrowedScanGivesTheUnindexedDiagnostics() {
         List<String> indexed = run(INDEXED, fixture(), null);
         List<String> unindexed = run(UNINDEXED, fixture(), null);
 
         assertEvaluatedOnce(indexed, "A", "X", "B", "N");
-        assertThat(closest(indexed), containsString("\"id\" : \"X\""));
+        assertThat(closest(indexed), containsString("\"id\" : \"A\""));
         // the same entries, including X's removal; only the order differs (candidates first)
         assertThat(sorted(indexed), is(sorted(unindexed)));
     }
 
     @Test
+    public void closestCandidateRemovedBetweenTheScansStillGivesTheUnindexedDiagnostics() {
+        List<String> indexed = run(INDEXED, fixture(), RequestMatchersUnmatchedDiagnosticsStoreChangeTest::removeA);
+        List<String> unindexed = run(UNINDEXED, fixture(), RequestMatchersUnmatchedDiagnosticsStoreChangeTest::removeA);
+
+        assertEvaluatedOnce(indexed, "A", "X", "B", "N");
+        assertThat(closest(indexed), containsString("\"id\" : \"A\""));
+        assertThat(sorted(indexed), is(sorted(unindexed)));
+    }
+
+    @Test
     public void removedClosestCandidateDoesNotJumpAheadOfAnEarlierEqualNonCandidate() {
-        // E (GET /b, expired) sorts between A and X and ties X on failures, so the un-indexed scan reports E
+        // E (GET /b) sorts before A and ties it on failures, so the un-indexed scan reports E
         List<Expectation> expectations = new ArrayList<>();
+        expectations.add(expectation("E", "/b", "5", 0));
         expectations.add(expectation("A", "/a", "1", 0));
-        expectations.add(expired("E", "/b", "5"));
         expectations.add(expired("X", "/a", "2"));
         expectations.add(expectation("B", "/a", "3", 0));
         expectations.add(expectation("N", "/b", "4", 0));
 
-        List<String> indexed = run(INDEXED, expectations, null);
-        List<String> unindexed = run(UNINDEXED, expectations, null);
+        List<String> indexed = run(INDEXED, expectations, RequestMatchersUnmatchedDiagnosticsStoreChangeTest::removeA);
+        List<String> unindexed = run(UNINDEXED, expectations, RequestMatchersUnmatchedDiagnosticsStoreChangeTest::removeA);
 
         assertEvaluatedOnce(indexed, "A", "E", "X", "B", "N");
         assertThat(closest(unindexed), containsString("\"id\" : \"E\""));
@@ -160,19 +177,19 @@ public class RequestMatchersUnmatchedDiagnosticsStoreChangeTest {
 
     @Test
     public void removedClosestCandidateStillBeatsALaterEqualNonCandidate() {
-        // F (GET /b, expired) sorts after X and ties it on failures, so the un-indexed scan reports X
+        // F (GET /b) sorts after A and ties it on failures, so the un-indexed scan reports A
         List<Expectation> expectations = new ArrayList<>();
         expectations.add(expectation("A", "/a", "1", 0));
         expectations.add(expired("X", "/a", "2"));
+        expectations.add(expectation("F", "/b", "5", 0));
         expectations.add(expectation("B", "/a", "3", 0));
-        expectations.add(expired("F", "/b", "5"));
         expectations.add(expectation("N", "/b", "4", 0));
 
-        List<String> indexed = run(INDEXED, expectations, null);
-        List<String> unindexed = run(UNINDEXED, expectations, null);
+        List<String> indexed = run(INDEXED, expectations, RequestMatchersUnmatchedDiagnosticsStoreChangeTest::removeA);
+        List<String> unindexed = run(UNINDEXED, expectations, RequestMatchersUnmatchedDiagnosticsStoreChangeTest::removeA);
 
         assertEvaluatedOnce(indexed, "A", "X", "B", "F", "N");
-        assertThat(closest(unindexed), containsString("\"id\" : \"X\""));
+        assertThat(closest(unindexed), containsString("\"id\" : \"A\""));
         assertThat(sorted(indexed), is(sorted(unindexed)));
     }
 
@@ -181,7 +198,7 @@ public class RequestMatchersUnmatchedDiagnosticsStoreChangeTest {
         List<String> indexed = run(INDEXED, fixture(), matchers -> matchers.add(expectation("Y", "/a", "6", 5), API));
 
         assertEvaluatedOnce(indexed, "A", "X", "B", "N", "Y");
-        assertThat(closest(indexed), containsString("\"id\" : \"X\""));
+        assertThat(closest(indexed), containsString("\"id\" : \"Y\""));
     }
 
     @Test
@@ -189,7 +206,7 @@ public class RequestMatchersUnmatchedDiagnosticsStoreChangeTest {
         List<String> indexed = run(INDEXED, fixture(), matchers -> matchers.add(expectation("Y", "/a", "6", -5), API));
 
         assertEvaluatedOnce(indexed, "A", "X", "B", "N", "Y");
-        assertThat(closest(indexed), containsString("\"id\" : \"X\""));
+        assertThat(closest(indexed), containsString("\"id\" : \"A\""));
     }
 
     @Test
@@ -198,7 +215,7 @@ public class RequestMatchersUnmatchedDiagnosticsStoreChangeTest {
 
         assertEvaluatedOnce(indexed, "A", "X", "B");
         assertThat(matchEvaluationEntries(indexed, "N"), is(0L));
-        assertThat(closest(indexed), containsString("\"id\" : \"X\""));
+        assertThat(closest(indexed), containsString("\"id\" : \"A\""));
     }
 
     @Test
@@ -206,7 +223,7 @@ public class RequestMatchersUnmatchedDiagnosticsStoreChangeTest {
         List<String> indexed = run(INDEXED, fixture(), matchers -> matchers.add(expectation("B", "/a", "3", 5), API));
 
         assertEvaluatedOnce(indexed, "A", "X", "B", "N");
-        assertThat(closest(indexed), containsString("\"id\" : \"X\""));
+        assertThat(closest(indexed), containsString("\"id\" : \"A\""));
     }
 
     @Test
@@ -214,7 +231,8 @@ public class RequestMatchersUnmatchedDiagnosticsStoreChangeTest {
         List<String> indexed = run(INDEXED, fixture(), matchers -> matchers.add(expectation("A", "/a", "1", -5), API));
 
         assertEvaluatedOnce(indexed, "A", "X", "B", "N");
-        assertThat(closest(indexed), containsString("\"id\" : \"X\""));
+        // the stand-in A is offered at its matcher's new position, behind N, which ties it
+        assertThat(closest(indexed), containsString("\"id\" : \"N\""));
     }
 
     @Test
@@ -230,7 +248,8 @@ public class RequestMatchersUnmatchedDiagnosticsStoreChangeTest {
         List<String> indexed = run(INDEXED, expectations, matchers -> matchers.add(expectation("N", "/b", "4", -5), API));
 
         assertEvaluatedOnce(indexed, "E", "N", "A", "B");
-        assertThat(closest(indexed), containsString("\"id\" : \"E\""));
+        // E is inactive; N, still in the walked snapshot ahead of the candidates, ties A and comes first
+        assertThat(closest(indexed), containsString("\"id\" : \"N\""));
     }
 
     @Test
@@ -239,6 +258,6 @@ public class RequestMatchersUnmatchedDiagnosticsStoreChangeTest {
 
         assertEvaluatedOnce(indexed, "A", "X", "B");
         assertThat(matchEvaluationEntries(indexed, "N"), is(0L));
-        assertThat(closest(indexed), containsString("\"id\" : \"X\""));
+        assertThat(closest(indexed), containsString("\"id\" : \"A\""));
     }
 }

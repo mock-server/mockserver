@@ -201,7 +201,8 @@ public class RequestMatchersUnmatchedDiagnosticsTest {
         }
         String closest = closestMatch(entries);
         assertThat(closest, notNullValue());
-        assertThat(closest, containsString("\"id\" : \"e-once\""));
+        // the used-up e-once fails with no differences but is never the closest; e-priority sorts first
+        assertThat(closest, containsString("\"id\" : \"e-priority\""));
     }
 
     @Test

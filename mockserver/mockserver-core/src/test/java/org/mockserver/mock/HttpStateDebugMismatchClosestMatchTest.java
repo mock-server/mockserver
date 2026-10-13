@@ -7,6 +7,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.matchers.TimeToLive;
+import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.ObjectMapperFactory;
@@ -29,7 +31,7 @@ import static org.mockserver.model.HttpResponse.response;
  * first, so a fixture whose closest expectation happens to be registered first passes whether the ranking
  * works or not.
  *
- * <p>Against the unfixed implementation this class scores <b>3 failures / 1 pass</b>, and the single pass
+ * <p>Against the unfixed ranking, the four ranking tests score <b>3 failures / 1 pass</b>, and the single pass
  * is that control — a standing demonstration of why fixture ordering decides whether these tests prove
  * anything.
  */
@@ -167,6 +169,32 @@ public class HttpStateDebugMismatchClosestMatchTest {
         assertThat("an expectation that missed on three fields cannot have matched as much as one "
                 + "that missed on a single header",
             nearMatched > farMatched, is(true));
+    }
+
+    @Test
+    public void shouldLeaveOutAUsedUpExpectationWhoseLastResponseIsStillInProgress() throws Exception {
+        httpState.add(
+            new Expectation(request().withMethod("GET").withPath("/once"), Times.once(), TimeToLive.unlimited(), 10)
+                .withId("once").thenRespond(response()),
+            new Expectation(
+                request()
+                    .withMethod("GET")
+                    .withPath("/api/orders")
+                    .withHeader("X-Token", "expected-token"))
+                .withId("near")
+                .thenRespond(response().withBody("near"))
+        );
+        assertThat(httpState.getRequestMatchers().firstMatchingExpectation(request().withMethod("GET").withPath("/once")).getId(), is("once"));
+        // a delayed response holds the used-up expectation in the store while it is written
+        httpState.getRequestMatchers().sortedRequestMatchers().stream()
+            .filter(matcher -> "once".equals(matcher.getExpectation().getId()))
+            .findFirst().orElseThrow()
+            .setResponseInProgress(true);
+
+        JsonNode result = debugMismatch();
+
+        assertThat(result.path("closestMatch").path("expectationId").asText(), is("near"));
+        assertThat(result.get("results").size(), is(1));
     }
 
     // ---- helpers ----

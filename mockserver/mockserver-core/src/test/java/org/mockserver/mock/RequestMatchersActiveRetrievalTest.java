@@ -5,8 +5,14 @@ import org.junit.Test;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
+import org.mockserver.matchers.TimeToLive;
+import org.mockserver.matchers.Times;
 import org.mockserver.model.DnsRecordType;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.Not;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.serialization.HttpRequestSerializer;
+import org.mockserver.serialization.RequestDefinitionSerializer;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -154,5 +160,63 @@ public class RequestMatchersActiveRetrievalTest {
 
         assertThat(active, contains("dns-1"));
         assertThat(active, not(hasItem("http-1")));
+    }
+
+    @Test
+    public void emptyHttpFilterListsNotExpectation() {
+        // A not(...) definition fails the reverse match against an empty filter, so the "show all"
+        // listing dropped it although it serves requests.
+        requestMatchers.add(new Expectation(request().withMethod("GET").withPath("/api/users")).withId("http-1")
+            .thenRespond(response()), API);
+        requestMatchers.add(new Expectation(Not.not(request().withPath("/secret"))).withId("not-1")
+            .thenRespond(response()), API);
+
+        assertThat(ids(requestMatchers.retrieveActiveExpectations(request())), containsInAnyOrder("http-1", "not-1"));
+        assertThat(ids(requestMatchers.retrieveActiveExpectations(request().withLogCorrelationId("some-correlation-id"))), containsInAnyOrder("http-1", "not-1"));
+        assertThat(ids(requestMatchers.retrieveActiveExpectations(new RequestDefinitionSerializer(new MockServerLogger()).deserialize("{}"))), containsInAnyOrder("http-1", "not-1"));
+    }
+
+    @Test
+    public void retrieveRequestMatchersWithEmptyHttpFilterListsNotExpectation() {
+        // the dashboard's Active Expectations panel with no filter typed; the UI sends {}
+        requestMatchers.add(new Expectation(request().withMethod("GET").withPath("/api/users")).withId("http-1")
+            .thenRespond(response()), API);
+        requestMatchers.add(new Expectation(Not.not(request().withPath("/secret"))).withId("not-1")
+            .thenRespond(response()), API);
+
+        for (HttpRequest filter : new HttpRequest[]{request(), new HttpRequestSerializer(new MockServerLogger()).deserialize("{}")}) {
+            List<String> matcherIds = requestMatchers.retrieveRequestMatchers(filter).stream()
+                .map(HttpRequestMatcher::getExpectation)
+                .map(Expectation::getId)
+                .collect(Collectors.toList());
+
+            assertThat(matcherIds, containsInAnyOrder("http-1", "not-1"));
+        }
+    }
+
+    @Test
+    public void nonEmptyHttpFilterStillReverseMatchesNotExpectation() {
+        requestMatchers.add(new Expectation(request().withMethod("GET").withPath("/api/users")).withId("http-1")
+            .thenRespond(response()), API);
+        requestMatchers.add(new Expectation(Not.not(request().withPath("/secret"))).withId("not-1")
+            .thenRespond(response()), API);
+
+        assertThat(ids(requestMatchers.retrieveActiveExpectations(request().withMethod("GET"))), contains("http-1"));
+        assertThat(ids(requestMatchers.retrieveActiveExpectations(Not.not(request()))), not(hasItem("http-1")));
+    }
+
+    @Test
+    public void emptyHttpFilterStillLeavesOutInactiveExpectations() {
+        requestMatchers.add(new Expectation(request().withMethod("GET").withPath("/once"), Times.once(), TimeToLive.unlimited(), 0).withId("once")
+            .thenRespond(response()), API);
+        requestMatchers.add(new Expectation(Not.not(request().withPath("/secret"))).withId("not-1")
+            .thenRespond(response()), API);
+        requestMatchers.firstMatchingExpectation(request().withMethod("GET").withPath("/once"));
+        // its response has been written
+        requestMatchers.retrieveRequestMatchers(null).stream()
+            .filter(matcher -> "once".equals(matcher.getExpectation().getId()))
+            .forEach(matcher -> matcher.setResponseInProgress(false));
+
+        assertThat(ids(requestMatchers.retrieveActiveExpectations(request())), contains("not-1"));
     }
 }

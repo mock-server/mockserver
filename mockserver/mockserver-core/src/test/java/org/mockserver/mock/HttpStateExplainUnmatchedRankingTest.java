@@ -8,6 +8,8 @@ import org.junit.Test;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.matchers.TimeToLive;
+import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.ObjectMapperFactory;
@@ -100,6 +102,31 @@ public class HttpStateExplainUnmatchedRankingTest {
         assertThat("an expectation missing on method, path and header cannot report the same "
                 + "differing-field count as one missing on a single header",
             nearCount < farCount, is(true));
+    }
+
+    @Test
+    public void shouldLeaveOutAUsedUpExpectationWhoseLastResponseIsStillInProgress() throws Exception {
+        httpState.add(
+            new Expectation(request().withMethod("GET").withPath("/once"), Times.once(), TimeToLive.unlimited(), 10)
+                .withId("once").thenRespond(response()),
+            new Expectation(
+                request().withMethod("GET").withPath("/api/orders")
+                    .withHeader("X-Token", "expected-token"))
+                .withId("near").thenRespond(response())
+        );
+        assertThat(httpState.getRequestMatchers().firstMatchingExpectation(request().withMethod("GET").withPath("/once")).getId(), is("once"));
+        // a delayed response holds the used-up expectation in the store while it is written
+        httpState.getRequestMatchers().sortedRequestMatchers().stream()
+            .filter(matcher -> "once".equals(matcher.getExpectation().getId()))
+            .findFirst().orElseThrow()
+            .setResponseInProgress(true);
+
+        logUnmatched();
+
+        JsonNode closestExpectations = explainUnmatched()
+            .path("unmatchedRequests").get(0).path("closestExpectations");
+        assertThat(closestExpectations.size(), is(1));
+        assertThat(closestExpectations.get(0).path("expectationId").asText(), is("near"));
     }
 
     // ---- helpers ----

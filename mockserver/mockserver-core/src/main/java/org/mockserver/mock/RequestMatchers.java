@@ -1069,10 +1069,12 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                 }
                 matchedExpectation = expectation;
                 break;
-            } else {
-                if (!httpRequestMatcher.isResponseInProgress() && !httpRequestMatcher.isActive()) {
+            } else if (!httpRequestMatcher.isActive()) {
+                // fails with no recorded differences, so it must not be offered as the closest match
+                if (!httpRequestMatcher.isResponseInProgress()) {
                     scheduleLazyRemoval(httpRequestMatcher);
                 }
+            } else {
                 int failures = matchDifference.getAllDifferences().size();
                 if (failures < closestMatchFailures && httpRequestMatcher.getExpectation() != null) {
                     closestMatchFailures = failures;
@@ -1275,10 +1277,13 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                 ? new MatchDifference(true, requestDefinition)
                 : sharedMatchDifference;
             if (!httpRequestMatcher.matches(matchDifference, requestDefinition)) {
-                if (!httpRequestMatcher.isResponseInProgress() && !httpRequestMatcher.isActive()) {
-                    scheduleLazyRemoval(httpRequestMatcher);
+                if (!httpRequestMatcher.isActive()) {
+                    if (!httpRequestMatcher.isResponseInProgress()) {
+                        scheduleLazyRemoval(httpRequestMatcher);
+                    }
+                } else {
+                    accumulator.offer(httpRequestMatcher.getExpectation(), matchDifference.getAllDifferences().size());
                 }
-                accumulator.offer(httpRequestMatcher.getExpectation(), matchDifference.getAllDifferences().size());
             }
         }
         if (standInPending) {
@@ -1972,7 +1977,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
     }
 
     public List<Expectation> retrieveActiveExpectations(RequestDefinition requestDefinition) {
-        if (requestDefinition == null) {
+        if (isUnfiltered(requestDefinition)) {
             return httpRequestMatchers.stream()
                 .filter(httpRequestMatcher -> {
                     if (!httpRequestMatcher.isResponseInProgress() && !httpRequestMatcher.isActive()) {
@@ -1998,6 +2003,15 @@ public class RequestMatchers extends MockServerMatcherNotifier {
             });
             return expectations;
         }
+    }
+
+    /**
+     * True for no filter and for an empty HTTP filter, which the retrieve endpoint (empty body) and the
+     * dashboard send for "show all". An empty filter must list every active expectation, but reverse
+     * matching it fails against a {@code not(...)} definition.
+     */
+    private static boolean isUnfiltered(RequestDefinition filter) {
+        return filter == null || (filter instanceof HttpRequest && new HttpRequest().equals(filter));
     }
 
     /**
@@ -2095,7 +2109,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
     }
 
     public List<HttpRequestMatcher> retrieveRequestMatchers(RequestDefinition requestDefinition) {
-        if (requestDefinition == null) {
+        if (isUnfiltered(requestDefinition)) {
             return httpRequestMatchers.stream()
                 .filter(httpRequestMatcher -> {
                     if (!httpRequestMatcher.isResponseInProgress() && !httpRequestMatcher.isActive()) {
@@ -2387,10 +2401,11 @@ public class RequestMatchers extends MockServerMatcherNotifier {
 
     /**
      * Evaluates one matcher for the closest-match scan and folds a non-match into {@code state}. Returns
-     * the differences of a non-match, or {@code null} for a match.
+     * the differences of a non-match, or {@code null} for a match or an inactive expectation (used up or
+     * expired), which fails with no differences and so is never offered.
      */
     private static Map<MatchDifference.Field, List<String>> evaluateForClosestMatch(HttpRequestMatcher httpRequestMatcher, MatchDifference matchDifference, HttpRequest httpRequest, ClosestMatchState state) {
-        if (httpRequestMatcher.matches(matchDifference, httpRequest)) {
+        if (httpRequestMatcher.matches(matchDifference, httpRequest) || !httpRequestMatcher.isActive()) {
             return null;
         }
         Map<MatchDifference.Field, List<String>> differences = matchDifference.getAllDifferences();

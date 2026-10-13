@@ -94,29 +94,31 @@ public class RequestMatchersClosestMatchMemoTest {
         configuration.matchersFailFast(true);
         assertSameAsFullScan("fail-fast back on", probes);
 
-        // An inactive expectation fails with no differences, so it outranks every expectation after it and
-        // masks them: each phase below removes it again before the next one. Consumption and
-        // expiry move neither the store generation nor the modification count (the mock scheduler never
-        // runs the lazy removal), so only the memo's own rule keeps these exact.
-        requestMatchers.firstMatchingExpectation(request().withMethod("GET").withPath("/once"));
-        assertSameAsFullScan("after once() consumed", probes, 1);
-        requestMatchers.clear(new ExpectationId().withId("once"), null);
-        assertSameAsFullScan("after once() removed", probes);
+        // An inactive expectation is skipped, so it stays in the store without masking the expectations
+        // after it. Each phase uses up its expectation directly: a GET /once request would be served by
+        // not-admin, which sorts first. Consumption and expiry move neither the store generation nor the
+        // modification count (the mock scheduler never runs the lazy removal), so only the memo's own
+        // rule keeps these exact.
+        consume("once");
+        assertThat("once() must be used up", storedExpectation("once").isActive(), is(false));
+        assertSameAsFullScan("after once() consumed", probes);
+        assertNoHintNames("once", probes);
 
-        requestMatchers.firstMatchingExpectation(request().withMethod("GET").withPath("/twice"));
+        consume("twice");
+        assertThat("exactly(2) must still be active", storedExpectation("twice").isActive(), is(true));
         assertSameAsFullScan("after exactly(2) consumed once", probes);
-        requestMatchers.firstMatchingExpectation(request().withMethod("GET").withPath("/twice"));
-        assertSameAsFullScan("after exactly(2) consumed", probes, 1);
+        consume("twice");
+        assertThat("exactly(2) must be used up", storedExpectation("twice").isActive(), is(false));
+        assertSameAsFullScan("after exactly(2) consumed", probes);
+        assertNoHintNames("twice", probes);
         requestMatchers.clear(new ExpectationId().withId("twice"), null);
         assertSameAsFullScan("after exactly(2) removed", probes);
 
-        Expectation ttl = requestMatchers.sortedRequestMatchers().stream()
-            .map(HttpRequestMatcher::getExpectation)
-            .filter(e -> e != null && "ttl".equals(e.getId()))
-            .findFirst().orElseThrow();
+        Expectation ttl = storedExpectation("ttl");
         ttl.getTimeToLive().setEndDate(1L);
         assertThat("time-to-live must have expired", ttl.isActive(), is(false));
-        assertSameAsFullScan("after ttl expiry", probes, 1);
+        assertSameAsFullScan("after ttl expiry", probes);
+        assertNoHintNames("ttl", probes);
         requestMatchers.clear(new ExpectationId().withId("ttl"), null);
         assertSameAsFullScan("after ttl removed", probes);
 
@@ -333,8 +335,27 @@ public class RequestMatchersClosestMatchMemoTest {
         assertThat(phase + " distinct hints", seen.size(), greaterThanOrEqualTo(distinctHints));
     }
 
+    private Expectation storedExpectation(String id) {
+        return requestMatchers.sortedRequestMatchers().stream()
+            .map(HttpRequestMatcher::getExpectation)
+            .filter(e -> e != null && id.equals(e.getId()))
+            .findFirst().orElseThrow();
+    }
+
+    private void consume(String id) {
+        assertThat("consume " + id, storedExpectation(id).consumeMatch(), is(true));
+    }
+
+    private void assertNoHintNames(String expectationId, List<HttpRequest> probes) {
+        for (HttpRequest probe : probes) {
+            RequestMatchers.ClosestMatchHint hint = requestMatchers.findClosestMatchHint(probe.clone());
+            assertThat(probe.getMethod().getValue() + " " + probe.getPath().getValue(), hint == null ? null : hint.getExpectationId(), org.hamcrest.Matchers.not(expectationId));
+        }
+    }
+
     /**
-     * The closest-match scan as it was before the memo, verbatim, with the evaluation cap applied.
+     * The closest-match scan as it was before the memo, with the evaluation cap applied and inactive (used-up
+     * or expired) expectations skipped.
      */
     static String reference(RequestMatchers requestMatchers, HttpRequest httpRequest, int cap) {
         int closestMatchFailures = Integer.MAX_VALUE;
@@ -344,7 +365,7 @@ public class RequestMatchersClosestMatchMemoTest {
         int limit = Math.min(sortedMatchers.size(), cap);
         for (HttpRequestMatcher httpRequestMatcher : sortedMatchers.subList(0, limit)) {
             MatchDifference matchDifference = new MatchDifference(true, httpRequest).suppressMatchResultLogging();
-            if (!httpRequestMatcher.matches(matchDifference, httpRequest)) {
+            if (!httpRequestMatcher.matches(matchDifference, httpRequest) && httpRequestMatcher.isActive()) {
                 Map<MatchDifference.Field, List<String>> differences = matchDifference.getAllDifferences();
                 int failures = differences.size();
                 if (failures < closestMatchFailures && httpRequestMatcher.getExpectation() != null) {

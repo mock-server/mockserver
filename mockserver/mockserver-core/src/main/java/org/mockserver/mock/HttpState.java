@@ -1057,8 +1057,12 @@ public class HttpState {
 
             for (int i = 0; i < evaluateCount; i++) {
                 HttpRequestMatcher matcher = matchers.get(i);
-                com.fasterxml.jackson.databind.node.ObjectNode matchResult = objectMapper.createObjectNode();
                 Expectation expectation = matcher.getExpectation();
+                // a used-up expectation still writing its last response fails with no differences
+                if (expectation != null && !expectation.isActive()) {
+                    continue;
+                }
+                com.fasterxml.jackson.databind.node.ObjectNode matchResult = objectMapper.createObjectNode();
                 if (expectation != null) {
                     matchResult.put("expectationId", expectation.getId());
                     if (expectation.getHttpRequest() instanceof HttpRequest) {
@@ -1236,7 +1240,8 @@ public class HttpState {
                             }
                             HttpRequestMatcher matcher = matchers.get(i);
                             Expectation expectation = matcher.getExpectation();
-                            if (expectation == null) {
+                            // a used-up expectation still writing its last response fails with no differences
+                            if (expectation == null || !expectation.isActive()) {
                                 continue;
                             }
                             com.fasterxml.jackson.databind.node.ObjectNode expResult = RequestMatchExplainer.compareFields(objectMapper, matcher, expectation, unmatchedRequest, sensitiveValues);
