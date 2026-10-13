@@ -6,6 +6,7 @@ import {
   withHostHeaderRow,
   withHostHeaderLine,
   REQUEST_SCOPE_FIELDS,
+  BREAKPOINT_SCOPE_FIELDS,
 } from '../lib/filterScope';
 import { matchesItemSearch } from '../lib/filterDSL';
 
@@ -178,5 +179,77 @@ describe('filterScope — host lands in the headers matcher', () => {
     expect(withHostHeaderLine('X-A: 1\n\nX-B: 2', 'new.svc')).toBe('X-A: 1\n\nX-B: 2\nHost: new.svc');
     expect(withHostHeaderLine('X-A: 1\n', 'new.svc')).toBe('X-A: 1\nHost: new.svc');
     expect(withHostHeaderLine('X-A: 1\n\nhost: old\n', 'new.svc')).toBe('X-A: 1\n\nHost: new.svc\n');
+  });
+});
+
+describe('filterScope — status: on the breakpoint scope', () => {
+  const breakpoint = (term: string) => parseRequestScope(term, BREAKPOINT_SCOPE_FIELDS);
+
+  it('stays unsupported on the plain request scope, which has no status range', () => {
+    const parsed = parseRequestScope('status:>=400');
+    expect(parsed.unsupportedFields).toEqual(['status']);
+    expect(isApplicableScope(parsed)).toBe(false);
+  });
+
+  it('translates each comparator into an inclusive range', () => {
+    expect(breakpoint('status:>=400').scope).toEqual({ statusMin: 400 });
+    expect(breakpoint('status:>399').scope).toEqual({ statusMin: 400 });
+    expect(breakpoint('status:<=499').scope).toEqual({ statusMax: 499 });
+    expect(breakpoint('status:<500').scope).toEqual({ statusMax: 499 });
+    expect(breakpoint('status:404').scope).toEqual({ statusMin: 404, statusMax: 404 });
+    expect(breakpoint('status:=404').scope).toEqual({ statusMin: 404, statusMax: 404 });
+    expect(isApplicableScope(breakpoint('status:>=400'))).toBe(true);
+  });
+
+  it('intersects repeated status: operators, as the search box ANDs them', () => {
+    expect(breakpoint('status:>=400 status:<500').scope).toEqual({ statusMin: 400, statusMax: 499 });
+    // The tighter bound wins whichever operator comes last.
+    expect(breakpoint('status:>=400 status:>=500').scope).toEqual({ statusMin: 500 });
+    expect(breakpoint('status:>=500 status:>=400').scope).toEqual({ statusMin: 500 });
+    expect(breakpoint('status:<=404 status:<500').scope).toEqual({ statusMax: 404 });
+  });
+
+  it('combines with the request operators', () => {
+    expect(breakpoint('method:get path:/api/* status:>=500').scope).toEqual({
+      method: 'GET',
+      path: '/api/.*',
+      statusMin: 500,
+    });
+  });
+
+  it('refuses a status that is not a whole number', () => {
+    for (const term of ['status:4xx', 'status:>=4.5', 'status:', 'status:>=', 'status:1000', 'status:-1']) {
+      const parsed = breakpoint(term);
+      expect(parsed.error, term).toMatch(/whole number/);
+      expect(parsed.scope, term).toEqual({});
+    }
+  });
+
+  it('refuses a range that selects no status code', () => {
+    for (const term of ['status:>=500 status:<400', 'status:<0', 'status:>999', 'status:404 status:405']) {
+      const parsed = breakpoint(term);
+      expect(parsed.error, term).toMatch(/selects no status code/);
+      expect(parsed.scope, term).toEqual({});
+    }
+  });
+
+  /**
+   * The search box and the registered matcher must select the same responses, so
+   * every translated range is checked against matchesItemSearch for every status.
+   */
+  it('selects exactly the statuses the search box selects', () => {
+    const terms = [
+      'status:>=400', 'status:>399', 'status:<=499', 'status:<500', 'status:404',
+      'status:=201', 'status:>=400 status:<500', 'status:>200 status:<=204',
+      'status:>=500 status:>=400', 'status:<=404 status:<500',
+    ];
+    for (const term of terms) {
+      const { statusMin, statusMax } = breakpoint(term).scope;
+      for (let status = 100; status <= 599; status++) {
+        const viaSearchBox = matchesItemSearch({ httpResponse: { statusCode: status } }, term);
+        const viaMatcher = (statusMin == null || status >= statusMin) && (statusMax == null || status <= statusMax);
+        expect(viaMatcher, `${term} vs ${status}`).toBe(viaSearchBox);
+      }
+    }
   });
 });

@@ -17,24 +17,19 @@
  * (`/api/*` -> `/api/.*`), with every other regex metacharacter escaped so a
  * literal term stays literal (`/api/v1.0` -> `/api/v1\.0`).
  *
- * **Why the vocabulary stops at three operators.**
- * - `status:` has nowhere to land in these forms. The *server* would cope with the
- *   whole operator — `StatusCodeMatcher` supports an exact code, a class range
- *   (`"2XX"`) and numeric operators (`">= 400"`) via `statusCodeRange`, and
- *   `BreakpointMatcher` carries `responseStatusCodeMin`/`Max` — but neither UI form
- *   has a field for a range: `VerificationView`'s response matcher exposes a single
- *   exact `statusCode`, and `lib/breakpoints.ts` sends only
- *   `{httpRequest, phases, clientId, skipCount}` with no response condition at all.
- *   So "Apply scope" has no destination for `status:>=400`, and the operator is
- *   flagged unsupported rather than honoured only in its degenerate `status:200`
- *   form. Adding a `statusCodeRange` / `responseStatusCodeMin`/`Max` field to either
- *   form is what would make `status:` viable here.
+ * **Why the vocabulary stops where it does.**
+ * - `status:` lands only in the breakpoint form ({@link BREAKPOINT_SCOPE_FIELDS}),
+ *   whose matcher carries an inclusive `responseStatusCodeMin`/`Max` range. Every
+ *   comparator the search box accepts maps exactly onto that range, and repeated
+ *   `status:` operators intersect just as the search box ANDs them.
+ *   `VerificationView`'s response matcher exposes a single exact `statusCode`, so
+ *   there `status:>=400` has no destination and stays flagged unsupported.
  * - `operation:` resolves from a decoded JSON request body's `operationName`.
  *   Neither matcher has a JSON-member body matcher wired to it here, so it is out.
  *
- * Callers pass {@link REQUEST_SCOPE_FIELDS} to `OperatorSearchField`, so the
- * placeholder, the help tooltip, the input's error state and this translation all
- * derive from the same list and cannot drift apart.
+ * Callers pass the same field list to `OperatorSearchField` and to
+ * {@link parseRequestScope}, so the placeholder, the help tooltip, the input's
+ * error state and this translation cannot drift apart.
  */
 import { parseSearchTerm } from './filterDSL';
 import type { KeyToMultiValue } from '../types';
@@ -46,11 +41,35 @@ import type { KeyToMultiValue } from '../types';
  */
 export const REQUEST_SCOPE_FIELDS = ['method', 'path', 'host'] as const;
 
+/** The breakpoint form also has a response status range for `status:` to fill. */
+export const BREAKPOINT_SCOPE_FIELDS = [...REQUEST_SCOPE_FIELDS, 'status'] as const;
+
 /** Matcher fields derived from a scope term. `path`/`host` are regex sources. */
 export interface RequestScope {
   method?: string;
   path?: string;
   host?: string;
+  /** Inclusive response status bounds, from `status:` (breakpoint scope only). */
+  statusMin?: number;
+  statusMax?: number;
+}
+
+/** Status codes are three digits; a bound outside 0-999 can select no response. */
+const STATUS_FLOOR = 0;
+const STATUS_CEILING = 999;
+
+/**
+ * The inclusive bounds one `status:` operator selects. Status codes are integers,
+ * so `>N` is `>=N+1` and `<N` is `<=N-1`; a bare or `=` value is one exact code.
+ */
+function statusBounds(comparator: string | undefined, value: number): { min?: number; max?: number } {
+  switch (comparator) {
+    case '>=': return { min: value };
+    case '>': return { min: value + 1 };
+    case '<=': return { max: value };
+    case '<': return { max: value - 1 };
+    default: return { min: value, max: value };
+  }
 }
 
 export interface ParsedScope {
@@ -83,20 +102,38 @@ export function globToRegexSource(glob: string): string {
  * Never returns a partially-applied scope alongside an error — a refused term
  * contributes nothing.
  */
-export function parseRequestScope(term: string): ParsedScope {
-  const parsed = parseSearchTerm(term, { fields: REQUEST_SCOPE_FIELDS });
+export function parseRequestScope(
+  term: string,
+  fields: readonly string[] = REQUEST_SCOPE_FIELDS,
+): ParsedScope {
+  const parsed = parseSearchTerm(term, { fields });
   const scope: RequestScope = {};
 
   if (parsed.text.length > 0) {
     return {
       scope: {},
       unsupportedFields: parsed.unsupportedFields,
-      error: `"${parsed.text}" is not a scope operator - use ${REQUEST_SCOPE_FIELDS.map((f) => `${f}:`).join(', ')}, or type it into the fields below.`,
+      error: `"${parsed.text}" is not a scope operator - use ${fields.map((f) => `${f}:`).join(', ')}, or type it into the fields below.`,
     };
   }
 
   for (const op of parsed.operators) {
     if (op.unsupported) continue; // reported via unsupportedFields
+    if (op.field === 'status') {
+      const shown = `status:${op.comparator ?? ''}${op.expr}`;
+      if (!/^\d{1,3}$/.test(op.expr)) {
+        return {
+          scope: {},
+          unsupportedFields: parsed.unsupportedFields,
+          error: `${shown} - a status is a whole number from 0 to 999, e.g. status:>=400 or status:404.`,
+        };
+      }
+      const { min, max } = statusBounds(op.comparator, Number(op.expr));
+      // Repeated status: operators AND in the search box, so they intersect here.
+      if (min != null) scope.statusMin = Math.max(scope.statusMin ?? min, min);
+      if (max != null) scope.statusMax = Math.min(scope.statusMax ?? max, max);
+      continue;
+    }
     if (op.comparator && op.comparator !== '=') {
       return {
         scope: {},
@@ -135,6 +172,18 @@ export function parseRequestScope(term: string): ParsedScope {
       scope.path = globToRegexSource(op.expr);
     } else if (op.field === 'host') {
       scope.host = globToRegexSource(op.expr);
+    }
+  }
+
+  if (scope.statusMin != null || scope.statusMax != null) {
+    const min = Math.max(scope.statusMin ?? STATUS_FLOOR, STATUS_FLOOR);
+    const max = Math.min(scope.statusMax ?? STATUS_CEILING, STATUS_CEILING);
+    if (min > max) {
+      return {
+        scope: {},
+        unsupportedFields: parsed.unsupportedFields,
+        error: 'status: selects no status code - check the comparators.',
+      };
     }
   }
 

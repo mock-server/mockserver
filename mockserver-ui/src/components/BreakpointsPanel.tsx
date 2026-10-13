@@ -42,6 +42,7 @@ import {
   registerBreakpointMatcher,
   removeBreakpointMatcher,
   clearBreakpointMatchers,
+  formatStatusRange,
   type BreakpointMatcherEntry,
   type MatcherPhase,
 } from '../lib/breakpoints';
@@ -63,7 +64,7 @@ import {
   parseRequestScope,
   isApplicableScope,
   withHostHeaderRow,
-  REQUEST_SCOPE_FIELDS,
+  BREAKPOINT_SCOPE_FIELDS,
 } from '../lib/filterScope';
 import type { KeyToMultiValue, KeyToValue } from '../types';
 import ConfirmDialog from './ConfirmDialog';
@@ -109,6 +110,13 @@ function releaseNoticeText(notice: BreakpointReleaseNotice): string {
     : `Your decision was not applied: ${notice.message}`;
 }
 
+/** A status-range bound typed in the form: blank is open, otherwise three digits. */
+function parseStatusBound(text: string): number | undefined | 'invalid' {
+  const trimmed = text.trim();
+  if (trimmed === '') return undefined;
+  return /^\d{1,3}$/.test(trimmed) ? Number(trimmed) : 'invalid';
+}
+
 const GONE_FROM_DIALOG = 'This item is no longer paused, so the change cannot be applied.';
 
 function phaseChipColor(phase: string): 'default' | 'primary' | 'secondary' | 'info' | 'warning' {
@@ -140,6 +148,10 @@ export default function BreakpointsPanel({ connectionParams }: BreakpointsPanelP
   const [formCookies, setFormCookies] = useState<KeyToValue[]>([{ name: '', value: '' }]);
   const [formPhases, setFormPhases] = useState<Set<MatcherPhase>>(new Set(['REQUEST', 'RESPONSE']));
   const [formSkipCount, setFormSkipCount] = useState('');
+  // Inclusive response status range (responseStatusCodeMin/Max). The server checks it
+  // at the RESPONSE phase only; every other phase pauses regardless of status.
+  const [formStatusMin, setFormStatusMin] = useState('');
+  const [formStatusMax, setFormStatusMax] = useState('');
   const [formBusy, setFormBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -299,7 +311,7 @@ export default function BreakpointsPanel({ connectionParams }: BreakpointsPanelP
   // -------------------------------------------------------------------------
 
   // Quick scope: the filter-DSL shorthand, translated into the fields below.
-  const parsedScope = useMemo(() => parseRequestScope(scopeTerm), [scopeTerm]);
+  const parsedScope = useMemo(() => parseRequestScope(scopeTerm, BREAKPOINT_SCOPE_FIELDS), [scopeTerm]);
   // The Method control is a fixed dropdown, so a method outside it could not be
   // shown (MUI would render a blank Select). Say so rather than dropping it.
   const scopeMethodUnknown =
@@ -313,10 +325,17 @@ export default function BreakpointsPanel({ connectionParams }: BreakpointsPanelP
     : parsedScope.error;
 
   const applyScope = useCallback(() => {
-    const { method, path, host } = parsedScope.scope;
+    const { method, path, host, statusMin, statusMax } = parsedScope.scope;
     if (method) setFormMethod(method);
     if (path) setFormPath(path);
     if (host) setFormHeaders((prev) => withHostHeaderRow(prev, host));
+    if (statusMin != null || statusMax != null) {
+      setFormStatusMin(statusMin != null ? String(statusMin) : '');
+      setFormStatusMax(statusMax != null ? String(statusMax) : '');
+      // A status is only known once there is a response, so the scope means
+      // "break on these responses"; a ticked Request phase would pause every request.
+      setFormPhases(new Set(['RESPONSE']));
+    }
     setScopeTerm('');
   }, [parsedScope]);
 
@@ -327,6 +346,21 @@ export default function BreakpointsPanel({ connectionParams }: BreakpointsPanelP
     }
     if (formPhases.size === 0) {
       setFormError('At least one phase must be selected.');
+      return;
+    }
+    const statusMin = parseStatusBound(formStatusMin);
+    const statusMax = parseStatusBound(formStatusMax);
+    if (statusMin === 'invalid' || statusMax === 'invalid') {
+      setFormError('A response status must be a whole number from 0 to 999.');
+      return;
+    }
+    const hasStatusRange = statusMin != null || statusMax != null;
+    if (statusMin != null && statusMax != null && statusMin > statusMax) {
+      setFormError('The minimum response status must not be greater than the maximum.');
+      return;
+    }
+    if (hasStatusRange && !formPhases.has('RESPONSE')) {
+      setFormError('A response status range is checked only at the Response phase, so tick Response.');
       return;
     }
     const httpRequest: Record<string, unknown> = {};
@@ -342,9 +376,11 @@ export default function BreakpointsPanel({ connectionParams }: BreakpointsPanelP
     if (validParams.length > 0) httpRequest.queryStringParameters = validParams;
     const validCookies = formCookies.filter((c) => c.name && c.value);
     if (validCookies.length > 0) httpRequest.cookies = validCookies;
-    // No fields matches everything, which pauses all traffic, so it must be confirmed
+    // No fields matches everything, which pauses all traffic, so it must be confirmed.
+    // A status range on a Response-only matcher narrows it, so that needs no confirming.
+    const narrowedByStatus = hasStatusRange && formPhases.size === 1;
     if (Object.keys(httpRequest).length === 0) {
-      if (!confirmedCatchAll) {
+      if (!confirmedCatchAll && !narrowedByStatus) {
         setFormError(null);
         setCatchAllConfirmOpen(true);
         return;
@@ -372,6 +408,7 @@ export default function BreakpointsPanel({ connectionParams }: BreakpointsPanelP
         [...formPhases],
         clientId,
         skipCount,
+        { min: statusMin, max: statusMax },
       );
       trackFeature('breakpoint_set');
       refreshMatchers();
@@ -382,12 +419,14 @@ export default function BreakpointsPanel({ connectionParams }: BreakpointsPanelP
       setFormQueryParams([{ name: '', values: [''] }]);
       setFormCookies([{ name: '', value: '' }]);
       setFormSkipCount('');
+      setFormStatusMin('');
+      setFormStatusMax('');
     } catch (e) {
       setFormError(humanizeError(e).message);
     } finally {
       setFormBusy(false);
     }
-  }, [connectionParams, clientId, formMethod, formPath, formHeaders, formQueryParams, formCookies, formPhases, formSkipCount, refreshMatchers]);
+  }, [connectionParams, clientId, formMethod, formPath, formHeaders, formQueryParams, formCookies, formPhases, formSkipCount, formStatusMin, formStatusMax, refreshMatchers]);
 
   const handleRemoveMatcher = useCallback(async (id: string) => {
     setBusy(true);
@@ -706,16 +745,17 @@ export default function BreakpointsPanel({ connectionParams }: BreakpointsPanelP
               Register a New Breakpoint Matcher
             </Typography>
             {/* Quick scope — the same filter-DSL operator syntax as the Traffic and
-                dashboard search boxes, narrowed to the three operators a breakpoint
-                matcher can genuinely intercept on. Applying FILLS the fields below
-                (a glob becomes the equivalent regex) so what will be registered stays
-                visible and editable; the richer matchers keep their own controls. */}
+                dashboard search boxes, narrowed to the operators a breakpoint matcher
+                can genuinely intercept on. Applying FILLS the fields below (a glob
+                becomes the equivalent regex) so what will be registered stays visible
+                and editable; the richer matchers keep their own controls. */}
             <Box sx={{ display: 'flex', gap: 1, mb: 0.5, alignItems: 'flex-start', flexWrap: 'wrap' }}>
               <OperatorSearchField
                 id="breakpoint-scope"
+                ariaLabel="Breakpoint scope"
                 value={scopeTerm}
                 onChange={setScopeTerm}
-                fields={REQUEST_SCOPE_FIELDS}
+                fields={BREAKPOINT_SCOPE_FIELDS}
                 maxWidth={520}
                 sx={{ ml: 0, flex: 1, minWidth: 240 }}
               />
@@ -768,6 +808,28 @@ export default function BreakpointsPanel({ connectionParams }: BreakpointsPanelP
                 slotProps={{ htmlInput: { min: 0, step: 1 }, inputLabel: { shrink: true } }}
                 sx={{ width: 120, flexShrink: 0 }}
               />
+              <TextField
+                label="Min status"
+                value={formStatusMin}
+                onChange={(e) => setFormStatusMin(e.target.value)}
+                size="small"
+                type="number"
+                placeholder="any"
+                title="Pause a response only when its status code is at least this (checked at the Response phase only)"
+                slotProps={{ htmlInput: { min: 0, max: 999, step: 1 }, inputLabel: { shrink: true } }}
+                sx={{ width: 110, flexShrink: 0 }}
+              />
+              <TextField
+                label="Max status"
+                value={formStatusMax}
+                onChange={(e) => setFormStatusMax(e.target.value)}
+                size="small"
+                type="number"
+                placeholder="any"
+                title="Pause a response only when its status code is at most this (checked at the Response phase only)"
+                slotProps={{ htmlInput: { min: 0, max: 999, step: 1 }, inputLabel: { shrink: true } }}
+                sx={{ width: 110, flexShrink: 0 }}
+              />
             </Box>
             <MultiValueField label="Headers" items={formHeaders} onChange={setFormHeaders} disabled={formBusy} />
             <MultiValueField label="Query parameters" items={formQueryParams} onChange={setFormQueryParams} disabled={formBusy} />
@@ -787,6 +849,13 @@ export default function BreakpointsPanel({ connectionParams }: BreakpointsPanelP
                 />
               ))}
             </FormGroup>
+            {(formStatusMin.trim() !== '' || formStatusMax.trim() !== '') &&
+              [...formPhases].some((p) => p !== 'RESPONSE') && (
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                The status range is checked at the Response phase only; the other ticked phases pause
+                regardless of status.
+              </Typography>
+            )}
             {formError && (
               <Alert severity="error" sx={{ mb: 1 }}>
                 {formError}
@@ -870,6 +939,14 @@ export default function BreakpointsPanel({ connectionParams }: BreakpointsPanelP
                           <Typography variant="caption" sx={{ fontFamily: 'monospace' }}>
                             {m.httpRequest ? `${(m.httpRequest.method as string) ?? '*'} ${(m.httpRequest.path as string) ?? '/'}` : '*'}
                           </Typography>
+                          {formatStatusRange(m.responseStatusCodeMin, m.responseStatusCodeMax) && (
+                            <Chip
+                              size="small"
+                              variant="outlined"
+                              label={formatStatusRange(m.responseStatusCodeMin, m.responseStatusCodeMax)}
+                              sx={{ ml: 0.5, height: 20, fontSize: '0.6rem' }}
+                            />
+                          )}
                         </TableCell>
                         <TableCell>
                           <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>

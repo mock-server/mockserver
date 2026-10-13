@@ -1151,7 +1151,8 @@ describe('BreakpointsPanel — quick scope', () => {
     connectCallbackWs('scope-client');
   }
 
-  const scopeInput = () => screen.getByLabelText('Search');
+  // Named for its purpose, so it is not one more anonymous "Search" box.
+  const scopeInput = () => screen.getByRole('textbox', { name: 'Breakpoint scope' });
   const applyButton = () => screen.getByRole('button', { name: 'Apply scope' });
 
   it('advertises only the operators a breakpoint matcher can intercept on', async () => {
@@ -1162,8 +1163,9 @@ describe('BreakpointsPanel — quick scope', () => {
     expect(placeholder).toContain('method:POST');
     expect(placeholder).toContain('path:/api/*');
     expect(placeholder).toContain('host:*.example.com');
-    // A matcher has no response and no body matcher wired here.
-    expect(placeholder).not.toContain('status:');
+    // The matcher's response status range gives status: somewhere to land.
+    expect(placeholder).toContain('status:>=400');
+    // No body matcher is wired here.
     expect(placeholder).not.toContain('operation:');
   });
 
@@ -1207,11 +1209,11 @@ describe('BreakpointsPanel — quick scope', () => {
     stubRegister();
     await renderConnected();
 
-    await user.type(scopeInput(), 'status:>=400');
+    await user.type(scopeInput(), 'operation:GetUser');
 
     const explanation = screen.getByText(/not supported here/i);
-    expect(explanation).toHaveTextContent('status:');
-    expect(explanation).toHaveTextContent('Supported here: method:, path:, host:');
+    expect(explanation).toHaveTextContent('operation:');
+    expect(explanation).toHaveTextContent('Supported here: method:, path:, host:, status:');
     expect(scopeInput()).toHaveAttribute('aria-invalid', 'true');
     expect(applyButton()).toBeDisabled();
     expect(screen.getByLabelText(/Path/)).toHaveValue('');
@@ -1250,6 +1252,136 @@ describe('BreakpointsPanel — quick scope', () => {
 
     await waitFor(() => { expect(captured.body).not.toBeNull(); });
     expect(captured.body!.httpRequest).toEqual({ path: '/api/(orders|carts)' });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Response status range (responseStatusCodeMin / responseStatusCodeMax)
+// ---------------------------------------------------------------------------
+
+describe('BreakpointsPanel — response status range', () => {
+  function stubRegister(listed: BreakpointMatcherListResponse = emptyMatchers) {
+    const captured: { body: Record<string, unknown> | null; puts: number } = { body: null, puts: 0 };
+    vi.stubGlobal('fetch', vi.fn(async (url: string, init?: RequestInit) => {
+      if (String(url).endsWith('/mockserver/breakpoint/matcher') && init?.method === 'PUT') {
+        captured.puts++;
+        captured.body = JSON.parse(init.body as string) as Record<string, unknown>;
+        return { ok: true, status: 201, json: async () => ({ id: 'new-1', phases: ['RESPONSE'] }) };
+      }
+      return { ok: true, status: 200, json: async () => listed };
+    }));
+    return captured;
+  }
+
+  async function renderConnected() {
+    renderPanel();
+    await waitFor(() => { expect(MockWebSocket.instances.length).toBeGreaterThan(0); });
+    connectCallbackWs('status-client');
+  }
+
+  const scopeInput = () => screen.getByRole('textbox', { name: 'Breakpoint scope' });
+  const phaseBox = (label: string) => screen.getByRole('checkbox', { name: label });
+  const register = () => screen.getByRole('button', { name: /Register Matcher/ });
+
+  it('registers a status: scope as a Response-only status range', async () => {
+    const user = userEvent.setup();
+    const captured = stubRegister();
+    await renderConnected();
+    expect(phaseBox('Request')).toBeChecked();
+
+    await user.type(scopeInput(), 'path:/api/* status:>=400 status:<500');
+    await user.click(screen.getByRole('button', { name: 'Apply scope' }));
+
+    expect(screen.getByLabelText('Min status')).toHaveValue(400);
+    expect(screen.getByLabelText('Max status')).toHaveValue(499);
+    // A status is known only once there is a response, so Request is unticked.
+    expect(phaseBox('Request')).not.toBeChecked();
+    expect(phaseBox('Response')).toBeChecked();
+
+    await user.click(register());
+    await waitFor(() => { expect(captured.body).not.toBeNull(); });
+    expect(captured.body).toMatchObject({
+      httpRequest: { path: '/api/.*' },
+      phases: ['RESPONSE'],
+      responseStatusCodeMin: 400,
+      responseStatusCodeMax: 499,
+    });
+  });
+
+  it('registers a status range with no request fields without the pause-everything warning', async () => {
+    const user = userEvent.setup();
+    const captured = stubRegister();
+    await renderConnected();
+
+    await user.type(scopeInput(), 'status:>=500');
+    await user.click(screen.getByRole('button', { name: 'Apply scope' }));
+    await user.click(register());
+
+    await waitFor(() => { expect(captured.body).not.toBeNull(); });
+    expect(screen.queryByText('Pause every request?')).not.toBeInTheDocument();
+    expect(captured.body).toMatchObject({ phases: ['RESPONSE'], responseStatusCodeMin: 500 });
+    expect(captured.body).not.toHaveProperty('responseStatusCodeMax');
+  });
+
+  it('still warns when a status range sits beside the Request phase, which ignores it', async () => {
+    const user = userEvent.setup();
+    const captured = stubRegister();
+    await renderConnected();
+
+    await user.type(screen.getByLabelText('Min status'), '500');
+    expect(screen.getByText(/checked at the Response phase only/)).toBeInTheDocument();
+
+    await user.click(register());
+    expect(await screen.findByText('Pause every request?')).toBeInTheDocument();
+    expect(captured.puts).toBe(0);
+  });
+
+  it('refuses a status range without the Response phase', async () => {
+    const user = userEvent.setup();
+    const captured = stubRegister();
+    await renderConnected();
+
+    await user.type(screen.getByLabelText(/Path/), '/api/.*');
+    await user.type(screen.getByLabelText('Min status'), '500');
+    await user.click(phaseBox('Response'));
+    await user.click(register());
+
+    expect(await screen.findByText(/tick Response/)).toBeInTheDocument();
+    expect(captured.puts).toBe(0);
+  });
+
+  it('refuses a minimum above the maximum, and a status that is not a code', async () => {
+    const user = userEvent.setup();
+    const captured = stubRegister();
+    await renderConnected();
+
+    await user.type(screen.getByLabelText(/Path/), '/api/.*');
+    await user.type(screen.getByLabelText('Min status'), '500');
+    await user.type(screen.getByLabelText('Max status'), '400');
+    await user.click(register());
+    expect(await screen.findByText(/must not be greater than the maximum/)).toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText('Max status'));
+    await user.type(screen.getByLabelText('Max status'), '1000');
+    await user.click(register());
+    expect(await screen.findByText(/whole number from 0 to 999/)).toBeInTheDocument();
+    expect(captured.puts).toBe(0);
+  });
+
+  it('shows a registered matcher\'s status range in the list', async () => {
+    stubRegister({
+      matchers: [
+        { id: 'm-range', httpRequest: { path: '/a' }, phases: ['RESPONSE'], responseStatusCodeMin: 400, responseStatusCodeMax: 499 },
+        { id: 'm-open', httpRequest: { path: '/b' }, phases: ['RESPONSE'], responseStatusCodeMin: 500 },
+        { id: 'm-none', httpRequest: { path: '/c' }, phases: ['REQUEST'] },
+      ],
+    });
+    renderPanel();
+
+    await waitFor(() => { expect(screen.getByText('m-range')).toBeInTheDocument(); });
+    expect(screen.getByText('status 400-499')).toBeInTheDocument();
+    expect(screen.getByText('status >=500')).toBeInTheDocument();
+    expect(screen.getAllByText(/^status /)).toHaveLength(2);
   });
 });
 

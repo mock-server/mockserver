@@ -85,25 +85,34 @@ To finish it:
 4. The single-socket invariant survives by construction: a params identity change re-creates
    `connect`, and `connect()` closes the previous socket first.
 
+Re-assessed 2026-10-13 and left deferred: it is not small. Beyond the four steps above,
+finishing it needs:
+- the Breakpoints callback WebSocket is an app-lifetime singleton
+  (`getBreakpointCallbackClient`) whose matchers are owned on the server by its `clientId`,
+  so switching a tab's target must reconnect it, and the matchers registered on instance A
+  are then dropped or orphaned; that needs a decision, not just a reset;
+- module-level caches outside the four store arrays also hold instance A's data: the
+  remembered shortened expectations (`lib/fullExpectation.ts`), the loaded full bodies
+  (`fullMessages`), the auto-load attempted markers (`useAutoLoadLlmRows`) and the rows held
+  by `useHeldItems`;
+- a target on another origin makes every control-plane `fetch` cross-origin, which works
+  only when that MockServer answers CORS for its API (`enableCORSForAPI`); the dashboard
+  needs to say so rather than fail with a bare network error;
+- a workspace that holds a connection target is exactly the "more state" the single-writer
+  follow-up below warns about, so two browser tabs would need resolving first.
+
 ---
 
 ## Follow-ups the reviews surfaced
 
-- **`OperatorSearchField` has a hard-coded `aria-label: 'Search'`.** `VerificationView` is the
-  first surface rendering several in one view (one per ordered-sequence step), so a screen
-  reader announces "Search" N times with nothing distinguishing them — and the tests have to
-  index positionally, which is the symptom. Add an optional `ariaLabel` prop and pass
-  `Scope for step N` / `Breakpoint scope`.
-- **`status:` on breakpoints is implementable today.** `BreakpointMatcher` already carries
-  `responseStatusCodeMin`/`Max` and the endpoint parses them; the dashboard just never sends a
-  response condition. Adding those fields to the breakpoint form would let `status:>=400`
-  work there. (Verification would additionally need `statusCodeRange`, which
-  `StatusCodeMatcher` supports — exact, class ranges like `"2XX"`, and numeric operators.)
-- **The host facet's counts are unfiltered** by design, so with `method:POST` already typed a
-  host reading "3 requests" can yield 1 row. Deriving them from the filtered rows would
-  collapse the list to the pinned host with no way back, so the counts are right — but the
-  affordance is silent. Show `matching/total` when another operator is active, or qualify the
-  tooltip.
+- **`status:` on the verification scope.** The Verify view's quick scope still flags `status:` as
+  unsupported, because its response matcher form has a single exact `statusCode` field.
+  `StatusCodeMatcher` already supports an exact code, a class range such as `"2XX"` and numeric
+  operators via `statusCodeRange`, so adding a range field to the verification response matcher
+  (and passing `[...REQUEST_SCOPE_FIELDS, 'status']` to its scope, translating each comparator to
+  `statusCodeRange`) would make `status:>=400` work there. `lib/filterScope.ts`
+  `parseRequestScope` already produces inclusive `statusMin`/`statusMax` bounds for the breakpoint
+  scope, with a test that they select exactly what the search box selects.
 - **Workspace persistence assumes a single writer per origin.** Two dashboard browser tabs
   share one `localStorage`, so the legacy keys can be written by a tab on workspace 1 while
   the blob says workspace 2 is active. The payload is a view name and five strings, so it is

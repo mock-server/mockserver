@@ -130,7 +130,7 @@ const hasError = (errors: RequestErrors | ResponseErrors): boolean => Object.val
  * nothing. Applying FILLS the fields below (a glob becomes the equivalent regex), so
  * the form stays the single source of truth and every field remains editable.
  */
-function ScopeField({ id, form, onChange, busy }: { id: string; form: RequestForm; onChange: (f: RequestForm) => void; busy?: boolean }) {
+function ScopeField({ id, ariaLabel, form, onChange, busy }: { id: string; ariaLabel: string; form: RequestForm; onChange: (f: RequestForm) => void; busy?: boolean }) {
   const [term, setTerm] = useState('');
   const parsed = useMemo(() => parseRequestScope(term), [term]);
   const methodUnknown = parsed.scope.method != null && !METHODS.includes(parsed.scope.method);
@@ -156,7 +156,7 @@ function ScopeField({ id, form, onChange, busy }: { id: string; form: RequestFor
       <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <OperatorSearchField
           id={id}
-          ariaLabel="Quick scope"
+          ariaLabel={ariaLabel}
           value={term}
           onChange={setTerm}
           fields={REQUEST_SCOPE_FIELDS}
@@ -176,11 +176,11 @@ function ScopeField({ id, form, onChange, busy }: { id: string; form: RequestFor
   );
 }
 
-function RequestFields({ scopeId, form, onChange, busy }: { scopeId: string; form: RequestForm; onChange: (f: RequestForm) => void; busy?: boolean }) {
+function RequestFields({ scopeId, scopeLabel, form, onChange, busy }: { scopeId: string; scopeLabel: string; form: RequestForm; onChange: (f: RequestForm) => void; busy?: boolean }) {
   const errors = requestErrors(form);
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      <ScopeField id={scopeId} form={form} onChange={onChange} busy={busy} />
+      <ScopeField id={scopeId} ariaLabel={scopeLabel} form={form} onChange={onChange} busy={busy} />
       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
         <Select
           size="small"
@@ -442,7 +442,7 @@ export default function VerificationView({ connectionParams }: { connectionParam
             invalid={hasError(requestErrors(single))}
             onToggle={() => setSingleRequestExpanded(!singleRequestExpanded)}
           >
-            <RequestFields scopeId="verify-scope-single" form={single} onChange={setSingle} busy={busy} />
+            <RequestFields scopeId="verify-scope-single" scopeLabel="Quick scope" form={single} onChange={setSingle} busy={busy} />
           </MatcherSection>
           <MatcherSection
             title="Response matcher (optional)"
@@ -495,7 +495,7 @@ export default function VerificationView({ connectionParams }: { connectionParam
                   invalid={hasError(requestErrors(row))}
                   onToggle={() => setSeqRequestExpanded(seqRequestExpanded.map((v, j) => j === i ? !v : v))}
                 >
-                  <RequestFields scopeId={`verify-scope-step-${i}`} form={row} onChange={(f) => setSequence(sequence.map((r, j) => j === i ? f : r))} busy={busy} />
+                  <RequestFields scopeId={`verify-scope-step-${i}`} scopeLabel={`Scope for step ${i + 1}`} form={row} onChange={(f) => setSequence(sequence.map((r, j) => j === i ? f : r))} busy={busy} />
                 </MatcherSection>
                 <MatcherSection
                   title="Response matcher (optional)"

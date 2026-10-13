@@ -134,9 +134,11 @@ describe('VerificationView quick scope', () => {
     renderView();
 
     await user.click(screen.getByRole('button', { name: 'Ordered sequence' }));
-    expect(screen.getAllByLabelText('Quick scope')).toHaveLength(2);
+    // Each step's box is named for its step, so a screen reader can tell them apart.
+    expect(screen.queryByLabelText('Quick scope')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Scope for step 1')).toBeInTheDocument();
 
-    await user.type(screen.getAllByLabelText('Quick scope')[1]!, 'path:/step/*');
+    await user.type(screen.getByLabelText('Scope for step 2'), 'path:/step/*');
     await user.click(screen.getAllByRole('button', { name: 'Apply scope' })[1]!);
 
     const paths = screen.getAllByLabelText('Path');

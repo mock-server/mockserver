@@ -4,6 +4,7 @@ import {
   listBreakpointMatchers,
   removeBreakpointMatcher,
   clearBreakpointMatchers,
+  formatStatusRange,
   type BreakpointMatcherListResponse,
 } from '../lib/breakpoints';
 
@@ -65,6 +66,26 @@ describe('registerBreakpointMatcher', () => {
     const [, init] = fetchMock.mock.calls[0]!;
     const body = JSON.parse(init.body as string);
     expect(body.skipCount).toBe(2);
+  });
+
+  it('sends a response status range as responseStatusCodeMin/Max', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({ id: 'match-s', phases: ['RESPONSE'] }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await registerBreakpointMatcher(params, { path: '.*' }, ['RESPONSE'], 'c', undefined, { min: 400, max: 499 });
+    await registerBreakpointMatcher(params, { path: '.*' }, ['RESPONSE'], 'c', undefined, { min: 500 });
+    await registerBreakpointMatcher(params, { path: '.*' }, ['RESPONSE'], 'c');
+
+    const bodies = fetchMock.mock.calls.map(([, init]) => JSON.parse((init as RequestInit).body as string));
+    expect(bodies[0]).toMatchObject({ responseStatusCodeMin: 400, responseStatusCodeMax: 499 });
+    expect(bodies[1].responseStatusCodeMin).toBe(500);
+    expect(bodies[1]).not.toHaveProperty('responseStatusCodeMax');
+    expect(bodies[2]).not.toHaveProperty('responseStatusCodeMin');
+    expect(bodies[2]).not.toHaveProperty('responseStatusCodeMax');
   });
 
   it('omits skipCount when it is zero', async () => {
@@ -139,5 +160,15 @@ describe('clearBreakpointMatchers', () => {
     const [url, init] = fetchMock.mock.calls[0]!;
     expect(url).toBe('http://127.0.0.1:1080/mockserver/breakpoint/matcher/clear');
     expect(init.method).toBe('PUT');
+  });
+});
+
+describe('formatStatusRange', () => {
+  it('describes each shape of range, and nothing when there is none', () => {
+    expect(formatStatusRange(400, 499)).toBe('status 400-499');
+    expect(formatStatusRange(404, 404)).toBe('status 404');
+    expect(formatStatusRange(500)).toBe('status >=500');
+    expect(formatStatusRange(undefined, 399)).toBe('status <=399');
+    expect(formatStatusRange()).toBeNull();
   });
 });

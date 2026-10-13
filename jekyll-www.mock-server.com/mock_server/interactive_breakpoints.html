@@ -235,6 +235,8 @@ curl -X PUT http://localhost:1080/mockserver/breakpoint/matcher \
     <span class="inline_code">responseStatusCodeMin</span> must not be greater than
     <span class="inline_code">responseStatusCodeMax</span>, otherwise registration returns
     <span class="inline_code">400</span>.
+    In the dashboard, the status range is the <strong>Min status</strong> and <strong>Max status</strong> fields of
+    the matcher-registration form.
 </p>
 
 <h3>Matcher management endpoints</h3>
@@ -408,7 +410,11 @@ curl -X PUT http://localhost:1080/mockserver/breakpoint/matcher \
 <h3>Matchers tab</h3>
 <p>
     A form to register a breakpoint matcher — enter a method (optional), a path pattern (supports regex),
-    and check which phases to intercept. On submit, the dashboard calls
+    an optional response status range (<strong>Min status</strong> / <strong>Max status</strong>, checked at the
+    Response phase only), and check which phases to intercept. The scope box above the form accepts the same
+    operators as the Traffic search, for example <span class="inline_code">method:POST path:/api/* status:&gt;=500</span>;
+    <strong>Apply scope</strong> fills the form from it, and a <span class="inline_code">status:</span> operator also
+    sets the phase to Response only, because a status is known only once there is a response. On submit, the dashboard calls
     <span class="inline_code">PUT /mockserver/breakpoint/matcher</span> with its own
     <span class="inline_code">clientId</span>. The tab lists all registered matchers with remove and clear-all
     actions.

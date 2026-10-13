@@ -31,6 +31,23 @@ export interface BreakpointMatcherEntry {
   clientId?: string;
   /** Optional Nth-hit / skip-count: pause only after this many matching hits. */
   skipCount?: number;
+  /** Inclusive response status range; checked at the RESPONSE phase only. */
+  responseStatusCodeMin?: number;
+  responseStatusCodeMax?: number;
+}
+
+/** An inclusive response status range; either bound may be open. */
+export interface StatusRange {
+  min?: number;
+  max?: number;
+}
+
+/** A matcher's status range as shown in the matcher list, or null when it has none. */
+export function formatStatusRange(min?: number, max?: number): string | null {
+  if (min != null && max != null) return min === max ? `status ${min}` : `status ${min}-${max}`;
+  if (min != null) return `status >=${min}`;
+  if (max != null) return `status <=${max}`;
+  return null;
 }
 
 export interface BreakpointMatcherListResponse {
@@ -48,10 +65,13 @@ export async function registerBreakpointMatcher(
   phases: MatcherPhase[],
   clientId?: string,
   skipCount?: number,
+  statusRange?: StatusRange,
 ): Promise<{ id: string; phases: MatcherPhase[] }> {
   const body: Record<string, unknown> = { httpRequest, phases };
   if (clientId) body.clientId = clientId;
   if (typeof skipCount === 'number' && skipCount > 0) body.skipCount = skipCount;
+  if (statusRange?.min != null) body.responseStatusCodeMin = statusRange.min;
+  if (statusRange?.max != null) body.responseStatusCodeMax = statusRange.max;
   const res = await fetch(matcherEndpoint(params), {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },

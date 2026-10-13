@@ -851,7 +851,13 @@ Prior to this, any UI feature that called an MCP tool was broken with a session-
 
 The panel has **three tabs**:
 
-**Matchers tab** — register a breakpoint matcher (method, path regex, headers, query parameters, cookies) together with the phases to break at (`REQUEST` / `RESPONSE` / `RESPONSE_STREAM` / `INBOUND_STREAM`), and list / remove / clear the active matchers. The matcher REST endpoints:
+**Matchers tab** — register a breakpoint matcher (method, path regex, headers, query parameters, cookies, and an optional inclusive response status range sent as `responseStatusCodeMin`/`responseStatusCodeMax`) together with the phases to break at (`REQUEST` / `RESPONSE` / `RESPONSE_STREAM` / `INBOUND_STREAM`), and list / remove / clear the active matchers. The list shows a matcher's status range as a chip (`formatStatusRange`).
+
+The server checks the status range at the `RESPONSE` phase only (`BreakpointMatcherRegistry.findResponseMatch`); the request and stream phases pause regardless of it. So registration refuses a status range without the Response phase ticked, a caption warns when other phases are ticked beside it, and a min above the max or a value outside 0-999 is refused before the request is sent.
+
+**Breakpoint scope** — the `OperatorSearchField` above the form (accessible name "Breakpoint scope") takes `BREAKPOINT_SCOPE_FIELDS`: `method:`, `path:`, `host:` and `status:`. **Apply scope** fills the form through `lib/filterScope.ts` `parseRequestScope`: globs become anchored regexes, `host:` becomes a `Host` header row, and each `status:` comparator becomes inclusive bounds (`>N` is `>=N+1`, `<N` is `<=N-1`, a bare code is one exact code); repeated `status:` operators intersect, as the search box ANDs them, and a range that selects no code is refused. A `status:` scope also sets the phases to Response only, since a ticked Request phase would pause every matching request. A test compares the translated range with `matchesItemSearch` for every status from 100 to 599. Verification's form has no range field, so its scope (`REQUEST_SCOPE_FIELDS`) still flags `status:` as unsupported; each of its scope boxes is named ("Quick scope", "Scope for step N") so a screen reader can tell an ordered sequence's steps apart.
+
+The matcher REST endpoints:
 
 | Action | Endpoint |
 |--------|----------|
@@ -876,7 +882,7 @@ Held items are bounded client-side and cleared when the callback WebSocket disco
 
 **Items MockServer resolves itself** — when the breakpoint timeout continues a paused item, or a stream ends before a held frame can be delivered, the server sends a `BreakpointReleasedDTO` (the dashboard asks for these by connecting with `?capabilities=breakpointReleased`). The client removes the item from its store and tells subscribers (`subscribeReleaseNotices`); the panel shows the message in a dismissible notice (`data-testid="breakpoint-release-notice"`), and an open Modify / Inject dialog for that item shows an error and no longer sends. The client remembers the correlation ids it has replied to, so a notice that crosses the user's own decision is shown as "Your decision was not applied".
 
-**Catch-all confirmation** — registering with no method, path, header, query parameter or cookie would create a `.*` matcher that pauses every request, so the Register Matcher button opens a confirmation dialog ("Pause every request?") first.
+**Catch-all confirmation** — registering with no method, path, header, query parameter or cookie would create a `.*` matcher that pauses every request, so the Register Matcher button opens a confirmation dialog ("Pause every request?") first. A Response-only matcher with a status range is not confirmed, since the range limits what it pauses.
 
 **Empty-state guidance**: when there are no paused exchanges or stream frames yet, each tab shows a contextual prompt directing the user to the correct next step — e.g. "Register a breakpoint matcher (Matchers tab) to pause matching forwarded requests or responses." If the callback WebSocket is not yet `connected`, an info banner explains the state and tells the user that items will appear once the connection establishes and matchers are registered.
 

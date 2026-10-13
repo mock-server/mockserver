@@ -617,13 +617,21 @@ The Breakpoints panel has three tabs:
 
 - A **matcher-builder form** to register a breakpoint matcher with method, path
   (regex), phase checkboxes (Request, Response, Response stream frames,
-  Inbound stream frames), and an optional **Skip count** field (Nth-hit /
-  conditional breakpoint). A form with no request fields would register a
-  catch-all `.*` matcher, so it asks for confirmation first. On submit, calls
-  `PUT /mockserver/breakpoint/matcher {httpRequest, phases, clientId, skipCount?}`
+  Inbound stream frames), an optional **Skip count** field (Nth-hit /
+  conditional breakpoint), and optional **Min status** / **Max status** fields
+  (an inclusive response status range, 0-999). On submit, calls
+  `PUT /mockserver/breakpoint/matcher {httpRequest, phases, clientId, skipCount?, responseStatusCodeMin?, responseStatusCodeMax?}`
   with the dashboard's assigned `clientId`.
+- **The status range is Response-only.** The server checks it only at the
+  `RESPONSE` phase (`findResponseMatch`); the request and stream phases pause
+  regardless of it. So the form refuses a range without Response ticked, warns
+  when other phases are ticked beside it, refuses a min above the max, and the
+  scope box's `status:` operator sets the phases to Response only.
+- A form with no request fields would register a catch-all `.*` matcher, so it
+  asks for confirmation first, unless the matcher is Response-only with a
+  status range, which limits what it pauses.
 - Lists all registered matchers (`GET /mockserver/breakpoint/matchers`) with
-  remove and clear-all actions.
+  each matcher's status range as a chip, and remove and clear-all actions.
 
 ### Live Exchanges tab
 
