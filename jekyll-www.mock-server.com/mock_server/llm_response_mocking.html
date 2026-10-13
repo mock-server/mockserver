@@ -928,7 +928,12 @@ data: [DONE]</code></pre>
     As on Bedrock, a non-streaming <span class="inline_code">BEDROCK</span> InvokeModel response also reports its
     token counts in the <span class="inline_code">X-Amzn-Bedrock-Input-Token-Count</span> header and, for a
     completion, the <span class="inline_code">X-Amzn-Bedrock-Output-Token-Count</span> header. Clients such as
-    LangChain's <span class="inline_code">ChatBedrock</span> read usage from these headers. For a Titan embedding the
+    LangChain's <span class="inline_code">ChatBedrock</span> read usage from these headers. If the completion's
+    <span class="inline_code">usage</span> sets <span class="inline_code">cachedInputTokens</span> or
+    <span class="inline_code">cacheCreationTokens</span>, the response also has the
+    <span class="inline_code">X-Amzn-Bedrock-Cache-Read-Input-Token-Count</span> and
+    <span class="inline_code">X-Amzn-Bedrock-Cache-Write-Input-Token-Count</span> headers, as Bedrock sends for
+    models that support prompt caching; a count you leave unset is sent as 0. For a Titan embedding the
     input count is <span class="inline_code">inputTextTokenCount</span>; for a Cohere embedding it is an estimate of
     about four characters per token of the texts, with images not counted. Converse and streaming responses have no
     token-count headers, as on Bedrock.

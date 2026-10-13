@@ -38,7 +38,10 @@ import java.util.regex.Pattern;
  * A non-streaming InvokeModel response also carries its token counts in the
  * {@code X-Amzn-Bedrock-Input-Token-Count} header and, for a completion, the
  * {@code X-Amzn-Bedrock-Output-Token-Count} header, as real Bedrock sends them; boto3-based clients
- * such as langchain-aws read usage only from these headers. Converse and streaming responses carry none.
+ * such as langchain-aws read usage only from these headers. A completion whose usage has a cache read
+ * or cache write count also carries {@code X-Amzn-Bedrock-Cache-Read-Input-Token-Count} and
+ * {@code X-Amzn-Bedrock-Cache-Write-Input-Token-Count}, as Bedrock sends them for the models that support
+ * prompt caching. Converse and streaming responses carry none.
  * <p>
  * <strong>SigV4 signing</strong> applies to the runtime client path ({@code BedrockLlmClient}),
  * not to this codec.
@@ -47,6 +50,8 @@ public class BedrockCodec implements ProviderCodec {
 
     public static final String INPUT_TOKEN_COUNT_HEADER = "X-Amzn-Bedrock-Input-Token-Count";
     public static final String OUTPUT_TOKEN_COUNT_HEADER = "X-Amzn-Bedrock-Output-Token-Count";
+    public static final String CACHE_READ_INPUT_TOKEN_COUNT_HEADER = "X-Amzn-Bedrock-Cache-Read-Input-Token-Count";
+    public static final String CACHE_WRITE_INPUT_TOKEN_COUNT_HEADER = "X-Amzn-Bedrock-Cache-Write-Input-Token-Count";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -117,9 +122,19 @@ public class BedrockCodec implements ProviderCodec {
     @Override
     public HttpResponse encode(Completion completion, String model) {
         Usage usage = completion != null ? completion.getUsage() : null;
-        return delegate.encode(completion, model)
-            .withHeader(INPUT_TOKEN_COUNT_HEADER, String.valueOf(usage != null && usage.getInputTokens() != null ? usage.getInputTokens() : 0))
-            .withHeader(OUTPUT_TOKEN_COUNT_HEADER, String.valueOf(usage != null && usage.getOutputTokens() != null ? usage.getOutputTokens() : 0));
+        HttpResponse response = delegate.encode(completion, model)
+            .withHeader(INPUT_TOKEN_COUNT_HEADER, tokenCount(usage != null ? usage.getInputTokens() : null))
+            .withHeader(OUTPUT_TOKEN_COUNT_HEADER, tokenCount(usage != null ? usage.getOutputTokens() : null));
+        if (usage != null && (usage.getCachedInputTokens() != null || usage.getCacheCreationTokens() != null)) {
+            response
+                .withHeader(CACHE_READ_INPUT_TOKEN_COUNT_HEADER, tokenCount(usage.getCachedInputTokens()))
+                .withHeader(CACHE_WRITE_INPUT_TOKEN_COUNT_HEADER, tokenCount(usage.getCacheCreationTokens()));
+        }
+        return response;
+    }
+
+    private static String tokenCount(Integer count) {
+        return String.valueOf(count != null ? count : 0);
     }
 
     /**

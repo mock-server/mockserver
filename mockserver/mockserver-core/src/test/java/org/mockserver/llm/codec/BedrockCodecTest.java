@@ -298,6 +298,54 @@ public class BedrockCodecTest {
         assertThat(headerValues(response, OUTPUT_TOKEN_COUNT), contains("0"));
     }
 
+    // Values from the DataDog dd-trace-js cassettes of us.anthropic.claude-sonnet-4-20250514-v1:0 invoke calls
+    private static final String CACHE_READ_INPUT_TOKEN_COUNT = "X-Amzn-Bedrock-Cache-Read-Input-Token-Count";
+    private static final String CACHE_WRITE_INPUT_TOKEN_COUNT = "X-Amzn-Bedrock-Cache-Write-Input-Token-Count";
+
+    @Test
+    public void shouldSendTheCacheTokenCountHeadersOfAnInvokeModelCompletionThatWritesTheCache() throws Exception {
+        Completion completion = completion()
+            .withText("The capital of France is Paris.")
+            .withUsage(Usage.usage().withInputTokens(4).withOutputTokens(10).withCacheCreationTokens(1209));
+
+        HttpResponse response = codec.encode(completion, "us.anthropic.claude-sonnet-4-20250514-v1:0",
+            invoke("us.anthropic.claude-sonnet-4-20250514-v1:0", "{\"anthropic_version\":\"bedrock-2023-05-31\",\"max_tokens\":10,\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]}"));
+
+        JsonNode usage = OBJECT_MAPPER.readTree(response.getBodyAsString()).get("usage");
+        assertThat(usage.get("cache_creation_input_tokens").asInt(), is(1209));
+        assertThat(headerValues(response, INPUT_TOKEN_COUNT), contains("4"));
+        assertThat(headerValues(response, OUTPUT_TOKEN_COUNT), contains("10"));
+        assertThat(headerValues(response, CACHE_READ_INPUT_TOKEN_COUNT), contains("0"));
+        assertThat(headerValues(response, CACHE_WRITE_INPUT_TOKEN_COUNT), contains("1209"));
+        assertThat(tokenCountHeaderNames(response), containsInAnyOrder(INPUT_TOKEN_COUNT, OUTPUT_TOKEN_COUNT, CACHE_READ_INPUT_TOKEN_COUNT, CACHE_WRITE_INPUT_TOKEN_COUNT));
+    }
+
+    @Test
+    public void shouldSendAZeroCacheWriteHeaderWhenAnInvokeModelCompletionOnlyReadsTheCache() throws Exception {
+        Completion completion = completion()
+            .withText("The capital of Italy is Rome.")
+            .withUsage(Usage.usage().withInputTokens(4).withOutputTokens(10).withCachedInputTokens(1209));
+
+        HttpResponse response = codec.encode(completion, "us.anthropic.claude-sonnet-4-20250514-v1:0");
+
+        JsonNode usage = OBJECT_MAPPER.readTree(response.getBodyAsString()).get("usage");
+        assertThat(usage.get("cache_read_input_tokens").asInt(), is(1209));
+        assertThat(headerValues(response, CACHE_READ_INPUT_TOKEN_COUNT), contains("1209"));
+        assertThat(headerValues(response, CACHE_WRITE_INPUT_TOKEN_COUNT), contains("0"));
+    }
+
+    @Test
+    public void shouldSendNoTokenCountHeadersOnAConverseResponseWithCacheUsage() {
+        HttpResponse response = codec.encode(
+            completion().withText("hi").withUsage(Usage.usage().withInputTokens(5).withOutputTokens(2).withCachedInputTokens(7).withCacheCreationTokens(3)),
+            "anthropic.claude-3-haiku-20240307-v1:0",
+            request().withMethod("POST").withPath("/model/anthropic.claude-3-haiku-20240307-v1:0/converse")
+                .withBody("{\"messages\":[{\"role\":\"user\",\"content\":[{\"text\":\"hi\"}]}]}"));
+
+        assertThat(response.getBodyAsString(), containsString("\"cacheReadInputTokens\":7"));
+        assertThat(tokenCountHeaderNames(response), is(empty()));
+    }
+
     @Test
     public void shouldSendNoTokenCountHeadersOnAConverseResponse() {
         HttpResponse response = codec.encode(
