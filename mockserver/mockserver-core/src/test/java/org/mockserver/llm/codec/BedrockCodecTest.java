@@ -246,6 +246,123 @@ public class BedrockCodecTest {
         assertThat(root.get("embedding").size(), is(1024));
     }
 
+    // --- InvokeModel token-count headers, as recorded from real Bedrock responses ---
+
+    private static final String INPUT_TOKEN_COUNT = "X-Amzn-Bedrock-Input-Token-Count";
+    private static final String OUTPUT_TOKEN_COUNT = "X-Amzn-Bedrock-Output-Token-Count";
+
+    private static HttpRequest invoke(String model, String body) {
+        return request().withMethod("POST").withPath("/model/" + model + "/invoke").withBody(body);
+    }
+
+    /** The values of the header with exactly this name, so the casing Bedrock sends is asserted too. */
+    private static List<String> headerValues(HttpResponse response, String name) {
+        return response.getHeaderList().stream()
+            .filter(header -> header.getName().getValue().equals(name))
+            .flatMap(header -> header.getValues().stream().map(NottableString::getValue))
+            .collect(java.util.stream.Collectors.toList());
+    }
+
+    private static List<String> tokenCountHeaderNames(HttpResponse response) {
+        return response.getHeaderList().stream()
+            .map(header -> header.getName().getValue())
+            .filter(name -> name.toLowerCase(java.util.Locale.ROOT).contains("token-count"))
+            .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Test
+    public void shouldSendTheBodyUsageInTheTokenCountHeadersOfAnInvokeModelCompletion() throws Exception {
+        Completion completion = completion()
+            .withText("Hello from Bedrock.")
+            .withUsage(Usage.usage().withInputTokens(14).withOutputTokens(10));
+
+        HttpResponse response = codec.encode(completion, "anthropic.claude-3-7-sonnet-20250219-v1:0",
+            invoke("anthropic.claude-3-7-sonnet-20250219-v1:0", "{\"anthropic_version\":\"bedrock-2023-05-31\",\"max_tokens\":10,\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]}"));
+
+        JsonNode usage = OBJECT_MAPPER.readTree(response.getBodyAsString()).get("usage");
+        assertThat(usage.get("input_tokens").asInt(), is(14));
+        assertThat(usage.get("output_tokens").asInt(), is(10));
+        assertThat(headerValues(response, INPUT_TOKEN_COUNT), contains("14"));
+        assertThat(headerValues(response, OUTPUT_TOKEN_COUNT), contains("10"));
+        assertThat(tokenCountHeaderNames(response), containsInAnyOrder(INPUT_TOKEN_COUNT, OUTPUT_TOKEN_COUNT));
+    }
+
+    @Test
+    public void shouldSendZeroTokenCountHeadersForAnInvokeModelCompletionWithNoUsage() throws Exception {
+        HttpResponse response = codec.encode(completion().withText("no usage"), "anthropic.claude-3-haiku-20240307-v1:0");
+
+        JsonNode usage = OBJECT_MAPPER.readTree(response.getBodyAsString()).get("usage");
+        assertThat(usage.get("input_tokens").asInt(), is(0));
+        assertThat(usage.get("output_tokens").asInt(), is(0));
+        assertThat(headerValues(response, INPUT_TOKEN_COUNT), contains("0"));
+        assertThat(headerValues(response, OUTPUT_TOKEN_COUNT), contains("0"));
+    }
+
+    @Test
+    public void shouldSendNoTokenCountHeadersOnAConverseResponse() {
+        HttpResponse response = codec.encode(
+            completion().withText("hi").withUsage(Usage.usage().withInputTokens(5).withOutputTokens(2)),
+            "anthropic.claude-3-haiku-20240307-v1:0",
+            request().withMethod("POST").withPath("/model/anthropic.claude-3-haiku-20240307-v1:0/converse")
+                .withBody("{\"messages\":[{\"role\":\"user\",\"content\":[{\"text\":\"hi\"}]}]}"));
+
+        assertThat(response.getBodyAsString(), containsString("\"inputTokens\":5"));
+        assertThat(tokenCountHeaderNames(response), is(empty()));
+    }
+
+    @Test
+    public void shouldSendTheTitanInputTextTokenCountAsTheInputTokenCountHeaderAndNoOutputCount() throws Exception {
+        EmbeddingResponse embedding = EmbeddingResponse.embedding().withDimensions(8).withDeterministicFromInput(true);
+        String[][] cases = {
+            {"amazon.titan-embed-text-v1", "{\"inputText\":\"a sentence for titan g1 to embed\"}"},
+            {"amazon.titan-embed-text-v2:0", "{\"inputText\":\"a longer sentence for titan v2 to embed today\"}"},
+            {"amazon.titan-embed-image-v1", "{\"inputText\":\"a caption\"}"}
+        };
+        for (String[] invocation : cases) {
+            HttpResponse response = codec.encodeEmbedding(embedding, invoke(invocation[0], invocation[1]), null);
+
+            JsonNode tokenCount = OBJECT_MAPPER.readTree(response.getBodyAsString()).get("inputTextTokenCount");
+            assertThat(invocation[0], tokenCount.asInt(), greaterThan(0));
+            assertThat(invocation[0], headerValues(response, INPUT_TOKEN_COUNT), contains(String.valueOf(tokenCount.asInt())));
+            assertThat(invocation[0], tokenCountHeaderNames(response), contains(INPUT_TOKEN_COUNT));
+        }
+    }
+
+    @Test
+    public void shouldSendTheApproximateTokensOfTheCohereTextsAsTheInputTokenCountHeaderAndNoOutputCount() {
+        EmbeddingResponse embedding = EmbeddingResponse.embedding().withDimensions(8).withDeterministicFromInput(true);
+
+        // 12 and 20 characters, at the four characters a token every codec estimates
+        HttpResponse texts = codec.encodeEmbedding(embedding,
+            invoke("cohere.embed-english-v3", "{\"texts\":[\"Hello World!\",\"Goodbye cruel world!\"],\"input_type\":\"search_document\"}"), null);
+        assertThat(headerValues(texts, INPUT_TOKEN_COUNT), contains("8"));
+        assertThat(tokenCountHeaderNames(texts), contains(INPUT_TOKEN_COUNT));
+
+        // a v4 input's text parts are counted and its image parts are not
+        HttpResponse inputs = codec.encodeEmbedding(embedding, invoke("cohere.embed-v4:0",
+            "{\"inputs\":[{\"content\":[{\"type\":\"text\",\"text\":\"sixteen chars ok\"},"
+                + "{\"type\":\"image_url\",\"image_url\":{\"url\":\"data:image/png;base64,AAAA\"}}]},"
+                + "{\"content\":[{\"type\":\"text\",\"text\":\"eight ch\"}]}],\"input_type\":\"search_document\"}"), null);
+        assertThat(headerValues(inputs, INPUT_TOKEN_COUNT), contains("6"));
+
+        HttpResponse image = codec.encodeEmbedding(embedding,
+            invoke("cohere.embed-english-v3", "{\"images\":[\"data:image/png;base64,AAAA\"],\"input_type\":\"image\"}"), null);
+        assertThat(headerValues(image, INPUT_TOKEN_COUNT), contains("0"));
+        assertThat(tokenCountHeaderNames(image), contains(INPUT_TOKEN_COUNT));
+    }
+
+    @Test
+    public void shouldSendTheInputTokenCountHeaderOnARequestLessEmbedding() throws Exception {
+        EmbeddingResponse embedding = EmbeddingResponse.embedding().withDimensions(8);
+
+        HttpResponse titan = codec.encodeEmbedding(embedding, "test input");
+        assertThat(headerValues(titan, INPUT_TOKEN_COUNT),
+            contains(OBJECT_MAPPER.readTree(titan.getBodyAsString()).get("inputTextTokenCount").asText()));
+
+        HttpResponse cohere = codec.encodeEmbedding(embedding, "twelve chars", "cohere.embed-english-v3");
+        assertThat(headerValues(cohere, INPUT_TOKEN_COUNT), contains("3"));
+    }
+
     // --- Streaming Format ---
 
     @Test

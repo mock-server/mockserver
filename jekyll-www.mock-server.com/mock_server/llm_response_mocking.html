@@ -922,6 +922,16 @@ data: [DONE]</code></pre>
 </p>
 
 <p>
+    As on Bedrock, a non-streaming <span class="inline_code">BEDROCK</span> InvokeModel response also reports its
+    token counts in the <span class="inline_code">X-Amzn-Bedrock-Input-Token-Count</span> header and, for a
+    completion, the <span class="inline_code">X-Amzn-Bedrock-Output-Token-Count</span> header. Clients such as
+    LangChain's <span class="inline_code">ChatBedrock</span> read usage from these headers. For a Titan embedding the
+    input count is <span class="inline_code">inputTextTokenCount</span>; for a Cohere embedding it is an estimate of
+    about four characters per token of the texts, with images not counted. Converse and streaming responses have no
+    token-count headers, as on Bedrock.
+</p>
+
+<p>
     <span class="inline_code">dimensions</span> on the expectation sets the vector length. If it is not set, the size the
     request asks for (<span class="inline_code">dimensions</span>, <span class="inline_code">outputDimensionality</span> or
     <span class="inline_code">output_dimension</span>) is used, and then the default above.

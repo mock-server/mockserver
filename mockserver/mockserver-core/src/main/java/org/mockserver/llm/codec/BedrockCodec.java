@@ -35,10 +35,18 @@ import java.util.regex.Pattern;
  * The request-less {@link #encode(Completion, String)} / {@link #encodeStreaming(Completion, String, StreamingPhysics)}
  * overloads keep the original InvokeModel behaviour.
  * <p>
+ * A non-streaming InvokeModel response also carries its token counts in the
+ * {@code X-Amzn-Bedrock-Input-Token-Count} header and, for a completion, the
+ * {@code X-Amzn-Bedrock-Output-Token-Count} header, as real Bedrock sends them; boto3-based clients
+ * such as langchain-aws read usage only from these headers. Converse and streaming responses carry none.
+ * <p>
  * <strong>SigV4 signing</strong> applies to the runtime client path ({@code BedrockLlmClient}),
  * not to this codec.
  */
 public class BedrockCodec implements ProviderCodec {
+
+    public static final String INPUT_TOKEN_COUNT_HEADER = "X-Amzn-Bedrock-Input-Token-Count";
+    public static final String OUTPUT_TOKEN_COUNT_HEADER = "X-Amzn-Bedrock-Output-Token-Count";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -108,7 +116,10 @@ public class BedrockCodec implements ProviderCodec {
 
     @Override
     public HttpResponse encode(Completion completion, String model) {
-        return delegate.encode(completion, model);
+        Usage usage = completion != null ? completion.getUsage() : null;
+        return delegate.encode(completion, model)
+            .withHeader(INPUT_TOKEN_COUNT_HEADER, String.valueOf(usage != null && usage.getInputTokens() != null ? usage.getInputTokens() : 0))
+            .withHeader(OUTPUT_TOKEN_COUNT_HEADER, String.valueOf(usage != null && usage.getOutputTokens() != null ? usage.getOutputTokens() : 0));
     }
 
     /**
@@ -200,6 +211,9 @@ public class BedrockCodec implements ProviderCodec {
      *       {@code output_dimension} (256, 512, 1024 or 1536). At most 96 texts or inputs;
      *       each data URI image at most 5MB once decoded.</li>
      * </ul>
+     * Every shape carries an {@code X-Amzn-Bedrock-Input-Token-Count} header and no output count:
+     * Titan's {@code inputTextTokenCount}, or for Cohere the approximate tokens of its texts (images
+     * add none).
      * A request the real API rejects on these limits throws
      * {@link EmbeddingWire.InvalidEmbeddingRequestException}.
      */
@@ -261,11 +275,12 @@ public class BedrockCodec implements ProviderCodec {
     private HttpResponse encodeTitanEmbedding(EmbeddingResponse embedding, JsonNode body, EmbeddingFamily family) {
         JsonNode inputText = body.get("inputText");
         String text = inputText != null && inputText.isTextual() ? inputText.asText() : "";
+        int tokens = EmbeddingVectors.approximateTokens(text);
         ObjectNode root = EmbeddingWire.object();
         if (family == EmbeddingFamily.TITAN_V1) {
             EmbeddingWire.addFloats(root.putArray("embedding"), EmbeddingWire.vector(embedding, text, null, 1536));
-            root.put("inputTextTokenCount", EmbeddingVectors.approximateTokens(text));
-            return EmbeddingWire.json(root, "Bedrock Titan");
+            root.put("inputTextTokenCount", tokens);
+            return withInputTokenCount(EmbeddingWire.json(root, "Bedrock Titan"), tokens);
         }
         if (family == EmbeddingFamily.TITAN_IMAGE) {
             JsonNode config = body.get("embeddingConfig");
@@ -273,8 +288,8 @@ public class BedrockCodec implements ProviderCodec {
                 ? EmbeddingWire.requestedDimensions(config.get("outputEmbeddingLength"), "embeddingConfig.outputEmbeddingLength", 256, 384, 1024)
                 : null;
             EmbeddingWire.addFloats(root.putArray("embedding"), EmbeddingWire.vector(embedding, text, length, 1024));
-            root.put("inputTextTokenCount", EmbeddingVectors.approximateTokens(text));
-            return EmbeddingWire.json(root, "Bedrock Titan");
+            root.put("inputTextTokenCount", tokens);
+            return withInputTokenCount(EmbeddingWire.json(root, "Bedrock Titan"), tokens);
         }
         Integer dimensions = EmbeddingWire.requestedDimensions(body.get("dimensions"), "dimensions", 256, 512, 1024);
         List<String> types = EmbeddingWire.requestedTypes(body.get("embeddingTypes"), "embeddingTypes", "float", "binary");
@@ -284,7 +299,7 @@ public class BedrockCodec implements ProviderCodec {
         if (floats) {
             EmbeddingWire.addFloats(root.putArray("embedding"), vector);
         }
-        root.put("inputTextTokenCount", EmbeddingVectors.approximateTokens(text));
+        root.put("inputTextTokenCount", tokens);
         ObjectNode byType = root.putObject("embeddingsByType");
         if (types.contains("binary")) {
             EmbeddingWire.titanBinary(byType.putArray("binary"), vector);
@@ -292,11 +307,12 @@ public class BedrockCodec implements ProviderCodec {
         if (floats) {
             EmbeddingWire.addFloats(byType.putArray("float"), vector);
         }
-        return EmbeddingWire.json(root, "Bedrock Titan");
+        return withInputTokenCount(EmbeddingWire.json(root, "Bedrock Titan"), tokens);
     }
 
     private HttpResponse encodeCohereEmbedding(EmbeddingResponse embedding, JsonNode body, EmbeddingFamily family) {
         List<String> inputs = new ArrayList<>();
+        long tokens = 0;
         JsonNode texts = body.get("texts");
         JsonNode items = body.get("inputs");
         JsonNode images = body.get("images");
@@ -306,12 +322,15 @@ public class BedrockCodec implements ProviderCodec {
         if (texts != null && texts.isArray()) {
             EmbeddingWire.checkInputCount(texts.size(), COHERE_MAX_INPUTS, "texts");
             for (JsonNode text : texts) {
-                inputs.add(text.isTextual() ? text.asText() : text.isNull() ? null : text.toString());
+                String input = text.isTextual() ? text.asText() : text.isNull() ? null : text.toString();
+                inputs.add(input);
+                tokens += EmbeddingVectors.approximateTokens(input);
             }
         } else if (items != null && items.isArray()) {
             EmbeddingWire.checkInputCount(items.size(), COHERE_MAX_INPUTS, "inputs");
             for (JsonNode item : items) {
                 inputs.add(cohereInputText(item.get("content")));
+                tokens += cohereTextPartTokens(item.get("content"));
             }
         } else if (images != null && images.isArray()) {
             EmbeddingWire.checkInputCount(images.size(), family == EmbeddingFamily.COHERE_V4 ? COHERE_MAX_INPUTS : COHERE_V3_MAX_IMAGES, "images");
@@ -365,7 +384,25 @@ public class BedrockCodec implements ProviderCodec {
                 }
             }
         }
-        return EmbeddingWire.json(root, "Bedrock Cohere");
+        return withInputTokenCount(EmbeddingWire.json(root, "Bedrock Cohere"), tokens);
+    }
+
+    private static HttpResponse withInputTokenCount(HttpResponse response, long tokens) {
+        return response.withHeader(INPUT_TOKEN_COUNT_HEADER, String.valueOf(tokens));
+    }
+
+    /** The approximate tokens of a v4 {@code inputs} item's text parts; its images add none. */
+    private static long cohereTextPartTokens(JsonNode content) {
+        long tokens = 0;
+        if (content != null && content.isArray()) {
+            for (JsonNode part : content) {
+                JsonNode partText = part.get("text");
+                if ("text".equals(part.path("type").asText("")) && partText != null && partText.isTextual()) {
+                    tokens += EmbeddingVectors.approximateTokens(partText.asText());
+                }
+            }
+        }
+        return tokens;
     }
 
     /**

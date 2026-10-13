@@ -26,9 +26,11 @@ import java.util.stream.Collectors;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockserver.model.HttpLlmResponse.llmResponse;
 import static org.mockserver.model.HttpRequest.request;
@@ -36,7 +38,8 @@ import static org.mockserver.model.HttpRequest.request;
 /**
  * A mocked embeddings or rerank response is counted like a forwarded one: one GenAI span with the
  * {@code embeddings} or {@code rerank} operation, and token metrics carrying the input tokens the
- * provider's codec put in the served body, read here from that provider's own usage field.
+ * provider's codec put in the served body, read here from that provider's own usage field, or for a
+ * Bedrock body with none from the InvokeModel input token count header.
  * <p>
  * Mutates process-wide state (the GenAI tracer and the LLM metrics), so it runs in the sequential
  * surefire phase.
@@ -138,11 +141,19 @@ public class HttpLlmResponseEmbeddingTelemetryTest {
     }
 
     @Test
-    public void shouldRecordASpanWithNoTokensForBedrockCohereEmbeddings() throws Exception {
+    public void shouldCountBedrockCohereEmbeddingsFromTheInputTokenCountHeader() {
         HttpResponse served = serve(embedding(Provider.BEDROCK), request("/model/cohere.embed-english-v3/invoke").withMethod("POST")
-            .withBody("{\"texts\":[\"a sentence for cohere to embed\"],\"input_type\":\"search_document\"}"));
+            .withBody("{\"texts\":[\"a sentence for cohere to embed\",\"and another one\"],\"input_type\":\"search_document\"}"));
 
-        assertCountedWithoutTokens(served, "embeddings", "aws.bedrock", Provider.BEDROCK, "cohere.embed-english-v3");
+        assertThat(served.getStatusCode(), is(200));
+        assertThat(served.getBodyAsString(), not(containsString("token")));
+        long tokens = Long.parseLong(served.getFirstHeader("X-Amzn-Bedrock-Input-Token-Count"));
+        assertThat(tokens, greaterThan(0L));
+        SpanData span = singleSpan("embeddings", "aws.bedrock", "cohere.embed-english-v3");
+        assertThat(span.getAttributes().get(longKey("gen_ai.usage.input_tokens")), is(tokens));
+        assertThat(span.getAttributes().get(longKey("gen_ai.usage.output_tokens")), nullValue());
+        assertThat(Metrics.getLlmInputTokens(Provider.BEDROCK.name(), "cohere.embed-english-v3"), is(tokens));
+        assertThat(Metrics.getLlmOutputTokens(Provider.BEDROCK.name(), "cohere.embed-english-v3"), is(0L));
     }
 
     @Test

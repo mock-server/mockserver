@@ -3,6 +3,7 @@ package org.mockserver.mock.action.http;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import org.mockserver.llm.codec.BedrockCodec;
 import org.mockserver.model.Completion;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.Usage;
@@ -12,8 +13,9 @@ import org.mockserver.model.Usage;
  * so the call is counted with exactly the usage the provider codec put on the wire. The fields are
  * each provider's own: {@code usage.prompt_tokens} (OpenAI and its compatibles), {@code usage.total_tokens}
  * (Voyage rerank), {@code usageMetadata.promptTokenCount} (Gemini), {@code prompt_eval_count}
- * (Ollama) and {@code inputTextTokenCount} (Bedrock Titan). A streaming parse skips the vectors,
- * which can hold millions of values, without building a tree.
+ * (Ollama) and {@code inputTextTokenCount} (Bedrock Titan). A body with none, such as Bedrock Cohere's,
+ * is counted from the {@code X-Amzn-Bedrock-Input-Token-Count} header that Bedrock InvokeModel returns.
+ * A streaming parse skips the vectors, which can hold millions of values, without building a tree.
  */
 final class EncodedLlmCallUsage {
 
@@ -24,10 +26,35 @@ final class EncodedLlmCallUsage {
 
     /**
      * @return a completion carrying the response's top-level {@code model} (or null) and a usage
-     * with only input tokens (or no usage when the body reports none); null when the body is not
-     * a JSON object
+     * with only input tokens (or no usage when neither the body nor the header reports any); null
+     * when the body is not a JSON object and there is no header count
      */
     static Completion read(HttpResponse encoded) {
+        Completion completion = readBody(encoded);
+        if (completion != null && completion.getUsage() != null) {
+            return completion;
+        }
+        Integer headerTokens = headerInputTokens(encoded);
+        if (headerTokens == null) {
+            return completion;
+        }
+        return (completion != null ? completion : Completion.completion()).withUsage(Usage.usage().withInputTokens(headerTokens));
+    }
+
+    private static Integer headerInputTokens(HttpResponse encoded) {
+        String value = encoded != null ? encoded.getFirstHeader(BedrockCodec.INPUT_TOKEN_COUNT_HEADER) : null;
+        if (value == null || value.isEmpty()) {
+            return null;
+        }
+        try {
+            long count = Long.parseLong(value.trim());
+            return count >= 0 ? (int) Math.min(Integer.MAX_VALUE, count) : null;
+        } catch (NumberFormatException notACount) {
+            return null;
+        }
+    }
+
+    private static Completion readBody(HttpResponse encoded) {
         String body = encoded != null ? encoded.getBodyAsString() : null;
         if (body == null || body.isEmpty()) {
             return null;
