@@ -99,6 +99,12 @@ public final class LlmProviderSniffer {
         "(?:/completions|/responses(?:/compact)?|/messages|:generatecontent|:streamgeneratecontent|/api/generate|/api/chat|/v[12]/chat"
             + "|/model/([^/]+)/(?:invoke|invoke-with-response-stream|converse|converse-stream)"
             + "|/models/([^/:]+):(?:rawpredict|streamrawpredict))/?$");
+    // the completion endpoints whose GenAI operation is not chat
+    private static final java.util.regex.Pattern GENERATE_CONTENT_PATH_PATTERN = java.util.regex.Pattern.compile(
+        "(?::generatecontent|:streamgeneratecontent)/?$");
+    // legacy and FIM /completions (not /chat/completions or Mistral /agents/completions), Ollama /api/generate
+    private static final java.util.regex.Pattern TEXT_COMPLETION_PATH_PATTERN = java.util.regex.Pattern.compile(
+        "(?:(?<!/chat|/agents)/completions|/api/generate)/?$");
     // Mistral Conversations API: start, append and restart each run the model
     private static final java.util.regex.Pattern MISTRAL_CONVERSATION_PATH_PATTERN = java.util.regex.Pattern.compile(
         "/v1/conversations(?:/[^/]+(?:/restart)?)?/?$");
@@ -537,11 +543,15 @@ public final class LlmProviderSniffer {
     }
 
     /**
-     * The kind of LLM call a forwarded response is accounted as, with its OpenTelemetry GenAI
-     * {@code gen_ai.operation.name}. Rerank has no well-known value, so it uses a custom one.
+     * The kind of LLM call a response is accounted as, with its OpenTelemetry GenAI
+     * {@code gen_ai.operation.name}: a well-known value where one applies (Gemini
+     * {@code generateContent} is {@code generate_content}, a legacy or FIM completion is
+     * {@code text_completion}). Rerank has no well-known value, so it uses a custom one.
      */
     public enum Operation {
         CHAT("chat"),
+        GENERATE_CONTENT("generate_content"),
+        TEXT_COMPLETION("text_completion"),
         EMBEDDINGS("embeddings"),
         RERANK("rerank");
 
@@ -554,6 +564,38 @@ public final class LlmProviderSniffer {
         public String genAiOperationName() {
             return genAiOperationName;
         }
+
+        /** Whether this operation generates a completion, so its response may be a stream. */
+        public boolean isCompletion() {
+            return this == CHAT || this == GENERATE_CONTENT || this == TEXT_COMPLETION;
+        }
+    }
+
+    /**
+     * The completion operation a forwarded request to a completion endpoint makes, by its path:
+     * {@code :generateContent}/{@code :streamGenerateContent} is {@link Operation#GENERATE_CONTENT};
+     * a legacy or FIM {@code /completions} and Ollama {@code /api/generate} are
+     * {@link Operation#TEXT_COMPLETION}; every other completion endpoint is {@link Operation#CHAT}.
+     */
+    private static Operation completionOperation(String lowerPath) {
+        if (GENERATE_CONTENT_PATH_PATTERN.matcher(lowerPath).find()) {
+            return Operation.GENERATE_CONTENT;
+        }
+        return TEXT_COMPLETION_PATH_PATTERN.matcher(lowerPath).find() ? Operation.TEXT_COMPLETION : Operation.CHAT;
+    }
+
+    /**
+     * The completion operation of a mocked completion, from the wire API its codec serves: every
+     * {@link Provider#GEMINI} completion is a {@code generateContent} response, whatever the path;
+     * for any other provider a legacy or FIM {@code /completions} or Ollama {@code /api/generate}
+     * request is a text completion, and everything else is a chat completion.
+     */
+    public static Operation servedCompletionOperation(Provider provider, String path) {
+        if (provider == Provider.GEMINI) {
+            return Operation.GENERATE_CONTENT;
+        }
+        String lowerPath = path == null ? "" : withoutQuery(path.toLowerCase(java.util.Locale.ROOT));
+        return TEXT_COMPLETION_PATH_PATTERN.matcher(lowerPath).find() ? Operation.TEXT_COMPLETION : Operation.CHAT;
     }
 
     /**
@@ -590,7 +632,7 @@ public final class LlmProviderSniffer {
                 return Optional.empty();
             }
             // the deprecated Assistants API adds a message to a thread without calling a model
-            return lowerPath.contains("/threads/") ? Optional.empty() : Optional.of(Operation.CHAT);
+            return lowerPath.contains("/threads/") ? Optional.empty() : Optional.of(completionOperation(lowerPath));
         }
         if (EMBEDDINGS_PATH_PATTERN.matcher(lowerPath).find()) {
             return Optional.of(Operation.EMBEDDINGS);

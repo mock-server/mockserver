@@ -412,9 +412,35 @@ sum(rate(mock_server_llm_cost_usd_total[1h]))</code></pre>
 </p>
 
 <ul>
-    <li><strong>Mock path</strong> &mdash; when MockServer serves an <span class="inline_code">httpLlmResponse</span>. A mocked completion gets a <span class="inline_code">chat</span> span, and a mocked embeddings or rerank response an <span class="inline_code">embeddings</span> or <span class="inline_code">rerank</span> span. An embeddings or rerank span, and the token metrics, carry the input tokens the mocked response reports in the provider's own usage field. A response whose provider reports no tokens there, such as a Cohere rerank (billed in search units), a Bedrock Cohere embedding or Ollama's older <span class="inline_code">/api/embeddings</span> endpoint, gets a span with no token counts.</li>
-    <li><strong>Forward/proxy path</strong> &mdash; when MockServer forwards requests to a real LLM provider. The provider is detected from the target host (e.g. <span class="inline_code">api.openai.com</span> maps to OpenAI, <span class="inline_code">api.anthropic.com</span> maps to Anthropic). Only calls to a model get a span: a completion (<span class="inline_code">gen_ai.operation.name</span> <span class="inline_code">chat</span>), an embeddings call (<span class="inline_code">embeddings</span>) or a rerank call (<span class="inline_code">rerank</span>), each named <span class="inline_code">&lt;operation&gt; &lt;model&gt;</span>. Other requests to the provider, such as listing models or fetching a stored response, get none.</li>
+    <li><strong>Mock path</strong> &mdash; when MockServer serves an <span class="inline_code">httpLlmResponse</span>. A mocked completion gets a span named for the API it answers (see the table below), and a mocked embeddings or rerank response an <span class="inline_code">embeddings</span> or <span class="inline_code">rerank</span> span. An embeddings or rerank span, and the token metrics, carry the input tokens the mocked response reports in the provider's own usage field. A response whose provider reports no tokens there, such as a Cohere rerank (billed in search units), a Bedrock Cohere embedding or Ollama's older <span class="inline_code">/api/embeddings</span> endpoint, gets a span with no token counts.</li>
+    <li><strong>Forward/proxy path</strong> &mdash; when MockServer forwards requests to a real LLM provider. The provider is detected from the target host (e.g. <span class="inline_code">api.openai.com</span> maps to OpenAI, <span class="inline_code">api.anthropic.com</span> maps to Anthropic). Only calls to a model get a span: a completion, an embeddings call (<span class="inline_code">embeddings</span>) or a rerank call (<span class="inline_code">rerank</span>). Other requests to the provider, such as listing models or fetching a stored response, get none.</li>
 </ul>
+
+<p>
+    Each span is named <span class="inline_code">&lt;operation&gt; &lt;model&gt;</span>, and its
+    <span class="inline_code">gen_ai.operation.name</span> follows the
+    <a href="https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-spans.md">OpenTelemetry GenAI semantic conventions</a>,
+    which require the specific operation name when one applies:
+</p>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr><th><span class="inline_code">gen_ai.operation.name</span></th><th>Used for</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><span class="inline_code">generate_content</span></td><td>Gemini <span class="inline_code">generateContent</span> and <span class="inline_code">streamGenerateContent</span>, on Google AI and on Vertex AI, and every mocked <span class="inline_code">GEMINI</span> completion</td></tr>
+        <tr><td><span class="inline_code">text_completion</span></td><td>legacy text completions (<span class="inline_code">/v1/completions</span>, including Azure OpenAI deployments), fill-in-the-middle completions (Mistral <span class="inline_code">/v1/fim/completions</span>, DeepSeek <span class="inline_code">/beta/completions</span>) and Ollama <span class="inline_code">/api/generate</span></td></tr>
+        <tr><td><span class="inline_code">chat</span></td><td>every other completion: chat completions, the Responses API, Anthropic Messages, Bedrock, Cohere chat, Ollama <span class="inline_code">/api/chat</span> and the OpenAI-compatible chat endpoints of Gemini and Vertex AI</td></tr>
+        <tr><td><span class="inline_code">embeddings</span>, <span class="inline_code">rerank</span></td><td>embeddings and rerank calls</td></tr>
+    </tbody>
+</table>
+
+<p>
+    In MockServer 8.0.0 and earlier every completion was named <span class="inline_code">chat</span>. A trace query or
+    dashboard that filters on <span class="inline_code">gen_ai.operation.name == "chat"</span> to find all
+    completions must also match <span class="inline_code">generate_content</span> and
+    <span class="inline_code">text_completion</span>.
+</p>
 
 <a id="trace_context" class="anchor" href="#trace_context">&nbsp;</a>
 <h2>W3C Trace Context Propagation</h2>

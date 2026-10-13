@@ -103,10 +103,68 @@ public class ServePathGenAiSpanEmissionTest {
         // then - the production serve path emitted exactly one GenAI span, visible via the exporter
         SpanData span = awaitSingleGenAiSpan(spanExporter);
         assertThat(span.getName(), is("chat gpt-4o"));
+        assertThat(span.getAttributes().get(stringKey("gen_ai.operation.name")), is("chat"));
         assertThat(span.getAttributes().get(stringKey("gen_ai.system")), is("openai"));
         assertThat(span.getAttributes().get(stringKey("gen_ai.request.model")), is("gpt-4o"));
         assertThat(span.getAttributes().get(longKey("gen_ai.usage.input_tokens")), is(12L));
         assertThat(span.getAttributes().get(longKey("gen_ai.usage.output_tokens")), is(8L));
+    }
+
+    /**
+     * The OpenTelemetry GenAI semantic conventions say a well-known {@code gen_ai.operation.name}
+     * MUST be used where one applies: {@code generate_content} for Gemini Generate Content and
+     * {@code text_completion} for a legacy (OpenAI Completions API) text completion.
+     * https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-spans.md
+     */
+    @Test
+    public void shouldNameEachServedCompletionByTheSemanticConventionOperationOfItsEndpoint() throws Exception {
+        assertServedOperation(Provider.GEMINI, "gemini-2.5-flash", "/v1beta/models/gemini-2.5-flash:generateContent",
+            "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"hello\"}]}]}", false, "generate_content");
+        assertServedOperation(Provider.GEMINI, "gemini-2.5-flash", "/v1beta/models/gemini-2.5-flash:streamGenerateContent",
+            "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"hello\"}]}]}", true, "generate_content");
+        assertServedOperation(Provider.OPENAI, "gpt-3.5-turbo-instruct", "/v1/completions",
+            "{\"model\":\"gpt-3.5-turbo-instruct\",\"prompt\":\"Say this is a test\"}", false, "text_completion");
+        assertServedOperation(Provider.MISTRAL, "codestral-2508", "/v1/fim/completions",
+            "{\"model\":\"codestral-2508\",\"prompt\":\"def f(\",\"suffix\":\"return a + b\"}", false, "text_completion");
+        assertServedOperation(Provider.OLLAMA, "llama3.2", "/api/generate",
+            "{\"model\":\"llama3.2\",\"prompt\":\"Why is the sky blue?\",\"stream\":false}", false, "text_completion");
+        assertServedOperation(Provider.OLLAMA, "llama3.2", "/api/generate",
+            "{\"model\":\"llama3.2\",\"prompt\":\"Why is the sky blue?\"}", true, "text_completion");
+        assertServedOperation(Provider.OLLAMA, "llama3.2", "/api/chat",
+            "{\"model\":\"llama3.2\",\"messages\":[{\"role\":\"user\",\"content\":\"hello\"}]}", true, "chat");
+    }
+
+    private void assertServedOperation(Provider provider, String model, String path, String requestBody, boolean streaming,
+                                       String expectedOperation) throws Exception {
+        if (server == null) {
+            server = new MockServer();
+        }
+        if (exporter != null) {
+            exporter.stop();
+        }
+        InMemorySpanExporter spanExporter = InMemorySpanExporter.create();
+        exporter = GenAiSpanExporter.startWithProcessor(SimpleSpanProcessor.create(spanExporter));
+        int port = server.getLocalPort();
+        MockServerClient client = new MockServerClient("localhost", port);
+        client.reset();
+        client
+            .when(request().withMethod("POST").withPath(path))
+            .respondWithLlm(llmResponse()
+                .withProvider(provider)
+                .withModel(model)
+                .withCompletion(Completion.completion()
+                    .withText("Hello! How can I help?")
+                    .withStopReason("stop")
+                    .withStreaming(streaming)
+                    .withUsage(Usage.usage().withInputTokens(12).withOutputTokens(8))));
+
+        int status = postJson("http://localhost:" + port + path, requestBody);
+        assertThat(provider + " " + path + " must be served", status, is(200));
+
+        SpanData span = awaitSingleGenAiSpan(spanExporter);
+        assertThat(provider + " " + path, span.getAttributes().get(stringKey("gen_ai.operation.name")), is(expectedOperation));
+        assertThat(provider + " " + path, span.getName(), is(expectedOperation + " " + model));
+        assertThat(provider + " " + path, span.getAttributes().get(longKey("gen_ai.usage.input_tokens")), is(12L));
     }
 
     /**

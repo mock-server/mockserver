@@ -4560,7 +4560,7 @@ public class HttpActionHandler {
             java.util.Optional<Provider> provider = forwardedLlmProvider(forwardedRequest, targetHost);
             // a polled result is counted only when whole, once: a resumed stream may repeat a counted one
             if (provider.isEmpty()
-                || forwardedLlmOperation(provider.get(), forwardedRequest).orElse(null) != org.mockserver.llm.client.LlmProviderSniffer.Operation.CHAT
+                || !forwardedLlmOperation(provider.get(), forwardedRequest).map(org.mockserver.llm.client.LlmProviderSniffer.Operation::isCompletion).orElse(false)
                 || isPolledCompletion(provider.get(), forwardedRequest)) {
                 return null;
             }
@@ -4669,7 +4669,7 @@ public class HttpActionHandler {
                 return;
             }
             String path = pathOf(forwardedRequest);
-            boolean completionPath = operation.get() == org.mockserver.llm.client.LlmProviderSniffer.Operation.CHAT;
+            boolean completionPath = operation.get().isCompletion();
             if (relayedStream && !completionPath) {
                 return;
             }

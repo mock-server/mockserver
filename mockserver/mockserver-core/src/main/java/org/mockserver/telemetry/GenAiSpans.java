@@ -39,8 +39,10 @@ public final class GenAiSpans {
     }
 
     /**
-     * Emit one GenAI span for a served completion, following the OpenTelemetry
-     * GenAI semantic conventions ({@code gen_ai.*}). No-op when disabled.
+     * Emit one GenAI span for a chat completion, following the OpenTelemetry
+     * GenAI semantic conventions ({@code gen_ai.*}). No-op when disabled. A Gemini
+     * {@code generateContent} call or a legacy text completion has its own
+     * operation name: record it with {@link #record}.
      */
     public static void recordCompletion(Provider provider, String model, Completion completion) {
         record("chat", provider, model, completion);
@@ -48,7 +50,8 @@ public final class GenAiSpans {
 
     /**
      * Emit one GenAI span for an LLM call of the given {@code gen_ai.operation.name}, such as
-     * {@code chat} or {@code embeddings}, named {@code {operation} {model}}. No-op when disabled.
+     * {@code chat}, {@code generate_content}, {@code text_completion} or {@code embeddings},
+     * named {@code {operation} {model}}. No-op when disabled.
      */
     public static void record(String operationName, Provider provider, String model, Completion completion) {
         Tracer current = tracer;

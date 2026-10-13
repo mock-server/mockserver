@@ -161,7 +161,7 @@ public class HttpLlmResponseActionHandler {
                 applyAzureContentFilterAnnotations(encoded, provider, httpLlmResponse.getContentFilter());
                 validateStructuredOutput(completion, encoded, provider, request);
                 applyRateLimitHeaders(encoded, provider, false, httpLlmResponse.getChaos());
-                org.mockserver.telemetry.GenAiSpans.recordCompletion(provider, model, completion);
+                recordCompletionSpan(provider, model, request, completion);
                 HttpActionHandler.recordLlmUsageMetrics(provider, model, completion);
                 recordOpenAiResponsesStateIfApplicable(provider, codecInstance, request, completion, encoded);
                 return encoded;
@@ -212,6 +212,16 @@ public class HttpLlmResponseActionHandler {
                 .withStatusCode(502)
                 .withBody("{\"error\":\"llm codec encode failed\",\"provider\":\"" + provider.name() + "\"}");
         }
+    }
+
+    /**
+     * Records the GenAI span for a served completion, named for the wire API its codec served:
+     * {@code generate_content}, {@code text_completion} or {@code chat}.
+     */
+    private static void recordCompletionSpan(Provider provider, String model, HttpRequest request, Completion completion) {
+        String path = request != null && request.getPath() != null ? request.getPath().getValue() : null;
+        org.mockserver.telemetry.GenAiSpans.record(
+            LlmProviderSniffer.servedCompletionOperation(provider, path).genAiOperationName(), provider, model, completion);
     }
 
     /**
@@ -486,7 +496,7 @@ public class HttpLlmResponseActionHandler {
                 request != null ? request.getBodyAsText() : null, chainedConversation(codecInstance, request), completion, events);
         }
         validateStructuredOutput(completion, null, provider, request);
-        org.mockserver.telemetry.GenAiSpans.recordCompletion(provider, model, completion);
+        recordCompletionSpan(provider, model, request, completion);
         HttpActionHandler.recordLlmUsageMetrics(provider, model, completion);
         // Rate-limit headers are intentionally not applied on the streaming path: it
         // returns SSE events rather than an HttpResponse, and a quota breach is

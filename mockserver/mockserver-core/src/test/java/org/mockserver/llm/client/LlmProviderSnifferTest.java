@@ -693,10 +693,10 @@ public class LlmProviderSnifferTest {
     }
 
     @Test
-    public void accountsEachProvidersCompletionEndpointsAsChat() {
+    public void accountsEachProvidersChatCompletionEndpointsAsChat() {
         String[] completionPaths = {
             // OpenAI
-            "/v1/chat/completions", "/v1/completions", "/v1/responses",
+            "/v1/chat/completions", "/v1/responses",
             // OpenAI Responses compaction runs the model and reports usage
             "/v1/responses/compact",
             // Azure OpenAI
@@ -704,21 +704,20 @@ public class LlmProviderSnifferTest {
             "/openai/responses?api-version=2025-04-01-preview",
             // OpenAI Codex backend
             "/backend-api/codex/responses",
-            // Mistral
-            "/v1/fim/completions", "/v1/agents/completions",
+            // Mistral Agents API, which takes chat messages
+            "/v1/agents/completions",
             // OpenRouter, Groq, DeepSeek
             "/api/v1/chat/completions", "/openai/v1/chat/completions", "/chat/completions",
+            // Gemini's and Vertex AI's OpenAI-compatible chat completions
+            "/v1beta/openai/chat/completions", "/v1/projects/p/locations/us-central1/endpoints/openapi/chat/completions",
             // Anthropic
             "/v1/messages",
-            // Gemini and Vertex AI
-            "/v1beta/models/gemini-2.5-flash:generateContent", "/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse",
-            "/v1/projects/p/locations/us-central1/publishers/google/models/gemini-2.5-flash:generateContent",
             // Bedrock
             "/model/anthropic.claude-sonnet-4-5-20250929-v1%3A0/converse",
             "/model/anthropic.claude-sonnet-4-5-20250929-v1%3A0/converse-stream",
             "/model/amazon.nova-pro-v1%3A0/invoke", "/model/amazon.nova-pro-v1%3A0/invoke-with-response-stream",
             // Ollama
-            "/api/chat", "/api/generate",
+            "/api/chat",
             // Cohere
             "/v1/chat", "/v2/chat",
             // Claude on Vertex AI
@@ -728,6 +727,60 @@ public class LlmProviderSnifferTest {
         for (String path : completionPaths) {
             assertOperation("POST", path, LlmProviderSniffer.Operation.CHAT);
         }
+    }
+
+    @Test
+    public void accountsGeminiGenerateContentAsTheGenerateContentOperation() {
+        // https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-spans.md
+        // generate_content: "Multimodal content generation operation such as Gemini Generate Content"
+        String[] generateContentPaths = {
+            "/v1beta/models/gemini-2.5-flash:generateContent", "/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse",
+            "/v1/projects/p/locations/us-central1/publishers/google/models/gemini-2.5-flash:generateContent",
+            "/v1/projects/p/locations/us-central1/publishers/google/models/gemini-2.5-flash:streamGenerateContent",
+        };
+        for (String path : generateContentPaths) {
+            assertOperation(Provider.GEMINI, "POST", path, LlmProviderSniffer.Operation.GENERATE_CONTENT);
+        }
+    }
+
+    @Test
+    public void accountsLegacyAndFillInTheMiddleCompletionsAsTheTextCompletionOperation() {
+        // text_completion: "Text completions operation such as OpenAI Completions API (Legacy)"
+        String[] textCompletionPaths = {
+            // OpenAI legacy completions, also served by OpenRouter and other OpenAI-compatible providers
+            "/v1/completions", "/v1/completions/", "/api/v1/completions",
+            "/openai/deployments/gpt-35-turbo-instruct/completions?api-version=2024-10-21",
+            // Mistral and DeepSeek fill-in-the-middle
+            "/v1/fim/completions", "/beta/completions",
+        };
+        for (String path : textCompletionPaths) {
+            assertOperation("POST", path, LlmProviderSniffer.Operation.TEXT_COMPLETION);
+        }
+        // Ollama generate takes one prompt, not chat messages
+        assertOperation(Provider.OLLAMA, "POST", "/api/generate", LlmProviderSniffer.Operation.TEXT_COMPLETION);
+        assertOperation(Provider.OLLAMA, "POST", "/API/Generate", LlmProviderSniffer.Operation.TEXT_COMPLETION);
+    }
+
+    @Test
+    public void namesAMockedCompletionForTheWireApiItsCodecServes() {
+        // every Gemini completion is encoded as a generateContent response, whatever the path
+        assertThat(LlmProviderSniffer.servedCompletionOperation(Provider.GEMINI, "/v1beta/models/gemini-2.5-flash:generateContent"),
+            is(LlmProviderSniffer.Operation.GENERATE_CONTENT));
+        assertThat(LlmProviderSniffer.servedCompletionOperation(Provider.GEMINI, "/any/path"), is(LlmProviderSniffer.Operation.GENERATE_CONTENT));
+        assertThat(LlmProviderSniffer.servedCompletionOperation(Provider.GEMINI, null), is(LlmProviderSniffer.Operation.GENERATE_CONTENT));
+
+        assertThat(LlmProviderSniffer.servedCompletionOperation(Provider.OPENAI, "/v1/completions"), is(LlmProviderSniffer.Operation.TEXT_COMPLETION));
+        assertThat(LlmProviderSniffer.servedCompletionOperation(Provider.MISTRAL, "/v1/fim/completions"), is(LlmProviderSniffer.Operation.TEXT_COMPLETION));
+        assertThat(LlmProviderSniffer.servedCompletionOperation(Provider.OLLAMA, "/api/generate"), is(LlmProviderSniffer.Operation.TEXT_COMPLETION));
+
+        assertThat(LlmProviderSniffer.servedCompletionOperation(Provider.OPENAI, "/v1/chat/completions"), is(LlmProviderSniffer.Operation.CHAT));
+        assertThat(LlmProviderSniffer.servedCompletionOperation(Provider.MISTRAL, "/v1/agents/completions"), is(LlmProviderSniffer.Operation.CHAT));
+        assertThat(LlmProviderSniffer.servedCompletionOperation(Provider.OLLAMA, "/api/chat"), is(LlmProviderSniffer.Operation.CHAT));
+        assertThat(LlmProviderSniffer.servedCompletionOperation(Provider.ANTHROPIC, "/v1/messages"), is(LlmProviderSniffer.Operation.CHAT));
+        // only a Gemini codec serves generateContent
+        assertThat(LlmProviderSniffer.servedCompletionOperation(Provider.OPENAI, "/v1beta/models/gemini-2.5-flash:generateContent"),
+            is(LlmProviderSniffer.Operation.CHAT));
+        assertThat(LlmProviderSniffer.servedCompletionOperation(Provider.OPENAI, null), is(LlmProviderSniffer.Operation.CHAT));
     }
 
     @Test
@@ -910,8 +963,15 @@ public class LlmProviderSnifferTest {
     @Test
     public void namesTheSemanticConventionOperationOfEachAccountedCall() {
         assertThat(LlmProviderSniffer.Operation.CHAT.genAiOperationName(), is("chat"));
+        assertThat(LlmProviderSniffer.Operation.GENERATE_CONTENT.genAiOperationName(), is("generate_content"));
+        assertThat(LlmProviderSniffer.Operation.TEXT_COMPLETION.genAiOperationName(), is("text_completion"));
         assertThat(LlmProviderSniffer.Operation.EMBEDDINGS.genAiOperationName(), is("embeddings"));
         assertThat(LlmProviderSniffer.Operation.RERANK.genAiOperationName(), is("rerank"));
+        assertThat(LlmProviderSniffer.Operation.CHAT.isCompletion(), is(true));
+        assertThat(LlmProviderSniffer.Operation.GENERATE_CONTENT.isCompletion(), is(true));
+        assertThat(LlmProviderSniffer.Operation.TEXT_COMPLETION.isCompletion(), is(true));
+        assertThat(LlmProviderSniffer.Operation.EMBEDDINGS.isCompletion(), is(false));
+        assertThat(LlmProviderSniffer.Operation.RERANK.isCompletion(), is(false));
     }
 
     @Test

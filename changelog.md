@@ -38,6 +38,8 @@ This release delivers a sustained performance and memory programme alongside dat
 
 **BREAKING** — if you verify requests with an OpenAPI request matcher (`specUrlOrPayload` and `operationId` in `PUT /mockserver/verify`, or `verify(openAPI(...), ...)` in a client), only requests for that operation now count. In 8.0.0 and earlier the OpenAPI matcher was ignored and every recorded request counted, so such a verification could pass when it should have failed. A verification that passed only because of this now fails: fix the matcher or the system under test. See *Changed*.
 
+**BREAKING** — if a trace query, dashboard or alert finds LLM completions by `gen_ai.operation.name == "chat"` (or a `chat ` span-name prefix): Gemini calls are now `generate_content` and legacy, fill-in-the-middle and Ollama `/api/generate` completions are now `text_completion`. See *Changed*.
+
 | Metric | Before | After |
 |--------|--------|-------|
 | Throughput, healthy ceiling / peak (req/s, 6 cores) | 39,033 / 43,671 | 57,149 / 59,905 |
@@ -358,6 +360,11 @@ This release delivers a sustained performance and memory programme alongside dat
   retained entry holds about what the budget counts. Log output is unchanged.
 ### Changed
 
+- **BREAKING: GenAI trace spans for Gemini and for legacy text completions now carry the OpenTelemetry operation names `generate_content` and `text_completion` instead of `chat`.** The OpenTelemetry GenAI semantic conventions say these well-known names must be used where they apply; 8.0.0 and earlier named every completion span `chat`. On both mocked and forwarded calls, these spans change:
+  - Gemini `generateContent` and `streamGenerateContent` (Google AI and Vertex AI), and every mocked `GEMINI` completion: `gen_ai.operation.name` is now `generate_content` and the span is named `generate_content <model>` (was `chat <model>`).
+  - Legacy `/v1/completions` (including Azure OpenAI `/openai/deployments/{deployment}/completions`), Mistral fill-in-the-middle `/v1/fim/completions`, DeepSeek `/beta/completions` and Ollama `/api/generate`: `gen_ai.operation.name` is now `text_completion` and the span is named `text_completion <model>`.
+
+  Every other completion (chat completions, the Responses API, Anthropic Messages, Bedrock, Cohere chat, Ollama `/api/chat`, and the OpenAI-compatible chat endpoints of Gemini and Vertex AI) is still `chat`. If a trace query, dashboard or alert selects completions with `gen_ai.operation.name == "chat"` or a `chat ` span-name prefix, change it to match `chat`, `generate_content` and `text_completion` (for example `gen_ai.operation.name IN ("chat", "generate_content", "text_completion")`). Token and cost metrics are unchanged: they are labelled by provider and model, not by operation.
 - **Trace spans for forwarded embeddings and rerank calls are now named `embeddings <model>` and `rerank <model>`.** They were named `chat <model>` with `gen_ai.operation.name` `chat`; they now carry `embeddings` or `rerank`, as the OpenTelemetry GenAI conventions describe. Update any trace query, dashboard or alert that selects these calls by span name or operation.
 - **An embedding mock with `deterministicFromInput` now refuses an input longer than 1,048,576
   characters, and the limit is configurable.** 8.0.0 hashed an input of any length, and hashing

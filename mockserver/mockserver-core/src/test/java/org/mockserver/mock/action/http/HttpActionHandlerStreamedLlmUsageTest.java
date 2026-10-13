@@ -1101,6 +1101,75 @@ public class HttpActionHandlerStreamedLlmUsageTest {
         assertOperation(singleGenAiSpan(), "chat", "chat gpt-4o-2024-08-06");
     }
 
+    // ---- semconv well-known operation names: generate_content and text_completion ----
+    // https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-spans.md
+
+    @Test
+    public void shouldNameAGeminiGenerateContentCallGenerateContent() {
+        forwardResponse("generativelanguage.googleapis.com", "/v1beta/models/gemini-2.5-flash:generateContent", "{\"contents\":[]}", json(
+            "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"Hello\"}],\"role\":\"model\"},\"finishReason\":\"STOP\",\"index\":0}],"
+                + "\"usageMetadata\":{\"promptTokenCount\":8,\"candidatesTokenCount\":12,\"totalTokenCount\":20},"
+                + "\"modelVersion\":\"gemini-2.5-flash\",\"responseId\":\"mAitaLmkHPPlz7IPvtfUqQ4\"}"));
+
+        SpanData span = singleGenAiSpan();
+        assertOperation(span, "generate_content", "generate_content gemini-2.5-flash");
+        assertTokens(span, "gcp.gemini", "gemini-2.5-flash", 8L, 12L);
+    }
+
+    @Test
+    public void shouldNameARelayedGeminiStreamGenerateContentCallGenerateContent() {
+        forwardStream("generativelanguage.googleapis.com", "/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse", "{\"contents\":[]}",
+            utf8(ProviderStreamFixtures.GEMINI_SSE));
+
+        SpanData span = singleGenAiSpan();
+        assertOperation(span, "generate_content", "generate_content gemini-2.5-flash");
+        assertTokens(span, "gcp.gemini", "gemini-2.5-flash", 8L, 39L);
+    }
+
+    @Test
+    public void shouldNameALegacyOpenAiCompletionTextCompletion() {
+        // https://platform.openai.com/docs/api-reference/completions/object
+        forwardResponse("api.openai.com", "/v1/completions", "{\"model\":\"gpt-3.5-turbo-instruct\",\"prompt\":\"Say this is a test\"}", json(
+            "{\"id\":\"cmpl-uqkvlQyYK7bGYrRHQ0eXlWi7\",\"object\":\"text_completion\",\"created\":1589478378,\"model\":\"gpt-3.5-turbo-instruct\","
+                + "\"system_fingerprint\":\"fp_44709d6fcb\",\"choices\":[{\"text\":\"\\n\\nThis is indeed a test\",\"index\":0,\"logprobs\":null,"
+                + "\"finish_reason\":\"length\"}],\"usage\":{\"prompt_tokens\":5,\"completion_tokens\":7,\"total_tokens\":12}}"));
+
+        SpanData span = singleGenAiSpan();
+        assertOperation(span, "text_completion", "text_completion gpt-3.5-turbo-instruct");
+        assertTokens(span, "openai", "gpt-3.5-turbo-instruct", 5L, 7L);
+    }
+
+    @Test
+    public void shouldNameAMistralFillInTheMiddleCompletionTextCompletion() {
+        // https://docs.mistral.ai/api/endpoint/fim
+        forwardResponse("api.mistral.ai", "/v1/fim/completions", "{\"model\":\"codestral-2508\",\"prompt\":\"def f(\",\"suffix\":\"return a + b\"}", json(
+            "{\"id\":\"447e3e0d457e42e98248b5d2ef52a2a3\",\"object\":\"chat.completion\",\"model\":\"codestral-2508\","
+                + "\"usage\":{\"prompt_tokens\":8,\"completion_tokens\":91,\"total_tokens\":99},\"created\":1759496862,"
+                + "\"choices\":[{\"index\":0,\"message\":{\"content\":\"a, b):\\n    \",\"tool_calls\":null,\"prefix\":false,\"role\":\"assistant\"},"
+                + "\"finish_reason\":\"stop\"}]}"));
+
+        SpanData span = singleGenAiSpan();
+        assertOperation(span, "text_completion", "text_completion codestral-2508");
+        assertTokens(span, "mistral", "codestral-2508", 8L, 91L);
+    }
+
+    @Test
+    public void shouldNameARelayedOllamaGenerateStreamTextCompletion() {
+        ConfigurationProperties.llmBaseUrl("http://ollama.internal:11434");
+        // https://github.com/ollama/ollama/blob/main/docs/api.md#generate-a-completion
+        String generateStream = ""
+            + "{\"model\":\"llama3.2\",\"created_at\":\"2023-08-04T08:52:19.385406455-07:00\",\"response\":\"The\",\"done\":false}\n"
+            + "{\"model\":\"llama3.2\",\"created_at\":\"2023-08-04T19:22:45.499127Z\",\"response\":\"\",\"done\":true,\"done_reason\":\"stop\","
+            + "\"context\":[1,2,3],\"total_duration\":10706818083,\"load_duration\":6338219291,\"prompt_eval_count\":26,"
+            + "\"prompt_eval_duration\":130079000,\"eval_count\":259,\"eval_duration\":4232710000}\n";
+
+        forwardStream("ollama.internal:11434", "/api/generate", "{\"model\":\"llama3.2\",\"prompt\":\"Why is the sky blue?\"}", utf8(generateStream));
+
+        SpanData span = singleGenAiSpan();
+        assertOperation(span, "text_completion", "text_completion llama3.2");
+        assertTokens(span, "ollama", "llama3.2", 26L, 259L);
+    }
+
     // ---- a Bedrock call names its model in the request path ----
 
     @Test
