@@ -299,15 +299,15 @@ public class StubGenerationPromptRedactionTest {
     @Test
     public void shouldMaskJwtInAnyQueryParameter() {
         String jwt = "eyJhbGciOiJIUzI1NiJ9.eyJzdGF0ZSI6InEifQ.queryJwtSignature_-456";
-        HttpRequest request = HttpRequest.request().withMethod("GET").withPath("/oauth/callback")
-            .withQueryStringParameter("state", jwt)
-            .withQueryStringParameter("code", "plain-code-value");
+        HttpRequest request = HttpRequest.request().withMethod("GET").withPath("/api/search")
+            .withQueryStringParameter("filter", jwt)
+            .withQueryStringParameter("page", "plain-page-value");
 
         String prompt = builder.build(request, Collections.emptyList());
 
         assertThat(prompt, not(containsString(jwt)));
-        assertThat(prompt, containsString("state"));
-        assertThat(prompt, containsString("plain-code-value"));
+        assertThat(prompt, containsString("filter"));
+        assertThat(prompt, containsString("plain-page-value"));
         assertThat(prompt, containsString(REDACTED));
     }
 
@@ -334,5 +334,177 @@ public class StubGenerationPromptRedactionTest {
         String prompt = builder.build(request, Collections.emptyList());
 
         assertThat(prompt, containsString("Path: /api/v1.2/orders/42\n"));
+    }
+
+    @Test
+    public void shouldMaskAuthorizationCodeQueryParameterBesideEachOAuthSignal() {
+        List<HttpRequest> oauthRequests = List.of(
+            HttpRequest.request().withPath("/oauth/callback").withQueryStringParameter("code", "auth-code-secret"),
+            HttpRequest.request().withPath("/login/oauth2/code/google").withQueryStringParameter("code", "auth-code-secret"),
+            HttpRequest.request().withPath("/authorize").withQueryStringParameter("code", "auth-code-secret"),
+            HttpRequest.request().withPath("/auth/Callback").withQueryStringParameter("code", "auth-code-secret"),
+            HttpRequest.request().withPath("/return").withQueryStringParameter("code", "auth-code-secret")
+                .withQueryStringParameter("state", "xyz"),
+            HttpRequest.request().withPath("/return").withQueryStringParameter("code", "auth-code-secret")
+                .withQueryStringParameter("redirect_uri", "https://app.example/return"),
+            HttpRequest.request().withPath("/return").withQueryStringParameter("code", "auth-code-secret")
+                .withQueryStringParameter("client_id", "web-app"),
+            HttpRequest.request().withPath("/token").withQueryStringParameter("code", "auth-code-secret")
+                .withQueryStringParameter("grant_type", "authorization_code")
+        );
+
+        for (HttpRequest request : oauthRequests) {
+            String prompt = builder.build(request.withMethod("GET"), Collections.emptyList());
+
+            assertThat(request.toString(), prompt, not(containsString("auth-code-secret")));
+            assertThat(request.toString(), prompt, containsString("code"));
+            assertThat(request.toString(), prompt, containsString(REDACTED));
+        }
+    }
+
+    @Test
+    public void shouldKeepCodeQueryParameterWithoutOAuthSignalVisible() {
+        HttpRequest request = HttpRequest.request().withMethod("GET").withPath("/api/countries")
+            .withQueryStringParameter("code", "GB")
+            .withQueryStringParameter("grant_type", "client_credentials")
+            .withQueryStringParameter("statement", "monthly");
+
+        String prompt = builder.build(request, Collections.emptyList());
+
+        assertThat(prompt, containsString("\"GB\""));
+        assertThat(prompt, not(containsString(REDACTED)));
+    }
+
+    @Test
+    public void shouldMaskAuthorizationCodeInFormBodyBesideOAuthSignal() {
+        HttpRequest request = HttpRequest.request().withMethod("POST").withPath("/token")
+            .withBody("grant_type=authorization_code&code=form-code-secret&redirect_uri=https%3A%2F%2Fapp.example%2Fcb");
+
+        String prompt = builder.build(request, Collections.emptyList());
+
+        assertThat(prompt, not(containsString("form-code-secret")));
+        assertThat(prompt, containsString("grant_type=authorization_code&code=" + REDACTED + "&redirect_uri="));
+    }
+
+    @Test
+    public void shouldMaskAuthorizationCodeInFormBodyOfOAuthPath() {
+        HttpRequest request = HttpRequest.request().withMethod("POST").withPath("/oauth2/token")
+            .withBody("code=path-context-code-secret");
+
+        String prompt = builder.build(request, Collections.emptyList());
+
+        assertThat(prompt, not(containsString("path-context-code-secret")));
+        assertThat(prompt, containsString("Request Body: code=" + REDACTED));
+    }
+
+    @Test
+    public void shouldKeepCodeInFormBodyWithoutOAuthSignalVisible() {
+        HttpRequest request = HttpRequest.request().withMethod("POST").withPath("/api/vouchers")
+            .withBody("code=SUMMER10&error_code=E42&my_state=on");
+
+        String prompt = builder.build(request, Collections.emptyList());
+
+        assertThat(prompt, containsString("Request Body: code=SUMMER10&error_code=E42&my_state=on"));
+    }
+
+    @Test
+    public void shouldMaskAuthorizationCodeInJsonBodyBesideOAuthSignal() {
+        HttpRequest request = HttpRequest.request().withMethod("POST").withPath("/token")
+            .withBody("{\"grant_type\":\"authorization_code\",\"code\":\"json-code-secret\",\"meta\":{\"code\":\"GB\"}}");
+
+        String prompt = builder.build(request, Collections.emptyList());
+
+        assertThat(prompt, not(containsString("json-code-secret")));
+        assertThat(prompt, containsString("\"code\":\"" + REDACTED + "\""));
+        assertThat(prompt, containsString("\"meta\":{\"code\":\"GB\"}"));
+    }
+
+    @Test
+    public void shouldKeepCodeInJsonBodyWithoutOAuthSignalVisible() {
+        HttpRequest request = HttpRequest.request().withMethod("POST").withPath("/api/countries")
+            .withBody("{\"code\":\"GB\",\"grant_type\":\"client_credentials\"}");
+
+        String prompt = builder.build(request, Collections.emptyList());
+
+        assertThat(prompt, containsString("\"code\":\"GB\""));
+    }
+
+    @Test
+    public void shouldMaskAuthorizationCodeInRedirectUrlHeaderValue() {
+        HttpRequest request = HttpRequest.request().withMethod("GET").withPath("/home")
+            .withHeader("Referer", "https://app.example/callback?code=referer-code-secret&state=s1")
+            .withHeader("X-Return", "https://app.example/landing?state=s2&code=return-code-secret#top")
+            .withHeader("X-Filter", "code=GB&page=2")
+            .withHeader("X-Error", "error_code=E42&state=s3");
+
+        String prompt = builder.build(request, Collections.emptyList());
+
+        assertThat(prompt, not(containsString("referer-code-secret")));
+        assertThat(prompt, not(containsString("return-code-secret")));
+        assertThat(prompt, containsString("https://app.example/callback?code=" + REDACTED + "&state=s1"));
+        assertThat(prompt, containsString("code=GB&page=2"));
+        assertThat(prompt, containsString("error_code=E42&state=s3"));
+    }
+
+    @Test
+    public void shouldMaskAuthorizationCodeInRequestAndContextPaths() {
+        HttpRequest request = HttpRequest.request().withMethod("GET")
+            .withPath("/oauth/callback;code=path-code-secret");
+        List<Expectation> context = List.of(
+            new Expectation(HttpRequest.request().withMethod("GET").withPath("/sso/authorize;code=ctx-code-secret")),
+            new Expectation(HttpRequest.request().withMethod("GET").withPath("/api/countries;code=GB")));
+
+        String prompt = builder.build(request, context);
+
+        assertThat(prompt, not(containsString("path-code-secret")));
+        assertThat(prompt, not(containsString("ctx-code-secret")));
+        assertThat(prompt, containsString("Path: /oauth/callback;code=" + REDACTED + "\n"));
+        assertThat(prompt, containsString("- GET /api/countries;code=GB\n"));
+    }
+
+    @Test
+    public void shouldMaskAuthorizationCodeBesideIssuerParameter() {
+        HttpRequest request = HttpRequest.request().withMethod("GET").withPath("/login")
+            .withQueryStringParameter("code", "iss-code-secret")
+            .withQueryStringParameter("iss", "https://idp.example")
+            .withHeader("Referer", "https://app.example/login?code=iss-referer-secret&iss=https%3A%2F%2Fidp.example");
+
+        String prompt = builder.build(request, Collections.emptyList());
+
+        assertThat(prompt, not(containsString("iss-code-secret")));
+        assertThat(prompt, not(containsString("iss-referer-secret")));
+        assertThat(prompt, containsString("https://idp.example"));
+    }
+
+    @Test
+    public void shouldKeepCodeBesideIssuerLikeParameterVisible() {
+        HttpRequest request = HttpRequest.request().withMethod("POST").withPath("/api/tickets")
+            .withBody("code=GB&issue=42&miss=1");
+
+        String prompt = builder.build(request, Collections.emptyList());
+
+        assertThat(prompt, containsString("Request Body: code=GB&issue=42&miss=1"));
+    }
+
+    @Test
+    public void shouldMaskPkceCodeVerifierAsCredential() {
+        HttpRequest formRequest = HttpRequest.request().withMethod("POST").withPath("/token")
+            .withBody("grant_type=authorization_code&code=pkce-code-secret&code_verifier=form-verifier-secret");
+        HttpRequest queryRequest = HttpRequest.request().withMethod("GET").withPath("/api/exchange")
+            .withQueryStringParameter("code_verifier", "query-verifier-secret");
+        HttpRequest jsonRequest = HttpRequest.request().withMethod("POST").withPath("/api/exchange")
+            .withBody("{\"code_verifier\":\"json-verifier-secret\"}");
+
+        String formPrompt = builder.build(formRequest, Collections.emptyList());
+        String queryPrompt = builder.build(queryRequest, Collections.emptyList());
+        String jsonPrompt = builder.build(jsonRequest, Collections.emptyList());
+
+        assertThat(formPrompt, not(containsString("form-verifier-secret")));
+        assertThat(formPrompt, not(containsString("pkce-code-secret")));
+        assertThat(formPrompt, containsString("code_verifier=" + REDACTED));
+        assertThat(queryPrompt, not(containsString("query-verifier-secret")));
+        assertThat(queryPrompt, containsString("code_verifier"));
+        assertThat(jsonPrompt, not(containsString("json-verifier-secret")));
+        assertThat(jsonPrompt, containsString("\"code_verifier\":\"" + REDACTED + "\""));
     }
 }

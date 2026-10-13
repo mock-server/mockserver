@@ -244,6 +244,41 @@ public class SemanticDriftExtensionTest {
     }
 
     @Test
+    public void buildPromptMasksAuthorizationCodeInRedirectDriftValues() {
+        SemanticDriftExtension ext = new SemanticDriftExtension(new StubLlmCompletionService(null), LlmBackend.of(Provider.OPENAI, "test-key"));
+        List<DriftRecord> records = List.of(
+            new DriftRecord().setDriftType(DriftType.HEADER_CHANGED).setField("header.location")
+                .setExpectedValue("https://app.example/callback?code=stub-code-secret&state=s1")
+                .setActualValue("https://app.example/return?state=s2&code=live-code-secret"),
+            new DriftRecord().setDriftType(DriftType.HEADER_CHANGED).setField("header.x-filter")
+                .setExpectedValue("code=GB").setActualValue("code=FR")
+        );
+
+        String prompt = ext.buildPrompt(records, response().withStatusCode(302), response().withStatusCode(302));
+
+        assertThat(prompt, not(containsString("stub-code-secret")));
+        assertThat(prompt, not(containsString("live-code-secret")));
+        assertThat(prompt, containsString("expected=https://app.example/callback?code=***REDACTED***&state=s1"));
+        assertThat(prompt, containsString("actual=https://app.example/return?state=s2&code=***REDACTED***"));
+        assertThat(prompt, containsString("'header.x-filter': expected=code=GB, actual=code=FR"));
+    }
+
+    @Test
+    public void buildPromptMasksAuthorizationCodeInResponseBodies() {
+        SemanticDriftExtension ext = new SemanticDriftExtension(new StubLlmCompletionService(null), LlmBackend.of(Provider.OPENAI, "test-key"));
+        List<DriftRecord> records = List.of(
+            new DriftRecord().setDriftType(DriftType.STATUS).setField("statusCode")
+        );
+
+        String prompt = ext.buildPrompt(records,
+            response().withStatusCode(200).withBody("Continue to https://app.example/cb?code=stub-body-code&state=s1"),
+            response().withStatusCode(200).withBody("{\"redirect_uri\":\"https://app.example/cb\",\"code\":\"live-body-code\"}"));
+
+        assertThat(prompt, not(containsString("stub-body-code")));
+        assertThat(prompt, not(containsString("live-body-code")));
+    }
+
+    @Test
     public void buildPromptMasksDriftValuesOfConfiguredDataPlaneApiKeyHeader() {
         SemanticDriftExtension ext = new SemanticDriftExtension(new StubLlmCompletionService(null), LlmBackend.of(Provider.OPENAI, "test-key"), "X-Tenant-Key");
         List<DriftRecord> records = List.of(
