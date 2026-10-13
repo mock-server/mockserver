@@ -172,7 +172,11 @@ KEEP="${PERF_RW_KEEP:-0.95}"
 # Cross-check: one k6 in the published summary mode (vu_tag window, full summary)
 # that ALSO remote-writes, on rungs where a single process is not saturated.
 XCHECK="${PERF_RW_XCHECK:-true}"
-XCHECK_MAX_RPS="${PERF_RW_XCHECK_MAX_RPS:-24000}"
+# multi_socket: one k6 on a whole NUMA node holds its latency floor through 40k, so cross_run has
+# rungs at 8k-10k per main process; 40k is also the per-process rate its VU pool is sized for.
+XCHECK_MAX_RPS_DEFAULT=24000
+if [ "$LADDER_PROFILE" = multi_socket ]; then XCHECK_MAX_RPS_DEFAULT=40000; fi
+XCHECK_MAX_RPS="${PERF_RW_XCHECK_MAX_RPS:-$XCHECK_MAX_RPS_DEFAULT}"
 # Same-request tolerances: native histograms (bucket factor 1.1) resolve a quantile to ~5%.
 # The time cut is held to by_tag from the same cut on (lib/perf-rw-cross-check.jq), at the same
 # tolerances. The absolute floor only matters below ~0.05 ms.

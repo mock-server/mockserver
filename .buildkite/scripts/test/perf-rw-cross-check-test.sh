@@ -211,5 +211,23 @@ check "default floor" "8000" "$(cross_input | jq -r '.tol.cross_run.min_per_proc
 RTOL_MIN_PP=0
 check "a floor of 0 reaches the program" "0" "$(cross_input | jq -r '.tol.cross_run.min_per_process_rps')"
 
+echo "--- 9. the cross-check cap: 40k on multi_socket, 24k otherwise, env wins"
+xcap() { # ladder_profile [PERF_RW_XCHECK_MAX_RPS]
+  # shellcheck disable=SC2034  # read by the eval'd cap block
+  ( LADDER_PROFILE="$1"; PERF_RW_XCHECK_MAX_RPS="${2:-}"; [ -n "${2:-}" ] || unset PERF_RW_XCHECK_MAX_RPS
+    eval "$(sed -n '/^XCHECK_MAX_RPS_DEFAULT=/,/^XCHECK_MAX_RPS=/p' "$HARNESS")"; echo "${XCHECK_MAX_RPS:-}" )
+}
+check "default profile keeps 24k" "24000" "$(xcap default)"
+check "multi_socket defaults to 40k" "40000" "$(xcap multi_socket)"
+check "PERF_RW_XCHECK_MAX_RPS overrides the profile default" "32000" "$(xcap multi_socket 32000)"
+MS_RATES="$(sed -n 's/^MULTI_SOCKET_RATES="\(.*\)"$/\1/p' "$HARNESS")"
+xr() { # XCHECK_MAX_RPS
+  # shellcheck disable=SC2034  # read by the eval'd XRATES block
+  ( XCHECK=true RATES="$MS_RATES" XCHECK_MAX_RPS="$1"; unset PERF_RW_XCHECK_RATES
+    eval "$(sed -n '/^XRATES=""/,/^fi$/p' "$HARNESS")"; echo "${XRATES:-}" )
+}
+check "multi_socket xcheck ladder reaches 40k (32k-40k judged at N=4)" \
+  "500,1000,2000,4000,8000,16000,24000,32000,36000,40000" "$(xr "$(xcap multi_socket)")"
+
 if [ "$FAILS" -gt 0 ]; then echo ":x: $FAILS cross-check fixture check(s) failed" >&2; exit 1; fi
 echo "all cross-check fixture checks passed"
