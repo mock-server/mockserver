@@ -1324,7 +1324,9 @@ geminiLive()
                 <span class="inline_code">us.anthropic.claude-...</span>; only Anthropic Claude models have a price, so
                 other models are counted in tokens only. For InvokeModelWithResponseStream only Anthropic
                 models are counted; streams from other model families (Nova, Titan, Llama, Mistral) are
-                <strong>not counted</strong>.</td>
+                <strong>not counted</strong>. A stream from the OpenAI-compatible
+                <span class="inline_code">/openai/v1/chat/completions</span> endpoint is counted like OpenAI's: set
+                <span class="inline_code">stream_options.include_usage</span> to <span class="inline_code">true</span>.</td>
         </tr>
         <tr>
             <td>Mistral, OpenRouter, Groq</td>

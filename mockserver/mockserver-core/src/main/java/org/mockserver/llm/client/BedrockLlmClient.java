@@ -62,6 +62,7 @@ public class BedrockLlmClient extends AnthropicLlmClient {
      */
     private static final Pattern BEDROCK_HOST_REGION_PATTERN =
         Pattern.compile("bedrock-runtime\\.([a-z0-9-]+)\\.amazonaws\\.com");
+    private static final OpenAiLlmClient OPENAI_USAGE = new OpenAiLlmClient();
 
     @Override
     public Provider provider() {
@@ -250,14 +251,20 @@ public class BedrockLlmClient extends AnthropicLlmClient {
     }
 
     /**
-     * Maps either usage shape: the camelCase object of Converse and of the ConverseStream
-     * {@code metadata} event, or the Anthropic object of {@code InvokeModel} and of the events
-     * inside an {@code InvokeModelWithResponseStream} stream (inherited).
+     * Maps each usage shape: the camelCase object of Converse and of the ConverseStream
+     * {@code metadata} event; the OpenAI object of the {@code /openai/v1/chat/completions}
+     * endpoint, of its stream's usage chunk and of an OpenAI-format model such as gpt-oss on
+     * {@code InvokeModel}; or the Anthropic object of {@code InvokeModel} and of the events inside
+     * an {@code InvokeModelWithResponseStream} stream (inherited).
      */
     @Override
     public Usage parseUsage(JsonNode usageNode) {
         if (usageNode != null && (usageNode.has("inputTokens") || usageNode.has("outputTokens"))) {
             return parseConverseUsage(usageNode);
+        }
+        if (usageNode != null && (usageNode.has("prompt_tokens") || usageNode.has("completion_tokens"))
+            && !usageNode.has("input_tokens") && !usageNode.has("output_tokens")) {
+            return OPENAI_USAGE.parseUsage(usageNode);
         }
         return super.parseUsage(usageNode);
     }

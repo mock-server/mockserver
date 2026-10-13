@@ -847,6 +847,37 @@ public class HttpActionHandlerStreamedLlmUsageTest {
         assertThat(Metrics.getLlmOutputTokens("BEDROCK", "amazon.titan-text-express-v1"), is(8L));
     }
 
+    // https://docs.aws.amazon.com/bedrock/latest/userguide/inference-chat-completions.html
+    @Test
+    public void shouldCountABedrockOpenAiChatCompletionWholeOrStreamedWithoutTokenCountHeaders() {
+        enableLlmTokenMetrics();
+        forwardResponse("bedrock-runtime.us-west-2.amazonaws.com", "/openai/v1/chat/completions",
+            "{\"model\":\"openai.gpt-oss-20b-1:0\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello!\"}]}", json(
+                "{\"id\":\"chatcmpl-1f2e3d4c\",\"object\":\"chat.completion\",\"created\":1754400000,\"model\":\"openai.gpt-oss-20b-1:0\","
+                    + "\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Hi.\"},\"finish_reason\":\"stop\"}],"
+                    + "\"usage\":{\"prompt_tokens\":21,\"completion_tokens\":37,\"total_tokens\":58}}"));
+        forwardStream("bedrock-runtime.us-west-2.amazonaws.com", "/openai/v1/chat/completions",
+            "{\"model\":\"openai.gpt-oss-120b-1:0\",\"stream\":true,\"stream_options\":{\"include_usage\":true},"
+                + "\"messages\":[{\"role\":\"user\",\"content\":\"Tell me a story\"}]}",
+            utf8("data: {\"id\":\"chatcmpl-9a8b7c6d\",\"object\":\"chat.completion.chunk\",\"created\":1754400000,"
+                + "\"model\":\"openai.gpt-oss-120b-1:0\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"Once\"},"
+                + "\"finish_reason\":null}],\"usage\":null}\n\n"
+                + "data: {\"id\":\"chatcmpl-9a8b7c6d\",\"object\":\"chat.completion.chunk\",\"created\":1754400000,"
+                + "\"model\":\"openai.gpt-oss-120b-1:0\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}],\"usage\":null}\n\n"
+                + "data: {\"id\":\"chatcmpl-9a8b7c6d\",\"object\":\"chat.completion.chunk\",\"created\":1754400000,"
+                + "\"model\":\"openai.gpt-oss-120b-1:0\",\"choices\":[],"
+                + "\"usage\":{\"prompt_tokens\":14,\"completion_tokens\":120,\"total_tokens\":134}}\n\n"
+                + "data: [DONE]\n\n"));
+
+        List<SpanData> genAiSpans = genAiSpans();
+        assertThat(genAiSpans, hasSize(2));
+        assertTokens(genAiSpans.get(0), "aws.bedrock", "openai.gpt-oss-20b-1:0", 21L, 37L);
+        assertTokens(genAiSpans.get(1), "aws.bedrock", "openai.gpt-oss-120b-1:0", 14L, 120L);
+        assertThat(Metrics.getLlmInputTokens("BEDROCK", "openai.gpt-oss-120b-1:0"), is(14L));
+        assertThat(Metrics.getLlmOutputTokens("BEDROCK", "openai.gpt-oss-120b-1:0"), is(120L));
+        assertThat(usageLogEntries(), is(empty()));
+    }
+
     // Cohere: https://docs.cohere.com/reference/embed, /reference/chat, /reference/rerank and the
     // cohere-python types ApiMeta, Usage and ChatMessageEndEventDelta
     @Test

@@ -6,7 +6,10 @@ import org.mockserver.llm.ParsedMessage;
 import org.mockserver.model.Completion;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.Provider;
+import org.mockserver.model.Usage;
+import org.mockserver.serialization.ObjectMapperFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -362,6 +365,47 @@ public class LlmClientTest {
                 + "\"usage\":{\"prompt_tokens\":21,\"completion_tokens\":37,\"total_tokens\":58}}"));
         assertThat(completion.getUsage().getInputTokens(), is(21));
         assertThat(completion.getUsage().getOutputTokens(), is(37));
+    }
+
+    @Test
+    public void bedrockCountsAnOpenAiChatCompletionFromItsBodyWithoutTheTokenCountHeaders() {
+        // the /openai/v1/chat/completions endpoint and gpt-oss on InvokeModel return OpenAI's chat
+        // completion object, and no Bedrock API reference documents the token-count headers on it
+        // https://docs.aws.amazon.com/bedrock/latest/userguide/inference-chat-completions.html
+        Completion completion = new BedrockLlmClient().parseCompletionResponse(response().withStatusCode(200)
+            .withBody("{\"id\":\"chatcmpl-1f2e3d4c\",\"object\":\"chat.completion\",\"created\":1754400000,"
+                + "\"model\":\"openai.gpt-oss-20b-1:0\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\","
+                + "\"content\":\"Sunny.\"},\"finish_reason\":\"stop\"}],"
+                + "\"usage\":{\"prompt_tokens\":21,\"completion_tokens\":37,\"total_tokens\":58,"
+                + "\"prompt_tokens_details\":{\"cached_tokens\":5},\"completion_tokens_details\":{\"reasoning_tokens\":12}}}"));
+        assertThat(completion.getUsage().getInputTokens(), is(21));
+        assertThat(completion.getUsage().getOutputTokens(), is(37));
+        assertThat(completion.getUsage().getCachedInputTokens(), is(5));
+        assertThat(completion.getUsage().getReasoningTokens(), is(12));
+    }
+
+    @Test
+    public void bedrockCountsTheUsageChunkOfAStreamedOpenAiChatCompletion() {
+        // with stream_options.include_usage the last chunk before [DONE] carries the usage
+        LlmStreamUsageScanner scanner = new LlmStreamUsageScanner();
+        scanner.accept(("data: {\"id\":\"chatcmpl-1f2e3d4c\",\"object\":\"chat.completion.chunk\",\"created\":1754400000,"
+            + "\"model\":\"openai.gpt-oss-20b-1:0\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Sunny.\"},"
+            + "\"finish_reason\":\"stop\"}],\"usage\":null}\n\n"
+            + "data: {\"id\":\"chatcmpl-1f2e3d4c\",\"object\":\"chat.completion.chunk\",\"created\":1754400000,"
+            + "\"model\":\"openai.gpt-oss-20b-1:0\",\"choices\":[],"
+            + "\"usage\":{\"prompt_tokens\":21,\"completion_tokens\":37,\"total_tokens\":58}}\n\n"
+            + "data: [DONE]\n\n").getBytes(StandardCharsets.UTF_8));
+
+        Usage usage = new BedrockLlmClient().parseUsage(scanner.usage());
+        assertThat(usage.getInputTokens(), is(21));
+        assertThat(usage.getOutputTokens(), is(37));
+    }
+
+    @Test
+    public void bedrockReadsAnthropicUsageBeforeOpenAiNamesInTheSameObject() {
+        Usage usage = new BedrockLlmClient().parseUsage(ObjectMapperFactory.createObjectMapper().createObjectNode().put("input_tokens", 12).put("output_tokens", 3).put("prompt_tokens", 999));
+        assertThat(usage.getInputTokens(), is(12));
+        assertThat(usage.getOutputTokens(), is(3));
     }
 
     @Test
