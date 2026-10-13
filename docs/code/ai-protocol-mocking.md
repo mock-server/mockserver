@@ -1266,6 +1266,19 @@ So an AI coding agent (Claude Code, Cursor, …) can stand up and drive mocks fr
 
 The read-vs-mutate class drives control-plane authorization: when `controlPlaneAuthorizationEnabled=true`, a MUTATE tool requires the MUTATE role and a READ tool the READ role (see the control-plane note at the top of this page). A typical "record then mock" agent flow is `set_operating_mode SPY` → drive the app so unmatched requests are forwarded and recorded → `promote_recordings` → `list_expectations` to confirm.
 
+### Diagnosis tools
+
+MockServer computes the facts; the user's own assistant does the reasoning. Each diagnosis tool delegates to the control-plane operation that answers the same question over REST, so both report the same facts, and each output is redacted. Only `explain_request` returns the endpoint's JSON unchanged: `debug_request_mismatch` re-sorts the endpoint's results and attaches remediation hints to them and to `closestMatch`, and `diagnose_config` returns an object holding only the non-default properties (or those matching `name`) plus counts, where `GET /mockserver/config` returns an array of every property.
+
+| Tool | Class | Delegates to | Redaction |
+|------|-------|--------------|-----------|
+| `explain_unmatched_requests` | READ | `HttpState.explainUnmatched` (`PUT /mockserver/explainUnmatched`) | recorded values scrubbed when `redactSecretsInLog` is on |
+| `debug_request_mismatch` | READ | `HttpState.debugMismatch` (`PUT /mockserver/debugMismatch`) | the request is the caller's own |
+| `explain_request` | READ | `HttpState.explain` (`PUT /mockserver/explain?correlationId=`) | recorded values scrubbed when `redactSecretsInLog` is on |
+| `diagnose_config` | READ | `ConfigurationProperties.effectiveConfiguration()` (`GET /mockserver/config`, `--print-config`) | credential-named properties always masked |
+
+`explain_request` maps a non-200 answer (unknown or evicted correlation id) to a tool error carrying the endpoint's message. `diagnose_config` lists only the properties not at their default unless `name` is given; `name` is compared with the dots, underscores, case and `mockserver` prefix removed, so `maxExpectations`, `mockserver.maxExpectations` and `MOCKSERVER_MAX_EXPECTATIONS` find the same property. Like `GET /mockserver/config`, it reports the static tiers and programmatic setters, not values set only on an instance `Configuration` or through `PUT /mockserver/configuration`.
+
 ### SSE Timing
 
 When the capture records per-chunk timing, the delays are carried on the `x-mockserver-chunk-delays-ms` header (a comma-separated list of millisecond gaps). `SseAwareExpectationConverter` parses that header and replays each SSE event with its captured delay, reproducing the original stream timing. When the header is absent, empty, or malformed, replay falls back to a fixed inter-event delay (50ms default).

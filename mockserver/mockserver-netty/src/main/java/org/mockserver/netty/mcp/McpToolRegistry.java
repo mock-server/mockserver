@@ -179,6 +179,8 @@ public class McpToolRegistry {
         "get_status",
         "debug_request_mismatch",
         "explain_unmatched_requests",
+        "explain_request",
+        "diagnose_config",
         "explain_agent_run",
         "export_optimisation_report",
         "diff_agent_runs",
@@ -214,6 +216,8 @@ public class McpToolRegistry {
         registerCreateForwardExpectation();
         registerDebugRequestMismatch();
         registerExplainUnmatchedRequests();
+        registerExplainRequest();
+        registerDiagnoseConfig();
         registerCreateExpectationFromOpenApi();
         registerCreateExpectationsFromRecordedTraffic();
         registerStopServer();
@@ -1475,6 +1479,107 @@ public class McpToolRegistry {
         } catch (Exception e) {
             return errorResult("Failed to explain unmatched requests", e);
         }
+    }
+
+    private void registerExplainRequest() {
+        ObjectNode schema = objectMapper.createObjectNode();
+        schema.put("type", "object");
+        ObjectNode properties = schema.putObject("properties");
+        properties.putObject("correlationId").put("type", "string").put("description", "Correlation id of one request MockServer has received, as shown by retrieve_logs (each log entry carries it) or the dashboard log");
+        schema.putArray("required").add("correlationId");
+
+        tools.put("explain_request", new ToolDefinition(
+            "explain_request",
+            "Explains one request MockServer has already received, identified by its correlation id: which expectation would serve it now, "
+                + "why each expectation evaluated ahead of that one was passed over (NAMESPACE, INACTIVE, FIELDS_DIFFER with per-field differences "
+                + "and remediation hints, CONVERSATION, SCENARIO_STATE, PERCENTAGE), which lower-priority expectations it shadows, and the outcome "
+                + "when it arrived. Recomputed now against the current expectations without consuming Times or moving scenarios; says whether the "
+                + "expectations changed since. Recorded values are redacted as in the event log (redactSecretsInLog). "
+                + "Equivalent to PUT /mockserver/explain?correlationId=<id>.",
+            schema,
+            this::handleExplainRequest
+        ));
+    }
+
+    private JsonNode handleExplainRequest(JsonNode params) {
+        try {
+            JsonNode correlationIdNode = params.path("correlationId");
+            if (!correlationIdNode.isTextual() || correlationIdNode.asText().isBlank()) {
+                return errorResult("'correlationId' is required");
+            }
+            HttpResponse response = httpState.explain(request()
+                .withMethod("PUT")
+                .withPath("/mockserver/explain")
+                .withQueryStringParameter("correlationId", correlationIdNode.asText()));
+            JsonNode body = objectMapper.readTree(response.getBodyAsString());
+            if (response.getStatusCode() == null || response.getStatusCode() != 200) {
+                ObjectNode error = errorResult(body.path("error").asText("Failed to explain request"));
+                error.put("correlationId", correlationIdNode.asText());
+                return error;
+            }
+            return body;
+        } catch (Exception e) {
+            return errorResult("Failed to explain request", e);
+        }
+    }
+
+    private void registerDiagnoseConfig() {
+        ObjectNode schema = objectMapper.createObjectNode();
+        schema.put("type", "object");
+        ObjectNode properties = schema.putObject("properties");
+        properties.putObject("name").put("type", "string").put("description", "Optional property name or fragment to look up, in any form (maxExpectations, mockserver.maxExpectations or MOCKSERVER_MAX_EXPECTATIONS); "
+            + "returns every matching property, including those at their default. Without it, only the properties set away from their default are returned.");
+
+        tools.put("diagnose_config", new ToolDefinition(
+            "diagnose_config",
+            "Reports MockServer's effective configuration: each mockserver.* property set away from its default, its value and the source that supplied it "
+                + "(system-property, properties-file, environment-variable or runtime-set). Pass 'name' to check whether a particular setting took effect. "
+                + "Credential values are always redacted. Reports the same values and sources as GET /mockserver/config, which lists every property.",
+            schema,
+            this::handleDiagnoseConfig
+        ));
+    }
+
+    private JsonNode handleDiagnoseConfig(JsonNode params) {
+        try {
+            JsonNode nameNode = params.path("name");
+            String filter = nameNode.isTextual() ? normalisedPropertyName(nameNode.asText()) : "";
+            List<ConfigurationProperties.ResolvedProperty> resolved = ConfigurationProperties.effectiveConfiguration();
+            ArrayNode matching = objectMapper.createArrayNode();
+            int explicitlySet = 0;
+            for (ConfigurationProperties.ResolvedProperty property : resolved) {
+                boolean atDefault = ConfigurationProperties.SOURCE_DEFAULT.equals(property.getSource());
+                if (!atDefault) {
+                    explicitlySet++;
+                }
+                if (filter.isEmpty() ? !atDefault : normalisedPropertyName(property.getName()).contains(filter)) {
+                    ObjectNode propertyNode = matching.addObject();
+                    propertyNode.put("name", property.getName());
+                    propertyNode.put("value", property.getValue());
+                    propertyNode.put("source", property.getSource());
+                }
+            }
+            ObjectNode resultNode = objectMapper.createObjectNode();
+            resultNode.set("properties", matching);
+            resultNode.put("count", matching.size());
+            resultNode.put("explicitlySetCount", explicitlySet);
+            resultNode.put("totalProperties", resolved.size());
+            resultNode.put("note", "values come from system properties, the properties file, environment variables and runtime setters; "
+                + "a value set only on an embedded server's Configuration object or through PUT /mockserver/configuration is not shown, "
+                + "and an unrecognised mockserver.* key is ignored with a WARN at startup");
+            if (!filter.isEmpty() && matching.isEmpty()) {
+                resultNode.put("hint", "no recognised configuration property name contains '" + nameNode.asText().trim() + "'; check the spelling");
+            }
+            return resultNode;
+        } catch (Exception e) {
+            return errorResult("Failed to diagnose configuration", e);
+        }
+    }
+
+    /** Lower-cases and drops the prefix, dots and underscores, so the property, system-property and environment-variable forms compare equal. */
+    private static String normalisedPropertyName(String name) {
+        String normalised = name.trim().toLowerCase(Locale.ROOT).replace(".", "").replace("_", "");
+        return normalised.startsWith("mockserver") ? normalised.substring("mockserver".length()) : normalised;
     }
 
     private void registerCreateExpectationFromOpenApi() {

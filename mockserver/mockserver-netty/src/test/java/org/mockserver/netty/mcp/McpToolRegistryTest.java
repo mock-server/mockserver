@@ -97,7 +97,9 @@ public class McpToolRegistryTest {
         assertThat(tools.containsKey("list_expectations"), is(true));
         assertThat(tools.containsKey("set_operating_mode"), is(true));
         assertThat(tools.containsKey("promote_recordings"), is(true));
-        assertThat(tools.size(), is(40));
+        assertThat(tools.containsKey("explain_request"), is(true));
+        assertThat(tools.containsKey("diagnose_config"), is(true));
+        assertThat(tools.size(), is(42));
     }
 
     @Test
@@ -2433,6 +2435,8 @@ public class McpToolRegistryTest {
             "get_status",
             "debug_request_mismatch",
             "explain_unmatched_requests",
+            "explain_request",
+            "diagnose_config",
             "explain_agent_run",
             "export_optimisation_report",
             "diff_agent_runs",

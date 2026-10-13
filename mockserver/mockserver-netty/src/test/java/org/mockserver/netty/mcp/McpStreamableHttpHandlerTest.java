@@ -167,6 +167,7 @@ public class McpStreamableHttpHandlerTest {
         String instructions = json.path("result").path("instructions").asText();
         assertThat(instructions, containsString("MockServer is an HTTP(S) mock server and proxy"));
         assertThat(instructions, containsString("explain_unmatched_requests"));
+        assertThat(instructions, containsString("explain_request"));
         assertThat(instructions, containsString("run_contract_test"));
         assertThat(instructions, containsString("run_resiliency_test"));
         assertThat(instructions, containsString("record_llm_fixtures"));

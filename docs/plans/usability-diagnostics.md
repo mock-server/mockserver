@@ -37,6 +37,9 @@ flowchart LR
 - **Explain one request (A3):** `PUT /mockserver/explain?correlationId=` re-checks a recorded
   request against the current expectations in serving order; names the winner, a reason for each
   expectation ahead of it, the ones it shadows, the outcome at arrival and `expectationsChangedSince`.
+- **MCP diagnosis tools (B1):** `explain_request` (A3's explainer by correlation id, redacted as the
+  event log is) and `diagnose_config` (the effective configuration with each value's source, credentials
+  masked; the non-default properties, or any property by name).
 - **404 hints:** `findClosestMatchHint` feeds the `x-mockserver-closest-match(-hint)` headers
   (`closestMatchHintEnabled`, default true), the optional mismatch diagnostic body, and a DEBUG
   log.
@@ -79,7 +82,6 @@ run.
 | # | Problem → proposal | Cost | Performance reasoning | Effort | Risks | Priority |
 |---|---|---|---|---|---|---|
 | A2 | A 404 flood rescans every expectation per miss for the closest-match hint → cap the scan and memoise per (method, path) until expectations change | (ii) | 404-heavy and proxy-miss loads currently pay O(expectations) per miss | S | A capped hint can miss the true closest match; say so in the header | P1 |
-| B1 | MCP diagnosis tools as the primary AI route: `explain_request` (A3), `explain_forward_failure` (A4), `lint_expectations` (A8), `test_template` (A5), `diagnose_config` (A7), `suggest_expectation_fix` (B3); `explain_request` can delegate to `HttpState.explain(HttpRequest)`, whose output is already redacted | (iii) | MockServer runs deterministic computation only; the user's assistant does the reasoning | M | Tool output carries user traffic to the assistant: apply the log redaction settings to tool results by default | P0 |
 | A4 | Partly done: TLS, HTTP/2, set-up and decode failures are named in the 502 (`7a8b8c424`). A plain connect failure still says only "failed to connect to remote socket" → split it into DNS, refused and timeout, add pooled-connection close and proxy loop, and add a suggested fix to each named cause | (ii) | Runs only on failure; a lookup | S | Must not reveal more of the target than the 502 already does | P1 |
 | A5 | Template errors are hard to locate → `PUT /template/test` dry run, plus line/column and missing-variable hints in the failure event | (iii) / (ii) | Dry run on demand; enrichment only on failure | M | Reuse the hardened template-engine sandbox; rate-limit | P1 |
 | A8 | Unreachable or suspicious expectations go unnoticed → lint: shadowed expectations, regex paths that look literal, missing leading slash, STRICT array bodies, `times=0`; surfaced as PUT `warnings`, in the UI, and via `mockserver lint file.json` | (iv) / (iii) | Control plane only; the pairwise shadowing check is O(n²), so on demand, not on every PUT | M | Advisory only, never rejecting | P1 |
@@ -93,6 +95,8 @@ run.
 | A3a | Explain is REST-only → an "Explain" action on a dashboard log group and typed `explain(correlationId)` methods in the clients; also complete the explain endpoint's OpenAPI 200 schema (`request`, `note`, `timestamp`, `expectationsLastChanged`, `totalExpectations`, `evaluatedExpectations`, `maxExpectationsEvaluated`) and add a guard test tying the explainer's gate order to the serving path, plus a `not`-matcher case | (iii) | Zero hot-path cost: calls the existing endpoint | M | The gate-order copy can drift from serving without the guard | P2 |
 | A6b | Surface OpenAPI load problems outside the log | (iv) | Load time only | S | Return the advisory problems of a spec that loads in the PUT /mockserver/openapi 201 response (needs HttpState, which was off-limits for A6) and list them in the dashboard and an MCP tool | P2 |
 | A6c | A JSON Schema response body logs "loaded OpenAPI spec with problems" although the user loaded no spec (`JsonSchemaResponseSynthesizer` wraps the schema in an OpenAPI document; `$schema`, `const` or a type list trigger it, once per schema every 30 minutes) | (iv) | Response path, cached | S | Suppress or reword the WARN for synthesizer-wrapped schemas | P3 |
+| B1b | `diagnose_config` reports only values and sources → once A7 lands, append its `unrecognisedConfiguration()` result (names, setAs, suggestions, systemPropertyOnly; names only, never values), add the defaults comparison from A11, and replace the tool's local `normalisedPropertyName` with core's public `suggestRecognisedKeys` / name normaliser | (iii) | On demand; one pass over the recognised keys | S | Must never echo the value of an unrecognised key, which may be a credential | P1 |
+| B1c | Diagnosis tools still missing from MCP → add `explain_forward_failure` when A4 lands, `test_template` with A5, `lint_expectations` with A8 and `suggest_expectation_fix` with B3; each in `READING_TOOLS`, delegating to the item's endpoint, with redacted output | (iii) | On demand; the item's own cost | S | Tool output carries user traffic: redact as the endpoint does | P1 |
 
 ## Approach to LLM features
 
@@ -107,8 +111,8 @@ run.
 ## Sequence
 
 1. **Wave 0 — hygiene and performance:** A2, C1.
-2. **Wave 1 — explain engine:** B1 (the A3 explainer plus existing tools with redacted output). (A3 and A10 landed.)
-3. **Wave 2 — failure classes:** A4, A5, A6, each with an MCP tool and a dashboard entry.
+2. **Wave 1 — explain engine:** done (A3, A10 and B1 landed).
+3. **Wave 2 — failure classes:** A4, A5, A6, each with an MCP tool (see B1b and B1c) and a dashboard entry.
 4. **Wave 3 — fixes:** A8 (including the CLI), B3, B2, A9b.
 5. **Wave 4 — optional:** B5, B6, A11.
 

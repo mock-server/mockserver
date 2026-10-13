@@ -65,7 +65,9 @@ public class McpRequestProcessor {
             "- Debug a request that did not match: call 'explain_unmatched_requests' after a failed test run to see, " +
             "for each request that hit the server, the closest expectations ranked by similarity with field-level " +
             "diffs and a remediation hint — no need to reconstruct the request. 'debug_request_mismatch' does the " +
-            "same for a request you supply.\n" +
+            "same for a request you supply. 'explain_request' takes one received request's correlation id (from " +
+            "'retrieve_logs') and says which expectation serves it now and why each one ahead of it lost; " +
+            "'diagnose_config' shows which settings are in effect and where they came from.\n" +
             "- Verify an implementation: 'verify_request' / 'verify_request_sequence' check requests were made; " +
             "'verify_traffic_against_openapi' checks recorded traffic conforms to an OpenAPI contract; " +
             "'run_contract_test' sends spec-derived example requests to a running service and checks the responses; " +

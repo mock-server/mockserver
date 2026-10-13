@@ -869,6 +869,8 @@ MCP tools map to MockServer control-plane operations:
 | `reset` | Reset all MockServer state |
 | `get_status` | Check MockServer running status and bound ports |
 | `debug_request_mismatch` | Diagnose why a request did not match any expectation |
+| `explain_request` | Explain one received request, by correlation id: which expectation serves it now and why each one ahead of it lost |
+| `diagnose_config` | Report the effective configuration and the source of each setting, credentials masked |
 | `stop_server` | Stop the MockServer instance |
 | `raw_expectation` | Full expectation JSON passthrough |
 | `raw_retrieve` | Full retrieve parameters passthrough |

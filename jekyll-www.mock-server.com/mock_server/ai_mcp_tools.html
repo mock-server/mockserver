@@ -9,7 +9,7 @@ subsection: true
 sitemap:
   priority: 0.8
   changefreq: 'monthly'
-  lastmod: 2026-05-26T00:00:00+00:00
+  lastmod: 2026-10-13T00:00:00+00:00
 keywords: "mcp tools, mockserver mcp tools, create_expectation, verify_request, ai testing tools"
 ---
 
@@ -42,6 +42,8 @@ keywords: "mcp tools, mockserver mcp tools, create_expectation, verify_request, 
         <tr><td><a href="#create_forward_expectation"><code>create_forward_expectation</code></a></td><td>Create a forwarding proxy expectation</td><td>High</td></tr>
         <tr><td><a href="#debug_request_mismatch"><code>debug_request_mismatch</code></a></td><td>Diagnose why a request did not match</td><td>High</td></tr>
         <tr><td><a href="#explain_unmatched_requests"><code>explain_unmatched_requests</code></a></td><td>Explain recent unmatched requests with ranked diagnostics</td><td>High</td></tr>
+        <tr><td><a href="#explain_request"><code>explain_request</code></a></td><td>Explain why one received request matched one expectation and not another</td><td>High</td></tr>
+        <tr><td><a href="#diagnose_config"><code>diagnose_config</code></a></td><td>Show which configuration settings are in effect and where each came from</td><td>High</td></tr>
         <tr><td><a href="#stop_server"><code>stop_server</code></a></td><td>Stop the MockServer instance</td><td>High</td></tr>
         <tr><td><a href="#create_expectation_from_openapi"><code>create_expectation_from_openapi</code></a></td><td>Generate expectations from an OpenAPI spec</td><td>High</td></tr>
         <tr><td><a href="#create_expectations_from_recorded_traffic"><code>create_expectations_from_recorded_traffic</code></a></td><td>Convert recorded proxy traffic into mock expectations</td><td>High</td></tr>
@@ -745,6 +747,103 @@ keywords: "mcp tools, mockserver mcp tools, create_expectation, verify_request, 
     <li><code>remediation</code> &mdash; actionable hints such as "use method POST not GET" or "add missing header Authorization"</li>
     <li><code>differingFieldCount</code> / <code>matchedFieldCount</code> &mdash; numeric closeness ranking</li>
 </ul>
+
+<a id="explain_request" class="anchor" href="#explain_request">&nbsp;</a>
+
+<h3>explain_request</h3>
+
+<p>Explains one request MockServer has already received, identified by its correlation ID: which expectation would serve it now, why each expectation checked before that one was passed over, which lower-priority expectations it hides, and how the request was actually handled when it arrived. Use it when a request was served by the wrong expectation, or by none. Find the correlation ID with <a href="#retrieve_logs"><code>retrieve_logs</code></a>: every log entry for a request carries it.</p>
+
+<p>The answer is worked out again when you ask, against the expectations as they are now, so it says whether they have changed since the request arrived. Asking changes nothing: no <code>Times</code> are used up and no scenario moves. The fields and reasons are described in <a href="/mock_server/troubleshooting_matching.html#explain_request">Troubleshooting Matching</a>.</p>
+
+<p><strong>Note:</strong> This functionality is also available as a REST API endpoint (<code>PUT /mockserver/explain?correlationId=&lt;id&gt;</code>).</p>
+
+<p><strong>Redaction:</strong> values quoted from the recorded request, such as an <code>Authorization</code> header in a field difference, are masked when <code>redactSecretsInLog</code> is enabled, exactly as in the event log. Enable it if your assistant should not see credentials from your traffic.</p>
+
+<table>
+    <thead>
+        <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>correlationId</code></td><td>string</td><td>Yes</td><td>Correlation ID of the received request</td></tr>
+    </tbody>
+</table>
+
+<p><strong>Example request:</strong></p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 21,
+  "method": "tools/call",
+  "params": {
+    "name": "explain_request",
+    "arguments": {
+      "correlationId": "abc-123-def-456"
+    }
+  }
+}</code></pre>
+
+<p><strong>Example response</strong> (the <code>text</code> holds the same JSON as the REST endpoint, shortened here):</p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 21,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"correlationId\":\"abc-123-def-456\",\"recomputed\":true,\"atArrival\":{\"outcome\":\"MATCHED\",\"expectationId\":\"catch-all\"},\"expectationsChangedSince\":false,\"matchedExpectation\":{\"expectationId\":\"catch-all\",\"position\":2,\"priority\":0},\"skippedExpectations\":[{\"expectationId\":\"gold-tenant\",\"position\":1,\"priority\":10,\"reason\":\"FIELDS_DIFFER\",\"explanation\":\"the request differs on: headers\"}],\"shadowedExpectations\":[]}"
+      }
+    ],
+    "isError": false
+  }
+}</code></pre>
+
+<p>An unknown or evicted correlation ID returns <code>"isError": true</code> with a message saying no request is recorded with it (the event log keeps the most recent <code>maxLogEntries</code> entries).</p>
+
+<a id="diagnose_config" class="anchor" href="#diagnose_config">&nbsp;</a>
+
+<h3>diagnose_config</h3>
+
+<p>Shows which configuration settings are in effect and where each came from: a system property, the properties file, an environment variable or a runtime setter. Without parameters it lists only the settings changed from their default. Pass <code>name</code> to check one setting, in any form (<code>maxExpectations</code>, <code>mockserver.maxExpectations</code> or <code>MOCKSERVER_MAX_EXPECTATIONS</code>); a name that matches nothing returns a <code>hint</code>, which usually means a typo. Credential values, such as passwords, tokens and API keys, are always shown as <code>***REDACTED***</code>.</p>
+
+<p><strong>Note:</strong> This reports the same values and sources as <code>GET /mockserver/config</code> and the <code>--print-config</code> command-line flag, which list every setting, including those at their default. A value set only on the <code>Configuration</code> object of an embedded server, or through <code>PUT /mockserver/configuration</code>, is not shown; <code>GET /mockserver/configuration</code> returns those.</p>
+
+<table>
+    <thead>
+        <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>name</code></td><td>string</td><td>No</td><td>A setting name, or part of one, to look up, including settings at their default</td></tr>
+    </tbody>
+</table>
+
+<p><strong>Example request:</strong></p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 22,
+  "method": "tools/call",
+  "params": {
+    "name": "diagnose_config",
+    "arguments": {
+      "name": "MOCKSERVER_MAX_EXPECTATIONS"
+    }
+  }
+}</code></pre>
+
+<p><strong>Example response</strong> (the <code>text</code> content, formatted):</p>
+
+<pre class="prettyprint code"><code class="code">{
+  "properties": [
+    { "name": "mockserver.maxExpectations", "value": "5000", "source": "environment-variable" }
+  ],
+  "count": 1,
+  "explicitlySetCount": 3,
+  "note": "values come from system properties, the properties file, environment variables and runtime setters; ..."
+}</code></pre>
+
+<p>A setting at its default shows the value <code>(default)</code> and the source <code>default</code>. <code>explicitlySetCount</code> is the number of settings changed from their default, and <code>totalProperties</code> (left out above) the number of settings MockServer recognises.</p>
 
 <a id="stop_server" class="anchor" href="#stop_server">&nbsp;</a>
 

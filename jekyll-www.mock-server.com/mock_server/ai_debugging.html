@@ -9,7 +9,7 @@ subsection: true
 sitemap:
   priority: 0.8
   changefreq: 'monthly'
-  lastmod: 2026-05-22T00:00:00+00:00
+  lastmod: 2026-10-13T00:00:00+00:00
 keywords: "ai http debugging, debug api with ai, mockserver mcp debugging"
 ---
 
@@ -186,6 +186,21 @@ agent = create_react_agent(model, tools=tools)</code></pre>
 </ol>
 
 <p>This is particularly useful for intermittent failures where you need to understand exactly what happened for a specific request.</p>
+
+<h3>"Why was this request served by the wrong mock?"</h3>
+
+<p>The assistant will:</p>
+<ol>
+    <li>Use <code class="code inline">retrieve_logs</code> to find the request and its correlation ID</li>
+    <li>Use <a href="/mock_server/ai_mcp_tools.html#explain_request"><code class="code inline">explain_request</code></a> with that correlation ID to see which expectation serves the request now, why each expectation checked before it was passed over (different fields, another namespace, used-up <code class="code inline">Times</code>, scenario state, percentage), and which expectations it hides</li>
+    <li>Suggest a fix, such as raising a priority, correcting a header matcher or moving a scenario on</li>
+</ol>
+
+<h3>"Did my configuration setting take effect?"</h3>
+
+<p>The assistant will use <a href="/mock_server/ai_mcp_tools.html#diagnose_config"><code class="code inline">diagnose_config</code></a> to list the settings changed from their default and where each came from, or to look up one setting by name. A setting that is still at its default, or a name that matches nothing, usually means a typo in the property or environment variable name.</p>
+
+<p>Both tools return redacted output: <code class="code inline">diagnose_config</code> always masks credentials, and <code class="code inline">explain_request</code> masks credentials quoted from your traffic when <code class="code inline">redactSecretsInLog</code> is enabled.</p>
 
 <h3>"Why are my test requests getting 404s?"</h3>
 

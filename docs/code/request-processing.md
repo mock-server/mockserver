@@ -459,6 +459,7 @@ flowchart LR
 - **Staleness.** `RequestMatchers.markMatchersModified` records `lastModifiedEpochMillis`; `expectationsChangedSince` is true when that is at or after the request's `epochTime` (a change in the same millisecond counts as a change). Scenario states and remaining `Times` are always read as they are now. A body truncated by `maxLoggedBodyBytes` (the `x-mockserver-body-truncated` header) is flagged as `request.bodyTruncated`, and that header is removed before matching.
 - **Budget.** At most `EXPLAIN_REQUEST_EVALUATION_BUDGET` (500) expectations are evaluated; `truncated` and `maxExpectationsEvaluated` report the cut.
 - **Route.** The route is registered only under `/mockserver/explain`, with no bare `/explain` alias, so it cannot shadow a user's own `PUT /explain` mock. It is a read for control-plane authorisation.
+- **MCP.** The `explain_request` tool calls `HttpState.explain` with the correlation id as a query parameter and returns its JSON; a non-200 answer becomes a tool error (`isError`) carrying the endpoint's message. Its output is redacted exactly as the endpoint's is.
 
 ### Request Replay
 
