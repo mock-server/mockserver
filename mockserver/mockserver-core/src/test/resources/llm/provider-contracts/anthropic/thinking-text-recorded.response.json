@@ -1,0 +1,37 @@
+{
+  "model": "claude-sonnet-4-5-20250929",
+  "id": "msg_011CfWk4XTetciJdcDHe8eSX",
+  "type": "message",
+  "role": "assistant",
+  "content": [
+    {
+      "type": "thinking",
+      "thinking": "17 * 23 = ?\n\nI can calculate this step by step:\n17 * 23 = 17 * 20 + 17 * 3\n= 340 + 51\n= 391",
+      "signature": "EtkCCpsBCBIYAipAOj7tKIR4DBGyYclh6aqaeaQT1kpKk8vSEK16OTX/Y0cmJrMcIa/rY9D+fc1VYeEX983z4VnyjP6aPr3UBZnvhDIaY2xhdWRlLXNvbm5ldC00LTUtMjAyNTA5Mjk4AEIIdGhpbmtpbmdaJDQ0YWU2NzZjLTk1OGYtNGQ2OC05MTA4LWVhZTlkZTdiMzY2YqgB4f3r1QYSDL4JZxNJQYYctz0K2RoMdLGPGPQsqHXGqqVJIjDeSD2fEqBGYPRhqjwJ4/Z81xm88IObdisbouHIdT+5uuVsUjHPl0YCTTN6oKcSS98qayT6UPAjPqHwis2DlVo9rRw4qZ8Zzxy9isVntORAx3eVFxVnA6Pf250J6mllGPJSnaJgoyvvTvg98UyBdLV4BEz5tcKdie1bPQ/N2eJpQyof1ZJWQVQ6QvbA3RE5xOj4gh2qxQmVg8aIjjoHGAE="
+    },
+    {
+      "type": "text",
+      "text": "391"
+    }
+  ],
+  "container": null,
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "stop_details": null,
+  "usage": {
+    "input_tokens": 51,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 0
+    },
+    "output_tokens": 63,
+    "output_tokens_details": {
+      "thinking_tokens": 57
+    },
+    "service_tier": "standard",
+    "inference_geo": "not_available"
+  },
+  "diagnostics": null
+}

@@ -118,8 +118,9 @@ public final class LlmContentFilterBodies {
         }
         switch (provider) {
             case ANTHROPIC:
-            case BEDROCK:
                 return new Block(200, LlmRefusalPresets.ANTHROPIC_REFUSAL_BODY);
+            case BEDROCK:
+                return new Block(200, LlmRefusalPresets.BEDROCK_INVOKE_REFUSAL_BODY);
             case AZURE_OPENAI:
                 return azureBlock(effective);
             case OPENAI:

@@ -30,13 +30,19 @@ public final class LlmRefusalPresets {
      * used by {@link LlmContentFilterBodies} for a content-filter block. Deterministic
      * test fixture — the id is fixed rather than random.
      */
-    public static final String ANTHROPIC_REFUSAL_BODY =
-        "{\"id\":\"msg_refusal\",\"type\":\"message\",\"role\":\"assistant\","
-            + "\"model\":\"claude\",\"content\":[],\"stop_reason\":\"refusal\","
-            + "\"stop_sequence\":null,\"stop_details\":" + AnthropicCodec.REFUSAL_STOP_DETAILS + ","
-            + "\"usage\":{\"input_tokens\":0,\"output_tokens\":0}}";
+    public static final String ANTHROPIC_REFUSAL_BODY = refusalBody(",\"diagnostics\":null");
+
+    /** As {@link #ANTHROPIC_REFUSAL_BODY} without {@code diagnostics}, which Bedrock InvokeModel does not send. */
+    public static final String BEDROCK_INVOKE_REFUSAL_BODY = refusalBody("");
 
     private LlmRefusalPresets() {
+    }
+
+    private static String refusalBody(String diagnostics) {
+        return "{\"id\":\"msg_refusal\",\"type\":\"message\",\"role\":\"assistant\","
+            + "\"model\":\"claude\",\"content\":[],\"container\":null,\"stop_reason\":\"refusal\","
+            + "\"stop_sequence\":null,\"stop_details\":" + AnthropicCodec.REFUSAL_STOP_DETAILS + ","
+            + "\"usage\":{\"input_tokens\":0,\"output_tokens\":0}" + diagnostics + "}";
     }
 
     /**

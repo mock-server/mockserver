@@ -38,6 +38,21 @@ public class AnthropicCodec implements ProviderCodec {
      */
     public static final String REFUSAL_STOP_DETAILS = "{\"type\":\"refusal\",\"category\":null,\"explanation\":null}";
 
+    private final boolean sendsDiagnostics;
+
+    public AnthropicCodec() {
+        this(true);
+    }
+
+    /**
+     * Every message carries {@code "container": null} unless a container tool ran, and the Claude API
+     * also sends {@code "diagnostics": null} unless the request opted in to cache diagnostics, which
+     * Bedrock does not support; {@code sendsDiagnostics} false leaves that field out for Bedrock.
+     */
+    AnthropicCodec(boolean sendsDiagnostics) {
+        this.sendsDiagnostics = sendsDiagnostics;
+    }
+
     @Override
     public Provider provider() {
         return Provider.ANTHROPIC;
@@ -57,6 +72,7 @@ public class AnthropicCodec implements ProviderCodec {
         root.put("model", model != null ? model : "unknown");
 
         ArrayNode content = root.putArray("content");
+        root.putNull("container");
 
         // Thinking/reasoning block (prepended before the text block when reasoning is set).
         // Anthropic encodes extended-thinking output as a leading
@@ -121,6 +137,9 @@ public class AnthropicCodec implements ProviderCodec {
 
         // usage
         ObjectNode usage = root.putObject("usage");
+        if (sendsDiagnostics) {
+            root.putNull("diagnostics");
+        }
         Usage completionUsage = completion.getUsage();
         int inputTokens = completionUsage != null && completionUsage.getInputTokens() != null ? completionUsage.getInputTokens() : 0;
         int outputTokens = completionUsage != null && completionUsage.getOutputTokens() != null ? completionUsage.getOutputTokens() : 0;
@@ -177,8 +196,9 @@ public class AnthropicCodec implements ProviderCodec {
         }
         messageStartUsage.append("}");
         String messageStartData = "{\"type\":\"message_start\",\"message\":{\"id\":\"" + messageId +
-            "\",\"type\":\"message\",\"role\":\"assistant\",\"content\":[],\"model\":\"" + escapeJson(modelName) +
-            "\",\"stop_reason\":null,\"stop_sequence\":null,\"stop_details\":null,\"usage\":" + messageStartUsage + "}}";
+            "\",\"type\":\"message\",\"role\":\"assistant\",\"content\":[],\"container\":null,\"model\":\"" + escapeJson(modelName) +
+            "\",\"stop_reason\":null,\"stop_sequence\":null,\"stop_details\":null,\"usage\":" + messageStartUsage +
+            (sendsDiagnostics ? ",\"diagnostics\":null" : "") + "}}";
         events.add(sseEvent().withEvent("message_start").withData(messageStartData));
 
         int contentIndex = 0;
@@ -263,7 +283,7 @@ public class AnthropicCodec implements ProviderCodec {
         String stopReason = mapStopReason(completion.getStopReason(), hasToolCalls);
         String stopDetails = REFUSAL.equals(stopReason) ? REFUSAL_STOP_DETAILS : "null";
         String messageDeltaData = "{\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"" + escapeJson(stopReason) +
-            "\",\"stop_sequence\":null,\"stop_details\":" + stopDetails + "},\"usage\":{\"output_tokens\":" + outputTokens + "}}";
+            "\",\"stop_sequence\":null,\"stop_details\":" + stopDetails + ",\"container\":null},\"usage\":{\"output_tokens\":" + outputTokens + "}}";
         events.add(sseEvent().withEvent("message_delta").withData(messageDeltaData));
 
         // 5. message_stop

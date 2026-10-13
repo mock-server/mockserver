@@ -1,0 +1,101 @@
+{
+  "description": "Messages API, streamed text reply recorded from the live API on 2026-09-28",
+  "source": "https://github.com/pydantic/pydantic-ai/blob/a3e2c5c829486d7b411b41a4e0964afaf9a6ab34/tests/models/anthropic/cassettes/test_max_tokens/test_default_max_tokens%5Bno-thinking%5D.yaml (recorded_at 2026-09-28; the SDK's beta client adds ?beta=true to /v1/messages)",
+  "retrieved": "2026-10-13",
+  "request": {
+    "method": "POST",
+    "path": "/v1/messages",
+    "body": {
+      "max_tokens": 64000,
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "text": "What is 17 * 23? Answer with just the number.",
+              "type": "text"
+            }
+          ]
+        }
+      ],
+      "model": "claude-sonnet-4-5",
+      "stream": true
+    }
+  },
+  "httpLlmResponse": {
+    "provider": "ANTHROPIC",
+    "model": "claude-sonnet-4-5-20250929",
+    "completion": {
+      "text": "391",
+      "streaming": true,
+      "usage": {
+        "inputTokens": 22,
+        "outputTokens": 5
+      }
+    }
+  },
+  "response": "stream-text-recorded.response.sse",
+  "format": "SSE",
+  "wireFormat": "SSE",
+  "ignoreRealEvents": {
+    "ping": "a keep-alive the API may send at any point; the Messages streaming docs tell clients to handle it, so a stream without one is valid"
+  },
+  "allowed": [
+    {
+      "kind": "MISSING",
+      "path": "message.usage.cache_creation",
+      "scope": "message_start",
+      "reason": "required in the Usage type of the Messages API reference (platform.claude.com/docs/en/api/messages/create) and sent by the real API on every message; MockServer omits it",
+      "openItem": "33e"
+    },
+    {
+      "kind": "MISSING",
+      "path": "message.usage.cache_creation_input_tokens",
+      "scope": "message_start",
+      "reason": "required in the Usage type of the Messages API reference (platform.claude.com/docs/en/api/messages/create) and sent by the real API on every message; MockServer omits it when zero",
+      "openItem": "33e"
+    },
+    {
+      "kind": "MISSING",
+      "path": "message.usage.cache_read_input_tokens",
+      "scope": "message_start",
+      "reason": "required in the Usage type of the Messages API reference (platform.claude.com/docs/en/api/messages/create) and sent by the real API on every message; MockServer omits it when zero",
+      "openItem": "33e"
+    },
+    {
+      "kind": "MISSING",
+      "path": "message.usage.inference_geo",
+      "scope": "message_start",
+      "reason": "required in the Usage type of the Messages API reference (platform.claude.com/docs/en/api/messages/create) and sent by the real API on every message; MockServer omits it",
+      "openItem": "33e"
+    },
+    {
+      "kind": "MISSING",
+      "path": "message.usage.service_tier",
+      "scope": "message_start",
+      "reason": "required in the Usage type of the Messages API reference (platform.claude.com/docs/en/api/messages/create) and sent by the real API on every message; MockServer omits it",
+      "openItem": "33e"
+    },
+    {
+      "kind": "MISSING",
+      "path": "usage.cache_creation_input_tokens",
+      "scope": "message_delta",
+      "reason": "required in the MessageDeltaUsage type of the Messages API reference (platform.claude.com/docs/en/api/messages/create) and sent by the real API on every message_delta; MockServer sends only output_tokens",
+      "openItem": "33e"
+    },
+    {
+      "kind": "MISSING",
+      "path": "usage.cache_read_input_tokens",
+      "scope": "message_delta",
+      "reason": "required in the MessageDeltaUsage type of the Messages API reference (platform.claude.com/docs/en/api/messages/create) and sent by the real API on every message_delta; MockServer sends only output_tokens",
+      "openItem": "33e"
+    },
+    {
+      "kind": "MISSING",
+      "path": "usage.input_tokens",
+      "scope": "message_delta",
+      "reason": "required in the MessageDeltaUsage type of the Messages API reference (platform.claude.com/docs/en/api/messages/create) and sent by the real API on every message_delta; MockServer sends only output_tokens",
+      "openItem": "33e"
+    }
+  ]
+}

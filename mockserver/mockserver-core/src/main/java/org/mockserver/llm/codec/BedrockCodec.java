@@ -53,7 +53,7 @@ public class BedrockCodec implements ProviderCodec {
     private static final Pattern CONVERSE_PATH = Pattern.compile("/converse(-stream)?/*$");
     private static final Pattern INVOKE_PATH = Pattern.compile("/invoke(-with-response-stream)?/*$");
 
-    private final AnthropicCodec delegate = new AnthropicCodec();
+    private final AnthropicCodec delegate = new AnthropicCodec(false);
     private final BedrockConverseCodec converse = new BedrockConverseCodec();
 
     /**

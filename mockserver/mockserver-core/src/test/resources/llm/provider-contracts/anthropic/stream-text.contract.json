@@ -47,6 +47,24 @@
       "path": "delta.stop_details",
       "scope": "message_delta",
       "reason": "RawMessageDeltaEvent.Delta.stop_details is required and nullable in anthropic-sdk-typescript (src/resources/messages/messages.ts) and null for every stop reason but refusal (platform.claude.com/docs/en/build-with-claude/refusals-and-fallback); this documentation example predates the field"
+    },
+    {
+      "kind": "EXTRA",
+      "path": "message.container",
+      "scope": "message_start",
+      "reason": "Message.container is required and nullable in the Messages API reference (platform.claude.com/docs/en/api/messages/create) and null unless a container tool ran; the recorded responses in stream-text-recorded and thinking-text-recorded (2026-09-28) carry it; this documentation example predates the field"
+    },
+    {
+      "kind": "EXTRA",
+      "path": "message.diagnostics",
+      "scope": "message_start",
+      "reason": "Message.diagnostics is required and nullable in the Messages API reference, and the 2026-09-23 API release note says POST /v1/messages responses always include it, null when the request did not include the diagnostics object; the recorded responses in stream-text-recorded and thinking-text-recorded (2026-09-28) carry it; this documentation example predates the field"
+    },
+    {
+      "kind": "EXTRA",
+      "path": "delta.container",
+      "scope": "message_delta",
+      "reason": "RawMessageDeltaEvent.delta.container is required and nullable in the Messages API reference (platform.claude.com/docs/en/api/messages/create); the recorded response in stream-text-recorded (2026-09-28) carries it as null; this documentation example predates the field"
     }
   ]
 }

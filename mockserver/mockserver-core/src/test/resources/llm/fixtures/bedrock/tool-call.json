@@ -12,6 +12,7 @@
       "units" : "celsius"
     }
   } ],
+  "container" : null,
   "stop_reason" : "tool_use",
   "stop_sequence" : null,
   "stop_details" : null,

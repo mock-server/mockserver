@@ -604,7 +604,8 @@ curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
         <tr>
             <td><span class="inline_code">/invoke</span></td>
             <td>InvokeModel for Anthropic Claude: the Anthropic Messages body (<span class="inline_code">content[]</span>,
-                <span class="inline_code">stop_reason</span>, <span class="inline_code">usage.input_tokens</span> / <span class="inline_code">output_tokens</span>).</td>
+                <span class="inline_code">stop_reason</span>, <span class="inline_code">usage.input_tokens</span> / <span class="inline_code">output_tokens</span>).
+                It carries <span class="inline_code">"container": null</span> but, as on real Bedrock, no <span class="inline_code">diagnostics</span> field.</td>
         </tr>
         <tr>
             <td><span class="inline_code">/invoke-with-response-stream</span></td>
@@ -1445,7 +1446,9 @@ geminiLive()
     <span class="inline_code">{"type": "refusal", "category": null, "explanation": null}</span>; a stream carries it in the
     <span class="inline_code">message_delta</span> event's <span class="inline_code">delta</span>, so SDK code that reads
     <span class="inline_code">stop_details</span> works against the mock. Every other Anthropic message sends
-    <span class="inline_code">"stop_details": null</span>, also as the real API does. To inject a block probabilistically across providers,
+    <span class="inline_code">"stop_details": null</span>, also as the real API does. Like the real API, every Anthropic message also
+    carries <span class="inline_code">"container": null</span> (no container tool ran) and <span class="inline_code">"diagnostics": null</span>
+    (the request did not ask for cache diagnostics). To inject a block probabilistically across providers,
     use the <span class="inline_code">contentFilterBlockProbability</span> chaos field (see below), which emits the
     provider-correct shape.
 </p>

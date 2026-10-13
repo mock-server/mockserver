@@ -1,0 +1,83 @@
+{
+  "description": "Messages API, extended-thinking text reply recorded from the live API on 2026-09-28",
+  "source": "https://github.com/pydantic/pydantic-ai/blob/a3e2c5c829486d7b411b41a4e0964afaf9a6ab34/tests/models/anthropic/cassettes/test_max_tokens/test_default_max_tokens%5Bexplicit-max-tokens%5D.yaml (recorded_at 2026-09-28; the SDK's beta client adds ?beta=true to /v1/messages)",
+  "retrieved": "2026-10-13",
+  "request": {
+    "method": "POST",
+    "path": "/v1/messages",
+    "body": {
+      "max_tokens": 15000,
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "text": "What is 17 * 23? Answer with just the number.",
+              "type": "text"
+            }
+          ]
+        }
+      ],
+      "model": "claude-sonnet-4-5",
+      "stream": false,
+      "thinking": {
+        "type": "enabled",
+        "budget_tokens": 4096
+      }
+    }
+  },
+  "httpLlmResponse": {
+    "provider": "ANTHROPIC",
+    "model": "claude-sonnet-4-5-20250929",
+    "completion": {
+      "text": "391",
+      "reasoningText": "17 * 23 = 391",
+      "reasoningSignature": "EtkCCpsBCBIYAipA",
+      "usage": {
+        "inputTokens": 51,
+        "outputTokens": 63,
+        "reasoningTokens": 57
+      }
+    }
+  },
+  "response": "thinking-text-recorded.response.json",
+  "format": "JSON",
+  "allowed": [
+    {
+      "kind": "MISSING",
+      "path": "usage.cache_creation",
+      "reason": "required in the Usage type of the Messages API reference (platform.claude.com/docs/en/api/messages/create) and sent by the real API on every message; MockServer omits it",
+      "openItem": "33e"
+    },
+    {
+      "kind": "MISSING",
+      "path": "usage.cache_creation_input_tokens",
+      "reason": "required in the Usage type of the Messages API reference (platform.claude.com/docs/en/api/messages/create) and sent by the real API on every message; MockServer omits it when zero",
+      "openItem": "33e"
+    },
+    {
+      "kind": "MISSING",
+      "path": "usage.cache_read_input_tokens",
+      "reason": "required in the Usage type of the Messages API reference (platform.claude.com/docs/en/api/messages/create) and sent by the real API on every message; MockServer omits it when zero",
+      "openItem": "33e"
+    },
+    {
+      "kind": "MISSING",
+      "path": "usage.inference_geo",
+      "reason": "required in the Usage type of the Messages API reference (platform.claude.com/docs/en/api/messages/create) and sent by the real API on every message; MockServer omits it",
+      "openItem": "33e"
+    },
+    {
+      "kind": "MISSING",
+      "path": "usage.service_tier",
+      "reason": "required in the Usage type of the Messages API reference (platform.claude.com/docs/en/api/messages/create) and sent by the real API on every message; MockServer omits it",
+      "openItem": "33e"
+    },
+    {
+      "kind": "MISSING",
+      "path": "usage.output_tokens_details",
+      "reason": "required and nullable in the Usage type of the Messages API reference; the real API sends thinking_tokens in it, but MockServer does not emit it even when the completion sets reasoningTokens",
+      "openItem": "33e"
+    }
+  ]
+}

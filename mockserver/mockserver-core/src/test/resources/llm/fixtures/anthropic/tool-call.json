@@ -12,11 +12,13 @@
       "units" : "celsius"
     }
   } ],
+  "container" : null,
   "stop_reason" : "tool_use",
   "stop_sequence" : null,
   "stop_details" : null,
   "usage" : {
     "input_tokens" : 0,
     "output_tokens" : 0
-  }
+  },
+  "diagnostics" : null
 }
