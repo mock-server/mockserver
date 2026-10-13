@@ -20,6 +20,8 @@ sitemap:
 
 <p>Follow these steps in order when a request is not matching:</p>
 
+<p>If the request was served, but by a different expectation from the one you expected, or you already have its correlation ID, go straight to <a href="#explain_request">explaining a specific request</a>: it names the expectation that wins and why each higher-priority one lost.</p>
+
 <h3>1. Is the expectation active?</h3>
 
 <p>Expectations expire after their configured <code>times</code> limit or <code>timeToLive</code>. Retrieve active expectations to confirm yours is still present:</p>
@@ -770,6 +772,143 @@ echo (string) $response-&gt;getBody();</code></pre></div>
 </div>
 
 <p>The correlation ID is visible in the dashboard UI as a small chip on grouped log entries. Click it to copy the ID.</p>
+
+<a id="explain_request" class="anchor" href="#explain_request">&nbsp;</a>
+
+<h2>Explaining Why a Request Matched One Expectation and Not Another</h2>
+
+<p>When a request was served by the wrong expectation, or by none, <code>PUT /mockserver/explain?correlationId=&lt;id&gt;</code> tells you why. It takes the recorded request with that correlation ID and checks it again against your current expectations, in the same order MockServer uses when a request arrives (highest priority first, then oldest first). It returns:</p>
+<ul>
+    <li><code>matchedExpectation</code> &mdash; the expectation that would serve the request now (absent if none would; <code>closestExpectationId</code> then names the closest one)</li>
+    <li><code>skippedExpectations</code> &mdash; every expectation checked before it, each with a <code>reason</code>, a plain-language <code>explanation</code> and, for field differences, the same <code>differences</code> and <code>remediation</code> hints that <code>explainUnmatched</code> returns</li>
+    <li><code>shadowedExpectations</code> &mdash; lower-priority expectations that also match but are never reached</li>
+    <li><code>atArrival</code> &mdash; how the request was actually handled when it arrived (<code>MATCHED</code> with the expectation ID, <code>NO_MATCH</code>, <code>FORWARDED_WITHOUT_EXPECTATION</code>, <code>RESPONDED_WITHOUT_EXPECTATION</code> or <code>UNKNOWN</code>), and <code>sameOutcomeAsAtArrival</code></li>
+    <li><code>expectationsChangedSince</code> &mdash; <code>true</code> if any expectation was added, changed or removed since the request arrived</li>
+</ul>
+
+<table class="table table-striped">
+    <thead>
+    <tr><th>Reason</th><th>Why the expectation was passed over</th></tr>
+    </thead>
+    <tbody>
+    <tr><td><code>FIELDS_DIFFER</code></td><td>The request differs on one or more fields (method, path, headers, body, &hellip;)</td></tr>
+    <tr><td><code>NAMESPACE</code></td><td>The expectation belongs to a different namespace from the request</td></tr>
+    <tr><td><code>INACTIVE</code></td><td>Its <code>Times</code> are used up or its time to live has expired</td></tr>
+    <tr><td><code>SCENARIO_STATE</code></td><td>It needs its scenario to be in a different state from the current one</td></tr>
+    <tr><td><code>PERCENTAGE</code></td><td>It matches, but is only served for a percentage of requests</td></tr>
+    <tr><td><code>CONVERSATION</code></td><td>The request matches, but its LLM conversation does not</td></tr>
+    </tbody>
+</table>
+
+<p>The answer is <strong>worked out again when you ask</strong>, not recorded when the request arrived, so it costs nothing on normal requests. This also means it reflects the expectations, scenario states and remaining <code>Times</code> as they are <em>now</em>: an expectation limited to <code>once()</code> that served the request will usually show as gone (<code>atArrival.expectationStillStored</code> is <code>false</code>). If the request body was cut short in the log by <code>maxLoggedBodyBytes</code>, <code>request.bodyTruncated</code> is <code>true</code> and body matching is checked against the shortened copy. Request values in the output are redacted in the same way as the log. At most 500 expectations are checked; <code>truncated</code> says when that limit was reached. A correlation ID that is not in the log (never received, cleared, or dropped once <code>maxLogEntries</code> was reached) returns <code>404</code>.</p>
+
+<button id="button_troubleshoot_explain_request" class="accordion">explain one request by correlation ID</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel"><pre class="prettyprint lang-java code"><code class="code">// no typed method in the Java client - call the REST endpoint
+java.net.http.HttpResponse&lt;String&gt; response = java.net.http.HttpClient.newHttpClient().send(
+    java.net.http.HttpRequest.newBuilder(
+            java.net.URI.create("http://localhost:1080/mockserver/explain?correlationId=abc-123-def-456"))
+        .PUT(java.net.http.HttpRequest.BodyPublishers.noBody())
+        .build(),
+    java.net.http.HttpResponse.BodyHandlers.ofString());
+System.out.println(response.body());</code></pre></div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel"><pre class="prettyprint lang-javascript code"><code class="code">// no typed method in the Node client - call the REST endpoint
+const response = await fetch(
+  "http://localhost:1080/mockserver/explain?correlationId=abc-123-def-456",
+  { method: "PUT" }
+);
+console.log(await response.json());</code></pre></div>
+    <button class="accordion inner">Python</button>
+    <div class="panel"><pre class="prettyprint lang-python code"><code class="code">import requests
+
+# no typed method - call the REST endpoint
+response = requests.put(
+    "http://localhost:1080/mockserver/explain",
+    params={"correlationId": "abc-123-def-456"},
+)
+print(response.json())</code></pre></div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel"><pre class="prettyprint lang-ruby code"><code class="code">require 'net/http'
+
+# no typed method - call the REST endpoint
+uri = URI('http://localhost:1080/mockserver/explain?correlationId=abc-123-def-456')
+response = Net::HTTP.start(uri.host, uri.port) { |http| http.request(Net::HTTP::Put.new(uri)) }
+puts response.body</code></pre></div>
+    <button class="accordion inner">Go</button>
+    <div class="panel"><pre class="prettyprint lang-go code"><code class="code">import (
+    "log"
+    "net/http"
+)
+
+// no typed method - call the REST endpoint
+url := "http://localhost:1080/mockserver/explain?correlationId=abc-123-def-456"
+req, _ := http.NewRequest("PUT", url, nil)
+resp, err := http.DefaultClient.Do(req)
+if err != nil {
+    log.Fatal(err)
+}
+defer resp.Body.Close()</code></pre></div>
+    <button class="accordion inner">.NET</button>
+    <div class="panel"><pre class="prettyprint lang-csharp code"><code class="code">using System.Net.Http;
+
+// no typed method - call the REST endpoint
+using var http = new HttpClient();
+var response = await http.PutAsync(
+    "http://localhost:1080/mockserver/explain?correlationId=abc-123-def-456", null);
+Console.WriteLine(await response.Content.ReadAsStringAsync());</code></pre></div>
+    <button class="accordion inner">Rust</button>
+    <div class="panel"><pre class="prettyprint lang-rust code"><code class="code">use reqwest::blocking::Client;
+
+// no typed method - call the REST endpoint
+let explanation = Client::new()
+    .put("http://localhost:1080/mockserver/explain?correlationId=abc-123-def-456")
+    .send()
+    .unwrap()
+    .text()
+    .unwrap();
+println!("{}", explanation);</code></pre></div>
+    <button class="accordion inner">PHP</button>
+    <div class="panel"><pre class="prettyprint lang-php code"><code class="code">use GuzzleHttp\Client;
+
+// no typed method - call the REST endpoint
+$http = new Client();
+$response = $http-&gt;put('http://localhost:1080/mockserver/explain', [
+    'query' =&gt; ['correlationId' =&gt; 'abc-123-def-456'],
+]);
+echo (string) $response-&gt;getBody();</code></pre></div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel"><pre class="prettyprint code"><code class="code">curl -X PUT "http://localhost:1080/mockserver/explain?correlationId=abc-123-def-456"</code></pre></div>
+</div>
+
+<p>For example, a request <code>GET /orders</code> with header <code>X-Tenant: silver</code>, where a priority-10 expectation requires <code>X-Tenant: gold</code> and a priority-0 expectation matches any <code>GET /orders</code>:</p>
+
+<pre class="prettyprint lang-json code"><code class="code">{
+  "correlationId": "abc-123-def-456",
+  "recomputed": true,
+  "request": { "method": "GET", "path": "/orders" },
+  "atArrival": { "outcome": "MATCHED", "expectationId": "catch-all", "expectationStillStored": true },
+  "expectationsChangedSince": false,
+  "sameOutcomeAsAtArrival": true,
+  "matchedExpectation": { "expectationId": "catch-all", "position": 2, "priority": 0 },
+  "skippedExpectations": [
+    {
+      "expectationId": "gold-tenant",
+      "position": 1,
+      "priority": 10,
+      "reason": "FIELDS_DIFFER",
+      "explanation": "the request differs on: headers",
+      "differences": { "headers": [ "..." ] }
+    }
+  ],
+  "shadowedExpectations": [],
+  "totalExpectations": 2,
+  "evaluatedExpectations": 2,
+  "truncated": false
+}</code></pre>
+
+<p>Fields are shortened here; each expectation entry also carries <code>expectationPath</code>, <code>expectationMethod</code> and the field counts that <code>explainUnmatched</code> returns.</p>
 
 <a id="typed_log_entries" class="anchor" href="#typed_log_entries">&nbsp;</a>
 

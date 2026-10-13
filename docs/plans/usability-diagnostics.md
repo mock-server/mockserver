@@ -34,6 +34,9 @@ flowchart LR
   request); `PUT /mockserver/explainUnmatched` re-runs recent unmatched requests against the
   current matchers, ranks the closest expectations and adds remediation hints, within a budget
   (50 expectations, 500 evaluations) — already category (iii).
+- **Explain one request (A3):** `PUT /mockserver/explain?correlationId=` re-checks a recorded
+  request against the current expectations in serving order; names the winner, a reason for each
+  expectation ahead of it, the ones it shadows, the outcome at arrival and `expectationsChangedSince`.
 - **404 hints:** `findClosestMatchHint` feeds the `x-mockserver-closest-match(-hint)` headers
   (`closestMatchHintEnabled`, default true), the optional mismatch diagnostic body, and a DEBUG
   log.
@@ -59,7 +62,7 @@ flowchart LR
 - **Dashboard → `/generateExpectation`:** yes, the Generate Stub dialog calls it
   (`mockserver-ui/src/lib/generateStub.ts`).
 
-**Gaps:** explaining why a request matched X instead of a higher-priority Y; expectation lint and
+**Gaps:** expectation lint and
 shadowing detection; config did-you-mean; the remaining forward-failure causes; a template dry
 run; located OpenAPI errors.
 
@@ -68,8 +71,7 @@ run; located OpenAPI errors.
 | # | Problem → proposal | Cost | Performance reasoning | Effort | Risks | Priority |
 |---|---|---|---|---|---|---|
 | A2 | A 404 flood rescans every expectation per miss for the closest-match hint → cap the scan and memoise per (method, path) until expectations change | (ii) | 404-heavy and proxy-miss loads currently pay O(expectations) per miss | S | A capped hint can miss the true closest match; say so in the header | P1 |
-| A3 | "Why did this specific request match X (or nothing)?" → `explain?correlationId=`: re-evaluate the stored request, including why a higher-priority expectation lost | (iii) | Zero hot-path cost | M | Expectations may have changed since arrival: return an `expectationsChangedSince` marker and label results "recomputed now" | P0 |
-| B1 | MCP diagnosis tools as the primary AI route: `explain_request` (A3), `explain_forward_failure` (A4), `lint_expectations` (A8), `test_template` (A5), `diagnose_config` (A7), `suggest_expectation_fix` (B3) | (iii) | MockServer runs deterministic computation only; the user's assistant does the reasoning | M | Tool output carries user traffic to the assistant: apply the log redaction settings to tool results by default | P0 |
+| B1 | MCP diagnosis tools as the primary AI route: `explain_request` (A3), `explain_forward_failure` (A4), `lint_expectations` (A8), `test_template` (A5), `diagnose_config` (A7), `suggest_expectation_fix` (B3); `explain_request` can delegate to `HttpState.explain(HttpRequest)`, whose output is already redacted | (iii) | MockServer runs deterministic computation only; the user's assistant does the reasoning | M | Tool output carries user traffic to the assistant: apply the log redaction settings to tool results by default | P0 |
 | A4 | Partly done: TLS, HTTP/2, set-up and decode failures are named in the 502 (`7a8b8c424`). A plain connect failure still says only "failed to connect to remote socket" → split it into DNS, refused and timeout, add pooled-connection close and proxy loop, and add a suggested fix to each named cause | (ii) | Runs only on failure; a lookup | S | Must not reveal more of the target than the 502 already does | P1 |
 | A5 | Template errors are hard to locate → `PUT /template/test` dry run, plus line/column and missing-variable hints in the failure event | (iii) / (ii) | Dry run on demand; enrichment only on failure | M | Reuse the hardened template-engine sandbox; rate-limit | P1 |
 | A6 | OpenAPI load errors are raw → group parser messages, add the JSON-pointer location, flag common causes (unresolved `$ref`, wrong path, YAML tab) | (iv) | Load time only | S | None | P1 |
@@ -81,6 +83,7 @@ run; located OpenAPI errors.
 | B6 | Natural-language → expectation without an LLM inside MockServer → document and test the `create_mock_from_description` prompt, with precise schema errors the assistant can act on | (iii) | None | S | Validate against the real schema | P2 |
 | C1 | From the prompt-redaction audit (`f5e1e6ce0`): a drift value in a non-credential field gets JWT and URL-userinfo masking but not the `key=value` credential sweep (`LlmPromptRedactor.maskDriftValue`) → apply `maskKeyValue` there too | (iii) | Only when an LLM drift prompt is built | S | None | P2 |
 | B5 | Optional plain-language summary of explain results from a configured LLM (`?narrate=true`) | (iii) | On demand, asynchronous, timeout-bounded, never inline in a 404 | S | Off by default; label as AI-generated; always return the deterministic facts too | P3 |
+| A3a | Explain is REST-only → an "Explain" action on a dashboard log group and typed `explain(correlationId)` methods in the clients; also complete the explain endpoint's OpenAPI 200 schema (`request`, `note`, `timestamp`, `expectationsLastChanged`, `totalExpectations`, `evaluatedExpectations`, `maxExpectationsEvaluated`) and add a guard test tying the explainer's gate order to the serving path, plus a `not`-matcher case | (iii) | Zero hot-path cost: calls the existing endpoint | M | The gate-order copy can drift from serving without the guard | P2 |
 
 ## Approach to LLM features
 
@@ -95,7 +98,7 @@ run; located OpenAPI errors.
 ## Sequence
 
 1. **Wave 0 — hygiene and performance:** A2, C1.
-2. **Wave 1 — explain engine:** A3, B1 (A3 plus existing tools with redacted output). (A10 landed: the symptom-first troubleshooting page.)
+2. **Wave 1 — explain engine:** B1 (the A3 explainer plus existing tools with redacted output). (A3 and A10 landed.)
 3. **Wave 2 — failure classes:** A4, A5, A6, A7, each with an MCP tool and a dashboard entry.
 4. **Wave 3 — fixes:** A8 (including the CLI), B3, B2, A9.
 5. **Wave 4 — optional:** B5, B6.

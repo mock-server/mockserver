@@ -120,6 +120,7 @@ public class HttpStateEndpointFailureTest {
             fault("PUT", "/mockserver/debugMismatch"),
             badInput("PUT", "/mockserver/debugMismatch", UNREADABLE_JSON, "failed to debug request mismatch"),
             fault("PUT", "/mockserver/explainUnmatched"),
+            fault("PUT", "/mockserver/explain"),
             fault("PUT", "/mockserver/diff"),
             badInput("PUT", "/mockserver/diff", UNREADABLE_JSON, "failed to diff requests"),
             // clock

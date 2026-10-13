@@ -2640,6 +2640,99 @@ paths:
               limit: 5
         description: optional limit on the number of unmatched requests to analyse
         required: false
+  /mockserver/explain:
+    put:
+      tags:
+        - troubleshooting
+      summary: explain which expectation a recorded request matches now, and why higher-priority ones lost
+      description: >-
+        Re-checks one recorded request, identified by the correlationId of its log entries, against the current
+        expectations in the order MockServer evaluates them. Returns the expectation that would serve the request
+        now, why each expectation evaluated ahead of it was passed over (reason NAMESPACE, INACTIVE, FIELDS_DIFFER,
+        CONVERSATION, SCENARIO_STATE or PERCENTAGE, with per-field differences and remediation hints), which
+        lower-priority expectations it shadows, and how the request was handled when it arrived. The result is
+        recomputed on demand, so it reports whether the expectations changed since the request arrived. Values
+        quoting the request are redacted as the event log is. At most 500 expectations are evaluated.
+      parameters:
+        - in: query
+          name: correlationId
+          schema:
+            type: string
+          required: false
+          description: >-
+            correlationId of the request's log entries (see PUT /mockserver/retrieve?type=LOGS&format=LOG_ENTRIES);
+            may instead be supplied in the body
+          example: 5f2c7a4e-8d43-4a7f-9a7e-3c1d2b0e6f11
+      responses:
+        '200':
+          description: explanation returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  correlationId:
+                    type: string
+                  recomputed:
+                    type: boolean
+                  expectationsChangedSince:
+                    type: boolean
+                    description: true when the expectations changed at or after the moment the request arrived
+                  atArrival:
+                    type: object
+                    description: how the request was handled when it arrived, read from the event log
+                  sameOutcomeAsAtArrival:
+                    type: boolean
+                  matchedExpectation:
+                    type: object
+                    description: the expectation that would serve the request now (absent when none would)
+                  closestExpectationId:
+                    type: string
+                    description: when no expectation would serve the request now, the one with the fewest differing fields
+                  skippedExpectations:
+                    type: array
+                    description: expectations evaluated ahead of the matched one, each with a reason and explanation
+                    items:
+                      type: object
+                  shadowedExpectations:
+                    type: array
+                    description: lower-priority expectations that also match but are never reached
+                    items:
+                      type: object
+                  truncated:
+                    type: boolean
+        '400':
+          description: no correlationId was supplied, or the recorded request is not an HTTP request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '404':
+          description: no request is recorded with this correlationId (never received, cleared or evicted)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                correlationId:
+                  type: string
+                  description: correlationId of the request to explain, when not given as a query parameter
+            example:
+              correlationId: 5f2c7a4e-8d43-4a7f-9a7e-3c1d2b0e6f11
+        description: optional; the correlationId when it is not given as a query parameter
+        required: false
   /mockserver/debugMismatch:
     put:
       tags:

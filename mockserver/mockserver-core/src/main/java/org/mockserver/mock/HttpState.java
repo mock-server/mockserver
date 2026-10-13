@@ -24,7 +24,6 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatchDifference;
-import org.mockserver.matchers.MismatchRemediation;
 import org.mockserver.memory.MemoryMonitoring;
 import org.mockserver.metrics.Metrics;
 import org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause;
@@ -1215,9 +1214,6 @@ public class HttpState {
 
                         // compute per-expectation diffs, ranked by closeness
                         List<HttpRequestMatcher> matchers = requestMatchers.retrieveRequestMatchers(null);
-                        // approximate denominator — see the note in debugMismatch above: six of these
-                        // 18 fields are never assessed for an HTTP expectation but count as matched
-                        int totalFields = MatchDifference.Field.values().length;
                         int evaluateCount = Math.min(matchers.size(), EXPLAIN_UNMATCHED_MAX_EXPECTATIONS);
 
                         // collect results with their failure count for sorting
@@ -1233,57 +1229,8 @@ public class HttpState {
                             if (expectation == null) {
                                 continue;
                             }
-
-                            HttpRequest clonedRequest = unmatchedRequest.clone();
-                            // collectAllDifferences: these results are sorted by differingFieldCount
-                            // below, which is only meaningful if every differing field was counted.
-                            // Fail-fast stops at the first one, leaving every mismatched expectation
-                            // on a count of exactly 1 — so the sort would tie for all of them and,
-                            // being stable, would simply preserve registration order while claiming
-                            // to rank by closeness.
-                            MatchDifference matchDifference = new MatchDifference(true, clonedRequest)
-                                .suppressMatchResultLogging()
-                                .collectAllDifferences();
-                            boolean matches = matcher.matches(matchDifference, clonedRequest);
+                            com.fasterxml.jackson.databind.node.ObjectNode expResult = RequestMatchExplainer.compareFields(objectMapper, matcher, expectation, unmatchedRequest, sensitiveValues);
                             totalEvaluations++;
-
-                            com.fasterxml.jackson.databind.node.ObjectNode expResult = objectMapper.createObjectNode();
-                            expResult.put("expectationId", expectation.getId());
-                            if (expectation.getHttpRequest() instanceof HttpRequest) {
-                                HttpRequest expReq = (HttpRequest) expectation.getHttpRequest();
-                                expResult.put("expectationPath", expReq.getPath() != null ? expReq.getPath().getValue() : "");
-                                expResult.put("expectationMethod", expReq.getMethod() != null ? expReq.getMethod().getValue() : "");
-                            }
-                            expResult.put("matches", matches);
-
-                            java.util.Map<MatchDifference.Field, List<String>> allDifferences = matchDifference.getAllDifferences();
-                            int failures = matches ? 0 : allDifferences.size();
-                            int matchedFields = totalFields - failures;
-                            expResult.put("matchedFieldCount", matchedFields);
-                            expResult.put("totalFieldCount", totalFields);
-                            expResult.put("differingFieldCount", failures);
-
-                            if (!matches && !allDifferences.isEmpty()) {
-                                com.fasterxml.jackson.databind.node.ObjectNode differences = objectMapper.createObjectNode();
-                                for (java.util.Map.Entry<MatchDifference.Field, List<String>> diffEntry : allDifferences.entrySet()) {
-                                    com.fasterxml.jackson.databind.node.ArrayNode fieldDiffs = differences.putArray(diffEntry.getKey().getName());
-                                    for (String diff : diffEntry.getValue()) {
-                                        fieldDiffs.add(sensitiveValues.scrub(diff));
-                                    }
-                                }
-                                expResult.set("differences", differences);
-
-                                // add remediation hints
-                                java.util.Map<MatchDifference.Field, String> hints = MismatchRemediation.allHints(allDifferences);
-                                if (!hints.isEmpty()) {
-                                    com.fasterxml.jackson.databind.node.ObjectNode remediationNode = objectMapper.createObjectNode();
-                                    for (java.util.Map.Entry<MatchDifference.Field, String> hintEntry : hints.entrySet()) {
-                                        remediationNode.put(hintEntry.getKey().getName(), sensitiveValues.scrub(hintEntry.getValue()));
-                                    }
-                                    expResult.set("remediation", remediationNode);
-                                }
-                            }
-
                             expResults.add(expResult);
                         }
 
@@ -1322,6 +1269,142 @@ public class HttpState {
         } catch (Exception e) {
             return unexpectedFailure(request, e);
         }
+    }
+
+    static final int EXPLAIN_REQUEST_EVALUATION_BUDGET = 500;
+
+    private static final java.util.Set<LogEntry.LogMessageType> EXPLAINABLE_REQUEST_TYPES = java.util.EnumSet.of(
+        LogEntry.LogMessageType.RECEIVED_REQUEST, LogEntry.LogMessageType.EXPECTATION_RESPONSE, LogEntry.LogMessageType.FORWARDED_REQUEST,
+        LogEntry.LogMessageType.NO_MATCH_RESPONSE
+    );
+
+    /**
+     * Explains, for one recorded request (by its log {@code correlationId}), which expectation would serve it now and
+     * why each expectation evaluated ahead of that one was passed over. Recomputed on demand against the current
+     * expectations: nothing is recorded per request, so the result says whether the expectations changed since.
+     *
+     * @param request the control-plane request: {@code ?correlationId=} or a body {@code {"correlationId":"..."}}
+     */
+    public HttpResponse explain(HttpRequest request) {
+        final String timestamp = java.time.Instant.now().toString();
+        com.fasterxml.jackson.databind.ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+        try {
+            String correlationId = request.getFirstQueryStringParameter("correlationId");
+            if (isBlank(correlationId) && isNotBlank(request.getBodyAsString())) {
+                try {
+                    correlationId = objectMapper.readTree(request.getBodyAsJsonOrXmlString()).path("correlationId").asText("");
+                } catch (Exception ignored) {
+                    // not JSON: reported below as a missing correlationId
+                }
+            }
+            if (isBlank(correlationId)) {
+                return explainError(objectMapper, BAD_REQUEST.code(), "explain requires a correlationId, as ?correlationId=<id> or a body {\"correlationId\":\"<id>\"}", null, timestamp);
+            }
+
+            CompletableFuture<List<LogEntry>> entriesFuture = new CompletableFuture<>();
+            mockServerLog.retrieveLogEntriesByCorrelationId(correlationId, entriesFuture::complete);
+            List<LogEntry> entries = entriesFuture.get(configuration.maxFutureTimeoutInMillis(), java.util.concurrent.TimeUnit.MILLISECONDS);
+
+            LogEntry requestEntry = null;
+            String arrivalExpectationId = null;
+            boolean arrivalNoMatch = false;
+            boolean arrivalForwardedWithoutExpectation = false;
+            boolean arrivalRespondedWithoutExpectation = false;
+            for (LogEntry entry : entries) {
+                if (!EXPLAINABLE_REQUEST_TYPES.contains(entry.getType())) {
+                    continue;
+                }
+                if (entry.getHttpRequest() != null && (requestEntry == null || entry.getType() == LogEntry.LogMessageType.RECEIVED_REQUEST && requestEntry.getType() != LogEntry.LogMessageType.RECEIVED_REQUEST)) {
+                    requestEntry = entry;
+                }
+                if (isNotBlank(entry.getExpectationId()) && entry.getType() != LogEntry.LogMessageType.RECEIVED_REQUEST) {
+                    arrivalExpectationId = entry.getExpectationId();
+                } else if (entry.getType() == LogEntry.LogMessageType.NO_MATCH_RESPONSE) {
+                    arrivalNoMatch = true;
+                } else if (entry.getType() == LogEntry.LogMessageType.FORWARDED_REQUEST) {
+                    arrivalForwardedWithoutExpectation = true;
+                } else if (entry.getType() == LogEntry.LogMessageType.EXPECTATION_RESPONSE) {
+                    arrivalRespondedWithoutExpectation = true;
+                }
+            }
+            if (requestEntry == null) {
+                return explainError(objectMapper, NOT_FOUND.code(), "no request is recorded with this correlationId; it may never have been received, or it has been cleared or evicted from the event log (see maxLogEntries)", correlationId, timestamp);
+            }
+            if (!(requestEntry.getHttpRequest() instanceof HttpRequest)) {
+                return explainError(objectMapper, BAD_REQUEST.code(), "only HTTP requests can be explained", correlationId, timestamp);
+            }
+            HttpRequest recordedRequest = (HttpRequest) requestEntry.getHttpRequest();
+            boolean bodyTruncated = recordedRequest.containsHeader(org.mockserver.log.MockServerEventLog.TRUNCATED_BODY_HEADER);
+            if (bodyTruncated) {
+                recordedRequest = recordedRequest.clone().removeHeader(org.mockserver.log.MockServerEventLog.TRUNCATED_BODY_HEADER);
+            }
+
+            org.mockserver.fixture.FixtureRedactor redactor = LogEntry.eventLogRedactor(configuration);
+            org.mockserver.fixture.SensitiveValueMatcher sensitiveValues = org.mockserver.fixture.SensitiveValueMatcher.of(redactor == null ? null : redactor.sensitiveValues(new RequestDefinition[]{recordedRequest}, null));
+
+            com.fasterxml.jackson.databind.node.ObjectNode resultNode = objectMapper.createObjectNode();
+            resultNode.put("correlationId", correlationId);
+            resultNode.put("timestamp", timestamp);
+            resultNode.put("recomputed", true);
+            resultNode.put("note", "recomputed now against the current expectations, scenario states and remaining Times, so it can differ from what happened when the request arrived");
+
+            com.fasterxml.jackson.databind.node.ObjectNode requestNode = resultNode.putObject("request");
+            requestNode.put("timestamp", requestEntry.getTimestamp());
+            requestNode.put("method", recordedRequest.getMethod() != null ? recordedRequest.getMethod().getValue() : "");
+            requestNode.put("path", recordedRequest.getPath() != null ? recordedRequest.getPath().getValue() : "");
+            if (bodyTruncated) {
+                requestNode.put("bodyTruncated", true);
+                requestNode.put("bodyTruncatedNote", "the event log kept only the first maxLoggedBodyBytes of this body, so body matching is re-checked against that truncated copy");
+            }
+
+            String arrivalOutcome = arrivalExpectationId != null ? "MATCHED"
+                : arrivalNoMatch ? "NO_MATCH"
+                : arrivalForwardedWithoutExpectation ? "FORWARDED_WITHOUT_EXPECTATION"
+                : arrivalRespondedWithoutExpectation ? "RESPONDED_WITHOUT_EXPECTATION"
+                : "UNKNOWN";
+            com.fasterxml.jackson.databind.node.ObjectNode arrivalNode = resultNode.putObject("atArrival");
+            arrivalNode.put("outcome", arrivalOutcome);
+            if (arrivalExpectationId != null) {
+                arrivalNode.put("expectationId", arrivalExpectationId);
+                final String servedId = arrivalExpectationId;
+                arrivalNode.put("expectationStillStored", requestMatchers.sortedRequestMatchers().stream()
+                    .anyMatch(matcher -> matcher.getExpectation() != null && servedId.equals(matcher.getExpectation().getId())));
+            }
+
+            long lastModified = requestMatchers.lastModifiedEpochMillis();
+            // same-millisecond changes are ambiguous, so they count as changed
+            resultNode.put("expectationsChangedSince", lastModified >= requestEntry.getEpochTime());
+            if (lastModified > 0) {
+                resultNode.put("expectationsLastChanged", java.time.Instant.ofEpochMilli(lastModified).toString());
+            }
+
+            com.fasterxml.jackson.databind.node.ObjectNode explanation = RequestMatchExplainer.explain(objectMapper, requestMatchers, configuration, recordedRequest, sensitiveValues, EXPLAIN_REQUEST_EVALUATION_BUDGET);
+            String matchedNowId = explanation.has("matchedExpectation") ? explanation.path("matchedExpectation").path("expectationId").asText() : null;
+            if ("MATCHED".equals(arrivalOutcome)) {
+                resultNode.put("sameOutcomeAsAtArrival", arrivalExpectationId.equals(matchedNowId));
+            } else if ("NO_MATCH".equals(arrivalOutcome) || "FORWARDED_WITHOUT_EXPECTATION".equals(arrivalOutcome)) {
+                resultNode.put("sameOutcomeAsAtArrival", matchedNowId == null);
+            }
+            resultNode.setAll(explanation);
+
+            return response()
+                .withStatusCode(OK.code())
+                .withBody(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(resultNode), MediaType.JSON_UTF_8);
+        } catch (Exception e) {
+            return unexpectedFailure(request, e);
+        }
+    }
+
+    private static HttpResponse explainError(com.fasterxml.jackson.databind.ObjectMapper objectMapper, int statusCode, String error, String correlationId, String timestamp) throws com.fasterxml.jackson.core.JsonProcessingException {
+        com.fasterxml.jackson.databind.node.ObjectNode errorNode = objectMapper.createObjectNode();
+        errorNode.put("error", error);
+        if (correlationId != null) {
+            errorNode.put("correlationId", correlationId);
+        }
+        errorNode.put("timestamp", timestamp);
+        return response()
+            .withStatusCode(statusCode)
+            .withBody(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(errorNode), MediaType.JSON_UTF_8);
     }
 
     public void log(LogEntry logEntry) {
@@ -2925,6 +3008,13 @@ public class HttpState {
 
                 if (controlPlaneRequestAuthenticated(request, responseWriter)) {
                     responseWriter.writeResponse(request, explainUnmatched(request), true);
+                }
+                canHandle.complete(true);
+
+            } else if (request.matches("PUT", PATH_PREFIX + "/explain")) {
+
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    responseWriter.writeResponse(request, explain(request), true);
                 }
                 canHandle.complete(true);
 
@@ -6421,7 +6511,7 @@ public class HttpState {
     }
 
     private static final java.util.Set<String> CONTROL_PLANE_READ_PUTS = new java.util.HashSet<>(java.util.Arrays.asList(
-        "retrieve", "verify", "verifySequence", "verifySLO", "diff", "explainUnmatched", "debugMismatch", "files/retrieve", "files/list"
+        "retrieve", "verify", "verifySequence", "verifySLO", "diff", "explainUnmatched", "explain", "debugMismatch", "files/retrieve", "files/list"
     ));
 
     /**

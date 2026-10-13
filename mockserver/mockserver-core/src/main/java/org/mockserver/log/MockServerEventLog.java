@@ -246,7 +246,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     // Header name added to the in-memory (and, if it ran before disk-write, persisted) copy of a
     // request/response body that was truncated by maxLoggedBodyBytes; its value is the original
     // (pre-truncation) body length in bytes.
-    private static final String TRUNCATED_BODY_HEADER = "x-mockserver-body-truncated";
+    public static final String TRUNCATED_BODY_HEADER = "x-mockserver-body-truncated";
     // Optional per-entry hook invoked (off the matching/forwarding path) for each recorded exchange
     // (FORWARDED_REQUEST or EXPECTATION_RESPONSE) log entry, used to persist recorded requests to
     // disk. Null when disk persistence is disabled.

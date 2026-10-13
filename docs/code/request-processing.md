@@ -97,6 +97,7 @@ Every response's `httpResponse.timing` block (`org.mockserver.model.Timing`) rec
 | `PUT /mockserver/files/delete` | Delete a stored file by name |
 | `PUT /mockserver/debugMismatch` | Compare a request against all active expectations and return per-field diffs |
 | `PUT /mockserver/explainUnmatched` | Retrieve recent unmatched requests with ranked closest-expectation diagnostics and remediation hints |
+| `PUT /mockserver/explain?correlationId=` | Re-check one recorded request against the current expectations: the expectation that would serve it now, why each one ahead of it lost, and which ones it shadows (see [Explain Endpoint](#explain-endpoint)) |
 | `PUT /mockserver/replay` | Re-issue a recorded request to its target and return the upstream response (see [Request Replay](#request-replay)) |
 | `PUT/GET/DELETE /mockserver/chaosExperiment` | Start, query, or stop a scheduled multi-stage chaos experiment (see [docs/code/chaos.md](chaos.md)) |
 | `PUT /mockserver/trafficValidate` | Validate recorded traffic (all `REQUEST_RESPONSES` from the event log) against an OpenAPI spec supplied in the request body as `{"spec": "<url|path|inline>"}`. Returns a per-pair conformance report in the same shape as `/contractTest`. The `spec` URL host is checked against the same SSRF policy enforced by the forward/replay/contract-test paths before the parser fetches it. Subject to control-plane authentication. |
@@ -303,7 +304,7 @@ When no expectation matches, the method logs a **closest match summary** identif
 
 `HttpState` obtains its `RequestMatchers` through `ExpectationStoreFactory` (a small SPI/registry) rather than constructing it directly. By default the factory returns the standard in-memory `RequestMatchers` (zero behaviour change). This is the **clustered-state seam**: an optional backend can register a factory returning a clustering-aware `RequestMatchers` so a fleet of MockServer instances shares expectations. The optional `mockserver-state-infinispan` module implements this with an embedded Infinispan data-grid backend; activate it by setting `stateBackend=infinispan`. See [Clustered State](clustered-state.md) for full details.
 
-Every comparison runs against a `MatchDifference` context, but detailed field-level differences are **recorded only when they will be read**: when `detailedMatchFailures` is on (the default) *and* INFO logging is enabled — the levels that consume them (the per-field "because" text in the `EXPECTATION_NOT_MATCHED` entry and the closest-match selection, both INFO-gated; TRACE implies INFO). At WARN/ERROR/OFF, or with `detailedMatchFailures` off, a single reusable `MatchDifference` serves the whole scan and records nothing, so a large no-match scan does not allocate a per-candidate context and difference map that nothing would read (the tracked perf baseline runs at ERROR). The `MatchFailureHints` utility adds actionable suggestions for common mistakes (trailing slashes, Content-Type charset mismatches, unescaped regex metacharacters). Read-only diagnostics (`explainUnmatched`, `debugMismatch`, verification, drift) build their own detailed `MatchDifference` independently, so they are unaffected by the serving-path log level.
+Every comparison runs against a `MatchDifference` context, but detailed field-level differences are **recorded only when they will be read**: when `detailedMatchFailures` is on (the default) *and* INFO logging is enabled — the levels that consume them (the per-field "because" text in the `EXPECTATION_NOT_MATCHED` entry and the closest-match selection, both INFO-gated; TRACE implies INFO). At WARN/ERROR/OFF, or with `detailedMatchFailures` off, a single reusable `MatchDifference` serves the whole scan and records nothing, so a large no-match scan does not allocate a per-candidate context and difference map that nothing would read (the tracked perf baseline runs at ERROR). The `MatchFailureHints` utility adds actionable suggestions for common mistakes (trailing slashes, Content-Type charset mismatches, unescaped regex metacharacters). Read-only diagnostics (`explainUnmatched`, `explain`, `debugMismatch`, verification, drift) build their own detailed `MatchDifference` independently, so they are unaffected by the serving-path log level.
 
 #### Request body parsed once per scan
 
@@ -435,6 +436,29 @@ The `PUT /mockserver/debugMismatch` endpoint (implemented in `HttpState.debugMis
 ### Explain Unmatched Endpoint
 
 The `PUT /mockserver/explainUnmatched` endpoint (implemented in `HttpState.explainUnmatched()`) provides a post-hoc diagnostic for requests that have already been received and returned 404. It retrieves recent `NO_MATCH_RESPONSE` log entries from `MockServerEventLog.retrieveUnmatchedRequests()`, and for each, computes ranked closest-expectation diagnostics using `MatchDifference` with `MismatchRemediation` hints. The optional request body accepts `{"limit": N}` (default 10, max 100). The MCP `explain_unmatched_requests` tool and `mockserver://unmatched` resource both delegate to this implementation.
+
+### Explain Endpoint
+
+`PUT /mockserver/explain?correlationId=<id>` (or a body `{"correlationId":"<id>"}`) answers "why did this request match X, or nothing, instead of Y?". It is recomputed on demand: nothing is recorded per request, so it adds no work to the serving path.
+
+```mermaid
+flowchart LR
+    Q["PUT /mockserver/explain\n?correlationId="] --> L["event log entries\nwith that correlationId"]
+    L --> R["recorded request\n(RECEIVED_REQUEST first)"]
+    L --> A["atArrival outcome\n(expectationId on\nEXPECTATION_RESPONSE /\nFORWARDED_REQUEST)"]
+    R --> W["RequestMatchExplainer.explain\nwalk sorted expectations,\nserving-path gates"]
+    W --> J["JSON: matched, skipped\n(reason), shadowed"]
+    A --> J
+```
+
+- **Lookup.** `HttpState.explain` reads the entries for the correlation id with `MockServerEventLog.retrieveLogEntriesByCorrelationId` (the scan runs off the event-log consumer thread) and evaluates on the calling thread. The request comes from the `RECEIVED_REQUEST` entry, else from an `EXPECTATION_RESPONSE`, `FORWARDED_REQUEST` or `NO_MATCH_RESPONSE` entry. No such entry gives `404`; no correlation id gives `400`; a non-HTTP request gives `400`.
+- **Outcome at arrival.** `MATCHED` (an `EXPECTATION_RESPONSE` or `FORWARDED_REQUEST` carrying an expectation id), `NO_MATCH`, `FORWARDED_WITHOUT_EXPECTATION` (proxied), `RESPONDED_WITHOUT_EXPECTATION` (CRUD, stored LLM responses) or `UNKNOWN` (`NO_MATCH_RESPONSE` is only kept at INFO and finer). `sameOutcomeAsAtArrival` compares that with the recomputed winner, and `expectationStillStored` says whether the expectation that served it is still in the store.
+- **Walk.** `RequestMatchExplainer.explain` iterates `RequestMatchers.sortedRequestMatchers()` (the sorted snapshot the serving path uses, inactive matchers included, no lazy removal scheduled) and applies the serving path's gates in its order: namespace, active (`Times` / time to live), request fields, LLM conversation predicates, scenario state, percentage. The first expectation that passes every gate is `matchedExpectation`; each one before it is in `skippedExpectations` with `reason` (`NAMESPACE`, `INACTIVE`, `FIELDS_DIFFER`, `CONVERSATION`, `SCENARIO_STATE`, `PERCENTAGE`) and an `explanation`; later expectations that also match are `shadowedExpectations` (`LOWER_PRIORITY`). A percentage below 100 is a coin toss on the serving path, so such an expectation is reported, not chosen. With no winner, `closestExpectationId` is the first expectation with the fewest differing fields.
+- **Field comparison** is `RequestMatchExplainer.compareFields`, the same per-expectation node `explainUnmatched` returns (`collectAllDifferences`, `suppressMatchResultLogging`, `MismatchRemediation` hints). It runs on a clone, so no `Times` is consumed, no scenario moves and no match event is written.
+- **Redaction.** Differences, hints and explanations are scrubbed with the request's sensitive values from `LogEntry.eventLogRedactor`, as `explainUnmatched` does.
+- **Staleness.** `RequestMatchers.markMatchersModified` records `lastModifiedEpochMillis`; `expectationsChangedSince` is true when that is at or after the request's `epochTime` (a change in the same millisecond counts as a change). Scenario states and remaining `Times` are always read as they are now. A body truncated by `maxLoggedBodyBytes` (the `x-mockserver-body-truncated` header) is flagged as `request.bodyTruncated`, and that header is removed before matching.
+- **Budget.** At most `EXPLAIN_REQUEST_EVALUATION_BUDGET` (500) expectations are evaluated; `truncated` and `maxExpectationsEvaluated` report the cut.
+- **Route.** The route is registered only under `/mockserver/explain`, with no bare `/explain` alias, so it cannot shadow a user's own `PUT /explain` mock. It is a read for control-plane authorisation.
 
 ### Request Replay
 

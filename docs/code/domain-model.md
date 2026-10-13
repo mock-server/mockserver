@@ -79,7 +79,7 @@ classDiagram
   Each criterion is a `NottableString` (regex / `!` negation / optional). A blank criterion (no
   `clientCertificate`, or every field blank) matches every request. A non-blank criterion never matches a
   request that presents no certificate chain. Mismatches are reported through `MatchDifference` under the
-  `clientCertificate` field so `explainUnmatched` / `debugMismatch` explain them. This is **matching only**
+  `clientCertificate` field so `explainUnmatched`, `explain` and `debugMismatch` explain them. This is **matching only**
   and does not change mTLS authentication (`MTLSAuthenticationHandler`).
 
 `HttpRequest` also carries a **`jwt`** (`Jwt`) matcher — expectation criteria for a JSON Web Token

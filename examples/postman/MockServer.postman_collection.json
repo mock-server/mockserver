@@ -2476,6 +2476,45 @@
           }
         },
         {
+          "name": "explain which expectation a recorded request matches now, and why higher-priority ones lost",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mockserver/explain",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mockserver",
+                "explain"
+              ],
+              "query": [
+                {
+                  "key": "correlationId",
+                  "value": "5f2c7a4e-8d43-4a7f-9a7e-3c1d2b0e6f11",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Re-checks one recorded request, identified by the correlationId of its log entries, against the current expectations in the order MockServer evaluates them. Returns the expectation that would serve the request now, why each expectation evaluated ahead of it was passed over (reason NAMESPACE, INACTIVE, FIELDS_DIFFER, CONVERSATION, SCENARIO_STATE or PERCENTAGE, with per-field differences and remediation hints), which lower-priority expectations it shadows, and how the request was handled when it arrived. The result is recomputed on demand, so it reports whether the expectations changed since the request arrived. Values quoting the request are redacted as the event log is. At most 500 expectations are evaluated.\n\noptional; the correlationId when it is not given as a query parameter\n\nFull API reference: https://www.mock-server.com/mock_server/mockserver_clients.html",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correlationId\": \"5f2c7a4e-8d43-4a7f-9a7e-3c1d2b0e6f11\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
           "name": "return per-expectation mismatch debug information for a request",
           "request": {
             "method": "PUT",

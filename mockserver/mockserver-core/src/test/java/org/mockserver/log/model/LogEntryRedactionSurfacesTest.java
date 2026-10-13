@@ -458,6 +458,39 @@ public class LogEntryRedactionSurfacesTest {
         return httpState.explainUnmatched(request("/mockserver/explainUnmatched").withMethod("PUT")).getBodyAsString();
     }
 
+    @Test
+    public void shouldRedactExplainDifferences() throws Exception {
+        HttpState redacting = newHttpState(redactingInstance());
+        logReceived(redacting);
+        HttpState off = newHttpState(configuration().redactSecretsInLog(false));
+        logReceived(off);
+
+        String redacted = explain(redacting);
+        assertThat(redacted, containsString("differences"));
+        assertNoMismatchSecrets("explain", redacted);
+        assertThat(explain(off), containsString("AUTHZ-SECRET-1"));
+    }
+
+    private static void logReceived(HttpState httpState) {
+        httpState.add(new Expectation(request(PATH).withHeader("Authorization", "Bearer expected").withQueryStringParameter("key", "expected").withCookie("session", "expected")).thenRespond(response("a")));
+        httpState.log(new LogEntry()
+            .setType(RECEIVED_REQUEST)
+            .setLogLevel(Level.INFO)
+            .setCorrelationId("explain-redaction")
+            .setHttpRequest(nonMatchingRequest()));
+    }
+
+    private static String explain(HttpState httpState) throws InterruptedException {
+        HttpRequest explainRequest = request("/mockserver/explain").withMethod("PUT").withQueryStringParameter("correlationId", "explain-redaction");
+        long deadline = System.currentTimeMillis() + 5000;
+        HttpResponse response = httpState.explain(explainRequest);
+        while (response.getStatusCode() == 404 && System.currentTimeMillis() < deadline) {
+            Thread.sleep(20);
+            response = httpState.explain(explainRequest);
+        }
+        return response.getBodyAsString();
+    }
+
     // ---- matcher differences at TRACE, and arguments nested in collections --------------------------
 
     @Test

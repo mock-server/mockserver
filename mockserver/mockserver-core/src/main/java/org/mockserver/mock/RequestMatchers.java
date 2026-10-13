@@ -21,6 +21,7 @@ import org.mockserver.state.ExpectationEntry;
 import org.mockserver.state.KeyValueStore;
 import org.mockserver.state.StateBackend;
 import org.mockserver.state.Versioned;
+import org.mockserver.time.EpochService;
 import org.mockserver.uuid.UUIDService;
 import org.slf4j.event.Level;
 
@@ -157,6 +158,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
     // RequestMatchersCandidateIndexGenerationTest, which guards that every control-plane mutation
     // site remains instrumented (a proxy for "the store was structurally changed").
     private final java.util.concurrent.atomic.AtomicLong matchersModificationCount = new java.util.concurrent.atomic.AtomicLong(0);
+    private volatile long lastModifiedEpochMillis;
     // The match fields a plain HTTP request can actually exercise. Used as the
     // denominator of the closest-expectation "matched X/Y fields" diagnostic so
     // it is not inflated by the DNS/binary/OpenAPI/operation enum constants that
@@ -794,6 +796,23 @@ public class RequestMatchers extends MockServerMatcherNotifier {
      */
     private void markMatchersModified() {
         matchersModificationCount.incrementAndGet();
+        lastModifiedEpochMillis = EpochService.currentTimeMillis();
+    }
+
+    /**
+     * When the expectation store last changed structurally, in epoch milliseconds, or {@code 0} if it never has.
+     * Lets an on-demand explanation say whether the expectations changed since a request arrived.
+     */
+    public long lastModifiedEpochMillis() {
+        return lastModifiedEpochMillis;
+    }
+
+    /**
+     * Every stored matcher, active or not, in the order the serving path evaluates them. Read-only: unlike
+     * {@link #retrieveRequestMatchers(RequestDefinition)} it schedules no lazy removal.
+     */
+    List<HttpRequestMatcher> sortedRequestMatchers() {
+        return httpRequestMatchers.toSortedList();
     }
 
     /**
@@ -2295,7 +2314,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
      * Extract the isolation key from the request based on the expectation's scenario name.
      * Returns null if no isolation is configured (legacy single-key behaviour).
      */
-    private String extractIsolationKey(Expectation expectation, RequestDefinition requestDefinition) {
+    String extractIsolationKey(Expectation expectation, RequestDefinition requestDefinition) {
         String scenarioName = expectation.getScenarioName();
         if (scenarioName == null) {
             return null;
@@ -2363,7 +2382,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
      * request's namespace. A request with no namespace ({@code requestNamespace ==
      * null}) therefore matches only global expectations — true tenant isolation.
      */
-    private static boolean matchesNamespace(Expectation expectation, String requestNamespace) {
+    static boolean matchesNamespace(Expectation expectation, String requestNamespace) {
         if (expectation == null) {
             return true;
         }
