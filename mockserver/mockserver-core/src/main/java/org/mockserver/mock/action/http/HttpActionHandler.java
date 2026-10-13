@@ -4724,6 +4724,10 @@ public class HttpActionHandler {
             if (model == null && provider == Provider.BEDROCK) {
                 // a Bedrock request names its model in the path, and a Converse response has none
                 model = org.mockserver.llm.client.LlmProviderSniffer.extractBedrockModelFromPath(path);
+                if (model == null && operation.get() == org.mockserver.llm.client.LlmProviderSniffer.Operation.RERANK) {
+                    // an Agent Runtime /rerank request names its model only in its body
+                    model = org.mockserver.llm.client.LlmProviderSniffer.extractBedrockRerankModelFromRequest(forwardedRequest);
+                }
             }
             if (model == null && provider == Provider.GEMINI) {
                 // a Gemini embeddings response names no model

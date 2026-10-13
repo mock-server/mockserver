@@ -89,10 +89,31 @@ public class GeminiLlmClient extends AbstractLlmClient {
             completion.withStopReason(candidate.path("finishReason").asText());
         }
         Usage usage = parseUsage(root.path("usageMetadata"));
+        if (usage == null) {
+            usage = predictedEmbeddingsUsage(root.path("predictions"));
+        }
         if (usage != null) {
             completion.withUsage(usage);
         }
         return completion;
+    }
+
+    /**
+     * A Vertex AI text embeddings {@code :predict} response reports the tokens of each input in
+     * {@code predictions[].embeddings.statistics.token_count}.
+     */
+    private static Usage predictedEmbeddingsUsage(JsonNode predictions) {
+        long tokens = 0;
+        boolean counted = false;
+        for (JsonNode prediction : predictions) {
+            JsonNode count = prediction.path("embeddings").path("statistics").path("token_count");
+            if (count.isIntegralNumber() && count.canConvertToLong() && count.asLong() >= 0) {
+                // saturates at Integer.MAX_VALUE, so the sum cannot overflow
+                tokens = Math.min(Integer.MAX_VALUE, tokens + Math.min(Integer.MAX_VALUE, count.asLong()));
+                counted = true;
+            }
+        }
+        return counted ? Usage.usage().withInputTokens((int) tokens) : null;
     }
 
     @Override

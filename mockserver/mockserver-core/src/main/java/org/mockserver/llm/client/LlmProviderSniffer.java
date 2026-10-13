@@ -1,5 +1,6 @@
 package org.mockserver.llm.client;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.Provider;
@@ -108,7 +109,9 @@ public final class LlmProviderSniffer {
         "/v1/chat/deferred-completion/[^/]+/?$");
     private static final java.util.Set<String> TERMINAL_RESPONSE_STATUSES = java.util.Set.of("completed", "incomplete", "failed", "cancelled");
     private static final java.util.regex.Pattern EMBEDDINGS_PATH_PATTERN = java.util.regex.Pattern.compile(
-        "(?:/embeddings|/multimodalembeddings|/contextualizedembeddings|/api/embed|/v[12]/embed|:embedcontent|:batchembedcontents)/?$");
+        "(?:/embeddings|/multimodalembeddings|/contextualizedembeddings|/api/embed|/v[12]/embed|:embedcontent|:batchembedcontents"
+            // Vertex AI embedding models on the publisher-model predict method
+            + "|/publishers/google/models/[^/:]*embedding[^/:]*:predict)/?$");
     private static final java.util.regex.Pattern RERANK_PATH_PATTERN = java.util.regex.Pattern.compile("/rerank/?$");
     private static final java.util.regex.Pattern GEMINI_MODEL_PATH_PATTERN = java.util.regex.Pattern.compile(
         "/models/([^/:]+):[A-Za-z]+$");
@@ -411,9 +414,13 @@ public final class LlmProviderSniffer {
         // Vertex AI Gemini: aiplatform.googleapis.com or <region>-aiplatform.googleapis.com.
         // matches() anchors the whole string, so an arbitrary host cannot be glued in front.
         if (VERTEX_HOST_PATTERN.matcher(lowerHost).matches()) {
-            // Claude on Vertex AI speaks the Anthropic Messages API
-            if (path != null && path.toLowerCase().contains("/publishers/anthropic/")) {
+            // Claude on Vertex AI speaks the Anthropic Messages API, and Mistral models Mistral's chat API
+            String lowerPath = path != null ? path.toLowerCase() : "";
+            if (lowerPath.contains("/publishers/anthropic/")) {
                 return Optional.of(Provider.ANTHROPIC);
+            }
+            if (lowerPath.contains("/publishers/mistralai/")) {
+                return Optional.of(Provider.MISTRAL);
             }
             return Optional.of(Provider.GEMINI);
         }
@@ -687,6 +694,34 @@ public final class LlmProviderSniffer {
         } catch (IllegalArgumentException malformed) {
             modelId = matcher.group(1);
         }
+        return bedrockModelId(modelId);
+    }
+
+    /**
+     * The model a Bedrock Agent Runtime {@code /rerank} request names, which it does only in the
+     * body, as {@code rerankingConfiguration.bedrockRerankingConfiguration.modelConfiguration.modelArn},
+     * reduced as {@link #extractBedrockModelFromPath} reduces a model id.
+     *
+     * @return the model id, or null when the request names none
+     */
+    public static String extractBedrockRerankModelFromRequest(HttpRequest request) {
+        if (request == null) {
+            return null;
+        }
+        try {
+            String body = request.getBodyAsText();
+            if (body == null || body.isEmpty()) {
+                return null;
+            }
+            JsonNode modelArn = org.mockserver.serialization.ObjectMapperFactory.createObjectMapper().readTree(body)
+                .path("rerankingConfiguration").path("bedrockRerankingConfiguration").path("modelConfiguration").path("modelArn");
+            return modelArn.isTextual() ? bedrockModelId(modelArn.asText()) : null;
+        } catch (Exception notJson) {
+            return null;
+        }
+    }
+
+    private static String bedrockModelId(String modelId) {
         if (modelId.isEmpty()) {
             return null;
         }

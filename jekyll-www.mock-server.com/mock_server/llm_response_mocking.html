@@ -1329,6 +1329,12 @@ geminiLive()
             <td>Ollama</td>
             <td>Always sent. Local models have no cost, so they are counted in tokens only.</td>
         </tr>
+        <tr>
+            <td>Cohere</td>
+            <td>Always sent by <span class="inline_code">/v2/chat</span>, in the final <span class="inline_code">message-end</span>
+                event. A <span class="inline_code">/v1/chat</span> stream is <strong>not counted</strong>. Cohere has no
+                price in the pricing table, so it is counted in tokens only.</td>
+        </tr>
     </tbody>
 </table>
 
@@ -1337,6 +1343,12 @@ geminiLive()
     by the host the mapping forwards to. Only calls to a model are counted: completions, and whole embeddings and
     rerank responses, whose trace spans are named <span class="inline_code">embeddings &lt;model&gt;</span> and
     <span class="inline_code">rerank &lt;model&gt;</span> instead of <span class="inline_code">chat &lt;model&gt;</span>.
+    Cohere calls are counted by the tokens Cohere bills (a rerank is billed in search units, so it has a span but
+    no token counts), Voyage calls by their <span class="inline_code">total_tokens</span>, and AWS Bedrock
+    InvokeModel calls whose body reports no usage, such as embedding and rerank models, by the token-count headers
+    Bedrock returns. A Bedrock Agent Runtime <span class="inline_code">/rerank</span> call is named by the model in
+    its <span class="inline_code">modelArn</span>, and reports no tokens. On Vertex AI, embedding models called
+    with <span class="inline_code">:predict</span> are counted, and Mistral models are counted as Mistral.
     An OpenAI response created with <span class="inline_code">background: true</span> and an xAI deferred
     completion report their usage only when the finished result is fetched, so that fetch is counted, once however
     many times it is polled. Other requests to an LLM host, such as listing models, fetching an ordinary stored

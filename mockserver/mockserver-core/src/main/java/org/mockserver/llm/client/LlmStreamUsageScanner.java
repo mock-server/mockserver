@@ -637,7 +637,8 @@ public final class LlmStreamUsageScanner {
             boolean top = objectDepth == 1;
             switch (name) {
                 case USAGE:
-                    return top || parent == Name.RESPONSE || parent == Name.MESSAGE || parent == Name.X_GROQ;
+                    // under delta: Cohere v2's message-end event
+                    return top || parent == Name.RESPONSE || parent == Name.MESSAGE || parent == Name.X_GROQ || parent == Name.DELTA;
                 case MODEL:
                     return top || parent == Name.RESPONSE || parent == Name.MESSAGE;
                 case ID:
@@ -652,7 +653,7 @@ public final class LlmStreamUsageScanner {
                 case BYTES:
                     return top && !nested && framing == Framing.EVENT_STREAM;
                 case FINISH_REASON:
-                    return parent == Name.CHOICES;
+                    return parent == Name.CHOICES || parent == Name.DELTA;
                 case STOP_REASON:
                     return parent == Name.DELTA;
                 case STATUS:

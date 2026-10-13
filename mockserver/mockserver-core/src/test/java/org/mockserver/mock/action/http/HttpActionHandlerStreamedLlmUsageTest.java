@@ -786,20 +786,180 @@ public class HttpActionHandlerStreamedLlmUsageTest {
 
     @Test
     public void shouldNameABedrockEmbeddingOrRerankModelInvocationByItsOperation() {
+        enableLlmTokenMetrics();
+        // Titan reports its input tokens in the body
         forwardResponse("bedrock-runtime.us-east-1.amazonaws.com", "/model/amazon.titan-embed-text-v2%3A0/invoke", "{\"inputText\":\"Hello\"}", json(
             "{\"embedding\":[0.1,0.2],\"embeddingsByType\":{\"float\":[0.1,0.2]},\"inputTextTokenCount\":2}"));
+        // any other model's body has none, so its counts are read from the InvokeModel token-count headers
         forwardResponse("bedrock-runtime.us-east-1.amazonaws.com", "/model/cohere.rerank-v3-5%3A0/invoke",
             "{\"query\":\"What is the capital?\",\"documents\":[\"Paris\",\"Berlin\"],\"api_version\":2}", json(
-                "{\"id\":\"5ee5c1c8-b3e0-4b1c-9b1a-1c2f3e4d5a6b\",\"results\":[{\"index\":0,\"relevance_score\":0.9}]}"));
-        forwardResponse("bedrock-agent-runtime.us-east-1.amazonaws.com", "/rerank",
-            "{\"queries\":[{\"type\":\"TEXT\",\"textQuery\":{\"text\":\"What is the capital?\"}}]}", json(
+                "{\"id\":\"5ee5c1c8-b3e0-4b1c-9b1a-1c2f3e4d5a6b\",\"results\":[{\"index\":0,\"relevance_score\":0.9}]}")
+                .withHeader("X-Amzn-Bedrock-Input-Token-Count", "14")
+                .withHeader("X-Amzn-Bedrock-Output-Token-Count", "0"));
+        forwardResponse("bedrock-runtime.us-east-1.amazonaws.com", "/model/cohere.embed-english-v3/invoke",
+            "{\"texts\":[\"hello world\"],\"input_type\":\"search_document\"}", json(
+                "{\"embeddings\":[[0.01,-0.02]],\"id\":\"6b2c4a6e-1e9f-4f3c-9d25-4c2a1f0e8b7d\",\"response_type\":\"embeddings_floats\","
+                    + "\"texts\":[\"hello world\"]}")
+                .withHeader("X-Amzn-Bedrock-Input-Token-Count", "3")
+                .withHeader("X-Amzn-Bedrock-Output-Token-Count", "0"));
+        // an Agent Runtime rerank names its model only in rerankingConfiguration, and reports no usage
+        forwardResponse("bedrock-agent-runtime.us-west-2.amazonaws.com", "/rerank",
+            "{\"queries\":[{\"type\":\"TEXT\",\"textQuery\":{\"text\":\"What is the capital?\"}}],"
+                + "\"rerankingConfiguration\":{\"type\":\"BEDROCK_RERANKING_MODEL\",\"bedrockRerankingConfiguration\":{"
+                + "\"numberOfResults\":1,\"modelConfiguration\":{\"modelArn\":\"arn:aws:bedrock:us-west-2::foundation-model/amazon.rerank-v1:0\"}}},"
+                + "\"sources\":[{\"type\":\"INLINE\",\"inlineDocumentSource\":{\"type\":\"TEXT\",\"textDocument\":{\"text\":\"Paris\"}}}]}", json(
                 "{\"results\":[{\"index\":0,\"relevanceScore\":0.86}]}"));
 
         List<SpanData> genAiSpans = genAiSpans();
-        assertThat(genAiSpans, hasSize(3));
+        assertThat(genAiSpans, hasSize(4));
         assertOperation(genAiSpans.get(0), "embeddings", "embeddings amazon.titan-embed-text-v2:0");
+        assertTokens(genAiSpans.get(0), "aws.bedrock", "amazon.titan-embed-text-v2:0", 2L, null);
         assertOperation(genAiSpans.get(1), "rerank", "rerank cohere.rerank-v3-5:0");
-        assertThat(genAiSpans.get(2).getAttributes().get(stringKey("gen_ai.operation.name")), is("rerank"));
+        assertTokens(genAiSpans.get(1), "aws.bedrock", "cohere.rerank-v3-5:0", 14L, 0L);
+        assertOperation(genAiSpans.get(2), "embeddings", "embeddings cohere.embed-english-v3");
+        assertTokens(genAiSpans.get(2), "aws.bedrock", "cohere.embed-english-v3", 3L, 0L);
+        assertOperation(genAiSpans.get(3), "rerank", "rerank amazon.rerank-v1:0");
+        assertTokens(genAiSpans.get(3), "aws.bedrock", "amazon.rerank-v1:0", null, null);
+        assertThat(Metrics.getLlmInputTokens("BEDROCK", "amazon.titan-embed-text-v2:0"), is(2L));
+        assertThat(Metrics.getLlmInputTokens("BEDROCK", "cohere.embed-english-v3"), is(3L));
+    }
+
+    @Test
+    public void shouldCountABedrockInvocationWhoseBodyUsageIsNotAnthropicsFromItsHeaders() {
+        enableLlmTokenMetrics();
+        forwardResponse("bedrock-runtime.us-west-2.amazonaws.com", "/model/openai.gpt-oss-20b-1%3A0/invoke",
+            "{\"messages\":[{\"role\":\"user\",\"content\":\"What is the weather like today?\"}],\"max_completion_tokens\":150}", json(
+                "{\"id\":\"chatcmpl-1f2e3d4c\",\"object\":\"chat.completion\",\"created\":1754400000,\"model\":\"openai.gpt-oss-20b-1:0\","
+                    + "\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Sunny.\"},\"finish_reason\":\"stop\"}],"
+                    + "\"usage\":{\"prompt_tokens\":21,\"completion_tokens\":37,\"total_tokens\":58}}")
+                .withHeader("X-Amzn-Bedrock-Input-Token-Count", "21")
+                .withHeader("X-Amzn-Bedrock-Output-Token-Count", "37"));
+        forwardResponse("bedrock-runtime.us-east-1.amazonaws.com", "/model/amazon.titan-text-express-v1/invoke",
+            "{\"inputText\":\"User: What is the capital of France?\\nBot:\"}", json(
+                "{\"inputTextTokenCount\":11,\"results\":[{\"tokenCount\":8,\"outputText\":\"\\nParis.\",\"completionReason\":\"FINISH\"}]}")
+                .withHeader("X-Amzn-Bedrock-Input-Token-Count", "11")
+                .withHeader("X-Amzn-Bedrock-Output-Token-Count", "8"));
+
+        List<SpanData> genAiSpans = genAiSpans();
+        assertThat(genAiSpans, hasSize(2));
+        assertTokens(genAiSpans.get(0), "aws.bedrock", "openai.gpt-oss-20b-1:0", 21L, 37L);
+        assertTokens(genAiSpans.get(1), "aws.bedrock", "amazon.titan-text-express-v1", 11L, 8L);
+        assertThat(Metrics.getLlmOutputTokens("BEDROCK", "amazon.titan-text-express-v1"), is(8L));
+    }
+
+    // Cohere: https://docs.cohere.com/reference/embed, /reference/chat, /reference/rerank and the
+    // cohere-python types ApiMeta, Usage and ChatMessageEndEventDelta
+    @Test
+    public void shouldCountCohereEmbedAndChatByWhatCohereBillsAndARerankWithoutTokens() {
+        enableLlmTokenMetrics();
+        forwardResponse("api.cohere.com", "/v2/embed",
+            "{\"model\":\"embed-v4.0\",\"texts\":[\"hello\",\"goodbye\"],\"input_type\":\"classification\",\"embedding_types\":[\"float\"]}", json(
+                "{\"id\":\"da6e531f-54c6-4a73-bf92-f60566d8d753\",\"embeddings\":{\"float\":[[0.016296387,-0.008354187],[-0.04663086,0.0118255615]]},"
+                    + "\"texts\":[\"hello\",\"goodbye\"],\"meta\":{\"api_version\":{\"version\":\"2\",\"is_experimental\":true},"
+                    + "\"billed_units\":{\"input_tokens\":2}}}"));
+        forwardResponse("api.cohere.com", "/v2/chat",
+            "{\"model\":\"command-a-03-2025\",\"messages\":[{\"role\":\"user\",\"content\":\"Tell me about LLMs\"}]}", json(
+                "{\"id\":\"c14c80c3-18eb-4519-9460-6c92edd8cfb4\",\"finish_reason\":\"COMPLETE\",\"message\":{\"role\":\"assistant\","
+                    + "\"content\":[{\"type\":\"text\",\"text\":\"LLMs stand for Large Language Models.\"}]},"
+                    + "\"usage\":{\"billed_units\":{\"input_tokens\":5,\"output_tokens\":418},\"tokens\":{\"input_tokens\":71,\"output_tokens\":418}}}"));
+        forwardResponse("api.cohere.com", "/v2/rerank",
+            "{\"model\":\"rerank-v3.5\",\"query\":\"What is the capital of the United States?\",\"documents\":[\"Carson City\",\"Washington, D.C.\"]}", json(
+                "{\"results\":[{\"index\":1,\"relevance_score\":0.999071},{\"index\":0,\"relevance_score\":0.32713068}],"
+                    + "\"id\":\"07734bd2-2473-4f07-94e1-0d9f0e6843cf\",\"meta\":{\"api_version\":{\"version\":\"2\",\"is_experimental\":false},"
+                    + "\"billed_units\":{\"search_units\":1}}}"));
+
+        List<SpanData> genAiSpans = genAiSpans();
+        assertThat(genAiSpans, hasSize(3));
+        assertOperation(genAiSpans.get(0), "embeddings", "embeddings embed-v4.0");
+        assertTokens(genAiSpans.get(0), "cohere", "embed-v4.0", 2L, null);
+        assertOperation(genAiSpans.get(1), "chat", "chat command-a-03-2025");
+        assertTokens(genAiSpans.get(1), "cohere", "command-a-03-2025", 5L, 418L);
+        assertOperation(genAiSpans.get(2), "rerank", "rerank rerank-v3.5");
+        assertTokens(genAiSpans.get(2), "cohere", "rerank-v3.5", null, null);
+        assertThat(Metrics.getLlmInputTokens("COHERE", "embed-v4.0"), is(2L));
+        assertThat(Metrics.getLlmOutputTokens("COHERE", "command-a-03-2025"), is(418L));
+    }
+
+    @Test
+    public void shouldCountACohereV2ChatStreamFromItsMessageEndEvent() {
+        forwardStream("api.cohere.com", "/v2/chat",
+            "{\"model\":\"command-a-03-2025\",\"stream\":true,\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}]}", utf8(""
+                + "event: message-start\n"
+                + "data: {\"id\":\"29f14a5a-11de-4cae-9800-25e4747408ea\",\"type\":\"message-start\",\"delta\":{\"message\":{\"role\":\"assistant\","
+                + "\"content\":[],\"tool_plan\":\"\",\"tool_calls\":[],\"citations\":[]}}}\n\n"
+                + "event: content-start\n"
+                + "data: {\"type\":\"content-start\",\"index\":0,\"delta\":{\"message\":{\"content\":{\"type\":\"text\",\"text\":\"\"}}}}\n\n"
+                + "event: content-delta\n"
+                + "data: {\"type\":\"content-delta\",\"index\":0,\"delta\":{\"message\":{\"content\":{\"text\":\"Hello\"}}}}\n\n"
+                + "event: content-end\n"
+                + "data: {\"type\":\"content-end\",\"index\":0}\n\n"
+                + "event: message-end\n"
+                + "data: {\"type\":\"message-end\",\"delta\":{\"finish_reason\":\"COMPLETE\",\"usage\":{\"billed_units\":{\"input_tokens\":3,"
+                + "\"output_tokens\":9},\"tokens\":{\"input_tokens\":69,\"output_tokens\":9}}}}\n\n"));
+
+        SpanData span = singleGenAiSpan();
+        assertOperation(span, "chat", "chat command-a-03-2025");
+        assertTokens(span, "cohere", "command-a-03-2025", 3L, 9L);
+        assertThat(span.getAttributes().get(stringArrayKey("gen_ai.response.finish_reasons")), contains("COMPLETE"));
+        assertThat(usageLogEntries(), is(empty()));
+    }
+
+    // Voyage: https://docs.voyageai.com/reference/embeddings-api and /reranker-api
+    @Test
+    public void shouldCountVoyageEmbeddingsAndRerankByTheirTotalTokens() {
+        enableLlmTokenMetrics();
+        forwardResponse("api.voyageai.com", "/v1/embeddings", "{\"model\":\"voyage-3.5\",\"input\":[\"Sample text 1\"]}", json(
+            "{\"object\":\"list\",\"data\":[{\"object\":\"embedding\",\"embedding\":[-0.013,0.024],\"index\":0}],"
+                + "\"model\":\"voyage-3.5\",\"usage\":{\"total_tokens\":4}}"));
+        forwardResponse("api.voyageai.com", "/v1/rerank",
+            "{\"model\":\"rerank-2.5\",\"query\":\"Sample query\",\"documents\":[\"Sample document 1\",\"Sample document 2\"]}", json(
+                "{\"object\":\"list\",\"data\":[{\"relevance_score\":0.4375,\"index\":0},{\"relevance_score\":0.421875,\"index\":1}],"
+                    + "\"model\":\"rerank-2.5\",\"usage\":{\"total_tokens\":26}}"));
+
+        List<SpanData> genAiSpans = genAiSpans();
+        assertThat(genAiSpans, hasSize(2));
+        assertOperation(genAiSpans.get(0), "embeddings", "embeddings voyage-3.5");
+        assertTokens(genAiSpans.get(0), "voyage", "voyage-3.5", 4L, null);
+        assertOperation(genAiSpans.get(1), "rerank", "rerank rerank-2.5");
+        assertTokens(genAiSpans.get(1), "voyage", "rerank-2.5", 26L, null);
+        assertThat(Metrics.getLlmInputTokens("VOYAGE", "rerank-2.5"), is(26L));
+    }
+
+    // https://docs.cloud.google.com/vertex-ai/generative-ai/docs/model-reference/text-embeddings-api
+    @Test
+    public void shouldCountAVertexAiPredictedEmbeddingByTheModelInItsPath() {
+        enableLlmTokenMetrics();
+        forwardResponse("us-central1-aiplatform.googleapis.com",
+            "/v1/projects/my-project/locations/us-central1/publishers/google/models/text-embedding-005:predict",
+            "{\"instances\":[{\"task_type\":\"RETRIEVAL_DOCUMENT\",\"content\":\"What is life?\"},{\"content\":\"Hello\"}]}", json(
+                "{\"predictions\":[{\"embeddings\":{\"statistics\":{\"truncated\":false,\"token_count\":4},\"values\":[0.01,-0.02]}},"
+                    + "{\"embeddings\":{\"statistics\":{\"truncated\":false,\"token_count\":1},\"values\":[0.03,0.04]}}]}"));
+
+        SpanData span = singleGenAiSpan();
+        assertOperation(span, "embeddings", "embeddings text-embedding-005");
+        assertTokens(span, "gcp.gemini", "text-embedding-005", 5L, null);
+        assertThat(Metrics.getLlmInputTokens("GEMINI", "text-embedding-005"), is(5L));
+    }
+
+    // https://docs.cloud.google.com/vertex-ai/generative-ai/docs/partner-models/mistral
+    @Test
+    public void shouldCountMistralOnVertexAiAsMistral() {
+        String path = "/v1/projects/my-project/locations/us-central1/publishers/mistralai/models/mistral-small-2503";
+        forwardResponse("us-central1-aiplatform.googleapis.com", path + ":rawPredict",
+            "{\"model\":\"mistral-small-2503\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}]}", json(
+                "{\"id\":\"cmpl-8a1b2c3d4e5f\",\"object\":\"chat.completion\",\"model\":\"mistral-small-2503\",\"created\":1741010000,"
+                    + "\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Hello!\",\"tool_calls\":null},"
+                    + "\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":5,\"completion_tokens\":3,\"total_tokens\":8}}"));
+        forwardStream("us-central1-aiplatform.googleapis.com", path + ":streamRawPredict",
+            "{\"model\":\"mistral-small-2503\",\"stream\":true,\"messages\":[]}", utf8(ProviderStreamFixtures.MISTRAL_CHAT));
+
+        List<SpanData> genAiSpans = genAiSpans();
+        assertThat(genAiSpans, hasSize(2));
+        assertTokens(genAiSpans.get(0), "mistral", "mistral-small-2503", 5L, 3L);
+        assertTokens(genAiSpans.get(1), "mistral", "mistral-small-latest", 16L, 18L);
+        assertThat(recordedCostUsd(), closeTo(LlmPricing.estimateCostUsd(Provider.MISTRAL, "mistral-small-2503", 5, 3)
+            + LlmPricing.estimateCostUsd(Provider.MISTRAL, "mistral-small-latest", 16, 18), USD_TOLERANCE));
+        assertThat(recordedCostUsd(), greaterThan(0.0));
     }
 
     private List<SpanData> genAiSpansWithTokens() {

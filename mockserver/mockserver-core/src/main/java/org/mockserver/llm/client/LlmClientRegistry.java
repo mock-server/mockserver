@@ -34,6 +34,9 @@ public class LlmClientRegistry {
         INSTANCE.register(new GroqLlmClient());
         INSTANCE.register(new OpenRouterLlmClient());
         INSTANCE.register(new OrcaRouterLlmClient());
+        // read the usage of proxied embeddings and rerank calls; not runtime backends
+        INSTANCE.register(new CohereLlmClient());
+        INSTANCE.register(new VoyageLlmClient());
     }
 
     private final ConcurrentHashMap<Provider, LlmClient> clients = new ConcurrentHashMap<>();

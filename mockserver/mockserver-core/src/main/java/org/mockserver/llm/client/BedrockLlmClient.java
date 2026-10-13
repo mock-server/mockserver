@@ -51,6 +51,10 @@ public class BedrockLlmClient extends AnthropicLlmClient {
     private static final int DEFAULT_MAX_TOKENS = 1024;
     private static final String DEFAULT_REGION = "us-east-1";
     private static final String SERVICE = "bedrock";
+    static final String INPUT_TOKEN_COUNT_HEADER = "X-Amzn-Bedrock-Input-Token-Count";
+    static final String OUTPUT_TOKEN_COUNT_HEADER = "X-Amzn-Bedrock-Output-Token-Count";
+    static final String CACHE_READ_INPUT_TOKEN_COUNT_HEADER = "X-Amzn-Bedrock-Cache-Read-Input-Token-Count";
+    static final String CACHE_WRITE_INPUT_TOKEN_COUNT_HEADER = "X-Amzn-Bedrock-Cache-Write-Input-Token-Count";
 
     /**
      * Pattern to extract the region from a Bedrock runtime endpoint hostname.
@@ -144,11 +148,83 @@ public class BedrockLlmClient extends AnthropicLlmClient {
      * Parses either Bedrock response shape: the Anthropic body that {@code InvokeModel} returns
      * for Claude (inherited), or the Converse envelope ({@code output.message.content[]},
      * camelCase {@code usage}) that proxied {@code /converse} traffic carries, so token and cost
-     * observability work for both APIs.
+     * observability work for both APIs. A body whose usage has no token counts, such as an
+     * embedding, rerank or non-Anthropic model's, is counted from the token-count headers
+     * {@code InvokeModel} returns for every model, or without them from a Titan body's counts.
      */
     @Override
     public Completion parseCompletionResponse(HttpResponse response) {
         JsonNode root = readBody(response);
+        Completion completion = parseBody(root, response);
+        if (!hasTokenCounts(completion.getUsage())) {
+            Usage usage = usageFromHeaders(response);
+            if (usage == null) {
+                usage = titanUsage(root);
+            }
+            if (usage != null) {
+                completion.withUsage(usage);
+            }
+        }
+        return completion;
+    }
+
+    private static boolean hasTokenCounts(Usage usage) {
+        return usage != null && (usage.getInputTokens() != null || usage.getOutputTokens() != null);
+    }
+
+    /**
+     * Titan reports {@code inputTextTokenCount}, and a Titan Text model the output tokens of each
+     * result in {@code results[].tokenCount}.
+     */
+    private static Usage titanUsage(JsonNode root) {
+        if (!root.hasNonNull("inputTextTokenCount")) {
+            return null;
+        }
+        Usage usage = Usage.usage().withInputTokens(Math.max(0, root.path("inputTextTokenCount").asInt()));
+        long output = 0;
+        boolean counted = false;
+        for (JsonNode result : root.path("results")) {
+            JsonNode tokenCount = result.path("tokenCount");
+            if (tokenCount.isIntegralNumber() && tokenCount.canConvertToLong() && tokenCount.asLong() >= 0) {
+                output = Math.min(Integer.MAX_VALUE, output + Math.min(Integer.MAX_VALUE, tokenCount.asLong()));
+                counted = true;
+            }
+        }
+        return counted ? usage.withOutputTokens((int) output) : usage;
+    }
+
+    private static Usage usageFromHeaders(HttpResponse response) {
+        Integer input = headerCount(response, INPUT_TOKEN_COUNT_HEADER);
+        Integer output = headerCount(response, OUTPUT_TOKEN_COUNT_HEADER);
+        if (input == null && output == null) {
+            return null;
+        }
+        Usage usage = Usage.usage().withInputTokens(input).withOutputTokens(output);
+        Integer cacheRead = headerCount(response, CACHE_READ_INPUT_TOKEN_COUNT_HEADER);
+        if (cacheRead != null) {
+            usage.withCachedInputTokens(cacheRead);
+        }
+        Integer cacheWrite = headerCount(response, CACHE_WRITE_INPUT_TOKEN_COUNT_HEADER);
+        if (cacheWrite != null) {
+            usage.withCacheCreationTokens(cacheWrite);
+        }
+        return usage;
+    }
+
+    private static Integer headerCount(HttpResponse response, String name) {
+        String value = response.getFirstHeader(name);
+        if (value == null || value.isEmpty()) {
+            return null;
+        }
+        try {
+            int count = Integer.parseInt(value.trim());
+            return count >= 0 ? count : null;
+        } catch (NumberFormatException notACount) {
+            return null;
+        }
+    }
+
+    private Completion parseBody(JsonNode root, HttpResponse response) {
         JsonNode message = root.path("output").path("message");
         if (!message.isObject()) {
             return super.parseCompletionResponse(response);

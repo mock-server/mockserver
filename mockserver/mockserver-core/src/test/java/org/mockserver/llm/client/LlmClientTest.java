@@ -208,15 +208,196 @@ public class LlmClientTest {
     // --- registry ---
 
     @Test
-    public void registryHasAllChatProviders() {
-        // Rerank-only providers (COHERE, VOYAGE) are not runtime-LLM chat backends,
-        // so they have no LlmClient — every other provider must have one.
+    public void registryHasAClientForEveryProvider() {
         for (Provider provider : Provider.values()) {
-            if (provider == Provider.COHERE || provider == Provider.VOYAGE) {
-                continue;
-            }
             assertThat("client for " + provider, LlmClientRegistry.getInstance().lookup(provider).isPresent(), is(true));
         }
+    }
+
+    @Test
+    public void cohereAndVoyageClientsReadUsageButAreNotRuntimeBackends() {
+        for (LlmClient client : new LlmClient[]{new CohereLlmClient(), new VoyageLlmClient()}) {
+            try {
+                client.buildCompletionRequest(LlmBackend.of(client.provider(), "key"), conversation());
+                throw new AssertionError("expected " + client.provider() + " to build no request");
+            } catch (UnsupportedOperationException expected) {
+                assertThat(expected.getMessage(), containsString("not supported as a runtime LLM backend"));
+            }
+        }
+    }
+
+    // --- Cohere: ApiMeta / Usage with billed_units, tokens, cached_tokens ---
+    // https://docs.cohere.com/reference/embed, /reference/rerank, /reference/chat and the cohere-python
+    // types ApiMeta, Usage, UsageBilledUnits, UsageTokens
+
+    @Test
+    public void cohereReadsTheBilledInputTokensOfAnEmbedResponse() {
+        Completion completion = new CohereLlmClient().parseCompletionResponse(response().withStatusCode(200).withBody(
+            "{\"id\":\"da6e531f-54c6-4a73-bf92-f60566d8d753\",\"embeddings\":{\"float\":[[0.016296387,-0.008354187]]},"
+                + "\"texts\":[\"hello\",\"goodbye\"],\"meta\":{\"api_version\":{\"version\":\"2\",\"is_experimental\":true},"
+                + "\"billed_units\":{\"input_tokens\":2},\"warnings\":[\"You are using an experimental version\"]}}"));
+        assertThat(completion.getUsage().getInputTokens(), is(2));
+        assertThat(completion.getUsage().getOutputTokens(), is((Integer) null));
+        assertThat(completion.getModel(), is((String) null));
+    }
+
+    @Test
+    public void cohereReadsTheBilledTokensOfAV2ChatResponseInPreferenceToTheTokensUsed() {
+        Completion completion = new CohereLlmClient().parseCompletionResponse(response().withStatusCode(200).withBody(
+            "{\"id\":\"c14c80c3-18eb-4519-9460-6c92edd8cfb4\",\"finish_reason\":\"COMPLETE\",\"message\":{\"role\":\"assistant\","
+                + "\"content\":[{\"type\":\"text\",\"text\":\"LLMs stand for Large Language Models.\"}]},"
+                + "\"usage\":{\"billed_units\":{\"input_tokens\":5,\"output_tokens\":418},"
+                + "\"tokens\":{\"input_tokens\":71,\"output_tokens\":418},\"cached_tokens\":3}}"));
+        assertThat(completion.getText(), is("LLMs stand for Large Language Models."));
+        assertThat(completion.getStopReason(), is("COMPLETE"));
+        assertThat(completion.getUsage().getInputTokens(), is(5));
+        assertThat(completion.getUsage().getOutputTokens(), is(418));
+        assertThat(completion.getUsage().getCachedInputTokens(), is(3));
+    }
+
+    @Test
+    public void cohereReadsTheMetaOfAV1ChatResponseAndFallsBackToTheTokensUsed() {
+        Completion completion = new CohereLlmClient().parseCompletionResponse(response().withStatusCode(200).withBody(
+            "{\"text\":\"Paris.\",\"generation_id\":\"0b1fbc5b-0c3c-4b4e-8a4e-3d0a0b9c3e5f\",\"finish_reason\":\"COMPLETE\","
+                + "\"meta\":{\"api_version\":{\"version\":\"1\"},\"tokens\":{\"input_tokens\":83,\"output_tokens\":2}}}"));
+        assertThat(completion.getText(), is("Paris."));
+        assertThat(completion.getUsage().getInputTokens(), is(83));
+        assertThat(completion.getUsage().getOutputTokens(), is(2));
+    }
+
+    @Test
+    public void cohereReportsNoTokensForARerankBilledInSearchUnits() {
+        Completion completion = new CohereLlmClient().parseCompletionResponse(response().withStatusCode(200).withBody(
+            "{\"results\":[{\"index\":3,\"relevance_score\":0.999071},{\"index\":0,\"relevance_score\":0.32713068}],"
+                + "\"id\":\"07734bd2-2473-4f07-94e1-0d9f0e6843cf\",\"meta\":{\"api_version\":{\"version\":\"2\",\"is_experimental\":false},"
+                + "\"billed_units\":{\"search_units\":1}}}"));
+        assertThat(completion.getUsage(), is((org.mockserver.model.Usage) null));
+    }
+
+    // --- Voyage: usage.total_tokens ---
+    // https://docs.voyageai.com/reference/embeddings-api, /reranker-api, /multimodal-embeddings-api
+
+    @Test
+    public void voyageReadsTheModelAndTotalTokensOfEmbeddingsRerankAndMultimodalResponses() {
+        Completion embeddings = new VoyageLlmClient().parseCompletionResponse(response().withStatusCode(200).withBody(
+            "{\"object\":\"list\",\"data\":[{\"object\":\"embedding\",\"embedding\":[-0.01,0.02],\"index\":0}],"
+                + "\"model\":\"voyage-3.5\",\"usage\":{\"total_tokens\":10}}"));
+        assertThat(embeddings.getModel(), is("voyage-3.5"));
+        assertThat(embeddings.getUsage().getInputTokens(), is(10));
+        assertThat(embeddings.getUsage().getOutputTokens(), is((Integer) null));
+
+        Completion rerank = new VoyageLlmClient().parseCompletionResponse(response().withStatusCode(200).withBody(
+            "{\"object\":\"list\",\"data\":[{\"relevance_score\":0.4375,\"index\":0}],\"model\":\"rerank-2.5\","
+                + "\"usage\":{\"total_tokens\":26}}"));
+        assertThat(rerank.getModel(), is("rerank-2.5"));
+        assertThat(rerank.getUsage().getInputTokens(), is(26));
+
+        Completion multimodal = new VoyageLlmClient().parseCompletionResponse(response().withStatusCode(200).withBody(
+            "{\"object\":\"list\",\"data\":[{\"object\":\"embedding\",\"embedding\":[0.1],\"index\":0}],"
+                + "\"model\":\"voyage-multimodal-3\",\"usage\":{\"text_tokens\":5,\"image_pixels\":2000000,\"total_tokens\":3576}}"));
+        assertThat(multimodal.getUsage().getInputTokens(), is(3576));
+    }
+
+    // --- Bedrock InvokeModel bodies without usage ---
+
+    @Test
+    public void bedrockReadsTheInputTokenCountOfATitanEmbeddingsBody() {
+        // https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-titan-embed-text.html
+        Completion completion = new BedrockLlmClient().parseCompletionResponse(response().withStatusCode(200).withBody(
+            "{\"embedding\":[0.1,0.2],\"inputTextTokenCount\":6,\"embeddingsByType\":{\"float\":[0.1,0.2]}}"));
+        assertThat(completion.getUsage().getInputTokens(), is(6));
+    }
+
+    @Test
+    public void bedrockReadsTheTokenCountHeadersWhenTheBodyHasNoUsage() {
+        // the headers InvokeModel returns, read by langchain-aws (llms/bedrock.py) and litellm
+        Completion completion = new BedrockLlmClient().parseCompletionResponse(response().withStatusCode(200)
+            .withHeader("x-amzn-bedrock-input-token-count", "9")
+            .withHeader("x-amzn-bedrock-output-token-count", "0")
+            .withBody("{\"embeddings\":[[0.01,-0.02]],\"id\":\"6b2c4a6e-1e9f-4f3c-9d25-4c2a1f0e8b7d\","
+                + "\"response_type\":\"embeddings_floats\",\"texts\":[\"hello world\"]}"));
+        assertThat(completion.getUsage().getInputTokens(), is(9));
+        assertThat(completion.getUsage().getOutputTokens(), is(0));
+
+        Completion llama = new BedrockLlmClient().parseCompletionResponse(response().withStatusCode(200)
+            .withHeader("X-Amzn-Bedrock-Input-Token-Count", "12")
+            .withHeader("X-Amzn-Bedrock-Output-Token-Count", "34")
+            .withHeader("X-Amzn-Bedrock-Cache-Read-Input-Token-Count", "4")
+            .withHeader("X-Amzn-Bedrock-Cache-Write-Input-Token-Count", "2")
+            .withBody("{\"generation\":\"Paris\",\"prompt_token_count\":12,\"generation_token_count\":34,\"stop_reason\":\"stop\"}"));
+        assertThat(llama.getUsage().getInputTokens(), is(12));
+        assertThat(llama.getUsage().getOutputTokens(), is(34));
+        assertThat(llama.getUsage().getCachedInputTokens(), is(4));
+        assertThat(llama.getUsage().getCacheCreationTokens(), is(2));
+    }
+
+    @Test
+    public void bedrockCountsATitanTextBodyFromItsHeadersOrElseItsBody() {
+        // https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-titan-text.html
+        String titanText = "{\"inputTextTokenCount\":5,\"results\":[{\"tokenCount\":9,"
+            + "\"outputText\":\"\\nParis is the capital of France.\",\"completionReason\":\"FINISH\"}]}";
+        // the headers win, so they are given different counts from the body's here
+        Completion fromHeaders = new BedrockLlmClient().parseCompletionResponse(response().withStatusCode(200)
+            .withHeader("X-Amzn-Bedrock-Input-Token-Count", "6")
+            .withHeader("X-Amzn-Bedrock-Output-Token-Count", "10")
+            .withBody(titanText));
+        assertThat(fromHeaders.getUsage().getInputTokens(), is(6));
+        assertThat(fromHeaders.getUsage().getOutputTokens(), is(10));
+
+        Completion fromBody = new BedrockLlmClient().parseCompletionResponse(response().withStatusCode(200).withBody(titanText));
+        assertThat(fromBody.getUsage().getInputTokens(), is(5));
+        assertThat(fromBody.getUsage().getOutputTokens(), is(9));
+    }
+
+    @Test
+    public void bedrockCountsABodyWhoseUsageIsNotAnthropicsFromItsHeaders() {
+        // gpt-oss on InvokeModel returns an OpenAI chat completion
+        // https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-openai.html
+        Completion completion = new BedrockLlmClient().parseCompletionResponse(response().withStatusCode(200)
+            .withHeader("X-Amzn-Bedrock-Input-Token-Count", "21")
+            .withHeader("X-Amzn-Bedrock-Output-Token-Count", "37")
+            .withBody("{\"id\":\"chatcmpl-1f2e3d4c\",\"object\":\"chat.completion\",\"created\":1754400000,"
+                + "\"model\":\"openai.gpt-oss-20b-1:0\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\","
+                + "\"content\":\"<reasoning>The user asks.</reasoning>Sunny.\"},\"finish_reason\":\"stop\"}],"
+                + "\"usage\":{\"prompt_tokens\":21,\"completion_tokens\":37,\"total_tokens\":58}}"));
+        assertThat(completion.getUsage().getInputTokens(), is(21));
+        assertThat(completion.getUsage().getOutputTokens(), is(37));
+    }
+
+    @Test
+    public void geminiSaturatesAnOverflowingSumOfPredictedEmbeddingTokenCounts() {
+        Completion completion = new GeminiLlmClient().parseCompletionResponse(response().withStatusCode(200).withBody(
+            "{\"predictions\":[{\"embeddings\":{\"statistics\":{\"token_count\":9223372036854775807}}},"
+                + "{\"embeddings\":{\"statistics\":{\"token_count\":9223372036854775807}}}]}"));
+        assertThat(completion.getUsage().getInputTokens(), is(Integer.MAX_VALUE));
+    }
+
+    @Test
+    public void bedrockPrefersTheUsageInTheBodyAndIgnoresAMalformedHeader() {
+        Completion completion = new BedrockLlmClient().parseCompletionResponse(response().withStatusCode(200)
+            .withHeader("X-Amzn-Bedrock-Input-Token-Count", "999")
+            .withBody("{\"content\":[{\"type\":\"text\",\"text\":\"Paris\"}],\"stop_reason\":\"end_turn\","
+                + "\"usage\":{\"input_tokens\":12,\"output_tokens\":3}}"));
+        assertThat(completion.getUsage().getInputTokens(), is(12));
+
+        Completion malformed = new BedrockLlmClient().parseCompletionResponse(response().withStatusCode(200)
+            .withHeader("X-Amzn-Bedrock-Input-Token-Count", "-1")
+            .withHeader("X-Amzn-Bedrock-Output-Token-Count", "many")
+            .withBody("{\"results\":[{\"index\":0,\"relevance_score\":0.9}]}"));
+        assertThat(malformed.getUsage(), is((org.mockserver.model.Usage) null));
+    }
+
+    // --- Vertex AI text embeddings :predict ---
+
+    @Test
+    public void geminiSumsTheTokenCountOfEachVertexAiPredictedEmbedding() {
+        // https://docs.cloud.google.com/vertex-ai/generative-ai/docs/model-reference/text-embeddings-api
+        Completion completion = new GeminiLlmClient().parseCompletionResponse(response().withStatusCode(200).withBody(
+            "{\"predictions\":[{\"embeddings\":{\"statistics\":{\"truncated\":false,\"token_count\":6},\"values\":[0.1,0.2]}},"
+                + "{\"embeddings\":{\"statistics\":{\"truncated\":false,\"token_count\":4},\"values\":[0.3,0.4]}}],"
+                + "\"metadata\":{\"billableCharacterCount\":40}}"));
+        assertThat(completion.getUsage().getInputTokens(), is(10));
+        assertThat(completion.getUsage().getOutputTokens(), is((Integer) null));
     }
 
     @Test

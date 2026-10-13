@@ -617,7 +617,7 @@ Optional, off-by-default OTLP export, in two independent parts (both fail-soft �
 - **Metrics** (`org.mockserver.metrics.OtelMetricsExporter`, `mockserver.otelMetricsEnabled`) — bridges the existing `Metrics.Name` gauges (the same set exposed for Prometheus, including the LLM/SSE/chaos counters) to OTLP as observable gauges that read the current values, so Prometheus and OTLP stay consistent. An alternative to the Prometheus endpoint.
 - **GenAI spans** (`org.mockserver.telemetry.GenAiSpanExporter` + `GenAiSpans`, `mockserver.otelTracesEnabled`) — emits one span per LLM completion with GenAI semantic-convention attributes (`gen_ai.system`, `gen_ai.request.model`, `gen_ai.usage.*`, `gen_ai.response.finish_reasons`, tool-call count). When a provider reports them, cached-input and reasoning token counts are also emitted under the `mockserver.gen_ai.usage.*` namespace (`cached_input_tokens`, `cache_creation_tokens`, `reasoning_tokens`) — there is no GenAI semconv attribute for these yet, and they are omitted entirely when absent. These are spans MockServer codes deliberately — **no auto-instrumentation**. `GenAiSpans` is a process-wide no-op until `GenAiSpanExporter` installs a tracer. Spans fire on two paths:
   - **Mock action path** — `HttpLlmResponseActionHandler` calls `GenAiSpans.recordCompletion()` for mocked completions (streaming and non-streaming), and records an `embeddings` or `rerank` span and token metrics for a mocked embeddings or rerank response, with the input tokens its codec encoded (see [telemetry.md](telemetry.md#genai-span-export-genaispans-genaispanexporter)).
-  - **Forward/proxy path** — `HttpActionHandler.emitForwardGenAiSpan()` detects LLM traffic via `LlmProviderSniffer` (maps the forwarded request's target host to a `Provider`), reads the upstream response's usage with the provider's `LlmClient`, and records a completion span. Covers matched-expectation forwards, breakpoint-continuation forwards, the unmatched proxy path and `proxyPassMappings` routes (sniffed by the mapping's target host). A whole JSON response is parsed by `parseCompletionResponse()`; a streamed response is read as it passes and the span is emitted when the stream ends (see [Proxied LLM usage and cost](#proxied-llm-usage-and-cost)). Model is extracted from the response (most providers include it), then for Bedrock from the request path (`/model/{modelId}/...`), then from the request body.
+  - **Forward/proxy path** — `HttpActionHandler.emitForwardGenAiSpan()` detects LLM traffic via `LlmProviderSniffer` (maps the forwarded request's target host to a `Provider`), reads the upstream response's usage with the provider's `LlmClient`, and records a completion span. Covers matched-expectation forwards, breakpoint-continuation forwards, the unmatched proxy path and `proxyPassMappings` routes (sniffed by the mapping's target host). A whole JSON response is parsed by `parseCompletionResponse()`; a streamed response is read as it passes and the span is emitted when the stream ends (see [Proxied LLM usage and cost](#proxied-llm-usage-and-cost)). Model is extracted from the response (most providers include it), then for Bedrock from the request path (`/model/{modelId}/...`) or, for an Agent Runtime `/rerank`, from the body's `rerankingConfiguration.bedrockRerankingConfiguration.modelConfiguration.modelArn`, then from the request body's `model`.
 
 Both use the OTLP HTTP/protobuf exporter with the JDK HttpClient sender (no gRPC/OkHttp) and share `mockserver.otelEndpoint` (a base collector URL; `/v1/metrics` and `/v1/traces` appended per signal, resolved by `telemetry.OtelEndpoints`).
 
@@ -654,6 +654,7 @@ flowchart LR
 | Bedrock ConverseStream | `usage` on the `metadata` event of the AWS event stream | AWS API reference, ConverseStream |
 | Bedrock InvokeModelWithResponseStream | Anthropic events, each base64 in a `chunk` event's `bytes` | AWS API reference, InvokeModelWithResponseStream |
 | Ollama | `prompt_eval_count` and `eval_count` on the `done: true` line of the NDJSON | Ollama `docs/api.md` |
+| Cohere v2 chat | `delta.usage` (`billed_units`, `tokens`) and `delta.finish_reason` on the `message-end` event; a v1 `stream-end` event's `response.meta` is two objects down, so a v1 stream is not counted | cohere-python `ChatMessageEndEvent`, `ChatMessageEndEventDelta`, `Usage` |
 
 **Why the stream is read as it passes.** A relayed stream is never held whole: the event log keeps
 only its first `maxStreamingCaptureBytes` (256 KiB by default), and usage is at the end. So
@@ -716,7 +717,7 @@ string removed) in one of these:
 | Operation (`gen_ai.operation.name`) | Path endings |
 |---|---|
 | `chat` | `/completions` (chat, legacy, Mistral FIM and agents), `/responses` and `/responses/compact` (which runs the model), `/messages`, Gemini `:generateContent`/`:streamGenerateContent`, Vertex AI partner models `/models/{model}:rawPredict`/`:streamRawPredict` (Claude on Vertex is sniffed as `ANTHROPIC`; its `count-tokens` model is not counted), Bedrock `/model/{id}/invoke`, `/invoke-with-response-stream`, `/converse`, `/converse-stream`, Ollama `/api/chat` and `/api/generate`, Cohere `/v1/chat` and `/v2/chat`, and on the Mistral host only the Conversations API `/v1/conversations`, `/v1/conversations/{id}`, `/v1/conversations/{id}/restart` (OpenAI's `/v1/conversations` creates a conversation object without calling a model) |
-| `embeddings` | `/embeddings`, Voyage `/multimodalembeddings` and `/contextualizedembeddings`, Ollama `/api/embed`, Cohere `/v1/embed` and `/v2/embed`, Gemini `:embedContent`/`:batchEmbedContents`, and a Bedrock invocation of a model whose id contains `embed` |
+| `embeddings` | `/embeddings`, Voyage `/multimodalembeddings` and `/contextualizedembeddings`, Ollama `/api/embed`, Cohere `/v1/embed` and `/v2/embed`, Gemini `:embedContent`/`:batchEmbedContents`, Vertex AI `/publishers/google/models/{model}:predict` for a model whose name contains `embedding`, and a Bedrock invocation of a model whose id contains `embed` |
 | `rerank` (no well-known value exists, so a custom one) | `/rerank` (Cohere, Voyage, Bedrock Agent Runtime) and a Bedrock invocation of a model whose id contains `rerank` |
 
 **Polled completions.** Two APIs report a model call's usage only when its result is fetched with
@@ -741,9 +742,21 @@ Anthropic `/v1/messages/count_tokens` and `/v1/messages/batches`, OpenAI `/v1/re
 Assistants `/threads/{id}/messages`, Ollama `/api/pull`. A stream is accounted only for `chat`. The
 span is named `{operation} {model}`; a Gemini embeddings response names no model, so it is read from
 the `/models/{model}:` path, and a Mistral Conversations response names it on each output entry, which
-`MistralLlmClient` reads. Cohere and Voyage have no `LlmClient`, so their calls are recognised but not
-counted, and a Bedrock embedding or rerank invocation gets a span without tokens (its body carries none
-that `BedrockLlmClient` reads).
+`MistralLlmClient` reads.
+
+**Embeddings and rerank usage.** Each provider reports it differently:
+
+| Provider | Where the usage is read | Shape validated against |
+|---|---|---|
+| Cohere (`CohereLlmClient`) | `meta` (embed, rerank, v1 chat) or `usage` (v2 chat, and the v2 stream's `message-end` `delta.usage`): `billed_units.input_tokens`/`output_tokens`, else `tokens.*`, and `cached_tokens`. No response names its model, so it is read from the request. A rerank is billed in `search_units`, so its span has no token counts | Cohere API reference (embed, rerank, chat); cohere-python `ApiMeta`, `Usage`, `ChatMessageEndEventDelta` |
+| Voyage (`VoyageLlmClient`) | `usage.total_tokens` as input tokens, `model` from the response, for embeddings, multimodal and contextualized embeddings, and rerank | Voyage API reference (embeddings, reranker, multimodal embeddings) |
+| Bedrock InvokeModel | a body whose usage has no input or output count (none at all, or an OpenAI-shaped `usage` such as gpt-oss's, which the inherited Anthropic mapping does not read) is read from the `X-Amzn-Bedrock-Input-Token-Count`/`-Output-Token-Count` headers (and the cache read/write count headers), which InvokeModel returns for every model; without them, from a Titan body's `inputTextTokenCount` and `results[].tokenCount` | AWS Titan Text and Titan Text Embeddings model parameters, OpenAI models on Bedrock; langchain-aws `llms/bedrock.py` and litellm, which read the headers |
+| Bedrock Agent Runtime `/rerank` | no usage; the model is the `modelArn` in the request body, reduced to its foundation-model id | AWS API reference, Agents for Amazon Bedrock Runtime: Rerank |
+| Vertex AI `:predict` | the sum of `predictions[].embeddings.statistics.token_count`, read by `GeminiLlmClient`; the model from the path | Vertex AI text embeddings API reference |
+
+Cohere and Voyage clients exist only to read usage: `buildCompletionRequest` throws, so neither can be a
+runtime backend. On a Vertex AI host a `/publishers/mistralai/` path is sniffed as `MISTRAL` (Mistral's
+chat wire format), as `/publishers/anthropic/` is as `ANTHROPIC`.
 
 **Bedrock model ids.** A Bedrock request names its model in the path and a Converse response has
 none, so the model is read from `/model/{modelId}/...` (URL-decoded). A foundation-model or

@@ -747,6 +747,10 @@ public class LlmProviderSnifferTest {
             "/v1/multimodalembeddings", "/v1/contextualizedembeddings",
             // Bedrock embedding models, invoked on the chat models' path
             "/model/amazon.titan-embed-text-v2%3A0/invoke", "/model/cohere.embed-v4%3A0/invoke",
+            // Vertex AI embedding models on the publisher-model predict method
+            "/v1/projects/p/locations/us-central1/publishers/google/models/text-embedding-005:predict",
+            "/v1/projects/p/locations/us-central1/publishers/google/models/gemini-embedding-001:predict",
+            "/v1/projects/p/locations/us-central1/publishers/google/models/textembedding-gecko@003:predict",
         };
         for (String path : embeddingsPaths) {
             assertOperation("POST", path, LlmProviderSniffer.Operation.EMBEDDINGS);
@@ -784,6 +788,9 @@ public class LlmProviderSnifferTest {
             "/v1/projects/p/locations/us-east5/publishers/anthropic/models/count-tokens:rawPredict",
             // OpenAI Conversations API objects, which do not call a model
             "/v1/conversations", "/v1/conversations/conv_123",
+            // Vertex AI predict on a model that is not an embedding model, or on a deployed endpoint
+            "/v1/projects/p/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict",
+            "/v1/projects/p/locations/us-central1/endpoints/1234567890:predict",
             "",
         };
         for (String path : otherPaths) {
@@ -864,6 +871,40 @@ public class LlmProviderSnifferTest {
             "/v1/projects/p/locations/us-east5/publishers/anthropic/models/claude-sonnet-4-5@20250929:rawPredict"), is(Optional.of(Provider.ANTHROPIC)));
         assertThat(LlmProviderSniffer.sniffByHostAndPath("us-east5-aiplatform.googleapis.com",
             "/v1/projects/p/locations/us-east5/publishers/google/models/gemini-2.5-flash:generateContent"), is(Optional.of(Provider.GEMINI)));
+    }
+
+    @Test
+    public void detectsMistralOnVertexAiAsMistral() {
+        // https://docs.cloud.google.com/vertex-ai/generative-ai/docs/partner-models/mistral
+        for (String method : new String[]{"rawPredict", "streamRawPredict"}) {
+            String path = "/v1/projects/p/locations/us-central1/publishers/mistralai/models/mistral-medium-3:" + method;
+            assertThat(path, LlmProviderSniffer.sniffByHostAndPath("us-central1-aiplatform.googleapis.com", path), is(Optional.of(Provider.MISTRAL)));
+            assertOperation(Provider.MISTRAL, "POST", path, LlmProviderSniffer.Operation.CHAT);
+        }
+        assertThat(LlmProviderSniffer.sniffByHostAndPath("aiplatform.googleapis.com",
+            "/v1/projects/p/locations/global/publishers/google/models/text-embedding-005:predict"), is(Optional.of(Provider.GEMINI)));
+    }
+
+    // --- Bedrock Agent Runtime rerank model from the request body ---
+
+    @Test
+    public void readsTheModelABedrockAgentRuntimeRerankRequestNamesInItsBody() {
+        // https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent-runtime_Rerank.html
+        String body = "{\"queries\":[{\"type\":\"TEXT\",\"textQuery\":{\"text\":\"What is the capital of France?\"}}],"
+            + "\"rerankingConfiguration\":{\"type\":\"BEDROCK_RERANKING_MODEL\",\"bedrockRerankingConfiguration\":{"
+            + "\"numberOfResults\":2,\"modelConfiguration\":{\"modelArn\":\"%s\"}}},"
+            + "\"sources\":[{\"type\":\"INLINE\",\"inlineDocumentSource\":{\"type\":\"TEXT\",\"textDocument\":{\"text\":\"Paris\"}}}]}";
+        assertThat(LlmProviderSniffer.extractBedrockRerankModelFromRequest(org.mockserver.model.HttpRequest.request("/rerank")
+                .withBody(String.format(body, "arn:aws:bedrock:us-west-2::foundation-model/amazon.rerank-v1:0"))),
+            is("amazon.rerank-v1:0"));
+        assertThat(LlmProviderSniffer.extractBedrockRerankModelFromRequest(org.mockserver.model.HttpRequest.request("/rerank")
+                .withBody(String.format(body, "arn:aws:bedrock:us-west-2::foundation-model/cohere.rerank-v3-5:0"))),
+            is("cohere.rerank-v3-5:0"));
+        assertThat(LlmProviderSniffer.extractBedrockRerankModelFromRequest(org.mockserver.model.HttpRequest.request("/rerank")
+            .withBody("{\"queries\":[]}")), is((String) null));
+        assertThat(LlmProviderSniffer.extractBedrockRerankModelFromRequest(org.mockserver.model.HttpRequest.request("/rerank")
+            .withBody("not json")), is((String) null));
+        assertThat(LlmProviderSniffer.extractBedrockRerankModelFromRequest(null), is((String) null));
     }
 
     @Test
