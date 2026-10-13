@@ -19,6 +19,7 @@
 - [Running MockServer](https://www.mock-server.com/mock_server/running_mock_server.html): How to run MockServer via Docker, Maven plugin, JUnit, npm, Homebrew, or standalone JAR
 - [Testcontainers](https://www.mock-server.com/mock_server/mockserver_testcontainers.html): Run MockServer in your tests with the mockserver-testcontainers module — helpers for DNS, transparent proxy, HTTP/3, init JSON, and a ready-wired client
 - [Troubleshooting Matching](https://www.mock-server.com/mock_server/troubleshooting_matching.html): Step-by-step checklist to diagnose why MockServer returns 404 when a request does not match, including common pitfalls and the debug mismatch endpoint
+- [Troubleshooting Index](https://www.mock-server.com/mock_server/troubleshooting_index.html): Symptom-first index — 404, 502/forwarding failures, TLS handshake errors, an empty dashboard, unexpected verification failures, LLM mocks returning the wrong shape, a container that won't start, and ignored configuration properties — each with the exact endpoint, header, or log line that tells the causes apart
 - [Running Tests In Parallel](https://www.mock-server.com/mock_server/running_tests_in_parallel.html): Run tests in parallel against a shared MockServer instance by using unique session IDs in request matchers to isolate each test
 
 ## Creating Expectations

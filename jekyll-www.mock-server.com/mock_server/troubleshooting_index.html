@@ -1,0 +1,215 @@
+---
+title: Troubleshooting Index
+description: Symptom-first index for MockServer problems — what you see, the likely causes, and the exact endpoint, log line or config property that tells them apart.
+shortTitle: Troubleshooting Index
+layout: page
+pageOrder: 2.5
+section: 'Operations'
+subsection: true
+sitemap:
+  priority: 0.8
+  changefreq: 'monthly'
+  lastmod: 2026-10-13T00:00:00+00:00
+keywords: "mockserver troubleshooting, mockserver 404, mockserver 502, mockserver tls error, mockserver dashboard empty, mockserver container will not start"
+---
+
+<p>Start here when something is wrong and you don't yet know which page explains it. Find your symptom below, do the one diagnostic step listed, then follow the link for the full fix.</p>
+
+<a id="index" class="anchor" href="#index">&nbsp;</a>
+
+<h2>Symptom Index</h2>
+
+<table class="table table-bordered table-striped">
+    <thead>
+    <tr>
+        <th>Symptom</th>
+        <th>Likely causes</th>
+        <th>Diagnostic step</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td><a href="#symptom_404">My request returns 404</a></td>
+        <td>No expectation matches the request; the expectation expired or was cleared; or an expectation matched but its template/action threw</td>
+        <td><code class="inline_code">x-mockserver-closest-match-hint</code> response header, or <code class="inline_code">PUT /mockserver/debugMismatch</code></td>
+    </tr>
+    <tr>
+        <td><a href="#symptom_wrong_match">The expectation matched the wrong one</a></td>
+        <td>Two expectations both match; priority or insertion order picked the other one</td>
+        <td><code class="inline_code">PUT /mockserver/retrieve?type=LOGS</code> — find the "matched expectation" entry</td>
+    </tr>
+    <tr>
+        <td><a href="#symptom_502">Forwarding returns 502 / connection refused</a></td>
+        <td>Upstream unreachable, TLS failure to the upstream, HTTP/2 error, or an undecodable upstream response</td>
+        <td>Read the 502 response body — it names the cause</td>
+    </tr>
+    <tr>
+        <td><a href="#symptom_tls">TLS handshake fails</a></td>
+        <td>Client doesn't trust MockServer's CA, empty JVM trust store, protocol mismatch, expired certificate, missing client certificate (mTLS)</td>
+        <td>MockServer's WARN log line naming the failed handshake and its probable cause</td>
+    </tr>
+    <tr>
+        <td><a href="#symptom_dashboard_empty">The dashboard is empty</a></td>
+        <td>Dashboard pointed at the wrong port, log cleared/reset, <code class="inline_code">maxLogEntries</code> set too low, request filter hiding everything</td>
+        <td><code class="inline_code">PUT /mockserver/retrieve?type=LOGS</code> against the same host/port the dashboard is pointed at</td>
+    </tr>
+    <tr>
+        <td><a href="#symptom_verify_fails">A verification fails unexpectedly</a></td>
+        <td>The request never arrived, arrived with different fields, or arrived a different number of times than expected</td>
+        <td>The verification failure's closest-request diff (<code class="inline_code">detailedVerificationFailures</code>, default <code class="inline_code">true</code>)</td>
+    </tr>
+    <tr>
+        <td><a href="#symptom_llm_shape">LLM mock returns the wrong shape</a></td>
+        <td>The expectation's <code class="inline_code">llmResponse.provider</code> or <code class="inline_code">completion.streaming</code> is set to the wrong value — neither is detected from the request</td>
+        <td>Check the expectation's own <code class="inline_code">provider</code> and <code class="inline_code">completion.streaming</code> fields</td>
+    </tr>
+    <tr>
+        <td><a href="#symptom_container">The container won't start</a></td>
+        <td>Host port already in use (Docker refuses to start it), missing TLS certificate files, Docker health check failing</td>
+        <td>Docker's own error on <code class="inline_code">docker run</code> for a port clash; otherwise <code class="inline_code">docker logs</code> on the container</td>
+    </tr>
+    <tr>
+        <td><a href="#symptom_config_typo">A configuration property seems to be ignored</a></td>
+        <td>A typo in the property name, or the wrong form (system property vs. environment variable vs. properties file)</td>
+        <td>The startup WARN log: <code class="inline_code">unrecognised MockServer configuration ... it is not a known configuration property and will be ignored (check for a typo)</code></td>
+    </tr>
+    <tr>
+        <td><a href="#symptom_template">A response template errors or produces the wrong output</a></td>
+        <td>Template syntax error, missing variable, wrong template engine selected</td>
+        <td>The log entry "Exception: ... transforming template" (the client gets a plain 404 with no body, see <a href="#symptom_404">404</a>); see <a href="/mock_server/response_templates.html">Response Templates</a></td>
+    </tr>
+    <tr>
+        <td><a href="#symptom_openapi">An OpenAPI specification fails to load</a></td>
+        <td>Invalid YAML/JSON, unresolved <code class="inline_code">$ref</code>, wrong file path or URL</td>
+        <td>The parser error messages returned in the <code class="inline_code">PUT /mockserver/expectation</code> (OpenAPI form) response body</td>
+    </tr>
+    </tbody>
+</table>
+
+<a id="symptom_404" class="anchor" href="#symptom_404">&nbsp;</a>
+
+<h2>My request returns 404</h2>
+
+<p>MockServer returns 404 when no active expectation matches the request. Three tools tell you why in one step, before you open the full checklist:</p>
+
+<ul>
+    <li>The response carries an <code class="inline_code">x-mockserver-closest-match-hint</code> header (enabled by default, <code class="inline_code">closestMatchHintEnabled</code>) naming the closest-matching expectation and what differed.</li>
+    <li><code class="inline_code">PUT /mockserver/debugMismatch</code> re-runs the request against every active expectation and returns, per expectation, which fields matched and which didn't — see <a href="/mock_server/troubleshooting_matching.html#debug_mismatch_endpoint">Programmatic Mismatch Debugging</a>.</li>
+    <li><code class="inline_code">PUT /mockserver/explainUnmatched</code> re-evaluates recent unmatched requests already recorded in the log against the current expectations and ranks the closest matches, within a bounded evaluation budget.</li>
+</ul>
+
+<p>For the full step-by-step checklist (is the expectation still active, did the request arrive, common pitfalls like trailing slashes or regex metacharacters), see <a href="/mock_server/troubleshooting_matching.html">Troubleshooting Matching</a>.</p>
+
+<h3>The request matched, but you still got a 404</h3>
+
+<p>A 404 is not always a non-match: if the matched expectation's response action throws while building the response — for example a template that fails — MockServer answers with a plain 404 with no body, because the failure is handled by the same generic exception path a non-match uses. In this case <strong>no closest-match hint header appears</strong>, since one was matched. The only trace is in the log: an entry whose message contains <code class="inline_code">Exception:</code> and, for a template, <code class="inline_code">transforming template</code>. Retrieve the log and look for that text before assuming the expectation itself did not match:</p>
+
+<pre class="prettyprint code"><code class="code">curl -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS"</code></pre>
+
+<a id="symptom_wrong_match" class="anchor" href="#symptom_wrong_match">&nbsp;</a>
+
+<h2>The expectation matched the wrong one</h2>
+
+<p>When more than one expectation matches a request, MockServer picks one by priority, then insertion order. Retrieve the log to see which expectation id actually matched:</p>
+
+<pre class="prettyprint code"><code class="code">curl -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS&amp;format=LOG_ENTRIES"</code></pre>
+
+<p>The default plain-text log format writes only a timestamp and message per entry, so it never shows the entry's type. Add <code class="inline_code">&amp;format=LOG_ENTRIES</code> to get structured entries and read the <code class="inline_code">type</code> field for <code class="inline_code">EXPECTATION_MATCHED</code> — or, without that parameter, search the plain-text log for the words "matched expectation". Either way the entry names the expectation id and path that won. Compare that expectation's <code class="inline_code">priority</code> field and its position among <code class="inline_code">PUT /mockserver/retrieve?type=ACTIVE_EXPECTATIONS</code> against the one you expected to match — see <a href="/mock_server/creating_expectations.html">Creating Expectations</a> for how priority and insertion order are used, and <a href="/mock_server/debugging_issues.html">Logging &amp; Debugging</a> for retrieving active expectations.</p>
+
+<a id="symptom_502" class="anchor" href="#symptom_502">&nbsp;</a>
+
+<h2>Forwarding returns 502 / connection refused</h2>
+
+<p>When MockServer forwards a request and the upstream call fails, it answers with <strong>502</strong> whose body names the cause instead of a generic failure:</p>
+
+<ul>
+    <li><strong>Set-up failure</strong> — "connection to the upstream could not be set up: ..." (a configuration problem on MockServer's side, such as an unresolvable host)</li>
+    <li><strong>TLS failure</strong> — "TLS with the upstream failed: ..."</li>
+    <li><strong>HTTP/2 error</strong> — "HTTP/2 error from the upstream: ..."</li>
+    <li><strong>Undecodable response</strong> — "response from the upstream could not be decoded: ..."</li>
+    <li><strong>Plain connect failure</strong> — "failed to connect to remote socket while forwarding request" (the upstream refused the connection, timed out, or does not exist — not yet split into a more specific reason)</li>
+</ul>
+
+<p>Read the 502 body first; it tells you which of the above you're dealing with. For slow or intermittently slow upstreams rather than outright failures, see the <code class="inline_code">timing</code> fields on retrieved request-response pairs in <a href="/mock_server/debugging_issues.html#forwarding_timings">Request Forwarding Timings</a> and <a href="/proxy/network_latency_debugging.html">Network Latency Debugging</a>.</p>
+
+<a id="symptom_tls" class="anchor" href="#symptom_tls">&nbsp;</a>
+
+<h2>TLS handshake fails</h2>
+
+<p>MockServer logs a client's failed TLS handshake as a WARN (once per client address, then DEBUG for repeats) naming the reason and a probable cause, for example <span class="inline_code">the client does not trust MockServer's Certificate Authority</span>. Set <code class="inline_code">logLevel</code> to <code class="inline_code">DEBUG</code> to see every failed handshake.</p>
+
+<p>The full troubleshooting table — untrusted CA, empty JVM trust store on minimal Docker images, protocol mismatch, expired certificates, mTLS certificate chain problems, 426 Upgrade Required, bad certificate — is at <a href="/mock_server/HTTPS_TLS.html#tls_troubleshooting">HTTPS &amp; TLS &rarr; TLS Troubleshooting</a>.</p>
+
+<a id="symptom_dashboard_empty" class="anchor" href="#symptom_dashboard_empty">&nbsp;</a>
+
+<h2>The dashboard is empty</h2>
+
+<p>The dashboard reads from the same in-memory log and expectation store as the REST API. If it looks empty, confirm the underlying data is actually there before assuming the UI is broken:</p>
+
+<pre class="prettyprint code"><code class="code">curl -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS"
+curl -X PUT "http://localhost:1080/mockserver/retrieve?type=ACTIVE_EXPECTATIONS"</code></pre>
+
+<p>If that also returns nothing, the log or expectations were cleared or reset (see <a href="/mock_server/clearing_and_resetting.html">Clearing &amp; Resetting</a>), or <code class="inline_code">maxLogEntries</code> is set very low and entries were evicted (see <a href="/mock_server/debugging_issues.html#retrieving_recorded_logs">Retrieving Recorded Logs</a>). If the REST call above returns data but the dashboard still shows nothing, the dashboard is most likely pointed at a different host/port, or a request filter in the UI is hiding the entries — see <a href="/mock_server/mockserver_ui.html#launch_ui">Launch UI</a> and <a href="/mock_server/mockserver_ui.html#ui_request_filter_section">Request Filter</a>.</p>
+
+<a id="symptom_verify_fails" class="anchor" href="#symptom_verify_fails">&nbsp;</a>
+
+<h2>A verification fails unexpectedly</h2>
+
+<p>Verification failures include the closest recorded request's diff by default (<code class="inline_code">detailedVerificationFailures</code>, default <code class="inline_code">true</code>), showing exactly which field didn't match the expected request — or that no request matching that count arrived at all. See <a href="/mock_server/verification.html">Verifying Requests &amp; Responses</a> for the verification API, and confirm the request actually reached MockServer with <code class="inline_code">PUT /mockserver/retrieve?type=REQUESTS</code> before assuming the verification itself is wrong.</p>
+
+<a id="symptom_llm_shape" class="anchor" href="#symptom_llm_shape">&nbsp;</a>
+
+<h2>LLM mock returns the wrong shape</h2>
+
+<p>MockServer does not detect the provider from the request. The <strong>expectation's own <code class="inline_code">llmResponse.provider</code> field sets it</strong>, and whether the response streams is decided by the <strong>expectation's <code class="inline_code">completion.streaming</code> field</strong> — neither comes from the request. If the shape is wrong, the expectation itself is most likely configured with the wrong provider or streaming flag, not MockServer guessing wrong:</p>
+
+<ul>
+    <li>A missing or null <code class="inline_code">provider</code> gives a 400 with body <code class="inline_code">{"error":"unsupported LLM provider: null", ...}</code> rather than a wrong shape — if you're seeing that, add <code class="inline_code">provider</code> to the expectation instead of debugging the shape.</li>
+    <li>A mismatched <code class="inline_code">provider</code> produces a response shaped for the wrong API (wrong field names, wrong envelope).</li>
+    <li>A mismatched <code class="inline_code">completion.streaming</code> produces a single JSON body when you expected Server-Sent Events, or vice versa.</li>
+</ul>
+
+<p>See <a href="/mock_server/llm_response_mocking.html#supported_providers">Mock LLM APIs &rarr; Supported Providers</a> for the full list of <code class="inline_code">provider</code> values, and <a href="/mock_server/llm_response_mocking.html#streaming">Streaming Responses</a> for how <code class="inline_code">completion.streaming</code> changes the response shape.</p>
+
+<a id="symptom_container" class="anchor" href="#symptom_container">&nbsp;</a>
+
+<h2>The container won't start</h2>
+
+<p>MockServer's Docker images are built on <a target="_blank" href="https://github.com/GoogleContainerTools/distroless" rel="noopener noreferrer">distroless</a> base images — there is no shell and no <code class="inline_code">curl</code> inside the container, so you cannot <code class="inline_code">docker exec -it ... sh</code> into it to poke around. Start with:</p>
+
+<pre class="prettyprint code"><code class="code">docker logs &lt;container&gt;</code></pre>
+
+<p>Common causes: a configured TLS certificate/key file path that does not exist in the container (check your volume mounts) — this shows up in <code class="inline_code">docker logs</code>. A host-port clash on <code class="inline_code">docker run -p</code>, by contrast, is reported by Docker itself when it refuses to start the container (the container never starts, so there is nothing in <code class="inline_code">docker logs</code>). If MockServer itself finds the port already taken (for example by another process when running without Docker's own port mapping), its own log message names the address it tried to bind and suggests <code class="inline_code">lsof -nP -iTCP:&lt;port&gt; -sTCP:LISTEN</code> to find what is using it — it does not name the other process itself. The image ships a built-in health check binary (<code class="inline_code">/mockserver-healthcheck</code>) that calls <code class="inline_code">PUT /mockserver/status</code> — see <a href="/mock_server/running_mock_server.html#docker_healthcheck">Docker Health Checks</a> for how it works and how to wire it into Compose, Kubernetes or ECS.</p>
+
+<a id="symptom_config_typo" class="anchor" href="#symptom_config_typo">&nbsp;</a>
+
+<h2>A configuration property seems to be ignored</h2>
+
+<p>An unrecognised <code class="inline_code">mockserver.*</code> system property or <code class="inline_code">MOCKSERVER_*</code> environment variable is not rejected — it logs a WARN at startup and is otherwise ignored:</p>
+
+<pre class="prettyprint code"><code class="code">unrecognised MockServer configuration &lt;key&gt; - it is not a known configuration property and will be ignored (check for a typo)</code></pre>
+
+<p>Check the startup log for this line first. Then confirm you're using the right form for where you're setting it (system property, environment variable, or properties file key) — see <a href="/mock_server/configuration_properties.html">Configuration</a> for the full reference, and retrieve the currently effective configuration with <code class="inline_code">GET /mockserver/configuration</code> (see <a href="/mock_server/debugging_issues.html#retrieving_configuration">Retrieving &amp; Updating Configuration</a>).</p>
+
+<a id="symptom_template" class="anchor" href="#symptom_template">&nbsp;</a>
+
+<h2>A response template errors or produces the wrong output</h2>
+
+<p>A template failure is reported only in the log, as "Exception: ... transforming template"; the client gets a plain 404 with no body (see <a href="#symptom_404">My request returns 404</a>). Confirm which template engine the expectation uses (Velocity, Mustache or JavaScript) and check the syntax against that engine's own rules — see <a href="/mock_server/response_templates.html">Response Templates</a>.</p>
+
+<a id="symptom_openapi" class="anchor" href="#symptom_openapi">&nbsp;</a>
+
+<h2>An OpenAPI specification fails to load</h2>
+
+<p>Loading an OpenAPI specification as an expectation returns the Swagger/OpenAPI parser's own messages in the <code class="inline_code">PUT /mockserver/expectation</code> response body when the spec is invalid (bad YAML/JSON, an unresolved <code class="inline_code">$ref</code>, or an unreachable path/URL). Read that response body first — it names the parser error. See <a href="/mock_server/using_openapi.html">OpenAPI &amp; WSDL</a> for how specifications are loaded and matched.</p>
+
+<a id="related" class="anchor" href="#related">&nbsp;</a>
+
+<h2>Related Pages</h2>
+
+<ul>
+    <li><a href="/mock_server/debugging_issues.html">Logging &amp; Debugging</a> &mdash; retrieving expectations, requests, logs and metrics</li>
+    <li><a href="/mock_server/troubleshooting_matching.html">Troubleshooting Matching</a> &mdash; the full 404 debugging checklist and common matching pitfalls</li>
+    <li><a href="/mock_server/HTTPS_TLS.html#tls_troubleshooting">HTTPS &amp; TLS &rarr; TLS Troubleshooting</a></li>
+    <li><a href="/mock_server/ai_debugging.html">Debugging HTTP Traffic with AI Assistants</a> &mdash; using the MCP tools to debug mismatches conversationally</li>
+</ul>

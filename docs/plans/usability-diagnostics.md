@@ -70,7 +70,6 @@ run; located OpenAPI errors.
 | A2 | A 404 flood rescans every expectation per miss for the closest-match hint → cap the scan and memoise per (method, path) until expectations change | (ii) | 404-heavy and proxy-miss loads currently pay O(expectations) per miss | S | A capped hint can miss the true closest match; say so in the header | P1 |
 | A3 | "Why did this specific request match X (or nothing)?" → `explain?correlationId=`: re-evaluate the stored request, including why a higher-priority expectation lost | (iii) | Zero hot-path cost | M | Expectations may have changed since arrival: return an `expectationsChangedSince` marker and label results "recomputed now" | P0 |
 | B1 | MCP diagnosis tools as the primary AI route: `explain_request` (A3), `explain_forward_failure` (A4), `lint_expectations` (A8), `test_template` (A5), `diagnose_config` (A7), `suggest_expectation_fix` (B3) | (iii) | MockServer runs deterministic computation only; the user's assistant does the reasoning | M | Tool output carries user traffic to the assistant: apply the log redaction settings to tool results by default | P0 |
-| A10 | Troubleshooting is split across pages → symptom-first index (404, 502, verify failure, template, spec, config) linking to the tools; document the hint headers and explainUnmatched | (iv) | None | S | Enumerated facts go stale | P1 |
 | A4 | Partly done: TLS, HTTP/2, set-up and decode failures are named in the 502 (`7a8b8c424`). A plain connect failure still says only "failed to connect to remote socket" → split it into DNS, refused and timeout, add pooled-connection close and proxy loop, and add a suggested fix to each named cause | (ii) | Runs only on failure; a lookup | S | Must not reveal more of the target than the 502 already does | P1 |
 | A5 | Template errors are hard to locate → `PUT /template/test` dry run, plus line/column and missing-variable hints in the failure event | (iii) / (ii) | Dry run on demand; enrichment only on failure | M | Reuse the hardened template-engine sandbox; rate-limit | P1 |
 | A6 | OpenAPI load errors are raw → group parser messages, add the JSON-pointer location, flag common causes (unresolved `$ref`, wrong path, YAML tab) | (iv) | Load time only | S | None | P1 |
@@ -96,7 +95,7 @@ run; located OpenAPI errors.
 ## Sequence
 
 1. **Wave 0 — hygiene and performance:** A2, C1.
-2. **Wave 1 — explain engine:** A3, B1 (A3 plus existing tools with redacted output), A10.
+2. **Wave 1 — explain engine:** A3, B1 (A3 plus existing tools with redacted output). (A10 landed: the symptom-first troubleshooting page.)
 3. **Wave 2 — failure classes:** A4, A5, A6, A7, each with an MCP tool and a dashboard entry.
 4. **Wave 3 — fixes:** A8 (including the CLI), B3, B2, A9.
 5. **Wave 4 — optional:** B5, B6.

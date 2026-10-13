@@ -1,5 +1,9 @@
 ### Debugging
 
+For a symptom-first index (404, 502, TLS failures, empty dashboard, unexpected verification
+failures, and more) with the exact REST endpoint or log line that tells the causes apart, see
+[Troubleshooting Index](https://www.mock-server.com/mock_server/troubleshooting_index.html).
+
 It can be helpful to view packet capture to debug any issues with MockServer.
 
 The [netshoot](https://github.com/nicolaka/netshoot) container has a helpful set of network debugging tools.

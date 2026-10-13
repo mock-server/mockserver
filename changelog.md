@@ -247,6 +247,11 @@ This release delivers a sustained performance and memory programme alongside dat
 
 ### Added
 
+- **Added a symptom-first Troubleshooting Index to the documentation site.** Look up what you
+  see (404, a 502 from forwarding, a failed TLS handshake, an empty dashboard, an unexpected
+  verification failure, an LLM mock returning the wrong shape, a container that won't start,
+  a configuration property that seems ignored) and get the exact endpoint, header, log line
+  or property that tells the causes apart, with links to the full guide for each.
 - **A memory limit for the OpenAI Responses API turns a mock keeps.** An `OPENAI_RESPONSES` mock keeps each response so a client can continue with `previous_response_id` or fetch it with `GET /v1/responses/{id}`. The new `maxOpenAiResponsesSizeInBytes` property caps the memory they hold (by default a twentieth of the heap), discarding the least recently used first and always keeping the latest; `0` limits them by count only. It can be changed on a running server with `PUT /mockserver/configuration`.
 - **Time from reading a request to decoding its headers: `mock_server_request_read_to_decode_duration_seconds`.**
   A new histogram (enabled with `metricsEnabled`, HTTP/1.1 only) times the span just before
