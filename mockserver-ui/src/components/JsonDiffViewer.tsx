@@ -1,18 +1,12 @@
 import { useCallback, useId, useLayoutEffect, useRef } from 'react';
-import { DiffEditor, loader } from '@monaco-editor/react';
+import { DiffEditor } from '@monaco-editor/react';
 import type { DiffOnMount } from '@monaco-editor/react';
-import * as monaco from 'monaco-editor';
+import type * as monaco from 'monaco-editor';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 import { monospaceFontFamily } from '../theme';
-
-// Reuse the same locally-bundled Monaco the JsonEditor wires up, so the diff
-// view never reaches for an external CDN at runtime (the dashboard is served
-// from the — often air-gapped — mock server itself). Calling loader.config here
-// as well as in JsonEditor is harmless: it just points the loader at the
-// bundled instance, which is idempotent.
-loader.config({ monaco });
+import './monacoSetup';
 
 export interface JsonDiffViewerProps {
   /** The "before" document (e.g. the existing expectation as stored). */

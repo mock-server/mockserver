@@ -1,22 +1,15 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
-import Editor, { loader } from '@monaco-editor/react';
+import Editor from '@monaco-editor/react';
 import type { OnChange, OnMount, OnValidate } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 import { monospaceFontFamily } from '../theme';
-// Vite ?worker imports — types declared in monaco-workers.d.ts so this stays
-// self-contained without a shared vite-env.d.ts dependency.
-// monaco-editor 0.56.0 added an `exports` map ("./*" -> "./esm/vs/*.js"), so
-// subpaths are now resolved relative to esm/vs and must NOT include that prefix
-// themselves (the old "esm/vs/..." form double-prefixes to "esm/vs/esm/vs/...").
-import EditorWorker from 'monaco-editor/editor/editor.worker?worker';
-import JsonWorker from 'monaco-editor/language/json/json.worker?worker';
+import './monacoSetup';
 
 // The top-level `monaco-editor` package marks `languages.json` as a deprecated
 // stub type, so the real json-language defaults API is described locally below.
-// (The Vite `?worker` import types live in monaco-workers.d.ts.)
 interface JsonSchemaEntry {
   uri: string;
   fileMatch?: string[];
@@ -29,30 +22,6 @@ interface JsonLanguageDefaults {
     allowComments: boolean;
     schemas: JsonSchemaEntry[];
   }): void;
-}
-
-// Use the locally bundled `monaco-editor` package instead of letting
-// `@monaco-editor/react` fetch Monaco from a CDN at runtime. The MockServer
-// dashboard is served from the (often air-gapped) mock server itself, so an
-// external CDN dependency at runtime is unacceptable. Calling loader.config
-// at module load swaps the loader to the bundled instance for every editor.
-loader.config({ monaco });
-
-// Wire Monaco's language web workers to the locally bundled worker bundles
-// (Vite ?worker imports) so JSON diagnostics run without any CDN. Only the JSON
-// language ships a dedicated worker in monaco core; every other language uses
-// the generic editor worker. In tests the ?worker imports are mocked, so this
-// assignment is harmless there; the typeof guard just avoids a hard reference
-// to `self` in any non-browser context.
-if (typeof self !== 'undefined') {
-  (self as unknown as { MonacoEnvironment?: monaco.Environment }).MonacoEnvironment = {
-    getWorker(_workerId: string, label: string) {
-      if (label === 'json') {
-        return new JsonWorker();
-      }
-      return new EditorWorker();
-    },
-  };
 }
 
 export interface JsonEditorMarker {

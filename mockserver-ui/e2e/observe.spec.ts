@@ -344,6 +344,22 @@ test.describe('Traffic (OBS)', () => {
     await dialog.getByRole('button', { name: 'Cancel' }).click();
   });
 
+  // The Preview Diff is often the first editor a page opens; it must start
+  // Monaco's diff worker itself (the console guard catches a failed worker load).
+  test('Capture as mock Preview Diff computes the diff when it is the first editor opened', async ({ page, request }) => {
+    const path = `/obs/cap-diff-first-${stamp()}`;
+    await request.get(`${ORIGIN}${path}`);
+    await gotoView(page, 'traffic');
+    await openTrafficRow(page, path);
+    await page.getByRole('button', { name: 'Capture as mock' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Capture as Mock' });
+    await dialog.getByRole('tab', { name: 'Preview Diff' }).click();
+    const diff = dialog.getByTestId('json-diff-viewer');
+    await expect(diff.locator('.monaco-diff-editor')).toBeVisible();
+    await expect(diff.locator('.line-insert').first(), 'the added lines are highlighted').toBeVisible();
+    await dialog.getByRole('button', { name: 'Cancel' }).click();
+  });
+
   test('Add to Diff Pool + Diff Selected compares two shortened requests using their whole bodies', async ({ page, request }) => {
     const tag = `obs-diff-${stamp()}`;
     await request.post(`${ORIGIN}/obs/diff-a-${tag}`, { data: bigJsonBody(`${tag}a`), headers: { 'content-type': 'application/json' } });

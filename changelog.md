@@ -923,6 +923,7 @@ This release delivers a sustained performance and memory programme alongside dat
   truncated body, and show it as base64, because a truncated body is kept as bytes.
 ### Fixed
 
+- **The dashboard's Preview Diff now shows the changes when it is the first editor you open.** In Capture as Mock, opening the Preview Diff tab before any other code editor in the page showed both documents with no added or changed lines highlighted, and the browser console reported that the editor's worker script failed to load. The diff is now computed whichever editor opens first.
 - **A forward whose connection could not be made now says why, and what to change, in the `502`.** A forward,
   a proxied request or a `proxyPass` mapping whose upstream could not be reached got an empty
   `502 Bad Gateway`, and the log said only "failed to connect to remote socket" (at `TRACE`) or, for a host
