@@ -1,5 +1,6 @@
 package org.mockserver.netty.mcp;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -21,6 +22,7 @@ import org.mockserver.llm.client.LlmClient;
 import org.mockserver.llm.client.LlmClientRegistry;
 import org.mockserver.llm.client.NettyHttpClientLlmTransport;
 import org.mockserver.llm.cost.LlmPricing;
+import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;
 import org.mockserver.validator.jsonschema.JsonSchemaValidator;
 import org.mockserver.llm.drift.DriftDetector;
 import org.mockserver.llm.drift.DriftReport;
@@ -77,6 +79,7 @@ public class McpToolRegistry {
     private final Map<String, ToolDefinition> tools;
     private ExpectationSerializer expectationSerializer;
     private RequestDefinitionSerializer requestDefinitionSerializer;
+    private JsonSchemaExpectationValidator expectationValidator;
     private final McpToolSchemaGenerator mcpToolSchemaGenerator = new McpToolSchemaGenerator();
 
     public McpToolRegistry(HttpState httpState, LifeCycle server) {
@@ -487,7 +490,9 @@ public class McpToolRegistry {
 
         tools.put("create_expectation", new ToolDefinition(
             "create_expectation",
-            "Creates a mock expectation that defines how MockServer should respond to a matching request",
+            "Creates a mock expectation that defines how MockServer should respond to a matching request. "
+                + "It accepts no other parameters than those in its input schema: an unknown one is rejected with an error naming it. "
+                + "Use raw_expectation to match request headers, query parameters, cookies or a body, or to add a delay or a template.",
             schema,
             this::handleCreateExpectation
         ));
@@ -495,6 +500,28 @@ public class McpToolRegistry {
 
     private JsonNode handleCreateExpectation(JsonNode params) {
         try {
+            JsonNode schemaProperties = tools.get("create_expectation").getInputSchema().path("properties");
+            ObjectNode unknownParameters = unknownParametersResult("create_expectation", params, schemaProperties,
+                "To match on request headers, query parameters, cookies or a body, or to add a delay or a template, " +
+                    "use raw_expectation with the full expectation JSON.");
+            if (unknownParameters != null) {
+                return unknownParameters;
+            }
+            if (params.has("chaos") && !params.get("chaos").isNull()) {
+                if (!params.get("chaos").isObject()) {
+                    return errorResult("'chaos' must be an object, for example {\"errorStatus\": 503, \"errorProbability\": 0.5}");
+                }
+                ObjectNode unknownChaosParameters = unknownParametersResult("create_expectation 'chaos'", params.get("chaos"),
+                    schemaProperties.path("chaos").path("properties"), null);
+                if (unknownChaosParameters != null) {
+                    return unknownChaosParameters;
+                }
+            }
+            for (String field : new String[]{"method", "path"}) {
+                if (params.has(field) && !params.get(field).isNull() && !params.get(field).isTextual()) {
+                    return errorResult("'" + field + "' must be a string, for example " + ("method".equals(field) ? "\"GET\"" : "\"/users/1\""));
+                }
+            }
             String method = params.path("method").asText(null);
             if (method == null || method.trim().isEmpty()) {
                 return errorResult("'method' is required and must not be blank");
@@ -529,11 +556,18 @@ public class McpToolRegistry {
             }
 
             JsonNode responseHeaders = params.path("responseHeaders");
+            if (!responseHeaders.isMissingNode() && !responseHeaders.isNull() && !responseHeaders.isObject()) {
+                return errorResult("'responseHeaders' must be an object mapping each header name to a string value, for example {\"Content-Type\": \"application/json\"}");
+            }
             if (responseHeaders.isObject()) {
                 Iterator<Map.Entry<String, JsonNode>> fields = responseHeaders.fields();
                 while (fields.hasNext()) {
                     Map.Entry<String, JsonNode> entry = fields.next();
-                    httpResponse.withHeader(entry.getKey(), entry.getValue().asText());
+                    List<String> values = headerValues(entry.getValue());
+                    if (values == null) {
+                        return errorResult("'responseHeaders." + entry.getKey() + "' must be a string or an array of strings");
+                    }
+                    httpResponse.withHeader(entry.getKey(), values.toArray(new String[0]));
                 }
             }
 
@@ -705,6 +739,93 @@ public class McpToolRegistry {
         } catch (Exception e) {
             return errorResult("Failed to create expectation", e);
         }
+    }
+
+    /** A header's values when {@code value} is a scalar or an array of scalars, otherwise null. */
+    private static List<String> headerValues(JsonNode value) {
+        List<String> values = new ArrayList<>();
+        if (value.isValueNode() && !value.isNull()) {
+            values.add(value.asText());
+            return values;
+        }
+        if (value.isArray() && value.size() > 0) {
+            for (JsonNode item : value) {
+                if (!item.isValueNode() || item.isNull()) {
+                    return null;
+                }
+                values.add(item.asText());
+            }
+            return values;
+        }
+        return null;
+    }
+
+    private static final Map<String, String> PARAMETER_ALIASES = Map.of(
+        "body", "responseBody",
+        "headers", "responseHeaders",
+        "status", "statusCode",
+        "responsestatus", "statusCode",
+        "responsestatuscode", "statusCode",
+        "httpmethod", "method",
+        "ttl", "timeToLive"
+    );
+
+    /**
+     * An error naming each parameter of {@code params} that {@code schemaProperties} does not declare, with the
+     * accepted names and a likely intended name, so a caller does not lose a field silently. Null when all are known.
+     * Keys starting with {@code _} (such as a client's {@code _meta}) are metadata, not parameters, and are let through.
+     */
+    private ObjectNode unknownParametersResult(String scope, JsonNode params, JsonNode schemaProperties, String alternative) {
+        Set<String> accepted = new LinkedHashSet<>();
+        schemaProperties.fieldNames().forEachRemaining(accepted::add);
+        List<String> unknown = new ArrayList<>();
+        params.fieldNames().forEachRemaining(name -> {
+            if (!accepted.contains(name) && !name.startsWith("_")) {
+                unknown.add(name);
+            }
+        });
+        if (unknown.isEmpty()) {
+            return null;
+        }
+        ObjectNode suggestions = objectMapper.createObjectNode();
+        StringBuilder message = new StringBuilder(scope).append(" does not accept: ");
+        for (int i = 0; i < unknown.size(); i++) {
+            String name = unknown.get(i);
+            message.append(i > 0 ? ", " : "").append("'").append(name).append("'");
+            String suggestion = suggestParameter(name, accepted);
+            if (suggestion != null) {
+                suggestions.put(name, suggestion);
+                message.append(" (did you mean '").append(suggestion).append("'?)");
+            }
+        }
+        message.append(". It accepts: ").append(String.join(", ", accepted)).append(".");
+        if (alternative != null) {
+            message.append(" ").append(alternative);
+        }
+        ObjectNode result = errorResult(message.toString());
+        ArrayNode unknownNode = result.putArray("unknownParameters");
+        unknown.forEach(unknownNode::add);
+        ArrayNode acceptedNode = result.putArray("acceptedParameters");
+        accepted.forEach(acceptedNode::add);
+        if (suggestions.size() > 0) {
+            result.set("suggestions", suggestions);
+        }
+        return result;
+    }
+
+    private static String suggestParameter(String unknown, Set<String> accepted) {
+        String normalised = normaliseParameterName(unknown);
+        for (String name : accepted) {
+            if (normaliseParameterName(name).equals(normalised)) {
+                return name;
+            }
+        }
+        String alias = PARAMETER_ALIASES.get(normalised);
+        return alias != null && accepted.contains(alias) ? alias : null;
+    }
+
+    private static String normaliseParameterName(String name) {
+        return name.toLowerCase(Locale.ROOT).replace("_", "").replace("-", "");
     }
 
     private void registerVerifyRequest() {
@@ -1801,6 +1922,18 @@ public class McpToolRegistry {
     private JsonNode handleRawExpectation(JsonNode params) {
         try {
             JsonNode expectationNode = params.path("expectation");
+            if (!expectationNode.isObject() && !(expectationNode.isArray() && expectationNode.size() > 0)) {
+                return errorResult("'expectation' must be a JSON object in MockServer expectation format, or a non-empty array of them, " +
+                    "for example {\"httpRequest\": {\"method\": \"GET\", \"path\": \"/hello\"}, \"httpResponse\": {\"statusCode\": 200, \"body\": \"hi\"}}");
+            }
+            List<String> validationErrors = expectationSchemaErrors(expectationNode);
+            if (!validationErrors.isEmpty()) {
+                ObjectNode result = errorResult("The expectation does not match the MockServer expectation schema: correct each entry of " +
+                    "'validationErrors' (a JSON path, then what is wrong there) and call raw_expectation again");
+                ArrayNode errors = result.putArray("validationErrors");
+                validationErrors.forEach(errors::add);
+                return result;
+            }
             String expectationJson = objectMapper.writeValueAsString(expectationNode);
 
             Expectation[] expectations = getExpectationSerializer().deserializeArray(expectationJson, false);
@@ -1820,6 +1953,54 @@ public class McpToolRegistry {
         } catch (Exception e) {
             return errorResult("Failed to create raw expectation", e);
         }
+    }
+
+    /**
+     * The expectation schema's errors for each entry of {@code expectationNode}, one per item, prefixed with the
+     * entry's position when there are several. Entries in the OpenAPI form are left to the deserializer.
+     */
+    private List<String> expectationSchemaErrors(JsonNode expectationNode) throws JsonProcessingException {
+        List<JsonNode> entries = new ArrayList<>();
+        if (expectationNode.isArray()) {
+            expectationNode.forEach(entries::add);
+        } else {
+            entries.add(expectationNode);
+        }
+        List<String> errors = new ArrayList<>();
+        for (int i = 0; i < entries.size(); i++) {
+            JsonNode entry = entries.get(i);
+            String prefix = entries.size() > 1 ? "expectation " + (i + 1) + ": " : "";
+            if (!entry.isObject()) {
+                errors.add(prefix + "must be an object");
+                continue;
+            }
+            if (entry.has("specUrlOrPayload")) {
+                continue;
+            }
+            String report = getExpectationValidator().isValid(objectMapper.writeValueAsString(entry), false);
+            if (report == null || report.isEmpty()) {
+                continue;
+            }
+            int before = errors.size();
+            for (String line : report.split("\\R")) {
+                if (line.startsWith(" - ")) {
+                    errors.add(prefix + line.substring(3).trim());
+                } else if (errors.size() > before && !line.isBlank()) {
+                    errors.set(errors.size() - 1, errors.get(errors.size() - 1) + " " + line.trim());
+                }
+            }
+            if (errors.size() == before) {
+                errors.add(prefix + "does not match the expectation schema");
+            }
+        }
+        return errors;
+    }
+
+    private JsonSchemaExpectationValidator getExpectationValidator() {
+        if (expectationValidator == null) {
+            expectationValidator = JsonSchemaExpectationValidator.jsonSchemaExpectationValidator(mockServerLogger);
+        }
+        return expectationValidator;
     }
 
     private void registerRawRetrieve() {

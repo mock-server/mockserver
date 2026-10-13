@@ -1,0 +1,128 @@
+package org.mockserver.netty.mcp;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockserver.integration.ClientAndServer;
+import org.mockserver.serialization.ObjectMapperFactory;
+import org.mockserver.socket.PortFactory;
+import org.slf4j.event.Level;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.mockserver.configuration.Configuration.configuration;
+
+/**
+ * Follows the why_forward_failed prompt's tool chain over MockServer's own MCP endpoint after a real forward to a port
+ * nothing listens on, and checks that each tool returns the fact the prompt says it does: the 502, the
+ * "failed to forward request" log entry with its correlationId, and the forward expectation's target.
+ */
+public class McpForwardFailurePromptIntegrationTest {
+
+    private final ObjectMapper objectMapper = ObjectMapperFactory.buildObjectMapperWithoutRemovingEmptyValues();
+    private final HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
+    private ClientAndServer mockServer;
+    private String sessionId;
+    private int requestId;
+
+    @Before
+    public void startMockServer() throws Exception {
+        // INFO, the default outside tests: below it MockServer records no forward failure for these tools to return
+        mockServer = ClientAndServer.startClientAndServer(configuration().logLevel(Level.INFO), 0);
+        HttpResponse<String> initialize = postMcp("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-06-18\"}}");
+        sessionId = initialize.headers().firstValue("Mcp-Session-Id").orElseThrow();
+        postMcp("{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}");
+    }
+
+    @After
+    public void stopMockServer() {
+        if (mockServer != null) {
+            mockServer.stop();
+        }
+    }
+
+    @Test
+    public void eachToolTheForwardPromptNamesReturnsTheFactItDescribes() throws Exception {
+        int closedPort = PortFactory.findFreePort();
+        JsonNode created = callTool("create_forward_expectation", objectMapper.createObjectNode()
+            .put("path", "/inventory").put("host", "127.0.0.1").put("port", closedPort).put("scheme", "HTTP"));
+        assertThat(created.toString(), created.path("status").asText(), is("created"));
+
+        HttpResponse<String> forwarded = httpClient.send(
+            HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + mockServer.getLocalPort() + "/inventory"))
+                .timeout(Duration.ofSeconds(60)).GET().build(),
+            HttpResponse.BodyHandlers.ofString());
+        assertThat(forwarded.statusCode(), is(502));
+
+        JsonNode failedPair = null;
+        JsonNode forwardFailure = null;
+        long deadline = System.currentTimeMillis() + 20_000;
+        while ((failedPair == null || forwardFailure == null) && System.currentTimeMillis() < deadline) {
+            JsonNode pairs = callTool("retrieve_request_responses", objectMapper.createObjectNode()
+                .put("method", "GET").put("path", "/inventory")).path("requestResponses");
+            for (JsonNode pair : pairs) {
+                if (pair.path("httpResponse").path("statusCode").asInt() == 502) {
+                    failedPair = pair;
+                }
+            }
+            for (JsonNode entry : callTool("retrieve_logs", objectMapper.createObjectNode().put("limit", 500)).path("logEntries")) {
+                if (entry.path("messageFormat").asText().contains("failed to forward request")) {
+                    forwardFailure = entry;
+                }
+            }
+            if (failedPair == null || forwardFailure == null) {
+                Thread.sleep(100);
+            }
+        }
+        assertThat("a 502 for the request from retrieve_request_responses", failedPair, notNullValue());
+        assertThat("a 'failed to forward request' entry from retrieve_logs", forwardFailure, notNullValue());
+        assertThat(forwardFailure.toString(), forwardFailure.path("message").toString(), containsString("failed to connect to remote socket while forwarding request"));
+
+        String correlationId = forwardFailure.path("correlationId").asText();
+        assertThat(forwardFailure.toString(), correlationId.isEmpty(), is(false));
+        JsonNode lifecycle = callTool("retrieve_logs", objectMapper.createObjectNode().put("correlationId", correlationId)).path("logEntries");
+        assertThat(lifecycle.toString(), lifecycle.size() >= 1, is(true));
+        for (JsonNode entry : lifecycle) {
+            assertThat(entry.toString(), entry.path("correlationId").asText(), is(correlationId));
+        }
+
+        JsonNode expectations = callTool("list_expectations", objectMapper.createObjectNode().put("path", "/inventory")).path("expectations");
+        assertThat(expectations.toString(), expectations.size(), is(1));
+        JsonNode target = expectations.get(0).path("httpForward");
+        assertThat(target.toString(), target.path("host").asText(), is("127.0.0.1"));
+        assertThat(target.path("port").asInt(), is(closedPort));
+        assertThat(target.path("scheme").asText(), is("HTTP"));
+    }
+
+    private JsonNode callTool(String name, ObjectNode arguments) throws Exception {
+        ObjectNode call = objectMapper.createObjectNode().put("jsonrpc", "2.0").put("id", ++requestId + 1).put("method", "tools/call");
+        call.putObject("params").put("name", name).set("arguments", arguments);
+        HttpResponse<String> response = postMcp(objectMapper.writeValueAsString(call));
+        JsonNode result = objectMapper.readTree(response.body()).path("result");
+        assertThat(response.body(), result.path("isError").asBoolean(), is(false));
+        return objectMapper.readTree(result.path("content").get(0).path("text").asText());
+    }
+
+    private HttpResponse<String> postMcp(String body) throws Exception {
+        HttpRequest.Builder request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + mockServer.getLocalPort() + "/mockserver/mcp"))
+            .timeout(Duration.ofSeconds(30))
+            .header("Content-Type", "application/json")
+            .header("Accept", "application/json, text/event-stream")
+            .POST(HttpRequest.BodyPublishers.ofString(body));
+        if (sessionId != null) {
+            request.header("Mcp-Session-Id", sessionId);
+        }
+        return httpClient.send(request.build(), HttpResponse.BodyHandlers.ofString());
+    }
+}

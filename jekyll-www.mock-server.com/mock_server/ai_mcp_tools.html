@@ -161,6 +161,16 @@ keywords: "mcp tools, mockserver mcp tools, create_expectation, verify_request, 
   }
 }</code></pre>
 
+<p><strong>Errors an assistant can act on:</strong> a call that is rejected creates nothing and returns <code>"error": true</code> with a <code>message</code> naming the field to change. A parameter the tool does not have (including one inside <code>chaos</code>) is never ignored silently: the result lists it in <code>unknownParameters</code>, lists the names the tool accepts in <code>acceptedParameters</code>, and, when the intended name is clear, maps it in <code>suggestions</code> (for example <code>body</code> to <code>responseBody</code>, <code>headers</code> to <code>responseHeaders</code>, or <code>status_code</code> to <code>statusCode</code>). Keys that start with <code>_</code>, such as a client's <code>_meta</code>, are treated as metadata and let through. <code>responseHeaders</code> must be an object whose values are strings, or arrays of strings for a header with several values. To match on request headers, query parameters, cookies or a body, or to add a delay or a template, use <a href="#raw_expectation"><code>raw_expectation</code></a> instead.</p>
+
+<pre class="prettyprint code"><code class="code">{
+  "error": true,
+  "message": "create_expectation does not accept: 'body' (did you mean 'responseBody'?), 'queryParameters'. It accepts: method, path, statusCode, responseBody, responseHeaders, times, timeToLive, chaos. To match on request headers, query parameters, cookies or a body, or to add a delay or a template, use raw_expectation with the full expectation JSON.",
+  "unknownParameters": ["body", "queryParameters"],
+  "acceptedParameters": ["method", "path", "statusCode", "responseBody", "responseHeaders", "times", "timeToLive", "chaos"],
+  "suggestions": { "body": "responseBody" }
+}</code></pre>
+
 <a id="verify_request" class="anchor" href="#verify_request">&nbsp;</a>
 
 <h3>verify_request</h3>
@@ -1900,6 +1910,16 @@ keywords: "mcp tools, mockserver mcp tools, create_expectation, verify_request, 
   }
 }</code></pre>
 
+<p><strong>Schema errors:</strong> <code>expectation</code> may also be an array of expectations. Before anything is created, each one is checked against the same expectation JSON schema the REST API uses. If any fails, nothing is created and the result lists every problem in <code>validationErrors</code>: a JSON path, then what is wrong there, prefixed with the expectation's position when an array was sent.</p>
+
+<pre class="prettyprint code"><code class="code">{
+  "error": true,
+  "message": "The expectation does not match the MockServer expectation schema: correct each entry of 'validationErrors' (a JSON path, then what is wrong there) and call raw_expectation again",
+  "validationErrors": [
+    "expectation 2: $.httpRequest.paht: is not defined in the schema and the schema does not allow additional properties"
+  ]
+}</code></pre>
+
 <a id="raw_retrieve" class="anchor" href="#raw_retrieve">&nbsp;</a>
 
 <h3>raw_retrieve</h3>
@@ -2001,6 +2021,38 @@ keywords: "mcp tools, mockserver mcp tools, create_expectation, verify_request, 
     </tbody>
 </table>
 
+<p>Each prompt is a short, fixed set of instructions telling your assistant which MockServer tools to call, in which order, and what each result means. MockServer itself never calls a language model: it only runs the tools, and your own assistant does the reasoning. Every argument is required.</p>
+
+<table>
+    <thead>
+        <tr><th>Prompt</th><th>Arguments</th><th>Use it when</th><th>Tools it chains</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>debug_unmatched_request</code></td><td><code>method</code>, <code>path</code></td><td>A request got a 404 because no expectation matched it</td><td><code>explain_unmatched_requests</code></td></tr>
+        <tr><td><code>why_did_verify_fail</code></td><td><code>method</code>, <code>path</code></td><td>A verification failed and you want to know whether the code under test or the verification is wrong</td><td><code>verify_request</code> (or <code>raw_verify</code> when the verification also matched headers, query parameters or a body), <code>retrieve_recorded_requests</code>, then <code>get_status</code> and <code>retrieve_logs</code> if nothing arrived</td></tr>
+        <tr><td><code>fix_my_expectation</code></td><td><code>method</code>, <code>path</code></td><td>An expectation does not match the request you meant it for</td><td><code>debug_request_mismatch</code>, <code>explain_unmatched_requests</code>, <code>list_expectations</code>, then <code>raw_expectation</code> (keeping the expectation's <code>id</code>, so it is replaced in place) only after you agree to the change</td></tr>
+        <tr><td><code>why_forward_failed</code></td><td><code>method</code>, <code>path</code></td><td>A forwarded or proxied request came back as a 502</td><td><code>retrieve_request_responses</code> (the 502 and, when MockServer could name it, the cause in its body), <code>retrieve_logs</code> (the <code>failed to forward request</code> entry and its <code>correlationId</code>), <code>list_expectations</code> (the forward target's host, port and scheme)</td></tr>
+        <tr><td><code>create_mock_from_description</code></td><td><code>description</code></td><td>You want an expectation from a plain-language description of an endpoint</td><td><code>create_expectation</code> or <code>raw_expectation</code>, then <code>list_expectations</code> to confirm</td></tr>
+    </tbody>
+</table>
+
+<p><strong>Facts are kept apart from the assistant's reasoning.</strong> The four diagnosis prompts ask the assistant to answer in two sections: <em>Facts from MockServer</em>, holding only values copied from the tool results (status codes, counts, field names, differences and error text), each naming the tool that returned it; and <em>Interpretation</em>, holding the assistant's explanation and suggested change. If a tool returned an error or nothing, the assistant is told to say so rather than guess. Tool results are recomputed when the tools are called, so, for example, a repeated verification also counts requests that arrived after your test's own check ran.</p>
+
+<a id="create_mock_from_description" class="anchor" href="#create_mock_from_description">&nbsp;</a>
+
+<h4>Creating a mock from a description</h4>
+
+<p><code>create_mock_from_description</code> turns a description such as <em>&ldquo;GET /health returns 200 with the JSON body {"status": "UP"}&rdquo;</em> into an expectation, with no language model inside MockServer. The prompt tells the assistant to:</p>
+
+<ol>
+    <li>use <a href="#create_expectation"><code>create_expectation</code></a> when the description needs only a method, a path, a status code, a response body, response headers, a match count, a time to live or a chaos profile, and <a href="#raw_expectation"><code>raw_expectation</code></a> with the full expectation JSON when the request must also match on headers, query parameters, cookies or a body, or the response needs a delay or a template;</li>
+    <li>on an error, read <code>message</code> and, when present, <code>unknownParameters</code> (with <code>suggestions</code>) or <code>validationErrors</code>, correct only the fields they name, and call the tool again, rather than dropping details from the description to make the error go away;</li>
+    <li>call <code>list_expectations</code> to confirm the expectation is active;</li>
+    <li>report the expectation id MockServer returned, and list separately every detail it assumed because the description did not state it, such as the status code or the content type.</li>
+</ol>
+
+<p>Because a rejected call creates nothing and names the exact field to fix, the assistant can correct itself in one more call instead of creating a mock that silently lacks part of what you described. The error formats are shown under <a href="#create_expectation"><code>create_expectation</code></a> and <a href="#raw_expectation"><code>raw_expectation</code></a>.</p>
+
 <p><strong>Example &mdash; list available prompts:</strong></p>
 
 <pre class="prettyprint code"><code class="code">{
@@ -2017,10 +2069,24 @@ keywords: "mcp tools, mockserver mcp tools, create_expectation, verify_request, 
   "id": 101,
   "method": "prompts/get",
   "params": {
-    "name": "create_expectation_prompt",
+    "name": "why_forward_failed",
     "arguments": {
       "method": "GET",
       "path": "/api/users"
+    }
+  }
+}</code></pre>
+
+<p><strong>Example &mdash; create a mock from a description:</strong></p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 103,
+  "method": "prompts/get",
+  "params": {
+    "name": "create_mock_from_description",
+    "arguments": {
+      "description": "POST /orders with a JSON body returns 201 with a Location header of /orders/42"
     }
   }
 }</code></pre>

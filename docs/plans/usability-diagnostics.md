@@ -55,8 +55,11 @@ flowchart LR
   dropped-event banners.
 - **MCP:** a large tool set, including `explain_unmatched_requests`, `debug_request_mismatch`,
   `retrieve_logs`, `verify_*` and `create_expectation(s_from_recorded_traffic)`; prompts
-  `debug_unmatched_request` and `create_mock_from_description` (so natural-language → expectation
-  already exists, with the user's own assistant doing the reasoning).
+  `debug_unmatched_request`, `why_did_verify_fail`, `fix_my_expectation` and `why_forward_failed`
+  (each chains existing tools and asks for "Facts from MockServer" apart from "Interpretation"),
+  and `create_mock_from_description` (natural-language → expectation, with the user's own assistant
+  doing the reasoning). `create_expectation` rejects unknown parameters with `unknownParameters` and
+  `suggestions`; `raw_expectation` returns schema `validationErrors` by JSON path.
 - **Bring-your-own LLM:** `PUT /generateExpectation` (`llmProvider` / `llmBaseUrl` / `llmModel`)
   with a template fallback when no backend is configured; `SemanticDriftExtension` optionally uses
   an LLM for drift.
@@ -86,9 +89,7 @@ run.
 | A5 | Template errors are hard to locate → `PUT /template/test` dry run, plus line/column and missing-variable hints in the failure event | (iii) / (ii) | Dry run on demand; enrichment only on failure | M | Reuse the hardened template-engine sandbox; rate-limit | P1 |
 | A8 | Unreachable or suspicious expectations go unnoticed → lint: shadowed expectations, regex paths that look literal, missing leading slash, STRICT array bodies, `times=0`; surfaced as PUT `warnings`, in the UI, and via `mockserver lint file.json` | (iv) / (iii) | Control plane only; the pairwise shadowing check is O(n²), so on demand, not on every PUT | M | Advisory only, never rejecting | P1 |
 | B3 | "Fix my expectation" → turn the diff into a minimal JSON patch with a preview-and-apply action in Explain Unmatched | (iii) | On demand | M | Never auto-apply | P1 |
-| B2 | More MCP prompts: `why_did_verify_fail`, `fix_my_expectation`, `why_forward_failed`, chaining the tools above | (iii) | Static text | S | Keep deterministic facts separate from model prose | P1 |
 | A9b | Response and sequence verification failures get no summary block → append the same `verification summary:` (counts, closest misses, late arrivals) to response-aware and sequence failures, and say how many recorded requests matched the fields but had the other disposition | (iii) | Failure path only; reuse the request summary's 500-request ranking budget | S | Append only; keep the "left out when it adds nothing" rule | P3 |
-| B6 | Natural-language → expectation without an LLM inside MockServer → document and test the `create_mock_from_description` prompt, with precise schema errors the assistant can act on | (iii) | None | S | Validate against the real schema | P2 |
 | C1 | From the prompt-redaction audit (`f5e1e6ce0`): a drift value in a non-credential field gets JWT and URL-userinfo masking but not the `key=value` credential sweep (`LlmPromptRedactor.maskDriftValue`) → apply `maskKeyValue` there too | (iii) | Only when an LLM drift prompt is built | S | None | P2 |
 | A11 | The effective-config view reports `(default)` for a property at its default, not the default's value → expose each typed getter's built-in default (one table the getters and the view both read) so the view can show effective and default side by side | (iv) | Startup / on demand only | M | Some defaults are derived (heap size, another property); show the derivation rather than a guessed number | P3 |
 | B5 | Optional plain-language summary of explain results from a configured LLM (`?narrate=true`) | (iii) | On demand, asynchronous, timeout-bounded, never inline in a 404 | S | Off by default; label as AI-generated; always return the deterministic facts too | P3 |
@@ -97,6 +98,7 @@ run.
 | A6c | A JSON Schema response body logs "loaded OpenAPI spec with problems" although the user loaded no spec (`JsonSchemaResponseSynthesizer` wraps the schema in an OpenAPI document; `$schema`, `const` or a type list trigger it, once per schema every 30 minutes) | (iv) | Response path, cached | S | Suppress or reword the WARN for synthesizer-wrapped schemas | P3 |
 | B1b | `diagnose_config` reports only values and sources → once A7 lands, append its `unrecognisedConfiguration()` result (names, setAs, suggestions, systemPropertyOnly; names only, never values), add the defaults comparison from A11, and replace the tool's local `normalisedPropertyName` with core's public `suggestRecognisedKeys` / name normaliser | (iii) | On demand; one pass over the recognised keys | S | Must never echo the value of an unrecognised key, which may be a credential | P1 |
 | B1c | Diagnosis tools still missing from MCP → add `explain_forward_failure` when A4 lands, `test_template` with A5, `lint_expectations` with A8 and `suggest_expectation_fix` with B3; each in `READING_TOOLS`, delegating to the item's endpoint, with redacted output | (iii) | On demand; the item's own cost | S | Tool output carries user traffic: redact as the endpoint does | P1 |
+| B7 | `prompts/get` with a required argument missing returns the template with its literal `{{placeholder}}` (pinned by `McpPromptRegistryTest.shouldLeavePlaceholdersWhenArgumentsMissing`) → answer `INVALID_PARAMS` (-32602) naming the argument, as the MCP prompts spec expects, in `McpRequestProcessor.handlePromptsGet` | (iii) | Control plane only | S | A client relying on the placeholder text breaks: give it a changelog Changed entry and update the consumer page's `prompts/get` row | P3 |
 
 ## Approach to LLM features
 
@@ -113,8 +115,8 @@ run.
 1. **Wave 0 — hygiene and performance:** A2, C1.
 2. **Wave 1 — explain engine:** done (A3, A10 and B1 landed).
 3. **Wave 2 — failure classes:** A4, A5, A6, each with an MCP tool (see B1b and B1c) and a dashboard entry.
-4. **Wave 3 — fixes:** A8 (including the CLI), B3, B2, A9b.
-5. **Wave 4 — optional:** B5, B6, A11.
+4. **Wave 3 — fixes:** A8 (including the CLI), B3, A9b. (B2 landed.)
+5. **Wave 4 — optional:** B5, B7, A11. (B6 landed.)
 
 ## Performance rules for every item
 

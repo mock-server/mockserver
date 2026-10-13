@@ -136,6 +136,8 @@ agent = create_react_agent(model, tools=tools)</code></pre>
 
 <p>Here are practical prompts you can use with your AI assistant for common debugging tasks:</p>
 
+<p>MockServer also ships ready-made MCP prompts for the commonest failures: <code>why_did_verify_fail</code>, <code>fix_my_expectation</code>, <code>why_forward_failed</code> and <code>debug_unmatched_request</code>. Each tells your assistant which tools to call and asks it to keep the facts MockServer reported apart from its own interpretation. See <a href="/mock_server/ai_mcp_tools.html#mcp_prompts">MCP prompts</a>.</p>
+
 <h3>"Why is my API call returning 500?"</h3>
 
 <p>The assistant will:</p>

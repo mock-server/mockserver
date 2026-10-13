@@ -632,14 +632,14 @@ public class McpToolRegistryTest {
 
     @Test
     public void shouldNotExposeExceptionDetailsInErrorMessages() {
-        // raw_expectation with invalid JSON should return a generic error, not expose internals
+        // raw_expectation with invalid JSON should say what shape is expected, not expose internals
         ObjectNode params = objectMapper.createObjectNode();
         params.put("expectation", "not valid json");
 
         JsonNode result = toolRegistry.callTool("raw_expectation", params);
         assertThat(result.path("error").asBoolean(), is(true));
         String message = result.path("message").asText();
-        assertThat(message, is("Failed to create raw expectation"));
+        assertThat(message, startsWith("'expectation' must be a JSON object in MockServer expectation format"));
         // Should NOT contain any Java exception class names or stack trace details
         assertThat(message, not(containsString("Exception")));
         assertThat(message, not(containsString("at org.")));
