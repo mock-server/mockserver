@@ -214,6 +214,7 @@ curl_close($ch);</code></pre>
     <li><a href="#templates_from_files"><strong>Loading Templates From Files</strong></a> &mdash; reference a template stored in a separate file with <code>templateFile</code></li>
     <li><a href="#templating_a_response_body_file"><strong>Templating A Response Body File</strong></a> &mdash; render a <code>FILE</code> response body as a template with <code>templateType</code></li>
     <li><a href="#response_template_testing"><strong>Response Template Testing</strong></a> &mdash; test templates locally using <code>ResponseTemplateTester</code></li>
+    <li><a href="#template_dry_run"><strong>Template Dry Run</strong></a> &mdash; render a template against a sample request on a running MockServer with <code>PUT /mockserver/template/test</code>, and find where a template fails</li>
     <li><a href="#request_model_variables"><strong>Request Model Variables</strong></a> &mdash; access request fields (method, path, headers, body, etc.) in templates</li>
     <li><a href="#request_multi_value_maps"><strong>Multi-Value And Single Value Maps</strong></a> &mdash; access headers, parameters, and cookies by key, entry set, values, or key set</li>
     <li><a href="#dynamic_model_variables"><strong>Dynamic Model Variables</strong></a> &mdash; timestamps, UUIDs, random integers, and random bytes</li>
@@ -291,6 +292,11 @@ curl_close($ch);</code></pre>
             <td>Template Testing</td>
             <td>Test templates locally with <code>ResponseTemplateTester</code></td>
             <td><a href="#response_template_testing">Response Template Testing</a></td>
+        </tr>
+        <tr>
+            <td>Template Dry Run</td>
+            <td>Render a template against a sample request on a running MockServer, with the line and column of any failure</td>
+            <td><a href="#template_dry_run">Template Dry Run</a></td>
         </tr>
         <tr>
             <td colspan="3"><strong>Request Variables</strong></td>
@@ -514,6 +520,62 @@ HttpResponse httpResponse = ResponseTemplateTester.testJavaScriptTemplate(templa
 
 // result
 System.out.println("httpResponse = " + httpResponse);</code></pre>
+
+<a id="template_dry_run" class="anchor" href="#template_dry_run">&nbsp;</a>
+
+<h2>Template Dry Run</h2>
+
+<p>To check a template without creating an expectation, send it to a running MockServer with <code>PUT /mockserver/template/test</code>. MockServer renders it against a sample request, with the same template engines, security settings and JavaScript timeout it uses when serving, and tells you what it rendered or why it failed.</p>
+
+<pre class="prettyprint code"><code class="code">curl -X PUT http://localhost:1080/mockserver/template/test -d '{
+    "templateType": "VELOCITY",
+    "template": "{\n  \"statusCode\": 200,\n  \"body\": \"hello $request.queryStringParameters[\u0027name\u0027][0] from $request.heders\"\n}",
+    "request": {
+        "method": "GET",
+        "path": "/hello",
+        "queryStringParameters": { "name": [ "world" ] }
+    }
+}'</code></pre>
+
+<p>The body takes:</p>
+<ul>
+    <li><code>templateType</code> &mdash; <code>VELOCITY</code>, <code>MUSTACHE</code> or <code>JAVASCRIPT</code></li>
+    <li><code>template</code> &mdash; the template, exactly as it would appear in an <code>httpResponseTemplate</code> or <code>httpForwardTemplate</code></li>
+    <li><code>actionType</code> &mdash; optional: <code>RESPONSE_TEMPLATE</code> (the default) for a response template, or <code>FORWARD_TEMPLATE</code> for a template that builds the request to forward</li>
+    <li><code>request</code> &mdash; optional: the sample request, in the same format as an expectation's <code>httpRequest</code>; without it the template sees <code>GET /</code></li>
+</ul>
+
+<p>The response says whether the template rendered a usable response, and why not if it did not:</p>
+
+<pre class="prettyprint code"><code class="code">{
+  "templateType" : "VELOCITY",
+  "actionType" : "RESPONSE_TEMPLATE",
+  "durationMillis" : 3,
+  "valid" : true,
+  "renderedResponse" : {
+    "statusCode" : 200,
+    "body" : "hello world from $request.heders"
+  },
+  "warnings" : [ {
+    "message" : "$request.heders did not resolve, so it was rendered as written (write $!{...} where a missing value should render nothing)",
+    "line" : 3,
+    "column" : 65
+  } ]
+}</code></pre>
+
+<ul>
+    <li><code>valid</code> &mdash; <code>true</code> when the template rendered a valid response (or request, for a forward template); when serving, MockServer answers an invalid response template with a 404 and an invalid forward template with a 502</li>
+    <li><code>renderedResponse</code> or <code>renderedRequest</code> &mdash; what the template rendered</li>
+    <li><code>renderedOutput</code> &mdash; the raw rendered text, when it is not a valid response or request; <code>error.validationErrors</code> then says what is wrong with it</li>
+    <li><code>error</code> &mdash; why the template failed: the engine's <code>message</code>, the template <code>line</code> and <code>column</code> where the engine reports them (Mustache reports a line only), and a <code>hint</code> for common mistakes such as an undefined JavaScript variable or a field read from a header the request does not have</li>
+    <li><code>warnings</code> &mdash; things that did not fail the template but are probably mistakes: a Velocity reference that did not resolve and was rendered as written, or a <code>scenario.set(...)</code> call, which a dry run reports instead of applying</li>
+    <li><code>timedOut</code> &mdash; <code>true</code> when the template ran too long</li>
+    <li>a field ending in <code>Truncated</code>, such as <code>messageTruncated</code> &mdash; <code>true</code> when that text was cut short: messages are kept to 8&nbsp;KB, warnings to 1&nbsp;KB and rendered output to 64&nbsp;KB</li>
+</ul>
+
+<p>A dry run does not change scenario state and does not appear in the event log or dashboard. A JavaScript template is stopped after <a href="configuration_properties.html">javascriptTemplateExecutionTimeout</a>, and after 5 seconds even when that is <code>0</code>. Velocity and Mustache templates cannot be stopped, so MockServer answers once the timeout plus a few seconds' grace has passed, and at most two dry runs run at once: a third gets a <code>429</code> until one finishes. When <a href="control_plane_authorisation.html">control plane authorisation</a> is on, a dry run needs the <strong>mutate</strong> role, because it runs the template you send.</p>
+
+<p>When a template fails while serving, the same position appears in the log: Velocity and Mustache messages already give the line (Velocity as <code>[line 3, column 7]</code>, Mustache as <code>@ line 4</code>), and a JavaScript failure adds <code>at template line 2, column 29</code>, counted from the first line of your template, followed by a hint when one applies.</p>
 
 <a id="request_model_variables" class="anchor" href="#request_model_variables">&nbsp;</a>
 

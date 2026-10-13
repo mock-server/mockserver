@@ -6,6 +6,11 @@ import com.google.common.base.Splitter;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.app.event.EventCartridge;
+import org.apache.velocity.app.event.InvalidReferenceEventHandler;
+import org.apache.velocity.context.Context;
+import org.apache.velocity.exception.ExtendedParseException;
+import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.runtime.RuntimeConstants;
 import org.apache.velocity.runtime.resource.loader.StringResourceLoader;
 import org.apache.velocity.runtime.resource.util.StringResourceRepository;
@@ -13,6 +18,7 @@ import org.apache.velocity.tools.ToolManager;
 import org.apache.velocity.tools.config.ToolConfiguration;
 import org.apache.velocity.tools.config.ToolboxConfiguration;
 import org.apache.velocity.tools.config.XmlFactoryConfiguration;
+import org.apache.velocity.util.introspection.Info;
 import org.apache.velocity.util.introspection.SecureUberspector;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
@@ -22,7 +28,9 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.DTO;
 import org.mockserver.templates.engine.TemplateEngine;
+import org.mockserver.templates.engine.TemplateEvaluationException;
 import org.mockserver.templates.engine.TemplateFunctions;
+import org.mockserver.templates.engine.TemplateWarning;
 import org.mockserver.templates.engine.helpers.RequestBodyExtractionHelper;
 import org.mockserver.templates.engine.model.HttpRequestTemplateObject;
 import org.mockserver.templates.engine.model.HttpResponseTemplateObject;
@@ -38,9 +46,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.log.model.LogEntry.LogMessageType.TEMPLATE_GENERATED;
 import static org.mockserver.log.model.LogEntryMessages.TEMPLATE_GENERATED_MESSAGE_FORMAT;
 
@@ -413,12 +421,20 @@ public class VelocityTemplateEngine implements TemplateEngine {
 
     @Override
     public <T> T executeTemplate(String template, HttpRequest request, Class<? extends DTO<T>> dtoClass) {
-        return executeTemplateInternal(template, request, null, dtoClass);
+        return executeTemplateInternal(template, request, null, dtoClass, null);
     }
 
     @Override
     public <T> T executeTemplate(String template, HttpRequest request, HttpResponse response, Class<? extends DTO<T>> dtoClass) {
-        return executeTemplateInternal(template, request, response, dtoClass);
+        return executeTemplateInternal(template, request, response, dtoClass, null);
+    }
+
+    /**
+     * As {@link #executeTemplate(String, HttpRequest, Class)}, also reporting each reference that did not
+     * resolve (and so was rendered as written) to {@code unresolvedReferences}. Used by the template dry run.
+     */
+    public <T> T executeTemplate(String template, HttpRequest request, Class<? extends DTO<T>> dtoClass, Consumer<TemplateWarning> unresolvedReferences) {
+        return executeTemplateInternal(template, request, null, dtoClass, unresolvedReferences);
     }
 
     @Override
@@ -444,11 +460,11 @@ public class VelocityTemplateEngine implements TemplateEngine {
             renderTemplate(holder, template, context, writer);
             return writer.toString();
         } catch (Exception e) {
-            throw new RuntimeException(formatLogMessage("Exception:{}transforming template:{}for request:{}", isNotBlank(e.getMessage()) ? e.getMessage() : e.getClass().getSimpleName(), template, request), e);
+            throw transformFailure(e, template, request);
         }
     }
 
-    private <T> T executeTemplateInternal(String template, HttpRequest request, HttpResponse response, Class<? extends DTO<T>> dtoClass) {
+    private <T> T executeTemplateInternal(String template, HttpRequest request, HttpResponse response, Class<? extends DTO<T>> dtoClass, Consumer<TemplateWarning> unresolvedReferences) {
         T result;
         try {
             validateTemplate(template);
@@ -459,6 +475,9 @@ public class VelocityTemplateEngine implements TemplateEngine {
             VelocityContext context = newRenderContext(holder, request);
             if (response != null) {
                 context.put("response", new HttpResponseTemplateObject(response));
+            }
+            if (unresolvedReferences != null) {
+                reportUnresolvedReferences(unresolvedReferences).attachToContext(context);
             }
             RequestBodyExtractionHelper bodyExtractionHelper = new RequestBodyExtractionHelper(request, mockServerLogger);
             context.put("jsonPath", new RequestBodyExtractionHelper.JsonPathTool(bodyExtractionHelper));
@@ -490,7 +509,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
             }
             result = httpTemplateOutputDeserializer.deserializer(request, writer.toString(), dtoClass);
         } catch (Exception e) {
-            throw new RuntimeException(formatLogMessage("Exception:{}transforming template:{}for request:{}", isNotBlank(e.getMessage()) ? e.getMessage() : e.getClass().getSimpleName(), template, request), e);
+            throw transformFailure(e, template, request);
         }
         return result;
     }
@@ -515,6 +534,66 @@ public class VelocityTemplateEngine implements TemplateEngine {
         VelocityContext context = new VelocityContext(functionsLayer);
         context.put("request", new HttpRequestTemplateObject(request));
         return context;
+    }
+
+    /**
+     * Velocity's parse and invocation exceptions carry the template line and column, and its messages
+     * already state them, so the location is only attached to the exception, not appended.
+     */
+    static TemplateEvaluationException transformFailure(Exception failure, String template, HttpRequest request) {
+        Integer line = null;
+        Integer column = null;
+        Throwable cause = failure;
+        for (int depth = 0; cause != null && depth < 10 && line == null; depth++, cause = cause.getCause()) {
+            int lineNumber = -1;
+            int columnNumber = -1;
+            if (cause instanceof ParseErrorException parseError) {
+                lineNumber = parseError.getLineNumber();
+                columnNumber = parseError.getColumnNumber();
+            } else if (cause instanceof ExtendedParseException located) {
+                lineNumber = located.getLineNumber();
+                columnNumber = located.getColumnNumber();
+            }
+            if (lineNumber > 0) {
+                line = lineNumber;
+                column = columnNumber > 0 ? columnNumber : null;
+            }
+        }
+        return TemplateEvaluationException.transformFailure(failure, template, request, line, column, null, false);
+    }
+
+    private static final String RENDERED_AS_WRITTEN = " did not resolve, so it was rendered as written (write $!{...} where a missing value should render nothing)";
+
+    private static EventCartridge reportUnresolvedReferences(Consumer<TemplateWarning> unresolvedReferences) {
+        EventCartridge eventCartridge = new EventCartridge();
+        eventCartridge.addEventHandler(new InvalidReferenceEventHandler() {
+            @Override
+            public Object invalidGetMethod(Context context, String reference, Object object, String property, Info info) {
+                report(reference + RENDERED_AS_WRITTEN, info);
+                return null;
+            }
+
+            @Override
+            public boolean invalidSetMethod(Context context, String leftReference, String rightReference, Info info) {
+                report(rightReference + " did not resolve, so " + leftReference + " was not set", info);
+                return false;
+            }
+
+            @Override
+            public Object invalidMethod(Context context, String reference, Object object, String method, Info info) {
+                report(reference + RENDERED_AS_WRITTEN, info);
+                return null;
+            }
+
+            private void report(String message, Info info) {
+                unresolvedReferences.accept(new TemplateWarning(
+                    message,
+                    info != null && info.getLine() > 0 ? info.getLine() : null,
+                    info != null && info.getColumn() > 0 ? info.getColumn() : null
+                ));
+            }
+        });
+        return eventCartridge;
     }
 
     private void validateTemplate(String template) {

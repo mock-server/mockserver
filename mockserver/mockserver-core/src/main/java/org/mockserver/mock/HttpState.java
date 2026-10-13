@@ -1273,6 +1273,15 @@ public class HttpState {
 
     static final int EXPLAIN_REQUEST_EVALUATION_BUDGET = 500;
 
+    private org.mockserver.templates.TemplateDryRun templateDryRun;
+
+    private synchronized org.mockserver.templates.TemplateDryRun getTemplateDryRun() {
+        if (templateDryRun == null) {
+            templateDryRun = new org.mockserver.templates.TemplateDryRun(configuration);
+        }
+        return templateDryRun;
+    }
+
     private static final java.util.Set<LogEntry.LogMessageType> EXPLAINABLE_REQUEST_TYPES = java.util.EnumSet.of(
         LogEntry.LogMessageType.RECEIVED_REQUEST, LogEntry.LogMessageType.EXPECTATION_RESPONSE, LogEntry.LogMessageType.FORWARDED_REQUEST,
         LogEntry.LogMessageType.NO_MATCH_RESPONSE
@@ -3015,6 +3024,19 @@ public class HttpState {
 
                 if (controlPlaneRequestAuthenticated(request, responseWriter)) {
                     responseWriter.writeResponse(request, explain(request), true);
+                }
+                canHandle.complete(true);
+
+            } else if (request.matches("PUT", PATH_PREFIX + "/template/test")) {
+
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    // rendered on the dry run's own threads, never this one; join() is bounded by its deadline
+                    CompletableFuture<HttpResponse> dryRun = getTemplateDryRun().test(request);
+                    if (warDeployment) {
+                        responseWriter.writeResponse(request, dryRun.join(), true);
+                    } else {
+                        dryRun.thenAccept(dryRunResponse -> responseWriter.writeResponse(request, dryRunResponse, true));
+                    }
                 }
                 canHandle.complete(true);
 

@@ -2733,6 +2733,149 @@ paths:
               correlationId: 5f2c7a4e-8d43-4a7f-9a7e-3c1d2b0e6f11
         description: optional; the correlationId when it is not given as a query parameter
         required: false
+  /mockserver/template/test:
+    put:
+      tags:
+        - troubleshooting
+      summary: render a response or forward template against a sample request without creating an expectation
+      description: >-
+        Dry run of a Velocity, Mustache or JavaScript template. Renders the template against the sample request with
+        the same engines, sandbox settings and JavaScript timeout as serving, and reports the rendered response (or
+        request, for a forward template), or the failure with the template line and column where the engine reports
+        one and a hint for common mistakes. A Velocity reference that did not resolve, and a scenario.set call, are
+        reported as warnings; a dry run never changes scenario state and writes nothing to the event log. When
+        javascriptTemplateExecutionTimeout is 0 a dry run still stops a JavaScript template after 5 seconds. At most
+        two dry runs run at once and further calls get a 429; Velocity and Mustache templates cannot be cancelled,
+        so the response is written after the timeout plus a grace period even if the template is still running.
+        Running a template needs a role that may change expectations.
+      responses:
+        '200':
+          description: >-
+            the template was evaluated; valid says whether it rendered a usable response or request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  templateType:
+                    type: string
+                  actionType:
+                    type: string
+                  valid:
+                    type: boolean
+                    description: true when the template rendered a valid response (or request); serving an invalid response template answers 404, an invalid forward template 502
+                  durationMillis:
+                    type: integer
+                  renderedResponse:
+                    type: object
+                    description: the rendered response, for a valid RESPONSE_TEMPLATE
+                  renderedRequest:
+                    type: object
+                    description: the rendered request, for a valid FORWARD_TEMPLATE
+                  renderedOutput:
+                    type: string
+                    description: the raw rendered text, when it is not a valid response or request or is too large to return as an object
+                  renderedOutputTruncated:
+                    type: boolean
+                    description: true when renderedOutput was cut to its first 65536 characters
+                  timedOut:
+                    type: boolean
+                  error:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      line:
+                        type: integer
+                        description: 1-based template line of the failure, when the engine reports one
+                      column:
+                        type: integer
+                        description: 1-based template column of the failure, when the engine reports one
+                      messageTruncated:
+                        type: boolean
+                        description: true when message was cut to its first 8192 characters
+                      hint:
+                        type: string
+                      hintTruncated:
+                        type: boolean
+                        description: true when hint was cut to its first 8192 characters
+                      validationErrors:
+                        type: string
+                        description: why the rendered output is not a valid response or request
+                      validationErrorsTruncated:
+                        type: boolean
+                        description: true when validationErrors was cut to its first 8192 characters
+                  warnings:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        message:
+                          type: string
+                        messageTruncated:
+                          type: boolean
+                          description: true when message was cut to its first 1024 characters
+                        line:
+                          type: integer
+                        column:
+                          type: integer
+        '400':
+          description: the body is missing or invalid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '429':
+          description: the maximum number of dry runs are already running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - templateType
+                - template
+              properties:
+                templateType:
+                  type: string
+                  enum:
+                    - VELOCITY
+                    - MUSTACHE
+                    - JAVASCRIPT
+                template:
+                  type: string
+                  description: the template, as it would appear in an httpResponseTemplate or httpForwardTemplate
+                actionType:
+                  type: string
+                  enum:
+                    - RESPONSE_TEMPLATE
+                    - FORWARD_TEMPLATE
+                  default: RESPONSE_TEMPLATE
+                  description: whether the template renders a response or the request to forward
+                request:
+                  $ref: '#/components/schemas/HttpRequest'
+            example:
+              templateType: VELOCITY
+              template: "{ \"statusCode\": 200, \"body\": \"hello $request.queryStringParameters['name'][0]\" }"
+              request:
+                method: GET
+                path: /hello
+                queryStringParameters:
+                  name:
+                    - world
+        description: the template to render and an optional sample request (default GET /)
+        required: true
   /mockserver/debugMismatch:
     put:
       tags:

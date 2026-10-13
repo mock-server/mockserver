@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Splitter;
 import com.samskivert.mustache.Mustache;
+import com.samskivert.mustache.MustacheException;
+import com.samskivert.mustache.MustacheParseException;
 import com.samskivert.mustache.Template;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
@@ -13,6 +15,7 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.DTO;
 import org.mockserver.templates.engine.TemplateEngine;
+import org.mockserver.templates.engine.TemplateEvaluationException;
 import org.mockserver.templates.engine.TemplateFunctions;
 import org.mockserver.templates.engine.helpers.RequestBodyExtractionHelper;
 import org.mockserver.templates.engine.helpers.ScenarioTemplateHelper;
@@ -30,9 +33,10 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.log.model.LogEntry.LogMessageType.TEMPLATE_GENERATED;
 import static org.mockserver.log.model.LogEntryMessages.TEMPLATE_GENERATED_MESSAGE_FORMAT;
 
@@ -169,7 +173,7 @@ public class MustacheTemplateEngine implements TemplateEngine {
             compiledTemplate.execute(data, writer);
             return writer.toString();
         } catch (Exception e) {
-            throw new RuntimeException(formatLogMessage("Exception:{}transforming template:{}for request:{}", isNotBlank(e.getMessage()) ? e.getMessage() : e.getClass().getSimpleName(), template, request), e);
+            throw transformFailure(e, template, request);
         }
     }
 
@@ -207,9 +211,32 @@ public class MustacheTemplateEngine implements TemplateEngine {
             }
             result = httpTemplateOutputDeserializer.deserializer(request, writer.toString(), dtoClass);
         } catch (Exception e) {
-            throw new RuntimeException(formatLogMessage("Exception:{}transforming template:{}for request:{}", isNotBlank(e.getMessage()) ? e.getMessage() : e.getClass().getSimpleName(), template, request), e);
+            throw transformFailure(e, template, request);
         }
         return result;
+    }
+
+    // jmustache appends " @ line N" to a parse error's message rather than exposing the line
+    private static final Pattern PARSE_ERROR_LINE = Pattern.compile(" @ line (\\d{1,9})$");
+
+    /**
+     * jmustache reports a line, never a column, and already states it in its message, so the line is only
+     * attached to the exception, not appended.
+     */
+    static TemplateEvaluationException transformFailure(Exception failure, String template, HttpRequest request) {
+        Integer line = null;
+        Throwable cause = failure;
+        for (int depth = 0; cause != null && depth < 10 && line == null; depth++, cause = cause.getCause()) {
+            if (cause instanceof MustacheException.Context context && context.lineNo > 0) {
+                line = context.lineNo;
+            } else if (cause instanceof MustacheParseException && cause.getMessage() != null) {
+                Matcher matcher = PARSE_ERROR_LINE.matcher(cause.getMessage());
+                if (matcher.find()) {
+                    line = Integer.parseInt(matcher.group(1));
+                }
+            }
+        }
+        return TemplateEvaluationException.transformFailure(failure, template, request, line, null, null, false);
     }
 
     private void validateTemplate(String template) {

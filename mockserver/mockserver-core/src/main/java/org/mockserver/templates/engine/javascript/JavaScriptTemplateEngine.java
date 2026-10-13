@@ -10,17 +10,19 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.DTO;
 import org.mockserver.templates.engine.TemplateEngine;
+import org.mockserver.templates.engine.TemplateEvaluationException;
 import org.mockserver.templates.engine.serializer.HttpTemplateOutputDeserializer;
 import org.slf4j.event.Level;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.StreamSupport;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.Configuration.configuration;
-import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.formatting.StringFormatter.indentAndToString;
 
 /**
@@ -60,6 +62,11 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
     private final Configuration configuration;
     private final Predicate<String> classFilter;
     private final boolean polyglotAvailable;
+    // the timeout applied when javascriptTemplateExecutionTimeout is 0 (disabled): none for a serving
+    // engine, a fixed bound for the dry-run engine so a dry run can never run unbounded
+    private final long timeoutWhenDisabledMillis;
+    // false for the dry-run engine, so one-off dry-run scripts cannot fill the shared parsed-source cache
+    private final boolean cacheParsedSources;
     // distinct class names already logged as refused; bounded by MAX_REFUSED_CLASSES_LOGGED
     private final Set<String> refusedClassesLogged = ConcurrentHashMap.newKeySet();
     // Per-engine seeded faker when templateFakerSeed is non-zero, else null (the shared unseeded faker
@@ -76,6 +83,12 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
      * constructor, which pins {@code polyglotAvailable} to the real classpath probe {@link #POLYGLOT_AVAILABLE}.
      */
     JavaScriptTemplateEngine(MockServerLogger mockServerLogger, Configuration configuration, boolean polyglotAvailable) {
+        this(mockServerLogger, configuration, polyglotAvailable, 0L, true);
+    }
+
+    private JavaScriptTemplateEngine(MockServerLogger mockServerLogger, Configuration configuration, boolean polyglotAvailable, long timeoutWhenDisabledMillis, boolean cacheParsedSources) {
+        this.timeoutWhenDisabledMillis = timeoutWhenDisabledMillis;
+        this.cacheParsedSources = cacheParsedSources;
         this.polyglotAvailable = polyglotAvailable;
         this.configuration = (configuration == null) ? configuration() : configuration;
         this.mockServerLogger = mockServerLogger;
@@ -131,6 +144,23 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
                 .setLogLevel(Level.WARN)
                 .setMessageFormat("JavaScript template was refused access to Java class \"" + className + "\". JavaScript templates cannot resolve Java classes unless they are explicitly allowed; add the class (or a package prefix such as \"java.time.*\") to mockserver.javascriptAllowedClasses if this template legitimately needs it.")
         );
+    }
+
+    /**
+     * An engine for the template dry run: identical to a serving engine, except that when
+     * {@code javascriptTemplateExecutionTimeout} is 0 (disabled) it still cancels a template after
+     * {@code timeoutWhenDisabledMillis}, and it does not cache the scripts it parses.
+     */
+    public static JavaScriptTemplateEngine forDryRun(MockServerLogger mockServerLogger, Configuration configuration, long timeoutWhenDisabledMillis) {
+        return new JavaScriptTemplateEngine(mockServerLogger, configuration, POLYGLOT_AVAILABLE, timeoutWhenDisabledMillis, false);
+    }
+
+    /**
+     * @return the timeout this engine applies to one evaluation in milliseconds, or 0 for none
+     */
+    public long executionTimeoutMillis() {
+        Long configured = configuration.javascriptTemplateExecutionTimeout();
+        return configured != null && configured > 0 ? configured : timeoutWhenDisabledMillis;
     }
 
     public static boolean isPolyglotAvailable() {
@@ -253,7 +283,6 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
         String script = wrapTemplate(template);
         try {
             validateTemplate(template);
-            Long executionTimeout = configuration.javascriptTemplateExecutionTimeout();
             // rawText=true: the template's handle(request) return value is coerced to text (a string is
             // used verbatim, any other value is JSON.stringify'd) rather than deserialised into a response.
             return PolyglotRunner.run(
@@ -267,14 +296,15 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
                 mockServerLogger,
                 httpTemplateOutputDeserializer,
                 null,
-                executionTimeout == null ? 0L : executionTimeout,
+                executionTimeoutMillis(),
                 true,
-                seededFaker
+                seededFaker,
+                cacheParsedSources
             );
         } catch (JavaScriptTemplateTimeoutException e) {
-            throw e;
+            throw explainDryRunTimeout(e);
         } catch (Exception e) {
-            throw new RuntimeException(formatLogMessage("Exception:{}transforming template:{}for request:{}", isNotBlank(e.getMessage()) ? e.getMessage() : e.getClass().getSimpleName(), template, request), e);
+            throw transformFailure(e, template, request);
         }
     }
 
@@ -309,7 +339,6 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
             // org.graalvm.polyglot.* references inside PolyglotRunner when this branch is
             // reached, so the standard distribution (no GraalVM on classpath) never triggers a
             // NoClassDefFoundError — that case is handled by the fail-loud guard above.
-            Long executionTimeout = configuration.javascriptTemplateExecutionTimeout();
             return PolyglotRunner.run(
                 script,
                 includeResponse,
@@ -321,17 +350,65 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
                 mockServerLogger,
                 httpTemplateOutputDeserializer,
                 dtoClass,
-                executionTimeout == null ? 0L : executionTimeout,
+                executionTimeoutMillis(),
                 false,
-                seededFaker
+                seededFaker,
+                cacheParsedSources
             );
         } catch (JavaScriptTemplateTimeoutException e) {
             // Surface the timeout as-is (with its clear, already-logged message) rather than wrapping
             // it in the generic transform-failure message, so callers/tests can recognise the cap firing.
-            throw e;
+            throw explainDryRunTimeout(e);
         } catch (Exception e) {
-            throw new RuntimeException(formatLogMessage("Exception:{}transforming template:{}for request:{}", isNotBlank(e.getMessage()) ? e.getMessage() : e.getClass().getSimpleName(), template, request), e);
+            throw transformFailure(e, template, request);
         }
+    }
+
+    /**
+     * The serving timeout message advises setting the timeout to 0 to disable it; when it already is 0 the
+     * cancellation came from the dry-run bound, so say that instead.
+     */
+    private JavaScriptTemplateTimeoutException explainDryRunTimeout(JavaScriptTemplateTimeoutException timeout) {
+        Long configured = configuration.javascriptTemplateExecutionTimeout();
+        if (timeoutWhenDisabledMillis > 0 && (configured == null || configured <= 0)) {
+            return new JavaScriptTemplateTimeoutException("JavaScript template execution exceeded " + timeoutWhenDisabledMillis
+                + "ms and was cancelled; mockserver.javascriptTemplateExecutionTimeout is 0, so serving does not time out, but a dry run always stops a JavaScript template after "
+                + timeoutWhenDisabledMillis + "ms", timeout.getCause());
+        }
+        return timeout;
+    }
+
+    private static final Pattern NOT_DEFINED = Pattern.compile("ReferenceError: ([\\p{L}\\p{N}_$]{1,200}) is not defined");
+
+    /**
+     * GraalJS reports positions in the wrapped script, so the template line and column are appended to its
+     * message, with a hint for the commonest mistakes.
+     */
+    private static TemplateEvaluationException transformFailure(Exception failure, String template, HttpRequest request) {
+        PolyglotRunner.TemplateLocation location = raisedByGraalJs(failure) ? PolyglotRunner.templateLocation(failure, template) : null;
+        String message = failure.getMessage() == null ? "" : failure.getMessage();
+        String hint = null;
+        Matcher notDefined = NOT_DEFINED.matcher(message);
+        if (notDefined.find()) {
+            hint = notDefined.group(1) + " is not defined: a template can use request, the built-in functions and helpers, and the variables it declares";
+        } else if (message.contains("TypeError: Cannot read propert")) {
+            hint = "the template read a field of undefined or null: the request may not have that header, parameter or body field, so check it exists before reading it";
+        } else if (location != null && location.syntaxErrorAfterTemplate()) {
+            hint = "the error is after the template's last line, so a bracket, brace, parenthesis or quote is probably not closed";
+        }
+        return TemplateEvaluationException.transformFailure(failure, template, request,
+            location == null ? null : location.line(), location == null ? null : location.column(), hint, true);
+    }
+
+    // checked by name so a failure raised before GraalJS ran never loads PolyglotRunner
+    private static boolean raisedByGraalJs(Throwable failure) {
+        Throwable cause = failure;
+        for (int depth = 0; cause != null && depth < 10; depth++, cause = cause.getCause()) {
+            if ("org.graalvm.polyglot.PolyglotException".equals(cause.getClass().getName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     static String wrapTemplate(String template) {

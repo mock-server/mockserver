@@ -7,6 +7,7 @@ import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Source;
+import org.graalvm.polyglot.SourceSection;
 import org.graalvm.polyglot.Value;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -138,6 +139,67 @@ final class PolyglotRunner {
         return created;
     }
 
+    static boolean sourceCacheContains(String scriptFragment) {
+        return SOURCE_CACHE.keySet().stream().anyMatch(script -> script.contains(scriptFragment));
+    }
+
+    static boolean sourceCacheIsFull() {
+        return SOURCE_CACHE.size() >= MAX_CACHED_SOURCES;
+    }
+
+    // JavaScriptTemplateEngine.wrapTemplate puts the template's first line on the script's third line,
+    // indented by two spaces
+    private static final int TEMPLATE_FIRST_SCRIPT_LINE = 3;
+    private static final int TEMPLATE_INDENT = 2;
+
+    /**
+     * Where a failed evaluation went wrong, in template coordinates: {@code line} and {@code column} are
+     * null when unknown, and {@code syntaxErrorAfterTemplate} is true for a syntax error the engine only
+     * detected after the template's last line, which usually means an unbalanced bracket or quote.
+     */
+    record TemplateLocation(Integer line, Integer column, boolean syntaxErrorAfterTemplate) {
+    }
+
+    static TemplateLocation templateLocation(Throwable failure, String template) {
+        Throwable cause = failure;
+        for (int depth = 0; cause != null && depth < 10; depth++, cause = cause.getCause()) {
+            if (cause instanceof PolyglotException polyglotException) {
+                SourceSection section = guestLocation(polyglotException);
+                if (section == null) {
+                    return null;
+                }
+                int line = section.getStartLine() - (TEMPLATE_FIRST_SCRIPT_LINE - 1);
+                if (line >= 1 && line <= lineCount(template)) {
+                    Integer column = section.hasColumns() ? Math.max(1, section.getStartColumn() - TEMPLATE_INDENT) : null;
+                    return new TemplateLocation(line, column, false);
+                }
+                return polyglotException.isSyntaxError() && line > lineCount(template) ? new TemplateLocation(null, null, true) : null;
+            }
+        }
+        return null;
+    }
+
+    private static SourceSection guestLocation(PolyglotException polyglotException) {
+        SourceSection section = polyglotException.getSourceLocation();
+        if (isTemplateSource(section)) {
+            return section;
+        }
+        for (PolyglotException.StackFrame frame : polyglotException.getPolyglotStackTrace()) {
+            if (frame.isGuestFrame() && isTemplateSource(frame.getSourceLocation())) {
+                return frame.getSourceLocation();
+            }
+        }
+        return null;
+    }
+
+    private static boolean isTemplateSource(SourceSection section) {
+        return section != null && section.isAvailable() && section.hasLines() && section.getSource() != null && !section.getSource().isInternal();
+    }
+
+    private static int lineCount(String template) {
+        return template == null ? 0 : template.split("\r\n|\r|\n", -1).length;
+    }
+
     static <T> T run(
         String script,
         boolean includeResponse,
@@ -151,7 +213,8 @@ final class PolyglotRunner {
         Class<? extends DTO<T>> dtoClass,
         long executionTimeoutMillis,
         boolean rawText,
-        Object fakerOverride
+        Object fakerOverride,
+        boolean cacheSource
     ) {
         // rawText (streaming payload templating): coerce the handle(request) return value to text — a
         // returned string is emitted verbatim, any other value is JSON.stringify'd — instead of always
@@ -238,7 +301,7 @@ final class PolyglotRunner {
             try {
                 return evaluate(
                     script, fullScript, includeResponse, request, response, iteration,
-                    objectMapper, mockServerLogger, httpTemplateOutputDeserializer, dtoClass, context, rawText, fakerOverride
+                    objectMapper, mockServerLogger, httpTemplateOutputDeserializer, dtoClass, context, rawText, fakerOverride, cacheSource
                 );
             } catch (PolyglotException polyglotException) {
                 if (watchdogFired.get() && (polyglotException.isCancelled() || polyglotException.isInterrupted())) {
@@ -280,7 +343,8 @@ final class PolyglotRunner {
         Class<? extends DTO<T>> dtoClass,
         Context context,
         boolean rawText,
-        Object fakerOverride
+        Object fakerOverride,
+        boolean cacheSource
     ) {
         {
             // In GraalVM Polyglot, context.getBindings("js") returns the JavaScript global scope
@@ -322,7 +386,7 @@ final class PolyglotRunner {
 
             // Reuse the cached, already-parsed Source so the shared ENGINE serves its code cache instead of
             // re-parsing this script (the expensive, interpreter-only step) on every request.
-            Source source = sourceFor(fullScript);
+            Source source = cacheSource ? sourceFor(fullScript) : Source.create("js", fullScript);
             context.eval(source);
 
             Value serialiseFunc = jsBindings.getMember("serialise");

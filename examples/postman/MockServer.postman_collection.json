@@ -2522,6 +2522,39 @@
           }
         },
         {
+          "name": "render a response or forward template against a sample request without creating an expectation",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mockserver/template/test",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mockserver",
+                "template",
+                "test"
+              ]
+            },
+            "description": "Dry run of a Velocity, Mustache or JavaScript template. Renders the template against the sample request with the same engines, sandbox settings and JavaScript timeout as serving, and reports the rendered response (or request, for a forward template), or the failure with the template line and column where the engine reports one and a hint for common mistakes. A Velocity reference that did not resolve, and a scenario.set call, are reported as warnings; a dry run never changes scenario state and writes nothing to the event log. When javascriptTemplateExecutionTimeout is 0 a dry run still stops a JavaScript template after 5 seconds. At most two dry runs run at once and further calls get a 429; Velocity and Mustache templates cannot be cancelled, so the response is written after the timeout plus a grace period even if the template is still running. Running a template needs a role that may change expectations.\n\nthe template to render and an optional sample request (default GET /)\n\nFull API reference: https://www.mock-server.com/mock_server/mockserver_clients.html",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"templateType\": \"VELOCITY\",\n  \"template\": \"{ \\\"statusCode\\\": 200, \\\"body\\\": \\\"hello $request.queryStringParameters['name'][0]\\\" }\",\n  \"request\": {\n    \"method\": \"GET\",\n    \"path\": \"/hello\",\n    \"queryStringParameters\": {\n      \"name\": [\n        \"world\"\n      ]\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
           "name": "return per-expectation mismatch debug information for a request",
           "request": {
             "method": "PUT",

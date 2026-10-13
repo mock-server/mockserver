@@ -3,6 +3,9 @@ package org.mockserver.templates.engine.helpers;
 import org.mockserver.mock.CrossProtocolEventBus;
 import org.mockserver.mock.ScenarioManager;
 
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
+
 /**
  * Template helper that exposes scenario state (the WireMock "scenarios" pattern)
  * to response templates, so a value captured or derived in one request can drive
@@ -43,6 +46,27 @@ import org.mockserver.mock.ScenarioManager;
  */
 public class ScenarioTemplateHelper {
 
+    // set while the template dry run renders on this thread, so a set(...) is reported, not applied
+    private static final ThreadLocal<BiConsumer<String, String>> SUPPRESSED_SETS = new ThreadLocal<>();
+
+    /**
+     * Runs {@code render} with every {@code set(name, state)} made on this thread passed to
+     * {@code suppressedSets} instead of changing the live scenario state.
+     */
+    public static <T> T withoutStateChanges(BiConsumer<String, String> suppressedSets, Supplier<T> render) {
+        BiConsumer<String, String> previous = SUPPRESSED_SETS.get();
+        SUPPRESSED_SETS.set(suppressedSets);
+        try {
+            return render.get();
+        } finally {
+            if (previous == null) {
+                SUPPRESSED_SETS.remove();
+            } else {
+                SUPPRESSED_SETS.set(previous);
+            }
+        }
+    }
+
     /**
      * Resolves the live {@link ScenarioManager}, or {@code null} if no server
      * has been initialised yet.
@@ -76,6 +100,11 @@ public class ScenarioTemplateHelper {
      */
     public String set(String name, String state) {
         if (name != null && state != null) {
+            BiConsumer<String, String> suppressedSets = SUPPRESSED_SETS.get();
+            if (suppressedSets != null) {
+                suppressedSets.accept(name, state);
+                return "";
+            }
             ScenarioManager manager = scenarioManager();
             if (manager != null) {
                 manager.setState(name, state);
