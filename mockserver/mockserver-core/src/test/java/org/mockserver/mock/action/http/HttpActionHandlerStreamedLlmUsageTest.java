@@ -46,6 +46,7 @@ import java.io.ByteArrayOutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -532,6 +533,43 @@ public class HttpActionHandlerStreamedLlmUsageTest {
 
         assertTokens(singleGenAiSpan(), "aws.bedrock", "claude-sonnet-4-5-20250929", 25L, 15L);
         assertCost(Provider.BEDROCK, "claude-sonnet-4-5-20250929", 25, 15);
+    }
+
+    @Test
+    public void shouldCountABedrockInvokeWithResponseStreamOfAModelThatSendsNoUsageFromItsInvocationMetrics() {
+        byte[] stream = ProviderStreamFixtures.bedrockInvokeWithResponseStreamOfLlama();
+        forwardStream("bedrock-runtime.us-west-2.amazonaws.com", "/model/meta.llama3-70b-instruct-v1:0/invoke-with-response-stream",
+            "{\"prompt\":\"Hi\"}", stream);
+        forwardResponse("bedrock-runtime.us-west-2.amazonaws.com", "/model/meta.llama3-8b-instruct-v1:0/invoke-with-response-stream", "{\"prompt\":\"Hi\"}", response()
+            .withStatusCode(200)
+            .withHeader("Content-Type", "application/vnd.amazon.eventstream")
+            .withBody(stream)
+            .withDelay(milliseconds(0)));
+
+        List<SpanData> genAiSpans = genAiSpans();
+        assertThat(genAiSpans, hasSize(2));
+        assertTokens(genAiSpans.get(0), "aws.bedrock", "meta.llama3-70b-instruct-v1:0", 8L, 5L);
+        assertTokens(genAiSpans.get(1), "aws.bedrock", "meta.llama3-8b-instruct-v1:0", 8L, 5L);
+        assertThat(usageLogEntries(), is(empty()));
+    }
+
+    @Test
+    public void shouldSuggestIncludeUsageForABedrockOpenAiChatCompletionsStreamButNotForAnInvokeModelStream() {
+        forwardStream("bedrock-runtime.us-west-2.amazonaws.com", "/openai/v1/chat/completions",
+            "{\"model\":\"openai.gpt-oss-120b-1:0\",\"stream\":true,\"messages\":[]}", utf8(ProviderStreamFixtures.OPENAI_CHAT_WITHOUT_USAGE));
+        ByteArrayOutputStream noMetrics = new ByteArrayOutputStream();
+        ProviderStreamFixtures.writeEventStreamMessage(noMetrics, "chunk", "{\"bytes\":\"" + Base64.getEncoder().encodeToString(
+            utf8("{\"generation\":\"Hello\",\"prompt_token_count\":8,\"generation_token_count\":1,\"stop_reason\":null}")) + "\"}");
+        forwardStream("bedrock-runtime.us-west-2.amazonaws.com", "/model/meta.llama3-70b-instruct-v1:0/invoke-with-response-stream",
+            "{\"prompt\":\"Hi\"}", noMetrics.toByteArray());
+
+        List<LogEntry> logged = usageLogEntries();
+        assertThat(logged, hasSize(2));
+        assertThat(logged.get(0).getArguments()[0], is(Provider.BEDROCK));
+        assertThat(logged.get(0).getMessageFormat(), containsString("stream_options.include_usage"));
+        assertThat(Arrays.asList(logged.get(1).getArguments()), contains(Provider.BEDROCK, "meta.llama3-70b-instruct-v1:0"));
+        assertThat(logged.get(1).getMessageFormat(), containsString("no token usage in the streamed {} response for model {}"));
+        assertThat(logged.get(1).getMessageFormat(), not(containsString("include_usage")));
     }
 
     @Test

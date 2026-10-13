@@ -9,6 +9,7 @@ import org.mockserver.model.Usage;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Random;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -180,6 +181,35 @@ public class LlmStreamUsageScannerTest {
     public void shouldReadAnthropicEventsWrappedByBedrockInvokeWithResponseStream() {
         assertUsageHoweverChunked(Provider.BEDROCK, ProviderStreamFixtures.bedrockInvokeWithResponseStream(),
             expected(25, 15, 7, 3, null), "claude-sonnet-4-5-20250929", "end_turn");
+    }
+
+    @Test
+    public void shouldReadTheInvocationMetricsOfABedrockInvokeWithResponseStreamThatSendsNoUsage() {
+        assertUsageHoweverChunked(Provider.BEDROCK, ProviderStreamFixtures.bedrockInvokeWithResponseStreamOfLlama(),
+            expected(8, 5, null, null, null), null, null);
+    }
+
+    @Test
+    public void shouldPreferAnthropicUsageToTheInvocationMetricsOfTheSameBedrockStream() {
+        byte[] stream = ProviderStreamFixtures.bedrockInvokeWithResponseStreamAndInvocationMetrics();
+        assertThat("the fixture carries invocation metrics",
+            stream.length > ProviderStreamFixtures.bedrockInvokeWithResponseStream().length, is(true));
+
+        assertUsageHoweverChunked(Provider.BEDROCK, stream, expected(25, 15, 7, 3, null), "claude-sonnet-4-5-20250929", "end_turn");
+    }
+
+    @Test
+    public void shouldReadInvocationMetricsOnlyAtTheTopOfTheEventInsideABedrockChunk() {
+        String metrics = "\"amazon-bedrock-invocationMetrics\":{\"inputTokenCount\":9,\"outputTokenCount\":9}";
+        ByteArrayOutputStream outsideTheBytes = new ByteArrayOutputStream();
+        ProviderStreamFixtures.writeEventStreamMessage(outsideTheBytes, "chunk", "{" + metrics + "}");
+        ByteArrayOutputStream deeperInsideTheBytes = new ByteArrayOutputStream();
+        ProviderStreamFixtures.writeEventStreamMessage(deeperInsideTheBytes, "chunk", "{\"bytes\":\""
+            + Base64.getEncoder().encodeToString(utf8("{\"generation\":\"Hi\",\"tool\":{" + metrics + "}}")) + "\"}");
+
+        assertThat(scan(outsideTheBytes.toByteArray()).usage(), is(nullValue()));
+        assertThat(scan(deeperInsideTheBytes.toByteArray()).usage(), is(nullValue()));
+        assertThat(scan(utf8("data: {" + metrics + "}\n\n")).usage(), is(nullValue()));
     }
 
     @Test

@@ -4836,9 +4836,10 @@ public class HttpActionHandler {
         // an uncounted call is a hole in the budget, so it is a warning once a budget is set
         Level level = configuration.llmCostBudgetUsd() > 0 ? Level.WARN : Level.INFO;
         String path = forwardedRequest.getPath() != null ? forwardedRequest.getPath().getValue() : null;
-        // Azure serves the Responses API too, where usage is not opt-in
+        // Azure serves the Responses API too, where usage is not opt-in; Bedrock serves OpenAI Chat Completions
         boolean usageIsOptIn = provider == Provider.OPENAI
-            || (provider == Provider.AZURE_OPENAI && (path == null || !path.toLowerCase().contains("/responses")));
+            || (provider == Provider.AZURE_OPENAI && (path == null || !path.toLowerCase().contains("/responses")))
+            || (provider == Provider.BEDROCK && path != null && path.toLowerCase().endsWith("/chat/completions"));
         if (mockServerLogger.isEnabledForInstance(level)) {
             mockServerLogger.logEvent(
                 new LogEntry()

@@ -924,7 +924,8 @@ This release delivers a sustained performance and memory programme alongside dat
   trace spans.** This covers calls to Bedrock's OpenAI-compatible `/openai/v1/chat/completions`
   endpoint and to OpenAI-format models such as gpt-oss on InvokeModel. In 8.0.0 and earlier, the
   token counts these responses carry were not read. A stream from that endpoint is counted when the
-  request sets `stream_options.include_usage` to `true`. Like other non-Claude Bedrock models, these
+  request sets `stream_options.include_usage` to `true`, and the log line for a stream that is not
+  counted says to set it, as it does for OpenAI. Like other non-Claude Bedrock models, these
   models have no price, so they add no cost and do not count towards `llmCostBudgetUsd`.
 - **The MCP `create_expectation` tool keeps every value of a response header given as an array.** A header such as `"Set-Cookie": ["a=1", "b=2"]` used to be created with an empty value.
 - **Mocked `DEEPSEEK` chat completions now include `system_fingerprint` and `usage.prompt_tokens_details`, as DeepSeek's API does.** DeepSeek's API reference marks both as required, but in 8.0.0 and earlier a mocked response had no `system_fingerprint`, and had `prompt_tokens_details` only when the expectation set cached input tokens, so a client generated from DeepSeek's specification could reject it. A mocked response now carries a generated `fp_` fingerprint, which a stream repeats on every chunk, and every usage object, streamed or not, carries `prompt_tokens_details.cached_tokens`, equal to `prompt_cache_hit_tokens` (0 when no cached input tokens are set). Other providers are unchanged.
@@ -1695,8 +1696,9 @@ This release delivers a sustained performance and memory programme alongside dat
   now reads the usage each provider reports in its stream as the stream is relayed: the final usage
   chunk of OpenAI Chat Completions (and of Mistral, OpenRouter and Groq, which send it without being
   asked), `response.completed` for the OpenAI Responses API, `message_start` and `message_delta` for
-  Anthropic, `usageMetadata` for Gemini, the `metadata` event of Bedrock ConverseStream and the wrapped
-  events of InvokeModelWithResponseStream, and the `done` line of Ollama. The call is counted when its
+  Anthropic, `usageMetadata` for Gemini, the `metadata` event of Bedrock ConverseStream, the wrapped
+  events of InvokeModelWithResponseStream (or, for a model other than Claude, the token counts Bedrock
+  adds to the stream's last chunk), and the `done` line of Ollama. The call is counted when its
   stream ends, wherever in the stream the usage is and however long the stream. Nothing is estimated:
   a stream that reports no usage is not counted, and MockServer now logs that, at `WARN` when a budget
   is set and at most once a minute for each provider and model. OpenAI Chat Completions only reports
@@ -1704,8 +1706,7 @@ This release delivers a sustained performance and memory programme alongside dat
   `stream_options.include_usage` to `true`, so set it for those calls to count towards the budget. A
   stream cut off after Anthropic's `message_start` is counted with the tokens reported up to then.
   Calls through `proxyPassMappings` routes are still not counted, a proxied Bedrock Converse call is
-  counted in tokens but not in cost, and for Bedrock InvokeModelWithResponseStream only Anthropic
-  models are counted.
+  counted in tokens but not in cost.
 - **`httpLlmResponse` embedding mocks now return one vector per input, read each provider's own
   input field, and use each provider's real response shape.** Only a top-level `input` was read, so
   Gemini `content.parts[].text`, Bedrock Titan `inputText`, Bedrock Cohere `texts` and Ollama

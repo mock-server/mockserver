@@ -1346,9 +1346,9 @@ geminiLive()
             <td>Always sent by ConverseStream, for every model. The price comes from the model named in the request
                 path, including a cross-Region inference profile such as
                 <span class="inline_code">us.anthropic.claude-...</span>; only Anthropic Claude models have a price, so
-                other models are counted in tokens only. For InvokeModelWithResponseStream only Anthropic
-                models are counted; streams from other model families (Nova, Titan, Llama, Mistral) are
-                <strong>not counted</strong>. A stream from the OpenAI-compatible
+                other models are counted in tokens only. InvokeModelWithResponseStream is counted for other
+                model families too (Llama, Mistral, DeepSeek, gpt-oss), from the token counts Bedrock adds to
+                the stream's last chunk. A stream from the OpenAI-compatible
                 <span class="inline_code">/openai/v1/chat/completions</span> endpoint is counted like OpenAI's: set
                 <span class="inline_code">stream_options.include_usage</span> to <span class="inline_code">true</span>.</td>
         </tr>

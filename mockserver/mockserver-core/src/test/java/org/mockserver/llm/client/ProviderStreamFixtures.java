@@ -131,9 +131,40 @@ public final class ProviderStreamFixtures {
 
     /** Bedrock InvokeModelWithResponseStream: each message's payload wraps one Anthropic event as base64. */
     public static byte[] bedrockInvokeWithResponseStream() {
+        return bedrockChunks(anthropicEvents(ANTHROPIC_MESSAGES));
+    }
+
+    /**
+     * {@link #bedrockInvokeWithResponseStream()} with the {@code amazon-bedrock-invocationMetrics} that Bedrock adds to
+     * the last chunk, as langchain-aws reads it ({@code llms/bedrock.py}, {@code _get_invocation_metrics_chunk}).
+     */
+    public static byte[] bedrockInvokeWithResponseStreamAndInvocationMetrics() {
+        return bedrockChunks(anthropicEvents(ANTHROPIC_MESSAGES.replace("{\"type\":\"message_stop\"}",
+            "{\"type\":\"message_stop\",\"amazon-bedrock-invocationMetrics\":{\"inputTokenCount\":25,\"outputTokenCount\":15,\"invocationLatency\":623,\"firstByteLatency\":211}}")));
+    }
+
+    /**
+     * Bedrock InvokeModelWithResponseStream from a Llama model, whose chunks follow the Meta Llama model parameters
+     * page; only the last chunk's {@code amazon-bedrock-invocationMetrics} carries the whole call's counts: 8 in, 5 out.
+     */
+    public static byte[] bedrockInvokeWithResponseStreamOfLlama() {
+        return bedrockChunks(
+            "{\"generation\":\"Hello\",\"prompt_token_count\":8,\"generation_token_count\":1,\"stop_reason\":null}",
+            "{\"generation\":\" there\",\"prompt_token_count\":null,\"generation_token_count\":5,\"stop_reason\":\"stop\","
+                + "\"amazon-bedrock-invocationMetrics\":{\"inputTokenCount\":8,\"outputTokenCount\":5,\"invocationLatency\":300,\"firstByteLatency\":100}}");
+    }
+
+    private static String[] anthropicEvents(String serverSentEvents) {
+        String[] events = serverSentEvents.split("\n\n");
+        for (int i = 0; i < events.length; i++) {
+            events[i] = events[i].substring(events[i].indexOf("data: ") + "data: ".length());
+        }
+        return events;
+    }
+
+    private static byte[] bedrockChunks(String... events) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        for (String event : ANTHROPIC_MESSAGES.split("\n\n")) {
-            String json = event.substring(event.indexOf("data: ") + "data: ".length());
+        for (String json : events) {
             String base64 = Base64.getEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
             writeEventStreamMessage(stream, "chunk", "{\"bytes\":\"" + base64 + "\",\"p\":\"abcdefghijklmnopqrstuvwxyzABCDEFGH\"}");
         }

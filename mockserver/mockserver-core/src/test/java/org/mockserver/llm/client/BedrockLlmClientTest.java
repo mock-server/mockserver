@@ -1,5 +1,6 @@
 package org.mockserver.llm.client;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 import org.mockserver.llm.ParsedConversation;
 import org.mockserver.llm.ParsedMessage;
@@ -7,6 +8,7 @@ import org.mockserver.model.Completion;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.Provider;
+import org.mockserver.model.Usage;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -264,5 +266,15 @@ public class BedrockLlmClientTest {
         assertThat(completion.getText(), is("Hi"));
         assertThat(completion.getUsage().getInputTokens(), is(3));
         assertThat(completion.getUsage().getOutputTokens(), is(1));
+    }
+
+    // the field names langchain-aws reads (llms/bedrock.py, _get_invocation_metrics_chunk)
+    @Test
+    public void shouldMapTheInvocationMetricsOfAnInvokeModelWithResponseStreamStream() throws Exception {
+        Usage usage = new BedrockLlmClient().parseUsage(new ObjectMapper().readTree("{"
+            + "\"inputTokenCount\":12,\"outputTokenCount\":4,\"invocationLatency\":300,\"firstByteLatency\":100,"
+            + "\"cacheReadInputTokenCount\":6,\"cacheWriteInputTokenCount\":2}"));
+
+        assertThat(usage, is(Usage.usage().withInputTokens(12).withOutputTokens(4).withCachedInputTokens(6).withCacheCreationTokens(2)));
     }
 }

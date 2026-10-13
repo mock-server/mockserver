@@ -655,7 +655,7 @@ flowchart LR
 | Anthropic | `message.usage` on `message_start`, then cumulative `usage` on `message_delta` | anthropic-sdk-python `RawMessageStartEvent`, `MessageDeltaUsage` |
 | Gemini | `usageMetadata` on each chunk, the last one complete; as SSE with `alt=sse`, otherwise one JSON array | Gemini API reference (`UsageMetadata`); the JSON-array form against google-api-core `_rest_streaming_base.py`, which Google's REST clients use for `streamGenerateContent` |
 | Bedrock ConverseStream | `usage` on the `metadata` event of the AWS event stream | AWS API reference, ConverseStream |
-| Bedrock InvokeModelWithResponseStream | Anthropic events, each base64 in a `chunk` event's `bytes` | AWS API reference, InvokeModelWithResponseStream |
+| Bedrock InvokeModelWithResponseStream | each model event base64 in a `chunk` event's `bytes`. Anthropic `usage` is read when the events carry it; otherwise the `amazon-bedrock-invocationMetrics` object (`inputTokenCount`, `outputTokenCount`, `cacheReadInputTokenCount`, `cacheWriteInputTokenCount`) at the top of the last chunk's event (langchain-aws reads it for Anthropic, Meta, Mistral, DeepSeek, Qwen and OpenAI models) | AWS API reference, InvokeModelWithResponseStream; langchain-aws `llms/bedrock.py` (`_get_invocation_metrics_chunk`) |
 | Bedrock OpenAI Chat Completions (`/openai/v1/chat/completions`) | as OpenAI Chat Completions: `usage` (`prompt_tokens`, `completion_tokens`) on a final chunk, only with `stream_options.include_usage: true`; `BedrockLlmClient.parseUsage` maps it | AWS user guide, Invoke a model with the OpenAI Chat Completions API (OpenAI-compatible); openai-python `ChatCompletionChunk` |
 | Ollama | `prompt_eval_count` and `eval_count` on the `done: true` line of the NDJSON | Ollama `docs/api.md` |
 | Cohere v2 chat | `delta.usage` (`billed_units`, `tokens`) and `delta.finish_reason` on the `message-end` event; a v1 `stream-end` event's `response.meta` is two objects down, so a v1 stream is not counted | cohere-python `ChatMessageEndEvent`, `ChatMessageEndEventDelta`, `Usage` |
@@ -690,6 +690,7 @@ Everything it holds for the life of the stream is bounded, whatever the upstream
 | The value being captured | 8 KiB (`MAX_VALUE_BYTES`); a larger value is dropped, not truncated |
 | The field name being read | 32 bytes |
 | The merged usage | 32 fields (`MAX_USAGE_FIELDS`). A field already kept is replaced by a later event; a further new field is refused. Only whole-number counts are kept, directly or as an object of at most 16 of them (`MAX_USAGE_DETAIL_FIELDS`), under names of at most 64 characters: under 64 KiB as JSON. A count is read as `JsonNode.asInt()` reads it on the whole-response path: a decimal is truncated and a numeric string (up to 32 characters) is parsed. Nulls, other text and arrays are ignored, so a `null` in a later event leaves the earlier count |
+| Bedrock's `amazon-bedrock-invocationMetrics` | one object of at most 16 counts, read only at the top of the event inside a `chunk`'s `bytes` |
 | Model name, stop reason | 128 characters each (`MAX_TEXT_CHARS`); a longer one is ignored |
 
 The merge keeps counts only because an unfiltered merge grew with the stream: usage events with
@@ -705,7 +706,7 @@ output as `candidatesTokenCount` + `thoughtsTokenCount` (Gemini bills thoughts a
 its final usage event, emits a span with no token attributes and logs one line, at `WARN` when
 `llmCostBudgetUsd` is set and `INFO` otherwise:
 
-- `no token usage in the streamed {provider} response for model {model}, so the call is not counted in LLM token and cost metrics or towards llmCostBudgetUsd`, with a hint to set `stream_options.include_usage` for OpenAI and for Azure OpenAI Chat Completions (not for an Azure `/responses` path, where usage is not opt-in).
+- `no token usage in the streamed {provider} response for model {model}, so the call is not counted in LLM token and cost metrics or towards llmCostBudgetUsd`, with a hint to set `stream_options.include_usage` for OpenAI, for Azure OpenAI Chat Completions (not for an Azure `/responses` path, where usage is not opt-in) and for Bedrock's OpenAI-compatible `/chat/completions` path.
 - `the streamed {provider} response for model {model} ended before its final usage event, so only the tokens reported before it ended are counted ...`: an Anthropic stream cut off after `message_start` is counted with its input tokens and the output tokens reported so far. Gemini repeats its counts on every chunk, so its stream is reported this way only when the upstream connection failed before a chunk with a `finishReason`.
 
 Each line is written at most once a minute for each provider and model, so a client that never
@@ -787,8 +788,6 @@ four Bedrock Runtime invocation paths, so a Gemini or Bedrock gateway or private
 
 - The budget is checked before a forward is sent and a streamed call is added when its stream ends,
   so calls already in flight when the budget is reached still complete.
-- For Bedrock `InvokeModelWithResponseStream` only Anthropic-shaped events are read, so streams from
-  other model families (Nova, Titan, Llama, Mistral) are not counted.
 - A scanner or parse failure is swallowed in the accounting path: `StreamingBody` drops an observer
   that throws, and the relayed bytes are never changed.
 

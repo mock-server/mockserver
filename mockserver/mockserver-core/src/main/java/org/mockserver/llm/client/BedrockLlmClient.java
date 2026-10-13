@@ -255,7 +255,8 @@ public class BedrockLlmClient extends AnthropicLlmClient {
      * {@code metadata} event; the OpenAI object of the {@code /openai/v1/chat/completions}
      * endpoint, of its stream's usage chunk and of an OpenAI-format model such as gpt-oss on
      * {@code InvokeModel}; or the Anthropic object of {@code InvokeModel} and of the events inside
-     * an {@code InvokeModelWithResponseStream} stream (inherited).
+     * an {@code InvokeModelWithResponseStream} stream (inherited); or, for a stream from another
+     * model family, the {@code amazon-bedrock-invocationMetrics} of its last chunk.
      */
     @Override
     public Usage parseUsage(JsonNode usageNode) {
@@ -266,25 +267,32 @@ public class BedrockLlmClient extends AnthropicLlmClient {
             && !usageNode.has("input_tokens") && !usageNode.has("output_tokens")) {
             return OPENAI_USAGE.parseUsage(usageNode);
         }
+        if (usageNode != null && (usageNode.has("inputTokenCount") || usageNode.has("outputTokenCount"))) {
+            return parseCamelCaseUsage(usageNode, "inputTokenCount", "outputTokenCount", "cacheReadInputTokenCount", "cacheWriteInputTokenCount");
+        }
         return super.parseUsage(usageNode);
     }
 
     private static Usage parseConverseUsage(JsonNode usageNode) {
+        return parseCamelCaseUsage(usageNode, "inputTokens", "outputTokens", "cacheReadInputTokens", "cacheWriteInputTokens");
+    }
+
+    private static Usage parseCamelCaseUsage(JsonNode usageNode, String input, String output, String cacheRead, String cacheWrite) {
         if (usageNode == null || !usageNode.isObject()) {
             return null;
         }
         Usage usage = Usage.usage();
-        if (usageNode.has("inputTokens")) {
-            usage.withInputTokens(usageNode.path("inputTokens").asInt());
+        if (usageNode.has(input)) {
+            usage.withInputTokens(usageNode.path(input).asInt());
         }
-        if (usageNode.has("outputTokens")) {
-            usage.withOutputTokens(usageNode.path("outputTokens").asInt());
+        if (usageNode.has(output)) {
+            usage.withOutputTokens(usageNode.path(output).asInt());
         }
-        if (usageNode.has("cacheReadInputTokens")) {
-            usage.withCachedInputTokens(usageNode.path("cacheReadInputTokens").asInt());
+        if (usageNode.has(cacheRead)) {
+            usage.withCachedInputTokens(usageNode.path(cacheRead).asInt());
         }
-        if (usageNode.has("cacheWriteInputTokens")) {
-            usage.withCacheCreationTokens(usageNode.path("cacheWriteInputTokens").asInt());
+        if (usageNode.has(cacheWrite)) {
+            usage.withCacheCreationTokens(usageNode.path(cacheWrite).asInt());
         }
         return usage;
     }

@@ -22,7 +22,8 @@ import java.util.Map;
  * Bounded whatever the stream sends: one captured value of at most {@link #MAX_VALUE_BYTES} bytes
  * (a larger one is dropped), and a merged usage of at most {@value #MAX_USAGE_FIELDS} fields, each a
  * count or an object of at most {@value #MAX_USAGE_DETAIL_FIELDS} counts, under
- * names of at most {@value #MAX_USAGE_NAME_CHARS} characters (under 64 KiB as JSON text).
+ * names of at most {@value #MAX_USAGE_NAME_CHARS} characters (under 64 KiB as JSON text), plus
+ * Bedrock's invocation metrics, one more object of at most {@value #MAX_USAGE_DETAIL_FIELDS} counts.
  * Not thread-safe; {@link #accept} never throws.
  */
 public final class LlmStreamUsageScanner {
@@ -57,6 +58,8 @@ public final class LlmStreamUsageScanner {
         USAGE_METADATA("usageMetadata"),
         PROMPT_EVAL_COUNT("prompt_eval_count"),
         EVAL_COUNT("eval_count"),
+        // exactly MAX_NAME_BYTES long
+        INVOCATION_METRICS("amazon-bedrock-invocationMetrics"),
         BYTES("bytes"),
         MODEL("model"),
         ID("id"),
@@ -115,6 +118,7 @@ public final class LlmStreamUsageScanner {
     private int checksumBytesLeft;
 
     private ObjectNode usage;
+    private ObjectNode invocationMetrics;
     private boolean finalUsageSeen;
     private boolean usageOnEveryChunk;
     private boolean finishReasonSeen;
@@ -157,10 +161,12 @@ public final class LlmStreamUsageScanner {
 
     /**
      * @return the usage the stream reported, in the provider's own field names and merged across
-     * events (a later event's fields replace an earlier one's), or null when it reported none
+     * events (a later event's fields replace an earlier one's), or null when it reported none.
+     * A Bedrock InvokeModelWithResponseStream stream with no usage object gives the counts of its
+     * last chunk's {@code amazon-bedrock-invocationMetrics} instead.
      */
     public JsonNode usage() {
-        return usage;
+        return usage != null ? usage : invocationMetrics;
     }
 
     /**
@@ -328,6 +334,14 @@ public final class LlmStreamUsageScanner {
             case USAGE_METADATA:
                 if (value.isObject() && mergeUsage((ObjectNode) value)) {
                     usageOnEveryChunk = true;
+                }
+                break;
+            case INVOCATION_METRICS:
+                // sent only on the last chunk of the stream
+                ObjectNode metrics = counts(value);
+                if (metrics != null) {
+                    invocationMetrics = metrics;
+                    finalUsageSeen = true;
                 }
                 break;
             case PROMPT_EVAL_COUNT:
@@ -652,6 +666,8 @@ public final class LlmStreamUsageScanner {
                     return top;
                 case BYTES:
                     return top && !nested && framing == Framing.EVENT_STREAM;
+                case INVOCATION_METRICS:
+                    return top && nested;
                 case FINISH_REASON:
                     return parent == Name.CHOICES || parent == Name.DELTA;
                 case STOP_REASON:
