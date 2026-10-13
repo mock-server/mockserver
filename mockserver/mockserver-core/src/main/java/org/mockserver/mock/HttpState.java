@@ -29,6 +29,7 @@ import org.mockserver.metrics.Metrics;
 import org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause;
 import org.mockserver.model.*;
 import org.mockserver.openapi.OpenAPIConverter;
+import org.mockserver.openapi.OpenAPILoadProblems;
 import org.mockserver.openapi.OpenApiSyncPlanner;
 import org.mockserver.persistence.ExpectationFileSystemPersistence;
 import org.mockserver.persistence.RecordedExpectationPostProcessor;
@@ -193,6 +194,10 @@ public class HttpState {
 
     // PUT routes whose handler loads the OpenAPI spec its body names (see mayLoadOpenAPISpec). Every route listed
     // must be one the PUT dispatch always handles.
+    /**
+     * On a {@code PUT /mockserver/openapi} 201, the number of advisory problems in the specs that loaded; absent when there are none.
+     */
+    public static final String OPENAPI_LOAD_PROBLEMS_HEADER = "x-mockserver-openapi-load-problems";
     private static final String[] OPENAPI_SPEC_PUT_ROUTES = {"/openapi", "/loadScenario/generateFromOpenAPI"};
     private static final String[] REQUEST_DEFINITION_PUT_ROUTES = {"/expectation", "/verify", "/verifySequence", "/retrieve", "/clear", "/breakpoint/matcher", "/recordings/promote"};
 
@@ -867,7 +872,17 @@ public class HttpState {
         });
     }
 
+    /**
+     * The expectations upserted from one OpenAPI spec, and the advisory problems of that spec, which loaded despite them.
+     */
+    public record OpenAPIImport(List<Expectation> expectations, List<OpenAPILoadProblems.Problem> loadProblems) {
+    }
+
     public List<Expectation> add(OpenAPIExpectation openAPIExpectation) {
+        return addOpenAPI(openAPIExpectation).expectations();
+    }
+
+    public OpenAPIImport addOpenAPI(OpenAPIExpectation openAPIExpectation) {
         // A spec referenced by URL/file may have changed since it was last parsed and cached (the parse is
         // LRU-cached for up to 30 minutes keyed by the reference string). Re-importing is an explicit signal
         // to pick up the current content, so evict the cache entry first. Inline payloads are keyed by their
@@ -875,6 +890,8 @@ public class HttpState {
         if (org.mockserver.openapi.OpenAPIParser.isSpecUrl(openAPIExpectation.getSpecUrlOrPayload())) {
             org.mockserver.openapi.OpenAPIParser.clearCache(openAPIExpectation.getSpecUrlOrPayload());
         }
+        // loads the spec into the parse cache that buildExpectations reads, so the spec is parsed once
+        List<OpenAPILoadProblems.Problem> loadProblems = org.mockserver.openapi.OpenAPIParser.loadOpenAPI(openAPIExpectation.getSpecUrlOrPayload(), mockServerLogger, configuration).problems();
         List<Expectation> newExpectations = getOpenAPIConverter().buildExpectations(
             openAPIExpectation.getSpecUrlOrPayload(),
             openAPIExpectation.getOperationsAndResponses(),
@@ -906,10 +923,13 @@ public class HttpState {
         }
 
         // Upsert the new expectations (add() does upsert-by-id)
-        return newExpectations.stream()
-            .map(this::add)
-            .flatMap(List::stream)
-            .collect(Collectors.toList());
+        return new OpenAPIImport(
+            newExpectations.stream()
+                .map(this::add)
+                .flatMap(List::stream)
+                .collect(Collectors.toList()),
+            loadProblems
+        );
     }
 
     public List<Expectation> add(Expectation... expectations) {
@@ -7569,12 +7589,30 @@ public class HttpState {
                     requestBody = YamlToJsonConverter.convertYamlToJson(requestBody);
                 }
             }
-            for (OpenAPIExpectation openAPIExpectation : getOpenAPIExpectationSerializer().deserializeArray(requestBody, false)) {
-                upsertedExpectations.addAll(add(openAPIExpectation));
+            com.fasterxml.jackson.databind.node.ArrayNode loadProblems = com.fasterxml.jackson.databind.node.JsonNodeFactory.instance.arrayNode();
+            OpenAPIExpectation[] openAPIExpectations = getOpenAPIExpectationSerializer().deserializeArray(requestBody, false);
+            for (int specIndex = 0; specIndex < openAPIExpectations.length; specIndex++) {
+                OpenAPIImport openAPIImport = addOpenAPI(openAPIExpectations[specIndex]);
+                upsertedExpectations.addAll(openAPIImport.expectations());
+                for (OpenAPILoadProblems.Problem problem : openAPIImport.loadProblems()) {
+                    problem.writeTo(loadProblems.addObject().put("specIndex", specIndex));
+                }
             }
-            responseWriter.writeResponse(request, response()
-                .withStatusCode(CREATED.code())
-                .withBody(getExpectationSerializer().serialize(upsertedExpectations), MediaType.JSON_UTF_8), true);
+            HttpResponse created = response().withStatusCode(CREATED.code());
+            if (!loadProblems.isEmpty()) {
+                created.withHeader(OPENAPI_LOAD_PROBLEMS_HEADER, String.valueOf(loadProblems.size()));
+            }
+            // the default body stays a bare array of expectations, which every client parses
+            if ("true".equalsIgnoreCase(request.getFirstQueryStringParameter("includeLoadProblems"))) {
+                com.fasterxml.jackson.databind.ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+                com.fasterxml.jackson.databind.node.ObjectNode body = objectMapper.createObjectNode();
+                body.set("expectations", objectMapper.readTree(getExpectationSerializer().serialize(upsertedExpectations)));
+                body.set("loadProblems", loadProblems);
+                created.withBody(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(body), MediaType.JSON_UTF_8);
+            } else {
+                created.withBody(getExpectationSerializer().serialize(upsertedExpectations), MediaType.JSON_UTF_8);
+            }
+            responseWriter.writeResponse(request, created, true);
         } catch (IllegalArgumentException iae) {
             mockServerLogger.logEvent(
                 new LogEntry()

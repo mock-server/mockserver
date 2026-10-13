@@ -63,8 +63,10 @@ flowchart LR
   failures get the same block: response counts and near misses, the sequence step that failed with
   its near misses and out-of-order matches, and requests matching with the other disposition (A9b).
 - **Other failures:** forward failures return a 502 with the raw error; OpenAPI load returns the
-  parser messages grouped by kind with JSON-pointer locations, and logs the problems of a spec that
-  still loads; unknown `mockserver.*` / `MOCKSERVER_*` keys log a WARN at startup.
+  parser messages grouped by kind with JSON-pointer locations; the problems of a spec that still
+  loads are logged, counted in the `PUT /mockserver/openapi` 201 header, returned with
+  `?includeLoadProblems=true` and by the `create_expectation_from_openapi` MCP tool, and listed by
+  the dashboard's OpenAPI import (A6b); unknown `mockserver.*` / `MOCKSERVER_*` keys log a WARN at startup.
 - **Dashboard:** Explain Unmatched, Debug Mismatch, Matcher Playground, create-expectation-from-
   unmatched, Verification, Drift, Diff Requests and Baseline Compare views, plus log-pressure and
   dropped-event banners.
@@ -118,7 +120,6 @@ flowchart LR
 | A11b | An overridden property shows only its effective value → show its built-in default beside it in the effective-config view, `nonDefault` and `diagnose_config`. Today the default is read from the property's getter, which returns the effective value while a tier supplies one, so this needs a way to ask a getter for its default (for example a default table the getters read, or a read mode that ignores the tiers) | (iv) / (iii) | Startup / on demand only | M | Must not add work to the per-request property read (`readPropertyHierarchically` is on the hot path); the default must go through `redactSensitiveValue` | P3 |
 | B5 | Optional plain-language summary of explain results from a configured LLM (`?narrate=true`) | (iii) | On demand, asynchronous, timeout-bounded, never inline in a 404 | S | Off by default; label as AI-generated; always return the deterministic facts too | P3 |
 | A3b | Only the Java client has a typed `explain(correlationId)` → add it to the Node, Python, Ruby, Go, Rust, .NET and PHP clients, together with typed `debugMismatch` / `explainUnmatched`, since none of the seven has a diagnostic-call pattern to extend yet; reuse the `RequestExplanation` / `ExplainedExpectation` OpenAPI schemas | (iii) | Zero hot-path cost: calls the existing endpoint | M | Seven model copies to keep in step with the schema; generate from it where the client already does | P3 |
-| A6b | Surface OpenAPI load problems outside the log | (iv) | Load time only | S | Return the advisory problems of a spec that loads in the PUT /mockserver/openapi 201 response (needs HttpState, which was off-limits for A6) and list them in the dashboard and an MCP tool | P2 |
 | A5b | The template dry run is REST-only → a "Test template" action in the expectation editor that posts the template and a chosen recorded request to `PUT /mockserver/template/test` and shows output, error position and warnings; a strict Mustache pass could warn about missing variables, which Mustache renders as empty text | (iii) | On demand; calls the existing endpoint | M | Keep the 429 and timeout visible in the UI | P2 |
 | A5c | Velocity templates have no execution time limit: serving sets `MAX_NUMBER_LOOPS` to -1 and Velocity cannot be cancelled, so a runaway `#foreach` holds a template-pool thread until restart → a configurable loop bound or a deadline check | (ii) | One counter check per loop iteration on the template path only; measure it before and after | M | A bound that is too low breaks legitimate large templates | P2 |
 | A5d | A template that throws answers the client with a plain 404 (`handleAnyException`), so a template bug looks like a missing expectation → a distinguishable status (for example 500 with an error header) behind a flag, or by default in a major release | (ii) | Failure path only | S | Behaviour change for clients that expect the 404 | P2 |
@@ -143,7 +144,7 @@ flowchart LR
 
 1. **Wave 0 — hygiene and performance:** A2b, C1b. (A2, A2c and C1 landed.)
 2. **Wave 1 — explain engine:** done (A3, A10 and B1 landed).
-3. **Wave 2 — failure classes:** A6, each with an MCP tool (see B1c) and a dashboard entry. (A4 landed; A5 landed REST-only, and A5b adds its dashboard entry.)
+3. **Wave 2 — failure classes:** each with an MCP tool (see B1c) and a dashboard entry. (A4, A6 and A6b landed; A5 landed REST-only, and A5b adds its dashboard entry.)
 4. **Wave 3 — fixes:** A8b, A8c. (B2, B3, A9b and A8, including the CLI, landed.)
 5. **Wave 4 — optional:** B5, A11b. (B6, B7, A11 and B1b landed.)
 

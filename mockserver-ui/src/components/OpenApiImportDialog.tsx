@@ -15,9 +15,11 @@ import {
   importOpenApi,
   discoverNamedExamples,
   type ExampleSelections,
+  type OpenApiLoadProblem,
 } from '../lib/openapiImport';
 import { humanizeError, type HumanError } from '../lib/errorMessage';
 import HumanErrorAlert from './HumanErrorAlert';
+import OpenApiLoadProblemsAlert from './OpenApiLoadProblemsAlert';
 import type { ConnectionParams } from '../hooks/useConnectionParams';
 import { trackFeature } from '../lib/analytics';
 
@@ -48,6 +50,7 @@ export default function OpenApiImportDialog({ open, onClose, connectionParams }:
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<HumanError | null>(null);
   const [createdCount, setCreatedCount] = useState<number | null>(null);
+  const [loadProblems, setLoadProblems] = useState<OpenApiLoadProblem[]>([]);
   // operationId -> chosen exampleName ('' = spec default).
   const [chosenExamples, setChosenExamples] = useState<Record<string, string>>({});
 
@@ -64,6 +67,7 @@ export default function OpenApiImportDialog({ open, onClose, connectionParams }:
     setBusy(true);
     setError(null);
     setCreatedCount(null);
+    setLoadProblems([]);
     try {
       const selections: ExampleSelections = {};
       for (const op of operationExamples) {
@@ -72,9 +76,10 @@ export default function OpenApiImportDialog({ open, onClose, connectionParams }:
           selections[op.operationId] = { statusCode: op.statusCode, exampleName: chosen };
         }
       }
-      const created = await importOpenApi(connectionParams, spec.trim(), selections);
+      const result = await importOpenApi(connectionParams, spec.trim(), selections);
       trackFeature('openapi_imported');
-      setCreatedCount(created.length);
+      setCreatedCount(result.expectations.length);
+      setLoadProblems(result.loadProblems);
     } catch (e) {
       setError(humanizeError(e));
     } finally {
@@ -86,6 +91,7 @@ export default function OpenApiImportDialog({ open, onClose, connectionParams }:
     setSpec('');
     setError(null);
     setCreatedCount(null);
+    setLoadProblems([]);
     setChosenExamples({});
     onClose();
   };
@@ -148,6 +154,7 @@ export default function OpenApiImportDialog({ open, onClose, connectionParams }:
             Imported {createdCount} expectation{createdCount === 1 ? '' : 's'}.
           </Alert>
         )}
+        <OpenApiLoadProblemsAlert problems={loadProblems} sx={{ mt: 1 }} />
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose}>Close</Button>

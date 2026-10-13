@@ -32,7 +32,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 public class OpenAPIParser {
 
-    private final static LRUCache<CacheKey, OpenAPI> openAPILRUCache = new LRUCache<>(new MockServerLogger(), 250, MINUTES.toMillis(30));
+    private final static LRUCache<CacheKey, LoadedSpec> openAPILRUCache = new LRUCache<>(new MockServerLogger(), 250, MINUTES.toMillis(30));
 
     public static final String OPEN_API_LOAD_ERROR = "Unable to load API spec";
     private static final String SPEC_PROBLEMS = "loaded OpenAPI spec with problems that may stop parts of it working as expected, {}";
@@ -47,6 +47,13 @@ public class OpenAPIParser {
      * problems differently from a spec load, so that is part of the key too.
      */
     private record CacheKey(String specUrlOrPayload, boolean fetchesChecked, boolean inlineJsonSchema) {
+    }
+
+    /**
+     * A spec that loaded, with the advisory problems swagger-parser reported for it (empty when it follows the
+     * OpenAPI rules). The problems are kept with the cached parse so a cache hit still reports them.
+     */
+    public record LoadedSpec(OpenAPI openAPI, List<OpenAPILoadProblems.Problem> problems) {
     }
 
     public static void clearCache(String specUrlOrPayload) {
@@ -75,7 +82,14 @@ public class OpenAPIParser {
      *                      (a client), for the global properties
      */
     public static OpenAPI buildOpenAPI(String specUrlOrPayload, MockServerLogger mockServerLogger, @Nullable Configuration configuration) {
-        return buildOpenAPI(specUrlOrPayload, mockServerLogger, configuration, false);
+        return loadOpenAPI(specUrlOrPayload, mockServerLogger, configuration, false).openAPI();
+    }
+
+    /**
+     * As {@link #buildOpenAPI(String, MockServerLogger, Configuration)}, also returning the spec's advisory load problems.
+     */
+    public static LoadedSpec loadOpenAPI(String specUrlOrPayload, MockServerLogger mockServerLogger, @Nullable Configuration configuration) {
+        return loadOpenAPI(specUrlOrPayload, mockServerLogger, configuration, false);
     }
 
     /**
@@ -83,10 +97,10 @@ public class OpenAPIParser {
      * such as {@code $schema}, {@code const} or a list of types breaks OpenAPI 3.0 rules, so problems are not a WARN.
      */
     static OpenAPI buildOpenAPIForInlineJsonSchema(String wrappedJsonSchema, MockServerLogger mockServerLogger, @Nullable Configuration configuration) {
-        return buildOpenAPI(wrappedJsonSchema, mockServerLogger, configuration, true);
+        return loadOpenAPI(wrappedJsonSchema, mockServerLogger, configuration, true).openAPI();
     }
 
-    private static OpenAPI buildOpenAPI(String specUrlOrPayload, MockServerLogger mockServerLogger, @Nullable Configuration configuration, boolean inlineJsonSchema) {
+    private static LoadedSpec loadOpenAPI(String specUrlOrPayload, MockServerLogger mockServerLogger, @Nullable Configuration configuration, boolean inlineJsonSchema) {
         if (specUrlOrPayload == null) {
             return SpecFetchGuard.whileParsing(InetAddressValidator.isEnabled(configuration), () -> parseOpenAPI(null, mockServerLogger, inlineJsonSchema));
         }
@@ -98,7 +112,7 @@ public class OpenAPIParser {
         return openAPILRUCache.getOrCompute(cacheKey, key -> SpecFetchGuard.whileParsing(key.fetchesChecked(), () -> parseOpenAPI(key.specUrlOrPayload(), mockServerLogger, key.inlineJsonSchema())));
     }
 
-    private static OpenAPI parseOpenAPI(String specUrlOrPayload, MockServerLogger mockServerLogger, boolean inlineJsonSchema) {
+    private static LoadedSpec parseOpenAPI(String specUrlOrPayload, MockServerLogger mockServerLogger, boolean inlineJsonSchema) {
         OpenAPI openAPI = null;
         SwaggerParseResult swaggerParseResult = null;
         List<AuthorizationValue> auths = null;
@@ -141,23 +155,24 @@ public class OpenAPIParser {
                 throw new IllegalArgumentException(OPEN_API_LOAD_ERROR);
             }
         }
-        logLoadProblems(swaggerParseResult.getMessages(), mockServerLogger, inlineJsonSchema);
+        List<OpenAPILoadProblems.Problem> problems = List.copyOf(OpenAPILoadProblems.problems(swaggerParseResult.getMessages()));
+        logLoadProblems(problems, mockServerLogger, inlineJsonSchema);
         addMissingOperationIds(openAPI, mockServerLogger);
-        return openAPI;
+        return new LoadedSpec(openAPI, problems);
     }
 
     /**
      * swagger-parser still returns a usable spec alongside these messages, so they are advisory: the spec loads and
      * the problems are logged once, when the spec is parsed (not on each cache hit).
      */
-    private static void logLoadProblems(List<String> messages, MockServerLogger mockServerLogger, boolean inlineJsonSchema) {
+    private static void logLoadProblems(List<OpenAPILoadProblems.Problem> problems, MockServerLogger mockServerLogger, boolean inlineJsonSchema) {
         Level level = inlineJsonSchema ? Level.DEBUG : Level.WARN;
-        if (mockServerLogger != null && messages != null && messages.stream().anyMatch(StringUtils::isNotBlank) && mockServerLogger.isEnabledForInstance(level)) {
+        if (mockServerLogger != null && !problems.isEmpty() && mockServerLogger.isEnabledForInstance(level)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(level)
                     .setMessageFormat(inlineJsonSchema ? INLINE_JSON_SCHEMA_PROBLEMS : SPEC_PROBLEMS)
-                    .setArguments(OpenAPILoadProblems.describe(messages))
+                    .setArguments(OpenAPILoadProblems.describeProblems(problems))
             );
         }
     }

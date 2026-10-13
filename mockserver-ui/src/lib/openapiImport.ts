@@ -187,7 +187,8 @@ function firstResponseWithNamedExamples(
 
 /**
  * Import an OpenAPI spec. `specOrUrl` may be a URL or an inline JSON/YAML spec.
- * Returns the list of created/updated expectations.
+ * Returns the created/updated expectations and the spec's load problems: places
+ * where a spec that still loaded breaks the OpenAPI rules.
  *
  * `exampleSelections` optionally pins a named example per operation. Each entry
  * is sent to the server as an `operationsAndResponses` value of the form
@@ -209,7 +210,7 @@ export async function importOpenApi(
   params: ConnectionParams,
   specOrUrl: string,
   exampleSelections?: ExampleSelections,
-): Promise<unknown[]> {
+): Promise<OpenApiImportResult> {
   const expectation: Record<string, unknown> = { specUrlOrPayload: specOrUrl };
   if (exampleSelections && Object.keys(exampleSelections).length > 0) {
     // Default-preserving entry for non-pinned operations. The converter reads a
@@ -229,7 +230,7 @@ export async function importOpenApi(
     expectation.operationsAndResponses = operationsAndResponses;
   }
   const body = JSON.stringify([expectation]);
-  const res = await fetch(`${buildBaseUrl(params)}/mockserver/openapi`, {
+  const res = await fetch(`${buildBaseUrl(params)}/mockserver/openapi?includeLoadProblems=true`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body,
@@ -237,6 +238,45 @@ export async function importOpenApi(
   if (!res.ok) {
     throw new Error((await res.text()) || `HTTP ${res.status} ${res.statusText}`);
   }
-  const created = (await res.json()) as unknown;
-  return Array.isArray(created) ? created : [];
+  return parseImportResponse((await res.json()) as unknown);
+}
+
+/**
+ * One problem in a spec that loaded but breaks the OpenAPI rules, which may stop
+ * parts of it working as expected. `location` is a JSON pointer such as
+ * `#/paths/~1pets/get`, absent when the parser named no location.
+ */
+export interface OpenApiLoadProblem {
+  specIndex?: number;
+  kind: string;
+  kindLabel: string;
+  location?: string;
+  description: string;
+  hint?: string;
+}
+
+export interface OpenApiImportResult {
+  expectations: unknown[];
+  loadProblems: OpenApiLoadProblem[];
+}
+
+/**
+ * Reads `{ expectations, loadProblems }`, or a bare array of expectations from a
+ * server that predates load problems.
+ */
+function parseImportResponse(body: unknown): OpenApiImportResult {
+  if (Array.isArray(body)) {
+    return { expectations: body, loadProblems: [] };
+  }
+  if (!isRecord(body)) {
+    return { expectations: [], loadProblems: [] };
+  }
+  return {
+    expectations: Array.isArray(body.expectations) ? body.expectations : [],
+    loadProblems: Array.isArray(body.loadProblems) ? body.loadProblems.filter(isLoadProblem) : [],
+  };
+}
+
+function isLoadProblem(value: unknown): value is OpenApiLoadProblem {
+  return isRecord(value) && typeof value.description === 'string' && typeof value.kindLabel === 'string';
 }

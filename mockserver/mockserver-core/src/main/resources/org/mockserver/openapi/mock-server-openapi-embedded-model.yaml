@@ -265,17 +265,69 @@ paths:
       tags:
         - expectation
       summary: create expectations from OpenAPI or Swagger
+      parameters:
+        - in: query
+          name: includeLoadProblems
+          schema:
+            type: boolean
+            default: false
+          required: false
+          description: when true, the 201 body is an object holding the upserted expectations and the load problems of each spec, instead of a bare list of upserted expectations
       responses:
         '201':
-          description: expectations created
+          description: expectations created; a spec that loads but breaks the OpenAPI rules still creates expectations, and its load problems are counted in the x-mockserver-openapi-load-problems header
+          headers:
+            x-mockserver-openapi-load-problems:
+              description: the number of load problems in the specs, sent only when there is at least one
+              schema:
+                type: integer
           content:
             application/json:
               schema:
-                description: "list of upserted expectations"
-                type: array
-                additionalProperties: false
-                items:
-                  $ref: "#/components/schemas/Expectation"
+                oneOf:
+                  - description: "list of upserted expectations, the body unless includeLoadProblems=true"
+                    type: array
+                    additionalProperties: false
+                    items:
+                      $ref: "#/components/schemas/Expectation"
+                  - description: "upserted expectations and load problems, the body when includeLoadProblems=true"
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      expectations:
+                        description: "list of upserted expectations"
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Expectation"
+                      loadProblems:
+                        description: "where a spec that loaded breaks the OpenAPI rules, which may stop parts of it working as expected"
+                        type: array
+                        items:
+                          type: object
+                          additionalProperties: false
+                          required:
+                            - specIndex
+                            - kind
+                            - kindLabel
+                            - description
+                          properties:
+                            specIndex:
+                              description: "the 0-based position of the spec in the request"
+                              type: integer
+                            kind:
+                              type: string
+                              enum: [ "SYNTAX", "UNREADABLE", "REF", "WRONG_TYPE", "MISSING", "DUPLICATE", "INVALID_PATH", "UNEXPECTED", "OTHER" ]
+                            kindLabel:
+                              description: "the kind in words, for example unresolved or mistyped $ref"
+                              type: string
+                            location:
+                              description: "a JSON pointer into the spec, for example #/paths/~1pets/get, absent when the parser names no location"
+                              type: string
+                            description:
+                              type: string
+                            hint:
+                              description: "what to change, for common causes"
+                              type: string
         '400':
           description: incorrect request format
         '406':

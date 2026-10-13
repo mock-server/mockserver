@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import OpenApiImportDialog from '../components/OpenApiImportDialog';
 
@@ -51,6 +51,24 @@ const specWithNamedExamples = JSON.stringify({
     },
   },
 });
+
+const loadProblems = [
+  {
+    specIndex: 0,
+    kind: 'REF',
+    kindLabel: 'unresolved or mistyped $ref',
+    location: '#/paths/~1pets/get/responses/200/content/application~1json/schema/$ref',
+    description: '$ref target #/components/schemas/Missing does not exist',
+    hint: 'check that the $ref target exists',
+  },
+  {
+    specIndex: 0,
+    kind: 'MISSING',
+    kindLabel: 'missing required field',
+    location: '#/info',
+    description: "required field 'version' is missing",
+  },
+];
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -161,5 +179,62 @@ describe('OpenApiImportDialog named-example picker', () => {
     const sent = JSON.parse(String(calls[0]?.init?.body)) as Array<Record<string, unknown>>;
     expect(sent[0]).not.toHaveProperty('operationsAndResponses');
     expect(sent[0]?.specUrlOrPayload).toBe(specWithNamedExamples);
+  });
+});
+
+describe('OpenApiImportDialog load problems', () => {
+  it('lists the problems of a spec that loaded, grouped by kind with location and hint', async () => {
+    const user = userEvent.setup();
+    stubFetch(201, { expectations: [{ id: 'openapi:pets:listPets' }], loadProblems });
+    render(<OpenApiImportDialog open onClose={() => {}} connectionParams={connectionParams} />);
+
+    await user.click(screen.getByLabelText('OpenAPI spec or URL'));
+    await user.paste('openapi: 3.0.0');
+    await user.click(screen.getByRole('button', { name: 'Import' }));
+
+    const alert = await screen.findByTestId('openapi-load-problems');
+    expect(screen.getByText('Imported 1 expectation.')).toBeInTheDocument();
+    expect(within(alert).getByText('Spec Loaded With 2 Problems')).toBeInTheDocument();
+    expect(within(alert).getByText('unresolved or mistyped $ref (1)')).toBeInTheDocument();
+    expect(within(alert).getByText('missing required field (1)')).toBeInTheDocument();
+    expect(alert).toHaveTextContent(
+      '#/paths/~1pets/get/responses/200/content/application~1json/schema/$ref: $ref target #/components/schemas/Missing does not exist',
+    );
+    expect(alert).toHaveTextContent("#/info: required field 'version' is missing");
+    expect(within(alert).getByText('Hint: check that the $ref target exists')).toBeInTheDocument();
+  });
+
+  it('shows no problems for a spec without any', async () => {
+    const user = userEvent.setup();
+    stubFetch(201, { expectations: [{ id: 'openapi:pets:listPets' }], loadProblems: [] });
+    render(<OpenApiImportDialog open onClose={() => {}} connectionParams={connectionParams} />);
+
+    await user.click(screen.getByLabelText('OpenAPI spec or URL'));
+    await user.paste('openapi: 3.0.0');
+    await user.click(screen.getByRole('button', { name: 'Import' }));
+
+    await screen.findByText('Imported 1 expectation.');
+    expect(screen.queryByTestId('openapi-load-problems')).not.toBeInTheDocument();
+  });
+
+  it('says how many problems are not shown when there are more than fit', async () => {
+    const user = userEvent.setup();
+    const many = Array.from({ length: 53 }, (_, index) => ({
+      kind: 'OTHER',
+      kindLabel: 'other problem',
+      location: `#/paths/~1p${index}`,
+      description: `problem ${index}`,
+    }));
+    stubFetch(201, { expectations: [], loadProblems: many });
+    render(<OpenApiImportDialog open onClose={() => {}} connectionParams={connectionParams} />);
+
+    await user.click(screen.getByLabelText('OpenAPI spec or URL'));
+    await user.paste('openapi: 3.0.0');
+    await user.click(screen.getByRole('button', { name: 'Import' }));
+
+    const alert = await screen.findByTestId('openapi-load-problems');
+    expect(within(alert).getByText('Spec Loaded With 53 Problems')).toBeInTheDocument();
+    expect(within(alert).getAllByRole('listitem')).toHaveLength(50);
+    expect(within(alert).getByText('3 more not shown; PUT /mockserver/openapi?includeLoadProblems=true returns every problem.')).toBeInTheDocument();
   });
 });

@@ -59,6 +59,13 @@
               "path": [
                 "mockserver",
                 "openapi"
+              ],
+              "query": [
+                {
+                  "key": "includeLoadProblems",
+                  "value": "false",
+                  "disabled": true
+                }
               ]
             },
             "description": "Create expectations from openapi or swagger.\n\nexpectation(s) to create\n\nFull API reference: https://www.mock-server.com/mock_server/mockserver_clients.html",

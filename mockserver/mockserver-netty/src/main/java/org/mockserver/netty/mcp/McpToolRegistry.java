@@ -41,6 +41,7 @@ import org.mockserver.mock.MockMode;
 import org.mockserver.mock.mcp.McpToolSchemaGenerator;
 import org.mockserver.mock.OpenAPIExpectation;
 import org.mockserver.model.*;
+import org.mockserver.openapi.OpenAPILoadProblems;
 import org.mockserver.openapi.OpenApiContractTest;
 import org.mockserver.openapi.OpenApiResiliencyTest;
 import org.mockserver.openapi.OpenApiTrafficValidator;
@@ -1713,6 +1714,11 @@ public class McpToolRegistry {
         }
     }
 
+    /**
+     * Keeps a tool result for a spec with very many problems small; the dashboard shows the same number.
+     */
+    static final int MAX_LOAD_PROBLEMS = 50;
+
     private void registerCreateExpectationFromOpenApi() {
         ObjectNode schema = objectMapper.createObjectNode();
         schema.put("type", "object");
@@ -1724,7 +1730,9 @@ public class McpToolRegistry {
 
         tools.put("create_expectation_from_openapi", new ToolDefinition(
             "create_expectation_from_openapi",
-            "Creates expectations from an OpenAPI specification, optionally specifying which operations and response codes to use",
+            "Creates expectations from an OpenAPI specification, optionally specifying which operations and response codes to use. "
+                + "loadProblems lists where a spec that loaded breaks the OpenAPI rules (kind, JSON-pointer location, description, hint), which can stop parts of it working as expected; "
+                + "at most " + MAX_LOAD_PROBLEMS + " are listed, and loadProblemsNotShown counts the rest",
             schema,
             this::handleCreateExpectationFromOpenApi
         ));
@@ -1764,14 +1772,22 @@ public class McpToolRegistry {
                 openAPIExpectation.withContextPathPrefix(contextPathNode.asText());
             }
 
-            List<Expectation> result = httpState.add(openAPIExpectation);
+            HttpState.OpenAPIImport result = httpState.addOpenAPI(openAPIExpectation);
 
             ObjectNode resultNode = objectMapper.createObjectNode();
             resultNode.put("status", "created");
-            resultNode.put("count", result.size());
+            resultNode.put("count", result.expectations().size());
             ArrayNode ids = resultNode.putArray("ids");
-            for (Expectation exp : result) {
+            for (Expectation exp : result.expectations()) {
                 ids.add(exp.getId());
+            }
+            ArrayNode loadProblems = resultNode.putArray("loadProblems");
+            List<OpenAPILoadProblems.Problem> problems = result.loadProblems();
+            for (OpenAPILoadProblems.Problem problem : problems.subList(0, Math.min(problems.size(), MAX_LOAD_PROBLEMS))) {
+                problem.writeTo(loadProblems.addObject());
+            }
+            if (problems.size() > MAX_LOAD_PROBLEMS) {
+                resultNode.put("loadProblemsNotShown", problems.size() - MAX_LOAD_PROBLEMS);
             }
             return resultNode;
         } catch (Exception e) {

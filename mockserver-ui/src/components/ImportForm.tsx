@@ -17,11 +17,12 @@ import Snackbar from '@mui/material/Snackbar';
 import CircularProgress from '@mui/material/CircularProgress';
 import type { ConnectionParams } from '../hooks/useConnectionParams';
 import { importExpectationJson, importCollection, importRecording, type RecordingImportResult } from '../lib/importMocks';
-import { importOpenApi } from '../lib/openapiImport';
+import { importOpenApi, type OpenApiLoadProblem } from '../lib/openapiImport';
 import { importWsdl } from '../lib/wsdlImport';
 import { humanizeError, type HumanError } from '../lib/errorMessage';
 import { monospaceFontFamily } from '../theme';
 import HumanErrorAlert from './HumanErrorAlert';
+import OpenApiLoadProblemsAlert from './OpenApiLoadProblemsAlert';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -75,6 +76,7 @@ export default function ImportForm({ connectionParams }: ImportFormProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<HumanError | null>(null);
   const [snackMessage, setSnackMessage] = useState<string | null>(null);
+  const [loadProblems, setLoadProblems] = useState<OpenApiLoadProblem[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currentFormatMeta = FORMATS.find((f) => f.value === format)!;
@@ -82,6 +84,7 @@ export default function ImportForm({ connectionParams }: ImportFormProps) {
   // When switching format, reset source to 'paste' if URL is not supported.
   const handleFormatChange = useCallback((newFormat: ImportFormat) => {
     setFormat(newFormat);
+    setLoadProblems([]);
     const meta = FORMATS.find((f) => f.value === newFormat)!;
     if (!meta.urlSupported && source === 'url') {
       setSource('paste');
@@ -106,6 +109,7 @@ export default function ImportForm({ connectionParams }: ImportFormProps) {
   const handleImport = useCallback(async () => {
     setBusy(true);
     setError(null);
+    setLoadProblems([]);
     try {
       const input = source === 'url' ? urlValue.trim() : payload.trim();
       if (!input) {
@@ -128,9 +132,12 @@ export default function ImportForm({ connectionParams }: ImportFormProps) {
         case 'json':
           created = await importExpectationJson(connectionParams, input);
           break;
-        case 'openapi':
-          created = await importOpenApi(connectionParams, input);
+        case 'openapi': {
+          const result = await importOpenApi(connectionParams, input);
+          created = result.expectations;
+          setLoadProblems(result.loadProblems);
           break;
+        }
         case 'wsdl':
           created = await importWsdl(connectionParams, input);
           break;
@@ -339,6 +346,8 @@ export default function ImportForm({ connectionParams }: ImportFormProps) {
       {error && (
         <HumanErrorAlert error={error} variant="outlined" />
       )}
+
+      <OpenApiLoadProblemsAlert problems={loadProblems} />
 
       <Snackbar
         open={snackMessage !== null}

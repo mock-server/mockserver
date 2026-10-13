@@ -221,6 +221,35 @@ describe('Import per-format endpoint calls', () => {
     });
   });
 
+  it('OpenAPI lists the load problems of a spec that loaded until the format changes', async () => {
+    stubFetch(201, {
+      expectations: [{ id: 'openapi:pets:listPets' }],
+      loadProblems: [
+        {
+          specIndex: 0,
+          kind: 'MISSING',
+          kindLabel: 'missing required field',
+          location: '#/info',
+          description: "required field 'version' is missing",
+        },
+      ],
+    });
+    const user = userEvent.setup();
+    renderComposer();
+    await user.click(screen.getByLabelText('Import'));
+    await user.click(getFormatRadio(/OpenAPI/));
+    await pasteInto(user, screen.getByLabelText('OpenAPI content'), 'openapi: 3.0.0');
+    await user.click(screen.getByRole('button', { name: 'Import' }));
+
+    const alert = await screen.findByTestId('openapi-load-problems');
+    expect(within(alert).getByText('Spec Loaded With 1 Problem')).toBeInTheDocument();
+    expect(alert).toHaveTextContent("#/info: required field 'version' is missing");
+    expect(fetchCalls.find((c) => c.url.includes('/mockserver/openapi'))!.url).toContain('includeLoadProblems=true');
+
+    await user.click(getFormatRadio(/WSDL/));
+    expect(screen.queryByTestId('openapi-load-problems')).not.toBeInTheDocument();
+  });
+
   it('OpenAPI URL source calls PUT /mockserver/openapi with the URL', async () => {
     const user = userEvent.setup();
     renderComposer();

@@ -2465,6 +2465,72 @@ public class McpToolRegistryTest {
         assertThat(verifyResult.path("message").asText().isEmpty(), is(false));
     }
 
+    @Test
+    public void shouldReturnLoadProblemsOfOpenApiSpecThatLoads() {
+        ObjectNode params = objectMapper.createObjectNode();
+        params.put("specUrlOrPayload", "openapi: 3.0.0\n" +
+            "info:\n" +
+            "  title: \"" + java.util.UUID.randomUUID() + "\"\n" +
+            "  version: \"1\"\n" +
+            "paths:\n" +
+            "  /pets:\n" +
+            "    get:\n" +
+            "      operationId: listPets\n" +
+            "      responses:\n" +
+            "        \"200\":\n" +
+            "          description: ok\n" +
+            "          content:\n" +
+            "            application/json:\n" +
+            "              schema:\n" +
+            "                $ref: \"#/components/schemas/Missing\"\n");
+
+        JsonNode result = toolRegistry.callTool("create_expectation_from_openapi", params);
+
+        assertThat(result.toString(), result.path("count").asInt(), is(1));
+        assertThat(result.path("loadProblems").size(), is(1));
+        JsonNode problem = result.path("loadProblems").get(0);
+        assertThat(problem.path("kind").asText(), is("REF"));
+        assertThat(problem.path("location").asText(), is("#/paths/~1pets/get/responses/200/content/application~1json/schema/$ref"));
+        assertThat(problem.path("description").asText(), is("$ref target #/components/schemas/Missing does not exist"));
+    }
+
+    @Test
+    public void shouldListAtMostFiftyLoadProblemsAndCountTheRest() {
+        StringBuilder paths = new StringBuilder("paths:\n");
+        for (int i = 0; i < 53; i++) {
+            paths.append("  p").append(i).append(":\n")
+                .append("    get:\n")
+                .append("      responses:\n")
+                .append("        \"200\":\n")
+                .append("          description: ok\n");
+        }
+        ObjectNode params = objectMapper.createObjectNode();
+        params.put("specUrlOrPayload", "openapi: 3.0.0\n" +
+            "info:\n" +
+            "  title: \"" + java.util.UUID.randomUUID() + "\"\n" +
+            "  version: \"1\"\n" +
+            paths);
+
+        JsonNode result = toolRegistry.callTool("create_expectation_from_openapi", params);
+
+        assertThat(result.toString(), result.path("loadProblems").size(), is(50));
+        assertThat(result.path("loadProblems").get(0).path("kind").asText(), is("INVALID_PATH"));
+        assertThat(result.path("loadProblemsNotShown").asInt(), is(3));
+    }
+
+    @Test
+    public void shouldReturnNoLoadProblemsForCleanOpenApiSpec() {
+        ObjectNode params = objectMapper.createObjectNode();
+        params.put("specUrlOrPayload", "org/mockserver/openapi/openapi_petstore_example.json");
+
+        JsonNode result = toolRegistry.callTool("create_expectation_from_openapi", params);
+
+        assertThat(result.toString(), result.path("count").asInt(), is(4));
+        assertThat(result.path("loadProblems").isArray(), is(true));
+        assertThat(result.path("loadProblems").size(), is(0));
+        assertThat(result.has("loadProblemsNotShown"), is(false));
+    }
+
     // ---- per-tool read/mutate classification (control-plane authorization) ----
 
     @Test

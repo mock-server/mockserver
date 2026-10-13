@@ -302,7 +302,7 @@ describe('LibraryView import tab', () => {
     await waitFor(() => {
       const call = fetchCalls.find((c) => c.url.includes('/mockserver/openapi'));
       expect(call).toBeTruthy();
-      expect(call!.url).toBe('http://localhost:1080/mockserver/openapi');
+      expect(call!.url).toBe('http://localhost:1080/mockserver/openapi?includeLoadProblems=true');
       expect(call!.init?.method).toBe('PUT');
     });
   });

@@ -911,6 +911,8 @@ keywords: "mcp tools, mockserver mcp tools, create_expectation, verify_request, 
   }
 }</code></pre>
 
+<p>The result gives the number of expectations created (<code>count</code>), their <code>ids</code>, and <code>loadProblems</code>: where a spec that loaded breaks the OpenAPI rules, each with its <code>kind</code>, <code>kindLabel</code>, JSON-pointer <code>location</code>, <code>description</code> and, for common causes, a <code>hint</code>. At most 50 problems are listed; when there are more, <code>loadProblemsNotShown</code> says how many were left out. The parts of the spec with problems may not behave as expected; see <a href="/mock_server/using_openapi.html#openapi_load_problems">When A Spec Has Problems</a>.</p>
+
 <a id="create_expectations_from_recorded_traffic" class="anchor" href="#create_expectations_from_recorded_traffic">&nbsp;</a>
 
 <h3>create_expectations_from_recorded_traffic</h3>

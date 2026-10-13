@@ -36,19 +36,42 @@ afterEach(() => {
 });
 
 describe('importOpenApi', () => {
-  it('PUTs the spec wrapped as an OpenAPIExpectation and returns created expectations', async () => {
+  it('PUTs the spec wrapped as an OpenAPIExpectation and returns created expectations and load problems', async () => {
     const created = [{ id: 'openapi:foo:listPets' }, { id: 'openapi:foo:createPets' }];
-    const calls = stubFetch(201, created);
+    const loadProblems = [
+      {
+        specIndex: 0,
+        kind: 'REF',
+        kindLabel: 'unresolved or mistyped $ref',
+        location: '#/paths/~1pets/get/responses/200/content/application~1json/schema/$ref',
+        description: '$ref target #/components/schemas/Missing does not exist',
+        hint: 'check that the $ref target exists',
+      },
+    ];
+    const calls = stubFetch(201, { expectations: created, loadProblems });
     const result = await importOpenApi(params, '{"openapi":"3.0.0"}');
-    expect(result).toEqual(created);
-    expect(calls[0]?.url).toBe('http://127.0.0.1:1080/mockserver/openapi');
+    expect(result).toEqual({ expectations: created, loadProblems });
+    expect(calls[0]?.url).toBe('http://127.0.0.1:1080/mockserver/openapi?includeLoadProblems=true');
     expect(calls[0]?.init?.method).toBe('PUT');
     expect(String(calls[0]?.init?.body)).toContain('specUrlOrPayload');
   });
 
-  it('returns an empty array when the response is not an array', async () => {
-    stubFetch(201, { unexpected: true });
-    expect(await importOpenApi(params, 'https://example.com/spec.yaml')).toEqual([]);
+  it('reads a bare array of expectations from a server without load problems', async () => {
+    const created = [{ id: 'openapi:foo:listPets' }];
+    stubFetch(201, created);
+    expect(await importOpenApi(params, '{"openapi":"3.0.0"}')).toEqual({ expectations: created, loadProblems: [] });
+  });
+
+  it('drops malformed load problems', async () => {
+    stubFetch(201, { expectations: [], loadProblems: [{ kind: 'REF' }, 'text', { kindLabel: 'other problem', description: 'kept' }] });
+    expect((await importOpenApi(params, '{"openapi":"3.0.0"}')).loadProblems).toEqual([
+      { kindLabel: 'other problem', description: 'kept' },
+    ]);
+  });
+
+  it('returns nothing when the response is neither an array nor an import result', async () => {
+    stubFetch(201, 'unexpected');
+    expect(await importOpenApi(params, 'https://example.com/spec.yaml')).toEqual({ expectations: [], loadProblems: [] });
   });
 
   it('throws the server message on an invalid spec', async () => {

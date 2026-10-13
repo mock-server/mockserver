@@ -1404,7 +1404,7 @@ curl_close($ch);</code></pre>
 <p>MockServer reads specs with the <a target="_blank" href="https://github.com/swagger-api/swagger-parser" rel="noopener noreferrer">swagger-parser</a> library and reports what it finds grouped by kind, with the location of each problem:</p>
 <ul>
     <li><strong>a spec that cannot be read</strong> (a YAML or JSON syntax error, or a file, classpath resource or URL that does not exist) is rejected with the same status code as before, for example <span class="inline_code">400 Bad Request</span> from <span class="inline_code">PUT /mockserver/openapi</span>; a syntax error gives the line and column, counted from the first line of the spec file or string</li>
-    <li><strong>a spec that can be read but breaks the OpenAPI rules</strong> (an unresolved <span class="inline_code">$ref</span>, a value of the wrong type, a missing required field, a repeated operationId, a path that does not start with <span class="inline_code">/</span>) is still loaded, and the problems are logged as a <span class="inline_code">WARN</span> when the spec is loaded; the parts with problems may not behave as you expect, so check the log (or the dashboard) when a mock does not match</li>
+    <li><strong>a spec that can be read but breaks the OpenAPI rules</strong> (an unresolved <span class="inline_code">$ref</span>, a value of the wrong type, a missing required field, a repeated operationId, a path that does not start with <span class="inline_code">/</span>) is still loaded, and the problems are logged as a <span class="inline_code">WARN</span> when the spec is loaded, reported by <span class="inline_code">PUT /mockserver/openapi</span> (see below) and listed by the dashboard's OpenAPI import; the parts with problems may not behave as you expect</li>
 </ul>
 <p>Each problem is located by a JSON pointer into the spec, where <span class="inline_code">~1</span> stands for <span class="inline_code">/</span> and <span class="inline_code">~0</span> for <span class="inline_code">~</span>, so <span class="inline_code">#/paths/~1pets/get/responses/200</span> is the <span class="inline_code">200</span> response of <span class="inline_code">GET /pets</span>. The pointer names the nearest object the parser reports: for a missing field it is the object the field belongs in, and for a parameter it is the <span class="inline_code">parameters</span> list. For common causes, such as a tab used for YAML indentation, an unresolved <span class="inline_code">$ref</span> or a list of types in an OpenAPI 3.0 schema, a hint says what to change. For example, a YAML spec indented with a tab is rejected with:</p>
 <pre class="code"><code class="code">Unable to load API spec, 1 problem found:
@@ -1423,6 +1423,22 @@ curl_close($ch);</code></pre>
     - #/paths/~1pets/get/responses/200/content/application~1json/schema/$ref: $ref target #/components/schemas/Missing does not exist
       hint: check that the $ref target exists (names are case-sensitive) and that any referenced file can be read</code></pre>
 <p>The parser does not check every rule: for example a misspelt schema type such as <span class="inline_code">type: strin</span> is not reported.</p>
+<p>When a spec loads with problems, the <span class="inline_code">201 Created</span> response from <span class="inline_code">PUT /mockserver/openapi</span> carries an <span class="inline_code">x-mockserver-openapi-load-problems</span> header with the number of problems. The body stays a list of the created expectations, so existing clients are unaffected. Add <span class="inline_code">?includeLoadProblems=true</span> to get the problems themselves; the body is then an object holding the expectations and the problems, where <span class="inline_code">specIndex</span> is the position of the spec in the request (counting from 0):</p>
+<pre class="code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/openapi?includeLoadProblems=true" -d '{
+    "specUrlOrPayload": "file:/Users/me/petstore.yaml"
+}'</code></pre>
+<pre class="code"><code class="code">{
+  "expectations" : [ ... ],
+  "loadProblems" : [ {
+    "specIndex" : 0,
+    "kind" : "REF",
+    "kindLabel" : "unresolved or mistyped $ref",
+    "location" : "#/paths/~1pets/get/responses/200/content/application~1json/schema/$ref",
+    "description" : "$ref target #/components/schemas/Missing does not exist",
+    "hint" : "check that the $ref target exists (names are case-sensitive) and that any referenced file can be read"
+  } ]
+}</code></pre>
+<p>The MCP tool <span class="inline_code">create_expectation_from_openapi</span> returns the same problems in its <span class="inline_code">loadProblems</span> field, at most 50 of them, with <span class="inline_code">loadProblemsNotShown</span> counting any more.</p>
 
 <a id="openapi_incremental_sync" class="anchor" href="#openapi_incremental_sync">&nbsp;</a>
 

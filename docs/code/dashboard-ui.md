@@ -1020,7 +1020,7 @@ The AppBar "Import / export" (wrench) menu groups one-off control-plane tools, e
 
 | Menu item | Dialog | Endpoint(s) |
 |-----------|--------|-------------|
-| Import OpenAPI / WSDL | `OpenApiImportDialog` / `WsdlImportDialog` | `PUT /mockserver/openapi` / WSDL import |
+| Import OpenAPI / WSDL | `OpenApiImportDialog` / `WsdlImportDialog` | `PUT /mockserver/openapi?includeLoadProblems=true` (the spec's load problems are shown by `OpenApiLoadProblemsAlert`, as in the Composer's Import form) / WSDL import |
 | Pact contract (export / verify) | `PactExportDialog` | `PUT /mockserver/pact`, `PUT /mockserver/pact/verify` |
 | Mock OIDC provider | `OidcDialog` | `PUT /mockserver/oidc` |
 | Mock SAML provider | `SamlDialog` | `PUT /mockserver/saml` |

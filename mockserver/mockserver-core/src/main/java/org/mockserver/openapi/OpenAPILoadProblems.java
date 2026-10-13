@@ -1,5 +1,7 @@
 package org.mockserver.openapi;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -22,7 +24,7 @@ import static org.mockserver.character.Character.NEW_LINE;
  */
 public final class OpenAPILoadProblems {
 
-    enum Kind {
+    public enum Kind {
         SYNTAX("syntax error"),
         UNREADABLE("spec could not be read"),
         REF("unresolved or mistyped $ref"),
@@ -39,7 +41,7 @@ public final class OpenAPILoadProblems {
             this.label = label;
         }
 
-        String label() {
+        public String label() {
             return label;
         }
     }
@@ -47,7 +49,23 @@ public final class OpenAPILoadProblems {
     /**
      * @param location a JSON pointer, "line N, column M", or null when the message names no location
      */
-    record Problem(Kind kind, String location, String description, String hint) {
+    public record Problem(Kind kind, String location, String description, String hint) {
+
+        /**
+         * Writes {@code kind}, {@code kindLabel}, {@code description} and, when known, {@code location} and {@code hint}.
+         */
+        public ObjectNode writeTo(ObjectNode node) {
+            node.put("kind", kind.name());
+            node.put("kindLabel", kind.label());
+            if (location != null) {
+                node.put("location", location);
+            }
+            node.put("description", description);
+            if (hint != null) {
+                node.put("hint", hint);
+            }
+            return node;
+        }
     }
 
     private static final Pattern ATTRIBUTE = Pattern.compile("^attribute (.+) is (unexpected|missing|unsupported|repeated|reserved by The OpenAPI Initiative|not of type `(.*)`)$", Pattern.DOTALL);
@@ -68,7 +86,7 @@ public final class OpenAPILoadProblems {
     private OpenAPILoadProblems() {
     }
 
-    static List<Problem> problems(Collection<String> messages) {
+    public static List<Problem> problems(Collection<String> messages) {
         List<Problem> problems = new ArrayList<>();
         if (messages != null) {
             for (String message : new LinkedHashSet<>(messages)) {
@@ -90,7 +108,10 @@ public final class OpenAPILoadProblems {
      * </pre>
      */
     public static String describe(Collection<String> messages) {
-        List<Problem> problems = problems(messages);
+        return describeProblems(problems(messages));
+    }
+
+    static String describeProblems(List<Problem> problems) {
         Map<Kind, List<Problem>> byKind = new EnumMap<>(Kind.class);
         problems.forEach(problem -> byKind.computeIfAbsent(problem.kind(), kind -> new ArrayList<>()).add(problem));
         StringBuilder text = new StringBuilder()

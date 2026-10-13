@@ -184,6 +184,41 @@ public class OpenAPILoadProblemsTest {
     }
 
     @Test
+    public void shouldReturnProblemsOnEveryLoadButWarnOnlyWhenParsed() {
+        MockServerLogger logger = mock(MockServerLogger.class);
+        when(logger.isEnabledForInstance(any())).thenReturn(true);
+        String spec = spec("3.0.0", "" +
+            "paths:\n" +
+            "  pets:\n" +
+            "    get:\n" +
+            "      responses:\n" +
+            "        \"200\":\n" +
+            "          description: ok\n");
+
+        OpenAPIParser.LoadedSpec first = OpenAPIParser.loadOpenAPI(spec, logger, null);
+        OpenAPIParser.LoadedSpec cached = OpenAPIParser.loadOpenAPI(spec, logger, null);
+
+        OpenAPILoadProblems.Problem expected = new OpenAPILoadProblems.Problem(OpenAPILoadProblems.Kind.INVALID_PATH, "#/paths/pets", "path 'pets' does not start with /", "each key under paths must start with '/', for example /pets");
+        assertThat(first.problems(), is(List.of(expected)));
+        assertThat(cached.problems(), is(List.of(expected)));
+        assertThat(cached.openAPI(), is(first.openAPI()));
+        ArgumentCaptor<LogEntry> entries = ArgumentCaptor.forClass(LogEntry.class);
+        verify(logger, atLeast(0)).logEvent(entries.capture());
+        assertThat(entries.getAllValues().stream().filter(entry -> entry.getLogLevel() == Level.WARN).count(), is(1L));
+    }
+
+    @Test
+    public void shouldReturnNoProblemsForCleanSpec() {
+        assertThat(OpenAPIParser.loadOpenAPI(spec("3.0.0", "" +
+            "paths:\n" +
+            "  /pets:\n" +
+            "    get:\n" +
+            "      responses:\n" +
+            "        \"200\":\n" +
+            "          description: ok\n"), new MockServerLogger(OpenAPILoadProblemsTest.class), null).problems(), is(empty()));
+    }
+
+    @Test
     public void shouldNotWarnForCleanSpec() {
         List<String> warnings = loadWarnings(spec("3.0.0", "" +
             "paths:\n" +

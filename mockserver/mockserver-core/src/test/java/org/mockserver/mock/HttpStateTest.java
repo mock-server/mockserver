@@ -1,6 +1,7 @@
 package org.mockserver.mock;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
@@ -1252,6 +1253,107 @@ public class HttpStateTest {
             "       in 'reader', line 1, column 19:" + NEW_LINE +
             "          \"openapi\": \"3.0.0\"," + NEW_LINE +
             "                            ^"));
+    }
+
+    /**
+     * Loads, but its response schema names a component that does not exist; a unique title keeps it out of the parse cache.
+     */
+    private static String specWithMissingRef() {
+        return "openapi: 3.0.0\n" +
+            "info:\n" +
+            "  title: \"" + java.util.UUID.randomUUID() + "\"\n" +
+            "  version: \"1\"\n" +
+            "paths:\n" +
+            "  /pets:\n" +
+            "    get:\n" +
+            "      operationId: listPets\n" +
+            "      responses:\n" +
+            "        \"200\":\n" +
+            "          description: ok\n" +
+            "          content:\n" +
+            "            application/json:\n" +
+            "              schema:\n" +
+            "                $ref: \"#/components/schemas/Missing\"\n";
+    }
+
+    private HttpResponse putOpenAPI(boolean includeLoadProblems, String... specs) throws InterruptedException {
+        OpenAPIExpectation[] expectations = Arrays.stream(specs).map(OpenAPIExpectation::openAPIExpectation).toArray(OpenAPIExpectation[]::new);
+        HttpRequest request = request("/mockserver/openapi").withMethod("PUT").withBody(openAPIExpectationSerializer.serialize(expectations));
+        if (includeLoadProblems) {
+            request.withQueryStringParameter("includeLoadProblems", "true");
+        }
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+        assertThat(httpState.handle(request, responseWriter, false), is(true));
+        responseWriter.awaitResponse();
+        assertThat(responseWriter.response.getBodyAsString(), responseWriter.response.getStatusCode(), is(201));
+        return responseWriter.response;
+    }
+
+    @Test
+    public void shouldReturnLoadProblemsOfSpecThatLoadsWhenRequested() throws Exception {
+        // when
+        HttpResponse response = putOpenAPI(true, specWithMissingRef());
+
+        // then
+        assertThat(response.getFirstHeader("x-mockserver-openapi-load-problems"), is("1"));
+        JsonNode body = ObjectMapperFactory.createObjectMapper().readTree(response.getBodyAsString());
+        assertThat(body.path("expectations").size(), is(1));
+        assertThat(body.path("expectations").get(0).path("httpRequest").path("operationId").asText(), is("listPets"));
+        assertThat(body.path("loadProblems").size(), is(1));
+        JsonNode problem = body.path("loadProblems").get(0);
+        assertThat(problem.path("specIndex").asInt(), is(0));
+        assertThat(problem.path("kind").asText(), is("REF"));
+        assertThat(problem.path("kindLabel").asText(), is("unresolved or mistyped $ref"));
+        assertThat(problem.path("location").asText(), is("#/paths/~1pets/get/responses/200/content/application~1json/schema/$ref"));
+        assertThat(problem.path("description").asText(), is("$ref target #/components/schemas/Missing does not exist"));
+        assertThat(problem.path("hint").asText(), startsWith("check that the $ref target exists"));
+    }
+
+    @Test
+    public void shouldKeepExpectationArrayBodyAndCountLoadProblemsInHeaderByDefault() throws Exception {
+        // when
+        HttpResponse response = putOpenAPI(false, specWithMissingRef());
+
+        // then
+        assertThat(response.getFirstHeader("x-mockserver-openapi-load-problems"), is("1"));
+        Expectation[] expectations = expectationSerializer.deserializeArray(response.getBodyAsString(), true);
+        assertThat(expectations.length, is(1));
+    }
+
+    @Test
+    public void shouldReturnLoadProblemsWhenSameInlineSpecIsImportedAgain() throws Exception {
+        // given
+        String spec = specWithMissingRef();
+        putOpenAPI(false, spec);
+
+        // when
+        HttpResponse response = putOpenAPI(true, spec);
+
+        // then
+        assertThat(response.getFirstHeader("x-mockserver-openapi-load-problems"), is("1"));
+        JsonNode body = ObjectMapperFactory.createObjectMapper().readTree(response.getBodyAsString());
+        assertThat(body.path("loadProblems").get(0).path("kind").asText(), is("REF"));
+    }
+
+    @Test
+    public void shouldIndexLoadProblemsBySpecAndOmitCountHeaderForCleanSpec() throws Exception {
+        // given
+        String cleanSpec = FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json");
+
+        // when
+        HttpResponse clean = putOpenAPI(true, cleanSpec);
+        HttpResponse mixed = putOpenAPI(true, cleanSpec, specWithMissingRef());
+
+        // then
+        assertThat(clean.containsHeader("x-mockserver-openapi-load-problems"), is(false));
+        JsonNode cleanBody = ObjectMapperFactory.createObjectMapper().readTree(clean.getBodyAsString());
+        assertThat(cleanBody.path("expectations").size(), is(4));
+        assertThat(cleanBody.path("loadProblems").isArray(), is(true));
+        assertThat(cleanBody.path("loadProblems").size(), is(0));
+        JsonNode mixedBody = ObjectMapperFactory.createObjectMapper().readTree(mixed.getBodyAsString());
+        assertThat(mixedBody.path("expectations").size(), is(5));
+        assertThat(mixedBody.path("loadProblems").size(), is(1));
+        assertThat(mixedBody.path("loadProblems").get(0).path("specIndex").asInt(), is(1));
     }
 
     @Test
