@@ -123,6 +123,14 @@ public final class LlmProviderSniffer {
         "/models/([^/:]+):[A-Za-z]+$");
     private static final java.util.regex.Pattern BEDROCK_MODEL_PATH_PATTERN = java.util.regex.Pattern.compile(
         "/model/([^/]+)/(?:invoke|invoke-with-response-stream|converse|converse-stream)(?:[/?]|$)");
+    private static final java.util.regex.Pattern BEDROCK_INVOKE_PATH_PATTERN = java.util.regex.Pattern.compile(
+        "/invoke(?:-with-response-stream)?/?$");
+    // models whose native InvokeModel request is a prompt string, not chat messages (AWS Bedrock model parameters):
+    // Titan Text, AI21 Jurassic-2, Cohere Command and Command Light, Meta Llama, Mistral 7B, Mixtral and Mistral
+    // Small 24.02, DeepSeek-R1. Mistral Large 24.02 and Claude 2 accept both, so they are left as chat.
+    private static final java.util.regex.Pattern BEDROCK_TEXT_COMPLETION_MODEL_PATTERN = java.util.regex.Pattern.compile(
+        "amazon\\.titan-(?:text|tg1)-|ai21\\.j2-|cohere\\.command-(?:light-)?text-|meta\\.llama"
+            + "|mistral\\.(?:mistral-7b-instruct|mixtral-8x7b-instruct|mistral-small-2402)|deepseek\\.r1");
 
     // Path-shape patterns for offline analysis detection (sniffByPath), mirroring
     // the dashboard's llmTraffic.ts. Matched against the original (case-sensitive)
@@ -145,11 +153,15 @@ public final class LlmProviderSniffer {
     // (callers lower-case the path before matching).
     private static final java.util.regex.Pattern OPENAI_RESPONSES_PATH_PATTERN = java.util.regex.Pattern.compile(
         "/v1/responses|(^|/)(codex|openai)/responses(?:[/?]|$)");
-    // Vertex AI Gemini host: global aiplatform.googleapis.com or regional
-    // <region>-aiplatform.googleapis.com. Fully anchored (the region label has no
-    // dot) so an arbitrary host cannot be glued in front. Compiled once.
+    // Vertex AI host: global aiplatform.googleapis.com, regional <region>-aiplatform.googleapis.com
+    // or multi-region aiplatform.<us|eu>.rep.googleapis.com. Matched whole (no label has a dot) so
+    // an arbitrary host cannot be glued on.
     private static final java.util.regex.Pattern VERTEX_HOST_PATTERN = java.util.regex.Pattern.compile(
-        "(?:[a-z0-9-]+-)?aiplatform\\.googleapis\\.com");
+        "(?:[a-z0-9-]+-)?aiplatform\\.googleapis\\.com|aiplatform\\.[a-z0-9-]+\\.rep\\.googleapis\\.com");
+    // Vertex AI's OpenAI-compatible APIs: endpoints/openapi for Model Garden and partner models, and
+    // endpoints/{id} for a self-deployed model
+    private static final java.util.regex.Pattern VERTEX_OPENAI_COMPATIBLE_PATH_PATTERN = java.util.regex.Pattern.compile(
+        "/endpoints/[^/]+/(chat/completions|responses)(?:[/?]|$)");
     // Bedrock Runtime invocation paths: any model id, both invoke and Converse APIs
     // (invoke, invoke-with-response-stream, converse, converse-stream). Not anchored
     // to anthropic.* — non-Anthropic models use the same path shape.
@@ -417,16 +429,23 @@ public final class LlmProviderSniffer {
         if (lowerHost.equals("generativelanguage.googleapis.com")) {
             return Optional.of(Provider.GEMINI);
         }
-        // Vertex AI Gemini: aiplatform.googleapis.com or <region>-aiplatform.googleapis.com.
-        // matches() anchors the whole string, so an arbitrary host cannot be glued in front.
+        // Vertex AI: matches() anchors the whole string, so an arbitrary host cannot be glued on.
+        // The provider is the wire API the path speaks, Gemini's unless the path says otherwise.
         if (VERTEX_HOST_PATTERN.matcher(lowerHost).matches()) {
-            // Claude on Vertex AI speaks the Anthropic Messages API, and Mistral models Mistral's chat API
             String lowerPath = path != null ? path.toLowerCase() : "";
+            java.util.regex.Matcher openAiCompatible = VERTEX_OPENAI_COMPATIBLE_PATH_PATTERN.matcher(lowerPath);
+            if (openAiCompatible.find()) {
+                return Optional.of("responses".equals(openAiCompatible.group(1)) ? Provider.OPENAI_RESPONSES : Provider.OPENAI);
+            }
+            // Claude speaks the Anthropic Messages API, Mistral models Mistral's chat API, AI21 Jamba OpenAI's chat shape
             if (lowerPath.contains("/publishers/anthropic/")) {
                 return Optional.of(Provider.ANTHROPIC);
             }
             if (lowerPath.contains("/publishers/mistralai/")) {
                 return Optional.of(Provider.MISTRAL);
+            }
+            if (lowerPath.contains("/publishers/ai21/")) {
+                return Optional.of(Provider.OPENAI);
             }
             return Optional.of(Provider.GEMINI);
         }
@@ -626,6 +645,9 @@ public final class LlmProviderSniffer {
                 if (bedrockModel.contains("embed")) {
                     return Optional.of(Operation.EMBEDDINGS);
                 }
+                if (isBedrockTextCompletionInvocation(lowerPath)) {
+                    return Optional.of(Operation.TEXT_COMPLETION);
+                }
             }
             // Claude on Vertex AI counts tokens through a model named count-tokens
             if ("count-tokens".equals(chat.group(2))) {
@@ -645,6 +667,18 @@ public final class LlmProviderSniffer {
             return Optional.of(Operation.CHAT);
         }
         return Optional.empty();
+    }
+
+    /**
+     * Whether a Bedrock InvokeModel request ({@code invoke} or {@code invoke-with-response-stream}, not the
+     * Converse API, which is chat for every model) is to a model whose native request is a prompt string.
+     */
+    private static boolean isBedrockTextCompletionInvocation(String lowerPath) {
+        if (!BEDROCK_INVOKE_PATH_PATTERN.matcher(lowerPath).find()) {
+            return false;
+        }
+        String modelId = extractBedrockModelFromPath(lowerPath);
+        return modelId != null && BEDROCK_TEXT_COMPLETION_MODEL_PATTERN.matcher(modelId).lookingAt();
     }
 
     /**

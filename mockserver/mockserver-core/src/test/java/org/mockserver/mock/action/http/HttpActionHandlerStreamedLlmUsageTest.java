@@ -993,6 +993,65 @@ public class HttpActionHandlerStreamedLlmUsageTest {
         assertThat(recordedCostUsd(), greaterThan(0.0));
     }
 
+    // https://docs.cloud.google.com/vertex-ai/generative-ai/docs/maas/call-open-model-apis: OpenAI-shaped usage,
+    // whole and on the stream's final chunk
+    @Test
+    public void shouldCountVertexAiOpenAiCompatibleChatCompletionsByTheirOpenAiUsage() {
+        enableLlmTokenMetrics();
+        String path = "/v1/projects/my-project/locations/us-east5/endpoints/openapi/chat/completions";
+        forwardResponse("us-east5-aiplatform.googleapis.com", path,
+            "{\"model\":\"meta/llama-3.3-70b-instruct-maas\",\"messages\":[{\"role\":\"user\",\"content\":\"Summer travel plan to Paris\"}]}", json(
+                "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"content\":\"Day 1: the Louvre.\","
+                    + "\"role\":\"assistant\"}}],\"created\":1733347200,\"id\":\"2024-12-04|23:20:00.000000-08|1.2.3.4|-123\","
+                    + "\"model\":\"meta/llama-3.3-70b-instruct-maas\",\"object\":\"chat.completion\",\"system_fingerprint\":\"\","
+                    + "\"usage\":{\"completion_tokens\":367,\"prompt_tokens\":14,\"total_tokens\":381}}"));
+        forwardStream("us-east5-aiplatform.googleapis.com", path,
+            "{\"model\":\"meta/llama-3.3-70b-instruct-maas\",\"stream\":true,\"messages\":[]}", utf8(""
+                + "data: {\"choices\":[{\"delta\":{\"content\":\"Day 1\",\"role\":\"assistant\"},\"index\":0}],\"created\":1733347200,"
+                + "\"id\":\"2024-12-04|23:20:01.000000-08|1.2.3.4|-124\",\"model\":\"meta/llama-3.3-70b-instruct-maas\","
+                + "\"object\":\"chat.completion.chunk\",\"system_fingerprint\":\"\"}\n\n"
+                + "data: {\"choices\":[{\"delta\":{\"content\":\": the Louvre.\",\"role\":\"assistant\"},\"finish_reason\":\"stop\",\"index\":0}],"
+                + "\"created\":1733347200,\"id\":\"2024-12-04|23:20:01.000000-08|1.2.3.4|-124\",\"model\":\"meta/llama-3.3-70b-instruct-maas\","
+                + "\"object\":\"chat.completion.chunk\",\"system_fingerprint\":\"\",\"usage\":{\"completion_tokens\":131,\"prompt_tokens\":14,"
+                + "\"total_tokens\":145}}\n\n"
+                + "data: [DONE]\n\n"));
+
+        List<SpanData> genAiSpans = genAiSpans();
+        assertThat(genAiSpans, hasSize(2));
+        assertOperation(genAiSpans.get(0), "chat", "chat meta/llama-3.3-70b-instruct-maas");
+        assertTokens(genAiSpans.get(0), "openai", "meta/llama-3.3-70b-instruct-maas", 14L, 367L);
+        assertTokens(genAiSpans.get(1), "openai", "meta/llama-3.3-70b-instruct-maas", 14L, 131L);
+        assertThat(Metrics.getLlmOutputTokens("OPENAI", "meta/llama-3.3-70b-instruct-maas"), is(498L));
+    }
+
+    // Grok on Vertex AI serves the Responses API on the multi-region host:
+    // https://docs.cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-partner-models
+    @Test
+    public void shouldCountAResponsesApiStreamFromAVertexAiMultiRegionHost() {
+        forwardStream("aiplatform.us.rep.googleapis.com", "/v1/projects/my-project/locations/us/endpoints/openapi/responses",
+            "{\"model\":\"xai/grok-4.7\",\"stream\":true,\"input\":[]}", utf8(ProviderStreamFixtures.OPENAI_RESPONSES));
+
+        SpanData span = singleGenAiSpan();
+        assertOperation(span, "chat", "chat gpt-4o-2024-08-06");
+        assertTokens(span, "openai", "gpt-4o-2024-08-06", 37L, 11L);
+    }
+
+    // ai21 4.3.0: ai21/clients/vertex/ai21_vertex_client.py drops "model" from the body and puts it in the
+    // rawPredict path; ai21/models/chat/chat_completion_response.py has no model, and usage is UsageInfo
+    @Test
+    public void shouldCountAi21JambaOnVertexAiByTheModelInItsPath() {
+        forwardResponse("us-central1-aiplatform.googleapis.com",
+            "/v1/projects/my-project/locations/us-central1/publishers/ai21/models/jamba-1.5-large@001:rawPredict",
+            "{\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}],\"max_tokens\":100}", json(
+                "{\"id\":\"chat-0a1b2c3d4e5f\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Hi there\","
+                    + "\"tool_calls\":null},\"logprobs\":null,\"finish_reason\":\"stop\"}],"
+                    + "\"usage\":{\"prompt_tokens\":9,\"completion_tokens\":4,\"total_tokens\":13}}"));
+
+        SpanData span = singleGenAiSpan();
+        assertOperation(span, "chat", "chat jamba-1.5-large@001");
+        assertTokens(span, "openai", "jamba-1.5-large@001", 9L, 4L);
+    }
+
     private List<SpanData> genAiSpansWithTokens() {
         return genAiSpans().stream()
             .filter(span -> span.getAttributes().get(longKey("gen_ai.usage.input_tokens")) != null)
@@ -1199,6 +1258,42 @@ public class HttpActionHandlerStreamedLlmUsageTest {
         SpanData span = singleGenAiSpan();
         assertOperation(span, "text_completion", "text_completion llama3.2");
         assertTokens(span, "ollama", "llama3.2", 26L, 259L);
+    }
+
+    // a Bedrock InvokeModel path does not say which API the model speaks, so its model family decides
+    @Test
+    public void shouldNameABedrockInvocationOfAPromptStringModelTextCompletion() {
+        // https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-meta.html
+        forwardResponse("bedrock-runtime.us-west-2.amazonaws.com", "/model/meta.llama3-70b-instruct-v1:0/invoke",
+            "{\"prompt\":\"<|begin_of_text|><|start_header_id|>user<|end_header_id|>\\nHello<|eot_id|>\",\"max_gen_len\":512}", json(
+                "{\"generation\":\"\\n\\nHello! How can I help?\",\"prompt_token_count\":17,\"generation_token_count\":8,\"stop_reason\":\"stop\"}")
+                .withHeader("X-Amzn-Bedrock-Input-Token-Count", "17")
+                .withHeader("X-Amzn-Bedrock-Output-Token-Count", "8"));
+        // https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-cohere-command.html
+        forwardResponse("bedrock-runtime.us-east-1.amazonaws.com", "/model/cohere.command-text-v14/invoke",
+            "{\"prompt\":\"Summarize this dialogue\",\"max_tokens\":200}", json(
+                "{\"generations\":[{\"finish_reason\":\"COMPLETE\",\"id\":\"5c4ec7a5-2f6e-4ed3-9f43-4f1c8d0a1b2c\",\"text\":\" A customer asks for help.\"}],"
+                    + "\"id\":\"6a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9\",\"prompt\":\"Summarize this dialogue\"}")
+                .withHeader("X-Amzn-Bedrock-Input-Token-Count", "4")
+                .withHeader("X-Amzn-Bedrock-Output-Token-Count", "6"));
+        // the Converse API is chat for the same model, and a messages model on InvokeModel stays chat
+        forwardResponse("bedrock-runtime.us-west-2.amazonaws.com", "/model/meta.llama3-70b-instruct-v1:0/converse",
+            "{\"messages\":[{\"role\":\"user\",\"content\":[{\"text\":\"Hello\"}]}]}", json(
+                "{\"output\":{\"message\":{\"role\":\"assistant\",\"content\":[{\"text\":\"Hello!\"}]}},\"stopReason\":\"end_turn\","
+                    + "\"usage\":{\"inputTokens\":10,\"outputTokens\":3,\"totalTokens\":13},\"metrics\":{\"latencyMs\":120}}"));
+        forwardResponse("bedrock-runtime.us-west-2.amazonaws.com", "/model/cohere.command-r-plus-v1:0/invoke",
+            "{\"message\":\"Hello\",\"chat_history\":[]}", json("{\"response_id\":\"r-1\",\"text\":\"Hi\",\"finish_reason\":\"COMPLETE\"}")
+                .withHeader("X-Amzn-Bedrock-Input-Token-Count", "3")
+                .withHeader("X-Amzn-Bedrock-Output-Token-Count", "1"));
+
+        List<SpanData> genAiSpans = genAiSpans();
+        assertThat(genAiSpans, hasSize(4));
+        assertOperation(genAiSpans.get(0), "text_completion", "text_completion meta.llama3-70b-instruct-v1:0");
+        assertTokens(genAiSpans.get(0), "aws.bedrock", "meta.llama3-70b-instruct-v1:0", 17L, 8L);
+        assertOperation(genAiSpans.get(1), "text_completion", "text_completion cohere.command-text-v14");
+        assertTokens(genAiSpans.get(1), "aws.bedrock", "cohere.command-text-v14", 4L, 6L);
+        assertOperation(genAiSpans.get(2), "chat", "chat meta.llama3-70b-instruct-v1:0");
+        assertOperation(genAiSpans.get(3), "chat", "chat cohere.command-r-plus-v1:0");
     }
 
     // ---- a Bedrock call names its model in the request path ----

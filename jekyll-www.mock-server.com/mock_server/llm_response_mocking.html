@@ -1378,7 +1378,13 @@ geminiLive()
     InvokeModel calls whose body reports no usage, such as embedding and rerank models, by the token-count headers
     Bedrock returns. A Bedrock Agent Runtime <span class="inline_code">/rerank</span> call is named by the model in
     its <span class="inline_code">modelArn</span>, and reports no tokens. On Vertex AI, embedding models called
-    with <span class="inline_code">:predict</span> are counted, and Mistral models are counted as Mistral.
+    with <span class="inline_code">:predict</span> are counted, and Mistral models are counted as Mistral. Calls to
+    Vertex AI's OpenAI-compatible endpoints (<span class="inline_code">endpoints/openapi/chat/completions</span> and
+    <span class="inline_code">endpoints/openapi/responses</span>, used for Llama, DeepSeek, Qwen, gpt-oss, Grok and
+    other Model Garden models, for Gemini through OpenAI libraries, and the same paths on a self-deployed endpoint)
+    and to AI21 Jamba are counted from their OpenAI-style usage, including on the multi-region
+    <span class="inline_code">aiplatform.us.rep.googleapis.com</span> and
+    <span class="inline_code">aiplatform.eu.rep.googleapis.com</span> hosts.
     An OpenAI response created with <span class="inline_code">background: true</span> and an xAI deferred
     completion report their usage only when the finished result is fetched, so that fetch is counted, once however
     many times it is polled. Other requests to an LLM host, such as listing models, fetching an ordinary stored

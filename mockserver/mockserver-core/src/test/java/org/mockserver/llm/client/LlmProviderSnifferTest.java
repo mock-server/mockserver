@@ -938,6 +938,110 @@ public class LlmProviderSnifferTest {
             "/v1/projects/p/locations/global/publishers/google/models/text-embedding-005:predict"), is(Optional.of(Provider.GEMINI)));
     }
 
+    @Test
+    public void detectsVertexAiOpenAiCompatibleEndpointsByTheirOpenAiWireApi() {
+        // https://docs.cloud.google.com/vertex-ai/generative-ai/docs/maas/call-open-model-apis
+        // https://docs.cloud.google.com/vertex-ai/generative-ai/docs/migrate/openai/overview (self-deployed endpoints)
+        String[][] chatCompletions = {
+            {"us-central1-aiplatform.googleapis.com", "/v1/projects/p/locations/us-central1/endpoints/openapi/chat/completions"},
+            {"us-central1-aiplatform.googleapis.com", "/v1beta1/projects/p/locations/us-central1/endpoints/openapi/chat/completions"},
+            {"aiplatform.googleapis.com", "/v1/projects/p/locations/global/endpoints/openapi/chat/completions"},
+            {"us-east4-aiplatform.googleapis.com", "/v1beta1/projects/p/locations/us-east4/endpoints/1234567890/chat/completions"},
+        };
+        for (String[] hostAndPath : chatCompletions) {
+            assertThat(hostAndPath[1], LlmProviderSniffer.sniffByHostAndPath(hostAndPath[0], hostAndPath[1]), is(Optional.of(Provider.OPENAI)));
+            assertOperation(Provider.OPENAI, "POST", hostAndPath[1], LlmProviderSniffer.Operation.CHAT);
+        }
+        // Grok on Vertex AI: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-partner-models
+        String responses = "/v1/projects/p/locations/us/endpoints/openapi/responses";
+        assertThat(LlmProviderSniffer.sniffByHostAndPath("aiplatform.us.rep.googleapis.com", responses), is(Optional.of(Provider.OPENAI_RESPONSES)));
+        assertThat(LlmProviderSniffer.sniffByHostAndPath("us-central1-aiplatform.googleapis.com",
+            "/v1/projects/p/locations/us-central1/endpoints/openapi/responses?alt=json"), is(Optional.of(Provider.OPENAI_RESPONSES)));
+        assertOperation(Provider.OPENAI_RESPONSES, "POST", responses, LlmProviderSniffer.Operation.CHAT);
+
+        // the Gemini API and a deployed endpoint's own predict method keep Gemini's wire API
+        assertThat(LlmProviderSniffer.sniffByHostAndPath("us-central1-aiplatform.googleapis.com",
+            "/v1/projects/p/locations/us-central1/publishers/google/models/gemini-2.5-flash:generateContent"), is(Optional.of(Provider.GEMINI)));
+        assertThat(LlmProviderSniffer.sniffByHostAndPath("us-central1-aiplatform.googleapis.com",
+            "/v1/projects/p/locations/us-central1/endpoints/1234567890:predict"), is(Optional.of(Provider.GEMINI)));
+        assertThat(LlmProviderSniffer.sniffByHostAndPath("us-central1-aiplatform.googleapis.com",
+            "/v1/projects/p/locations/us-central1/endpoints/openapi/chat/completions-archive"), is(Optional.of(Provider.GEMINI)));
+    }
+
+    @Test
+    public void detectsAi21JambaOnVertexAiByItsOpenAiShapedUsage() {
+        // ai21 4.3.0 ai21/clients/vertex/ai21_vertex_client.py: /publishers/ai21/models/{model}:rawPredict|streamRawPredict;
+        // ai21/models/usage_info.py: prompt_tokens, completion_tokens, total_tokens
+        for (String method : new String[]{"rawPredict", "streamRawPredict"}) {
+            String path = "/v1/projects/p/locations/us-central1/publishers/ai21/models/jamba-1.5-large@001:" + method;
+            assertThat(path, LlmProviderSniffer.sniffByHostAndPath("us-central1-aiplatform.googleapis.com", path), is(Optional.of(Provider.OPENAI)));
+            assertOperation(Provider.OPENAI, "POST", path, LlmProviderSniffer.Operation.CHAT);
+        }
+    }
+
+    @Test
+    public void detectsTheVertexAiMultiRegionHosts() {
+        // https://docs.cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-partner-models
+        assertThat(LlmProviderSniffer.sniffByHostAndPath("aiplatform.us.rep.googleapis.com",
+                "/v1/projects/p/locations/us/publishers/anthropic/models/claude-opus-4-7:rawPredict"),
+            is(Optional.of(Provider.ANTHROPIC)));
+        assertThat(LlmProviderSniffer.sniffByHostAndPath("aiplatform.eu.rep.googleapis.com",
+                "/v1/projects/p/locations/eu/publishers/anthropic/models/claude-opus-4-7:streamRawPredict"),
+            is(Optional.of(Provider.ANTHROPIC)));
+        assertThat(LlmProviderSniffer.sniffByHost("aiplatform.us.rep.googleapis.com"), is(Optional.of(Provider.GEMINI)));
+        // an arbitrary host cannot be glued around the multi-region domain
+        assertThat(LlmProviderSniffer.sniffByHost("evil.aiplatform.us.rep.googleapis.com"), is(Optional.empty()));
+        assertThat(LlmProviderSniffer.sniffByHost("aiplatform.evil.com.rep.googleapis.com"), is(Optional.empty()));
+        assertThat(LlmProviderSniffer.sniffByHost("aiplatform.us.rep.googleapis.com.evil.com"), is(Optional.empty()));
+    }
+
+    @Test
+    public void accountsABedrockInvocationOfALegacyTextCompletionModelAsTextCompletion() {
+        // AWS Bedrock user guide, model parameters: each of these takes a prompt string, not chat messages, on InvokeModel
+        String[] textCompletionModels = {
+            // model-parameters-titan-text.html: inputText -> results[].outputText
+            "amazon.titan-text-express-v1", "amazon.titan-text-lite-v1", "amazon.titan-text-premier-v1%3A0", "amazon.titan-tg1-large",
+            // model-parameters-jurassic2.html: prompt -> completions[].data.text
+            "ai21.j2-mid-v1", "ai21.j2-ultra-v1",
+            // model-parameters-cohere-command.html: prompt -> generations[].text
+            "cohere.command-text-v14", "cohere.command-light-text-v14",
+            // model-parameters-meta.html: prompt -> generation, "for a text completion inference call"
+            "meta.llama3-70b-instruct-v1%3A0", "meta.llama3-2-90b-instruct-v1%3A0", "meta.llama4-maverick-17b-instruct-v1%3A0",
+            // model-parameters-mistral-text-completion.html: prompt -> outputs[].text
+            "mistral.mistral-7b-instruct-v0%3A2", "mistral.mixtral-8x7b-instruct-v0%3A1", "mistral.mistral-small-2402-v1%3A0",
+            // model-parameters-deepseek.html: prompt -> choices[].text, "for a Text Completion inference call"
+            "deepseek.r1-v1%3A0",
+            // a cross-Region inference profile and a foundation-model ARN name the same models
+            "us.meta.llama3-2-90b-instruct-v1%3A0", "us.deepseek.r1-v1%3A0",
+            "arn%3Aaws%3Abedrock%3Aus-east-1%3A%3Afoundation-model%2Fcohere.command-text-v14",
+            "AMAZON.TITAN-TEXT-EXPRESS-V1",
+        };
+        for (String model : textCompletionModels) {
+            assertOperation(Provider.BEDROCK, "POST", "/model/" + model + "/invoke", LlmProviderSniffer.Operation.TEXT_COMPLETION);
+            assertOperation(Provider.BEDROCK, "POST", "/model/" + model + "/invoke-with-response-stream", LlmProviderSniffer.Operation.TEXT_COMPLETION);
+            // the Converse API is a chat API for every model
+            assertOperation(Provider.BEDROCK, "POST", "/model/" + model + "/converse", LlmProviderSniffer.Operation.CHAT);
+            assertOperation(Provider.BEDROCK, "POST", "/model/" + model + "/converse-stream", LlmProviderSniffer.Operation.CHAT);
+        }
+        String[] chatModels = {
+            "anthropic.claude-sonnet-4-5-20250929-v1%3A0", "amazon.nova-pro-v1%3A0",
+            // Command R and Jamba take chat messages
+            "cohere.command-r-plus-v1%3A0", "ai21.jamba-1-5-large-v1%3A0",
+            // model-parameters-mistral-large-2407.html and -chat-completion.html: messages -> choices[].message
+            "mistral.mistral-large-2407-v1%3A0", "mistral.pixtral-large-2502-v1%3A0",
+            // Mistral Large 24.02 accepts both a prompt and messages, so the path cannot say which
+            "mistral.mistral-large-2402-v1%3A0",
+            "openai.gpt-oss-20b-1%3A0",
+            // an application inference profile names no model
+            "arn%3Aaws%3Abedrock%3Aus-east-1%3A123456789012%3Aapplication-inference-profile%2Fa1b2c3d4e5f6",
+        };
+        for (String model : chatModels) {
+            assertOperation(Provider.BEDROCK, "POST", "/model/" + model + "/invoke", LlmProviderSniffer.Operation.CHAT);
+        }
+        // a text embedding model is still an embeddings call
+        assertOperation(Provider.BEDROCK, "POST", "/model/amazon.titan-embed-text-v2%3A0/invoke", LlmProviderSniffer.Operation.EMBEDDINGS);
+    }
+
     // --- Bedrock Agent Runtime rerank model from the request body ---
 
     @Test

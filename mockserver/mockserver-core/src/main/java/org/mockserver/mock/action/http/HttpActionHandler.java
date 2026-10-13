@@ -4729,8 +4729,8 @@ public class HttpActionHandler {
                     model = org.mockserver.llm.client.LlmProviderSniffer.extractBedrockRerankModelFromRequest(forwardedRequest);
                 }
             }
-            if (model == null && provider == Provider.GEMINI) {
-                // a Gemini embeddings response names no model
+            if (model == null) {
+                // a Gemini embeddings response names no model, nor does an AI21 response on Vertex AI
                 model = org.mockserver.llm.client.LlmProviderSniffer.extractGeminiModelFromPath(path);
             }
             if (model == null) {

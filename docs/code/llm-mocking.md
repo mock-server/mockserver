@@ -721,8 +721,8 @@ string removed) in one of these:
 | Operation (`gen_ai.operation.name`) | Path endings |
 |---|---|
 | `generate_content` | Gemini `:generateContent`/`:streamGenerateContent` (Google AI and Vertex AI) |
-| `text_completion` | `/completions` not preceded by `/chat` or `/agents`: legacy `/v1/completions` (also Azure `/openai/deployments/{d}/completions`), Mistral FIM `/v1/fim/completions`, DeepSeek FIM `/beta/completions`; Ollama `/api/generate` |
-| `chat` | `/chat/completions`, Mistral `/v1/agents/completions`, `/responses` and `/responses/compact` (which runs the model), `/messages`, Vertex AI partner models `/models/{model}:rawPredict`/`:streamRawPredict` (Claude on Vertex is sniffed as `ANTHROPIC`; its `count-tokens` model is not counted), Bedrock `/model/{id}/invoke`, `/invoke-with-response-stream`, `/converse`, `/converse-stream`, Ollama `/api/chat`, Cohere `/v1/chat` and `/v2/chat`, and on the Mistral host only the Conversations API `/v1/conversations`, `/v1/conversations/{id}`, `/v1/conversations/{id}/restart` (OpenAI's `/v1/conversations` creates a conversation object without calling a model) |
+| `text_completion` | `/completions` not preceded by `/chat` or `/agents`: legacy `/v1/completions` (also Azure `/openai/deployments/{d}/completions`), Mistral FIM `/v1/fim/completions`, DeepSeek FIM `/beta/completions`; Ollama `/api/generate`; Bedrock `/model/{id}/invoke` and `/invoke-with-response-stream` for a model whose native InvokeModel request is a prompt string rather than chat messages: Titan Text (`amazon.titan-text-*`, `amazon.titan-tg1-*`), AI21 Jurassic-2 (`ai21.j2-*`), Cohere Command and Command Light (`cohere.command-text-*`, `cohere.command-light-text-*`, not Command R), Meta Llama (`meta.llama*`), Mistral 7B Instruct, Mixtral 8x7B Instruct and Mistral Small 24.02, and DeepSeek-R1 (`deepseek.r1*`), matched on the id `extractBedrockModelFromPath` returns, so a cross-Region profile or foundation-model ARN counts |
+| `chat` | `/chat/completions`, Mistral `/v1/agents/completions`, `/responses` and `/responses/compact` (which runs the model), `/messages`, Vertex AI partner models `/models/{model}:rawPredict`/`:streamRawPredict` (Claude on Vertex is sniffed as `ANTHROPIC`; its `count-tokens` model is not counted), Bedrock `/converse` and `/converse-stream` for every model, and `/model/{id}/invoke` and `/invoke-with-response-stream` for any model not listed under `text_completion` (Mistral Large 24.02 and Claude 2 accept both a prompt and messages on InvokeModel, so they stay `chat`), Ollama `/api/chat`, Cohere `/v1/chat` and `/v2/chat`, and on the Mistral host only the Conversations API `/v1/conversations`, `/v1/conversations/{id}`, `/v1/conversations/{id}/restart` (OpenAI's `/v1/conversations` creates a conversation object without calling a model) |
 | `embeddings` | `/embeddings`, Voyage `/multimodalembeddings` and `/contextualizedembeddings`, Ollama `/api/embed`, Cohere `/v1/embed` and `/v2/embed`, Gemini `:embedContent`/`:batchEmbedContents`, Vertex AI `/publishers/google/models/{model}:predict` for a model whose name contains `embedding`, and a Bedrock invocation of a model whose id contains `embed` |
 | `rerank` (no well-known value exists, so a custom one) | `/rerank` (Cohere, Voyage, Bedrock Agent Runtime) and a Bedrock invocation of a model whose id contains `rerank` |
 
@@ -762,8 +762,15 @@ the `/models/{model}:` path, and a Mistral Conversations response names it on ea
 | Vertex AI `:predict` | the sum of `predictions[].embeddings.statistics.token_count`, read by `GeminiLlmClient`; the model from the path | Vertex AI text embeddings API reference |
 
 Cohere and Voyage clients exist only to read usage: `buildCompletionRequest` throws, so neither can be a
-runtime backend. On a Vertex AI host a `/publishers/mistralai/` path is sniffed as `MISTRAL` (Mistral's
-chat wire format), as `/publishers/anthropic/` is as `ANTHROPIC`.
+runtime backend. A Vertex AI host (`aiplatform.googleapis.com`, `{region}-aiplatform.googleapis.com`
+or the multi-region `aiplatform.{us|eu}.rep.googleapis.com`) is sniffed by the wire API its path
+speaks: `/endpoints/{openapi|id}/chat/completions` (Model Garden MaaS and partner models such as
+Llama, DeepSeek, Qwen, gpt-oss and Grok, Gemini through OpenAI libraries, and a self-deployed vLLM or
+TGI endpoint) as `OPENAI`, and `/endpoints/{openapi|id}/responses` as `OPENAI_RESPONSES`, because
+their usage is OpenAI's; `/publishers/anthropic/` as `ANTHROPIC`; `/publishers/mistralai/` as
+`MISTRAL`; `/publishers/ai21/` (Jamba, whose chat response carries OpenAI's `usage.prompt_tokens`
+and `completion_tokens` and no `model`) as `OPENAI`; anything else as `GEMINI`. A response that names
+no model takes it from the `/models/{model}:` path, whatever the provider.
 
 **Bedrock model ids.** A Bedrock request names its model in the path and a Converse response has
 none, so the model is read from `/model/{modelId}/...` (URL-decoded). A foundation-model or
