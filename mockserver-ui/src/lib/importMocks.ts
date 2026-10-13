@@ -15,9 +15,17 @@
  */
 import { buildBaseUrl } from './mcpClient';
 import type { ConnectionParams } from '../hooks/useConnectionParams';
+import { lintWarningCount } from './lint';
 
 /** Collection formats accepted by the PUT /mockserver/import endpoint. */
 export type ImportCollectionFormat = 'har' | 'postman';
+
+/** The expectations an import created, and the lint warnings the server counted for them. */
+export interface ImportedExpectations {
+  created: unknown[];
+  /** `x-mockserver-lint-warnings`, or 0 when the header is absent. */
+  lintWarnings: number;
+}
 
 /**
  * Import raw expectation JSON (a single object or JSON array) via
@@ -28,7 +36,7 @@ export type ImportCollectionFormat = 'har' | 'postman';
 export async function importExpectationJson(
   params: ConnectionParams,
   jsonPayload: string,
-): Promise<unknown[]> {
+): Promise<ImportedExpectations> {
   const parsed: unknown = JSON.parse(jsonPayload);
   const body = Array.isArray(parsed) ? parsed : [parsed];
   const res = await fetch(`${buildBaseUrl(params)}/mockserver/expectation`, {
@@ -40,7 +48,7 @@ export async function importExpectationJson(
     throw new Error((await res.text()) || `HTTP ${res.status} ${res.statusText}`);
   }
   const created = (await res.json()) as unknown;
-  return Array.isArray(created) ? created : [];
+  return { created: Array.isArray(created) ? created : [], lintWarnings: lintWarningCount(res) };
 }
 
 /**

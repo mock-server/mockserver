@@ -315,6 +315,8 @@ sitemap:
 
 <p>To remove several at once, click <strong>Select</strong> in the panel header to turn on multi-select: tick the checkbox on each expectation you want (or use the header checkbox to select all), then click <strong>Delete selected</strong> and confirm. Recorded requests and logs are kept.</p>
 
+<p>Click <strong>Lint</strong> in the panel header to find expectations that can never match, or will not match the way they read: one hidden behind an earlier expectation that always matches first, a path without its leading <code>/</code>, <code>times</code> of 0, and so on. Each finding shows its severity, rule and message; for a hidden expectation it also names the one that wins, and clicking any expectation id opens it in the Mocks composer so you can fix it. When you create an expectation in the Mocks composer, or import Expectation JSON, and the server finds a problem, a <strong>Lint Warnings</strong> badge appears that opens the same list (see <a href="/mock_server/troubleshooting_matching.html#lint_expectations">linting expectations</a>).</p>
+
 <a id="ui_requests_received_section" class="anchor" href="#ui_requests_received_section">&nbsp;</a>
 
 <h2>Received Requests</h2>

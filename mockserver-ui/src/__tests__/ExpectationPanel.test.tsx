@@ -20,6 +20,18 @@ describe('ExpectationPanel', () => {
     vi.restoreAllMocks();
   });
 
+  it('Lint opens the Lint Expectations dialog over PUT /mockserver/lint', async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ expectationsChecked: 0, issues: [] }), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    render(<ExpectationPanel />);
+    await user.click(screen.getByRole('button', { name: 'Lint expectations' }));
+    expect(await screen.findByRole('dialog', { name: 'Lint Expectations' })).toBeInTheDocument();
+    expect(await screen.findByTestId('lint-clean')).toBeInTheDocument();
+    expect(String(fetchMock.mock.calls[0]![0])).toMatch(/\/mockserver\/lint$/);
+    vi.unstubAllGlobals();
+  });
+
   it('shows empty state when no expectations', () => {
     render(<ExpectationPanel />);
     expect(screen.getByText(/No active expectations/)).toBeInTheDocument();

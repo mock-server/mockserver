@@ -622,6 +622,36 @@ instead of the generic "feature not available" message.
 Before this, the chip parsed its value from the group `key`, which is the first entry's log id, not the
 correlation ID; servers that do not send `correlationId` now show no chip and no Explain button.
 
+### Lint Expectations
+
+The **Lint** button in the **Active Expectations** header opens `LintDialog`, which calls
+`PUT /mockserver/lint` with an empty body (`lib/lint.ts`), so the server lints every active
+expectation in serving order. Each finding shows its severity, rule and message, the expectation's
+position, `METHOD path` and id, and for `SHADOWED` a **Shadowed by** line naming the expectation
+evaluated earlier that always matches first. Summary chips give the checked, error, warning and info
+counts, and an alert says when the shadowing check hit its pair budget or the list was capped.
+
+```mermaid
+flowchart LR
+    B["Lint button / lint badge"] --> D["LintDialog"]
+    D -- "PUT /mockserver/lint" --> S["MockServer"]
+    D -- "click an expectation id" --> F["fetchExpectation(id)"]
+    F --> C["editExpectation: Mocks composer"]
+```
+
+- **Links.** Every expectation id in the dialog, including the shadowing one, is a link that loads
+  the whole expectation with `fetchExpectation` (not the capped live list) and opens it in the Mocks
+  composer through `editExpectation`. An expectation removed since the lint keeps the dialog open
+  with the reason.
+- **Badge on create.** `PUT /mockserver/expectation` counts the per-expectation lint warnings in
+  `x-mockserver-lint-warnings`. The composer's **Mock Registered** banner and an Expectation JSON
+  import show the count as a `LintWarningsBadge` chip (`N Lint Warnings`) that opens the same dialog;
+  no header, or `0`, shows nothing. The badge needs the header to be readable: a dashboard on another
+  origin sees it only if CORS exposes it. The dashboard's other create paths (Generate Stub, Capture
+  as Mock, Apply Fix) do not show it.
+- **Cost.** Lint runs only when the dialog opens or **Refresh** is pressed; the server bounds the
+  shadowing work (see [request-processing.md](request-processing.md#expectation-lint)).
+
 ### Row Layout in Requests and Expectations
 
 Each collapsed item row has two lines:
@@ -1202,6 +1232,8 @@ Expandable match failure reasons"]
 | `BecauseSection` | `BecauseSection.tsx` | Expandable list of match failure reasons for `EXPECTATION_NOT_MATCHED` entries |
 | `EventLogLossDetails` | `EventLogLossDetails.tsx` | What the event log lost and the setting to change, inside a `VERIFICATION_FAILED` entry for a verification that failed on an incomplete log |
 | `ErrorBoundary` | `ErrorBoundary.tsx` | Catches render-time exceptions; shows a recoverable inline fallback; keyed-reset on `view`; hard-reload for chunk-load failures |
+| `LintDialog` | `LintDialog.tsx` | Lint Expectations dialog over `PUT /mockserver/lint` (`lib/lint.ts`): severity, rule, message and a link to the shadowing expectation; ids open in the composer |
+| `LintWarningsBadge` | `LintWarningsBadge.tsx` | `N Lint Warnings` chip from `x-mockserver-lint-warnings` after a create; opens `LintDialog` |
 | `HumanErrorAlert` | `HumanErrorAlert.tsx` | Shared error alert: short `message` + inline "Details" expander for the raw server body |
 | `SamlDialog` | `SamlDialog.tsx` | Mock SAML 2.0 IdP registration dialog; backed by `lib/saml.ts` → `PUT /mockserver/saml` |
 | `GrpcServicesPanel` | `GrpcServicesPanel.tsx` | gRPC Services view: polls services + health every 5 s via `lib/grpc.ts` (`PUT /mockserver/grpc/services`, `GET /mockserver/grpc/health`); renders per-service method tables with streaming kind chips |

@@ -23,6 +23,7 @@ import { humanizeError, type HumanError } from '../lib/errorMessage';
 import { monospaceFontFamily } from '../theme';
 import HumanErrorAlert from './HumanErrorAlert';
 import OpenApiLoadProblemsAlert from './OpenApiLoadProblemsAlert';
+import LintWarningsBadge from './LintWarningsBadge';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -77,6 +78,8 @@ export default function ImportForm({ connectionParams }: ImportFormProps) {
   const [error, setError] = useState<HumanError | null>(null);
   const [snackMessage, setSnackMessage] = useState<string | null>(null);
   const [loadProblems, setLoadProblems] = useState<OpenApiLoadProblem[]>([]);
+  // x-mockserver-lint-warnings from the last Expectation JSON import.
+  const [lintWarnings, setLintWarnings] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currentFormatMeta = FORMATS.find((f) => f.value === format)!;
@@ -110,6 +113,7 @@ export default function ImportForm({ connectionParams }: ImportFormProps) {
     setBusy(true);
     setError(null);
     setLoadProblems([]);
+    setLintWarnings(0);
     try {
       const input = source === 'url' ? urlValue.trim() : payload.trim();
       if (!input) {
@@ -129,9 +133,12 @@ export default function ImportForm({ connectionParams }: ImportFormProps) {
 
       let created: unknown[];
       switch (format) {
-        case 'json':
-          created = await importExpectationJson(connectionParams, input);
+        case 'json': {
+          const imported = await importExpectationJson(connectionParams, input);
+          created = imported.created;
+          setLintWarnings(imported.lintWarnings);
           break;
+        }
         case 'openapi': {
           const result = await importOpenApi(connectionParams, input);
           created = result.expectations;
@@ -342,6 +349,12 @@ export default function ImportForm({ connectionParams }: ImportFormProps) {
           </Typography>
         </Box>
       </Paper>
+
+      {lintWarnings > 0 && (
+        <Box>
+          <LintWarningsBadge count={lintWarnings} connectionParams={connectionParams} />
+        </Box>
+      )}
 
       {error && (
         <HumanErrorAlert error={error} variant="outlined" />

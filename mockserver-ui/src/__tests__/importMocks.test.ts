@@ -41,10 +41,16 @@ describe('importExpectationJson', () => {
     const created = [{ id: 'exp1' }, { id: 'exp2' }];
     const calls = stubFetch(201, created);
     const result = await importExpectationJson(params, JSON.stringify(created));
-    expect(result).toEqual(created);
+    expect(result.created).toEqual(created);
+    expect(result.lintWarnings).toBe(0);
     expect(calls[0]?.url).toBe('http://127.0.0.1:1080/mockserver/expectation');
     expect(calls[0]?.init?.method).toBe('PUT');
     expect(calls[0]?.init?.headers).toEqual({ 'Content-Type': 'application/json' });
+  });
+
+  it('returns the lint warning count from x-mockserver-lint-warnings', async () => {
+    stubFetch(201, [{ id: 'exp1' }], { 'x-mockserver-lint-warnings': '2' });
+    expect((await importExpectationJson(params, '[{}]')).lintWarnings).toBe(2);
   });
 
   it('wraps a single object into an array before sending', async () => {
@@ -68,7 +74,7 @@ describe('importExpectationJson', () => {
 
   it('returns an empty array when the response is not an array', async () => {
     stubFetch(201, { unexpected: true });
-    expect(await importExpectationJson(params, '[]')).toEqual([]);
+    expect((await importExpectationJson(params, '[]')).created).toEqual([]);
   });
 });
 

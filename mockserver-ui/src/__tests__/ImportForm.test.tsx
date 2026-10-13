@@ -37,7 +37,7 @@ interface FetchCall {
 
 let fetchCalls: FetchCall[];
 
-function stubFetch(status: number, body: unknown) {
+function stubFetch(status: number, body: unknown, headers: Record<string, string> = {}) {
   fetchCalls = [];
   vi.stubGlobal(
     'fetch',
@@ -47,6 +47,7 @@ function stubFetch(status: number, body: unknown) {
         ok: status >= 200 && status < 300,
         status,
         statusText: 'stub',
+        headers: { get: (name: string) => headers[name.toLowerCase()] ?? null },
         json: async () => body,
         text: async () => (typeof body === 'string' ? body : JSON.stringify(body)),
       };
@@ -357,6 +358,26 @@ describe('Import success and error feedback', () => {
     await waitFor(() => {
       expect(screen.getByText('Imported 2 expectations')).toBeInTheDocument();
     });
+  });
+
+  it('shows a lint warnings badge when the server counted lint warnings', async () => {
+    stubFetch(201, [{ id: 'imported-1' }], { 'x-mockserver-lint-warnings': '3' });
+    const user = userEvent.setup();
+    renderComposer();
+    await user.click(screen.getByLabelText('Import'));
+    await pasteInto(user, screen.getByLabelText('Expectation JSON content'), '[{"httpRequest":{"path":"users"}}]');
+    await user.click(screen.getByRole('button', { name: 'Import' }));
+    expect(await screen.findByTestId('lint-warnings-badge')).toHaveTextContent('3 Lint Warnings');
+  });
+
+  it('shows no lint warnings badge when the header is absent', async () => {
+    const user = userEvent.setup();
+    renderComposer();
+    await user.click(screen.getByLabelText('Import'));
+    await pasteInto(user, screen.getByLabelText('Expectation JSON content'), '[{"httpRequest":{"path":"/test"}}]');
+    await user.click(screen.getByRole('button', { name: 'Import' }));
+    await screen.findByText('Imported 2 expectations');
+    expect(screen.queryByTestId('lint-warnings-badge')).not.toBeInTheDocument();
   });
 
   it('shows an honest "Import succeeded" when the server returns no created list', async () => {

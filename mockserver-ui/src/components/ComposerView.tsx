@@ -36,6 +36,7 @@ import type { ConnectionParams } from '../hooks/useConnectionParams';
 import { notifyWholeExpectationLoadFailed } from '../hooks/useWithWholeExpectation';
 import { isShortenedExpectation, loadWholeExpectation } from '../lib/fullExpectation';
 import { fetchActiveExpectations } from '../lib/expectations';
+import { lintWarningCount } from '../lib/lint';
 import { useDashboardStore } from '../store';
 import { humanizeError, type HumanError } from '../lib/errorMessage';
 import { monospaceFontFamily } from '../theme';
@@ -44,6 +45,7 @@ import { listConversationScenarios } from '../lib/conversationCodegen';
 import { buildBaseUrl } from '../lib/mcpClient';
 import LlmConversationForm from './LlmConversationForm';
 import HumanErrorAlert from './HumanErrorAlert';
+import LintWarningsBadge from './LintWarningsBadge';
 import StandardReview from './StandardReview';
 import MatcherPlaygroundDialog from './MatcherPlaygroundDialog';
 import LiveResponseWidget from './LiveResponseWidget';
@@ -326,7 +328,7 @@ async function registerExpectation(
   connectionParams: ConnectionParams,
   matcher: MatcherState,
   action: StandardActionPayload,
-): Promise<void> {
+): Promise<number> {
   if (action.editOriginal && isShortenedExpectation(action.editOriginal)) {
     throw new Error('This expectation was shortened in the live update, so it was not saved: load it again from the list');
   }
@@ -341,6 +343,7 @@ async function registerExpectation(
     const text = await res.text();
     throw new Error(`MockServer returned ${res.status}: ${text || res.statusText}`);
   }
+  return lintWarningCount(res);
 }
 
 // ---------------------------------------------------------------------------
@@ -4479,6 +4482,8 @@ export default function ComposerView({ connectionParams }: ComposerViewProps) {
   // dashboard" / "Add another" so the user does not accidentally re-register the
   // still-populated form. Holds the label of the just-registered mock.
   const [registeredLabel, setRegisteredLabel] = useState<string | null>(null);
+  // x-mockserver-lint-warnings from the last register; shown as a badge in the banner.
+  const [registeredLintWarnings, setRegisteredLintWarnings] = useState(0);
 
   const selectedMeta = useMemo(
     () => ACTION_TYPES.find((a) => a.value === actionType)!,
@@ -4526,8 +4531,9 @@ export default function ComposerView({ connectionParams }: ComposerViewProps) {
       setError(null);
       setRegisteredLabel(null);
       try {
-        await registerExpectation(connectionParams, m, action);
+        const lintWarnings = await registerExpectation(connectionParams, m, action);
         trackFeature('expectation_created');
+        setRegisteredLintWarnings(lintWarnings);
         const label = m.dns ? m.dns.dnsName : `${m.method || 'ANY'} ${m.path}`;
         setSnackMessage(`Registered ${label}`);
         // Surface a persistent next-step banner (the snackbar auto-hides).
@@ -5760,6 +5766,11 @@ export default function ComposerView({ connectionParams }: ComposerViewProps) {
             <Typography variant="body2" sx={{ mb: 1 }}>
               <code>{registeredLabel}</code> is now live. What next?
             </Typography>
+            {registeredLintWarnings > 0 && (
+              <Box sx={{ mb: 1 }}>
+                <LintWarningsBadge count={registeredLintWarnings} connectionParams={connectionParams} />
+              </Box>
+            )}
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
               <Button
                 size="small"

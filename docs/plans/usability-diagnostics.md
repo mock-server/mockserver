@@ -104,6 +104,9 @@ flowchart LR
   mistakes, method and header-name typos, and STRICT JSON arrays (info). `PUT /mockserver/expectation`
   runs the per-expectation rules and reports them in `x-mockserver-lint-warnings` and a WARN log; the
   O(n²) shadowing check is on demand only, capped at 100,000 pairs and a regex step budget.
+  The dashboard's Active Expectations panel has a Lint button (`LintDialog`: severity, rule,
+  message, a Shadowed by link, ids that open in the composer), and the composer and the
+  Expectation JSON import show a Lint Warnings badge from `x-mockserver-lint-warnings` (A8b).
 - **Forward-failure causes:** a failed forward's 502 names a TLS failure, an HTTP/2 error, a
   client-side set-up failure or an undecodable upstream response (`upstreamFailureReason`,
   `7a8b8c424`, extended to binary and wss in `d089350d4`), and a connection that could not be made
@@ -123,16 +126,16 @@ flowchart LR
   from the property's getter), credentials redacted, and lists the unrecognised keys by name with
   their suggestions.
 
-**Gaps:** lint in the dashboard and at initialisation-file load; a Velocity time limit that cannot stop a single long Java call or cap memory (A5h).
+**Gaps:** lint at initialisation-file load; a Velocity time limit that cannot stop a single long Java call or cap memory (A5h).
 
 ## Items
 
 | # | Problem → proposal | Cost | Performance reasoning | Effort | Risks | Priority |
 |---|---|---|---|---|---|---|
-| A8b | Lint results are REST, CLI and log only → a dashboard "Lint" view over `PUT /mockserver/lint` (rule, severity, message, a link to the shadowing expectation), and a badge from `x-mockserver-lint-warnings` when the dashboard creates an expectation | (iii) | On demand; calls the existing endpoint | S | Keep clear of B3's Explain Unmatched work | P2 |
 | A8d | `control_plane_authorisation.html` lists read operations by example and does not name `lint` (left out of A8 to avoid a conflict with A5's edit of the adjacent mutate row) → add `lint` (and `explain` if still missing) to the read row | (iv) | Docs only | S | None | P3 |
 | A8c | Expectations loaded from `initializationJsonPath` (and `--watch` reloads) never pass through `PUT /mockserver/expectation`, so they get no lint warnings → run `ExpectationLinter`'s per-expectation rules (and optionally the budgeted shadowing check) once per load and log a WARN summary | (iv) | Once per file load; linear rules, shadowing within its 100,000-pair budget | S | A large initialiser must not log thousands of lines: cap as `adviseOnUpsert` does | P2 |
 | A11b | An overridden property shows only its effective value → show its built-in default beside it in the effective-config view, `nonDefault` and `diagnose_config`. Today the default is read from the property's getter, which returns the effective value while a tier supplies one, so this needs a way to ask a getter for its default (for example a default table the getters read, or a read mode that ignores the tiers) | (iv) / (iii) | Startup / on demand only | M | Must not add work to the per-request property read (`readPropertyHierarchically` is on the hot path); the default must go through `redactSensitiveValue` | P3 |
+| A8e | The `x-mockserver-lint-warnings` badge (A8b) shows only after a composer register or an Expectation JSON import; Generate Stub (`lib/generateStub.ts`), Capture as Mock (`CaptureAsMockDialog`) and Apply Fix (`lib/expectationFix.ts`) also PUT `/mockserver/expectation` but ignore the header → read `lintWarningCount(res)` in each path and render `LintWarningsBadge` where it reports success | (iii) | UI only; reads a header the PUT already returns | S | None | P3 |
 | B5 | Optional plain-language summary of explain results from a configured LLM (`?narrate=true`) | (iii) | On demand, asynchronous, timeout-bounded, never inline in a 404 | S | Off by default; label as AI-generated; always return the deterministic facts too | P3 |
 | A3b | Only the Java client has a typed `explain(correlationId)` → add it to the Node, Python, Ruby, Go, Rust, .NET and PHP clients, together with typed `debugMismatch` / `explainUnmatched`, since none of the seven has a diagnostic-call pattern to extend yet; reuse the `RequestExplanation` / `ExplainedExpectation` OpenAPI schemas | (iii) | Zero hot-path cost: calls the existing endpoint | M | Seven model copies to keep in step with the schema; generate from it where the client already does | P3 |
 | A5b | The template dry run is REST-only → a "Test template" action in the expectation editor that posts the template and a chosen recorded request to `PUT /mockserver/template/test` and shows output, error position and warnings; a strict Mustache pass could warn about missing variables, which Mustache renders as empty text; when it shows a dry-run failure, also say that serving answers such a failure with 404 unless `templateFailureAsServerError` is set | (iii) | On demand; calls the existing endpoint | M | Keep the 429 and timeout visible in the UI | P2 |
@@ -162,7 +165,7 @@ flowchart LR
 1. **Wave 0 — hygiene and performance:** A2d. (A2, A2b, A2c, C1 and C1b landed.)
 2. **Wave 1 — explain engine:** done (A3, A10 and B1 landed).
 3. **Wave 2 — failure classes:** A5e, A5g, A5h and A5i, each with an MCP tool and a dashboard entry where it applies. (A4, A6 and A6b landed; B1c added the MCP tools for A4, A5, A8 and B3; A5 landed REST-only, and A5b adds its dashboard entry; A5c and A5d landed; A5f waits for the 9.0.0 major release.)
-4. **Wave 3 — fixes:** A8b, A8c. (B2, B3, A9b and A8, including the CLI, landed.)
+4. **Wave 3 — fixes:** A8c, A8e. (B2, B3, A9b, A8, including the CLI, and A8b landed.)
 5. **Wave 4 — optional:** B5, A11b. (B6, B7, A11 and B1b landed.)
 
 ## Performance rules for every item

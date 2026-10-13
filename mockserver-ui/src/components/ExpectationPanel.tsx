@@ -8,6 +8,7 @@ import Tooltip from '@mui/material/Tooltip';
 import ToggleButton from '@mui/material/ToggleButton';
 import SortIcon from '@mui/icons-material/Sort';
 import ChecklistIcon from '@mui/icons-material/Checklist';
+import FactCheckIcon from '@mui/icons-material/FactCheck';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { useDashboardStore } from '../store';
 import Panel from './Panel';
@@ -16,6 +17,7 @@ import ProgressiveList from './ProgressiveList';
 import ConfirmDialog from './ConfirmDialog';
 import MatcherPlaygroundDialog from './MatcherPlaygroundDialog';
 import OpenApiImportDialog from './OpenApiImportDialog';
+import LintDialog from './LintDialog';
 import { useExpansion } from '../hooks/useExpansion';
 import { useHeldItems } from '../hooks/useHeldItems';
 import { useConnectionParams } from '../hooks/useConnectionParams';
@@ -73,6 +75,8 @@ function ExpectationPanel() {
 
   // Empty-state "import a spec" action opens the OpenAPI import dialog inline.
   const [openApiOpen, setOpenApiOpen] = useState(false);
+
+  const [lintOpen, setLintOpen] = useState(false);
 
   // When true, rows are sorted by match priority (descending), which mirrors
   // the order MockServer evaluates equally-specific mocks. Off by default so
@@ -295,6 +299,19 @@ function ExpectationPanel() {
                 <Typography variant="caption">Select</Typography>
               </ToggleButton>
             </Tooltip>
+            <Tooltip title="Lint: find expectations that can never match, or will not match as written">
+              <Button
+                size="small"
+                variant="outlined"
+                color="inherit"
+                onClick={() => setLintOpen(true)}
+                aria-label="Lint expectations"
+                startIcon={<FactCheckIcon sx={{ fontSize: '1rem' }} />}
+                sx={{ height: 24, minWidth: 0, px: 0.75, py: 0, textTransform: 'none', borderColor: 'divider', '& .MuiButton-startIcon': { mr: 0.25 } }}
+              >
+                <Typography variant="caption">Lint</Typography>
+              </Button>
+            </Tooltip>
           </>
         }
       >
@@ -420,6 +437,7 @@ function ExpectationPanel() {
         onClose={() => setOpenApiOpen(false)}
         connectionParams={params}
       />
+      {lintOpen && <LintDialog open onClose={() => setLintOpen(false)} connectionParams={params} />}
     </>
   );
 }
