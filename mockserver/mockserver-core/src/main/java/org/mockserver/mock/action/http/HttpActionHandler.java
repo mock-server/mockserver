@@ -4818,7 +4818,8 @@ public class HttpActionHandler {
                 GenAiSpans.record(operation.get().genAiOperationName(), provider, model, completion);
             }
             // Increment LLM token/cost metrics and record against the budget monitor
-            recordLlmUsageMetrics(provider, model, completion);
+            recordLlmUsageMetrics(provider, model, completion,
+                org.mockserver.llm.client.LlmProviderSniffer.isVertexAiHost(forwardedRequest, targetHost));
             claimedPoll = null;
             // a background response counted from its stream must not be counted again when it is fetched
             if (provider == Provider.OPENAI_RESPONSES && scanned != null && scanned.responseId() != null
@@ -4933,6 +4934,13 @@ public class HttpActionHandler {
      * path (via {@link HttpLlmResponseActionHandler}). Fail-soft.
      */
     public static void recordLlmUsageMetrics(Provider provider, String model, Completion completion) {
+        recordLlmUsageMetrics(provider, model, completion, false);
+    }
+
+    /**
+     * @param vertexAi whether the call went to a Vertex AI host, so it is priced at Vertex AI's rates
+     */
+    private static void recordLlmUsageMetrics(Provider provider, String model, Completion completion, boolean vertexAi) {
         if (completion == null) {
             return;
         }
@@ -4941,8 +4949,9 @@ public class HttpActionHandler {
             long inputTokens = usage != null && usage.getInputTokens() != null ? usage.getInputTokens().longValue() : 0L;
             long outputTokens = usage != null && usage.getOutputTokens() != null ? usage.getOutputTokens().longValue() : 0L;
             String providerName = provider != null ? provider.name() : "unknown";
-            Double costUsd = org.mockserver.llm.cost.LlmPricing.estimateCostUsd(
-                provider, model, inputTokens, outputTokens);
+            Double costUsd = vertexAi
+                ? org.mockserver.llm.cost.LlmPricing.estimateVertexAiCostUsd(provider, model, inputTokens, outputTokens)
+                : org.mockserver.llm.cost.LlmPricing.estimateCostUsd(provider, model, inputTokens, outputTokens);
             org.mockserver.metrics.Metrics.incrementLlmTokens(providerName, model, inputTokens, outputTokens, costUsd);
             LlmCostBudgetMonitor.getInstance().recordCost(costUsd);
         } catch (Exception ignored) {

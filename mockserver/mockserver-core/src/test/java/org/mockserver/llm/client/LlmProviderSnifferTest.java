@@ -556,6 +556,22 @@ public class LlmProviderSnifferTest {
     }
 
     @Test
+    public void recognisesAForwardedRequestToAVertexAiHost() {
+        assertThat(LlmProviderSniffer.isVertexAiHost(request("/v1").withHeader("Host", "us-central1-aiplatform.googleapis.com:443"), null), is(true));
+        assertThat(LlmProviderSniffer.isVertexAiHost(request("/v1").withHeader("Host", "AIPLATFORM.EU.REP.GOOGLEAPIS.COM"), null), is(true));
+        assertThat(LlmProviderSniffer.isVertexAiHost(request("/v1").withHeader("Host", "generativelanguage.googleapis.com"), null), is(false));
+        assertThat(LlmProviderSniffer.isVertexAiHost(request("/v1").withHeader("Host", "evil.com-aiplatform.googleapis.com"), null), is(false));
+        assertThat(LlmProviderSniffer.isVertexAiHost(request("/v1"), null), is(false));
+        assertThat(LlmProviderSniffer.isVertexAiHost(null, null), is(false));
+    }
+
+    @Test
+    public void recognisesAVertexAiTargetHostOverTheForwardedRequestsHost() {
+        assertThat(LlmProviderSniffer.isVertexAiHost(request("/v1").withHeader("Host", "localhost:1080"), "aiplatform.googleapis.com"), is(true));
+        assertThat(LlmProviderSniffer.isVertexAiHost(request("/v1").withHeader("Host", "aiplatform.googleapis.com"), "generativelanguage.googleapis.com"), is(false));
+    }
+
+    @Test
     public void voyageHostDisambiguatesSharedRerankPath() {
         // Both Cohere and Voyage use /v1/rerank; the host decides which one.
         assertThat(LlmProviderSniffer.sniffByHostAndPath("api.voyageai.com", "/v1/rerank"),

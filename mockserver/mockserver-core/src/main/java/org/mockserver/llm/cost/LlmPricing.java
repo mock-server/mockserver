@@ -195,6 +195,7 @@ public final class LlmPricing {
     // 2026-10). Only families the vendor tables above already price are listed; gemini-2.0-flash
     // is the one Gemini rate that differs from the Gemini API's. Llama keys keep "-maas" so a
     // self-deployed or other gateway's "meta/llama-…" is not billed at the managed rate.
+    // A native Gemini call on a Vertex AI host is priced from VERTEX_GEMINI_PRICING too.
     private static final List<Map.Entry<String, PricingEntry>> VERTEX_GEMINI_PRICING = Arrays.asList(
         entry("gemini-2.5-flash-lite", new PricingEntry(0.1, 0.4)),
         entry("gemini-2.5-flash", new PricingEntry(0.3, 2.5)),
@@ -377,7 +378,29 @@ public final class LlmPricing {
      * unknown. Returns {@code 0.0} for zero tokens on a known (priced) model.
      */
     public static Double estimateCostUsd(Provider provider, String model, long inputTokens, long outputTokens) {
-        PricingEntry pricing = getPricing(provider, model);
+        return costUsd(getPricing(provider, model), inputTokens, outputTokens);
+    }
+
+    /**
+     * Pricing for a call sent to a Vertex AI host: a native Gemini call is billed at Vertex AI's
+     * Gemini rates, any other provider as {@link #getPricing(Provider, String)} prices it.
+     */
+    public static PricingEntry getVertexAiPricing(Provider provider, String model) {
+        if (provider == Provider.GEMINI) {
+            return findPricing(VERTEX_GEMINI_PRICING, model);
+        }
+        return getPricing(provider, model);
+    }
+
+    /**
+     * {@link #estimateCostUsd(Provider, String, long, long)} for a call sent to a Vertex AI host,
+     * priced by {@link #getVertexAiPricing(Provider, String)}.
+     */
+    public static Double estimateVertexAiCostUsd(Provider provider, String model, long inputTokens, long outputTokens) {
+        return costUsd(getVertexAiPricing(provider, model), inputTokens, outputTokens);
+    }
+
+    private static Double costUsd(PricingEntry pricing, long inputTokens, long outputTokens) {
         if (pricing == null) {
             return null;
         }

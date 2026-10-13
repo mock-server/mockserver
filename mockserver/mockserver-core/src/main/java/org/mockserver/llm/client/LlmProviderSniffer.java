@@ -499,6 +499,16 @@ public final class LlmProviderSniffer {
     }
 
     /**
+     * Whether a forwarded request went to a Vertex AI host, which bills at its own list prices.
+     *
+     * @param targetHost the upstream host when the forwarded request does not name it, or null
+     */
+    public static boolean isVertexAiHost(HttpRequest forwardedRequest, String targetHost) {
+        String host = targetHost != null ? targetHost : (forwardedRequest != null ? extractHost(forwardedRequest) : null);
+        return host != null && VERTEX_HOST_PATTERN.matcher(host.toLowerCase(java.util.Locale.ROOT)).matches();
+    }
+
+    /**
      * An Azure OpenAI endpoint: any {@code *.openai.azure.com} host, or the
      * {@code *.services.ai.azure.com} Foundry host on an {@code /openai/} path (that host
      * also serves non-OpenAI APIs).

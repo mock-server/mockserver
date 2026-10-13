@@ -51,6 +51,40 @@ public class LlmPricingTest {
             is(closeTo(0.5, EPS)));
     }
 
+    // cloud.google.com/vertex-ai/generative-ai/pricing (standard tier): Gemini 2.0 Flash is 0.15 / 0.60
+    // per million input / output tokens on Vertex AI, against the Gemini API's 0.10 / 0.40
+    @Test
+    public void shouldPriceNativeVertexAiGemini20FlashAtVertexAiRates() {
+        assertThat(LlmPricing.estimateVertexAiCostUsd(Provider.GEMINI, "gemini-2.0-flash-001", 1_000_000, 0),
+            is(closeTo(0.15, EPS)));
+        assertThat(LlmPricing.estimateVertexAiCostUsd(Provider.GEMINI, "gemini-2.0-flash-001", 0, 1_000_000),
+            is(closeTo(0.6, EPS)));
+        assertThat(LlmPricing.estimateCostUsd(Provider.GEMINI, "gemini-2.0-flash-001", 1_000_000, 1_000_000),
+            is(closeTo(0.5, EPS)));
+    }
+
+    @Test
+    public void shouldPriceOtherNativeVertexAiGeminiModelsAtTheirVertexAiRates() {
+        assertThat(LlmPricing.estimateVertexAiCostUsd(Provider.GEMINI, "gemini-2.0-flash-lite-001", 1_000_000, 1_000_000),
+            is(closeTo(0.375, EPS)));
+        assertThat(LlmPricing.estimateVertexAiCostUsd(Provider.GEMINI, "gemini-2.5-flash", 1_000_000, 1_000_000),
+            is(closeTo(2.8, EPS)));
+        assertThat(LlmPricing.estimateVertexAiCostUsd(Provider.GEMINI, "gemini-2.5-flash-lite", 1_000_000, 1_000_000),
+            is(closeTo(0.5, EPS)));
+        assertThat(LlmPricing.estimateVertexAiCostUsd(Provider.GEMINI, "gemini-2.5-pro", 1_000_000, 1_000_000),
+            is(closeTo(11.25, EPS)));
+        assertThat(LlmPricing.estimateVertexAiCostUsd(Provider.GEMINI, "text-embedding-005", 1_000_000, 0), is(nullValue()));
+        assertThat(LlmPricing.estimateVertexAiCostUsd(Provider.GEMINI, "gemini-1.5-pro", 1_000_000, 0), is(nullValue()));
+    }
+
+    @Test
+    public void shouldPriceNonGeminiCallsOnVertexAiAsTheirOwnProvider() {
+        assertThat(LlmPricing.estimateVertexAiCostUsd(Provider.ANTHROPIC, "claude-sonnet-4@20250514", 1_000_000, 1_000_000),
+            is(closeTo(LlmPricing.estimateCostUsd(Provider.ANTHROPIC, "claude-sonnet-4@20250514", 1_000_000, 1_000_000), EPS)));
+        assertThat(LlmPricing.estimateVertexAiCostUsd(Provider.MISTRAL, "mistral-small-2503", 1_000_000, 1_000_000),
+            is(closeTo(LlmPricing.estimateCostUsd(Provider.MISTRAL, "mistral-small-2503", 1_000_000, 1_000_000), EPS)));
+    }
+
     @Test
     public void shouldPriceOllamaAsFree() {
         assertThat(LlmPricing.estimateCostUsd(Provider.OLLAMA, "llama3", 5_000_000, 5_000_000),

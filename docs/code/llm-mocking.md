@@ -773,7 +773,11 @@ TGI endpoint) as `OPENAI`, and `/endpoints/{openapi|id}/responses` as `OPENAI_RE
 their usage is OpenAI's; `/publishers/anthropic/` as `ANTHROPIC`; `/publishers/mistralai/` as
 `MISTRAL`; `/publishers/ai21/` (Jamba, whose chat response carries OpenAI's `usage.prompt_tokens`
 and `completion_tokens` and no `model`) as `OPENAI`; anything else as `GEMINI`. A response that names
-no model takes it from the `/models/{model}:` path, whatever the provider.
+no model takes it from the `/models/{model}:` path, whatever the provider. A `GEMINI` call on a Vertex
+AI host (`LlmProviderSniffer.isVertexAiHost`, which checks a `proxyPassMappings` target host first) is
+priced by `LlmPricing.estimateVertexAiCostUsd` from Vertex AI's Gemini list prices, which differ from
+the Gemini API's only for `gemini-2.0-flash` (0.15/0.60 against 0.10/0.40 USD per million tokens); a
+`generativelanguage.googleapis.com` call, and a mocked Gemini response, keep the Gemini API rates.
 
 **Bedrock model ids.** A Bedrock request names its model in the path and a Converse response has
 none, so the model is read from `/model/{modelId}/...` (URL-decoded). A foundation-model or

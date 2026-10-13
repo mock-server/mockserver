@@ -1010,6 +1010,38 @@ public class HttpActionHandlerStreamedLlmUsageTest {
         assertThat(Metrics.getLlmInputTokens("GEMINI", "text-embedding-005"), is(5L));
     }
 
+    // https://docs.cloud.google.com/vertex-ai/generative-ai/docs/model-reference/inference; Vertex AI bills
+    // Gemini 2.0 Flash at 0.15 / 0.60 USD per million input / output tokens
+    // (https://cloud.google.com/vertex-ai/generative-ai/pricing), the Gemini API at 0.10 / 0.40
+    @Test
+    public void shouldPriceANativeVertexAiGeminiCallAtVertexAiRates() {
+        String path = "/v1/projects/my-project/locations/us-central1/publishers/google/models/gemini-2.0-flash-001";
+        forwardResponse("us-central1-aiplatform.googleapis.com", path + ":generateContent", "{\"contents\":[]}", json(
+            "{\"candidates\":[{\"content\":{\"role\":\"model\",\"parts\":[{\"text\":\"Hello\"}]},\"finishReason\":\"STOP\"}],"
+                + "\"usageMetadata\":{\"promptTokenCount\":8,\"candidatesTokenCount\":12,\"totalTokenCount\":20,\"trafficType\":\"ON_DEMAND\"},"
+                + "\"modelVersion\":\"gemini-2.0-flash-001\",\"createTime\":\"2026-10-13T10:00:00.000000Z\",\"responseId\":\"mAitaLmkHPPlz7IPvtfUqQ4\"}"));
+        forwardStream("aiplatform.googleapis.com",
+            "/v1/projects/my-project/locations/global/publishers/google/models/gemini-2.0-flash-001:streamGenerateContent?alt=sse",
+            "{\"contents\":[]}", utf8(ProviderStreamFixtures.GEMINI_SSE.replace("gemini-2.5-flash", "gemini-2.0-flash-001")));
+
+        List<SpanData> genAiSpans = genAiSpans();
+        assertThat(genAiSpans, hasSize(2));
+        assertTokens(genAiSpans.get(0), "gcp.gemini", "gemini-2.0-flash-001", 8L, 12L);
+        assertTokens(genAiSpans.get(1), "gcp.gemini", "gemini-2.0-flash-001", 8L, 39L);
+        assertThat(recordedCostUsd(), closeTo(((8 + 8) * 0.15 + (12 + 39) * 0.60) / 1_000_000, USD_TOLERANCE));
+    }
+
+    @Test
+    public void shouldPriceAGeminiApiCallAtGeminiApiRates() {
+        forwardResponse("generativelanguage.googleapis.com", "/v1beta/models/gemini-2.0-flash:generateContent", "{\"contents\":[]}", json(
+            "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"Hello\"}],\"role\":\"model\"},\"finishReason\":\"STOP\",\"index\":0}],"
+                + "\"usageMetadata\":{\"promptTokenCount\":800,\"candidatesTokenCount\":1200,\"totalTokenCount\":2000},"
+                + "\"modelVersion\":\"gemini-2.0-flash\",\"responseId\":\"mAitaLmkHPPlz7IPvtfUqQ4\"}"));
+
+        assertTokens(singleGenAiSpan(), "gcp.gemini", "gemini-2.0-flash", 800L, 1200L);
+        assertThat(recordedCostUsd(), closeTo((800 * 0.10 + 1200 * 0.40) / 1_000_000, USD_TOLERANCE));
+    }
+
     // https://docs.cloud.google.com/vertex-ai/generative-ai/docs/partner-models/mistral
     @Test
     public void shouldCountMistralOnVertexAiAsMistral() {
