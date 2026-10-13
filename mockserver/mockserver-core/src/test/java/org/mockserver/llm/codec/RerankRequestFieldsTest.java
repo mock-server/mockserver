@@ -177,6 +177,26 @@ public class RerankRequestFieldsTest {
         }
     }
 
+    private static String manyDocuments(int count) {
+        StringBuilder array = new StringBuilder("[");
+        for (int i = 0; i < count; i++) {
+            array.append(i > 0 ? "," : "").append("\"doc ").append(i).append('"');
+        }
+        return array.append(']').toString();
+    }
+
+    @Test
+    public void shouldRejectMoreThan1000VoyageDocumentsWithAVoyageError() throws Exception {
+        assertThat(ok(post(Provider.VOYAGE, RerankResponse.rerank(), "/v1/rerank",
+            "{\"query\":\"q\",\"documents\":" + manyDocuments(1000) + ",\"model\":\"rerank-2.5\"}")).get("data").size(), is(1000));
+
+        HttpResponse response = post(Provider.VOYAGE, RerankResponse.rerank(), "/v1/rerank",
+            "{\"query\":\"q\",\"documents\":" + manyDocuments(1001) + ",\"model\":\"rerank-2.5\"}");
+        assertThat(response.getStatusCode(), is(400));
+        assertThat(response.getFirstHeader("content-type"), is("application/json"));
+        assertThat(OBJECT_MAPPER.readTree(response.getBodyAsString()).get("detail").asText(), is("The number of documents cannot exceed 1,000."));
+    }
+
     @Test
     public void shouldCountVoyageTokensAsQueryTokensPerDocumentPlusDocumentTokens() throws Exception {
         String query = "what is the capital of the united states";

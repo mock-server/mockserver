@@ -18,11 +18,13 @@ import java.util.List;
  * {@code {"object":"list","data":[{"index":N,"relevance_score":F}, ...],"model":...,"usage":{"total_tokens":N}}},
  * sorted by descending relevance and capped to the request's {@code top_k}. The request's
  * {@code model} is echoed, {@code return_documents: true} adds each {@code document}, and
- * {@code total_tokens} is estimated from the query and documents.
+ * {@code total_tokens} is estimated from the query and documents. More than 1,000 documents is
+ * rejected with a 400, as the real API does.
  */
 public class VoyageCodec implements ProviderCodec {
 
     private static final String DEFAULT_MODEL = "rerank-2";
+    private static final int MAX_DOCUMENTS = 1000;
 
     @Override
     public Provider provider() {
@@ -41,6 +43,9 @@ public class VoyageCodec implements ProviderCodec {
 
     @Override
     public HttpResponse encodeRerank(RerankResponse rerank, List<String> documents, HttpRequest request) {
+        if (documents != null && documents.size() > MAX_DOCUMENTS) {
+            throw new EmbeddingWire.InvalidEmbeddingRequestException("documents", "The number of documents cannot exceed 1,000.");
+        }
         JsonNode body = EmbeddingWire.body(request);
         List<RerankScoring.Scored> scored = RerankScoring.score(rerank, documents, RerankScoring.requestedTopN(body.get("top_k"), "top_k"));
         boolean returnDocuments = RerankScoring.returnDocuments(body);

@@ -12,6 +12,7 @@ import org.mockserver.model.Provider;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 
@@ -451,6 +452,7 @@ public class EmbeddingProviderWireShapeTest {
                 "{\"input\":\"x\",\"dimensions\":" + dimensions + "}")).get("error");
             assertThat(dimensions, error.get("type").asText(), is("invalid_request_error"));
             assertThat(dimensions, error.get("param").asText(), is("dimensions"));
+            assertThat(dimensions, error.get("code").isNull(), is(true));
         }
         assertThat(post(Provider.OPENAI, null, deterministic(), "/v1/embeddings", "{\"input\":\"x\",\"dimensions\":8192}")
             .get("data").get(0).get("embedding").size(), is(8192));
@@ -464,6 +466,100 @@ public class EmbeddingProviderWireShapeTest {
         assertThat(error.get("param").asText(), is("input"));
         rejected(postRaw(Provider.AZURE_OPENAI, null, small, "/openai/deployments/e/embeddings", "{\"input\":" + inputs(2049) + "}"));
         rejected(postRaw(Provider.MISTRAL, null, small, "/v1/embeddings", "{\"input\":" + inputs(2049) + "}"));
+    }
+
+    /** {@code count} texts of {@code characters} characters each, as a JSON array. */
+    private static String texts(int count, int characters) {
+        StringBuilder array = new StringBuilder("[");
+        for (int i = 0; i < count; i++) {
+            array.append(i > 0 ? "," : "").append('"');
+            for (int c = 0; c < characters; c++) {
+                array.append('a');
+            }
+            array.append('"');
+        }
+        return array.append(']').toString();
+    }
+
+    /** Token arrays of the given lengths, as a JSON array of arrays. */
+    private static String tokenArrays(int... lengths) {
+        StringBuilder array = new StringBuilder("[");
+        for (int i = 0; i < lengths.length; i++) {
+            array.append(i > 0 ? ",[" : "[");
+            for (int t = 0; t < lengths[i]; t++) {
+                array.append(t > 0 ? "," : "").append(1212);
+            }
+            array.append(']');
+        }
+        return array.append(']').toString();
+    }
+
+    /** Token arrays totalling {@code total} tokens, as a JSON array of arrays of at most 8,100 tokens each. */
+    private static String tokenArraysTotalling(int total) {
+        int[] lengths = new int[(total + 8_099) / 8_100];
+        Arrays.fill(lengths, 8_100);
+        lengths[lengths.length - 1] = total - 8_100 * (lengths.length - 1);
+        return tokenArrays(lengths);
+    }
+
+    /** {@code inputs}, a JSON array, with {@code texts} more appended. */
+    private static String plus(String inputs, String... texts) {
+        StringBuilder array = new StringBuilder(inputs.substring(0, inputs.length() - 1));
+        for (String text : texts) {
+            array.append(",\"").append(text).append('"');
+        }
+        return array.append(']').toString();
+    }
+
+    @Test
+    public void shouldRejectOpenAiTokenArraysTotallingMoreThan300000TokensWithOpenAisError() throws Exception {
+        EmbeddingResponse small = EmbeddingResponse.embedding().withDimensions(4);
+        JsonNode atLimit = post(Provider.OPENAI, null, small, "/v1/embeddings", "{\"input\":" + tokenArraysTotalling(300_000) + "}");
+        assertThat(atLimit.get("data").size(), is(38));
+        assertThat(atLimit.get("usage").get("prompt_tokens").asInt(), is(300_000));
+        assertThat(atLimit.get("usage").get("total_tokens").asInt(), is(300_000));
+
+        String overLimit = "{\"input\":" + tokenArraysTotalling(300_001) + "}";
+        JsonNode error = rejected(postRaw(Provider.OPENAI, null, small, "/v1/embeddings", overLimit)).get("error");
+        assertThat(error.get("message").asText(), is("Requested 300001 tokens, max 300000 tokens per request"));
+        assertThat(error.get("type").asText(), is("max_tokens_per_request"));
+        assertThat(error.get("code").asText(), is("max_tokens_per_request"));
+        assertThat(error.get("param").isNull(), is(true));
+
+        JsonNode azure = rejected(postRaw(Provider.AZURE_OPENAI, null, small, "/openai/deployments/e/embeddings", overLimit)).get("error");
+        assertThat(azure.get("type").asText(), is("max_tokens_per_request"));
+        assertThat("the limit is OpenAI's own, not every OpenAI-compatible provider's",
+            post(Provider.MISTRAL, null, small, "/v1/embeddings", overLimit).get("data").size(), is(38));
+    }
+
+    @Test
+    public void shouldNotRejectOpenAiTextsWhoseEstimateIsOverTheTokenLimit() throws Exception {
+        EmbeddingResponse small = EmbeddingResponse.embedding().withDimensions(4);
+        // 300 texts of 4,000 characters and one of 4 estimate 300,001 tokens, but a tokeniser
+        // may well fit them in 300,000, so the real API could accept them
+        JsonNode accepted = post(Provider.OPENAI, null, small, "/v1/embeddings", "{\"input\":" + plus(texts(300, 4000), "abcd") + "}");
+        assertThat(accepted.get("data").size(), is(301));
+        assertThat(accepted.get("usage").get("prompt_tokens").asInt(), is(300_001));
+    }
+
+    @Test
+    public void shouldCountEachOpenAiTextAsAtLeastOneTokenTowardsTheLimit() throws Exception {
+        EmbeddingResponse small = EmbeddingResponse.embedding().withDimensions(4);
+        String arrays = tokenArraysTotalling(299_999);
+        // one text makes at least 300,000 tokens, which fits; a second makes at least 300,001
+        JsonNode accepted = post(Provider.OPENAI, null, small, "/v1/embeddings", "{\"input\":" + plus(arrays, "abcdefgh") + "}");
+        assertThat(accepted.get("data").size(), is(39));
+        assertThat("usage counts the text at the codec's estimate", accepted.get("usage").get("prompt_tokens").asInt(), is(300_001));
+
+        JsonNode error = rejected(postRaw(Provider.OPENAI, null, small, "/v1/embeddings",
+            "{\"input\":" + plus(arrays, "abcdefgh", "abcdefgh") + "}")).get("error");
+        assertThat(error.get("message").asText(), is("Requested 300003 tokens, max 300000 tokens per request"));
+    }
+
+    @Test
+    public void shouldCountASingleOpenAiTokenArrayByItsLength() throws Exception {
+        assertThat(post(Provider.OPENAI, null, EmbeddingResponse.embedding().withDimensions(4), "/v1/embeddings",
+            "{\"input\":[100257,100258,100259]}").get("usage").get("prompt_tokens").asInt(), is(3));
     }
 
     @Test
@@ -546,19 +642,22 @@ public class EmbeddingProviderWireShapeTest {
             "{\"content\":{\"parts\":[{\"text\":\"x\"}]},\"embedContentConfig\":{\"outputDimensionality\":2147483647}}"));
 
         String batch = "/v1beta/models/m:batchEmbedContents";
-        assertThat(post(Provider.GEMINI, null, deterministic().withDimensions(4), batch, geminiRequests(2048, 0, 0)).get("embeddings").size(), is(2048));
-        rejected(postRaw(Provider.GEMINI, null, deterministic().withDimensions(4), batch, geminiRequests(2049, 0, 0)));
+        assertThat(post(Provider.GEMINI, null, deterministic().withDimensions(4), batch, geminiRequests(100, 0, 0)).get("embeddings").size(), is(100));
+        JsonNode tooMany = rejected(postRaw(Provider.GEMINI, null, deterministic().withDimensions(4), batch, geminiRequests(101, 0, 0))).get("error");
+        assertThat(tooMany.get("code").asInt(), is(400));
+        assertThat(tooMany.get("status").asText(), is("INVALID_ARGUMENT"));
+        assertThat(tooMany.get("message").asText(), is("* BatchEmbedContentsRequest.requests: at most 100 requests can be in one batch"));
     }
 
     @Test
     public void shouldSumEachGeminiBatchRequestsDimensionsAgainstTheTotalValueLimit() throws Exception {
         String batch = "/v1beta/models/m:batchEmbedContents";
-        // 2048 requests at 128 dimensions = 262,144 values; one request at 129 makes 262,145
-        JsonNode embeddings = post(Provider.GEMINI, null, deterministic(), batch, geminiRequests(2048, 128, 128)).get("embeddings");
-        assertThat(embeddings.size(), is(2048));
-        assertThat(embeddings.get(2047).get("values").size(), is(128));
+        // 99 requests at 2,621 dimensions and one at 2,665 = 262,144 values; the last at 2,666 makes 262,145
+        JsonNode embeddings = post(Provider.GEMINI, null, deterministic(), batch, geminiRequests(100, 2621, 2665)).get("embeddings");
+        assertThat(embeddings.size(), is(100));
+        assertThat(embeddings.get(99).get("values").size(), is(2665));
 
-        JsonNode error = rejected(postRaw(Provider.GEMINI, null, deterministic(), batch, geminiRequests(2048, 128, 129))).get("error");
+        JsonNode error = rejected(postRaw(Provider.GEMINI, null, deterministic(), batch, geminiRequests(100, 2621, 2666))).get("error");
         assertThat(error.get("message").asText(), allOf(containsString("262145"), containsString("262144")));
     }
 

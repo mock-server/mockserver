@@ -345,6 +345,7 @@ public class GeminiCodec implements ProviderCodec {
     }
 
     private static final int DEFAULT_EMBEDDING_DIMENSIONS = 768;
+    private static final int MAX_BATCH_EMBED_REQUESTS = 100;
 
     /**
      * Encodes a Gemini {@code embedContent} response ({@code {"embedding":{"values":[...]}}})
@@ -367,6 +368,7 @@ public class GeminiCodec implements ProviderCodec {
      *       array) embeds each {@code requests[i].content} in order:
      *       {@code {"embeddings":[{"values":[...]}, ...]}}.</li>
      * </ul>
+     * A batch of more than 100 requests is rejected, as the real API does.
      * Both carry {@code usageMetadata.promptTokenCount}. Each request's
      * {@code outputDimensionality} (top level or in {@code embedContentConfig}) is honoured
      * unless the expectation sets dimensions.
@@ -381,7 +383,10 @@ public class GeminiCodec implements ProviderCodec {
         if (batch) {
             ArrayNode embeddings = root.putArray("embeddings");
             if (requests != null && requests.isArray()) {
-                EmbeddingWire.checkInputCount(requests.size(), EmbeddingWire.MAX_INPUTS, "requests");
+                if (requests.size() > MAX_BATCH_EMBED_REQUESTS) {
+                    throw new EmbeddingWire.InvalidEmbeddingRequestException("requests",
+                        "* BatchEmbedContentsRequest.requests: at most " + MAX_BATCH_EMBED_REQUESTS + " requests can be in one batch");
+                }
                 long totalValues = 0;
                 for (JsonNode embedRequest : requests) {
                     totalValues += EmbeddingWire.dimensions(embedding, outputDimensionality(embedRequest), DEFAULT_EMBEDDING_DIMENSIONS);

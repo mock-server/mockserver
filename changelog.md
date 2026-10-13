@@ -894,7 +894,8 @@ This release delivers a sustained performance and memory programme alongside dat
   `/v1/rerank`. Cohere responses carry `id` and `meta` (`api_version`, `billed_units.search_units`)
   instead of a `model` the real API never returns, and on `/v1/rerank` `return_documents: true` adds each document as it was sent, keeping every field of a structured document. Voyage responses echo the request's `model` rather than always saying
   `rerank-2`, and `return_documents: true` adds each document. A `top_n` or `top_k` that is not a
-  positive whole number gets a 400 in the provider's own error format.
+  positive whole number gets a 400 in the provider's own error format. A Voyage request with more
+  than 1,000 documents gets a 400 with Voyage's `{"detail": ...}` error body, as the real API does.
 - **An embedding expectation's `dimensions` must now be at least 1.** In 8.0.0 and earlier a
   `dimensions` of `0` returned empty vectors and a negative value failed every matching request with a
   502; such an expectation is now refused when it is created.
@@ -1641,8 +1642,11 @@ This release delivers a sustained performance and memory programme alongside dat
   Embed v4 defaults to 1,536 dimensions and Titan Multimodal (`amazon.titan-embed-image-v1`) to 1,024.
   Because the request now picks how many vectors come back and how long they are, both are limited, so
   a small request cannot make MockServer build a very large response. A request gets a 400 in the
-  provider's error format when it asks for more than 8,192 dimensions, more than 2,048 inputs or 96
-  Cohere texts, a Titan or Cohere size or embedding type the provider does not have, or more than
+  provider's error format when it asks for more than 8,192 dimensions, more than 2,048 inputs, 100
+  Gemini batch requests or 96 Cohere texts, token arrays adding up to more than 300,000 tokens in one
+  OpenAI or Azure OpenAI request (with OpenAI's own `max_tokens_per_request` error; text inputs are
+  never refused for their length, since MockServer cannot count their tokens exactly), a Titan or
+  Cohere size or embedding type the provider does not have, or more than
   262,144 values in total (1,048,576 with `encoding_format: "base64"`), which keeps the largest
   response at about 5.6 MB. The total is configurable with `llmEmbeddingMaxResponseValues`. A Bedrock Cohere request with only `images` returns one vector per image, and Cohere Embed v3 also returns `images` giving each image's `width`, `height`, `format` and `bit_depth`, read from its PNG or JPEG header; as on AWS, a v3 image that is not a JPEG or PNG data URI gets a 400 `ValidationException`, and so does a v3 or v4 image larger than 5 MB. A Cohere Embed v4 `inputs` item is embedded from its images as well as its text, so two items with different images get different vectors. The same text, seed and dimensions give the same vector on every provider.
 - **Inbound WebSocket and GraphQL breakpoints now actually stop the connection reading while a frame is paused.**

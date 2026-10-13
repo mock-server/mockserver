@@ -336,10 +336,12 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
 
     private static final String DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small";
     private static final int DEFAULT_EMBEDDING_DIMENSIONS = 1536;
+    private static final long MAX_EMBEDDING_REQUEST_TOKENS = 300_000;
 
     @Override
     public HttpResponse encodeEmbedding(EmbeddingResponse embedding, String input) {
-        return encodeEmbeddings(embedding, Collections.singletonList(input), DEFAULT_EMBEDDING_MODEL, null, false);
+        List<String> inputs = Collections.singletonList(input);
+        return encodeEmbeddings(embedding, inputs, EmbeddingWire.tokens(inputs), DEFAULT_EMBEDDING_MODEL, null, false);
     }
 
     /**
@@ -350,19 +352,50 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
      * dimensions, and {@code encoding_format: "base64"} returns each vector as base64
      * little-endian float32, which the OpenAI SDKs request by default. An empty {@code input}
      * ({@code ""}, {@code []}, or an empty string or token array inside the array) is rejected
-     * with a 400, as the real API does.
+     * with a 400, as the real API does. For {@link Provider#OPENAI} and Azure OpenAI, so is a
+     * request certainly over the 300,000-token total: token arrays count their length and each
+     * text one token, the least it can encode to, so nothing the real API accepts is rejected.
      */
     @Override
     public HttpResponse encodeEmbedding(EmbeddingResponse embedding, HttpRequest request, String model) {
         JsonNode body = EmbeddingWire.body(request);
-        rejectEmptyEmbeddingInput(body.get("input"));
+        JsonNode input = body.get("input");
+        rejectEmptyEmbeddingInput(input);
+        List<String> inputs = EmbeddingWire.stringOrArrayInputs(input);
+        int tokens = embeddingInputTokens(input, inputs, false);
+        if (provider() == Provider.OPENAI && embeddingInputTokens(input, inputs, true) > MAX_EMBEDDING_REQUEST_TOKENS) {
+            throw new EmbeddingWire.InvalidEmbeddingRequestException(null,
+                "Requested " + tokens + " tokens, max " + MAX_EMBEDDING_REQUEST_TOKENS + " tokens per request",
+                "max_tokens_per_request", "max_tokens_per_request");
+        }
         return encodeEmbeddings(
             embedding,
-            EmbeddingWire.stringOrArrayInputs(body.get("input")),
+            inputs,
+            tokens,
             EmbeddingWire.firstNonBlank(EmbeddingWire.text(body, "model"), model, DEFAULT_EMBEDDING_MODEL),
             EmbeddingWire.requestedDimensions(body.get("dimensions"), "dimensions"),
             "base64".equals(EmbeddingWire.text(body, "encoding_format"))
         );
+    }
+
+    /**
+     * The request's token count: a token array counts its length, a text the codec's estimate,
+     * or with {@code lowerBound} one token, since no tokeniser bound guarantees more. {@code inputs}
+     * is {@code input} as {@link EmbeddingWire#stringOrArrayInputs} reads it.
+     */
+    private static int embeddingInputTokens(JsonNode input, List<String> inputs, boolean lowerBound) {
+        if (input == null || !input.isArray()) {
+            return lowerBound ? 1 : EmbeddingWire.tokens(inputs);
+        }
+        if (inputs.size() == 1 && input.size() > 0 && input.get(0).isNumber()) {
+            return input.size();
+        }
+        int total = 0;
+        for (int i = 0; i < input.size(); i++) {
+            JsonNode element = input.get(i);
+            total += element.isArray() ? element.size() : lowerBound ? 1 : EmbeddingVectors.approximateTokens(inputs.get(i));
+        }
+        return total;
     }
 
     private static void rejectEmptyEmbeddingInput(JsonNode input) {
@@ -389,7 +422,7 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
         return (input.isTextual() && input.asText().isEmpty()) || (input.isArray() && input.isEmpty());
     }
 
-    private HttpResponse encodeEmbeddings(EmbeddingResponse embedding, List<String> inputs, String model, Integer requestedDimensions, boolean base64) {
+    private HttpResponse encodeEmbeddings(EmbeddingResponse embedding, List<String> inputs, int tokens, String model, Integer requestedDimensions, boolean base64) {
         EmbeddingWire.checkTotalValues(
             EmbeddingWire.dimensions(embedding, requestedDimensions, DEFAULT_EMBEDDING_DIMENSIONS) * (long) inputs.size(),
             base64 ? EmbeddingWire.maxTotalBase64Values() : EmbeddingWire.maxTotalValues()
@@ -409,10 +442,9 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
             }
         }
         root.put("model", model);
-        int approxTokens = EmbeddingWire.tokens(inputs);
         ObjectNode usage = root.putObject("usage");
-        usage.put("prompt_tokens", approxTokens);
-        usage.put("total_tokens", approxTokens);
+        usage.put("prompt_tokens", tokens);
+        usage.put("total_tokens", tokens);
         return EmbeddingWire.json(root, "OpenAI");
     }
 

@@ -82,7 +82,7 @@ public final class EmbeddingWire {
     /** The largest vector length a request may ask for. */
     public static final int MAX_REQUESTED_DIMENSIONS = 8192;
 
-    /** The most inputs one request may embed (OpenAI's limit). */
+    /** The most inputs one OpenAI-style or Ollama request may embed (OpenAI's limit). */
     public static final int MAX_INPUTS = 2048;
 
     /**
@@ -162,10 +162,19 @@ public final class EmbeddingWire {
      */
     public static final class InvalidEmbeddingRequestException extends RuntimeException {
         private final String param;
+        private final String type;
+        private final String code;
 
         public InvalidEmbeddingRequestException(String param, String message) {
+            this(param, message, null, null);
+        }
+
+        /** {@code type} and {@code code} fill the OpenAI error envelope; {@code null} gives {@code invalid_request_error} and no code. */
+        public InvalidEmbeddingRequestException(String param, String message, String type, String code) {
             super(message);
             this.param = param;
+            this.type = type;
+            this.code = code;
         }
 
         public String getParam() {
@@ -303,9 +312,9 @@ public final class EmbeddingWire {
             default:
                 ObjectNode openAiError = body.putObject("error");
                 openAiError.put("message", e.getMessage());
-                openAiError.put("type", "invalid_request_error");
+                openAiError.put("type", e.type != null ? e.type : "invalid_request_error");
                 openAiError.put("param", e.getParam());
-                openAiError.putNull("code");
+                openAiError.put("code", e.code);
                 break;
         }
         return response.withBody(body.toString());

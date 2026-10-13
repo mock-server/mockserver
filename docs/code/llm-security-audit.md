@@ -158,7 +158,9 @@ Evidence: `LlmStreamUsageScannerTest` (hostile and oversized input, cut-off stre
 | Limit | Value | Constant (`EmbeddingWire`) |
 |-------|-------|----------------------------|
 | Request-supplied dimensions (`dimensions`, `outputDimensionality`, `output_dimension`, `embeddingConfig.outputEmbeddingLength`) | an integer from 1 to 8,192; the provider's own set where it has one (Titan V2 256/512/1024, Titan Multimodal 256/384/1024, Cohere v4 256/512/1024/1536) | `MAX_REQUESTED_DIMENSIONS` |
-| Inputs per request (OpenAI-style `input`, Gemini `requests`, Ollama `input`) | 2,048; Cohere `texts` / `inputs` 96 | `MAX_INPUTS` |
+| Inputs per request (OpenAI-style `input`, Ollama `input`) | 2,048; Gemini `requests` 100; Cohere `texts` / `inputs` 96 | `MAX_INPUTS`; `GeminiCodec.MAX_BATCH_EMBED_REQUESTS` |
+| Tokens per request (OpenAI and Azure OpenAI only) | 300,000, rejected only when certainly over: a token array counts its length and a text one token (its minimum), so a batch a tokeniser packed to the limit is never refused; OpenAI's own `max_tokens_per_request` error | `OpenAiChatCompletionsCodec.MAX_EMBEDDING_REQUEST_TOKENS` |
+| Rerank documents (Voyage only) | 1,000, Voyage's own limit | `VoyageCodec.MAX_DOCUMENTS` |
 | Values per response, as JSON numbers | 262,144 by default (`llmEmbeddingMaxResponseValues`): inputs x dimensions, x the number of Cohere `embedding_types`; Titan V2 counts each array it returns. Also bounds a `dimensions` set on the expectation | `DEFAULT_MAX_TOTAL_VALUES`, `maxTotalValues()` |
 | Values per response, as OpenAI `encoding_format: "base64"` | four times the JSON limit: 1,048,576 by default | `maxTotalBase64Values()` |
 | Characters per input, `deterministicFromInput` only | 1,048,576 by default (`llmEmbeddingMaxInputCharacters`), above the largest input a real provider accepts | `DEFAULT_MAX_INPUT_CHARACTERS`, `maxInputCharacters()` |

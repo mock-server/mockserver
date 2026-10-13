@@ -931,11 +931,11 @@ data: [DONE]</code></pre>
 
 <p>
     MockServer rejects an embedding request that is over a limit with a <span class="inline_code">400</span> in the
-    provider's own error format. Some of the limits are the provider's own, which the real API enforces too: the Titan
-    and Cohere sizes and embedding types, 96 Cohere texts or inputs, and 2,048 OpenAI inputs. The rest are MockServer's
-    own limits, which keep its responses small: 8,192 dimensions, 2,048 Gemini
-    <span class="inline_code">requests</span> or Ollama inputs, and the total number of vector values. A request is
-    rejected when:
+    provider's own error format. Some of the limits copy the real provider's: the Titan and Cohere sizes and embedding
+    types, 96 Cohere texts or inputs, 100 Gemini <span class="inline_code">requests</span> in one batch, 2,048 OpenAI
+    inputs, and OpenAI's 300,000 tokens per request (checked only for token arrays, see below). The rest are
+    MockServer's own limits, which keep its responses small: 8,192 dimensions, 2,048 Ollama inputs, and the total number
+    of vector values. A request is rejected when:
 </p>
 <ul>
     <li>the request asks for more than 8,192 dimensions, or for a size that is not a positive whole number;</li>
@@ -943,8 +943,14 @@ data: [DONE]</code></pre>
         <span class="inline_code">dimensions</span> must be 256, 512 or 1024, Titan Multimodal
         <span class="inline_code">embeddingConfig.outputEmbeddingLength</span> 256, 384 or 1024, and Cohere Embed v4
         <span class="inline_code">output_dimension</span> 256, 512, 1024 or 1536;</li>
-    <li>the request has more than 2,048 inputs (Gemini <span class="inline_code">requests</span>), or more than 96
-        Cohere <span class="inline_code">texts</span> or <span class="inline_code">inputs</span>;</li>
+    <li>the request has more than 2,048 inputs, more than 100 Gemini <span class="inline_code">requests</span>, or
+        more than 96 Cohere <span class="inline_code">texts</span> or <span class="inline_code">inputs</span>;</li>
+    <li>an <span class="inline_code">OPENAI</span> or <span class="inline_code">AZURE_OPENAI</span> request is certainly
+        over 300,000 tokens, with OpenAI's <span class="inline_code">max_tokens_per_request</span> error. MockServer has
+        no tokeniser, so it counts a token array as its length and each text as just one token: a request of token
+        arrays over the limit is rejected, but text inputs are never rejected for their length, so a batch the real API
+        would accept is never refused. The response's <span class="inline_code">usage.prompt_tokens</span> still
+        estimates text at about four characters a token;</li>
     <li>the request asks for a Cohere <span class="inline_code">embedding_types</span> or Titan
         <span class="inline_code">embeddingTypes</span> value the provider does not have;</li>
     <li>the response would hold more than 262,144 vector values in total (inputs &times; dimensions, and &times; the
@@ -1018,6 +1024,9 @@ data: [DONE]</code></pre>
 <p>
     Documents may be plain strings or objects with a <span class="inline_code">text</span> field (Cohere's
     structured form) &mdash; both are read from the request's <span class="inline_code">documents</span> array.
+    A <span class="inline_code">VOYAGE</span> request with more than 1,000 documents gets a
+    <span class="inline_code">400</span> with Voyage's <span class="inline_code">{"detail": "..."}</span> error body,
+    as the real API does.
 </p>
 
 <a id="multimodal" class="anchor" href="#multimodal">&nbsp;</a>
