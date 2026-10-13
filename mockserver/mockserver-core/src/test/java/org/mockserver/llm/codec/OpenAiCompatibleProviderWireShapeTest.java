@@ -262,9 +262,86 @@ public class OpenAiCompatibleProviderWireShapeTest {
         List<JsonNode> chunks = stream(Provider.OPENROUTER, reasoning(), "openai/gpt-4o", NO_OPT_IN);
         assertThat(deltaText(chunks, "reasoning"), is("2 plus 2 is 4"));
         JsonNode usageChunk = chunks.get(chunks.size() - 1);
-        assertThat(usageChunk.path("choices").size(), is(0));
+        assertThat(usageChunk.path("choices").size(), is(1));
         assertThat(usageChunk.path("usage").path("prompt_tokens").asInt(-1), is(20));
         assertThat(usageChunk.path("usage").path("completion_tokens").asInt(-1), is(30));
+    }
+
+    @Test
+    public void openRouterChoiceCarriesTheUpstreamNativeFinishReasonBesideTheNormalisedOne() throws Exception {
+        String[][] cases = {
+            // stopReason, finish_reason, native_finish_reason
+            {null, "stop", "stop"},
+            {"end_turn", "stop", "end_turn"},
+            {"STOP", "stop", "STOP"},
+            {"MAX_TOKENS", "length", "MAX_TOKENS"},
+            {"max_tokens", "length", "max_tokens"},
+            {"SAFETY", "content_filter", "SAFETY"},
+            {"completed", "stop", "completed"},
+            {"custom_reason", "custom_reason", "custom_reason"},
+        };
+        for (String[] c : cases) {
+            Completion completion = completion().withText("Hello").withStopReason(c[0]);
+            JsonNode choice = encode(Provider.OPENROUTER, completion, "google/gemini-2.5-flash").path("choices").path(0);
+            assertThat(c[0] + " finish_reason", choice.path("finish_reason").asText(), is(c[1]));
+            assertThat(c[0] + " native_finish_reason", choice.path("native_finish_reason").isTextual(), is(true));
+            assertThat(c[0] + " native_finish_reason", choice.path("native_finish_reason").asText(), is(c[2]));
+
+            JsonNode last = finishChunk(stream(Provider.OPENROUTER, completion, "google/gemini-2.5-flash", NO_OPT_IN)).path("choices").path(0);
+            assertThat(c[0] + " streamed finish_reason", last.path("finish_reason").asText(), is(c[1]));
+            assertThat(c[0] + " streamed native_finish_reason", last.path("native_finish_reason").asText(), is(c[2]));
+        }
+
+        JsonNode toolChoice = encode(Provider.OPENROUTER, toolCall("call_1"), "mistralai/mistral-small").path("choices").path(0);
+        assertThat(toolChoice.path("finish_reason").asText(), is("tool_calls"));
+        assertThat(toolChoice.path("native_finish_reason").asText(), is("tool_calls"));
+        JsonNode forced = encode(Provider.OPENROUTER, toolCall("call_1").withStopReason("end_turn").withToolChoice("required"),
+            "anthropic/claude-sonnet-4.5").path("choices").path(0);
+        assertThat(forced.path("finish_reason").asText(), is("tool_calls"));
+        assertThat(forced.path("native_finish_reason").asText(), is("tool_calls"));
+    }
+
+    @Test
+    public void openRouterStreamCarriesNativeFinishReasonOnEveryChoiceAndRepeatsItOnTheUsageChunk() throws Exception {
+        List<JsonNode> chunks = stream(Provider.OPENROUTER, reasoning().withStopReason("end_turn"), "anthropic/claude-sonnet-4.5", NO_OPT_IN);
+        JsonNode finish = finishChunk(chunks);
+        int finishIndex = chunks.indexOf(finish);
+        for (int i = 0; i < finishIndex; i++) {
+            JsonNode choice = chunks.get(i).path("choices").path(0);
+            assertThat("chunk " + i + " has native_finish_reason", choice.has("native_finish_reason"), is(true));
+            assertThat("chunk " + i + " native_finish_reason", choice.get("native_finish_reason").isNull(), is(true));
+        }
+        assertThat(finish.path("choices").path(0).path("finish_reason").asText(), is("stop"));
+        assertThat(finish.path("choices").path(0).path("native_finish_reason").asText(), is("end_turn"));
+
+        JsonNode usageChunk = chunks.get(chunks.size() - 1);
+        assertThat(finishIndex, is(chunks.size() - 2));
+        JsonNode usageChoice = usageChunk.path("choices").path(0);
+        assertThat(usageChoice.path("index").asInt(-1), is(0));
+        assertThat(usageChoice.path("delta").path("content").asText("x"), is(""));
+        assertThat(usageChoice.path("delta").path("role").asText(), is("assistant"));
+        assertThat(usageChoice.path("finish_reason").asText(), is("stop"));
+        assertThat(usageChoice.path("native_finish_reason").asText(), is("end_turn"));
+        assertThat(usageChunk.path("usage").path("total_tokens").asInt(-1), is(50));
+    }
+
+    @Test
+    public void onlyOpenRouterAddsNativeFinishReasonOrAUsageChunkChoice() throws Exception {
+        for (Provider provider : new Provider[]{Provider.OPENAI, Provider.AZURE_OPENAI, Provider.MISTRAL, Provider.XAI,
+            Provider.DEEPSEEK, Provider.GROQ, Provider.ORCAROUTER}) {
+            Completion completion = completion().withText("Hello").withStopReason("STOP");
+            JsonNode choice = encode(provider, completion, "m").path("choices").path(0);
+            assertThat(provider + " native_finish_reason", choice.has("native_finish_reason"), is(false));
+            assertThat(provider + " finish_reason", choice.path("finish_reason").asText(), is("STOP"));
+            int finishReasons = 0;
+            for (JsonNode chunk : stream(provider, completion, "m", INCLUDE_USAGE)) {
+                for (JsonNode streamed : chunk.path("choices")) {
+                    assertThat(provider + " streamed native_finish_reason", streamed.has("native_finish_reason"), is(false));
+                    finishReasons += streamed.path("finish_reason").isTextual() ? 1 : 0;
+                }
+            }
+            assertThat(provider + " chunks carrying finish_reason", finishReasons, is(1));
+        }
     }
 
     @Test

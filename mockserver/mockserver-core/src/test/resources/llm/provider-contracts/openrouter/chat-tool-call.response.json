@@ -1,0 +1,37 @@
+{
+  "choices": [
+    {
+      "finish_reason": "tool_calls",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "content": "",
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant",
+        "tool_calls": [
+          {
+            "function": {
+              "arguments": "{\"numerator\": 123, \"denominator\": 456, \"on_inf\": \"infinity\"}",
+              "name": "divide"
+            },
+            "id": "3sniiMddS",
+            "index": 0,
+            "type": "function"
+          }
+        ]
+      },
+      "native_finish_reason": "tool_calls"
+    }
+  ],
+  "created": 1762047030,
+  "id": "gen-1762047030-dJUcJW4ildNGqK4UV6iJ",
+  "model": "mistralai/mistral-small",
+  "object": "chat.completion",
+  "provider": "Mistral",
+  "usage": {
+    "completion_tokens": 43,
+    "prompt_tokens": 134,
+    "total_tokens": 177
+  }
+}

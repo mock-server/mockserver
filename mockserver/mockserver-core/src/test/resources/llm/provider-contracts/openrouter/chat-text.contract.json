@@ -1,0 +1,66 @@
+{
+  "description": "Chat completions through OpenRouter to a Gemini model, text reply: native_finish_reason is Gemini's STOP beside the normalised stop (pydantic-ai recorded cassette; its parsed_body YAML re-serialised as JSON)",
+  "source": "https://github.com/pydantic/pydantic-ai/blob/ff25d3d83ff5d8e0bf5bde433cdc26f4f9959c2f/tests/models/cassettes/test_openrouter/test_openrouter_with_preset.yaml",
+  "retrieved": "2026-10-12",
+  "request": {
+    "method": "POST",
+    "path": "/api/v1/chat/completions",
+    "body": {
+      "messages": [
+        {
+          "content": "Trains",
+          "role": "user"
+        }
+      ],
+      "model": "google/gemini-2.5-flash-lite",
+      "preset": "@preset/comedian",
+      "stream": false
+    }
+  },
+  "httpLlmResponse": {
+    "provider": "OPENROUTER",
+    "model": "google/gemini-2.5-flash-lite",
+    "completion": {
+      "text": "Why did the train break up with the track?\n\nBecause it felt like their relationship was going nowhere.",
+      "stopReason": "STOP",
+      "usage": {
+        "inputTokens": 31,
+        "outputTokens": 21
+      }
+    }
+  },
+  "response": "chat-text.response.json",
+  "format": "JSON",
+  "allowed": [
+    {
+      "kind": "MISSING",
+      "path": "choices[].message.reasoning",
+      "reason": "optional: MockServer sends message.reasoning only when the completion sets reasoningText; the recorded response sends null"
+    },
+    {
+      "kind": "MISSING",
+      "path": "choices[].message.refusal",
+      "reason": "optional: not in ChatAssistantMessage's required list in OpenRouter's OpenAPI spec; the recorded response sends null"
+    },
+    {
+      "kind": "MISSING",
+      "path": "provider",
+      "reason": "the name of the upstream provider that served the request (Google, Mistral, OpenAI); not in the Response type of OpenRouter's documented response types (openrouter.ai/docs/api-reference/overview) or ChatResult in its OpenAPI spec, and a mock has no upstream"
+    },
+    {
+      "kind": "MISSING",
+      "path": "usage.completion_tokens_details.image_tokens",
+      "reason": "optional: completion_tokens_details fields are optional in the ResponseUsage type of OpenRouter's documented response types (openrouter.ai/docs/api-reference/overview)"
+    },
+    {
+      "kind": "EXTRA",
+      "path": "usage.cost",
+      "reason": "in the ResponseUsage type of OpenRouter's documented response types (openrouter.ai/docs/api-reference/overview); this 2025 recording lacks it, while 2026 recordings in the same cassette directory carry it"
+    },
+    {
+      "kind": "EXTRA",
+      "path": "usage.is_byok",
+      "reason": "in the ResponseUsage type of OpenRouter's documented response types (openrouter.ai/docs/api-reference/overview); this 2025 recording lacks it, while 2026 recordings in the same cassette directory carry it"
+    }
+  ]
+}

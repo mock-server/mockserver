@@ -1,0 +1,33 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "content": "Why did the train break up with the track?\n\nBecause it felt like their relationship was going nowhere.",
+        "reasoning": null,
+        "refusal": null,
+        "role": "assistant"
+      },
+      "native_finish_reason": "STOP"
+    }
+  ],
+  "created": 1759510642,
+  "id": "gen-1759510642-J9qupM2EtKoYTfG7ehDn",
+  "model": "google/gemini-2.5-flash-lite",
+  "object": "chat.completion",
+  "provider": "Google",
+  "usage": {
+    "completion_tokens": 21,
+    "completion_tokens_details": {
+      "image_tokens": 0,
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 31,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 52
+  }
+}

@@ -461,6 +461,19 @@ curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     and the final message holds only the stop reason and token counts.
 </p>
 
+<p>
+    <span class="inline_code">OPENROUTER</span> reports two values on each choice, as OpenRouter does:
+    <span class="inline_code">finish_reason</span>, normalised to <span class="inline_code">stop</span>,
+    <span class="inline_code">length</span>, <span class="inline_code">tool_calls</span> or
+    <span class="inline_code">content_filter</span>, and <span class="inline_code">native_finish_reason</span>, the raw value
+    of the model behind it. Set <span class="inline_code">stopReason</span> to that model's own value to mock it: with
+    <span class="inline_code">STOP</span> (a Gemini model) or <span class="inline_code">end_turn</span> (a Claude model) a choice has
+    <span class="inline_code">"finish_reason": "stop"</span> and that value as its
+    <span class="inline_code">native_finish_reason</span>. Without a <span class="inline_code">stopReason</span> both fields
+    have the same value. In a stream, <span class="inline_code">native_finish_reason</span> is
+    <span class="inline_code">null</span> until the chunk that carries the <span class="inline_code">finish_reason</span>.
+</p>
+
 <a id="supported_providers" class="anchor" href="#supported_providers">&nbsp;</a>
 <h2>Supported Providers</h2>
 
@@ -714,7 +727,9 @@ curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     providers send it without being asked, as their real APIs do: <span class="inline_code">MISTRAL</span> puts
     <span class="inline_code">usage</span> on the chunk with the <span class="inline_code">finish_reason</span>,
     <span class="inline_code">GROQ</span> puts it in <span class="inline_code">x_groq.usage</span> on that chunk, and
-    <span class="inline_code">OPENROUTER</span> always ends the stream with the usage chunk shown below. Some AI SDKs ask by default
+    <span class="inline_code">OPENROUTER</span> always ends the stream with the usage chunk shown below, though its usage chunk
+    has one choice with an empty <span class="inline_code">delta</span> that repeats the
+    <span class="inline_code">finish_reason</span>, as OpenRouter's does, where OpenAI's has none. Some AI SDKs ask by default
     (the Vercel AI SDK does); in LangChain set <span class="inline_code">stream_usage</span>, and with the OpenAI
     SDKs pass <span class="inline_code">stream_options</span>.
     The request sets <span class="inline_code">stream_options</span>:

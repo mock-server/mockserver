@@ -502,7 +502,9 @@ public class LlmCodecGoldenFileTest {
         String ctx = provider.name() + " streaming usage";
         assertThat(ctx + " ends with [DONE]", events.get(events.size() - 1).getData(), is("[DONE]"));
         JsonNode usageChunk = OBJECT_MAPPER.readTree(events.get(events.size() - 2).getData());
-        assertThat(ctx + " choices", usageChunk.path("choices").isArray() && usageChunk.path("choices").isEmpty(), is(true));
+        // OpenRouter's usage chunk repeats the finish_reason in one content-free choice; OpenAI's has none
+        int expectedChoices = provider == Provider.OPENROUTER ? 1 : 0;
+        assertThat(ctx + " choices", usageChunk.path("choices").isArray() && usageChunk.path("choices").size() == expectedChoices, is(true));
         JsonNode u = usageChunk.path("usage");
         assertThat(ctx + " prompt_tokens", u.path("prompt_tokens").asInt(-1), is(expectedInput));
         assertThat(ctx + " completion_tokens", u.path("completion_tokens").asInt(-1), is(expectedOutput));
