@@ -1390,6 +1390,11 @@ geminiLive()
     and to AI21 Jamba are counted from their OpenAI-style usage, including on the multi-region
     <span class="inline_code">aiplatform.us.rep.googleapis.com</span> and
     <span class="inline_code">aiplatform.eu.rep.googleapis.com</span> hosts.
+    Their cost is estimated at Vertex AI's list prices for Gemini 2.5 and 2.0 models
+    (<span class="inline_code">google/gemini-2.5-flash</span>) and Llama 3.3 70B
+    (<span class="inline_code">meta/llama-3.3-70b-instruct-maas</span>); other models on these endpoints, and AI21
+    Jamba, are counted in tokens but have no price, so they add nothing to
+    <span class="inline_code">llmCostBudgetUsd</span>.
     An OpenAI response created with <span class="inline_code">background: true</span> and an xAI deferred
     completion report their usage only when the finished result is fetched, so that fetch is counted, once however
     many times it is polled. Other requests to an LLM host, such as listing models, fetching an ordinary stored

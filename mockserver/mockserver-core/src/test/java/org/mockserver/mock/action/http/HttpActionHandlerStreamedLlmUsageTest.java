@@ -1060,6 +1060,9 @@ public class HttpActionHandlerStreamedLlmUsageTest {
         assertTokens(genAiSpans.get(0), "openai", "meta/llama-3.3-70b-instruct-maas", 14L, 367L);
         assertTokens(genAiSpans.get(1), "openai", "meta/llama-3.3-70b-instruct-maas", 14L, 131L);
         assertThat(Metrics.getLlmOutputTokens("OPENAI", "meta/llama-3.3-70b-instruct-maas"), is(498L));
+        // priced at Vertex AI's Llama 3.3 70B list price, 0.72 USD per million tokens in and out
+        assertThat(recordedCostUsd(), closeTo((14 + 367 + 14 + 131) * 0.72 / 1_000_000, USD_TOLERANCE));
+        assertThat(recordedCostUsd(), greaterThan(0.0));
     }
 
     // Grok on Vertex AI serves the Responses API on the multi-region host:
@@ -1088,6 +1091,8 @@ public class HttpActionHandlerStreamedLlmUsageTest {
         SpanData span = singleGenAiSpan();
         assertOperation(span, "chat", "chat jamba-1.5-large@001");
         assertTokens(span, "openai", "jamba-1.5-large@001", 9L, 4L);
+        // no pricing table has Jamba, so the call is counted but not priced
+        assertThat(recordedCostUsd(), is(0.0));
     }
 
     private List<SpanData> genAiSpansWithTokens() {

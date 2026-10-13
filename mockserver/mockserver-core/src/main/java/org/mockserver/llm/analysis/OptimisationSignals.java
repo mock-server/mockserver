@@ -455,7 +455,7 @@ public class OptimisationSignals {
                 continue;
             }
             Double currentBlended = LlmPricing.blendedPerMillion(provider, call.getModel());
-            LlmPricing.ModelOption cheapest = LlmPricing.cheapestModel(provider);
+            LlmPricing.ModelOption cheapest = LlmPricing.cheapestModel(provider, call.getModel());
             if (currentBlended == null || cheapest == null) {
                 continue;
             }

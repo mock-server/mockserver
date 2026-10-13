@@ -30,7 +30,7 @@ import java.util.Map;
  * list prices captured 2026-06 (newer families) / 2025-Q4 (original entries).
  * They WILL drift — treat any total as an estimate, not an invoice. Sources:
  * Anthropic (anthropic.com/pricing), OpenAI (openai.com/api/pricing),
- * Gemini (ai.google.dev/pricing).
+ * Gemini (ai.google.dev/pricing), Vertex AI (cloud.google.com/vertex-ai/generative-ai/pricing).
  */
 public final class LlmPricing {
 
@@ -190,6 +190,23 @@ public final class LlmPricing {
         entry("gemma2-9b", new PricingEntry(0.2, 0.2, true))
     );
 
+    // Vertex AI's OpenAI-compatible endpoint names a model "<publisher>/<model>" and bills at
+    // Vertex AI's own list prices (cloud.google.com/vertex-ai/generative-ai/pricing, captured
+    // 2026-10). Only families the vendor tables above already price are listed; gemini-2.0-flash
+    // is the one Gemini rate that differs from the Gemini API's. Llama keys keep "-maas" so a
+    // self-deployed or other gateway's "meta/llama-…" is not billed at the managed rate.
+    private static final List<Map.Entry<String, PricingEntry>> VERTEX_GEMINI_PRICING = Arrays.asList(
+        entry("gemini-2.5-flash-lite", new PricingEntry(0.1, 0.4)),
+        entry("gemini-2.5-flash", new PricingEntry(0.3, 2.5)),
+        entry("gemini-2.5-pro", new PricingEntry(1.25, 10.0)),
+        entry("gemini-2.0-flash-lite", new PricingEntry(0.075, 0.3)),
+        entry("gemini-2.0-flash", new PricingEntry(0.15, 0.6))
+    );
+
+    private static final List<Map.Entry<String, PricingEntry>> VERTEX_LLAMA_PRICING = Arrays.asList(
+        entry("llama-3.3-70b-instruct-maas", new PricingEntry(0.72, 0.72))
+    );
+
     private LlmPricing() {
     }
 
@@ -237,11 +254,15 @@ public final class LlmPricing {
                 // Bedrock Anthropic model ids look like "anthropic.claude-sonnet-4-…".
                 return findPricing(ANTHROPIC_PRICING, model == null ? null : model.replaceFirst("^anthropic\\.", ""));
             case OPENAI:
+            case OPENAI_RESPONSES:
+                // no OpenAI model id has a "<publisher>/" prefix; Vertex AI's OpenAI-compatible endpoint does
+                if (vendorPrefix(model) != null) {
+                    return vertexPublisherPricing(model);
+                }
+                return findPricing(OPENAI_PRICING, model);
             case AZURE_OPENAI:
                 // Azure OpenAI uses user-defined deployment names rather than canonical
                 // model ids, so this returns null for most real Azure deployments.
-                return findPricing(OPENAI_PRICING, model);
-            case OPENAI_RESPONSES:
                 return findPricing(OPENAI_PRICING, model);
             case GEMINI:
                 return findPricing(GEMINI_PRICING, model);
@@ -277,15 +298,11 @@ public final class LlmPricing {
      * {@code null} for an unrecognised vendor prefix or a bare (unprefixed) id.
      */
     private static PricingEntry openRouterPricing(String model) {
-        if (model == null) {
+        String vendor = vendorPrefix(model);
+        if (vendor == null) {
             return null;
         }
-        int slash = model.indexOf('/');
-        if (slash <= 0 || slash == model.length() - 1) {
-            return null;
-        }
-        String vendor = model.substring(0, slash).toLowerCase();
-        String rest = model.substring(slash + 1);
+        String rest = afterVendor(model);
         switch (vendor) {
             case "openai":
                 return findPricing(OPENAI_PRICING, rest);
@@ -304,6 +321,53 @@ public final class LlmPricing {
             default:
                 return null;
         }
+    }
+
+    /**
+     * The lower-cased vendor of a {@code <vendor>/<model>} id, or {@code null} for a bare
+     * id or one with an empty vendor or model part.
+     */
+    private static String vendorPrefix(String model) {
+        if (model == null) {
+            return null;
+        }
+        int slash = model.indexOf('/');
+        if (slash <= 0 || slash == model.length() - 1) {
+            return null;
+        }
+        return model.substring(0, slash).toLowerCase();
+    }
+
+    /**
+     * The model part of a {@code <vendor>/<model>} id, cut at the slash of the original string:
+     * lower-casing can change the vendor's length (U+0130 becomes two characters).
+     */
+    private static String afterVendor(String model) {
+        return model.substring(model.indexOf('/') + 1);
+    }
+
+    /**
+     * The Vertex AI table for a publisher on the OpenAI-compatible endpoint, or {@code null}
+     * when MockServer has no Vertex AI price for that publisher's models.
+     */
+    private static List<Map.Entry<String, PricingEntry>> vertexPublisherTable(String publisher) {
+        if ("google".equals(publisher)) {
+            return VERTEX_GEMINI_PRICING;
+        }
+        if ("meta".equals(publisher)) {
+            return VERTEX_LLAMA_PRICING;
+        }
+        return null;
+    }
+
+    /**
+     * Price a {@code <publisher>/<model>} id from Vertex AI's OpenAI-compatible endpoint. A
+     * trailing {@code @version} is not stripped, because the prefix walk already ignores it.
+     */
+    private static PricingEntry vertexPublisherPricing(String model) {
+        String publisher = vendorPrefix(model);
+        List<Map.Entry<String, PricingEntry>> table = vertexPublisherTable(publisher);
+        return table == null ? null : findPricing(table, afterVendor(model));
     }
 
     /**
@@ -372,7 +436,22 @@ public final class LlmPricing {
      * tableless providers. Deterministic: ties resolve to the first table entry.
      */
     public static ModelOption cheapestModel(Provider provider) {
-        List<Map.Entry<String, PricingEntry>> table = tableFor(provider);
+        return cheapestIn(tableFor(provider));
+    }
+
+    /**
+     * The cheapest model a call on {@code model} could move to without changing vendor: for a
+     * {@code <publisher>/<model>} id on Vertex AI's OpenAI-compatible endpoint, the cheapest in
+     * that publisher's Vertex AI table (or {@code null}); otherwise {@link #cheapestModel(Provider)}.
+     */
+    public static ModelOption cheapestModel(Provider provider, String model) {
+        if ((provider == Provider.OPENAI || provider == Provider.OPENAI_RESPONSES) && vendorPrefix(model) != null) {
+            return cheapestIn(vertexPublisherTable(vendorPrefix(model)));
+        }
+        return cheapestModel(provider);
+    }
+
+    private static ModelOption cheapestIn(List<Map.Entry<String, PricingEntry>> table) {
         if (table == null || table.isEmpty()) {
             return null;
         }

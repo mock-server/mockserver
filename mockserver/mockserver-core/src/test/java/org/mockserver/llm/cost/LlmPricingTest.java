@@ -264,6 +264,92 @@ public class LlmPricingTest {
         }
     }
 
+    // --- Vertex AI OpenAI-compatible endpoint: "<publisher>/<model>" ids ---
+
+    @Test
+    public void shouldPriceVertexAiPublisherPrefixedModelsAtVertexAiListPrices() {
+        Object[][] cases = {
+            {Provider.OPENAI, "google/gemini-2.5-flash", 0.3, 2.5},
+            {Provider.OPENAI, "google/gemini-2.5-flash-lite", 0.1, 0.4},
+            {Provider.OPENAI, "google/gemini-2.5-pro", 1.25, 10.0},
+            {Provider.OPENAI, "google/gemini-2.5-flash-preview-04-17", 0.3, 2.5},
+            {Provider.OPENAI, "google/gemini-2.0-flash-lite-001", 0.075, 0.3},
+            // Vertex AI bills gemini-2.0-flash above the Gemini API's 0.10 / 0.40
+            {Provider.OPENAI, "google/gemini-2.0-flash-001", 0.15, 0.6},
+            {Provider.OPENAI_RESPONSES, "google/gemini-2.5-pro", 1.25, 10.0},
+            {Provider.OPENAI, "Google/Gemini-2.5-Flash", 0.3, 2.5},
+            {Provider.OPENAI, "meta/llama-3.3-70b-instruct-maas", 0.72, 0.72},
+            // an @version suffix does not stop the prefix match
+            {Provider.OPENAI, "google/gemini-2.5-flash@001", 0.3, 2.5},
+            {Provider.OPENAI, "meta/llama-3.3-70b-instruct-maas@001", 0.72, 0.72},
+        };
+        for (Object[] c : cases) {
+            Provider provider = (Provider) c[0];
+            String model = (String) c[1];
+            LlmPricing.PricingEntry pricing = LlmPricing.getPricing(provider, model);
+            assertThat(provider + " " + model, pricing, is(notNullValue()));
+            assertThat(provider + " " + model + " input", pricing.getInputPerMillion(), is(closeTo((Double) c[2], EPS)));
+            assertThat(provider + " " + model + " output", pricing.getOutputPerMillion(), is(closeTo((Double) c[3], EPS)));
+            assertFalse(provider + " " + model, pricing.isApproximate());
+        }
+        // 1M input + 1M output on Vertex AI gemini-2.0-flash: 0.15 + 0.60
+        assertThat(LlmPricing.estimateCostUsd(Provider.OPENAI, "google/gemini-2.0-flash-001", 1_000_000, 1_000_000),
+            is(closeTo(0.75, EPS)));
+        // the Gemini API's own rate for the same model is unchanged
+        assertThat(LlmPricing.estimateCostUsd(Provider.GEMINI, "gemini-2.0-flash-001", 1_000_000, 1_000_000),
+            is(closeTo(0.5, EPS)));
+    }
+
+    @Test
+    public void shouldLeaveVertexAiModelsWithNoVertexAiListPriceUnpriced() {
+        String[] models = {
+            // families no pricing table has
+            "google/gemini-3.1-pro-preview",
+            "google/gemma-3-27b-it",
+            "meta/llama-4-maverick-17b-128e-instruct-maas",
+            "qwen/qwen3-235b-a22b-instruct-2507-maas",
+            "openai/gpt-oss-120b-maas",
+            "deepseek-ai/deepseek-v3.1-maas",
+            "xai/grok-4.1-fast-reasoning",
+            // Llama 3.3 without "-maas" is not the managed model Vertex AI bills per token
+            "meta/llama-3.3-70b-instruct",
+            "meta-llama/Llama-3.3-70B-Instruct",
+            // AI21 Jamba names its model in the path, with an @version and no publisher
+            "jamba-1.5-large@001",
+            // embedding models never inherit a chat rate
+            "google/text-embedding-005",
+            "google/gemini-embedding-001",
+            "google/gemini-2.5-flash-embed",
+            // no vendor or no model after the slash
+            "/gemini-2.5-flash",
+            "google/",
+            // a vendor that lower-cases to a longer string (U+0130) must not shift the model part
+            "\u0130\u0130/x",
+        };
+        for (String model : models) {
+            assertThat(model, LlmPricing.getPricing(Provider.OPENAI, model), is(nullValue()));
+            assertThat(model, LlmPricing.getPricing(Provider.OPENAI_RESPONSES, model), is(nullValue()));
+            assertThat(model, LlmPricing.estimateCostUsd(Provider.OPENAI, model, 1_000_000, 1_000_000), is(nullValue()));
+        }
+    }
+
+    @Test
+    public void shouldNotPriceAPublisherPrefixedIdOnAnOpenAiTableRateOrOnAzure() {
+        // a prefixed id is not an OpenAI model: "openai/gpt-4o" on Vertex AI is not gpt-4o's OpenAI rate
+        assertThat(LlmPricing.getPricing(Provider.OPENAI, "openai/gpt-4o"), is(nullValue()));
+        // Azure OpenAI deployment names are not Vertex AI publisher ids
+        assertThat(LlmPricing.getPricing(Provider.AZURE_OPENAI, "google/gemini-2.5-flash"), is(nullValue()));
+        // bare OpenAI ids are priced as before
+        assertThat(LlmPricing.estimateCostUsd(Provider.OPENAI, "gpt-4o", 1_000_000, 0), is(closeTo(2.5, EPS)));
+        // a vendor that lower-cases to a longer string (U+0130) is unpriced, not an exception
+        assertThat(LlmPricing.getPricing(Provider.OPENROUTER, "\u0130\u0130/x"), is(nullValue()));
+        assertThat(LlmPricing.getPricing(Provider.ORCAROUTER, "\u0130\u0130/x"), is(nullValue()));
+        assertThat(LlmPricing.cheapestModel(Provider.OPENAI, "\u0130\u0130/x"), is(nullValue()));
+        // OpenRouter keeps the Gemini API rate for the same prefixed id
+        assertThat(LlmPricing.getPricing(Provider.OPENROUTER, "google/gemini-2.0-flash-001").getInputPerMillion(),
+            is(closeTo(0.1, EPS)));
+    }
+
     // --- blendedPerMillion ---
 
     @Test
@@ -307,6 +393,20 @@ public class LlmPricingTest {
         assertThat(cheapest, is(notNullValue()));
         assertThat(cheapest.getLabel(), is("gemini-2.0-flash-lite"));
         assertThat(cheapest.getBlendedPerMillion(), is(closeTo(0.375, EPS)));
+    }
+
+    @Test
+    public void cheapestModelForAVertexAiPublisherIdStaysWithThatPublisher() {
+        // gemini-2.0-flash-lite (0.075 + 0.3 = 0.375) is the cheapest Vertex AI Gemini entry, not gpt-4.1-nano
+        LlmPricing.ModelOption cheapest = LlmPricing.cheapestModel(Provider.OPENAI, "google/gemini-2.5-pro");
+        assertThat(cheapest, is(notNullValue()));
+        assertThat(cheapest.getLabel(), is("gemini-2.0-flash-lite"));
+        assertThat(cheapest.getBlendedPerMillion(), is(closeTo(0.375, EPS)));
+        assertThat(LlmPricing.cheapestModel(Provider.OPENAI, "meta/llama-3.3-70b-instruct-maas").getLabel(),
+            is("llama-3.3-70b-instruct-maas"));
+        assertThat(LlmPricing.cheapestModel(Provider.OPENAI, "qwen/qwen3-235b-a22b-instruct-2507-maas"), is(nullValue()));
+        // a bare id keeps the provider's own table
+        assertThat(LlmPricing.cheapestModel(Provider.OPENAI, "gpt-4o").getLabel(), is("gpt-4.1-nano"));
     }
 
     @Test

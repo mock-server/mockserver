@@ -272,6 +272,28 @@ public class OptimisationSignalsTest {
     }
 
     @Test
+    public void modelOverspendForAVertexAiGeminiCallSuggestsAVertexAiGeminiModel() {
+        List<Call> calls = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            calls.add(call(i).setProvider("OPENAI").setModel("google/gemini-2.5-pro")
+                .setOutputTokens(50).setInputTokens(200).setEstimatedCostUsd(0.01));
+        }
+        Optional<Signal> signal = findSignal(signals.detect(calls), "MODEL_OVERSPEND");
+        assertTrue(signal.isPresent());
+        assertTrue(signal.get().getRecommendation(), signal.get().getRecommendation().contains("`gemini-2.0-flash-lite`"));
+    }
+
+    @Test
+    public void modelOverspendNotFiredForTheOnlyPricedVertexAiLlamaModel() {
+        List<Call> calls = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            calls.add(call(i).setProvider("OPENAI").setModel("meta/llama-3.3-70b-instruct-maas")
+                .setOutputTokens(50).setInputTokens(200).setEstimatedCostUsd(0.01));
+        }
+        assertNull(findSignal(signals.detect(calls), "MODEL_OVERSPEND").orElse(null));
+    }
+
+    @Test
     public void modelOverspendNotFiredForSingleCandidate() {
         List<Call> calls = Arrays.asList(
             call(0).setProvider("OPENAI").setModel("gpt-4o").setOutputTokens(50).setInputTokens(200).setEstimatedCostUsd(0.01),
