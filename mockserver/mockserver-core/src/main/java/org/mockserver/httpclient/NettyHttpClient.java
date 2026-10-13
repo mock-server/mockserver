@@ -297,6 +297,8 @@ public class NettyHttpClient {
                         responseFuture.complete(reuseMessage);
                     } else if (firstByteMillis.get() == 0 && isRetryableReusedConnectionFailure(reuseThrowable) && isIdempotent(httpRequest)) {
                         connectFresh(httpRequest, effectiveRemoteAddress, effectiveConnectAddress, upstreamProxies, connectionTimeoutMillis, disableStreaming, secure, httpProtocol, poolKey, responseFuture, firstByteMillis, connectionEstablishedMillis, httpResponseFuture);
+                    } else if (firstByteMillis.get() == 0 && closedWithoutAnswer(reuseThrowable)) {
+                        responseFuture.completeExceptionally(new PooledConnectionClosedException(httpRequest.getMethod("GET"), reuseThrowable));
                     } else {
                         responseFuture.completeExceptionally(reuseThrowable);
                     }
@@ -484,7 +486,7 @@ public class NettyHttpClient {
                     .setArguments(hostAndPort(proxyAddress), propertyFor(proxy.getType()), boundedFaultDescription(cause))
             );
         }
-        return new UpstreamProxyUnreachableException(proxyAddress, cause);
+        return new UpstreamProxyUnreachableException(proxyAddress, propertyFor(proxy.getType()), cause);
     }
 
     // as configured, without the "/<unresolved>" an unresolved address's toString adds
@@ -995,6 +997,15 @@ public class NettyHttpClient {
                 && (message.contains("Connection reset") || message.contains("Broken pipe") || message.contains("broken pipe"));
         }
         return false;
+    }
+
+    /**
+     * Whether a request failed only because its connection closed or was reset, as a stale pooled connection does: not
+     * for a cause the failure names (TLS, HTTP/2, an unexpected exception), which is reported as that.
+     */
+    private static boolean closedWithoutAnswer(Throwable cause) {
+        return (cause.getClass() == SocketConnectionException.class && cause.getCause() == null)
+            || (cause instanceof SocketException && isRetryableReusedConnectionFailure(cause));
     }
 
     /**

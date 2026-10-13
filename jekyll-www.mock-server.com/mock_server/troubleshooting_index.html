@@ -40,7 +40,7 @@ keywords: "mockserver troubleshooting, mockserver 404, mockserver 502, mockserve
     </tr>
     <tr>
         <td><a href="#symptom_502">Forwarding returns 502 / connection refused</a></td>
-        <td>Upstream unreachable, TLS failure to the upstream, HTTP/2 error, or an undecodable upstream response</td>
+        <td>Upstream host unresolvable, refusing or not answering, upstream proxy unreachable, a pooled connection closed, TLS failure to the upstream, HTTP/2 error, or an undecodable upstream response</td>
         <td>Read the 502 response body — it names the cause</td>
     </tr>
     <tr>
@@ -120,15 +120,17 @@ keywords: "mockserver troubleshooting, mockserver 404, mockserver 502, mockserve
 
 <h2>Forwarding returns 502 / connection refused</h2>
 
-<p>When MockServer forwards a request and the upstream call fails, it answers with <strong>502</strong> whose body names the cause instead of a generic failure:</p>
+<p>When MockServer forwards a request and the upstream call fails, it answers with <strong>502</strong> whose body names the cause and, for a connection that could not be made, what to change:</p>
 
 <ul>
-    <li><strong>Set-up failure</strong> — "connection to the upstream could not be set up: ..." (a configuration problem on MockServer's side, such as an unresolvable host)</li>
-    <li><strong>TLS failure</strong> — "TLS with the upstream failed: ..."</li>
-    <li><strong>HTTP/2 error</strong> — "HTTP/2 error from the upstream: ..."</li>
-    <li><strong>Undecodable response</strong> — "response from the upstream could not be decoded: ..."</li>
-    <li><strong>Plain connect failure</strong> — "failed to connect to remote socket while forwarding request" (the upstream refused the connection, timed out, or does not exist — not yet split into a more specific reason)</li>
+    <li><strong>Connection failure</strong> &mdash; "upstream host name could not be resolved: ...", "upstream refused the connection: ...", "connection to the upstream timed out: ...", "upstream address could not be reached (no route to it): ...", "upstream proxy set by forwardHttpProxy could not be reached (...): ...", "upstream closed the pooled keep-alive connection ...", or "MockServer ran out of local ports or open files ..." (a forward that points back at MockServer itself is the usual cause of the last one). The full list, with what to change for each, is in <a href="/mock_server/debugging_issues.html#forward_failures">Why a Forward Failed (502 Bad Gateway)</a></li>
+    <li><strong>Set-up failure</strong> &mdash; "connection to the upstream could not be set up: ..." (a configuration problem on MockServer's side, such as a <span class="inline_code">forwardProxyPrivateKey</span> or <span class="inline_code">forwardProxyCertificateChain</span> that is not valid PEM)</li>
+    <li><strong>TLS failure</strong> &mdash; "TLS with the upstream failed: ..."</li>
+    <li><strong>HTTP/2 error</strong> &mdash; "HTTP/2 error from the upstream: ..."</li>
+    <li><strong>Undecodable response</strong> &mdash; "response from the upstream could not be decoded: ..."</li>
 </ul>
+
+<p>A 502 with an empty body is a failure MockServer could not classify; set <code class="inline_code">logLevel</code> to <code class="inline_code">TRACE</code> to see the underlying exception.</p>
 
 <p>Read the 502 body first; it tells you which of the above you're dealing with. For slow or intermittently slow upstreams rather than outright failures, see the <code class="inline_code">timing</code> fields on retrieved request-response pairs in <a href="/mock_server/debugging_issues.html#forwarding_timings">Request Forwarding Timings</a> and <a href="/proxy/network_latency_debugging.html">Network Latency Debugging</a>.</p>
 

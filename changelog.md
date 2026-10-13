@@ -916,6 +916,20 @@ This release delivers a sustained performance and memory programme alongside dat
   truncated body, and show it as base64, because a truncated body is kept as bytes.
 ### Fixed
 
+- **A forward whose connection could not be made now says why, and what to change, in the `502`.** A forward,
+  a proxied request or a `proxyPass` mapping whose upstream could not be reached got an empty
+  `502 Bad Gateway`, and the log said only "failed to connect to remote socket" (at `TRACE`) or, for a host
+  name that did not resolve, logged an error with a stack trace. The `502` body now names the cause with a
+  suggested fix: `upstream host name could not be resolved: ...`, `upstream refused the connection: ...`,
+  `connection to the upstream timed out: ...` (naming `socketConnectionTimeoutInMillis` where it applies),
+  `upstream address could not be reached (no route to it): ...`, `upstream proxy set by forwardHttpProxy
+  could not be reached (...): ...`, `MockServer ran out of local ports or open files ...`, and, for a request such as a `POST` that is not
+  sent twice, `upstream closed the pooled keep-alive connection the request was sent on without
+  answering ...`, which suggests `forwardConnectionPoolIdleTimeoutMillis` or `forwardConnectionPoolEnabled`.
+  A forward expectation that points at MockServer itself, which forwards the request back to itself until
+  it fails, gets a hint that it may be looping. The body never names the upstream's host or address, and the
+  same text is in the request's log entry. A `502` with an empty body now means a failure MockServer could
+  not classify. See [Debugging Issues: Why a Forward Failed](https://www.mock-server.com/mock_server/debugging_issues.html#forward_failures).
 - **Anthropic messages now send `"container": null` and `"diagnostics": null`, as the real API does.** In 8.0.0 and earlier, a mocked Anthropic response left out both fields, while the real Messages API now sends `container` on every message (`null` unless a code-execution container ran) and, since September 2026, `diagnostics` on every message (`null` unless the request asked for cache diagnostics). Anthropic's SDKs mostly treat a missing field and `null` the same, but code that tests `diagnostics === null` and then reads `diagnostics.cache_miss_reason`, as Anthropic's cache diagnostics TypeScript example does, threw against the mock. `container` is now `null` on a whole message, in the `message_start` event's `message` and in the `message_delta` event's `delta`; `diagnostics` is `null` on a whole message and in the `message_start` event's `message`. Bedrock InvokeModel responses gain `"container": null` but no `diagnostics`, because Bedrock does not support cache diagnostics and does not send it.
 - **Anthropic and Bedrock usage objects now include every field the real APIs send.** In 8.0.0 and
   earlier, a mocked Anthropic response sent `cache_creation_input_tokens` and

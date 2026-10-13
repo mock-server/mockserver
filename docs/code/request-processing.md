@@ -1180,6 +1180,7 @@ the request and the bounded cause, and the client gets a `502` whose body is the
 | TLS (any `SSLException` in the cause chain) | `TLS with the upstream failed: SSLHandshakeException: PKIX path building failed: …`; with OpenSSL, whose message is `General OpenSslEngine problem`, the root cause follows: `…; caused by CertificateException: No subject alternative names present` |
 | HTTP/2 error (any `Http2Exception` in the cause chain) | `HTTP/2 error from the upstream: PROTOCOL_ERROR: Frame of type 0 must be associated with a stream.` |
 | HTTP/1.1 response that could not be decoded (`UndecodableResponseException`) | `response from the upstream could not be decoded: IllegalArgumentException: No colon found` |
+| A connection that could not be made, or a pooled one lost before the response | the cause and what to change: see [Connection Causes](#connection-causes) |
 | Anything else | as before: no body; a connection failure is logged at `TRACE` on the first two routes, and at `INFO` as `proxy pass forwarding failed for <target>: ...` on a proxy-pass mapping |
 
 The body holds only text from the TLS, HTTP/2, set-up or decoding code, bounded as a log entry's fault is (each
@@ -1202,6 +1203,49 @@ is false for it, so it is not retried. The circuit breaker records a configurati
 refusal, as neither a success nor a failure (`recordNeutral`), and an undecodable response as a success, since the
 upstream answered. A TLS or HTTP/2 failure counts as a failure.
 
+#### Connection Causes
+
+When none of those reasons applies, `UpstreamConnectFailure.reason` names a connection that could not be made, or a
+pooled one that was lost, and the `502` body is its text: the cause, then what to change. It walks the cause chain
+only after the forward has failed, so a forward that succeeds costs nothing more. Neither the text nor its `INFO`
+entry names the upstream's host or address (the request, and on a proxy-pass mapping its `INFO` entry, already say
+where it was sent). The failure is logged at `TRACE`, with the request, the target and the reason, as a connection
+failure was before; a host name that did not resolve, which used to be an `ERROR` with a stack trace, is now logged
+the same way. For an expectation's forward the scheduler's `INFO` entry for the failed response future is skipped for
+these causes too, as it is for the reasons above, except a loop, which only the action shows.
+
+| Cause (first match in the chain) | `502` body starts |
+|---|---|
+| `UpstreamProxyUnreachableException` | `upstream proxy set by forwardHttpProxy could not be reached (it refused the connection): ...`; the property comes from the exception, the bracket from its cause |
+| `PooledConnectionClosedException` | `upstream closed the pooled keep-alive connection the request was sent on without answering, and a POST is not sent again ...: if the upstream closes idle connections, set forwardConnectionPoolIdleTimeoutMillis below its keep-alive timeout or set forwardConnectionPoolEnabled to false; otherwise the upstream may have closed the connection to reject the request` |
+| `UnknownHostException`, `UnresolvedAddressException` | `upstream host name could not be resolved: ...` |
+| Netty's `ConnectTimeoutException`, or a `ConnectException` saying `timed out` | `connection to the upstream timed out: ...`, naming `socketConnectionTimeoutInMillis` except for a request proxied only because its Host is not MockServer's, which connects with a fixed one second timeout |
+| A `SocketException` saying `Connection refused` | `upstream refused the connection: ...` |
+| `NoRouteToHostException`, or a `SocketException` saying `unreachable` | `upstream address could not be reached (no route to it): ...` |
+| `BindException`, or any exception saying `assign requested address` or `Too many open files` (on epoll a channel that cannot be created is a `ChannelException` over Netty's `NativeIoException`) | `MockServer ran out of local ports or open files to connect to the upstream: ...`, which says a forward to MockServer itself is the usual cause |
+
+For an expectation's `httpForward` whose host is a loopback address or the address the request arrived on
+(`HttpRequest.localAddress`, compared as text) and whose port is the one it arrived on, a loop hint (`the forward's
+target is the address MockServer received the request on, so the request may have been forwarded back to MockServer
+itself ...`) is added only where a loop is likely: after the local-resources text, or as the body of a failure no cause
+in the table names, whose own entries (the `ERROR` with its message, or the `TRACE` connect entry) are kept and whose
+`INFO` entry gets the hint appended. It never replaces a named cause: a loopback target on that port can be another
+process when MockServer listens on one address only.
+
+`NettyHttpClient` marks a pooled connection's failure: a request on a reused connection that failed before any of its
+response arrived only because the connection closed or was reset (`HttpClientConnectionErrorHandler`'s
+`SocketConnectionException` with no cause, or a reset or broken pipe), and was not sent again because its method is
+not idempotent, fails with `PooledConnectionClosedException` around the failure it failed with before. A failure that
+names its own cause (TLS, an HTTP/2 error, an unexpected exception on the connection) is left as it was. An upstream
+that closes a connection to reject a request looks the same as one that closed it while idle, so the text says both. It is a
+`SocketConnectionException` whose message and string form are its cause's, so callers and logs see what they saw
+before. Before this change such a request's `502` had no body and the log said only that the channel closed.
+
+A forward expectation that targets MockServer itself is answered by the same expectation again, and each hop opens a
+new connection until local ports run out (in about nine seconds on macOS). The innermost hop's forward fails, its
+`502` gives the local-resources text with the loop hint, and each outer hop relays that `502` as the upstream's
+answer, so the client gets it. Only the failure is explained: the loop itself is not stopped.
+
 An upstream proxy (`forwardHttpProxy`, `forwardHttpsProxy` or `forwardSocksProxy`) that cannot be reached is a
 configuration problem too. When the forward client's connection to the proxy fails (its name does not resolve, it
 refuses the connection, or the connect times out), `NettyHttpClient.connectFresh` fails the request with
@@ -1211,7 +1255,9 @@ proxy, so the connect future reports only the proxy; a failure the proxy reports
 `CONNECT` answered with a non-200 status, a SOCKS failure reply, the proxy closing the tunnel before answering, or its
 handshake timing out) is the target's, as before, since some proxies close rather than answer when they cannot reach
 the target. The wrapper is neutral for the breaker and not retried, and reads as its cause (`getMessage` and
-`toString` are the cause's), so every route answers and logs the failure exactly as before. Only the HTTP forward
+`toString` are the cause's), so every route logs the failure at the levels the cause alone gets. It carries the
+property that set the proxy, and the `502` names that property and what happened to the connection rather than
+blaming the target (see [Connection Causes](#connection-causes)). Only the HTTP forward
 client's connections are classified: the per-message binary forward and a client that is not the forward client
 (`forwardProxyClient` false) fail with the connect failure itself.
 

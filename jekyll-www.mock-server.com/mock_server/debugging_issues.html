@@ -613,6 +613,31 @@ $activeExpectations = $client-&gt;retrieveActiveExpectations(
 
 <p>For a detailed guide on using these timing fields to diagnose slow or intermittently slow upstream services &mdash; including HAR export with timing breakdowns, slow-request flagging, and Prometheus latency percentiles &mdash; see <a href="/proxy/network_latency_debugging.html">Network Latency Debugging</a>.</p>
 
+<a id="forward_failures" class="anchor" href="#forward_failures">&nbsp;</a>
+
+<h2>Why a Forward Failed (502 Bad Gateway)</h2>
+
+<p>When MockServer cannot get a response from the server it forwards or proxies a request to, it answers with <span class="inline_code">502 Bad Gateway</span>. The body of the <span class="inline_code">502</span> says why and what to change. The same text is in the log entry for the request, which you can see in the <a href="/mock_server/mockserver_ui.html">dashboard</a>. For a connection that could not be made, the body never contains the upstream's host name or address.</p>
+
+<table class="table-scroll">
+    <thead>
+        <tr><th>The 502 body starts with</th><th>What happened</th><th>What to change</th></tr>
+    </thead>
+    <tbody>
+    <tr><td><span class="inline_code">upstream host name could not be resolved</span></td><td>The upstream's host name could not be looked up where MockServer runs</td><td>Check the spelling of the host, and that it resolves from MockServer's machine or container (its DNS, hosts file or container network)</td></tr>
+    <tr><td><span class="inline_code">upstream refused the connection</span></td><td>Nothing was listening on the upstream's port</td><td>Start the upstream, or correct the port in the forward</td></tr>
+    <tr><td><span class="inline_code">connection to the upstream timed out</span></td><td>The upstream did not accept the connection within <span class="inline_code">socketConnectionTimeoutInMillis</span></td><td>Check a firewall, route, VPN or required proxy is not blocking it; raise <span class="inline_code">socketConnectionTimeoutInMillis</span> if the upstream is slow to accept connections. A request that matched no expectation and was proxied only because its <span class="inline_code">Host</span> header is not MockServer's waits one second, so this setting does not apply to it</td></tr>
+    <tr><td><span class="inline_code">upstream address could not be reached</span></td><td>There is no network route to the upstream</td><td>Check the address, and the network, VPN or proxy MockServer needs to reach it</td></tr>
+    <tr><td><span class="inline_code">upstream proxy set by forwardHttpProxy could not be reached</span> (or <span class="inline_code">forwardHttpsProxy</span>, <span class="inline_code">forwardSocksProxy</span>)</td><td>The proxy MockServer is configured to forward through could not be reached; the upstream itself was not contacted</td><td>Start the proxy, or correct the property's host and port</td></tr>
+    <tr><td><span class="inline_code">upstream closed the pooled keep-alive connection</span></td><td>The upstream closed a connection MockServer reused, without answering a request such as a <span class="inline_code">POST</span>, which MockServer does not send twice. Requests such as <span class="inline_code">GET</span> are sent again on a new connection instead</td><td>If the upstream closes idle connections, set <span class="inline_code">forwardConnectionPoolIdleTimeoutMillis</span> below its keep-alive timeout, or turn pooling off with <span class="inline_code">forwardConnectionPoolEnabled=false</span>. An upstream can also close a connection to reject a request, for example one whose headers are too large</td></tr>
+    <tr><td><span class="inline_code">the forward's target is the address MockServer received the request on</span> (on its own, or after another cause)</td><td>The forward may point at MockServer itself, so the forwarded request comes back to MockServer and can be forwarded again</td><td>Point the forward at the real upstream's host and port</td></tr>
+    <tr><td><span class="inline_code">MockServer ran out of local ports or open files</span></td><td>MockServer could not open another connection. A forward whose target is MockServer itself causes this</td><td>Check the forward's host and port; otherwise lower the number of concurrent forwards or raise the open-file limit</td></tr>
+    <tr><td><span class="inline_code">TLS with the upstream failed</span></td><td>The TLS handshake with the upstream failed</td><td>See <a href="/mock_server/HTTPS_TLS.html">HTTPS &amp; TLS</a></td></tr>
+    </tbody>
+</table>
+
+<p>Other failures, such as an HTTP/2 error from the upstream or a response MockServer could not decode, are also named in the body. A <span class="inline_code">502</span> with an empty body is a failure MockServer could not classify; run MockServer with <span class="inline_code">logLevel</span> set to <span class="inline_code">TRACE</span> to see the underlying exception.</p>
+
 <a id="retrieving_recorded_logs" class="anchor" href="#retrieving_recorded_logs">&nbsp;</a>
 
 <h2>Retrieving Recorded Logs</h2>

@@ -68,6 +68,8 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
     public static void stopTrustNoneTLSEchoServer() {
         if (trustNoneTLSEchoServer != null) {
             trustNoneTLSEchoServer.stop();
+            // the next class in this JVM starts its own: a stopped one refuses the connection, not the handshake
+            trustNoneTLSEchoServer = null;
         }
     }
 

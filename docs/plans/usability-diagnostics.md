@@ -70,9 +70,13 @@ flowchart LR
   request with the serving engines and limits, and reports the result, the failure with its template
   line and column and a hint, and warnings for unresolved Velocity references and `scenario.set`. A
   failing JavaScript template's log message now gives the template line and column too.
-- **Forward-failure causes (part of A4):** a failed forward's 502 now names a TLS failure, an
-  HTTP/2 error, a client-side set-up failure or an undecodable upstream response
-  (`upstreamFailureReason`, `7a8b8c424`, extended to binary and wss in `d089350d4`).
+- **Forward-failure causes:** a failed forward's 502 names a TLS failure, an HTTP/2 error, a
+  client-side set-up failure or an undecodable upstream response (`upstreamFailureReason`,
+  `7a8b8c424`, extended to binary and wss in `d089350d4`), and a connection that could not be made
+  or was lost (unresolvable host, refused, connect timeout, no route, local ports or files running
+  out, unreachable upstream proxy, a pooled connection closed under a non-idempotent request), each
+  with what to change, plus a loop hint for a failed forward back to MockServer itself
+  (`UpstreamConnectFailure`).
 - **Dashboard → `/generateExpectation`:** yes, the Generate Stub dialog calls it
   (`mockserver-ui/src/lib/generateStub.ts`).
 - **Configuration (was A7):** the startup WARN for an unknown `mockserver.*` / `MOCKSERVER_*` key
@@ -82,13 +86,12 @@ flowchart LR
   with their suggestions.
 
 **Gaps:** expectation lint and
-shadowing detection; the remaining forward-failure causes.
+shadowing detection.
 
 ## Items
 
 | # | Problem → proposal | Cost | Performance reasoning | Effort | Risks | Priority |
 |---|---|---|---|---|---|---|
-| A4 | Partly done: TLS, HTTP/2, set-up and decode failures are named in the 502 (`7a8b8c424`). A plain connect failure still says only "failed to connect to remote socket" → split it into DNS, refused and timeout, add pooled-connection close and proxy loop, and add a suggested fix to each named cause | (ii) | Runs only on failure; a lookup | S | Must not reveal more of the target than the 502 already does | P1 |
 | A8 | Unreachable or suspicious expectations go unnoticed → lint: shadowed expectations, regex paths that look literal, missing leading slash, STRICT array bodies, `times=0`; surfaced as PUT `warnings`, in the UI, and via `mockserver lint file.json` | (iv) / (iii) | Control plane only; the pairwise shadowing check is O(n²), so on demand, not on every PUT | M | Advisory only, never rejecting | P1 |
 | B3 | "Fix my expectation" → turn the diff into a minimal JSON patch with a preview-and-apply action in Explain Unmatched | (iii) | On demand | M | Never auto-apply | P1 |
 | A9b | Response and sequence verification failures get no summary block → append the same `verification summary:` (counts, closest misses, late arrivals) to response-aware and sequence failures, and say how many recorded requests matched the fields but had the other disposition | (iii) | Failure path only; reuse the request summary's 500-request ranking budget | S | Append only; keep the "left out when it adds nothing" rule | P3 |
@@ -104,6 +107,7 @@ shadowing detection; the remaining forward-failure causes.
 | A2b | At INFO an unmatched request still walks every expectation for the closest-match log line (`fullScanClosestMatchAndLazyRemoval`, which also schedules lazy removal and counts namespace skips), so a 404 flood at INFO stays O(expectations) per miss after A2 → measure it with `MatchingBenchmark` at INFO and 1,000 expectations, then cap it at 1,000 like the hint if it dominates, keeping lazy removal reachable for every inactive expectation | (ii) | Today O(expectations) per miss at INFO; A2's memo cannot be reused because the walk drives lazy removal | S | A cap must say so in the log line and must not strand inactive expectations | P2 |
 | A2c | An expired or used-up expectation still in the store fails with no recorded differences, so every closest-match scan ranks it closest and the hint header disappears until lazy removal runs (at WARN with 64 or more expectations this may never happen for an expectation outside the requests' buckets; not verified) → skip inactive expectations in the hint, the INFO closest-match line and explainUnmatched, then update `RequestMatchersClosestMatchMemoTest`'s masked phases | (ii) | Removes work; one `isActive` check per candidate already paid | S | Changes the hint for stores holding inactive expectations | P2 |
 | C1b | The LLM prompt redactor still sends an OAuth authorization `?code=` query value, because `code` is not a credential field name | (iv) | Prompt build only | S | `code` is a common non-secret parameter name; mask it only alongside OAuth signals such as `state`, `redirect_uri` or an `/authorize` or `/callback` path | P3 |
+| A12 | A forward expectation whose target is MockServer itself loops: each hop matches the same expectation and opens a new connection until local ports run out (about 9 s on macOS); A4 only explains the failure in the 502 → warn at expectation PUT (an A8 lint: an `httpForward` to a loopback host on a port MockServer listens on), or send the loop-prevention header on forward actions and answer a request carrying it with a 502 naming the loop | (iv) / (i) | The lint is control-plane only; the header option adds a header to every forward (hot path), so prefer the lint | S | A loopback target on that port can be another process when MockServer binds one address: warn, never reject | P2 |
 
 ## Approach to LLM features
 
@@ -119,7 +123,7 @@ shadowing detection; the remaining forward-failure causes.
 
 1. **Wave 0 — hygiene and performance:** A2b, A2c, C1b. (A2 and C1 landed.)
 2. **Wave 1 — explain engine:** done (A3, A10 and B1 landed).
-3. **Wave 2 — failure classes:** A4, A6, each with an MCP tool (see B1b and B1c) and a dashboard entry. (A5 landed REST-only; A5b adds its dashboard entry.)
+3. **Wave 2 — failure classes:** A6, each with an MCP tool (see B1b and B1c) and a dashboard entry. (A4 landed; A5 landed REST-only, and A5b adds its dashboard entry.)
 4. **Wave 3 — fixes:** A8 (including the CLI), B3, A9b. (B2 landed.)
 5. **Wave 4 — optional:** B5, A11. (B6 and B7 landed.)
 

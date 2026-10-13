@@ -70,6 +70,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.startsWith;
 import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpRequest.request;
@@ -469,7 +470,8 @@ public class ForwardHeaderLimitIntegrationTest {
 
                 boolean idempotent = method.equals("GET");
                 assertThat(method + " " + onAPooledConnection, onAPooledConnection.status, is(502));
-                assertThat(onAPooledConnection.body, is(""));
+                // a POST on a pooled connection the upstream closed is not sent again, and the 502 says so
+                assertThat(onAPooledConnection.body, idempotent ? is("") : startsWith("upstream closed the pooled keep-alive connection the request was sent on without answering, and a POST is not sent again"));
                 assertThat(method + " sent again only if idempotent", blocksRefusedByTheUpstream(), is(idempotent ? 2L : 1L));
                 assertThat(method + " on a new connection only for the second attempt", HTTP2_CONNECTIONS.get() - before, is(idempotent ? 1 : 0));
                 assertThat("the upstream is still served", get(mockServer, "/small/headers/1000").status, is(200));

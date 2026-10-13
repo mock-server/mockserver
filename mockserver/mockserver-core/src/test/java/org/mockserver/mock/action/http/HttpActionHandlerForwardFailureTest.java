@@ -67,8 +67,8 @@ import static org.mockserver.model.HttpRequest.request;
 /**
  * The {@code 502} a failed forward is answered with, and the entry it is logged with, for each reason the forward
  * client can name: a connection it could not set up from MockServer's configuration, TLS with the upstream, and an
- * HTTP/2 error from the upstream, and an HTTP/1.1 response that could not be decoded. The matched forward, unmatched
- * proxy and proxy-pass routes answer each alike. A connection that could not be made is answered as before.
+ * HTTP/2 error from the upstream, and an HTTP/1.1 response that could not be decoded; and for a connection that could not
+ * be made, its cause and what to change. The matched forward, unmatched proxy and proxy-pass routes answer each alike.
  */
 public class HttpActionHandlerForwardFailureTest {
 
@@ -191,8 +191,105 @@ public class HttpActionHandlerForwardFailureTest {
     }
 
     @Test
-    public void shouldAnswerAConnectionThatCouldNotBeMadeAsBefore() {
-        actionHandler.handleExceptionDuringForwardingRequest(ACTION, request, responseWriter, new ConnectException("Connection refused: upstream.example/127.0.0.1:8443"));
+    public void shouldAnswerARefusedConnectionWithItsCauseAndWhatToChangeWithoutNamingTheUpstream() {
+        actionHandler.handleExceptionDuringForwardingRequest(ACTION, request, responseWriter, new CompletionException(new ConnectException("Connection refused: upstream.example/127.0.0.1:8443")));
+
+        String reason = "upstream refused the connection: check the upstream is running and listening on the port forwarded to";
+        assertThat(answer().getStatusCode(), is(502));
+        assertThat(answer().getBodyAsString(), is(reason));
+        assertThat(errors(), empty());
+        assertThat("the 502's entry names the cause", info().getMessage(configuration()), containsString(reason));
+    }
+
+    @Test
+    public void shouldAnswerAProxiedRequestsConnectTimeoutWithoutNamingATimeoutThatDoesNotApply() {
+        // a request proxied only because its Host is not MockServer's connects with a fixed one second timeout
+        actionHandler.handleUnmatchedForwardFailure(new io.netty.channel.ConnectTimeoutException("connection timed out after 1000 ms: upstream.example/192.0.2.1:8443"), request, responseWriter, UPSTREAM, true);
+
+        assertThat(answer().getStatusCode(), is(502));
+        assertThat(answer().getBodyAsString(), is("connection to the upstream timed out: check the upstream is reachable from where MockServer runs (firewall, routing, VPN or an upstream proxy it must go through)"));
+        assertThat(errors(), empty());
+    }
+
+    @Test
+    public void shouldAnswerAProxiedRequestsHostThatDoesNotResolveWithItsCauseAndNotAsAnError() {
+        actionHandler.handleUnmatchedForwardFailure(new java.util.concurrent.ExecutionException(new java.net.UnknownHostException("upstream.example")), request, responseWriter, UPSTREAM, false);
+
+        assertThat(answer().getStatusCode(), is(502));
+        assertThat(answer().getBodyAsString(), is("upstream host name could not be resolved: check it is spelled correctly and resolves where MockServer runs (its DNS, hosts file or container network)"));
+        assertThat(errors(), empty());
+    }
+
+    private static final String LOOP_HINT = "the forward's target is the address MockServer received the request on, so the request may have been forwarded back to MockServer itself, where it can match the same expectation again and loop: check the forward's host and port";
+
+    @Test
+    public void shouldAddTheLoopHintToLocalPortsRunningOutOnAForwardBackToTheAddressTheRequestArrivedOn() {
+        HttpRequest received = request("/some_path").withLocalAddress("127.0.0.1:1080");
+        ResponseWriter writer = mock(ResponseWriter.class);
+
+        actionHandler.handleExceptionDuringForwardingRequest(forward().withHost("localhost").withPort(1080), received, writer, new CompletionException(new java.net.SocketException("Can't assign requested address")));
+
+        assertThat(written(writer, received).getStatusCode(), is(502));
+        assertThat(written(writer, received).getBodyAsString(), is("MockServer ran out of local ports or open files to connect to the upstream: a forward whose target is MockServer itself repeats until this happens, so check the forward's host and port; otherwise lower the number of concurrent forwards or raise the open-file limit; " + LOOP_HINT));
+        assertThat(errors(), empty());
+    }
+
+    @Test
+    public void shouldKeepAnUnnamedFailuresOwnEntryAndAddTheLoopHintOnAForwardBackToTheAddressTheRequestArrivedOn() {
+        HttpRequest received = request("/some_path").withLocalAddress("127.0.0.1:1080");
+        ResponseWriter writer = mock(ResponseWriter.class);
+        String timedOut = "Response was not received after 500 milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property";
+
+        actionHandler.handleExceptionDuringForwardingRequest(forward().withHost("127.0.0.1").withPort(1080), received, writer, new RuntimeException(timedOut));
+
+        assertThat(written(writer, received).getStatusCode(), is(502));
+        assertThat(written(writer, received).getBodyAsString(), is(LOOP_HINT));
+        assertThat("the failure's own entry, as before", errors(), hasSize(1));
+        assertThat(errors().get(0).getMessage(configuration()), containsString(timedOut));
+        assertThat(info().getMessage(configuration()), containsString(timedOut + "; " + LOOP_HINT));
+    }
+
+    @Test
+    public void shouldNotAddTheLoopHintToANamedCauseOnAForwardToTheAddressTheRequestArrivedOn() {
+        // a loopback target on the same port can be another process when MockServer listens on one address
+        HttpRequest received = request("/some_path").withLocalAddress("10.0.0.5:1080");
+        ResponseWriter writer = mock(ResponseWriter.class);
+
+        actionHandler.handleExceptionDuringForwardingRequest(forward().withHost("127.0.0.1").withPort(1080), received, writer, new ConnectException("Connection refused"));
+
+        assertThat(written(writer, received).getBodyAsString(), is("upstream refused the connection: check the upstream is running and listening on the port forwarded to"));
+    }
+
+    @Test
+    public void shouldAnswerAnUnnamedFailureOfAForwardElsewhereAsBefore() {
+        HttpRequest received = request("/some_path").withLocalAddress("127.0.0.1:1080");
+        ResponseWriter writer = mock(ResponseWriter.class);
+
+        actionHandler.handleExceptionDuringForwardingRequest(forward().withHost("127.0.0.1").withPort(1081), received, writer, new RuntimeException("something else"));
+
+        assertThat(written(writer, received).getBodyAsString(), is(nullValue()));
+        assertThat(errors(), hasSize(1));
+    }
+
+    private static HttpResponse written(ResponseWriter writer, HttpRequest request) {
+        ArgumentCaptor<HttpResponse> response = ArgumentCaptor.forClass(HttpResponse.class);
+        verify(writer).writeResponse(eq(request), response.capture(), eq(false));
+        return response.getValue();
+    }
+
+    @Test
+    public void shouldNotTakeAFailedForwardToAnotherPortForALoop() {
+        HttpRequest received = request("/some_path").withLocalAddress("127.0.0.1:1080");
+        ResponseWriter writer = mock(ResponseWriter.class);
+
+        actionHandler.handleExceptionDuringForwardingRequest(forward().withHost("127.0.0.1").withPort(1081), received, writer, new java.net.SocketException("Can't assign requested address"));
+
+        assertThat(written(writer, received).getBodyAsString(), is("MockServer ran out of local ports or open files to connect to the upstream: a forward whose target is MockServer itself repeats until this happens, so check the forward's host and port; otherwise lower the number of concurrent forwards or raise the open-file limit"));
+    }
+
+    @Test
+    public void shouldAnswerAConnectionFailureItCannotNameAsBefore() {
+        actionHandler.handleExceptionDuringForwardingRequest(ACTION, request, responseWriter, new ConnectException("something unexpected"));
 
         assertThat(answer().getStatusCode(), is(502));
         assertThat(answer().getBodyAsString(), is(nullValue()));
@@ -256,8 +353,19 @@ public class HttpActionHandlerForwardFailureTest {
     }
 
     @Test
-    public void shouldAnswerAProxyPassFailureWithoutAReasonAsBefore() throws Exception {
+    public void shouldAnswerAProxyPassRefusedConnectionWithItsCause() throws Exception {
         HttpResponse answer = proxyPass(CompletableFuture.failedFuture(new ConnectException("Connection refused: upstream.example/127.0.0.1:8080")));
+
+        String reason = "upstream refused the connection: check the upstream is running and listening on the port forwarded to";
+        assertThat(answer.getStatusCode(), is(502));
+        assertThat(answer.getBodyAsString(), is(reason));
+        assertThat(errors(), empty());
+        assertThat(info().getMessage(configuration()), containsString("proxy pass forwarding failed for http://upstream.example:8080/api: " + reason));
+    }
+
+    @Test
+    public void shouldAnswerAProxyPassFailureWithoutAReasonAsBefore() throws Exception {
+        HttpResponse answer = proxyPass(CompletableFuture.failedFuture(new ConnectException("something unexpected")));
 
         assertThat(answer.getStatusCode(), is(502));
         assertThat(answer.getBodyAsString(), is(nullValue()));
@@ -359,6 +467,12 @@ public class HttpActionHandlerForwardFailureTest {
         ArgumentCaptor<HttpResponse> response = ArgumentCaptor.forClass(HttpResponse.class);
         verify(responseWriter).writeResponse(eq(request), response.capture(), eq(false));
         return response.getValue();
+    }
+
+    private LogEntry info() {
+        List<LogEntry> infos = logged.stream().filter(entry -> entry.getLogLevel() == Level.INFO && org.mockserver.log.model.LogEntryMessages.FORWARD_FAILURE_MESSAGE_FORMAT.equals(entry.getMessageFormat())).collect(Collectors.toList());
+        assertThat(infos, hasSize(1));
+        return infos.get(0);
     }
 
     private List<LogEntry> errors() {

@@ -439,9 +439,9 @@ public class HttpForwardActionResilienceTest {
     }
 
     private static Throwable upstreamProxyUnreachable() throws Exception {
-        Constructor<UpstreamProxyUnreachableException> constructor = UpstreamProxyUnreachableException.class.getDeclaredConstructor(InetSocketAddress.class, Throwable.class);
+        Constructor<UpstreamProxyUnreachableException> constructor = UpstreamProxyUnreachableException.class.getDeclaredConstructor(InetSocketAddress.class, String.class, Throwable.class);
         constructor.setAccessible(true);
-        return constructor.newInstance(InetSocketAddress.createUnresolved("proxy.example", 3128), new java.net.ConnectException("Connection refused"));
+        return constructor.newInstance(InetSocketAddress.createUnresolved("proxy.example", 3128), "forwardHttpProxy", new java.net.ConnectException("Connection refused"));
     }
 
     private static Throwable configurationError() throws Exception {

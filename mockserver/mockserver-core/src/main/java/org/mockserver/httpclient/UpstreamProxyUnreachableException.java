@@ -15,10 +15,12 @@ public class UpstreamProxyUnreachableException extends RuntimeException {
     private static final long serialVersionUID = 1L;
 
     private final transient InetSocketAddress proxyAddress;
+    private final String property;
 
-    UpstreamProxyUnreachableException(InetSocketAddress proxyAddress, Throwable cause) {
+    UpstreamProxyUnreachableException(InetSocketAddress proxyAddress, String property, Throwable cause) {
         super(cause.getMessage(), cause, true, false);
         this.proxyAddress = proxyAddress;
+        this.property = property;
     }
 
     /**
@@ -26,6 +28,13 @@ public class UpstreamProxyUnreachableException extends RuntimeException {
      */
     public InetSocketAddress getProxyAddress() {
         return proxyAddress;
+    }
+
+    /**
+     * @return the configuration property that set the proxy: forwardHttpProxy, forwardHttpsProxy or forwardSocksProxy
+     */
+    public String getProperty() {
+        return property;
     }
 
     @Override

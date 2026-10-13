@@ -17,6 +17,7 @@ import org.mockserver.grpc.GrpcProtoDescriptorStore;
 import org.mockserver.httpclient.ClientConfigurationException;
 import org.mockserver.httpclient.HeaderLimitExceededException;
 import org.mockserver.httpclient.UndecodableResponseException;
+import org.mockserver.httpclient.UpstreamConnectFailure;
 import org.mockserver.httpclient.UpstreamProxyUnreachableException;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.httpclient.SocketCommunicationException;
@@ -1308,13 +1309,18 @@ public class HttpActionHandler {
      * async continuation.
      */
     void handleUnmatchedForwardFailure(Throwable throwable, HttpRequest request, ResponseWriter responseWriter, InetSocketAddress remoteAddress, boolean potentiallyHttpProxy) {
+        Throwable failure = throwable;
         throwable = answeredAsItsCause(throwable);
         if (returnedBlockedTarget(responseWriter, request, throwable, "proxied request")
             || returnedHeaderLimitFailure(responseWriter, request, throwable)
             || returnedUpstreamFailureReason(throwable, request, responseWriter, new LogEntry().setMessageFormat("failed to proxy request{}to remote address{}because:{}"), remoteAddress)) {
             return;
         }
-        if (potentiallyHttpProxy && connectionException(throwable)) {
+        // a request proxied only because its Host is not MockServer's connects with a fixed timeout
+        String connectFailure = UpstreamConnectFailure.reason(failure, !potentiallyHttpProxy);
+        if (connectFailure != null) {
+            returnConnectFailure(responseWriter, request, failure, new LogEntry().setMessageFormat("failed to proxy request{}to remote address{}because:{}"), remoteAddress, connectFailure, connectFailure);
+        } else if (potentiallyHttpProxy && connectionException(throwable)) {
             if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
@@ -1518,6 +1524,11 @@ public class HttpActionHandler {
     private void handleProxyPassFailure(Throwable throwable, HttpRequest request, ResponseWriter responseWriter, String targetUri) {
         if (returnedHeaderLimitFailure(responseWriter, request, throwable)
             || returnedUpstreamFailureReason(throwable, request, responseWriter, new LogEntry().setMessageFormat("failed to proxy pass request{}to{}because:{}"), targetUri)) {
+            return;
+        }
+        String connectFailure = UpstreamConnectFailure.reason(throwable, true);
+        if (connectFailure != null) {
+            returnConnectFailure(responseWriter, request, throwable, new LogEntry().setMessageFormat("failed to proxy pass request{}to{}because:{}"), targetUri, "proxy pass forwarding failed for " + targetUri + ": " + connectFailure, connectFailure);
             return;
         }
         returnBadGateway(responseWriter, request, "proxy pass forwarding failed for " + targetUri + ": " + throwable.getMessage());
@@ -3005,8 +3016,8 @@ public class HttpActionHandler {
                     postProcessor.run();
                 }
             }
-            // a failure with a reason is logged once, with the request, by handleExceptionDuringForwardingRequest
-        }, synchronous, throwable -> upstreamFailureReason(throwable) == null);
+            // a failure with a reason or a named connect failure is logged once, with the request, by handleExceptionDuringForwardingRequest
+        }, synchronous, throwable -> upstreamFailureReason(throwable) == null && UpstreamConnectFailure.reason(throwable, true) == null);
     }
 
     private void writeStreamingForwardActionResponse(final HttpResponse response, final ResponseWriter responseWriter, final HttpRequest request, final Action action, final HttpForwardActionResult responseFuture, final Runnable postProcessor, final long forwardStartNanos) {
@@ -3159,13 +3170,20 @@ public class HttpActionHandler {
     }
 
     void handleExceptionDuringForwardingRequest(Action action, HttpRequest request, ResponseWriter responseWriter, Throwable exception) {
+        Throwable failure = exception;
         exception = answeredAsItsCause(exception);
         if (returnedBlockedTarget(responseWriter, request, exception, "forward")
             || returnedHeaderLimitFailure(responseWriter, request, exception)
             || returnedUpstreamFailureReason(exception, request, responseWriter, new LogEntry().setMessageFormat("failed to forward request{}for action{}because:{}"), action)) {
             return;
         }
-        if (connectionException(exception)) {
+        String connectFailure = UpstreamConnectFailure.reason(failure, true);
+        // a loop is only likely where nothing more specific explains the failure
+        String loopHint = (connectFailure == null || UpstreamConnectFailure.OUT_OF_LOCAL_RESOURCES.equals(connectFailure)) && forwardsToReceivingAddress(action, request) ? UpstreamConnectFailure.FORWARD_LOOP : null;
+        if (connectFailure != null) {
+            String reason = loopHint != null ? connectFailure + "; " + loopHint : connectFailure;
+            returnConnectFailure(responseWriter, request, failure, new LogEntry().setMessageFormat("failed to forward request{}for action{}because:{}"), action, reason, reason);
+        } else if (connectionException(exception)) {
             if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
@@ -3176,7 +3194,7 @@ public class HttpActionHandler {
                         .setThrowable(exception)
                 );
             }
-            returnBadGateway(responseWriter, request, "failed to connect to remote socket while forwarding request");
+            returnLoopHintOrBadGateway(responseWriter, request, "failed to connect to remote socket while forwarding request", loopHint);
         } else {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -3187,7 +3205,19 @@ public class HttpActionHandler {
                     .setMessageFormat(exception != null ? isNotBlank(exception.getMessage()) ? exception.getMessage() : exception.getClass().getSimpleName() : null)
                     .setThrowable(exception)
             );
-            returnBadGateway(responseWriter, request, exception != null ? exception.getMessage() : null);
+            returnLoopHintOrBadGateway(responseWriter, request, exception != null ? exception.getMessage() : null, loopHint);
+        }
+    }
+
+    /**
+     * Answers an unnamed forward failure as before, or, when the forward went back to the address the request arrived
+     * on, with the loop hint as the 502's body and appended to its INFO entry's error.
+     */
+    private void returnLoopHintOrBadGateway(ResponseWriter responseWriter, HttpRequest request, String error, String loopHint) {
+        if (loopHint == null) {
+            returnBadGateway(responseWriter, request, error);
+        } else {
+            returnBadGateway(responseWriter, request, isNotBlank(error) ? error + "; " + loopHint : loopHint, badGatewayResponse().withBody(loopHint));
         }
     }
 
@@ -3428,6 +3458,35 @@ public class HttpActionHandler {
         );
         returnBadGateway(responseWriter, request, reason, badGatewayResponse().withBody(reason));
         return true;
+    }
+
+    /**
+     * Answers a forward whose connection to the upstream could not be made, or was lost before the response, with a
+     * 502 whose body is {@code reason}, which names the cause and what to change and never the upstream. The failure
+     * itself is logged at TRACE as {@code entry}, whose format takes the request, {@code target} and the reason, as a
+     * connection failure was before; {@code error} is the 502's INFO entry.
+     */
+    private void returnConnectFailure(ResponseWriter responseWriter, HttpRequest request, Throwable failure, LogEntry entry, Object target, String error, String reason) {
+        if (mockServerLogger.isEnabledForInstance(TRACE)) {
+            mockServerLogger.logEvent(
+                entry
+                    .setLogLevel(TRACE)
+                    .setCorrelationId(request.getLogCorrelationId())
+                    .setArguments(request, target, reason)
+                    .setThrowable(failure)
+            );
+        }
+        returnBadGateway(responseWriter, request, error, badGatewayResponse().withBody(reason));
+    }
+
+    /**
+     * Whether a forward action sent the request back to the address it was received on: checked only once the forward
+     * has failed. A loopback target on that port can be another process when MockServer is bound to one address, so
+     * this is offered as a hint, never in place of a named cause.
+     */
+    private static boolean forwardsToReceivingAddress(Action action, HttpRequest request) {
+        return action instanceof HttpForward
+            && UpstreamConnectFailure.targetsReceivingAddress(((HttpForward) action).getHost(), ((HttpForward) action).getPort(), request.getLocalAddress());
     }
 
     /**
