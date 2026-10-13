@@ -879,6 +879,7 @@
                         <exclude>**/ValidationProxyTest.java</exclude>
                         <exclude>**/HttpLlmResponseActionHandlerTest.java</exclude>
                         <exclude>**/HttpLlmResponseEmbeddingTelemetryTest.java</exclude>
+                        <exclude>**/HttpLlmResponseModelManagementTelemetryTest.java</exclude>
                         <exclude>**/HttpLlmResponseActionHandlerChaosTest.java</exclude>
                         <exclude>**/HttpActionHandlerLlmEnforcementTest.java</exclude>
                         <exclude>**/DnsIntentRegistryTest.java</exclude>
@@ -1103,6 +1104,7 @@
                                 <include>**/ValidationProxyTest.java</include>
                                 <include>**/HttpLlmResponseActionHandlerTest.java</include>
                                 <include>**/HttpLlmResponseEmbeddingTelemetryTest.java</include>
+                                <include>**/HttpLlmResponseModelManagementTelemetryTest.java</include>
                                 <include>**/HttpLlmResponseActionHandlerChaosTest.java</include>
                                 <include>**/HttpActionHandlerLlmEnforcementTest.java</include>
                                 <include>**/DnsIntentRegistryTest.java</include>

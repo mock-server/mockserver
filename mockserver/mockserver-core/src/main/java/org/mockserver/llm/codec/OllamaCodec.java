@@ -137,21 +137,11 @@ public class OllamaCodec implements ProviderCodec {
      * {@code load} otherwise. Returns null for any other request.
      */
     private static ObjectNode modelManagementReply(String model, HttpRequest request) {
-        String path = EmbeddingWire.path(request);
-        boolean generate = path.endsWith("/api/generate");
-        if (!generate && !path.endsWith("/api/chat")) {
-            return null;
-        }
-        JsonNode body = jsonObjectBody(request);
+        JsonNode body = modelManagementBody(request);
         if (body == null) {
             return null;
         }
-        JsonNode input = body.get(generate ? "prompt" : "messages");
-        boolean nothingToGenerate = input == null || input.isNull()
-            || (generate ? input.isTextual() && input.asText().isEmpty() : input.isArray() && input.isEmpty());
-        if (!nothingToGenerate) {
-            return null;
-        }
+        boolean generate = isGenerate(request);
         String modelName = EmbeddingWire.firstNonBlank(model, EmbeddingWire.text(body, "model"), "unknown");
         ObjectNode reply;
         if (generate) {
@@ -165,6 +155,28 @@ public class OllamaCodec implements ProviderCodec {
         reply.put("done", true);
         reply.put("done_reason", isZeroKeepAlive(body.get("keep_alive")) ? "unload" : "load");
         return reply;
+    }
+
+    @Override
+    public boolean isModelManagementRequest(HttpRequest request) {
+        return modelManagementBody(request) != null;
+    }
+
+    /** The JSON body of a request that only loads or unloads the model, or null for any other request. */
+    private static JsonNode modelManagementBody(HttpRequest request) {
+        String path = EmbeddingWire.path(request);
+        boolean generate = path.endsWith("/api/generate");
+        if (!generate && !path.endsWith("/api/chat")) {
+            return null;
+        }
+        JsonNode body = jsonObjectBody(request);
+        if (body == null) {
+            return null;
+        }
+        JsonNode input = body.get(generate ? "prompt" : "messages");
+        boolean nothingToGenerate = input == null || input.isNull()
+            || (generate ? input.isTextual() && input.asText().isEmpty() : input.isArray() && input.isEmpty());
+        return nothingToGenerate ? body : null;
     }
 
     private static JsonNode jsonObjectBody(HttpRequest request) {

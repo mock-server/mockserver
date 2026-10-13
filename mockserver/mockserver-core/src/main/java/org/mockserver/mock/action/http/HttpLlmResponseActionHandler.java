@@ -154,15 +154,22 @@ public class HttpLlmResponseActionHandler {
                 return encoded;
             }
 
-            // Non-streaming completion path
-            Completion completion = withInferredUsageIfEnabled(httpLlmResponse.getCompletion(), codecInstance, request);
+            // Non-streaming completion path; a model load or unload is not traced, counted or checked
+            boolean modelManagement = codecInstance.isModelManagementRequest(request);
+            Completion completion = modelManagement
+                ? httpLlmResponse.getCompletion()
+                : withInferredUsageIfEnabled(httpLlmResponse.getCompletion(), codecInstance, request);
             if (completion != null && !Boolean.TRUE.equals(completion.getStreaming())) {
                 HttpResponse encoded = codecInstance.encode(completion, model, request);
                 applyAzureContentFilterAnnotations(encoded, provider, httpLlmResponse.getContentFilter());
-                validateStructuredOutput(completion, encoded, provider, request);
+                if (!modelManagement) {
+                    validateStructuredOutput(completion, encoded, provider, request);
+                }
                 applyRateLimitHeaders(encoded, provider, false, httpLlmResponse.getChaos());
-                recordCompletionSpan(provider, model, request, completion);
-                HttpActionHandler.recordLlmUsageMetrics(provider, model, completion);
+                if (!modelManagement) {
+                    recordCompletionSpan(provider, model, request, completion);
+                    HttpActionHandler.recordLlmUsageMetrics(provider, model, completion);
+                }
                 recordOpenAiResponsesStateIfApplicable(provider, codecInstance, request, completion, encoded);
                 return encoded;
             }
@@ -414,6 +421,9 @@ public class HttpLlmResponseActionHandler {
             return null;
         }
         Provider provider = httpLlmResponse.getProvider();
+        if (isModelManagementRequest(provider, request)) {
+            return null;
+        }
         String error = structuredOutputError(completion, provider, request);
         if (error == null) {
             return null;
@@ -439,6 +449,12 @@ public class HttpLlmResponseActionHandler {
             .withHeader("content-type", "application/json")
             .withHeader(STRUCTURED_OUTPUT_INVALID_HEADER, compactHeaderValue(error))
             .withBody(body);
+    }
+
+    private static boolean isModelManagementRequest(Provider provider, HttpRequest request) {
+        return provider != null && ProviderCodecRegistry.getInstance().lookup(provider)
+            .map(codec -> codec.isModelManagementRequest(request))
+            .orElse(false);
     }
 
     /**
@@ -484,7 +500,11 @@ public class HttpLlmResponseActionHandler {
         ProviderCodec codecInstance = registry.lookup(provider)
             .orElseThrow(() -> new IllegalStateException("no codec registered for provider " + provider));
 
-        Completion completion = withInferredUsageIfEnabled(httpLlmResponse.getCompletion(), codecInstance, request);
+        // a model load or unload generates nothing, so it is not traced, counted or checked
+        boolean modelManagement = codecInstance.isModelManagementRequest(request);
+        Completion completion = modelManagement
+            ? httpLlmResponse.getCompletion()
+            : withInferredUsageIfEnabled(httpLlmResponse.getCompletion(), codecInstance, request);
         String model = httpLlmResponse.getModel();
         StreamingPhysics physics = completion.getStreamingPhysics();
 
@@ -495,9 +515,11 @@ public class HttpLlmResponseActionHandler {
             OpenAiResponsesStore.getInstance().recordStreamedIfStored(
                 request != null ? request.getBodyAsText() : null, chainedConversation(codecInstance, request), completion, events);
         }
-        validateStructuredOutput(completion, null, provider, request);
-        recordCompletionSpan(provider, model, request, completion);
-        HttpActionHandler.recordLlmUsageMetrics(provider, model, completion);
+        if (!modelManagement) {
+            validateStructuredOutput(completion, null, provider, request);
+            recordCompletionSpan(provider, model, request, completion);
+            HttpActionHandler.recordLlmUsageMetrics(provider, model, completion);
+        }
         // Rate-limit headers are intentionally not applied on the streaming path: it
         // returns SSE events rather than an HttpResponse, and a quota breach is
         // surfaced as a non-streaming error before streaming begins.

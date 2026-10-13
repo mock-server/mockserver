@@ -34,6 +34,14 @@ public interface ProviderCodec {
     }
 
     /**
+     * Whether the request only loads or unloads a model, which the provider answers without
+     * generating anything (Ollama), so there is no completion to trace, count or check.
+     */
+    default boolean isModelManagementRequest(HttpRequest request) {
+        return false;
+    }
+
+    /**
      * The wire format this provider uses for streaming responses.
      * Defaults to {@link StreamingFormat#SSE}; override for providers
      * that use a different format (e.g. Ollama uses NDJSON).
