@@ -21,18 +21,13 @@ public class JsonSchemaExpectationIdValidator extends JsonSchemaValidator {
         super(compiled, mockServerLogger);
     }
 
-    private static volatile JsonSchemaExpectationIdValidator compiled;
+    static final CompiledOnce<JsonSchemaExpectationIdValidator> COMPILED = new CompiledOnce<>(() -> new JsonSchemaExpectationIdValidator(new MockServerLogger(JsonSchemaExpectationIdValidator.class)));
 
     /**
      * A validator that logs to {@code mockServerLogger}. The schema is compiled once per JVM, by a validator that
      * holds no server's logger, so a stopped server is not kept by it.
      */
     public static JsonSchemaExpectationIdValidator jsonSchemaExpectationIdValidator(MockServerLogger mockServerLogger) {
-        JsonSchemaExpectationIdValidator shared = compiled;
-        if (shared == null) {
-            shared = new JsonSchemaExpectationIdValidator(new MockServerLogger(JsonSchemaExpectationIdValidator.class));
-            compiled = shared;
-        }
-        return new JsonSchemaExpectationIdValidator(mockServerLogger, shared);
+        return new JsonSchemaExpectationIdValidator(mockServerLogger, COMPILED.get());
     }
 }

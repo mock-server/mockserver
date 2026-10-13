@@ -698,6 +698,8 @@
                         <exclude>**/LRUCacheTest.java</exclude>
                         <exclude>**/KeyStoreFactoryTest.java</exclude>
                         <exclude>**/JsonSchemaValidatorCacheTest.java</exclude>
+                        <!-- Forgets the JVM-wide compiled schemas, so a schema-sharing test running alongside would see two. -->
+                        <exclude>**/JsonSchemaValidatorFirstUseRaceTest.java</exclude>
                         <exclude>**/ConfigurationTest.java</exclude>
                         <exclude>**/PortFactoryTest.java</exclude>
                         <exclude>**/ProxyConfigurationTest.java</exclude>
@@ -983,6 +985,7 @@
                                 <include>**/LRUCacheTest.java</include>
                                 <include>**/KeyStoreFactoryTest.java</include>
                                 <include>**/JsonSchemaValidatorCacheTest.java</include>
+                                <include>**/JsonSchemaValidatorFirstUseRaceTest.java</include>
                                 <include>**/ConfigurationTest.java</include>
                                 <include>**/PortFactoryTest.java</include>
                                 <include>**/ProxyConfigurationTest.java</include>
