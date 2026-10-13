@@ -17,6 +17,7 @@ import org.mockserver.llm.ProviderCodec;
 import org.mockserver.llm.ProviderCodecRegistry;
 import org.mockserver.llm.StreamingFormat;
 import org.mockserver.llm.TokenCounter;
+import org.mockserver.llm.client.LlmProviderSniffer;
 import org.mockserver.llm.codec.EmbeddingWire;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -129,22 +130,28 @@ public class HttpLlmResponseActionHandler {
 
             // Embedding path
             if (httpLlmResponse.getEmbedding() != null) {
+                HttpResponse encoded;
                 try {
-                    return EmbeddingWire.withLimits(embeddingLimits(),
+                    encoded = EmbeddingWire.withLimits(embeddingLimits(),
                         () -> codecInstance.encodeEmbedding(httpLlmResponse.getEmbedding(), request, model));
                 } catch (EmbeddingWire.InvalidEmbeddingRequestException e) {
                     return EmbeddingWire.invalidRequest(provider, e);
                 }
+                recordEncodedCallUsage(LlmProviderSniffer.Operation.EMBEDDINGS, provider, model, request, encoded);
+                return encoded;
             }
 
             // Rerank path
             if (httpLlmResponse.getRerank() != null) {
                 List<String> documents = extractDocumentsFromRequest(request);
+                HttpResponse encoded;
                 try {
-                    return codecInstance.encodeRerank(httpLlmResponse.getRerank(), documents, request);
+                    encoded = codecInstance.encodeRerank(httpLlmResponse.getRerank(), documents, request);
                 } catch (EmbeddingWire.InvalidEmbeddingRequestException e) {
                     return EmbeddingWire.invalidRequest(provider, e);
                 }
+                recordEncodedCallUsage(LlmProviderSniffer.Operation.RERANK, provider, model, request, encoded);
+                return encoded;
             }
 
             // Non-streaming completion path
@@ -204,6 +211,40 @@ public class HttpLlmResponseActionHandler {
             return response()
                 .withStatusCode(502)
                 .withBody("{\"error\":\"llm codec encode failed\",\"provider\":\"" + provider.name() + "\"}");
+        }
+    }
+
+    /**
+     * Records the GenAI span and token metrics for a served embeddings or rerank response, with
+     * the usage its codec encoded. The model is resolved as on the forward path: the one the
+     * response names, then the Bedrock or Gemini path, then the request body, then the expectation.
+     * Fail-soft: telemetry must never affect the served response.
+     */
+    private void recordEncodedCallUsage(LlmProviderSniffer.Operation operation, Provider provider, String expectationModel,
+                                        HttpRequest request, HttpResponse encoded) {
+        try {
+            Completion usage = EncodedLlmCallUsage.read(encoded);
+            if (usage == null) {
+                usage = Completion.completion();
+            }
+            String path = request != null && request.getPath() != null ? request.getPath().getValue() : null;
+            String model = usage.getModel();
+            if (model == null && provider == Provider.BEDROCK) {
+                model = LlmProviderSniffer.extractBedrockModelFromPath(path);
+            }
+            if (model == null && provider == Provider.GEMINI) {
+                model = LlmProviderSniffer.extractGeminiModelFromPath(path);
+            }
+            if (model == null) {
+                model = LlmProviderSniffer.extractModelFromRequest(request);
+            }
+            if (model == null) {
+                model = expectationModel;
+            }
+            org.mockserver.telemetry.GenAiSpans.record(operation.genAiOperationName(), provider, model, usage);
+            HttpActionHandler.recordLlmUsageMetrics(provider, model, usage);
+        } catch (Exception e) {
+            // fail-soft: telemetry must never affect the served response
         }
     }
 

@@ -412,7 +412,7 @@ sum(rate(mock_server_llm_cost_usd_total[1h]))</code></pre>
 </p>
 
 <ul>
-    <li><strong>Mock path</strong> &mdash; when MockServer serves an <span class="inline_code">httpLlmResponse</span></li>
+    <li><strong>Mock path</strong> &mdash; when MockServer serves an <span class="inline_code">httpLlmResponse</span>. A mocked completion gets a <span class="inline_code">chat</span> span, and a mocked embeddings or rerank response an <span class="inline_code">embeddings</span> or <span class="inline_code">rerank</span> span. An embeddings or rerank span, and the token metrics, carry the input tokens the mocked response reports in the provider's own usage field. A response whose provider reports no tokens there, such as a Cohere rerank (billed in search units), a Bedrock Cohere embedding or Ollama's older <span class="inline_code">/api/embeddings</span> endpoint, gets a span with no token counts.</li>
     <li><strong>Forward/proxy path</strong> &mdash; when MockServer forwards requests to a real LLM provider. The provider is detected from the target host (e.g. <span class="inline_code">api.openai.com</span> maps to OpenAI, <span class="inline_code">api.anthropic.com</span> maps to Anthropic). Only calls to a model get a span: a completion (<span class="inline_code">gen_ai.operation.name</span> <span class="inline_code">chat</span>), an embeddings call (<span class="inline_code">embeddings</span>) or a rerank call (<span class="inline_code">rerank</span>), each named <span class="inline_code">&lt;operation&gt; &lt;model&gt;</span>. Other requests to the provider, such as listing models or fetching a stored response, get none.</li>
 </ul>
 

@@ -8,13 +8,13 @@ MockServer integrates with OpenTelemetry (OTEL) for both metrics export and trac
 
 ### GenAI Span Export (`GenAiSpans`, `GenAiSpanExporter`)
 
-Emits explicit OpenTelemetry GenAI semantic-convention spans for LLM completions MockServer serves **or forwards**, and for forwarded embeddings and rerank calls. Each span carries provider (`gen_ai.system`), model, token usage, and finish reason. Controlled by `mockserver.otelTracesEnabled`.
+Emits explicit OpenTelemetry GenAI semantic-convention spans for LLM completions, embeddings and rerank calls MockServer serves **or forwards**. Each span carries provider (`gen_ai.system`), model, token usage, and finish reason. Controlled by `mockserver.otelTracesEnabled`.
 
 - **`GenAiSpans`** — static emit point; no-op unless a tracer is installed by `GenAiSpanExporter`
 - **`GenAiSpanExporter`** — configures the OTel trace SDK (OTLP HTTP/protobuf, JDK sender) and installs the tracer
 
 GenAI spans fire on two paths:
-1. **Mock action path** — `HttpLlmResponseActionHandler` calls `GenAiSpans.recordCompletion()` for mocked LLM responses (streaming and non-streaming).
+1. **Mock action path** — `HttpLlmResponseActionHandler` calls `GenAiSpans.recordCompletion()` for mocked LLM completions (streaming and non-streaming). A mocked embeddings or rerank response gets a span whose `gen_ai.operation.name` is `embeddings` or `rerank`, and token metrics, with the input tokens read back out of the served body by `EncodedLlmCallUsage` (a streaming parse of the provider's own field: `usage.prompt_tokens`, else `usage.total_tokens`; `usageMetadata.promptTokenCount`; `prompt_eval_count`; `inputTextTokenCount`), so the count is exactly what the codec put on the wire. Its model is resolved as on the forward path: the response's top-level `model`, then the Bedrock or Gemini path, then the request body, then the expectation. A request the codec rejects with a 400 gets no span.
 2. **Forward/proxy path** — `HttpActionHandler.emitForwardGenAiSpan()` detects LLM traffic via `LlmProviderSniffer`, reads the upstream response's usage using the provider's `LlmClient`, and records a span whose `gen_ai.operation.name` is `chat`, `embeddings` or `rerank` (from `LlmProviderSniffer.accountableOperation`: a `POST` to a completion, embeddings or rerank endpoint, or the `GET` that fetches a finished OpenAI background response or xAI deferred completion, counted once per id; `GET /v1/models` or an ordinary stored-response retrieval gets no span). Covers matched-expectation forwards, breakpoint-continuation forwards, the unmatched proxy path and `proxyPassMappings` routes. A streamed response is read as it is relayed, by `LlmStreamUsageScanner`, and its span is emitted when the stream ends; a stream that reports no usage gets a span with no `gen_ai.usage.*` attributes and a log line saying it was not counted. See [Proxied LLM usage and cost](llm-mocking.md#proxied-llm-usage-and-cost).
 
 ### LLM Provider Sniffer (`LlmProviderSniffer`)
