@@ -4554,9 +4554,14 @@ public class HttpActionHandler {
      */
     private LlmStreamUsageScanner observeForwardedLlmStream(HttpRequest forwardedRequest, HttpResponse streamingResponse, String targetHost) {
         try {
-            if (!isForwardLlmAccountingEnabled()
-                || forwardedLlmProvider(forwardedRequest, targetHost).isEmpty()
-                || !org.mockserver.llm.client.LlmProviderSniffer.isCompletionPath(pathOf(forwardedRequest))) {
+            if (!isForwardLlmAccountingEnabled()) {
+                return null;
+            }
+            java.util.Optional<Provider> provider = forwardedLlmProvider(forwardedRequest, targetHost);
+            // a polled result is counted only when whole, once: a resumed stream may repeat a counted one
+            if (provider.isEmpty()
+                || forwardedLlmOperation(provider.get(), forwardedRequest).orElse(null) != org.mockserver.llm.client.LlmProviderSniffer.Operation.CHAT
+                || isPolledCompletion(provider.get(), forwardedRequest)) {
                 return null;
             }
             LlmStreamUsageScanner streamUsage = new LlmStreamUsageScanner();
@@ -4589,6 +4594,52 @@ public class HttpActionHandler {
         return org.mockserver.llm.client.LlmProviderSniffer.sniff(forwardedRequest);
     }
 
+    private static java.util.Optional<org.mockserver.llm.client.LlmProviderSniffer.Operation> forwardedLlmOperation(Provider provider, HttpRequest forwardedRequest) {
+        return org.mockserver.llm.client.LlmProviderSniffer.accountableOperation(provider, methodOf(forwardedRequest), pathOf(forwardedRequest));
+    }
+
+    private static boolean isPolledCompletion(Provider provider, HttpRequest forwardedRequest) {
+        return org.mockserver.llm.client.LlmProviderSniffer.isPolledCompletion(provider, methodOf(forwardedRequest), pathOf(forwardedRequest));
+    }
+
+    private static String methodOf(HttpRequest request) {
+        return request != null && request.getMethod() != null ? request.getMethod().getValue() : null;
+    }
+
+    private static final int COUNTED_POLLED_COMPLETION_IDS = 10_000;
+    // a background response is polled until it finishes and may be fetched again after, so each is counted once
+    private final java.util.Map<String, Boolean> countedPolledCompletionIds = java.util.Collections.synchronizedMap(
+        new java.util.LinkedHashMap<String, Boolean>(16, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(java.util.Map.Entry<String, Boolean> eldest) {
+                return size() > COUNTED_POLLED_COMPLETION_IDS;
+            }
+        });
+
+    /**
+     * Claims a polled completion's id so a concurrent poll of the same id is not counted too; the claim
+     * is released if the usage then cannot be counted.
+     *
+     * @return the claimed key, or null when this poll is not to be counted
+     */
+    private String claimPolledCompletion(Provider provider, HttpResponse upstreamResponse) {
+        Integer statusCode = upstreamResponse.getStatusCode();
+        if (statusCode == null || statusCode != 200) {
+            return null;
+        }
+        String id = org.mockserver.llm.client.LlmProviderSniffer.polledCompletionId(provider, upstreamResponse.getBodyAsString());
+        String key = id != null ? countedCompletionKey(provider, id) : null;
+        return key != null && countedPolledCompletionIds.putIfAbsent(key, Boolean.TRUE) == null ? key : null;
+    }
+
+    private static String countedCompletionKey(Provider provider, String id) {
+        return provider.name() + '|' + id;
+    }
+
+    private static boolean hasTokenCounts(Usage usage) {
+        return usage != null && (usage.getInputTokens() != null || usage.getOutputTokens() != null);
+    }
+
     private static String pathOf(HttpRequest request) {
         return request != null && request.getPath() != null ? request.getPath().getValue() : null;
     }
@@ -4606,17 +4657,28 @@ public class HttpActionHandler {
         if (!isForwardLlmAccountingEnabled()) {
             return;
         }
+        String claimedPoll = null;
         try {
             java.util.Optional<Provider> providerOpt = forwardedLlmProvider(forwardedRequest, targetHost);
             if (providerOpt.isEmpty()) {
                 return;
             }
+            Provider provider = providerOpt.get();
+            java.util.Optional<org.mockserver.llm.client.LlmProviderSniffer.Operation> operation = forwardedLlmOperation(provider, forwardedRequest);
+            if (operation.isEmpty()) {
+                return;
+            }
             String path = pathOf(forwardedRequest);
-            boolean completionPath = org.mockserver.llm.client.LlmProviderSniffer.isCompletionPath(path);
+            boolean completionPath = operation.get() == org.mockserver.llm.client.LlmProviderSniffer.Operation.CHAT;
             if (relayedStream && !completionPath) {
                 return;
             }
-            Provider provider = providerOpt.get();
+            if (isPolledCompletion(provider, forwardedRequest)) {
+                claimedPoll = relayedStream ? null : claimPolledCompletion(provider, upstreamResponse);
+                if (claimedPoll == null) {
+                    return;
+                }
+            }
             java.util.Optional<org.mockserver.llm.client.LlmClient> clientOpt =
                 org.mockserver.llm.client.LlmClientRegistry.getInstance().lookup(provider);
             if (clientOpt.isEmpty()) {
@@ -4654,11 +4716,18 @@ public class HttpActionHandler {
                     return;
                 }
             }
+            if (claimedPoll != null && !hasTokenCounts(completion.getUsage())) {
+                return;
+            }
             // Prefer the model from the parsed completion; fall back to the request body
             String model = completion.getModel();
             if (model == null && provider == Provider.BEDROCK) {
                 // a Bedrock request names its model in the path, and a Converse response has none
                 model = org.mockserver.llm.client.LlmProviderSniffer.extractBedrockModelFromPath(path);
+            }
+            if (model == null && provider == Provider.GEMINI) {
+                // a Gemini embeddings response names no model
+                model = org.mockserver.llm.client.LlmProviderSniffer.extractGeminiModelFromPath(path);
             }
             if (model == null) {
                 model = org.mockserver.llm.client.LlmProviderSniffer.extractModelFromRequest(forwardedRequest);
@@ -4667,10 +4736,16 @@ public class HttpActionHandler {
                 logStreamedUsageUnavailable(provider, model, forwardedRequest, upstreamResponse, completion.getUsage(), scanned, streamCutOff);
             }
             if (spanEnabled) {
-                GenAiSpans.recordCompletion(provider, model, completion);
+                GenAiSpans.record(operation.get().genAiOperationName(), provider, model, completion);
             }
             // Increment LLM token/cost metrics and record against the budget monitor
             recordLlmUsageMetrics(provider, model, completion);
+            claimedPoll = null;
+            // a background response counted from its stream must not be counted again when it is fetched
+            if (provider == Provider.OPENAI_RESPONSES && scanned != null && scanned.responseId() != null
+                && scanned.finalUsageSeen() && hasTokenCounts(completion.getUsage())) {
+                countedPolledCompletionIds.put(countedCompletionKey(provider, scanned.responseId()), Boolean.TRUE);
+            }
         } catch (Exception e) {
             // fail-soft: telemetry must never affect the served response
             if (mockServerLogger.isEnabledForInstance(Level.TRACE)) {
@@ -4681,6 +4756,10 @@ public class HttpActionHandler {
                         .setArguments(e.getMessage())
                         .setThrowable(e)
                 );
+            }
+        } finally {
+            if (claimedPoll != null) {
+                countedPolledCompletionIds.remove(claimedPoll);
             }
         }
     }

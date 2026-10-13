@@ -682,49 +682,205 @@ public class LlmProviderSnifferTest {
             is(Optional.empty()));
     }
 
-    // --- completion endpoints ---
+    // --- accountable endpoints: completions, embeddings and rerank ---
+
+    private static void assertOperation(String method, String path, LlmProviderSniffer.Operation expected) {
+        assertOperation(Provider.OPENAI, method, path, expected);
+    }
+
+    private static void assertOperation(Provider provider, String method, String path, LlmProviderSniffer.Operation expected) {
+        assertThat(provider + " " + method + " " + path, LlmProviderSniffer.accountableOperation(provider, method, path), is(Optional.ofNullable(expected)));
+    }
 
     @Test
-    public void recognisesEachProvidersCompletionEndpoints() {
+    public void accountsEachProvidersCompletionEndpointsAsChat() {
         String[] completionPaths = {
-            "/v1/chat/completions",
-            "/openai/deployments/gpt-4o/chat/completions",
-            "/v1/completions",
-            "/v1/responses",
+            // OpenAI
+            "/v1/chat/completions", "/v1/completions", "/v1/responses",
+            // OpenAI Responses compaction runs the model and reports usage
+            "/v1/responses/compact",
+            // Azure OpenAI
+            "/openai/deployments/gpt-4o/chat/completions?api-version=2024-10-21", "/openai/v1/responses",
+            "/openai/responses?api-version=2025-04-01-preview",
+            // OpenAI Codex backend
             "/backend-api/codex/responses",
+            // Mistral
+            "/v1/fim/completions", "/v1/agents/completions",
+            // OpenRouter, Groq, DeepSeek
+            "/api/v1/chat/completions", "/openai/v1/chat/completions", "/chat/completions",
+            // Anthropic
             "/v1/messages",
-            "/v1beta/models/gemini-2.5-flash:streamGenerateContent",
-            "/v1beta/models/gemini-2.5-flash:generateContent",
+            // Gemini and Vertex AI
+            "/v1beta/models/gemini-2.5-flash:generateContent", "/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse",
+            "/v1/projects/p/locations/us-central1/publishers/google/models/gemini-2.5-flash:generateContent",
+            // Bedrock
+            "/model/anthropic.claude-sonnet-4-5-20250929-v1%3A0/converse",
             "/model/anthropic.claude-sonnet-4-5-20250929-v1%3A0/converse-stream",
-            "/model/amazon.nova-pro-v1%3A0/invoke-with-response-stream",
-            "/api/chat",
-            "/api/generate",
-            "/v1/chat",
-            "/v2/chat",
+            "/model/amazon.nova-pro-v1%3A0/invoke", "/model/amazon.nova-pro-v1%3A0/invoke-with-response-stream",
+            // Ollama
+            "/api/chat", "/api/generate",
+            // Cohere
+            "/v1/chat", "/v2/chat",
+            // Claude on Vertex AI
+            "/v1/projects/p/locations/us-east5/publishers/anthropic/models/claude-sonnet-4-5@20250929:rawPredict",
+            "/v1/projects/p/locations/us-east5/publishers/anthropic/models/claude-sonnet-4-5@20250929:streamRawPredict",
         };
         for (String path : completionPaths) {
-            assertThat(path, LlmProviderSniffer.isCompletionPath(path), is(true));
+            assertOperation("POST", path, LlmProviderSniffer.Operation.CHAT);
         }
     }
 
     @Test
-    public void doesNotTreatOtherEndpointsOfAnLlmHostAsCompletions() {
+    public void accountsEachProvidersEmbeddingsEndpointsAsEmbeddings() {
+        String[] embeddingsPaths = {
+            // OpenAI, Mistral, OpenRouter, Voyage
+            "/v1/embeddings", "/api/v1/embeddings",
+            // Azure OpenAI
+            "/openai/deployments/text-embedding-3-small/embeddings?api-version=2024-10-21",
+            // Gemini
+            "/v1beta/models/gemini-embedding-001:embedContent", "/v1beta/models/gemini-embedding-001:batchEmbedContents",
+            // Ollama, current and legacy
+            "/api/embed", "/api/embeddings",
+            // Cohere
+            "/v1/embed", "/v2/embed",
+            // Voyage
+            "/v1/multimodalembeddings", "/v1/contextualizedembeddings",
+            // Bedrock embedding models, invoked on the chat models' path
+            "/model/amazon.titan-embed-text-v2%3A0/invoke", "/model/cohere.embed-v4%3A0/invoke",
+        };
+        for (String path : embeddingsPaths) {
+            assertOperation("POST", path, LlmProviderSniffer.Operation.EMBEDDINGS);
+        }
+    }
+
+    @Test
+    public void accountsEachProvidersRerankEndpointsAsRerank() {
+        String[] rerankPaths = {
+            // Cohere and Voyage
+            "/v1/rerank", "/v2/rerank",
+            // Bedrock Agent Runtime, and a Bedrock rerank model invoked on the chat models' path
+            "/rerank", "/model/cohere.rerank-v3-5%3A0/invoke",
+        };
+        for (String path : rerankPaths) {
+            assertOperation("POST", path, LlmProviderSniffer.Operation.RERANK);
+        }
+    }
+
+    @Test
+    public void doesNotAccountOtherEndpointsOfAnLlmHost() {
         String[] otherPaths = {
-            "/api/pull",
-            "/api/push",
-            "/api/create",
-            "/api/tags",
-            "/v1/realtime/events",
-            "/v1/models",
-            "/v1/embeddings",
-            "/v1/files",
-            "/v2/chatbots",
+            // Anthropic token count and batches
+            "/v1/messages/count_tokens", "/v1/messages/batches",
+            // OpenAI Responses token count and cancel, a stored chat completion's update, Assistants thread messages
+            "/v1/responses/input_tokens", "/v1/responses/resp_123/cancel", "/v1/chat/completions/chatcmpl-123",
+            "/v1/threads/thread_abc/messages",
+            // Ollama model management
+            "/api/pull", "/api/push", "/api/create", "/api/show",
+            // other OpenAI endpoints
+            "/v1/realtime/events", "/v1/moderations", "/v1/files", "/v1/models",
+            // Gemini token count, Cohere's other endpoints, Bedrock's other paths
+            "/v1beta/models/gemini-2.5-flash:countTokens", "/v2/chatbots", "/v1/tokenize", "/model/123/details",
+            // Claude on Vertex AI token count
+            "/v1/projects/p/locations/us-east5/publishers/anthropic/models/count-tokens:rawPredict",
+            // OpenAI Conversations API objects, which do not call a model
+            "/v1/conversations", "/v1/conversations/conv_123",
             "",
         };
         for (String path : otherPaths) {
-            assertThat(path, LlmProviderSniffer.isCompletionPath(path), is(false));
+            assertOperation("POST", path, null);
         }
-        assertThat(LlmProviderSniffer.isCompletionPath(null), is(false));
+        assertOperation("POST", null, null);
+    }
+
+    @Test
+    public void accountsOnlyAPostBecauseEveryOtherMethodReadsOrDeletesWithoutCallingAModel() {
+        assertOperation("GET", "/v1/models", null);
+        assertOperation("GET", "/v1/chat/completions", null);
+        assertOperation("GET", "/v1/chat/completions/chatcmpl-123", null);
+        assertOperation("GET", "/v1/responses/resp_123", null);
+        assertOperation("GET", "/v1/responses/resp_123?stream=true", null);
+        assertOperation("DELETE", "/v1/responses/resp_123", null);
+        assertOperation("GET", "/v1/messages/batches/msgbatch_01/results", null);
+        assertOperation("GET", "/api/tags", null);
+        assertOperation("OPTIONS", "/v1/chat/completions", null);
+        assertOperation("HEAD", "/v1/embeddings", null);
+
+        assertOperation("post", "/v1/chat/completions", LlmProviderSniffer.Operation.CHAT);
+        // a request whose method is not known is judged by its path alone
+        assertOperation(null, "/v1/chat/completions", LlmProviderSniffer.Operation.CHAT);
+        assertOperation("", "/v1/embeddings", LlmProviderSniffer.Operation.EMBEDDINGS);
+    }
+
+    @Test
+    public void accountsMistralConversationsOnlyOnTheMistralHost() {
+        String[] conversationPaths = {"/v1/conversations", "/v1/conversations/conv_06835b9dc0c7749180001ed2adbbc4e2",
+            "/v1/conversations/conv_06835b9dc0c7749180001ed2adbbc4e2/restart"};
+        for (String path : conversationPaths) {
+            assertOperation(Provider.MISTRAL, "POST", path, LlmProviderSniffer.Operation.CHAT);
+            assertOperation(Provider.OPENAI, "POST", path, null);
+        }
+        assertOperation(Provider.MISTRAL, "GET", "/v1/conversations/conv_06835b9dc0c7749180001ed2adbbc4e2", null);
+        assertOperation(Provider.MISTRAL, "GET", "/v1/conversations/conv_06835b9dc0c7749180001ed2adbbc4e2/history", null);
+        assertOperation(Provider.MISTRAL, "GET", "/v1/conversations/conv_06835b9dc0c7749180001ed2adbbc4e2/messages", null);
+    }
+
+    @Test
+    public void recognisesAGetOfABackgroundResponseOrADeferredCompletionAsAPolledCompletion() {
+        assertThat(LlmProviderSniffer.isPolledCompletion(Provider.OPENAI_RESPONSES, "GET", "/v1/responses/resp_123"), is(true));
+        assertThat(LlmProviderSniffer.isPolledCompletion(Provider.OPENAI_RESPONSES, "GET", "/openai/v1/responses/resp_123?api-version=preview"), is(true));
+        assertThat(LlmProviderSniffer.isPolledCompletion(Provider.XAI, "GET", "/v1/chat/deferred-completion/f15c114e-f47d-40ca-8d5c-8c23d656eeb6"), is(true));
+        assertOperation(Provider.OPENAI_RESPONSES, "GET", "/v1/responses/resp_123", LlmProviderSniffer.Operation.CHAT);
+        assertOperation(Provider.XAI, "GET", "/v1/chat/deferred-completion/f15c114e-f47d-40ca-8d5c-8c23d656eeb6", LlmProviderSniffer.Operation.CHAT);
+
+        assertThat(LlmProviderSniffer.isPolledCompletion(Provider.OPENAI_RESPONSES, "GET", "/v1/responses/resp_123/input_items"), is(false));
+        assertThat(LlmProviderSniffer.isPolledCompletion(Provider.OPENAI_RESPONSES, "DELETE", "/v1/responses/resp_123"), is(false));
+        assertThat(LlmProviderSniffer.isPolledCompletion(Provider.OPENAI_RESPONSES, "POST", "/v1/responses/resp_123"), is(false));
+        assertThat(LlmProviderSniffer.isPolledCompletion(Provider.OPENAI, "GET", "/v1/chat/completions/chatcmpl-123"), is(false));
+        assertThat(LlmProviderSniffer.isPolledCompletion(Provider.OPENAI, "GET", "/v1/chat/deferred-completion/abc"), is(false));
+        assertThat(LlmProviderSniffer.isPolledCompletion(Provider.XAI, "GET", "/v1/responses/resp_123"), is(false));
+    }
+
+    @Test
+    public void countsAPolledResponseOnlyWhenItRanInTheBackgroundAndHasFinished() {
+        String finished = "{\"id\":\"resp_123\",\"object\":\"response\",\"background\":true,\"status\":\"completed\","
+            + "\"usage\":{\"input_tokens\":10,\"output_tokens\":20,\"total_tokens\":30}}";
+        assertThat(LlmProviderSniffer.polledCompletionId(Provider.OPENAI_RESPONSES, finished), is("resp_123"));
+        assertThat(LlmProviderSniffer.polledCompletionId(Provider.OPENAI_RESPONSES, finished.replace("completed", "incomplete")), is("resp_123"));
+        assertThat(LlmProviderSniffer.polledCompletionId(Provider.OPENAI_RESPONSES, finished.replace("completed", "in_progress")), is((String) null));
+        assertThat(LlmProviderSniffer.polledCompletionId(Provider.OPENAI_RESPONSES, finished.replace("\"background\":true", "\"background\":false")), is((String) null));
+        assertThat(LlmProviderSniffer.polledCompletionId(Provider.OPENAI_RESPONSES,
+            "{\"id\":\"resp_123\",\"object\":\"response\",\"background\":true,\"status\":\"queued\",\"usage\":null}"), is((String) null));
+        assertThat(LlmProviderSniffer.polledCompletionId(Provider.XAI,
+            "{\"id\":\"a3d1008e-4544-40d4-d075-11527e794e4a\",\"object\":\"chat.completion\",\"usage\":{\"prompt_tokens\":9,\"completion_tokens\":5}}"),
+            is("a3d1008e-4544-40d4-d075-11527e794e4a"));
+        assertThat(LlmProviderSniffer.polledCompletionId(Provider.XAI, ""), is((String) null));
+        assertThat(LlmProviderSniffer.polledCompletionId(Provider.XAI, "not json"), is((String) null));
+        assertThat(LlmProviderSniffer.polledCompletionId(Provider.OPENAI, finished), is((String) null));
+    }
+
+    @Test
+    public void detectsClaudeOnVertexAiAsAnthropic() {
+        assertThat(LlmProviderSniffer.sniffByHostAndPath("us-east5-aiplatform.googleapis.com",
+            "/v1/projects/p/locations/us-east5/publishers/anthropic/models/claude-sonnet-4-5@20250929:rawPredict"), is(Optional.of(Provider.ANTHROPIC)));
+        assertThat(LlmProviderSniffer.sniffByHostAndPath("us-east5-aiplatform.googleapis.com",
+            "/v1/projects/p/locations/us-east5/publishers/google/models/gemini-2.5-flash:generateContent"), is(Optional.of(Provider.GEMINI)));
+    }
+
+    @Test
+    public void namesTheSemanticConventionOperationOfEachAccountedCall() {
+        assertThat(LlmProviderSniffer.Operation.CHAT.genAiOperationName(), is("chat"));
+        assertThat(LlmProviderSniffer.Operation.EMBEDDINGS.genAiOperationName(), is("embeddings"));
+        assertThat(LlmProviderSniffer.Operation.RERANK.genAiOperationName(), is("rerank"));
+    }
+
+    @Test
+    public void extractsTheModelAGeminiRequestNamesInItsPath() {
+        assertThat(LlmProviderSniffer.extractGeminiModelFromPath("/v1beta/models/gemini-embedding-001:embedContent"), is("gemini-embedding-001"));
+        assertThat(LlmProviderSniffer.extractGeminiModelFromPath("/v1beta/models/text-embedding-004:batchEmbedContents?key=abc"), is("text-embedding-004"));
+        assertThat(LlmProviderSniffer.extractGeminiModelFromPath(
+            "/v1/projects/p/locations/us-central1/publishers/google/models/gemini-2.5-flash:generateContent"), is("gemini-2.5-flash"));
+        assertThat(LlmProviderSniffer.extractGeminiModelFromPath("/v1beta/models"), is((String) null));
+        assertThat(LlmProviderSniffer.extractGeminiModelFromPath(null), is((String) null));
     }
 
     // --- Bedrock model id from the request path ---

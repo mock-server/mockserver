@@ -90,22 +90,28 @@ public final class LlmProviderSniffer {
     };
 
     /**
-     * Path fragments of the endpoints that return a model's completion, the only responses whose
-     * stream is accounted as an LLM call. Checked case-insensitively; Bedrock and Cohere chat are
-     * matched by pattern.
+     * The endpoints whose response is accounted as an LLM call, matched case-insensitively against
+     * the end of the path (any query string removed) so a sub-resource, such as
+     * {@code /v1/messages/count_tokens} or {@code /v1/responses/{id}/cancel}, is not.
      */
-    private static final String[] COMPLETION_PATH_FRAGMENTS = {
-        "/chat/completions",
-        "/completions",
-        "/responses",
-        "/messages",
-        ":generatecontent",
-        ":streamgeneratecontent",
-        "/api/generate",
-        "/api/chat",
-    };
-    private static final java.util.regex.Pattern COHERE_CHAT_PATH_PATTERN = java.util.regex.Pattern.compile(
-        "/v[12]/chat(/?$|\\?)");
+    private static final java.util.regex.Pattern CHAT_PATH_PATTERN = java.util.regex.Pattern.compile(
+        "(?:/completions|/responses(?:/compact)?|/messages|:generatecontent|:streamgeneratecontent|/api/generate|/api/chat|/v[12]/chat"
+            + "|/model/([^/]+)/(?:invoke|invoke-with-response-stream|converse|converse-stream)"
+            + "|/models/([^/:]+):(?:rawpredict|streamrawpredict))/?$");
+    // Mistral Conversations API: start, append and restart each run the model
+    private static final java.util.regex.Pattern MISTRAL_CONVERSATION_PATH_PATTERN = java.util.regex.Pattern.compile(
+        "/v1/conversations(?:/[^/]+(?:/restart)?)?/?$");
+    // a stored result fetched with GET: an OpenAI background response, an xAI deferred completion
+    private static final java.util.regex.Pattern OPENAI_RESPONSE_POLL_PATH_PATTERN = java.util.regex.Pattern.compile(
+        "/responses/(?!input_tokens/?$|compact/?$)[^/]+/?$");
+    private static final java.util.regex.Pattern XAI_DEFERRED_COMPLETION_PATH_PATTERN = java.util.regex.Pattern.compile(
+        "/v1/chat/deferred-completion/[^/]+/?$");
+    private static final java.util.Set<String> TERMINAL_RESPONSE_STATUSES = java.util.Set.of("completed", "incomplete", "failed", "cancelled");
+    private static final java.util.regex.Pattern EMBEDDINGS_PATH_PATTERN = java.util.regex.Pattern.compile(
+        "(?:/embeddings|/multimodalembeddings|/contextualizedembeddings|/api/embed|/v[12]/embed|:embedcontent|:batchembedcontents)/?$");
+    private static final java.util.regex.Pattern RERANK_PATH_PATTERN = java.util.regex.Pattern.compile("/rerank/?$");
+    private static final java.util.regex.Pattern GEMINI_MODEL_PATH_PATTERN = java.util.regex.Pattern.compile(
+        "/models/([^/:]+):[A-Za-z]+$");
     private static final java.util.regex.Pattern BEDROCK_MODEL_PATH_PATTERN = java.util.regex.Pattern.compile(
         "/model/([^/]+)/(?:invoke|invoke-with-response-stream|converse|converse-stream)(?:[/?]|$)");
 
@@ -405,6 +411,10 @@ public final class LlmProviderSniffer {
         // Vertex AI Gemini: aiplatform.googleapis.com or <region>-aiplatform.googleapis.com.
         // matches() anchors the whole string, so an arbitrary host cannot be glued in front.
         if (VERTEX_HOST_PATTERN.matcher(lowerHost).matches()) {
+            // Claude on Vertex AI speaks the Anthropic Messages API
+            if (path != null && path.toLowerCase().contains("/publishers/anthropic/")) {
+                return Optional.of(Provider.ANTHROPIC);
+            }
             return Optional.of(Provider.GEMINI);
         }
         if (lowerHost.equals("api.cohere.com")) {
@@ -520,21 +530,138 @@ public final class LlmProviderSniffer {
     }
 
     /**
-     * Whether the path is a completion endpoint (chat, messages, responses, generate, converse or
-     * invoke), as opposed to another endpoint of an LLM host, such as Ollama's {@code /api/pull}
-     * progress stream or a realtime event stream, whose stream is not a model's completion.
+     * The kind of LLM call a forwarded response is accounted as, with its OpenTelemetry GenAI
+     * {@code gen_ai.operation.name}. Rerank has no well-known value, so it uses a custom one.
      */
-    public static boolean isCompletionPath(String path) {
+    public enum Operation {
+        CHAT("chat"),
+        EMBEDDINGS("embeddings"),
+        RERANK("rerank");
+
+        private final String genAiOperationName;
+
+        Operation(String genAiOperationName) {
+            this.genAiOperationName = genAiOperationName;
+        }
+
+        public String genAiOperationName() {
+            return genAiOperationName;
+        }
+    }
+
+    /**
+     * The LLM call a request to an LLM host makes, if it is one whose response is accounted: a
+     * {@code POST} to a completion, embeddings or rerank endpoint, or a {@code GET} of a completion
+     * that ran in the background ({@link #isPolledCompletion}). Every other endpoint, such as
+     * {@code GET /v1/models}, a token count, a batch or Ollama's {@code /api/pull}, is not a model call.
+     *
+     * @param provider the provider the request was sniffed as, or null
+     * @param method   the request method, or null when unknown
+     */
+    public static Optional<Operation> accountableOperation(Provider provider, String method, String path) {
         if (path == null || path.isEmpty()) {
+            return Optional.empty();
+        }
+        String lowerPath = withoutQuery(path.toLowerCase(java.util.Locale.ROOT));
+        if (method != null && !method.isEmpty() && !"POST".equalsIgnoreCase(method)) {
+            return isPolledCompletion(provider, method, path) ? Optional.of(Operation.CHAT) : Optional.empty();
+        }
+        java.util.regex.Matcher chat = CHAT_PATH_PATTERN.matcher(lowerPath);
+        if (chat.find()) {
+            String bedrockModel = chat.group(1);
+            if (bedrockModel != null) {
+                // Bedrock invokes embedding and rerank models on the same path as chat models
+                if (bedrockModel.contains("rerank")) {
+                    return Optional.of(Operation.RERANK);
+                }
+                if (bedrockModel.contains("embed")) {
+                    return Optional.of(Operation.EMBEDDINGS);
+                }
+            }
+            // Claude on Vertex AI counts tokens through a model named count-tokens
+            if ("count-tokens".equals(chat.group(2))) {
+                return Optional.empty();
+            }
+            // the deprecated Assistants API adds a message to a thread without calling a model
+            return lowerPath.contains("/threads/") ? Optional.empty() : Optional.of(Operation.CHAT);
+        }
+        if (EMBEDDINGS_PATH_PATTERN.matcher(lowerPath).find()) {
+            return Optional.of(Operation.EMBEDDINGS);
+        }
+        if (RERANK_PATH_PATTERN.matcher(lowerPath).find()) {
+            return Optional.of(Operation.RERANK);
+        }
+        // OpenAI's /v1/conversations creates a conversation object without calling a model
+        if (provider == Provider.MISTRAL && MISTRAL_CONVERSATION_PATH_PATTERN.matcher(lowerPath).find()) {
+            return Optional.of(Operation.CHAT);
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Whether the request fetches with {@code GET} the result of a completion that ran in the
+     * background, whose usage is reported only there: an OpenAI Responses API response created with
+     * {@code background: true}, or an xAI deferred chat completion. The response must still be checked
+     * with {@link #polledCompletionId} because the same path also retrieves ordinary stored responses.
+     */
+    public static boolean isPolledCompletion(Provider provider, String method, String path) {
+        if (path == null || !"GET".equalsIgnoreCase(method)) {
             return false;
         }
-        String lowerPath = path.toLowerCase();
-        for (String fragment : COMPLETION_PATH_FRAGMENTS) {
-            if (lowerPath.contains(fragment)) {
-                return true;
-            }
+        String lowerPath = withoutQuery(path.toLowerCase(java.util.Locale.ROOT));
+        if (provider == Provider.OPENAI_RESPONSES) {
+            return OPENAI_RESPONSE_POLL_PATH_PATTERN.matcher(lowerPath).find();
         }
-        return BEDROCK_PATH_PATTERN.matcher(lowerPath).find() || COHERE_CHAT_PATH_PATTERN.matcher(lowerPath).find();
+        return provider == Provider.XAI && XAI_DEFERRED_COMPLETION_PATH_PATTERN.matcher(lowerPath).find();
+    }
+
+    /**
+     * The id of a polled completion ({@link #isPolledCompletion}) whose usage is to be counted: an
+     * OpenAI response created in the background that has finished, or an xAI deferred completion,
+     * carrying a usage object. A response not created in the background was counted when it was
+     * created, so it is not counted again.
+     *
+     * @return the id, or null when this response is not counted
+     */
+    public static String polledCompletionId(Provider provider, String responseBody) {
+        if (responseBody == null || responseBody.isEmpty()) {
+            return null;
+        }
+        try {
+            com.fasterxml.jackson.databind.JsonNode root =
+                org.mockserver.serialization.ObjectMapperFactory.createObjectMapper().readTree(responseBody);
+            if (root == null || !root.path("id").isTextual() || root.path("id").asText().isEmpty() || !root.path("usage").isObject()) {
+                return null;
+            }
+            if (provider == Provider.OPENAI_RESPONSES) {
+                boolean finishedInBackground = root.path("background").asBoolean(false)
+                    && TERMINAL_RESPONSE_STATUSES.contains(root.path("status").asText(""));
+                return finishedInBackground ? root.path("id").asText() : null;
+            }
+            return provider == Provider.XAI ? root.path("id").asText() : null;
+        } catch (Exception notJson) {
+            return null;
+        }
+    }
+
+    private static String withoutQuery(String path) {
+        int query = path.indexOf('?');
+        return query >= 0 ? path.substring(0, query) : path;
+    }
+
+    /**
+     * The model a Gemini request names in its path ({@code /v1beta/models/{model}:embedContent} and
+     * the other model methods), for a response that does not name it, such as an embeddings response.
+     *
+     * @return the model, or null when the path names none
+     */
+    public static String extractGeminiModelFromPath(String path) {
+        if (path == null) {
+            return null;
+        }
+        int query = path.indexOf('?');
+        java.util.regex.Matcher matcher = GEMINI_MODEL_PATH_PATTERN.matcher(query >= 0 ? path.substring(0, query) : path);
+        return matcher.find() ? matcher.group(1) : null;
     }
 
     /**

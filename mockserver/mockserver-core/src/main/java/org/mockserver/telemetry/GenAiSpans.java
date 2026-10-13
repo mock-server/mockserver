@@ -12,7 +12,8 @@ import java.util.Collections;
 
 /**
  * Static emit point for explicit GenAI semantic-convention spans describing the
- * LLM completions MockServer serves. A process-wide holder (like the metrics
+ * LLM completions MockServer serves, and the completions, embeddings and rerank
+ * calls it forwards. A process-wide holder (like the metrics
  * gauges) so the action handler can record a span without threading a tracer
  * through its constructors.
  * <p>
@@ -42,11 +43,19 @@ public final class GenAiSpans {
      * GenAI semantic conventions ({@code gen_ai.*}). No-op when disabled.
      */
     public static void recordCompletion(Provider provider, String model, Completion completion) {
+        record("chat", provider, model, completion);
+    }
+
+    /**
+     * Emit one GenAI span for an LLM call of the given {@code gen_ai.operation.name}, such as
+     * {@code chat} or {@code embeddings}, named {@code {operation} {model}}. No-op when disabled.
+     */
+    public static void record(String operationName, Provider provider, String model, Completion completion) {
         Tracer current = tracer;
         if (current == null) {
             return;
         }
-        recordCompletion(current, provider, model, completion);
+        record(current, operationName, provider, model, completion);
     }
 
     /**
@@ -56,13 +65,17 @@ public final class GenAiSpans {
      * classes run in parallel.
      */
     static void recordCompletion(Tracer explicitTracer, Provider provider, String model, Completion completion) {
+        record(explicitTracer, "chat", provider, model, completion);
+    }
+
+    static void record(Tracer explicitTracer, String operationName, Provider provider, String model, Completion completion) {
         try {
             String resolvedModel = model != null && !model.isEmpty() ? model : "unknown";
-            Span span = explicitTracer.spanBuilder("chat " + resolvedModel)
+            Span span = explicitTracer.spanBuilder(operationName + " " + resolvedModel)
                 .setSpanKind(SpanKind.CLIENT)
                 .startSpan();
             try {
-                span.setAttribute("gen_ai.operation.name", "chat");
+                span.setAttribute("gen_ai.operation.name", operationName);
                 if (provider != null) {
                     span.setAttribute("gen_ai.system", genAiSystem(provider));
                 }

@@ -705,12 +705,42 @@ sends usage does not flood the log; every call still gets its span. The rate lim
 256 provider-and-model keys and clears them all when a new one would exceed that, so after the clear
 a line can repeat within the minute.
 
-**Only completions are accounted.** A stream from an LLM host whose path is not a completion endpoint
-(`LlmProviderSniffer.isCompletionPath`: chat, completions, messages, responses, Gemini
-`generateContent`/`streamGenerateContent`, Bedrock `converse`/`invoke` and their streaming forms,
-Ollama `/api/chat` and `/api/generate`, Cohere `/v1/chat` and `/v2/chat`) gets no span and no log line,
-whether it was relayed or aggregated. Ollama's `/api/pull` progress stream is the case this is for. A
-whole JSON response is accounted on any LLM path, as before, so embeddings stay counted.
+**Only calls to a model are accounted.** `LlmProviderSniffer.accountableOperation(provider, method, path)`
+decides, for a request to an LLM host, whether its response is accounted and as which GenAI
+operation. A `POST` is (an unknown method is judged by its path alone) when the path ends (query
+string removed) in one of these:
+
+| Operation (`gen_ai.operation.name`) | Path endings |
+|---|---|
+| `chat` | `/completions` (chat, legacy, Mistral FIM and agents), `/responses` and `/responses/compact` (which runs the model), `/messages`, Gemini `:generateContent`/`:streamGenerateContent`, Vertex AI partner models `/models/{model}:rawPredict`/`:streamRawPredict` (Claude on Vertex is sniffed as `ANTHROPIC`; its `count-tokens` model is not counted), Bedrock `/model/{id}/invoke`, `/invoke-with-response-stream`, `/converse`, `/converse-stream`, Ollama `/api/chat` and `/api/generate`, Cohere `/v1/chat` and `/v2/chat`, and on the Mistral host only the Conversations API `/v1/conversations`, `/v1/conversations/{id}`, `/v1/conversations/{id}/restart` (OpenAI's `/v1/conversations` creates a conversation object without calling a model) |
+| `embeddings` | `/embeddings`, Voyage `/multimodalembeddings` and `/contextualizedembeddings`, Ollama `/api/embed`, Cohere `/v1/embed` and `/v2/embed`, Gemini `:embedContent`/`:batchEmbedContents`, and a Bedrock invocation of a model whose id contains `embed` |
+| `rerank` (no well-known value exists, so a custom one) | `/rerank` (Cohere, Voyage, Bedrock Agent Runtime) and a Bedrock invocation of a model whose id contains `rerank` |
+
+**Polled completions.** Two APIs report a model call's usage only when its result is fetched with
+`GET` (`LlmProviderSniffer.isPolledCompletion`): an OpenAI Responses API response created with
+`background: true` (`GET .../responses/{id}`; the create call returns `usage: null`) and an xAI
+deferred chat completion (`GET /v1/chat/deferred-completion/{id}`; the create call returns only a
+`request_id`). A whole `200` body is counted when `polledCompletionId` finds an id and a usage object,
+and for OpenAI also `background: true` and a terminal status (`completed`, `incomplete`, `failed`,
+`cancelled`); a response not created in the background was counted when it was created. Each id is
+counted once per `HttpActionHandler`: the ids already counted are held in an LRU set of 10,000, so
+repeated polls and refetches are not counted again. A poll claims its id with `putIfAbsent` before the
+body is parsed, so concurrent polls count it once, and releases the claim if no token counts can be
+read from it, so a later poll can still count it. A Responses stream that was counted adds its
+`response.id` (read by `LlmStreamUsageScanner.responseId()`) to the same set, so a `background: true,
+stream: true` response is not counted again when it is fetched. A resumed background stream
+(`GET .../responses/{id}?stream=true`) is never counted, because it may repeat a stream already counted.
+
+Anything else gets no span, no token or cost metrics and no log line, whether its response is whole,
+relayed as a stream or aggregated: `GET /v1/models`, retrieving an ordinary stored response (which
+would count its tokens a second time; the semantic conventions say not to report usage for it),
+Anthropic `/v1/messages/count_tokens` and `/v1/messages/batches`, OpenAI `/v1/responses/input_tokens`,
+Assistants `/threads/{id}/messages`, Ollama `/api/pull`. A stream is accounted only for `chat`. The
+span is named `{operation} {model}`; a Gemini embeddings response names no model, so it is read from
+the `/models/{model}:` path, and a Mistral Conversations response names it on each output entry, which
+`MistralLlmClient` reads. Cohere and Voyage have no `LlmClient`, so their calls are recognised but not
+counted, and a Bedrock embedding or rerank invocation gets a span without tokens (its body carries none
+that `BedrockLlmClient` reads).
 
 **Bedrock model ids.** A Bedrock request names its model in the path and a Converse response has
 none, so the model is read from `/model/{modelId}/...` (URL-decoded). A foundation-model or

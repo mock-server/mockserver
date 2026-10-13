@@ -413,7 +413,7 @@ sum(rate(mock_server_llm_cost_usd_total[1h]))</code></pre>
 
 <ul>
     <li><strong>Mock path</strong> &mdash; when MockServer serves an <span class="inline_code">httpLlmResponse</span></li>
-    <li><strong>Forward/proxy path</strong> &mdash; when MockServer forwards requests to a real LLM provider. The provider is detected from the target host (e.g. <span class="inline_code">api.openai.com</span> maps to OpenAI, <span class="inline_code">api.anthropic.com</span> maps to Anthropic).</li>
+    <li><strong>Forward/proxy path</strong> &mdash; when MockServer forwards requests to a real LLM provider. The provider is detected from the target host (e.g. <span class="inline_code">api.openai.com</span> maps to OpenAI, <span class="inline_code">api.anthropic.com</span> maps to Anthropic). Only calls to a model get a span: a completion (<span class="inline_code">gen_ai.operation.name</span> <span class="inline_code">chat</span>), an embeddings call (<span class="inline_code">embeddings</span>) or a rerank call (<span class="inline_code">rerank</span>), each named <span class="inline_code">&lt;operation&gt; &lt;model&gt;</span>. Other requests to the provider, such as listing models or fetching a stored response, get none.</li>
 </ul>
 
 <a id="trace_context" class="anchor" href="#trace_context">&nbsp;</a>

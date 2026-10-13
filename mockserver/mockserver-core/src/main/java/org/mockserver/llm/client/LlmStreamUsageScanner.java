@@ -59,6 +59,7 @@ public final class LlmStreamUsageScanner {
         EVAL_COUNT("eval_count"),
         BYTES("bytes"),
         MODEL("model"),
+        ID("id"),
         MODEL_VERSION("modelVersion"),
         FINISH_REASON("finish_reason"),
         STOP_REASON("stop_reason"),
@@ -118,6 +119,7 @@ public final class LlmStreamUsageScanner {
     private boolean usageOnEveryChunk;
     private boolean finishReasonSeen;
     private String model;
+    private String responseId;
     private String stopReason;
     private int jsonDocuments;
 
@@ -180,6 +182,14 @@ public final class LlmStreamUsageScanner {
 
     public String model() {
         return model;
+    }
+
+    /**
+     * @return the id of the OpenAI Responses API response the stream's events describe
+     * ({@code response.id}), or null when none was seen
+     */
+    public String responseId() {
+        return responseId;
     }
 
     public String stopReason() {
@@ -336,6 +346,11 @@ public final class LlmStreamUsageScanner {
             case MODEL_VERSION:
                 if (isShortText(value)) {
                     model = value.asText();
+                }
+                break;
+            case ID:
+                if (isShortText(value)) {
+                    responseId = value.asText();
                 }
                 break;
             default:
@@ -625,6 +640,8 @@ public final class LlmStreamUsageScanner {
                     return top || parent == Name.RESPONSE || parent == Name.MESSAGE || parent == Name.X_GROQ;
                 case MODEL:
                     return top || parent == Name.RESPONSE || parent == Name.MESSAGE;
+                case ID:
+                    return parent == Name.RESPONSE;
                 case USAGE_METADATA:
                 case PROMPT_EVAL_COUNT:
                 case EVAL_COUNT:

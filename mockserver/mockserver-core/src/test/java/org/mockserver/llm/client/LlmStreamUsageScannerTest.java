@@ -78,6 +78,14 @@ public class LlmStreamUsageScannerTest {
     }
 
     @Test
+    public void shouldReadTheResponseIdOfAnOpenAiResponsesStreamOnly() {
+        assertThat(scan(utf8(ProviderStreamFixtures.OPENAI_RESPONSES)).responseId(), is("resp_67c9fdcecf488190bdd9a0409de3a1ec07b8b0ad4e5eb654"));
+        // a chat chunk's id and a Responses output item's id are not a response id
+        assertThat(scan(utf8(ProviderStreamFixtures.OPENAI_CHAT_WITH_USAGE)).responseId(), is(nullValue()));
+        assertThat(scan(utf8("data: {\"type\":\"response.output_item.added\",\"item\":{\"id\":\"msg_1\",\"type\":\"message\"}}\n\n")).responseId(), is(nullValue()));
+    }
+
+    @Test
     public void shouldFindNoUsageInOpenAiChatStreamSentWithoutIncludeUsage() {
         LlmStreamUsageScanner scanner = scan(utf8(ProviderStreamFixtures.OPENAI_CHAT_WITHOUT_USAGE));
 

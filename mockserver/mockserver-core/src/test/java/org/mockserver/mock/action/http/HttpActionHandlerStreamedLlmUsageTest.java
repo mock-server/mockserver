@@ -115,6 +115,8 @@ public class HttpActionHandlerStreamedLlmUsageTest {
     private double originalBudget;
     private String originalLlmBaseUrl;
     private String originalLlmProvider;
+    private boolean originalMetricsEnabled;
+    private boolean originalLlmMetricsEnabled;
     private Configuration configuration;
     @Mock
     private WebSocketClientRegistry mockWebSocketClientRegistry;
@@ -127,6 +129,8 @@ public class HttpActionHandlerStreamedLlmUsageTest {
         originalBudget = ConfigurationProperties.llmCostBudgetUsd();
         originalLlmBaseUrl = ConfigurationProperties.llmBaseUrl();
         originalLlmProvider = ConfigurationProperties.llmProvider();
+        originalMetricsEnabled = ConfigurationProperties.metricsEnabled();
+        originalLlmMetricsEnabled = ConfigurationProperties.llmMetricsEnabled();
         ConfigurationProperties.llmCostBudgetUsd(100.0);
         LlmProviderSniffer.resetConfiguration();
         Metrics.resetAdditionalMetricsForTesting();
@@ -162,6 +166,9 @@ public class HttpActionHandlerStreamedLlmUsageTest {
         ConfigurationProperties.llmCostBudgetUsd(originalBudget);
         ConfigurationProperties.llmBaseUrl(originalLlmBaseUrl == null ? "" : originalLlmBaseUrl);
         ConfigurationProperties.llmProvider(originalLlmProvider == null ? "" : originalLlmProvider);
+        ConfigurationProperties.metricsEnabled(originalMetricsEnabled);
+        ConfigurationProperties.llmMetricsEnabled(originalLlmMetricsEnabled);
+        Metrics.resetAdditionalMetricsForTesting();
         LlmCostBudgetMonitor.getInstance().reset();
         BreakpointMatcherRegistry.getInstance().clear();
         BreakpointCallbackDispatcher.getInstance().reset();
@@ -170,8 +177,12 @@ public class HttpActionHandlerStreamedLlmUsageTest {
     // ---- driving the forward path ----
 
     private void forwardResponse(String host, String path, String requestBody, HttpResponse upstreamResponse) {
-        HttpRequest request = request(path).withMethod("POST").withBody(requestBody);
-        HttpRequest forwardedRequest = request(path).withMethod("POST").withHeader("Host", host).withBody(requestBody);
+        forwardResponse("POST", host, path, requestBody, upstreamResponse);
+    }
+
+    private void forwardResponse(String method, String host, String path, String requestBody, HttpResponse upstreamResponse) {
+        HttpRequest request = request(path).withMethod(method).withBody(requestBody);
+        HttpRequest forwardedRequest = request(path).withMethod(method).withHeader("Host", host).withBody(requestBody);
         CompletableFuture<HttpResponse> future = new CompletableFuture<>();
         future.complete(upstreamResponse);
         HttpForwardActionResult forwardResult = new HttpForwardActionResult(forwardedRequest, future, null, new InetSocketAddress(1234));
@@ -193,8 +204,12 @@ public class HttpActionHandlerStreamedLlmUsageTest {
     }
 
     private StreamingBody startStream(String host, String path, String requestBody) {
+        return startStream("POST", host, path, requestBody);
+    }
+
+    private StreamingBody startStream(String method, String host, String path, String requestBody) {
         StreamingBody streamingBody = new StreamingBody(16);
-        forwardResponse(host, path, requestBody, response()
+        forwardResponse(method, host, path, requestBody, response()
             .withStatusCode(200)
             .withHeader("Content-Type", "text/event-stream")
             .withStreamingBody(streamingBody)
@@ -638,6 +653,292 @@ public class HttpActionHandlerStreamedLlmUsageTest {
         assertThat(streamingBody.getError(), is(nullValue()));
         assertThat(recordedCostUsd(), is(0.0));
         assertTokens(singleGenAiSpan(), "openai", "gpt-4o", null, null);
+    }
+
+    // ---- only a call to a model is accounted: completions, embeddings and rerank ----
+
+    private static HttpResponse json(String body) {
+        return response()
+            .withStatusCode(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(body)
+            .withDelay(milliseconds(0));
+    }
+
+    private static void enableLlmTokenMetrics() {
+        // the handler built in setup registered the metrics without the LLM counters
+        Metrics.resetAdditionalMetricsForTesting();
+        ConfigurationProperties.metricsEnabled(true);
+        ConfigurationProperties.llmMetricsEnabled(true);
+        new Metrics(configuration().metricsEnabled(true).llmMetricsEnabled(true));
+    }
+
+    private static void assertOperation(SpanData span, String operation, String spanName) {
+        assertThat(span.getAttributes().get(stringKey("gen_ai.operation.name")), is(operation));
+        assertThat(span.getName(), is(spanName));
+    }
+
+    @Test
+    public void shouldNotAccountAWholeResponseFromAnEndpointOfAnLlmHostThatDoesNotCallAModel() {
+        enableLlmTokenMetrics();
+        ConfigurationProperties.llmBaseUrl("http://ollama.internal:11434");
+        forwardResponse("GET", "api.openai.com", "/v1/models", "", json(
+            "{\"object\":\"list\",\"data\":[{\"id\":\"gpt-4o\",\"object\":\"model\",\"created\":1686935002,\"owned_by\":\"openai\"}]}"));
+        // listing stored chat completions, on the path a completion is created on
+        forwardResponse("GET", "api.openai.com", "/v1/chat/completions", "", json(
+            "{\"object\":\"list\",\"data\":[{\"object\":\"chat.completion\",\"id\":\"chatcmpl-AyPNinnUqUDYo9SAdA52NobMflmj2\","
+                + "\"model\":\"gpt-4o-2024-08-06\",\"created\":1738960610,\"request_id\":\"req_ded8ab984ec4bf840f37566c1011c417\","
+                + "\"tool_choice\":null,\"usage\":{\"total_tokens\":31,\"completion_tokens\":18,\"prompt_tokens\":13},"
+                + "\"seed\":4944116822809979520,\"top_p\":1.0,\"temperature\":1.0,\"presence_penalty\":0.0,\"frequency_penalty\":0.0,"
+                + "\"system_fingerprint\":\"fp_50cad350e4\",\"input_user\":null,\"service_tier\":\"default\",\"tools\":null,"
+                + "\"metadata\":{},\"choices\":[{\"index\":0,\"message\":{\"content\":\"Mind of circuits hum\",\"role\":\"assistant\","
+                + "\"tool_calls\":null,\"function_call\":null},\"finish_reason\":\"stop\",\"logprobs\":null}],\"response_format\":null}],"
+                + "\"first_id\":\"chatcmpl-AyPNinnUqUDYo9SAdA52NobMflmj2\",\"last_id\":\"chatcmpl-AyPNinnUqUDYo9SAdA52NobMflmj2\",\"has_more\":false}"));
+        // retrieving a stored response would count its tokens a second time
+        forwardResponse("GET", "api.openai.com", "/v1/responses/resp_67cb71b351908190a308f3859487620d", "", json(
+            "{\"id\":\"resp_67cb71b351908190a308f3859487620d\",\"object\":\"response\",\"created_at\":1741386163,\"status\":\"completed\","
+                + "\"model\":\"gpt-4o-2024-08-06\",\"output\":[{\"type\":\"message\",\"id\":\"msg_67cb71b3c2b0819084d481baaaf148f2\","
+                + "\"status\":\"completed\",\"role\":\"assistant\",\"content\":[{\"type\":\"output_text\",\"text\":\"Hi\",\"annotations\":[]}]}],"
+                + "\"usage\":{\"input_tokens\":328,\"output_tokens\":52,\"total_tokens\":380}}"));
+        forwardResponse("POST", "api.anthropic.com", "/v1/messages/count_tokens",
+            "{\"model\":\"claude-sonnet-4-5\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello, world\"}]}",
+            json("{\"input_tokens\":14}"));
+        forwardResponse("GET", "ollama.internal:11434", "/api/tags", "", json(
+            "{\"models\":[{\"name\":\"llama3.2:latest\",\"model\":\"llama3.2:latest\",\"size\":2019393189}]}"));
+        // a stored response replayed as a stream is not a new call either
+        StreamingBody replay = startStream("GET", "api.openai.com", "/v1/responses/resp_67cb71b351908190a308f3859487620d", "");
+        feed(replay, utf8(ProviderStreamFixtures.OPENAI_RESPONSES));
+        replay.complete();
+
+        assertThat(genAiSpans(), is(empty()));
+        assertThat(recordedCostUsd(), is(0.0));
+        assertThat(Metrics.getLlmInputTokens("OPENAI_RESPONSES", "gpt-4o-2024-08-06"), is(0L));
+        assertThat(usageLogEntries(), is(empty()));
+    }
+
+    @Test
+    public void shouldCountAnOpenAiEmbeddingsResponseAsAnEmbeddingsCall() {
+        enableLlmTokenMetrics();
+        forwardResponse("api.openai.com", "/v1/embeddings", "{\"model\":\"text-embedding-3-small\",\"input\":\"The food was delicious\"}", json(
+            "{\"object\":\"list\",\"data\":[{\"object\":\"embedding\",\"embedding\":[0.0023064255,-0.009327292],\"index\":0}],"
+                + "\"model\":\"text-embedding-3-small\",\"usage\":{\"prompt_tokens\":8,\"total_tokens\":8}}"));
+
+        SpanData span = singleGenAiSpan();
+        assertOperation(span, "embeddings", "embeddings text-embedding-3-small");
+        assertTokens(span, "openai", "text-embedding-3-small", 8L, null);
+        assertThat(Metrics.getLlmInputTokens("OPENAI", "text-embedding-3-small"), is(8L));
+    }
+
+    @Test
+    public void shouldCountAnAzureOpenAiEmbeddingsResponseAsAnEmbeddingsCall() {
+        enableLlmTokenMetrics();
+        forwardResponse("my-resource.openai.azure.com", "/openai/deployments/text-embedding-3-small/embeddings", "{\"input\":[\"hello\"]}", json(
+            "{\"object\":\"list\",\"data\":[{\"object\":\"embedding\",\"embedding\":[0.0023064255,-0.009327292],\"index\":0}],"
+                + "\"model\":\"text-embedding-3-small\",\"usage\":{\"prompt_tokens\":1,\"total_tokens\":1}}"));
+
+        SpanData span = singleGenAiSpan();
+        assertOperation(span, "embeddings", "embeddings text-embedding-3-small");
+        assertTokens(span, "az.ai.openai", "text-embedding-3-small", 1L, null);
+        assertThat(Metrics.getLlmInputTokens("AZURE_OPENAI", "text-embedding-3-small"), is(1L));
+    }
+
+    @Test
+    public void shouldCountAMistralEmbeddingsResponseAsAnEmbeddingsCall() {
+        enableLlmTokenMetrics();
+        forwardResponse("api.mistral.ai", "/v1/embeddings", "{\"model\":\"mistral-embed\",\"input\":[\"Embed this sentence.\"]}", json(
+            "{\"id\":\"embd-aad6fc62b17349b192ef09225058bc45\",\"object\":\"list\",\"data\":[{\"object\":\"embedding\","
+                + "\"embedding\":[-0.016632080078125,0.0701904296875],\"index\":0}],\"model\":\"mistral-embed\","
+                + "\"usage\":{\"prompt_tokens\":15,\"total_tokens\":15,\"completion_tokens\":0}}"));
+
+        SpanData span = singleGenAiSpan();
+        assertOperation(span, "embeddings", "embeddings mistral-embed");
+        assertTokens(span, "mistral", "mistral-embed", 15L, 0L);
+        assertThat(Metrics.getLlmInputTokens("MISTRAL", "mistral-embed"), is(15L));
+    }
+
+    @Test
+    public void shouldCountAGeminiEmbeddingsResponseByTheModelInItsPath() {
+        enableLlmTokenMetrics();
+        forwardResponse("generativelanguage.googleapis.com", "/v1beta/models/gemini-embedding-001:embedContent",
+            "{\"content\":{\"parts\":[{\"text\":\"What is the meaning of life?\"}]}}", json(
+                "{\"embedding\":{\"values\":[-0.022374554,-0.004560777]},"
+                    + "\"usageMetadata\":{\"promptTokenCount\":7,\"promptTokenDetails\":[{\"modality\":\"TEXT\",\"tokenCount\":7}]}}"));
+
+        SpanData span = singleGenAiSpan();
+        assertOperation(span, "embeddings", "embeddings gemini-embedding-001");
+        assertTokens(span, "gcp.gemini", "gemini-embedding-001", 7L, null);
+        assertThat(Metrics.getLlmInputTokens("GEMINI", "gemini-embedding-001"), is(7L));
+    }
+
+    @Test
+    public void shouldCountAnOllamaEmbedResponseAsAnEmbeddingsCall() {
+        enableLlmTokenMetrics();
+        ConfigurationProperties.llmBaseUrl("http://ollama.internal:11434");
+        forwardResponse("ollama.internal:11434", "/api/embed", "{\"model\":\"all-minilm\",\"input\":\"Why is the sky blue?\"}", json(
+            "{\"model\":\"all-minilm\",\"embeddings\":[[0.010071029,-0.0017594862]],"
+                + "\"total_duration\":14143917,\"load_duration\":1019500,\"prompt_eval_count\":8}"));
+
+        SpanData span = singleGenAiSpan();
+        assertOperation(span, "embeddings", "embeddings all-minilm");
+        assertTokens(span, "ollama", "all-minilm", 8L, null);
+        assertThat(Metrics.getLlmInputTokens("OLLAMA", "all-minilm"), is(8L));
+    }
+
+    @Test
+    public void shouldNameABedrockEmbeddingOrRerankModelInvocationByItsOperation() {
+        forwardResponse("bedrock-runtime.us-east-1.amazonaws.com", "/model/amazon.titan-embed-text-v2%3A0/invoke", "{\"inputText\":\"Hello\"}", json(
+            "{\"embedding\":[0.1,0.2],\"embeddingsByType\":{\"float\":[0.1,0.2]},\"inputTextTokenCount\":2}"));
+        forwardResponse("bedrock-runtime.us-east-1.amazonaws.com", "/model/cohere.rerank-v3-5%3A0/invoke",
+            "{\"query\":\"What is the capital?\",\"documents\":[\"Paris\",\"Berlin\"],\"api_version\":2}", json(
+                "{\"id\":\"5ee5c1c8-b3e0-4b1c-9b1a-1c2f3e4d5a6b\",\"results\":[{\"index\":0,\"relevance_score\":0.9}]}"));
+        forwardResponse("bedrock-agent-runtime.us-east-1.amazonaws.com", "/rerank",
+            "{\"queries\":[{\"type\":\"TEXT\",\"textQuery\":{\"text\":\"What is the capital?\"}}]}", json(
+                "{\"results\":[{\"index\":0,\"relevanceScore\":0.86}]}"));
+
+        List<SpanData> genAiSpans = genAiSpans();
+        assertThat(genAiSpans, hasSize(3));
+        assertOperation(genAiSpans.get(0), "embeddings", "embeddings amazon.titan-embed-text-v2:0");
+        assertOperation(genAiSpans.get(1), "rerank", "rerank cohere.rerank-v3-5:0");
+        assertThat(genAiSpans.get(2).getAttributes().get(stringKey("gen_ai.operation.name")), is("rerank"));
+    }
+
+    private List<SpanData> genAiSpansWithTokens() {
+        return genAiSpans().stream()
+            .filter(span -> span.getAttributes().get(longKey("gen_ai.usage.input_tokens")) != null)
+            .collect(Collectors.toList());
+    }
+
+    @Test
+    public void shouldCountABackgroundResponseOnceWhenAPollFindsItFinished() {
+        String responseId = "resp_68a1c0b1f0f88193a5b9e0e5c0a1b2c3";
+        forwardResponse("api.openai.com", "/v1/responses",
+            "{\"model\":\"o3\",\"input\":\"Write a very long novel about otters in space.\",\"background\":true}", json(
+                "{\"id\":\"" + responseId + "\",\"object\":\"response\",\"created_at\":1755282609,\"status\":\"queued\",\"background\":true,"
+                    + "\"error\":null,\"incomplete_details\":null,\"model\":\"o3-2025-04-16\",\"output\":[],\"usage\":null}"));
+        String polled = "{\"id\":\"" + responseId + "\",\"object\":\"response\",\"created_at\":1755282609,\"status\":\"%s\",\"background\":true,"
+            + "\"error\":null,\"incomplete_details\":null,\"model\":\"o3-2025-04-16\",\"output\":[%s],\"usage\":%s}";
+        forwardResponse("GET", "api.openai.com", "/v1/responses/" + responseId, "", json(String.format(polled, "in_progress", "", "null")));
+        String finished = String.format(polled, "completed",
+            "{\"type\":\"message\",\"id\":\"msg_1\",\"status\":\"completed\",\"role\":\"assistant\","
+                + "\"content\":[{\"type\":\"output_text\",\"text\":\"Once upon a time...\",\"annotations\":[]}]}",
+            "{\"input_tokens\":18,\"input_tokens_details\":{\"cached_tokens\":0},\"output_tokens\":5000,"
+                + "\"output_tokens_details\":{\"reasoning_tokens\":1200},\"total_tokens\":5018}");
+        // the client polls again, or fetches the finished response a second time
+        forwardResponse("GET", "api.openai.com", "/v1/responses/" + responseId, "", json(finished));
+        forwardResponse("GET", "api.openai.com", "/v1/responses/" + responseId, "", json(finished));
+
+        List<SpanData> counted = genAiSpansWithTokens();
+        assertThat(counted, hasSize(1));
+        assertTokens(counted.get(0), "openai", "o3-2025-04-16", 18L, 5000L);
+        assertCost(Provider.OPENAI_RESPONSES, "o3-2025-04-16", 18, 5000);
+    }
+
+    @Test
+    public void shouldNotCountABackgroundResponseAgainWhenItWasCountedFromItsStream() {
+        String responseId = "resp_67c9fdcecf488190bdd9a0409de3a1ec07b8b0ad4e5eb654";
+        forwardStream("api.openai.com", "/v1/responses", "{\"model\":\"gpt-4o\",\"input\":\"Hello\",\"background\":true,\"stream\":true}",
+            utf8(ProviderStreamFixtures.OPENAI_RESPONSES));
+        forwardResponse("GET", "api.openai.com", "/v1/responses/" + responseId, "", json(
+            "{\"id\":\"" + responseId + "\",\"object\":\"response\",\"created_at\":1741290958,\"status\":\"completed\",\"background\":true,"
+                + "\"model\":\"gpt-4o-2024-08-06\",\"output\":[{\"type\":\"message\",\"id\":\"msg_67c9fdcf37fc8190ba82116e33fb28c507b8b0ad4e5eb654\","
+                + "\"status\":\"completed\",\"role\":\"assistant\",\"content\":[{\"type\":\"output_text\",\"text\":\"Hello there\",\"annotations\":[]}]}],"
+                + "\"usage\":{\"input_tokens\":37,\"input_tokens_details\":{\"cached_tokens\":5},\"output_tokens\":11,"
+                + "\"output_tokens_details\":{\"reasoning_tokens\":2},\"total_tokens\":48}}"));
+
+        List<SpanData> counted = genAiSpansWithTokens();
+        assertThat(counted, hasSize(1));
+        assertCost(Provider.OPENAI_RESPONSES, "gpt-4o-2024-08-06", 37, 11);
+    }
+
+    @Test
+    public void shouldCountAFinishedBackgroundResponseOnALaterPollWhenAnEarlierOneHadNoCounts() {
+        String responseId = "resp_68a1c0b1f0f88193a5b9e0e5c0a1b2c4";
+        String finished = "{\"id\":\"" + responseId + "\",\"object\":\"response\",\"created_at\":1755282609,\"status\":\"completed\","
+            + "\"background\":true,\"model\":\"o3-2025-04-16\",\"output\":[],\"usage\":%s}";
+        // a finished response whose usage object carries no counts is not counted, and does not use up its id
+        forwardResponse("GET", "api.openai.com", "/v1/responses/" + responseId, "", json(String.format(finished, "{}")));
+        forwardResponse("GET", "api.openai.com", "/v1/responses/" + responseId, "", json(String.format(finished,
+            "{\"input_tokens\":18,\"output_tokens\":500,\"total_tokens\":518}")));
+        forwardResponse("GET", "api.openai.com", "/v1/responses/" + responseId, "", json(String.format(finished,
+            "{\"input_tokens\":18,\"output_tokens\":500,\"total_tokens\":518}")));
+
+        assertThat(genAiSpans(), hasSize(1));
+        assertTokens(singleGenAiSpan(), "openai", "o3-2025-04-16", 18L, 500L);
+        assertCost(Provider.OPENAI_RESPONSES, "o3-2025-04-16", 18, 500);
+    }
+
+    @Test
+    public void shouldCountAnXaiDeferredCompletionWhenItIsFetched() {
+        String requestId = "f15c114e-f47d-40ca-8d5c-8c23d656eeb6";
+        forwardResponse("api.x.ai", "/v1/chat/completions",
+            "{\"model\":\"grok-4\",\"messages\":[{\"role\":\"user\",\"content\":\"What is 101*3?\"}],\"deferred\":true}",
+            json("{\"request_id\":\"" + requestId + "\"}"));
+        forwardResponse("GET", "api.x.ai", "/v1/chat/deferred-completion/" + requestId, "", response().withStatusCode(202).withDelay(milliseconds(0)));
+        String done = "{\"id\":\"a3d1008e-4544-40d4-d075-11527e794e4a\",\"object\":\"chat.completion\",\"created\":1743770624,"
+            + "\"model\":\"grok-4-0709\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"303\","
+            + "\"refusal\":null},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":14,\"completion_tokens\":3,"
+            + "\"total_tokens\":17},\"system_fingerprint\":\"fp_156d35dcaa\"}";
+        forwardResponse("GET", "api.x.ai", "/v1/chat/deferred-completion/" + requestId, "", json(done));
+        forwardResponse("GET", "api.x.ai", "/v1/chat/deferred-completion/" + requestId, "", json(done));
+
+        List<SpanData> counted = genAiSpansWithTokens();
+        assertThat(counted, hasSize(1));
+        assertTokens(counted.get(0), "xai", "grok-4-0709", 14L, 3L);
+        assertCost(Provider.XAI, "grok-4-0709", 14, 3);
+    }
+
+    @Test
+    public void shouldCountEachMistralConversationsCallByTheModelOnItsOutputs() {
+        enableLlmTokenMetrics();
+        String conversation = "{\"object\":\"conversation.response\",\"conversation_id\":\"conv_06835b9dc0c7749180001ed2adbbc4e2\","
+            + "\"outputs\":[{\"object\":\"entry\",\"type\":\"message.output\",\"created_at\":\"2025-05-27T13:02:21.290Z\","
+            + "\"completed_at\":\"2025-05-27T13:02:22.580Z\",\"id\":\"msg_06835b9dd4a97a6e80002c8d3c5bd5d8\",\"agent_id\":null,"
+            + "\"model\":\"mistral-medium-2505\",\"role\":\"assistant\",\"content\":\"Albert Einstein was a physicist.\"}],"
+            + "\"usage\":{\"prompt_tokens\":%d,\"completion_tokens\":%d,\"total_tokens\":%d,\"connector_tokens\":null,\"connectors\":null}}";
+        forwardResponse("api.mistral.ai", "/v1/conversations", "{\"model\":\"mistral-medium-latest\",\"inputs\":\"Who is Albert Einstein?\",\"stream\":false}",
+            json(String.format(conversation, 7, 12, 19)));
+        forwardResponse("api.mistral.ai", "/v1/conversations/conv_06835b9dc0c7749180001ed2adbbc4e2", "{\"inputs\":\"Translate to French.\",\"stream\":false}",
+            json(String.format(conversation, 30, 14, 44)));
+        forwardResponse("api.mistral.ai", "/v1/conversations/conv_06835b9dc0c7749180001ed2adbbc4e2/restart",
+            "{\"inputs\":\"Translate to German.\",\"from_entry_id\":\"msg_06835b9dd4a97a6e80002c8d3c5bd5d8\",\"stream\":false}",
+            json(String.format(conversation, 30, 15, 45)));
+
+        List<SpanData> genAiSpans = genAiSpans();
+        assertThat(genAiSpans, hasSize(3));
+        assertTokens(genAiSpans.get(1), "mistral", "mistral-medium-2505", 30L, 14L);
+        assertThat(Metrics.getLlmInputTokens("MISTRAL", "mistral-medium-2505"), is(67L));
+        assertThat(Metrics.getLlmOutputTokens("MISTRAL", "mistral-medium-2505"), is(41L));
+    }
+
+    @Test
+    public void shouldCountClaudeOnVertexAiButNotItsTokenCount() {
+        String path = "/v1/projects/my-project/locations/us-east5/publishers/anthropic/models/claude-sonnet-4-5@20250929";
+        forwardResponse("us-east5-aiplatform.googleapis.com", path + ":rawPredict",
+            "{\"anthropic_version\":\"vertex-2023-10-16\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}],\"max_tokens\":256}", json(
+                "{\"id\":\"msg_vrtx_01AbCdEfGhIjKlMnOpQrStUv\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"claude-sonnet-4-5-20250929\","
+                    + "\"content\":[{\"type\":\"text\",\"text\":\"Hi there\"}],\"stop_reason\":\"end_turn\",\"stop_sequence\":null,"
+                    + "\"usage\":{\"input_tokens\":12,\"output_tokens\":6}}"));
+        forwardResponse("us-east5-aiplatform.googleapis.com", "/v1/projects/my-project/locations/us-east5/publishers/anthropic/models/count-tokens:rawPredict",
+            "{\"model\":\"claude-sonnet-4-5@20250929\",\"messages\":[{\"role\":\"user\",\"content\":\"how many tokens are in this request?\"}]}",
+            json("{\"input_tokens\":14}"));
+        forwardStream("us-east5-aiplatform.googleapis.com", path + ":streamRawPredict",
+            "{\"anthropic_version\":\"vertex-2023-10-16\",\"stream\":true,\"messages\":[],\"max_tokens\":256}",
+            utf8(ProviderStreamFixtures.ANTHROPIC_MESSAGES));
+
+        List<SpanData> genAiSpans = genAiSpans();
+        assertThat(genAiSpans, hasSize(2));
+        assertTokens(genAiSpans.get(0), "anthropic", "claude-sonnet-4-5-20250929", 12L, 6L);
+        assertTokens(genAiSpans.get(1), "anthropic", "claude-sonnet-4-5-20250929", 25L, 15L);
+    }
+
+    @Test
+    public void shouldKeepNamingACompletionAChatCall() {
+        forwardResponse("api.openai.com", "/v1/chat/completions", "{\"model\":\"gpt-4o\",\"messages\":[]}", json(
+            "{\"id\":\"chatcmpl-123\",\"object\":\"chat.completion\",\"model\":\"gpt-4o-2024-08-06\","
+                + "\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Hello\"},\"finish_reason\":\"stop\"}],"
+                + "\"usage\":{\"prompt_tokens\":12,\"completion_tokens\":8,\"total_tokens\":20}}"));
+
+        assertOperation(singleGenAiSpan(), "chat", "chat gpt-4o-2024-08-06");
     }
 
     // ---- a Bedrock call names its model in the request path ----

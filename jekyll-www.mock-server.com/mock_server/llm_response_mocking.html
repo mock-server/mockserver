@@ -1319,9 +1319,14 @@ geminiLive()
 
 <p>
     Calls through <span class="inline_code">proxyPassMappings</span> reverse-proxy routes are counted the same way,
-    by the host the mapping forwards to. Only completions are counted: a stream from another endpoint of an LLM
-    host, such as Ollama's <span class="inline_code">/api/pull</span> download progress, is relayed but not
-    treated as an LLM call. Behind a gateway or private endpoint that is not a known provider host, set
+    by the host the mapping forwards to. Only calls to a model are counted: completions, and whole embeddings and
+    rerank responses, whose trace spans are named <span class="inline_code">embeddings &lt;model&gt;</span> and
+    <span class="inline_code">rerank &lt;model&gt;</span> instead of <span class="inline_code">chat &lt;model&gt;</span>.
+    An OpenAI response created with <span class="inline_code">background: true</span> and an xAI deferred
+    completion report their usage only when the finished result is fetched, so that fetch is counted, once however
+    many times it is polled. Other requests to an LLM host, such as listing models, fetching an ordinary stored
+    response, counting tokens or Ollama's <span class="inline_code">/api/pull</span> download progress, are relayed
+    but not treated as an LLM call. Behind a gateway or private endpoint that is not a known provider host, set
     <span class="inline_code">llmProvider</span> so Gemini and Bedrock calls through it are recognised and counted.
 </p>
 
