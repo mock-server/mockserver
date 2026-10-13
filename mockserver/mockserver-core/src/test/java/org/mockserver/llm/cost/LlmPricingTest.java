@@ -159,6 +159,111 @@ public class LlmPricingTest {
         assertThat(LlmPricing.estimateCostUsd(null, "claude-sonnet-4", 100, 100), is(nullValue()));
     }
 
+    // --- embedding models never inherit a chat rate ---
+
+    @Test
+    public void shouldNotPriceCodestralEmbedAtTheCodestralChatRate() {
+        for (String model : new String[]{"codestral-embed", "codestral-embed-2505", "Codestral-Embed"}) {
+            assertThat(model, LlmPricing.getPricing(Provider.MISTRAL, model), is(nullValue()));
+            assertThat(model, LlmPricing.estimateCostUsd(Provider.MISTRAL, model, 1_000_000, 0), is(nullValue()));
+            assertThat(model, LlmPricing.blendedPerMillion(Provider.MISTRAL, model), is(nullValue()));
+            assertFalse(model, LlmPricing.isApproximateRate(Provider.MISTRAL, model));
+        }
+        // the codestral chat model itself is still priced
+        assertThat(LlmPricing.estimateCostUsd(Provider.MISTRAL, "codestral-2508", 1_000_000, 1_000_000),
+            is(closeTo(1.2, EPS)));
+    }
+
+    @Test
+    public void shouldNotPriceCodestralEmbedThroughOpenRouter() {
+        assertThat(LlmPricing.getPricing(Provider.OPENROUTER, "mistralai/codestral-embed-2505"), is(nullValue()));
+        assertThat(LlmPricing.getPricing(Provider.ORCAROUTER, "mistral/codestral-embed"), is(nullValue()));
+        assertThat(LlmPricing.estimateCostUsd(Provider.OPENROUTER, "mistralai/codestral-2508", 1_000_000, 0),
+            is(closeTo(0.3, EPS)));
+    }
+
+    @Test
+    public void shouldLeaveEveryEmbeddingModelUnpriced() {
+        assertThat(LlmPricing.getPricing(Provider.MISTRAL, "mistral-embed"), is(nullValue()));
+        assertThat(LlmPricing.getPricing(Provider.OPENAI, "text-embedding-3-small"), is(nullValue()));
+        assertThat(LlmPricing.getPricing(Provider.AZURE_OPENAI, "text-embedding-3-large"), is(nullValue()));
+        assertThat(LlmPricing.getPricing(Provider.GEMINI, "gemini-embedding-001"), is(nullValue()));
+        assertThat(LlmPricing.getPricing(Provider.BEDROCK, "amazon.titan-embed-text-v2:0"), is(nullValue()));
+        assertThat(LlmPricing.getPricing(Provider.OPENROUTER, "openai/text-embedding-3-small"), is(nullValue()));
+    }
+
+    @Test
+    public void shouldStillPriceOllamaEmbeddingModelsAsFree() {
+        assertThat(LlmPricing.estimateCostUsd(Provider.OLLAMA, "nomic-embed-text", 1_000_000, 0),
+            is(closeTo(0.0, EPS)));
+    }
+
+    @Test
+    public void shouldKeepEveryIntendedPrefixMatchForDatedAndSuffixedModelIds() {
+        Object[][] cases = {
+            {Provider.ANTHROPIC, "claude-fable-5", 10.0, 50.0},
+            {Provider.ANTHROPIC, "claude-opus-4-8-20260101", 5.0, 25.0},
+            {Provider.ANTHROPIC, "claude-opus-4-7", 5.0, 25.0},
+            {Provider.ANTHROPIC, "claude-opus-4-6", 5.0, 25.0},
+            {Provider.ANTHROPIC, "claude-opus-4-5-20251101", 5.0, 25.0},
+            {Provider.ANTHROPIC, "claude-sonnet-4-6", 3.0, 15.0},
+            {Provider.ANTHROPIC, "claude-sonnet-4-5-20250929", 3.0, 15.0},
+            {Provider.ANTHROPIC, "claude-haiku-4-5-20251001", 1.0, 5.0},
+            {Provider.ANTHROPIC, "claude-opus-4-1-20250805", 15.0, 75.0},
+            {Provider.ANTHROPIC, "claude-sonnet-4-20250514", 3.0, 15.0},
+            {Provider.ANTHROPIC, "claude-haiku-4", 0.8, 4.0},
+            {Provider.BEDROCK, "anthropic.claude-sonnet-4-20250514-v1:0", 3.0, 15.0},
+            {Provider.OPENAI, "gpt-4o-mini-2024-07-18", 0.15, 0.6},
+            {Provider.OPENAI, "gpt-4o-2024-08-06", 2.5, 10.0},
+            {Provider.OPENAI, "gpt-4.1-mini-2025-04-14", 0.4, 1.6},
+            {Provider.OPENAI, "gpt-4.1-nano-2025-04-14", 0.1, 0.4},
+            {Provider.OPENAI, "gpt-4.1-2025-04-14", 2.0, 8.0},
+            {Provider.OPENAI, "o4-mini-2025-04-16", 1.1, 4.4},
+            {Provider.OPENAI, "o3-mini-2025-01-31", 1.1, 4.4},
+            {Provider.OPENAI, "o3-2025-04-16", 15.0, 60.0},
+            {Provider.OPENAI, "gpt-5-mini-2025-08-07", 0.15, 0.6},
+            {Provider.OPENAI, "gpt-5-nano-2025-08-07", 0.15, 0.6},
+            {Provider.OPENAI, "gpt-5-2025-08-07", 2.5, 10.0},
+            {Provider.OPENAI_RESPONSES, "gpt-4o-2024-08-06", 2.5, 10.0},
+            {Provider.GEMINI, "gemini-2.5-flash-lite-preview-06-17", 0.1, 0.4},
+            {Provider.GEMINI, "gemini-2.5-flash-preview-05-20", 0.3, 2.5},
+            {Provider.GEMINI, "gemini-2.5-pro-preview-06-05", 1.25, 10.0},
+            {Provider.GEMINI, "gemini-2.0-flash-lite-001", 0.075, 0.3},
+            {Provider.GEMINI, "gemini-2.0-flash-001", 0.1, 0.4},
+            {Provider.MISTRAL, "mistral-large-latest", 2.0, 6.0},
+            {Provider.MISTRAL, "mistral-medium-2505", 0.4, 2.0},
+            {Provider.MISTRAL, "mistral-small-2503", 0.1, 0.3},
+            {Provider.MISTRAL, "codestral-latest", 0.3, 0.9},
+            {Provider.MISTRAL, "ministral-8b-2410", 0.1, 0.1},
+            {Provider.MISTRAL, "ministral-3b-latest", 0.04, 0.04},
+            {Provider.MISTRAL, "open-mistral-nemo-2407", 0.15, 0.15},
+            {Provider.XAI, "grok-4-0709", 3.0, 15.0},
+            {Provider.XAI, "grok-3-mini-beta", 0.3, 0.5},
+            {Provider.XAI, "grok-3-latest", 3.0, 15.0},
+            {Provider.XAI, "grok-2-1212", 2.0, 10.0},
+            {Provider.XAI, "grok-beta", 5.0, 15.0},
+            {Provider.DEEPSEEK, "deepseek-reasoner", 0.55, 2.19},
+            {Provider.DEEPSEEK, "deepseek-chat", 0.27, 1.1},
+            {Provider.GROQ, "llama-3.3-70b-versatile", 0.59, 0.79},
+            {Provider.GROQ, "llama-3.1-8b-instant", 0.05, 0.08},
+            {Provider.GROQ, "llama-3.1-70b-versatile", 0.59, 0.79},
+            {Provider.GROQ, "llama-3.1-405b-reasoning", 1.79, 1.79},
+            {Provider.GROQ, "mixtral-8x7b-32768", 0.24, 0.24},
+            {Provider.GROQ, "gemma2-9b-it", 0.2, 0.2},
+            {Provider.OPENROUTER, "openai/gpt-4o-2024-08-06", 2.5, 10.0},
+            {Provider.OPENROUTER, "anthropic/claude-sonnet-4-5-20250929", 3.0, 15.0},
+            {Provider.OPENROUTER, "google/gemini-2.5-pro-preview-06-05", 1.25, 10.0},
+        };
+        for (Object[] c : cases) {
+            Provider provider = (Provider) c[0];
+            String model = (String) c[1];
+            LlmPricing.PricingEntry pricing = LlmPricing.getPricing(provider, model);
+            assertThat(provider + " " + model, pricing, is(notNullValue()));
+            assertThat(provider + " " + model + " input", pricing.getInputPerMillion(), is(closeTo((Double) c[2], EPS)));
+            assertThat(provider + " " + model + " output", pricing.getOutputPerMillion(), is(closeTo((Double) c[3], EPS)));
+        }
+    }
+
     // --- blendedPerMillion ---
 
     @Test

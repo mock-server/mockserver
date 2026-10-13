@@ -14,6 +14,10 @@ import java.util.Map;
  * input/output rates in USD per million tokens. Returns {@code null} for an
  * unknown model so callers can distinguish "free/known-zero" from "unpriceable".
  *
+ * <p>The tables hold chat rates only, so an embedding model id resolves to
+ * {@code null} even when a chat prefix matches it (codestral-embed would
+ * otherwise bill at codestral's rate). Ollama stays flat free.
+ *
  * <p><strong>Companion dashboard pricing table</strong>
  * {@code mockserver-ui/src/lib/llmPricing.ts} maintains a parallel table with
  * the same prefix-walk semantics, and is kept in sync with this table. A
@@ -198,12 +202,25 @@ public final class LlmPricing {
             return null;
         }
         String lower = model.toLowerCase();
+        if (isEmbeddingModel(lower)) {
+            return null;
+        }
         for (Map.Entry<String, PricingEntry> e : table) {
             if (lower.startsWith(e.getKey().toLowerCase())) {
                 return e.getValue();
             }
         }
         return null;
+    }
+
+    /** True when a name segment starts with "embed" (codestral-embed, text-embedding-3-small). */
+    private static boolean isEmbeddingModel(String lowerModel) {
+        for (String segment : lowerModel.split("[^a-z0-9]+")) {
+            if (segment.startsWith("embed")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
