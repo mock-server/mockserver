@@ -7,8 +7,15 @@ import org.junit.Test;
 import org.mockserver.model.LlmContentFilter;
 import org.mockserver.model.Provider;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.oneOf;
 import static org.hamcrest.core.Is.is;
 
 public class LlmContentFilterBodiesTest {
@@ -81,12 +88,28 @@ public class LlmContentFilterBodiesTest {
     }
 
     @Test
-    public void geminiBlockIs200Safety() throws Exception {
+    public void geminiBlockIsABlockedOutputCandidateWithoutPromptFeedback() throws Exception {
         LlmContentFilterBodies.Block block = LlmContentFilterBodies.blockFor(Provider.GEMINI, null);
         assertThat(block.getStatusCode(), is(200));
         JsonNode root = MAPPER.readTree(block.getJsonBody());
-        assertThat(root.get("candidates").get(0).get("finishReason").asText(), is("SAFETY"));
-        assertThat(root.get("promptFeedback").get("blockReason").asText(), is("SAFETY"));
+        assertThat(root.has("promptFeedback"), is(false));
+        assertThat(root.get("candidates").size(), is(1));
+        JsonNode candidate = root.get("candidates").get(0);
+        assertThat(candidate.get("finishReason").asText(), is("SAFETY"));
+        assertThat(candidate.get("index").asInt(), is(0));
+        assertThat(candidate.has("content"), is(false));
+        Set<String> categories = new HashSet<>();
+        List<String> blocked = new ArrayList<>();
+        for (JsonNode rating : candidate.get("safetyRatings")) {
+            assertThat("at most one rating per category", categories.add(rating.get("category").asText()), is(true));
+            assertThat(rating.get("probability").asText(), oneOf("NEGLIGIBLE", "LOW", "MEDIUM", "HIGH"));
+            if (rating.path("blocked").asBoolean(false)) {
+                blocked.add(rating.get("category").asText() + "=" + rating.get("probability").asText());
+            }
+        }
+        assertThat(blocked, contains("HARM_CATEGORY_HATE_SPEECH=HIGH"));
+        assertThat(root.at("/usageMetadata/promptTokenCount").isInt(), is(true));
+        assertThat(root.at("/usageMetadata/totalTokenCount").isInt(), is(true));
     }
 
     @Test

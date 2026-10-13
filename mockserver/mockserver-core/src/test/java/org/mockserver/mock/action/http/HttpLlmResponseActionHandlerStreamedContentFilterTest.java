@@ -79,7 +79,8 @@ public class HttpLlmResponseActionHandlerStreamedContentFilterTest {
         assertThat(events, hasSize(1));
         JsonNode chunk = MAPPER.readTree(events.get(0).getData());
         assertThat(chunk.at("/candidates/0/finishReason").asText(), is("SAFETY"));
-        assertThat(chunk.at("/promptFeedback/blockReason").asText(), is("SAFETY"));
+        assertThat(chunk.at("/candidates/0/safetyRatings/1/blocked").asBoolean(), is(true));
+        assertThat(chunk.has("promptFeedback"), is(false));
     }
 
     @Test

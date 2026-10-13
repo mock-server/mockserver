@@ -28,7 +28,7 @@ import java.util.List;
  *       error; Azure → HTTP 400 whose {@code innererror} carries the filter result;
  *       Anthropic and Bedrock InvokeModel → HTTP 200 with {@code stop_reason:"refusal"};
  *       Bedrock Converse → HTTP 200 with {@code stopReason:"content_filtered"}; Gemini →
- *       HTTP 200 with {@code finishReason:"SAFETY"}; otherwise a generic 400. A streaming
+ *       HTTP 200 with a candidate whose {@code finishReason} is {@code SAFETY}; otherwise a generic 400. A streaming
  *       request gets the HTTP 200 blocks as an event stream ({@link #streamedBlockOrNull}).</li>
  * </ul>
  *
@@ -197,13 +197,22 @@ public final class LlmContentFilterBodies {
         }
     }
 
+    /**
+     * A Gemini (and Vertex AI) response whose output was blocked: one candidate with
+     * {@code finishReason} {@code SAFETY}, no {@code content}, and a blocked hate-speech
+     * {@code safetyRatings} entry. It carries no {@code promptFeedback}: the API sends
+     * {@code promptFeedback.blockReason} only for a blocked prompt, which has no candidates.
+     */
+    static final String GEMINI_SAFETY_BLOCK_BODY =
+        "{\"candidates\":[{\"finishReason\":\"SAFETY\",\"index\":0,\"safetyRatings\":["
+            + "{\"category\":\"HARM_CATEGORY_SEXUALLY_EXPLICIT\",\"probability\":\"NEGLIGIBLE\"},"
+            + "{\"category\":\"HARM_CATEGORY_HATE_SPEECH\",\"probability\":\"HIGH\",\"blocked\":true},"
+            + "{\"category\":\"HARM_CATEGORY_HARASSMENT\",\"probability\":\"NEGLIGIBLE\"},"
+            + "{\"category\":\"HARM_CATEGORY_DANGEROUS_CONTENT\",\"probability\":\"NEGLIGIBLE\"}]}],"
+            + "\"usageMetadata\":{\"promptTokenCount\":0,\"totalTokenCount\":0}}";
+
     private static Block geminiBlock() {
-        // Gemini blocks with HTTP 200: candidates carry finishReason SAFETY and the
-        // top-level promptFeedback carries blockReason SAFETY.
-        return new Block(200,
-            "{\"candidates\":[{\"finishReason\":\"SAFETY\",\"index\":0,"
-                + "\"safetyRatings\":[{\"category\":\"HARM_CATEGORY_HATE_SPEECH\",\"probability\":\"HIGH\","
-                + "\"blocked\":true}]}],\"promptFeedback\":{\"blockReason\":\"SAFETY\"}}");
+        return new Block(200, GEMINI_SAFETY_BLOCK_BODY);
     }
 
     private static Block genericBlock() {

@@ -92,7 +92,7 @@ public class LlmStreamedContentFilterE2eTest {
         List<JsonNode> data = sseData(response);
         assertThat(data, hasSize(1));
         assertThat(data.get(0).at("/candidates/0/finishReason").asText(), is("SAFETY"));
-        assertThat(data.get(0).at("/promptFeedback/blockReason").asText(), is("SAFETY"));
+        assertThat(data.get(0).has("promptFeedback"), is(false));
     }
 
     @Test
@@ -108,7 +108,22 @@ public class LlmStreamedContentFilterE2eTest {
         assertThat(body.isArray(), is(true));
         assertThat(body.size(), is(1));
         assertThat(body.at("/0/candidates/0/finishReason").asText(), is("SAFETY"));
-        assertThat(body.at("/0/promptFeedback/blockReason").asText(), is("SAFETY"));
+        assertThat(body.get(0).has("promptFeedback"), is(false));
+    }
+
+    @Test
+    public void vertexStreamWithoutAltSseIsTheSameOutputSafetyBlock() throws Exception {
+        String path = "/v1/projects/p/locations/us-central1/publishers/google/models/gemini-2.0-flash:streamGenerateContent";
+        expectBlock(path, Provider.GEMINI);
+
+        HttpResponse<byte[]> response = post(path, "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"Hi\"}]}]}");
+
+        assertThat(response.statusCode(), is(200));
+        assertThat(contentType(response), startsWith("application/json"));
+        JsonNode body = OBJECT_MAPPER.readTree(response.body());
+        assertThat(body.size(), is(1));
+        assertThat(body.at("/0/candidates/0/finishReason").asText(), is("SAFETY"));
+        assertThat(body.get(0).has("promptFeedback"), is(false));
     }
 
     @Test
