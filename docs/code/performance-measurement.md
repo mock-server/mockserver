@@ -514,12 +514,30 @@ names: `mockserver-rw-prom-<36-character build ID>-<pid>-rw` is 64 characters on
 digits. The alias is unique per run because `PERF_RW_NETWORK` may be a shared network.
 
 `cross_check.cross_run` separately compares the N-process rungs with that single-process run at
-the same aggregate rate (achieved ratio within 0.02; p50/p95/p99 within 20/35/60%) — two separate
-runs, so it carries run-to-run noise and is reported as `cross_check.cross_run.agrees` rather than
-gating validity. `cross_check.equivalent` is the gated same-request result only
-(`rw_cross_check_same_requests`); through build 535 it also required `cross_run.agrees`, so logs
-printed `cross_check_equivalent=false` on runs whose gate had passed. Rungs above `PERF_RW_XCHECK_MAX_RPS` are listed with `status: "no counterpart"`,
-and a rung with a missing figure as `"incomplete"`; neither is divided or compared.
+the same aggregate rate (achieved ratio within 0.02; p50/p95/p99 within 20/35/60%). It is reported
+as `cross_check.cross_run.agrees` rather than gating validity. `cross_check.equivalent` is the
+gated same-request result only (`rw_cross_check_same_requests`); through build 535 it also
+required `cross_run.agrees`, so logs printed `cross_check_equivalent=false` on runs whose gate had
+passed.
+
+**`cross_run` judges a rung only when each main-phase k6 offers at least
+`PERF_RW_CROSSRUN_MIN_PER_PROC_RPS` (default 8,000 req/s; 0 judges every rung).** Below that rate
+the two arms are not the same rung measured twice. On this rig, latency and cost per request fall
+steeply with load on both the client and the server: p50 goes from about 0.42 ms at 500 req/s to a
+floor of about 0.08 ms. At the same aggregate rate each of N processes runs at 1/N of the single
+process's rate, so the N-process arm reaches that floor at a higher aggregate rate. On `perf-xl`
+(N = 4) the single process reaches it by 16k and the 4-process arm only at 32k (8k per process),
+so every rung from 8k to the 24k cap read p50 1.2–2.0x and p95 1.15–1.8x apart, identically in
+builds 643, 664, 667, 668 and 670. At 16k every MockServer timer and the SUT's CPU per request
+moved by the same ~1.45x, with identical allocation: the server did the same work on colder
+cores, without queueing. The rest of the gap is k6's own cost per request, which follows each
+process's rate. A rung below the floor keeps its figures and its `per_process_rps`, and is listed
+with `status: "below per-process floor"` and `ok: null`; the harness logs these rungs as
+information, not as a `WARNING`. `agrees` is `null` when no rung was judged, which is the
+`perf-xl` default today: with N = 4 and the 24k cap, no rung reaches 8k per process. A main phase
+of one process has the cross-check's layout, so it judges every rung. Rungs above
+`PERF_RW_XCHECK_MAX_RPS` are listed with `status: "no counterpart"`, and a judged rung with a
+missing figure as `"incomplete"` (which fails `agrees`); neither is divided.
 
 **Once inputs are validated and an output file is given, a result is always written.** A soft step that fails (the cross-check phase, or any
 post-measurement step: `xcheck_phase`, `merge_main`, `sweep_json`, `saturation`, `headline`,
@@ -835,7 +853,7 @@ the published ladder over its rungs, from `.rung_windows` (the earliest process 
 client share over 5 ms as `1 - histogram_fraction(0, 0.005, …)` over the same merged steady
 histogram the percentiles come from) against `diag-samples.csv`, and stores it as
 `.serving_rw_multik6.tail_localisation`. A `cross_check.cross_run` disagreement stays
-report-only, but the harness logs a `WARNING` naming each rung, the metrics outside tolerance and
+report-only, but the harness logs a `WARNING` naming each judged rung, the metrics outside tolerance and
 the single- and multi-process figures. For a trial also
 set `PERF_INFO_ARM=false` and `PERF_COVERAGE=false`, the two default-on phases the run step's
 timeout comment names as removable. Locally:
@@ -1902,7 +1920,7 @@ presence gate counts as a rig failure. So is a point whose SUT state cannot be r
 (`docker inspect` failed) or whose assembly fails; a point is never dropped silently
 (`PERF_HW_MATRIX_TEST_FAULT=sut_inspect|point_jq` exercises both). A SUT that died stays a point
 with its OOM status. `measurement.cross_run_agrees` is null when no rung had a single-process
-counterpart.
+counterpart at or above the per-process floor.
 
 **Lower-bound reasons**, all from `derive_saturation` (the local 85%-of-pin rule is not used in
 this mode). A point's ceiling is a lower bound when any of these holds:

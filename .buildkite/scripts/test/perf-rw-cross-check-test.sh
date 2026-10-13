@@ -149,5 +149,67 @@ check "no query for the rung with no cut" "no" "$(has 'rate="28800"' "$Q")"
 check "no steady sample at the cut: nothing subtracted" "yes" \
   "$(has '^histogram_quantile\(0\.99, sum\(k6_http_req_duration_seconds\{proc=~"xcheck-p\[0-9\]\+",rate="9600",win="9600_steady"\}\)\) \* 1000$' "$(cat "$T/queries.txt")")"
 
+echo "--- 7. cross_run: judged only where each main-phase k6 offers at least the per-process floor"
+# Rungs 500..24000 and 32000 of perf build 667 (single process vs 4 processes): every rung a
+# single process covers is below 8000 per process. $1: floor ("" = none), $2: a jq update.
+xrun() { # floor update
+  jq -nc --arg min "$1" '
+    def pt($o; $a; $p50; $p95; $p99): {offered_rps:$o, achieved_rps:$a, p50_ms:$p50, p95_ms:$p95, p99_ms:$p99};
+    def mp($o; $a; $p50; $p95; $p99): pt($o; $a; $p50; $p95; $p99) + {nominal_agg_offered_rps:$o, per_process:[{},{},{},{}]};
+    {live:true, bytime:null, bytag:null, bytagcut:null, xcost:[],
+     pub:{points:[pt(500; 500.1; 0.423; 0.601; 0.685), pt(1000; 1000.1; 0.37; 0.513; 0.608), pt(2000; 2000.1; 0.351; 0.544; 0.653),
+                  pt(4000; 3992.5; 0.252; 0.523; 0.648), pt(8000; 8000; 0.181; 0.442; 0.607), pt(16000; 16000.1; 0.081; 0.285; 0.432),
+                  pt(24000; 24000.4; 0.078; 0.235; 0.306)]},
+     main:{points:[mp(500; 500.3; 0.471; 0.629; 0.686), mp(1000; 1000.3; 0.452; 0.576; 0.632), mp(2000; 2000.3; 0.346; 0.441; 0.534),
+                   mp(4000; 4000.3; 0.25; 0.47; 0.629), mp(8000; 7990.7; 0.217; 0.51; 0.696), mp(16000; 16000.4; 0.16; 0.467; 0.677),
+                   mp(24000; 23941.3; 0.117; 0.415; 0.657), mp(32000; 32000.4; 0.084; 0.272; 0.41)]},
+     tol:{p50:0.10, p95:0.10, p99:0.15, abs_ms:0.005, push_s:1, window_tol:0.05,
+          cross_run:({achieved_ratio:0.02, p50:0.20, p95:0.35, p99:0.60}
+                     + (if $min == "" then {} else {min_per_process_rps:($min|tonumber)} end))}}' \
+    | jq -c "$2" | jq -c -f "$CROSS_JQ" | jq -c '.cross_run'
+}
+crun() { jq -r "$2" <<<"$1"; }
+at() { jq -r --argjson o "$2" ".rungs[] | select(.offered_rps == \$o) | $3" <<<"$1"; } # cross_run offered_rps expr
+# A synthetic single-process 32000 rung, where both arms are past the knee (multi p50 0.084).
+X32='.pub.points += [{offered_rps:32000, achieved_rps:32000.2, p50_ms:0.080, p95_ms:0.25, p99_ms:0.40}]'
+R="$(xrun 8000 '.')"
+check "rig ladder at the 8000 floor: nothing judged, so agrees is null" "null 0 7 1" "$(crun "$R" '"\(.agrees) \(.compared) \(.below_floor) \(.no_counterpart)"')"
+check "  ... the 16000 rung is 4000 per process, reported with its figures, not judged" "below per-process floor 4000 null 0.081 0.16 false" \
+  "$(at "$R" 16000 '"\(.status) \(.per_process_rps) \(.ok) \(.latency.p50.published) \(.latency.p50.remote_write) \(.latency.p50.ok)"')"
+check "  ... and its achieved ratios too" "1 1 true" "$(at "$R" 16000 '"\(.achieved_ratio.single) \(.achieved_ratio.multi) \(.achieved_ratio.ok)"')"
+check "  ... no rung below the floor carries a verdict" "0" "$(crun "$R" '[.rungs[] | select(.status == "below per-process floor" and .ok != null)] | length')"
+R="$(xrun "" '.')"
+check "no floor (an input from before it): the recorded verdict, every rung judged" "false 7 0" "$(crun "$R" '"\(.agrees) \(.compared) \(.below_floor)"')"
+check "  ... 16000 fails on p50 0.081 vs 0.16" "compared false" "$(at "$R" 16000 '"\(.status) \(.ok)"')"
+check "floor 0 judges every rung too" "false 7" "$(crun "$(xrun 0 '.')" '"\(.agrees) \(.compared)"')"
+R="$(xrun 8000 "$X32")"
+check "mixed ladder: 32000 (8000 per process, at the floor) judged and agreeing" "true 1 7 0" "$(crun "$R" '"\(.agrees) \(.compared) \(.below_floor) \(.no_counterpart)"')"
+check "  ... at 8000 per process" "compared 8000 true" "$(at "$R" 32000 '"\(.status) \(.per_process_rps) \(.ok)"')"
+check "  ... while the 16000 rung's disagreement is not counted" "below per-process floor false" "$(at "$R" 16000 '"\(.status) \(.latency.p50.ok)"')"
+check "floor one above 32000's per-process rate: nothing judged" "null 0 8" "$(crun "$(xrun 8001 "$X32")" '"\(.agrees) \(.compared) \(.below_floor)"')"
+R="$(xrun 8000 "$X32 | .pub.points[7].p50_ms = 0.04")"
+check "a judged rung outside tolerance: agrees false" "false 1" "$(crun "$R" '"\(.agrees) \(.compared)"')"
+R="$(xrun 8000 "$X32 | .pub.points[7].achieved_rps = null")"
+check "an incomplete rung above the floor is judged and fails" "false incomplete" "$(crun "$R" '"\(.agrees) \(.rungs[7].status)"')"
+R="$(xrun 8000 '.main.points[].per_process = [{}]')"
+check "one main-phase process: the arms share a layout, so every rung is judged" "false 7 0" "$(crun "$R" '"\(.agrees) \(.compared) \(.below_floor)"')"
+check "  ... 4000 agrees" "compared 4000 true" "$(at "$R" 4000 '"\(.status) \(.per_process_rps) \(.ok)"')"
+R="$(xrun 8000 '.main.points[] |= del(.per_process)')"
+check "a merged ladder without per-process entries is judged as before" "false 7 0" "$(crun "$R" '"\(.agrees) \(.compared) \(.below_floor)"')"
+check "the floor is reported with the tolerances" "8000" \
+  "$(jq -nc '{live:true, main:null, xcost:[], tol:{p50:0.1, p95:0.1, p99:0.15, abs_ms:0.005, push_s:1, window_tol:0.05, cross_run:{achieved_ratio:0.02, p50:0.2, p95:0.35, p99:0.6, min_per_process_rps:8000}}}' | jq -r -f "$CROSS_JQ" | jq -r '.tolerances.cross_run.min_per_process_rps')"
+
+echo "--- 8. the harness passes the floor (default 8000) into the cross-check input"
+eval "$(grep -E '^RTOL_[A-Z0-9_]+=' "$HARNESS")"
+eval "$(sed -n '/^cross_input() {/,/^}/p' "$HARNESS")"
+cpu_cost_json() { echo '[]'; }
+# shellcheck disable=SC2034  # read by the eval'd cross_input
+XTOL_P50=0.10 XTOL_P95=0.10 XTOL_P99=0.15 XTOL_ABS_MS=0.005 PUSH_S=1 WINDOW_TOL=0.05
+for f in xcheck-p0 xcheck-by-time xcheck-by-tag main-merged; do echo '{"points":[]}' > "$T/$f.json"; done
+check "default floor" "8000" "$(cross_input | jq -r '.tol.cross_run.min_per_process_rps')"
+# shellcheck disable=SC2034
+RTOL_MIN_PP=0
+check "a floor of 0 reaches the program" "0" "$(cross_input | jq -r '.tol.cross_run.min_per_process_rps')"
+
 if [ "$FAILS" -gt 0 ]; then echo ":x: $FAILS cross-check fixture check(s) failed" >&2; exit 1; fi
 echo "all cross-check fixture checks passed"

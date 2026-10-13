@@ -7,6 +7,11 @@
 # settle boundary, so it drops up to two push intervals of steady requests. bytagcut is by_tag
 # (the published requests) from the same cut on, so by_time must match it within the histogram
 # tolerances; the two differ only by settle requests still in flight at the cut.
+#
+# cross_run judges a rung only when each of the N (> 1) processes offers at least
+# tol.cross_run.min_per_process_rps: below that rate latency and cost per request still fall
+# with each process's own rate, so the arms differ by generator layout, not run-to-run noise.
+# Lower rungs are reported with their figures and ok:null; agrees is null when none is judged.
 def num: type == "number";
 .tol as $tol | $tol.abs_ms as $abs | (.live == true) as $live
 | def within($a; $b; $t): ($a|num) and ($b|num) and ((($a - $b)|fabs) <= ([($t * ([$a, $b]|max)), $abs]|max));
@@ -61,22 +66,26 @@ def num: type == "number";
       | .by_tag += {same_count:(($x.measured_sample_count|num) and $x.measured_sample_count == $g.measured_sample_count)}
       | .by_tag += {ok:(.by_tag.same_count and .by_tag.p50.ok and .by_tag.p95.ok and .by_tag.p99.ok)}
       | . + {ok:(.counts.ok and .by_tag.ok and .window.ok and .by_time.ok)} ] as $same
+  | ($tol.cross_run.min_per_process_rps // 0) as $minpp
   | [ (.main.points // [])[] as $m
       | ([ $P[] | select(.offered_rps == $m.nominal_agg_offered_rps) ] | first) as $x
+      | (($m.per_process // []) | length) as $np
+      | (if $np > 0 and ($m.offered_rps|num) then $m.offered_rps / $np else null end) as $pp
       | if $x == null then
           {offered_rps:$m.nominal_agg_offered_rps, main_offered_rps:$m.offered_rps, status:"no counterpart", ok:null}
         else
           ratio($x.achieved_rps; $x.offered_rps) as $rs | ratio($m.achieved_rps; $m.offered_rps) as $rm
-          | {offered_rps:$x.offered_rps, main_offered_rps:$m.offered_rps,
+          | {offered_rps:$x.offered_rps, main_offered_rps:$m.offered_rps, per_process_rps:($pp|r3),
              status:(if $rs == null or $rm == null then "incomplete" else "compared" end),
              achieved_ratio:{single:($rs|r3), multi:($rm|r3),
                              ok:($rs != null and $rm != null and (($rs - $rm)|fabs) <= $tol.cross_run.achieved_ratio)},
              latency:cmp($x; $m; $tol.cross_run.p50; $tol.cross_run.p95; $tol.cross_run.p99)}
           | . + {ok:(.achieved_ratio.ok and .latency.p50.ok and .latency.p95.ok and .latency.p99.ok)}
+          | if $np > 1 and $pp != null and $pp < $minpp then . + {status:"below per-process floor", ok:null} else . end
         end ] as $run
-  | ([ $run[] | select(.status != "no counterpart") ]) as $cmp
+  | ([ $run[] | select(.status == "compared" or .status == "incomplete") ]) as $cmp
   | {attempted:true,
-     note:"same_requests: one k6 in the published summary mode ALSO remote-writing. by_tag (the Prometheus merge of exactly its steady requests) must match its summary within the histogram tolerances; by_time (the time cut under test) may move up to 2 push intervals of requests (window) and must match by_tag from the same cut on within the same tolerances, holding at most the VU pool more requests (settle requests in flight at the cut). published vs by_tag_at_cut is what the late cut itself moved (report-only). cross_run: the N-process rungs vs that single-process run at the same aggregate offered rate (separate runs, so run-to-run noise); rungs above the cross-check cap have no counterpart.",
+     note:"same_requests: one k6 in the published summary mode ALSO remote-writing. by_tag (the Prometheus merge of exactly its steady requests) must match its summary within the histogram tolerances; by_time (the time cut under test) may move up to 2 push intervals of requests (window) and must match by_tag from the same cut on within the same tolerances, holding at most the VU pool more requests (settle requests in flight at the cut). published vs by_tag_at_cut is what the late cut itself moved (report-only). cross_run: the N-process rungs vs that single-process run at the same aggregate offered rate (separate runs, so run-to-run noise), judged only where each of the N processes offers at least min_per_process_rps; below it the arms sit in different load regimes, so those rungs are reported, not judged, and agrees is null when no rung is judged; rungs above the cross-check cap have no counterpart.",
      tolerances:{same_requests:{p50:$tol.p50, p95:$tol.p95, p99:$tol.p99, abs_ms:$abs,
                                 by_time_reference:"by_tag from the same settle cut (by_tag_at_cut); offline, a run without it uses the published quantiles"},
                  cross_run:($tol.cross_run + {abs_ms:$abs})},
@@ -87,8 +96,9 @@ def num: type == "number";
                                   (if $r.by_tag.ok then empty else "by_tag (counts \($r.measured_counts.published) vs \($r.measured_counts.by_tag); " + ([ quantiles[] as [$n, $q, $tq] | $r.by_tag[$n] | select(.ok|not) | "\($n) \(.published) vs \(.remote_write)" ] | join(", ")) + ")" end),
                                   (if $r.window.ok then empty else "window (excluded \($r.window.excluded) of \($r.window.of), allowed -\($r.window.max_added)..\($r.window.max_excluded), settle_cut_ok \($r.window.settle_cut_ok))" end),
                                   (if $r.by_time.ok then empty else "by_time vs \($r.by_time.reference // "no by_tag at the cut") (" + ([ (if $r.by_time.counts.ok then empty else "counts \($r.by_time.counts.by_time) vs \($r.by_time.counts.by_tag_at_cut), allowed 0..\($r.by_time.counts.max_settle_after_cut) more" end), (quantiles[] as [$n, $q, $tq] | $r.by_time[$n] | select(.ok|not) | "\($n) \(.remote_write) vs " + (if $r.by_time.reference == "published" then "\(.published)" else "\(.by_tag_at_cut) (published \(.published))" end)) ] | join(", ")) + ")" end) ] | join("; ")) ]},
-     cross_run:{rungs:$run, agrees:(($cmp|length) > 0 and all($cmp[]; .ok)),
+     cross_run:{rungs:$run, agrees:(if ($cmp|length) == 0 then null else all($cmp[]; .ok) end),
                 compared:([ $run[] | select(.status == "compared") ] | length),
+                below_floor:([ $run[] | select(.status == "below per-process floor") ] | length),
                 no_counterpart:([ $run[] | select(.status == "no counterpart") ] | length)},
      single_process_cpu_us_per_request:((.xcost // [])[0].cpu_us_per_request // null)}
   | . + {equivalent:(.same_requests.equivalent and .same_requests.accounting_ok)}

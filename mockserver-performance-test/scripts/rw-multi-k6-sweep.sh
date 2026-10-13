@@ -185,6 +185,10 @@ RTOL_ACHIEVED="${PERF_RW_CROSSRUN_TOL_ACHIEVED:-0.02}"
 RTOL_P50="${PERF_RW_CROSSRUN_TOL_P50:-0.20}"
 RTOL_P95="${PERF_RW_CROSSRUN_TOL_P95:-0.35}"
 RTOL_P99="${PERF_RW_CROSSRUN_TOL_P99:-0.60}"
+# cross_run judges only rungs where each main-phase k6 offers at least this rate (0: every rung);
+# below it a process's own rate moves latency, so the arms are not the same regime.
+RTOL_MIN_PP="${PERF_RW_CROSSRUN_MIN_PER_PROC_RPS:-8000}"
+[[ "$RTOL_MIN_PP" =~ ^(0|[1-9][0-9]{0,6})$ ]] || { echo ":x: PERF_RW_CROSSRUN_MIN_PER_PROC_RPS='$RTOL_MIN_PP' must be a whole number of requests per second from 0" >&2; exit 2; }
 
 # Target: launch a pinned SUT (default) or drive an existing one on an existing
 # docker network (perf-test-run.sh passes its main SUT, so both methods measure it).
@@ -989,10 +993,11 @@ cross_input() {
     --argjson xcost "$xcost" \
     --argjson t50 "$XTOL_P50" --argjson t95 "$XTOL_P95" --argjson t99 "$XTOL_P99" --argjson abs "$XTOL_ABS_MS" \
     --argjson push "$PUSH_S" --argjson wtol "$WINDOW_TOL" \
-    --argjson ra "$RTOL_ACHIEVED" --argjson r50 "$RTOL_P50" --argjson r95 "$RTOL_P95" --argjson r99 "$RTOL_P99" '
+    --argjson ra "$RTOL_ACHIEVED" --argjson r50 "$RTOL_P50" --argjson r95 "$RTOL_P95" --argjson r99 "$RTOL_P99" \
+    --argjson rpp "$RTOL_MIN_PP" '
     {live:($live == "true"), pub:$pub[0], bytime:$bytime[0], bytag:$bytag[0], bytagcut:$tagcut[0], main:$main[0], xcost:$xcost,
      tol:{p50:$t50, p95:$t95, p99:$t99, abs_ms:$abs, push_s:$push, window_tol:$wtol,
-          cross_run:{achieved_ratio:$ra, p50:$r50, p95:$r95, p99:$r99}}}'
+          cross_run:{achieved_ratio:$ra, p50:$r50, p95:$r95, p99:$r99, min_per_process_rps:$rpp}}}'
 }
 # by_tag (exactly the published requests) from each process's settle cut on: the requests the
 # time cut should hold. A failed query fails rw_prometheus_queries_ok; a rung with no cut gets
@@ -1467,9 +1472,14 @@ fi
 # cross_run is report-only (two separate runs), so it gates nothing, but it is not left silent.
 if [ "$(jq -r '.cross_run.agrees | if . == null then "null" else tostring end' <<<"$CROSS" 2>/dev/null)" = false ]; then
   echo "WARNING: rw-multi-k6 cross_run (report-only, not a gate): the N-process ladder disagrees with the single-process cross-check run beyond the run-to-run tolerances ($(jq -c '.tolerances.cross_run' <<<"$CROSS" 2>/dev/null)); single vs multi per rung:" >&2
-  jq -r '(.cross_run.rungs // [])[] | select(.status != "no counterpart" and .ok != true)
+  jq -r '(.cross_run.rungs // [])[] | select((.status == "compared" or .status == "incomplete") and .ok != true)
     | "    \(.offered_rps) rps [\(.status); outside: \([ (if .achieved_ratio.ok then empty else "achieved" end), (if .latency.p50.ok then empty else "p50" end), (if .latency.p95.ok then empty else "p95" end), (if .latency.p99.ok then empty else "p99" end) ] | join(","))]: achieved/offered \(.achieved_ratio.single) vs \(.achieved_ratio.multi); p50 \(.latency.p50.published) vs \(.latency.p50.remote_write) ms; p95 \(.latency.p95.published) vs \(.latency.p95.remote_write) ms; p99 \(.latency.p99.published) vs \(.latency.p99.remote_write) ms"' <<<"$CROSS" >&2 || true
   [ "$(jq -r '.cross_run.compared // 0' <<<"$CROSS" 2>/dev/null)" != 0 ] || echo "    no rung had a single-process counterpart to compare" >&2
+fi
+if [ "$(jq -r '.cross_run.below_floor // 0' <<<"$CROSS" 2>/dev/null)" != 0 ]; then
+  echo "--- rw-multi-k6 cross_run: $(jq -r '.cross_run.below_floor' <<<"$CROSS") rung(s) below ${RTOL_MIN_PP} rps per process reported, not judged (PERF_RW_CROSSRUN_MIN_PER_PROC_RPS); agrees=$(jq -r '.cross_run.agrees | if . == null then "n/a" else tostring end' <<<"$CROSS"):" >&2
+  jq -r '.cross_run.rungs[] | select(.status == "below per-process floor")
+    | "    \(.offered_rps) rps (\(.per_process_rps) per process): p50 \(.latency.p50.published) vs \(.latency.p50.remote_write) ms; p95 \(.latency.p95.published) vs \(.latency.p95.remote_write) ms; p99 \(.latency.p99.published) vs \(.latency.p99.remote_write) ms"' <<<"$CROSS" >&2 || true
 fi
 
 # --- validity (fail closed) ---------------------------------------------------------

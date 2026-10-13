@@ -621,6 +621,15 @@ for bad_env in PERF_RW_GC_MASK_MIN_QUIET_S=0 PERF_RW_GC_MASK_MIN_QUIET_S=2.5 PER
 done
 run_h PERF_RW_TEST_RESOLVE_ONLY=true PERF_RW_K6_GOMEMLIMIT=off PERF_RW_GC_MASK_MIN_QUIET_S=5
 check "accepted: PERF_RW_GC_MASK_MIN_QUIET_S=5" "0" "$RC"
+for bad_env in PERF_RW_CROSSRUN_MIN_PER_PROC_RPS=some PERF_RW_CROSSRUN_MIN_PER_PROC_RPS=-1 \
+    PERF_RW_CROSSRUN_MIN_PER_PROC_RPS=8000.5 PERF_RW_CROSSRUN_MIN_PER_PROC_RPS=08000; do
+  run_h PERF_RW_TEST_RESOLVE_ONLY=true PERF_RW_K6_GOMEMLIMIT=off "$bad_env"
+  check "rejected at startup: $bad_env" "2|yes" "$RC|$(has 'PERF_RW_CROSSRUN_MIN_PER_PROC_RPS' "$(cat "$T/err")")"
+done
+for good_env in PERF_RW_CROSSRUN_MIN_PER_PROC_RPS=0 PERF_RW_CROSSRUN_MIN_PER_PROC_RPS=12000; do
+  run_h PERF_RW_TEST_RESOLVE_ONLY=true PERF_RW_K6_GOMEMLIMIT=off "$good_env"
+  check "accepted: $good_env" "0" "$RC"
+done
 for bad_env in PERF_RW_HEADLINE_RULE=gc_masked PERF_RW_HEADLINE_RULE=unmasked PERF_RW_HEADLINE_RULE=masked; do
   run_h PERF_RW_TEST_RESOLVE_ONLY=true PERF_RW_K6_GOMEMLIMIT=off "$bad_env"
   check "rejected at startup: $bad_env" "2|yes" "$RC|$(has 'PERF_RW_HEADLINE_RULE' "$(cat "$T/err")")"
