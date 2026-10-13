@@ -49,6 +49,7 @@ import static org.slf4j.event.Level.*;
         "  mockserver proxy --to https://api.example.com",
         "  mockserver openapi ./petstore.yaml -p 1080",
         "  mockserver import ./expectations.json -p 1080",
+        "  mockserver lint ./expectations.json",
         "  mockserver demo -p 1080",
         "  mockserver -p 1080",
         "",
@@ -60,6 +61,7 @@ import static org.slf4j.event.Level.*;
         Main.ProxyCommand.class,
         Main.OpenApiCommand.class,
         Main.ImportCommand.class,
+        Main.LintCommand.class,
         Main.DemoCommand.class,
         Main.VersionCommand.class,
         CommandLine.HelpCommand.class,
@@ -292,7 +294,7 @@ public class Main {
         if (arguments == null || arguments.length == 0) {
             return new String[]{"run"};
         }
-        Set<String> subcommands = Set.of("run", "ui", "proxy", "openapi", "import", "demo", "version", "help");
+        Set<String> subcommands = Set.of("run", "ui", "proxy", "openapi", "import", "lint", "demo", "version", "help");
         // Top-level help/version flags should NOT be prepended with "run"
         Set<String> topLevelFlags = Set.of("--help", "-h", "--version", "-V");
         String first = arguments[0];
@@ -889,6 +891,102 @@ public class Main {
                 String reason = isNotBlank(throwable.getMessage()) ? throwable.getMessage() : throwable.getClass().getSimpleName();
                 systemErr.println(NEW_LINE + "ERROR:  could not import expectations from " + file + " into " + host + ":" + port + " — " + reason + NEW_LINE);
                 systemErr.flush();
+            }
+        }
+    }
+
+    @Command(
+        name = "lint",
+        description = "Check expectation JSON files for expectations that can never match or will not match as written. Advisory: nothing is changed, and no server is needed.",
+        mixinStandardHelpOptions = true
+    )
+    static class LintCommand implements Runnable, CommandLine.IExitCodeGenerator {
+
+        @Parameters(arity = "1..*", paramLabel = "<file>", description = "JSON file(s), each a single expectation or an array of expectations. Several files are checked together, in the order given, as --init loads them.")
+        List<String> files;
+
+        @Option(names = "--json", description = "Print the report as JSON, in the PUT /mockserver/lint format, with each issue's file.")
+        boolean json;
+
+        @Option(names = "--strict", description = "Also exit with status 1 when a warning is found (by default only an error, such as an invalid expectation or an unreadable file, does).")
+        boolean strict;
+
+        // an invalid entry is reported in the lint output, so the serializer's own log would only repeat it
+        private static final MockServerLogger QUIET_LOGGER = new MockServerLogger(Main.class) {
+            @Override
+            public void logEvent(LogEntry logEntry) {
+            }
+        };
+
+        private int exitCode = 0;
+
+        @Override
+        public int getExitCode() {
+            return exitCode;
+        }
+
+        @Override
+        public void run() {
+            com.fasterxml.jackson.databind.ObjectMapper objectMapper = org.mockserver.serialization.ObjectMapperFactory.createObjectMapper();
+            List<com.fasterxml.jackson.databind.JsonNode> entries = new ArrayList<>();
+            List<String> entryFiles = new ArrayList<>();
+            List<Integer> entryIndexes = new ArrayList<>();
+            for (String file : files) {
+                try {
+                    com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(org.mockserver.file.FileReader.readFileFromClassPathOrPath(file));
+                    if (root == null || !(root.isArray() || root.isObject())) {
+                        throw new IllegalArgumentException("expected an expectation or an array of expectations");
+                    }
+                    List<com.fasterxml.jackson.databind.JsonNode> fileEntries = new ArrayList<>();
+                    if (root.isArray()) {
+                        root.forEach(fileEntries::add);
+                    } else {
+                        fileEntries.add(root);
+                    }
+                    for (int i = 0; i < fileEntries.size(); i++) {
+                        entries.add(fileEntries.get(i));
+                        entryFiles.add(file);
+                        entryIndexes.add(i);
+                    }
+                } catch (Throwable throwable) {
+                    exitCode = 1;
+                    String reason = isNotBlank(throwable.getMessage()) ? throwable.getMessage() : throwable.getClass().getSimpleName();
+                    systemErr.println("ERROR:  could not read expectations from " + file + " — " + reason);
+                    systemErr.flush();
+                }
+            }
+            if (exitCode != 0) {
+                return;
+            }
+            com.fasterxml.jackson.databind.node.ObjectNode report = org.mockserver.mock.ExpectationLinter.lintJsonEntries(objectMapper, new org.mockserver.serialization.ExpectationSerializer(QUIET_LOGGER), entries);
+            for (com.fasterxml.jackson.databind.JsonNode issue : report.path("issues")) {
+                com.fasterxml.jackson.databind.node.ObjectNode issueNode = (com.fasterxml.jackson.databind.node.ObjectNode) issue;
+                int index = issue.path("index").asInt();
+                issueNode.put("file", entryFiles.get(index));
+                issueNode.put("index", entryIndexes.get(index));
+                if (issue.has("relatedIndex")) {
+                    int related = issue.path("relatedIndex").asInt();
+                    issueNode.put("relatedFile", entryFiles.get(related));
+                    issueNode.put("relatedIndex", entryIndexes.get(related));
+                }
+            }
+            if (json) {
+                systemOut.println(report.toPrettyString());
+            } else {
+                for (com.fasterxml.jackson.databind.JsonNode issue : report.path("issues")) {
+                    systemOut.println(issue.path("file").asText() + " [" + issue.path("index").asInt() + "] " + issue.path("summary").asText() + NEW_LINE
+                        + "  " + issue.path("severity").asText() + " " + issue.path("rule").asText() + ": " + issue.path("message").asText()
+                        + (issue.has("relatedFile") ? NEW_LINE + "  see " + issue.path("relatedFile").asText() + " [" + issue.path("relatedIndex").asInt() + "] " + issue.path("relatedSummary").asText() : ""));
+                }
+                systemOut.println("checked " + report.path("expectationsChecked").asInt() + " expectation(s) in " + files.size() + " file(s): "
+                    + report.path("errorCount").asInt() + " error(s), " + report.path("warningCount").asInt() + " warning(s), " + report.path("infoCount").asInt() + " info"
+                    + (report.path("openApiExpectationsSkipped").asInt() > 0 ? ", " + report.path("openApiExpectationsSkipped").asInt() + " OpenAPI expectation(s) not checked" : "")
+                    + (report.path("shadowCheckTruncated").asBoolean() ? "; the shadowing check stopped at its budget" : "")
+                    + (report.path("issuesTruncated").asBoolean() ? "; only the first " + report.path("issueCount").asInt() + " issues are listed" : ""));
+            }
+            systemOut.flush();
+            if (report.path("errorCount").asInt() > 0 || strict && report.path("warningCount").asInt() > 0) {
+                exitCode = 1;
             }
         }
     }

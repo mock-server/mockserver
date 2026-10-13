@@ -952,6 +952,141 @@ echo (string) $response-&gt;getBody();</code></pre></div>
 
 <p>AI assistants can ask the same question through the <a href="/mock_server/ai_mcp_tools.html#explain_request">MCP <code>explain_request</code> tool</a>.</p>
 
+<a id="lint_expectations" class="anchor" href="#lint_expectations">&nbsp;</a>
+
+<h2>Linting Expectations</h2>
+
+<p>Some expectations can never match, however the request is sent: one evaluated earlier catches every request it would match, a path is missing its leading <code>/</code>, or <code>times</code> allows 0 matches. <strong>Lint</strong> finds these before you spend time debugging a <code>404</code>. It is advisory: it never rejects or changes an expectation.</p>
+
+<p>Lint runs in three places:</p>
+<ul>
+    <li><strong>When you create expectations</strong> &mdash; <code>PUT /mockserver/expectation</code> (and every client's create or upsert call) still stores the expectations, but when a quick check finds a problem the response carries an <code>x-mockserver-lint-warnings</code> header with the number of problems, and each one is written to the log as a <code>WARN</code>. This quick check looks at each expectation on its own; it does not look for shadowing.</li>
+    <li><strong>On demand</strong> &mdash; <code>PUT /mockserver/lint</code> with an empty body checks all your active expectations, including for shadowing. Send expectations in the body (one, or an array) to check them <em>without</em> storing them. It only reads, so a client with the <code>read</code> role may call it.</li>
+    <li><strong>From the command line</strong> &mdash; <code>mockserver lint expectations.json</code> checks expectation files with no server running (see <a href="/mock_server/running_mock_server.html#command_line_subcommands">command line subcommands</a>).</li>
+</ul>
+
+<table class="table table-striped">
+    <thead>
+    <tr><th>Rule</th><th>What it finds</th></tr>
+    </thead>
+    <tbody>
+    <tr><td><code>SHADOWED</code></td><td>An expectation evaluated earlier (higher priority, or the same priority and created earlier) matches every request this one matches and never runs out, so this one is never used. Give this one a higher priority, or make the other more specific.</td></tr>
+    <tr><td><code>TIMES_ZERO</code>, <code>TIME_TO_LIVE_ZERO</code>, <code>PERCENTAGE_ZERO</code></td><td><code>times</code>, <code>timeToLive</code> or <code>percentage</code> is 0, so the expectation is never served</td></tr>
+    <tr><td><code>UNREACHABLE_RESPONSES</code></td><td>A list of responses that <code>times</code> never reaches: with <code>times</code> of 2, the third response is never sent</td></tr>
+    <tr><td><code>PATH_MISSING_LEADING_SLASH</code></td><td><code>users/1</code> instead of <code>/users/1</code></td></tr>
+    <tr><td><code>PATH_INCLUDES_SCHEME_AND_HOST</code></td><td><code>https://api.example.com/users</code>: the path is matched without the scheme and host</td></tr>
+    <tr><td><code>PATH_INCLUDES_QUERY_STRING</code></td><td><code>/search?q=shoes</code>: use <code>queryStringParameters</code> instead</td></tr>
+    <tr><td><code>PATH_GLOB_WILDCARD</code></td><td><code>/api/*</code>: paths are regular expressions, so use <code>/api/.*</code></td></tr>
+    <tr><td><code>PATH_TEMPLATE_WITHOUT_PATH_PARAMETERS</code></td><td><code>/users/{id}</code> without <code>pathParameters</code>, which matches only the literal text <code>{id}</code></td></tr>
+    <tr><td><code>METHOD_TYPO</code>, <code>HEADER_NAME_TYPO</code></td><td>A method or header name close to a standard one, such as <code>GTE</code> for <code>GET</code>, <code>Authorisation</code> for <code>Authorization</code> or <code>content_type</code> for <code>Content-Type</code></td></tr>
+    <tr><td><code>STRICT_JSON_BODY_WITH_ARRAYS</code></td><td>Information only: <code>STRICT</code> JSON matching of a body with arrays needs the same order and no extra items</td></tr>
+    <tr><td><code>INVALID_EXPECTATION</code>, <code>DUPLICATE_ID</code></td><td>When checking expectations you send or files: an entry that would be rejected, or two entries with the same <code>id</code> (only the last is kept)</td></tr>
+    </tbody>
+</table>
+
+<p>The shadowing check is careful: it reports an expectation only when it can prove the earlier one always wins, so it may miss some cases but does not report an expectation that can still be used. It never fetches an OpenAPI specification; OpenAPI entries in the body are skipped and counted. To keep it quick on very large expectation sets it compares at most 100,000 pairs and stops a regular expression that takes too long; <code>shadowCheckTruncated</code> is <code>true</code> when either limit was reached.</p>
+
+<button id="button_troubleshoot_lint_expectations" class="accordion">lint the active expectations</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel"><pre class="prettyprint lang-java code"><code class="code">// no typed method in the Java client - call the REST endpoint
+java.net.http.HttpResponse&lt;String&gt; response = java.net.http.HttpClient.newHttpClient().send(
+    java.net.http.HttpRequest.newBuilder(java.net.URI.create("http://localhost:1080/mockserver/lint"))
+        .PUT(java.net.http.HttpRequest.BodyPublishers.noBody())
+        .build(),
+    java.net.http.HttpResponse.BodyHandlers.ofString());
+System.out.println(response.body());</code></pre></div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel"><pre class="prettyprint lang-javascript code"><code class="code">// no typed method in the Node client - call the REST endpoint
+const response = await fetch("http://localhost:1080/mockserver/lint", { method: "PUT" });
+console.log(await response.json());</code></pre></div>
+    <button class="accordion inner">Python</button>
+    <div class="panel"><pre class="prettyprint lang-python code"><code class="code">import requests
+
+# no typed method - call the REST endpoint
+response = requests.put("http://localhost:1080/mockserver/lint")
+print(response.json())</code></pre></div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel"><pre class="prettyprint lang-ruby code"><code class="code">require 'net/http'
+
+# no typed method - call the REST endpoint
+uri = URI('http://localhost:1080/mockserver/lint')
+response = Net::HTTP.start(uri.host, uri.port) { |http| http.request(Net::HTTP::Put.new(uri)) }
+puts response.body</code></pre></div>
+    <button class="accordion inner">Go</button>
+    <div class="panel"><pre class="prettyprint lang-go code"><code class="code">import (
+    "log"
+    "net/http"
+)
+
+// no typed method - call the REST endpoint
+req, _ := http.NewRequest("PUT", "http://localhost:1080/mockserver/lint", nil)
+resp, err := http.DefaultClient.Do(req)
+if err != nil {
+    log.Fatal(err)
+}
+defer resp.Body.Close()</code></pre></div>
+    <button class="accordion inner">.NET</button>
+    <div class="panel"><pre class="prettyprint lang-csharp code"><code class="code">using System.Net.Http;
+
+// no typed method - call the REST endpoint
+using var http = new HttpClient();
+var response = await http.PutAsync("http://localhost:1080/mockserver/lint", null);
+Console.WriteLine(await response.Content.ReadAsStringAsync());</code></pre></div>
+    <button class="accordion inner">Rust</button>
+    <div class="panel"><pre class="prettyprint lang-rust code"><code class="code">use reqwest::blocking::Client;
+
+// no typed method - call the REST endpoint
+let report = Client::new()
+    .put("http://localhost:1080/mockserver/lint")
+    .send()
+    .unwrap()
+    .text()
+    .unwrap();
+println!("{}", report);</code></pre></div>
+    <button class="accordion inner">PHP</button>
+    <div class="panel"><pre class="prettyprint lang-php code"><code class="code">use GuzzleHttp\Client;
+
+// no typed method - call the REST endpoint
+$http = new Client();
+$response = $http-&gt;put('http://localhost:1080/mockserver/lint');
+echo (string) $response-&gt;getBody();</code></pre></div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel"><pre class="prettyprint code"><code class="code"># lint the active expectations
+curl -X PUT "http://localhost:1080/mockserver/lint"
+
+# lint expectations without storing them
+curl -X PUT "http://localhost:1080/mockserver/lint" -d '[
+    { "httpRequest": { "method": "GET", "path": "/users/.*" }, "httpResponse": { "statusCode": 200 } },
+    { "httpRequest": { "method": "GET", "path": "/users/1" }, "httpResponse": { "statusCode": 404 } }
+]'</code></pre></div>
+</div>
+
+<p>For the second <code>curl</code> above, the second expectation can never be used, because the first one is evaluated first and matches every <code>GET /users/1</code>:</p>
+
+<pre class="prettyprint lang-json code"><code class="code">{
+  "source": "request",
+  "expectationsChecked": 2,
+  "issueCount": 1,
+  "errorCount": 0,
+  "warningCount": 1,
+  "infoCount": 0,
+  "shadowCheckTruncated": false,
+  "issues": [
+    {
+      "rule": "SHADOWED",
+      "severity": "WARNING",
+      "index": 1,
+      "summary": "GET /users/1",
+      "message": "never matches: GET /users/.* is evaluated first (same priority, created earlier), matches every request this one matches, and never runs out (...)",
+      "relatedIndex": 0,
+      "relatedSummary": "GET /users/.*"
+    }
+  ]
+}</code></pre>
+
+<p>Fields are shortened here. With an empty body, issues name the stored expectation's <code>expectationId</code> and its <code>position</code> in the order MockServer evaluates expectations (from 1); with expectations in the body, <code>index</code> is the entry's place in the array (from 0).</p>
+
 <a id="typed_log_entries" class="anchor" href="#typed_log_entries">&nbsp;</a>
 
 <h2>Typed Log Entry Retrieval</h2>

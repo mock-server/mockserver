@@ -598,6 +598,11 @@ public class ExampleSpringTestListenerTestWithDnsPortInjection {
 			<td><code class="code inline">mockserver import ./expectations.json -p 1080</code></td>
 		</tr>
 		<tr>
+			<td><span class="inline_code">lint</span></td>
+			<td>Check expectation files for expectations that can never match or will not match as written, with no server needed</td>
+			<td><code class="code inline">mockserver lint ./expectations.json</code></td>
+		</tr>
+		<tr>
 			<td><span class="inline_code">demo</span></td>
 			<td>Start MockServer pre-loaded with a small set of example expectations and print a getting-started URL and sample <span class="inline_code">curl</span> &mdash; the fastest way to try MockServer</td>
 			<td><code class="code inline">mockserver demo -p 1080</code></td>
@@ -790,6 +795,39 @@ public class ExampleSpringTestListenerTestWithDnsPortInjection {
 	</tbody>
 </table>
 
+<h4>Options for <span class="inline_code">lint</span></h4>
+
+<p>The <span class="inline_code">lint</span> subcommand checks expectation files for mistakes that stop an expectation matching, such as an expectation that another one always matches first, a path without a leading <span class="inline_code">/</span>, or <span class="inline_code">times</span> of 0 (see <a href="/mock_server/troubleshooting_matching.html#lint_expectations">Linting Expectations</a> for every rule). It does not start or contact a server and never changes the files. Several files are checked together, in the order given, so an expectation in one file that hides one in another is found. Each finding names its file and its position in that file, counting from 0.</p>
+
+<p>Lint is advisory, so the command exits with status <span class="inline_code">0</span> even when it finds warnings, unless you pass <span class="inline_code">--strict</span>. It exits with <span class="inline_code">1</span> when a file cannot be read or contains an invalid expectation.</p>
+
+<table class="comparison_table">
+	<thead>
+		<tr>
+			<th>Argument / Option</th>
+			<th>Required</th>
+			<th>Description</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td><span class="inline_code">&lt;file&gt;...</span></td>
+			<td>Yes (positional)</td>
+			<td>One or more JSON files, each containing a single expectation or an array of expectations.</td>
+		</tr>
+		<tr>
+			<td><span class="inline_code">--json</span></td>
+			<td>No</td>
+			<td>Print the report as JSON (the <span class="inline_code">PUT /mockserver/lint</span> format, with each finding's <span class="inline_code">file</span>) instead of text.</td>
+		</tr>
+		<tr>
+			<td><span class="inline_code">--strict</span></td>
+			<td>No</td>
+			<td>Also exit with status <span class="inline_code">1</span> when a warning is found, for example to fail a CI step.</td>
+		</tr>
+	</tbody>
+</table>
+
 <h4>Options for <span class="inline_code">demo</span></h4>
 
 <p>The <span class="inline_code">demo</span> subcommand starts MockServer pre-loaded with a small set of example expectations (<span class="inline_code">GET /hello</span> and <span class="inline_code">GET /users/{id}</span>) and prints a getting-started URL, the dashboard URL, and a sample <span class="inline_code">curl</span> command. It is the fastest way to see MockServer responding to requests without writing any expectations first. It accepts the same <span class="inline_code">-p, --port</span> (default <span class="inline_code">1080</span>), <span class="inline_code">-l, --log-level</span>, and <span class="inline_code">-D&lt;key&gt;=&lt;value&gt;</span> options as <span class="inline_code">run</span>. After starting, try <span class="inline_code">curl http://localhost:1080/hello</span>.</p>
@@ -812,6 +850,9 @@ public class ExampleSpringTestListenerTestWithDnsPortInjection {
 
 <p>Load expectations from a JSON file into a server that is already running on port 1080:</p>
 <pre><code class="code">java -jar mockserver-netty-no-dependencies-{{ site.mockserver_version }}.jar import ./expectations.json -p <span class="numeric_literal">1080</span></code></pre>
+
+<p>Check expectation files before loading them, failing on any warning:</p>
+<pre><code class="code">java -jar mockserver-netty-no-dependencies-{{ site.mockserver_version }}.jar lint --strict ./expectations.json ./more-expectations.json</code></pre>
 
 <p>Start a demo server pre-loaded with example expectations (then try <span class="inline_code">curl http://localhost:1080/hello</span>):</p>
 <pre><code class="code">java -jar mockserver-netty-no-dependencies-{{ site.mockserver_version }}.jar demo -p <span class="numeric_literal">1080</span></code></pre>

@@ -1,0 +1,46 @@
+meta {
+  name: lint expectations for ones that can never match or will not match as written
+  type: http
+  seq: 1
+}
+
+put {
+  url: {{baseUrl}}/mockserver/lint
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  [
+    {
+      "httpRequest": {
+        "method": "GET",
+        "path": "/api/users/.*"
+      },
+      "httpResponse": {
+        "statusCode": 200
+      }
+    },
+    {
+      "httpRequest": {
+        "method": "GET",
+        "path": "/api/users/1"
+      },
+      "httpResponse": {
+        "statusCode": 404
+      }
+    }
+  ]
+}
+
+docs {
+  Checks expectations for mistakes that stop them matching: a shadowed expectation (one evaluated earlier always matches first and never runs out), times or a time to live that allow no match, a percentage of 0, sequential responses that times never reaches, a path without a leading slash, with a scheme and host, with a query string, with a glob * or with a {name} template but no pathParameters, a misspelt method or header name, and (information only) STRICT JSON matching of a body with arrays. With expectations in the body (one or an array) it lints those without storing them; OpenAPI entries are skipped and invalid entries are reported as INVALID_EXPECTATION. With an empty body it lints the active stored expectations in the order they are evaluated. Advisory only: nothing is rejected or changed. The shadowing check compares at most 100,000 pairs and stops a regular expression that backtracks too long; shadowCheckTruncated says when either limit was reached.
+  
+  optional; expectations to lint without storing them. When empty, the active stored expectations are linted
+  
+  Full API reference: https://www.mock-server.com/mock_server/mockserver_clients.html
+}

@@ -78,6 +78,12 @@ flowchart LR
   request with the serving engines and limits, and reports the result, the failure with its template
   line and column and a hint, and warnings for unresolved Velocity references and `scenario.set`. A
   failing JavaScript template's log message now gives the template line and column too.
+- **Expectation lint (A8):** `PUT /mockserver/lint` lints the active expectations, or a body of
+  expectations without storing them, and `mockserver lint <file>...` lints files offline: shadowed
+  expectations, `times` / time to live / percentage of 0, unreachable sequential responses, five path
+  mistakes, method and header-name typos, and STRICT JSON arrays (info). `PUT /mockserver/expectation`
+  runs the per-expectation rules and reports them in `x-mockserver-lint-warnings` and a WARN log; the
+  O(n²) shadowing check is on demand only, capped at 100,000 pairs and a regex step budget.
 - **Forward-failure causes:** a failed forward's 502 names a TLS failure, an HTTP/2 error, a
   client-side set-up failure or an undecodable upstream response (`upstreamFailureReason`,
   `7a8b8c424`, extended to binary and wss in `d089350d4`), and a connection that could not be made
@@ -93,14 +99,15 @@ flowchart LR
   shows each value and its source, credentials redacted, and lists the unrecognised keys by name
   with their suggestions.
 
-**Gaps:** expectation lint and
-shadowing detection.
+**Gaps:** lint in the dashboard and at initialisation-file load.
 
 ## Items
 
 | # | Problem → proposal | Cost | Performance reasoning | Effort | Risks | Priority |
 |---|---|---|---|---|---|---|
-| A8 | Unreachable or suspicious expectations go unnoticed → lint: shadowed expectations, regex paths that look literal, missing leading slash, STRICT array bodies, `times=0`; surfaced as PUT `warnings`, in the UI, and via `mockserver lint file.json` | (iv) / (iii) | Control plane only; the pairwise shadowing check is O(n²), so on demand, not on every PUT | M | Advisory only, never rejecting | P1 |
+| A8b | Lint results are REST, CLI and log only → a dashboard "Lint" view over `PUT /mockserver/lint` (rule, severity, message, a link to the shadowing expectation), and a badge from `x-mockserver-lint-warnings` when the dashboard creates an expectation | (iii) | On demand; calls the existing endpoint | S | Keep clear of B3's Explain Unmatched work | P2 |
+| A8d | `control_plane_authorisation.html` lists read operations by example and does not name `lint` (left out of A8 to avoid a conflict with A5's edit of the adjacent mutate row) → add `lint` (and `explain` if still missing) to the read row | (iv) | Docs only | S | None | P3 |
+| A8c | Expectations loaded from `initializationJsonPath` (and `--watch` reloads) never pass through `PUT /mockserver/expectation`, so they get no lint warnings → run `ExpectationLinter`'s per-expectation rules (and optionally the budgeted shadowing check) once per load and log a WARN summary | (iv) | Once per file load; linear rules, shadowing within its 100,000-pair budget | S | A large initialiser must not log thousands of lines: cap as `adviseOnUpsert` does | P2 |
 | A9b | Response and sequence verification failures get no summary block → append the same `verification summary:` (counts, closest misses, late arrivals) to response-aware and sequence failures, and say how many recorded requests matched the fields but had the other disposition | (iii) | Failure path only; reuse the request summary's 500-request ranking budget | S | Append only; keep the "left out when it adds nothing" rule | P3 |
 | A11 | The effective-config view reports `(default)` for a property at its default, not the default's value → expose each typed getter's built-in default (one table the getters and the view both read) so the view can show effective and default side by side | (iv) | Startup / on demand only | M | Some defaults are derived (heap size, another property); show the derivation rather than a guessed number | P3 |
 | B5 | Optional plain-language summary of explain results from a configured LLM (`?narrate=true`) | (iii) | On demand, asynchronous, timeout-bounded, never inline in a 404 | S | Off by default; label as AI-generated; always return the deterministic facts too | P3 |
@@ -133,7 +140,7 @@ shadowing detection.
 1. **Wave 0 — hygiene and performance:** A2b, A2c, C1b. (A2 and C1 landed.)
 2. **Wave 1 — explain engine:** done (A3, A10 and B1 landed).
 3. **Wave 2 — failure classes:** A6, each with an MCP tool (see B1b and B1c) and a dashboard entry. (A4 landed; A5 landed REST-only, and A5b adds its dashboard entry.)
-4. **Wave 3 — fixes:** A8 (including the CLI), A9b. (B2 and B3 landed.)
+4. **Wave 3 — fixes:** A9b, A8b, A8c. (B2, B3 and A8, including the CLI, landed.)
 5. **Wave 4 — optional:** B5, A11. (B6 and B7 landed.)
 
 ## Performance rules for every item

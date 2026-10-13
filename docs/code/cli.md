@@ -45,6 +45,7 @@ flowchart TD
 | `proxy` | `Main.ProxyCommand` | Syntactic sugar — starts MockServer with `--proxy-to` set, delegates to `RunCommand.run()` |
 | `openapi` | `Main.OpenApiCommand` | Start MockServer, pre-load expectations from an OpenAPI spec; delegates to `RunCommand.run()` |
 | `import` | `Main.ImportCommand` | Load expectations from a JSON file into an **already-running** MockServer (connects as a `MockServerClient`; does not start a server) |
+| `lint` | `Main.LintCommand` | Check expectation JSON files offline (no server) for expectations that can never match or will not match as written, using `ExpectationLinter` from core; advisory, it changes nothing (see [`lint` subcommand](#lint-subcommand)) |
 | `demo` | `Main.DemoCommand` | Start MockServer (default port 1080), seed a small set of example expectations (`GET /hello`, `GET /users/{id}`) via `MockServerClient`, then print a getting-started URL, the dashboard URL, and a sample `curl`; delegates to `RunCommand.run()` then `seedDemoExpectations()` / `printDemoInstructions()` (only when the server actually started) |
 | `version` | `Main.VersionCommand` | Print `Version.getVersion()` and exit |
 | `help` | `CommandLine.HelpCommand` (picocli built-in, registered in `@Command(subcommands = {...})`) | Print usage for the top command or any subcommand — `mockserver help` or `mockserver help <subcommand>` |
@@ -120,6 +121,18 @@ Unlike every other subcommand, `import` does **not** start a server — it loads
 
 It deliberately never calls `MockServerClient.stop()`/`close()`: that method sends a shutdown request to the **remote** server (and, for an in-JVM client, publishes a `STOP` event on the per-port `MockServerEventBus`), which must never happen when only loading expectations. The client's event-loop threads are daemon threads, so the short-lived CLI process exits cleanly without an explicit close. On any failure (missing/invalid file, unreachable server) it prints a clean `ERROR:` line and reports exit code `1` via `CommandLine.IExitCodeGenerator`, so it does not fall into the top-level execution-exception handler that prints the legacy `run` usage blob.
 
+### `lint` subcommand
+
+`lint` does not start or contact a server. It reads each file with `FileReader.readFileFromClassPathOrPath`, takes the entries of every file (an object or an array) in the order given, and passes them to `ExpectationLinter.lintJsonEntries`, the same code `PUT /mockserver/lint` runs on a body, so expectations spread across files are checked for shadowing together, as `--init` would load them. Each issue then gets its `file` and its `index` within that file (and `relatedFile` / `relatedIndex`). The serializer's own logger is silenced, because an invalid entry is already reported as `INVALID_EXPECTATION`.
+
+| Argument / Option | Notes |
+|---|---|
+| `<file>...` | One or more JSON files, each a single expectation or an array |
+| `--json` | Print the `PUT /mockserver/lint` report, with `file` on each issue, instead of text |
+| `--strict` | Exit `1` on any warning too |
+
+Exit code: `1` when a file cannot be read or parsed (reported as `ERROR:` on stderr, with no usage blob) or when an entry is invalid; with `--strict`, also on a warning; otherwise `0`, because lint is advisory.
+
 ### `version` subcommand
 
 No options. Prints `Version.getVersion()` and exits.
@@ -137,7 +150,7 @@ The logic (in `Main.preprocessArguments`):
 if args is empty                                        → return ["run"]
 if args[0] == "-help"                                   → rewrite args[0] to "--help"
 if args[0] == "-version"                                → rewrite args[0] to "--version"
-if args[0] ∈ {run, ui, proxy, openapi, import, demo, version, help} → return args unchanged
+if args[0] ∈ {run, ui, proxy, openapi, import, lint, demo, version, help} → return args unchanged
 if args[0] ∈ {--help, -h, --version, -V}                → return args unchanged
 otherwise                                                → return ["run"] + args
 ```

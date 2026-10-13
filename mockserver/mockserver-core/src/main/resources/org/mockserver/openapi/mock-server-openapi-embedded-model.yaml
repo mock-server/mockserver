@@ -83,6 +83,14 @@ paths:
       responses:
         '201':
           description: expectations created
+          headers:
+            x-mockserver-lint-warnings:
+              description: >-
+                present when the advisory per-expectation lint found problems in the expectations just created or
+                updated, which are stored unchanged; the number of problems, each also logged as a WARN. PUT
+                /mockserver/lint gives the full report, including shadowing
+              schema:
+                type: integer
           content:
             application/json:
               schema:
@@ -117,6 +125,141 @@ paths:
                 body: '{"users":[{"id":1,"name":"John Doe"}],"total":1}'
         description: expectation(s) to create
         required: true
+  /mockserver/lint:
+    put:
+      tags:
+        - troubleshooting
+      summary: lint expectations for ones that can never match or will not match as written
+      description: >-
+        Checks expectations for mistakes that stop them matching: a shadowed expectation (one evaluated earlier
+        always matches first and never runs out), times or a time to live that allow no match, a percentage of 0,
+        sequential responses that times never reaches, a path without a leading slash, with a scheme and host, with
+        a query string, with a glob * or with a {name} template but no pathParameters, a misspelt method or header
+        name, and (information only) STRICT JSON matching of a body with arrays. With expectations in the body (one
+        or an array) it lints those without storing them; OpenAPI entries are skipped and invalid entries are
+        reported as INVALID_EXPECTATION. With an empty body it lints the active stored expectations in the order
+        they are evaluated. Advisory only: nothing is rejected or changed. The shadowing check compares at most
+        100,000 pairs and stops a regular expression that backtracks too long; shadowCheckTruncated says when
+        either limit was reached.
+      responses:
+        '200':
+          description: lint report
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  source:
+                    type: string
+                    enum:
+                      - request
+                      - stored
+                  note:
+                    type: string
+                  expectationsChecked:
+                    type: integer
+                  openApiExpectationsSkipped:
+                    type: integer
+                    description: OpenAPI entries in the body, which are not linted (body source only)
+                  inactiveExpectationsSkipped:
+                    type: integer
+                    description: stored expectations whose times are used up or time to live has expired (stored source only)
+                  issueCount:
+                    type: integer
+                  errorCount:
+                    type: integer
+                  warningCount:
+                    type: integer
+                  infoCount:
+                    type: integer
+                  issuesTruncated:
+                    type: boolean
+                    description: true when more than 1,000 issues were found and the rest were left out
+                  pairComparisons:
+                    type: integer
+                  maxPairComparisons:
+                    type: integer
+                  shadowCheckTruncated:
+                    type: boolean
+                  issues:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        rule:
+                          type: string
+                          enum:
+                            - INVALID_EXPECTATION
+                            - DUPLICATE_ID
+                            - SHADOWED
+                            - TIMES_ZERO
+                            - TIME_TO_LIVE_ZERO
+                            - PERCENTAGE_ZERO
+                            - UNREACHABLE_RESPONSES
+                            - PATH_MISSING_LEADING_SLASH
+                            - PATH_INCLUDES_SCHEME_AND_HOST
+                            - PATH_INCLUDES_QUERY_STRING
+                            - PATH_GLOB_WILDCARD
+                            - PATH_TEMPLATE_WITHOUT_PATH_PARAMETERS
+                            - METHOD_TYPO
+                            - HEADER_NAME_TYPO
+                            - STRICT_JSON_BODY_WITH_ARRAYS
+                        severity:
+                          type: string
+                          enum:
+                            - ERROR
+                            - WARNING
+                            - INFO
+                        expectationId:
+                          type: string
+                        index:
+                          type: integer
+                          description: position of the entry in the body, from 0 (body source)
+                        position:
+                          type: integer
+                          description: position in the order the expectations are evaluated, from 1 (stored source)
+                        summary:
+                          type: string
+                        field:
+                          type: string
+                        message:
+                          type: string
+                        relatedExpectationId:
+                          type: string
+                          description: for SHADOWED the expectation that matches first; for DUPLICATE_ID the one that replaces it
+                        relatedIndex:
+                          type: integer
+                        relatedPosition:
+                          type: integer
+                        relatedSummary:
+                          type: string
+        '400':
+          description: the body is not JSON, or not an expectation or an array of expectations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Expectations"
+            example:
+              - httpRequest:
+                  method: GET
+                  path: /api/users/.*
+                httpResponse:
+                  statusCode: 200
+              - httpRequest:
+                  method: GET
+                  path: /api/users/1
+                httpResponse:
+                  statusCode: 404
+        description: optional; expectations to lint without storing them. When empty, the active stored expectations are linted
+        required: false
   /mockserver/openapi:
     put:
       tags:

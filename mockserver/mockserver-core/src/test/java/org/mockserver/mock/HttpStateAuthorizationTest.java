@@ -160,6 +160,16 @@ public class HttpStateAuthorizationTest {
     }
 
     @Test
+    public void readOnlyPrincipalCanLintExpectationsItSendsBecauseLintStoresNothing() {
+        authenticateWithScopes("viewer", Set.of("viewers"));
+        HttpRequest lint = request("/mockserver/lint").withMethod("PUT").withRemoteAddress("10.0.0.5:5555")
+            .withBody("[{\"httpRequest\":{\"path\":\"x\"},\"httpResponse\":{\"statusCode\":200}}]");
+
+        assertThat(handle(lint).getStatusCode(), is(200));
+        assertThat(httpState.getRequestMatchers().retrieveActiveExpectations(null).size(), is(0));
+    }
+
+    @Test
     public void principalWithNoMappedRoleIsForbiddenOnMutation() {
         authenticateWithScopes("nobody", Set.of("unmapped-group"));
         HttpResponse response = handle(putExpectation());

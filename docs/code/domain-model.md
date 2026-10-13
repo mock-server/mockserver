@@ -541,6 +541,8 @@ Expectation.when(request)      // RequestDefinition
 
 Scenario fields are optional. When `scenarioName` and `scenarioState` are set, the expectation only matches when the named scenario is in the required state. After matching, the scenario transitions to `newScenarioState` (if set). All scenarios start in the `"Started"` state. State is managed by `ScenarioManager` in `RequestMatchers`.
 
+`ExpectationLinter` checks expectations for combinations of these fields that can never match (for example `times` of 0, or a path without a leading slash) and for expectations shadowed by an earlier one; it is advisory and never rejects an expectation. See [Expectation Lint](request-processing.md#expectation-lint).
+
 #### Rate Limit (`rateLimit`)
 
 `Expectation.rateLimit` (a `RateLimit`, `org.mockserver.model`) is an optional, nullable clause — a sibling of `chaos` — that declaratively rate-limits the matched expectation. It follows the same model field / `withX` / getter convention as `HttpChaosProfile` (plain Jackson bean, no custom serializer) and round-trips through `RateLimitDTO` (`org.mockserver.serialization.model`), wired into `ExpectationDTO` exactly like `chaos` (nullable field, null-guarded copy in the constructor, `withRateLimit(...)` in `buildObject()`). An expectation **without** a `rateLimit` clause serializes and behaves byte-for-byte identically to before (the field is omitted from JSON, the response is untouched).

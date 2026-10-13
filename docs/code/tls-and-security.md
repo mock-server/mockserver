@@ -498,7 +498,7 @@ Off by default: with `controlPlaneAuthorizationEnabled=false` (the default) no a
 
 | Role | Grants |
 |------|--------|
-| `read` | Read-only control-plane operations (every `GET`, plus the read `PUT`s: `retrieve`, `verify`, `verifySequence`, `verifySLO`, `diff`, `explainUnmatched`, `debugMismatch`, `files/retrieve`, `files/list`) |
+| `read` | Read-only control-plane operations (every `GET`, plus the read `PUT`s: `retrieve`, `verify`, `verifySequence`, `verifySLO`, `diff`, `explainUnmatched`, `explain`, `debugMismatch`, `lint`, `files/retrieve`, `files/list`) |
 | `mutate` | Everything `read` grants **plus** all mutations (creating expectations, clearing, resetting, binding ports, etc.) |
 | `admin` | Everything `mutate` grants (ceiling for future admin-only operations; currently a strict superset of `mutate`) |
 

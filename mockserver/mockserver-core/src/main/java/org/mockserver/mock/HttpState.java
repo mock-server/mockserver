@@ -1420,6 +1420,32 @@ public class HttpState {
         }
     }
 
+    /**
+     * Lints the expectations in the body (one or an array), without storing them, or the active stored expectations
+     * when the body is empty. Advisory: nothing is rejected or changed. See {@link ExpectationLinter}.
+     */
+    public HttpResponse lint(HttpRequest request) {
+        com.fasterxml.jackson.databind.ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+        try {
+            String body = request.getBodyAsJsonOrXmlString();
+            com.fasterxml.jackson.databind.node.ObjectNode result = isBlank(body)
+                ? ExpectationLinter.lintStored(objectMapper, requestMatchers)
+                : ExpectationLinter.lintJson(objectMapper, getExpectationSerializer(), body);
+            return response()
+                .withStatusCode(OK.code())
+                .withBody(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(result), MediaType.JSON_UTF_8);
+        } catch (Exception e) {
+            if (!isClientError(e)) {
+                return unexpectedFailure(request, e);
+            }
+            try {
+                return explainError(objectMapper, BAD_REQUEST.code(), "failed to lint expectations: " + e.getMessage(), null, java.time.Instant.now().toString());
+            } catch (Exception jsonError) {
+                return unexpectedFailure(request, jsonError);
+            }
+        }
+    }
+
     private static HttpResponse explainError(com.fasterxml.jackson.databind.ObjectMapper objectMapper, int statusCode, String error, String correlationId, String timestamp) throws com.fasterxml.jackson.core.JsonProcessingException {
         com.fasterxml.jackson.databind.node.ObjectNode errorNode = objectMapper.createObjectNode();
         errorNode.put("error", error);
@@ -2415,9 +2441,16 @@ public class HttpState {
                         }
                     }
 
-                    responseWriter.writeResponse(request, response()
+                    responseWriter.writeResponse(request, ExpectationLinter.adviseOnUpsert(mockServerLogger, upsertedExpectations, response()
                         .withStatusCode(CREATED.code())
-                        .withBody(getExpectationSerializer().serialize(upsertedExpectations), MediaType.JSON_UTF_8), true);
+                        .withBody(getExpectationSerializer().serialize(upsertedExpectations), MediaType.JSON_UTF_8)), true);
+                }
+                canHandle.complete(true);
+
+            } else if (request.matches("PUT", PATH_PREFIX + "/lint")) {
+
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    responseWriter.writeResponse(request, lint(request), true);
                 }
                 canHandle.complete(true);
 
@@ -6551,7 +6584,7 @@ public class HttpState {
     }
 
     private static final java.util.Set<String> CONTROL_PLANE_READ_PUTS = new java.util.HashSet<>(java.util.Arrays.asList(
-        "retrieve", "verify", "verifySequence", "verifySLO", "diff", "explainUnmatched", "explain", "debugMismatch", "files/retrieve", "files/list"
+        "retrieve", "verify", "verifySequence", "verifySLO", "diff", "explainUnmatched", "explain", "debugMismatch", "lint", "files/retrieve", "files/list"
     ));
 
     /**

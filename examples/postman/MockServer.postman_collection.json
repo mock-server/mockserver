@@ -2451,6 +2451,38 @@
       "name": "troubleshooting",
       "item": [
         {
+          "name": "lint expectations for ones that can never match or will not match as written",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mockserver/lint",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mockserver",
+                "lint"
+              ]
+            },
+            "description": "Checks expectations for mistakes that stop them matching: a shadowed expectation (one evaluated earlier always matches first and never runs out), times or a time to live that allow no match, a percentage of 0, sequential responses that times never reaches, a path without a leading slash, with a scheme and host, with a query string, with a glob * or with a {name} template but no pathParameters, a misspelt method or header name, and (information only) STRICT JSON matching of a body with arrays. With expectations in the body (one or an array) it lints those without storing them; OpenAPI entries are skipped and invalid entries are reported as INVALID_EXPECTATION. With an empty body it lints the active stored expectations in the order they are evaluated. Advisory only: nothing is rejected or changed. The shadowing check compares at most 100,000 pairs and stops a regular expression that backtracks too long; shadowCheckTruncated says when either limit was reached.\n\noptional; expectations to lint without storing them. When empty, the active stored expectations are linted\n\nFull API reference: https://www.mock-server.com/mock_server/mockserver_clients.html",
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"httpRequest\": {\n      \"method\": \"GET\",\n      \"path\": \"/api/users/.*\"\n    },\n    \"httpResponse\": {\n      \"statusCode\": 200\n    }\n  },\n  {\n    \"httpRequest\": {\n      \"method\": \"GET\",\n      \"path\": \"/api/users/1\"\n    },\n    \"httpResponse\": {\n      \"statusCode\": 404\n    }\n  }\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
           "name": "explain why recent requests did not match any expectation",
           "request": {
             "method": "PUT",

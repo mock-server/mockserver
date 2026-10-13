@@ -121,6 +121,9 @@ public class HttpStateEndpointFailureTest {
             badInput("PUT", "/mockserver/debugMismatch", UNREADABLE_JSON, "failed to debug request mismatch"),
             fault("PUT", "/mockserver/explainUnmatched"),
             fault("PUT", "/mockserver/explain"),
+            fault("PUT", "/mockserver/lint"),
+            badInput("PUT", "/mockserver/lint", UNREADABLE_JSON, "failed to lint expectations: Unexpected character"),
+            badInput("PUT", "/mockserver/lint", "42", "failed to lint expectations: expected an expectation or an array of expectations"),
             fault("PUT", "/mockserver/diff"),
             badInput("PUT", "/mockserver/diff", UNREADABLE_JSON, "failed to diff requests"),
             // clock

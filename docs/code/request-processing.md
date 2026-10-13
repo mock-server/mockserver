@@ -95,6 +95,7 @@ Every response's `httpResponse.timing` block (`org.mockserver.model.Timing`) rec
 | `PUT /mockserver/files/retrieve` | Retrieve a stored file by name |
 | `PUT /mockserver/files/list` | List all stored file names |
 | `PUT /mockserver/files/delete` | Delete a stored file by name |
+| `PUT /mockserver/lint` | Lint the expectations in the body without storing them, or the active stored ones when the body is empty: shadowed, unreachable or misspelt expectations (see [Expectation Lint](#expectation-lint)) |
 | `PUT /mockserver/debugMismatch` | Compare a request against all active expectations and return per-field diffs |
 | `PUT /mockserver/explainUnmatched` | Retrieve recent unmatched requests with ranked closest-expectation diagnostics and remediation hints |
 | `PUT /mockserver/explain?correlationId=` | Re-check one recorded request against the current expectations: the expectation that would serve it now, why each one ahead of it lost, and which ones it shadows (see [Explain Endpoint](#explain-endpoint)) |
@@ -492,6 +493,42 @@ flowchart LR
 - **Budget.** At most `EXPLAIN_REQUEST_EVALUATION_BUDGET` (500) expectations are evaluated; `truncated` and `maxExpectationsEvaluated` report the cut.
 - **Route.** The route is registered only under `/mockserver/explain`, with no bare `/explain` alias, so it cannot shadow a user's own `PUT /explain` mock. It is a read for control-plane authorisation.
 - **MCP.** The `explain_request` tool calls `HttpState.explain` with the correlation id as a query parameter and returns its JSON; a non-200 answer becomes a tool error (`isError`) carrying the endpoint's message. Its output is redacted exactly as the endpoint's is.
+
+### Expectation Lint
+
+Lint finds expectations that can never match, or will not match the way they read. It is advisory: it never rejects or changes an expectation, and it adds nothing to the per-request path. `ExpectationLinter` (`org.mockserver.mock`) holds every rule; three surfaces call it.
+
+```mermaid
+flowchart LR
+    P["PUT /mockserver/expectation"] --> E["per-expectation rules
+warnings only"]
+    E --> H["x-mockserver-lint-warnings header
++ one WARN log entry"]
+    L["PUT /mockserver/lint"] --> B{"body?"}
+    B -- "expectations" --> J["lintJson: rules + DUPLICATE_ID
++ shadowing, nothing stored"]
+    B -- "empty" --> S["lintStored: active expectations
+in serving order + shadowing"]
+    C["mockserver lint file..."] --> J
+```
+
+| Rule | Severity | Finding |
+|---|---|---|
+| `INVALID_EXPECTATION` | ERROR | the entry fails schema validation, so `PUT /mockserver/expectation` would reject it (body and CLI only) |
+| `DUPLICATE_ID` | WARNING | a later entry has the same id and replaces it on upsert (body and CLI only) |
+| `SHADOWED` | WARNING | an expectation evaluated earlier always matches first |
+| `TIMES_ZERO`, `TIME_TO_LIVE_ZERO`, `PERCENTAGE_ZERO` | WARNING | the expectation can never be served |
+| `UNREACHABLE_RESPONSES` | WARNING | `SEQUENTIAL` or `SWITCH` `httpResponses` that limited `times` never reach |
+| `PATH_MISSING_LEADING_SLASH`, `PATH_INCLUDES_SCHEME_AND_HOST`, `PATH_INCLUDES_QUERY_STRING`, `PATH_GLOB_WILDCARD`, `PATH_TEMPLATE_WITHOUT_PATH_PARAMETERS` | WARNING | the path cannot match the request it describes |
+| `METHOD_TYPO`, `HEADER_NAME_TYPO` | WARNING | an unknown method or header name within edit distance 1 (optimal string alignment) of a known one, or a known header written with `_`; a header that is a known name with a prefix added or removed (`X-Authorization`, `Request-Id`) is a custom header, not a typo |
+| `STRICT_JSON_BODY_WITH_ARRAYS` | INFO | `STRICT` JSON matching of a body with arrays needs the same order and no extra items |
+
+- **On PUT.** `HttpState` passes the upserted expectations to `ExpectationLinter.adviseOnUpsert`, which runs only the per-expectation rules (linear in the expectations sent) and drops `INFO`. If any remain it adds `x-mockserver-lint-warnings: <count>` to the `201` and logs one `WARN` entry listing the first 20. Shadowing is not checked here: it is pairwise.
+- **Shadowing.** An earlier expectation shadows a later one only when nothing can pass it over (unlimited `times` and time to live, no scenario state requirement, no percentage below 100, no LLM conversation predicates, the same namespace: the gates `RequestMatchExplainer` walks; and the later one is not `respondBeforeBody` unless the earlier one is too, because `RequestMatchers.firstMatchingEarlyExpectation` serves those first) and every request constraint it has is provably weaker: a blank or equal field, a subset of equal header, query, cookie and path-parameter entries with the same key-match style, an equal body, and for method and path either `.*` or a regex that fully matches the later expectation's literal value. Anything it cannot prove counts as not covering, so it misses some shadowing but never reports a reachable expectation. `NottableString.equals` treats a schema as matching a value, so values are compared by class, `not`, `optional` and text instead.
+- **Serving order.** Stored expectations come from `RequestMatchers.sortedRequestMatchers()`; inactive ones are skipped and counted. Body and file entries are sorted by priority, then by their position, which is the order an upsert creates them in. OpenAPI entries (`specUrlOrPayload`) are skipped, not expanded, so lint never fetches a specification.
+- **Budgets.** A literal-path expectation is compared only with later expectations that have the same path text; others are compared with every later one, and an expectation already found shadowed is never used as the earlier side. Every candidate visited counts against `MAX_PAIR_COMPARISONS` (100,000), so the shadowing work is bounded however many expectations are sent or stored. A user regex runs over a counting `CharSequence` capped at 100,000 character reads per match and 2,000,000 per lint, so catastrophic backtracking ends as "does not cover". `shadowCheckTruncated` reports either cut; at most 1,000 issues are listed (`issuesTruncated`).
+- **Route.** Registered only under `/mockserver/lint`, with no bare alias, and a read for control-plane authorisation: it stores nothing, even when sent expectations. A body that is not JSON, or not an object or array, is a `400`.
+- **CLI.** `mockserver lint <file>...` (`Main.LintCommand`) parses each file, lints all entries together in the order given and maps each issue back to its file and index. It needs no server. See [cli.md](cli.md).
 
 ### Request Replay
 
