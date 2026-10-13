@@ -4139,7 +4139,7 @@ public class McpToolRegistry {
             providerEnum.add(name);
         }
         properties.putObject("maxCostUsd").put("type", "number").put("description", "Cost budget in USD. The assertion passes when the total estimated cost of the recorded responses is at or below this value.");
-        properties.putObject("model").put("type", "string").put("description", "Optional model id used to price every response (e.g. claude-sonnet-4). If omitted, the model is read from each recorded request body; responses whose model cannot be priced are reported as unpriceable and excluded from the total.");
+        properties.putObject("model").put("type", "string").put("description", "Optional model id used to price every response (e.g. claude-sonnet-4). If omitted, the model is read from each recorded request body, or from the path of a native Gemini call; a call sent to a Vertex AI host is priced at Vertex AI's rates. Responses whose model cannot be priced are reported as unpriceable and excluded from the total.");
         properties.putObject("path").put("type", "string").put("description", "Optional request path filter (only total responses to this path).");
         ArrayNode required = schema.putArray("required");
         required.add("provider");
@@ -4213,7 +4213,11 @@ public class McpToolRegistry {
                 totalOutputTokens += outputTokens;
 
                 String model = modelOverride != null ? modelOverride : modelFromRequest(pair.getHttpRequest());
-                Double cost = LlmPricing.estimateCostUsd(provider, model, inputTokens, outputTokens);
+                boolean vertexAi = pair.getHttpRequest() instanceof HttpRequest
+                    && LlmProviderSniffer.isVertexAiHost((HttpRequest) pair.getHttpRequest(), null);
+                Double cost = vertexAi
+                    ? LlmPricing.estimateVertexAiCostUsd(provider, model, inputTokens, outputTokens)
+                    : LlmPricing.estimateCostUsd(provider, model, inputTokens, outputTokens);
 
                 ObjectNode entry = objectMapper.createObjectNode();
                 if (pair.getHttpRequest() instanceof HttpRequest && ((HttpRequest) pair.getHttpRequest()).getPath() != null) {
@@ -4269,15 +4273,19 @@ public class McpToolRegistry {
             return null;
         }
         HttpRequest httpRequest = (HttpRequest) requestDefinition;
+        // a native Gemini call names its model only in its path
+        String pathModel = httpRequest.getPath() != null
+            ? LlmProviderSniffer.extractGeminiModelFromPath(httpRequest.getPath().getValue())
+            : null;
         if (httpRequest.getBody() == null) {
-            return null;
+            return pathModel;
         }
         try {
             JsonNode body = objectMapper.readTree(httpRequest.getBodyAsText());
             JsonNode model = body.path("model");
-            return model.isTextual() ? model.asText() : null;
+            return model.isTextual() ? model.asText() : pathModel;
         } catch (Exception e) {
-            return null;
+            return pathModel;
         }
     }
 

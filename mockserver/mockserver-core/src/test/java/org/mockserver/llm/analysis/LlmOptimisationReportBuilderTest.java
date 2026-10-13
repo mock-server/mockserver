@@ -395,4 +395,75 @@ public class LlmOptimisationReportBuilderTest {
         assertThat(call.getDefinedToolNames(), contains("get_weather"));
         assertThat(call.getDefinedToolTokens(), greaterThan(0L));
     }
+
+    // --- Vertex AI pricing ---
+
+    private static HttpRequest geminiRequest(String host, String path) {
+        return request().withMethod("POST").withPath(path).withHeader("Host", host)
+            .withBody("{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"hi\"}]}]}");
+    }
+
+    // https://docs.cloud.google.com/vertex-ai/generative-ai/docs/model-reference/inference
+    private static HttpResponse geminiUsageResponse(String modelVersion, int inputTokens, int outputTokens) {
+        return response().withStatusCode(200).withBody(
+            "{\"candidates\":[{\"content\":{\"role\":\"model\",\"parts\":[{\"text\":\"Hello\"}]},\"finishReason\":\"STOP\"}],"
+                + "\"usageMetadata\":{\"promptTokenCount\":" + inputTokens + ",\"candidatesTokenCount\":" + outputTokens
+                + ",\"totalTokenCount\":" + (inputTokens + outputTokens) + "},\"modelVersion\":\"" + modelVersion + "\"}");
+    }
+
+    private LlmOptimisationReport.Call singleCall(HttpRequest request, HttpResponse response) {
+        LlmOptimisationReport report = builder.build(Collections.singletonList(exchange(request, response, 100L)),
+            "host:any", LlmOptimisationReport.GroupingBasis.PROXY_HOST, headers(), Collections.emptyList());
+        assertThat(report.getCalls().size(), is(1));
+        return report.getCalls().get(0);
+    }
+
+    // Vertex AI bills Gemini 2.0 Flash at 0.15 / 0.60 USD per million input / output tokens
+    // (https://cloud.google.com/vertex-ai/generative-ai/pricing), the Gemini API at 0.10 / 0.40
+    @Test
+    public void nativeVertexAiGeminiCallIsPricedAtVertexAiRates() {
+        LlmOptimisationReport.Call call = singleCall(
+            geminiRequest("us-central1-aiplatform.googleapis.com",
+                "/v1/projects/my-project/locations/us-central1/publishers/google/models/gemini-2.0-flash-001:generateContent"),
+            geminiUsageResponse("gemini-2.0-flash-001", 1_000_000, 1_000_000));
+
+        assertEquals("GEMINI", call.getProvider());
+        assertEquals("gemini-2.0-flash-001", call.getModel());
+        assertFalse(call.isCostUnknown());
+        assertFalse(call.isCostIsEstimated());
+        assertEquals(0.75, call.getEstimatedCostUsd(), 0.00001);
+    }
+
+    @Test
+    public void nativeVertexAiGeminiCallThroughAMultiRegionHostIsPricedAtVertexAiRates() {
+        LlmOptimisationReport.Call call = singleCall(
+            geminiRequest("aiplatform.eu.rep.googleapis.com:443",
+                "/v1/projects/my-project/locations/eu/publishers/google/models/gemini-2.0-flash-001:streamGenerateContent"),
+            geminiUsageResponse("gemini-2.0-flash-001", 1_000_000, 0));
+
+        assertEquals(0.15, call.getEstimatedCostUsd(), 0.00001);
+    }
+
+    @Test
+    public void nativeGeminiApiCallIsPricedAtGeminiApiRates() {
+        LlmOptimisationReport.Call call = singleCall(
+            geminiRequest("generativelanguage.googleapis.com", "/v1beta/models/gemini-2.0-flash:generateContent"),
+            geminiUsageResponse("gemini-2.0-flash", 1_000_000, 1_000_000));
+
+        assertEquals("gemini-2.0-flash", call.getModel());
+        assertFalse(call.isCostUnknown());
+        assertEquals(0.5, call.getEstimatedCostUsd(), 0.00001);
+    }
+
+    @Test
+    public void vertexAiPricingContextIsNotSerialisedIntoTheReport() throws Exception {
+        LlmOptimisationReport.Call call = singleCall(
+            geminiRequest("aiplatform.googleapis.com",
+                "/v1/projects/my-project/locations/global/publishers/google/models/gemini-2.0-flash-001:generateContent"),
+            geminiUsageResponse("gemini-2.0-flash-001", 10, 10));
+
+        assertTrue(call.isVertexAi());
+        String json = org.mockserver.serialization.ObjectMapperFactory.createObjectMapper().writeValueAsString(call);
+        assertThat(json, not(containsString("vertexAi")));
+    }
 }

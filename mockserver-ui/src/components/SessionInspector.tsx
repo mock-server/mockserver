@@ -312,7 +312,8 @@ function computeSessionUsage(requests: SessionRequest[]): SessionUsage | null {
       totalOut += tokens.outputTokens;
       const model = getModelLabel(req.parsed);
       if (model && req.parsed.kind !== 'mcp' && req.parsed.kind !== 'generic') {
-        const cost = estimateCostUsd(req.parsed.kind, model, tokens.inputTokens, tokens.outputTokens);
+        const cost = estimateCostUsd(req.parsed.kind, model, tokens.inputTokens, tokens.outputTokens,
+          req.parsed.kind === 'gemini' && req.parsed.vertexAi === true);
         if (cost !== null) {
           hasCost = true;
           totalCost += cost;

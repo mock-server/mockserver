@@ -474,6 +474,17 @@ public final class LlmPricing {
         return cheapestModel(provider);
     }
 
+    /**
+     * {@link #cheapestModel(Provider, String)} for a call sent to a Vertex AI host: a native
+     * Gemini call can move only to another of Vertex AI's Gemini models.
+     */
+    public static ModelOption cheapestVertexAiModel(Provider provider, String model) {
+        if (provider == Provider.GEMINI) {
+            return cheapestIn(VERTEX_GEMINI_PRICING);
+        }
+        return cheapestModel(provider, model);
+    }
+
     private static ModelOption cheapestIn(List<Map.Entry<String, PricingEntry>> table) {
         if (table == null || table.isEmpty()) {
             return null;
@@ -495,7 +506,18 @@ public final class LlmPricing {
      * {@code null} when the model is unpriced.
      */
     public static Double blendedPerMillion(Provider provider, String model) {
-        PricingEntry pricing = getPricing(provider, model);
+        return blended(getPricing(provider, model));
+    }
+
+    /**
+     * {@link #blendedPerMillion(Provider, String)} for a call sent to a Vertex AI host, priced by
+     * {@link #getVertexAiPricing(Provider, String)}.
+     */
+    public static Double vertexAiBlendedPerMillion(Provider provider, String model) {
+        return blended(getVertexAiPricing(provider, model));
+    }
+
+    private static Double blended(PricingEntry pricing) {
         if (pricing == null) {
             return null;
         }

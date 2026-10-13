@@ -1,5 +1,7 @@
 package org.mockserver.llm.analysis;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -299,6 +301,7 @@ public class LlmOptimisationReport {
         private boolean costIsEstimated;
         private boolean costUnknown;
         private boolean approximateRate;
+        private boolean vertexAi;
         private long latencyMs;
         private String finishReason;
         private int messageCount;
@@ -422,6 +425,20 @@ public class LlmOptimisationReport {
 
         public Call setApproximateRate(boolean approximateRate) {
             this.approximateRate = approximateRate;
+            return this;
+        }
+
+        /**
+         * True when the captured request went to a Vertex AI host, so it is priced at Vertex AI's
+         * rates. Pricing context only: not part of the serialised report.
+         */
+        @JsonIgnore
+        public boolean isVertexAi() {
+            return vertexAi;
+        }
+
+        public Call setVertexAi(boolean vertexAi) {
+            this.vertexAi = vertexAi;
             return this;
         }
 

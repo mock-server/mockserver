@@ -1649,7 +1649,7 @@ keywords: "mcp tools, mockserver mcp tools, create_expectation, verify_request, 
     <tbody>
         <tr><td><code>provider</code></td><td>string (enum)</td><td>Yes</td><td>Provider whose recorded responses to total (<code>ANTHROPIC</code>, <code>OPENAI</code>, &hellip;)</td></tr>
         <tr><td><code>maxCostUsd</code></td><td>number</td><td>Yes</td><td>Cost budget in USD. The assertion passes (<code>withinBudget: true</code>) when the total estimated cost is at or below this value.</td></tr>
-        <tr><td><code>model</code></td><td>string</td><td>No</td><td>Model id used to price every response (e.g. <code>claude-sonnet-4</code>). If omitted, the model is read from each recorded request body; responses whose model has no known price are reported as <code>unpriceable</code> and excluded from the total.</td></tr>
+        <tr><td><code>model</code></td><td>string</td><td>No</td><td>Model id used to price every response (e.g. <code>claude-sonnet-4</code>). If omitted, the model is read from each recorded request body, or from the request path for a native Gemini call (<code>/models/gemini-2.0-flash-001:generateContent</code>). A call that was sent to a Vertex AI host (<code>aiplatform.googleapis.com</code>) is priced at Vertex AI's rates, whether or not you pin the model. Responses whose model has no known price are reported as <code>unpriceable</code> and excluded from the total.</td></tr>
         <tr><td><code>path</code></td><td>string</td><td>No</td><td>Only total responses to this request path.</td></tr>
     </tbody>
 </table>

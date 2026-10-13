@@ -121,6 +121,20 @@ describe('estimateCostUsd', () => {
     expect(cost).toBeCloseTo(2.8, 2);
   });
 
+  it('returns the Vertex AI rate for gemini-2.0-flash on a Vertex AI host', () => {
+    // cloud.google.com/vertex-ai/generative-ai/pricing: 0.15 input + 0.60 output = 0.75
+    expect(estimateCostUsd('gemini', 'gemini-2.0-flash-001', 1_000_000, 1_000_000, true)).toBeCloseTo(0.75, 6);
+    expect(estimateCostUsd('gemini', 'gemini-2.0-flash-001', 1_000_000, 1_000_000, false)).toBeCloseTo(0.5, 6);
+  });
+
+  it('prices a non-Gemini call on a Vertex AI host as its own provider', () => {
+    expect(estimateCostUsd('anthropic', 'claude-sonnet-4@20250514', 1_000_000, 1_000_000, true)).toBeCloseTo(18.0, 6);
+  });
+
+  it('returns null on a Vertex AI host for a Gemini model with no Vertex AI price', () => {
+    expect(estimateCostUsd('gemini', 'gemini-1.5-pro', 1_000_000, 1_000_000, true)).toBeNull();
+  });
+
   it('returns the gemini-2.5-pro rate', () => {
     const cost = estimateCostUsd('gemini', 'gemini-2.5-pro', 1_000_000, 1_000_000);
     // 1.25 input + 10.00 output = 11.25
@@ -243,6 +257,7 @@ describe('LLM pricing drift guard (mirrors LlmPricing.java)', () => {
     model: string;
     input: number;
     output: number;
+    vertexAi?: boolean;
   }> = [
     // Anthropic — current families
     { provider: 'anthropic', model: 'claude-fable-5-x', input: 10.0, output: 50.0 },
@@ -278,12 +293,18 @@ describe('LLM pricing drift guard (mirrors LlmPricing.java)', () => {
     { provider: 'gemini', model: 'gemini-2.5-pro', input: 1.25, output: 10.0 },
     { provider: 'gemini', model: 'gemini-2.0-flash-lite', input: 0.075, output: 0.3 },
     { provider: 'gemini', model: 'gemini-2.0-flash', input: 0.1, output: 0.4 },
+    // Vertex AI Gemini (VERTEX_GEMINI_PRICING), for a native Gemini call on a Vertex AI host
+    { provider: 'gemini', model: 'gemini-2.5-flash-lite', input: 0.1, output: 0.4, vertexAi: true },
+    { provider: 'gemini', model: 'gemini-2.5-flash', input: 0.3, output: 2.5, vertexAi: true },
+    { provider: 'gemini', model: 'gemini-2.5-pro', input: 1.25, output: 10.0, vertexAi: true },
+    { provider: 'gemini', model: 'gemini-2.0-flash-lite', input: 0.075, output: 0.3, vertexAi: true },
+    { provider: 'gemini', model: 'gemini-2.0-flash', input: 0.15, output: 0.6, vertexAi: true },
   ];
 
   it.each(CANONICAL_PRICING)(
-    'UI table matches canonical Java price for $provider/$model',
-    ({ provider, model, input, output }) => {
-      const cost = estimateCostUsd(provider, model, 1_000_000, 1_000_000);
+    'UI table matches canonical Java price for $provider/$model (Vertex AI: $vertexAi)',
+    ({ provider, model, input, output, vertexAi }) => {
+      const cost = estimateCostUsd(provider, model, 1_000_000, 1_000_000, vertexAi === true);
       expect(cost).not.toBeNull();
       // 1M input + 1M output → input/million + output/million combined.
       expect(cost).toBeCloseTo(input + output, 6);
@@ -327,6 +348,13 @@ describe('LLM pricing drift guard (mirrors LlmPricing.java)', () => {
       'gemini-2.0-flash-lite',
       'gemini-2.0-flash',
     ],
+    vertex_gemini: [
+      'gemini-2.5-flash-lite',
+      'gemini-2.5-flash',
+      'gemini-2.5-pro',
+      'gemini-2.0-flash-lite',
+      'gemini-2.0-flash',
+    ],
   };
 
   it.each(Object.keys(CANONICAL_MODELS))(
@@ -361,5 +389,9 @@ describe('LLM pricing drift guard (mirrors LlmPricing.java)', () => {
     const gemini = PRICING_MODEL_PREFIXES.gemini;
     expect(idx(gemini, 'gemini-2.5-flash-lite')).toBeLessThan(idx(gemini, 'gemini-2.5-flash'));
     expect(idx(gemini, 'gemini-2.0-flash-lite')).toBeLessThan(idx(gemini, 'gemini-2.0-flash'));
+
+    const vertexGemini = PRICING_MODEL_PREFIXES.vertex_gemini;
+    expect(idx(vertexGemini, 'gemini-2.5-flash-lite')).toBeLessThan(idx(vertexGemini, 'gemini-2.5-flash'));
+    expect(idx(vertexGemini, 'gemini-2.0-flash-lite')).toBeLessThan(idx(vertexGemini, 'gemini-2.0-flash'));
   });
 });

@@ -47,4 +47,74 @@ describe('LlmUsageDetail', () => {
     );
     expect(screen.getByText('12 in / 64 out')).toBeInTheDocument();
   });
+
+  // Vertex AI bills Gemini 2.0 Flash at 0.15 / 0.60 USD per million input / output tokens, the
+  // Gemini API at 0.10 / 0.40: https://cloud.google.com/vertex-ai/generative-ai/pricing and
+  // https://ai.google.dev/gemini-api/docs/pricing. Vertex AI request and response shape:
+  // https://docs.cloud.google.com/vertex-ai/generative-ai/docs/model-reference/inference
+  function geminiFlashCall(httpRequest: Record<string, unknown>) {
+    return parseTraffic({
+      httpRequest: {
+        method: 'POST',
+        body: { type: 'JSON', json: '{"contents":[{"role":"user","parts":[{"text":"Hi"}]}]}' },
+        ...httpRequest,
+      },
+      httpResponse: {
+        statusCode: 200,
+        body: {
+          type: 'JSON',
+          json: JSON.stringify({
+            candidates: [{ content: { role: 'model', parts: [{ text: 'Hello' }] }, finishReason: 'STOP' }],
+            usageMetadata: { promptTokenCount: 1_000_000, candidatesTokenCount: 1_000_000, totalTokenCount: 2_000_000 },
+            modelVersion: 'gemini-2.0-flash-001',
+          }),
+        },
+      },
+    });
+  }
+
+  const VERTEX_PATH = '/v1/projects/my-project/locations/us-central1/publishers/google/models/gemini-2.0-flash-001:generateContent';
+
+  function renderCost(parsed: ReturnType<typeof parseTraffic>) {
+    render(
+      <ThemeProvider theme={buildTheme('dark')}>
+        <LlmUsageDetail parsed={parsed} />
+      </ThemeProvider>,
+    );
+  }
+
+  it('prices a native Gemini call to a Vertex AI host at Vertex AI rates', () => {
+    renderCost(geminiFlashCall({ path: VERTEX_PATH, headers: { Host: ['us-central1-aiplatform.googleapis.com:443'] } }));
+    expect(screen.getByText('$0.75')).toBeInTheDocument();
+  });
+
+  it('prices a native Gemini call through a Vertex AI multi-region host at Vertex AI rates', () => {
+    renderCost(geminiFlashCall({
+      path: VERTEX_PATH.replace('us-central1', 'eu'),
+      headers: [{ name: 'host', values: ['aiplatform.eu.rep.googleapis.com'] }],
+    }));
+    expect(screen.getByText('$0.75')).toBeInTheDocument();
+  });
+
+  it('takes the Vertex AI host from the socket address before the Host header, as the server does', () => {
+    renderCost(geminiFlashCall({
+      path: VERTEX_PATH,
+      headers: { Host: ['localhost:1080'] },
+      socketAddress: { host: 'aiplatform.googleapis.com', port: 443, scheme: 'HTTPS' },
+    }));
+    expect(screen.getByText('$0.75')).toBeInTheDocument();
+  });
+
+  it('prices a native Gemini API call at Gemini API rates', () => {
+    renderCost(geminiFlashCall({
+      path: '/v1beta/models/gemini-2.0-flash-001:generateContent',
+      headers: { Host: ['generativelanguage.googleapis.com'] },
+    }));
+    expect(screen.getByText('$0.50')).toBeInTheDocument();
+  });
+
+  it('does not treat a host that only ends in a Vertex AI host name as Vertex AI', () => {
+    renderCost(geminiFlashCall({ path: VERTEX_PATH, headers: { Host: ['evil.com-aiplatform.googleapis.com'] } }));
+    expect(screen.getByText('$0.50')).toBeInTheDocument();
+  });
 });

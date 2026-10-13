@@ -86,6 +86,25 @@ public class LlmPricingTest {
     }
 
     @Test
+    public void shouldBlendNativeVertexAiGeminiAtVertexAiRates() {
+        assertThat(LlmPricing.vertexAiBlendedPerMillion(Provider.GEMINI, "gemini-2.0-flash-001"), is(closeTo(0.75, EPS)));
+        assertThat(LlmPricing.blendedPerMillion(Provider.GEMINI, "gemini-2.0-flash-001"), is(closeTo(0.5, EPS)));
+        assertThat(LlmPricing.vertexAiBlendedPerMillion(Provider.GEMINI, "gemini-1.5-pro"), is(nullValue()));
+        assertThat(LlmPricing.vertexAiBlendedPerMillion(Provider.ANTHROPIC, "claude-sonnet-4@20250514"), is(closeTo(18.0, EPS)));
+    }
+
+    @Test
+    public void shouldSuggestTheCheapestVertexAiGeminiModelForANativeVertexAiGeminiCall() {
+        LlmPricing.ModelOption cheapest = LlmPricing.cheapestVertexAiModel(Provider.GEMINI, "gemini-2.0-flash-001");
+        assertThat(cheapest.getLabel(), is("gemini-2.0-flash-lite"));
+        assertThat(cheapest.getBlendedPerMillion(), is(closeTo(0.375, EPS)));
+        LlmPricing.ModelOption anthropic = LlmPricing.cheapestVertexAiModel(Provider.ANTHROPIC, "claude-sonnet-4@20250514");
+        assertThat(anthropic.getLabel(), is(LlmPricing.cheapestModel(Provider.ANTHROPIC).getLabel()));
+        assertThat(LlmPricing.cheapestVertexAiModel(Provider.OPENAI, "meta/llama-3.3-70b-instruct-maas").getLabel(),
+            is("llama-3.3-70b-instruct-maas"));
+    }
+
+    @Test
     public void shouldPriceOllamaAsFree() {
         assertThat(LlmPricing.estimateCostUsd(Provider.OLLAMA, "llama3", 5_000_000, 5_000_000),
             is(closeTo(0.0, EPS)));

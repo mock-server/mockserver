@@ -18,6 +18,7 @@ import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.closeTo;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockserver.configuration.Configuration.configuration;
@@ -1944,6 +1945,77 @@ public class McpToolRegistryTest {
         assertThat(result.path("withinBudget").asBoolean(), is(true));
         // ...but the check is NOT authoritative — the caller must not trust withinBudget here
         assertThat(result.path("budgetCheckAuthoritative").asBoolean(), is(false));
+    }
+
+    private void logForwardedGeminiCall(String host, String path, int inputTokens, int outputTokens) {
+        // https://docs.cloud.google.com/vertex-ai/generative-ai/docs/model-reference/inference
+        httpState.log(new LogEntry()
+            .setType(FORWARDED_REQUEST)
+            .setLogLevel(org.slf4j.event.Level.INFO)
+            .setHttpRequest(request().withMethod("POST").withPath(path).withHeader("Host", host)
+                .withBody("{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"hi\"}]}]}"))
+            .setHttpResponse(response().withStatusCode(200).withBody(
+                "{\"candidates\":[{\"content\":{\"role\":\"model\",\"parts\":[{\"text\":\"Hello\"}]},\"finishReason\":\"STOP\"}],"
+                    + "\"usageMetadata\":{\"promptTokenCount\":" + inputTokens + ",\"candidatesTokenCount\":" + outputTokens + "},"
+                    + "\"modelVersion\":\"gemini-2.0-flash-001\"}"))
+            .setMessageFormat("returning response:{}for forwarded request")
+            .setArguments(response().withStatusCode(200)));
+    }
+
+    // Vertex AI bills Gemini 2.0 Flash at 0.15 / 0.60 USD per million input / output tokens
+    // (https://cloud.google.com/vertex-ai/generative-ai/pricing), the Gemini API at 0.10 / 0.40
+    @Test
+    public void shouldPriceANativeVertexAiGeminiCallAtVertexAiRates() throws Exception {
+        String path = "/v1/projects/my-project/locations/us-central1/publishers/google/models/gemini-2.0-flash-001:generateContent";
+        logForwardedGeminiCall("us-central1-aiplatform.googleapis.com", path, 1_000_000, 1_000_000);
+        Thread.sleep(500);
+
+        ObjectNode params = objectMapper.createObjectNode();
+        params.put("provider", "GEMINI");
+        params.put("path", path);
+        params.put("maxCostUsd", 0.7);
+        JsonNode result = toolRegistry.callTool("verify_cost_budget", params);
+
+        assertThat(result.has("error"), is(false));
+        assertThat(result.path("checked").asInt(), is(1));
+        assertThat(result.path("unpriceable").asInt(), is(0));
+        assertThat(result.path("results").get(0).path("model").asText(), is("gemini-2.0-flash-001"));
+        assertThat(result.path("totalCostUsd").asDouble(), closeTo(0.75, 1e-9));
+        assertThat(result.path("withinBudget").asBoolean(), is(false));
+        assertThat(result.path("budgetCheckAuthoritative").asBoolean(), is(true));
+    }
+
+    @Test
+    public void shouldPriceAPinnedModelOnAVertexAiHostAtVertexAiRates() throws Exception {
+        String path = "/v1/projects/my-project/locations/eu/publishers/google/models/gemini-2.0-flash-001:generateContent";
+        logForwardedGeminiCall("aiplatform.eu.rep.googleapis.com", path, 1_000_000, 0);
+        Thread.sleep(500);
+
+        ObjectNode params = objectMapper.createObjectNode();
+        params.put("provider", "GEMINI");
+        params.put("path", path);
+        params.put("model", "gemini-2.0-flash");
+        params.put("maxCostUsd", 1.0);
+        JsonNode result = toolRegistry.callTool("verify_cost_budget", params);
+
+        assertThat(result.path("totalCostUsd").asDouble(), closeTo(0.15, 1e-9));
+    }
+
+    @Test
+    public void shouldPriceANativeGeminiApiCallAtGeminiApiRates() throws Exception {
+        String path = "/v1beta/models/gemini-2.0-flash:generateContent";
+        logForwardedGeminiCall("generativelanguage.googleapis.com", path, 1_000_000, 1_000_000);
+        Thread.sleep(500);
+
+        ObjectNode params = objectMapper.createObjectNode();
+        params.put("provider", "GEMINI");
+        params.put("path", path);
+        params.put("maxCostUsd", 1.0);
+        JsonNode result = toolRegistry.callTool("verify_cost_budget", params);
+
+        assertThat(result.path("unpriceable").asInt(), is(0));
+        assertThat(result.path("results").get(0).path("model").asText(), is("gemini-2.0-flash"));
+        assertThat(result.path("totalCostUsd").asDouble(), closeTo(0.5, 1e-9));
     }
 
     @Test

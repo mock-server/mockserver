@@ -260,6 +260,60 @@ describe('SessionInspector', () => {
     expect(screen.getByText('Unscoped requests (api.anthropic.com)')).toBeInTheDocument();
   });
 
+  // Vertex AI bills Gemini 2.0 Flash at 0.15 / 0.60 USD per million input / output tokens, the
+  // Gemini API at 0.10 / 0.40 (cloud.google.com/vertex-ai/generative-ai/pricing, ai.google.dev/gemini-api/docs/pricing)
+  function makeGeminiFlashRequest(key: string, host: string, path: string): JsonListItem {
+    return {
+      key,
+      value: {
+        httpRequest: {
+          method: 'POST',
+          path,
+          headers: [{ name: 'host', values: [host] }],
+          body: { type: 'JSON', json: '{"contents":[{"role":"user","parts":[{"text":"Hi"}]}]}' },
+        },
+        httpResponse: {
+          statusCode: 200,
+          body: {
+            type: 'JSON',
+            json: JSON.stringify({
+              candidates: [{ content: { role: 'model', parts: [{ text: 'Hello' }] }, finishReason: 'STOP' }],
+              usageMetadata: { promptTokenCount: 100_000, candidatesTokenCount: 100_000, totalTokenCount: 200_000 },
+              modelVersion: 'gemini-2.0-flash-001',
+            }),
+          },
+        },
+      },
+    };
+  }
+
+  it('totals a session of native Gemini calls to a Vertex AI host at Vertex AI rates', () => {
+    useDashboardStore.setState({
+      proxiedRequests: [
+        makeGeminiFlashRequest('req-v', 'us-central1-aiplatform.googleapis.com',
+          '/v1/projects/my-project/locations/us-central1/publishers/google/models/gemini-2.0-flash-001:generateContent'),
+      ],
+      activeExpectations: [],
+    });
+
+    renderInspector();
+
+    expect(screen.getByText('$0.0750')).toBeInTheDocument();
+  });
+
+  it('totals a session of native Gemini API calls at Gemini API rates', () => {
+    useDashboardStore.setState({
+      proxiedRequests: [
+        makeGeminiFlashRequest('req-g', 'generativelanguage.googleapis.com', '/v1beta/models/gemini-2.0-flash-001:generateContent'),
+      ],
+      activeExpectations: [],
+    });
+
+    renderInspector();
+
+    expect(screen.getByText('$0.0500')).toBeInTheDocument();
+  });
+
   it('renders plain "Unscoped requests" when no host header is present', () => {
     // Build a request with no host header so isolationKey falls back to <unscoped>
     const noHostRequest: JsonListItem = {

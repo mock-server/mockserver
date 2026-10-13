@@ -1405,6 +1405,10 @@ geminiLive()
     <span class="inline_code">:streamGenerateContent</span> on an <span class="inline_code">aiplatform</span> host) are
     costed at Vertex AI's list prices, which for Gemini 2.0 Flash are higher than the Gemini API's; calls to
     <span class="inline_code">generativelanguage.googleapis.com</span> keep the Gemini API's prices.
+    The optimisation report, the <span class="inline_code">verify_cost_budget</span> MCP tool and the dashboard's
+    cost estimates price captured calls the same way, by the host the captured request was sent to. A call sent
+    through a <span class="inline_code">proxyPassMappings</span> mapping is captured with MockServer's own host, so
+    those three price it at the Gemini API's prices.
     An OpenAI response created with <span class="inline_code">background: true</span> and an xAI deferred
     completion report their usage only when the finished result is fetched, so that fetch is counted, once however
     many times it is polled. Other requests to an LLM host, such as listing models, fetching an ordinary stored

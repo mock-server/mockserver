@@ -27,6 +27,7 @@
  *   - Anthropic: https://www.anthropic.com/pricing
  *   - OpenAI:    https://openai.com/api/pricing
  *   - Gemini:    https://ai.google.dev/pricing
+ *   - Vertex AI: https://cloud.google.com/vertex-ai/generative-ai/pricing
  */
 
 // ---------------------------------------------------------------------------
@@ -98,6 +99,17 @@ const GEMINI_PRICING: Array<[string, PricingEntry]> = [
   ['gemini-2.0-flash', { inputPerMillion: 0.1, outputPerMillion: 0.4 }],
 ];
 
+// A native Gemini call to a Vertex AI host is billed at Vertex AI's list prices
+// (cloud.google.com/vertex-ai/generative-ai/pricing, captured 2026-10), which differ
+// from the Gemini API's only for gemini-2.0-flash. Mirrors VERTEX_GEMINI_PRICING in LlmPricing.java.
+const VERTEX_GEMINI_PRICING: Array<[string, PricingEntry]> = [
+  ['gemini-2.5-flash-lite', { inputPerMillion: 0.1, outputPerMillion: 0.4 }],
+  ['gemini-2.5-flash', { inputPerMillion: 0.3, outputPerMillion: 2.5 }],
+  ['gemini-2.5-pro', { inputPerMillion: 1.25, outputPerMillion: 10.0 }],
+  ['gemini-2.0-flash-lite', { inputPerMillion: 0.075, outputPerMillion: 0.3 }],
+  ['gemini-2.0-flash', { inputPerMillion: 0.15, outputPerMillion: 0.6 }],
+];
+
 // Ollama is always free (local models)
 const OLLAMA_PRICING: PricingEntry = { inputPerMillion: 0, outputPerMillion: 0 };
 
@@ -119,7 +131,7 @@ function findPricing(table: Array<[string, PricingEntry]>, model: string): Prici
  * Look up pricing for a given provider and model.
  * Returns null if the model is not recognised.
  */
-function getPricing(provider: string, model: string): PricingEntry | null {
+function getPricing(provider: string, model: string, vertexAi: boolean): PricingEntry | null {
   const kind = provider.toLowerCase();
 
   if (kind === 'anthropic' || kind === 'bedrock') {
@@ -142,7 +154,7 @@ function getPricing(provider: string, model: string): PricingEntry | null {
     return findPricing(OPENAI_PRICING, model);
   }
   if (kind === 'gemini') {
-    return findPricing(GEMINI_PRICING, model);
+    return findPricing(vertexAi ? VERTEX_GEMINI_PRICING : GEMINI_PRICING, model);
   }
   if (kind === 'ollama') {
     return OLLAMA_PRICING;
@@ -158,6 +170,8 @@ function getPricing(provider: string, model: string): PricingEntry | null {
 /**
  * Estimate the cost in USD for a given provider, model, and token counts.
  *
+ * @param vertexAi whether the captured request went to a Vertex AI host, which
+ *        bills a native Gemini call at Vertex AI's rates (as the server does)
  * @returns The estimated cost in USD, or `null` if the model is unknown.
  *          Returns `0` for zero tokens even on a known model.
  */
@@ -166,8 +180,9 @@ export function estimateCostUsd(
   model: string,
   inputTokens: number,
   outputTokens: number,
+  vertexAi = false,
 ): number | null {
-  const pricing = getPricing(provider, model);
+  const pricing = getPricing(provider, model, vertexAi);
   if (pricing === null) return null;
 
   if (inputTokens === 0 && outputTokens === 0) return 0;
@@ -192,4 +207,5 @@ export const PRICING_MODEL_PREFIXES: Record<string, string[]> = {
   anthropic: ANTHROPIC_PRICING.map(([prefix]) => prefix),
   openai: OPENAI_PRICING.map(([prefix]) => prefix),
   gemini: GEMINI_PRICING.map(([prefix]) => prefix),
+  vertex_gemini: VERTEX_GEMINI_PRICING.map(([prefix]) => prefix),
 };

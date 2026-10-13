@@ -101,7 +101,8 @@ export default function LlmUsageDetail({ parsed }: LlmUsageDetailProps) {
   const stopReason = extractStopReason(parsed);
 
   const cost = tokens && model
-    ? estimateCostUsd(parsed.kind, model, tokens.inputTokens, tokens.outputTokens)
+    ? estimateCostUsd(parsed.kind, model, tokens.inputTokens, tokens.outputTokens,
+      parsed.kind === 'gemini' && parsed.vertexAi === true)
     : null;
 
   return (

@@ -779,6 +779,14 @@ AI host (`LlmProviderSniffer.isVertexAiHost`, which checks a `proxyPassMappings`
 priced by `LlmPricing.estimateVertexAiCostUsd` from Vertex AI's Gemini list prices, which differ from
 the Gemini API's only for `gemini-2.0-flash` (0.15/0.60 against 0.10/0.40 USD per million tokens); a
 `generativelanguage.googleapis.com` call, and a mocked Gemini response, keep the Gemini API rates.
+The offline pricers apply the same rule to the captured request's host (socket address, else `Host`
+header): the optimisation report (`LlmOptimisationReportBuilder` sets `Call.vertexAi`, which is not
+serialised, and `OptimisationSignals` compares Vertex AI rates via `vertexAiBlendedPerMillion` and
+`cheapestVertexAiModel`), MCP `verify_cost_budget`, and the dashboard (`llmTraffic.ts` marks a
+`GeminiParsed` as `vertexAi`, and `llmPricing.ts` mirrors `VERTEX_GEMINI_PRICING`). The report and
+`verify_cost_budget` read a native Gemini call's model from its `/models/{model}:` path when the
+body names none. A `proxyPassMappings` call is logged with the request MockServer received, whose
+host is MockServer's own, so these offline pricers cost it at the Gemini API rates.
 
 **Bedrock model ids.** A Bedrock request names its model in the path and a Converse response has
 none, so the model is read from `/model/{modelId}/...` (URL-decoded). A foundation-model or

@@ -147,6 +147,8 @@ export interface GeminiParsed {
   sseEvents: SseEvent[] | null;
   streamed: boolean;
   streamTruncated: boolean;
+  /** The captured request went to a Vertex AI host, which bills at Vertex AI's rates. */
+  vertexAi?: boolean;
 }
 
 /** Gemini usageMetadata. Thinking models report thoughtsTokenCount apart from candidatesTokenCount. */
@@ -547,6 +549,18 @@ function isOpenAiResponsesPath(path: string | null): boolean {
 function isAzureOpenAiHost(host: string, path: string | null): boolean {
   return host.endsWith('.openai.azure.com')
     || (host.endsWith('.services.ai.azure.com') && path !== null && path.toLowerCase().startsWith('/openai/'));
+}
+
+const VERTEX_AI_HOST = /^(?:(?:[a-z0-9-]+-)?aiplatform\.googleapis\.com|aiplatform\.[a-z0-9-]+\.rep\.googleapis\.com)$/;
+
+/**
+ * Whether a captured request went to a Vertex AI host, as the server's
+ * LlmProviderSniffer.isVertexAiHost decides it: the socket address's host, else the Host header.
+ */
+function isVertexAiHost(httpRequest: Record<string, unknown> | null): boolean {
+  if (!httpRequest) return false;
+  const host = getString(getObject(httpRequest, 'socketAddress'), 'host') || getHeaderValue(httpRequest['headers'], 'host');
+  return host !== null && VERTEX_AI_HOST.test(host.toLowerCase().replace(/:\d+$/, ''));
 }
 
 function isGeminiPath(path: string | null): boolean {
@@ -1104,6 +1118,7 @@ function parseGeminiRequest(
   responseBody: unknown,
   responseHeaders: unknown,
   path: string | null,
+  vertexAi: boolean,
 ): GeminiParsed {
   const req = safeParseJson(requestBody) as Record<string, unknown> | undefined;
   const { streamed, truncated } = hasStreamingHeaders(responseHeaders);
@@ -1122,6 +1137,7 @@ function parseGeminiRequest(
     sseEvents: null,
     streamed,
     streamTruncated: truncated,
+    vertexAi,
   };
 
   if (isStream && typeof responseBody === 'string') {
@@ -1740,7 +1756,7 @@ export function parseTraffic(value: Record<string, unknown>): ParsedTraffic {
       case 'openai_responses':
         return parseOpenAiResponsesRequest(reqBodyContent, resBodyContent, responseHeaders);
       case 'gemini':
-        return parseGeminiRequest(reqBodyContent, resBodyContent, responseHeaders, path);
+        return parseGeminiRequest(reqBodyContent, resBodyContent, responseHeaders, path, isVertexAiHost(httpRequest));
     }
 
     if (isAnthropicPath(path)) {
@@ -1773,7 +1789,7 @@ export function parseTraffic(value: Record<string, unknown>): ParsedTraffic {
     }
 
     if (isGeminiPath(path)) {
-      return parseGeminiRequest(reqBodyContent, resBodyContent, responseHeaders, path);
+      return parseGeminiRequest(reqBodyContent, resBodyContent, responseHeaders, path, isVertexAiHost(httpRequest));
     }
 
     if (isOllamaPath(path)) {
@@ -1803,7 +1819,7 @@ export function parseTraffic(value: Record<string, unknown>): ParsedTraffic {
       case 'openai_responses':
         return parseOpenAiResponsesRequest(reqBodyContent, resBodyContent, responseHeaders);
       case 'gemini':
-        return parseGeminiRequest(reqBodyContent, resBodyContent, responseHeaders, path);
+        return parseGeminiRequest(reqBodyContent, resBodyContent, responseHeaders, path, isVertexAiHost(httpRequest));
     }
 
     const statusCode = httpResponse ? getNumber(httpResponse, 'statusCode') : null;

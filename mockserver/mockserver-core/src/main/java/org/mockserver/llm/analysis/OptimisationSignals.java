@@ -454,8 +454,12 @@ public class OptimisationSignals {
             if (provider == null || call.getModel() == null) {
                 continue;
             }
-            Double currentBlended = LlmPricing.blendedPerMillion(provider, call.getModel());
-            LlmPricing.ModelOption cheapest = LlmPricing.cheapestModel(provider, call.getModel());
+            Double currentBlended = call.isVertexAi()
+                ? LlmPricing.vertexAiBlendedPerMillion(provider, call.getModel())
+                : LlmPricing.blendedPerMillion(provider, call.getModel());
+            LlmPricing.ModelOption cheapest = call.isVertexAi()
+                ? LlmPricing.cheapestVertexAiModel(provider, call.getModel())
+                : LlmPricing.cheapestModel(provider, call.getModel());
             if (currentBlended == null || cheapest == null) {
                 continue;
             }

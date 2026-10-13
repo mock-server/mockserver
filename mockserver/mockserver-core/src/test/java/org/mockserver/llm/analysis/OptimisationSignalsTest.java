@@ -283,6 +283,31 @@ public class OptimisationSignalsTest {
         assertTrue(signal.get().getRecommendation(), signal.get().getRecommendation().contains("`gemini-2.0-flash-lite`"));
     }
 
+    // Gemini 2.0 Flash is 0.15 / 0.60 per million tokens on Vertex AI and 0.10 / 0.40 on the Gemini API;
+    // Flash-Lite is 0.075 / 0.30 on both, so moving saves 50% on Vertex AI but only 25% on the Gemini API
+    @Test
+    public void modelOverspendForANativeVertexAiGeminiCallUsesVertexAiRates() {
+        List<Call> calls = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            calls.add(call(i).setProvider("GEMINI").setModel("gemini-2.0-flash-001").setVertexAi(true)
+                .setOutputTokens(50).setInputTokens(200).setEstimatedCostUsd(0.01));
+        }
+        Optional<Signal> signal = findSignal(signals.detect(calls), "MODEL_OVERSPEND");
+        assertTrue(signal.isPresent());
+        assertTrue(signal.get().getRecommendation(), signal.get().getRecommendation().contains("`gemini-2.0-flash-lite` would likely suffice at ~50% lower cost"));
+        assertEquals(0.015, signal.get().getEstimatedSavingUsd(), 0.00001);
+    }
+
+    @Test
+    public void modelOverspendNotFiredForAGeminiApiCallWhoseSavingIsTooSmall() {
+        List<Call> calls = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            calls.add(call(i).setProvider("GEMINI").setModel("gemini-2.0-flash-001")
+                .setOutputTokens(50).setInputTokens(200).setEstimatedCostUsd(0.01));
+        }
+        assertNull(findSignal(signals.detect(calls), "MODEL_OVERSPEND").orElse(null));
+    }
+
     @Test
     public void modelOverspendNotFiredForTheOnlyPricedVertexAiLlamaModel() {
         List<Call> calls = new ArrayList<>();

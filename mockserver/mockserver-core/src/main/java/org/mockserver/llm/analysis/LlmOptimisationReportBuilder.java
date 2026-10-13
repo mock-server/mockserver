@@ -175,6 +175,7 @@ public class LlmOptimisationReportBuilder {
             call.setPath(request.getPath().getValue());
         }
         String model = modelFromRequest(request);
+        call.setVertexAi(LlmProviderSniffer.isVertexAiHost(request, null));
 
         // Decode the request conversation (best-effort).
         ParsedConversation conversation = decode(request, provider);
@@ -298,7 +299,12 @@ public class LlmOptimisationReportBuilder {
         call.setCachedInputTokens(cachedInputTokens);
         call.setReasoningTokens(reasoningTokens);
 
-        Double cost = LlmPricing.estimateCostUsd(provider, model, inputTokens, outputTokens);
+        LlmPricing.PricingEntry pricing = call.isVertexAi()
+            ? LlmPricing.getVertexAiPricing(provider, model)
+            : LlmPricing.getPricing(provider, model);
+        Double cost = call.isVertexAi()
+            ? LlmPricing.estimateVertexAiCostUsd(provider, model, inputTokens, outputTokens)
+            : LlmPricing.estimateCostUsd(provider, model, inputTokens, outputTokens);
         // Distinguish "unpriced" (unknown model — Azure deployment names, unrecognised ids) from a
         // genuine $0.00. We keep estimatedCostUsd numerically 0.0 so aggregation stays well-defined,
         // but flag costUnknown so consumers never render an unpriced call as a confident $0.00.
@@ -308,7 +314,7 @@ public class LlmOptimisationReportBuilder {
         // A cost derived from an admitted-placeholder/approx rate (e.g. gpt-5*) is not a billed
         // figure — force the estimate flag (and surface an explicit approx-rate flag) so it is
         // never shown as fact.
-        boolean approxRate = !costUnknown && LlmPricing.isApproximateRate(provider, model);
+        boolean approxRate = !costUnknown && pricing.isApproximate();
         call.setApproximateRate(approxRate);
         call.setCostIsEstimated(estimated || approxRate);
         call.setModel(model);
@@ -544,8 +550,12 @@ public class LlmOptimisationReportBuilder {
     }
 
     private String modelFromRequest(HttpRequest request) {
-        // Prefer the request body's model field; LlmProviderSniffer already has a robust reader.
-        return LlmProviderSniffer.extractModelFromRequest(request);
+        // Prefer the request body's model field; a native Gemini call names its model only in its path.
+        String model = LlmProviderSniffer.extractModelFromRequest(request);
+        if (model == null && request.getPath() != null) {
+            model = LlmProviderSniffer.extractGeminiModelFromPath(request.getPath().getValue());
+        }
+        return model;
     }
 
     private static String systemPromptText(List<ParsedMessage> messages) {
