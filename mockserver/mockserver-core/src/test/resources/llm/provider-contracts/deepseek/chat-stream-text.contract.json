@@ -1,0 +1,45 @@
+{
+  "description": "DeepSeek chat completions, streamed text reply without stream_options: usage rides on the finish_reason chunk, the last before [DONE]",
+  "source": "https://api-docs.deepseek.com/api/create-chat-completion (200 (Streaming) Example; stream_options.include_usage)",
+  "retrieved": "2026-10-13",
+  "request": {
+    "method": "POST",
+    "path": "/chat/completions",
+    "body": {
+      "model": "deepseek-flash",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant"
+        },
+        {
+          "role": "user",
+          "content": "Hello"
+        }
+      ],
+      "stream": true
+    }
+  },
+  "httpLlmResponse": {
+    "provider": "DEEPSEEK",
+    "model": "deepseek-flash",
+    "completion": {
+      "text": "Hello! How can I assist you today?",
+      "streaming": true,
+      "usage": {
+        "inputTokens": 17,
+        "outputTokens": 9
+      }
+    }
+  },
+  "response": "chat-stream-text.response.sse",
+  "format": "SSE",
+  "wireFormat": "SSE",
+  "allowed": [
+    {
+      "kind": "MISSING",
+      "path": "choices[].logprobs",
+      "reason": "optional on a stream chunk: the reference's chat completion chunk schema marks choices[].logprobs nullable but not required, where the non-streaming choice requires it"
+    }
+  ]
+}

@@ -721,11 +721,13 @@ curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
 
 <p>
     <strong>Token usage in an OpenAI stream.</strong> For <span class="inline_code">OPENAI</span>,
-    <span class="inline_code">AZURE_OPENAI</span>, <span class="inline_code">DEEPSEEK</span>,
+    <span class="inline_code">AZURE_OPENAI</span>,
     <span class="inline_code">XAI</span> and <span class="inline_code">ORCAROUTER</span>, a stream carries the
-    <span class="inline_code">usage</span> above only when the request asks for it, as the real APIs do. Three
+    <span class="inline_code">usage</span> above only when the request asks for it, as the real APIs do. Four
     providers send it without being asked, as their real APIs do: <span class="inline_code">MISTRAL</span> puts
     <span class="inline_code">usage</span> on the chunk with the <span class="inline_code">finish_reason</span>,
+    <span class="inline_code">DEEPSEEK</span> does too (and when asked, also sends
+    <span class="inline_code">"usage": null</span> on every other chunk, with no separate usage chunk),
     <span class="inline_code">GROQ</span> puts it in <span class="inline_code">x_groq.usage</span> on that chunk, and
     <span class="inline_code">OPENROUTER</span> always ends the stream with the usage chunk shown below, though its usage chunk
     has one choice with an empty <span class="inline_code">delta</span> that repeats the
@@ -1345,7 +1347,7 @@ geminiLive()
                 <span class="inline_code">stream_options.include_usage</span> to <span class="inline_code">true</span>.</td>
         </tr>
         <tr>
-            <td>Mistral, OpenRouter, Groq</td>
+            <td>Mistral, DeepSeek, OpenRouter, Groq</td>
             <td>Sent without being asked for. Nothing to set.</td>
         </tr>
         <tr>

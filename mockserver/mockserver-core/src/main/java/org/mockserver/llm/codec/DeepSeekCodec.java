@@ -12,6 +12,8 @@ import org.mockserver.model.Usage;
  * DeepSeek's API reference requires: {@code logprobs} (null) on each choice, a
  * {@code system_fingerprint} on the response and on every chunk, and
  * {@code usage.prompt_tokens_details.cached_tokens} (equal to the cache hits) in every usage.
+ * A stream always carries {@code usage} on its {@code finish_reason} chunk, with no separate
+ * usage chunk; {@code stream_options.include_usage} only adds {@code "usage": null} to the others.
  */
 public class DeepSeekCodec extends OpenAiCompatibleChatCodec {
 
@@ -28,6 +30,11 @@ public class DeepSeekCodec extends OpenAiCompatibleChatCodec {
     @Override
     protected String reasoningField() {
         return "reasoning_content";
+    }
+
+    @Override
+    protected boolean streamsUsageOnFinishChunk() {
+        return true;
     }
 
     @Override

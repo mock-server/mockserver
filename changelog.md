@@ -867,6 +867,7 @@ This release delivers a sustained performance and memory programme alongside dat
   truncated body, and show it as base64, because a truncated body is kept as bytes.
 ### Fixed
 
+- **A mocked `DEEPSEEK` stream now reports token usage on its last chunk, whether or not the request sets `stream_options.include_usage`, as DeepSeek's API does.** DeepSeek's API reference says the last chunk before `data: [DONE]` always carries the token usage, on the chunk with the `finish_reason`, and that there is no separate usage-only chunk; `include_usage: true` only adds `"usage": null` to every other chunk. In 8.0.0 and earlier a mocked `DEEPSEEK` stream carried no usage at all, so a client or gateway that counts DeepSeek tokens from a stream read none. A request that sets `include_usage` gets `"usage": null` on every chunk but the last, and no extra chunk with empty `choices`. Other providers are unchanged.
 - **Mistral `codestral-embed` calls are no longer costed at the Codestral chat rate.** In 8.0.0 and earlier, an embedding model whose name starts with a priced chat model's name took that chat model's price, so `codestral-embed` calls forwarded to Mistral added an estimated cost to the LLM cost metrics, the cost budget and the LLM cost reports. Embedding models now have no estimated cost, as other embedding models already did. Chat models with dated or suffixed names, such as `gpt-4o-2024-08-06` or `codestral-2508`, keep their price.
 - **Mocked AWS Bedrock InvokeModel responses now send the token-count headers that Bedrock sends.** Real Bedrock reports an InvokeModel call's token counts in the `X-Amzn-Bedrock-Input-Token-Count` and `X-Amzn-Bedrock-Output-Token-Count` response headers, and boto3-based clients such as LangChain's `ChatBedrock` read usage only from them. In 8.0.0 and earlier a mocked `BEDROCK` InvokeModel response had neither header, so these clients reported zero tokens for every mocked call. A non-streaming completion now sends both, equal to the body's `usage`, and a Titan or Cohere embedding sends the input count. Converse and streaming responses still send none, as on Bedrock.
 - **Forwarded AWS Bedrock calls that report OpenAI-style usage are now counted in token metrics and
@@ -1621,9 +1622,13 @@ This release delivers a sustained performance and memory programme alongside dat
   `completion_tokens_details.reasoning_tokens`. Every other chunk carries `"usage": null`. The stream
   never carried usage, even though the documentation's streaming example set it, so the Vercel AI SDK
   (which asks for usage by default), LangChain `stream_usage`, LiteLLM and Langfuse saw zero tokens. This
-  applies to `OPENAI`, `AZURE_OPENAI` and the OpenAI-compatible providers (`MISTRAL`, `XAI`, `DEEPSEEK`,
-  `GROQ`, `OPENROUTER`, `ORCAROUTER`). A request that does not ask gets no usage, as from the real
-  OpenAI and Azure APIs, and is unchanged; the compatible providers follow the same opt-in.
+  applies to `OPENAI`, `AZURE_OPENAI` and the OpenAI-compatible providers `XAI`, `GROQ` and `ORCAROUTER`.
+  A request that does not ask gets no usage chunk, as from the real OpenAI and Azure APIs, and is
+  unchanged; `XAI` and `ORCAROUTER` follow the same opt-in. `MISTRAL` and `DEEPSEEK` never send the extra
+  chunk: they always put `usage` on the chunk that carries the `finish_reason`, and `DEEPSEEK` adds
+  `"usage": null` to every other chunk only when asked. `GROQ` also always puts the usage in
+  `x_groq.usage` on that chunk, and `OPENROUTER` always ends the stream with its usage chunk, whose
+  `choices` holds one content-free choice repeating the `finish_reason`.
 - **A proxied LLM call whose response is streamed is now counted, so `llmCostBudgetUsd` applies to
   streaming clients.** Token and cost tracking of forwarded LLM traffic read the response as one JSON
   document, so a Server-Sent Events stream failed to parse and was silently skipped, and an Ollama

@@ -37,8 +37,8 @@ import static org.mockserver.model.Usage.usage;
  * The OpenAI-compatible providers' additions to the OpenAI Chat Completions shape, and the
  * configured tool-call id, asserted against each provider's published shape rather than codec
  * output:
- * DeepSeek (api-docs.deepseek.com/api/create-chat-completion and the {@code @ai-sdk/deepseek}
- * schema), xAI (docs.x.ai/developers/rest-api-reference/inference/chat-completions),
+ * DeepSeek (api-docs.deepseek.com/api/create-chat-completion, its streaming example and
+ * {@code stream_options.include_usage}, and the {@code @ai-sdk/deepseek} schema), xAI (docs.x.ai/developers/rest-api-reference/inference/chat-completions),
  * Groq ({@code groq-python} {@code ChatCompletionChunk}, {@code XGroq}, {@code CompletionUsage}),
  * Mistral ({@code client-python} {@code CompletionChunk}, which has no {@code stream_options}),
  * OpenRouter (openrouter.ai/docs usage accounting and reasoning tokens), Gemini
@@ -131,9 +131,50 @@ public class OpenAiCompatibleProviderWireShapeTest {
         }
         assertThat(lastReasoning < firstContent, is(true));
         JsonNode usageChunk = chunks.get(chunks.size() - 1);
-        assertThat(usageChunk.path("choices").size(), is(0));
+        assertThat(usageChunk.path("choices").path(0).path("finish_reason").asText(), is("stop"));
         assertThat(usageChunk.path("usage").path("prompt_cache_hit_tokens").asInt(-1), is(5));
         assertThat(usageChunk.path("usage").path("prompt_cache_miss_tokens").asInt(-1), is(15));
+    }
+
+    @Test
+    public void deepSeekStreamsUsageOnTheFinishChunkWithOrWithoutTheOptIn() throws Exception {
+        // the reference's stream_options.include_usage: the last chunk before [DONE] carries the
+        // usage either way, the chunk whose one choice has the finish_reason; no usage-only chunk.
+        // With the opt-in every other chunk has "usage": null; without it they have no usage field.
+        Completion completion = completion().withText("Hello! How can I assist you today?")
+            .withUsage(usage().withInputTokens(17).withOutputTokens(9));
+        for (HttpRequest request : new HttpRequest[]{NO_OPT_IN, INCLUDE_USAGE, null}) {
+            List<JsonNode> chunks = new ArrayList<>();
+            List<SseEvent> events = request == null
+                ? codec(Provider.DEEPSEEK).encodeStreaming(completion, "deepseek-flash", null)
+                : codec(Provider.DEEPSEEK).encodeStreaming(completion, "deepseek-flash", null, request);
+            assertThat(events.get(events.size() - 1).getData(), is("[DONE]"));
+            for (SseEvent event : events.subList(0, events.size() - 1)) {
+                chunks.add(OBJECT_MAPPER.readTree(event.getData()));
+            }
+            String ctx = (request == INCLUDE_USAGE ? "include_usage" : request == null ? "no request" : "no opt-in") + " ";
+            String lastData = events.get(events.size() - 2).getData();
+            assertThat(ctx + "one usage member on the last chunk", lastData.split("\"usage\"", -1).length - 1, is(1));
+            JsonNode last = chunks.get(chunks.size() - 1);
+            assertThat(ctx + "last chunk choices", last.path("choices").size(), is(1));
+            assertThat(ctx + "last chunk finish_reason", last.path("choices").path(0).path("finish_reason").asText(), is("stop"));
+            JsonNode usage = last.path("usage");
+            assertThat(ctx + "prompt_tokens", usage.path("prompt_tokens").asInt(-1), is(17));
+            assertThat(ctx + "completion_tokens", usage.path("completion_tokens").asInt(-1), is(9));
+            assertThat(ctx + "total_tokens", usage.path("total_tokens").asInt(-1), is(26));
+            assertThat(ctx + "prompt_tokens_details.cached_tokens", usage.path("prompt_tokens_details").path("cached_tokens").asInt(-1), is(0));
+            assertThat(ctx + "prompt_cache_hit_tokens", usage.path("prompt_cache_hit_tokens").asInt(-1), is(0));
+            assertThat(ctx + "prompt_cache_miss_tokens", usage.path("prompt_cache_miss_tokens").asInt(-1), is(17));
+            for (JsonNode chunk : chunks.subList(0, chunks.size() - 1)) {
+                assertThat(ctx + "one choice", chunk.path("choices").size(), is(1));
+                assertThat(ctx + "no finish_reason", chunk.path("choices").path(0).path("finish_reason").isNull(), is(true));
+                if (request == INCLUDE_USAGE) {
+                    assertThat(ctx + "usage null", chunk.has("usage") && chunk.get("usage").isNull(), is(true));
+                } else {
+                    assertThat(ctx + "no usage", chunk.has("usage"), is(false));
+                }
+            }
+        }
     }
 
     @Test
@@ -399,7 +440,7 @@ public class OpenAiCompatibleProviderWireShapeTest {
 
     @Test
     public void usageStreamedWithoutAnOptInIsReadByTheProxyUsageScanner() {
-        for (Provider provider : new Provider[]{Provider.GROQ, Provider.MISTRAL, Provider.OPENROUTER}) {
+        for (Provider provider : new Provider[]{Provider.GROQ, Provider.MISTRAL, Provider.OPENROUTER, Provider.DEEPSEEK}) {
             StringBuilder body = new StringBuilder();
             for (SseEvent event : codec(provider).encodeStreaming(
                 completion().withText("hello there").withUsage(usage().withInputTokens(9).withOutputTokens(3)), "m", null, NO_OPT_IN)) {

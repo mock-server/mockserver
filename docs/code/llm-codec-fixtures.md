@@ -166,7 +166,7 @@ Current coverage: OpenAI Chat Completions (text, tool call, stream), OpenAI Resp
 function call, stream), Anthropic Messages (text, stream, stream with text then tool use),
 Gemini (text, thinking with function call, `alt=sse` stream), Bedrock Converse (text,
 stream), Azure OpenAI (text), Ollama `/api/chat` (text, tool call, both streamed, model load and unload), Ollama
-`/api/generate` (text, streamed text, model load and unload), DeepSeek (text), Groq (text) and OpenRouter (text, tool
+`/api/generate` (text, streamed text, model load and unload), DeepSeek (text, stream), Groq (text) and OpenRouter (text, tool
 call, stream). Not yet covered: Bedrock InvokeModel, the other OpenAI-compatible providers
 (Mistral, xAI, OrcaRouter), embeddings and rerank,
 and a recorded Gemini JSON-array stream (that framing is tested by

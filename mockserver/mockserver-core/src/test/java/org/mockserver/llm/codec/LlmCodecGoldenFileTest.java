@@ -457,8 +457,8 @@ public class LlmCodecGoldenFileTest {
         Set<Provider> sameAsOpenAi = EnumSet.of(Provider.OPENAI, Provider.AZURE_OPENAI, Provider.ORCAROUTER);
         for (Provider provider : family) {
             ProviderCodec codec = registry.lookup(provider).orElseThrow(AssertionError::new);
-            // Mistral has no stream_options and puts usage on its finish_reason chunk instead
-            if (provider != Provider.MISTRAL) {
+            // Mistral and DeepSeek put usage on the finish_reason chunk instead, opt-in or not
+            if (provider != Provider.MISTRAL && provider != Provider.DEEPSEEK) {
                 assertStreamedUsageChunk(provider, codec.encodeStreaming(TEXT_COMPLETION, model, null, includeUsage), 12, 8);
                 assertStreamedUsageChunk(provider, codec.encodeStreaming(TOOL_CALL_COMPLETION, model, null, includeUsage), 25, 15);
             }

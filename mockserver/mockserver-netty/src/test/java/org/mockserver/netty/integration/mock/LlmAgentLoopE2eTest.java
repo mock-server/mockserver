@@ -667,7 +667,7 @@ public class LlmAgentLoopE2eTest {
     public void shouldStreamOpenAiUsageChunkThroughNettyPipelineWhenRequestSetsIncludeUsage() throws Exception {
         // AI SDKs (Vercel AI SDK, LangChain stream_usage, LiteLLM) send stream_options.include_usage
         // and read token counts only from the final choices:[] chunk before [DONE].
-        for (org.mockserver.model.Provider provider : new org.mockserver.model.Provider[]{OPENAI, AZURE_OPENAI, DEEPSEEK}) {
+        for (org.mockserver.model.Provider provider : new org.mockserver.model.Provider[]{OPENAI, AZURE_OPENAI}) {
             mockServerClient.reset();
             String path = "/v1/chat/completions/" + provider.name().toLowerCase();
             llmMock(path)
@@ -694,6 +694,45 @@ public class LlmAgentLoopE2eTest {
             for (String line : dataLines.subList(0, dataLines.size() - 2)) {
                 JsonNode chunk = OBJECT_MAPPER.readTree(line);
                 assertThat(ctx + "usage is null on content chunks", chunk.has("usage") && chunk.get("usage").isNull(), is(true));
+            }
+        }
+    }
+
+    @Test
+    public void shouldStreamDeepSeekUsageOnTheFinishChunkWithOrWithoutIncludeUsage() throws Exception {
+        // DeepSeek's API reference: the usage is on the last chunk before [DONE], the chunk whose one
+        // choice has the finish_reason, whether or not the request sets stream_options.include_usage
+        llmMock("/chat/completions")
+            .withProvider(DEEPSEEK)
+            .withModel("deepseek-flash")
+            .respondingWith(completion()
+                .withText("Hello from DeepSeek")
+                .withUsage(Usage.usage().withInputTokens(17).withOutputTokens(9))
+                .withStreaming(true))
+            .applyTo(mockServerClient);
+
+        for (boolean includeUsage : new boolean[]{false, true}) {
+            String body = "{\"model\":\"deepseek-flash\",\"stream\":true,"
+                + (includeUsage ? "\"stream_options\":{\"include_usage\":true}," : "")
+                + "\"messages\":[{\"role\":\"user\",\"content\":\"Hi\"}]}";
+            List<String> dataLines = sseDataLines(sendPostRaw("/chat/completions", body));
+
+            String ctx = "include_usage=" + includeUsage + " ";
+            assertThat(ctx + "ends with [DONE]", dataLines.get(dataLines.size() - 1), is("[DONE]"));
+            JsonNode last = OBJECT_MAPPER.readTree(dataLines.get(dataLines.size() - 2));
+            assertThat(ctx + "finish chunk has one choice", last.get("choices").size(), is(1));
+            assertThat(ctx + "finish_reason", last.path("choices").path(0).path("finish_reason").asText(), is("stop"));
+            assertThat(ctx + "prompt_tokens", last.path("usage").path("prompt_tokens").asInt(-1), is(17));
+            assertThat(ctx + "completion_tokens", last.path("usage").path("completion_tokens").asInt(-1), is(9));
+            assertThat(ctx + "prompt_cache_miss_tokens", last.path("usage").path("prompt_cache_miss_tokens").asInt(-1), is(17));
+            for (String line : dataLines.subList(0, dataLines.size() - 2)) {
+                JsonNode chunk = OBJECT_MAPPER.readTree(line);
+                assertThat(ctx + "one choice", chunk.get("choices").size(), is(1));
+                assertThat(ctx + "usage on earlier chunks",
+                    chunk.has("usage"), is(includeUsage));
+                if (includeUsage) {
+                    assertThat(ctx + "usage is null on earlier chunks", chunk.get("usage").isNull(), is(true));
+                }
             }
         }
     }

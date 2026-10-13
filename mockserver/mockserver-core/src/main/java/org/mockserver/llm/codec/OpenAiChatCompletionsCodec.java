@@ -133,6 +133,7 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
     private List<SseEvent> encodeStreamingChunks(Completion completion, String model, StreamingPhysics physics, boolean includeUsageRequested) {
         List<SseEvent> events = new ArrayList<>();
         boolean includeUsage = streamsUsageChunk(includeUsageRequested);
+        boolean usageOnFinishChunk = streamsUsageOnFinishChunk();
         String id = "chatcmpl-" + randomId(29);
         String providerRequestId = newProviderRequestId();
         String systemFingerprint = newSystemFingerprint();
@@ -186,11 +187,12 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
 
         // 4. Final chunk with finish_reason
         String finishReason = finishReason(completion, hasToolCalls);
+        String finishFields = finishChunkFields(providerRequestId, usage) + (usageOnFinishChunk ? ",\"usage\":" + toJson(usage) : "");
         events.add(sseEvent().withData(buildChunk(prefix, "{}", finishReason,
-            streamChoiceFields(completion, finishReason), includeUsage, finishChunkFields(providerRequestId, usage))));
+            streamChoiceFields(completion, finishReason), includeUsage && !usageOnFinishChunk, finishFields)));
 
         // 5. Usage chunk (when the request set stream_options.include_usage, or the provider always sends it)
-        if (includeUsage) {
+        if (includeUsage && !usageOnFinishChunk) {
             events.add(sseEvent().withData(buildUsageChunk(prefix, usageChunkChoices(completion, finishReason), usage)));
         }
 
@@ -593,6 +595,15 @@ public class OpenAiChatCompletionsCodec implements ProviderCodec {
     /** Whether a stream ends with the {@code choices: []} usage chunk, given the request's opt-in. */
     protected boolean streamsUsageChunk(boolean includeUsageRequested) {
         return includeUsageRequested;
+    }
+
+    /**
+     * Whether the stream's usage always rides on the {@code finish_reason} chunk instead of a
+     * {@code choices: []} chunk; {@link #streamsUsageChunk} then decides only the {@code "usage": null}
+     * on every other chunk.
+     */
+    protected boolean streamsUsageOnFinishChunk() {
+        return false;
     }
 
     /** A provider-assigned request id echoed in the response and stream, or null for none. */
