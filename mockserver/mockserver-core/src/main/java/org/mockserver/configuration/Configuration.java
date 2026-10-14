@@ -2559,7 +2559,8 @@ public class Configuration {
 
     /**
      * How many times one request may be forwarded by this MockServer before it is answered with
-     * {@code 508 Loop Detected}: each forward action adds this MockServer's identifier to the request's
+     * {@code 508 Loop Detected}: each forward action (one relaying a WebSocket upgrade too) and
+     * {@code proxyPassMappings} entry adds this MockServer's identifier to the request's
      * {@code x-mockserver-forwarded-by} header, so a forward whose target leads back here stops instead of
      * repeating until local ports run out. Default 10; 0 turns loop detection off and stops the header
      * being sent.

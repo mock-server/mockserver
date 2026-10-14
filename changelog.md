@@ -935,15 +935,17 @@ This release delivers a sustained performance and memory programme alongside dat
 
 - **A flood of unmatched requests at INFO no longer compares each one with every expectation.** At the default INFO log level, a request that matched nothing was compared with every stored expectation so the log could name the closest one, writing one "didn't match" entry for each. With more than 1,000 expectations this now stops after the expectations that share the request's method and path (and any whose method or path is not a plain value) plus 1,000 others, in serving order. In a benchmark with 5,000 expectations an unmatched request went from about 17 ms to about 4.6 ms. When expectations were left out, the closest-match log entry ends with `only N of M expectations were checked, so a closer one may exist`, and only the compared expectations get a "didn't match" entry. Used-up and expired expectations are still removed, and the namespace count in the DEBUG log still covers every expectation. Stores of up to 1,000 expectations, and the WARN level, are unchanged.
 - **The dashboard's Preview Diff now shows the changes when it is the first editor you open.** In Capture as Mock, opening the Preview Diff tab before any other code editor in the page showed both documents with no added or changed lines highlighted, and the browser console reported that the editor's worker script failed to load. The diff is now computed whichever editor opens first.
-- **A forward expectation that sends requests back to MockServer itself now stops after 10 forwards with a
-  `508 Loop Detected`, instead of repeating until MockServer runs out of local ports.** Each forward matched the
-  same expectation again and opened another connection, and the client waited for an eventual `502`. Every forward action now adds an
-  `x-mockserver-forwarded-by` header naming this MockServer (a random value, new each start), and a request this
-  MockServer has already forwarded `forwardLoopMaxHops` times (default 10) is answered with a `508` whose body
-  says what to check. Only a MockServer's own entries count, so a forward to another MockServer, a chain of them,
-  and a deliberate forward back to the same MockServer (to a path another expectation answers) still work.
-  Upstreams now see the extra header; recorded expectations leave it out, so recordings still match requests
-  without it. Set `forwardLoopMaxHops` to `0` to stop sending it.
+- **A forward expectation (including one that forwards a WebSocket upgrade) or a `proxyPassMappings` entry that
+  sends requests back to MockServer itself now stops after 10 hops with a `508 Loop Detected`, instead of
+  repeating until MockServer runs out of local ports.** Each hop matched the same expectation or mapping again and
+  opened another connection, and the client waited for an eventual `502`. Every forward action and
+  `proxyPassMappings` entry now adds an `x-mockserver-forwarded-by` header naming this MockServer (a random value,
+  new each start), and a request this MockServer has already forwarded `forwardLoopMaxHops` times (default 10) is
+  answered with a `508` whose body says what to check. Only a MockServer's own entries count, so a forward to
+  another MockServer, a chain of them, and a deliberate forward back to the same MockServer (to a path another
+  expectation answers) still work. Requests proxied because no expectation matched are not changed. Upstreams now
+  see the extra header; recorded expectations leave it out, so recordings still match requests without it. Set
+  `forwardLoopMaxHops` to `0` to stop sending it.
 - **A client that sends binary (non-HTTP) messages and never reads the replies can no longer make MockServer
   buffer replies for it without limit.** Two cases were affected: messages forwarded one per upstream connection
   (`forwardBinaryRequestsUseSingleConnection` off, or a connection whose only upstream proxy is

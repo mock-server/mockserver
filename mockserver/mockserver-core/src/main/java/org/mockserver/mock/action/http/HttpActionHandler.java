@@ -180,6 +180,7 @@ public class HttpActionHandler {
     private WebSocketProxyRelayHandler getWebSocketProxyRelayHandler() {
         if (webSocketProxyRelayHandler == null) {
             webSocketProxyRelayHandler = new WebSocketProxyRelayHandler(configuration, mockServerLogger, nettySslContextFactory);
+            webSocketProxyRelayHandler.setForwardLoopGuard(forwardLoopGuard);
         }
         return webSocketProxyRelayHandler;
     }
@@ -189,9 +190,11 @@ public class HttpActionHandler {
      * Returns {@code true} when the request is a WebSocket upgrade and an upstream address could be resolved, in
      * which case the relay takes over the channel; {@code false} otherwise so the caller falls back to normal HTTP
      * forwarding / matching. Only ever invoked with a live Netty {@code ctx} (never in WAR deployments).
+     * {@code loopRoute} is null on the unmatched proxy path, which, as for HTTP, is not hop-counted.
      */
     private boolean attemptWebSocketPassthrough(final HttpRequest request, final ResponseWriter responseWriter, final ChannelHandlerContext ctx,
-                                                final String forwardHost, final Integer forwardPort, final Boolean forwardTls) {
+                                                final String forwardHost, final Integer forwardPort, final Boolean forwardTls,
+                                                final ForwardLoopGuard.Route loopRoute) {
         if (ctx == null || !WebSocketProxyRelayHandler.isWebSocketUpgrade(request)) {
             return false;
         }
@@ -231,7 +234,7 @@ public class HttpActionHandler {
         if (isEmpty(host)) {
             return false;
         }
-        getWebSocketProxyRelayHandler().relay(request, ctx, host, port, tls, responseWriter.respondingDirectly());
+        getWebSocketProxyRelayHandler().relay(request, ctx, host, port, tls, responseWriter.respondingDirectly(), loopRoute);
         return true;
     }
 
@@ -407,7 +410,7 @@ public class HttpActionHandler {
             // relayed straight through to the real upstream server (101 handshake + bidirectional frame relay),
             // rather than being forwarded as a plain (broken) HTTP request. Falls back to normal forwarding when
             // the request is not a WS upgrade or no upstream address can be resolved.
-            if (attemptWebSocketPassthrough(request, responseWriter, ctx, null, null, null)) {
+            if (attemptWebSocketPassthrough(request, responseWriter, ctx, null, null, null, null)) {
                 return;
             }
             handleUnmatchedProxyForward(request, responseWriter, ctx, synchronous, potentiallyHttpProxy);
@@ -557,7 +560,7 @@ public class HttpActionHandler {
         if (action instanceof HttpForward && WebSocketProxyRelayHandler.isWebSocketUpgrade(request) && ctx != null) {
             HttpForward forward = (HttpForward) action;
             if (attemptWebSocketPassthrough(request, responseWriter, ctx, forward.getHost(), forward.getPort(),
-                forward.getScheme() == HttpForward.Scheme.HTTPS)) {
+                forward.getScheme() == HttpForward.Scheme.HTTPS, ForwardLoopGuard.Route.FORWARD)) {
                 expectationPostProcessor.run();
                 return;
             }
@@ -1612,10 +1615,17 @@ public class HttpActionHandler {
                         long forwardStartNanos = org.mockserver.time.TimeService.nanoTime();
                         // gRPC forward-proxy: capture the decode override then re-encode to protobuf for upstream.
                         final java.util.function.Function<HttpResponse, HttpResponse> grpcDecode = grpcDecodeOverride(clonedRequest);
-                        final HttpRequest requestToSend = grpcEncodeForForward(clonedRequest);
-                        if (refusedByPrivateNetworkBlock(requestToSend, targetAddress, request, responseWriter)) {
+                        final HttpRequest encodedRequest = grpcEncodeForForward(clonedRequest);
+                        if (refusedByPrivateNetworkBlock(encodedRequest, targetAddress, request, responseWriter)) {
                             return;
                         }
+                        // a mapping whose target leads back here matches again on every hop, as a forward does
+                        HttpResponse loopDetected = forwardLoopGuard.refuseLoop(request, ForwardLoopGuard.Route.PROXY_PASS, mockServerLogger);
+                        if (loopDetected != null) {
+                            responseWriter.writeResponse(request, loopDetected, false);
+                            return;
+                        }
+                        final HttpRequest requestToSend = forwardLoopGuard.markForwarded(request, encodedRequest);
                         final HttpForwardActionResult responseFuture = new HttpForwardActionResult(clonedRequest, httpClient.sendRequest(requestToSend, targetAddress), grpcDecode, targetAddress);
                         // Consume the upstream response via the scheduler continuation (as the matched path
                         // does) instead of a blocking get, so the pool thread is freed during the round trip.

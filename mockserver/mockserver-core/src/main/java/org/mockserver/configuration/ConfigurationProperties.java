@@ -2958,7 +2958,8 @@ public class ConfigurationProperties {
 
     /**
      * How many times one request may be forwarded by the same MockServer before it is answered with
-     * {@code 508 Loop Detected}. Each forward action adds this MockServer's identifier to the request's
+     * {@code 508 Loop Detected}. Each forward action (one relaying a WebSocket upgrade too) and
+     * {@code proxyPassMappings} entry adds this MockServer's identifier to the request's
      * {@code x-mockserver-forwarded-by} header, so a forward whose target leads back to this MockServer
      * stops after this many hops instead of repeating until local ports run out. Forwards through other
      * MockServer instances are not counted.

@@ -33,6 +33,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -86,11 +87,16 @@ public class WebSocketProxyRelayHandler {
     private final Configuration configuration;
     private final MockServerLogger mockServerLogger;
     private final NettySslContextFactory nettySslContextFactory;
+    private ForwardLoopGuard forwardLoopGuard;
 
     public WebSocketProxyRelayHandler(Configuration configuration, MockServerLogger mockServerLogger, NettySslContextFactory nettySslContextFactory) {
         this.configuration = configuration;
         this.mockServerLogger = mockServerLogger;
         this.nettySslContextFactory = nettySslContextFactory;
+    }
+
+    void setForwardLoopGuard(ForwardLoopGuard forwardLoopGuard) {
+        this.forwardLoopGuard = forwardLoopGuard;
     }
 
     /**
@@ -129,6 +135,18 @@ public class WebSocketProxyRelayHandler {
      */
     public void relay(final HttpRequest request, final ChannelHandlerContext clientCtx,
                       final String upstreamHost, final int upstreamPort, final boolean tlsUpstream, final Runnable responseEnded) {
+        relay(request, clientCtx, upstreamHost, upstreamPort, tlsUpstream, responseEnded, null);
+    }
+
+    /**
+     * As {@link #relay(HttpRequest, ChannelHandlerContext, String, int, boolean, Runnable)}, counting the hop against
+     * {@code forwardLoopMaxHops} when {@code loopRoute} is not null (a forward expectation); the unmatched proxy path
+     * passes null and, as for HTTP, neither counts nor sends {@code x-mockserver-forwarded-by}.
+     */
+    void relay(final HttpRequest request, final ChannelHandlerContext clientCtx,
+               final String upstreamHost, final int upstreamPort, final boolean tlsUpstream, final Runnable responseEnded,
+               final ForwardLoopGuard.Route loopRoute) {
+        final ForwardLoopGuard loopGuard = loopRoute != null ? forwardLoopGuard : null;
         final Channel clientChannel = clientCtx.channel();
         // forwardProxyBlockPrivateNetworks, as for any forward; connecting to the address checked means a second
         // DNS answer for the name cannot reach a blocked address. Unchanged (connect by name) when the setting is off.
@@ -137,6 +155,12 @@ public class WebSocketProxyRelayHandler {
             upstreamAddress = InetAddressValidator.validateForwardTarget(configuration, InetSocketAddress.createUnresolved(upstreamHost, upstreamPort));
         } catch (IllegalArgumentException e) {
             failClient(clientChannel, request, e.getMessage());
+            return;
+        }
+        // an upgrade relayed back here matches the same forward again, as a forwarded request does
+        HttpResponse loopDetected = loopGuard != null ? loopGuard.refuseLoop(request, loopRoute, mockServerLogger) : null;
+        if (loopDetected != null) {
+            answerClientAndClose(clientChannel, loopDetected);
             return;
         }
         final URI uri;
@@ -150,6 +174,10 @@ public class WebSocketProxyRelayHandler {
         // custom headers to forward to the upstream (everything except the handshake headers Netty sets
         // itself and MockServer control headers that must not leak upstream)
         final HttpHeaders customHeaders = buildUpstreamCustomHeaders(request);
+        List<String> forwardedBy = loopGuard != null ? loopGuard.forwardedEntries(request) : null;
+        if (forwardedBy != null) {
+            customHeaders.set(ForwardLoopGuard.HEADER_NAME, forwardedBy);
+        }
         final String subprotocol = request.getFirstHeader("Sec-WebSocket-Protocol");
 
         final WebSocketClientHandshaker upstreamHandshaker = WebSocketClientHandshakerFactory.newHandshaker(
@@ -197,7 +225,7 @@ public class WebSocketProxyRelayHandler {
                     pipeline.addLast(codec);
                     pipeline.addLast(lineEndSplitGuard.afterCodec());
                     pipeline.addLast(new HttpObjectAggregator(MAX_FRAME_PAYLOAD_LENGTH));
-                    pipeline.addLast(new UpstreamHandshakeHandler(request, clientCtx, upstreamHandshaker, subprotocol, transcript, maxHeaderSize, handshakeTimeoutMillis, handshakeTimeoutName, responseEnded));
+                    pipeline.addLast(new UpstreamHandshakeHandler(request, clientCtx, upstreamHandshaker, subprotocol, transcript, maxHeaderSize, handshakeTimeoutMillis, handshakeTimeoutName, responseEnded, forwardedBy != null));
                 }
             });
 
@@ -324,6 +352,13 @@ public class WebSocketProxyRelayHandler {
     }
 
     private void failClient(Channel clientChannel, HttpRequest request, String message) {
+        logFailure(request, message);
+        answerClientAndClose(clientChannel, response()
+            .withStatusCode(HttpResponseStatus.BAD_GATEWAY.code())
+            .withBody(message));
+    }
+
+    private void logFailure(HttpRequest request, String message) {
         if (mockServerLogger.isEnabledForInstance(Level.WARN)) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -334,11 +369,11 @@ public class WebSocketProxyRelayHandler {
                     .setArguments(message)
             );
         }
+    }
+
+    private static void answerClientAndClose(Channel clientChannel, HttpResponse response) {
         if (clientChannel.isActive()) {
-            clientChannel.writeAndFlush(response()
-                .withStatusCode(HttpResponseStatus.BAD_GATEWAY.code())
-                .withBody(message)
-            ).addListener(ChannelFutureListener.CLOSE);
+            clientChannel.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
         }
     }
 
@@ -359,6 +394,8 @@ public class WebSocketProxyRelayHandler {
         private final long handshakeTimeoutMillis;
         private final String handshakeTimeoutName;
         private final Runnable responseEnded;
+        // the hop was counted, so an upstream's 508 is a refused loop further on and is relayed
+        private final boolean relaysLoopDetected;
         // the client has been answered 502, or has gone: whatever the upstream connection reports after that is not reported
         private boolean failed;
         private ScheduledFuture<?> handshakeTimeout;
@@ -366,7 +403,7 @@ public class WebSocketProxyRelayHandler {
         private UpstreamHandshakeHandler(HttpRequest request, ChannelHandlerContext clientCtx,
                                          WebSocketClientHandshaker handshaker, String requestedSubprotocol,
                                          FrameTranscript transcript, int maxHeaderSize, long handshakeTimeoutMillis,
-                                         String handshakeTimeoutName, Runnable responseEnded) {
+                                         String handshakeTimeoutName, Runnable responseEnded, boolean relaysLoopDetected) {
             this.request = request;
             this.clientCtx = clientCtx;
             this.handshaker = handshaker;
@@ -376,6 +413,7 @@ public class WebSocketProxyRelayHandler {
             this.handshakeTimeoutMillis = handshakeTimeoutMillis;
             this.handshakeTimeoutName = handshakeTimeoutName;
             this.responseEnded = responseEnded;
+            this.relaysLoopDetected = relaysLoopDetected;
         }
 
         private void fail(ChannelHandlerContext ctx, String message) {
@@ -446,6 +484,18 @@ public class WebSocketProxyRelayHandler {
             }
             if (msg.decoderResult().isFailure()) {
                 fail(ctx, "upstream WebSocket handshake response could not be read: " + (undecoded.getMessage() != null ? undecoded.getMessage() : undecoded.getClass().getSimpleName()));
+                return;
+            }
+            if (relaysLoopDetected && msg.status().code() == ForwardLoopGuard.LOOP_DETECTED) {
+                // a hop further on refused the loop: its 508 is relayed, as a forward relays it
+                failed = true;
+                String reason = msg.content().toString(StandardCharsets.UTF_8);
+                logFailure(request, "upstream answered the WebSocket handshake with 508 Loop Detected: " + reason);
+                answerClientAndClose(clientCtx.channel(), response()
+                    .withStatusCode(ForwardLoopGuard.LOOP_DETECTED)
+                    .withReasonPhrase(msg.status().reasonPhrase())
+                    .withBody(reason));
+                ctx.close();
                 return;
             }
             final String negotiatedSubprotocol;

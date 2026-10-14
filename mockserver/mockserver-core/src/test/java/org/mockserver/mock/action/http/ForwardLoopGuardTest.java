@@ -172,4 +172,21 @@ public class ForwardLoopGuardTest {
         verify(httpClient, never()).sendRequest(any(HttpRequest.class), nullable(InetSocketAddress.class));
         verify(httpClient, never()).sendRequest(any(HttpRequest.class), nullable(InetSocketAddress.class), nullable(Long.class), anyBoolean());
     }
+
+    @Test
+    public void shouldNameTheProxyPassMappingWhenRefusingAProxyPassLoop() {
+        HttpResponse refusal = guard(1).loopDetectedResponse(request().withHeader(HEADER_NAME, THIS_INSTANCE), ForwardLoopGuard.Route.PROXY_PASS);
+
+        assertThat(refusal.getStatusCode(), is(508));
+        assertThat(refusal.getBodyAsString(), is("MockServer did not forward this request because it has already forwarded it 1 times, so the proxyPassMappings entry's target leads back to this MockServer, where the request matched the mapping again: check the mapping's target URI, or raise forwardLoopMaxHops if the repeated forwarding is intended"));
+    }
+
+    @Test
+    public void shouldGiveTheEntriesToSendOnOrNoneWhenLoopDetectionIsOff() {
+        HttpRequest received = request().withHeader(HEADER_NAME, OTHER_INSTANCE);
+
+        assertThat(guard(10).forwardedEntries(received), contains(OTHER_INSTANCE, THIS_INSTANCE));
+        assertThat(guard(10).forwardedEntries(request()), contains(THIS_INSTANCE));
+        assertThat(guard(0).forwardedEntries(received), nullValue());
+    }
 }

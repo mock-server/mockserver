@@ -88,18 +88,8 @@ public abstract class HttpForwardAction {
             }
             return badGatewayFuture(request);
         }
-        HttpResponse loopDetected = forwardLoopGuard != null ? forwardLoopGuard.loopDetectedResponse(received) : null;
+        HttpResponse loopDetected = forwardLoopGuard != null ? forwardLoopGuard.refuseLoop(received, ForwardLoopGuard.Route.FORWARD, mockServerLogger) : null;
         if (loopDetected != null) {
-            if (mockServerLogger.isEnabledForInstance(Level.WARN)) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(Level.WARN)
-                        .setCorrelationId(received.getLogCorrelationId())
-                        .setHttpRequest(received)
-                        .setMessageFormat("returning 508 Loop Detected in place of forwarding request:{}because:{}")
-                        .setArguments(received, loopDetected.getBodyAsString())
-                );
-            }
             CompletableFuture<HttpResponse> loopFuture = new CompletableFuture<>();
             loopFuture.complete(loopDetected);
             return new HttpForwardActionResult(request, loopFuture, null, remoteAddress);

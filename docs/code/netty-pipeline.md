@@ -2151,7 +2151,10 @@ is already made: `WebSocketProxyRelayHandler.isWebSocketUpgrade(request)` is che
    (`NettyTransport.socketChannelClassFor(...)`), so both relay halves run single-threaded with no cross-thread races.
    TLS uses `NettySslContextFactory.createClientSslContext(...)`.
 3. Drives the **client-side** handshake to the upstream (`WebSocketClientHandshaker`), forwarding the client's custom
-   headers (e.g. `Authorization`, `Cookie`) and requested subprotocol.
+   headers (e.g. `Authorization`, `Cookie`) and requested subprotocol. For a matched forward (not the unmatched proxy
+   path) it appends this instance to `x-mockserver-forwarded-by`, answers an upgrade that already carries it
+   `forwardLoopMaxHops` times with `508` before connecting, and relays an upstream's `508` (see
+   [request-processing.md](request-processing.md#loop-prevention)).
 4. On upstream `101`, completes the **server-side** handshake back to the original client (reusing the same
    `WebSocketServerHandshakerFactory` approach as the WS mock handler), strips the HTTP server handlers, and installs a
    `FrameRelayHandler` on each channel. The client's `101` carries the upstream's response headers (`Set-Cookie`,
