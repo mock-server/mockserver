@@ -178,47 +178,47 @@ mock_server/using_openapi.html#button_wsdl_file:
 # --- Not compared ---
 mock_server/_includes/ai_protocol_mocking.html#button_a2a_basic:
   status: not_compared
-  digest: cbce10b7b95f
+  digest: dd5b95229a2b
   reason: The accordion has no REST API tab to compare with.
 mock_server/_includes/ai_protocol_mocking.html#button_a2a_handlers:
   status: not_compared
-  digest: 426f274967a6
+  digest: 91ce860761a5
   reason: The accordion has no REST API tab to compare with.
 mock_server/_includes/ai_protocol_mocking.html#button_a2a_push:
   status: not_compared
-  digest: c35d8d6aefbf
+  digest: ff5e4cd357de
   reason: The accordion has no REST API tab to compare with.
 mock_server/_includes/ai_protocol_mocking.html#button_a2a_streaming:
   status: not_compared
-  digest: 066f15c0d261
+  digest: 762e104dc785
   reason: The accordion has no REST API tab to compare with.
 mock_server/_includes/ai_protocol_mocking.html#button_a2a_workflow:
   status: not_compared
-  digest: 5b39fcedfd02
+  digest: b1c95aa477dd
   reason: The accordion has no REST API tab to compare with.
 mock_server/_includes/ai_protocol_mocking.html#button_mcp_full:
   status: not_compared
-  digest: 137479cd2ae9
+  digest: bbca7d0f264c
   reason: The accordion has no REST API tab to compare with.
 mock_server/_includes/ai_protocol_mocking.html#button_mcp_prompts:
   status: not_compared
-  digest: 60e2bed49b89
+  digest: af080fb269cb
   reason: The accordion has no REST API tab to compare with.
 mock_server/_includes/ai_protocol_mocking.html#button_mcp_resources:
   status: not_compared
-  digest: 066c06168ae1
+  digest: 444d693f9ee5
   reason: The accordion has no REST API tab to compare with.
 mock_server/_includes/ai_protocol_mocking.html#button_mcp_tools:
   status: not_compared
-  digest: 352e237d935d
+  digest: 5054d3c7329e
   reason: The accordion has no REST API tab to compare with.
 mock_server/_includes/creating_expectations.html#tabs-1:
   status: not_compared
-  digest: 977ea2159a18
+  digest: 91cf9e4ed8c7
   reason: These language tabs have no REST API tab to compare with.
-mock_server/client_compatibility.html#loose-9bbdbaaf9a5a:
+mock_server/client_compatibility.html#loose-ff8c7d936055:
   status: not_compared
-  digest: 9bbdbaaf9a5a
+  digest: ff8c7d936055
   reason: Outside any accordion, so there is no REST API tab to compare with.
 mock_server/drift_detection.html#tabs-1:
   status: not_compared
@@ -236,15 +236,15 @@ mock_server/mock_openid_connect_provider.html#button_introspect_token:
   status: not_compared
   digest: 7f88a361cfd7
   reason: The REST API tab calls the mocked OIDC endpoints, not /mockserver/.
-mock_server/mockserver_clients.html#loose-29b407f66766:
+mock_server/mockserver_clients.html#loose-21ac7488bb82:
   status: not_compared
-  digest: 29b407f66766
+  digest: 21ac7488bb82
   reason: Outside any accordion, so there is no REST API tab to compare with.
-mock_server/mockserver_clients.html#loose-32e9b61e07cd:
+mock_server/mockserver_clients.html#loose-b632bf49e668:
   status: not_compared
-  digest: 32e9b61e07cd
+  digest: b632bf49e668
   reason: Outside any accordion, so there is no REST API tab to compare with.
-mock_server/mockserver_testcontainers.html#loose-fe5db4ee520a:
+mock_server/mockserver_testcontainers.html#loose-f7036c4050ce:
   status: not_compared
-  digest: fe5db4ee520a
+  digest: f7036c4050ce
   reason: Outside any accordion, so there is no REST API tab to compare with.
