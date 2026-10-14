@@ -15,7 +15,8 @@ import org.slf4j.event.Level;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -31,13 +32,15 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.log.model.LogEntry.LogMessageType.FORWARDED_REQUEST;
+import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
+import static org.mockserver.log.model.LogEntry.LogMessageType.RUNNABLE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
 /**
  * Verifies the two eviction SIGNALS that keep silent coverage-loss visible: the once-per-server WARN
  * emitted when the log first evicts (via {@link MockServerEventLog#buildEvictionWarning}) and that the
- * byte budget actually bounds retained memory. Complements
+ * byte budget actually bounds retained memory. Also pins the remedies in the once-only ring-full WARN. Complements
  * {@code CircularConcurrentLinkedDequeTest} (eviction mechanics) and {@code ConfigurationTest} (the
  * heap-derived default).
  */
@@ -89,6 +92,8 @@ public class MockServerEventLogEvictionSignalTest {
         assertThat(message, containsString("does NOT affect what verify can find"));
         // and warns that lowering the level shrinks the default byte budget, which may then bind
         assertThat(message, containsString("the default byte budget is smaller at WARN"));
+        // or keeps the log level and caps the did-not-match entries per request instead
+        assertThat(message, containsString("to keep this log level, set maxLoggedMatchFailures"));
     }
 
     @Test
@@ -102,18 +107,24 @@ public class MockServerEventLogEvictionSignalTest {
         assertThat(message, containsString("bodies are retained at every log level"));
         // it must NOT tell a user under a byte-budget eviction that lowering the level will free memory
         assertThat(message, not(containsString("lowering the log level (e.g. to WARN)")));
+        // nor offer the did-not-match cap, which does not shrink the always-retained bodies
+        assertThat(message, not(containsString("maxLoggedMatchFailures")));
     }
 
     // ---- the WARN fires exactly once when eviction begins, and never when the log does not evict ----
 
     private int countEvictionWarnings(Runnable work) {
-        AtomicInteger warnings = new AtomicInteger(0);
+        return warningsContaining("MockServer event log full", work).size();
+    }
+
+    private List<String> warningsContaining(String marker, Runnable work) {
+        List<String> warnings = new CopyOnWriteArrayList<>();
         Logger julLogger = Logger.getLogger(MockServerEventLog.class.getName());
         Handler handler = new Handler() {
             @Override
             public void publish(LogRecord record) {
-                if (record.getMessage() != null && record.getMessage().contains("MockServer event log full")) {
-                    warnings.incrementAndGet();
+                if (record.getMessage() != null && record.getMessage().contains(marker)) {
+                    warnings.add(record.getMessage());
                 }
             }
 
@@ -137,7 +148,7 @@ public class MockServerEventLogEvictionSignalTest {
             julLogger.removeHandler(handler);
             julLogger.setLevel(previous);
         }
-        return warnings.get();
+        return warnings;
     }
 
     @Test
@@ -183,6 +194,47 @@ public class MockServerEventLogEvictionSignalTest {
 
         assertThat(log.getEvictedLogEntryCount(), is(0L));
         assertThat(warnings, is(0));
+    }
+
+    @Test
+    public void ringFullWarningNamesBothTheLogLevelAndTheMatchFailureCapRemedies() throws Exception {
+        // ringBufferSize = nextPowerOfTwo(min(maxLogEntries, 16384)) = 1, so a blocked consumer fills it at once
+        Configuration configuration = configuration().maxLogEntries(1);
+        MockServerEventLog log = new MockServerEventLog(configuration, new MockServerLogger(configuration, MockServerLogger.class), mock(Scheduler.class), true);
+        eventLogs.add(log);
+        CountDownLatch hold = new CountDownLatch(1);
+        CountDownLatch consumerStarted = new CountDownLatch(1);
+
+        List<String> warnings;
+        try {
+            warnings = warningsContaining("Log event ring buffer full", () -> {
+                log.add(new LogEntry().setType(RUNNABLE).setConsumer(() -> {
+                    consumerStarted.countDown();
+                    try {
+                        hold.await(30, SECONDS);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }));
+                try {
+                    assertThat("consumer should start", consumerStarted.await(10, SECONDS), is(true));
+                } catch (InterruptedException e) {
+                    throw new IllegalStateException(e);
+                }
+                for (int i = 0; i < 100; i++) {
+                    log.add(new LogEntry().setType(RECEIVED_REQUEST).setLogLevel(Level.INFO).setHttpRequest(request("/r" + i)));
+                }
+            });
+        } finally {
+            hold.countDown();
+        }
+
+        assertThat(log.getDroppedLogEventCount(), is(greaterThan(0L)));
+        assertThat(warnings.size(), is(1));
+        String warning = warnings.get(0);
+        assertThat(warning, containsString("lower the log level (e.g. to WARN or ERROR)"));
+        assertThat(warning, containsString("keep INFO and set maxLoggedMatchFailures"));
+        assertThat(warning, containsString("raising ringBufferSize only absorbs short bursts"));
     }
 
     // ---- the byte budget actually bounds retained memory (measured, not inferred from config) ----

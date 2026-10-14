@@ -348,7 +348,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                 // saturation cliff surfaces in the log even for INFO/DEBUG events.
                 recordDrop(DropReason.RING_FULL);
                 if (droppedLogEventWarned.compareAndSet(false, true)) {
-                    logger.warn("Log event ring buffer full — dropping log events because they arrive faster than the single logging thread can record them. If this persists under steady load, lower the log level (e.g. to WARN or ERROR), which skips the per-expectation diagnostic entries that saturate that thread; raising ringBufferSize only absorbs short bursts. Dropped events are not retrievable and cannot be verified.");
+                    logger.warn("Log event ring buffer full — dropping log events because they arrive faster than the single logging thread can record them. If this persists under steady load, lower the log level (e.g. to WARN or ERROR), which skips the per-expectation diagnostic entries that saturate that thread, or keep INFO and set maxLoggedMatchFailures (e.g. to 10) to cap those entries per request; raising ringBufferSize only absorbs short bursts. Dropped events are not retrievable and cannot be verified.");
                 }
                 // if ring buffer full only write WARN and ERROR to logger
                 if (logEntry.getLogLevel().toInt() >= Level.WARN.toInt()) {
@@ -834,7 +834,8 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
      * (response verify) — are added to the event log at EVERY log level; only lower-priority diagnostics
      * such as {@code EXPECTATION_NOT_MATCHED} are gated by the level. So lowering the level reduces the
      * number of entries retained per request without dropping anything {@code verify} depends on — it
-     * trades log detail, never verification correctness. That lever does NOT help the byte bound: the
+     * trades log detail, never verification correctness ({@code maxLoggedMatchFailures} caps the same
+     * diagnostics without changing the level). That lever does NOT help the byte bound: the
      * request/response bodies dominating the byte budget live on the always-retained entry types, so for
      * a byte-bound eviction the message points at {@code maxLoggedBodyBytes} / the budget instead.
      *
@@ -867,6 +868,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                 .append("lowering the log level (e.g. to WARN) stops recording those and cuts entries retained per request, and does NOT affect what verify can find ")
                 .append("(received requests and mocked/forwarded responses are recorded at every level; ")
                 .append("note: the default byte budget is smaller at WARN, so raise maxEventLogSizeInBytes if it then binds); ")
+                .append("or, to keep this log level, set maxLoggedMatchFailures (e.g. to 10) to cap those entries per request; ")
                 .append("(2) if you have heap headroom, raise the limit maxLogEntries (currently ").append(maxLogEntries).append("); ")
                 .append("(3) clear/reset the event log between tests.");
         }
