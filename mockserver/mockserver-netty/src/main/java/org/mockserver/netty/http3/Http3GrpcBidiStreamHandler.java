@@ -307,7 +307,7 @@ public class Http3GrpcBidiStreamHandler {
                     inboundBreakpointClientId, inboundBreakpointId, inboundStreamId, seq,
                     PausedStreamFrame.Direction.INBOUND, BreakpointPhase.INBOUND_STREAM,
                     current, "GRPC-INBOUND", methodDescriptor.getFullName(),
-                    webSocketClientRegistry, configuration, null);
+                    null, webSocketClientRegistry, configuration, null);
             if (decisionFuture == null) {
                 // Not parked (cap reached or client not connected): process inline, keep draining.
                 processInboundBytes(current);

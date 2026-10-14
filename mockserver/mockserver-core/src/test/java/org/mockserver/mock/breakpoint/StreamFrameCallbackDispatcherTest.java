@@ -148,10 +148,10 @@ public class StreamFrameCallbackDispatcherTest {
         byte[] frameBody = "original frame".getBytes();
 
         CompletableFuture<StreamFrameDecision> future = dispatcher.dispatchFrame(
-            CLIENT_ID, "stream-1", 0,
+            CLIENT_ID, null, "stream-1", 0,
             PausedStreamFrame.Direction.OUTBOUND, BreakpointPhase.RESPONSE_STREAM,
             frameBody, "GET", "/api/test",
-            webSocketClientRegistry, configuration, logger
+            null, webSocketClientRegistry, configuration, logger
         );
         assertThat(future, is(notNullValue()));
         assertThat(future.isDone(), is(false));
@@ -182,10 +182,10 @@ public class StreamFrameCallbackDispatcherTest {
         byte[] frameBody = "original".getBytes();
 
         CompletableFuture<StreamFrameDecision> future = dispatcher.dispatchFrame(
-            CLIENT_ID, "stream-1", 0,
+            CLIENT_ID, null, "stream-1", 0,
             PausedStreamFrame.Direction.OUTBOUND, BreakpointPhase.RESPONSE_STREAM,
             frameBody, "GET", "/api/test",
-            webSocketClientRegistry, configuration, logger
+            null, webSocketClientRegistry, configuration, logger
         );
         assertThat(future, is(notNullValue()));
 
@@ -214,10 +214,10 @@ public class StreamFrameCallbackDispatcherTest {
         byte[] frameBody = "drop me".getBytes();
 
         CompletableFuture<StreamFrameDecision> future = dispatcher.dispatchFrame(
-            CLIENT_ID, "stream-1", 0,
+            CLIENT_ID, null, "stream-1", 0,
             PausedStreamFrame.Direction.OUTBOUND, BreakpointPhase.RESPONSE_STREAM,
             frameBody, "GET", "/api/test",
-            webSocketClientRegistry, configuration, logger
+            null, webSocketClientRegistry, configuration, logger
         );
 
         TextWebSocketFrame sentFrame = clientChannel.readOutbound();
@@ -240,10 +240,10 @@ public class StreamFrameCallbackDispatcherTest {
         byte[] frameBody = "original".getBytes();
 
         CompletableFuture<StreamFrameDecision> future = dispatcher.dispatchFrame(
-            CLIENT_ID, "stream-1", 0,
+            CLIENT_ID, null, "stream-1", 0,
             PausedStreamFrame.Direction.OUTBOUND, BreakpointPhase.RESPONSE_STREAM,
             frameBody, "GET", "/api/test",
-            webSocketClientRegistry, configuration, logger
+            null, webSocketClientRegistry, configuration, logger
         );
 
         TextWebSocketFrame sentFrame = clientChannel.readOutbound();
@@ -269,10 +269,10 @@ public class StreamFrameCallbackDispatcherTest {
         byte[] frameBody = "close this".getBytes();
 
         CompletableFuture<StreamFrameDecision> future = dispatcher.dispatchFrame(
-            CLIENT_ID, "stream-1", 0,
+            CLIENT_ID, null, "stream-1", 0,
             PausedStreamFrame.Direction.OUTBOUND, BreakpointPhase.RESPONSE_STREAM,
             frameBody, "GET", "/api/test",
-            webSocketClientRegistry, configuration, logger
+            null, webSocketClientRegistry, configuration, logger
         );
 
         TextWebSocketFrame sentFrame = clientChannel.readOutbound();
@@ -298,10 +298,10 @@ public class StreamFrameCallbackDispatcherTest {
         byte[] frameBody = "timeout me".getBytes();
 
         CompletableFuture<StreamFrameDecision> future = dispatcher.dispatchFrame(
-            CLIENT_ID, "stream-1", 0,
+            CLIENT_ID, null, "stream-1", 0,
             PausedStreamFrame.Direction.OUTBOUND, BreakpointPhase.RESPONSE_STREAM,
             frameBody, "GET", "/api/test",
-            webSocketClientRegistry, shortTimeoutConfig, logger
+            null, webSocketClientRegistry, shortTimeoutConfig, logger
         );
         assertThat(future, is(notNullValue()));
 
@@ -317,10 +317,10 @@ public class StreamFrameCallbackDispatcherTest {
         Configuration shortTimeoutConfig = Configuration.configuration().breakpointTimeoutMillis(200L);
 
         CompletableFuture<StreamFrameDecision> future = dispatcher.dispatchFrame(
-            "released-frame-client", "stream-timeout", 0,
+            "released-frame-client", null, "stream-timeout", 0,
             PausedStreamFrame.Direction.OUTBOUND, BreakpointPhase.RESPONSE_STREAM,
             "timeout me".getBytes(), "GET", "/api/test",
-            webSocketClientRegistry, shortTimeoutConfig, logger
+            null, webSocketClientRegistry, shortTimeoutConfig, logger
         );
         PausedStreamFrameDTO paused = (PausedStreamFrameDTO) serializer.deserialize(((TextWebSocketFrame) sent.poll(5, TimeUnit.SECONDS)).text());
 
@@ -333,12 +333,12 @@ public class StreamFrameCallbackDispatcherTest {
     @Test
     public void releaseStreamDropsOnlyThatStreamsHeldFramesAndTellsTheClient() throws Exception {
         CompletableFuture<StreamFrameDecision> ended = dispatcher.dispatchFrame(
-            CLIENT_ID, "stream-ended", 0, PausedStreamFrame.Direction.OUTBOUND, BreakpointPhase.RESPONSE_STREAM,
-            "a".getBytes(), "GET", "/a", webSocketClientRegistry, configuration, logger);
+            CLIENT_ID, null, "stream-ended", 0, PausedStreamFrame.Direction.OUTBOUND, BreakpointPhase.RESPONSE_STREAM,
+            "a".getBytes(), "GET", "/a", null, webSocketClientRegistry, configuration, logger);
         PausedStreamFrameDTO endedFrame = readPausedFrame();
         CompletableFuture<StreamFrameDecision> other = dispatcher.dispatchFrame(
-            CLIENT_ID, "stream-other", 0, PausedStreamFrame.Direction.OUTBOUND, BreakpointPhase.RESPONSE_STREAM,
-            "b".getBytes(), "GET", "/b", webSocketClientRegistry, configuration, logger);
+            CLIENT_ID, null, "stream-other", 0, PausedStreamFrame.Direction.OUTBOUND, BreakpointPhase.RESPONSE_STREAM,
+            "b".getBytes(), "GET", "/b", null, webSocketClientRegistry, configuration, logger);
         readPausedFrame();
 
         assertThat(dispatcher.releaseStream("stream-ended"), is(1));
@@ -364,8 +364,8 @@ public class StreamFrameCallbackDispatcherTest {
         webSocketClientRegistry.registerClient("old-client", oldCtx);
         ((TextWebSocketFrame) oldClientChannel.readOutbound()).release();
         CompletableFuture<StreamFrameDecision> held = dispatcher.dispatchFrame(
-            "old-client", "stream-old", 0, PausedStreamFrame.Direction.OUTBOUND, BreakpointPhase.RESPONSE_STREAM,
-            "a".getBytes(), "GET", "/a", webSocketClientRegistry, configuration, logger);
+            "old-client", null, "stream-old", 0, PausedStreamFrame.Direction.OUTBOUND, BreakpointPhase.RESPONSE_STREAM,
+            "a".getBytes(), "GET", "/a", null, webSocketClientRegistry, configuration, logger);
         ((TextWebSocketFrame) oldClientChannel.readOutbound()).release();
 
         assertThat(dispatcher.releaseStream("stream-old"), is(1));
@@ -415,10 +415,10 @@ public class StreamFrameCallbackDispatcherTest {
         byte[] frameBody = "no client".getBytes();
 
         CompletableFuture<StreamFrameDecision> future = dispatcher.dispatchFrame(
-            "nonexistent-client", "stream-1", 0,
+            "nonexistent-client", null, "stream-1", 0,
             PausedStreamFrame.Direction.OUTBOUND, BreakpointPhase.RESPONSE_STREAM,
             frameBody, "GET", "/api/test",
-            webSocketClientRegistry, configuration, logger
+            null, webSocketClientRegistry, configuration, logger
         );
         assertThat("should return null when client not connected", future, is(nullValue()));
     }
@@ -434,18 +434,18 @@ public class StreamFrameCallbackDispatcherTest {
         byte[] frame2 = "second".getBytes();
 
         CompletableFuture<StreamFrameDecision> future1 = dispatcher.dispatchFrame(
-            CLIENT_ID, "stream-1", 0,
+            CLIENT_ID, null, "stream-1", 0,
             PausedStreamFrame.Direction.OUTBOUND, BreakpointPhase.RESPONSE_STREAM,
             frame1, "GET", "/api/test",
-            webSocketClientRegistry, lowCapConfig, logger
+            null, webSocketClientRegistry, lowCapConfig, logger
         );
         assertThat(future1, is(notNullValue()));
 
         CompletableFuture<StreamFrameDecision> future2 = dispatcher.dispatchFrame(
-            CLIENT_ID, "stream-1", 1,
+            CLIENT_ID, null, "stream-1", 1,
             PausedStreamFrame.Direction.OUTBOUND, BreakpointPhase.RESPONSE_STREAM,
             frame2, "GET", "/api/test",
-            webSocketClientRegistry, lowCapConfig, logger
+            null, webSocketClientRegistry, lowCapConfig, logger
         );
         assertThat("should return null when cap is reached", future2, is(nullValue()));
 
@@ -460,10 +460,10 @@ public class StreamFrameCallbackDispatcherTest {
         byte[] frameBody = "in-flight".getBytes();
 
         CompletableFuture<StreamFrameDecision> future = dispatcher.dispatchFrame(
-            CLIENT_ID, "stream-1", 0,
+            CLIENT_ID, null, "stream-1", 0,
             PausedStreamFrame.Direction.OUTBOUND, BreakpointPhase.RESPONSE_STREAM,
             frameBody, "GET", "/api/test",
-            webSocketClientRegistry, configuration, logger
+            null, webSocketClientRegistry, configuration, logger
         );
         assertThat(future, is(notNullValue()));
         assertThat(future.isDone(), is(false));
@@ -483,10 +483,10 @@ public class StreamFrameCallbackDispatcherTest {
         byte[] frameBody = "inbound data".getBytes();
 
         CompletableFuture<StreamFrameDecision> future = dispatcher.dispatchFrame(
-            CLIENT_ID, "inbound-stream-1", 0,
+            CLIENT_ID, null, "inbound-stream-1", 0,
             PausedStreamFrame.Direction.INBOUND, BreakpointPhase.INBOUND_STREAM,
             frameBody, "POST", "/grpc/service/Method",
-            webSocketClientRegistry, configuration, logger
+            null, webSocketClientRegistry, configuration, logger
         );
         assertThat(future, is(notNullValue()));
 
@@ -602,10 +602,10 @@ public class StreamFrameCallbackDispatcherTest {
         byte[] frameBody = "test payload".getBytes();
 
         dispatcher.dispatchFrame(
-            CLIENT_ID, "my-stream", 3,
+            CLIENT_ID, null, "my-stream", 3,
             PausedStreamFrame.Direction.INBOUND, BreakpointPhase.INBOUND_STREAM,
             frameBody, "POST", "/grpc/service",
-            webSocketClientRegistry, configuration, logger
+            null, webSocketClientRegistry, configuration, logger
         );
 
         TextWebSocketFrame sentFrame = clientChannel.readOutbound();
@@ -632,7 +632,7 @@ public class StreamFrameCallbackDispatcherTest {
             CLIENT_ID, breakpointId, "stream-bp-id", 0,
             PausedStreamFrame.Direction.OUTBOUND, BreakpointPhase.RESPONSE_STREAM,
             frameBody, "GET", "/api/test",
-            webSocketClientRegistry, configuration, logger
+            null, webSocketClientRegistry, configuration, logger
         );
 
         TextWebSocketFrame sentFrame = clientChannel.readOutbound();
@@ -643,21 +643,20 @@ public class StreamFrameCallbackDispatcherTest {
     }
 
     @Test
-    public void shouldSetBreakpointIdViaDeprecatedOverload() throws Exception {
-        // The deprecated (no breakpointId) overload should set breakpointId to null
-        byte[] frameBody = "deprecated-overload-test".getBytes();
+    public void shouldSendNullBreakpointIdWhenNotProvided() throws Exception {
+        byte[] frameBody = "no-breakpoint-id-test".getBytes();
 
         dispatcher.dispatchFrame(
-            CLIENT_ID, "stream-deprecated", 0,
+            CLIENT_ID, null, "stream-no-bp-id", 0,
             PausedStreamFrame.Direction.OUTBOUND, BreakpointPhase.RESPONSE_STREAM,
             frameBody, "GET", "/api/test",
-            webSocketClientRegistry, configuration, logger
+            null, webSocketClientRegistry, configuration, logger
         );
 
         TextWebSocketFrame sentFrame = clientChannel.readOutbound();
         PausedStreamFrameDTO sentDto = (PausedStreamFrameDTO) serializer.deserialize(sentFrame.text());
 
-        assertThat("deprecated overload should set breakpointId to null",
+        assertThat("breakpointId should be null when not provided",
             sentDto.getBreakpointId(), is(nullValue()));
     }
 
@@ -682,7 +681,7 @@ public class StreamFrameCallbackDispatcherTest {
             CLIENT_ID, bp1Id, "stream-mc-1", 0,
             PausedStreamFrame.Direction.OUTBOUND, BreakpointPhase.RESPONSE_STREAM,
             frameBody, "GET", "/api/client1",
-            webSocketClientRegistry, configuration, logger
+            null, webSocketClientRegistry, configuration, logger
         );
         assertThat(future1, is(notNullValue()));
 
@@ -691,7 +690,7 @@ public class StreamFrameCallbackDispatcherTest {
             client2Id, bp2Id, "stream-mc-2", 0,
             PausedStreamFrame.Direction.INBOUND, BreakpointPhase.INBOUND_STREAM,
             frameBody, "POST", "/api/client2",
-            webSocketClientRegistry, configuration, logger
+            null, webSocketClientRegistry, configuration, logger
         );
         assertThat(future2, is(notNullValue()));
 
@@ -759,10 +758,10 @@ public class StreamFrameCallbackDispatcherTest {
         byte[] frameBody = "no-ts".getBytes();
 
         dispatcher.dispatchFrame(
-            CLIENT_ID, "stream-no-ts", 0,
+            CLIENT_ID, null, "stream-no-ts", 0,
             PausedStreamFrame.Direction.OUTBOUND, BreakpointPhase.RESPONSE_STREAM,
             frameBody, "GET", "/api/no-ts",
-            webSocketClientRegistry, configuration, logger
+            null, webSocketClientRegistry, configuration, logger
         );
 
         TextWebSocketFrame sentFrame = clientChannel.readOutbound();

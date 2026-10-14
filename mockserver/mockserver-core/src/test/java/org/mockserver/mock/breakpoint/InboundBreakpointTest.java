@@ -85,6 +85,8 @@ public class InboundBreakpointTest {
             (ctx, msg) -> sentMessages.add(msg),
             config,
             streamId,
+            null,
+            null,
             null
         );
 

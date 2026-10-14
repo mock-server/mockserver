@@ -133,25 +133,7 @@ public class GraphQLSubscriptionHandler extends SimpleChannelInboundHandler<WebS
         FrameSender frameSender,
         WebSocketServerHandshaker handshaker
     ) {
-        this(expectedSubscriptionQuery, subscriptionPayloads, frameSender, handshaker, null, null, null);
-    }
-
-    /**
-     * Constructor with inbound breakpoint support (performs its own findMatch for backward compatibility).
-     *
-     * @deprecated use the constructor that accepts inboundBreakpointClientId and inboundBreakpointId
-     */
-    public GraphQLSubscriptionHandler(
-        GraphQLBody expectedSubscriptionQuery,
-        List<WebSocketMessage> subscriptionPayloads,
-        FrameSender frameSender,
-        WebSocketServerHandshaker handshaker,
-        Configuration configuration,
-        String inboundStreamId,
-        WebSocketClientRegistry webSocketClientRegistry
-    ) {
-        this(expectedSubscriptionQuery, subscriptionPayloads, frameSender, handshaker,
-            configuration, inboundStreamId, webSocketClientRegistry, null, null);
+        this(expectedSubscriptionQuery, subscriptionPayloads, frameSender, handshaker, null, null, null, null, null);
     }
 
     /**
@@ -268,7 +250,7 @@ public class GraphQLSubscriptionHandler extends SimpleChannelInboundHandler<WebS
                 org.mockserver.mock.breakpoint.StreamFrameCallbackDispatcher.getInstance().dispatchFrame(
                     inboundBreakpointClientId, inboundBreakpointId, inboundStreamId, seq, PausedStreamFrame.Direction.INBOUND,
                     org.mockserver.mock.breakpoint.BreakpointPhase.INBOUND_STREAM,
-                    frameBytes, "GQL-INBOUND", "/", webSocketClientRegistry, configuration, null);
+                    frameBytes, "GQL-INBOUND", "/", null, webSocketClientRegistry, configuration, null);
             if (wsFuture != null) {
                 decisionFuture = wsFuture;
             } else {

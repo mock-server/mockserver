@@ -217,37 +217,6 @@ public class GrpcBidiStreamHandler extends ChannelInboundHandlerAdapter {
 
     /**
      * Phase 3b constructor: GrpcBidiResponse-driven with completion callback, inbound breakpoints,
-     * and per-server WebSocket registry.
-     *
-     * @param methodDescriptor        the resolved gRPC method descriptor
-     * @param converter               JSON/protobuf converter for the method's message types
-     * @param config                  the GrpcBidiResponse configuration from the matched expectation
-     * @param completionCallback      invoked once on stream finish to clear responseInProgress
-     * @param configuration           the active server configuration (null to disable inbound breakpoints)
-     * @param inboundStreamId         the stream ID for inbound breakpoints (null to disable)
-     * @param webSocketClientRegistry the per-server WS registry for callback dispatch (null to disable)
-     */
-    /**
-     * Phase 3b constructor: GrpcBidiResponse-driven with completion callback, inbound breakpoints,
-     * and per-server WebSocket registry. Performs its own findMatch for inbound breakpoints.
-     *
-     * @deprecated use the constructor that accepts inboundBreakpointClientId and inboundBreakpointId
-     *     from the outer caller to avoid mis-routing across clients
-     */
-    public GrpcBidiStreamHandler(
-        Descriptors.MethodDescriptor methodDescriptor,
-        GrpcJsonMessageConverter converter,
-        GrpcBidiResponse config,
-        Runnable completionCallback,
-        Configuration configuration,
-        String inboundStreamId,
-        WebSocketClientRegistry webSocketClientRegistry
-    ) {
-        this(methodDescriptor, converter, null, config, new IncrementalGrpcFrameDecoder(configuration), completionCallback, configuration, inboundStreamId, webSocketClientRegistry, null, null);
-    }
-
-    /**
-     * Phase 3b constructor: GrpcBidiResponse-driven with completion callback, inbound breakpoints,
      * per-server WebSocket registry, and pre-resolved breakpoint identity from the outer caller.
      *
      * @param methodDescriptor           the resolved gRPC method descriptor
@@ -455,7 +424,7 @@ public class GrpcBidiStreamHandler extends ChannelInboundHandlerAdapter {
                     org.mockserver.mock.breakpoint.StreamFrameCallbackDispatcher.getInstance().dispatchFrame(
                         inboundBreakpointClientId, inboundBreakpointId, inboundStreamId, seq, PausedStreamFrame.Direction.INBOUND,
                         org.mockserver.mock.breakpoint.BreakpointPhase.INBOUND_STREAM,
-                        bytes, "GRPC-INBOUND", methodDescriptor.getFullName(), webSocketClientRegistry, configuration, null);
+                        bytes, "GRPC-INBOUND", methodDescriptor.getFullName(), null, webSocketClientRegistry, configuration, null);
                 if (wsFuture != null) {
                     decisionFuture = wsFuture;
                 } else {

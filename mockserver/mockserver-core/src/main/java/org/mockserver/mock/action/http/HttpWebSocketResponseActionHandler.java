@@ -268,7 +268,7 @@ public class HttpWebSocketResponseActionHandler {
                     org.mockserver.mock.breakpoint.StreamFrameCallbackDispatcher.getInstance().dispatchFrame(
                         breakpointClientId, streamBreakpointId, streamId, seq, PausedStreamFrame.Direction.OUTBOUND,
                         org.mockserver.mock.breakpoint.BreakpointPhase.RESPONSE_STREAM,
-                        frameBytes, reqMethod, reqPath, webSocketClientRegistry, configuration, mockServerLogger);
+                        frameBytes, reqMethod, reqPath, null, webSocketClientRegistry, configuration, mockServerLogger);
                 if (wsFuture != null) {
                     decisionFuture = wsFuture;
                 } else {
@@ -457,7 +457,7 @@ public class HttpWebSocketResponseActionHandler {
                         org.mockserver.mock.breakpoint.StreamFrameCallbackDispatcher.getInstance().dispatchFrame(
                             breakpointClientId, streamBreakpointId, streamId, seq, PausedStreamFrame.Direction.OUTBOUND,
                             org.mockserver.mock.breakpoint.BreakpointPhase.RESPONSE_STREAM,
-                            frameBytes, reqMethod, reqPath, webSocketClientRegistry, configuration, mockServerLogger);
+                            frameBytes, reqMethod, reqPath, null, webSocketClientRegistry, configuration, mockServerLogger);
                     if (wsFuture != null) {
                         decisionFuture = wsFuture;
                     } else {
@@ -577,7 +577,7 @@ public class HttpWebSocketResponseActionHandler {
                         org.mockserver.mock.breakpoint.StreamFrameCallbackDispatcher.getInstance().dispatchFrame(
                             breakpointClientId, streamBreakpointId, streamId, seq, PausedStreamFrame.Direction.OUTBOUND,
                             org.mockserver.mock.breakpoint.BreakpointPhase.RESPONSE_STREAM,
-                            frameBytes, reqMethod, reqPath, webSocketClientRegistry, configuration, mockServerLogger);
+                            frameBytes, reqMethod, reqPath, null, webSocketClientRegistry, configuration, mockServerLogger);
                     if (wsFuture != null) {
                         decisionFuture = wsFuture;
                     } else {

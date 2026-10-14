@@ -71,18 +71,7 @@ public class BidirectionalWebSocketFrameHandler extends SimpleChannelInboundHand
      * Original constructor — no inbound breakpoint support (backward compatible).
      */
     public BidirectionalWebSocketFrameHandler(List<WebSocketMessageMatcher> matchers, FrameSender frameSender) {
-        this(matchers, frameSender, null, null, null);
-    }
-
-    /**
-     * Constructor with inbound breakpoint support (performs its own findMatch for backward compatibility).
-     *
-     * @deprecated use the constructor that accepts inboundBreakpointClientId and inboundBreakpointId
-     */
-    public BidirectionalWebSocketFrameHandler(List<WebSocketMessageMatcher> matchers, FrameSender frameSender,
-                                              Configuration configuration, String inboundStreamId,
-                                              WebSocketClientRegistry webSocketClientRegistry) {
-        this(matchers, frameSender, configuration, inboundStreamId, webSocketClientRegistry, null, null);
+        this(matchers, frameSender, null, null, null, null, null);
     }
 
     /**
@@ -144,7 +133,7 @@ public class BidirectionalWebSocketFrameHandler extends SimpleChannelInboundHand
                     org.mockserver.mock.breakpoint.StreamFrameCallbackDispatcher.getInstance().dispatchFrame(
                         inboundBreakpointClientId, inboundBreakpointId, inboundStreamId, seq, PausedStreamFrame.Direction.INBOUND,
                         org.mockserver.mock.breakpoint.BreakpointPhase.INBOUND_STREAM,
-                        frameBytes, "WS-INBOUND", "/", webSocketClientRegistry, configuration, null);
+                        frameBytes, "WS-INBOUND", "/", null, webSocketClientRegistry, configuration, null);
                 if (wsFuture != null) {
                     decisionFuture = wsFuture;
                 } else {

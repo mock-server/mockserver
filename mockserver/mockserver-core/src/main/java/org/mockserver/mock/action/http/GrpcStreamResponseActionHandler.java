@@ -184,7 +184,7 @@ public class GrpcStreamResponseActionHandler {
                         breakpointClientId, streamBreakpointId, streamId, seq,
                         PausedStreamFrame.Direction.OUTBOUND,
                         org.mockserver.mock.breakpoint.BreakpointPhase.RESPONSE_STREAM,
-                        frameBytes, reqMethod, reqPath,
+                        frameBytes, reqMethod, reqPath, null,
                         webSocketClientRegistry,
                         configuration, mockServerLogger
                     );

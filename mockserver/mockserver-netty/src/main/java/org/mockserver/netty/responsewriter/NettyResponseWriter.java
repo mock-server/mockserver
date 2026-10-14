@@ -368,7 +368,7 @@ public class NettyResponseWriter extends ResponseWriter {
                         PausedStreamFrame.Direction.OUTBOUND,
                         org.mockserver.mock.breakpoint.BreakpointPhase.RESPONSE_STREAM,
                         chunkBytes, reqMethod, reqPath,
-                        wsRegistry,
+                        null, wsRegistry,
                         configuration, mockServerLogger
                     );
                 // Cap reached or client not connected: the frame is not held, but is still

@@ -70,64 +70,6 @@ public class StreamFrameCallbackDispatcher {
     }
 
     /**
-     * Dispatches a stream frame to a callback WebSocket client for interactive resolution.
-     *
-     * @param clientId               the owning callback client
-     * @param streamId               the stream this frame belongs to
-     * @param sequenceNumber         0-based sequence number within the stream
-     * @param direction              INBOUND or OUTBOUND
-     * @param phase                  RESPONSE_STREAM or INBOUND_STREAM
-     * @param capturedBytes          the frame payload bytes (already copied from ByteBuf)
-     * @param requestMethod          HTTP method of the original request (nullable)
-     * @param requestPath            path of the original request (nullable)
-     * @param webSocketClientRegistry the WS registry for sending messages
-     * @param configuration          for timeout and max-held
-     * @param logger                 for logging
-     * @return a future that completes with the stream frame decision, or {@code null}
-     *         if the max-held cap is reached or the client is not connected
-     */
-    /**
-     * @deprecated use the overload that includes breakpointId and requestTimestamp
-     */
-    public CompletableFuture<StreamFrameDecision> dispatchFrame(
-        String clientId,
-        String streamId,
-        int sequenceNumber,
-        PausedStreamFrame.Direction direction,
-        BreakpointPhase phase,
-        byte[] capturedBytes,
-        String requestMethod,
-        String requestPath,
-        WebSocketClientRegistry webSocketClientRegistry,
-        Configuration configuration,
-        MockServerLogger logger
-    ) {
-        return dispatchFrame(clientId, null, streamId, sequenceNumber, direction, phase,
-            capturedBytes, requestMethod, requestPath, null, webSocketClientRegistry, configuration, logger);
-    }
-
-    /**
-     * @deprecated use the overload that includes requestTimestamp
-     */
-    public CompletableFuture<StreamFrameDecision> dispatchFrame(
-        String clientId,
-        String breakpointId,
-        String streamId,
-        int sequenceNumber,
-        PausedStreamFrame.Direction direction,
-        BreakpointPhase phase,
-        byte[] capturedBytes,
-        String requestMethod,
-        String requestPath,
-        WebSocketClientRegistry webSocketClientRegistry,
-        Configuration configuration,
-        MockServerLogger logger
-    ) {
-        return dispatchFrame(clientId, breakpointId, streamId, sequenceNumber, direction, phase,
-            capturedBytes, requestMethod, requestPath, null, webSocketClientRegistry, configuration, logger);
-    }
-
-    /**
      * Dispatches a stream frame to a callback WebSocket client for interactive resolution,
      * tagging the message with the matched breakpoint id and request timestamp.
      *
