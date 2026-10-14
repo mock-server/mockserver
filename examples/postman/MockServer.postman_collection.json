@@ -2507,9 +2507,16 @@
               "path": [
                 "mockserver",
                 "explainUnmatched"
+              ],
+              "query": [
+                {
+                  "key": "narrate",
+                  "value": "false",
+                  "disabled": true
+                }
               ]
             },
-            "description": "Returns a diagnostic report for recently recorded unmatched requests, including the closest-matching expectations and the per-field differences that prevented a match. An optional 'limit' in the body bounds how many unmatched requests are analysed (default 10). With 'suggestFixes' set to true, each of the five closest non-matching expectations also carries a 'suggestedFix': an RFC 6902 JSON patch of that expectation (as PUT /mockserver/retrieve?type=active_expectations returns it) that would make it match the request, the fields it patches and cannot patch, and whether the patched expectation matches. Nothing is applied: to apply a fix, patch the retrieved expectation and send it to PUT /mockserver/expectation, which updates the expectation with the same id. Values the event log redacts are never copied into a patch.\n\noptional limit on the number of unmatched requests to analyse\n\nFull API reference: https://www.mock-server.com/mock_server/mockserver_clients.html",
+            "description": "Returns a diagnostic report for recently recorded unmatched requests, including the closest-matching expectations and the per-field differences that prevented a match. An optional 'limit' in the body bounds how many unmatched requests are analysed (default 10). With 'suggestFixes' set to true, each of the five closest non-matching expectations also carries a 'suggestedFix': an RFC 6902 JSON patch of that expectation (as PUT /mockserver/retrieve?type=active_expectations returns it) that would make it match the request, the fields it patches and cannot patch, and whether the patched expectation matches. Nothing is applied: to apply a fix, patch the retrieved expectation and send it to PUT /mockserver/expectation, which updates the expectation with the same id. Values the event log redacts are never copied into a patch. With ?narrate=true the response also carries an AI-generated plain-language summary from the configured LLM backend in 'narration'.\n\noptional limit on the number of unmatched requests to analyse\n\nFull API reference: https://www.mock-server.com/mock_server/mockserver_clients.html",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"limit\": 5\n}",
@@ -2545,10 +2552,15 @@
                   "key": "correlationId",
                   "value": "5f2c7a4e-8d43-4a7f-9a7e-3c1d2b0e6f11",
                   "disabled": true
+                },
+                {
+                  "key": "narrate",
+                  "value": "false",
+                  "disabled": true
                 }
               ]
             },
-            "description": "Re-checks one recorded request, identified by the correlationId of its log entries, against the current expectations in the order MockServer evaluates them. Returns the expectation that would serve the request now, why each expectation evaluated ahead of it was passed over (reason NAMESPACE, INACTIVE, FIELDS_DIFFER, NOT_OPERATOR, CONVERSATION, SCENARIO_STATE or PERCENTAGE, with per-field differences and remediation hints), which lower-priority expectations it shadows, and how the request was handled when it arrived. The result is recomputed on demand, so it reports whether the expectations changed since the request arrived. Values quoting the request are redacted as the event log is. At most 500 expectations are evaluated.\n\noptional; the correlationId when it is not given as a query parameter\n\nFull API reference: https://www.mock-server.com/mock_server/mockserver_clients.html",
+            "description": "Re-checks one recorded request, identified by the correlationId of its log entries, against the current expectations in the order MockServer evaluates them. Returns the expectation that would serve the request now, why each expectation evaluated ahead of it was passed over (reason NAMESPACE, INACTIVE, FIELDS_DIFFER, NOT_OPERATOR, CONVERSATION, SCENARIO_STATE or PERCENTAGE, with per-field differences and remediation hints), which lower-priority expectations it shadows, and how the request was handled when it arrived. The result is recomputed on demand, so it reports whether the expectations changed since the request arrived. Values quoting the request are redacted as the event log is. At most 500 expectations are evaluated. With ?narrate=true the response also carries an AI-generated plain-language summary from the configured LLM backend in 'narration'.\n\noptional; the correlationId when it is not given as a query parameter\n\nFull API reference: https://www.mock-server.com/mock_server/mockserver_clients.html",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"correlationId\": \"5f2c7a4e-8d43-4a7f-9a7e-3c1d2b0e6f11\"\n}",

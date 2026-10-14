@@ -283,6 +283,12 @@ public class HttpStateExplainRequestTest {
         for (String correlationId : new String[]{"s1", "s2", "s3"}) {
             schema.assertDocuments(explain(correlationId));
         }
+        httpState.getConfiguration().llmExplainNarrationEnabled(true);
+        schema.assertDocuments(narrated("s1"));
+        httpState.setLlmCompletionService(new org.mockserver.llm.client.LlmCompletionService((llmRequest, timeoutMillis) -> response().withStatusCode(200)
+                .withBody("{\"model\":\"gpt-4o-mini\",\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\"summary\"}}]}")),
+            org.mockserver.llm.client.LlmBackend.of(org.mockserver.model.Provider.OPENAI, "key"));
+        schema.assertDocuments(narrated("s1"));
 
         // explainUnmatched alone fills suggestedFix; HttpStateDiagnosticsOpenApiSchemaTest covers it
         assertThat("documented but never returned", schema.documentedButNeverReturned(path -> path.startsWith("ExplainedExpectation/suggestedFix") || path.startsWith("SuggestedFix/")),
@@ -311,6 +317,13 @@ public class HttpStateExplainRequestTest {
 
     private JsonNode explain(String correlationId) throws Exception {
         HttpResponse response = awaitExplained(request("/mockserver/explain").withMethod("PUT").withQueryStringParameter("correlationId", correlationId));
+        assertThat(response.getBodyAsString(), response.getStatusCode(), is(200));
+        return objectMapper.readTree(response.getBodyAsString());
+    }
+
+    private JsonNode narrated(String correlationId) throws Exception {
+        HttpResponse response = httpState.explainWithOptionalNarration(request("/mockserver/explain").withMethod("PUT")
+            .withQueryStringParameter("correlationId", correlationId).withQueryStringParameter("narrate", "true")).get(10, TimeUnit.SECONDS);
         assertThat(response.getBodyAsString(), response.getStatusCode(), is(200));
         return objectMapper.readTree(response.getBodyAsString());
     }

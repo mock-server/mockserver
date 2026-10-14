@@ -2818,6 +2818,21 @@ paths:
         request, the fields it patches and cannot patch, and whether the patched expectation matches. Nothing is
         applied: to apply a fix, patch the retrieved expectation and send it to PUT /mockserver/expectation, which
         updates the expectation with the same id. Values the event log redacts are never copied into a patch.
+        With ?narrate=true the response also carries an AI-generated plain-language summary from the configured LLM
+        backend in 'narration'.
+      parameters:
+        - in: query
+          name: narrate
+          schema:
+            type: boolean
+            default: false
+          required: false
+          description: >-
+            when true, and the server has llmExplainNarrationEnabled set, also ask the configured LLM backend
+            (llmProvider) for a plain-language summary of the result, returned in 'narration' and labelled as
+            AI-generated; the deterministic fields are returned unchanged. The prompt is redacted before it is sent.
+            When narration is disabled, no LLM backend is configured, or the LLM fails or does not answer within
+            llmRequestTimeoutMillis plus a 2-second grace, 'narration' says why it is unavailable instead
       responses:
         '200':
           description: unmatched-request explanation returned
@@ -2856,7 +2871,9 @@ paths:
         NOT_OPERATOR, CONVERSATION, SCENARIO_STATE or PERCENTAGE, with per-field differences and remediation hints), which
         lower-priority expectations it shadows, and how the request was handled when it arrived. The result is
         recomputed on demand, so it reports whether the expectations changed since the request arrived. Values
-        quoting the request are redacted as the event log is. At most 500 expectations are evaluated.
+        quoting the request are redacted as the event log is. At most 500 expectations are evaluated. With
+        ?narrate=true the response also carries an AI-generated plain-language summary from the configured LLM
+        backend in 'narration'.
       parameters:
         - in: query
           name: correlationId
@@ -2867,6 +2884,18 @@ paths:
             correlationId of the request's log entries (see PUT /mockserver/retrieve?type=LOGS&format=LOG_ENTRIES);
             may instead be supplied in the body
           example: 5f2c7a4e-8d43-4a7f-9a7e-3c1d2b0e6f11
+        - in: query
+          name: narrate
+          schema:
+            type: boolean
+            default: false
+          required: false
+          description: >-
+            when true, and the server has llmExplainNarrationEnabled set, also ask the configured LLM backend
+            (llmProvider) for a plain-language summary of the result, returned in 'narration' and labelled as
+            AI-generated; the deterministic fields are returned unchanged. The prompt is redacted before it is sent.
+            When narration is disabled, no LLM backend is configured, or the LLM fails or does not answer within
+            llmRequestTimeoutMillis plus a 2-second grace, 'narration' says why it is unavailable instead
       responses:
         '200':
           description: explanation returned
@@ -8265,6 +8294,39 @@ components:
         maxExpectationsEvaluated:
           type: integer
           description: the evaluation budget (500); present only when truncated is true
+        narration:
+          $ref: '#/components/schemas/ExplanationNarration'
+    ExplanationNarration:
+      description: >-
+        present only with ?narrate=true: a plain-language summary of the explanation written by the configured LLM
+        backend, or why none is available. It is AI-generated and can be wrong; the other fields are the deterministic
+        facts
+      type: object
+      properties:
+        available:
+          type: boolean
+          description: whether the LLM returned a summary
+        aiGenerated:
+          type: boolean
+          description: always true when available; marks the text as written by an LLM, not by MockServer
+        label:
+          type: string
+          description: a label to show beside the text, saying it is AI-generated and can be wrong
+        provider:
+          type: string
+          description: the configured LLM provider that wrote the text
+        model:
+          type: string
+          description: the model that wrote the text, when known
+        text:
+          type: string
+          description: the summary, at most 4,000 characters including a trailing '...[truncated]' when it was cut
+        reason:
+          type: string
+          description: >-
+            when not available, why: llmExplainNarrationEnabled is off, no LLM backend is configured, the LLM failed
+            or returned no text, it did not answer within llmRequestTimeoutMillis plus a 2-second grace, or two
+            narrations are already running
     ExplainedExpectation:
       description: >-
         one expectation as a diagnostic endpoint evaluated it. PUT /mockserver/explain fills every field but
@@ -8433,6 +8495,8 @@ components:
           description: the most recent unmatched requests, at most limit
           items:
             $ref: '#/components/schemas/UnmatchedRequest'
+        narration:
+          $ref: '#/components/schemas/ExplanationNarration'
     UnmatchedRequest:
       description: one recent request that matched no expectation, and the expectations that came closest
       type: object

@@ -478,6 +478,7 @@ public class Configuration {
     private volatile String llmBackendsConfig;
     private volatile Long llmRequestTimeoutMillis;
     private volatile Boolean llmSemanticMatchingEnabled;
+    private volatile Boolean llmExplainNarrationEnabled;
     private volatile Boolean llmInferUsageEnabled;
     private volatile Boolean llmVcrStrict;
     private volatile Integer llmOptimisationMaxCalls;
@@ -6860,6 +6861,24 @@ public class Configuration {
      */
     public Configuration llmSemanticMatchingEnabled(Boolean llmSemanticMatchingEnabled) {
         this.llmSemanticMatchingEnabled = llmSemanticMatchingEnabled;
+        return this;
+    }
+
+    public Boolean llmExplainNarrationEnabled() {
+        if (llmExplainNarrationEnabled == null) {
+            return ConfigurationProperties.llmExplainNarrationEnabled();
+        }
+        return llmExplainNarrationEnabled;
+    }
+
+    /**
+     * Opt-in switch that lets the explain endpoints' {@code ?narrate=true} send a redacted explanation
+     * to the runtime LLM backend for a plain-language summary. Off by default.
+     *
+     * @param llmExplainNarrationEnabled allow explain narration
+     */
+    public Configuration llmExplainNarrationEnabled(Boolean llmExplainNarrationEnabled) {
+        this.llmExplainNarrationEnabled = llmExplainNarrationEnabled;
         return this;
     }
 

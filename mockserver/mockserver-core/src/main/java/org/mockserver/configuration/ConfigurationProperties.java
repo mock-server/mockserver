@@ -231,6 +231,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_PROMETHEUS_REMOTE_WRITE_HEADERS = "mockserver.prometheusRemoteWriteHeaders";
     private static final String MOCKSERVER_PROMETHEUS_REMOTE_WRITE_PROTOCOL_VERSION = "mockserver.prometheusRemoteWriteProtocolVersion";
     private static final String MOCKSERVER_LLM_SEMANTIC_MATCHING_ENABLED = "mockserver.llmSemanticMatchingEnabled";
+    private static final String MOCKSERVER_LLM_EXPLAIN_NARRATION_ENABLED = "mockserver.llmExplainNarrationEnabled";
     private static final String MOCKSERVER_LLM_INFER_USAGE_ENABLED = "mockserver.llmInferUsageEnabled";
     private static final String MOCKSERVER_LLM_METRICS_ENABLED = "mockserver.llmMetricsEnabled";
     private static final String MOCKSERVER_PER_EXPECTATION_METRICS_ENABLED = "mockserver.perExpectationMetricsEnabled";
@@ -4025,6 +4026,20 @@ public class ConfigurationProperties {
 
     public static void llmSemanticMatchingEnabled(boolean enabled) {
         setProperty(MOCKSERVER_LLM_SEMANTIC_MATCHING_ENABLED, "" + enabled);
+    }
+
+    /**
+     * Opt-in switch that lets {@code PUT /mockserver/explain?narrate=true} and
+     * {@code PUT /mockserver/explainUnmatched?narrate=true} send a redacted explanation to the
+     * runtime LLM backend for a plain-language summary. Off by default: without it no explanation
+     * leaves the process, even when a backend is configured for other features.
+     */
+    public static boolean llmExplainNarrationEnabled() {
+        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_LLM_EXPLAIN_NARRATION_ENABLED, "MOCKSERVER_LLM_EXPLAIN_NARRATION_ENABLED", "" + false));
+    }
+
+    public static void llmExplainNarrationEnabled(boolean enabled) {
+        setProperty(MOCKSERVER_LLM_EXPLAIN_NARRATION_ENABLED, "" + enabled);
     }
 
     /**

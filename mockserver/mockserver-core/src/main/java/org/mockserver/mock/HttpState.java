@@ -1197,6 +1197,10 @@ public class HttpState {
      * @return a JSON response containing an array of unmatched requests with diagnostics
      */
     public HttpResponse explainUnmatched(HttpRequest request) {
+        return explainUnmatched(request, null);
+    }
+
+    private HttpResponse explainUnmatched(HttpRequest request, List<RequestDefinition> quoted) {
         final String correlationId = UUIDService.getNonSecureUUID();
         final String timestamp = java.time.Instant.now().toString();
         try {
@@ -1221,9 +1225,12 @@ public class HttpState {
                 : null;
 
             CompletableFuture<HttpResponse> responseFuture = new CompletableFuture<>();
+            // handed over only through the completed future: after a timeout the callback may still be running
+            java.util.concurrent.atomic.AtomicReference<List<RequestDefinition>> explainedRequests = new java.util.concurrent.atomic.AtomicReference<>(Collections.emptyList());
 
             mockServerLog.retrieveUnmatchedRequests(limit, unmatchedEntries -> {
                 try {
+                    List<RequestDefinition> explained = new ArrayList<>();
                     com.fasterxml.jackson.databind.node.ArrayNode unmatchedArray = objectMapper.createArrayNode();
                     int totalEvaluations = 0;
                     boolean truncated = false;
@@ -1237,6 +1244,7 @@ public class HttpState {
                             continue;
                         }
                         HttpRequest unmatchedRequest = (HttpRequest) requestDef;
+                        explained.add(unmatchedRequest);
                         // the differences quote the recorded request's values: scrub its credentials when redactSecretsInLog is on
                         org.mockserver.fixture.FixtureRedactor redactor = LogEntry.eventLogRedactor(configuration);
                         org.mockserver.fixture.SensitiveValueMatcher sensitiveValues = org.mockserver.fixture.SensitiveValueMatcher.of(redactor == null ? null : redactor.sensitiveValues(new RequestDefinition[]{unmatchedRequest}, null));
@@ -1298,6 +1306,7 @@ public class HttpState {
                     resultNode.put("truncated", truncated);
                     resultNode.set("unmatchedRequests", unmatchedArray);
 
+                    explainedRequests.set(explained);
                     responseFuture.complete(response()
                         .withStatusCode(OK.code())
                         .withBody(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(resultNode), MediaType.JSON_UTF_8));
@@ -1306,13 +1315,83 @@ public class HttpState {
                 }
             });
 
-            return responseFuture.get(configuration.maxFutureTimeoutInMillis(), java.util.concurrent.TimeUnit.MILLISECONDS);
+            HttpResponse explanation = responseFuture.get(configuration.maxFutureTimeoutInMillis(), java.util.concurrent.TimeUnit.MILLISECONDS);
+            if (quoted != null) {
+                quoted.addAll(explainedRequests.get());
+            }
+            return explanation;
         } catch (Exception e) {
             return unexpectedFailure(request, e);
         }
     }
 
     static final int EXPLAIN_REQUEST_EVALUATION_BUDGET = 500;
+
+    private org.mockserver.llm.ExplanationNarrator explanationNarrator;
+
+    private synchronized org.mockserver.llm.ExplanationNarrator getExplanationNarrator() {
+        if (explanationNarrator == null) {
+            explanationNarrator = new org.mockserver.llm.ExplanationNarrator(configuration);
+        }
+        return explanationNarrator;
+    }
+
+    /**
+     * {@link #explain(HttpRequest)}, plus, with {@code ?narrate=true}, an AI-generated summary from the configured LLM
+     * backend in a {@code narration} field; the LLM call runs off the calling thread and is bounded by its timeout.
+     */
+    CompletableFuture<HttpResponse> explainWithOptionalNarration(HttpRequest request) {
+        if (!org.mockserver.llm.ExplanationNarrator.requested(request)) {
+            return CompletableFuture.completedFuture(explain(request));
+        }
+        List<RequestDefinition> quoted = new ArrayList<>();
+        HttpResponse deterministic = explain(request, quoted);
+        quoted.addAll(expectationRequestMatchers(requestMatchers.sortedRequestMatchers(), EXPLAIN_REQUEST_EVALUATION_BUDGET));
+        return getExplanationNarrator().narrate(deterministic, quoted, llmCompletionService, llmBackend);
+    }
+
+    /**
+     * {@link #explainUnmatched(HttpRequest)}, plus, with {@code ?narrate=true}, an AI-generated summary as
+     * {@link #explainWithOptionalNarration(HttpRequest)} adds.
+     */
+    CompletableFuture<HttpResponse> explainUnmatchedWithOptionalNarration(HttpRequest request) {
+        if (!org.mockserver.llm.ExplanationNarrator.requested(request)) {
+            return CompletableFuture.completedFuture(explainUnmatched(request));
+        }
+        List<RequestDefinition> quoted = new ArrayList<>();
+        HttpResponse deterministic = explainUnmatched(request, quoted);
+        quoted.addAll(expectationRequestMatchers(requestMatchers.retrieveRequestMatchers(null), EXPLAIN_UNMATCHED_MAX_EXPECTATIONS));
+        return getExplanationNarrator().narrate(deterministic, quoted, llmCompletionService, llmBackend);
+    }
+
+    // the facts quote the expectations' matcher values too, so their credential values are scrubbed from the prompt
+    private static List<RequestDefinition> expectationRequestMatchers(List<HttpRequestMatcher> matchers, int limit) {
+        List<RequestDefinition> definitions = new ArrayList<>();
+        for (HttpRequestMatcher matcher : matchers) {
+            if (definitions.size() >= limit) {
+                break;
+            }
+            if (matcher.getExpectation() != null && matcher.getExpectation().getHttpRequest() != null) {
+                definitions.add(matcher.getExpectation().getHttpRequest());
+            }
+        }
+        return definitions;
+    }
+
+    private void writeWhenComplete(HttpRequest request, ResponseWriter responseWriter, boolean warDeployment, CompletableFuture<HttpResponse> response) {
+        if (warDeployment || response.isDone()) {
+            HttpResponse completed;
+            try {
+                completed = response.join();
+            } catch (Exception e) {
+                completed = unexpectedFailure(request, e);
+            }
+            responseWriter.writeResponse(request, completed, true);
+        } else {
+            // a timed-out narration completes on the JDK's shared delay thread, so the write hops to the scheduler
+            response.whenComplete((completed, throwable) -> scheduler.submit(() -> responseWriter.writeResponse(request, completed != null ? completed : unexpectedFailure(request, throwable), true)));
+        }
+    }
 
     private org.mockserver.templates.TemplateDryRun templateDryRun;
 
@@ -1336,6 +1415,10 @@ public class HttpState {
      * @param request the control-plane request: {@code ?correlationId=} or a body {@code {"correlationId":"..."}}
      */
     public HttpResponse explain(HttpRequest request) {
+        return explain(request, null);
+    }
+
+    private HttpResponse explain(HttpRequest request, List<RequestDefinition> quoted) {
         final String timestamp = java.time.Instant.now().toString();
         com.fasterxml.jackson.databind.ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
         try {
@@ -1391,6 +1474,9 @@ public class HttpState {
 
             org.mockserver.fixture.FixtureRedactor redactor = LogEntry.eventLogRedactor(configuration);
             org.mockserver.fixture.SensitiveValueMatcher sensitiveValues = org.mockserver.fixture.SensitiveValueMatcher.of(redactor == null ? null : redactor.sensitiveValues(new RequestDefinition[]{recordedRequest}, null));
+            if (quoted != null) {
+                quoted.add(recordedRequest);
+            }
 
             com.fasterxml.jackson.databind.node.ObjectNode resultNode = objectMapper.createObjectNode();
             resultNode.put("correlationId", correlationId);
@@ -3128,14 +3214,14 @@ public class HttpState {
             } else if (request.matches("PUT", PATH_PREFIX + "/explainUnmatched", "/explainUnmatched")) {
 
                 if (controlPlaneRequestAuthenticated(request, responseWriter)) {
-                    responseWriter.writeResponse(request, explainUnmatched(request), true);
+                    writeWhenComplete(request, responseWriter, warDeployment, explainUnmatchedWithOptionalNarration(request));
                 }
                 canHandle.complete(true);
 
             } else if (request.matches("PUT", PATH_PREFIX + "/explain")) {
 
                 if (controlPlaneRequestAuthenticated(request, responseWriter)) {
-                    responseWriter.writeResponse(request, explain(request), true);
+                    writeWhenComplete(request, responseWriter, warDeployment, explainWithOptionalNarration(request));
                 }
                 canHandle.complete(true);
 

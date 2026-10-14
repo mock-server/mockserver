@@ -18,6 +18,7 @@ import org.mockserver.model.RequestDefinition;
 import org.mockserver.serialization.ObjectMapperFactory;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -30,8 +31,8 @@ import java.util.regex.Pattern;
 
 /**
  * Redacts credentials out of the text of a prompt before it is sent to an external
- * LLM backend (the {@code /generateExpectation} stub-generation path and the
- * semantic drift enrichment path).
+ * LLM backend (the {@code /generateExpectation} stub-generation path, the
+ * semantic drift enrichment path and the explain endpoints' {@code ?narrate=true}).
  * <p>
  * Redaction here is <b>always on</b> and independent of {@code redactSecretsInLog}:
  * a prompt leaves the process to a third-party service, so credentials in the
@@ -420,6 +421,14 @@ public class LlmPromptRedactor {
             return FixtureRedactor.REDACTED_PLACEHOLDER;
         }
         return maskFreeText(value);
+    }
+
+    /**
+     * The credential values these requests carry in the headers, cookies, query parameters and body fields this
+     * redactor masks, for scrubbing free text that quotes them, such as a match difference's "found" text.
+     */
+    public List<String> sensitiveValues(Collection<RequestDefinition> requests) {
+        return fixtureRedactor.sensitiveValues(requests, List.of());
     }
 
     private boolean isSensitiveHeaderField(String field) {

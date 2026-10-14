@@ -16,6 +16,7 @@ headers {
 
 params:query {
   ~correlationId: 5f2c7a4e-8d43-4a7f-9a7e-3c1d2b0e6f11
+  ~narrate: false
 }
 
 body:json {
@@ -25,7 +26,7 @@ body:json {
 }
 
 docs {
-  Re-checks one recorded request, identified by the correlationId of its log entries, against the current expectations in the order MockServer evaluates them. Returns the expectation that would serve the request now, why each expectation evaluated ahead of it was passed over (reason NAMESPACE, INACTIVE, FIELDS_DIFFER, NOT_OPERATOR, CONVERSATION, SCENARIO_STATE or PERCENTAGE, with per-field differences and remediation hints), which lower-priority expectations it shadows, and how the request was handled when it arrived. The result is recomputed on demand, so it reports whether the expectations changed since the request arrived. Values quoting the request are redacted as the event log is. At most 500 expectations are evaluated.
+  Re-checks one recorded request, identified by the correlationId of its log entries, against the current expectations in the order MockServer evaluates them. Returns the expectation that would serve the request now, why each expectation evaluated ahead of it was passed over (reason NAMESPACE, INACTIVE, FIELDS_DIFFER, NOT_OPERATOR, CONVERSATION, SCENARIO_STATE or PERCENTAGE, with per-field differences and remediation hints), which lower-priority expectations it shadows, and how the request was handled when it arrived. The result is recomputed on demand, so it reports whether the expectations changed since the request arrived. Values quoting the request are redacted as the event log is. At most 500 expectations are evaluated. With ?narrate=true the response also carries an AI-generated plain-language summary from the configured LLM backend in 'narration'.
   
   optional; the correlationId when it is not given as a query parameter
   

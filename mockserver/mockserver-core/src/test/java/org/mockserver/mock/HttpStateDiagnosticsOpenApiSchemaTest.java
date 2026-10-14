@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -96,6 +97,12 @@ public class HttpStateDiagnosticsOpenApiSchemaTest {
         assertThat(withFixes.path("unmatchedRequests").get(0).path("closestExpectations").size(), is(2));
         schema.assertDocuments(withFixes);
         schema.assertDocuments(explainUnmatched("{\"limit\":10}"));
+        httpState.getConfiguration().llmExplainNarrationEnabled(true);
+        schema.assertDocuments(narratedExplainUnmatched());
+        httpState.setLlmCompletionService(new org.mockserver.llm.client.LlmCompletionService((llmRequest, timeoutMillis) -> response().withStatusCode(200)
+                .withBody("{\"model\":\"gpt-4o-mini\",\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\"summary\"}}]}")),
+            org.mockserver.llm.client.LlmBackend.of(org.mockserver.model.Provider.OPENAI, "key"));
+        schema.assertDocuments(narratedExplainUnmatched());
 
         assertThat("documented but never returned", schema.documentedButNeverReturned(path -> path.startsWith("ExplainedExpectation/")),
             is(Collections.emptyList()));
@@ -127,6 +134,13 @@ public class HttpStateDiagnosticsOpenApiSchemaTest {
     private JsonNode explainUnmatched(String body) throws Exception {
         HttpResponse response = httpState.explainUnmatched(request().withMethod("PUT").withBody(body));
         assertThat(response.getStatusCode(), is(200));
+        return objectMapper.readTree(response.getBodyAsString());
+    }
+
+    private JsonNode narratedExplainUnmatched() throws Exception {
+        HttpResponse response = httpState.explainUnmatchedWithOptionalNarration(request().withMethod("PUT")
+            .withQueryStringParameter("narrate", "true").withBody("{\"limit\":10}")).get(10, TimeUnit.SECONDS);
+        assertThat(response.getBodyAsString(), response.getStatusCode(), is(200));
         return objectMapper.readTree(response.getBodyAsString());
     }
 

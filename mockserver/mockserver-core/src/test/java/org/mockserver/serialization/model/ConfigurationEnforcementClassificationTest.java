@@ -177,6 +177,8 @@ public class ConfigurationEnforcementClassificationTest {
             "org.mockserver.metrics.LlmMetricsTest#shouldNotIncrementWhenLlmMetricsDisabled");
         ENFORCEMENT_VERIFIED.put("loadGenerationEnabled",
             "org.mockserver.mock.HttpStateLoadScenarioEndpointTest#startReturns403WhenGenerationDisabled");
+        ENFORCEMENT_VERIFIED.put("llmExplainNarrationEnabled",
+            "org.mockserver.mock.HttpStateExplainNarrationTest#shouldSendNothingToTheLlmWhileNarrationIsDisabled");
         ENFORCEMENT_VERIFIED.put("metricsEnabled",
             "org.mockserver.metrics.MetricsHandlerTest#shouldReflectOriginWhenMetricsEnabled");
         ENFORCEMENT_VERIFIED.put("perExpectationMetricsEnabled",

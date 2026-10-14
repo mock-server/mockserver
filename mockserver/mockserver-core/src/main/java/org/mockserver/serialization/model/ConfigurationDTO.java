@@ -340,6 +340,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private String llmBackendsConfig;
     private Long llmRequestTimeoutMillis;
     private Boolean llmSemanticMatchingEnabled;
+    private Boolean llmExplainNarrationEnabled;
     private Boolean llmInferUsageEnabled;
     private Boolean llmVcrStrict;
     private Integer llmOptimisationMaxCalls;
@@ -716,6 +717,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
             this.llmBackendsConfig = configuration.llmBackendsConfig();
             this.llmRequestTimeoutMillis = configuration.llmRequestTimeoutMillis();
             this.llmSemanticMatchingEnabled = configuration.llmSemanticMatchingEnabled();
+            this.llmExplainNarrationEnabled = configuration.llmExplainNarrationEnabled();
             this.llmInferUsageEnabled = configuration.llmInferUsageEnabled();
             this.llmVcrStrict = configuration.llmVcrStrict();
             this.llmOptimisationMaxCalls = configuration.llmOptimisationMaxCalls();
@@ -1199,6 +1201,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
         configuration.llmBackendsConfig(ConfigurationProperties.containsRedactionMask(llmBackendsConfig) ? null : llmBackendsConfig);
         configuration.llmRequestTimeoutMillis(llmRequestTimeoutMillis);
         configuration.llmSemanticMatchingEnabled(llmSemanticMatchingEnabled);
+        configuration.llmExplainNarrationEnabled(llmExplainNarrationEnabled);
         configuration.llmInferUsageEnabled(llmInferUsageEnabled);
         configuration.llmVcrStrict(llmVcrStrict);
         configuration.llmOptimisationMaxCalls(llmOptimisationMaxCalls);
@@ -2285,6 +2288,9 @@ public class ConfigurationDTO implements DTO<Configuration> {
         }
         if (llmSemanticMatchingEnabled != null) {
             target.llmSemanticMatchingEnabled(llmSemanticMatchingEnabled);
+        }
+        if (llmExplainNarrationEnabled != null) {
+            target.llmExplainNarrationEnabled(llmExplainNarrationEnabled);
         }
         if (llmInferUsageEnabled != null) {
             target.llmInferUsageEnabled(llmInferUsageEnabled);
@@ -5119,6 +5125,15 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setLlmSemanticMatchingEnabled(Boolean llmSemanticMatchingEnabled) {
         this.llmSemanticMatchingEnabled = llmSemanticMatchingEnabled;
+        return this;
+    }
+
+    public Boolean getLlmExplainNarrationEnabled() {
+        return llmExplainNarrationEnabled;
+    }
+
+    public ConfigurationDTO setLlmExplainNarrationEnabled(Boolean llmExplainNarrationEnabled) {
+        this.llmExplainNarrationEnabled = llmExplainNarrationEnabled;
         return this;
     }
 

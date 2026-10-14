@@ -469,6 +469,33 @@ public class ConfigurationTest {
     }
 
     @Test
+    public void shouldSetAndGetLlmExplainNarrationEnabled() {
+        boolean original = ConfigurationProperties.llmExplainNarrationEnabled();
+        try {
+            // then - default value
+            clearPropertyAndCache("mockserver.llmExplainNarrationEnabled");
+            assertThat(configuration.llmExplainNarrationEnabled(), equalTo(false));
+
+            // when - system property setter
+            ConfigurationProperties.llmExplainNarrationEnabled(true);
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.llmExplainNarrationEnabled(), equalTo(true));
+            assertThat(System.getProperty("mockserver.llmExplainNarrationEnabled"), equalTo("true"));
+            assertThat(configuration.llmExplainNarrationEnabled(), equalTo(true));
+            ConfigurationProperties.llmExplainNarrationEnabled(false);
+
+            // when - setter
+            configuration.llmExplainNarrationEnabled(true);
+
+            // then - getter
+            assertThat(configuration.llmExplainNarrationEnabled(), equalTo(true));
+        } finally {
+            ConfigurationProperties.llmExplainNarrationEnabled(original);
+        }
+    }
+
+    @Test
     public void shouldSetAndGetDashboardAnalyticsEndpoint() {
         String original = ConfigurationProperties.dashboardAnalyticsEndpoint();
         try {
