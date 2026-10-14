@@ -23,8 +23,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * MEASUREMENT-ONLY harness (no production code) isolating the cost of the NEW off-event-loop
- * local-callback dispatch hop introduced alongside the forward connection-pool default flip.
+ * Harness isolating the cost of the off-event-loop local-callback dispatch hop.
  *
  * <p>Production ({@code org.mockserver.scheduler.Scheduler}) dispatches every LOCAL (in-JVM)
  * object/class callback in asynchronous/Netty mode onto a dedicated, UNBOUNDED cached pool —
@@ -38,7 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * ONE dispatch + completion round-trip ({@code offLoopDispatch}) against running the same trivial
  * task inline ({@code inline}). The DELTA between the two is the per-local-callback thread-hop
  * overhead. A real local callback also does the response work itself; this isolates only the hop so
- * the number is the marginal cost the new threading adds, not the callback's own cost.
+ * the number is the marginal cost of the hop, not the callback's own cost.
  *
  * <p>Single-threaded by design: it measures the latency of a SINGLE hop on the critical path of one
  * request, which is what a user perceives per local-callback request (concurrency is exercised by

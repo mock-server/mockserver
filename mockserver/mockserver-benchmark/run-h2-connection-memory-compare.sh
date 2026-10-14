@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# One-time CROSS-VERSION per-connection memory comparison (programme item 11) — the measurement that
+# One-time CROSS-VERSION per-connection memory comparison — the measurement that
 # actually answers the 8.0.0 changelog's warning that the HTTP/2-multiplex migration changed per-connection
 # memory. It is NOT part of the recurring perf run: it needs two published server images (a pre-8.0.0 and an
 # 8.0.0+), so it is opt-in and manual/one-time.

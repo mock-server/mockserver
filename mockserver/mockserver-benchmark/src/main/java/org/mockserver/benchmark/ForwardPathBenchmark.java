@@ -53,7 +53,7 @@ import static org.mockserver.model.HttpRequest.request;
  * <pre>./run.sh -prof gc ForwardPathBenchmark</pre>
  *
  * <p>Uses the default {@link Configuration} (the common case). Velocity is the default load-step
- * engine. BASELINE ONLY — no production code is changed by this benchmark.
+ * engine.
  */
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.AverageTime)

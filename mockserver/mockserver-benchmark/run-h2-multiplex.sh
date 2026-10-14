@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Build and run the HTTP/2 multiplex throughput/latency benchmark (issue #2669).
+# Build and run the HTTP/2 multiplex throughput/latency benchmark.
 #
 # Answers: what does giving every HTTP/2 stream its own child channel cost under
 # concurrency? Drives N concurrent streams over ONE h2c connection and reports

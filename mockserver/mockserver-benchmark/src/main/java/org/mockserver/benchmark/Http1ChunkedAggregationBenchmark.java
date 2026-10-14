@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Item 53 — decoding and aggregating one HTTP/1.1 request on a keep-alive connection, within-run A/B, at the 10 MiB
+ * Decoding and aggregating one HTTP/1.1 request on a keep-alive connection, within-run A/B, at the 10 MiB
  * default {@code maxRequestBodySize} (component limit 10,240). {@code MERGE} is the production server aggregator
  * ({@link HttpObjectAggregators#httpObjectAggregator}, which past the limit merges only the components added since
  * its last merge); {@code NETTY} is the aggregator it replaced, a plain {@link HttpObjectAggregator} with the same

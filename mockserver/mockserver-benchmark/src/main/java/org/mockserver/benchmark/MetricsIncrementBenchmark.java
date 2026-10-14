@@ -23,10 +23,10 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>Models the production hot path: every worker thread, on the Netty event loop when
  * {@code metricsEnabled} is on, increments the <em>same</em> shared counter once per request.
- * On the baseline implementation every {@code increment()} call entered {@code synchronized (name)}
- * on the shared {@code Name} enum constant, serializing all worker threads on that one monitor.
- * The fix adds a double-checked lookup ({@code ConcurrentHashMap.get} before the lock) so the
- * already-registered hot path is lock-free.
+ * Every {@code increment()} call enters {@code synchronized (name)} on the shared {@code Name} enum
+ * constant. Do not replace that with a lock-free lookup before the lock: it looks like a win but
+ * regresses the shared-counter case, because the lock also serialises the {@code AtomicLong} CAS
+ * that would otherwise contend. This benchmark is the evidence for keeping the lock.
  *
  * <p>Run with high thread counts to expose the contention:
  *
@@ -34,9 +34,7 @@ import java.util.concurrent.TimeUnit;
  * ./run.sh MetricsIncrementBenchmark            # uses the @Threads(32) default below</pre>
  *
  * <p>{@link Mode#Throughput} (ops/us, higher is better) is the headline metric for a contended
- * lock; average-time is also reported. Compare the number before vs after the getOrCreate
- * double-checked-lookup change — a clear increase under contention is the proof the lock removal
- * helps; if it does not move, the lock was not the bottleneck and the change should be dropped.
+ * lock; average-time is also reported. Re-run it before changing the locking in {@code Metrics}.
  */
 @State(Scope.Benchmark)
 @BenchmarkMode({Mode.Throughput, Mode.AverageTime})
@@ -64,7 +62,7 @@ public class MetricsIncrementBenchmark {
     }
 
     /**
-     * Worst case for the lock: all threads increment the SAME Name, so on baseline they serialize
+     * Worst case for the lock: all threads increment the SAME Name, so they serialize
      * on that single shared monitor. NOTE the same Name also means all threads CAS the same shared
      * AtomicLong inside Gauge.inc(), which is itself a contention point independent of the lock.
      */
@@ -74,8 +72,8 @@ public class MetricsIncrementBenchmark {
     }
 
     /**
-     * Realistic mixed case: each thread increments a DIFFERENT Name. On baseline {@code
-     * synchronized(name)} locks the per-Name monitor, so distinct Names never contend on the lock;
+     * Realistic mixed case: each thread increments a DIFFERENT Name. {@code synchronized(name)}
+     * locks the per-Name monitor, so distinct Names never contend on the lock;
      * each thread also CASes its own distinct gauge AtomicLong. This isolates the lock-acquire cost
      * itself (uncontended monitor) from the same-counter CAS contention above.
      */

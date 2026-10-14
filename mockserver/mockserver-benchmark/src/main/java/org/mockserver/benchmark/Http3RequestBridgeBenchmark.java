@@ -38,7 +38,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Item 20a — a within-run A/B of the <b>HTTP/3 request bridge</b> against the <b>HTTP/2
+ * A within-run A/B of the <b>HTTP/3 request bridge</b> against the <b>HTTP/2
  * equivalent</b>, both converting one inbound request (headers frame + optional body frame)
  * into a MockServer {@link HttpRequest} model object exactly as the production pipelines do.
  *
@@ -51,7 +51,7 @@ import java.util.concurrent.TimeUnit;
  * all environmental noise. The deterministic, machine-independent signal is
  * {@code gc.alloc.rate.norm} (bytes/op); run with {@code -prof gc}.
  *
- * <p><b>How much confidence the answer carries.</b> The 20a conclusion rests on the
+ * <p><b>How much confidence the answer carries.</b> The conclusion rests on the
  * <em>allocation ratio</em>, not the timing rows: allocation per op is deterministic and
  * fork-count-independent, so it survives the difference between a local JMH config and CI's.
  * It is a <em>floor-confidence</em> result rather than a point estimate, because the two
@@ -83,8 +83,8 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>{@code @Setup} asserts both arms produce a model request with the SAME method, path and
  * body length, and that the HTTP/3 arm's request carries {@link Protocol#HTTP_3} — a
- * fail-loud guard against a silently-degraded arm (the item 9a naming-trap lesson: prove the
- * benchmark exercises what its name claims). If a codec silently dropped the body, or the
+ * fail-loud guard against a silently-degraded arm (prove the benchmark exercises what its name
+ * claims). If a codec silently dropped the body, or the
  * bridge failed to tag the protocol, setup throws before any measurement is taken.
  *
  * <pre>./run.sh -prof gc Http3RequestBridgeBenchmark</pre>
@@ -132,7 +132,7 @@ public class Http3RequestBridgeBenchmark {
             new LenientInboundHttp2StreamFrameCodec(),
             new HttpObjectAggregator(configuration.maxRequestBodySize()));
 
-        // --- Genuineness guard (item 9a naming-trap lesson) -------------------
+        // --- Genuineness guard ------------------------------------------------
         // Prove BOTH arms actually convert the SAME logical request into a model
         // HttpRequest, and that the HTTP/3 arm is really on the QUIC bridge (its result
         // is tagged Protocol.HTTP_3). If a codec silently dropped the body, or the bridge

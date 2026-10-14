@@ -47,43 +47,39 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Programme item 21 — the <b>connection-scaling ceiling</b>: how many concurrent established
+ * The <b>connection-scaling ceiling</b>: how many concurrent established
  * connections a MockServer holds before request latency degrades.
  *
  * <p><b>Why this needs its own driver.</b> k6 allocates a virtual user per connection and is not
- * built to park tens of thousands of idle ones, so the plan called for a purpose-built holder. This
- * is it: it opens N real connections, proves they are established <em>on the server</em>, parks them
- * idle, and then measures request latency on a <b>separate</b> connection. The held connections
+ * built to park tens of thousands of idle ones, so this purpose-built holder opens N real
+ * connections, proves they are established <em>on the server</em>, parks them idle, and then
+ * measures request latency on a <b>separate</b> connection. The held connections
  * generate no traffic — the axis under test is connection <em>state</em>, not offered load.
  *
- * <p><b>The rig is measured before the server is.</b> This programme's recurring failure is a number
- * that turns out to describe the client or the harness, so the client-side limits are established
- * first and every rung carries its own validity block:
+ * <p><b>The rig is measured before the server is.</b> A ceiling number can easily describe the
+ * client or the harness instead of the server, so the client-side limits are established first and
+ * every rung carries its own validity block:
  * <ul>
  *   <li><b>Two different client ceilings, and the first one is invisible.</b> {@code CEILING_MODE=calibrate}
  *       opens connections until the kernel refuses and reports <em>which</em> resource ran out, because
  *       file descriptors and source ports look alike in a stack trace and mean opposite things:
  *       <ul>
  *         <li><b>File descriptors.</b> The JDK does not simply inherit the shell's limit, and what it
- *             does instead is <b>opposite on the two platforms</b> — both measured, so do not carry the
- *             flag across:
+ *             does instead is <b>opposite on the two platforms</b>, so do not carry the flag across:
  *             <ul>
  *               <li><b>macOS</b>: the JDK sets {@code RLIMIT_NOFILE} to {@code min(hard, OPEN_MAX)} =
- *                   <b>10,240</b> however high {@code ulimit -n} reads (a 60,000 shell still yields
- *                   10,240), so an un-flagged JVM stops at ~9,977 connections. That is the JDK, not the
+ *                   <b>10,240</b> however high {@code ulimit -n} reads. That is the JDK, not the
  *                   server — and it binds the <b>server</b> JVM as hard as the driver, so <b>both</b>
  *                   need {@code -XX:-MaxFDLimit}, <em>paired with</em> a raised {@code ulimit -n}: the
- *                   flag leaves the inherited soft limit alone (2,048 stays 2,048).</li>
- *               <li><b>Linux</b>: the JDK already raises the soft limit to the <b>hard</b> limit
- *                   (1,024 to 1,048,576 measured), so no flag is needed. Passing
- *                   {@code -XX:-MaxFDLimit} there <b>disables</b> that raise and leaves 1,024.</li>
+ *                   flag leaves the inherited soft limit alone.</li>
+ *               <li><b>Linux</b>: the JDK already raises the soft limit to the <b>hard</b> limit, so
+ *                   no flag is needed. Passing {@code -XX:-MaxFDLimit} there <b>disables</b> that
+ *                   raise and leaves 1,024.</li>
  *             </ul></li>
  *         <li><b>Source ports.</b> With the clamp lifted the wall moves to the ephemeral range
- *             (49152-65535 on macOS), measured here at <b>15,511</b> connections. Spreading across four
- *             destination ports reached 15,609 — a ratio of <b>1.01</b>, so on this kernel source ports
- *             come from <em>one global range</em> and giving the server more ports buys nothing. The
- *             multi-port argument is kept only because it costs nothing and does hold on kernels that
- *             key the range by destination.</li>
+ *             (49152-65535 on macOS). On macOS source ports come from <em>one global range</em>, so
+ *             giving the server more ports buys nothing. The multi-port argument is kept only because
+ *             it costs nothing and does hold on kernels that key the range by destination.</li>
  *       </ul>
  *       {@link #ephemeralHeadroom} refuses a rung above the measured ceiling rather than letting it fail
  *       as connect errors that read like a server limit.</li>
@@ -95,13 +91,11 @@ import java.util.concurrent.TimeUnit;
  *       read, matched and answered on it. A connection that only completed a TCP handshake would pass
  *       the first proof and fail the second.</li>
  *   <li><b>Source addresses are counted from the sockets that were actually bound, not the ones asked
- *       for.</b> The ~15,500 wall this item hit is the macOS global ephemeral source-port range, and
- *       the only way past it is more client source <em>addresses</em> (loopback aliases or more
- *       load-generator hosts), not more server ports — the multi-port ratio measured 1.01. So the
- *       driver can round-robin connections across a configured list of local source addresses
- *       ({@code CEILING_SOURCE_ADDRESSES}), giving each address its own ephemeral range. Because this
- *       programme's recurring defect is an instrument that runs honestly while measuring the wrong
- *       subject, every rung reports how many <b>distinct source addresses were actually used</b> and
+ *       for.</b> The macOS wall is the global ephemeral source-port range, and the only way past it
+ *       is more client source <em>addresses</em> (loopback aliases or more load-generator hosts), not
+ *       more server ports. So the driver can round-robin connections across a configured list of
+ *       local source addresses ({@code CEILING_SOURCE_ADDRESSES}), giving each address its own
+ *       ephemeral range. Every rung reports how many <b>distinct source addresses were actually used</b> and
  *       how many connections landed on <b>each</b>, tallied from {@link Channel#localAddress()} after
  *       the OS assigned it — and {@link #measureRung} throws if that tally does not match the
  *       round-robin distribution the run configured. A misconfiguration that silently collapsed onto
@@ -115,12 +109,11 @@ import java.util.concurrent.TimeUnit;
  *
  * <p><b>Every rung is paired with its own baseline.</b> A rung's latency means nothing in isolation on
  * a laptop, so each rung is preceded by a zero-connection sample and reported as a ratio to <em>that</em>
- * one. A single baseline at the start of the run is not enough: measured that way this box drifted
- * <b>35%</b> faster across one ladder — larger than any effect the ladder was looking for, and
- * monotonic, so every higher rung appeared to be an improvement. Pairing cancels drift slower than a
- * pair; the first-to-last baseline gap is still printed, as a measure of how much the box moved. The
- * discarded warm-up exists for the same reason at a shorter timescale: the first sample of an un-warmed
- * driver reads several times steady state.
+ * one. A single baseline at the start of the run is not enough: a box can drift across one ladder by
+ * more than any effect the ladder is looking for, and monotonic drift makes every higher rung look like
+ * an improvement. Pairing cancels drift slower than a pair; the first-to-last baseline gap is still
+ * printed, as a measure of how much the box moved. The discarded warm-up exists for the same reason at
+ * a shorter timescale: the first sample of an un-warmed driver reads well above steady state.
  *
  * <p><b>Scope.</b> Plaintext HTTP/1.1 keep-alive ({@code h1}) and the same over TLS ({@code tls}),
  * where the extra axis is the server's per-connection session and {@code SSLEngine} state. HTTP/2 is
@@ -138,8 +131,8 @@ import java.util.concurrent.TimeUnit;
  *   CEILING_SOURCE_ADDRESSES comma-separated local source addresses to round-robin outgoing
  *                           connections across, e.g. 127.0.0.1,127.0.0.2,127.0.0.3,127.0.0.4
  *                           (default 127.0.0.1). Each address contributes its own ephemeral
- *                           source-port range, which is the only lever that moves the ~15,500 wall on
- *                           macOS. Non-primary loopback aliases must be created with sudo BEFORE the
+ *                           source-port range, which is the only lever that moves the source-port
+ *                           wall on macOS. Non-primary loopback aliases must be created with sudo BEFORE the
  *                           run and removed after (see run-connection-ceiling.sh); the driver refuses
  *                           to start if any configured address is not bindable.
  * </pre>
@@ -154,9 +147,9 @@ public class ConnectionCeilingBenchmark {
      * Ephemeral range size assumed when {@code CEILING_CLIENT_CEILING} is not set — macOS's default
      * 49152-65535. Deliberately NOT multiplied by the number of destination ports: whether the kernel
      * keeps a separate source-port space per destination is a property of the kernel, not something to
-     * assume, and {@code CEILING_MODE=calibrate} measures it. Assuming the multiplier is what let a
-     * ladder ask for more connections than the box could give and fail as a {@code BindException}
-     * mid-rung, which reads like a server limit and is not one.
+     * assume, and {@code CEILING_MODE=calibrate} measures it. Assuming the multiplier lets a ladder
+     * ask for more connections than the box can give and fail as a {@code BindException} mid-rung,
+     * which reads like a server limit and is not one.
      */
     private static final int DEFAULT_EPHEMERAL_RANGE = 16_384;
 
@@ -231,12 +224,8 @@ public class ConnectionCeilingBenchmark {
         try {
             warmUp(group, sslContext, host, ports[0], warmupRequests);
             long drainMs = Long.parseLong(env("CEILING_TIMEWAIT_DRAIN_MS", "45000"));
-            // Every rung is PAIRED with a zero-connection baseline measured immediately before it, and the
-            // ratio reported is against that partner rather than against one baseline for the whole run.
-            // A single run-start baseline is not good enough here: measured that way the box drifted 35%
-            // across one ladder — larger than any effect the ladder was looking for, and monotonic, so it
-            // made higher rungs look progressively FASTER. Pairing cancels drift that is slow relative to
-            // a pair, and the first-versus-last baseline printed below still says how much drift there was.
+            // Every rung is PAIRED with a zero-connection baseline measured immediately before it (see
+            // the class Javadoc); the first-versus-last baseline printed below says how much the box drifted.
             for (int rung : ladder) {
                 // A rung's closed sockets hold their source ports in TIME_WAIT for 2*MSL, so the next rung
                 // starts with less of the range than the last one had. Waiting keeps the ladder from
@@ -261,8 +250,8 @@ public class ConnectionCeilingBenchmark {
 
     /**
      * Discarded requests on a throwaway connection, so the first measured rung is not the one paying for
-     * class loading and JIT. Without this the first rung-0 sample read ~2.5x the last one on the same box,
-     * which would have presented as every held-connection rung being faster than no connections at all.
+     * class loading and JIT. Without this an un-warmed first rung-0 sample reads well above the later
+     * ones, presenting every held-connection rung as faster than no connections at all.
      */
     private static void warmUp(NioEventLoopGroup group, SslContext sslContext, String host, int port, int requests)
         throws Exception {
@@ -368,8 +357,8 @@ public class ConnectionCeilingBenchmark {
 
             // The establishment proofs above are taken at PARK time. Nothing so far shows the parked
             // connections are still open when the probe runs — and a rung whose connections quietly
-            // dropped in between would still report rig_valid:true, biasing toward the "no degradation"
-            // conclusion this harness reached. Re-assert immediately before measuring.
+            // dropped in between would still report rig_valid:true, biasing toward a "no degradation"
+            // conclusion. Re-assert immediately before measuring.
             long stillParked = parked.stream().filter(Channel::isActive).count();
             if (stillParked != connections) {
                 throw new IllegalStateException("HARNESS VALIDATION FAILED: " + stillParked + " of "
@@ -445,9 +434,8 @@ public class ConnectionCeilingBenchmark {
     /**
      * Connect, optionally binding the outgoing socket to {@code localAddress} (address with port 0 for an
      * OS-assigned ephemeral port). Binding an explicit source address is how a rung spreads its
-     * connections across several ephemeral ranges; {@code null} preserves the pre-existing behaviour of
-     * letting the OS choose, which for a loopback destination is 127.0.0.1 — so a run configured with the
-     * default single {@code 127.0.0.1} source lands on exactly the same address as before.
+     * connections across several ephemeral ranges; {@code null} lets the OS choose, which for a loopback
+     * destination is 127.0.0.1 — the same address the default single {@code 127.0.0.1} source binds.
      */
     static Channel connect(NioEventLoopGroup group, SslContext sslContext, String host, int port,
                            SocketAddress localAddress) throws InterruptedException {
@@ -556,9 +544,8 @@ public class ConnectionCeilingBenchmark {
      * Link {@link Wall} and {@link Wall.Kind} while descriptors are still available.
      * <p>
      * Loading a class needs a descriptor to read the jar, so a JVM that exhausts them mid-loop cannot
-     * then load the class it would use to report that: at {@code ulimit -n 512} this died with
-     * {@code NoClassDefFoundError: ...$Wall} instead of naming the wall — the instrument failing in
-     * precisely the condition it exists to diagnose. Called from {@code main} rather than from the
+     * then load the class it would use to report that, and dies with {@code NoClassDefFoundError}
+     * instead of naming the wall. Called from {@code main} rather than from the
      * calibrate path alone, because the measuring path reaches {@code classify()} on the same failure.
      */
     private static void preloadFailureReportingClasses() {
@@ -573,7 +560,7 @@ public class ConnectionCeilingBenchmark {
      * allocates ports), else the assumed ephemeral range — and in both cases reduced by
      * {@link #EPHEMERAL_SAFETY_FACTOR}, because a ladder must fit the previous rung's {@code TIME_WAIT}
      * sockets as well as its own. It takes no <em>port</em> count: whether destinations get separate
-     * source-port spaces is a kernel property, and on macOS it measured as one global range. It does
+     * source-port spaces is a kernel property, and on macOS it is one global range. It does
      * scale by the number of source <em>addresses</em>, because each local address contributes its own
      * ephemeral range — that is the whole reason for binding across addresses, and the guard would
      * otherwise refuse the very rungs the feature exists to reach. This only raises the ceiling the
@@ -711,7 +698,7 @@ public class ConnectionCeilingBenchmark {
             }
             // Only the message is evidence. `ChannelException` wraps many unrelated failures, so
             // matching on the type would report "out of file descriptors" for a refused connection and
-            // send the reader to the wrong fix. Verified against a real exhaustion: the chain is
+            // send the reader to the wrong fix. On a real exhaustion the chain is
             // ChannelException -> InvocationTargetException -> ChannelException -> SocketException,
             // and the last carries "Too many open files", so walking causes finds it without the type.
             if (message.contains("Too many open files")) {
@@ -768,8 +755,8 @@ public class ConnectionCeilingBenchmark {
         }
 
         // How many connections landed on EACH source address, printed per non-baseline rung. This is the
-        // check that a ladder "past 15,500" really used several source addresses rather than one — the
-        // headline number is worthless if the spread is not what was configured.
+        // check that a ladder past the source-port wall really used several source addresses rather than
+        // one — the headline number is worthless if the spread is not what was configured.
         if (sourceAddresses > 1) {
             System.out.println("\nconnections per source address (from the addresses the OS actually bound):");
             for (Rung rung : results) {
@@ -943,7 +930,7 @@ public class ConnectionCeilingBenchmark {
      * Parse a comma-separated list of local source addresses into resolved {@link InetAddress}es,
      * preserving order and rejecting duplicates — two entries for the same address would silently halve
      * that address's apparent share and break the round-robin distribution check. Blank input yields the
-     * single default {@code 127.0.0.1}, which reproduces the pre-existing single-address behaviour.
+     * single default {@code 127.0.0.1}.
      */
     static InetAddress[] parseSourceAddresses(String csv) throws java.net.UnknownHostException {
         String[] parts = (csv == null || csv.isBlank() ? "127.0.0.1" : csv).split(",");
@@ -971,7 +958,7 @@ public class ConnectionCeilingBenchmark {
      * Refuse to start unless every configured source address can actually be bound. A non-primary
      * loopback alias that was never created (macOS needs {@code sudo ifconfig lo0 alias <ip> up}) would
      * otherwise surface mid-rung as a {@code BindException} that reads like ephemeral-port exhaustion, or
-     * — worse for this programme — could be mistaken for having raised the ceiling. Failing up front with
+     * — worse — could be mistaken for having raised the ceiling. Failing up front with
      * the address named and the fix printed keeps a misconfiguration from ever reaching a latency number.
      */
     private static void assertSourceAddressesBindable(InetAddress[] sourceAddresses) {

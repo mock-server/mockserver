@@ -29,7 +29,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
 /**
- * T1-C1 benchmark: candidate index vs full linear scan for
+ * Candidate index vs full linear scan for
  * {@link RequestMatchers#firstMatchingExpectation}.
  *
  * <p>{@code indexMode} selects the two code paths to compare directly, isolating the
@@ -87,14 +87,10 @@ public class CandidateIndexBenchmark {
             mock(Scheduler.class),
             mock(WebSocketClientRegistry.class)
         );
-        // Engage/disengage the candidate index by setting the per-instance threshold
-        // DIRECTLY on this matcher via withCandidateIndexThreshold, NOT via a JVM-global
-        // system property. The system property is read once at construction and is
-        // fork-fragile under JMH multi-fork (a forked JVM did not reliably observe a
-        // property set inside @Setup), which silently left the index DISENGAGED — making
-        // the "INDEX" arm secretly re-measure the scan. Setting the instance field directly
-        // is deterministic across forks. SCAN: threshold above the largest n (index never
-        // engages — the un-indexed baseline). INDEX: threshold 2 (engages for every n >= 2).
+        // Set the threshold on this instance, NOT via the JVM-global system property: that is
+        // read once at construction, and a forked JVM does not reliably observe a property set
+        // inside @Setup, which silently leaves the INDEX arm re-measuring the scan. SCAN:
+        // threshold above the largest n (index never engages). INDEX: threshold 2 (n >= 2).
         requestMatchers.withCandidateIndexThreshold("SCAN".equals(indexMode) ? Integer.MAX_VALUE : 2);
         for (int i = 0; i < n; i++) {
             requestMatchers.add(buildExpectation(i), API);

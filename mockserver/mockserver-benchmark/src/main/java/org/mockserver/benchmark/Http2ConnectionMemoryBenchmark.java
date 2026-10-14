@@ -43,7 +43,7 @@ import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
- * HTTP/2 <em>per-connection memory</em> benchmark — the memory axis of issue #2669 (programme item 11).
+ * HTTP/2 <em>per-connection memory</em> benchmark.
  *
  * <p><strong>What it answers.</strong> The 8.0.0 changelog warned that migrating the HTTP/2 pipeline to
  * {@code Http2FrameCodec + Http2MultiplexHandler} — where every stream becomes its own child {@link Channel}
@@ -58,7 +58,7 @@ import static org.mockserver.stop.Stop.stopQuietly;
  *   <li>Open {@code C} real TCP connections, each carrying {@code S} concurrently in-flight streams. Each
  *       stream sends a complete request whose matched response is <b>held open by a long server-side delay</b>,
  *       so the server keeps {@code C×S} stream child channels alive simultaneously — the exact structures
- *       #2669 changed. Total concurrent server streams = {@code C×S}.</li>
+ *       the multiplex migration changed. Total concurrent server streams = {@code C×S}.</li>
  *   <li><b>Isolate connection cost from event-log cost.</b> MockServer retains full request/response bodies
  *       in a count-bounded event-log ring, so a naive heap delta would fold in logged bodies. Two things
  *       remove that confound: (a) the requests are bodyless {@code GET}s and the held responses never
@@ -96,9 +96,9 @@ import static org.mockserver.stop.Stop.stopQuietly;
  *       nothing was actually established/measured) and below a ceiling (a whole-heap delta means the harness
  *       measured the wrong thing).</li>
  * </ol>
- * <p>These are HARNESS-integrity gates, deliberately distinct from any performance threshold (there is none —
- * the metric is notify-only until its run-to-run variance is known). {@code selftest} proves every gate fires
- * on a fabricated bad result and that a clean result passes, server-free.</p>
+ * <p>These are HARNESS-integrity gates, deliberately distinct from any performance threshold.
+ * {@code selftest} proves every gate fires on a fabricated bad result and that a clean result
+ * passes, server-free.</p>
  *
  * <pre>
  *   java -cp ... org.mockserver.benchmark.Http2ConnectionMemoryBenchmark [output.json]

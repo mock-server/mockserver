@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * G6 mechanism proof (NOT a JMH benchmark) — a package-private verifier that
+ * Mechanism proof (NOT a JMH benchmark) — a package-private verifier that
  * {@link MatchingTimeoutExecutor#callWithTimeout} really hands the match to the shared thread pool
  * on the default path and really bypasses it when the timeout is disabled. It lives in
  * {@code org.mockserver.matchers} (not {@code org.mockserver.benchmark}) precisely so it can read
@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *   <li><b>Pool on/off the path.</b> A call with the default {@code timeoutMillis=5000} increments
  *       the submitted-task counter (the task went to the pool); a call with {@code timeoutMillis=0}
  *       does <em>not</em> (it ran inline on the calling thread via the {@code timeoutMillis <= 0}
- *       short-circuit at {@code MatchingTimeoutExecutor.callWithTimeout} line 1). This is the exact
+ *       short-circuit at the top of {@code MatchingTimeoutExecutor.callWithTimeout}). This is the exact
  *       distinction the benchmark's POOL vs INLINE arms rely on.</li>
  *   <li><b>Saturation reachability.</b> The executor caps live evaluator threads at
  *       {@code max(64, availableProcessors*16)} and, once saturated, runs the excess submissions

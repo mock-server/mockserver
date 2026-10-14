@@ -47,10 +47,10 @@ import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
- * HTTP/2 multiplex throughput / latency benchmark — answers the open question from issue #2669:
- * <em>what does giving every HTTP/2 stream its own channel cost under concurrency?</em>
+ * HTTP/2 multiplex throughput / latency benchmark — answers <em>what does giving every HTTP/2
+ * stream its own channel cost under concurrency?</em>
  *
- * <p>Since #2669 the server's only HTTP/2 pipeline is {@code Http2FrameCodec + Http2MultiplexHandler},
+ * <p>The server's only HTTP/2 pipeline is {@code Http2FrameCodec + Http2MultiplexHandler},
  * so every stream is a child channel with its own pipeline (strictly more per-stream allocation than a
  * shared connection pipeline). This harness drives {@code N} concurrent streams over ONE h2c connection
  * and reports throughput plus p50/p95/p99 latency, sweeping {@code N = 1, 10, 100}. The server caps
@@ -58,21 +58,20 @@ import static org.mockserver.stop.Stop.stopQuietly;
  * higher concurrency is a different (multi-connection) question and is intentionally not attempted here.</p>
  *
  * <p><strong>Concurrency model.</strong> Each HTTP/2 request gets its <em>own</em> stream — that is the
- * unit whose per-stream cost #2669 changed. Concurrency {@code N} is realised as {@code N} driver
+ * unit whose per-stream cost is under test. Concurrency {@code N} is realised as {@code N} driver
  * threads ("lanes"); each lane issues {@code requestsPerStream} requests sequentially, opening a fresh
  * {@link Http2StreamChannel} for every one, so at any instant there are exactly {@code N} in-flight
  * streams on the connection. Total requests per measured run = {@code N * requestsPerStream}. The
  * driver threads block on per-request futures — they are NOT event-loop threads, so blocking is safe.</p>
  *
- * <p><strong>Why not the earlier harness.</strong> A previous attempt reused ONE {@code Http2StreamChannel}
- * for many requests, writing several {@code HEADERS} frames on a single stream — an HTTP/2 protocol
- * violation (a stream carries exactly one request/response), which produced "expected N responses, got 0".
- * The fix is one stream per request, as demonstrated by {@code Http2MultiplexSseEndStreamIntegrationTest}.</p>
+ * <p><strong>One stream per request.</strong> Reusing ONE {@code Http2StreamChannel} for many requests
+ * writes several {@code HEADERS} frames on a single stream — an HTTP/2 protocol violation (a stream
+ * carries exactly one request/response), so no responses arrive.</p>
  *
  * <p><strong>Self-validation is mandatory and fails the JVM loudly (exit code 2), never warn-and-continue.</strong>
- * A prior harness stopped its timer on a stream-count latch and divided an <em>assumed</em> request count by
- * elapsed time, "reporting" 1,074,476 req/s and a p95 of 95 ns — physically impossible over TCP. The gates
- * in {@link RunResult#validate()} exist to make that class of false-green impossible:
+ * Stopping the timer on a stream-count latch and dividing an <em>assumed</em> request count by elapsed time
+ * can "report" physically impossible figures. The gates in {@link RunResult#validate()} exist to make that
+ * class of false-green impossible:
  * <ol>
  *   <li>the latch counts TOTAL expected responses ({@code streams * requestsPerStream}), and the run asserts
  *       {@code completed == expected};</li>
@@ -81,8 +80,8 @@ import static org.mockserver.stop.Stop.stopQuietly;
  *   <li>a throughput ceiling — wildly-above-documented numbers are treated as a broken harness, not a win;</li>
  *   <li>any stream reset / timeout / non-200 fails the run — statistics are never computed over an errored run.</li>
  * </ol>
- * These gates are HARNESS-integrity checks, deliberately distinct from any performance threshold (there is
- * none yet — see the CI job). A gate failure means the measurement is untrustworthy and exits non-zero;
+ * These gates are HARNESS-integrity checks, deliberately distinct from any performance threshold. A gate
+ * failure means the measurement is untrustworthy and exits non-zero;
  * a slow-but-valid run exits zero and simply records slower numbers.</p>
  *
  * <p>Run it via {@code mockserver-benchmark}'s classpath (see {@code run-h2-multiplex.sh}):</p>
@@ -100,11 +99,9 @@ public final class Http2StreamChannelBenchmark {
     private static final long LATENCY_FLOOR_NANOS = 1_000L;
 
     /**
-     * Sanity ceiling for req/s on ONE loopback connection through the full request-matching path. This
-     * repo's documented end-to-end knee is ~36k req/s on 6 cores; a single-connection in-JVM run is a
-     * different shape, so this ceiling is set well above any plausible real number purely to catch the
-     * "divided an assumed count by a tiny elapsed" false-green (the 1,074,476 req/s bug). It is NOT a
-     * performance threshold.
+     * Sanity ceiling for req/s on ONE loopback connection through the full request-matching path, set
+     * well above any plausible real number purely to catch the "divided an assumed count by a tiny
+     * elapsed" false-green. It is NOT a performance threshold.
      */
     private static final long THROUGHPUT_CEILING_RPS = 200_000L;
 
@@ -509,20 +506,20 @@ public final class Http2StreamChannelBenchmark {
         withError.recordError("synthetic error");
         failures += expectThrows("errors-present gate", withError);
 
-        // Gate: completed != expected (the exact "expected N, got 0" reference failure).
+        // Gate: completed != expected.
         RunResult mismatch = new RunResult(1, 500);
         mismatch.setWallNanos(1_000_000_000L);
         // no latencies recorded → completed 0 != expected 500
         failures += expectThrows("expected!=completed gate", mismatch);
 
-        // Gate: latency floor (the 95 ns physically-impossible p95 class).
+        // Gate: latency floor (a physically-impossible p95).
         RunResult tooFast = new RunResult(1, 2);
         tooFast.recordLatency(95);   // 95 ns — impossible
         tooFast.recordLatency(120);
         tooFast.setWallNanos(1_000_000);
         failures += expectThrows("latency-floor gate", tooFast);
 
-        // Gate: throughput ceiling (the 1,074,476 req/s divide-by-tiny-elapsed class).
+        // Gate: throughput ceiling (the divide-by-tiny-elapsed class).
         RunResult tooFast2 = new RunResult(1, 100);
         for (int i = 0; i < 100; i++) {
             tooFast2.recordLatency(2_000); // valid per-request latency ...

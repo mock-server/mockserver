@@ -22,8 +22,7 @@ import org.slf4j.event.Level;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Micro-benchmark for the per-request configuration-resolution hot paths that performance unit U5
- * targets. Unlike {@link ResponseWriterAllocBenchmark}, whose writer (and therefore its CORS
+ * Micro-benchmark for the per-request configuration-resolution hot paths. Unlike {@link ResponseWriterAllocBenchmark}, whose writer (and therefore its CORS
  * resolution) is built once per trial in {@code @Setup}, this benchmark builds the writer INSIDE the
  * measured op — matching production, where {@code HttpRequestHandler} constructs a fresh
  * {@code NettyResponseWriter} for every request.

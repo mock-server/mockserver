@@ -37,20 +37,18 @@ import static org.mockserver.model.HttpResponse.response;
  * Hot-path micro-benchmark for {@link RequestMatchers#firstMatchingExpectation}.
  *
  * <p>The benchmarked request matches <em>no</em> expectation, which forces the
- * full N-matcher scan — the worst case for the per-request allocation churn the
- * Part-A optimizations target (a {@code MatchDifference} allocated per matcher,
- * the rebuilt sorted matcher list, the {@code becauseBuilder} strings). Run with
- * the GC profiler to capture bytes-allocated-per-op:
+ * full N-matcher scan — the worst case for per-request allocation (a
+ * {@code MatchDifference} allocated per matcher, the sorted matcher list, the
+ * {@code becauseBuilder} strings). Run with the GC profiler to capture
+ * bytes-allocated-per-op:
  *
  * <pre>./run.sh -prof gc MatchingBenchmark</pre>
  *
  * <p>Metrics are off; {@code detailedMatchFailures} and the log level are
- * parameterised. The {@code detailedMatchFailures=false} arm is the opt-out Part A
- * optimizes; the {@code true} arm (the shipped default) exercises the {@code MatchDifference}
- * formatting path (the #1/#2 production allocation sites, made lazy by
- * a8898b263). Capture {@code -prof gc} numbers here before and after each A1/A2
- * change; a reduction in {@code gc.alloc.rate.norm} is the proof an allocation
- * win is real (k6's end-to-end signal cannot isolate it).
+ * parameterised; the {@code true} arm (the shipped default) exercises the
+ * {@code MatchDifference} formatting path. A reduction in {@code gc.alloc.rate.norm}
+ * here is the proof an allocation win is real (k6's end-to-end signal cannot
+ * isolate it).
  */
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.AverageTime)
@@ -74,12 +72,12 @@ public class MatchingBenchmark {
      *       method+path and reaches HEADERS) but carries a distinct header matcher; the request
      *       has the same method+path plus several headers, missing on every expectation's header
      *       matcher. Forces the request-side header map to be (re)built for ALL N expectations —
-     *       the path Unit C's request-side MAP memoization targets.</li>
+     *       the path request-side map memoization serves.</li>
      *   <li>{@code XML_BODY} — every expectation carries a JSON-schema body matcher; the request
      *       carries an {@code application/xml} body, so {@code bodyMatches} routes through
      *       {@code JsonSchemaBodyDecoder.convertToJson}'s XML branch (XML DOM parse + ObjectMapper
-     *       serialisation) once per candidate expectation on baseline — the path Unit D's per-request
-     *       XML→JSON cache targets. BODY is matched before HEADERS in the field order, so a blank
+     *       serialisation) — the path the per-request XML→JSON cache serves. BODY is matched before
+     *       HEADERS in the field order, so a blank
      *       method/path on each expectation reaches the body matcher for ALL N expectations.</li>
      *   <li>{@code JSON_DEEP_DEFER} / {@code JSON_DEEP_REJECT} — every expectation carries a
      *       {@code JsonBody} (default {@code ONLY_MATCHING_FIELDS}) that is a nested object
@@ -106,24 +104,21 @@ public class MatchingBenchmark {
 
     /**
      * Server log level. INFO is the default; WARN models a performance-tuned
-     * deployment (logging reduced below INFO). The per-field "because" string
-     * building on the match path is gated only by !controlPlaneMatcher today, so
-     * it runs — and is discarded — at WARN too; this param exposes that.
+     * deployment (logging reduced below INFO). The per-field "because" string on
+     * the match path is built only when INFO is enabled, so this param shows what
+     * that gate saves.
      */
     @Param({"INFO", "WARN"})
     public String logLevel;
 
     /**
      * Whether detailed match-failure reports are recorded. {@code true} is the
-     * shipped default; {@code false} is the opt-out Part A optimizes. {@code true} turns on
-     * the {@code MatchDifference.addDifference} -> {@code StringFormatter} path a
-     * sustained-load JFR profile identified as the #1 and #2 allocation sites in
-     * production (together ~28-33% of sampled allocation) — the path commit
-     * a8898b263 made lazy. This param exists so both arms are measurable and the
-     * detailed arm can be gated with its own absolute allocation floor, so a
-     * regression that re-introduces eager formatting fails the per-merge gate
-     * ({@code .buildkite/scripts/steps/perf-alloc-gate.sh}) rather than sailing
-     * through a gate that never ran the largest production allocation source.
+     * shipped default and turns on the {@code MatchDifference.addDifference} ->
+     * {@code StringFormatter} path, the largest production allocation source. This
+     * param exists so both arms are measurable and the detailed arm can be gated
+     * with its own absolute allocation floor, so a regression that re-introduces
+     * eager formatting fails the per-merge gate
+     * ({@code .buildkite/scripts/steps/perf-alloc-gate.sh}).
      *
      * <p>Consumers that measure a single workload MUST pin this param: the daily
      * micro-bench primary run and the doc-site scaling sweep pin it {@code false}
@@ -139,13 +134,10 @@ public class MatchingBenchmark {
 
     @Setup(Level.Trial)
     public void setup() {
-        // model a deployment at the given log level with detailed match reports
-        // either off (the opt-out Part A optimizes) or on (the shipped default: the
-        // MatchDifference formatting path a8898b263 made lazy) per the param.
         // Configuration.configuration() MUST be constructed AFTER these statics are
         // set: it snapshots ConfigurationProperties (detailedMatchFailures() falls
         // back to the static when its own field is null), so the trial's param
-        // values must already be in place — same ordering the logLevel line relies on.
+        // values must already be in place.
         ConfigurationProperties.logLevel(logLevel);
         ConfigurationProperties.detailedMatchFailures(detailedMatchFailures);
         Configuration configuration = Configuration.configuration();
@@ -189,8 +181,8 @@ public class MatchingBenchmark {
             case "XPATH":
             case "XML_BODY": {
                 // an application/xml body matched against JSON-schema body matchers -> bodyMatches
-                // routes through convertToJson's XML branch (DOM parse + ObjectMapper) per expectation
-                // on baseline. Body is matched before headers in the field order, so each expectation
+                // routes through convertToJson's XML branch (DOM parse + ObjectMapper). Body is
+                // matched before headers in the field order, so each expectation
                 // (blank method/path) reaches the body matcher; the converted JSON fails the schema.
                 HttpRequest r = request()
                     .withBody(XML_BODY);

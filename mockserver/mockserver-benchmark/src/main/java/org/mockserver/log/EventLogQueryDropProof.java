@@ -17,14 +17,14 @@ import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
- * G2 mechanism proof (NOT a JMH benchmark) — a standalone verifier that a concurrent event-log
+ * Mechanism proof (NOT a JMH benchmark) — a standalone verifier that a concurrent event-log
  * QUERY (retrieve/verify) can, by monopolising the single disruptor consumer thread, cause
  * serving-path log writes to be DROPPED, silently losing the {@code RECEIVED_REQUEST} evidence a
  * later {@code verify} needs. It lives in {@code org.mockserver.log} so it can build a real
  * {@link MockServerEventLog} through its public API and read {@link MockServerEventLog#getDroppedLogEventCount()}
  * / {@link MockServerEventLog#getRingBufferOccupancy()}.
  *
- * <p><b>The finding under test (G2).</b> {@code MockServerEventLog} runs its disruptor with a SINGLE
+ * <p><b>The mechanism under test.</b> {@code MockServerEventLog} runs its disruptor with a SINGLE
  * handler that both APPENDS serving-path entries and RUNS every query (retrieve/verify/clear are
  * dispatched as {@code RUNNABLE} events onto that same consumer thread). A query is an O(n) scan
  * over up to {@code maxLogEntries} entries, each running a full cloned request-match. While that
@@ -46,7 +46,7 @@ import static org.mockserver.model.HttpRequest.request;
  *       — the flood count is held constant across the two arms, only the hold is removed. This is the
  *       same drop path {@link MockServerEventLogDroppedEventsTest} pins; it is reproduced here as the
  *       race-free floor the second (real-query) check builds on.</li>
- *   <li><b>Real query vs no query (the G2 claim).</b> The log is filled to a large occupancy N and a
+ *   <li><b>Real query vs no query.</b> The log is filled to a large occupancy N and a
  *       paced writer publishes at a rate a FREE consumer sustains with zero drops (the control arm
  *       proves it does). Re-running that identical paced writer while a REAL {@code retrieveRequests}
  *       scan is in flight drops entries — because the scan freezes the consumer for its whole
@@ -84,10 +84,9 @@ public final class EventLogQueryDropProof {
     }
 
     /**
-     * Item 3 (the verified NON-result): a long query must NOT block the serving path's log write.
+     * A long query must NOT block the serving path's log write.
      * {@code add()} publishes via {@code tryPublishEvent}, which returns immediately whether the ring
-     * accepts (fast) or is full (drop) — it never blocks on the consumer. Measured: per-write latency
-     * while a real scan holds the consumer is not materially worse than idle. (Request MATCHING itself
+     * accepts (fast) or is full (drop) — it never blocks on the consumer. (Request MATCHING itself
      * never reads the event log at all — a structural decoupling, so it is unaffected by construction;
      * this check covers the one serving-path touch-point that does reach the log: the write.)
      */
@@ -110,7 +109,7 @@ public final class EventLogQueryDropProof {
             double idleUs = idleMaxNanos / 1_000.0;
             double busyUs = busyMaxNanos / 1_000.0;
             // Generous ceiling: a non-blocking write, even contended, stays sub-millisecond; a write
-            // that BLOCKED on the ~50ms scan would be orders of magnitude over this.
+            // that BLOCKED on the scan would be orders of magnitude over this.
             boolean pass = busyMaxNanos < TimeUnit.MILLISECONDS.toNanos(5);
             System.out.printf("[g2:nonblock] maxWrite idle=%.1fus during-scan=%.1fus (ceiling 5000us) -> %s%n",
                 idleUs, busyUs, pass ? "PASS" : "FAIL");
@@ -165,7 +164,7 @@ public final class EventLogQueryDropProof {
     }
 
     /**
-     * Check 2: the G2 claim. A paced writer that a free consumer sustains with zero drops (control)
+     * Check 2: a paced writer that a free consumer sustains with zero drops (control)
      * drops entries when an identical run coincides with a real O(n) query scan.
      */
     private static boolean proveRealQueryVsNoQuery() throws Exception {
@@ -178,7 +177,7 @@ public final class EventLogQueryDropProof {
                 System.out.println("[g2:query] WARN: " + fillDrops + " drops during fill — fill pacing too aggressive");
             }
 
-            // Measure one scan's wall-clock (also the item-2 latency figure).
+            // Measure one scan's wall-clock.
             long scanNanos = timeOneScan(log);
             double scanMs = scanNanos / 1_000_000.0;
 
@@ -215,7 +214,7 @@ public final class EventLogQueryDropProof {
     }
 
     /**
-     * Diagnostic (item 2 / boundary): scan wall-clock grows ~linearly with occupancy. The derived
+     * Diagnostic (boundary): scan wall-clock grows ~linearly with occupancy. The derived
      * "fill rate" column is RING / scan = the sustained serving-path write rate (entries/s) that
      * would exactly fill the ring during one scan — above it, a single concurrent query drops. Note
      * the default maxLogEntries ceiling is 250_000; higher occupancies model raised-limit deployments.
@@ -238,7 +237,7 @@ public final class EventLogQueryDropProof {
     }
 
     /**
-     * Diagnostic (item 2): query throughput cannot scale with cores because every query runs on the
+     * Diagnostic: query throughput cannot scale with cores because every query runs on the
      * one disruptor consumer thread. Firing K queries concurrently from K caller threads takes about
      * the same wall-clock as running them one after another (K x single-scan) — the caller threads
      * only enqueue; the scans serialize on the consumer. Reported as a serialization ratio

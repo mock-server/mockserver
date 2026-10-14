@@ -1750,6 +1750,11 @@ They are promoted into `perf-test-microbench.sh`'s second JMH invocation and lan
 `microbench_extra.*`. All are notify-only (no gating flag) until each has enough history to
 derive a budget.
 
+`MetricsIncrementBenchmark` guards a dropped change: replacing the `synchronized (name)` in
+`Metrics.getOrCreate` with a lock-free lookup looked like a win, but JMH showed it made the
+shared-counter case 6-13x slower (the lock serialises the `AtomicLong` CAS), so `Metrics` keeps
+the lock.
+
 ### The proxy-path benchmarks (items 9b, 9c)
 
 Proxying was the largest request-path area the programme's mandate named that had no
@@ -1763,6 +1768,9 @@ same `microbench_extra.*` result object**, so they inherit the existing notify-o
 |---|---|---|
 | `RelayByteCopyBenchmark` | The CONNECT/relay **response leg** — HTTP decode → the real relay aggregator → re-encode — as bytes/s and allocation per relayed message. The relay handlers copy nothing; the per-message cost lives in the flanking codecs and is per-fragment, not per-byte. | 9c |
 | `SocksHandshakeBenchmark` | The per-connection **SOCKS4/5 handshake** codec cost (the only uncovered SOCKS cost: k6 has no SOCKS transport, and the SOCKS steady-state relay is already `RelayByteCopyBenchmark`'s territory). Ships with two controls — `detect` (allocation-free front-door floor) and `channelPlumbingOnly` (per-op `EmbeddedChannel` construction share). | 9b |
+
+When the SOCKS controls were added, `channelPlumbingOnly` read about 1,600 B/op (a lower bound on
+the plumbing share of `handshake`) and `detect` ran 200-3000x faster than the handshake.
 
 Both benchmarks declare large default `@Param` cartesians (relay 2×3×4 = 24, socks 3×3 = 9) for
 on-demand characterisation via their own `run-*`/`run.sh`. The daily invocation **pins** each to
@@ -1807,6 +1815,20 @@ Netty HTTP client: `request.clone()` plus Velocity template rendering. This is t
 generator's own hot path, not the server's forward-and-proxy path. The javadoc makes this
 explicit: "the per-iteration work ... performs before each request is handed to the Netty HTTP
 client". A regression in this benchmark means the load generator is slower, not MockServer.
+
+### `ConnectionCeilingBenchmark` — on demand, not run by CI
+
+`mockserver-benchmark/run-connection-ceiling.sh` parks N idle connections and times requests on a
+separate one, to find how many established connections a server holds before latency degrades.
+The client rig runs out first on a laptop, so `calibrate` mode reports which limit it hit. Figures
+measured on a developer Mac (run `calibrate` on any other box rather than reusing them):
+
+| Limit | What was measured |
+|---|---|
+| macOS descriptor clamp | The JDK sets `RLIMIT_NOFILE` to `min(hard, OPEN_MAX)` = 10,240 even from a 60,000 shell; an un-flagged JVM stopped at about 9,977 connections. `-XX:-MaxFDLimit` leaves the inherited soft limit as it is (2,048 stays 2,048), so it needs a raised `ulimit -n` too |
+| Linux descriptors | The JDK raised the soft limit from 1,024 to the hard limit, 1,048,576. `-XX:-MaxFDLimit` disables that and leaves 1,024, so the script passes it on macOS only |
+| macOS source ports | With the clamp lifted the wall was 15,511 connections; spreading across four server ports reached 15,609 (ratio 1.01), so the ephemeral range is global and more server ports do not help. More client source addresses (loopback aliases, which need root) are the lever; a ladder past the wall has not been measured |
+| Baseline drift | One run-start baseline drifted 35% faster across a ladder, making higher rungs look faster, which is why every rung is paired with its own zero-connection baseline. Without the warm-up the first rung-0 sample read about 2.5x the last |
 
 ### `scripts/perf/bench_startup.py` — never runs in CI
 

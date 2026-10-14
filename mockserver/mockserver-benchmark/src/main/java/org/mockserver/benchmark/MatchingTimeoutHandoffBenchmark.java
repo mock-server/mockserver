@@ -20,10 +20,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 /**
- * G6 benchmark: the cost of the per-match hand-off to the shared matching thread pool, versus
+ * The cost of the per-match hand-off to the shared matching thread pool, versus
  * evaluating the same regex inline.
  *
- * <p><b>The finding under test (G6).</b> Every non-literal matcher (regex path/method/header/query/
+ * <p><b>The mechanism under test.</b> Every non-literal matcher (regex path/method/header/query/
  * string-body, XPath, GraphQL {@code operationName}, JSON-RPC {@code method}, LLM conversation)
  * routes its evaluation through {@link MatchingTimeoutExecutor#callWithTimeout}, which submits the
  * real match to a JVM-wide {@code ThreadPoolExecutor} (SynchronousQueue, cap
@@ -43,13 +43,12 @@ import java.util.regex.Pattern;
  *   <li>{@code mode=INLINE} — {@code timeoutMillis=0}: {@code callWithTimeout}'s first line
  *       ({@code if (timeoutMillis <= 0) return task.call();}) evaluates the regex on the calling
  *       thread with no pool, no future, no cross-thread hop. This is the control, and it is exactly
- *       what setting {@code mockserver.regexMatchingTimeoutMillis=0} does in production (verified by
- *       reading {@code MatchingTimeoutExecutor.callWithTimeout} — 0 is not a magic sentinel, it is
- *       the {@code <= 0} disable branch).</li>
+ *       what setting {@code mockserver.regexMatchingTimeoutMillis=0} does in production (0 is not
+ *       a magic sentinel, it is the {@code <= 0} disable branch).</li>
  * </ul>
  *
  * <p><b>Why call {@code callWithTimeout} directly</b> rather than driving {@code RegexStringMatcher}
- * or {@code RequestMatchers}: G6 is a statement about the executor hand-off specifically, so the
+ * or {@code RequestMatchers}: the question is about the executor hand-off specifically, so the
  * benchmark isolates that single operation around a fixed, cheap payload. Driving the full matcher
  * would fold in {@code NottableString} allocation, the pure-ASCII-literal short-circuit, and the
  * candidate-index scan — noise that the sibling {@code MatchingBenchmark} / {@code
@@ -64,7 +63,7 @@ import java.util.regex.Pattern;
  *
  * <p><b>Threads.</b> The finding is about event-loop blocking and pool contention, so the thread
  * count is the primary dimension — set on the command line ({@code -t 1}, {@code -t 4}, {@code -t 8}),
- * exactly as the G1 churn benchmark does. {@code @Threads} is a single-valued annotation and cannot
+ * exactly as {@code CandidateIndexChurnBenchmark} does. {@code @Threads} is a single-valued annotation and cannot
  * be swept as a JMH param, so the run script drives the three counts as separate (sequential) forks.
  * At {@code -t 8} the peak in-flight task count is 8, far below the {@code max(64, cores*16)} pool
  * cap, so this benchmark never saturates the pool (confirmed by the per-trial {@code [g6]} line and
@@ -112,7 +111,7 @@ public class MatchingTimeoutHandoffBenchmark {
         // this trial (warmup + measurement, across all -t threads). POOL must be large and > 0;
         // INLINE must be 0. A zero here in the POOL arm, or a non-zero in the INLINE arm, means the
         // benchmark did NOT measure what it claims (stale classes / mis-set timeout) — a loud
-        // false-result guard, mirroring the G1 churn benchmark's [churn] line.
+        // false-result guard, mirroring CandidateIndexChurnBenchmark's [churn] line.
         long delta = MatchingTimeoutHandoffProof.submittedTaskCount() - submittedAtSetup;
         System.out.println("[g6] mode=" + mode + " timeoutMillis=" + timeoutMillis
             + " poolSubmissionsThisTrial=" + delta

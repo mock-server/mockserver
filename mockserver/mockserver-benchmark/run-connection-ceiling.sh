@@ -1,27 +1,25 @@
 #!/usr/bin/env bash
 #
-# Programme item 21 — the CONNECTION-SCALING CEILING: how many concurrent established connections a
+# The CONNECTION-SCALING CEILING: how many concurrent established connections a
 # MockServer holds before request latency degrades. Starts a server, runs the ladder against it, stops it.
 #
 #   ./run-connection-ceiling.sh                 # measure, using the calibrated client ceiling below
 #   ./run-connection-ceiling.sh calibrate       # find THIS box's client ceiling and what limits it
 #
 # -XX:-MaxFDLimit is applied ON macOS ONLY, and that asymmetry is deliberate because the flag does
-# OPPOSITE things on the two platforms (both measured):
+# OPPOSITE things on the two platforms:
 #   * macOS — the JDK sets its own RLIMIT_NOFILE to min(hard, OPEN_MAX=10240) however high `ulimit -n`
-#     reads, so an un-flagged JVM (driver OR server) stops at ~9,977 connections and the "ceiling" you
-#     measure is the JDK's. The flag leaves the inherited soft limit alone, so it must be paired with a
-#     raised `ulimit -n`: the flag alone gives you whatever the shell had.
-#   * Linux — the JDK already raises the soft limit to the HARD limit (1024 -> 1048576 measured). The
-#     flag DISABLES that and leaves 1024, making the ceiling ~40x worse. Never pass it here.
-# With the clamp lifted on macOS the wall moves to the ephemeral source-port range, measured on this
-# laptop at 15,511 connections; spreading across four server ports reached 15,609 (ratio 1.01), so the
-# source-port range is GLOBAL and more server ports do not raise the ceiling. Run `calibrate` on any new
-# box rather than inheriting these numbers.
+#     reads, so an un-flagged JVM (driver OR server) hits the JDK's limit, not the server's. The flag
+#     leaves the inherited soft limit alone, so it must be paired with a raised `ulimit -n`.
+#   * Linux — the JDK already raises the soft limit to the HARD limit. The flag DISABLES that and
+#     leaves 1024. Never pass it here.
+# With the clamp lifted on macOS the wall moves to the client's ephemeral source-port range, which is
+# GLOBAL, so more server ports do not raise the ceiling. Run `calibrate` on any new box. Measured
+# figures: docs/code/performance-measurement.md.
 #
-# GETTING PAST ~15,500 — MULTIPLE CLIENT SOURCE ADDRESSES (REQUIRES ROOT, MANUAL STEP):
-#   The ~15,500 wall is the client's GLOBAL ephemeral source-port range, not the server. More SERVER
-#   ports do not move it (ratio 1.01 above). The only lever is more client source ADDRESSES: each local
+# GETTING PAST THE SOURCE-PORT WALL — MULTIPLE CLIENT SOURCE ADDRESSES (REQUIRES ROOT, MANUAL STEP):
+#   The wall is the client's GLOBAL ephemeral source-port range, not the server. More SERVER
+#   ports do not move it. The only lever is more client source ADDRESSES: each local
 #   address has its own ephemeral range, so N loopback aliases roughly multiply the ceiling by N. Set
 #   CEILING_SOURCE_ADDRESSES to a comma-separated list and the driver round-robins connections across
 #   them, reporting how many distinct addresses were actually used and how many connections landed on
@@ -41,8 +39,7 @@
 #       sudo ifconfig lo0 -alias 127.0.0.3
 #       sudo ifconfig lo0 -alias 127.0.0.4
 #   (List current aliases with `ifconfig lo0`; a reboot also clears them. On Linux the whole 127.0.0.0/8
-#   is already local, so no alias is needed — just list the addresses. As of this commit the >15,500
-#   figure is UNMEASURED here because these aliases were never created — the alias step is root-only.)
+#   is already local, so no alias is needed — just list the addresses.)
 #
 # Tunables (env): CEILING_MODE (h1|tls|calibrate), CEILING_LADDER, CEILING_PROBE_REQUESTS,
 # CEILING_SETTLE_MS, CEILING_WARMUP_REQUESTS, CEILING_TIMEWAIT_DRAIN_MS, CEILING_CLIENT_CEILING,
@@ -89,12 +86,9 @@ ALL_PORTS="$(printf '%s' "${PORTS}" | tr ',' ' ')"
 # Readiness is the control-plane 200, never a listening port — MockServer accepts and then resets while
 # it is still initialising, so a port probe reports ready before the server can serve.
 #
-# EVERY port, not just the first, and the server process must still be alive. Probing only
-# ${FIRST_PORT} made this harness report ready against a DIFFERENT server: an unrelated MockServer
-# had been left on 1080, ours could not bind, printed its usage text and exited, and the probe was
-# answered 200 by the stranger. The run then proceeded and failed on the first connection to 1081
-# with "Connection refused" — which the ladder reports as "RIG EXHAUSTED" and blames on the
-# file-descriptor limit, advice that has nothing to do with the actual fault.
+# EVERY port, not just the first, and the server process must still be alive: a stale MockServer
+# on the first port answers 200 while ours, unable to bind, has exited — and the ladder then
+# reports the refused connections as "RIG EXHAUSTED", blaming the wrong limit.
 ready=false
 for _ in $(seq 1 60); do
     if ! kill -0 "${SERVER_PID}" 2>/dev/null; then
@@ -134,8 +128,8 @@ if [ "${1:-}" = "calibrate" ]; then
     export CEILING_MODE=calibrate
 fi
 
-# NOT `exec`: exec replaces this shell, so the EXIT trap above never runs and the server started on
-# line 52 is left alive — which then makes the NEXT run fail to bind its ports, for a reason that
+# NOT `exec`: exec replaces this shell, so the EXIT trap above never runs and the server started
+# above is left alive — which then makes the NEXT run fail to bind its ports, for a reason that
 # looks nothing like its cause.
 java "${FD_FLAG[@]}" -Xms1g -Xmx6g -cp "${CP}" \
     org.mockserver.benchmark.ConnectionCeilingBenchmark 127.0.0.1 "${PORTS}"

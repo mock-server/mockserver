@@ -13,15 +13,15 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Item 21 mechanism proof (NOT a JMH benchmark) — a standalone verifier for the multi-source-address
- * binding {@link ConnectionCeilingBenchmark} grew so its connection ladder can be driven past the
- * ~15,500 <em>global ephemeral source-port</em> wall on macOS. The wall is a client limit, not the
+ * Mechanism proof (NOT a JMH benchmark) — a standalone verifier for the multi-source-address
+ * binding {@link ConnectionCeilingBenchmark} uses so its connection ladder can be driven past the
+ * <em>global ephemeral source-port</em> wall on macOS. The wall is a client limit, not the
  * server's; the only lever that moves it is more client source <b>addresses</b> (loopback aliases or
  * more load-generator hosts), each contributing its own ephemeral range.
  *
  * <p><b>What this proves without needing loopback aliases (which require root).</b> Creating a
- * non-primary loopback alias needs {@code sudo ifconfig lo0 alias 127.0.0.2 up}, so the >15,500
- * measurement itself stays UNMEASURED here. What is provable, and is proved:
+ * non-primary loopback alias needs {@code sudo ifconfig lo0 alias 127.0.0.2 up}, so a ladder past
+ * the wall is not run here. What is provable, and is proved:
  * <ol>
  *   <li><b>The round-robin distribution.</b> {@link ConnectionCeilingBenchmark#expectedRoundRobinCounts}
  *       deals connections evenly across addresses, remainder to the first few — the exact spread the
@@ -29,18 +29,16 @@ import java.util.concurrent.TimeUnit;
  *   <li><b>The per-address accounting and its guard.</b>
  *       {@link ConnectionCeilingBenchmark#assertSourceAddressDistribution} passes for a correct spread
  *       and THROWS both for a silent collapse onto one address and for a wrong per-address share —
- *       because this programme's recurring defect is an instrument that runs honestly while measuring
- *       the wrong subject, and a run that quietly used one address must never read as a raised
- *       ceiling.</li>
- *   <li><b>Source-address parsing.</b> Blank yields the single default {@code 127.0.0.1} (identical to
- *       the pre-existing behaviour); a list is preserved; a duplicate is rejected.</li>
+ *       because a run that quietly used one address must never read as a raised ceiling.</li>
+ *   <li><b>Source-address parsing.</b> Blank yields the single default {@code 127.0.0.1}; a list is
+ *       preserved; a duplicate is rejected.</li>
  *   <li><b>The bindability preflight.</b> {@link ConnectionCeilingBenchmark#isBindable} is true for
  *       {@code 127.0.0.1} and false for a non-local address ({@code 203.0.113.1}, RFC 5737 TEST-NET-3),
  *       which is how a missing alias is caught up front instead of mid-rung.</li>
- *   <li><b>Explicit {@code 127.0.0.1} binding is identical to today.</b> A real Netty connect with an
+ *   <li><b>Explicit {@code 127.0.0.1} binding matches an unbound connect.</b> A real Netty connect with an
  *       explicit {@code 127.0.0.1:0} local bind lands on exactly the same local address as an unbound
  *       connect to a loopback destination, with a distinct OS-assigned port — so the default
- *       single-address run behaves as it did before this change, and the accounting reads the address
+ *       single-address run is unaffected by the binding, and the accounting reads the address
  *       the OS actually bound (from {@link Channel#localAddress()}), not the one requested.</li>
  * </ol>
  *

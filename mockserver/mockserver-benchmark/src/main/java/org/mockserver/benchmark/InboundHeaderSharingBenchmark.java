@@ -45,7 +45,7 @@ import java.util.concurrent.TimeUnit;
  *   every other request, as some HTTP/2 clients reorder headers — positional misses fall back to the
  *   identity scan of the previous request's headers.</li>
  *   <li>{@code headerCount} adds fixed {@code X-Extra-n} headers after the ten above, e.g.
- *   {@code -p headerCount=64} for the memo's largest size.</li>
+ *   {@code -p headerCount=64}.</li>
  *   <li>{@code protocol=HTTP_1_1} is what netty's HTTP/1.1 decoder produces: {@code String} values
  *   and {@link AsciiString} names, one shared constant for {@code Host} and {@code Accept} and a fresh
  *   instance per request for every other name; {@code HTTP_2} carries lower-case {@link AsciiString}

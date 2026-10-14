@@ -54,8 +54,7 @@ import java.util.concurrent.TimeUnit;
  * (a real server reuses the channel per connection), so the only per-op allocation measured is the
  * serialise-and-encode work itself, not channel/pipeline setup. Each invocation drains and releases
  * every produced outbound {@code ByteBuf} so the measured allocation is not inflated by leaked
- * buffers and the channel returns to a clean state for the next op. BASELINE ONLY — no production
- * code is changed by this benchmark.
+ * buffers and the channel returns to a clean state for the next op.
  */
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.AverageTime)
@@ -74,8 +73,7 @@ public class ResponseWriteBenchmark {
      * <ul>
      *   <li>{@code false} — {@code withBody(String)}: the body has no declared charset, so its
      *       materialised bytes use the ISO-8859-1 default while the JSON wire charset is UTF-8. The
-     *       outbound path must re-encode; this is the implicit-charset arm (the pre-existing shape),
-     *       kept so its untouched behaviour stays visible.</li>
+     *       outbound path must re-encode; this is the implicit-charset arm.</li>
      *   <li>{@code true} — {@code withBody(String, APPLICATION_JSON_UTF_8)}: the body declares UTF-8,
      *       which is exactly the wire charset, so the outbound path may reuse the already-materialised
      *       bytes with no second encode. This is the explicit-charset arm the reuse optimisation targets

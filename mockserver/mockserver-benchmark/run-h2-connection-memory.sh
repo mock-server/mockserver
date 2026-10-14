@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Build and run the HTTP/2 PER-CONNECTION MEMORY benchmark (issue #2669, programme item 11).
+# Build and run the HTTP/2 PER-CONNECTION MEMORY benchmark.
 #
 # Adds the CONNECTIONS axis the throughput harness (run-h2-multiplex.sh) lacks: N connections x M
 # concurrent in-flight streams, shapes 1x1 / 10x10 / 100x10, recording the heap delta per established

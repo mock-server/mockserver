@@ -30,26 +30,25 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
 /**
- * G9 benchmark: the cost of {@link RequestMatchers#clear(org.mockserver.model.RequestDefinition)}
+ * The cost of {@link RequestMatchers#clear(org.mockserver.model.RequestDefinition)}
  * as the expectation store grows, with the candidate-index clear fast path ON vs OFF.
  *
- * <p><b>The finding under test (G9).</b> {@code clear(RequestDefinition)} ran a full reverse match
- * against EVERY registered expectation — O(n) in store size — and a per-test teardown does three of
- * them. The G9 cycle used PATH-ONLY clears (a clear carrying a path but no method), which the
- * (method,path) index could not narrow; the path-only index dimension added here can. The lever the
- * analysis identified is the NUMBER of comparisons, not their individual cost, so this benchmark
- * isolates exactly that.
+ * <p><b>The cost under test.</b> Without the fast path {@code clear(RequestDefinition)} runs a full
+ * reverse match against EVERY registered expectation — O(n) in store size — and a per-test teardown
+ * does three of them. PATH-ONLY clears (a path but no method) cannot be narrowed by the (method,path)
+ * index; the path-only index dimension can. The lever is the NUMBER of comparisons, not their
+ * individual cost, so this benchmark isolates exactly that.
  *
  * <p><b>Arms.</b>
  * <ul>
  *   <li>{@code indexMode=SCAN} — clear fast path disabled (threshold above n): the clear iterates
- *       all n expectations. This is the pre-change baseline.</li>
+ *       all n expectations. This is the un-indexed baseline.</li>
  *   <li>{@code indexMode=INDEX} — clear fast path engaged (threshold 2): a path-only literal clear
  *       consults one path bucket plus the (here empty) path fallthrough.</li>
  * </ul>
  * crossed with store size {@code n}. All seeded expectations are literal {@code GET /exact/path-i}
- * on DISTINCT literal paths, so each lands in its own path bucket — the realistic large-store shape
- * G9 measured.
+ * on DISTINCT literal paths, so each lands in its own path bucket — the realistic large-store
+ * shape.
  *
  * <p><b>Two methods, two questions.</b>
  * <ul>
@@ -60,7 +59,7 @@ import static org.mockserver.model.HttpResponse.response;
  *   <li>{@link #clearOneAndRestore} clears ONE existing path (removing it) and immediately re-adds
  *       it, so the store size is invariant across invocations. This is the realistic per-teardown
  *       clear: both arms pay the same single remove+add of index maintenance; the delta is again
- *       the scan (n vs 1). It is noisier (it mutates) but faithful to G9's cycle.</li>
+ *       the scan (n vs 1). It is noisier (it mutates) but faithful to a teardown.</li>
  * </ul>
  *
  * <p><b>Reading it.</b> A single-thread, average-time microbenchmark; read the SCAN-vs-INDEX RATIO
@@ -114,7 +113,7 @@ public class CandidateClearBenchmark {
             );
         }
 
-        // A path-only clear (no method) of a path in the MIDDLE of the store — the G9 shape.
+        // A path-only clear (no method) of a path in the MIDDLE of the store.
         int mid = n / 2;
         clearExistingPath = request().withPath("/exact/path-" + mid);
         restoreExpectation = new Expectation(request().withMethod("GET").withPath("/exact/path-" + mid))

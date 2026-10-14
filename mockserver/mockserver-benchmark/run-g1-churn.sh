@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# G1 research benchmark: candidate-index / sorted-list REBUILD cost under expectation churn.
+# Research benchmark: candidate-index / sorted-list REBUILD cost under expectation churn.
 # See CandidateIndexChurnBenchmark (JMH) and CandidateIndexChurnRebuildProof (the mechanism proof).
 #
 # TWO ways to run this:
@@ -24,10 +24,8 @@
 #   that a CHURN arm actually churned (rather than silently degrading to static when its daemon
 #   writer thread dies, which would land the ratio at ~1.0 and pass the 1.5 floor green) lives
 #   in the benchmark's own @TearDown: it throws on unhealthy churn signals, and -foe true makes
-#   that JMH error exit non-zero so `set -e` reds the step. The ratio is a within-run A/B
-#   (the CandidateIndexBenchmark gold-standard shape) so it cancels host/JVM/GC noise and is
-#   machine-independent — allocation is bytes/op, not timing. A regression that reintroduced
-#   rebuild-on-read would move it ~1.06x -> ~1000x+ (three orders of magnitude).
+#   that JMH error exit non-zero so `set -e` reds the step. The ratio is a within-run A/B, so
+#   it cancels host/JVM/GC noise and is machine-independent — allocation is bytes/op, not timing.
 #
 set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

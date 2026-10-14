@@ -27,8 +27,7 @@ import static org.mockserver.model.HttpRequest.request;
 /**
  * Allocation micro-benchmark for the response-templating render path — the per-render work each
  * {@link TemplateEngine} performs when a matched template is rendered against a request. It exists so
- * an allocation figure can be attributed to the render path of a given engine; the whole-programme
- * gate covered matching, inbound decode and response write, but no render arm.
+ * an allocation figure can be attributed to the render path of a given engine.
  *
  * <p>The engine instance is built once and warmed in {@code setup} (the parsed/compiled template is
  * cached after the first render, mirroring steady-state production), so each measured op is one render
@@ -40,8 +39,7 @@ import static org.mockserver.model.HttpRequest.request;
  * <p>All three engines are exercised through {@link TemplateEngine#renderTemplateText} so the same
  * call drives the text-render path on Velocity and Mustache and the {@code handle(request)} path on
  * JavaScript. The JavaScript arm needs GraalJS on the classpath (declared by this module); with it
- * absent the engine throws by design and that arm cannot be measured. BASELINE ONLY — no production
- * code is changed by this benchmark.
+ * absent the engine throws by design and that arm cannot be measured.
  */
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.AverageTime)

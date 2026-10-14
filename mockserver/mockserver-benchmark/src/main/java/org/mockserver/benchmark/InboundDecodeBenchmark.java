@@ -32,12 +32,11 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
  * Hot-path micro-benchmark for {@link FullHttpRequestToMockServerHttpRequest#mapFullHttpRequestToMockServerRequest}
  * — the inbound decode of a request-with-body into the MockServer {@code HttpRequest} model.
  *
- * <p>Baseline {@code setBody} materialised the body TWICE per request: once into a {@code byte[]}
- * (the non-destructive {@code getBytes} for the original-raw-body diff) and a second identical full
- * copy inside {@code BodyDecoderEncoder.byteBufToBody} (which allocates its own {@code byte[]} and
- * re-reads the same content). This benchmark drives that path with a JSON body of varying size so the
- * {@code -prof gc} {@code gc.alloc.rate.norm} (bytes/op) column shows the second body-size {@code byte[]}
- * being removed once the mapper hands the already-materialised bytes straight to {@code bytesToBody}.
+ * <p>The mapper materialises the body once into a {@code byte[]} (the non-destructive
+ * {@code getBytes} for the original-raw-body diff) and hands those bytes straight to
+ * {@code bytesToBody}; going through {@code BodyDecoderEncoder.byteBufToBody} instead would copy the
+ * body a second time. This benchmark drives that path with a JSON body of varying size so the
+ * {@code -prof gc} {@code gc.alloc.rate.norm} (bytes/op) column shows how many body-size copies are made.
  *
  * <pre>./run.sh -prof gc InboundDecodeBenchmark</pre>
  *

@@ -31,8 +31,7 @@ cd "${DIR}"
 
 # Bounded by default; override for a fast validation run. JMH forks a JVM per param
 # combo, so iteration counts multiply across the (many) combos below — keep them small.
-# -f 2 (item 15c): two forks sample inter-fork JIT variance so the reported dispersion
-# is not understated; iterations trimmed (-wi 3->2, -i 5->3) so wall-clock stays bounded.
+# -f 2: two forks sample inter-fork JIT variance so the reported dispersion is not understated.
 JMH_ARGS_SCALING="${JMH_ARGS_SCALING:--f 2 -wi 2 -i 3 -r 2 -w 2}"
 SCALING_RESULT_PATH="${SCALING_RESULT_PATH:-${REPO_ROOT}/perf-scaling.json}"
 
@@ -42,14 +41,10 @@ RAW_INDEX="${DIR}/target/jmh-scaling-index.json"
 echo "--- building mockserver-netty + its upstream reactor deps"
 # Install mockserver-netty AND its upstream (-am), then compile the benchmark so JMH's
 # annotation processor regenerates META-INF/BenchmarkList, and resolve the classpath.
-# The -am set covers BOTH org.mock-server module deps the benchmark declares
-# (mockserver-core AND mockserver-netty). Installing only mockserver-core here (the
-# original) fails: the very next "mvn compile" compiles ALL benchmark sources, some of
-# which import mockserver-netty, so mockserver-netty must be in the local repo. We do
-# NOT use "-pl mockserver-benchmark": the benchmark module is deliberately absent from
-# the parent <modules> (its JMH annotation processor must not enter the default build),
-# so Maven cannot select it as a reactor project ("Could not find the selected project
-# in the reactor"). The install target must therefore name an in-reactor module.
+# Installing core alone is not enough: some benchmark sources import mockserver-netty.
+# Do NOT use "-pl mockserver-benchmark": the module is deliberately absent from the parent
+# <modules> (its JMH annotation processor must not enter the default build), so Maven
+# cannot select it; the install target must name an in-reactor module.
 ( cd "${REPO_ROOT}/mockserver" \
   && mvn -q -pl mockserver-netty -am install -DskipTests -DskipITs -P '!build-ui' -Djacoco.skip=true -Dcheckstyle.skip=true )
 mvn -q compile dependency:build-classpath -Dmdep.outputFile=target/classpath.txt -Djacoco.skip=true

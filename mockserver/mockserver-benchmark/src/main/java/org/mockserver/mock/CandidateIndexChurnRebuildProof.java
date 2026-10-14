@@ -18,7 +18,7 @@ import static org.mockserver.model.HttpResponse.response;
 /**
  * Standalone proof (NOT a JMH benchmark) that the CHURN arm of
  * {@link org.mockserver.benchmark.CandidateIndexChurnBenchmark} genuinely forces a rebuild of the
- * sorted matcher snapshot — the mechanism G1 is about — rather than measuring the wrong subject.
+ * sorted matcher snapshot — the mechanism it measures — rather than measuring the wrong subject.
  *
  * <p>Lives in {@code org.mockserver.mock} so it can read the package-private
  * {@link RequestMatchers#matchersModificationCountForTesting()}. It reaches the private

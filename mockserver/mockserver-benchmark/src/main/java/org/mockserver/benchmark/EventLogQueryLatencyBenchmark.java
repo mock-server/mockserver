@@ -31,10 +31,10 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.slf4j.event.Level.INFO;
 
 /**
- * G2 benchmark: the wall-clock cost of ONE event-log query ({@code retrieveRequests}) as a function
+ * The wall-clock cost of ONE event-log query ({@code retrieveRequests}) as a function
  * of log occupancy {@code n}.
  *
- * <p><b>The finding under test (G2).</b> A query is dispatched as a {@code RUNNABLE} onto the event
+ * <p><b>The mechanism under test.</b> A query is dispatched as a {@code RUNNABLE} onto the event
  * log's SINGLE disruptor consumer thread, where it runs an O(n) scan over the retained entries, each
  * entry cloned and run through a full request-match. So query latency grows linearly with occupancy
  * and — because that one thread also appends serving-path writes — a long scan freezes ingestion for

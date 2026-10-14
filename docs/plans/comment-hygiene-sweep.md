@@ -22,6 +22,14 @@ carried measured timing figures), `mockserver-core/.../model/KeysToMultiValues.j
 reference alongside the invariant); all three compressed to the invariant/constraint, proven
 comment-only via identical `javap -c` before/after.
 
+Swept 2026-10-14: `mockserver-benchmark` (40 Java and shell files). Removed programme/ticket labels,
+"BASELINE ONLY" boilerplate, stale line references and past-run figures; kept the JMH correctness
+notes and "don't do the obvious thing" warnings, compressing blocks over six lines. Rewrote comments
+that described code that no longer exists (MetricsIncrementBenchmark claimed a lock-free lookup that
+was dropped; MatchingBenchmark said the "because" string is built at WARN). Rig figures moved to
+`docs/code/performance-measurement.md` (ConnectionCeilingBenchmark section). Proven comment-only via
+identical `javap -c -p` for all 298 classes.
+
 ## What "too much" means here
 
 The rule's test: a comment earns its place only if a reader **of that code** would

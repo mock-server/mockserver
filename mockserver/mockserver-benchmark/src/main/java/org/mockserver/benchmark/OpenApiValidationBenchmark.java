@@ -20,18 +20,18 @@ import java.util.concurrent.TimeUnit;
 /**
  * Hot-path micro-benchmark for the OpenAPI request/response body-validation step.
  *
- * <p>When {@code validateRequestsAgainstOpenApiSpec} / response validation is enabled, the
- * validators (re)build a {@link JsonSchemaValidator} per request — which compiles a networknt
- * {@code Schema} and a fresh {@code SchemaRegistry} — even though the operation schema never
- * changes. This benchmark isolates that per-request compilation cost from the constant
- * validate-only cost so the allocation/time win of the content-keyed validator cache is visible.
+ * <p>When {@code validateRequestsAgainstOpenApiSpec} / response validation is enabled, building a
+ * {@link JsonSchemaValidator} per request would compile a networknt {@code Schema} and a fresh
+ * {@code SchemaRegistry} every time, even though the operation schema never changes. This benchmark
+ * isolates that compilation cost from the constant validate-only cost, showing what the
+ * content-keyed validator cache the validators use saves.
  *
  * <p>The two arms validate the <em>same</em> payload against the <em>same</em> schema:
  * <ul>
  *   <li>{@code PER_REQUEST_COMPILE} — {@code new JsonSchemaValidator(...)} then {@code isValid}
- *       (the pre-fix behaviour: compile Schema+SchemaRegistry every request);</li>
+ *       (uncached: compile Schema+SchemaRegistry every request);</li>
  *   <li>{@code CACHED} — {@link JsonSchemaValidator#cachedJsonSchemaValidator} then {@code isValid}
- *       (the fix: compile once, reuse the validator).</li>
+ *       (compile once, reuse the validator).</li>
  * </ul>
  * The {@code schemaComplexity} param toggles a small flat schema vs a larger nested/{@code $ref}-style
  * (inlined, as swagger-parser would resolve it) schema; the compile cost — and therefore the win —
@@ -47,7 +47,7 @@ import java.util.concurrent.TimeUnit;
 @Fork(1)
 public class OpenApiValidationBenchmark {
 
-    /** Whether each op rebuilds the validator (pre-fix) or reuses the cached one (fix). */
+    /** Whether each op rebuilds the validator or reuses the cached one. */
     @Param({"PER_REQUEST_COMPILE", "CACHED"})
     public String mode;
 

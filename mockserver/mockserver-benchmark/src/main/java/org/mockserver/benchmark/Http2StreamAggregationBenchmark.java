@@ -28,7 +28,7 @@ import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Item 46 — aggregating one HTTP/2 request stream's body, within-run A/B. {@code STREAM} is the production stream
+ * Aggregating one HTTP/2 request stream's body, within-run A/B. {@code STREAM} is the production stream
  * aggregator ({@link HttpObjectAggregators#streamHttpObjectAggregator}, which copies runs of pieces under 1 KiB
  * into 16 KiB blocks and merges only new components at the limit); {@code NETTY} is a plain {@link HttpObjectAggregator} with the same stream component limit, the
  * aggregator the stream used before, which consolidates the whole body each time it passes the limit. Frames are

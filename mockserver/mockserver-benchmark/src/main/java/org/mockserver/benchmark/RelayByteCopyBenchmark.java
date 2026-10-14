@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Byte-cost micro-benchmark for the <b>CONNECT/relay response leg</b> — the proxy path the matcher
- * backstop says nothing about (performance-programme item 9c). A relayed message is decoded off the
+ * backstop says nothing about. A relayed message is decoded off the
  * downstream (server-facing) socket, re-aggregated, and re-encoded onto the upstream (client-facing)
  * socket; this benchmark drives exactly those codec steps in an {@link EmbeddedChannel} so that
  * <b>bytes/s</b> (from the {@code AverageTime} score) and <b>allocation per relayed KB</b> (from the
@@ -52,7 +52,7 @@ import java.util.concurrent.TimeUnit;
  *       {@link FullHttpResponse} back to wire bytes.</li>
  * </ul>
  *
- * <p><b>The body is NOT copied — the cost is per-fragment, not per-byte (measured, not assumed).</b>
+ * <p><b>The body is NOT copied — the cost is per-fragment, not per-byte.</b>
  * With {@code Content-Length} framing the decoder emits {@code HttpContent} objects that are
  * <i>retained slices</i> of the input buffer (no copy) and the aggregator assembles them into a
  * {@link CompositeByteBuf} whose components are added <i>by reference</i> (no copy). {@code setup()}
@@ -62,11 +62,10 @@ import java.util.concurrent.TimeUnit;
  * <b>proportional to the number of fragments</b> (one wrapper {@code ByteBuf}, one {@code HttpContent},
  * and one composite-component entry per fragment), plus a fixed per-message overhead (status/header
  * Strings, the {@code HttpResponse} objects, the encoder's header buffer). Fragment count is linear in
- * {@code bodySize} only when {@code readSize} is held fixed — which is exactly why an earlier
- * fixed-fragment version produced a clean straight line and <i>looked</i> like byte-proportional
- * copying. The decisive control is the {@link #readSize} sweep at a fixed {@code bodySize}: halving the
- * fragment size doubles the fragment count and (if the cost is per-fragment) roughly doubles alloc/op.
- * It does — see the module report. The {@link #fragmentWrappersOnly} control isolates how much of that
+ * {@code bodySize} only when {@code readSize} is held fixed, so a fixed-fragment sweep <i>looks</i> like
+ * byte-proportional copying. The decisive control is the {@link #readSize} sweep at a fixed
+ * {@code bodySize}: halving the fragment size doubles the fragment count and (if the cost is
+ * per-fragment) roughly doubles alloc/op. The {@link #fragmentWrappersOnly} control isolates how much of that
  * per-fragment allocation is the benchmark's own wrapper {@code ByteBuf}s versus the codec objects.
  *
  * <p><b>Fed like a socket, on purpose.</b> A large HTTP response never arrives in one read; the kernel

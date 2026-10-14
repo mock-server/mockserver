@@ -9,12 +9,12 @@
 #   ./run.sh -l                               # list available benchmarks
 #
 # Any extra args are passed straight through to org.openjdk.jmh.Main. The most
-# useful column for the Part-A allocation work is gc.alloc.rate.norm
+# useful column for allocation work is gc.alloc.rate.norm
 # (bytes allocated per op) from `-prof gc`.
 #
 # Requires mockserver-netty AND its upstream reactor deps installed locally first:
 #   (cd .. && mvn -o -pl mockserver-netty -am install -DskipTests)
-# The benchmark module depends on core AND netty (since #2669), and -am builds a
+# The benchmark module depends on core AND netty, and -am builds a
 # module's upstream only -- installing core alone leaves netty unresolvable and
 # the `mvn compile` below fails.
 #

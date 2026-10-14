@@ -56,8 +56,7 @@ import static org.mockserver.stop.Stop.stopQuietly;
  * construction is part of every op.
  *
  * <p>{@code bodySize}: {@code SMALL} (a 64-byte body) and {@code OVER_WINDOW} (256 KiB, larger than the
- * 65,535-byte HTTP/2 flow-control window, so the transfer needs WINDOW_UPDATEs — the size class every
- * pre-#2669 HTTP/2 test missed).</p>
+ * 65,535-byte HTTP/2 flow-control window, so the transfer needs WINDOW_UPDATEs).</p>
  *
  * <p>JMH's {@code -prof gc} counts allocation on ALL threads, so {@code gc.alloc.rate.norm} is the whole
  * in-process JVM per request: this driver, the server's event loops and its action thread. Use it as an

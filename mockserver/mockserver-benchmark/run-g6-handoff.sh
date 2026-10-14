@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# G6 research benchmark: the per-match hand-off to the shared matching thread pool
+# Research benchmark: the per-match hand-off to the shared matching thread pool
 # (MatchingTimeoutExecutor.callWithTimeout — submit + block a Netty event-loop thread on future.get)
 # versus evaluating the same regex inline (regexMatchingTimeoutMillis=0).
 # See MatchingTimeoutHandoffBenchmark (JMH) and MatchingTimeoutHandoffProof (the mechanism proof).

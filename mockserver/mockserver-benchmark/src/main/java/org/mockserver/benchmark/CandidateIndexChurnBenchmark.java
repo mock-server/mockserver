@@ -35,10 +35,10 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
 /**
- * G1 benchmark: the cost of {@link RequestMatchers#firstMatchingExpectation} when the
+ * The cost of {@link RequestMatchers#firstMatchingExpectation} when the
  * expectation store is being MUTATED (churned), versus a STATIC store.
  *
- * <p><b>The finding under test (G1).</b> {@code CircularPriorityQueue.toSortedList()} caches
+ * <p><b>The mechanism under test.</b> {@code CircularPriorityQueue.toSortedList()} caches
  * the sorted matcher snapshot and INVALIDATES it on every structural mutation; in parallel the
  * {@link RequestMatchers} modification counter bumps on every mutation and
  * {@code CandidateIndex} rebuilds whenever its generation is stale. So a single mutation
@@ -143,7 +143,7 @@ public class CandidateIndexChurnBenchmark {
             );
         }
         // A HIT in the middle of the insertion/priority order — representative of a real match,
-        // not the full-miss worst case. The rebuild (the subject of G1) happens BEFORE the scan,
+        // not the full-miss worst case. The rebuild (the subject here) happens BEFORE the scan,
         // so the HIT/MISS choice does not change whether a rebuild occurs.
         probe = request().withMethod("GET").withPath("/exact/path-" + (n / 2));
         if (requestMatchers.firstMatchingExpectation(probe) == null) {
@@ -181,15 +181,10 @@ public class CandidateIndexChurnBenchmark {
 
     @TearDown(Level.Trial)
     public void tearDown() throws InterruptedException {
-        // Sampled BEFORE the writer is stopped, so it observes the live churn the measurement
-        // iterations saw: whether the sorted-snapshot cache was found invalidated (rebuilt) under
-        // the live writer, sampled ROBUSTLY (yielding to the writer, up to a deadline; see
-        // sampleSortedListRebuilds) so a busy CI agent starving the writer cannot spuriously read
-        // zero. STATIC must report 0 (no writer); a CHURN arm reporting 0 would mean the cache
-        // stopped being invalidated (dead writer, or the G1 regression shape) and every number in
-        // it is worthless. 500 ms is negligible for a once-per-trial teardown, and a healthy arm
-        // exits on the FIRST observed rebuild (microseconds); only a genuinely non-churning arm
-        // waits out the full deadline before correctly returning 0.
+        // Sampled BEFORE the writer is stopped, so it sees the live churn. STATIC must report 0; a
+        // CHURN arm reporting 0 means the cache stopped being invalidated and every number in it is
+        // worthless. The sampler yields to the writer up to the deadline so a starved writer cannot
+        // read 0 spuriously; a healthy arm exits on the first observed rebuild.
         int sortedListRebuildsObserved = sampleSortedListRebuilds(TimeUnit.MILLISECONDS.toNanos(500));
         long storeModificationsDuringTrial = storeModifications() - storeModificationsAtSetup;
         // Also sampled while the writer is still running: the measured call must still RETURN the
@@ -209,25 +204,12 @@ public class CandidateIndexChurnBenchmark {
             + " sortedListRebuildsObserved=" + sortedListRebuildsObserved
             + " stillMatchesUnderChurn=" + stillMatchesUnderChurn);
 
-        // FAIL-CLOSED at the SOURCE (the CI gate's headline safety property). The three signals
-        // above are the ONLY place that can observe whether the CHURN arm actually churned — the
-        // daemon writer thread is what drives it, and a daemon thread that dies of an uncaught
-        // exception does so with NO signal, silently degrading CHURN to STATIC. That lands the
-        // churn/static allocation ratio at ~1.0, comfortably UNDER the gate's 1.5 floor, so the
-        // build goes GREEN having measured nothing — the exact false green the gate exists to
-        // prevent. Nothing outside this method can catch it: CandidateIndexChurnRebuildProof is a
-        // synchronous, main-thread proof that never touches churnThread, and a ~1.0 ratio is a
-        // perfectly numeric, positive value that the reshape's numeric check waves through. So the
-        // check MUST live here. A @TearDown(Level.Trial) exception fails the JMH run, which exits
-        // org.openjdk.jmh.Main non-zero, which reds the CI step under `set -e`. STATIC arms are
-        // exempt (they must report all-zero by design). The store-modification and rebuild samples
-        // return -1 when their reflective hooks are unavailable; `<= 0` fails closed on that too.
-        // The three checks are OR-combined ON PURPOSE: storeModifications catches a dead/absent
-        // writer, and sortedListRebuildsObserved independently catches the PARTIAL failure where
-        // mutations keep counting but the cache is no longer invalidated (allocation collapses to
-        // static, ratio ~1.0) — the exact G1 regression shape, which storeModifications alone
-        // cannot see. The rebuild sample is made robust against writer starvation in
-        // sampleSortedListRebuilds (yield + deadline), so this OR does not spuriously RED.
+        // FAIL-CLOSED here, the only place that can see whether CHURN churned: a dying daemon writer
+        // is silent, degrading CHURN to STATIC and landing the ratio near 1.0, under the CI gate's 1.5
+        // floor, so the build would go green having measured nothing. A @TearDown exception exits JMH
+        // non-zero, which reds the step. STATIC is exempt; -1 (hook unavailable) fails via `<= 0`. The
+        // checks are OR-combined on purpose: the rebuild sample catches mutations that still count
+        // but no longer invalidate the cache, which the store-modification count cannot see.
         if ("CHURN".equals(mode)
             && (storeModificationsDuringTrial <= 0 || sortedListRebuildsObserved <= 0 || !stillMatchesUnderChurn)) {
             throw new IllegalStateException("CHURN arm did not actually churn (n=" + n
@@ -264,17 +246,10 @@ public class CandidateIndexChurnBenchmark {
      * between reads so the SINGLE daemon writer is actually scheduled, and stopping at the FIRST
      * observed rebuild or when {@code maxNanos} expires.
      *
-     * <p>WHY not a tight fixed-count loop: a back-to-back read loop with no yield can starve the
-     * writer on a busy CI agent and observe ZERO invalidations even while the arm is churning
-     * heavily — a false RED (the teardown assertion below OR-combines this signal, so a spurious
-     * zero fails the build on a scheduling artifact). Yielding hands the CPU to the writer, and the
-     * deadline bounds the wait. The property this preserves: a genuinely churning arm crosses
-     * {@code rebuilds>0} almost immediately (so it essentially never reads zero, even contended),
-     * while an arm whose cache is NO LONGER being invalidated — a dead writer, OR mutations that no
-     * longer null the cache (the G1 regression shape this benchmark exists to catch) — never
-     * observes one and returns 0. Weakening the assertion to ignore a zero here whenever mutations
-     * are counting would delete the ONLY detector for that partial-failure shape, so the fix is a
-     * robust SAMPLE, not a weaker condition.
+     * <p>WHY yield and a deadline, not a tight fixed-count loop: a back-to-back loop can starve the
+     * writer on a busy CI agent and read ZERO while the arm churns heavily, a false RED. Do not
+     * instead ignore a zero whenever mutations are counting: this sample is the only detector for
+     * mutations that no longer invalidate the cache.
      *
      * <p>Returns 0 if no rebuild was observed within the deadline, the observed rebuild count
      * (>=1) otherwise, or -1 if the backing queue cannot be reached (reported, never silently 0).

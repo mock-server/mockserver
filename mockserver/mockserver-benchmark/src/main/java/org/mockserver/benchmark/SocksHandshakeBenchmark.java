@@ -48,21 +48,15 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Per-connection cost of MockServer's <b>SOCKS proxy handshake</b> — the one proxy dimension the k6 arms
- * and the other JMH benchmarks leave entirely uncovered (performance-programme item 9b).
+ * and the other JMH benchmarks leave entirely uncovered.
  *
- * <p><b>Why this is a JMH benchmark and not a k6 arm.</b> The k6 arms (including {@code proxy.js}, 9a)
- * drive load through k6's HTTP client, and k6 can route through an <i>HTTP</i> proxy but has no SOCKS
- * transport at all — Go's {@code net/http} would need an {@code x/net/proxy} dialer that k6 does not
- * expose, so a SOCKS k6 arm needs either a custom {@code xk6} binary or an HTTP&rarr;SOCKS bridge
- * sidecar in front of MockServer. A bridge would make the measured number dominated by the bridge, not
- * by MockServer's handshake, and adds a whole service to build, containerise and maintain. The plan
- * anticipated exactly this ("if awkward, downgrade to a JMH benchmark of the handshake handlers rather
- * than skipping the dimension"), and there is a second, decisive reason the JMH route is the <i>right</i>
- * one rather than merely the easy one: <b>the SOCKS steady-state relay is already covered.</b> Once a
- * SOCKS {@code CONNECT} is established, {@code SocksConnectHandler extends RelayConnectHandler} and the
- * tunnel is pumped by the same {@code Upstream/DownstreamProxyRelayHandler} pair measured by
- * {@code RelayByteCopyBenchmark} (9c). The <i>only</i> genuinely SOCKS-specific, uncovered cost is the
- * per-connection negotiation — a bounded, allocation-and-CPU micro-cost, which is what JMH measures well.
+ * <p><b>Why this is a JMH benchmark and not a k6 arm.</b> k6 can route through an <i>HTTP</i> proxy but
+ * has no SOCKS transport, so a SOCKS k6 arm would need a custom {@code xk6} binary or an
+ * HTTP&rarr;SOCKS bridge whose cost would dominate the number. And <b>the SOCKS steady-state relay is
+ * already covered:</b> once a SOCKS {@code CONNECT} is established,
+ * {@code SocksConnectHandler extends RelayConnectHandler} and the tunnel is pumped by the same
+ * {@code Upstream/DownstreamProxyRelayHandler} pair measured by {@code RelayByteCopyBenchmark}. The
+ * <i>only</i> SOCKS-specific cost is the per-connection negotiation, which is what JMH measures well.
  *
  * <p><b>What is actually measured — the real handshake codecs, not an imitation.</b> The SOCKS handshake
  * is parsed and emitted by the exact Netty codec instances {@code PortUnificationHandler.enableSocks4/5}
@@ -84,7 +78,7 @@ import java.util.concurrent.TimeUnit;
  * its {@code gc.alloc.rate.norm} is a near-zero <b>floor reference</b> proving detection is not where the
  * handshake cost lives.
  *
- * <p><b>Measurement-validity — the two controls that stop this number lying (the 9c lesson).</b> A raw
+ * <p><b>Measurement-validity — the two controls that stop this number lying.</b> A raw
  * per-op figure from an {@link EmbeddedChannel} cannot, on its own, tell "SOCKS protocol work" apart from
  * "EmbeddedChannel/pipeline construction plumbing", because building a fresh channel per op allocates a
  * channel, pipeline and config every time. Two independent controls discriminate the mechanism:
@@ -92,13 +86,14 @@ import java.util.concurrent.TimeUnit;
  *   <li><b>{@link #channelPlumbingOnly} (the rival-variable control).</b> It constructs and closes a
  *       fresh {@link EmbeddedChannel} holding a single no-op handler and does <i>no</i> SOCKS work at all.
  *       {@code channelPlumbingOnly ÷ handshake} is therefore the share of {@link #handshake}'s allocation
- *       that is pure channel construction rather than the SOCKS codecs — the direct analogue of 9c's
- *       {@code fragmentWrappersOnly}. This is a LOWER BOUND on the plumbing share, for TWO independent
+ *       that is pure channel construction rather than the SOCKS codecs — the analogue of
+ *       {@code RelayByteCopyBenchmark.fragmentWrappersOnly}. This is a LOWER BOUND on the plumbing
+ *       share, for TWO independent
  *       reasons that both push the same way: the control's channel does not escape into codec work, so
  *       the JIT has more freedom to elide it; and the control holds ONE handler where {@link #handshake}
  *       starts with two (encoder + initial decoder), each of which costs a
- *       {@code DefaultChannelHandlerContext}. So the real plumbing share is somewhat above 1,600 B/op and
- *       the SOCKS-attributed remainder is correspondingly an upper bound. The subtraction is directional
+ *       {@code DefaultChannelHandlerContext}. So the real plumbing share is somewhat above what the
+ *       control reports and the SOCKS-attributed remainder is correspondingly an upper bound. The subtraction is directional
  *       evidence that the climb is codec work, not an exact split.</li>
  *   <li><b>The {@link #scenario} sweep (the protocol-complexity discriminator).</b> {@code SOCKS4} does a
  *       single request/response; {@code SOCKS5_NO_AUTH} does an initial greeting + a command (two
@@ -108,7 +103,7 @@ import java.util.concurrent.TimeUnit;
  *       measuring plumbing, not the handshake — so their ordering (PASSWORD &gt; NO_AUTH &gt; SOCKS4) is
  *       itself the evidence that the figure reflects real protocol work.</li>
  * </ul>
- * The free arithmetic tell, per 9c: the SOCKS negotiation messages are tiny (a SOCKS5 greeting is 3-4
+ * A free arithmetic sanity check: the SOCKS negotiation messages are tiny (a SOCKS5 greeting is 3-4
  * bytes, a command request ~10 bytes, a SOCKS4 request ~15 bytes), so a per-op allocation of a few
  * hundred bytes to low-single-kB is physically plausible; a figure orders of magnitude larger than that
  * would signal plumbing (or a leak) dominating, not "an expensive handshake", and would be investigated
@@ -120,13 +115,13 @@ import java.util.concurrent.TimeUnit;
  *       decoders as {@code wrappedBuffer} views over pre-built arrays; the kernel&harr;userspace copy a
  *       real socket pays on every read and write is not measured. The figure is the handshake's
  *       codec/object cost above the socket, not its total per-byte cost (the messages are tiny, so this
- *       omission is small in absolute terms — unlike the relay in 9c).</li>
+ *       omission is small in absolute terms — unlike the relay).</li>
  *   <li><b>The {@code Socks5ProxyHandler} / {@code Socks4ProxyHandler} control flow and the relay handoff
  *       are out of scope.</b> Those handlers are thin routers: a few branch comparisons, one or two
  *       {@code pipeline().addFirst/replace} edits, and (PASSWORD) a constant-time credential compare —
  *       and their terminal step, {@code forwardConnection}, initiates a <i>real upstream connection</i>
- *       and installs the relay handler, which cannot run in an {@link EmbeddedChannel} and is 9c's
- *       territory, not 9b's. This benchmark measures the substantive per-connection cost (the codecs the
+ *       and installs the relay handler, which cannot run in an {@link EmbeddedChannel} and is
+ *       {@code RelayByteCopyBenchmark}'s territory. This benchmark measures the substantive per-connection cost (the codecs the
  *       handlers drive), not the routing shim around them and not the relay after handoff. Concretely,
  *       the {@code SOCKS5_PASSWORD} scenario emits the auth SUCCESS response WITHOUT performing the two
  *       {@code ConstantTimeEquals} comparisons production runs over the supplied username and password,
@@ -228,7 +223,7 @@ public class SocksHandshakeBenchmark {
      * bytes and then scans a null-terminated username byte by byte; a SOCKS5 input fails
      * {@code isSocks4} on the very first byte and then needs only three bytes of {@code isSocks5}. So
      * SOCKS4 reads slower here purely because it is the longer scan. The only claim this method supports
-     * is the one it is here for: detection is 200-3000x cheaper than the handshake and allocates nothing,
+     * is the one it is here for: detection is far cheaper than the handshake and allocates nothing,
      * so the front door is not where SOCKS cost lives.
      */
     @Benchmark

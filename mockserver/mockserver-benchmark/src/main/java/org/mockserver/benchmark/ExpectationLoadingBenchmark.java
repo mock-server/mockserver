@@ -36,14 +36,13 @@ import static org.mockserver.model.HttpResponse.response;
  * invocation registers a fresh, empty matcher store (so every expectation is an add), which is
  * exactly what a server does when it loads an initializer file.
  *
- * <p><b>Why sweep {@code n}.</b> The regression this guards against is super-linear registration.
- * {@code CircularPriorityQueue.evictExcess()} used to evaluate {@code ConcurrentLinkedQueue.size()}
- * (an O(n) traversal) on every add, making a batch load O(n^2): a 10k-expectation file paid ~250ms
- * in registration alone and the per-expectation cost tripled between 1k and 10k. With an O(1) size
- * counter the batch is linear. Sweeping {@code n} across a small case (1/5/100) and a large case
- * (1000/5000/10000) makes both guarantees observable in one run: the small case must not regress,
- * and the large case must stay proportional to {@code n} — if registration time grows faster than
- * {@code n}, an O(n^2) path has crept back in. This mirrors the small-and-large A/B intent of
+ * <p><b>Why sweep {@code n}.</b> The regression this guards against is super-linear registration:
+ * an O(n) {@code ConcurrentLinkedQueue.size()} in {@code CircularPriorityQueue.evictExcess()} on
+ * every add makes a batch load O(n^2), so the queue keeps an O(1) size counter. Sweeping {@code n}
+ * across a small case (1/5/100) and a large case (1000/5000/10000) makes both guarantees
+ * observable in one run: the small case must not regress, and the large case must stay
+ * proportional to {@code n} — if registration time grows faster than {@code n}, an O(n^2) path has
+ * crept back in. This mirrors the small-and-large A/B intent of
  * {@link CandidateIndexBenchmark}.
  *
  * <pre>./run.sh ExpectationLoadingBenchmark</pre>

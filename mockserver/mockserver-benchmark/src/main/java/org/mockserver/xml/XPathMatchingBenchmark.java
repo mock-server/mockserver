@@ -35,16 +35,16 @@ import java.util.concurrent.TimeUnit;
  * over {@link #DISTINCT_BODIES} distinct bodies, so each "request" presents a body different from the
  * previous one — the realistic case where a per-thread parse cache is a fresh miss on the first
  * candidate of every request and a hit for that request's remaining candidates. The benchmark makes
- * NO reference to the cache API, so it compiles and runs unchanged against both the pre-change core
- * (which re-parses every candidate) and the post-change core (which parses once per request).
+ * NO reference to the cache API, so it compiles and runs unchanged against a core that re-parses
+ * every candidate and one that parses once per request.
  *
  * <p><strong>What it does NOT capture.</strong>
  * <ul>
  *   <li>The full {@code RequestMatchers} scan (method/path/header short-circuits, {@code MatchDifference}
  *       allocation, matcher sorting) — it isolates the XPath parse+evaluate core only.</li>
  *   <li>Cross-request cache sharing — there is none by design; each request re-parses its own body once.</li>
- *   <li>The robustness fix (bounding the parse under the timeout). That is a worst-case / hostile-input
- *       property; this measures only the common-case allocation/time of the caching change. Both arms
+ *   <li>Bounding the parse under the timeout. That is a worst-case / hostile-input property; this
+ *       measures only the common-case allocation/time of the per-request parse cache. Both arms
  *       run the pool hand-off per evaluation, so that fixed cost cancels in the delta.</li>
  *   <li>Real-world body shapes and expression complexity — synthetic flat XML and existence predicates.</li>
  * </ul>

@@ -35,10 +35,8 @@ import java.util.concurrent.TimeUnit;
  * enters at {@code channel.writeOutbound(response)} (encoder only), this drives a real
  * {@link ResponseWriter}, so the per-response work the encoder never sees is measured too: the CORS
  * pass, the default-header stamp, the Content-Length diagnostic, the defensive clone in
- * {@code addConnectionHeader}, and the {@code Connection} header synthesis. That layer is what
- * memory-optimisation unit 18a changes, and the reason the per-merge allocation gate (which gates
- * {@code ResponseWriteBenchmark} — an encoder-only benchmark) would report no change for 18a on its
- * own.
+ * {@code addConnectionHeader}, and the {@code Connection} header synthesis. The per-merge allocation
+ * gate covers only the encoder-only {@code ResponseWriteBenchmark}, so it cannot see this layer.
  *
  * <p>This is a SEPARATE class from {@code ResponseWriteBenchmark} deliberately: the per-merge
  * allocation gate and the daily microbench both select benchmarks by explicit class-name include,
@@ -46,16 +44,15 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>The response carries a handful of headers and two cookies — a representative mock-response
  * shape — so the header clone and the cookie clone that {@code addConnectionHeader} performs are
- * both exercised (unit 18a item 3 stops the clone deep-copying the cookies). The concrete
+ * both exercised. The concrete
  * {@link ResponseWriter} subclass encodes each response to the wire through the same two handlers the
  * server wires ({@link MockServerHttpToNettyHttpResponseEncoder} + {@link HttpResponseEncoder}) and
  * the benchmark drains and releases every produced {@code ByteBuf}, so the {@code gc.alloc.rate.norm}
  * (bytes/op) column is the full model&rarr;wire allocation, not a leaked-buffer artefact. The
  * {@link EmbeddedChannel} and writer are built once per trial and reused.
  *
- * <p>The log level is fixed at the shipped default (INFO). Item 2 of unit 18a (gating the
- * Content-Length diagnostic on the log level) is a scan/parse avoidance, not an allocation change,
- * so it is deliberately outside what this bytes/op instrument measures.
+ * <p>The log level is fixed at the shipped default (INFO). Gating the Content-Length diagnostic on
+ * the log level avoids a scan/parse, not an allocation, so this bytes/op instrument does not see it.
  *
  * <pre>./run.sh -prof gc ResponseWriterAllocBenchmark</pre>
  */
