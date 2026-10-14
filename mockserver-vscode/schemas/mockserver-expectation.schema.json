@@ -1919,7 +1919,7 @@
           "type": "string"
         },
         "upstream": {
-          "description": "what happens upstream to a matched message on a binary connection MockServer relays to an upstream (forwardBinaryRequestsMatchExpectations): ANSWER_ONLY (the default) writes binaryData and does not forward the message; ANSWER_AND_FORWARD writes binaryData, forwards the message and drops the upstream's reply; FORWARD_AND_REPLACE forwards the message and writes binaryData in place of the upstream's reply. The last two need binaryMessageFraming POSTGRESQL; without it a match answers as ANSWER_ONLY",
+          "description": "what happens upstream to a matched message on a binary connection MockServer relays to an upstream (matchBinaryExpectationsWhenProxying): ANSWER_ONLY (the default) writes binaryData and does not forward the message; ANSWER_AND_FORWARD writes binaryData, forwards the message and drops the upstream's reply; FORWARD_AND_REPLACE forwards the message and writes binaryData in place of the upstream's reply. The last two need binaryMessageFraming POSTGRESQL; without it a match answers as ANSWER_ONLY",
           "enum": [
             "ANSWER_ONLY",
             "ANSWER_AND_FORWARD",

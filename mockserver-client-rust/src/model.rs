@@ -2781,7 +2781,7 @@ pub struct BinaryResponse {
 
 /// What happens upstream to a message a binary expectation matches on a
 /// connection MockServer relays to an upstream
-/// (`forwardBinaryRequestsMatchExpectations`). `AnswerAndForward` and
+/// (`matchBinaryExpectationsWhenProxying`). `AnswerAndForward` and
 /// `ForwardAndReplace` need `binaryMessageFraming` `POSTGRESQL`; without it
 /// the server answers as `AnswerOnly`.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]

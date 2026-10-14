@@ -32,7 +32,7 @@ import static org.mockserver.model.HttpResponse.response;
 
 /**
  * The per-message cost of matching a relayed binary message that no expectation matches, with
- * {@code forwardBinaryRequestsMatchExpectations} on and binary expectations registered.
+ * {@code matchBinaryExpectationsWhenProxying} on and binary expectations registered.
  *
  * <p>Both arms run in one JMH run, so they share a machine:
  * <ul>

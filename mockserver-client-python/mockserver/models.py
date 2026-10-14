@@ -2293,7 +2293,7 @@ class GrpcBidiResponse:
 
 class BinaryUpstream:
     """Constants for :attr:`BinaryResponse.upstream`: what happens upstream to a message a
-    binary expectation matches on a relayed connection (forwardBinaryRequestsMatchExpectations).
+    binary expectation matches on a relayed connection (matchBinaryExpectationsWhenProxying).
 
     ``ANSWER_ONLY`` (the server's default) writes the binary data and does not forward the
     message; ``ANSWER_AND_FORWARD`` also forwards it and drops the upstream's reply;

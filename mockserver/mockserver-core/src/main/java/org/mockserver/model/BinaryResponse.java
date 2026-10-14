@@ -40,7 +40,7 @@ public class BinaryResponse extends Action<BinaryResponse> {
 
     /**
      * What happens upstream when the matched message arrives on a binary connection MockServer relays to an upstream
-     * (forwardBinaryRequestsMatchExpectations). Null means {@link Upstream#ANSWER_ONLY}. The other two need
+     * (matchBinaryExpectationsWhenProxying). Null means {@link Upstream#ANSWER_ONLY}. The other two need
      * binaryMessageFraming POSTGRESQL, which says where the upstream's reply ends; without it, and on a connection
      * that is not relayed, the expectation answers as {@link Upstream#ANSWER_ONLY}.
      */

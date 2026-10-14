@@ -222,21 +222,23 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
     }
 
     /**
-     * With forwardBinaryRequestsMatchExpectations, a message on a connection relayed on one upstream connection
+     * With matchBinaryExpectationsWhenProxying, a message on a connection relayed on one upstream connection
      * whose bytes match a binary expectation is answered here and not forwarded, or, as the binary response's
      * {@code upstream} says, answered and forwarded or forwarded with its reply replaced. A message no expectation
      * can match is forwarded without a matcher pass, so it adds no match entries to the log. Any other connection is
-     * forwarded as without the setting, and says so once.
+     * forwarded as without the setting, and says so once, when a message arrives that an expectation could match.
      *
      * @return the expectation the message matched, or null for none or a connection whose messages are not matched
      */
     private Expectation relayedMessageExpectation(ChannelHandlerContext ctx, BinaryMessage binaryRequest, String logCorrelationId, InetSocketAddress remoteAddress) {
-        if (httpState == null || !configuration.forwardBinaryRequestsMatchExpectations()) {
+        if (httpState == null || !configuration.matchBinaryExpectationsWhenProxying()) {
             return null;
         }
         if (!usesSingleConnection(ctx)
             || !BinaryRelay.relaysOnOneConnection(ctx, remoteAddress, configuration, mockServerLogger, scheduler, httpClient, binaryExchangeCallback)) {
-            warnOnceThatExpectationsAreNotMatched(ctx, remoteAddress, logCorrelationId);
+            if (httpState.mayMatchBinaryMessage(binaryRequest.getBytes())) {
+                warnOnceThatExpectationsAreNotMatched(ctx, remoteAddress, logCorrelationId);
+            }
             return null;
         }
         if (!httpState.mayMatchBinaryMessage(binaryRequest.getBytes())) {
@@ -349,7 +351,7 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
                 new LogEntry()
                     .setLogLevel(Level.WARN)
                     .setCorrelationId(logCorrelationId)
-                    .setMessageFormat("binary expectations are not matched on binary connection from:{}to:{}because its messages are each forwarded on an upstream connection of their own; forwardBinaryRequestsMatchExpectations applies only to a connection relayed on one (forwardBinaryRequestsUseSingleConnection)")
+                    .setMessageFormat("binary expectations are not matched on binary connection from:{}to:{}because its messages are each forwarded on an upstream connection of their own; matchBinaryExpectationsWhenProxying applies only to a connection relayed on one (forwardBinaryRequestsUseSingleConnection)")
                     .setArguments(ctx.channel().remoteAddress(), remoteAddress)
             );
         }

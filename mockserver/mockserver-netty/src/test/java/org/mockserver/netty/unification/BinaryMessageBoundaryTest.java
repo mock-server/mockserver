@@ -834,7 +834,7 @@ public class BinaryMessageBoundaryTest {
 
     @Test
     public void shouldFramePostgresqlMessagesOnARelayedConnectionAndMatchOrForwardEachOnItsOwn() throws Exception {
-        configuration.binaryMessageFraming(BinaryMessageFraming.POSTGRESQL).forwardBinaryRequestsMatchExpectations(true);
+        configuration.binaryMessageFraming(BinaryMessageFraming.POSTGRESQL).matchBinaryExpectationsWhenProxying(true);
         relayToAnUpstreamThatTakesEverything();
         byte[] answered = postgresqlMessage('Q', 60);
         httpState.add(new Expectation(binaryRequest(answered)).thenRespondWithBinary(binaryResponse(message('c', 3))));

@@ -83,7 +83,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     private Boolean forwardBinaryRequestsWithoutWaitingForResponse;
     private Boolean forwardBinaryRequestsUseSingleConnection;
-    private Boolean forwardBinaryRequestsMatchExpectations;
+    private Boolean matchBinaryExpectationsWhenProxying;
     private Long forwardBinaryServerFirstWaitMillis;
     private String binaryMessageFraming;
     private Integer binaryMessageLengthPrefixBytes;
@@ -450,7 +450,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
             this.forwardBinaryRequestsWithoutWaitingForResponse = configuration.forwardBinaryRequestsWithoutWaitingForResponse();
             this.forwardBinaryRequestsUseSingleConnection = configuration.forwardBinaryRequestsUseSingleConnection();
-            this.forwardBinaryRequestsMatchExpectations = configuration.forwardBinaryRequestsMatchExpectations();
+            this.matchBinaryExpectationsWhenProxying = configuration.matchBinaryExpectationsWhenProxying();
             this.forwardBinaryServerFirstWaitMillis = configuration.forwardBinaryServerFirstWaitMillis();
             this.binaryMessageFraming = configuration.binaryMessageFraming().name();
             this.binaryMessageLengthPrefixBytes = configuration.binaryMessageLengthPrefixBytes();
@@ -917,7 +917,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
         configuration.forwardBinaryRequestsWithoutWaitingForResponse(forwardBinaryRequestsWithoutWaitingForResponse);
         configuration.forwardBinaryRequestsUseSingleConnection(forwardBinaryRequestsUseSingleConnection);
-        configuration.forwardBinaryRequestsMatchExpectations(forwardBinaryRequestsMatchExpectations);
+        configuration.matchBinaryExpectationsWhenProxying(matchBinaryExpectationsWhenProxying);
         configuration.forwardBinaryServerFirstWaitMillis(forwardBinaryServerFirstWaitMillis);
         if (binaryMessageFraming != null) {
             configuration.binaryMessageFraming(parseBinaryMessageFraming(binaryMessageFraming));
@@ -1520,8 +1520,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
         if (forwardBinaryRequestsUseSingleConnection != null) {
             target.forwardBinaryRequestsUseSingleConnection(forwardBinaryRequestsUseSingleConnection);
         }
-        if (forwardBinaryRequestsMatchExpectations != null) {
-            target.forwardBinaryRequestsMatchExpectations(forwardBinaryRequestsMatchExpectations);
+        if (matchBinaryExpectationsWhenProxying != null) {
+            target.matchBinaryExpectationsWhenProxying(matchBinaryExpectationsWhenProxying);
         }
         if (forwardBinaryServerFirstWaitMillis != null) {
             target.forwardBinaryServerFirstWaitMillis(forwardBinaryServerFirstWaitMillis);
@@ -2925,12 +2925,12 @@ public class ConfigurationDTO implements DTO<Configuration> {
         return this;
     }
 
-    public Boolean getForwardBinaryRequestsMatchExpectations() {
-        return forwardBinaryRequestsMatchExpectations;
+    public Boolean getMatchBinaryExpectationsWhenProxying() {
+        return matchBinaryExpectationsWhenProxying;
     }
 
-    public ConfigurationDTO setForwardBinaryRequestsMatchExpectations(Boolean forwardBinaryRequestsMatchExpectations) {
-        this.forwardBinaryRequestsMatchExpectations = forwardBinaryRequestsMatchExpectations;
+    public ConfigurationDTO setMatchBinaryExpectationsWhenProxying(Boolean matchBinaryExpectationsWhenProxying) {
+        this.matchBinaryExpectationsWhenProxying = matchBinaryExpectationsWhenProxying;
         return this;
     }
 

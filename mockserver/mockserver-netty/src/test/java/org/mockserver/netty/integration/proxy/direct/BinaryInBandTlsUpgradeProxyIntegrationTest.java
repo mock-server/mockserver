@@ -270,7 +270,7 @@ public class BinaryInBandTlsUpgradeProxyIntegrationTest {
     public void shouldUpgradeTheUpstreamWhenTheFirstMessageOverTlsIsAnsweredLocally() throws Exception {
         byte[] answeredLocally = {'R', 0, 0, 0, 8, 0, 0, 0, 3};
         try (StartTlsUpstream upstream = session()) {
-            Socket client = connectThrough(configuration().forwardBinaryRequestsMatchExpectations(true), upstream);
+            Socket client = connectThrough(configuration().matchBinaryExpectationsWhenProxying(true), upstream);
             mockServer.upsert(new Expectation(binaryRequest(STARTUP)).thenRespondWithBinary(binaryResponse(answeredLocally)));
 
             exchange(client, SSL_REQUEST, new byte[]{'S'});

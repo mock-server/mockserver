@@ -31,7 +31,7 @@ import static org.mockserver.verify.VerificationTimes.never;
 import static org.mockserver.verify.VerificationTimes.once;
 
 /**
- * With {@code forwardBinaryRequestsMatchExpectations}, a relayed message that a binary expectation answers is counted
+ * With {@code matchBinaryExpectationsWhenProxying}, a relayed message that a binary expectation answers is counted
  * by that expectation's id, at every log level; one an expectation matched but did not answer, as it has no binary
  * response, is forwarded and not counted by the id.
  */
@@ -42,7 +42,7 @@ public class BinaryRelayVerifyByIdTest {
 
     @Before
     public void expectations() {
-        relay.configuration.logLevel("WARN").redactSecretsInLog(false).forwardBinaryRequestsMatchExpectations(true);
+        relay.configuration.logLevel("WARN").redactSecretsInLog(false).matchBinaryExpectationsWhenProxying(true);
         MockServerLogger mockServerLogger = new MockServerLogger(relay.configuration, BinaryRelayVerifyByIdTest.class);
         httpState = new HttpState(relay.configuration, mockServerLogger, mock(Scheduler.class));
         httpState.add(new Expectation(binaryRequest(bytes("mocked"))).withId("answers").thenRespondWithBinary(binaryResponse(bytes("canned"))));

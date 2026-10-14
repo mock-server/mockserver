@@ -1075,10 +1075,10 @@ A proxied binary (non-HTTP) connection is given one upstream connection for its 
 - Default: true
 - Environment variable: MOCKSERVER_FORWARD_BINARY_REQUESTS_USE_SINGLE_CONNECTION
 
-**forwardBinaryRequestsMatchExpectations**
-On a binary connection relayed on one upstream connection (forwardBinaryRequestsUseSingleConnection), a message whose bytes equal a binary expectation's is answered by that expectation and is not sent upstream; every other message is forwarded. The binary response's upstream field changes that per expectation: ANSWER_ONLY (default) as described; ANSWER_AND_FORWARD answers and also forwards the message, dropping the upstream's reply; FORWARD_AND_REPLACE forwards the message and writes the binary response in place of the upstream's reply once it has ended. Those two need binaryMessageFraming POSTGRESQL (a reply ends at ReadyForQuery; an extended-query batch up to its Sync has one reply); without it the expectation answers as ANSWER_ONLY. No effect on a connection forwarded one message at a time. MockServer does not know a protocol's message boundaries, so an expectation applies only when the client's message arrives exactly as its bytes.
-- Default: false
-- Environment variable: MOCKSERVER_FORWARD_BINARY_REQUESTS_MATCH_EXPECTATIONS
+**matchBinaryExpectationsWhenProxying**
+On a binary connection relayed on one upstream connection (forwardBinaryRequestsUseSingleConnection), a message whose bytes equal a binary expectation's is answered by that expectation and is not sent upstream; every other message is forwarded. The binary response's upstream field changes that per expectation: ANSWER_ONLY (default) as described; ANSWER_AND_FORWARD answers and also forwards the message, dropping the upstream's reply; FORWARD_AND_REPLACE forwards the message and writes the binary response in place of the upstream's reply once it has ended. Those two need binaryMessageFraming POSTGRESQL (a reply ends at ReadyForQuery; an extended-query batch up to its Sync has one reply); without it the expectation answers as ANSWER_ONLY. No effect on a connection forwarded one message at a time. MockServer does not know a protocol's message boundaries, so an expectation applies only when the client's message arrives exactly as its bytes. Set to false to forward every message without consulting binary expectations.
+- Default: true
+- Environment variable: MOCKSERVER_MATCH_BINARY_EXPECTATIONS_WHEN_PROXYING
 
 **forwardBinaryServerFirstWaitMillis**
 How long, in milliseconds, a connection with a fixed upstream (port forwarding, PROXY protocol, transparent proxy) waits for its client's first byte before MockServer takes it as binary and opens its upstream connection, so a protocol in which the server speaks first (MySQL, SMTP, FTP) can be proxied: the server's greeting is relayed to the client. Applies only to a connection relayed on one upstream connection (forwardBinaryRequestsUseSingleConnection). A client that sends HTTP only after this long is relayed as binary, not mocked. 0 never does: a connection waits for its client.
@@ -2544,7 +2544,7 @@ Or by expectation IDs:
 | MOCKSERVER_PERSISTED_EXPECTATIONS_PATH | mockserver.persistedExpectationsPath | persistedExpectations.json |
 | MOCKSERVER_ATTEMPT_TO_PROXY_IF_NO_MATCHING_EXPECTATION | mockserver.attemptToProxyIfNoMatchingExpectation | true |
 | MOCKSERVER_FORWARD_BINARY_REQUESTS_USE_SINGLE_CONNECTION | mockserver.forwardBinaryRequestsUseSingleConnection | true |
-| MOCKSERVER_FORWARD_BINARY_REQUESTS_MATCH_EXPECTATIONS | mockserver.forwardBinaryRequestsMatchExpectations | false |
+| MOCKSERVER_MATCH_BINARY_EXPECTATIONS_WHEN_PROXYING | mockserver.matchBinaryExpectationsWhenProxying | true |
 | MOCKSERVER_FORWARD_BINARY_SERVER_FIRST_WAIT_MILLIS | mockserver.forwardBinaryServerFirstWaitMillis | 0 |
 | MOCKSERVER_BINARY_MESSAGE_FRAMING | mockserver.binaryMessageFraming | RAW |
 | MOCKSERVER_BINARY_MESSAGE_LENGTH_PREFIX_BYTES | mockserver.binaryMessageLengthPrefixBytes | 4 |

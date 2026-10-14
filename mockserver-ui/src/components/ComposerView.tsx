@@ -3014,7 +3014,7 @@ function BinaryResponsePanel({
           if (upstream === 'ANSWER_ONLY') delete next.upstream;
           setState(next);
         }}
-        helperText="Only on a binary connection MockServer relays to an upstream (forwardBinaryRequestsMatchExpectations). Forwarding needs binaryMessageFraming POSTGRESQL; without it the match answers only."
+        helperText="Only on a binary connection MockServer relays to an upstream (matchBinaryExpectationsWhenProxying). Forwarding needs binaryMessageFraming POSTGRESQL; without it the match answers only."
         sx={{ width: { xs: '100%', sm: 360 } }}
       >
         <MenuItem value="ANSWER_ONLY">Answer only (default)</MenuItem>

@@ -280,8 +280,8 @@ public class MockServerPropertyCustomizer implements ContextCustomizer {
             case "forwardBinaryRequestsUseSingleConnection":
                 config.forwardBinaryRequestsUseSingleConnection(parseStrictBoolean(value, key));
                 break;
-            case "forwardBinaryRequestsMatchExpectations":
-                config.forwardBinaryRequestsMatchExpectations(parseStrictBoolean(value, key));
+            case "matchBinaryExpectationsWhenProxying":
+                config.matchBinaryExpectationsWhenProxying(parseStrictBoolean(value, key));
                 break;
             case "forwardBinaryServerFirstWaitMillis":
                 config.forwardBinaryServerFirstWaitMillis(Long.parseLong(value));

@@ -47,7 +47,7 @@ import static org.mockserver.stop.Stop.stopQuietly;
 import static org.mockserver.test.Retries.tryWaitForSuccess;
 
 /**
- * With {@code forwardBinaryRequestsMatchExpectations}, over real sockets: on a binary connection relayed on one
+ * With {@code matchBinaryExpectationsWhenProxying}, over real sockets: on a binary connection relayed on one
  * upstream connection, a message whose bytes equal a binary expectation's is answered by MockServer and never
  * reaches the upstream, and every other message is relayed as without the setting.
  */
@@ -70,7 +70,7 @@ public class BinaryExpectationsOnProxiedConnectionIntegrationTest {
     }
 
     private static Configuration matchingExpectations() {
-        return configuration().logLevel("INFO").forwardBinaryRequestsMatchExpectations(true);
+        return configuration().logLevel("INFO").matchBinaryExpectationsWhenProxying(true);
     }
 
     private Socket clientOf(Configuration configuration, Upstream upstream) throws IOException {
@@ -312,9 +312,24 @@ public class BinaryExpectationsOnProxiedConnectionIntegrationTest {
     }
 
     @Test
-    public void shouldForwardAMatchingMessageWhenTheSettingIsOff() throws Exception {
+    public void shouldAnswerAMatchedMessageByDefault() throws Exception {
         try (Upstream upstream = new Upstream(Upstream::numberEachLineOfTheConnection);
              Socket client = clientOf(configuration().logLevel("INFO"), upstream)) {
+            mock("mocked\n", "canned\n");
+
+            send(client, "mocked\n");
+            assertThat(readLine(client.getInputStream()), is("canned\n"));
+            send(client, "one\n");
+            assertThat(readLine(client.getInputStream()), is("1:one\n"));
+
+            assertThat(upstream.receivedText(), is("one\n"));
+        }
+    }
+
+    @Test
+    public void shouldForwardAMatchingMessageWhenTheSettingIsOff() throws Exception {
+        try (Upstream upstream = new Upstream(Upstream::numberEachLineOfTheConnection);
+             Socket client = clientOf(configuration().logLevel("INFO").matchBinaryExpectationsWhenProxying(false), upstream)) {
             mock("mocked\n", "canned\n");
 
             send(client, "mocked\n");

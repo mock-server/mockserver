@@ -1990,7 +1990,7 @@ module MockServer
   end
 
   # Values for BinaryResponse#upstream: what happens upstream to a message a binary
-  # expectation matches on a relayed connection (forwardBinaryRequestsMatchExpectations).
+  # expectation matches on a relayed connection (matchBinaryExpectationsWhenProxying).
   # ANSWER_ONLY is the server's default; the other two need binaryMessageFraming POSTGRESQL.
   module BinaryUpstream
     ANSWER_ONLY         = 'ANSWER_ONLY'

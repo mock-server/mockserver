@@ -280,7 +280,7 @@ type BinaryResponse struct {
 
 // BinaryUpstream says what happens upstream to a message a binary expectation
 // matches on a connection MockServer relays to an upstream
-// (forwardBinaryRequestsMatchExpectations). Empty means the server's default,
+// (matchBinaryExpectationsWhenProxying). Empty means the server's default,
 // BinaryUpstreamAnswerOnly. The other two need binaryMessageFraming POSTGRESQL.
 type BinaryUpstream string
 

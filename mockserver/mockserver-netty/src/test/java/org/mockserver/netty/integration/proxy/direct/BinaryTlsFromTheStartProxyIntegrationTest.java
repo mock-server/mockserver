@@ -337,7 +337,7 @@ public class BinaryTlsFromTheStartProxyIntegrationTest {
     public void shouldAnswerAMatchedMessageAndRelayTheRestOverTlsOnOneUpstreamConnection() throws Exception {
         byte[] answeredLocally = {'R', 0, 0, 0, 8, 0, 0, 0, 3};
         try (StartTlsUpstream upstream = session()) {
-            startMockServer(configuration().forwardBinaryRequestsMatchExpectations(true), upstream);
+            startMockServer(configuration().matchBinaryExpectationsWhenProxying(true), upstream);
             mockServer.upsert(new Expectation(binaryRequest(QUERY)).thenRespondWithBinary(binaryResponse(answeredLocally)));
             SSLSocket tls = client(null, "TLSv1.3");
 

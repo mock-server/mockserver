@@ -185,7 +185,7 @@ public final class BinaryRelay {
 
     /**
      * Whether this connection's messages are relayed on one upstream connection, so that MockServer may answer one
-     * itself instead (forwardBinaryRequestsMatchExpectations). Opens no upstream connection. Must be called on the
+     * itself instead (matchBinaryExpectationsWhenProxying). Opens no upstream connection. Must be called on the
      * client connection's event loop.
      */
     public static boolean relaysOnOneConnection(ChannelHandlerContext ctx, InetSocketAddress target, Configuration configuration, MockServerLogger mockServerLogger, Scheduler scheduler, NettyHttpClient httpClient, BinaryProxyListener listener) {

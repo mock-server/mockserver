@@ -67,7 +67,7 @@ public class BinaryResponseUpstreamIntegrationTest {
     }
 
     private static Configuration postgresqlFraming() {
-        return configuration().logLevel("INFO").forwardBinaryRequestsMatchExpectations(true).binaryMessageFraming(BinaryMessageFraming.POSTGRESQL);
+        return configuration().logLevel("INFO").matchBinaryExpectationsWhenProxying(true).binaryMessageFraming(BinaryMessageFraming.POSTGRESQL);
     }
 
     private Socket clientThrough(Configuration configuration, StartTlsUpstream upstream) throws IOException {
@@ -277,7 +277,7 @@ public class BinaryResponseUpstreamIntegrationTest {
     @Test
     public void shouldAnswerWithoutForwardingAndWarnOnceWithoutPostgresqlFraming() throws Exception {
         try (StartTlsUpstream upstream = postgresLikeUpstream();
-             Socket client = clientThrough(configuration().logLevel("INFO").forwardBinaryRequestsMatchExpectations(true), upstream)) {
+             Socket client = clientThrough(configuration().logLevel("INFO").matchBinaryExpectationsWhenProxying(true), upstream)) {
             mock(MOCKED_QUERY, binaryResponse(CANNED).withUpstream(BinaryResponse.Upstream.FORWARD_AND_REPLACE));
 
             send(client.getOutputStream(), STARTUP);

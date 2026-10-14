@@ -66,7 +66,7 @@ public class BinaryRelayLoggedBytesTest {
     }
 
     private void expectations(Expectation... expectations) {
-        relay.configuration.forwardBinaryRequestsMatchExpectations(true);
+        relay.configuration.matchBinaryExpectationsWhenProxying(true);
         when(httpState.mayMatchBinaryMessage(any(byte[].class))).thenReturn(true);
         when(httpState.firstMatchingExpectation(any(BinaryRequestDefinition.class))).thenAnswer(invocation -> {
             byte[] received = invocation.<BinaryRequestDefinition>getArgument(0).getBinaryData();

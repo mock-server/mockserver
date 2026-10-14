@@ -60,7 +60,7 @@ import static org.mockserver.test.Retries.tryWaitForSuccess;
  * binding. MockServer keeps one upstream connection for the client connection and upgrades it to TLS when the
  * client does. Docker-gated.
  * <p>
- * With {@code forwardBinaryRequestsMatchExpectations} and the driver in simple query mode, binary expectations
+ * With {@code matchBinaryExpectationsWhenProxying} and the driver in simple query mode, binary expectations
  * answer chosen queries of the same session while the rest reach the server.
  */
 public class PostgresThroughMockServerIntegrationTest {
@@ -319,7 +319,7 @@ public class PostgresThroughMockServerIntegrationTest {
     }
 
     private static Configuration matchingExpectations() {
-        return configuration().logLevel("INFO").forwardBinaryRequestsMatchExpectations(true);
+        return configuration().logLevel("INFO").matchBinaryExpectationsWhenProxying(true);
     }
 
     private static void executeDirectly(String sql) throws SQLException {

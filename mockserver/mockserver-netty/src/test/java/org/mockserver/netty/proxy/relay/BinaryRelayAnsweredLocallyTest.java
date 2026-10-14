@@ -49,7 +49,7 @@ import static org.mockserver.netty.proxy.relay.BinaryRelayHarness.isReading;
 import static org.mockserver.netty.proxy.relay.BinaryRelayHarness.setWritable;
 
 /**
- * With {@code forwardBinaryRequestsMatchExpectations} a message on a relayed binary connection that matches a binary
+ * With {@code matchBinaryExpectationsWhenProxying} a message on a relayed binary connection that matches a binary
  * expectation is answered by MockServer and never reaches the upstream; every other message is relayed.
  */
 public class BinaryRelayAnsweredLocallyTest {
@@ -78,7 +78,7 @@ public class BinaryRelayAnsweredLocallyTest {
             return null;
         });
         relay = new BinaryRelayHarness(true);
-        relay.configuration.forwardBinaryRequestsMatchExpectations(true);
+        relay.configuration.matchBinaryExpectationsWhenProxying(true);
     }
 
     @After
@@ -154,8 +154,21 @@ public class BinaryRelayAnsweredLocallyTest {
     }
 
     @Test
+    public void shouldAnswerAMatchedMessageByDefault() {
+        relay.configuration.matchBinaryExpectationsWhenProxying(null);
+        clientConnection();
+
+        relay.clientSends("one");
+        relay.clientSends("mocked");
+
+        assertThat(relay.receivedByClient(), is(CANNED));
+        assertThat(relay.receivedByUpstream(), is("one"));
+        verify(httpState).postProcess(mocked);
+    }
+
+    @Test
     public void shouldNotConsultExpectationsWhenTheSettingIsOff() {
-        relay.configuration.forwardBinaryRequestsMatchExpectations(false);
+        relay.configuration.matchBinaryExpectationsWhenProxying(false);
         clientConnection();
 
         relay.clientSends("mocked");
@@ -286,6 +299,20 @@ public class BinaryRelayAnsweredLocallyTest {
         assertThat(relay.forwardedPerMessage, contains("mocked waiting", "mocked waiting"));
         assertThat(warnings(), hasSize(1));
         assertThat(warnings().get(0), containsString("binary expectations are not matched on binary connection"));
+        verify(httpState, never()).firstMatchingExpectation(any());
+    }
+
+    @Test
+    public void shouldNotWarnOnAConnectionWhoseMessagesEachHaveAConnectionOfTheirOwnWhenNoExpectationCanMatchThem() {
+        when(httpState.mayMatchBinaryMessage(any(byte[].class))).thenReturn(false);
+        relay.configuration.forwardBinaryRequestsUseSingleConnection(false);
+        clientConnection();
+
+        relay.clientSends("mocked");
+        relay.clientSends("other");
+
+        assertThat(relay.forwardedPerMessage, contains("mocked waiting", "other waiting"));
+        assertThat(warnings(), is(empty()));
         verify(httpState, never()).firstMatchingExpectation(any());
     }
 

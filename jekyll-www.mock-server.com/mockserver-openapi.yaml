@@ -7978,7 +7978,7 @@ components:
         upstream:
           description: >-
             What happens upstream to a matched message on a binary connection MockServer relays to an upstream
-            (forwardBinaryRequestsMatchExpectations). ANSWER_ONLY, the default, writes binaryData and does not
+            (matchBinaryExpectationsWhenProxying). ANSWER_ONLY, the default, writes binaryData and does not
             forward the message. ANSWER_AND_FORWARD writes binaryData, forwards the message and drops the upstream's
             reply to it. FORWARD_AND_REPLACE forwards the message and writes binaryData in place of the upstream's
             reply once that reply has ended. The last two need binaryMessageFraming POSTGRESQL, which says where a

@@ -36,7 +36,7 @@ import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.netty.proxy.relay.BinaryRelayHarness.TARGET;
 
 /**
- * With {@code forwardBinaryRequestsMatchExpectations} and a real expectation store, a relayed message that no
+ * With {@code matchBinaryExpectationsWhenProxying} and a real expectation store, a relayed message that no
  * expectation can match is forwarded without a matcher pass, so it adds no match entries to the log, while a message
  * an expectation may match is matched as before.
  */
@@ -49,7 +49,7 @@ public class BinaryRelayMatcherPassTest {
 
     @Before
     public void expectations() {
-        relay.configuration.logLevel("INFO").forwardBinaryRequestsMatchExpectations(true);
+        relay.configuration.logLevel("INFO").matchBinaryExpectationsWhenProxying(true);
         mockServerLogger = spy(new MockServerLogger(relay.configuration, BinaryRelayMatcherPassTest.class));
         // read as it is logged: the event log reuses an entry once it has taken it
         doAnswer(invocation -> {

@@ -282,7 +282,7 @@ public class ConfigurationProperties {
     // non http proxying
     private static final String MOCKSERVER_FORWARD_BINARY_REQUESTS_WITHOUT_WAITING_FOR_RESPONSE = "mockserver.forwardBinaryRequestsWithoutWaitingForResponse";
     private static final String MOCKSERVER_FORWARD_BINARY_REQUESTS_USE_SINGLE_CONNECTION = "mockserver.forwardBinaryRequestsUseSingleConnection";
-    private static final String MOCKSERVER_FORWARD_BINARY_REQUESTS_MATCH_EXPECTATIONS = "mockserver.forwardBinaryRequestsMatchExpectations";
+    private static final String MOCKSERVER_MATCH_BINARY_EXPECTATIONS_WHEN_PROXYING = "mockserver.matchBinaryExpectationsWhenProxying";
     private static final String MOCKSERVER_FORWARD_BINARY_SERVER_FIRST_WAIT_MILLIS = "mockserver.forwardBinaryServerFirstWaitMillis";
     private static final String MOCKSERVER_BINARY_MESSAGE_FRAMING = "mockserver.binaryMessageFraming";
     private static final AtomicReference<String> REPORTED_INVALID_BINARY_MESSAGE_FRAMING = new AtomicReference<>();
@@ -4420,21 +4420,22 @@ public class ConfigurationProperties {
     }
 
     /**
-     * If true, a message on a proxied binary connection that forwardBinaryRequestsUseSingleConnection relays on one
-     * upstream connection is matched against binary expectations: one whose bytes match is answered by that
-     * expectation and is not forwarded, and every other message is forwarded. Has no effect on a connection whose
-     * messages are each forwarded on an upstream connection of their own.
+     * If true (the default), a message on a proxied binary connection that forwardBinaryRequestsUseSingleConnection
+     * relays on one upstream connection is matched against binary expectations: one whose bytes match is answered by
+     * that expectation and is not forwarded, and every other message is forwarded. Has no effect on a connection
+     * whose messages are each forwarded on an upstream connection of their own. Set it to false to forward every
+     * message without consulting binary expectations.
      * <p>
-     * The default is false
+     * The default is true
      *
-     * @param forwardBinaryRequestsMatchExpectations target value
+     * @param matchBinaryExpectationsWhenProxying target value
      */
-    public static void forwardBinaryRequestsMatchExpectations(boolean forwardBinaryRequestsMatchExpectations) {
-        setProperty(MOCKSERVER_FORWARD_BINARY_REQUESTS_MATCH_EXPECTATIONS, "" + forwardBinaryRequestsMatchExpectations);
+    public static void matchBinaryExpectationsWhenProxying(boolean matchBinaryExpectationsWhenProxying) {
+        setProperty(MOCKSERVER_MATCH_BINARY_EXPECTATIONS_WHEN_PROXYING, "" + matchBinaryExpectationsWhenProxying);
     }
 
-    public static boolean forwardBinaryRequestsMatchExpectations() {
-        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_FORWARD_BINARY_REQUESTS_MATCH_EXPECTATIONS, "MOCKSERVER_FORWARD_BINARY_REQUESTS_MATCH_EXPECTATIONS", "false"));
+    public static boolean matchBinaryExpectationsWhenProxying() {
+        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_MATCH_BINARY_EXPECTATIONS_WHEN_PROXYING, "MOCKSERVER_MATCH_BINARY_EXPECTATIONS_WHEN_PROXYING", "true"));
     }
 
     /**

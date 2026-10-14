@@ -616,7 +616,7 @@ export interface BinaryResponse {
   primary?: boolean;
   /**
    * What happens upstream to the matched message on a connection MockServer relays to an upstream
-   * (forwardBinaryRequestsMatchExpectations). Absent means ANSWER_ONLY. ANSWER_AND_FORWARD and
+   * (matchBinaryExpectationsWhenProxying). Absent means ANSWER_ONLY. ANSWER_AND_FORWARD and
    * FORWARD_AND_REPLACE need binaryMessageFraming POSTGRESQL on the server.
    */
   upstream?: "ANSWER_ONLY" | "ANSWER_AND_FORWARD" | "FORWARD_AND_REPLACE";

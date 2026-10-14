@@ -230,7 +230,7 @@ public class Configuration {
     // non http proxying
     private volatile Boolean forwardBinaryRequestsWithoutWaitingForResponse;
     private volatile Boolean forwardBinaryRequestsUseSingleConnection;
-    private volatile Boolean forwardBinaryRequestsMatchExpectations;
+    private volatile Boolean matchBinaryExpectationsWhenProxying;
     private volatile Long forwardBinaryServerFirstWaitMillis;
     private volatile BinaryMessageFraming binaryMessageFraming;
     private volatile Integer binaryMessageLengthPrefixBytes;
@@ -3421,25 +3421,26 @@ public class Configuration {
         return this;
     }
 
-    public Boolean forwardBinaryRequestsMatchExpectations() {
-        if (forwardBinaryRequestsMatchExpectations == null) {
-            return ConfigurationProperties.forwardBinaryRequestsMatchExpectations();
+    public Boolean matchBinaryExpectationsWhenProxying() {
+        if (matchBinaryExpectationsWhenProxying == null) {
+            return ConfigurationProperties.matchBinaryExpectationsWhenProxying();
         }
-        return forwardBinaryRequestsMatchExpectations;
+        return matchBinaryExpectationsWhenProxying;
     }
 
     /**
-     * If true, a message on a proxied binary connection that forwardBinaryRequestsUseSingleConnection relays on one
-     * upstream connection is matched against binary expectations: one whose bytes match is answered by that
-     * expectation and is not forwarded, and every other message is forwarded. Has no effect on a connection whose
-     * messages are each forwarded on an upstream connection of their own.
+     * If true (the default), a message on a proxied binary connection that forwardBinaryRequestsUseSingleConnection
+     * relays on one upstream connection is matched against binary expectations: one whose bytes match is answered by
+     * that expectation and is not forwarded, and every other message is forwarded. Has no effect on a connection
+     * whose messages are each forwarded on an upstream connection of their own. Set it to false to forward every
+     * message without consulting binary expectations.
      * <p>
-     * The default is false
+     * The default is true
      *
-     * @param forwardBinaryRequestsMatchExpectations target value
+     * @param matchBinaryExpectationsWhenProxying target value
      */
-    public Configuration forwardBinaryRequestsMatchExpectations(Boolean forwardBinaryRequestsMatchExpectations) {
-        this.forwardBinaryRequestsMatchExpectations = forwardBinaryRequestsMatchExpectations;
+    public Configuration matchBinaryExpectationsWhenProxying(Boolean matchBinaryExpectationsWhenProxying) {
+        this.matchBinaryExpectationsWhenProxying = matchBinaryExpectationsWhenProxying;
         return this;
     }
 

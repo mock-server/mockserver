@@ -68,7 +68,7 @@ class BinaryResponse implements \JsonSerializable
 
     /**
      * What happens upstream to the matched message on a connection MockServer
-     * relays to an upstream (forwardBinaryRequestsMatchExpectations). The last
+     * relays to an upstream (matchBinaryExpectationsWhenProxying). The last
      * two values need binaryMessageFraming POSTGRESQL on the server.
      *
      * @param string $upstream ANSWER_ONLY, ANSWER_AND_FORWARD or FORWARD_AND_REPLACE

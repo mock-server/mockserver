@@ -77,11 +77,11 @@ public class MockServerPropertyCustomizerConfigurationTest {
     }
 
     @Test
-    public void shouldApplyForwardBinaryRequestsMatchExpectations() {
+    public void shouldApplyMatchBinaryExpectationsWhenProxying() {
         Configuration config = MockServerPropertyCustomizer.buildConfiguration(
-            Collections.singletonList("mockserver.forwardBinaryRequestsMatchExpectations=true")
+            Collections.singletonList("mockserver.matchBinaryExpectationsWhenProxying=false")
         );
-        assertThat(config.forwardBinaryRequestsMatchExpectations(), is(true));
+        assertThat(config.matchBinaryExpectationsWhenProxying(), is(false));
     }
 
     @Test

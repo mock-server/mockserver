@@ -68,7 +68,7 @@ public class MysqlServerFirstFramingIntegrationTest {
             mockServer = new MockServer(configuration()
                 .forwardBinaryServerFirstWaitMillis(WAIT_MILLIS)
                 .binaryMessageFraming(BinaryMessageFraming.MYSQL)
-                .forwardBinaryRequestsMatchExpectations(true), upstream.port(), "127.0.0.1", 0);
+                .matchBinaryExpectationsWhenProxying(true), upstream.port(), "127.0.0.1", 0);
             byte[] answered = packet(0, 3000, 'q');
             byte[] answer = packet(1, 1, 'M');
             new MockServerClient("127.0.0.1", mockServer.getLocalPort())

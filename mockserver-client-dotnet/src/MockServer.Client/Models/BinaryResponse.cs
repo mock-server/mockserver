@@ -40,7 +40,7 @@ public sealed class BinaryResponse
 
 /// <summary>
 /// What happens upstream to a message a binary expectation matches on a
-/// connection MockServer relays to an upstream (forwardBinaryRequestsMatchExpectations).
+/// connection MockServer relays to an upstream (matchBinaryExpectationsWhenProxying).
 /// ANSWER_AND_FORWARD and FORWARD_AND_REPLACE need binaryMessageFraming POSTGRESQL;
 /// without it the server answers as ANSWER_ONLY.
 /// </summary>
