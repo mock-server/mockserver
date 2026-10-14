@@ -207,9 +207,26 @@ describe('explain types follow the OpenAPI schemas', function () {
         assert.deepEqual(declaredMembers('RequestExplanation'), Object.keys(spec.components.schemas.RequestExplanation.properties).sort());
     });
 
-    it('ExplainedExpectation declares every schema property, plus explainUnmatched\'s suggestedFix', function () {
-        assert.deepEqual(declaredMembers('ExplainedExpectation'),
-            Object.keys(spec.components.schemas.ExplainedExpectation.properties).concat(['suggestedFix']).sort());
+    ['ExplainedExpectation', 'SuggestedFix', 'DebugMismatchResult', 'ExplainUnmatchedResult', 'UnmatchedRequest'].forEach(function (name) {
+        it(name + ' declares every schema property', function () {
+            assert.deepEqual(declaredMembers(name), Object.keys(spec.components.schemas[name].properties).sort());
+        });
+    });
+
+    function inlineMembers(name, member) {
+        var body = new RegExp('export interface ' + name + ' \\{([\\s\\S]*?)\\n\\}').exec(dts)[1];
+        var inline = new RegExp('^ {2}' + member + '\\??: \\{([^}]*)\\}', 'm').exec(body);
+        assert.ok(inline, name + '.' + member + ' is declared as an inline object type');
+        return inline[1].split(';').map(function (part) {
+            return part.trim().replace(/\??:[\s\S]*$/, '');
+        }).filter(Boolean).sort();
+    }
+
+    it('the inline closest match, patch operation and unpatched field declare every schema property', function () {
+        var schemas = spec.components.schemas;
+        assert.deepEqual(inlineMembers('DebugMismatchResult', 'closestMatch'), Object.keys(schemas.ClosestMatch.properties).sort());
+        assert.deepEqual(inlineMembers('SuggestedFix', 'patch'), Object.keys(schemas.SuggestedFix.properties.patch.items.properties).sort());
+        assert.deepEqual(inlineMembers('SuggestedFix', 'unpatchedFields'), Object.keys(schemas.SuggestedFix.properties.unpatchedFields.items.properties).sort());
     });
 
     it('the reason and outcome unions list every schema enum value', function () {

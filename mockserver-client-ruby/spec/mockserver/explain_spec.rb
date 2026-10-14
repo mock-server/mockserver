@@ -214,9 +214,11 @@ RSpec.describe MockServer::Client do
         .to eq(schemas['RequestExplanation']['properties'].keys.map { |k| snake(k) }.sort)
     end
 
-    it 'ExplainedExpectation reads every schema property, plus explainUnmatched\'s suggestedFix' do
-      expect(readers(MockServer::ExplainedExpectation))
-        .to eq((schemas['ExplainedExpectation']['properties'].keys.map { |k| snake(k) } + ['suggested_fix']).sort)
+    %w[ExplainedExpectation SuggestedFix DebugMismatchResult ClosestMatch ExplainUnmatchedResult UnmatchedRequest].each do |name|
+      it "#{name} reads every schema property" do
+        expect(readers(MockServer.const_get(name)))
+          .to eq(schemas[name]['properties'].keys.map { |k| snake(k) }.sort)
+      end
     end
   end
 end

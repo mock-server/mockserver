@@ -2257,6 +2257,7 @@ This release delivers a sustained performance and memory programme alongside dat
   documented tuning settings read only as system properties, and as system properties they were
   always applied; only the warning was wrong. Set in the properties file or as an environment
   variable they are still ignored, and the warning now says to set them with `-D` instead.
+- **The OpenAPI specification now describes what `PUT /mockserver/debugMismatch` and `PUT /mockserver/explainUnmatched` return.** Both responses were documented only as an untyped JSON object, so code generated from the specification could not read the per-expectation results, the closest match, the unmatched requests or the suggested fixes. Their responses now have full schemas, which share the per-expectation shape of `PUT /mockserver/explain`, and the `debugMismatch` error response lists its `correlationId` and `timestamp`.
 
 ## [8.0.0] - 2026-09-15
 

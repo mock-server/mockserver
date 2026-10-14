@@ -11,12 +11,15 @@ import pytest
 
 from mockserver import (
     AsyncMockServerClient,
+    ClosestMatch,
     DebugMismatchResult,
     ExplainedExpectation,
     ExplainUnmatchedResult,
     HttpRequest,
     MockServerClient,
     RequestExplanation,
+    SuggestedFix,
+    UnmatchedRequest,
 )
 from mockserver.exceptions import MockServerError
 
@@ -257,6 +260,10 @@ class TestModelsFollowTheSchema:
         fields = {f.name for f in dataclasses.fields(RequestExplanation)}
         assert fields == {snake(p) for p in schema_properties("RequestExplanation")}
 
-    def test_explained_expectation_models_every_schema_property_and_the_suggested_fix(self):
-        fields = {f.name for f in dataclasses.fields(ExplainedExpectation)}
-        assert fields == {snake(p) for p in schema_properties("ExplainedExpectation")} | {"suggested_fix"}
+    @pytest.mark.parametrize(
+        "model",
+        [ExplainedExpectation, SuggestedFix, DebugMismatchResult, ClosestMatch, ExplainUnmatchedResult, UnmatchedRequest],
+    )
+    def test_diagnostic_model_models_every_schema_property(self, model):
+        fields = {f.name for f in dataclasses.fields(model)}
+        assert fields == {snake(p) for p in schema_properties(model.__name__)}

@@ -2824,7 +2824,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ExplainUnmatchedResult'
       requestBody:
         content:
           application/json:
@@ -3064,7 +3064,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/DebugMismatchResult'
         '400':
           description: an OpenAPI definition was supplied instead of an HttpRequest, or the request could not be processed
           content:
@@ -3074,6 +3074,11 @@ paths:
                 properties:
                   error:
                     type: string
+                  correlationId:
+                    type: string
+                  timestamp:
+                    type: string
+                    format: date-time
       requestBody:
         content:
           application/json:
@@ -8262,8 +8267,11 @@ components:
           description: the evaluation budget (500); present only when truncated is true
     ExplainedExpectation:
       description: >-
-        one expectation as PUT /mockserver/explain evaluated it; the matched expectation has no reason, every
-        skipped or shadowed one has a reason and an explanation
+        one expectation as a diagnostic endpoint evaluated it. PUT /mockserver/explain fills every field but
+        suggestedFix; the matched expectation has no reason, every skipped or shadowed one has a reason and an
+        explanation. PUT /mockserver/debugMismatch fills expectationId, expectationMethod, expectationPath,
+        matches, matchedFieldCount, totalFieldCount and differences. PUT /mockserver/explainUnmatched fills
+        those plus differingFieldCount and remediation, and suggestedFix when asked for.
       type: object
       properties:
         expectationId:
@@ -8312,3 +8320,137 @@ components:
           description: for each differing field, a hint on how to change the expectation
           additionalProperties:
             type: string
+        suggestedFix:
+          $ref: '#/components/schemas/SuggestedFix'
+    SuggestedFix:
+      description: >-
+        an RFC 6902 JSON patch of an expectation, as PUT /mockserver/retrieve?type=active_expectations returns it,
+        that would make it match the request (PUT /mockserver/explainUnmatched with suggestFixes); nothing is applied
+      type: object
+      properties:
+        patch:
+          type: array
+          description: the patch operations, each under /httpRequest; empty when no field could be patched
+          items:
+            type: object
+            properties:
+              op:
+                type: string
+                enum:
+                  - add
+                  - remove
+                  - replace
+                  - test
+              path:
+                type: string
+                description: a JSON pointer into the expectation
+              value:
+                description: the value to add, replace or test; absent for remove
+        patchedFields:
+          type: array
+          description: the differing fields the patch changes
+          items:
+            type: string
+        unpatchedFields:
+          type: array
+          description: the differing fields the patch leaves alone, each with the reason
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              reason:
+                type: string
+        matchesAfterPatch:
+          type: boolean
+          description: whether the patched expectation matches the request; false when the patch is empty
+    DebugMismatchResult:
+      description: >-
+        every active expectation, in evaluation order, compared field by field with the supplied request, and the
+        one that came closest (PUT /mockserver/debugMismatch)
+      type: object
+      properties:
+        correlationId:
+          type: string
+          description: a new id for this call, not the id of a recorded request
+        timestamp:
+          type: string
+          format: date-time
+          description: when this result was computed
+        totalExpectations:
+          type: integer
+          description: how many expectations are stored
+        evaluatedExpectations:
+          type: integer
+          description: how many expectations were evaluated, at most maxExpectationsEvaluated
+        truncated:
+          type: boolean
+          description: present and true when there were more expectations than maxExpectationsEvaluated
+        maxExpectationsEvaluated:
+          type: integer
+          description: the evaluation limit (100); present only when truncated is true
+        closestMatch:
+          $ref: '#/components/schemas/ClosestMatch'
+        results:
+          type: array
+          description: >-
+            one entry per evaluated expectation, in evaluation order; an expectation that is used up is left out
+          items:
+            $ref: '#/components/schemas/ExplainedExpectation'
+    ClosestMatch:
+      description: the non-matching expectation with the fewest differing fields; absent when every one matches
+      type: object
+      properties:
+        expectationId:
+          type: string
+        matchedFields:
+          type: integer
+        totalFields:
+          type: integer
+    ExplainUnmatchedResult:
+      description: >-
+        recent requests that matched no expectation, each re-checked against the current expectations
+        (PUT /mockserver/explainUnmatched)
+      type: object
+      properties:
+        correlationId:
+          type: string
+          description: a new id for this call, not the id of a recorded request
+        timestamp:
+          type: string
+          format: date-time
+          description: when this result was computed
+        unmatchedRequestCount:
+          type: integer
+          description: how many unmatched requests are listed
+        truncated:
+          type: boolean
+          description: >-
+            true when the budget of 500 expectation evaluations ran out, so later unmatched requests are left out
+            and the last one listed may have been compared with only some of the expectations
+        unmatchedRequests:
+          type: array
+          description: the most recent unmatched requests, at most limit
+          items:
+            $ref: '#/components/schemas/UnmatchedRequest'
+    UnmatchedRequest:
+      description: one recent request that matched no expectation, and the expectations that came closest
+      type: object
+      properties:
+        timestamp:
+          type: string
+          description: when the request was recorded, as the event log formats it (yyyy-MM-dd HH:mm:ss.SSS)
+        method:
+          type: string
+        path:
+          type: string
+        closestExpectations:
+          type: array
+          description: >-
+            the expectations compared with the request (at most 50), closest first (fewest differing fields);
+            used-up expectations are left out
+          items:
+            $ref: '#/components/schemas/ExplainedExpectation'
+        totalExpectationsEvaluated:
+          type: integer
+          description: how many expectations were compared with this request
