@@ -12,7 +12,7 @@ regressions hide and stale claims get published.
 | `regression.js` (HTTP + HTTPS/H2) | Per-behaviour latency percentiles and delivery ratio at 200 rps | Daily (perf queue) | No — notify-only |
 | `growth.js` | Latency slope as the event log fills | Daily (perf queue) | No — notify-only |
 | `sweep.js` | Throughput-vs-latency knee curve | Daily (perf queue) | No — notify-only |
-| `rw-multi-k6-sweep.sh` (`sweep.js` from N processes, merged in Prometheus) | The same knee curve without the single-k6 ceiling (item 31) | **Opt-in**: `PERF_SERVING_RW_MULTIK6=true` inside `perf-run` on `perf`, or its own arm-only step on `perf-xl` with `PERF_XL=true` ([where each arm runs](#which-queue-runs-which-arm)) | No. Exits 2 on its own accounting/skew/window/cross-check gates; the perf-xl step fails when the arm is not `valid`. **Its perf-xl ceiling is what the page's headline is published from** (item 44): its own compare step persists a series member and its publish step refreshes the page ([the headline rule](#the-headline-rule-item-44)); inside `perf-run` on `perf` it is never published |
+| `rw-multi-k6-sweep.sh` (`sweep.js` from N processes, merged in Prometheus) | The same knee curve without the single-k6 ceiling (item 31) | **Opt-in**: `PERF_SERVING_RW_MULTIK6=true` inside `perf-run` on `perf`, or its own arm-only step on `perf-xl` with `PERF_XL=true`, which a weekly schedule sets (Saturday 08:00 UTC) ([where each arm runs](#which-queue-runs-which-arm)) | No. Exits 2 on its own accounting/skew/window/cross-check gates; the perf-xl step fails when the arm is not `valid`. **Its perf-xl ceiling is what the page's headline is published from** (item 44): its own compare step persists a series member and its publish step refreshes the page ([the headline rule](#the-headline-rule-item-44)); inside `perf-run` on `perf` it is never published |
 | `forward.js` | Forward connection-pool regression guard | Daily (perf queue) | `forward.error_rate` only |
 | `proxy.js` | Proxy and TLS handshake latency | Daily (perf queue) | No — notify-only |
 | `proxy.js` forward + slow upstream | Unmatched-proxy in-flight concurrency cap (unit 21) | **Opt-in** (`PERF_WORKLOAD=forward`) | `workload_forward_served_via_upstream` validity check |
@@ -69,7 +69,8 @@ steps, or whose run step ran and failed (compare is then skipped, and the build 
 run). So a passing manual run clears a failed daily run without waiting for 04:00, and a failing one
 turns the check red, but a manual run never stands in for a schedule that has stopped. A manual
 build that never measured (a guard skip, or one cancelled before its run step finished), or an A/B
-build with env overrides, is ignored. The full rules are in
+build with env overrides, is ignored. So are the weekly scheduled builds, whose messages carry
+`[perf-soak]` or `[perf-xl-weekly]`: neither counts as the daily producer. The full rules are in
 [ci-cd.md](../infrastructure/ci-cd.md).
 
 The `perf` queue runs up to three agents, one per machine, so the four measurement steps run in
@@ -1886,8 +1887,9 @@ bk build create -p mockserver-performance-test -b master -c HEAD \
 
 The build runs the normal regression chain plus the matrix (about 10 minutes per point, 60 in
 all); the guard raises the run step's timeout from 70 to 160 minutes only when
-`PERF_SERVING_HW_MATRIX=true`. Avoid the 04:00 UTC daily slot and the Sunday 08:00 soak (a
-daily build can hold all three `perf` agents, so a matrix build would queue behind it).
+`PERF_SERVING_HW_MATRIX=true`. Avoid the 04:00 UTC daily slot, the Saturday 08:00 weekly perf-xl
+build and the Sunday 08:00 soak (a daily build can hold all three `perf` agents, so a matrix build
+would queue behind it).
 `PERF_HW_MATRIX` overrides the points, as comma-separated
 `cores:memory[:control]` entries.
 
@@ -2495,8 +2497,10 @@ them under `single_k6`, and the page renders the multi-k6 headline, its two p99 
 rule; that is what is committed today (from build 643), and a daily refresh cannot replace the
 headline. The template branches on `headline_rule`, so only a publish patch changes the state. Each source's age, move and lower-bound checks read only its own committed
 part, so the multi-k6 headline is never held against the single-k6 ceiling or the reverse.
-`PERF_XL` is not on the daily schedule, so the headline refreshes only when someone runs a
-`PERF_XL=true` build; the daily run keeps refreshing the rest.
+`PERF_XL` is not on the daily schedule. The headline refreshes from the weekly perf-xl build
+(Saturday 08:00 UTC, `perf_xl_weekly` in `terraform/buildkite-pipelines/pipelines.tf`, a
+scheduled `PERF_XL=true` `[perf-run]` build) or when someone runs a `PERF_XL=true` build; the
+daily run keeps refreshing the rest.
 
 Before publishing any figure:
 - State the version, date, core count, heap, GC, and log level. A figure without these is not a figure.

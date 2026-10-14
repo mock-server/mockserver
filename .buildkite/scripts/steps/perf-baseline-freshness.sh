@@ -206,11 +206,11 @@ API="https://api.buildkite.com/v2/organizations/${ORG}/pipelines/${PRODUCER_PIPE
 CURL_CFG="$WORK/curl.cfg"
 ( umask 077; printf 'header = "Authorization: Bearer %s"\n' "$TOKEN" > "$CURL_CFG" )
 
-# Only source==schedule builds prove the cron is alive. The weekly [perf-soak] schedule
-# is not the baseline producer: counting it would let a fresh or passing soak mask a
-# dead or failed daily. Every scan applies this one filter.
-NOT_SOAK='((.message // "") | test("\\[perf-soak\\]") | not)'
-DAILY_SCHEDULED_SEL="(.source == \"schedule\" and ${NOT_SOAK})"
+# Only source==schedule builds prove the cron is alive. The weekly [perf-soak] and
+# [perf-xl-weekly] schedules are not the baseline producer: counting either would let a
+# fresh or passing weekly build mask a dead or failed daily. Every scan applies this filter.
+NOT_WEEKLY='((.message // "") | test("\\[perf-(soak|xl-weekly)\\]") | not)'
+DAILY_SCHEDULED_SEL="(.source == \"schedule\" and ${NOT_WEEKLY})"
 # A measured manual build: the steps the guard dispatches for a full run all executed
 # (passed or failed; a skipped build shows them `broken` or omits them), or `perf-run`
 # itself ran and failed, which skips compare but is still a failed run. Build env
@@ -218,7 +218,7 @@ DAILY_SCHEDULED_SEL="(.source == \"schedule\" and ${NOT_SOAK})"
 MEASURED_STEPS='["perf-run", "perf-microbench", "perf-compare"]'
 FULLY_MEASURED="((.jobs // []) as \$jobs | all(${MEASURED_STEPS}[]; . as \$k | any(\$jobs[]; .step_key == \$k and (.state == \"passed\" or .state == \"failed\"))))"
 MEASUREMENT_FAILED='any((.jobs // [])[]; .step_key == "perf-run" and (.state == "failed" or .state == "timed_out"))'
-MEASURED_MANUAL_SEL="(.source != \"schedule\" and ${NOT_SOAK}
+MEASURED_MANUAL_SEL="(.source != \"schedule\" and ${NOT_WEEKLY}
   and (.source == \"ui\" or ((.message // \"\") | test(\"\\\\[perf-run\\\\]\")))
   and ((.env // {}) == {})
   and (${FULLY_MEASURED} or ${MEASUREMENT_FAILED}))"

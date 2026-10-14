@@ -211,5 +211,22 @@ check "hw_matrix: the multi-k6 client's cpusets" '"32-39;40-47"|["32-39;40-47",2
   "$(placement hw_matrix "$RW2" '{"client_placement":{"k6_cpusets":["32-39","40-47"]}}')"
 check "hw_matrix, single-k6 client (no fixed client placement): null" 'null|[null,null,null]|null' "$(placement hw_matrix '{}' '{}')"
 
+echo "--- 7. the weekly perf-xl schedule (pipelines.tf) dispatches when the daily already measured HEAD"
+TF="$REPO_ROOT/terraform/buildkite-pipelines/pipelines.tf"
+SCHED="$(awk '/^resource "buildkite_pipeline_schedule" "perf_xl_weekly"/ {p=1} p {print} p && /^}/ {exit}' "$TF")"
+XLW_MSG="$(sed -n 's/^  message *= "\(.*\)"$/\1/p' <<<"$SCHED")"
+XLW_ENV="$(sed -n 's/^    PERF_XL *= "\(.*\)"$/\1/p' <<<"$SCHED")"
+check "schedule found, with a message and PERF_XL" "1|1" "$([ -n "$XLW_MSG" ] && echo 1 || echo 0)|$([ -n "$XLW_ENV" ] && echo 1 || echo 0)"
+mkdir -p "$WORK/bin7"
+HEAD_SHA="$(git -C "$REPO_ROOT" rev-parse HEAD)"
+printf '#!/usr/bin/env bash\necho fake-token\n' > "$WORK/bin7/aws"
+printf '#!/usr/bin/env bash\necho %s\n' "'[{\"meta_data\":{\"perf_regression_ran_commit\":\"$HEAD_SHA\"}}]'" > "$WORK/bin7/curl"
+chmod +x "$WORK/bin7/aws" "$WORK/bin7/curl"
+guard weekly PATH="$WORK/bin7:$WORK/bin:$PATH" BUILDKITE_SOURCE=schedule BUILDKITE_MESSAGE="$XLW_MSG" PERF_XL="$XLW_ENV"
+guard weekly_untagged PATH="$WORK/bin7:$WORK/bin:$PATH" BUILDKITE_SOURCE=schedule BUILDKITE_MESSAGE="Scheduled: daily performance regression run" PERF_XL="$XLW_ENV"
+check "control: a scheduled build on a measured HEAD is skipped" "0" "$(uploads weekly_untagged)"
+check "weekly: regression and perf-xl uploads" "2" "$(uploads weekly)"
+check "weekly: the multi-k6 arm runs on perf-xl" "1" "$(grep -c 'PERF_RUN_ARM: "rw_multik6"' "$WORK/weekly/upload-2.yml" 2>/dev/null || true)"
+
 if [ "$FAILS" -gt 0 ]; then echo "FAILED: $FAILS check(s)" >&2; exit 1; fi
 echo "all perf-xl dispatch checks passed"

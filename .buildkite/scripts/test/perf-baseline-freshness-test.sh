@@ -163,6 +163,16 @@ echo "--- 4. [perf-soak] is not the daily producer"
   | run "a fresh soak does not mask a stalled daily" 1 "STALLED (no scheduled build within 30h)"
 { b 545 schedule passed 2 "[perf-soak] Scheduled: weekly soak"; b 520 schedule passed 100 "[perf-soak] Scheduled: weekly soak"; } \
   | run "only soak builds ever: no daily schedule" 1 "NO_SCHEDULE"
+# The message the weekly perf-xl schedule really sends, so a renamed marker fails here.
+XLW="$(awk '/^resource "buildkite_pipeline_schedule" "perf_xl_weekly"/ {p=1} p && /^  message/ {print; exit}' \
+  "$REPO_ROOT/terraform/buildkite-pipelines/pipelines.tf" | sed -n 's/^  message *= "\(.*\)"$/\1/p')"
+[ -n "$XLW" ] || bad "perf_xl_weekly schedule message not found in pipelines.tf"
+{ b 546 schedule passed 2 "$XLW"; b 541 schedule failed 8; } \
+  | run "a passing weekly perf-xl build does not mask a failed daily" 1 "NOT_PASSED (last completed scheduled run was 'failed')"
+{ b 546 schedule passed 2 "$XLW"; b 500 schedule passed 40; } \
+  | run "a fresh weekly perf-xl build does not mask a stalled daily" 1 "STALLED (no scheduled build within 30h)"
+{ b 546 schedule failed 2 "$XLW"; b 541 schedule passed 8; } \
+  | run "a failed weekly perf-xl build does not fail a passing daily" 0 "last completed #541 passed, scheduled"
 
 echo "--- 5. API and config errors fail closed"
 b 541 schedule passed 2 | run "no token" 1 "DENIED (no Buildkite API token)" FAKE_NO_TOKEN=1

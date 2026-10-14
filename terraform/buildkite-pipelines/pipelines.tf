@@ -213,6 +213,23 @@ resource "buildkite_pipeline_schedule" "perf_soak_weekly" {
   message     = "Scheduled: weekly performance soak [perf-soak]"
 }
 
+# Weekly PERF_XL run (item 44a): refreshes the multi-k6 headline series on perf-xl, as a
+# manual PERF_XL=true [perf-run] build does. [perf-run] is required: without it the commit
+# guard skips the build whenever the 04:00 daily already measured HEAD. It also forces the
+# regression steps onto the `perf` queue, so Saturday 08:00 keeps clear of the daily's
+# worst case and of Sunday's soak. [perf-xl-weekly] keeps it out of the baseline-freshness
+# check's daily-producer set (perf-baseline-freshness.sh), as [perf-soak] does.
+resource "buildkite_pipeline_schedule" "perf_xl_weekly" {
+  pipeline_id = buildkite_pipeline.pipeline["perf-test"].id
+  label       = "Weekly perf-xl headline run"
+  cronline    = "0 8 * * 6"
+  branch      = "master"
+  message     = "Scheduled: weekly perf-xl headline run [perf-run] [perf-xl-weekly]"
+  env = {
+    PERF_XL = "true"
+  }
+}
+
 locals {
   # Audit finding F-BK-CLOUD-02: pipelines that load secrets via AWS Secrets
   # Manager must be PRIVATE so their build logs are not world-readable. The

@@ -145,7 +145,8 @@ Strip the bell character too when grepping a log — lines are prefixed with a b
 
 **Before concluding a perf build is stuck waiting for an agent:** the `perf` queue scales
 from zero to at most **three** agents, one per c5.12xlarge, so each perf job has a whole
-machine to itself. `mockserver-performance-test` has a **scheduled daily run at 04:00** and a
+machine to itself. `mockserver-performance-test` has a **scheduled daily run at 04:00**, a
+**weekly `PERF_XL` run on Saturday at 08:00** (which also uses the `perf-xl` agent) and a
 **weekly soak on Sunday at 08:00** (UTC). A daily build fans its measurement steps out and
 can hold all three agents at once, so a manual run can be legitimately queued behind it,
 which is easy to miss because the Buildkite UI lists only the most recent pipeline runs by
