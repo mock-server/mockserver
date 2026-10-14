@@ -289,7 +289,7 @@ expectations = client.import_har(File.read('traffic.har'))
         <pre class="prettyprint lang-go code"><code class="code">import (
     "os"
 
-    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 )
 
 client := mockserver.New("localhost", 1080)
@@ -401,7 +401,7 @@ expectations = client.import_postman_collection(File.read('my-collection.postman
         <pre class="prettyprint lang-go code"><code class="code">import (
     "os"
 
-    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 )
 
 client := mockserver.New("localhost", 1080)
@@ -555,7 +555,7 @@ generated_expectations = client.pact_import(File.read('consumer-provider.json'))
         <pre class="prettyprint lang-go code"><code class="code">import (
     "os"
 
-    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 )
 
 client := mockserver.New("localhost", 1080)

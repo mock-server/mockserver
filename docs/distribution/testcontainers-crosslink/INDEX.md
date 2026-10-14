@@ -17,7 +17,7 @@ URLs are:
 | Node | npm | https://www.npmjs.com/package/@mockserver/testcontainers |
 | Python | PyPI | https://pypi.org/project/testcontainers-mockserver/ |
 | .NET | NuGet | https://www.nuget.org/packages/Testcontainers.MockServer/ |
-| Go | pkg.go.dev | https://pkg.go.dev/github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go |
+| Go | pkg.go.dev | https://pkg.go.dev/github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go/v9 |
 | Rust | crates.io | https://crates.io/crates/testcontainers-mockserver |
 
 Do not post a PR or issue until `curl`/`pip install`/`dotnet add package`/`go get`/`cargo add`

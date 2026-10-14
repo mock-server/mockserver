@@ -101,7 +101,7 @@ description: Officially maintained Testcontainers module for MockServer — star
 language: go
 homepage: https://www.mock-server.com
 source: https://github.com/mock-server/mockserver/tree/master/mockserver-testcontainers/go
-package: https://pkg.go.dev/github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go
+package: https://pkg.go.dev/github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go/v9
 maintainer: official
 ---
 ```
@@ -129,7 +129,7 @@ maintainer: official
 | Node | `npm install --save-dev @mockserver/testcontainers` |
 | Python | `pip install testcontainers-mockserver` |
 | .NET | `dotnet add package MockServer.Testcontainers` |
-| Go | `go get github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go` |
+| Go | `go get github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go/v9` |
 | Rust | `testcontainers-mockserver = "7.0"` in `[dev-dependencies]` |
 
 Related: Java module update in #184.

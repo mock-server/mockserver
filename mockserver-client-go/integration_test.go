@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+	mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 )
 
 // skipIfNoServer skips the test if MOCKSERVER_URL is not set or the server

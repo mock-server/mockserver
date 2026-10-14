@@ -11,7 +11,7 @@
 //	    "context"
 //	    "log"
 //
-//	    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go"
+//	    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go/v9"
 //	)
 //
 //	func main() {

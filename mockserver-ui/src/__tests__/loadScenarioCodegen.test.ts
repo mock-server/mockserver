@@ -161,7 +161,7 @@ describe('loadScenarioCodegen', () => {
   describe('Go — struct literals + stage helpers', () => {
     const out = loadToGo(INPUT);
     it('builds a mockserver.LoadScenario struct', () => {
-      expect(out).toContain('mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"');
+      expect(out).toContain('mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"');
       expect(out).toContain('mockserver.LoadScenario{');
       expect(out).toContain('Profile: &mockserver.LoadProfile{');
       expect(out).toContain('Steps: []mockserver.LoadStep{');

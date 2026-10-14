@@ -227,10 +227,30 @@ sub_once("jekyll-www.mock-server.com/mockserver-openapi.yaml",
 PYEOF
 fi
 
+# Go modules carry the release major in their path (/vN); on a major release
+# rewrite every reference to it, so the Go tags pushed later are installable.
+GO_MAJOR="${RELEASE_VERSION%%.*}"
+GO_MODULE_PATHS=()
+if is_dry_run; then
+  log_dry "would: rewrite the Go module paths to /v$GO_MAJOR"
+  python3 "$SCRIPT_DIR/go_module_major.py" --check "$GO_MAJOR" \
+    || log_dry "the rewrite above would change the references listed"
+else
+  log_info "Setting the Go module paths to /v$GO_MAJOR"
+  go_changed="$(python3 "$SCRIPT_DIR/go_module_major.py" --set "$GO_MAJOR")"
+  while IFS= read -r path; do
+    if [[ -n "$path" ]]; then
+      GO_MODULE_PATHS+=("$path")
+      log_info "  updated: $path"
+    fi
+  done <<< "$go_changed"
+fi
+
 git_commit_and_push "release: set version $RELEASE_VERSION" \
   mockserver/ \
   examples/java/pom.xml \
-  "${NON_MAVEN_VERSION_PATHS[@]}"
+  "${NON_MAVEN_VERSION_PATHS[@]}" \
+  "${GO_MODULE_PATHS[@]+"${GO_MODULE_PATHS[@]}"}"
 git_tag_and_push "mockserver-$RELEASE_VERSION"
 
 log_info "Prepare complete"

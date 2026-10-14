@@ -162,7 +162,7 @@ generated_expectations = client.pact_import(pact.to_json)
     </div>
     <button class="accordion inner">Go</button>
     <div class="panel">
-        <pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+        <pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 
 client := mockserver.New("localhost", 1080)
 pactJSON := `{
@@ -363,7 +363,7 @@ pact_contract = client.pact_export(consumer: 'frontend', provider: 'users-servic
     </div>
     <button class="accordion inner">Go</button>
     <div class="panel">
-        <pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+        <pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 
 client := mockserver.New("localhost", 1080)
 pactContract, _ := client.PactExport("frontend", "users-service")
@@ -596,7 +596,7 @@ verified = JSON.parse(report)['verified']</code></pre>
     </div>
     <button class="accordion inner">Go</button>
     <div class="panel">
-        <pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+        <pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 
 client := mockserver.New("localhost", 1080)
 pactJSON := `{

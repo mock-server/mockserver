@@ -188,7 +188,7 @@ public class ExpectationToCodeSerializerTest {
         String code = goSerializer.serialize(Collections.singletonList(sampleExpectation("/somePath", "someBody")));
 
         assertThat(code, containsString("package main"));
-        assertThat(code, containsString("mockserver \"github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7\""));
+        assertThat(code, containsString("mockserver \"github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9\""));
         assertThat(code, containsString("client := mockserver.New(\"localhost\", 1080)"));
         assertThat(code, containsString("json.Unmarshal([]byte("));
         assertThat(code, containsString("client.Upsert(e)"));

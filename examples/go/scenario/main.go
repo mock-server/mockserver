@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+	mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 )
 
 // baseURL builds the MockServer data-plane base URL from the environment.

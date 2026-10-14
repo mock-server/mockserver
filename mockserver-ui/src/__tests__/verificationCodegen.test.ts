@@ -223,7 +223,7 @@ describe('verifyToPython', () => {
 describe('verifyToGo', () => {
   it('generates request-only Verify call with fluent builder', () => {
     const code = verifyToGo(REQUEST_ONLY);
-    expect(code).toContain('mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"');
+    expect(code).toContain('mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"');
     expect(code).toContain('client := mockserver.New("localhost", 1080)');
     expect(code).toContain('req := mockserver.Request()');
     expect(code).toContain('.Method("GET")');

@@ -83,7 +83,7 @@ curl http://localhost:1080/pets
 [![Node](https://img.shields.io/npm/v/mockserver-client.svg?label=Node)](https://www.npmjs.org/package/mockserver-client)
 [![PyPI](https://img.shields.io/pypi/v/mockserver-client.svg?label=Python)](https://pypi.org/project/mockserver-client/)
 [![Gem](https://badge.fury.io/rb/mockserver-client.png)](https://rubygems.org/gems/mockserver-client)
-[![Go](https://pkg.go.dev/badge/github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7.svg)](https://pkg.go.dev/github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7)
+[![Go](https://pkg.go.dev/badge/github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9.svg)](https://pkg.go.dev/github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9)
 [![Packagist](https://img.shields.io/packagist/v/mock-server/mockserver-client.svg?label=PHP)](https://packagist.org/packages/mock-server/mockserver-client)
 [![NuGet](https://img.shields.io/nuget/v/MockServerClient.svg?label=.NET)](https://www.nuget.org/packages/MockServerClient)
 [![Crates.io](https://img.shields.io/crates/v/mockserver-client.svg?label=Rust)](https://crates.io/crates/mockserver-client)

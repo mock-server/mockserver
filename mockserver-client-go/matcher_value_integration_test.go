@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+	mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 )
 
 // A matcher value beginning with '!' is the case the plain-string wire form

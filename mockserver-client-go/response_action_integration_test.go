@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+	mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 )
 
 // These tests close the response-ACTION wire gap for the Go client: the other

@@ -33,7 +33,7 @@ import (
 	"strconv"
 	"time"
 
-	mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+	mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 )
 
 func newClient() *mockserver.Client {

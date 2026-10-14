@@ -88,7 +88,7 @@ describe('standardToPython', () => {
 describe('standardToGo', () => {
   it('constructs a typed mockserver.Expectation and Upserts it (no embedded JSON)', () => {
     const code = standardToGo(baseMatcher(), templateFileAction, BASE_URL);
-    expect(code).toContain('mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"');
+    expect(code).toContain('mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"');
     expect(code).toContain('mockserver.New("localhost", 1080)');
     // typed construction — the fluent request builder and a typed action struct
     expect(code).toContain('mockserver.Request().');

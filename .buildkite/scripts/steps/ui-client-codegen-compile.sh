@@ -109,6 +109,7 @@ EOF
     ;;
   go)
     IMAGE="golang:1.23"; CACHE="go"
+    GO_CLIENT_MODULE="$(awk '/^module /{print $2; exit}' "$REPO_ROOT/mockserver-client-go/go.mod")"
     CHECK_CMD="$(cat <<EOF
 set -eu
 cd "$WORK_DIR"
@@ -120,9 +121,9 @@ module codegensamples
 
 go 1.21
 
-require github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7 v7.0.0
+require $GO_CLIENT_MODULE v${GO_CLIENT_MODULE##*/v}.0.0
 
-replace github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7 => $BASE/mockserver-client-go
+replace $GO_CLIENT_MODULE => $BASE/mockserver-client-go
 GOMOD
 export GOFLAGS=-mod=mod
 go mod tidy

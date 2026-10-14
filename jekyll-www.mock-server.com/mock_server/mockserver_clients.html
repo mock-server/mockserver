@@ -338,11 +338,11 @@ end</code></pre>
 
 <p>Install via <span class="inline_code">go get</span>:</p>
 
-<pre class="prettyprint code"><code class="code">go get github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7@latest</code></pre>
+<pre class="prettyprint code"><code class="code">go get github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9@latest</code></pre>
 
 <p>Create an expectation using the fluent API:</p>
 
-<pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+<pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 
 client := mockserver.New("localhost", 1080)
 client.When(
@@ -353,7 +353,7 @@ client.When(
 
 <p>Verification failures return a <span class="inline_code">*mockserver.VerificationError</span>:</p>
 
-<pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+<pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 
 client := mockserver.New("localhost", 1080)
 err := client.Verify(
@@ -655,7 +655,7 @@ client.when(
         </div>
         <button class="accordion inner">Go</button>
         <div class="panel">
-        <pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+        <pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 
 client := mockserver.New("localhost", 1080)
 client.When(
@@ -848,7 +848,7 @@ client.when(
         </div>
         <button class="accordion inner">Go</button>
         <div class="panel">
-        <pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+        <pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 
 client := mockserver.New("localhost", 1080, mockserver.WithTLS())
 client.When(
@@ -1013,7 +1013,7 @@ client.verify(
             <pre class="prettyprint lang-go code"><code class="code">import (
     "log"
 
-    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 )
 
 client := mockserver.New("localhost", 1080)
@@ -1174,7 +1174,7 @@ client.verify_sequence(
             <pre class="prettyprint lang-go code"><code class="code">import (
     "log"
 
-    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 )
 
 client := mockserver.New("localhost", 1080)
@@ -1319,7 +1319,7 @@ recorded_requests = client.retrieve_recorded_requests(
             <pre class="prettyprint lang-go code"><code class="code">import (
     "log"
 
-    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 )
 
 client := mockserver.New("localhost", 1080)
@@ -1447,7 +1447,7 @@ recorded_expectations = client.retrieve_recorded_expectations(
             <pre class="prettyprint lang-go code"><code class="code">import (
     "log"
 
-    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 )
 
 client := mockserver.New("localhost", 1080)
@@ -1581,7 +1581,7 @@ log_messages = client.retrieve_log_messages(
             <pre class="prettyprint lang-go code"><code class="code">import (
     "log"
 
-    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 )
 
 client := mockserver.New("localhost", 1080)
@@ -1701,7 +1701,7 @@ client.clear(HttpRequest.new(path: '/some/path'))</code></pre>
             <pre class="prettyprint lang-go code"><code class="code">import (
     "log"
 
-    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 )
 
 client := mockserver.New("localhost", 1080)
@@ -1820,7 +1820,7 @@ client.clear(HttpRequest.new(path: '/some/path'), type: 'LOG')</code></pre>
             <pre class="prettyprint lang-go code"><code class="code">import (
     "log"
 
-    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 )
 
 client := mockserver.New("localhost", 1080)
@@ -1924,7 +1924,7 @@ client.reset</code></pre>
             <pre class="prettyprint lang-go code"><code class="code">import (
     "log"
 
-    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 )
 
 client := mockserver.New("localhost", 1080)
@@ -2006,7 +2006,7 @@ bound_ports = client.bind(0)</code></pre>
             <pre class="prettyprint lang-go code"><code class="code">import (
     "log"
 
-    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 )
 
 client := mockserver.New("localhost", 1080)
@@ -2092,7 +2092,7 @@ bound_ports = client.bind(1081, 1082)</code></pre>
             <pre class="prettyprint lang-go code"><code class="code">import (
     "log"
 
-    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 )
 
 client := mockserver.New("localhost", 1080)

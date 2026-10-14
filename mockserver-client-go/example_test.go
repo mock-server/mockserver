@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+	mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 )
 
 // This example demonstrates creating a basic expectation using the fluent API.

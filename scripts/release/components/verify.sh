@@ -446,7 +446,7 @@ fi
 log_info ""
 log_info "== Go Client (soft — pkg.go.dev indexing may lag) =="
 check_http_soft "Go client module on pkg.go.dev" \
-  "https://pkg.go.dev/github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7@v${V}"
+  "https://pkg.go.dev/github.com/mock-server/mockserver-monorepo/mockserver-client-go/v${V%%.*}@v${V}"
 
 log_info ""
 log_info "== .NET Client (soft — NuGet indexing may lag) =="
@@ -495,7 +495,7 @@ check_http_soft "MockServer.Testcontainers $V on NuGet" \
 log_info ""
 log_info "== testcontainers-go (soft — pkg.go.dev indexing may lag) =="
 check_http_soft "testcontainers-go module on pkg.go.dev" \
-  "https://pkg.go.dev/github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go@v${V}"
+  "https://pkg.go.dev/github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go/v${V%%.*}@v${V}"
 
 log_info ""
 log_info "== testcontainers-mockserver (crates.io, soft) =="

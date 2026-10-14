@@ -861,7 +861,7 @@ export function standardToGo(matcher: StandardMatcher, action: StandardActionPay
     'package main',
     '',
     'import (',
-    '\tmockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"',
+    '\tmockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"',
     ')',
     '',
     'func main() {',

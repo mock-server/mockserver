@@ -24,7 +24,7 @@ git push origin "${MODULE_TAG}"
 
 # Trigger proxy indexing
 GOPROXY=https://proxy.golang.org GO111MODULE=on \
-  go list -m "github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go@v${RELEASE_VERSION}" || true
+  go list -m "github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go/v9@v${RELEASE_VERSION}" || true
 
 echo "Published: ${MODULE_TAG}"
 ```
@@ -33,5 +33,5 @@ echo "Published: ${MODULE_TAG}"
 
 ```bash
 # testcontainers-go: verify the module is accessible via the Go proxy
-go list -m -json "github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go@v${RELEASE_VERSION}"
+go list -m -json "github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go/v9@v${RELEASE_VERSION}"
 ```

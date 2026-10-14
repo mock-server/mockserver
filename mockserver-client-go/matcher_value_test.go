@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+	mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 )
 
 // A value that round-trips through the plain form must STAY a plain string, so

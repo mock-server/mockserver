@@ -7,7 +7,7 @@ Zero third-party dependencies — uses only the Go standard library (`net/http` 
 ## Installation
 
 ```bash
-go get github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7
+go get github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9
 ```
 
 ## Quick Start
@@ -18,7 +18,7 @@ package main
 import (
     "log"
 
-    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 )
 
 func main() {
@@ -428,7 +428,7 @@ import (
     "fmt"
     "log"
 
-    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 )
 
 func main() {

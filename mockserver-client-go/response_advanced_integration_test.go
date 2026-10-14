@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+	mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 )
 
 // These tests close audit gap #47 for the Go client's ADVANCED response actions:

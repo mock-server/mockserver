@@ -4,7 +4,8 @@
 # Go modules are indexed automatically by the Go module proxy when a
 # properly-formatted tag is pushed to a public repository. The subdir-module
 # tag convention (mockserver-testcontainers/go/vX.Y.Z) is required for
-# pkg.go.dev to resolve the module inside a monorepo.
+# pkg.go.dev to resolve the module inside a monorepo, and the module path must
+# end in /vN (N = the release major), which require_go_module_major enforces.
 #
 # NOTE: full pkg.go.dev resolution may require splitting to a dedicated repo
 # later — keep this best-effort/soft.
@@ -28,6 +29,9 @@ require_release_inputs
 skip_unless_release_type "tc-go" full,post-maven
 
 log_step "Publish testcontainers-go $RELEASE_VERSION (dry-run=$DRY_RUN)"
+# The tag must land on a commit that has prepare.sh's /vN suffix and VERSION bump,
+# not on the commit this build was started from.
+sync_to_origin_master
 
 TAG="mockserver-testcontainers/go/v${RELEASE_VERSION}"
 
@@ -42,6 +46,8 @@ TAG="mockserver-testcontainers/go/v${RELEASE_VERSION}"
 log_info "Validating Go module (go vet) in $GO_IMAGE"
 in_docker "$GO_IMAGE" -e GOTOOLCHAIN=auto \
   -w /build/mockserver-testcontainers/go -- go vet ./...
+
+require_go_module_major
 
 if is_dry_run; then
   log_dry "skip: git tag $TAG + push + proxy indexing"
@@ -61,7 +67,7 @@ log_info "Triggering Go module proxy indexing in $GO_IMAGE"
 if ! retry 3 5 -- in_docker "$GO_IMAGE" \
      -e GOPROXY=https://proxy.golang.org -e GO111MODULE=on \
      -w /build/mockserver-testcontainers/go -- \
-     go list -m "github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go@v${RELEASE_VERSION}"; then
+     go list -m "github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go/v${RELEASE_VERSION%%.*}@v${RELEASE_VERSION}"; then
   log_info ":warning: proxy indexing nudge failed after retries — non-fatal (tag pushed; pkg.go.dev indexes on first fetch)"
 fi
 

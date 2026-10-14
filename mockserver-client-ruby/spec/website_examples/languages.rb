@@ -344,7 +344,7 @@ module WebsiteExamples
     # -------------------------------------------------------------------
     module Go
       NAME = 'go'
-      MODULE = 'github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7'
+      MODULE = 'github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9'
       IMPORT = /^import\s*(\([^)]*\)|[^\n]*)\n?/m.freeze
 
       module_function
@@ -357,7 +357,7 @@ module WebsiteExamples
 
           go 1.21
 
-          require #{MODULE} v7.0.0
+          require #{MODULE} v#{MODULE[%r{/v(\d+)\z}, 1]}.0.0
           #{File.read(File.join(client, 'go.mod'))[/^require (?!\().*$/]}
           replace #{MODULE} => #{client}
         MOD

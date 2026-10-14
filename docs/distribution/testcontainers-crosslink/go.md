@@ -8,14 +8,14 @@ The module is published automatically when a semver tag of the form
 `mockserver-testcontainers/go/vX.Y.Z` is pushed to the monorepo. Verify indexing:
 
 ```bash
-go list -m -versions github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go
-# or visit: https://pkg.go.dev/github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go
+go list -m -versions github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go/v9
+# or visit: https://pkg.go.dev/github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go/v9
 ```
 
 The Go proxy may take a few minutes to index after the tag is pushed.
 
 **Note on module path:** the module currently lives in the monorepo at
-`github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go`. The
+`github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go/v9`. The
 `PUBLISHING.md` notes a future split to a dedicated repo
 (`github.com/mock-server/mockserver-testcontainers-go`). Post the PR against whichever
 path is live — do not post until the path resolves via `go get`.
@@ -53,7 +53,7 @@ docs: add official MockServer module for Go
 ## Summary
 
 MockServer now ships an officially maintained Testcontainers module for Go:
-[`github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go`](https://pkg.go.dev/github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go).
+[`github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go/v9`](https://pkg.go.dev/github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go/v9).
 
 The module is maintained by the MockServer project, wraps `testcontainers-go` v0.36+,
 and tracks each MockServer release.
@@ -61,7 +61,7 @@ and tracks each MockServer release.
 ## Install
 
 ```bash
-go get github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go
+go get github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go/v9
 ```
 
 ## Quick start
@@ -72,7 +72,7 @@ import (
     "net/http"
     "strings"
 
-    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go"
+    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go/v9"
 )
 
 ctx := context.Background()
@@ -94,7 +94,7 @@ resp, _ := http.Get(url + "/hello")
 
 ## Links
 
-- pkg.go.dev: https://pkg.go.dev/github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go
+- pkg.go.dev: https://pkg.go.dev/github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go/v9
 - Source: https://github.com/mock-server/mockserver/tree/master/mockserver-testcontainers/go
 - MockServer docs: https://www.mock-server.com
 ```
@@ -103,7 +103,7 @@ resp, _ := http.Get(url + "/hello")
 
 ## Notes for the Submitter
 
-- Module path: `github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go`
+- Module path: `github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go/v9`
 - Go 1.22+; testcontainers-go v0.36+.
 - Entry point: `mockserver.Run(ctx, image, opts...)` returns `*MockServerContainer`;
   `ctr.URL(ctx)` returns the HTTP base URL.

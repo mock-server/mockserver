@@ -828,6 +828,23 @@ git_commit_and_push() {
   return $rc
 }
 
+# Go's semantic import versioning: a vN.x.y tag (N >= 2) is only installable when
+# the module path ends in /vN. prepare.sh rewrites the suffix on a major release;
+# this refuses to tag while any reference to either Go module is on another major.
+# A dry run only reports, because prepare's rewrite has not happened yet.
+require_go_module_major() {
+  require_cmd python3
+  local major="${RELEASE_VERSION%%.*}"
+  if python3 "$RELEASE_LIB_DIR/go_module_major.py" --check "$major"; then
+    log_info "Go module paths end in /v$major"
+  elif is_dry_run; then
+    log_dry "Go module paths are not on /v$major yet; prepare.sh --execute rewrites them"
+  else
+    log_error "Go module paths do not end in /v$major: the proxy would reject the v$RELEASE_VERSION tag"
+    return 1
+  fi
+}
+
 git_tag_and_push() {
   local tag="$1"
   if is_dry_run; then

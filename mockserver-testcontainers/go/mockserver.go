@@ -23,7 +23,7 @@ import (
 	"runtime/debug"
 	"strings"
 
-	mockserverclient "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+	mockserverclient "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
@@ -39,7 +39,7 @@ const (
 	// selfModulePath is this module's own Go module path, used to derive the
 	// default image tag from the build info version when consumed as a
 	// versioned dependency.
-	selfModulePath = "github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go"
+	selfModulePath = "github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go/v9"
 )
 
 // DefaultImage is the default Docker image used by the examples and integration
@@ -123,9 +123,10 @@ func (c *MockServerContainer) URL(ctx context.Context) (string, error) {
 //	    mockserverclient.Response().StatusCode(200).Body("world"),
 //	)
 //
-// The client is bundled via the mockserver-client-go/v7 module. The "/v7"
-// Semantic Import Versioning suffix on that module's path is what makes it
-// resolvable as a normal dependency of this module for downstream `go get`.
+// The client is bundled via the mockserver-client-go/vN module (N = the release
+// major). The "/vN" Semantic Import Versioning suffix on that module's path is
+// what makes it resolvable as a normal dependency of this module for downstream
+// `go get`.
 func (c *MockServerContainer) Client(ctx context.Context) (*mockserverclient.Client, error) {
 	host, err := c.Host(ctx)
 	if err != nil {

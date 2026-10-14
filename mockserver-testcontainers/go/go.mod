@@ -1,18 +1,18 @@
-module github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go
+module github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go/v9
 
 go 1.25.0
 
 require (
 	github.com/docker/go-connections v0.6.0
-	github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7 v7.0.0
+	github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9 v9.0.0
 	github.com/testcontainers/testcontainers-go v0.42.0
 )
 
 // For in-repo builds, resolve the client from the local working tree. Downstream
-// consumers (published testcontainers-go) resolve the published /v7 client module
+// consumers (published testcontainers-go) resolve the published /vN client module
 // instead, which is possible because the client carries the Semantic Import
 // Versioning suffix.
-replace github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7 => ../../mockserver-client-go
+replace github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9 => ../../mockserver-client-go
 
 require (
 	dario.cat/mergo v1.0.2 // indirect

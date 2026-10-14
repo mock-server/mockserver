@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+	mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 )
 
 // correlationIDOf returns the correlation ID of the received request with the

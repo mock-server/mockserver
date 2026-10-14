@@ -6,7 +6,7 @@ A [Testcontainers](https://golang.testcontainers.org/) module that starts a
 ## Installation
 
 ```bash
-go get github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go
+go get github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go/v9
 ```
 
 ## Usage
@@ -21,7 +21,7 @@ import (
 	"net/http"
 	"strings"
 
-	mockserver "github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go"
+	mockserver "github.com/mock-server/mockserver-monorepo/mockserver-testcontainers/go/v9"
 )
 
 func Example() {
@@ -85,12 +85,12 @@ Returns the mapped host port for the MockServer container port 1080.
 
 ### `MockServerContainer.Client(ctx) (*mockserverclient.Client, error)`
 
-Returns a [`mockserver-client-go`](https://pkg.go.dev/github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7)
+Returns a [`mockserver-client-go`](https://pkg.go.dev/github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9)
 control-plane client already pointed at the container's mapped host and port — the Go
 equivalent of the Java module's `getClient()` helper:
 
 ```go
-import mockserverclient "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+import mockserverclient "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 
 client, err := ctr.Client(ctx)
 if err != nil {
@@ -104,7 +104,7 @@ _, err = client.When(
 )
 ```
 
-The client is bundled via the `mockserver-client-go/v7` module. The `/v7` Semantic Import
+The client is bundled via the `mockserver-client-go/vN` module (N = the release major). The `/vN` Semantic Import
 Versioning suffix on that module's path is what lets this module depend on it as a normal
 `require`, so downstream `go get` of this module resolves the published client cleanly.
 

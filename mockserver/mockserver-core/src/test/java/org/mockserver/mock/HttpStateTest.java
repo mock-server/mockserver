@@ -2926,7 +2926,7 @@ public class HttpStateTest {
         assertThat(responseWriter.response.getStatusCode(), is(200));
         assertThat(responseWriter.response.getBody().getContentType(), is(MediaType.create("text", "x-go").withCharset(UTF_8).toString()));
         String body = responseWriter.response.getBodyAsString();
-        assertThat(body, containsString("mockserver \"github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7\""));
+        assertThat(body, containsString("mockserver \"github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9\""));
         assertThat(body, containsString("client := mockserver.New(\"localhost\", 1080)"));
         assertThat(body, containsString("client.Upsert(e)"));
         assertThat(body, containsString("/somePath"));

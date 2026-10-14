@@ -1,8 +1,9 @@
 # Release Component: mockserver-client-go
 
-> **Module path:** `github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7`.
-> The `/v7` suffix is Go's Semantic Import Versioning marker for major version 7 — a
-> future major bump changes it (v8 → `/v8`, v9 → `/v9`), minor/patch releases do not.
+> **Module path:** `github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9`.
+> The `/vN` suffix is Go's Semantic Import Versioning marker for the release major N. A
+> major release changes it (`prepare.sh` runs `go_module_major.py --set <major>`);
+> minor and patch releases do not.
 > The publish **tag** is independent of the suffix and stays `mockserver-client-go/v${VERSION}`.
 
 ## Component Script (`scripts/release/components/go-client.sh`)
@@ -22,7 +23,7 @@ git push origin "${TAG}"
 
 # Trigger proxy indexing
 GOPROXY=https://proxy.golang.org GO111MODULE=on \
-  go get "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7@v${VERSION}" || true
+  go get "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9@v${VERSION}" || true
 
 echo "Go client ${TAG} published to pkg.go.dev"
 ```
@@ -32,7 +33,7 @@ echo "Go client ${TAG} published to pkg.go.dev"
 ```bash
 # Go client: verify module is indexed on pkg.go.dev
 curl -sf --retry 5 --retry-delay 30 \
-  "https://pkg.go.dev/github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7@v${RELEASE_VERSION}" \
+  "https://pkg.go.dev/github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9@v${RELEASE_VERSION}" \
   | grep -q "mockserver-client-go"
 ```
 

@@ -1,3 +1,6 @@
-# compiled binaries
+# compiled binaries (each example builds to a binary named after its directory)
+callback/callback
 create_expectation/create_expectation
+load_scenario/load_scenario
 modify_proxied_response/modify_proxied_response
+scenario/scenario

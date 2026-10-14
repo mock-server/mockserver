@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	mockserverclient "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+	mockserverclient "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 )
 
 func isDockerAvailable() bool {

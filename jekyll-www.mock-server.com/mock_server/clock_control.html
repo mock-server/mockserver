@@ -71,7 +71,7 @@ client.freeze_clock('2025-01-15T09:30:00Z')</code></pre>
     </div>
     <button class="accordion inner">Go</button>
     <div class="panel">
-        <pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+        <pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 
 client := mockserver.New("localhost", 1080)
 client.FreezeClock("2025-01-15T09:30:00Z")</code></pre>
@@ -152,7 +152,7 @@ client.advance_clock(3600000)</code></pre>
     </div>
     <button class="accordion inner">Go</button>
     <div class="panel">
-        <pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+        <pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 
 client := mockserver.New("localhost", 1080)
 client.AdvanceClock(3600000)</code></pre>
@@ -233,7 +233,7 @@ client.reset_clock</code></pre>
     </div>
     <button class="accordion inner">Go</button>
     <div class="panel">
-        <pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+        <pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 
 client := mockserver.New("localhost", 1080)
 client.ResetClock()</code></pre>
@@ -313,7 +313,7 @@ puts client.clock_status</code></pre>
     </div>
     <button class="accordion inner">Go</button>
     <div class="panel">
-        <pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
+        <pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
 
 client := mockserver.New("localhost", 1080)
 clockJson, _ := client.ClockStatus()</code></pre>

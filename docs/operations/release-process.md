@@ -239,6 +239,24 @@ non-`soft_fail` gate in the preflight pipeline on the release queue — see
 [Release Preflight Credential Gate](../infrastructure/ci-cd.md#release-preflight-credential-gate).
 It is also worth running by hand before a release.
 
+### Go modules and the `/vN` suffix
+
+Both Go modules (`mockserver-client-go`, `mockserver-testcontainers/go`) are published
+by a git tag named after their directory (`mockserver-client-go/vX.Y.Z`,
+`mockserver-testcontainers/go/vX.Y.Z`). Go's semantic import versioning also requires
+the module path to end in `/vN` for the release major `N`, or `proxy.golang.org`
+rejects the tag; 8.0.0 shipped with `/v7` and no suffix and was never installable.
+
+- `prepare.sh` runs `scripts/release/go_module_major.py --set <major>`, which rewrites
+  every reference to either module (go.mod files, imports, examples, docs, website
+  snippets, the Java and UI Go code generators) and adds the changed files to the
+  release commit. On a minor or patch release it changes nothing.
+- `client-go.sh` and `tc-go.sh` sync to `origin/master` (so the tag lands on a commit
+  with the rewrite) and run `go_module_major.py --check <major>` before tagging; a
+  mismatch fails the step instead of pushing an uninstallable tag. A dry run only
+  reports the mismatch, because prepare's rewrite has not run.
+- `changelog.md` and `docs/plans/` are historical and are never rewritten.
+
 ### Release preflight performance gate
 
 `scripts/release/check-perf-preflight.sh` stops a release from publishing on top of

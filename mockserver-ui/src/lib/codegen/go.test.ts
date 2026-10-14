@@ -30,7 +30,7 @@ describe('standardToGo — scaffold', () => {
   it('imports only the typed client and registers via Upsert, never json.Unmarshal', () => {
     const code = standardToGo(m(), staticOk, URL);
     expect(code).toContain('package main');
-    expect(code).toContain('mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"');
+    expect(code).toContain('mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"');
     expect(code).toContain('client := mockserver.New("localhost", 1080)');
     expect(code).toContain('expectation := mockserver.Expectation{');
     expect(code).toContain('if _, err := client.Upsert(expectation); err != nil {');
