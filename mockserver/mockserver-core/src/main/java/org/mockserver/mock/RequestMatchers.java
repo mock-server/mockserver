@@ -193,8 +193,9 @@ public class RequestMatchers extends MockServerMatcherNotifier {
     // not consulted for the Expectation overload), so each cold-path diagnostic
     // allocates a matcher — acceptable on this already-gated, no-match cold path.
     private volatile MatcherBuilder nonFailFastMatcherBuilder;
-    // The 404 closest-match hint checks at most this many expectations, in serving order, so a miss
-    // never costs more than this many evaluations however many expectations are stored.
+    // The 404 closest-match hint checks at most this many expectations, in serving order, and the INFO
+    // closest-match walk at most this many beyond the request's candidates, so neither costs a miss more
+    // than this many evaluations however many expectations are stored.
     static final int DEFAULT_CLOSEST_MATCH_MAX_EVALUATIONS = 1000;
     static final int CLOSEST_MATCH_MEMO_MAX_ENTRIES = 256;
     static final int CLOSEST_MATCH_MEMO_MAX_RECHECKED = 256;
@@ -906,6 +907,9 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         // the request actually carries a namespace — the common no-namespace hot
         // path does no extra work (the counter stays 0 and is never read).
         int namespaceSkipped = 0;
+        // set only when the cold-path reconciliation below stops evaluating at the cap
+        int expectationsChecked = 0;
+        int expectationsNotChecked = 0;
 
         // Per-candidate detail is read only at INFO or finer (the "because" text, closest-match
         // selection, TRACE events), so it is recorded only then. Otherwise one non-detailed
@@ -1109,6 +1113,8 @@ public class RequestMatchers extends MockServerMatcherNotifier {
             // silence DEBUG diagnostic below is identical to the un-indexed scan (the
             // narrowed candidate scan above only saw the candidate subset's skips).
             namespaceSkipped = accumulator.namespaceSkipped;
+            expectationsChecked = accumulator.checked;
+            expectationsNotChecked = accumulator.notChecked;
         }
 
         if (matchedExpectation == null && closestMatchExpectation != null && mockServerLogger.isEnabledForInstance(Level.INFO)) {
@@ -1125,6 +1131,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
             // keeps fail-fast.
             int totalFields = applicableFieldCount(requestDefinition);
             int matchedFields = countMatchedApplicableFields(closestMatchExpectation, requestDefinition, totalFields, closestMatchFailures);
+            int expectationsConsidered = expectationsChecked + expectationsNotChecked;
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(EXPECTATION_NOT_MATCHED)
@@ -1132,7 +1139,8 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                     .setCorrelationId(requestDefinition.getLogCorrelationId())
                     .setHttpRequest(requestDefinition)
                     .setExpectation(closestMatchExpectation)
-                    .setMessageFormat("closest expectation:{}matched " + matchedFields + "/" + totalFields + " fields for request:{}")
+                    .setMessageFormat("closest expectation:{}matched " + matchedFields + "/" + totalFields + " fields for request:{}"
+                        + (expectationsNotChecked > 0 ? "only " + expectationsChecked + " of " + expectationsConsidered + " expectations were checked, so a closer one may exist" : ""))
                     .setArguments(closestMatchExpectation.clone(), requestDefinition)
             );
         }
@@ -1204,6 +1212,10 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         // scan — reconciled back so the namespaced-silence DEBUG diagnostic matches the
         // un-indexed scan (only counted when the request carries a namespace).
         int namespaceSkipped = 0;
+        // expectations in the request's namespace that the closest match was chosen from, and those
+        // left unevaluated by the evaluation cap
+        int checked = 0;
+        int notChecked = 0;
 
         // first with the fewest failures wins (strict <), as in the in-loop accumulation
         void offer(Expectation expectation, int failures) {
@@ -1247,6 +1259,11 @@ public class RequestMatchers extends MockServerMatcherNotifier {
      * Candidates, recognised by identity, are not evaluated again. The candidate scan's closest match
      * stands in for all of them: it is offered where its own matcher is reached or, if that matcher has
      * left the store, at the position of its scan-time sort key.
+     * <p>
+     * At most {@code closestMatchMaxEvaluations} non-candidates are evaluated, in serving order, so a miss
+     * never logs or evaluates more than that many beyond its candidates. Past the cap the walk still counts
+     * namespace skips and schedules the lazy removal of every inactive matcher (an inactive matcher never
+     * matches, so this is the outcome an evaluation would have had), and counts the rest as not checked.
      */
     private ClosestMatchAccumulator fullScanClosestMatchAndLazyRemoval(RequestDefinition requestDefinition, boolean recordDetailedDifferences, MatchDifference sharedMatchDifference, List<HttpRequestMatcher> candidates, Expectation candidateClosestExpectation, HttpRequestMatcher candidateClosestMatcher, int candidateClosestFailures) {
         ClosestMatchAccumulator accumulator = new ClosestMatchAccumulator();
@@ -1258,6 +1275,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         SortableExpectationId removedStandInSortableId = standInPending && !containsByIdentity(sortedMatchers, candidateClosestMatcher)
             ? candidateClosestExpectation.getSortableId()
             : null;
+        int evaluationsLeft = closestMatchMaxEvaluations;
         for (HttpRequestMatcher httpRequestMatcher : sortedMatchers) {
             if (standInPending && (httpRequestMatcher == candidateClosestMatcher
                 || (removedStandInSortableId != null && EXPECTATION_SORTABLE_PRIORITY_COMPARATOR.compare(removedStandInSortableId, sortableIdOf(httpRequestMatcher)) < 0))) {
@@ -1271,8 +1289,18 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                 continue;
             }
             if (candidateSet.contains(httpRequestMatcher)) {
+                accumulator.checked++;
                 continue;
             }
+            if (evaluationsLeft == 0) {
+                if (!httpRequestMatcher.isResponseInProgress() && !httpRequestMatcher.isActive()) {
+                    scheduleLazyRemoval(httpRequestMatcher);
+                }
+                accumulator.notChecked++;
+                continue;
+            }
+            evaluationsLeft--;
+            accumulator.checked++;
             MatchDifference matchDifference = recordDetailedDifferences
                 ? new MatchDifference(true, requestDefinition)
                 : sharedMatchDifference;
@@ -2431,7 +2459,8 @@ public class RequestMatchers extends MockServerMatcherNotifier {
     }
 
     /**
-     * Instance-scoped override of the closest-match evaluation cap, for tests; production keeps
+     * Instance-scoped override of the closest-match evaluation cap (the hint and the INFO closest-match
+     * walk), for tests; production keeps
      * {@link #DEFAULT_CLOSEST_MATCH_MAX_EVALUATIONS}.
      */
     RequestMatchers withClosestMatchMaxEvaluations(int maxEvaluations) {
