@@ -284,7 +284,8 @@ public final class ExpectationLinter {
      * The per-expectation checks, at warning severity or above, and the budgeted shadowing check for the expectations
      * one initialization file has just loaded, compared in the order the file lists them at each priority. Logs one
      * WARN naming the file and never changes what was loaded. Ids in {@code generatedIds} were assigned by the loader,
-     * not written in the file, so messages name those expectations by method and path instead.
+     * not written in the file, so messages name those expectations by method and path instead. A later entry that repeats
+     * an id is reported as {@code DUPLICATE_ID} and left out of the other checks, as the load keeps only the first.
      * <p>
      * Returns a digest of the problems found, 0 when there are none. The WARN is skipped when the digest equals
      * {@code previousDigest}, so a reload that finds the same problems in the same file does not repeat them.
@@ -302,8 +303,9 @@ public final class ExpectationLinter {
             String id = generatedIds.contains(expectation.getId()) ? null : expectation.getId();
             subjects.add(new Subject(expectation, index, id, summary(expectation)));
         }
-        subjects.sort(Comparator.comparingInt((Subject subject) -> -subject.expectation.getPriority()).thenComparingInt(subject -> subject.order));
         Report report = new Report();
+        subjects = removeReplacedDuplicates(report, subjects, Collections.nCopies(loaded.length, 0));
+        subjects.sort(Comparator.comparingInt((Subject subject) -> -subject.expectation.getPriority()).thenComparingInt(subject -> subject.servingPosition));
         lint(report, subjects, true, false);
         if (report.issues.isEmpty()) {
             return 0;
