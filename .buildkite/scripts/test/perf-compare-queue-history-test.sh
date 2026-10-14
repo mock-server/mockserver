@@ -29,11 +29,15 @@ B="$WORK/bucket"; mkdir -p "$WORK/bin" "$B"
 cat > "$WORK/bin/aws" <<'STUB'
 #!/usr/bin/env bash
 # s3 cp <src> <dst> and s3 ls s3://<bucket>/<prefix> --recursive, against $FAKE_BUCKET.
+# FAKE_LS_FAIL=1|empty: the listing fails, or returns nothing. FAKE_CP_FAIL=1: every download fails.
 case "$1 $2" in
   "s3 cp")
     if [[ "$4" == s3://* ]]; then k="${4#s3://*/}"; mkdir -p "$FAKE_BUCKET/$(dirname "$k")"; cp "$3" "$FAKE_BUCKET/$k"
+    elif [ -n "${FAKE_CP_FAIL:-}" ]; then echo "download failed: $3 (403) Forbidden" >&2; exit 1
     else cp "$FAKE_BUCKET/${3#s3://*/}" "$4"; fi ;;
   "s3 ls")
+    [ "${FAKE_LS_FAIL:-}" != empty ] || exit 0
+    [ -z "${FAKE_LS_FAIL:-}" ] || { echo "An error occurred (AccessDenied) when calling the ListObjectsV2 operation" >&2; exit 254; }
     p="${3#s3://*/}"
     [ -d "$FAKE_BUCKET/$p" ] && (cd "$FAKE_BUCKET" && find "$p" -type f | sort | sed 's/^/2026-10-01 00:00:00 100 /') ;;
   *) exit 1 ;;
@@ -66,7 +70,7 @@ compare() { # name head_result_file -> log in $WORK/<name>.log, exit code in $WO
   local rc=0
   : > "$WORK/$1.meta"; : > "$WORK/$1.meta.annotate"
   env -i PATH="$WORK/bin:$PATH" HOME="${HOME:-/tmp}" TMPDIR="$WORK" FAKE_BUCKET="$B" HEAD_RESULT="$2" META_LOG="$WORK/$1.meta" \
-    META_SET_FAIL="${META_SET_FAIL:-}" \
+    META_SET_FAIL="${META_SET_FAIL:-}" FAKE_LS_FAIL="${FAKE_LS_FAIL:-}" FAKE_CP_FAIL="${FAKE_CP_FAIL:-}" \
     PERF_BUDGETS_COMMIT=fixture bash "$COMPARE" >"$WORK/$1.log" 2>&1 || rc=$?
   echo "$rc" > "$WORK/$1.rc"
 }
@@ -125,6 +129,22 @@ check "unreadable object: exit 1" "1" "$(cat "$WORK/corrupt.rc")"
 check "unreadable object: named as unreadable" "1" "$(grep -c 'UNREADABLE.*2026-09-07T04-00-00Z__corrupt000.json' "$WORK/corrupt.log" || true)"
 check "unreadable object: not reported as another queue" "0" "$(grep -c 'dropping 2026-09-07T04-00-00Z__corrupt000.json' "$WORK/corrupt.log" || true)"
 check "unreadable object: still in the bucket" "yes" "$([ -f "$B/runs/master/2026-09-07T04-00-00Z__corrupt000.json" ] && echo yes || echo no)"
+
+echo "--- 5. a history that cannot be read fails the daily compare; it is not read as warming up"
+rm -f "$B/runs/master/2026-09-07T04-00-00Z__corrupt000.json"
+history_fails() { # name timestamp -> "rc|errors|warming up|persisted" (the FAKE_* failure comes from the caller)
+  jq --arg ts "$2" '.timestamp_utc = $ts' "$WORK/head-perf.json" > "$WORK/head-$1.json"
+  compare "$1" "$WORK/head-$1.json"
+  echo "$(cat "$WORK/$1.rc")|$(grep -c 'build FAILED' "$WORK/$1.log" || true)|$(grep -c 'Perf baseline warming up' "$WORK/$1.log" || true)|$(find "$B" -name "${2//:/-}__*" | wc -l | tr -d ' ')"
+}
+check "the listing fails: exit 1, an error, not warming up, the run still persisted" "1|1|0|1" "$(FAKE_LS_FAIL=1 history_fails lsfail 2026-10-02T01:00:00Z)"
+check "the listing lacks the run just written: the same" "1|1|0|1" "$(FAKE_LS_FAIL=empty history_fails lsempty 2026-10-02T02:00:00Z)"
+check "a listed run cannot be downloaded: the same" "1|1|0|1" "$(FAKE_CP_FAIL=1 history_fails cpfail 2026-10-02T03:00:00Z)"
+check "the listing failure names the history" "1" "$(grep -c 'Perf history could not be listed' "$WORK/lsfail.log" || true)"
+check "the download failure names the object" "1" "$(grep -c 'could not be read.*runs/master/' "$WORK/cpfail.log" || true)"
+compare readable "$WORK/head-perf.json"
+check "control: a readable history still reaches the compare" "0|0" \
+  "$(cat "$WORK/readable.rc")|$(grep -c 'Perf baseline warming up' "$WORK/readable.log" || true)"
 
 if [ "$FAILS" -gt 0 ]; then echo "FAILED: $FAILS check(s)" >&2; exit 1; fi
 echo "all compare queue-history checks passed"

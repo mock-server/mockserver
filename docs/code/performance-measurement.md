@@ -1287,8 +1287,8 @@ perf_figures.json only"]
   transform errors) fails the step and is not persisted, so the history holds only runs the page
   could show. It records the key as the build meta-data
   `perf-xl-persisted-key`. Because the step has just written the run, a history listing that
-  fails or lacks it fails the step; it is not read as an empty history. (The daily compare still
-  reads a failed listing as no prior runs and reports "warming up".) The one metric it compares is
+  fails or lacks it, or a listed run that cannot be downloaded, fails the step; it is not read as
+  a shorter history. The daily compare does the same. The one metric it compares is
   `serving_rw_multik6.healthy_ceiling_rps` (budget: down, 15%, `hw`, notify-only), against
   `runs-perf-xl/` runs with the same fingerprint: settle, rule, bound, quiet-second floor and SUT
   diagnostics tier.

@@ -653,29 +653,32 @@ BASE_DIR="$WORK/baseline"; mkdir -p "$BASE_DIR"
 if [ -n "${PERF_BASELINE_DIR:-}" ]; then
   cp "$PERF_BASELINE_DIR"/*.json "$BASE_DIR/" 2>/dev/null || true
 elif $HAVE_AWS; then
-  # List, drop the just-uploaded current key, take the most recent N by name.
-  # grep -vxF: exact whole-line fixed-string match (the key has dots — a plain
-  # regex grep would treat them as wildcards and over-exclude).
-  if [ "$ARM_MODE" = true ]; then
-    # This step has just written $KEY, so a listing that fails or lacks it is an error, not an
-    # empty history. (The daily path below still reads a failed listing as no prior runs.)
-    if ! LS_OUT="$(aws s3 ls "s3://${BUCKET}/${HISTORY_PREFIX}/${BRANCH}/" --recursive 2>"$WORK/ls.err")" \
-       || ! awk -v k="$KEY" '$4 == k { found = 1 } END { exit !found }' <<<"$LS_OUT"; then
-      annotate "error" ":no_entry: **Multi-k6 history could not be listed — build FAILED** — \`${COMMIT:0:10}\` on \`${BRANCH}\`
+  # This step has just written $KEY, so a listing that fails or lacks it, or a listed run that
+  # cannot be read, is an error: read as fewer prior runs it would report "warming up" instead.
+  if ! LS_OUT="$(aws s3 ls "s3://${BUCKET}/${HISTORY_PREFIX}/${BRANCH}/" --recursive 2>"$WORK/ls.err")" \
+     || ! awk -v k="$KEY" '$4 == k { found = 1 } END { exit !found }' <<<"$LS_OUT"; then
+    annotate "error" ":no_entry: **Perf history could not be listed — build FAILED** — \`${COMMIT:0:10}\` on \`${BRANCH}\`
 
 Listing \`s3://${BUCKET}/${HISTORY_PREFIX}/${BRANCH}/\` failed, or did not return \`${KEY}\`, which this step had just written. The run is persisted, but its baseline could not be read, so it was not compared and is not reported as warming up.
 \`\`\`
 $(head -c 600 "$WORK/ls.err" 2>/dev/null)
 \`\`\`"
-      exit 1
-    fi
-    mapfile -t KEYS < <(awk '{print $4}' <<<"$LS_OUT" | grep -vxF "$KEY" | sort | tail -n "$BASELINE_N")
-  else
-  mapfile -t KEYS < <(aws s3 ls "s3://${BUCKET}/${HISTORY_PREFIX}/${BRANCH}/" --recursive 2>/dev/null | awk '{print $4}' | grep -vxF "$KEY" | sort | tail -n "$BASELINE_N")
+    exit 1
   fi
+  # Drop the just-written key, take the most recent N by name. grep -vxF: an exact whole-line
+  # fixed-string match (the key has dots, which a regex grep would read as wildcards).
+  mapfile -t KEYS < <(awk '{print $4}' <<<"$LS_OUT" | grep -vxF "$KEY" | sort | tail -n "$BASELINE_N")
   for k in "${KEYS[@]:-}"; do
     [ -n "$k" ] || continue
-    aws s3 cp "s3://${BUCKET}/${k}" "$BASE_DIR/$(basename "$k")" --only-show-errors 2>/dev/null || true
+    if ! aws s3 cp "s3://${BUCKET}/${k}" "$BASE_DIR/$(basename "$k")" --only-show-errors 2>"$WORK/cp.err"; then
+      annotate "error" ":no_entry: **Perf baseline object could not be read — build FAILED** — \`${k}\`
+
+The history listing returned it, but downloading it failed, so the baseline window cannot be trusted. The run is persisted, but it was not compared and is not reported as warming up.
+\`\`\`
+$(head -c 600 "$WORK/cp.err" 2>/dev/null)
+\`\`\`"
+      exit 1
+    fi
   done
 fi
 
