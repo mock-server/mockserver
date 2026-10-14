@@ -916,15 +916,15 @@ public class ConfigurationProperties {
     }
 
     public static int maxLoggedMatchFailures() {
-        return readIntegerProperty(MOCKSERVER_MAX_LOGGED_MATCH_FAILURES, "MOCKSERVER_MAX_LOGGED_MATCH_FAILURES", -1);
+        return readIntegerProperty(MOCKSERVER_MAX_LOGGED_MATCH_FAILURES, "MOCKSERVER_MAX_LOGGED_MATCH_FAILURES", 50);
     }
 
     /**
      * The most "request didn't match expectation" log events written per request at INFO (usually one per expectation
      * compared; an OpenAPI expectation writes one per operation and a conditional one per branch it tries). Every
      * expectation is still compared, so the match and the closest-match log event are unchanged; on an unmatched request
-     * that event says how many were left out. Default is -1 (any negative value), which writes all of them, as before;
-     * 0 writes none. Lowering it makes unmatched requests much cheaper when many expectations are stored.
+     * that event says how many were left out. Default is 50; -1 (any negative value) writes all of them and 0 writes
+     * none. Lowering it makes unmatched requests much cheaper when many expectations are stored.
      *
      * @param maxLoggedMatchFailures the most did-not-match log events per request, negative for no limit
      */

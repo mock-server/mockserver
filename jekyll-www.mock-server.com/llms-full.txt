@@ -886,8 +886,8 @@ Include detailed reasons why each non-matching field did not match in log entrie
 - Environment variable: MOCKSERVER_DETAILED_MATCH_FAILURES
 
 **maxLoggedMatchFailures**
-The most "request didn't match expectation" log entries written per request at INFO (usually one per expectation compared); every expectation is still compared, and the closest-match entry says how many were left out. Set it low to make unmatched requests cheap when many expectations are stored.
-- Default: -1 (no limit; 0 logs none)
+The most "request didn't match expectation" log entries written per request at INFO (usually one per expectation compared); every expectation is still compared, and the closest-match entry says how many were left out. Set it low to make unmatched requests cheap when many expectations are stored, or to -1 to log every comparison (the default before 9.0.0).
+- Default: 50 (-1 for no limit; 0 logs none)
 - Environment variable: MOCKSERVER_MAX_LOGGED_MATCH_FAILURES
 
 **metricsEnabled**
@@ -2533,7 +2533,7 @@ Or by expectation IDs:
 | MOCKSERVER_SOCKET_CONNECTION_TIMEOUT | mockserver.socketConnectionTimeout | 20000 |
 | MOCKSERVER_MAX_FUTURE_TIMEOUT | mockserver.maxFutureTimeout | 90000 |
 | MOCKSERVER_DETAILED_MATCH_FAILURES | mockserver.detailedMatchFailures | true |
-| MOCKSERVER_MAX_LOGGED_MATCH_FAILURES | mockserver.maxLoggedMatchFailures | -1 |
+| MOCKSERVER_MAX_LOGGED_MATCH_FAILURES | mockserver.maxLoggedMatchFailures | 50 |
 | MOCKSERVER_MATCHERS_FAIL_FAST | mockserver.matchersFailFast | true |
 | MOCKSERVER_ENABLE_CORS_FOR_API | mockserver.enableCORSForAPI | false |
 | MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES | mockserver.enableCORSForAllResponses | false |

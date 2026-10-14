@@ -45,7 +45,7 @@ import static org.mockserver.model.HttpResponse.response;
  * else changes. The store mixes in expectations that write no entry for an HTTP request (DNS, binary, used-up OpenAPI),
  * one entry per operation (OpenAPI) or one per branch tried (conditional, served past the limit by its else branch).
  *
- * <p>The differential oracle is the same store and request with no limit (the default): the limited run must
+ * <p>The differential oracle is the same store and request with no limit (-1): the limited run must
  * return the same expectation, leave the same store after its lazy removals, and log the same entries in the same
  * order, apart from the did-not-match entries after the first {@code limit}, which are left out,
  * and the closest-match line, which names how many were. Instance configuration and a capturing logger only, so it
@@ -239,7 +239,7 @@ public class RequestMatchersMaxLoggedMatchFailuresTest {
                           for (boolean withOtherKinds : new boolean[]{false, true}) {
                             List<Spec> specs = corpus(fillers, withOtherKinds);
                             for (HttpRequest probe : probes()) {
-                                Run reference = run(configurationFor(logLevel, detailed, failFast, null), specs, threshold, probe);
+                                Run reference = run(configurationFor(logLevel, detailed, failFast, -1), specs, threshold, probe);
                                 for (int limit : new int[]{0, 1, 2, 5, 1_000_000}) {
                                     String label = logLevel + " detailed=" + detailed + " failFast=" + failFast + " threshold=" + threshold + " fillers=" + fillers + " otherKinds=" + withOtherKinds
                                         + " limit=" + limit + " probe=" + probe.getMethod().getValue() + " " + probe.getPath().getValue() + " ns=" + probe.getFirstHeader(NAMESPACE_HEADER);
@@ -348,7 +348,25 @@ public class RequestMatchersMaxLoggedMatchFailuresTest {
     }
 
     @Test
-    public void defaultIsNoLimit() {
-        assertThat(new Configuration().maxLoggedMatchFailures(), is(-1));
+    public void defaultIsFifty() {
+        assertThat(new Configuration().maxLoggedMatchFailures(), is(50));
+    }
+
+    @Test
+    public void defaultLogsFiftyDidNotMatchEntriesAndCountsTheRest() {
+        HttpRequest probe = request().withMethod("GET").withPath("/nowhere");
+        List<Spec> specs = new ArrayList<>();
+        for (int i = 0; i < 60; i++) {
+            specs.add(new Spec(String.format("f-%04d", i), request().withMethod("GET").withPath("/filler/" + i), null, false, null, 0, i + 1));
+        }
+        for (int threshold : new int[]{INDEXED, UNINDEXED}) {
+            Run byDefault = run(configurationFor("INFO", true, true, null), specs, threshold, probe);
+            assertThat(byDefault.rendered().stream().filter(RequestMatchersMaxLoggedMatchFailuresTest::isPerExpectationNotMatched).count(), is(50L));
+            assertThat(byDefault.rendered().stream().filter(RequestMatchersMaxLoggedMatchFailuresTest::isClosestMatch).findFirst().orElse(""),
+                containsString("10 further did-not-match entries were not logged (maxLoggedMatchFailures)"));
+
+            Run unlimited = run(configurationFor("INFO", true, true, -1), specs, threshold, probe);
+            assertThat(unlimited.rendered().stream().filter(RequestMatchersMaxLoggedMatchFailuresTest::isPerExpectationNotMatched).count(), is(60L));
+        }
     }
 }

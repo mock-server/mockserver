@@ -150,8 +150,10 @@ public class RequestMatchersClosestMatchWalkCapTest {
         }
     }
 
+    // every did-not-match entry is logged (no maxLoggedMatchFailures limit), so the entries show what the walk evaluated
     private static Configuration configurationFor(String logLevel, boolean detailed, boolean failFast) {
-        return configuration().logLevel(logLevel).detailedMatchFailures(detailed).matchersFailFast(failFast).matchNamespaceHeader(NAMESPACE_HEADER);
+        return configuration().logLevel(logLevel).detailedMatchFailures(detailed).matchersFailFast(failFast).matchNamespaceHeader(NAMESPACE_HEADER)
+            .maxLoggedMatchFailures(-1);
     }
 
     /**

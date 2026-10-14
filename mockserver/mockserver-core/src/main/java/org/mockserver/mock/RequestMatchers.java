@@ -921,7 +921,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         final boolean diagnosticsEmittable = mockServerLogger.isEnabledForInstance(Level.INFO);
         final boolean recordDetailedDifferences = configuration.detailedMatchFailures()
             && diagnosticsEmittable;
-        // null (no limit, the default) unless maxLoggedMatchFailures is set and INFO entries are written
+        // null (no limit) when maxLoggedMatchFailures is negative or INFO entries are not written
         final NotMatchedLogBudget notMatchedLogBudget = diagnosticsEmittable
             ? NotMatchedLogBudget.of(configuration.maxLoggedMatchFailures())
             : null;

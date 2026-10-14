@@ -3047,8 +3047,8 @@ public class ConfigurationTest {
     public void shouldSetAndGetMaxLoggedMatchFailures() {
         int original = ConfigurationProperties.maxLoggedMatchFailures();
         try {
-            // then - default value (-1, no limit)
-            assertThat(configuration.maxLoggedMatchFailures(), equalTo(-1));
+            // then - default value
+            assertThat(configuration.maxLoggedMatchFailures(), equalTo(50));
 
             // when - system property setter
             ConfigurationProperties.maxLoggedMatchFailures(20);
@@ -3082,7 +3082,7 @@ public class ConfigurationTest {
             // a value that is not a number falls back to the default
             clearPropertyAndCache("mockserver.maxLoggedMatchFailures");
             System.setProperty("mockserver.maxLoggedMatchFailures", "ten");
-            assertThat(ConfigurationProperties.maxLoggedMatchFailures(), equalTo(-1));
+            assertThat(ConfigurationProperties.maxLoggedMatchFailures(), equalTo(50));
         } finally {
             clearPropertyAndCache("mockserver.maxLoggedMatchFailures");
         }

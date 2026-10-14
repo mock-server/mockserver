@@ -196,8 +196,15 @@ test.describe('Dashboard (OBS)', () => {
 
   test('E2E-OBS-1: ~150 small expectations no longer shrink the live window, and the banner names the log messages', async ({ page, request }) => {
     const tag = stamp();
-    await putExpectations(request, Array.from({ length: 150 }, (_, i) => ({ id: `obs-frame-${tag}-${i}`, httpRequest: { path: `/obs/frame-exp/${i}` }, httpResponse: { statusCode: 200 } })));
-    for (let i = 0; i < 50; i++) await request.get(`${ORIGIN}/obs/frame/${i}`);
+    // The banner needs every did-not-match entry: at the default limit (50 per request) the log stays under the frame budget.
+    const previousLimit = (await (await request.get(`${ORIGIN}/mockserver/configuration`)).json()).maxLoggedMatchFailures;
+    expect((await request.put(`${ORIGIN}/mockserver/configuration`, { data: { maxLoggedMatchFailures: -1 } })).ok()).toBeTruthy();
+    try {
+      await putExpectations(request, Array.from({ length: 150 }, (_, i) => ({ id: `obs-frame-${tag}-${i}`, httpRequest: { path: `/obs/frame-exp/${i}` }, httpResponse: { statusCode: 200 } })));
+      for (let i = 0; i < 50; i++) await request.get(`${ORIGIN}/obs/frame/${i}`);
+    } finally {
+      await request.put(`${ORIGIN}/mockserver/configuration`, { data: { maxLoggedMatchFailures: previousLimit } });
+    }
     await gotoView(page, 'traffic');
     await expect(trafficRow(page, '/obs/frame/49')).toBeVisible();
     // 50 requests with no body are far under the 100-row window and the 16 MB update.
