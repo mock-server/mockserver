@@ -2,9 +2,7 @@ package org.mockserver.serialization.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.mockserver.model.ExpectationId;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.model.ObjectWithJsonToString;
-import org.mockserver.model.OpenAPIDefinition;
 import org.mockserver.serialization.deserializers.body.VerificationHttpResponseDTODeserializer;
 import org.mockserver.verify.Disposition;
 import org.mockserver.verify.Verification;
@@ -26,11 +24,7 @@ public class VerificationDTO extends ObjectWithJsonToString implements DTO<Verif
 
     public VerificationDTO(Verification verification) {
         if (verification != null) {
-            if (verification.getHttpRequest() instanceof HttpRequest) {
-                httpRequest = new HttpRequestDTO((HttpRequest) verification.getHttpRequest());
-            } else if (verification.getHttpRequest() instanceof OpenAPIDefinition) {
-                httpRequest = new OpenAPIDefinitionDTO((OpenAPIDefinition) verification.getHttpRequest());
-            }
+            httpRequest = RequestDefinitionDTO.of(verification.getHttpRequest());
             httpResponse = verification.getHttpResponse() != null ? new HttpResponseDTO(verification.getHttpResponse()) : null;
             expectationId = verification.getExpectationId();
             times = new VerificationTimesDTO(verification.getTimes());

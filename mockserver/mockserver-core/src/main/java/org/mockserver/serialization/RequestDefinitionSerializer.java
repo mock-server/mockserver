@@ -7,14 +7,9 @@ import com.google.common.base.Joiner;
 import org.apache.commons.lang3.Strings;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.ConditionalRequestDefinition;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.OpenAPIDefinition;
 import org.mockserver.model.RequestDefinition;
-import org.mockserver.serialization.model.ConditionalRequestDefinitionDTO;
-import org.mockserver.serialization.model.HttpRequestDTO;
 import org.mockserver.serialization.model.HttpRequestPrettyPrintedDTO;
-import org.mockserver.serialization.model.OpenAPIDefinitionDTO;
 import org.mockserver.serialization.model.RequestDefinitionDTO;
 import org.mockserver.validator.jsonschema.JsonSchemaRequestDefinitionValidator;
 import org.slf4j.event.Level;
@@ -56,16 +51,12 @@ public class RequestDefinitionSerializer implements Serializer<RequestDefinition
     }
 
     public String serialize(boolean prettyPrint, RequestDefinition requestDefinition) {
+        if (requestDefinition == null) {
+            return "";
+        }
+        Object requestDefinitionDTO = toDTO(prettyPrint, requestDefinition);
         try {
-            if (requestDefinition instanceof HttpRequest) {
-                return objectWriter.writeValueAsString(prettyPrint ? new HttpRequestPrettyPrintedDTO((HttpRequest) requestDefinition) : new HttpRequestDTO((HttpRequest) requestDefinition));
-            } else if (requestDefinition instanceof OpenAPIDefinition) {
-                return objectWriter.writeValueAsString(new OpenAPIDefinitionDTO((OpenAPIDefinition) requestDefinition));
-            } else if (requestDefinition instanceof ConditionalRequestDefinition) {
-                return objectWriter.writeValueAsString(new ConditionalRequestDefinitionDTO((ConditionalRequestDefinition) requestDefinition));
-            } else {
-                return "";
-            }
+            return objectWriter.writeValueAsString(requestDefinitionDTO);
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -125,15 +116,16 @@ public class RequestDefinitionSerializer implements Serializer<RequestDefinition
     private static Object[] toDTOs(boolean prettyPrint, RequestDefinition[] requestDefinitions) {
         Object[] requestDefinitionDTOs = new Object[requestDefinitions.length];
         for (int i = 0; i < requestDefinitions.length; i++) {
-            if (requestDefinitions[i] instanceof HttpRequest) {
-                requestDefinitionDTOs[i] = prettyPrint ? new HttpRequestPrettyPrintedDTO((HttpRequest) requestDefinitions[i]) : new HttpRequestDTO((HttpRequest) requestDefinitions[i]);
-            } else if (requestDefinitions[i] instanceof OpenAPIDefinition) {
-                requestDefinitionDTOs[i] = new OpenAPIDefinitionDTO((OpenAPIDefinition) requestDefinitions[i]);
-            } else if (requestDefinitions[i] instanceof ConditionalRequestDefinition) {
-                requestDefinitionDTOs[i] = new ConditionalRequestDefinitionDTO((ConditionalRequestDefinition) requestDefinitions[i]);
-            }
+            requestDefinitionDTOs[i] = toDTO(prettyPrint, requestDefinitions[i]);
         }
         return requestDefinitionDTOs;
+    }
+
+    private static Object toDTO(boolean prettyPrint, RequestDefinition requestDefinition) {
+        if (prettyPrint && requestDefinition instanceof HttpRequest) {
+            return new HttpRequestPrettyPrintedDTO((HttpRequest) requestDefinition);
+        }
+        return RequestDefinitionDTO.of(requestDefinition);
     }
 
     private RuntimeException failure(RequestDefinition[] requestDefinitions, Exception e) {

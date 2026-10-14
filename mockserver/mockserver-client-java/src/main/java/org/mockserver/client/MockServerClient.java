@@ -1796,7 +1796,7 @@ public class MockServerClient implements Stoppable {
         long deadlineNanos = System.nanoTime() + timeout.toNanos();
         String lastFailure;
         while (true) {
-            lastFailure = attemptVerification(verification);
+            lastFailure = attemptVerification(verification, false);
             if (lastFailure == null) {
                 return clientClass.cast(this);
             }
@@ -1859,7 +1859,7 @@ public class MockServerClient implements Stoppable {
 
         long deadlineNanos = System.nanoTime() + window.toNanos();
         while (true) {
-            if (attemptVerification(verification) == null) {
+            if (attemptVerification(verification, true) == null) {
                 throw new AssertionError("Found request matching verification within the " + window + " window that was expected to find no match" + NEW_LINE + verificationSerializer.serialize(verification));
             }
             if (System.nanoTime() - deadlineNanos >= 0) {
@@ -1873,9 +1873,11 @@ public class MockServerClient implements Stoppable {
      * Run a single verification attempt against the server, returning the failure message
      * (the verify endpoint's non-empty response body) or {@code null} when the verification passes.
      * Authentication failures are rethrown rather than treated as a verification failure so that
-     * the poll loop does not silently retry an unauthorized client.
+     * the poll loop does not silently retry an unauthorized client. With {@code failOnError} any
+     * other error, such as a verification the server rejects (400), is rethrown too: verifyNever
+     * reads a failure message as "not matched", so a swallowed error would let it pass.
      */
-    private String attemptVerification(Verification verification) throws AssertionError {
+    private String attemptVerification(Verification verification, boolean failOnError) throws AssertionError {
         try {
             String result = sendRequest(
                 request()
@@ -1889,6 +1891,9 @@ public class MockServerClient implements Stoppable {
         } catch (AuthenticationException authenticationException) {
             throw authenticationException;
         } catch (Throwable throwable) {
+            if (failOnError) {
+                throw new AssertionError(throwable.getMessage(), throwable);
+            }
             // never return null here: a null would be read as "verification passed" by the poll loop,
             // turning an exception into a silent false-positive
             String message = throwable.getMessage();

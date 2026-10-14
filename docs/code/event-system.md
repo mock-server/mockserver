@@ -260,6 +260,8 @@ sequenceDiagram
 
 The request matcher (`VerificationDTO.httpRequest`, `VerificationSequenceDTO.httpRequests`) is read by `RequestDefinitionDTODeserializer`, the same polymorphic reader expectations, retrieve and clear use, so an OpenAPI matcher (`specUrlOrPayload` plus optional `operationId`) counts only the recorded requests that match that operation. Binding the field to `HttpRequestDTO` instead silently drops the OpenAPI fields and leaves an empty matcher that counts every request.
 
+A DNS or binary matcher is parsed but not counted. DNS queries and binary messages are logged without their request definition, so a count would always be zero and `never()` would pass whatever was received. `HttpState.verify` therefore rejects such a verification, and any sequence containing one, with an `IllegalArgumentException`: `400` and a message saying they cannot be verified. It is not a `406` failed verification, which the Java client's `verifyNever` polls for as "not matched". The same applies when an expectation id resolves to a DNS or binary expectation. Clients build these DTOs with `RequestDefinitionDTO.of`, which maps every request definition type and throws for an unknown one instead of dropping it.
+
 #### Verification Summary on Failure
 
 When `detailedVerificationFailures` is on (the default) and a request-count, response or sequence verification fails, `VerificationFailureSummary` appends a `verification summary:` block after the existing message and its `closest match diff:`. Clients parse the message by prefix (the Node client cuts it at `, expected:<`), so the block is only ever appended, never inserted. For a request-count verification it states:

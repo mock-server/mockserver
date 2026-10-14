@@ -2503,6 +2503,7 @@ public class HttpState {
             // check valid expectation id and populate for error message
             verification.withRequest(resolveExpectationId(verification.getExpectationId()));
         }
+        rejectUnverifiable(Collections.singletonList(verification.getHttpRequest()));
         // T1.9 count-based verify fan-in. When enabled, aggregate each peer's LOCAL match
         // count with this node's before evaluating VerificationTimes, so a verify behind a
         // load balancer reflects fleet-wide traffic rather than only the node it hit.
@@ -2534,7 +2535,23 @@ public class HttpState {
         if (verificationSequence.getExpectationIds() != null && !verificationSequence.getExpectationIds().isEmpty()) {
             verificationSequence.withRequests(resolveExpectationIds(verificationSequence.getExpectationIds()));
         }
+        rejectUnverifiable(verificationSequence.getHttpRequests());
         mockServerLog.verify(verificationSequence, resultConsumer);
+    }
+
+    /**
+     * DNS and binary requests are logged without their request definition, so a verification of one would count
+     * zero whatever was received and never() would pass. Reject it as invalid input (400), not as a failed
+     * verification (406), which a client polling for "never matched" would read as success.
+     */
+    private static void rejectUnverifiable(List<RequestDefinition> requestDefinitions) {
+        if (requestDefinitions != null) {
+            for (RequestDefinition requestDefinition : requestDefinitions) {
+                if (requestDefinition instanceof DnsRequestDefinition || requestDefinition instanceof BinaryRequestDefinition) {
+                    throw new IllegalArgumentException("DNS and binary requests cannot be verified, because MockServer does not record them in its request log, found:" + NEW_LINE + requestDefinition);
+                }
+            }
+        }
     }
 
     public boolean handle(HttpRequest request, ResponseWriter responseWriter, boolean warDeployment) {

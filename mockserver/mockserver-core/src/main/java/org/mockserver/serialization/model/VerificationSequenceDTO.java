@@ -21,10 +21,8 @@ public class VerificationSequenceDTO extends ObjectWithReflectiveEqualsHashCodeT
     public VerificationSequenceDTO(VerificationSequence verification) {
         if (verification != null) {
             for (RequestDefinition httpRequest : verification.getHttpRequests()) {
-                if (httpRequest instanceof HttpRequest) {
-                    httpRequests.add(new HttpRequestDTO((HttpRequest) httpRequest));
-                } else if (httpRequest instanceof OpenAPIDefinition) {
-                    httpRequests.add(new OpenAPIDefinitionDTO((OpenAPIDefinition) httpRequest));
+                if (httpRequest != null) {
+                    httpRequests.add(RequestDefinitionDTO.of(httpRequest));
                 }
             }
             for (HttpResponse httpResponse : verification.getHttpResponses()) {

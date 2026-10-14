@@ -1607,6 +1607,18 @@ public class MockServerClientTest {
     }
 
     @Test
+    public void shouldVerifyNeverFailWhenTheServerCannotBeReached() {
+        // given - a failed attempt is an error, not "no match"
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean()))
+            .thenThrow(new RuntimeException("connection refused"));
+        when(mockVerificationSerializer.serialize(any(Verification.class))).thenReturn("verification_json");
+
+        AssertionError assertionError = assertThrows(AssertionError.class, () -> mockServerClient.verifyNever(request().withPath("/should_not_be_called"), java.time.Duration.ofMillis(250)));
+
+        assertThat(assertionError.getMessage(), containsString("connection refused"));
+    }
+
+    @Test
     public void shouldVerifyNeverRejectNullWindow() {
         IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, () -> mockServerClient.verifyNever(request(), (java.time.Duration) null));
         assertThat(illegalArgumentException.getMessage(), containsString("requires a non null non-negative Duration object"));

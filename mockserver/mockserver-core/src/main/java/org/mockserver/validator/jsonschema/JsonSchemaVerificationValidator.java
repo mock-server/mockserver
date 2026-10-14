@@ -18,6 +18,8 @@ public class JsonSchemaVerificationValidator extends JsonSchemaValidator {
             "requestDefinition",
             "conditionalRequestDefinition",
             "openAPIDefinition",
+            "binaryRequestDefinition",
+            "dnsRequestDefinition",
             "httpRequest",
             "httpResponse",
             "stringOrJsonSchema",
