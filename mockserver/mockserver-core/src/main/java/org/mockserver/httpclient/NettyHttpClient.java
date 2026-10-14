@@ -739,19 +739,20 @@ public class NettyHttpClient {
                 tunnelled.tryFailure(registration.cause());
                 return;
             }
+            // added after handlerAdded in practice, so the CONNECT codec is removed before the connect completes on any caller's thread
+            tunnelHandler.connectFuture().addListener(opened -> {
+                if (opened.isSuccess()) {
+                    tunnelled.trySuccess();
+                } else {
+                    tunnelled.tryFailure(tunnelRefused(tunnel, tunnelHandler, destination, opened.cause()));
+                }
+            });
             channel.connect(destination).addListener(connected -> {
                 if (!connected.isSuccess()) {
                     tunnelled.tryFailure(proxyFailure(tunnel, connected.cause()));
                     channel.close();
                 }
             });
-        });
-        tunnelHandler.connectFuture().addListener(opened -> {
-            if (opened.isSuccess()) {
-                tunnelled.trySuccess();
-            } else {
-                tunnelled.tryFailure(tunnelRefused(tunnel, tunnelHandler, destination, opened.cause()));
-            }
         });
         return tunnelled;
     }

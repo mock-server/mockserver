@@ -149,6 +149,9 @@ public class NettyHttpClientBinaryRelayConnectTest {
 
                 ChannelFuture connect = client.connectBinaryRelay(clientConnections.next(), InetSocketAddress.createUnresolved("db.example.com", 5432), secure, receiving(received));
                 Channel channel = connect.channel();
+                // called off the event loop: the connect must still complete only once the CONNECT codec is gone
+                CompletableFuture<ChannelHandler> firstOnConnect = new CompletableFuture<>();
+                connect.addListener(connected -> firstOnConnect.complete(channel.pipeline().first()));
                 try (Socket accepted = proxy.accept()) {
                     accepted.setSoTimeout(10_000);
                     String head = readHead(accepted);
@@ -159,7 +162,8 @@ public class NettyHttpClientBinaryRelayConnectTest {
                     accepted.getOutputStream().write("HTTP/1.1 200 Connection established\r\n\r\n".getBytes(StandardCharsets.US_ASCII));
                     assertThat(connect.await(10, TimeUnit.SECONDS), is(true));
                     assertThat(connect.isSuccess(), is(true));
-                    assertThat("the tunnel's handler is first", channel.pipeline().first(), is(instanceOf(HttpConnectProxyHandler.class)));
+                    assertThat("the tunnel's handler is first when the connect completes", firstOnConnect.get(10, TimeUnit.SECONDS), is(instanceOf(HttpConnectProxyHandler.class)));
+                    assertThat("the tunnel's handler is first", channel.eventLoop().submit(() -> channel.pipeline().first()).get(10, TimeUnit.SECONDS), is(instanceOf(HttpConnectProxyHandler.class)));
 
                     assertThroughTheTunnel(channel, accepted, received);
                 } finally {
