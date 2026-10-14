@@ -1508,6 +1508,16 @@ def _deserialize_request_definition(data: Any) -> Any | None:
     return HttpRequest.from_dict(data)
 
 
+def _deserialize_recorded_request(data: Any) -> Any | None:
+    """Deserialize one element of a recorded-requests retrieve. A DNS query is a
+    :class:`DnsRequestDefinition` and an HTTP request an :class:`HttpRequest`; a
+    binary message (``binaryData``) has no model here, so its dict is returned as is.
+    """
+    if isinstance(data, dict) and "binaryData" in data:
+        return data
+    return _deserialize_request_definition(data)
+
+
 @dataclass
 class ConnectionOptions:
     close_socket: bool | None = None

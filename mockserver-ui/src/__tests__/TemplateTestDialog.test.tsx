@@ -80,6 +80,26 @@ describe('TemplateTestDialog', () => {
     expect(mockTest.mock.calls[0]![1].request).toEqual({ method: 'POST', path: '/orders', body: 'abc' });
   });
 
+  it('offers only HTTP requests, not recorded DNS queries or binary messages', async () => {
+    const user = userEvent.setup();
+    useDashboardStore.setState({
+      recordedRequests: [
+        { key: 'dns_request', timestamp: '2026-10-13 10:00:02.000', value: { httpRequest: { dnsName: 'api.example.com', dnsType: 'A' } } },
+        { key: 'binary_request', timestamp: '2026-10-13 10:00:01.000', value: { httpRequest: { binaryData: 'AAEC' } } },
+        { key: 'r1_request', timestamp: '2026-10-13 10:00:00.000', value: { httpRequest: { method: 'POST', path: '/orders' } } },
+      ],
+    });
+    renderDialog();
+
+    await user.click(screen.getByRole('combobox', { name: 'Sample request' }));
+
+    const options = await screen.findAllByRole('option');
+    expect(options).toHaveLength(2);
+    expect(options[1]).toHaveTextContent('POST /orders');
+    expect(screen.queryByRole('option', { name: /10:00:02/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: /10:00:01/ })).not.toBeInTheDocument();
+  });
+
   it('loads the whole body of a recorded request the server shortened before using it', async () => {
     const user = userEvent.setup();
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ httpRequest: { method: 'PUT', path: '/big', body: 'the whole body' } })));

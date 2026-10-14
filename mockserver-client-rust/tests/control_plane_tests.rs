@@ -446,3 +446,39 @@ fn test_wsdl_invalid_maps_400() {
     let err = client.wsdl_expectation("<bad/>").unwrap_err();
     assert!(matches!(err, Error::InvalidRequest(_)));
 }
+
+// ---------------------------------------------------------------------------
+// Retrieve recorded requests with a DNS filter
+// ---------------------------------------------------------------------------
+
+#[test]
+fn test_retrieve_recorded_requests_with_dns_filter() {
+    let (client, rx) = stub(
+        200,
+        r#"[{"dnsName":"api.example.com","dnsType":"A","dnsClass":"IN"}]"#,
+    );
+    // HttpRequest has no DNS fields; a DNS matcher travels in the `extra` catch-all.
+    let mut filter = HttpRequest::new();
+    filter
+        .extra
+        .insert("dnsName".into(), "api.example.com".into());
+    filter.extra.insert("dnsType".into(), "A".into());
+
+    let recorded = client.retrieve_recorded_requests(Some(&filter)).unwrap();
+
+    let cap = rx.recv().unwrap();
+    assert_eq!(cap.method, "PUT");
+    assert!(
+        cap.url.starts_with("/mockserver/retrieve?type=REQUESTS"),
+        "{}",
+        cap.url
+    );
+    assert_eq!(
+        body_json(&cap),
+        serde_json::json!({"dnsName": "api.example.com", "dnsType": "A"})
+    );
+    assert_eq!(recorded.len(), 1);
+    assert_eq!(recorded[0].extra["dnsName"], "api.example.com");
+    assert_eq!(recorded[0].extra["dnsType"], "A");
+    assert_eq!(recorded[0].extra["dnsClass"], "IN");
+}

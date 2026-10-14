@@ -390,6 +390,24 @@ public class MockServerClientTests
     }
 
     [Fact]
+    public void RetrieveRecordedRequests_WithDnsFilter_ReturnsDnsRequests()
+    {
+        var (client, handler) = CreateClient();
+        handler.ResponseStatusCode = HttpStatusCode.OK;
+        handler.ResponseBody = "[{\"dnsName\":\"api.example.com\",\"dnsType\":\"A\",\"dnsClass\":\"IN\"}]";
+
+        var results = client.RetrieveRecordedRequests(new HttpRequest { DnsName = "api.example.com", DnsType = "A" });
+
+        handler.LastRequest!.RequestUri!.PathAndQuery.Should().Contain("type=requests");
+        handler.LastRequestBody.Should().Contain("\"dnsName\":\"api.example.com\"");
+        handler.LastRequestBody.Should().Contain("\"dnsType\":\"A\"");
+        results.Should().HaveCount(1);
+        results[0].DnsName.Should().Be("api.example.com");
+        results[0].DnsType.Should().Be("A");
+        results[0].DnsClass.Should().Be("IN");
+    }
+
+    [Fact]
     public void RetrieveActiveExpectations_SendsCorrectRequest()
     {
         var (client, handler) = CreateClient();

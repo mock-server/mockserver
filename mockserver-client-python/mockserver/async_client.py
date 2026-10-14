@@ -20,6 +20,7 @@ from mockserver.fluent import ForwardChainExpectation
 from mockserver.models import (
     ConditionalRequestDefinition,
     DebugMismatchResult,
+    DnsRequestDefinition,
     Expectation,
     ExplainUnmatchedResult,
     HttpChaosProfile,
@@ -36,6 +37,7 @@ from mockserver.models import (
     Verification,
     VerificationSequence,
     VerificationTimes,
+    _deserialize_recorded_request,
 )
 from mockserver.websocket_client import MockServerWebSocketClient
 
@@ -1163,8 +1165,12 @@ class AsyncMockServerClient:
         )
 
     async def retrieve_recorded_requests(
-        self, request: HttpRequest | None = None
-    ) -> list[HttpRequest]:
+        self, request: HttpRequest | DnsRequestDefinition | None = None
+    ) -> list[HttpRequest | DnsRequestDefinition | dict]:
+        """Retrieve the recorded requests matching ``request`` (all HTTP requests when
+        omitted). With a DNS filter the DNS queries come back as
+        :class:`DnsRequestDefinition`; a binary message comes back as its raw dict.
+        """
         body = json.dumps(request.to_dict()) if request else ""
         status, response_body = await self._request(
             "PUT",
@@ -1179,7 +1185,7 @@ class AsyncMockServerClient:
         if response_body:
             parsed = json.loads(response_body)
             if isinstance(parsed, list):
-                return [HttpRequest.from_dict(r) for r in parsed]
+                return [_deserialize_recorded_request(r) for r in parsed]
         return []
 
     async def retrieve_active_expectations(
@@ -1242,7 +1248,7 @@ class AsyncMockServerClient:
 
     async def retrieve_recorded_requests_by_id(
         self, expectation_id: str
-    ) -> list[HttpRequest]:
+    ) -> list[HttpRequest | DnsRequestDefinition | dict]:
         status, response_body = await self._retrieve_by_id(
             expectation_id, {"type": "REQUESTS", "format": "JSON"}
         )
@@ -1253,7 +1259,7 @@ class AsyncMockServerClient:
         if response_body:
             parsed = json.loads(response_body)
             if isinstance(parsed, list):
-                return [HttpRequest.from_dict(r) for r in parsed]
+                return [_deserialize_recorded_request(r) for r in parsed]
         return []
 
     async def retrieve_active_expectations_by_id(

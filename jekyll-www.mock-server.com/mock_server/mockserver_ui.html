@@ -251,7 +251,7 @@ sitemap:
         <tr><td><strong>Request Filter</strong></td><td>Collapsible filter panel — filter all panels by HTTP method, path, headers, query parameters, or cookies</td></tr>
         <tr><td><strong>Log Messages</strong> (top-left)</td><td>All log events, grouped by request correlation ID, with color-coded types</td></tr>
         <tr><td><strong>Active Expectations</strong> (top-right)</td><td>Currently registered expectations in priority order</td></tr>
-        <tr><td><strong>Received Requests</strong> (bottom-left)</td><td>All HTTP requests received, oldest first with newest at the bottom, with their matched responses</td></tr>
+        <tr><td><strong>Received Requests</strong> (bottom-left)</td><td>All HTTP requests, DNS queries and binary messages received, oldest first with newest at the bottom, with their matched responses</td></tr>
         <tr><td><strong>Proxied Requests</strong> (bottom-right)</td><td>Forwarded requests with their actual responses from destination servers</td></tr>
     </tbody>
 </table>
@@ -322,6 +322,7 @@ sitemap:
 <h2>Received Requests</h2>
 
 <p>The Received Requests panel shows all HTTP requests received by MockServer, oldest first with the newest appended at the bottom. This includes requests that matched a mock expectation, requests that were proxied, and requests that received a default 404 response. Each item shows the method and path. Click to expand and see the full request details including headers, query parameters, and body, together with the response that MockServer returned.</p>
+<p>DNS queries and binary messages that MockServer receives are listed here too. A DNS query shows <code>DNS</code> with the name and record type it asked for, for example <code>DNS api.example.com A</code>. A binary message shows <code>BINARY</code> with its length and its first 16 bytes in hex; with <code>redactSecretsInLog</code> enabled it shows <code>bytes redacted</code> instead, and its bytes are masked. Like a large HTTP body, a large binary message is shortened in the panel and can be loaded in full. These requests appear only in this panel: the Traffic view and the Test Template dialog list HTTP requests only.</p>
 
 <a id="ui_proxied_requests_section" class="anchor" href="#ui_proxied_requests_section">&nbsp;</a>
 

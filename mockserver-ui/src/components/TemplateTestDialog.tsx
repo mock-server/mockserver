@@ -28,6 +28,7 @@ import {
   type TemplateTestReport,
 } from '../lib/templateTest';
 import { humanizeError, type HumanError } from '../lib/errorMessage';
+import { isNonHttpRequest } from '../lib/requestKind';
 import { monospaceFontFamily } from '../theme';
 import HumanErrorAlert from './HumanErrorAlert';
 import JsonViewer from './JsonViewer';
@@ -206,7 +207,7 @@ export default function TemplateTestDialog({
   const options = useMemo(
     () => recordedRequests
       .map((item) => ({ item, request: recordedRequestOf(item.value) }))
-      .filter((o): o is { item: typeof o.item; request: Record<string, unknown> } => o.request !== undefined)
+      .filter((o): o is { item: typeof o.item; request: Record<string, unknown> } => o.request !== undefined && !isNonHttpRequest(o.request))
       .slice(0, MAX_LISTED_REQUESTS),
     [recordedRequests],
   );

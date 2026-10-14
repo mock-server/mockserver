@@ -1219,3 +1219,42 @@ func TestClient_ContentType_Header(t *testing.T) {
 		t.Errorf("unexpected Content-Type: %s", receivedContentType)
 	}
 }
+
+func TestClient_RetrieveRecordedRequests_DnsFilterRoundTrip(t *testing.T) {
+	var receivedQuery string
+	var receivedBody []byte
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedQuery = r.URL.RawQuery
+		receivedBody, _ = io.ReadAll(r.Body)
+		w.WriteHeader(200)
+		w.Write([]byte(`[{"dnsName":"api.example.com","dnsType":"A","dnsClass":"IN"}]`))
+	}))
+	defer ts.Close()
+
+	client := NewFromURL(ts.URL)
+	// There is no fluent DNS setter on RequestBuilder, so set the DNS fields directly.
+	filter := &RequestBuilder{request: HttpRequest{DnsName: "api.example.com", DnsType: "A"}}
+	reqs, err := client.RetrieveRecordedRequests(filter)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !strings.Contains(receivedQuery, "type=requests") {
+		t.Errorf("expected type=requests in query, got %s", receivedQuery)
+	}
+	var sent map[string]interface{}
+	if err := json.Unmarshal(receivedBody, &sent); err != nil {
+		t.Fatalf("filter body is not valid JSON: %s", err)
+	}
+	if sent["dnsName"] != "api.example.com" || sent["dnsType"] != "A" {
+		t.Errorf("expected DNS filter in body, got %s", receivedBody)
+	}
+
+	if len(reqs) != 1 {
+		t.Fatalf("expected 1 recorded request, got %d", len(reqs))
+	}
+	if reqs[0].DnsName != "api.example.com" || reqs[0].DnsType != "A" || reqs[0].DnsClass != "IN" {
+		t.Errorf("expected DNS fields to round-trip, got %+v", reqs[0])
+	}
+}

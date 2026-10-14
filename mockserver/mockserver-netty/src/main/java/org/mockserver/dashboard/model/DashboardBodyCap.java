@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.mock.Expectation;
+import org.mockserver.model.BinaryRequestDefinition;
 import org.mockserver.model.Body;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -17,6 +18,7 @@ import org.mockserver.model.RequestDefinition;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -35,6 +37,8 @@ public final class DashboardBodyCap {
     public static final int MAX_BODY_CHARACTERS = 64 * 1024;
     // a message's headers, path and the like, which are not capped
     public static final int MESSAGE_OVERHEAD_CHARACTERS = 1024;
+    // a binary message is shown as base64: this many bytes fill the cap
+    static final int MAX_BINARY_BYTES = MAX_BODY_CHARACTERS / 4 * 3;
     private static final ObjectMapper JSON = new ObjectMapper();
     // Cut text of retained bodies, so a large body is decoded once rather than at every quote in every update.
     // Weak keys compare by identity and go with the body's log entry; soft values give way under heap pressure.
@@ -221,6 +225,9 @@ public final class DashboardBodyCap {
      * {@code sizes} with the body's full length.
      */
     static RequestDefinition cap(RequestDefinition requestDefinition, Sizes sizes, Rendering rendering) {
+        if (requestDefinition instanceof BinaryRequestDefinition) {
+            return cap((BinaryRequestDefinition) requestDefinition, sizes);
+        }
         if (!(requestDefinition instanceof HttpRequest) || ((HttpRequest) requestDefinition).getBody() == null) {
             return requestDefinition;
         }
@@ -234,6 +241,25 @@ public final class DashboardBodyCap {
         HttpRequest capped = request.shallowClone().withBody(new LogEntryBody(text.text));
         sizes.truncated(capped, text.length, text.text.length());
         return capped;
+    }
+
+    private static RequestDefinition cap(BinaryRequestDefinition request, Sizes sizes) {
+        byte[] bytes = request.getBinaryData();
+        if (bytes == null) {
+            return request;
+        }
+        long length = base64Length(bytes.length);
+        if (length <= MAX_BODY_CHARACTERS) {
+            sizes.shown(request, length);
+            return request;
+        }
+        BinaryRequestDefinition capped = request.shallowClone().withBinaryData(Arrays.copyOf(bytes, MAX_BINARY_BYTES));
+        sizes.truncated(capped, length, base64Length(MAX_BINARY_BYTES));
+        return capped;
+    }
+
+    private static long base64Length(long bytes) {
+        return (bytes + 2) / 3 * 4;
     }
 
     static HttpResponse cap(HttpResponse response, Sizes sizes, Rendering rendering) {

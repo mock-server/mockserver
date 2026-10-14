@@ -136,6 +136,19 @@ describe('TrafficInspector — log level above INFO', () => {
     expect(screen.queryByTestId('traffic-log-level-hint')).toBeNull();
   });
 
+  it('says nothing for a recorded DNS query or binary message, which never has an HTTP response', () => {
+    useDashboardStore.setState({
+      serverConfiguration: { logLevel: 'WARN' },
+      recordedRequests: [
+        { key: 'dns_request', value: { httpRequest: { dnsName: 'api.example.com', dnsType: 'A' } } },
+        { key: 'binary_request', value: { httpRequest: { binaryData: 'AAEC' } } },
+        recorded('/warn/matched'),
+      ],
+    });
+    renderTrafficInspector();
+    expect(screen.queryByTestId('traffic-log-level-hint')).toBeNull();
+  });
+
   it('says nothing when every request has its response', () => {
     useDashboardStore.setState({ serverConfiguration: { logLevel: 'WARN' }, recordedRequests: [recorded('/warn/matched')] });
     renderTrafficInspector();

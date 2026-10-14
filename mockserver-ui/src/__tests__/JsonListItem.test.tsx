@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import JsonListItem from '../components/JsonListItem';
+import type { Description } from '../types';
 
 describe('JsonListItem', () => {
   it('renders index and description', () => {
@@ -13,6 +14,35 @@ describe('JsonListItem', () => {
     );
     expect(screen.getByText('3')).toBeInTheDocument();
     expect(screen.getByText('GET /api/users')).toBeInTheDocument();
+  });
+
+  it('lays out a received DNS query or binary message as its kind and summary, in place of method and path', () => {
+    const { rerender } = render(
+      <JsonListItem
+        item={{
+          key: 'dns_request',
+          description: { json: false, first: 'DNS', second: 'api.example.com. A' },
+          value: { httpRequest: { dnsName: 'api.example.com.', dnsType: 'A' } },
+        }}
+        index={1}
+      />,
+    );
+    expect(screen.getByText('DNS')).toBeInTheDocument();
+    expect(screen.getByTitle('api.example.com. A')).toHaveTextContent('api.example.com. A');
+
+    rerender(
+      <JsonListItem
+        item={{
+          key: 'binary_request',
+          // as the server sends it, without json: false
+          description: { first: 'BINARY', second: '12 bytes 66697273742d62696e617279' } as unknown as Description,
+          value: { httpRequest: { binaryData: 'Zmlyc3QtYmluYXJ5' } },
+        }}
+        index={1}
+      />,
+    );
+    expect(screen.getByText('BINARY')).toBeInTheDocument();
+    expect(screen.getByTitle('12 bytes 66697273742d62696e617279')).toBeInTheDocument();
   });
 
   it('does not show JSON body by default', () => {

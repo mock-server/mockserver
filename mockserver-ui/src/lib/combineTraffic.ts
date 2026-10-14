@@ -1,4 +1,5 @@
 import type { JsonListItem } from '../types';
+import { isNonHttpRequestRow } from './requestKind';
 
 /**
  * One list of captured traffic, newest first, with one row per request.
@@ -9,7 +10,8 @@ import type { JsonListItem } from '../types';
  * them shows a proxied request twice: once without a response, once with the
  * upstream's. A received row whose `correlationId` matches a proxied row is
  * dropped in favour of the proxied one, which carries the response. A received
- * row of a request still in flight (no proxied row yet) is kept.
+ * row of a request still in flight (no proxied row yet) is kept. DNS queries
+ * and binary messages are left out: they are listed only in Received Requests.
  *
  * Both inputs are newest first; the result interleaves them by `timestamp`
  * (the server's `yyyy-MM-dd HH:mm:ss.SSS`, which sorts as text), keeping each
@@ -23,9 +25,8 @@ export function combineTraffic(
   for (const item of proxied) {
     if (item.correlationId) forwarded.add(item.correlationId);
   }
-  const receivedOnly = forwarded.size === 0
-    ? received
-    : received.filter((item) => !item.correlationId || !forwarded.has(item.correlationId));
+  const receivedOnly = received.filter((item) =>
+    !isNonHttpRequestRow(item) && (!item.correlationId || !forwarded.has(item.correlationId)));
 
   const result: JsonListItem[] = [];
   let p = 0;

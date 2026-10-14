@@ -1,10 +1,14 @@
 package org.mockserver.dashboard.serializers;
 
+import io.netty.buffer.ByteBufUtil;
 import io.swagger.v3.oas.models.OpenAPI;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.configuration.Configuration;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.dashboard.model.DashboardLogEntryDTO;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.BinaryRequestDefinition;
+import org.mockserver.model.DnsRequestDefinition;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.OpenAPIDefinition;
 import org.mockserver.openapi.OpenAPIParser;
@@ -15,6 +19,7 @@ import static org.mockserver.openapi.OpenAPIParser.buildOpenAPI;
 public class DescriptionProcessor {
 
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger();
+    static final int BINARY_PREVIEW_BYTES = 16;
     private final Configuration configuration;
     private int maxHttpRequestLength;
     private int maxOpenAPILength;
@@ -83,6 +88,38 @@ public class DescriptionProcessor {
         }
 
         return description;
+    }
+
+    /**
+     * As {@link #description(Object)}, also describing a DNS query by its name and type, and a binary message by its
+     * length and first bytes in hex. The bytes are left out when {@code redactSecretsInLog} is on, as the message
+     * itself is masked then.
+     *
+     * @param binaryLength the length of a binary message as received, which may be longer than the bytes the
+     *                     dashboard shows; {@code null} to use the length of the bytes in {@code request}
+     */
+    public Description receivedRequestDescription(Object request, Integer binaryLength) {
+        if (request instanceof DnsRequestDefinition) {
+            DnsRequestDefinition dnsRequest = (DnsRequestDefinition) request;
+            String name = StringUtils.defaultString(dnsRequest.getDnsName());
+            return new ReceivedRequestDescription("DNS", dnsRequest.getDnsType() != null ? name + " " + dnsRequest.getDnsType().name() : name);
+        } else if (request instanceof BinaryRequestDefinition) {
+            return new ReceivedRequestDescription("BINARY", binarySummary(((BinaryRequestDefinition) request).getBinaryData(), binaryLength));
+        }
+        return description(request);
+    }
+
+    private String binarySummary(byte[] bytes, Integer binaryLength) {
+        if (configuration != null ? configuration.redactSecretsInLog() : ConfigurationProperties.redactSecretsInLog()) {
+            return "bytes redacted";
+        }
+        int available = bytes != null ? bytes.length : 0;
+        int length = binaryLength != null ? binaryLength : available;
+        int shown = Math.min(available, BINARY_PREVIEW_BYTES);
+        if (shown == 0) {
+            return length + " bytes";
+        }
+        return length + " bytes " + ByteBufUtil.hexDump(bytes, 0, shown) + (length > shown ? "..." : "");
     }
 
     /**

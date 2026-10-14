@@ -9,6 +9,7 @@ from mockserver.models import (
     ConditionalRequestDefinition,
     DebugMismatchResult,
     Delay,
+    DnsRequestDefinition,
     Expectation,
     ExplainUnmatchedResult,
     HttpChaosProfile,
@@ -553,8 +554,8 @@ class MockServerClient:
         return self._run(self._async_client.verify_zero_interactions())
 
     def retrieve_recorded_requests(
-        self, request: HttpRequest | None = None
-    ) -> list[HttpRequest]:
+        self, request: HttpRequest | DnsRequestDefinition | None = None
+    ) -> list[HttpRequest | DnsRequestDefinition | dict]:
         return self._run(self._async_client.retrieve_recorded_requests(request))
 
     def retrieve_active_expectations(
@@ -569,7 +570,7 @@ class MockServerClient:
 
     def retrieve_recorded_requests_by_id(
         self, expectation_id: str
-    ) -> list[HttpRequest]:
+    ) -> list[HttpRequest | DnsRequestDefinition | dict]:
         return self._run(
             self._async_client.retrieve_recorded_requests_by_id(expectation_id)
         )

@@ -1832,6 +1832,8 @@ public class LogEntry implements EventTranslator<LogEntry> {
             Body<?> body = httpRequest.getBody();
             Body<?> rendered = body == null ? null : rendering.render(body, null, LogEntry::renderedRequestBody);
             return rendered == body ? httpRequest : httpRequest.shallowClone().withBody(rendered);
+        } else if (requestDefinition instanceof DnsRequestDefinition || requestDefinition instanceof BinaryRequestDefinition) {
+            return requestDefinition;
         } else {
             return null;
         }

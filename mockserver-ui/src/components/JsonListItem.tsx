@@ -121,6 +121,16 @@ function extractRequestParts(value: Record<string, unknown>): { method: string |
   return { method, path };
 }
 
+// A received request with no method or path (a DNS query, a binary message) is described by the
+// server as its kind and a summary, which take the method and path slots. The server leaves out
+// `json: false`, so only `json: true` marks the other object form.
+function describedRequestParts(description: unknown): { method: string | null; path: string | null } | null {
+  if (!description || typeof description !== 'object') return null;
+  const d = description as Record<string, unknown>;
+  if (d['json'] === true || typeof d['first'] !== 'string' || typeof d['second'] !== 'string') return null;
+  return { method: d['first'], path: d['second'] };
+}
+
 // Top-level action keys an expectation may carry, mapped to a short human
 // label. Used to give non-HTTP expectations (gRPC / spec-derived matchers with
 // no method+path) a meaningful row summary instead of repeating the id.
@@ -275,7 +285,10 @@ function JsonListItem({ item, index, turnPosition, expanded: expandedProp, onTog
   // non-blocking follow-up render instead of stalling the click.
   const showBody = useDeferredValue(expanded);
   const llmBadge = useMemo(() => extractLlmBadge(item.value), [item.value]);
-  const requestParts = useMemo(() => extractRequestParts(item.value), [item.value]);
+  const requestParts = useMemo(
+    () => extractRequestParts(item.value) ?? describedRequestParts(item.description),
+    [item.value, item.description],
+  );
   const chaosSummary = useMemo(() => extractChaosSummary(item.value), [item.value]);
   const priority = useMemo(() => extractPriority(item.value), [item.value]);
 

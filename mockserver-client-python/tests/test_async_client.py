@@ -15,6 +15,7 @@ from mockserver.exceptions import (
 )
 from mockserver.fluent import ForwardChainExpectation
 from mockserver.models import (
+    DnsRequestDefinition,
     Expectation,
     HttpForward,
     HttpObjectCallback,
@@ -347,6 +348,47 @@ class TestRetrieve:
         assert result[0].path == "/recorded1"
         assert "type=REQUESTS" in MockHandler.last_path
         assert "format=JSON" in MockHandler.last_path
+
+    @pytest.mark.asyncio
+    async def test_retrieve_recorded_requests_with_dns_filter(self, mock_server):
+        MockHandler.response_body = json.dumps([
+            {"dnsName": "api.example.com", "dnsType": "A", "dnsClass": "IN"},
+        ])
+        client = AsyncMockServerClient("127.0.0.1", mock_server)
+        result = await client.retrieve_recorded_requests(
+            DnsRequestDefinition.dns_request("api.example.com", "A")
+        )
+        assert json.loads(MockHandler.last_request_body) == {
+            "dnsName": "api.example.com",
+            "dnsType": "A",
+        }
+        assert "type=REQUESTS" in MockHandler.last_path
+        assert len(result) == 1
+        assert isinstance(result[0], DnsRequestDefinition)
+        assert result[0].dns_name == "api.example.com"
+        assert result[0].dns_type == "A"
+        assert result[0].dns_class == "IN"
+
+    @pytest.mark.asyncio
+    async def test_retrieve_recorded_requests_keeps_binary_definition(self, mock_server):
+        binary = {"binaryData": "AAEC", "socketAddress": {"host": "db", "port": 5432}}
+        MockHandler.response_body = json.dumps([binary])
+        client = AsyncMockServerClient("127.0.0.1", mock_server)
+        result = await client.retrieve_recorded_requests()
+        assert result == [binary]
+
+    @pytest.mark.asyncio
+    async def test_retrieve_recorded_requests_by_id_returns_dns_definition(self, mock_server):
+        MockHandler.response_body = json.dumps([
+            {"dnsName": "api.example.com", "dnsType": "A", "dnsClass": "IN"},
+            {"method": "GET", "path": "/http"},
+        ])
+        client = AsyncMockServerClient("127.0.0.1", mock_server)
+        result = await client.retrieve_recorded_requests_by_id("exp-dns")
+        assert isinstance(result[0], DnsRequestDefinition)
+        assert result[0].dns_name == "api.example.com"
+        assert isinstance(result[1], HttpRequest)
+        assert result[1].path == "/http"
 
     @pytest.mark.asyncio
     async def test_retrieve_active_expectations(self, mock_server):

@@ -5,14 +5,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.After;
 import org.junit.Test;
 import org.mockserver.configuration.Configuration;
+import org.mockserver.fixture.FixtureRedactor;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.DnsRecordType;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
 import org.slf4j.event.Level;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -23,6 +27,9 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_RESPONSE;
+import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
+import static org.mockserver.model.BinaryRequestDefinition.binaryRequest;
+import static org.mockserver.model.DnsRequestDefinition.dnsRequest;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
@@ -36,6 +43,7 @@ public class HttpStateLogEntryBodyTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String REQUEST_BODY = repeat("request-body-", 10_000);
     private static final String RESPONSE_BODY = repeat("response-body-", 10_000);
+    private static final byte[] BINARY_MESSAGE = repeat("binary-", 20_000).getBytes(StandardCharsets.UTF_8);
 
     private Scheduler scheduler;
     private HttpState httpState;
@@ -64,15 +72,18 @@ public class HttpStateLogEntryBodyTest {
     }
 
     private String seedExchange(Configuration configuration) throws Exception {
-        MockServerLogger logger = new MockServerLogger(configuration, HttpStateLogEntryBodyTest.class);
-        scheduler = new Scheduler(configuration, logger, true);
-        httpState = new HttpState(configuration, logger, scheduler);
-        LogEntry entry = new LogEntry()
+        return seed(configuration, new LogEntry()
             .setType(EXPECTATION_RESPONSE)
             .setLogLevel(Level.INFO)
             .setHttpRequest(request("/large").withHeader("Authorization", "Bearer SECRET-TOKEN-1").withBody(REQUEST_BODY))
             .setHttpResponse(response().withBody(RESPONSE_BODY))
-            .setMessageFormat("returning response:{}");
+            .setMessageFormat("returning response:{}"));
+    }
+
+    private String seed(Configuration configuration, LogEntry entry) throws Exception {
+        MockServerLogger logger = new MockServerLogger(configuration, HttpStateLogEntryBodyTest.class);
+        scheduler = new Scheduler(configuration, logger, true);
+        httpState = new HttpState(configuration, logger, scheduler);
         String id = entry.id();
         httpState.getMockServerLog().add(entry);
         CompletableFuture<Integer> recorded = new CompletableFuture<>();
@@ -120,6 +131,52 @@ public class HttpStateLogEntryBodyTest {
         assertThat(requestPart.getStatusCode(), is(200));
         assertThat(requestPart.getBodyAsString(), not(containsString("SECRET-TOKEN-1")));
         assertThat(OBJECT_MAPPER.readTree(requestPart.getBodyAsString()).get("httpRequest").get("body").asText(), is(REQUEST_BODY));
+    }
+
+    private static LogEntry receivedBinaryMessage() {
+        return new LogEntry()
+            .setType(RECEIVED_REQUEST)
+            .setLogLevel(Level.INFO)
+            .setHttpRequest(binaryRequest(BINARY_MESSAGE))
+            .setMessageFormat("received binary request:{}");
+    }
+
+    @Test
+    public void shouldReturnTheFullBinaryMessageOfALogEntry() throws Exception {
+        String id = seed(configuration(), receivedBinaryMessage());
+
+        HttpResponse requestPart = get("id=" + id + "&part=request");
+
+        assertThat(requestPart.getStatusCode(), is(200));
+        JsonNode request = OBJECT_MAPPER.readTree(requestPart.getBodyAsString()).get("httpRequest");
+        assertThat(request.get("binaryData").asText(), is(Base64.getEncoder().encodeToString(BINARY_MESSAGE)));
+    }
+
+    @Test
+    public void shouldMaskTheBinaryMessageWhenRedactionIsOn() throws Exception {
+        String id = seed(configuration().redactSecretsInLog(true), receivedBinaryMessage());
+
+        HttpResponse requestPart = get("id=" + id + "&part=request");
+
+        assertThat(requestPart.getStatusCode(), is(200));
+        String binaryData = OBJECT_MAPPER.readTree(requestPart.getBodyAsString()).get("httpRequest").get("binaryData").asText();
+        assertThat(new String(Base64.getDecoder().decode(binaryData), StandardCharsets.UTF_8), is(FixtureRedactor.REDACTED_PLACEHOLDER));
+    }
+
+    @Test
+    public void shouldReturnTheDnsQueryOfALogEntry() throws Exception {
+        String id = seed(configuration(), new LogEntry()
+            .setType(RECEIVED_REQUEST)
+            .setLogLevel(Level.INFO)
+            .setHttpRequest(dnsRequest("api.example.com", DnsRecordType.AAAA))
+            .setMessageFormat("received DNS query"));
+
+        HttpResponse requestPart = get("id=" + id + "&part=request");
+
+        assertThat(requestPart.getStatusCode(), is(200));
+        JsonNode request = OBJECT_MAPPER.readTree(requestPart.getBodyAsString()).get("httpRequest");
+        assertThat(request.get("dnsName").asText(), is("api.example.com"));
+        assertThat(request.get("dnsType").asText(), is("AAAA"));
     }
 
     @Test

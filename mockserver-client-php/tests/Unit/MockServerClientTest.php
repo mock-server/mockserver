@@ -549,6 +549,31 @@ class MockServerClientTest extends TestCase
         $this->assertSame('/bar', $result[1]['path']);
     }
 
+    public function testRetrieveRecordedRequestsWithDnsFilter(): void
+    {
+        $history = [];
+        $client = $this->createClientWithMock([
+            new Response(200, [], json_encode([
+                ['dnsName' => 'api.example.com', 'dnsType' => 'A', 'dnsClass' => 'IN'],
+            ])),
+        ], $history);
+
+        // HttpRequest has no DNS setters; fromArray keeps the DNS fields as additional fields.
+        $filter = HttpRequest::fromArray(['dnsName' => 'api.example.com', 'dnsType' => 'A']);
+        $result = $client->retrieveRecordedRequests($filter);
+
+        $request = $history[0]['request'];
+        $this->assertStringContainsString('type=REQUESTS', (string) $request->getUri());
+        $this->assertSame(
+            ['dnsName' => 'api.example.com', 'dnsType' => 'A'],
+            json_decode((string) $request->getBody(), true)
+        );
+        $this->assertCount(1, $result);
+        $this->assertSame('api.example.com', $result[0]['dnsName']);
+        $this->assertSame('A', $result[0]['dnsType']);
+        $this->assertSame('IN', $result[0]['dnsClass']);
+    }
+
     public function testRetrieveActiveExpectationsById(): void
     {
         $history = [];

@@ -447,6 +447,23 @@ RSpec.describe MockServer::Client do
       expect(result).to eq([])
     end
 
+    it 'sends a DNS filter and returns the recorded DNS queries' do
+      response_body = [{ 'dnsName' => 'api.example.com', 'dnsType' => 'A', 'dnsClass' => 'IN' }]
+      stub_request(:put, "#{base_url}/mockserver/retrieve?format=JSON&type=REQUESTS")
+        .to_return(status: 200, body: JSON.generate(response_body))
+
+      result = client.retrieve_recorded_requests(
+        request: MockServer::HttpRequest.dns_request('api.example.com', dns_type: 'A')
+      )
+
+      expect(WebMock).to have_requested(:put, "#{base_url}/mockserver/retrieve?format=JSON&type=REQUESTS")
+        .with { |r| JSON.parse(r.body) == { 'dnsName' => 'api.example.com', 'dnsType' => 'A' } }
+      expect(result.length).to eq(1)
+      expect(result[0].dns_name).to eq('api.example.com')
+      expect(result[0].dns_type).to eq('A')
+      expect(result[0].dns_class).to eq('IN')
+    end
+
     it 'sends request filter in body' do
       stub_request(:put, "#{base_url}/mockserver/retrieve?format=JSON&type=REQUESTS")
         .to_return(status: 200, body: '[]')

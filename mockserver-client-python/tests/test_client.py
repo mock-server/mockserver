@@ -10,6 +10,7 @@ from mockserver.client import MockServerClient, SyncForwardChainExpectation
 from mockserver.exceptions import MockServerError, MockServerVerificationError
 from mockserver.models import (
     Delay,
+    DnsRequestDefinition,
     Expectation,
     HttpChaosProfile,
     HttpError,
@@ -227,6 +228,20 @@ class TestSyncRetrieve:
             result = client.retrieve_recorded_requests()
             assert len(result) == 1
             assert result[0].path == "/recorded"
+
+    def test_retrieve_recorded_requests_with_dns_filter(self, sync_mock_server):
+        SyncMockHandler.response_body = json.dumps([
+            {"dnsName": "api.example.com", "dnsType": "A", "dnsClass": "IN"},
+        ])
+        with MockServerClient("127.0.0.1", sync_mock_server) as client:
+            result = client.retrieve_recorded_requests(
+                DnsRequestDefinition.dns_request("api.example.com", "A")
+            )
+            assert json.loads(SyncMockHandler.last_request_body)["dnsName"] == "api.example.com"
+            assert len(result) == 1
+            assert isinstance(result[0], DnsRequestDefinition)
+            assert result[0].dns_name == "api.example.com"
+            assert result[0].dns_type == "A"
 
     def test_retrieve_active_expectations(self, sync_mock_server):
         SyncMockHandler.response_body = json.dumps([

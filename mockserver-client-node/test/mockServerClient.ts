@@ -513,6 +513,16 @@ async function test() {
     let recordedCode: string = await client.retrieveRecordedExpectationsAsCode('python');
     let grpcServices: GrpcService[] = await client.retrieveGrpcServices();
     let har: Har = await client.retrieveRecordedRequestsAndResponsesAsHar('/somePath');
+    let recordedRequests: RequestDefinition[] = await client.retrieveRecordedRequests({dnsName: 'api.example.com', dnsType: 'A'});
+    recordedRequests = await client.retrieveRecordedRequestsById('some-id');
+    // a recorded request may be a DNS query or binary message, so HTTP fields need narrowing first
+    // @ts-expect-error
+    let unnarrowedHeaders = (await client.retrieveRecordedRequests('/somePath'))[0].headers;
+    const firstRecorded = recordedRequests[0];
+    if ('path' in firstRecorded) {
+        let recordedPath = firstRecorded.path;
+        let recordedHeaders = firstRecorded.headers;
+    }
     har = await client.retrieveRecordedRequestsAndResponsesAsHar({path: '/somePath', method: 'GET'});
     har = await client.retrieveRecordedRequestsAndResponsesAsHar(null);
     let harStatus: number = har.log.entries[0].response.status;

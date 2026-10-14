@@ -1359,7 +1359,7 @@ public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter impl
                                     value.put("httpResponse", responseMessage.message);
                                 }
                                 Map<String, Object> entry = new LinkedHashMap<>();
-                                Description description = recordedRequestsDescriptionProcessor.description(request);
+                                Description description = recordedRequestsDescriptionProcessor.receivedRequestDescription(request, logEntryDTO.binaryLength(request));
                                 if (description != null) {
                                     entry.put("description", description);
                                 }

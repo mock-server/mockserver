@@ -3,10 +3,12 @@ package org.mockserver.dashboard.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.dashboard.serializers.Description;
 import org.mockserver.log.model.LogEntry;
+import org.mockserver.model.BinaryRequestDefinition;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.ObjectWithJsonToString;
 import org.mockserver.model.RequestDefinition;
 
+import java.util.IdentityHashMap;
 import java.util.Map;
 
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
@@ -20,6 +22,7 @@ public class DashboardLogEntryDTO extends ObjectWithJsonToString {
         "messageSizes",
         "argumentSizes",
         "argumentOwnMessageParts",
+        "binaryLengths",
     };
     private String id;
     private String correlationId;
@@ -34,6 +37,8 @@ public class DashboardLogEntryDTO extends ObjectWithJsonToString {
     private final DashboardBodyCap.Sizes messageSizes = new DashboardBodyCap.Sizes();
     private final DashboardBodyCap.Sizes argumentSizes = new DashboardBodyCap.Sizes();
     private String[] argumentOwnMessageParts;
+    // each binary message this entry shows, to its length before the dashboard cut it
+    private final Map<Object, Integer> binaryLengths = new IdentityHashMap<>();
     private String because;
 
     private Description description;
@@ -66,7 +71,11 @@ public class DashboardLogEntryDTO extends ObjectWithJsonToString {
         LogEntry.RedactedView redacted = logEntry.redactedView(configuration, rendering);
         RequestDefinition[] requests = redacted.getHttpUpdatedRequests();
         for (int i = 0; i < requests.length; i++) {
-            requests[i] = DashboardBodyCap.cap(requests[i], messageSizes, rendering);
+            RequestDefinition request = requests[i];
+            requests[i] = DashboardBodyCap.cap(request, messageSizes, rendering);
+            if (request instanceof BinaryRequestDefinition && ((BinaryRequestDefinition) request).getBinaryData() != null) {
+                binaryLengths.put(requests[i], ((BinaryRequestDefinition) request).getBinaryData().length);
+            }
         }
         setHttpRequests(requests);
         setHttpResponse(DashboardBodyCap.cap(redacted.getHttpUpdatedResponse(), messageSizes, rendering));
@@ -95,6 +104,15 @@ public class DashboardLogEntryDTO extends ObjectWithJsonToString {
     public Long originalBodyLength(Object message) {
         Long length = messageSizes.originalLength(message);
         return length != null ? length : argumentSizes.originalLength(message);
+    }
+
+    /**
+     * The length, before the dashboard cut it, of a binary message that is one of this entry's requests, or
+     * {@code null} for any other message.
+     */
+    @JsonIgnore
+    public Integer binaryLength(Object request) {
+        return request == null ? null : binaryLengths.get(request);
     }
 
     /**

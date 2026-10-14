@@ -26,6 +26,17 @@ describe('combineTraffic', () => {
     expect(combineTraffic(proxied, received).map((r) => r.key)).toEqual(['mocked', 'inflight', 'p1', 'nocorrelation']);
   });
 
+  it('leaves out recorded DNS queries and binary messages, which only Received Requests lists', () => {
+    const received: JsonListItem[] = [
+      { key: 'dns', timestamp: '2026-10-10 10:00:03.000', value: { httpRequest: { dnsName: 'api.example.com', dnsType: 'A' } } },
+      { key: 'binary', timestamp: '2026-10-10 10:00:02.000', value: { httpRequest: { binaryData: 'AAEC' } } },
+      row('http', '2026-10-10 10:00:01.000'),
+    ];
+
+    expect(combineTraffic([], received).map((r) => r.key)).toEqual(['http']);
+    expect(combineTraffic([row('p1', '2026-10-10 10:00:00.000', 'c1')], received).map((r) => r.key)).toEqual(['http', 'p1']);
+  });
+
   it('interleaves the two lists newest first by timestamp', () => {
     const proxied = [row('p3', '2026-10-10 10:00:03.000', 'a'), row('p1', '2026-10-10 10:00:01.000', 'b')];
     const received = [row('r4', '2026-10-10 10:00:04.000', 'x'), row('r2', '2026-10-10 10:00:02.000', 'y'), row('r0', '2026-10-10 10:00:00.000', 'z')];

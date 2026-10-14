@@ -629,7 +629,7 @@ export interface MockServerClient {
 
     bind(ports: Port[]): Promise<RequestResponse>;
 
-    retrieveRecordedRequests(pathOrRequestDefinition: PathOrRequestDefinition): Promise<HttpResponse[]>;
+    retrieveRecordedRequests(pathOrRequestDefinition: PathOrRequestDefinition): Promise<RequestDefinition[]>;
 
     retrieveRecordedRequestsAndResponses(pathOrRequestDefinition: PathOrRequestDefinition): Promise<HttpRequestAndHttpResponse[]>;
 
@@ -655,7 +655,7 @@ export interface MockServerClient {
      * other methods return the entries matching that expectation's request, exactly as
      * verify by expectation id matches them. An unknown id is rejected with a 400.
      */
-    retrieveRecordedRequestsById(expectationId: string): Promise<HttpResponse[]>;
+    retrieveRecordedRequestsById(expectationId: string): Promise<RequestDefinition[]>;
 
     retrieveRecordedRequestsAndResponsesById(expectationId: string): Promise<HttpRequestAndHttpResponse[]>;
 

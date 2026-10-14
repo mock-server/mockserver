@@ -90,6 +90,7 @@ import type { ConnectionParams } from '../hooks/useConnectionParams';
 import { useFollow } from '../hooks/useFollow';
 import { useTailFollow } from '../hooks/useTailFollow';
 import { combineTraffic } from '../lib/combineTraffic';
+import { isNonHttpRequestRow } from '../lib/requestKind';
 import {
   summarizeTraffic,
   extractBodyContent,
@@ -2412,7 +2413,7 @@ export default function TrafficInspector() {
   const [logLevelHintDismissed, setLogLevelHintDismissed] = useState(false);
   const showLogLevelHint = !logLevelHintDismissed
     && (logLevel === 'WARN' || logLevel === 'ERROR' || logLevel === 'OFF')
-    && recordedRequests.some((item) => !item.value['httpResponse']);
+    && recordedRequests.some((item) => !item.value['httpResponse'] && !isNonHttpRequestRow(item));
 
   // Build summaries for every captured request (proxied + mocked), one row per
   // request, newest first.
