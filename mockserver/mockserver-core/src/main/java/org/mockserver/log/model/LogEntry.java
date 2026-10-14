@@ -231,6 +231,14 @@ public class LogEntry implements EventTranslator<LogEntry> {
                         }
                         size += derivedBodyBytes(request.getBody());
                         size += headerBytes(request.getHeaders());
+                    } else if (rd instanceof BinaryRequestDefinition) {
+                        byte[] b = ((BinaryRequestDefinition) rd).getBinaryData();
+                        hasHttpMessage = true;
+                        size += PER_REQUEST_MESSAGE_OVERHEAD_BYTES + (b != null ? b.length : 0);
+                    } else if (rd instanceof DnsRequestDefinition) {
+                        String name = ((DnsRequestDefinition) rd).getDnsName();
+                        hasHttpMessage = true;
+                        size += PER_REQUEST_MESSAGE_OVERHEAD_BYTES + (name != null ? name.length() : 0);
                     }
                 }
             }
@@ -1288,6 +1296,8 @@ public class LogEntry implements EventTranslator<LogEntry> {
             return updateBodyRedacted((HttpRequest) argument, redactor);
         } else if (argument instanceof HttpResponse) {
             return updateBodyRedacted((HttpResponse) argument, redactor);
+        } else if (argument instanceof BinaryRequestDefinition) {
+            return redactor.redactRequestDefinition((BinaryRequestDefinition) argument);
         } else if (argument instanceof DeferredLogArgument) {
             return redaction.scrub(((DeferredLogArgument) argument).render(redactor));
         } else if (argument instanceof SensitiveLogValue) {
@@ -1710,10 +1720,28 @@ public class LogEntry implements EventTranslator<LogEntry> {
         List<String> bodyFieldList = isBlank(redactionKey)
             ? Collections.emptyList()
             : Arrays.asList(redactionKey.split(","));
-        return new org.mockserver.fixture.FixtureRedactor(
-            org.mockserver.fixture.FixtureRedactor.defaultSensitiveHeaders(),
-            bodyFieldList
-        );
+        return new EventLogRedactor(bodyFieldList);
+    }
+
+    /**
+     * Also masks a binary message's bytes, which have no structure to redact fields from, as the
+     * {@link SensitiveLogValue} the binary handler logs them with is masked.
+     */
+    private static final class EventLogRedactor extends org.mockserver.fixture.FixtureRedactor {
+
+        private static final byte[] MASKED_BINARY_DATA = org.mockserver.fixture.FixtureRedactor.REDACTED_PLACEHOLDER.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+
+        private EventLogRedactor(List<String> bodyFieldList) {
+            super(org.mockserver.fixture.FixtureRedactor.defaultSensitiveHeaders(), bodyFieldList);
+        }
+
+        @Override
+        public RequestDefinition redactRequestDefinition(RequestDefinition requestDefinition) {
+            if (requestDefinition instanceof BinaryRequestDefinition && ((BinaryRequestDefinition) requestDefinition).getBinaryData() != null) {
+                return ((BinaryRequestDefinition) requestDefinition).shallowClone().withBinaryData(MASKED_BINARY_DATA.clone());
+            }
+            return super.redactRequestDefinition(requestDefinition);
+        }
     }
 
     /**

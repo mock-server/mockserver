@@ -77,22 +77,22 @@ public class DnsRequestHandler extends SimpleChannelInboundHandler<DatagramDnsQu
         DnsRecordType qType = DnsRecordType.fromIntValue(question.type().intValue());
         DnsRecordClass qClass = DnsRecordClass.fromIntValue(question.dnsClass());
 
-        if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(RECEIVED_REQUEST)
-                    .setLogLevel(Level.INFO)
-                    .setCorrelationId(logCorrelationId)
-                    .setMessageFormat("received DNS query for name:{} type:{} class:{}")
-                    .setArguments(qName, qType, qClass)
-            );
-        }
-
         DnsRequestDefinition dnsRequestDefinition = DnsRequestDefinition.dnsRequest()
             .withDnsName(qName)
             .withDnsType(qType)
             .withDnsClass(qClass);
         dnsRequestDefinition.withLogCorrelationId(logCorrelationId);
+
+        // logged at every level with its definition, as an HTTP request is, so verify and retrieve can find it
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setLogLevel(Level.INFO)
+                .setCorrelationId(logCorrelationId)
+                .setHttpRequest(dnsRequestDefinition)
+                .setMessageFormat("received DNS query for name:{} type:{} class:{}")
+                .setArguments(qName, qType, qClass)
+        );
 
         Expectation matchedExpectation = httpState.firstMatchingExpectation(dnsRequestDefinition);
         if (matchedExpectation != null && matchedExpectation.getDnsResponse() != null) {

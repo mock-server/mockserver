@@ -31,12 +31,11 @@ import static org.mockserver.model.DnsRequestDefinition.dnsRequest;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.stop.Stop.stopQuietly;
-import static org.mockserver.verify.VerificationTimes.atLeast;
 import static org.mockserver.verify.VerificationTimes.never;
 
 /**
  * The Java client sends a DNS or binary request definition to the server as that definition, so clearing and
- * retrieving by one acts on what it describes rather than on everything, and verifying one fails with the reason.
+ * retrieving by one acts on what it describes rather than on everything, and a verification sequence keeps it as a step.
  */
 public class ClientNonHttpRequestFilterTest {
 
@@ -104,40 +103,11 @@ public class ClientNonHttpRequestFilterTest {
     }
 
     @Test
-    public void verifyingADnsQueryFailsWithTheReasonRatherThanCountingNothing() {
-        AssertionError failure = assertThrows(AssertionError.class, () -> clientAndServer.verify(dnsRequest("never.example."), never()));
-
-        assertThat(failure.getMessage(), containsString("DNS and binary requests cannot be verified"));
-        assertThat(failure.getMessage(), containsString("never.example."));
-    }
-
-    @Test
-    public void verifyingNeverForADnsQueryFailsWithTheReason() {
-        AssertionError failure = assertThrows(AssertionError.class, () -> clientAndServer.verifyNever(dnsRequest("never.example."), Duration.ofMillis(200)));
-
-        assertThat(failure.getMessage(), containsString("DNS and binary requests cannot be verified"));
-    }
-
-    @Test
-    public void verifyingNeverForABinaryRequestFailsWithTheReason() {
-        AssertionError failure = assertThrows(AssertionError.class, () -> clientAndServer.verifyNever(binaryRequest(FIRST_BYTES), Duration.ofMillis(200)));
-
-        assertThat(failure.getMessage(), containsString("DNS and binary requests cannot be verified"));
-    }
-
-    @Test
     public void verifyingADnsExpectationByIdFailsWithTheReason() {
         AssertionError failure = assertThrows(AssertionError.class, () -> clientAndServer.verify("dns-first", never()));
 
-        assertThat(failure.getMessage(), containsString("DNS and binary requests cannot be verified"));
+        assertThat(failure.getMessage(), containsString("DNS and binary requests cannot be verified by expectation id"));
         assertThat(failure.getMessage(), containsString("first.example."));
-    }
-
-    @Test
-    public void verifyingABinaryRequestFailsWithTheReason() {
-        AssertionError failure = assertThrows(AssertionError.class, () -> clientAndServer.verify(binaryRequest(FIRST_BYTES), atLeast(1)));
-
-        assertThat(failure.getMessage(), containsString("DNS and binary requests cannot be verified"));
     }
 
     @Test
@@ -149,7 +119,7 @@ public class ClientNonHttpRequestFilterTest {
             request("/first"), dnsRequest("never.example."), request("/last")
         ));
 
-        assertThat(failure.getMessage(), containsString("DNS and binary requests cannot be verified"));
+        assertThat(failure.getMessage(), containsString("Request sequence not found"));
         assertThat(failure.getMessage(), containsString("never.example."));
     }
 

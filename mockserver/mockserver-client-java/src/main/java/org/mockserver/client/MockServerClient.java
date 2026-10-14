@@ -2097,18 +2097,29 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
-     * Retrieve the recorded requests that match the httpRequest parameter, use null for the parameter to retrieve all requests
+     * Retrieve the recorded HTTP requests that match the httpRequest parameter, use null for the parameter to retrieve all requests;
+     * to retrieve DNS queries or binary messages use {@link #retrieveRecordedRequestDefinitions(RequestDefinition)}
      *
      * @param requestDefinition the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
      * @return an array of all requests that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
      */
     public HttpRequest[] retrieveRecordedRequests(RequestDefinition requestDefinition) {
-        RequestDefinition[] requestDefinitions = new RequestDefinition[0];
+        return Arrays.stream(retrieveRecordedRequestDefinitions(requestDefinition)).filter(HttpRequest.class::isInstance).map(HttpRequest.class::cast).toArray(HttpRequest[]::new);
+    }
+
+    /**
+     * Retrieve the recorded requests that match the requestDefinition parameter, which can be an http, DNS or binary request;
+     * DNS queries and binary messages are returned only for a DNS or binary requestDefinition, use null for the parameter to retrieve all http requests
+     *
+     * @param requestDefinition the request that is matched against when deciding whether to return each request, use null for the parameter to retrieve all http requests
+     * @return an array of all requests that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
+     */
+    public RequestDefinition[] retrieveRecordedRequestDefinitions(RequestDefinition requestDefinition) {
         String recordedRequests = retrieveRecordedRequests(requestDefinition, Format.JSON);
         if (isNotBlank(recordedRequests) && !recordedRequests.equals("[]")) {
-            requestDefinitions = requestDefinitionSerializer.deserializeArray(recordedRequests);
+            return requestDefinitionSerializer.deserializeArray(recordedRequests);
         }
-        return Arrays.stream(requestDefinitions).map(HttpRequest.class::cast).toArray(HttpRequest[]::new);
+        return new RequestDefinition[0];
     }
 
     /**
@@ -2905,7 +2916,7 @@ public class MockServerClient implements Stoppable {
         if (isNotBlank(recordedRequests) && !recordedRequests.equals("[]")) {
             requestDefinitions = requestDefinitionSerializer.deserializeArray(recordedRequests);
         }
-        return Arrays.stream(requestDefinitions).map(HttpRequest.class::cast).toArray(HttpRequest[]::new);
+        return Arrays.stream(requestDefinitions).filter(HttpRequest.class::isInstance).map(HttpRequest.class::cast).toArray(HttpRequest[]::new);
     }
 
     /**

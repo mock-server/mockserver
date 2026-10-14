@@ -120,6 +120,7 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
                 .setType(RECEIVED_REQUEST)
                 .setLogLevel(Level.INFO)
                 .setCorrelationId(logCorrelationId)
+                .setHttpRequest(binaryRequestDefinition(binaryRequest, logCorrelationId))
                 .setMessageFormat("received binary request:{}")
                 .setArguments(SensitiveLogValue.of(hexDumpForLog(binaryRequest.getBytes(), configuration.maxLoggedBodyBytes())))
         );
@@ -153,9 +154,13 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
     }
 
     private Expectation firstMatchingBinaryExpectation(BinaryMessage binaryRequest, String logCorrelationId) {
+        return httpState.firstMatchingExpectation(binaryRequestDefinition(binaryRequest, logCorrelationId));
+    }
+
+    private static BinaryRequestDefinition binaryRequestDefinition(BinaryMessage binaryRequest, String logCorrelationId) {
         BinaryRequestDefinition binaryRequestDefinition = BinaryRequestDefinition.binaryRequest(binaryRequest.getBytes());
         binaryRequestDefinition.withLogCorrelationId(logCorrelationId);
-        return httpState.firstMatchingExpectation(binaryRequestDefinition);
+        return binaryRequestDefinition;
     }
 
     /**

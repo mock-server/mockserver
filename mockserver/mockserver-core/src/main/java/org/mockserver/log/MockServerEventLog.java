@@ -20,6 +20,8 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.mock.RequestMatchers;
 import org.mockserver.mock.listeners.MockServerEventLogNotifier;
 import org.mockserver.mock.listeners.MockServerLogListener;
+import org.mockserver.model.BinaryRequestDefinition;
+import org.mockserver.model.DnsRequestDefinition;
 import org.mockserver.model.ExpectationId;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -140,6 +142,8 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             || input.getType() == NO_MATCH_RESPONSE
             || input.getType() == FORWARDED_REQUEST
     );
+    private static final Predicate<LogEntry> notDnsOrBinaryRequest = input
+        -> !(input.getHttpRequest() instanceof DnsRequestDefinition || input.getHttpRequest() instanceof BinaryRequestDefinition);
     private static final Predicate<LogEntry> recordedExpectationLogPredicate = input
         -> !input.isDeleted() && input.getType() == FORWARDED_REQUEST;
     // Disposition predicates for verify-by-disposition (Verification.withDisposition). A MOCKED
@@ -883,11 +887,10 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         // keep one copy between them, the one the weigher charges with the named expectation
         Map<Object, Object> cutCopies = new IdentityHashMap<>();
         RequestDefinition requestDefinition = logEntry.getHttpRequest();
-        if (requestDefinition instanceof HttpRequest) {
-            HttpRequest httpRequest = (HttpRequest) requestDefinition;
-            HttpRequest truncated = (HttpRequest) cutOnce(httpRequest, maxLoggedBodyBytes, cutCopies);
-            if (truncated != httpRequest) {
-                logEntry.setHttpRequest(truncated).replaceQuoted(httpRequest, truncated);
+        if (requestDefinition instanceof HttpRequest || requestDefinition instanceof BinaryRequestDefinition) {
+            RequestDefinition truncated = (RequestDefinition) cutOnce(requestDefinition, maxLoggedBodyBytes, cutCopies);
+            if (truncated != requestDefinition) {
+                logEntry.setHttpRequest(truncated).replaceQuoted(requestDefinition, truncated);
             }
         }
         HttpResponse httpResponse = logEntry.getHttpResponse();
@@ -908,6 +911,8 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         if (cut == null) {
             if (quoted instanceof HttpRequest) {
                 cut = truncatedForLog((HttpRequest) quoted, maxLoggedBodyBytes);
+            } else if (quoted instanceof BinaryRequestDefinition) {
+                cut = truncatedForLog((BinaryRequestDefinition) quoted, maxLoggedBodyBytes);
             } else if (quoted instanceof HttpResponse) {
                 cut = truncatedForLog((HttpResponse) quoted, maxLoggedBodyBytes);
             } else if (quoted instanceof Expectation) {
@@ -935,6 +940,16 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             .clone()
             .withBody(Arrays.copyOf(body, maxLoggedBodyBytes))
             .withHeader(TRUNCATED_BODY_HEADER, String.valueOf(body.length));
+    }
+
+    private static BinaryRequestDefinition truncatedForLog(BinaryRequestDefinition binaryRequest, int maxLoggedBodyBytes) {
+        byte[] bytes = binaryRequest.getBinaryData();
+        if (bytes == null || bytes.length <= maxLoggedBodyBytes) {
+            return binaryRequest;
+        }
+        BinaryRequestDefinition truncated = binaryRequest.shallowClone().withBinaryData(Arrays.copyOf(bytes, maxLoggedBodyBytes));
+        truncated.withLogCorrelationId(binaryRequest.getLogCorrelationId());
+        return truncated;
     }
 
     private static HttpResponse truncatedForLog(HttpResponse httpResponse, int maxLoggedBodyBytes) {
@@ -1138,7 +1153,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     public void retrieveRequestLogEntries(RequestDefinition requestDefinition, Consumer<List<LogEntry>> listConsumer) {
         retrieveLogEntries(
             requestDefinition,
-            requestLogPredicate,
+            recordedRequestPredicate(requestDefinition, requestLogPredicate),
             (Stream<LogEntry> logEventStream) -> listConsumer.accept(logEventStream.filter(Objects::nonNull).collect(Collectors.toList()))
         );
     }
@@ -1167,7 +1182,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             }
             retrieveLogEntries(
                 verification.getHttpRequest().withLogCorrelationId(logCorrelationId),
-                typePredicate,
+                recordedRequestPredicate(verification.getHttpRequest(), typePredicate),
                 logEntryToRequest,
                 logEventStream -> listConsumer.accept(
                     logEventStream
@@ -1208,8 +1223,16 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     }
 
     private void retrieveAllRecordedRequests(boolean matchingExpectationsOnly, Consumer<List<VerificationFailureSummary.RecordedRequest>> listConsumer) {
+        retrieveAllRecordedRequests(matchingExpectationsOnly, logEntryToRequest, listConsumer);
+    }
+
+    /**
+     * @param toRequests {@link LogEntry#getHttpRequests()} for the requests as received, which a sequence must match
+     *                   on, as redaction masks what a step may match; else the redacted copies a failure shows
+     */
+    private void retrieveAllRecordedRequests(boolean matchingExpectationsOnly, Function<LogEntry, RequestDefinition[]> toRequests, Consumer<List<VerificationFailureSummary.RecordedRequest>> listConsumer) {
         Function<LogEntry, Stream<VerificationFailureSummary.RecordedRequest>> toRecordedRequests = logEntry -> {
-            RequestDefinition[] requests = logEntryToRequest.apply(logEntry);
+            RequestDefinition[] requests = toRequests.apply(logEntry);
             long arrivedAtMillis = logEntry.getEpochTime();
             return requests == null ? Stream.empty() : Arrays.stream(requests).map(request -> new VerificationFailureSummary.RecordedRequest(request, arrivedAtMillis));
         };
@@ -1271,7 +1294,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     public void retrieveRequests(RequestDefinition requestDefinition, Consumer<List<RequestDefinition>> listConsumer) {
         retrieveLogEntries(
             requestDefinition,
-            requestLogPredicate,
+            recordedRequestPredicate(requestDefinition, requestLogPredicate),
             logEntryToRequest,
             logEventStream -> listConsumer.accept(
                 logEventStream
@@ -1347,6 +1370,14 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             logEntryToRecordedExpectation,
             logEventStream -> listConsumer.accept(logEventStream.filter(Objects::nonNull).collect(Collectors.toList()))
         );
+    }
+
+    /**
+     * An empty filter runs no matcher, so it would also select DNS queries and binary messages; recorded requests
+     * and verification counts read through it select only HTTP requests, as an empty HTTP matcher does.
+     */
+    private static Predicate<LogEntry> recordedRequestPredicate(RequestDefinition filter, Predicate<LogEntry> typePredicate) {
+        return RequestMatchers.isUnfiltered(filter) ? typePredicate.and(notDnsOrBinaryRequest) : typePredicate;
     }
 
     /**
@@ -2253,13 +2284,26 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                     }
                 };
                 if (summarise) {
-                    retrieveAllRecordedRequests(false, recordedRequests -> evaluateSequence.accept(recordedRequests.stream().map(VerificationFailureSummary.RecordedRequest::request).collect(Collectors.toList()), recordedRequests));
+                    retrieveAllRecordedRequests(false, LogEntry::getHttpRequests, recordedRequests -> evaluateSequence.accept(recordedRequests.stream().map(VerificationFailureSummary.RecordedRequest::request).collect(Collectors.toList()), recordedRequests));
                 } else {
                     // only the summary reads arrival times, so the other evaluations skip the wrappers
-                    retrieveAllRequests(false, allRequests -> evaluateSequence.accept(allRequests, null));
+                    retrieveLogEntries(
+                        (RequestDefinition) null,
+                        requestLogPredicate,
+                        LogEntry::getHttpRequests,
+                        logEventStream -> evaluateSequence.accept(logEventStream.filter(Objects::nonNull).flatMap(Arrays::stream).collect(Collectors.toList()), null)
+                    );
                 }
             }
         }
+    }
+
+    private List<RequestDefinition> redactedRequestsForDisplay(List<RequestDefinition> requests) {
+        org.mockserver.fixture.FixtureRedactor redactor = LogEntry.eventLogRedactor(configuration);
+        if (redactor == null) {
+            return requests;
+        }
+        return requests.stream().map(request -> request == null ? null : redactor.redactRequestDefinition(request)).collect(Collectors.toList());
     }
 
     /**
@@ -2421,7 +2465,12 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         resultConsumer.accept(failureMessage);
     }
 
-    private String verificationSequenceFailureMessage(VerificationSequence verificationSequence, String logCorrelationId, boolean logResult, List<RequestDefinition> allRequests, RequestDefinition unmatchedStepRequest) {
+    /**
+     * @param receivedRequests the requests as received; the returned message shows redacted copies, and the logged
+     *                         entry redacts them when rendered
+     */
+    private String verificationSequenceFailureMessage(VerificationSequence verificationSequence, String logCorrelationId, boolean logResult, List<RequestDefinition> receivedRequests, RequestDefinition unmatchedStepRequest) {
+        final List<RequestDefinition> allRequests = redactedRequestsForDisplay(receivedRequests);
         String failureMessage;
         String serializedRequestToBeVerified = requestDefinitionSerializer.serialize(true, verificationSequence.getHttpRequests());
         Integer maximumNumberOfRequestToReturnInVerificationFailure = verificationSequence.getMaximumNumberOfRequestToReturnInVerificationFailure() != null ? verificationSequence.getMaximumNumberOfRequestToReturnInVerificationFailure() : configuration.maximumNumberOfRequestToReturnInVerificationFailure();
@@ -2442,7 +2491,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                 failureMessage += diffSummary;
             }
         }
-        final Object[] arguments = new Object[]{verificationSequence.getHttpRequests(), allRequests.size() == 1 ? allRequests.get(0) : allRequests};
+        final Object[] arguments = new Object[]{verificationSequence.getHttpRequests(), receivedRequests.size() == 1 ? receivedRequests.get(0) : receivedRequests};
         if (logResult && mockServerLogger.isEnabledForInstance(Level.INFO)) {
             mockServerLogger.logEvent(
                 new LogEntry()

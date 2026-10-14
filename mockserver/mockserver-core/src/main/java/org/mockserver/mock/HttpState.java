@@ -2514,8 +2514,14 @@ public class HttpState {
         if (verification.getExpectationId() != null) {
             // check valid expectation id and populate for error message
             verification.withRequest(resolveExpectationId(verification.getExpectationId()));
+            rejectUnverifiable(Collections.singletonList(verification.getHttpRequest()), BY_EXPECTATION_ID);
         }
-        rejectUnverifiable(Collections.singletonList(verification.getHttpRequest()));
+        if (verification.getHttpResponse() != null) {
+            rejectUnverifiable(Collections.singletonList(verification.getHttpRequest()), WITH_A_RESPONSE);
+        }
+        if (verification.getDisposition() != null) {
+            rejectUnverifiable(Collections.singletonList(verification.getHttpRequest()), BY_DISPOSITION);
+        }
         // T1.9 count-based verify fan-in. When enabled, aggregate each peer's LOCAL match
         // count with this node's before evaluating VerificationTimes, so a verify behind a
         // load balancer reflects fleet-wide traffic rather than only the node it hit.
@@ -2546,21 +2552,28 @@ public class HttpState {
     public void verify(VerificationSequence verificationSequence, Consumer<String> resultConsumer) {
         if (verificationSequence.getExpectationIds() != null && !verificationSequence.getExpectationIds().isEmpty()) {
             verificationSequence.withRequests(resolveExpectationIds(verificationSequence.getExpectationIds()));
+            rejectUnverifiable(verificationSequence.getHttpRequests(), BY_EXPECTATION_ID);
         }
-        rejectUnverifiable(verificationSequence.getHttpRequests());
+        if (verificationSequence.getHttpResponses() != null && !verificationSequence.getHttpResponses().isEmpty()) {
+            rejectUnverifiable(verificationSequence.getHttpRequests(), WITH_A_RESPONSE);
+        }
         mockServerLog.verify(verificationSequence, resultConsumer);
     }
 
+    private static final String BY_EXPECTATION_ID = "by expectation id, because MockServer does not record which expectation answered one; verify the DNS or binary request itself instead";
+    private static final String WITH_A_RESPONSE = "with a response, because they have no HTTP response";
+    private static final String BY_DISPOSITION = "by disposition, which counts only mocked or forwarded HTTP requests";
+
     /**
-     * DNS and binary requests are logged without their request definition, so a verification of one would count
-     * zero whatever was received and never() would pass. Reject it as invalid input (400), not as a failed
-     * verification (406), which a client polling for "never matched" would read as success.
+     * A DNS query or binary message is counted from its received-request entry, which is all that is recorded of it.
+     * A verification that counts other entries would count zero and never() would pass, so it is rejected as invalid
+     * input (400), not as a failed verification (406), which a client polling for "never matched" reads as success.
      */
-    private static void rejectUnverifiable(List<RequestDefinition> requestDefinitions) {
+    private static void rejectUnverifiable(List<RequestDefinition> requestDefinitions, String how) {
         if (requestDefinitions != null) {
             for (RequestDefinition requestDefinition : requestDefinitions) {
                 if (requestDefinition instanceof DnsRequestDefinition || requestDefinition instanceof BinaryRequestDefinition) {
-                    throw new IllegalArgumentException("DNS and binary requests cannot be verified, because MockServer does not record them in its request log, found:" + NEW_LINE + requestDefinition);
+                    throw new IllegalArgumentException("DNS and binary requests cannot be verified " + how + ", found:" + NEW_LINE + requestDefinition);
                 }
             }
         }
