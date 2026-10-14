@@ -87,6 +87,17 @@ public class BinaryRequestProxyingHandlerDelayTest {
         channel.checkException();
     }
 
+    /** As a client stops or starts reading what MockServer writes to it, its connection stops or starts being writable. */
+    private void clientWritable(boolean writable) {
+        channel.unsafe().outboundBuffer().setUserDefinedWritability(1, writable);
+        channel.runPendingTasks();
+        channel.checkException();
+    }
+
+    private boolean isReading() {
+        return channel.config().isAutoRead();
+    }
+
     private List<String> written() {
         List<String> written = new ArrayList<>();
         ByteBuf buffer;
@@ -220,6 +231,114 @@ public class BinaryRequestProxyingHandlerDelayTest {
         after(500);
         assertThat(written().size(), is(BinaryLocalReplies.MAX_WAITING_REPLIES + 1));
         assertThat("read again once every reply is written", ChannelReadPause.holds(channel), is(0));
+    }
+
+    @Test
+    public void shouldNotReadAClientThatCannotBeWrittenToOnceItsReplyIsWritten() {
+        expect("fast", "FAST", 0);
+        clientWritable(false);
+
+        send("fast");
+        assertThat("the reply is still written", written(), contains("FAST"));
+        assertThat("a client that does not read its replies is not read either", isReading(), is(false));
+        assertThat(ChannelReadPause.holds(channel), is(1));
+
+        send("fast");
+        assertThat(written(), contains("FAST"));
+        assertThat("one hold, however many replies", ChannelReadPause.holds(channel), is(1));
+
+        clientWritable(true);
+        assertThat("read again once it can be written to", isReading(), is(true));
+        assertThat(ChannelReadPause.holds(channel), is(0));
+    }
+
+    @Test
+    public void shouldNotReadAClientWithADelayedReplyWaitingWhileItCannotBeWrittenTo() {
+        expect("slow", "SLOW", 500);
+
+        send("slow");
+        clientWritable(false);
+        assertThat(isReading(), is(false));
+        after(500);
+        assertThat(written(), contains("SLOW"));
+        assertThat(isReading(), is(false));
+
+        clientWritable(true);
+        assertThat(isReading(), is(true));
+        assertThat(ChannelReadPause.holds(channel), is(0));
+    }
+
+    @Test
+    public void shouldKeepNotReadingAClientThatCanBeWrittenToAgainWhileTooManyRepliesStillWait() {
+        expect("slow", "SLOW", 500);
+        expect("fast", "FAST", 0);
+        send("slow");
+        for (int i = 0; i < BinaryLocalReplies.MAX_WAITING_REPLIES; i++) {
+            send("fast");
+        }
+        clientWritable(false);
+        clientWritable(true);
+        assertThat("the replies still wait", isReading(), is(false));
+        assertThat("one hold for both reasons", ChannelReadPause.holds(channel), is(1));
+
+        after(500);
+        assertThat(written().size(), is(BinaryLocalReplies.MAX_WAITING_REPLIES + 1));
+        assertThat(isReading(), is(true));
+    }
+
+    @Test
+    public void shouldKeepNotReadingAClientThatCannotBeWrittenToOnceItsWaitingRepliesAreWritten() {
+        expect("slow", "SLOW", 500);
+        expect("fast", "FAST", 0);
+        send("slow");
+        for (int i = 0; i < BinaryLocalReplies.MAX_WAITING_REPLIES; i++) {
+            send("fast");
+        }
+        clientWritable(false);
+
+        after(500);
+        assertThat(written().size(), is(BinaryLocalReplies.MAX_WAITING_REPLIES + 1));
+        assertThat("every reply is written, and none read", isReading(), is(false));
+        assertThat(ChannelReadPause.holds(channel), is(1));
+
+        clientWritable(true);
+        assertThat(isReading(), is(true));
+    }
+
+    @Test
+    public void shouldGiveUpTheHoldOnAClientThatCannotBeWrittenToWhenItCloses() {
+        expect("fast", "FAST", 0);
+        clientWritable(false);
+        send("fast");
+        assertThat(ChannelReadPause.holds(channel), is(1));
+
+        channel.pipeline().fireChannelInactive();
+
+        assertThat(ChannelReadPause.holds(channel), is(0));
+    }
+
+    @Test
+    public void shouldNotHoldAConnectionClosedByItsReply() {
+        clientWritable(false);
+
+        send("unknown");
+
+        assertThat(written().get(0), startsWith("unknown message format"));
+        assertThat(channel.isOpen(), is(false));
+        assertThat(ChannelReadPause.holds(channel), is(0));
+    }
+
+    @Test
+    public void shouldKeepReadingAClientThatReadsItsReplies() {
+        expect("fast", "FAST", 0);
+
+        for (int i = 0; i < 10; i++) {
+            send("fast");
+        }
+
+        assertThat(written().size(), is(10));
+        assertThat(isReading(), is(true));
+        assertThat(ChannelReadPause.holds(channel), is(0));
     }
 
     @Test

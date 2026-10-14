@@ -810,6 +810,7 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
     @Override
     public void channelWritabilityChanged(ChannelHandlerContext ctx) {
         BinaryRelay.clientWritabilityChanged(ctx.channel());
+        BinaryLocalReplies.writabilityChanged(ctx.channel());
         ForwardQueue queue = ctx.channel().attr(FORWARD_QUEUE).get();
         if (queue != null) {
             // may run after writability has changed back, so it acts on what the channel says now

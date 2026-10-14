@@ -5,6 +5,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.ScheduledFuture;
+import org.mockserver.netty.proxy.relay.BinaryRelay;
 import org.mockserver.socket.ChannelReadPause;
 
 import java.util.ArrayDeque;
@@ -19,12 +20,16 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
  * that delay, counted from when its message was handled, has passed and every earlier reply has been written; a
  * reply without one is written at once unless an earlier reply is still waiting. The wait is a timer on the
  * connection's event loop, cancelled when the connection closes. Used only on that event loop.
+ * <p>
+ * The connection is not read while it is not writable, so a client that does not read its replies cannot make them
+ * pile up in its outbound buffer: one {@link ChannelReadPause} hold, shared with the limit on waiting replies. A
+ * relayed connection is left to {@link BinaryRelay}, which holds such a client back itself.
  */
 final class BinaryLocalReplies {
 
     /**
      * The connection is not read while more replies than this wait, and is read again once they have all been
-     * written.
+     * written and it is writable.
      */
     static final int MAX_WAITING_REPLIES = 64;
     private static final AttributeKey<BinaryLocalReplies> LOCAL_REPLIES = AttributeKey.valueOf("BINARY_LOCAL_REPLIES");
@@ -50,17 +55,37 @@ final class BinaryLocalReplies {
         BinaryLocalReplies replies = channel.hasAttr(LOCAL_REPLIES) ? channel.attr(LOCAL_REPLIES).get() : null;
         if ((replies == null || replies.waiting.isEmpty()) && delayMillis <= 0) {
             writeNow(ctx, reply, closeAfter, afterWrite);
+            if (!channel.isWritable() && channel.isActive() && !BinaryRelay.hasRelay(channel)) {
+                // created only now, so a client that reads its replies costs nothing more
+                (replies != null ? replies : attach(ctx)).pauseOrResumeReads();
+            }
             return;
         }
         if (!channel.isActive()) {
             return;
         }
         if (replies == null) {
-            replies = new BinaryLocalReplies(ctx);
-            channel.attr(LOCAL_REPLIES).set(replies);
+            replies = attach(ctx);
         }
         long due = ctx.executor().ticker().nanoTime() + MILLISECONDS.toNanos(Math.max(0, delayMillis));
         replies.add(new Reply(reply, due, closeAfter, afterWrite));
+    }
+
+    /**
+     * Stops or starts reading the connection as it stops or starts being writable, once it has had a reply written
+     * by this class that left it not writable, or a reply waiting. Acts on what the channel says when it runs.
+     */
+    static void writabilityChanged(Channel channel) {
+        BinaryLocalReplies replies = channel.hasAttr(LOCAL_REPLIES) ? channel.attr(LOCAL_REPLIES).get() : null;
+        if (replies != null) {
+            replies.pauseOrResumeReads();
+        }
+    }
+
+    private static BinaryLocalReplies attach(ChannelHandlerContext ctx) {
+        BinaryLocalReplies replies = new BinaryLocalReplies(ctx);
+        ctx.channel().attr(LOCAL_REPLIES).set(replies);
+        return replies;
     }
 
     /**
@@ -82,7 +107,10 @@ final class BinaryLocalReplies {
                 replies.timer = null;
             }
             replies.waiting.clear();
-            replies.resumeReadsOnceDrained();
+            if (replies.readsPaused) {
+                replies.readsPaused = false;
+                ChannelReadPause.resume(channel);
+            }
         }
     }
 
@@ -91,9 +119,8 @@ final class BinaryLocalReplies {
         closing |= reply.closeAfter;
         if (waiting.size() == 1) {
             writeDue();
-        } else if (!readsPaused && waiting.size() > MAX_WAITING_REPLIES) {
-            readsPaused = true;
-            ChannelReadPause.pause(ctx.channel());
+        } else {
+            pauseOrResumeReads();
         }
     }
 
@@ -112,13 +139,20 @@ final class BinaryLocalReplies {
                 waiting.clear();
             }
         }
-        resumeReadsOnceDrained();
+        pauseOrResumeReads();
     }
 
-    private void resumeReadsOnceDrained() {
-        if (readsPaused && waiting.isEmpty()) {
+    private void pauseOrResumeReads() {
+        Channel channel = ctx.channel();
+        boolean clientBehind = !channel.isWritable() && !BinaryRelay.hasRelay(channel);
+        if (!readsPaused) {
+            if (channel.isActive() && (waiting.size() > MAX_WAITING_REPLIES || clientBehind)) {
+                readsPaused = true;
+                ChannelReadPause.pause(channel);
+            }
+        } else if (waiting.isEmpty() && !clientBehind) {
             readsPaused = false;
-            ChannelReadPause.resume(ctx.channel());
+            ChannelReadPause.resume(channel);
         }
     }
 

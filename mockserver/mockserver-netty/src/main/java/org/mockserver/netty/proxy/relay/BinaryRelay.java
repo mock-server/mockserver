@@ -166,6 +166,14 @@ public final class BinaryRelay {
     }
 
     /**
+     * Whether this connection has a relay, which then holds the client back itself when MockServer's own reply leaves
+     * it not writable ({@link #answeredLocally}).
+     */
+    public static boolean hasRelay(Channel client) {
+        return client.hasAttr(RELAY) && client.attr(RELAY).get() != null;
+    }
+
+    /**
      * Whether this connection's relay knows where the upstream's reply to each message ends, so a reply can be
      * dropped or replaced: one relayed with a protocol's framing (binaryMessageFraming POSTGRESQL) whose tracking has
      * not been given up on a malformed upstream message. Must be called on the client connection's event loop.
