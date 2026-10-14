@@ -129,6 +129,11 @@ Everything else is reported in the Buildkite annotation but does not change the 
 **Currently gating:**
 - `MatchingBenchmark` — `time_per_op` and `alloc_bytes_per_op` per matcher type / expectation count, on the shipped-default `detailedMatchFailures=true` arm (keys `<matcherType>_100_detailed`)
 - `forward.error_rate` (discriminating pass/fail, not a tuned threshold)
+- `churn.alloc_ratio_index_n15000`, the candidate-index churn/static allocation ratio from `run-g1-churn.sh` (absolute floor 1.5, provisional)
+
+The release perf preflight gate (`scripts/release/check-perf-preflight.sh`) also checks
+these last two against the newest daily run. See
+[release-process.md](../operations/release-process.md#release-preflight-performance-gate).
 
 **Notify-only until ≥ 10 clean run history exists to derive a budget from:**
 - All `regression.js` latency percentiles

@@ -33,7 +33,8 @@
 #                 a different history than the release (DIVERGENT, blocks).
 #   3. BUDGETS    for every budget marked `gating:true` in perf-budgets.json:
 #                 - ABSOLUTE-floored gating budgets are evaluated DIRECTLY against
-#                   this run's value (today: forward.error_rate). A breach BLOCKS
+#                   this run's value (today: forward.error_rate and
+#                   churn.alloc_ratio_index_n15000). A breach BLOCKS
 #                   unless an acceptance record covers it. A gating metric that is
 #                   absent from the run (e.g. the forward guard did not run) is
 #                   INDETERMINATE (fail-closed), never skipped.
@@ -103,8 +104,12 @@
 #   PERF_PREFLIGHT_AWS_BIN         aws binary (default aws) — test injection point
 #
 # USAGE
-#   scripts/release/check-perf-preflight.sh [--self-test]
+#   scripts/release/check-perf-preflight.sh [--self-test | --lint-budgets]
 #   AWS auth comes from the ambient environment, like the other release scripts.
+#   --lint-budgets reads only the budget file (no AWS, no run object): it exits 1
+#   when a gating budget has no value mapping here and is not a delegated
+#   (floor:null) or premerge_alloc.* entry, so that an unmapped gating budget
+#   fails CI when it is added, not when a release runs this gate.
 
 set -uo pipefail
 
@@ -122,9 +127,11 @@ BUDGETS_FILE="${PERF_BUDGETS_FILE:-$REPO_ROOT/mockserver-performance-test/perf-b
 ACCEPT_FILE="${PERF_ACCEPTED_REGRESSIONS_FILE:-$REPO_ROOT/mockserver-performance-test/perf-accepted-regressions.json}"
 
 RUN_SELF_TEST=false
+RUN_LINT=false
 for arg in "$@"; do
   case "$arg" in
     --self-test) RUN_SELF_TEST=true ;;
+    --lint-budgets) RUN_LINT=true ;;
     -h|--help)   awk 'NR==1{next} /^#/{sub(/^# ?/,"");print;next} {exit}' "${BASH_SOURCE[0]}"; exit 0 ;;
     *) echo "ERROR: unknown argument: $arg" >&2; exit 64 ;;
   esac
@@ -160,6 +167,7 @@ classify_budgets() {
     def gval($bkey):
       ($run[0]) as $r |
       if   $bkey == "forward.error_rate" then { known:true, value:($r.forward_guard.error_rate) }
+      elif $bkey == "churn.alloc_ratio_index_n15000" then { known:true, value:($r.churn.alloc_ratio_index_n15000) }
       else { known:false, value:null } end;
 
     # Does an acceptance record cover this metric+commit+VALUE? A record matches
@@ -225,6 +233,44 @@ classify_budgets() {
     ' "$budgets"
 }
 
+# lint_budget_mappings <budgets.json>
+# Grades every gating budget against an EMPTY run object, so only the mapping is
+# exercised (a mapped absolute budget reads ABSENT). Returns 1 on any
+# UNKNOWN_MAPPING row, a dropped row, a grader fault, or no gating budgets at all.
+lint_budget_mappings() {
+  local budgets="$1" empty="$WORK/lint-empty-run.json" expected rows rc n unmapped
+  echo '{}' > "$empty"
+  if ! expected="$(jq -e '[ (.budgets // {}) | to_entries[] | select((.value|type)=="object" and .value.gating==true) ] | length' "$budgets" 2>/dev/null)"; then
+    err "LINT FAIL: budget file missing or unparseable: $budgets"
+    return 1
+  fi
+  if [[ "$expected" -eq 0 ]]; then
+    err "LINT FAIL: $budgets declares no gating:true budgets"
+    return 1
+  fi
+  rows="$(classify_budgets "$empty" "$budgets" - 0000000)"; rc=$?
+  if [[ $rc -ne 0 ]]; then
+    err "LINT FAIL: the grader exited rc=$rc on $budgets"
+    return 1
+  fi
+  n="$(printf '%s\n' "$rows" | grep -c . || true)"
+  if [[ "$n" -ne "$expected" ]]; then
+    err "LINT FAIL: the grader classified $n of $expected gating budget(s)"
+    return 1
+  fi
+  unmapped="$(printf '%s\n' "$rows" | awk -F'\t' '$1=="UNKNOWN_MAPPING"{print "    " $2 ": " $3}')"
+  if [[ -n "$unmapped" ]]; then
+    err "LINT FAIL: the release perf preflight gate cannot evaluate these gating budget(s):"
+    err "$unmapped"
+    err "Map each one in gval() in scripts/release/check-perf-preflight.sh to the path where the"
+    err "daily run object carries it. Left unmapped, every release preflight fails closed."
+    return 1
+  fi
+  log "LINT OK: all ${expected} gating budget(s) in $budgets are classified:" \
+      "$(printf '%s\n' "$rows" | awk -F'\t' '$1=="ABSENT"{a++} $1=="RELATIVE_DELEGATED"{r++} $1=="SKIP_PREMERGE"{p++}
+            END{printf "%d absolute mapped, %d relative delegated, %d premerge_alloc out of scope", a, r, p}')"
+}
+
 # ---------------------------------------------------------------------------
 # Self-test: prove the grader tells good / bad / unprovable apart. No AWS.
 # ---------------------------------------------------------------------------
@@ -237,6 +283,7 @@ run_self_test() {
   cat > "$d/budgets.json" <<'JSON'
 { "budgets": {
   "forward.error_rate":              { "dir":"up",   "min_pct":0, "floor":0.01, "gating":true },
+  "churn.alloc_ratio_index_n15000":  { "dir":"up",   "min_pct":0, "floor":1.5,  "gating":true },
   "microbench.*.time_per_op":        { "dir":"up",   "min_pct":0.05, "floor":null, "gating":true },
   "premerge_alloc.MatchingBenchmark.alloc_bytes_per_op": { "dir":"up","min_pct":0,"floor":1850000,"gating":true },
   "behaviours.*.error_rate":         { "dir":"up",   "min_pct":0, "floor":0.005, "gating":false }
@@ -324,6 +371,27 @@ JSON
   local rows_down; rows_down="$(classify_budgets "$d/downhigh.json" "$d/budgets-down.json" - abc123def456)"
   expect_status "dir:down 0.5 not below floor 0.01" OK "forward.error_rate" "$rows_down"
 
+  # 8) churn.alloc_ratio_index_n15000 is read from .churn in the daily run object
+  echo '{"commit":"abc123def456","forward_guard":{"error_rate":0},"churn":{"alloc_ratio_index_n15000":1.05}}' > "$d/churn-ok.json"
+  expect_status "churn ratio 1.05 <= 1.5" OK "churn.alloc_ratio_index_n15000" \
+    "$(classify_budgets "$d/churn-ok.json" "$d/budgets.json" - abc123def456)"
+  echo '{"commit":"abc123def456","forward_guard":{"error_rate":0},"churn":{"alloc_ratio_index_n15000":1200}}' > "$d/churn-bad.json"
+  expect_status "churn ratio 1200 > 1.5" BREACH "churn.alloc_ratio_index_n15000" \
+    "$(classify_budgets "$d/churn-bad.json" "$d/budgets.json" - abc123def456)"
+  expect_status "churn ratio absent from the run" ABSENT "churn.alloc_ratio_index_n15000" "$rows_ok"
+
+  # 9) the lint accepts a fully classified budget file and rejects an unmapped one
+  if lint_budget_mappings "$d/budgets.json" >/dev/null 2>&1; then
+    echo "  ✓ lint passes a budget file whose gating budgets are all classified"
+  else
+    echo "  ✗ lint failed a fully classified budget file"; fails=$((fails+1))
+  fi
+  if lint_budget_mappings "$d/budgets-unknown.json" >/dev/null 2>&1; then
+    echo "  ✗ lint passed a budget file with an unmapped gating budget"; fails=$((fails+1))
+  else
+    echo "  ✓ lint fails a budget file with an unmapped gating budget"
+  fi
+
   if [[ $fails -eq 0 ]]; then
     log "Self-test PASSED — the grader distinguishes ok, breach, accepted, absent, unmapped"
     return 0
@@ -337,8 +405,16 @@ require_cmd() { command -v "$1" >/dev/null 2>&1 || { err "ERROR: required tool n
 require_cmd jq
 require_cmd git
 
+if [[ "$RUN_SELF_TEST" == "true" && "$RUN_LINT" == "true" ]]; then
+  err "ERROR: --self-test and --lint-budgets are separate modes; pass one"
+  exit 64
+fi
 if [[ "$RUN_SELF_TEST" == "true" ]]; then
   run_self_test
+  exit $?
+fi
+if [[ "$RUN_LINT" == "true" ]]; then
+  lint_budget_mappings "$BUDGETS_FILE"
   exit $?
 fi
 

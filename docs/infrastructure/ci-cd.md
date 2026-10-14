@@ -159,7 +159,10 @@ the release-script **Maven `unzip` prelude guard** (`check-release-maven-prelude
 Dockerfile sync, Helm chart validation, the **performance headline lint fixtures**
 (`website-perf-headline-lint-test.sh`, `trigger` queue, no Docker: the lint the website pipeline
 runs, exercised on fixtures and run on the committed site; see
-[website.md](../operations/website.md#performance-headline-lint)), and **API-collection validation**. The collection step
+[website.md](../operations/website.md#performance-headline-lint)), the **release perf preflight
+gate fixtures** (`perf-preflight-gate-test.sh`, which also fails when a gating budget in
+`perf-budgets.json` is one the gate cannot evaluate; see
+[release-process.md](../operations/release-process.md#release-preflight-performance-gate)), and **API-collection validation**. The collection step
 (`collections-validate.sh`) regenerates the Postman and Bruno collections from the
 OpenAPI spec and fails if the committed `examples/postman/**` or `examples/bruno/**`
 have drifted — so `examples/` and `jekyll-www.mock-server.com/mockserver-openapi.yaml`

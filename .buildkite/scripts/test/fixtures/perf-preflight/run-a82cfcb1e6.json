@@ -1,0 +1,71 @@
+{
+  "commit": "a82cfcb1e6ff95a23aafaa20f768c149e6b12425",
+  "branch": "master",
+  "timestamp_utc": "2026-10-14T11:58:09Z",
+  "validity": {
+    "valid": true,
+    "checks": [
+      {
+        "name": "source_provenance",
+        "ok": true,
+        "detail": "SUT image revision (a82cfcb1e6) is a well-formed git SHA — result is attributed to, and keyed in history by, the measured binary's own commit; the harness (build) commit a82cfcb1e6 is recorded separately as harness_commit"
+      },
+      {
+        "name": "sweep_client_had_headroom",
+        "ok": true,
+        "detail": "11 rung(s) measured with client headroom, no client-limited drops, low errors (rig_valid_peak_achieved_rps=43852.2)"
+      },
+      {
+        "name": "sweep_latency_window_accounts_every_request",
+        "ok": true,
+        "detail": "every rung: measured_sample_count + settle_excluded == sample_count"
+      },
+      {
+        "name": "growth_event_log_budget_scoped",
+        "ok": true,
+        "detail": "growth.js ran at maxEventLogSizeInBytes=268435456 (gauge-confirmed), restored to 47290368 with the in-flight cap back at 135115776"
+      },
+      {
+        "name": "resource_samples_present",
+        "ok": true,
+        "detail": "50 resource samples captured during growth"
+      },
+      {
+        "name": "regression_metrics_present",
+        "ok": true,
+        "detail": "regression behaviours present with non-null latency percentiles"
+      },
+      {
+        "name": "growth_heap_sampled",
+        "ok": true,
+        "detail": "live-set floor min_last_window=236978176 bytes (heap metrics captured)"
+      },
+      {
+        "name": "streaming_metrics_present",
+        "ok": true,
+        "detail": "streaming match A/B present (ratio=4.2857)"
+      },
+      {
+        "name": "clustered_metrics_present",
+        "ok": true,
+        "detail": "clustered A/B genuine: view=2 state_crossed=true arms=8"
+      }
+    ]
+  },
+  "forward_guard": {
+    "peak_rps": 1500,
+    "error_rate": 0,
+    "threshold": 0.01,
+    "passed": true,
+    "k6_exit": 0,
+    "status": "passed"
+  },
+  "churn": {
+    "alloc_ratio_index_n15000": 1.048835552199349,
+    "static_alloc_bytes_per_op": 273.2803802961248,
+    "churn_alloc_bytes_per_op": 286.62617857313415,
+    "n": 15000,
+    "index_mode": "INDEX",
+    "threads": 1
+  }
+}

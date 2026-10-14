@@ -99,6 +99,19 @@ steps:
         - exit_status: 255  # agent forced shutdown
           limit: 2
 
+  # The release perf preflight gate's fixture checks, including the lint that every gating
+  # budget in perf-budgets.json is one the gate can evaluate. perf-test lint runs them when the
+  # budget file changes; this step runs them when the gate script or its fixtures change.
+  - label: ":chart_with_downwards_trend: release perf preflight gate fixture checks"
+    command: ".buildkite/scripts/test/perf-preflight-gate-test.sh"
+    timeout_in_minutes: 5
+    retry:
+      automatic:
+        - exit_status: -1   # agent lost (e.g. Spot reclamation)
+          limit: 2
+        - exit_status: 255  # agent forced shutdown
+          limit: 2
+
   # Baseline-freshness assertion for the daily perf-regression control. It lives HERE,
   # in mockserver-infra, ON PURPOSE: a check that lives inside the system it monitors
   # (the perf pipeline) dies with it, so it sits in a DIFFERENT pipeline. It keys off

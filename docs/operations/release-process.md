@@ -257,7 +257,8 @@ It reads **one S3 query** (the newest run for the branch in
   unmeasured code (`STALE`, blocks); not an ancestor ⇒ `DIVERGENT` (blocks).
 - **Budgets** — the **blocking set is read from the budget file's own `gating` field**,
   never hard-coded. Only `gating:true` budgets can block. Those with an **absolute
-  floor** (today: `forward.error_rate`) are evaluated directly against the newest run;
+  floor** (today: `forward.error_rate` and `churn.alloc_ratio_index_n15000`) are evaluated
+  directly against the newest run;
   a breach blocks unless a reviewed acceptance covers it. **Relative-only** gating
   budgets (`microbench.*`, floor `null`) cannot be judged from a single run — they are
   reported as a delegated seam, covered by the daily `perf-test-compare.sh` gate, the
@@ -270,6 +271,15 @@ Every state it cannot resolve is its **own loud outcome, never a silent pass**:
 `2` indeterminate, `3` precondition. It runs automatically as a hard, non-`soft_fail`
 gate in the preflight pipeline **on the `perf` queue** — the queue whose IAM role holds
 the perf-results S3 grant. `--self-test` unit-tests the grader without AWS.
+
+**Adding a gating budget.** The gate only knows where to find an absolute gating budget's
+value if its key is mapped in `gval()` in the script. An unmapped one makes every release
+preflight `INDETERMINATE`. `--lint-budgets` (budget file only, no AWS) fails when a
+`gating:true` budget with a floor has no mapping and is not a `premerge_alloc.*` entry.
+`.buildkite/scripts/test/perf-preflight-gate-test.sh` runs it with the other gate checks,
+in `perf-test-lint.sh` when the budget file changes and in `mockserver-infra` when the
+gate script changes. So a new gating budget fails CI in the commit that adds it, rather
+than at release time.
 
 **Accepted regressions** are recorded — the only way to silence a `BREACH` — in
 `mockserver-performance-test/perf-accepted-regressions.json` (a reviewed diff, owned by
