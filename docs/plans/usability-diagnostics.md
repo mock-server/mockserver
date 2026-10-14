@@ -106,7 +106,7 @@ flowchart LR
   expectations, `times` / time to live / percentage of 0, unreachable sequential responses, five path
   mistakes, method and header-name typos, and STRICT JSON arrays (info). `PUT /mockserver/expectation`
   runs the per-expectation rules and reports them in `x-mockserver-lint-warnings` and a WARN log; the
-  O(n²) shadowing check is on demand only, capped at 100,000 pairs and a regex step budget.
+  O(n²) shadowing check runs on demand and once per initialisation-file load, capped at 100,000 pairs and a regex step budget (a regex that overflows the stack counts as not covering). Each JSON initialisation file load (start-up and `--watch` reloads) runs the per-expectation rules and the shadowing check over that file and logs one capped WARN naming it, not repeated while the problems are unchanged (A8c).
   The dashboard's Active Expectations panel has a Lint button (`LintDialog`: severity, rule,
   message, a Shadowed by link, ids that open in the composer), and the composer and the
   Expectation JSON import show a Lint Warnings badge from `x-mockserver-lint-warnings` (A8b).
@@ -129,14 +129,13 @@ flowchart LR
   from the property's getter), credentials redacted, and lists the unrecognised keys by name with
   their suggestions.
 
-**Gaps:** lint at initialisation-file load; a Velocity time limit that cannot stop a single long Java call or cap memory (A5h).
+**Gaps:** a Velocity time limit that cannot stop a single long Java call or cap memory (A5h).
 
 ## Items
 
 | # | Problem → proposal | Cost | Performance reasoning | Effort | Risks | Priority |
 |---|---|---|---|---|---|---|
-| A8d | `control_plane_authorisation.html` lists read operations by example and does not name `lint` (left out of A8 to avoid a conflict with A5's edit of the adjacent mutate row) → add `lint` (and `explain` if still missing) to the read row | (iv) | Docs only | S | None | P3 |
-| A8c | Expectations loaded from `initializationJsonPath` (and `--watch` reloads) never pass through `PUT /mockserver/expectation`, so they get no lint warnings → run `ExpectationLinter`'s per-expectation rules (and optionally the budgeted shadowing check) once per load and log a WARN summary | (iv) | Once per file load; linear rules, shadowing within its 100,000-pair budget | S | A large initialiser must not log thousands of lines: cap as `adviseOnUpsert` does | P2 |
+| A8f | `DUPLICATE_ID` says "only the last one is kept", which is true for `PUT /mockserver/expectation` (`HttpState.add` upserts each entry in turn) but false for an `initializationJsonPath` file: its load goes through `RequestMatchers.update`, which keeps the first entry with each id, so `mockserver lint init.json` names the wrong survivor → make the message depend on the source (initialisation file: first kept; body: last kept), or make a file load keep the last entry like an upsert (a behaviour change: decide which) | (iv) | Control plane only; one pass over the ids | S | Changing which duplicate a file load keeps changes served responses for existing users: prefer fixing the message; add a test that loads a file with a duplicate id and asserts which entry serves | P3 |
 | A11b | An overridden property shows only its effective value → show its built-in default beside it in the effective-config view, `nonDefault` and `diagnose_config`. Today the default is read from the property's getter, which returns the effective value while a tier supplies one, so this needs a way to ask a getter for its default (for example a default table the getters read, or a read mode that ignores the tiers) | (iv) / (iii) | Startup / on demand only | M | Must not add work to the per-request property read (`readPropertyHierarchically` is on the hot path); the default must go through `redactSensitiveValue` | P3 |
 | A8e | The `x-mockserver-lint-warnings` badge (A8b) shows only after a composer register or an Expectation JSON import; Generate Stub (`lib/generateStub.ts`), Capture as Mock (`CaptureAsMockDialog`) and Apply Fix (`lib/expectationFix.ts`) also PUT `/mockserver/expectation` but ignore the header → read `lintWarningCount(res)` in each path and render `LintWarningsBadge` where it reports success | (iii) | UI only; reads a header the PUT already returns | S | None | P3 |
 | B5 | Optional plain-language summary of explain results from a configured LLM (`?narrate=true`) | (iii) | On demand, asynchronous, timeout-bounded, never inline in a 404 | S | Off by default; label as AI-generated; always return the deterministic facts too | P3 |
@@ -168,7 +167,7 @@ flowchart LR
 1. **Wave 0 — hygiene and performance:** A2d. (A2, A2b, A2c, C1 and C1b landed.)
 2. **Wave 1 — explain engine:** done (A3, A10 and B1 landed).
 3. **Wave 2 — failure classes:** A5e, A5g, A5h and A5i, each with an MCP tool and a dashboard entry where it applies. (A4, A6 and A6b landed; B1c added the MCP tools for A4, A5, A8 and B3; A5 landed, with its dashboard entry in A5b; A5c and A5d landed; A5f waits for the 9.0.0 major release.)
-4. **Wave 3 — fixes:** A8c, A8e. (B2, B3, A9b, A8, including the CLI, and A8b landed.)
+4. **Wave 3 — fixes:** A8e, A8f. (B2, B3, A9b, A8, including the CLI, A8b, initialisation-file lint (A8c) and the authorisation page (A8d) landed.)
 5. **Wave 4 — optional:** B5, A11b. (B6, B7, A11 and B1b landed.)
 
 ## Performance rules for every item

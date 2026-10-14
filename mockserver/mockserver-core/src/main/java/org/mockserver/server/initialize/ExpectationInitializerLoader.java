@@ -9,6 +9,7 @@ import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
+import org.mockserver.mock.ExpectationLinter;
 import org.mockserver.mock.RequestMatchers;
 import org.mockserver.mock.listeners.MockServerMatcherNotifier;
 import org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause;
@@ -19,6 +20,7 @@ import org.mockserver.serialization.ExpectationSerializer;
 import java.lang.reflect.Constructor;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -33,11 +35,14 @@ public class ExpectationInitializerLoader {
 
     private static final LRUCache<String, List<String>> EXPANDED_INITIALIZATION_JSON_PATHS = new LRUCache<>(new MockServerLogger(LRUCache.class), 10, TimeUnit.HOURS.toMillis(1));
     private static final LRUCache<String, List<String>> EXPANDED_INITIALIZATION_OPENAPI_PATHS = new LRUCache<>(new MockServerLogger(LRUCache.class), 10, TimeUnit.HOURS.toMillis(1));
+    private static final int MAX_LINT_DIGESTS = 1_000;
     private final Configuration configuration;
     private final ExpectationSerializer expectationSerializer;
     private final OpenAPIConverter openAPIConverter;
     private final MockServerLogger mockServerLogger;
     private final RequestMatchers requestMatchers;
+    // per file, the problems last logged, so a --watch reload that finds the same ones stays quiet
+    private final Map<String, Integer> lintDigests = new ConcurrentHashMap<>();
 
     public ExpectationInitializerLoader(Configuration configuration, MockServerLogger mockServerLogger, RequestMatchers requestMatchers) {
         this.configuration = configuration;
@@ -265,6 +270,7 @@ public class ExpectationInitializerLoader {
                         }
                         failFastIfConfigured("JSON file", initializationJsonPath, throwable);
                     }
+                    adviseOnLoad(initializationJsonPath, expectations, expectationIds);
                 }
                 if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
                     mockServerLogger.logEvent(
@@ -278,6 +284,33 @@ public class ExpectationInitializerLoader {
                 return Arrays.stream(expectations);
             })
             .collect(Collectors.toList());
+    }
+
+    // lint is advisory: a failure in it must never stop a file loading, or fail startup
+    private void adviseOnLoad(String initializationJsonPath, Expectation[] expectations, Set<String> generatedIds) {
+        try {
+            Integer previousDigest = lintDigests.get(initializationJsonPath);
+            int digest = ExpectationLinter.adviseOnLoad(mockServerLogger, initializationJsonPath, expectations, generatedIds, previousDigest != null ? previousDigest : 0);
+            if (digest == 0) {
+                lintDigests.remove(initializationJsonPath);
+            } else {
+                if (lintDigests.size() >= MAX_LINT_DIGESTS && !lintDigests.containsKey(initializationJsonPath)) {
+                    lintDigests.clear();
+                }
+                lintDigests.put(initializationJsonPath, digest);
+            }
+        } catch (Throwable lintFailure) {
+            if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(WARN)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(SERVER_CONFIGURATION)
+                        .setLogLevel(WARN)
+                        .setMessageFormat("expectation lint failed for JSON initialization file:{}its expectations were loaded unchanged")
+                        .setArguments(initializationJsonPath)
+                        .setThrowable(lintFailure)
+                );
+            }
+        }
     }
 
     @VisibleForTesting

@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.configuration.Configuration;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.RequestMatchers;
@@ -15,6 +16,7 @@ import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.server.initialize.ExpectationInitializerLoader;
 import org.mockserver.test.Retries;
 import org.mockserver.uuid.UUIDService;
+import org.slf4j.event.Level;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -22,6 +24,8 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -853,6 +857,48 @@ public class ExpectationFileWatcherTest {
                         )
                 )
             );
+        } finally {
+            if (expectationFileWatcher != null) {
+                expectationFileWatcher.stop();
+            }
+        }
+    }
+
+    @Test
+    public void shouldLogLintWarningsForTheExpectationsAReloadLoads() throws Exception {
+        ExpectationFileWatcher expectationFileWatcher = null;
+        try {
+            // given - an empty watched file, so the start-up load lints nothing
+            File mockserverInitialization = new File(temporaryFolder.getRoot(), "mockserverInitialization" + UUIDService.getUUID() + ".json");
+            Files.write(mockserverInitialization.toPath(), new byte[0]);
+            Configuration configuration = configuration()
+                .initializationJsonPath(mockserverInitialization.getPath())
+                .watchInitializationJson(true)
+                .watchInitializationJsonPollPeriodMillis(POLL_PERIOD_MILLIS);
+            List<LogEntry> logged = new CopyOnWriteArrayList<>();
+            MockServerLogger logger = new MockServerLogger(configuration, ExpectationFileWatcherTest.class) {
+                @Override
+                public void logEvent(LogEntry logEntry) {
+                    logged.add(logEntry);
+                }
+            };
+            CompletableFuture<String> expectationsUpdated = new CompletableFuture<>();
+            requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
+            expectationFileWatcher = new ExpectationFileWatcher(configuration, logger, requestMatchers, new ExpectationInitializerLoader(configuration, logger, requestMatchers));
+
+            // when - the file is rewritten with an expectation that can never match
+            Files.write(mockserverInitialization.toPath(), ("[ { \"id\" : \"no-slash\", \"httpRequest\" : { \"path\" : \"users\" }, \"httpResponse\" : { \"statusCode\" : 200 } } ]").getBytes(StandardCharsets.UTF_8));
+            expectationsUpdated.get(30, SECONDS);
+
+            // then - it is loaded, and the reload logged one lint WARN naming it
+            assertThat(requestMatchers.retrieveActiveExpectations(null).size(), equalTo(1));
+            List<String> warnings = logged.stream()
+                .filter(entry -> entry.getLogLevel() == Level.WARN && entry.getMessage().contains("expectation lint found"))
+                .map(LogEntry::getMessage)
+                .collect(Collectors.toList());
+            assertThat(String.valueOf(warnings), warnings.size(), equalTo(1));
+            assertThat(warnings.get(0).contains("PATH_MISSING_LEADING_SLASH expectation 'no-slash' (any method users)"), equalTo(true));
+            assertThat(warnings.get(0).contains(mockserverInitialization.getPath()), equalTo(true));
         } finally {
             if (expectationFileWatcher != null) {
                 expectationFileWatcher.stop();

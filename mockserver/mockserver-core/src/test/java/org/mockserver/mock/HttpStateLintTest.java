@@ -415,6 +415,32 @@ public class HttpStateLintTest {
         assertThat("lint changes nothing", httpState.firstMatchingExpectation(request().withPath("/stored/1")).getId(), is("catch-all"));
     }
 
+    @Test
+    public void shouldNotFailWhenARegexOverflowsTheStackDuringTheShadowingCheck() throws Throwable {
+        // given - a regex that java.util.regex matches recursively, compared with a 12,001 character literal path
+        String body = "[{\"id\":\"catch-all\",\"httpRequest\":{\"path\":\"/(a|b)*\"},\"httpResponse\":{}},"
+            + "{\"id\":\"long\",\"httpRequest\":{\"path\":\"/" + new String(new char[6_000]).replace("\0", "ab") + "\"},\"httpResponse\":{}}]";
+        JsonNode[] result = new JsonNode[1];
+        Throwable[] escaped = new Throwable[1];
+
+        // when
+        Thread thread = new Thread(null, () -> {
+            try {
+                result[0] = lintBody(body);
+            } catch (Throwable throwable) {
+                escaped[0] = throwable;
+            }
+        }, "small-stack", 512 * 1024);
+        thread.start();
+        thread.join(TimeUnit.SECONDS.toMillis(120));
+        assertThat("finished", thread.isAlive(), is(false));
+        assertThat(String.valueOf(escaped[0]), escaped[0] == null, is(true));
+
+        // then - a 200, and the pair counts as not shadowed because it cannot be proved
+        assertThat(result[0].toPrettyString(), rules(result[0]), not(hasItem("SHADOWED")));
+        assertThat(result[0].path("expectationsChecked").asInt(), is(2));
+    }
+
     // ---- advice on PUT /mockserver/expectation ----
 
     @Test

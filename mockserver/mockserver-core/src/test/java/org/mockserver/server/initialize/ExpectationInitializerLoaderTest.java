@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -769,6 +770,194 @@ public class ExpectationInitializerLoaderTest {
             ExpectationInitializerException.class,
             () -> new ExpectationInitializerLoader(configuration, new MockServerLogger(configuration, ExpectationInitializerLoaderTest.class), mock(RequestMatchers.class))
         );
+    }
+
+    // --- lint of the expectations a JSON initializer file loads ----------------------------------
+
+    private static final String LINT_PROBLEMS = "[" +
+        " { \"id\" : \"catch-all\", \"httpRequest\" : { \"path\" : \"/orders/.*\" }, \"httpResponse\" : { \"statusCode\" : 200 } }," +
+        " { \"id\" : \"specific\", \"httpRequest\" : { \"path\" : \"/orders/1\" }, \"httpResponse\" : { \"statusCode\" : 201 } }," +
+        " { \"httpRequest\" : { \"path\" : \"users\" }, \"httpResponse\" : { \"statusCode\" : 202 } }," +
+        " { \"id\" : \"strict\", \"httpRequest\" : { \"path\" : \"/strict\", \"body\" : { \"type\" : \"JSON\", \"json\" : \"{\\\"items\\\":[1]}\", \"matchType\" : \"STRICT\" } }, \"httpResponse\" : { \"statusCode\" : 203 } }" +
+        " ]";
+
+    private static java.util.List<String> lintWarnings(java.util.List<org.mockserver.log.model.LogEntry> logged) {
+        return logged.stream()
+            .filter(entry -> entry.getLogLevel() == org.slf4j.event.Level.WARN && entry.getMessage().contains("expectation lint found"))
+            .map(org.mockserver.log.model.LogEntry::getMessage)
+            .collect(java.util.stream.Collectors.toList());
+    }
+
+    private static MockServerLogger capturingLogger(java.util.List<org.mockserver.log.model.LogEntry> logged) {
+        return new MockServerLogger(configuration().logLevel("INFO"), ExpectationInitializerLoaderTest.class) {
+            @Override
+            public void logEvent(org.mockserver.log.model.LogEntry logEntry) {
+                logged.add(logEntry);
+            }
+        };
+    }
+
+    @Test
+    public void shouldLogOneLintWarningForAJsonInitializerFileAndStillLoadEveryExpectation() throws Exception {
+        // given
+        File file = initializerFile(LINT_PROBLEMS);
+        Configuration configuration = configuration().initializationJsonPath(file.getAbsolutePath());
+        java.util.List<org.mockserver.log.model.LogEntry> logged = new java.util.concurrent.CopyOnWriteArrayList<>();
+        RequestMatchers requestMatchers = mock(RequestMatchers.class);
+
+        // when
+        new ExpectationInitializerLoader(configuration, capturingLogger(logged), requestMatchers);
+
+        // then - all four are loaded unchanged
+        org.mockito.ArgumentCaptor<Expectation[]> loaded = org.mockito.ArgumentCaptor.forClass(Expectation[].class);
+        org.mockito.Mockito.verify(requestMatchers).update(loaded.capture(), org.mockito.ArgumentMatchers.any());
+        assertThat(loaded.getValue().length, is(4));
+        String generatedId = loaded.getValue()[2].getId();
+        // and - one WARN names the file, the shadowed and the path problems, but not the STRICT information
+        java.util.List<String> warnings = lintWarnings(logged);
+        assertThat(String.valueOf(warnings), warnings.size(), is(1));
+        String warning = warnings.get(0);
+        assertThat(warning, org.hamcrest.Matchers.containsString("expectation lint found 2 problem(s) in the expectations loaded from initialization file:"));
+        assertThat(warning, org.hamcrest.Matchers.containsString(file.getAbsolutePath()));
+        assertThat(warning, org.hamcrest.Matchers.containsString("SHADOWED expectation 'specific' (any method /orders/1): never matches: 'catch-all' (any method /orders/.*) is evaluated first"));
+        assertThat(warning, org.hamcrest.Matchers.containsString("PATH_MISSING_LEADING_SLASH expectation any method users: "));
+        assertThat("an id the loader generated is not one the user can find in the file", warning.contains(generatedId), is(false));
+        assertThat(warning.contains("STRICT_JSON_BODY_WITH_ARRAYS"), is(false));
+    }
+
+    @Test
+    public void shouldCompareTheExpectationsInAnInitializerFileByPriorityThenFileOrder() throws Exception {
+        // given - the catch-all is listed last but has the higher priority, so it is evaluated first
+        File file = initializerFile("[" +
+            " { \"id\" : \"specific\", \"httpRequest\" : { \"path\" : \"/items/1\" }, \"httpResponse\" : { \"statusCode\" : 200 } }," +
+            " { \"id\" : \"catch-all\", \"priority\" : 10, \"httpRequest\" : { \"path\" : \"/items/.*\" }, \"httpResponse\" : { \"statusCode\" : 201 } }" +
+            " ]");
+        java.util.List<org.mockserver.log.model.LogEntry> logged = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+        // when
+        new ExpectationInitializerLoader(configuration().initializationJsonPath(file.getAbsolutePath()), capturingLogger(logged), mock(RequestMatchers.class));
+
+        // then
+        java.util.List<String> warnings = lintWarnings(logged);
+        assertThat(String.valueOf(warnings), warnings.size(), is(1));
+        assertThat(warnings.get(0), org.hamcrest.Matchers.containsString("SHADOWED expectation 'specific' (any method /items/1): never matches: 'catch-all' (any method /items/.*) is evaluated first (priority 10 > 0)"));
+    }
+
+    @Test
+    public void shouldNotLogALintWarningForAWellFormedInitializerFile() throws Exception {
+        // given - distinct paths, and a STRICT JSON array, which is information only
+        File file = initializerFile("[" +
+            " { \"id\" : \"one\", \"httpRequest\" : { \"method\" : \"GET\", \"path\" : \"/one\" }, \"httpResponse\" : { \"statusCode\" : 200 } }," +
+            " { \"id\" : \"strict\", \"httpRequest\" : { \"path\" : \"/strict\", \"body\" : { \"type\" : \"JSON\", \"json\" : \"{\\\"items\\\":[1]}\", \"matchType\" : \"STRICT\" } }, \"httpResponse\" : { \"statusCode\" : 201 } }" +
+            " ]");
+        java.util.List<org.mockserver.log.model.LogEntry> logged = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+        // when
+        new ExpectationInitializerLoader(configuration().initializationJsonPath(file.getAbsolutePath()), capturingLogger(logged), mock(RequestMatchers.class));
+
+        // then
+        assertThat(lintWarnings(logged), org.hamcrest.Matchers.empty());
+    }
+
+    @Test
+    public void shouldCapTheLintWarningForALargeInitializerFileAndSayWhenTheShadowingCheckStopped() throws Exception {
+        // given - 600 regex paths, so every pair is a candidate and the 100,000 comparison budget runs out
+        StringBuilder json = new StringBuilder("[");
+        for (int i = 0; i < 600; i++) {
+            json.append(i == 0 ? "" : ",").append(" { \"httpRequest\" : { \"path\" : \"").append(i < 25 ? "" : "/").append("p").append(i).append("/.*\" }, \"httpResponse\" : { \"statusCode\" : 200 } }");
+        }
+        File file = initializerFile(json.append(" ]").toString());
+        java.util.List<org.mockserver.log.model.LogEntry> logged = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+        // when
+        new ExpectationInitializerLoader(configuration().initializationJsonPath(file.getAbsolutePath()), capturingLogger(logged), mock(RequestMatchers.class));
+
+        // then - one WARN, twenty problems listed, the rest counted
+        java.util.List<String> warnings = lintWarnings(logged);
+        assertThat(String.valueOf(warnings), warnings.size(), is(1));
+        String warning = warnings.get(0);
+        assertThat(warning, org.hamcrest.Matchers.containsString("expectation lint found 25 problem(s)"));
+        assertThat(warning.split("PATH_MISSING_LEADING_SLASH", -1).length - 1, is(20));
+        assertThat(warning, org.hamcrest.Matchers.containsString(" - and 5 more"));
+        assertThat(warning, org.hamcrest.Matchers.containsString(" - the shadowing check stopped at its budget, so not every pair of expectations was compared"));
+    }
+
+    // a regex like /(a|b)* recurses once per repeated character in java.util.regex, so a long literal path that the
+    // shadowing check compares with it overflows a small stack long before the step budget ends
+    private static final String DEEP_REGEX_RECURSION = "[" +
+        " { \"id\" : \"catch-all\", \"httpRequest\" : { \"path\" : \"/(a|b)*\" }, \"httpResponse\" : { \"statusCode\" : 200 } }," +
+        " { \"id\" : \"long\", \"httpRequest\" : { \"path\" : \"/" + new String(new char[6_000]).replace("\0", "ab") + "\" }, \"httpResponse\" : { \"statusCode\" : 201 } }" +
+        " ]";
+
+    private static void onASmallStack(Runnable runnable) throws Throwable {
+        Throwable[] escaped = new Throwable[1];
+        Thread thread = new Thread(null, () -> {
+            try {
+                runnable.run();
+            } catch (Throwable throwable) {
+                escaped[0] = throwable;
+            }
+        }, "small-stack", 512 * 1024);
+        thread.start();
+        thread.join(TimeUnit.SECONDS.toMillis(120));
+        assertThat("finished", thread.isAlive(), is(false));
+        if (escaped[0] != null) {
+            throw escaped[0];
+        }
+    }
+
+    @Test
+    public void shouldLoadAnInitializerFileWhoseRegexOverflowsTheStackWhenLinted() throws Throwable {
+        // given
+        File file = initializerFile(DEEP_REGEX_RECURSION);
+        java.util.List<org.mockserver.log.model.LogEntry> logged = new java.util.concurrent.CopyOnWriteArrayList<>();
+        RequestMatchers requestMatchers = mock(RequestMatchers.class);
+
+        // when
+        onASmallStack(() -> new ExpectationInitializerLoader(configuration().initializationJsonPath(file.getAbsolutePath()), capturingLogger(logged), requestMatchers));
+
+        // then - both load, the pair counts as not shadowed (it cannot be proved), and lint itself did not fail
+        org.mockito.ArgumentCaptor<Expectation[]> loaded = org.mockito.ArgumentCaptor.forClass(Expectation[].class);
+        org.mockito.Mockito.verify(requestMatchers).update(loaded.capture(), org.mockito.ArgumentMatchers.any());
+        assertThat(loaded.getValue().length, is(2));
+        java.util.List<String> warnings = logged.stream()
+            .filter(entry -> entry.getLogLevel() == org.slf4j.event.Level.WARN)
+            .map(org.mockserver.log.model.LogEntry::getMessage)
+            .collect(java.util.stream.Collectors.toList());
+        assertThat(String.valueOf(warnings), warnings, org.hamcrest.Matchers.empty());
+    }
+
+    @Test
+    public void shouldNotRepeatTheLintWarningWhenAReloadFindsTheSameProblems() throws Exception {
+        // given - the file is loaded once at construction
+        File file = initializerFile("[ { \"id\" : \"no-slash\", \"httpRequest\" : { \"path\" : \"users\" }, \"httpResponse\" : { \"statusCode\" : 200 } } ]");
+        java.util.List<org.mockserver.log.model.LogEntry> logged = new java.util.concurrent.CopyOnWriteArrayList<>();
+        ExpectationInitializerLoader loader = new ExpectationInitializerLoader(configuration().initializationJsonPath(file.getAbsolutePath()), capturingLogger(logged), mock(RequestMatchers.class));
+        assertThat(lintWarnings(logged).size(), is(1));
+
+        // when - reloaded unchanged, as a --watch reload of another file (or a persisted PUT) does
+        loader.retrieveExpectationsFromFile("", "", "", org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause.Type.FILE_INITIALISER);
+
+        // then - no repeat
+        assertThat(lintWarnings(logged).size(), is(1));
+
+        // when - the problems change
+        Files.write(file.toPath(), "[ { \"id\" : \"no-slash\", \"httpRequest\" : { \"path\" : \"orders\" }, \"httpResponse\" : { \"statusCode\" : 200 } } ]".getBytes(StandardCharsets.UTF_8));
+        loader.retrieveExpectationsFromFile("", "", "", org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause.Type.FILE_INITIALISER);
+
+        // then - logged again
+        java.util.List<String> warnings = lintWarnings(logged);
+        assertThat(warnings.size(), is(2));
+        assertThat(warnings.get(1), org.hamcrest.Matchers.containsString("use \"/orders\""));
+
+        // when - fixed, then broken again the same way
+        Files.write(file.toPath(), "[ { \"id\" : \"no-slash\", \"httpRequest\" : { \"path\" : \"/orders\" }, \"httpResponse\" : { \"statusCode\" : 200 } } ]".getBytes(StandardCharsets.UTF_8));
+        loader.retrieveExpectationsFromFile("", "", "", org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause.Type.FILE_INITIALISER);
+        Files.write(file.toPath(), "[ { \"id\" : \"no-slash\", \"httpRequest\" : { \"path\" : \"orders\" }, \"httpResponse\" : { \"statusCode\" : 200 } } ]".getBytes(StandardCharsets.UTF_8));
+        loader.retrieveExpectationsFromFile("", "", "", org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause.Type.FILE_INITIALISER);
+
+        // then - the reintroduced problem is reported
+        assertThat(lintWarnings(logged).size(), is(3));
     }
 
 }

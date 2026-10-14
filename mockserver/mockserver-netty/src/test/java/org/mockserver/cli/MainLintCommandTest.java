@@ -110,6 +110,30 @@ public class MainLintCommandTest {
     }
 
     @Test
+    public void shouldNotFailWhenARegexOverflowsTheStackDuringTheShadowingCheck() throws Throwable {
+        // a regex that java.util.regex matches recursively, compared with a 12,001 character literal path
+        File expectations = file("deep-regex.json", "[{\"id\":\"catch-all\",\"httpRequest\":{\"path\":\"/(a|b)*\"},\"httpResponse\":{}},"
+            + "{\"id\":\"long\",\"httpRequest\":{\"path\":\"/" + new String(new char[6_000]).replace("\0", "ab") + "\"},\"httpResponse\":{}}]");
+        Output[] output = new Output[1];
+        Throwable[] escaped = new Throwable[1];
+
+        Thread thread = new Thread(null, () -> {
+            try {
+                output[0] = lint(expectations.getAbsolutePath());
+            } catch (Throwable throwable) {
+                escaped[0] = throwable;
+            }
+        }, "small-stack", 512 * 1024);
+        thread.start();
+        thread.join(java.util.concurrent.TimeUnit.SECONDS.toMillis(120));
+
+        assertThat("finished", thread.isAlive(), is(false));
+        assertThat(String.valueOf(escaped[0]), escaped[0] == null, is(true));
+        assertThat(output[0].err, output[0].exitCode, is(0));
+        assertThat(output[0].out, containsString("checked 2 expectation(s) in 1 file(s): 0 error(s), 0 warning(s), 0 info"));
+    }
+
+    @Test
     public void shouldBeAKnownSubcommand() {
         assertThat(Main.preprocessArguments("lint", "./expectations.json")[0], is("lint"));
     }

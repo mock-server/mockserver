@@ -45,8 +45,9 @@ import java.util.regex.PatternSyntaxException;
 /**
  * Advisory checks for expectations that can never match, or will not match the way they read. Lint never rejects or
  * changes an expectation. The per-expectation checks are cheap and run on every {@code PUT /mockserver/expectation};
- * the pairwise shadowing check runs only on demand ({@code PUT /mockserver/lint}, {@code mockserver lint}) and within
- * a comparison budget, so a large expectation set reports truncation instead of taking unbounded time.
+ * the pairwise shadowing check runs only on demand ({@code PUT /mockserver/lint}, {@code mockserver lint}) and once per
+ * initialisation file load, within a comparison budget, so a large expectation set reports truncation instead of
+ * taking unbounded time.
  */
 public final class ExpectationLinter {
 
@@ -249,32 +250,87 @@ public final class ExpectationLinter {
             return response;
         }
         if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(Level.WARN)) {
-            StringBuilder lines = new StringBuilder();
-            for (int i = 0; i < Math.min(warnings.size(), MAX_LOGGED_ISSUES); i++) {
-                Issue issue = warnings.get(i);
-                lines.append("\n - ").append(issue.rule.name()).append(" expectation ").append(issue.subject.describe()).append(": ").append(issue.message);
-            }
-            if (warnings.size() > MAX_LOGGED_ISSUES) {
-                lines.append("\n - and ").append(warnings.size() - MAX_LOGGED_ISSUES).append(" more");
-            }
-            String detail = lines.toString();
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.WARN)
                     .setLogLevel(Level.WARN)
                     .setMessageFormat("expectation lint found " + warnings.size() + " problem(s) in the expectations just created or updated, which were stored unchanged; PUT /mockserver/lint checks every stored expectation, including for shadowing:{}")
-                    .setArguments(detail)
+                    .setArguments(warningLines(warnings, ""))
             );
         }
         return response.withHeader(LINT_WARNINGS_HEADER, Integer.toString(warnings.size()));
     }
 
+    /**
+     * The per-expectation checks, at warning severity or above, and the budgeted shadowing check for the expectations
+     * one initialization file has just loaded, compared in the order the file lists them at each priority. Logs one
+     * WARN naming the file and never changes what was loaded. Ids in {@code generatedIds} were assigned by the loader,
+     * not written in the file, so messages name those expectations by method and path instead.
+     * <p>
+     * Returns a digest of the problems found, 0 when there are none. The WARN is skipped when the digest equals
+     * {@code previousDigest}, so a reload that finds the same problems in the same file does not repeat them.
+     */
+    public static int adviseOnLoad(MockServerLogger mockServerLogger, String file, Expectation[] loaded, Set<String> generatedIds, int previousDigest) {
+        if (mockServerLogger == null || !mockServerLogger.isEnabledForInstance(Level.WARN)) {
+            return previousDigest;
+        }
+        if (loaded.length == 0) {
+            return 0;
+        }
+        List<Subject> subjects = new ArrayList<>();
+        for (int index = 0; index < loaded.length; index++) {
+            Expectation expectation = loaded[index];
+            String id = generatedIds.contains(expectation.getId()) ? null : expectation.getId();
+            subjects.add(new Subject(expectation, index, id, summary(expectation)));
+        }
+        subjects.sort(Comparator.comparingInt((Subject subject) -> -subject.expectation.getPriority()).thenComparingInt(subject -> subject.order));
+        Report report = new Report();
+        lint(report, subjects, true, false);
+        if (report.issues.isEmpty()) {
+            return 0;
+        }
+        String truncated = report.shadowCheckTruncated ? "\n - the shadowing check stopped at its budget, so not every pair of expectations was compared" : "";
+        StringBuilder allIssues = new StringBuilder(truncated);
+        for (Issue issue : report.issues) {
+            allIssues.append('\n').append(issue.rule.name()).append(' ').append(issue.subject.describe()).append(": ").append(issue.message);
+        }
+        int digest = allIssues.toString().hashCode();
+        digest = digest == 0 ? 1 : digest;
+        if (digest != previousDigest) {
+            List<Issue> warnings = report.issues;
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.WARN)
+                    .setLogLevel(Level.WARN)
+                    .setMessageFormat("expectation lint found " + warnings.size() + " problem(s) in the expectations loaded from initialization file:{}which were loaded unchanged; PUT /mockserver/lint or mockserver lint <file> lists them in full:{}")
+                    .setArguments(file, warningLines(warnings, truncated))
+            );
+        }
+        return digest;
+    }
+
+    private static String warningLines(List<Issue> warnings, String suffix) {
+        StringBuilder lines = new StringBuilder();
+        for (int i = 0; i < Math.min(warnings.size(), MAX_LOGGED_ISSUES); i++) {
+            Issue issue = warnings.get(i);
+            lines.append("\n - ").append(issue.rule.name()).append(" expectation ").append(issue.subject.describe()).append(": ").append(issue.message);
+        }
+        if (warnings.size() > MAX_LOGGED_ISSUES) {
+            lines.append("\n - and ").append(warnings.size() - MAX_LOGGED_ISSUES).append(" more");
+        }
+        return lines.append(suffix).toString();
+    }
+
     // ---- the checks ----
 
     static void lint(Report report, List<Subject> servingOrder, boolean checkShadowing) {
+        lint(report, servingOrder, checkShadowing, true);
+    }
+
+    private static void lint(Report report, List<Subject> servingOrder, boolean checkShadowing, boolean includeInfo) {
         for (Subject subject : servingOrder) {
             report.expectationsChecked++;
-            lintOne(report, subject, true);
+            lintOne(report, subject, includeInfo);
         }
         if (checkShadowing) {
             findShadowed(report, servingOrder);
@@ -677,7 +733,8 @@ public final class ExpectationLinter {
             BoundedCharSequence text = new BoundedCharSequence(input, Math.min(remaining, MAX_REGEX_STEPS_PER_MATCH));
             try {
                 return pattern.matcher(text).matches();
-            } catch (BudgetExceeded budgetExceeded) {
+            } catch (BudgetExceeded | StackOverflowError cannotProve) {
+                // java.util.regex recurses per repetition, so a long input can overflow the stack before the budget ends
                 return false;
             } finally {
                 remaining -= text.steps[0];
