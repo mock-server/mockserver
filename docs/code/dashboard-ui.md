@@ -644,11 +644,13 @@ flowchart LR
   composer through `editExpectation`. An expectation removed since the lint keeps the dialog open
   with the reason.
 - **Badge on create.** `PUT /mockserver/expectation` counts the per-expectation lint warnings in
-  `x-mockserver-lint-warnings`. The composer's **Mock Registered** banner and an Expectation JSON
-  import show the count as a `LintWarningsBadge` chip (`N Lint Warnings`) that opens the same dialog;
-  no header, or `0`, shows nothing. The badge needs the header to be readable: a dashboard on another
-  origin sees it only if CORS exposes it. The dashboard's other create paths (Generate Stub, Capture
-  as Mock, Apply Fix) do not show it.
+  `x-mockserver-lint-warnings`. Every dashboard path that sends that PUT shows the count as a
+  `LintWarningsBadge` chip (`N Lint Warnings`) that opens the same dialog: the composer's **Mock
+  Registered** banner, an Expectation JSON import, Generate Stub's success alert (per suggestion),
+  Apply Fix's **Expectation updated.** alert, and Capture as Mock, which stays open with a success
+  alert instead of closing when the count is non-zero, its fields read-only and focus on **Close**
+  (an LLM capture goes through MCP and has no count). No header, or `0`, shows nothing. The badge needs the header to be readable: a dashboard
+  on another origin sees it only if CORS exposes it.
 - **Cost.** Lint runs only when the dialog opens or **Refresh** is pressed; the server bounds the
   shadowing work (see [request-processing.md](request-processing.md#expectation-lint)).
 

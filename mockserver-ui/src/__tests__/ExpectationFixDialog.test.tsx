@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
 import ExplainUnmatchedDialog from '../components/ExplainUnmatchedDialog';
 import { explainUnmatched } from '../lib/explainUnmatched';
 import { fetchExpectation } from '../lib/expectations';
@@ -46,7 +46,7 @@ function explanation(matchesAfterPatch = true) {
 beforeEach(() => {
   vi.clearAllMocks();
   mockFetchExpectation.mockResolvedValue(registered);
-  mockRegister.mockResolvedValue(undefined);
+  mockRegister.mockResolvedValue(0);
 });
 
 async function openPreview() {
@@ -81,6 +81,29 @@ describe('Explain Unmatched fix preview and apply', () => {
     expect(mockRegister).toHaveBeenCalledTimes(1);
     expect(mockRegister).toHaveBeenCalledWith(connectionParams, { ...registered, httpRequest: { method: 'GET', path: '/api/orders' } });
     await waitFor(() => expect(mockExplain).toHaveBeenCalledTimes(2));
+  });
+
+  it('shows the lint warnings the server reported for the updated expectation', async () => {
+    mockExplain.mockResolvedValue(explanation());
+    mockRegister.mockResolvedValue(2);
+
+    const dialog = await openPreview();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Apply Fix' })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: 'Apply Fix' }));
+
+    await within(dialog).findByText('Expectation updated.');
+    expect(within(dialog).getByRole('button', { name: '2 Lint Warnings' })).toHaveAttribute('data-testid', 'lint-warnings-badge');
+  });
+
+  it('shows no lint badge when the server reported no lint warnings', async () => {
+    mockExplain.mockResolvedValue(explanation());
+
+    const dialog = await openPreview();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Apply Fix' })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: 'Apply Fix' }));
+
+    await within(dialog).findByText('Expectation updated.');
+    expect(within(dialog).queryByTestId('lint-warnings-badge')).not.toBeInTheDocument();
   });
 
   it('does not apply when Cancel is selected', async () => {

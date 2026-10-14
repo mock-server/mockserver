@@ -17,6 +17,7 @@ import { JsonPatchTestFailedError } from '../lib/jsonPatch';
 import { monospaceFontFamily } from '../theme';
 import { humanizeError, type HumanError } from '../lib/errorMessage';
 import HumanErrorAlert from './HumanErrorAlert';
+import LintWarningsBadge from './LintWarningsBadge';
 
 const CHANGED_SINCE = 'This expectation has changed since the explanation was computed, so the fix was not applied. Refresh the explanation and preview the fix again.';
 
@@ -77,6 +78,7 @@ export default function ExpectationFixDialog({
   const [applying, setApplying] = useState(false);
   const [applyError, setApplyError] = useState<HumanError | string | null>(null);
   const [applied, setApplied] = useState(false);
+  const [lintWarnings, setLintWarnings] = useState(0);
 
   useEffect(() => {
     if (!open) return;
@@ -91,7 +93,8 @@ export default function ExpectationFixDialog({
     setApplying(true);
     setApplyError(null);
     try {
-      await applyExpectationFix(connectionParams, expectationId, fix.patch);
+      const result = await applyExpectationFix(connectionParams, expectationId, fix.patch);
+      setLintWarnings(result.lintWarnings);
       setApplied(true);
       onApplied();
     } catch (e) {
@@ -148,7 +151,16 @@ export default function ExpectationFixDialog({
           </Box>
         )}
         {applyError && <Box sx={{ mt: 1.5 }}><ErrorAlert error={applyError} /></Box>}
-        {applied && <Alert severity="success" sx={{ mt: 1.5 }}>Expectation updated.</Alert>}
+        {applied && (
+          <Alert severity="success" sx={{ mt: 1.5 }}>
+            Expectation updated.
+            {lintWarnings > 0 && (
+              <Box sx={{ mt: 1 }}>
+                <LintWarningsBadge count={lintWarnings} connectionParams={connectionParams} />
+              </Box>
+            )}
+          </Alert>
+        )}
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>{applied ? 'Close' : 'Cancel'}</Button>

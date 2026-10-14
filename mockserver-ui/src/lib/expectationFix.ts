@@ -29,6 +29,13 @@ export async function previewExpectationFix(
   return { before, after: applyJsonPatch(before, patch) };
 }
 
+export interface AppliedExpectationFix {
+  /** The patched expectation, as sent. */
+  expectation: Record<string, unknown>;
+  /** The lint warning count the server reported for the updated expectation. */
+  lintWarnings: number;
+}
+
 /**
  * Re-reads the expectation, so a change made after the preview makes the patch's test operations fail rather
  * than be overwritten, and sends the patched expectation to `PUT /mockserver/expectation`.
@@ -37,10 +44,10 @@ export async function applyExpectationFix(
   params: ConnectionParams,
   expectationId: string,
   patch: readonly JsonPatchOperation[],
-): Promise<Record<string, unknown>> {
+): Promise<AppliedExpectationFix> {
   const { after } = await previewExpectationFix(params, expectationId, patch);
-  await registerExpectation(params, after);
-  return after;
+  const lintWarnings = await registerExpectation(params, after);
+  return { expectation: after, lintWarnings };
 }
 
 export interface PatchChange {

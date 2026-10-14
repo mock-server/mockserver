@@ -18,12 +18,13 @@ const patch: JsonPatchOperation[] = [
   { op: 'replace', path: '/httpRequest/path', value: '/orders' },
 ];
 
-function stubServer(current: Record<string, unknown>) {
+function stubServer(current: Record<string, unknown>, lintWarnings?: string) {
   const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
     if (url.includes('/mockserver/retrieve')) {
       return { ok: true, status: 200, statusText: 'OK', json: async () => [current] } as unknown as Response;
     }
-    return { ok: true, status: 201, statusText: 'Created', text: async () => '', json: async () => JSON.parse(String(init?.body)) } as unknown as Response;
+    const headers = new Headers(lintWarnings === undefined ? {} : { 'x-mockserver-lint-warnings': lintWarnings });
+    return { ok: true, status: 201, statusText: 'Created', headers, text: async () => '', json: async () => JSON.parse(String(init?.body)) } as unknown as Response;
   });
   vi.stubGlobal('fetch', fetchMock);
   return fetchMock;
@@ -55,6 +56,20 @@ describe('applyExpectationFix', () => {
     expect(url).toBe('http://127.0.0.1:1080/mockserver/expectation');
     expect(init?.method).toBe('PUT');
     expect(JSON.parse(String(init?.body))).toEqual({ ...registered, httpRequest: { method: 'GET', path: '/orders' } });
+  });
+
+  it('returns the patched expectation and the lint warning count the server reported', async () => {
+    stubServer(registered, '2');
+
+    const result = await applyExpectationFix(params, 'exp-1', patch);
+
+    expect(result).toEqual({ expectation: { ...registered, httpRequest: { method: 'GET', path: '/orders' } }, lintWarnings: 2 });
+  });
+
+  it('reports no lint warnings when the server sends no lint header', async () => {
+    stubServer(registered);
+
+    expect((await applyExpectationFix(params, 'exp-1', patch)).lintWarnings).toBe(0);
   });
 
   it('writes nothing when the expectation changed since the fix was suggested', async () => {

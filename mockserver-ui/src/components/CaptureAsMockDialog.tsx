@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -19,6 +19,7 @@ import Typography from '@mui/material/Typography';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Tooltip from '@mui/material/Tooltip';
+import Alert from '@mui/material/Alert';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { monospaceFontFamily } from '../theme';
@@ -43,9 +44,11 @@ import {
 } from '../lib/llmExpectationCodegen';
 import { callMcpTool, buildBaseUrl } from '../lib/mcpClient';
 import { humanizeError, type HumanError } from '../lib/errorMessage';
+import { lintWarningCount } from '../lib/lint';
 import CopyButton from './CopyButton';
 import HumanErrorAlert from './HumanErrorAlert';
 import JsonDiffViewer from './JsonDiffViewerLazy';
+import LintWarningsBadge from './LintWarningsBadge';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -105,6 +108,13 @@ export default function CaptureAsMockDialog({
   const [tab, setTab] = useState(0);
   const [registering, setRegistering] = useState(false);
   const [error, setError] = useState<HumanError | null>(null);
+  // Lint warnings the server reported for the registered mock; non-zero keeps the dialog open to show them.
+  const [registeredLintWarnings, setRegisteredLintWarnings] = useState(0);
+  const registered = registeredLintWarnings > 0;
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (registered) closeButtonRef.current?.focus();
+  }, [registered]);
 
   // Reset all transient state (draft edits, error/details, registering flag,
   // snackbar) whenever the captured path changes OR the dialog transitions from
@@ -122,6 +132,7 @@ export default function CaptureAsMockDialog({
     setTab(0);
     setError(null);
     setRegistering(false);
+    setRegisteredLintWarnings(0);
   } else if (open !== prevOpen) {
     setPrevOpen(open);
   }
@@ -214,8 +225,13 @@ export default function CaptureAsMockDialog({
           body,
         });
         if (response.ok) {
-          setNotification({ message: 'Mock expectation registered successfully', severity: 'success' });
-          onClose();
+          const lintWarnings = lintWarningCount(response);
+          if (lintWarnings > 0) {
+            setRegisteredLintWarnings(lintWarnings);
+          } else {
+            setNotification({ message: 'Mock expectation registered successfully', severity: 'success' });
+            onClose();
+          }
         } else {
           const text = await response.text();
           // Use the `MockServer returned <status>: <body>` shape so humanizeError
@@ -242,10 +258,10 @@ export default function CaptureAsMockDialog({
 
   // Determine if Register button should be disabled
   const registerDisabled = useMemo(() => {
-    if (registering) return true;
+    if (registering || registered) return true;
     if (draft.kind === 'llm') return !draft.path || !draft.provider;
     return !draft.path;
-  }, [registering, draft]);
+  }, [registering, registered, draft]);
 
   const tabLabels = ['Edit', 'Preview Diff', 'Copy as JSON', 'Copy as Java'];
 
@@ -261,6 +277,14 @@ export default function CaptureAsMockDialog({
       >
         <DialogTitle id="capture-as-mock-title">Capture as Mock</DialogTitle>
         <DialogContent dividers>
+          {registered && (
+            <Alert severity="success" sx={{ mb: 2 }} data-testid="capture-registered">
+              Mock expectation registered successfully.
+              <Box sx={{ mt: 1 }}>
+                <LintWarningsBadge count={registeredLintWarnings} connectionParams={connectionParams} />
+              </Box>
+            </Alert>
+          )}
           <Tabs
             value={tab}
             onChange={(_, v: number) => setTab(v)}
@@ -383,6 +407,7 @@ export default function CaptureAsMockDialog({
                   }}
                   size="small"
                   aria-label="Matcher precision"
+                  disabled={registered}
                 >
                   {MATCHER_PRECISIONS.map((p) => (
                     <Tooltip key={p} title={PRECISION_DESCRIPTIONS[p]} arrow>
@@ -405,6 +430,7 @@ export default function CaptureAsMockDialog({
                   size="small"
                   value={draft.method}
                   onChange={(e) => updateGenericDraft({ method: e.target.value })}
+                  slotProps={{ input: { readOnly: registered } }}
                   sx={{ width: 120 }}
                 />
                 <TextField
@@ -413,6 +439,7 @@ export default function CaptureAsMockDialog({
                   fullWidth
                   value={draft.path}
                   onChange={(e) => updateGenericDraft({ path: e.target.value })}
+                  slotProps={{ input: { readOnly: registered } }}
                 />
               </Box>
               {draft.matcherPrecision !== 'loose' && (
@@ -425,6 +452,7 @@ export default function CaptureAsMockDialog({
                   maxRows={6}
                   value={draft.body ?? ''}
                   onChange={(e) => updateGenericDraft({ body: e.target.value })}
+                  slotProps={{ input: { readOnly: registered } }}
                   helperText={
                     !draft.body
                       ? 'No body was captured — add one to match on the request body.'
@@ -441,6 +469,7 @@ export default function CaptureAsMockDialog({
                 type="number"
                 value={draft.responseStatusCode}
                 onChange={(e) => { const v = parseInt(e.target.value, 10); updateGenericDraft({ responseStatusCode: isNaN(v) ? 200 : v }); }}
+                slotProps={{ input: { readOnly: registered } }}
                 sx={{ width: 120 }}
               />
               <TextField
@@ -452,6 +481,7 @@ export default function CaptureAsMockDialog({
                 maxRows={8}
                 value={draft.responseBody}
                 onChange={(e) => updateGenericDraft({ responseBody: e.target.value })}
+                slotProps={{ input: { readOnly: registered } }}
               />
             </Box>
           )}
@@ -531,12 +561,12 @@ export default function CaptureAsMockDialog({
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose}>Cancel</Button>
+          <Button ref={closeButtonRef} onClick={onClose}>{registered ? 'Close' : 'Cancel'}</Button>
           {draft.kind === 'generic' && (
             <Button
               onClick={handleRefineInComposer}
               startIcon={<EditOutlinedIcon sx={{ fontSize: '0.875rem' }} />}
-              disabled={registering || !draft.path}
+              disabled={registering || registered || !draft.path}
             >
               Refine in Composer
             </Button>
@@ -546,7 +576,7 @@ export default function CaptureAsMockDialog({
             onClick={() => void handleRegister()}
             disabled={registerDisabled}
           >
-            {registering ? 'Registering...' : 'Register'}
+            {registering ? 'Registering...' : registered ? 'Registered' : 'Register'}
           </Button>
         </DialogActions>
       </Dialog>

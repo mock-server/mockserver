@@ -113,8 +113,9 @@ flowchart LR
   runs the per-expectation rules and reports them in `x-mockserver-lint-warnings` and a WARN log; the
   O(n²) shadowing check runs on demand and once per initialisation-file load, capped at 100,000 pairs and a regex step budget (a regex that overflows the stack counts as not covering). Each JSON initialisation file load (start-up and `--watch` reloads) runs the per-expectation rules and the shadowing check over that file and logs one capped WARN naming it, not repeated while the problems are unchanged (A8c).
   The dashboard's Active Expectations panel has a Lint button (`LintDialog`: severity, rule,
-  message, a Shadowed by link, ids that open in the composer), and the composer and the
-  Expectation JSON import show a Lint Warnings badge from `x-mockserver-lint-warnings` (A8b).
+  message, a Shadowed by link, ids that open in the composer), and the composer, the
+  Expectation JSON import (A8b), Generate Stub, Capture as Mock and Apply Fix (A8e) show a Lint
+  Warnings badge from `x-mockserver-lint-warnings`.
 - **Forward-failure causes:** a failed forward's 502 names a TLS failure, an HTTP/2 error, a
   client-side set-up failure or an undecodable upstream response (`upstreamFailureReason`,
   `7a8b8c424`, extended to binary and wss in `d089350d4`), and a connection that could not be made
@@ -141,7 +142,6 @@ flowchart LR
 
 | # | Problem → proposal | Cost | Performance reasoning | Effort | Risks | Priority |
 |---|---|---|---|---|---|---|
-| A8e | The `x-mockserver-lint-warnings` badge (A8b) shows only after a composer register or an Expectation JSON import; Generate Stub (`lib/generateStub.ts`), Capture as Mock (`CaptureAsMockDialog`) and Apply Fix (`lib/expectationFix.ts`) also PUT `/mockserver/expectation` but ignore the header → read `lintWarningCount(res)` in each path and render `LintWarningsBadge` where it reports success | (iii) | UI only; reads a header the PUT already returns | S | None | P3 |
 | A8g | The on-load lint (`ExpectationLinter.adviseOnLoad`, A8c) receives every valid entry of the file, including later entries whose id repeats, which `RequestMatchers.update` drops, so the WARN can report an ignored entry as shadowed or as shadowing another → in `adviseOnLoad`, run `removeReplacedDuplicates(report, subjects, Collections.nCopies(loaded.length, 0))` before sorting, so it reports DUPLICATE_ID and lints only what is loaded; add a loader test with a repeated id | (iv) | Once per file load; one pass over the ids | S | Create the `Report` before the dedup; generated ids are already null in `Subject.reportedId`, so they are never treated as duplicates | P3 |
 | A8h | A file load keeps the FIRST entry for a repeated id (`RequestMatchers.update`) while `PUT /mockserver/expectation` keeps the LAST, and the initialisation page claimed "last" until A8f → owner decision: keep the difference (lint and docs now describe it) or make a file load keep the last entry like an upsert | (iv) | Load path only | S | BREAKING for users whose files repeat an id: the response served changes; needs a changelog `BREAKING:` entry and a major version | P3 |
 | A5e | Two template failures are outside `templateFailureAsServerError`: output that is not a valid response is not a thrown failure, so it still answers 404 (a response template) or 502 (a forward template); and a forward-with-override `responseTemplate` renders in the upstream response callback, not in the action handler → under that flag, answer both as template failures, with the validation errors in the body for the first | (ii) | Failure path only | S | Same opt-in; keep the TEMPLATE_GENERATION_FAILED log entry | P2 |
@@ -171,7 +171,7 @@ flowchart LR
 1. **Wave 0 — hygiene and performance:** A2d. (A2, A2b, A2c, C1 and C1b landed.)
 2. **Wave 1 — explain engine:** done (A3, A10 and B1 landed).
 3. **Wave 2 — failure classes:** A5e, A5g, A5h and A5i, each with an MCP tool and a dashboard entry where it applies. (A4, A6 and A6b landed; B1c added the MCP tools for A4, A5, A8 and B3; A5 landed, with its dashboard entry in A5b; A5c and A5d landed; A5f waits for the 9.0.0 major release.)
-4. **Wave 3 — fixes:** A8e, A8g; A8h waits for an owner decision. (B2, B3, A9b, A8, including the CLI, A8b, initialisation-file lint (A8c), the authorisation page (A8d) and per-source `DUPLICATE_ID` (A8f) landed.)
+4. **Wave 3 — fixes:** A8g; A8h waits for an owner decision. (B2, B3, A9b, A8, including the CLI, A8b, initialisation-file lint (A8c), the authorisation page (A8d), per-source `DUPLICATE_ID` (A8f) and the badge on every create path (A8e) landed.)
 5. **Wave 4 — optional:** done (B5, B6, B7, A11, A11b and B1b landed).
 
 ## Performance rules for every item

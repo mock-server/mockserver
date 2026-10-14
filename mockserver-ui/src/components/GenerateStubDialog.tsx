@@ -16,6 +16,7 @@ import { registerExpectation } from '../lib/generateStub';
 import { humanizeError, type HumanError } from '../lib/errorMessage';
 import HumanErrorAlert from './HumanErrorAlert';
 import JsonViewer from './JsonViewer';
+import LintWarningsBadge from './LintWarningsBadge';
 
 interface GenerateStubDialogProps {
   open: boolean;
@@ -35,7 +36,8 @@ export default function GenerateStubDialog({
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const [registering, setRegistering] = useState(false);
-  const [registered, setRegistered] = useState<Set<number>>(new Set());
+  // Suggestion index -> the lint warning count the server reported when it was registered.
+  const [registered, setRegistered] = useState<Map<number, number>>(new Map());
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [error, setError] = useState<HumanError | null>(null);
 
@@ -44,8 +46,8 @@ export default function GenerateStubDialog({
     setRegistering(true);
     setError(null);
     try {
-      await registerExpectation(connectionParams, suggestions[selectedIndex]!);
-      setRegistered((prev) => new Set(prev).add(selectedIndex));
+      const lintWarnings = await registerExpectation(connectionParams, suggestions[selectedIndex]!);
+      setRegistered((prev) => new Map(prev).set(selectedIndex, lintWarnings));
     } catch (e) {
       setError(humanizeError(e));
     } finally {
@@ -54,7 +56,7 @@ export default function GenerateStubDialog({
   }, [connectionParams, suggestions, selectedIndex]);
 
   const handleClose = useCallback(() => {
-    setRegistered(new Set());
+    setRegistered(new Map());
     setSelectedIndex(0);
     setError(null);
     onClose();
@@ -78,6 +80,11 @@ export default function GenerateStubDialog({
         {registered.has(selectedIndex) && (
           <Alert severity="success" sx={{ mb: 1.5 }}>
             Suggestion {selectedIndex + 1} registered successfully.
+            {(registered.get(selectedIndex) ?? 0) > 0 && (
+              <Box sx={{ mt: 1 }}>
+                <LintWarningsBadge count={registered.get(selectedIndex)!} connectionParams={connectionParams} />
+              </Box>
+            )}
           </Alert>
         )}
         {suggestions.length === 0 ? (
