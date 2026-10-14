@@ -931,7 +931,9 @@ public class Main {
             List<com.fasterxml.jackson.databind.JsonNode> entries = new ArrayList<>();
             List<String> entryFiles = new ArrayList<>();
             List<Integer> entryIndexes = new ArrayList<>();
-            for (String file : files) {
+            List<Integer> entryFileOrdinals = new ArrayList<>();
+            for (int fileOrdinal = 0; fileOrdinal < files.size(); fileOrdinal++) {
+                String file = files.get(fileOrdinal);
                 try {
                     com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(org.mockserver.file.FileReader.readFileFromClassPathOrPath(file));
                     if (root == null || !(root.isArray() || root.isObject())) {
@@ -947,6 +949,7 @@ public class Main {
                         entries.add(fileEntries.get(i));
                         entryFiles.add(file);
                         entryIndexes.add(i);
+                        entryFileOrdinals.add(fileOrdinal);
                     }
                 } catch (Throwable throwable) {
                     exitCode = 1;
@@ -958,7 +961,7 @@ public class Main {
             if (exitCode != 0) {
                 return;
             }
-            com.fasterxml.jackson.databind.node.ObjectNode report = org.mockserver.mock.ExpectationLinter.lintJsonEntries(objectMapper, new org.mockserver.serialization.ExpectationSerializer(QUIET_LOGGER), entries);
+            com.fasterxml.jackson.databind.node.ObjectNode report = org.mockserver.mock.ExpectationLinter.lintInitializationFileEntries(objectMapper, new org.mockserver.serialization.ExpectationSerializer(QUIET_LOGGER), entries, entryFileOrdinals);
             for (com.fasterxml.jackson.databind.JsonNode issue : report.path("issues")) {
                 com.fasterxml.jackson.databind.node.ObjectNode issueNode = (com.fasterxml.jackson.databind.node.ObjectNode) issue;
                 int index = issue.path("index").asInt();

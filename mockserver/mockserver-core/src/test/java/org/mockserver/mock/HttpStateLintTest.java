@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -18,8 +20,12 @@ import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.serialization.ObjectMapperFactory;
+import org.mockserver.server.initialize.ExpectationInitializerLoader;
 import org.slf4j.event.Level;
 
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -47,6 +53,8 @@ public class HttpStateLintTest {
 
     private final ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private final List<LogEntry> logged = new CopyOnWriteArrayList<>();
+    @Rule
+    public TemporaryFolder tempFolder = new TemporaryFolder();
     private ExpectationSerializer expectationSerializer;
     private HttpState httpState;
 
@@ -385,6 +393,64 @@ public class HttpStateLintTest {
     }
 
     @Test
+    public void shouldNameTheLastEntryForAnIdAsKeptAndServeItFromTheFirstEntrysPlaceAsPutExpectationDoes() throws Exception {
+        String body = "[" +
+            "{\"id\":\"dup\",\"httpRequest\":{\"path\":\"/kept\"},\"httpResponse\":{\"body\":\"first\"}}," +
+            "{\"id\":\"between\",\"httpRequest\":{\"path\":\"/kept\"},\"httpResponse\":{\"body\":\"between\"}}," +
+            "{\"id\":\"dup\",\"httpRequest\":{\"path\":\"/kept\"},\"httpResponse\":{\"body\":\"last\"}}" +
+            "]";
+
+        JsonNode result = lintBody(body);
+
+        JsonNode duplicate = issue(result, "DUPLICATE_ID");
+        assertThat(duplicate.path("index").asInt(), is(0));
+        assertThat(duplicate.path("relatedIndex").asInt(), is(2));
+        assertThat(duplicate.path("message").asText(), containsString("only the last one is kept"));
+        assertThat(issues(result, "SHADOWED"), is(List.of("1 by 2")));
+        assertThat(handle(request("/mockserver/expectation").withMethod("PUT").withBody(body)).getStatusCode(), is(201));
+        assertThat(servedBody("/kept"), is("last"));
+    }
+
+    @Test
+    public void shouldNameTheFirstEntryForAnIdInAFileAsKeptAsAnInitializationFileLoadDoes() throws Exception {
+        File file = file("first-kept.json", "[" +
+            "{\"id\":\"dup\",\"httpRequest\":{\"path\":\"/kept\"},\"httpResponse\":{\"body\":\"first\"}}," +
+            "{\"httpRequest\":{\"path\":\"/kept\"},\"httpResponse\":{\"body\":\"between\"}}," +
+            "{\"id\":\"dup\",\"httpRequest\":{\"path\":\"/kept\"},\"httpResponse\":{\"body\":\"last\"}}" +
+            "]");
+
+        JsonNode result = lintFiles(file);
+
+        JsonNode duplicate = issue(result, "DUPLICATE_ID");
+        assertThat(duplicate.path("index").asInt(), is(2));
+        assertThat(duplicate.path("relatedIndex").asInt(), is(0));
+        assertThat(duplicate.path("message").asText(), containsString("an earlier entry in the same file has the same id"));
+        assertThat(issues(result, "SHADOWED"), is(List.of("1 by 0")));
+        load(file);
+        assertThat(servedBody("/kept"), is("first"));
+    }
+
+    @Test
+    public void shouldNameTheEntryInTheLaterFileAsKeptAndServeItFromTheFirstEntrysPlaceAsInitializationFileLoadsDo() throws Exception {
+        File earlier = file("earlier.json", "[{\"id\":\"dup\",\"httpRequest\":{\"path\":\"/kept\"},\"httpResponse\":{\"body\":\"earlier file\"}}]");
+        File later = file("later.json", "[" +
+            "{\"httpRequest\":{\"path\":\"/kept\"},\"httpResponse\":{\"body\":\"between\"}}," +
+            "{\"id\":\"dup\",\"httpRequest\":{\"path\":\"/kept\"},\"httpResponse\":{\"body\":\"later file\"}}," +
+            "{\"id\":\"dup\",\"httpRequest\":{\"path\":\"/kept\"},\"httpResponse\":{\"body\":\"later file, second\"}}" +
+            "]");
+
+        JsonNode result = lintFiles(earlier, later);
+
+        assertThat(issues(result, "DUPLICATE_ID"), is(List.of("0 by 2", "3 by 2")));
+        assertThat(messages(result, "DUPLICATE_ID").get(0), containsString("a file loaded later replaces an earlier file's entries with the same id"));
+        assertThat(messages(result, "DUPLICATE_ID").get(1), containsString("an earlier entry in the same file has the same id"));
+        assertThat(issues(result, "SHADOWED"), is(List.of("1 by 2")));
+        load(earlier);
+        load(later);
+        assertThat(servedBody("/kept"), is("later file"));
+    }
+
+    @Test
     public void shouldAnswerABodyThatIsNotJsonWithABadRequest() {
         HttpResponse response = handle(request("/mockserver/lint").withMethod("PUT").withBody("{not json"));
 
@@ -489,6 +555,38 @@ public class HttpStateLintTest {
         HttpResponse response = handle(request("/mockserver/lint").withMethod("PUT").withBody(body));
         assertThat(response.getBodyAsString(), response.getStatusCode(), is(200));
         return objectMapper.readTree(response.getBodyAsString());
+    }
+
+    private File file(String name, String content) throws Exception {
+        File file = tempFolder.newFile(name);
+        Files.write(file.toPath(), content.getBytes(StandardCharsets.UTF_8));
+        return file;
+    }
+
+    private JsonNode lintFiles(File... files) throws Exception {
+        List<JsonNode> entries = new ArrayList<>();
+        List<Integer> fileOfEntry = new ArrayList<>();
+        for (int i = 0; i < files.length; i++) {
+            for (JsonNode entry : objectMapper.readTree(files[i])) {
+                entries.add(entry);
+                fileOfEntry.add(i);
+            }
+        }
+        return ExpectationLinter.lintInitializationFileEntries(objectMapper, expectationSerializer, entries, fileOfEntry);
+    }
+
+    private void load(File file) {
+        new ExpectationInitializerLoader(configuration().initializationJsonPath(file.getAbsolutePath()), new MockServerLogger(), httpState.getRequestMatchers());
+    }
+
+    private static List<String> issues(JsonNode result, String rule) {
+        List<String> found = new ArrayList<>();
+        for (JsonNode issue : result.path("issues")) {
+            if (rule.equals(issue.path("rule").asText())) {
+                found.add(issue.path("index").asInt() + " by " + issue.path("relatedIndex").asInt());
+            }
+        }
+        return found;
     }
 
     private HttpResponse handle(HttpRequest request) {

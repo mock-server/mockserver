@@ -134,6 +134,17 @@ public class MainLintCommandTest {
     }
 
     @Test
+    public void shouldNameTheFirstEntryForADuplicateIdInOneFileAsKeptAsLoadingTheFileDoes() throws Exception {
+        File expectations = file("dup-in-file.json", "[{\"id\":\"dup\",\"httpRequest\":{\"path\":\"/a\"},\"httpResponse\":{}},{\"id\":\"dup\",\"httpRequest\":{\"path\":\"/b\"},\"httpResponse\":{}}]");
+
+        Output output = lint(expectations.getAbsolutePath());
+
+        assertThat(output.out, containsString(expectations.getAbsolutePath() + " [1] any method /b"));
+        assertThat(output.out, containsString("WARNING DUPLICATE_ID: is ignored because an earlier entry in the same file has the same id (any method /a)"));
+        assertThat(output.out, containsString("see " + expectations.getAbsolutePath() + " [0] any method /a"));
+    }
+
+    @Test
     public void shouldBeAKnownSubcommand() {
         assertThat(Main.preprocessArguments("lint", "./expectations.json")[0], is("lint"));
     }

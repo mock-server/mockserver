@@ -112,12 +112,18 @@ public final class ExpectationLinter {
     static final class Subject {
         final Expectation expectation;
         final int order;
+        final int servingPosition;
         final String reportedId;
         final String summary;
 
         Subject(Expectation expectation, int order, String reportedId, String summary) {
+            this(expectation, order, order, reportedId, summary);
+        }
+
+        Subject(Expectation expectation, int order, int servingPosition, String reportedId, String summary) {
             this.expectation = expectation;
             this.order = order;
+            this.servingPosition = servingPosition;
             this.reportedId = reportedId;
             this.summary = summary;
         }
@@ -179,6 +185,19 @@ public final class ExpectationLinter {
      * As {@link #lintJson}, for entries already parsed; each issue's {@code index} is the entry's position in {@code entries}.
      */
     public static ObjectNode lintJsonEntries(ObjectMapper objectMapper, ExpectationSerializer expectationSerializer, List<JsonNode> entries) {
+        return lintEntries(objectMapper, expectationSerializer, entries, null);
+    }
+
+    /**
+     * As {@link #lintJsonEntries}, for entries read from initialization files, where {@code fileOfEntry} gives the file
+     * each entry came from, numbered in load order. Loading a file keeps the first entry for each id, and a later file
+     * replaces an earlier file's entry, so {@code DUPLICATE_ID} names the entry the load keeps.
+     */
+    public static ObjectNode lintInitializationFileEntries(ObjectMapper objectMapper, ExpectationSerializer expectationSerializer, List<JsonNode> entries, List<Integer> fileOfEntry) {
+        return lintEntries(objectMapper, expectationSerializer, entries, fileOfEntry);
+    }
+
+    private static ObjectNode lintEntries(ObjectMapper objectMapper, ExpectationSerializer expectationSerializer, List<JsonNode> entries, List<Integer> fileOfEntry) {
         Report report = new Report();
         List<Subject> subjects = new ArrayList<>();
         for (int index = 0; index < entries.size(); index++) {
@@ -206,8 +225,8 @@ public final class ExpectationLinter {
                 addIssue(report, new Issue(Rule.INVALID_EXPECTATION, null, "not a valid expectation, so PUT /mockserver/expectation would reject it: " + reason, subject, null));
             }
         }
-        subjects = removeReplacedDuplicates(report, subjects);
-        subjects.sort(Comparator.comparingInt((Subject subject) -> -subject.expectation.getPriority()).thenComparingInt(subject -> subject.order));
+        subjects = removeReplacedDuplicates(report, subjects, fileOfEntry);
+        subjects.sort(Comparator.comparingInt((Subject subject) -> -subject.expectation.getPriority()).thenComparingInt(subject -> subject.servingPosition));
         lint(report, subjects, true);
         return toJson(objectMapper, report, "request", "index", "openApiExpectationsSkipped");
     }
@@ -338,24 +357,44 @@ public final class ExpectationLinter {
         report.issues.sort(Comparator.comparingInt((Issue issue) -> issue.subject.order).thenComparing(issue -> issue.rule));
     }
 
-    private static List<Subject> removeReplacedDuplicates(Report report, List<Subject> subjects) {
-        Map<String, Subject> lastById = new HashMap<>();
+    /**
+     * Drops the entries a store would not keep. {@code fileOfEntry} null means an upsert of each entry in turn, which
+     * keeps the last entry for an id; otherwise a file load, which keeps the first entry for an id within a file while a
+     * later file's entry replaces an earlier file's. The kept entry is served from the first entry's place, as an update
+     * in place keeps the original's creation time.
+     */
+    private static List<Subject> removeReplacedDuplicates(Report report, List<Subject> subjects, List<Integer> fileOfEntry) {
+        Map<String, Subject> firstById = new HashMap<>();
+        Map<String, Subject> keptById = new HashMap<>();
         for (Subject subject : subjects) {
             if (subject.reportedId != null) {
-                lastById.put(subject.reportedId, subject);
+                firstById.putIfAbsent(subject.reportedId, subject);
+                Subject kept = keptById.get(subject.reportedId);
+                if (kept == null || fileOfEntry == null || !sameFile(fileOfEntry, kept, subject)) {
+                    keptById.put(subject.reportedId, subject);
+                }
             }
         }
-        List<Subject> kept = new ArrayList<>();
+        List<Subject> result = new ArrayList<>();
         for (Subject subject : subjects) {
-            Subject last = subject.reportedId != null ? lastById.get(subject.reportedId) : subject;
-            if (last != subject) {
-                addIssue(report, new Issue(Rule.DUPLICATE_ID, "id", "is replaced by a later entry with the same id (" + last.summary
-                    + "); expectations are upserted by id, so only the last one is kept", subject, last));
+            Subject kept = subject.reportedId != null ? keptById.get(subject.reportedId) : subject;
+            if (kept != subject) {
+                String message = fileOfEntry != null && sameFile(fileOfEntry, kept, subject)
+                    ? "is ignored because an earlier entry in the same file has the same id (" + kept.summary + "); loading a file keeps only the first entry for each id"
+                    : "is replaced by a later entry with the same id (" + kept.summary + "); " + (fileOfEntry != null
+                    ? "a file loaded later replaces an earlier file's entries with the same id"
+                    : "expectations are upserted by id, so only the last one is kept");
+                addIssue(report, new Issue(Rule.DUPLICATE_ID, "id", message, subject, kept));
             } else {
-                kept.add(subject);
+                Subject first = subject.reportedId != null ? firstById.get(subject.reportedId) : subject;
+                result.add(new Subject(subject.expectation, subject.order, first.order, subject.reportedId, subject.summary));
             }
         }
-        return kept;
+        return result;
+    }
+
+    private static boolean sameFile(List<Integer> fileOfEntry, Subject one, Subject other) {
+        return fileOfEntry.get(one.order).equals(fileOfEntry.get(other.order));
     }
 
     private static void lintOne(Report report, Subject subject, boolean includeInfo) {

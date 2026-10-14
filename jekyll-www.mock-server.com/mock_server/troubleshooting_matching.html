@@ -1028,7 +1028,7 @@ foreach ($explanation-&gt;skippedExpectations as $skipped) {
     <tr><td><code>PATH_TEMPLATE_WITHOUT_PATH_PARAMETERS</code></td><td><code>/users/{id}</code> without <code>pathParameters</code>, which matches only the literal text <code>{id}</code></td></tr>
     <tr><td><code>METHOD_TYPO</code>, <code>HEADER_NAME_TYPO</code></td><td>A method or header name close to a standard one, such as <code>GTE</code> for <code>GET</code>, <code>Authorisation</code> for <code>Authorization</code> or <code>content_type</code> for <code>Content-Type</code></td></tr>
     <tr><td><code>STRICT_JSON_BODY_WITH_ARRAYS</code></td><td>Information only: <code>STRICT</code> JSON matching of a body with arrays needs the same order and no extra items</td></tr>
-    <tr><td><code>INVALID_EXPECTATION</code>, <code>DUPLICATE_ID</code></td><td>When checking expectations you send or files: an entry that would be rejected, or two entries with the same <code>id</code> (only the last is kept)</td></tr>
+    <tr><td><code>INVALID_EXPECTATION</code>, <code>DUPLICATE_ID</code></td><td>When checking expectations you send or files: an entry that would be rejected, or two entries with the same <code>id</code>, only one of which is kept: in expectations you send, the last; in files, the first in each file, with a file checked later replacing an earlier one, as loading initialisation files does</td></tr>
     </tbody>
 </table>
 
