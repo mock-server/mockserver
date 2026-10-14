@@ -414,15 +414,19 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
         return forward.response;
     }
 
+    /**
+     * Also while the client connection is not writable: a client that does not read its replies is not read either, so
+     * replies to it cannot pile up beyond what the forwards already started bring.
+     */
     private static void pauseReadsIfBehind(ChannelHandlerContext ctx, ForwardQueue queue) {
-        if (!queue.readsPaused && (queue.waiting.size() > MAX_WAITING_MESSAGES || queue.waitingBytes > MAX_WAITING_BYTES || queue.pendingListenerCalls > MAX_PENDING_LISTENER_CALLS || queue.awaitingResponse >= MAX_UNANSWERED_FORWARDS)) {
+        if (!queue.readsPaused && (queue.waiting.size() > MAX_WAITING_MESSAGES || queue.waitingBytes > MAX_WAITING_BYTES || queue.pendingListenerCalls > MAX_PENDING_LISTENER_CALLS || queue.awaitingResponse >= MAX_UNANSWERED_FORWARDS || !ctx.channel().isWritable())) {
             queue.readsPaused = true;
             ChannelReadPause.pause(ctx.channel());
         }
     }
 
     private static void resumeReadsOnceDrained(ChannelHandlerContext ctx, ForwardQueue queue) {
-        if (queue.readsPaused && queue.waiting.size() <= MAX_WAITING_MESSAGES / 2 && queue.waitingBytes <= MAX_WAITING_BYTES / 2 && queue.pendingListenerCalls <= MAX_PENDING_LISTENER_CALLS / 2 && queue.awaitingResponse <= MAX_UNANSWERED_FORWARDS / 2) {
+        if (queue.readsPaused && queue.waiting.size() <= MAX_WAITING_MESSAGES / 2 && queue.waitingBytes <= MAX_WAITING_BYTES / 2 && queue.pendingListenerCalls <= MAX_PENDING_LISTENER_CALLS / 2 && queue.awaitingResponse <= MAX_UNANSWERED_FORWARDS / 2 && ctx.channel().isWritable()) {
             queue.readsPaused = false;
             ChannelReadPause.resume(ctx.channel());
         }
@@ -806,6 +810,15 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
     @Override
     public void channelWritabilityChanged(ChannelHandlerContext ctx) {
         BinaryRelay.clientWritabilityChanged(ctx.channel());
+        ForwardQueue queue = ctx.channel().attr(FORWARD_QUEUE).get();
+        if (queue != null) {
+            // may run after writability has changed back, so it acts on what the channel says now
+            if (ctx.channel().isWritable()) {
+                resumeReadsOnceDrained(ctx, queue);
+            } else {
+                pauseReadsIfBehind(ctx, queue);
+            }
+        }
         ctx.fireChannelWritabilityChanged();
     }
 

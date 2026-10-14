@@ -939,6 +939,15 @@ This release delivers a sustained performance and memory programme alongside dat
   and a deliberate forward back to the same MockServer (to a path another expectation answers) still work.
   Upstreams now see the extra header; recorded expectations leave it out, so recordings still match requests
   without it. Set `forwardLoopMaxHops` to `0` to stop sending it.
+- **A client that sends binary (non-HTTP) messages forwarded one per upstream connection, and never
+  reads the replies, can no longer make MockServer buffer replies for it without limit.** With
+  `forwardBinaryRequestsUseSingleConnection` off, or on a connection whose only upstream proxy is
+  `forwardHttpProxy`, each reply was queued for the client whether or not it was reading them, so a
+  client that kept sending and never read had every reply held in MockServer's memory. Now, with
+  `forwardBinaryRequestsWithoutWaitingForResponse` on or off, MockServer stops reading such a client
+  once more than 32 KiB of replies are waiting to be written to it, and reads it again once it has
+  read them. Nothing is dropped; a client that writes much more than it reads sees its writes stall,
+  as it would against any server.
 - **A forward whose connection could not be made now says why, and what to change, in the `502`.** A forward,
   a proxied request or a `proxyPass` mapping whose upstream could not be reached got an empty
   `502 Bad Gateway`, and the log said only "failed to connect to remote socket" (at `TRACE`) or, for a host

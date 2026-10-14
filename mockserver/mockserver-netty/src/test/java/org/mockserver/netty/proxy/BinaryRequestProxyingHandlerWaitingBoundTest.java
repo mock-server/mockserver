@@ -137,6 +137,12 @@ public class BinaryRequestProxyingHandlerWaitingBoundTest {
         channel.runPendingTasks();
     }
 
+    /** As a client stops or starts reading what MockServer writes to it, its connection stops or starts being writable. */
+    private void clientWritable(boolean writable) {
+        channel.unsafe().outboundBuffer().setUserDefinedWritability(1, writable);
+        channel.runPendingTasks();
+    }
+
     private void advanceTimeBy(long millis) {
         channel.advanceTimeBy(millis, TimeUnit.MILLISECONDS);
         channel.runScheduledPendingTasks();
@@ -367,5 +373,72 @@ public class BinaryRequestProxyingHandlerWaitingBoundTest {
         }
         responsesHandled();
         assertThat("and not a second time as the responses are handled", ChannelReadPause.holds(channel), is(0));
+    }
+
+    @Test
+    public void shouldNotReadAClientThatIsNotReadingItsRepliesUntilItCanBeWrittenToAgain() {
+        upstreamThatAnswersWhenTold();
+        clientConnection(waitingForResponses());
+        clientSends(1);
+        upstreamAnswers(0);
+        responsesHandled();
+        assertThat(isReading(), is(true));
+
+        clientWritable(false);
+        assertThat("a client that does not read its replies is not read either", isReading(), is(false));
+        assertThat(ChannelReadPause.holds(channel), is(1));
+
+        clientWritable(true);
+        assertThat("and is read again once it can be written to", isReading(), is(true));
+        assertThat(repliesWrittenToTheClient(), is(sequence(0, 1)));
+    }
+
+    @Test
+    public void shouldNotReadAClientThatCannotBeWrittenToWhenItsMessageIsForwarded() {
+        upstreamThatAnswersWhenTold();
+        clientConnection(waitingForResponses());
+        clientWritable(false);
+
+        clientSends(1);
+        assertThat(isReading(), is(false));
+
+        clientWritable(true);
+        assertThat(isReading(), is(true));
+    }
+
+    @Test
+    public void shouldKeepNotReadingAClientThatCannotBeWrittenToOnceItsForwardsAreHandled() {
+        upstreamThatAnswersWhenTold();
+        clientConnection(waitingForResponses());
+        clientSends(MAX_UNANSWERED_FORWARDS);
+        clientWritable(false);
+
+        for (int i = 0; i < MAX_UNANSWERED_FORWARDS; i++) {
+            upstreamAnswers(i);
+        }
+        responsesHandled();
+        assertThat("every response is written, and none read", isReading(), is(false));
+        assertThat("one hold for both reasons", ChannelReadPause.holds(channel), is(1));
+
+        clientWritable(true);
+        assertThat(isReading(), is(true));
+        assertThat(repliesWrittenToTheClient(), is(sequence(0, MAX_UNANSWERED_FORWARDS)));
+    }
+
+    @Test
+    public void shouldKeepNotReadingAClientThatCanBeWrittenToAgainWhileItsForwardsAreStillBehind() {
+        upstreamThatAnswersWhenTold();
+        clientConnection(waitingForResponses());
+        clientSends(MAX_UNANSWERED_FORWARDS);
+        clientWritable(false);
+        clientWritable(true);
+        assertThat(MAX_UNANSWERED_FORWARDS + " forwards still wait", isReading(), is(false));
+
+        for (int i = 0; i < MAX_UNANSWERED_FORWARDS / 2; i++) {
+            upstreamAnswers(i);
+        }
+        responsesHandled();
+        assertThat(isReading(), is(true));
+        assertThat(ChannelReadPause.holds(channel), is(0));
     }
 }

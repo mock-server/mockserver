@@ -19,6 +19,7 @@ import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -330,5 +331,25 @@ public class BinaryRequestProxyingHandlerBacklogBoundTest {
         assertThat(reportedToListener, contains(0, 1));
         assertThat("the given-up forward's response is empty, as for an upstream that closes without answering", listenerResponses.get(0), is(nullValue()));
         assertThat("the next is still waiting", listenerResponses.get(1), is(sameInstance(NOT_YET)));
+    }
+
+    @Test
+    public void shouldNotReadAClientThatIsNotReadingItsRepliesUntilItCanBeWrittenToAgain() {
+        upstreamThatNeverAnswers();
+        clientConnection(notWaitingForResponses());
+        clientSends(1);
+        assertThat(isReading(), is(true));
+
+        channel.unsafe().outboundBuffer().setUserDefinedWritability(1, false);
+        channel.runPendingTasks();
+        assertThat("a client that does not read its replies is not read either", isReading(), is(false));
+
+        clientSends(1);
+        assertThat("what a read under way still delivers is forwarded", forwarded, is(Arrays.asList(0, 1)));
+
+        channel.unsafe().outboundBuffer().setUserDefinedWritability(1, true);
+        channel.runPendingTasks();
+        assertThat("and the client is read again once it can be written to", isReading(), is(true));
+        assertThat(ChannelReadPause.holds(channel), is(0));
     }
 }
