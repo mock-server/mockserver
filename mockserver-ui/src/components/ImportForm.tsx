@@ -80,6 +80,7 @@ export default function ImportForm({ connectionParams }: ImportFormProps) {
   const [loadProblems, setLoadProblems] = useState<OpenApiLoadProblem[]>([]);
   // x-mockserver-lint-warnings from the last Expectation JSON import.
   const [lintWarnings, setLintWarnings] = useState(0);
+  const [noExpectationsCreated, setNoExpectationsCreated] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currentFormatMeta = FORMATS.find((f) => f.value === format)!;
@@ -88,6 +89,7 @@ export default function ImportForm({ connectionParams }: ImportFormProps) {
   const handleFormatChange = useCallback((newFormat: ImportFormat) => {
     setFormat(newFormat);
     setLoadProblems([]);
+    setNoExpectationsCreated(false);
     const meta = FORMATS.find((f) => f.value === newFormat)!;
     if (!meta.urlSupported && source === 'url') {
       setSource('paste');
@@ -114,6 +116,7 @@ export default function ImportForm({ connectionParams }: ImportFormProps) {
     setError(null);
     setLoadProblems([]);
     setLintWarnings(0);
+    setNoExpectationsCreated(false);
     try {
       const input = source === 'url' ? urlValue.trim() : payload.trim();
       if (!input) {
@@ -143,6 +146,11 @@ export default function ImportForm({ connectionParams }: ImportFormProps) {
           const result = await importOpenApi(connectionParams, input);
           created = result.expectations;
           setLoadProblems(result.loadProblems);
+          if (created.length === 0 && result.loadProblems.length > 0) {
+            // The load-problems alert reports this as an error; keep the spec so it can be fixed.
+            setNoExpectationsCreated(true);
+            return;
+          }
           break;
         }
         case 'wsdl':
@@ -360,7 +368,7 @@ export default function ImportForm({ connectionParams }: ImportFormProps) {
         <HumanErrorAlert error={error} variant="outlined" />
       )}
 
-      <OpenApiLoadProblemsAlert problems={loadProblems} />
+      <OpenApiLoadProblemsAlert problems={loadProblems} noExpectationsCreated={noExpectationsCreated} />
 
       <Snackbar
         open={snackMessage !== null}

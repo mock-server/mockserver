@@ -11,6 +11,8 @@ const MAX_SHOWN = 50;
 
 interface OpenApiLoadProblemsAlertProps {
   problems: OpenApiLoadProblem[];
+  /** The import created no expectations, so the problems are reported as an error, not a caveat. */
+  noExpectationsCreated?: boolean;
   sx?: SxProps<Theme>;
 }
 
@@ -19,7 +21,7 @@ interface OpenApiLoadProblemsAlertProps {
  * grouped by kind, each with its JSON-pointer location and any hint. Renders
  * nothing when there are no problems.
  */
-export default function OpenApiLoadProblemsAlert({ problems, sx }: OpenApiLoadProblemsAlertProps) {
+export default function OpenApiLoadProblemsAlert({ problems, noExpectationsCreated = false, sx }: OpenApiLoadProblemsAlertProps) {
   if (problems.length === 0) {
     return null;
   }
@@ -34,14 +36,23 @@ export default function OpenApiLoadProblemsAlert({ problems, sx }: OpenApiLoadPr
     }
   }
   const count = problems.length;
+  const problemCount = `${count} Problem${count === 1 ? '' : 's'}`;
   return (
-    <Alert severity="warning" variant="outlined" sx={sx} data-testid="openapi-load-problems">
+    <Alert
+      severity={noExpectationsCreated ? 'error' : 'warning'}
+      variant="outlined"
+      sx={sx}
+      data-testid="openapi-load-problems"
+    >
       <AlertTitle>
-        Spec Loaded With {count} Problem{count === 1 ? '' : 's'}
+        {noExpectationsCreated
+          ? `No Expectations Created: Spec Has ${problemCount}`
+          : `Spec Loaded With ${problemCount}`}
       </AlertTitle>
       <Typography variant="body2" sx={{ mb: 1 }}>
-        These parts of the spec break the OpenAPI rules, so the expectations generated from them may
-        not behave as expected.
+        {noExpectationsCreated
+          ? 'These parts of the spec break the OpenAPI rules. Fix them and import the spec again.'
+          : 'These parts of the spec break the OpenAPI rules, so the expectations generated from them may not behave as expected.'}
       </Typography>
       {[...groups.entries()].map(([kindLabel, group]) => (
         <Box key={kindLabel} sx={{ mb: 1 }}>

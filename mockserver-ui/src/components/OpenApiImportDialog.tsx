@@ -55,6 +55,8 @@ export default function OpenApiImportDialog({ open, onClose, connectionParams }:
   const [chosenExamples, setChosenExamples] = useState<Record<string, string>>({});
 
   const operationExamples = useMemo(() => discoverNamedExamples(spec), [spec]);
+  // The load problems are then the whole result, so no success message is shown.
+  const noExpectationsCreated = createdCount === 0 && loadProblems.length > 0;
 
   // Editing the spec invalidates any prior example choices (operationIds may now
   // mean a different operation), so reset selections whenever the spec changes.
@@ -149,12 +151,12 @@ export default function OpenApiImportDialog({ open, onClose, connectionParams }:
         {error !== null && (
           <HumanErrorAlert error={error} sx={{ mt: 1 }} />
         )}
-        {createdCount !== null && (
+        {createdCount !== null && !noExpectationsCreated && (
           <Alert severity="success" sx={{ mt: 1 }}>
             Imported {createdCount} expectation{createdCount === 1 ? '' : 's'}.
           </Alert>
         )}
-        <OpenApiLoadProblemsAlert problems={loadProblems} sx={{ mt: 1 }} />
+        <OpenApiLoadProblemsAlert problems={loadProblems} noExpectationsCreated={noExpectationsCreated} sx={{ mt: 1 }} />
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose}>Close</Button>

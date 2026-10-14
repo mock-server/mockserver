@@ -195,6 +195,7 @@ describe('OpenApiImportDialog load problems', () => {
     const alert = await screen.findByTestId('openapi-load-problems');
     expect(screen.getByText('Imported 1 expectation.')).toBeInTheDocument();
     expect(within(alert).getByText('Spec Loaded With 2 Problems')).toBeInTheDocument();
+    expect(alert).toHaveClass('MuiAlert-colorWarning');
     expect(within(alert).getByText('unresolved or mistyped $ref (1)')).toBeInTheDocument();
     expect(within(alert).getByText('missing required field (1)')).toBeInTheDocument();
     expect(alert).toHaveTextContent(
@@ -202,6 +203,35 @@ describe('OpenApiImportDialog load problems', () => {
     );
     expect(alert).toHaveTextContent("#/info: required field 'version' is missing");
     expect(within(alert).getByText('Hint: check that the $ref target exists')).toBeInTheDocument();
+  });
+
+  it('reports a spec that created no expectations as an error, not an import of 0', async () => {
+    const user = userEvent.setup();
+    stubFetch(201, { expectations: [], loadProblems });
+    render(<OpenApiImportDialog open onClose={() => {}} connectionParams={connectionParams} />);
+
+    await user.click(screen.getByLabelText('OpenAPI spec or URL'));
+    await user.paste('{"openapi":"3.0.0"}');
+    await user.click(screen.getByRole('button', { name: 'Import' }));
+
+    const alert = await screen.findByTestId('openapi-load-problems');
+    expect(within(alert).getByText('No Expectations Created: Spec Has 2 Problems')).toBeInTheDocument();
+    expect(alert).toHaveClass('MuiAlert-colorError');
+    expect(alert).not.toHaveTextContent('expectations generated from them');
+    expect(screen.queryByText(/^Imported \d+ expectation/)).not.toBeInTheDocument();
+  });
+
+  it('still reports an import of 0 when the spec has no problems', async () => {
+    const user = userEvent.setup();
+    stubFetch(201, { expectations: [], loadProblems: [] });
+    render(<OpenApiImportDialog open onClose={() => {}} connectionParams={connectionParams} />);
+
+    await user.click(screen.getByLabelText('OpenAPI spec or URL'));
+    await user.paste('openapi: 3.0.0');
+    await user.click(screen.getByRole('button', { name: 'Import' }));
+
+    expect(await screen.findByText('Imported 0 expectations.')).toBeInTheDocument();
+    expect(screen.queryByTestId('openapi-load-problems')).not.toBeInTheDocument();
   });
 
   it('shows no problems for a spec without any', async () => {
@@ -233,7 +263,7 @@ describe('OpenApiImportDialog load problems', () => {
     await user.click(screen.getByRole('button', { name: 'Import' }));
 
     const alert = await screen.findByTestId('openapi-load-problems');
-    expect(within(alert).getByText('Spec Loaded With 53 Problems')).toBeInTheDocument();
+    expect(within(alert).getByText('No Expectations Created: Spec Has 53 Problems')).toBeInTheDocument();
     expect(within(alert).getAllByRole('listitem')).toHaveLength(50);
     expect(within(alert).getByText('3 more not shown; PUT /mockserver/openapi?includeLoadProblems=true returns every problem.')).toBeInTheDocument();
   });

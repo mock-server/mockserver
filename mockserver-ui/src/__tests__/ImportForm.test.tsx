@@ -245,10 +245,38 @@ describe('Import per-format endpoint calls', () => {
     const alert = await screen.findByTestId('openapi-load-problems');
     expect(within(alert).getByText('Spec Loaded With 1 Problem')).toBeInTheDocument();
     expect(alert).toHaveTextContent("#/info: required field 'version' is missing");
+    expect(alert).toHaveClass('MuiAlert-colorWarning');
+    expect(await screen.findByText('Imported 1 expectation')).toBeInTheDocument();
     expect(fetchCalls.find((c) => c.url.includes('/mockserver/openapi'))!.url).toContain('includeLoadProblems=true');
 
     await user.click(getFormatRadio(/WSDL/));
     expect(screen.queryByTestId('openapi-load-problems')).not.toBeInTheDocument();
+  });
+
+  it('OpenAPI that creates no expectations reports its load problems as an error, not success', async () => {
+    stubFetch(201, {
+      expectations: [],
+      loadProblems: [
+        { specIndex: 0, kind: 'MISSING', kindLabel: 'missing required field', location: '#', description: "required field 'info' is missing" },
+        { specIndex: 0, kind: 'MISSING', kindLabel: 'missing required field', location: '#', description: "required field 'paths' is missing" },
+      ],
+    });
+    const user = userEvent.setup();
+    renderComposer();
+    await user.click(screen.getByLabelText('Import'));
+    await user.click(getFormatRadio(/OpenAPI/));
+    const textarea = screen.getByLabelText('OpenAPI content');
+    await pasteInto(user, textarea, '{"openapi":"3.0.0"}');
+    await user.click(screen.getByRole('button', { name: 'Import' }));
+
+    const alert = await screen.findByTestId('openapi-load-problems');
+    expect(within(alert).getByText('No Expectations Created: Spec Has 2 Problems')).toBeInTheDocument();
+    expect(alert).toHaveClass('MuiAlert-colorError');
+    expect(alert).not.toHaveTextContent('expectations generated from them');
+    expect(screen.queryByText('Import succeeded')).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Imported \d+ expectation/)).not.toBeInTheDocument();
+    // Nothing was created, so the spec stays in place to be fixed.
+    expect(textarea).toHaveValue('{"openapi":"3.0.0"}');
   });
 
   it('OpenAPI URL source calls PUT /mockserver/openapi with the URL', async () => {

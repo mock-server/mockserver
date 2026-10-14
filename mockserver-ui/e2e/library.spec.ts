@@ -447,10 +447,14 @@ test('import error paths: invalid input is reported and nothing is created', asy
   await expect(page.getByRole('alert')).toBeVisible();
 
   // Not an OpenAPI spec. The server accepts it with no operations and reports
-  // its load problems, so the problems alert is the report (the import snackbar
-  // is an alert too, which is why this is not getByRole('alert')).
+  // its load problems, so the problems alert is the only report, an error
+  // rather than a success snackbar.
   await importViaForm(page, 'OpenAPI', '{"openapi":"3.0.0"}');
-  await expect(page.getByTestId('openapi-load-problems')).toContainText('missing required field');
+  const loadProblems = page.getByTestId('openapi-load-problems');
+  await expect(loadProblems).toContainText(/No Expectations Created: Spec Has \d+ Problems?/);
+  await expect(loadProblems).toContainText('missing required field');
+  await expect(page.getByRole('alert')).toHaveCount(1);
+  await expect(snackbar(page)).toHaveCount(0);
 
   expect(await activeExpectations(request)).toEqual([]);
 });
