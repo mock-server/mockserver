@@ -162,8 +162,10 @@ public class HttpActionHandler {
         this.httpStateHandler = httpStateHandler;
         this.loopPreventionHeaderName = string(httpStateHandler.getUniqueLoopPreventionHeaderName());
         this.loopPreventionHeaderValue = string(httpStateHandler.getUniqueLoopPreventionHeaderValue());
-        // its own id: upstreams see this one, and a request carrying the x-forwarded-by value goes unlogged
-        this.forwardLoopGuard = new ForwardLoopGuard(configuration, "MockServer_" + java.util.UUID.randomUUID());
+        // its own id: upstreams see this one, and a request carrying the x-forwarded-by value goes unlogged;
+        // not UUIDService, whose test pinning would give every server in a test the same id
+        java.util.concurrent.ThreadLocalRandom random = java.util.concurrent.ThreadLocalRandom.current();
+        this.forwardLoopGuard = new ForwardLoopGuard(configuration, "MockServer_" + Long.toHexString(random.nextLong()) + Long.toHexString(random.nextLong()));
         this.scheduler = httpStateHandler.getScheduler();
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         this.httpRequestToCurlSerializer = new HttpRequestToCurlSerializer(mockServerLogger);
