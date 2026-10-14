@@ -2,15 +2,14 @@
 
 ## Supported Versions
 
-MockServer requires **Java 17** as the minimum supported runtime (raised from Java 11 in the 6.x line as part of the Jakarta EE 10 / Spring 7 platform modernisation). Currently supported versions:
+MockServer requires **Java 17** as the minimum supported runtime (raised from Java 11 in the 6.x line as part of the Jakarta EE 10 / Spring 7 platform modernisation). Only the current release line is supported:
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 8.0.x   | :white_check_mark: |
-| 6.0.x   | :white_check_mark: |
-| < 6.0   | :x:                |
+| 9.0.x   | :white_check_mark: |
+| < 9.0   | :x:                |
 
-The latest minor in the current major line receives fixes; older minors are best-effort. The `5.15.x` line is the last Java 11-compatible release and no longer receives security updates.
+Security fixes ship as patch releases of the release line in the table above. Every older version is unsupported and receives no fixes; upgrade to the latest patch release of the supported line to pick up a fix. The `5.15.x` line is the last Java 11-compatible release.
 
 ## Security Posture
 
@@ -300,10 +299,10 @@ We will respond within **7 days** and work with you to understand and address th
 
 ## Upgrade Path
 
-MockServer 6.x requires **Java 17 or later**. If you are still on Java 11:
+MockServer 6.x and later require **Java 17 or later**. If you are still on Java 11:
 
-1. **Upgrade your environment to Java 17+** to run MockServer 6.x (and pick up the patched Spring 7 / Jetty 12 dependency stack).
-2. If you cannot move off Java 11 yet, **pin to MockServer 5.15.x** (the last Java 11-compatible line) — note it no longer receives security updates.
+1. **Upgrade your environment to Java 17+** to run a supported MockServer release (see [Supported Versions](#supported-versions)) and pick up the patched Spring 7 / Jetty 12 dependency stack.
+2. If you cannot move off Java 11 yet, **pin to MockServer 5.15.x** (the last Java 11-compatible line) — note it is unsupported and receives no security updates.
 
 See the [Java 17 / Jakarta EE 10 upgrade guide](docs/operations/migration-java17-jakarta.md) for the consumer-facing breaking changes (servlet namespace, container requirements, removed shaded classifier).
 
