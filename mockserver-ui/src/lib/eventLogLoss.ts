@@ -63,6 +63,8 @@ export function parseEventLogLoss(value: unknown): EventLogLoss | null {
   return COUNT_FIELDS.some((field) => (loss[field] ?? 0) > 0) ? loss : null;
 }
 
+const MATCH_FAILURE_CAP = 'maxLoggedMatchFailures (e.g. to 10) to cap the did-not-match entries logged per request';
+
 function counted(count: number, one: string, many: string): string {
   return `${count.toLocaleString()} ${count === 1 ? one : many}`;
 }
@@ -76,8 +78,8 @@ export function eventLogLossCauses(loss: EventLogLoss): EventLogLossCause[] {
       id: 'ring-full',
       lost: `${counted(ringFull, 'log event was', 'log events were')} dropped before being recorded because the `
         + 'ring buffer was full (log events arrived faster than the single logging thread could record them).',
-      fix: 'If the drops persist under steady load, lower the log level (e.g. to WARN); a larger ringBufferSize '
-        + 'only absorbs short bursts.',
+      fix: 'If the drops persist under steady load, lower the log level (e.g. to WARN), or keep the log level and '
+        + `set ${MATCH_FAILURE_CAP}; a larger ringBufferSize only absorbs short bursts.`,
     });
   }
   const inFlightBytes = loss.droppedInFlightBytes ?? 0;
@@ -99,7 +101,8 @@ export function eventLogLossCauses(loss: EventLogLoss): EventLogLossCause[] {
       id: 'max-log-entries',
       lost: `${counted(countEvicted, 'recorded entry was', 'recorded entries were')} evicted after the log reached `
         + `its maximum number of entries (${setting('maxLogEntries', loss.maxLogEntries)}).`,
-      fix: 'Raise maxLogEntries, or lower the log level so fewer entries are recorded per request.',
+      fix: 'Raise maxLogEntries, or lower the log level so fewer entries are recorded per request, or keep the log '
+        + `level and set ${MATCH_FAILURE_CAP}.`,
     });
   }
   const byteEvicted = loss.evictedAtMaxEventLogSizeInBytes ?? 0;

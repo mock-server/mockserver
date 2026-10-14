@@ -1780,7 +1780,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             message
                 .append(ringFull).append(ringFull == 1 ? " log event was" : " log events were")
                 .append(" DROPPED before being recorded because the ring buffer was full (log events arrived faster than the single logging thread could record them). ");
-            remedy.append("for the ring-full drops, lower the log level (e.g. to WARN) if they persist under steady load — a larger ringBufferSize only absorbs short bursts; ");
+            remedy.append("for the ring-full drops, lower the log level (e.g. to WARN) if they persist under steady load, or keep the log level and set maxLoggedMatchFailures (e.g. to 10) to cap the did-not-match entries logged per request — a larger ringBufferSize only absorbs short bursts; ");
         }
         if (inFlightBytes > 0) {
             long inFlightBudget = maxInFlightBytes;
@@ -1799,7 +1799,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             message
                 .append(countEvicted).append(countEvicted == 1 ? " recorded entry was" : " recorded entries were")
                 .append(" EVICTED after the log reached its maximum number of entries (maxLogEntries=").append(maxLogEntries).append("). ");
-            remedy.append("for the evictions at maxLogEntries, raise it, or lower the log level so fewer entries are recorded per request; ");
+            remedy.append("for the evictions at maxLogEntries, raise it, or lower the log level so fewer entries are recorded per request, or keep the log level and set maxLoggedMatchFailures (e.g. to 10) to cap the did-not-match entries logged per request; ");
         }
         if (byteEvicted > 0) {
             long maxEventLogSizeInBytes = configuration.maxEventLogSizeInBytes();

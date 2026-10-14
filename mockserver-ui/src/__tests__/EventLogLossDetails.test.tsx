@@ -43,7 +43,10 @@ describe('failed verification on an incomplete event log', () => {
     expect(cause).toHaveTextContent(
       '1,234 recorded entries were evicted after the log reached its maximum number of entries (maxLogEntries=1000).',
     );
-    expect(cause).toHaveTextContent('Raise maxLogEntries, or lower the log level so fewer entries are recorded per request.');
+    expect(cause).toHaveTextContent(
+      'Raise maxLogEntries, or lower the log level so fewer entries are recorded per request, or keep the log level '
+      + 'and set maxLoggedMatchFailures (e.g. to 10) to cap the did-not-match entries logged per request.',
+    );
     expect(screen.getByTestId('event-log-loss')).not.toHaveTextContent('maxEventLogSizeInBytes');
   });
 
@@ -59,6 +62,7 @@ describe('failed verification on an incomplete event log', () => {
       'Raise maxEventLogSizeInBytes, or set maxLoggedBodyBytes to truncate large bodies so each recorded entry is smaller.',
     );
     expect(screen.getByTestId('event-log-loss')).not.toHaveTextContent('maxLogEntries');
+    expect(screen.getByTestId('event-log-loss')).not.toHaveTextContent('maxLoggedMatchFailures');
   });
 
   it('says how many events were dropped at a full ring and to lower the log level', () => {
@@ -68,7 +72,9 @@ describe('failed verification on an incomplete event log', () => {
     const cause = screen.getByTestId('event-log-loss-ring-full');
     expect(cause).toHaveTextContent('27 log events were dropped before being recorded because the ring buffer was full');
     expect(cause).toHaveTextContent(
-      'If the drops persist under steady load, lower the log level (e.g. to WARN); a larger ringBufferSize only absorbs short bursts.',
+      'If the drops persist under steady load, lower the log level (e.g. to WARN), or keep the log level and set '
+      + 'maxLoggedMatchFailures (e.g. to 10) to cap the did-not-match entries logged per request; a larger '
+      + 'ringBufferSize only absorbs short bursts.',
     );
     expect(screen.getByTestId('event-log-loss')).not.toHaveTextContent('evicted');
   });
@@ -85,6 +91,7 @@ describe('failed verification on an incomplete event log', () => {
     expect(cause).toHaveTextContent('raise maxEventLogSizeInBytes above that budget');
     expect(cause).toHaveTextContent('maxLoggedBodyBytes does not help');
     expect(screen.getByTestId('event-log-loss')).not.toHaveTextContent('ring buffer');
+    expect(screen.getByTestId('event-log-loss')).not.toHaveTextContent('maxLoggedMatchFailures');
   });
 
   it('uses the singular for a single lost entry', () => {

@@ -57,13 +57,14 @@ public class MockServerEventLogVerifyIncompleteLogCauseTest {
 
     private static final int IN_FLIGHT_CAP = 1000;
     private static final String RING_FULL_CAUSE = "because the ring buffer was full";
-    private static final String RING_FULL_REMEDY = "for the ring-full drops, lower the log level";
+    private static final String MATCH_FAILURE_CAP = "or keep the log level and set maxLoggedMatchFailures (e.g. to 10) to cap the did-not-match entries logged per request";
+    private static final String RING_FULL_REMEDY = "for the ring-full drops, lower the log level (e.g. to WARN) if they persist under steady load, " + MATCH_FAILURE_CAP;
     private static final String IN_FLIGHT_CAUSE = "exceeded the in-flight byte budget of " + IN_FLIGHT_CAP + " bytes";
     private static final String IN_FLIGHT_REMEDY = "for the in-flight byte drops, lower the log level or, if you have heap to spare, raise maxEventLogSizeInBytes above that budget";
     private static final String EVICTED_CAUSE = "EVICTED after the log reached";
     private static final String COUNT_EVICTED_CAUSE = EVICTED_CAUSE + " its maximum number of entries (maxLogEntries=";
     private static final String BYTE_EVICTED_CAUSE = EVICTED_CAUSE + " its maximum size in bytes (maxEventLogSizeInBytes=";
-    private static final String COUNT_EVICTION_REMEDY = "for the evictions at maxLogEntries, raise it";
+    private static final String COUNT_EVICTION_REMEDY = "for the evictions at maxLogEntries, raise it, or lower the log level so fewer entries are recorded per request, " + MATCH_FAILURE_CAP;
     private static final String BYTE_EVICTION_REMEDY = "for the evictions at maxEventLogSizeInBytes, raise it";
 
     private MockServerEventLog log;
@@ -112,6 +113,7 @@ public class MockServerEventLogVerifyIncompleteLogCauseTest {
         assertThat(failure, containsString(IN_FLIGHT_CAUSE));
         assertThat(failure, containsString(IN_FLIGHT_REMEDY));
         assertThat(failure, containsString("maxLoggedBodyBytes does not help"));
+        assertThat(failure, not(containsString("maxLoggedMatchFailures")));
         assertThat(failure, not(containsString("ring")));
         assertThat(failure, not(containsString("EVICTED")));
         assertThat(failure, not(containsString("maxLogEntries")));
@@ -142,6 +144,7 @@ public class MockServerEventLogVerifyIncompleteLogCauseTest {
         assertThat(failure, containsString(log.getEvictedLogEntryCount() + " recorded entries were " + BYTE_EVICTED_CAUSE + "1500)"));
         assertThat(failure, containsString(BYTE_EVICTION_REMEDY));
         assertThat(failure, containsString("set maxLoggedBodyBytes to truncate large bodies"));
+        assertThat(failure, not(containsString("maxLoggedMatchFailures")));
         assertThat(failure, not(containsString("DROPPED")));
         assertThat(failure, not(containsString("ring")));
         assertThat(failure, not(containsString("in-flight")));

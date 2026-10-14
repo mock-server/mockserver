@@ -156,7 +156,6 @@ flowchart LR
 
 | # | Problem → proposal | Cost | Performance reasoning | Effort | Risks | Priority |
 |---|---|---|---|---|---|---|
-| A2g | The incomplete-log verify failure (`upperBoundUnprovableAfterEviction` in `MockServerEventLog`) and the dashboard log-pressure banner still name only "lower the log level" for ring-full drops and `maxLogEntries` evictions → also name `maxLoggedMatchFailures` on both surfaces, keeping the dashboard fixture keys unchanged; update `MockServerEventLogVerifyIncompleteLogCauseTest`, the UI tests and the remedy tables in `memory-management.md` and `dashboard-ui.md` | (ii) | Message text only | S | The banner text and its fixture are a UI contract | P3 |
 | A3l | `LocalBoundIpAddresses.anotherAddressOfThisHost()` (netty tests) returns the first up, non-loopback IPv4 address, which on a Mac with a VPN is a point-to-point tunnel interface (utun) that a datagram sent from this host does not reach, so `DnsLocalBoundIpTest.shouldAnswerOnEveryAddressWithoutALocalBoundIp` times out there (it fails the same way on code before A3i) → skip point-to-point interfaces (`NetworkInterface.isPointToPoint()`) and virtual ones, preferring a physical interface, and check `Http3LocalBoundIpTest`, which uses the same helper | (ii) | Test helper only | S | A host whose only non-loopback address is a tunnel now fails the test with the helper's own message, which must say so | P3 |
 
 ## Approach to LLM features
@@ -171,7 +170,7 @@ flowchart LR
 
 ## Sequence
 
-1. **Wave 0 — hygiene and performance:** A2g. (A2, A2b, A2c, A2d, A2e, A2f, C1 and C1b landed.)
+1. **Wave 0 — hygiene and performance:** done (A2, A2b, A2c, A2d, A2e, A2f, A2g, C1 and C1b landed).
 2. **Wave 1 — explain engine:** done (A3, A10 and B1 landed).
 3. **Wave 2 — failure classes:** done, each with an MCP tool and a dashboard entry where it applies. (A4, A6 and A6b landed; B1c added the MCP tools for A4, A5, A8 and B3; A5 landed, with its dashboard entry in A5b; A5c, A5d, A5e, A5g and A5i landed; A5f landed for 9.0.0, making the 500 the default.)
 4. **Wave 3 — fixes:** A3l. (B2, B3, B3c, B3d, B3e, B3f, A3f, A3g, A3h, A3i, A3j, A3k, A9b, A8, including the CLI, A8b, initialisation-file lint (A8c), the authorisation page (A8d), per-source `DUPLICATE_ID` (A8f), the badge on every create path (A8e), on-load duplicate ids (A8g) and a file load keeping the last duplicate id (A8h) landed.)

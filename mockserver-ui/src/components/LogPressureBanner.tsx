@@ -15,8 +15,8 @@ import { monospaceFontFamily } from '../theme';
  * fails" and "the dashboard is missing requests". Each cause gets its own fix:
  *
  * - **Ring full** (events dropped faster than the single logging thread can
- *   record them): lower the log level; a bigger `ringBufferSize` only absorbs
- *   short bursts.
+ *   record them): lower the log level, or keep it and set
+ *   `maxLoggedMatchFailures`; a bigger `ringBufferSize` only absorbs short bursts.
  * - **In-flight bytes** (large bodies waiting to be logged exceeded the
  *   in-flight cap): lower the log level, or raise `maxEventLogSizeInBytes`.
  * - **Eviction** (recorded entries removed by the retention bound): raise
@@ -98,8 +98,9 @@ export default function LogPressureBanner({ connectionParams }: LogPressureBanne
           <li data-testid="log-pressure-ring-full">
             {plural(pressure.ringFull, 'event was', 'events were')} dropped because they arrived faster than
             the single logging thread could record them. If this happens under steady load, lower the log
-            level (<Code>logLevel</Code> <Code>WARN</Code> or <Code>ERROR</Code>); raising{' '}
-            <Code>ringBufferSize</Code> only absorbs short bursts.
+            level (<Code>logLevel</Code> <Code>WARN</Code> or <Code>ERROR</Code>), or keep the log level and
+            set <Code>maxLoggedMatchFailures</Code> (e.g. <Code>10</Code>) to cap the did-not-match entries
+            logged per request; raising <Code>ringBufferSize</Code> only absorbs short bursts.
           </li>
         )}
         {pressure.inFlightBytes > 0 && (

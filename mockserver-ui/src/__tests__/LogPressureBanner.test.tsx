@@ -79,6 +79,7 @@ describe('LogPressureBanner', () => {
     const reason = within(banner).getByTestId('log-pressure-ring-full');
     expect(reason).toHaveTextContent('128 events were dropped');
     expect(reason).toHaveTextContent(/lower the log level/);
+    expect(reason).toHaveTextContent(/keep the log level and set maxLoggedMatchFailures \(e\.g\. 10\) to cap the did-not-match entries/);
     expect(reason).toHaveTextContent(/ringBufferSize only absorbs short bursts/);
     expect(banner).not.toHaveTextContent(/maxLogEntries/);
     expect(within(banner).queryByTestId('log-pressure-in-flight-bytes')).not.toBeInTheDocument();
@@ -101,6 +102,7 @@ describe('LogPressureBanner', () => {
     expect(reason).toHaveTextContent(/bodies waiting to be logged exceeded the in-flight memory cap/);
     expect(reason).toHaveTextContent(/maxEventLogSizeInBytes/);
     expect(banner).not.toHaveTextContent(/ringBufferSize/);
+    expect(banner).not.toHaveTextContent(/maxLoggedMatchFailures/);
     expect(within(banner).queryByTestId('log-pressure-ring-full')).not.toBeInTheDocument();
   });
 

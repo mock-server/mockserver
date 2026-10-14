@@ -994,7 +994,7 @@ See [docs/code/breakpoints.md](breakpoints.md) for the server-side architecture 
 
 | Cause (counter) | Banner line | Remedy shown |
 |-----------------|-------------|--------------|
-| `mock_server_dropped_log_events_total{reason="ring_full"}` | events arrived faster than the single logging thread could record them | lower the log level (`WARN`/`ERROR`); a bigger `ringBufferSize` only absorbs short bursts |
+| `mock_server_dropped_log_events_total{reason="ring_full"}` | events arrived faster than the single logging thread could record them | lower the log level (`WARN`/`ERROR`), or keep it and set `maxLoggedMatchFailures` to cap the did-not-match entries per request; a bigger `ringBufferSize` only absorbs short bursts |
 | `mock_server_dropped_log_events_total{reason="in_flight_bytes"}` | bodies waiting to be logged exceeded the in-flight memory cap | lower the log level, or raise `maxEventLogSizeInBytes` |
 | unlabelled `mock_server_dropped_log_events_total` (a server that predates the label), or a `reason` the dashboard does not know | events dropped before being recorded | lower the log level |
 | `mock_server_evicted_log_entries_total` | oldest entries evicted to stay within the retention limit | raise `maxLogEntries` or `maxEventLogSizeInBytes` |
@@ -1007,9 +1007,9 @@ A verification that asserts an upper bound fails, rather than passes, once the e
 
 | Field(s) in the message part | Line shown | Remedy shown |
 |------------------------------|------------|--------------|
-| `droppedRingFull` | N log events were dropped because the ring buffer was full | lower the log level; a larger `ringBufferSize` only absorbs short bursts |
+| `droppedRingFull` | N log events were dropped because the ring buffer was full | lower the log level, or keep it and set `maxLoggedMatchFailures`; a larger `ringBufferSize` only absorbs short bursts |
 | `droppedInFlightBytes`, `inFlightBytesBudget` | N log events were dropped because the bodies waiting to be logged exceeded the in-flight byte budget of B bytes | lower the log level, or raise `maxEventLogSizeInBytes` above the budget (not `maxLoggedBodyBytes`) |
-| `evictedAtMaxLogEntries`, `maxLogEntries` | N recorded entries were evicted at `maxLogEntries=…` | raise `maxLogEntries`, or lower the log level |
+| `evictedAtMaxLogEntries`, `maxLogEntries` | N recorded entries were evicted at `maxLogEntries=…` | raise `maxLogEntries`, or lower the log level, or keep it and set `maxLoggedMatchFailures` |
 | `evictedAtMaxEventLogSizeInBytes`, `maxEventLogSizeInBytes` | N recorded entries were evicted at `maxEventLogSizeInBytes=…` | raise `maxEventLogSizeInBytes`, or set `maxLoggedBodyBytes` |
 
 Only the causes that happened are listed, followed by the two alternatives common to all (reset the event log between tests, or `failVerificationOnEvictedLog=false`). Unlike the log-pressure banner, this needs no metrics endpoint and its counts are since the event log was last reset, not lifetime totals.

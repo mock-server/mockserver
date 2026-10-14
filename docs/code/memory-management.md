@@ -986,9 +986,9 @@ Two byte bounds apply to the event log: `maxEventLogSizeInBytes` to the deque (r
 
 | Cause since the last reset | Message says | Remedy given |
 |---|---|---|
-| Ring-full drops | `N log events were DROPPED before being recorded because the ring buffer was full` | lower the log level; a larger `ringBufferSize` only absorbs short bursts |
+| Ring-full drops | `N log events were DROPPED before being recorded because the ring buffer was full` | lower the log level, or keep it and set `maxLoggedMatchFailures` to cap the `EXPECTATION_NOT_MATCHED` entries per request; a larger `ringBufferSize` only absorbs short bursts |
 | In-flight byte drops | `N log events were DROPPED … exceeded the in-flight byte budget of B bytes` | lower the log level or raise `maxEventLogSizeInBytes` (not `maxLoggedBodyBytes`, which truncates only after the backlog) |
-| Eviction, count bound | `N recorded entries were EVICTED after the log reached its maximum number of entries (maxLogEntries=…)` | raise `maxLogEntries`, or lower the log level |
+| Eviction, count bound | `N recorded entries were EVICTED after the log reached its maximum number of entries (maxLogEntries=…)` | raise `maxLogEntries`, or lower the log level, or keep it and set `maxLoggedMatchFailures` |
 | Eviction, byte bound | `… its maximum size in bytes (maxEventLogSizeInBytes=…)` | raise `maxEventLogSizeInBytes`, or set `maxLoggedBodyBytes` to truncate large bodies |
 
 The `VERIFICATION_FAILED` log entry (shown in the dashboard) ends `because the event log has dropped log events`, `evicted entries`, or `dropped log events and evicted entries` to match, followed by a second argument: the same counts and bounds as a map, holding only the causes that occurred. The REST `406` body and every client's assertion message carry the full message unchanged.

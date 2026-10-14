@@ -5,7 +5,8 @@
  *
  * - `mock_server_dropped_log_events_total{reason="ring_full"}` — events dropped
  *   because they arrived faster than the single logging thread could record
- *   them (lower the log level; a bigger `ringBufferSize` only absorbs bursts).
+ *   them (lower the log level or set `maxLoggedMatchFailures`; a bigger
+ *   `ringBufferSize` only absorbs bursts).
  * - `mock_server_dropped_log_events_total{reason="in_flight_bytes"}` — events
  *   dropped because the bodies waiting to be logged exceeded the in-flight
  *   byte cap.
