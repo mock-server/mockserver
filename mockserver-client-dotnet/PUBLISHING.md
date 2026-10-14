@@ -7,7 +7,7 @@
   `MockServer.Client` id is owned by an unrelated third party)
 - **Registry:** [nuget.org](https://www.nuget.org/packages/MockServerClient)
 - **Status:** the `MockServerClient` id is **claimed** (first published as
-  `8.0.0-alpha.1` on 2026-06-11 to reserve the name); the release pipeline publishes
+  `8.0.0-alpha.1` on 2026-06-11 to reserve the name); the release pipeline publishes <!-- version-ref:keep -->
   the stable release version on top.
 - **Secret:** `mockserver-release/nuget` (AWS Secrets Manager, JSON key `api_key` — the
   release scripts read it via `load_secret … api_key`; the `NUGET_API_KEY` below is just the

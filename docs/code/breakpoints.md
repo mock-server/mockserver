@@ -475,9 +475,9 @@ the Java client sends it) or a `?capabilities=breakpointReleased` query paramete
 matches the upgrade on the decoded path, so a query string is accepted, and
 records the capability with `WebSocketClientRegistry.registerClient(clientId,
 ctx, true)`. Clients must keep the bare URI unless they only target this version:
-servers up to 8.0.0 open the callback WebSocket only when the URI is exactly
+servers up to 8.0.0 open the callback WebSocket only when the URI is exactly <!-- version-ref:keep -->
 `/_mockserver_callback_websocket`. Older clients never receive the notice (an
-8.0.0 Java client logs an unknown message type as an ERROR). The Java client
+8.0.0 Java client logs an unknown message type as an ERROR). <!-- version-ref:keep --> The Java client
 logs the notice at TRACE and now ignores any unknown message type at DEBUG.
 
 | Field | Type | Description |

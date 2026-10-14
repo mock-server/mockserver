@@ -337,7 +337,7 @@ curl -X PUT http://localhost:1080/mockserver/expectation -d '{
     <li><strong>Mustache</strong> &mdash; <span class="inline_code">{% raw %}{{#scenario.get}}orderId{{/scenario.get}}{% endraw %}</span> (a <em>section</em>, with the state name as the section body &mdash; Mustache cannot pass a method argument inline the way Velocity and JavaScript can)</li>
 </ul>
 
-<p><span class="inline_code">capture</span> rules require <strong>MockServer 8.0.0 or later</strong>; reading scenario state from a <strong>Mustache</strong> template is supported in <strong>recent versions</strong> (Velocity and JavaScript work from 8.0.0). On earlier versions, write the value into scenario state from a Velocity/JavaScript template on the first request with <span class="inline_code">scenario.set('name', ...)</span> and read it back with <span class="inline_code">scenario.get('name')</span> on the later request.</p>
+<p><span class="inline_code">capture</span> rules require <strong>MockServer 8.0.0 or later</strong>; reading scenario state from a <strong>Mustache</strong> template is supported in <strong>recent versions</strong> (Velocity and JavaScript work from 8.0.0). On earlier versions, write the value into scenario state from a Velocity/JavaScript template on the first request with <span class="inline_code">scenario.set('name', ...)</span> and read it back with <span class="inline_code">scenario.get('name')</span> on the later request.</p> <!-- version-ref:keep -->
 
 <button class="accordion title"><strong>Three-Step Order Flow</strong> &mdash; capture the order id in step 1, then return it in the response body of step 3</button>
 <div class="panel title">

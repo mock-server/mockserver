@@ -9,7 +9,7 @@
 ## Status
 
 The crate name `mockserver-client` is **claimed** on crates.io (first published as
-`8.0.0-alpha.1` on 2026-06-11 to reserve the name). The release pipeline publishes
+`8.0.0-alpha.1` on 2026-06-11 to reserve the name). The release pipeline publishes <!-- version-ref:keep -->
 the stable release version on top.
 
 ## Secret

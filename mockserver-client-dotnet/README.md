@@ -150,7 +150,7 @@ sent as an `httpRequest` holding `if`/`then`/`else` (the `If`, `Then` and `Else`
 conditional, or an OpenAPI matcher from `HttpRequest.OpenApi(specUrlOrPayload, operationId)`
 (`SpecUrlOrPayload`, `OperationId`, `ContextPathPrefix`). A load scenario `LoadStep` likewise takes
 `Checks`, a list of `LoadCheck` assertions on each step's response. These need a client released
-after 8.0.0.
+after 8.0.0. <!-- version-ref:keep -->
 
 ```csharp
 client.When(

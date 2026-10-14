@@ -24,7 +24,7 @@ schema_faq:
     answer: "MockServer loads user-supplied classes at runtime: class callbacks, expectation initializers, and custom matchers. GraalVM native-image requires a closed world at build time, which is fundamentally incompatible with runtime class loading. In testing, features not explicitly traced during the build-time metadata step failed silently at runtime — HTTPS, templates, and logging each failed without reporting a clear error. The real HotSpot JVM is the only distribution that can provide 100% feature parity."
 ---
 
-<p itemprop="headline">The standard <span class="inline_code">mockserver/mockserver</span> image reaches ready in roughly <strong>0.57&nbsp;s</strong> &mdash; about a third faster than MockServer 8.0.0 &mdash; thanks to a class-data-sharing archive baked in at build time. For the lowest possible container start, the <span class="inline_code">-aot</span> image variant uses a JDK&nbsp;25 Leyden AOT cache and reaches ready in roughly <strong>0.35&nbsp;s</strong>. A built-in warmup step means the first real request you send is answered in ~5&ndash;10&nbsp;ms rather than the hundreds of milliseconds a cold JVM would otherwise take. For test suites, the single biggest speed lever remains <a href="/mock_server/fast_tests.html">one container per suite with <span class="inline_code">reset()</span> between tests</a> &mdash; that brings per-test cost to milliseconds regardless of image choice.</p>
+<p itemprop="headline">The standard <span class="inline_code">mockserver/mockserver</span> image reaches ready in roughly <strong>0.57&nbsp;s</strong> &mdash; about a third faster than MockServer 8.0.0 &mdash; thanks to a class-data-sharing archive baked in at build time. For the lowest possible container start, the <span class="inline_code">-aot</span> image variant uses a JDK&nbsp;25 Leyden AOT cache and reaches ready in roughly <strong>0.35&nbsp;s</strong>. A built-in warmup step means the first real request you send is answered in ~5&ndash;10&nbsp;ms rather than the hundreds of milliseconds a cold JVM would otherwise take. For test suites, the single biggest speed lever remains <a href="/mock_server/fast_tests.html">one container per suite with <span class="inline_code">reset()</span> between tests</a> &mdash; that brings per-test cost to milliseconds regardless of image choice.</p> <!-- version-ref:keep -->
 
 <table class="table-standard">
     <thead>
@@ -62,7 +62,7 @@ schema_faq:
 
 <p>If the archive is ever unusable &mdash; for example because the image was rebuilt against a different JDK patch &mdash; the JVM logs a warning and starts normally. There is no risk of incorrect behaviour from the archive.</p>
 
-<p>The image is built on a jlink-trimmed JDK&nbsp;17 runtime on a distroless base, so the archive size (~33&nbsp;MB) is offset by the smaller runtime: the complete image is 411&nbsp;MB versus 422&nbsp;MB for the pre-archive 8.0.0 image.</p>
+<p>The image is built on a jlink-trimmed JDK&nbsp;17 runtime on a distroless base, so the archive size (~33&nbsp;MB) is offset by the smaller runtime: the complete image is 411&nbsp;MB versus 422&nbsp;MB for the pre-archive 8.0.0 image.</p><!-- version-ref:keep -->
 
 <a id="aot_image" class="anchor" href="#aot_image">&nbsp;</a>
 <h2>-aot image — JDK 25 Leyden AOT cache</h2>

@@ -283,7 +283,7 @@ A load-scenario `LoadStep` takes per-step response assertions with
 `.check(LoadCheck::status(..))`, `LoadCheck::header(..)` or
 `LoadCheck::body_json_path(..)`; failing checks feed the
 `LoadThresholdMetric::CheckFailureRate` threshold. These need a client released
-after 8.0.0.
+after 8.0.0. <!-- version-ref:keep -->
 
 ```rust
 use mockserver_client::*;

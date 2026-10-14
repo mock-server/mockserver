@@ -160,5 +160,5 @@ connections — to test resilience. Licensed Apache 2.0. Homepage: https://www.m
 - AlternativeTo and StackShare display the listing immediately after creation (no review queue).
 - Slant entries go through a community review before appearing prominently.
 - Keep descriptions factual — do not list features that are not confirmed in the current release.
-  The copy above reflects what is shipped in MockServer 8.0.0 (June 2026).
+  The copy above reflects what is shipped in MockServer 8.0.0 (June 2026). <!-- version-ref:keep -->
 - Link back to `https://www.mock-server.com` as the canonical homepage in all listings.

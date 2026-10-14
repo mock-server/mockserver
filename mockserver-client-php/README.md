@@ -140,7 +140,7 @@ whenever `$if` does not). Each branch is an `HttpRequest`, including an OpenAPI
 matcher (`HttpRequest::openAPI($specUrlOrPayload, $operationId)`) or another
 conditional; `->not()` inverts any matcher. `HttpRequest::fromArray()` reads
 these back, and `Expectation::fromArray()` exposes the typed request through
-`getHttpRequest()`. These need a client released after 8.0.0.
+`getHttpRequest()`. These need a client released after 8.0.0. <!-- version-ref:keep -->
 
 ```php
 $client->when(

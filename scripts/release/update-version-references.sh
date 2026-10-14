@@ -53,6 +53,9 @@ sed_i() {
 
 if is_dry_run; then
   log_dry "would: rewrite version refs across changelog, jekyll config, packages, docs"
+  log_dry "unmarked references to $OLD_VERSION that read as history (the rewrite would bump them):"
+  python3 "$SCRIPT_DIR/version_refs.py" check "$REPO_ROOT" \
+    --version "$OLD_VERSION" --api-version "$OLD_API_VERSION" --warn-only
 else
   # Roll the changelog: open a fresh empty [Unreleased] and stamp a dated
   # [RELEASE_VERSION] section from the previous Unreleased content.
@@ -106,8 +109,6 @@ else
 
   VERSION_RB="$REPO_ROOT/mockserver-client-ruby/lib/mockserver/version.rb"
   [[ -f "$VERSION_RB" ]] && sed_i "s/VERSION = '.*'/VERSION = '$RELEASE_VERSION'/" "$VERSION_RB"
-  RUBY_README="$REPO_ROOT/mockserver-client-ruby/README.md"
-  [[ -f "$RUBY_README" ]] && sed_i "s/$OLD_VERSION/$RELEASE_VERSION/g" "$RUBY_README"
 
   # Bump the pinned Testcontainers image tag in Java test source. The general
   # find-and-replace below deliberately excludes *.java (blanket-rewriting version
@@ -142,53 +143,13 @@ else
   fi
   log_info "Testcontainers image pin set to mockserver/mockserver:mockserver-${RELEASE_VERSION}"
 
-  # General find-and-replace across docs (excluding changelog, target, etc.)
-  OLD_PAT=$(escape_sed "$OLD_VERSION"); NEW_REP=$(escape_sed "$RELEASE_VERSION")
-  OLD_API_PAT=$(escape_sed "$OLD_API_VERSION"); NEW_API=$(escape_sed "$API_VERSION")
-  # Skip the substitution on lines that describe a HISTORICAL milestone
-  # (e.g. "Fixed in 6.0.x", "Before 6.0.0", "removed in 6.0.0", "switched
-  # to X in 6.0.0", "Since 5.15.0"). On those lines the version is a
-  # milestone marker, not a current-version reference; bumping it to the
-  # new release would falsify the statement. Trade-off: a line that mixes
-  # a historical milestone AND a current-version reference would be
-  # protected too, but that pattern is rare enough to be a tolerable false
-  # negative — the operator can always fix it by hand in the finalize
-  # commit. The list is intentionally broad (covers "Fixed in", "removed
-  # in", "switched ... in", etc.) because this step runs unattended and we
-  # prefer false negatives (missed bump) over false positives (mangled
-  # documentation lie).
-  HISTORICAL_RE='([Bb]efore|[Uu]ntil|[Ss]ince|[Ff]ixed in|[Rr]emoved in|[Ii]ntroduced in|[Dd]eprecated in|[Aa]dded in|[Uu]pdated in|[Rr]eleased in|[Cc]hanged in|[Aa]s of|[Rr]equires|[Mm]inimum version[:]?|switched [^.]+ in|moved [^.]+ in|migrated [^.]+ in|renamed [^.]+ in|published [^.]+ in)[[:space:]]+[0-9]+\.[0-9]+'
-  # mockserver-{node,client-node}/package.json are excluded from the general
-  # find-and-replace because their version references are bumped explicitly
-  # with jq above (precise field targeting). Without this guard the blanket
-  # OLD_VERSION->NEW_VERSION sed would rewrite third-party prerelease tags
-  # that share the OLD_VERSION prefix (e.g. grunt-ts@^6.0.0-beta.22). Example
-  # package.json files (under */examples/) are *not* excluded — they carry
-  # first-party "mockserver-client"/"mockserver-node" deps that must bump.
-  for ext in "*.html" "*.md" "*.yaml" "*.yml" "*.json" "*.txt"; do
-    find "$REPO_ROOT" -name "$ext" \
-      -not -path "*/node_modules/*" -not -path "*/.git/*" \
-      -not -path "*/target/*" -not -path "*/helm/charts/*" \
-      -not -path "*/.tmp/*" \
-      -not -name "changelog.md" -not -name "CHANGELOG.md" \
-      -not -path "*/mockserver-node/package.json" \
-      -not -path "*/mockserver-client-node/package.json" \
-      -not -path "*/mockserver-ui/package.json" \
-      -not -name "package-lock.json" -print0 2>/dev/null \
-    | while IFS= read -r -d '' file; do
-        # Anchor the version so it only matches a COMPLETE version token, never a
-        # substring of a larger version. Without the boundaries, OLD_VERSION 6.1.0
-        # matched inside a third-party dependency range like "^16.1.0" and bumped
-        # it to the non-existent "^17.0.0", breaking `npm ci` for mockserver-ui
-        # (and thus every mvn build of mockserver-netty + CodeQL). The leading
-        # group requires a non-digit/non-dot before the version; the trailing
-        # group a non-digit after it.
-        sed_i -E "/${HISTORICAL_RE}/!s/(^|[^0-9.])${OLD_PAT}([^0-9]|\$)/\1${NEW_REP}\2/g" "$file" 2>/dev/null || true
-        if [[ "$OLD_API_VERSION" != "$API_VERSION" ]]; then
-          sed_i -E "/${HISTORICAL_RE}/!s/(^|[^0-9.])${OLD_API_PAT}([^0-9]|\$)/\1${NEW_API}\2/g" "$file" 2>/dev/null || true
-        fi
-      done
-  done
+  # Bump every reference to the old version in the docs, configs and example
+  # manifests, except lines explicitly marked as history (version-ref:keep, a
+  # keep block, or the KEEP_FILES/KEEP_LINES lists in version_refs.py). Rules:
+  # docs/operations/release-process.md#version-references
+  python3 "$SCRIPT_DIR/version_refs.py" rewrite "$REPO_ROOT" \
+    --old "$OLD_VERSION" --new "$RELEASE_VERSION" \
+    --old-api "$OLD_API_VERSION" --new-api "$API_VERSION"
 fi
 
 log_info "Diff summary:"

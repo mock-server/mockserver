@@ -257,6 +257,9 @@ fi
 # source (mockserver-core / -netty / -async), and each draws from a shared, contended static generator
 # that serialises the worker event loops under load. Three earlier sweeps each fixed one such shape by
 # enumerating it once; only an always-on control stops the next one reappearing. Greps-only, ~1s.
+#
+# The version-reference guard is always-on because a mention of the current release can be added
+# to any doc, README or manifest in the repository, which no single path filter covers. ~1s.
 ALWAYS_STEPS='  - label: ":package: validate client version pins"
     command: ".buildkite/scripts/steps/clients-version-consistency.sh"
     timeout_in_minutes: 5
@@ -292,6 +295,17 @@ ALWAYS_STEPS='  - label: ":package: validate client version pins"
           limit: 2
   - label: ":hourglass: guard every child step declares a timeout"
     command: ".buildkite/scripts/steps/check-pipeline-step-timeouts.sh"
+    timeout_in_minutes: 5
+    agents:
+      queue: trigger
+    retry:
+      automatic:
+        - exit_status: -1   # agent lost (e.g. Spot reclamation)
+          limit: 2
+        - exit_status: 255  # agent forced shutdown
+          limit: 2
+  - label: ":label: guard version references survive the release rewrite"
+    command: "scripts/release/test-version-refs.sh"
     timeout_in_minutes: 5
     agents:
       queue: trigger

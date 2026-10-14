@@ -32,7 +32,7 @@ to listen on.
 to `shaded_package.io.netty`. Netty's `NativeLibraryLoader` then asks for a prefixed library —
 `libshaded_1package_netty_quiche42_linux_<arch>.so` — while every published native (inside the shaded
 jar itself, or in `netty-codec-native-quic`) is named `libnetty_quiche42_linux_<arch>.so`. So no
-published image has ever served HTTP/3 (8.0.0 logged `native QUIC transport not available` and
+published image has ever served HTTP/3 (8.0.0 logged `native QUIC transport not available` and <!-- version-ref:keep -->
 ignored `http3Port`), and mounting the stock native jar into `/libs` does not help either. The same
 applies to Maven users of `mockserver-netty-no-dependencies`.
 

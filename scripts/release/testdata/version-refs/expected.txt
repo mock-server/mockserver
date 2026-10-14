@@ -1,0 +1,21 @@
+Fixture for test-version-refs.sh: rewriting version forty-one to forty-two (and its
+.x line) must turn this file into expected.txt. Each line names what it exercises.
+default bump, image tag: docker pull mockserver/mockserver:42.0.0
+default bump, artefact: java -jar mockserver-netty-no-dependencies-42.0.0.jar
+default bump, prose: MockServer is currently at 42.0.0
+default bump, quoted and range: start(version="42.0.0") and "^42.0.0"
+default bump, api line: | 42.0.x | supported |
+default bump, two on a line: mockserver/mockserver:42.0.0 and mockserver-42.0.0.tgz
+unmarked history is still bumped (check fails on it): In 42.0.0 it ran on every read
+unmarked history is still bumped (check fails on it): capture rules require MockServer 42.0.0 or later
+keep marker: In 41.0.0 it ran on every read <!-- version-ref:keep -->
+keep marker in a table cell: | 855 ms (41.0.0) <!-- version-ref:keep --> |
+keep marker keeps the whole line: in 41.0.0 the image was mockserver/mockserver:41.0.0 # version-ref:keep
+bump marker: Since 40.0.0 we pin 42.0.0 here <!-- version-ref:bump -->
+<!-- version-ref:keep-begin -->
+kept block: docker pull mockserver/mockserver:41.0.0
+kept block: 41.0.0 logged one too
+<!-- version-ref:keep-end -->
+after the block: docker pull mockserver/mockserver:42.0.0
+bounded: mockserver/mockserver:42.0.0 bumps but 141.0.0, 41.0.01 and 41.0.0.1 are other versions
+crlf line: image: mockserver/mockserver:42.0.0

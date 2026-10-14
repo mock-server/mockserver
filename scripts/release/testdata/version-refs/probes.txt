@@ -1,0 +1,25 @@
+in 41.0.0 the image was mockserver/mockserver:41.0.0
+The 41.0.0 image is `mockserver/mockserver:41.0.0`
+Download the 41.0.0 jar: `mockserver-netty-41.0.0-jar-with-dependencies.jar`
+Works on 40.6.0 and later; pin `mockserver/mockserver:41.0.0`
+docker run -p 1080:1080 mockserver/mockserver:41.0.0 # tested against 41.0.0
+Since 40.0.0, the newest image is 41.0.0
+Fixed in 40.5.0. Latest stable: 41.0.0
+Download the 41.0.0 jar from Maven Central
+The latest MockServer 41.0.0 still supports Java 17
+MockServer is currently at 41.0.0
+The current image 41.0.0 runs on JDK 17
+| Image | `mockserver/mockserver:41.0.0` | since 40.0.0 |
+| Latest | 41.0.0 |
+Use `mockserver-41.0.0` (released after 40.6.0)
+See https://repo1.maven.org/maven2/org/mock-server/mockserver-netty/41.0.0/ for the jar
+{"image": "mockserver/mockserver:41.0.0", "note": "pre-40.0.0 behaviour"}
+The latest release is MockServer 41.0.0's successor-free build
+Get the jar from Maven Central: version 41.0.0 published on Maven Central
+Now on 41.0.0, upgrade today
+helm install --version 41.0.0 mockserver mockserver/mockserver
+Run `docker pull mockserver/mockserver:41.0.0` - available from 41.0.0
+The 41.0.0 release is the current stable release
+Install the latest: npm i mockserver-client@41.0.0 (added in 40.1.0)
+To keep the 41.0.0 behaviour: set the flag back
+A blank status code in the 41.0.0 dashboard became 0

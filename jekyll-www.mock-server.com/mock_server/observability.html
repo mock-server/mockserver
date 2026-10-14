@@ -436,7 +436,7 @@ sum(rate(mock_server_llm_cost_usd_total[1h]))</code></pre>
 </table>
 
 <p>
-    In MockServer 8.0.0 and earlier every completion was named <span class="inline_code">chat</span>. A trace query or
+    In MockServer 8.0.0 and earlier every completion was named <span class="inline_code">chat</span>. A trace query or <!-- version-ref:keep -->
     dashboard that filters on <span class="inline_code">gen_ai.operation.name == "chat"</span> to find all
     completions must also match <span class="inline_code">generate_content</span> and
     <span class="inline_code">text_completion</span>.

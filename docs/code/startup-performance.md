@@ -6,7 +6,7 @@ MockServer startup is **class-loading bound, not flag-tunable**. After measuring
 
 | Metric | Before | After | Change |
 |---|---|---|---|
-| Standard Docker image, `docker run` → ready | 855 ms (8.0.0) | 566 ms (AppCDS) | −34% |
+| Standard Docker image, `docker run` → ready | 855 ms (8.0.0) <!-- version-ref:keep --> | 566 ms (AppCDS) | −34% |
 | Fat jar on host JDK 21, launch → ready (tight 2 ms poll) | 919 ms | 804 ms (lazy BC + lazy forward group) | −13% |
 | First request arriving 600 ms after port-open | ~230 ms | 5–11 ms (`startupWarmup`) | −97% |
 | `-aot` variant (JDK 25 Leyden), host launch → ready | — | ~580 ms | −37% vs standard jar |
@@ -111,7 +111,7 @@ These were measured and ruled out. The evidence is above.
 ### U2 — AppCDS standard Docker image (shipped)
 
 **Measured (arm64, launch of container → status 200, median of 5).** AppCDS image **566 ms** vs
-published 8.0.0 standard image **855 ms** (−34%; −39% vs a same-jar no-AppCDS control at 933 ms).
+published 8.0.0 standard image **855 ms** (−34%; −39% vs a same-jar no-AppCDS control at 933 ms). <!-- version-ref:keep -->
 Image size 411 MB vs 422 MB — the jlink-trimmed runtime offsets the ~33 MB archive. Archive use
 confirmed via `-Xlog:cds=info` ("Opened archive /mockserver.jsa", mapped dynamic regions). Both
 fallback cases proven: a missing archive and a corrupt archive each log a warning and start

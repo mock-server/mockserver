@@ -459,7 +459,7 @@ helm install mockserver mockserver/mockserver
 
 The separate `mockserver-config` chart is retained as a **reference example only**. It is not published to the Helm repository at `https://www.mock-server.com/index.yaml` — consumers wanting to use it must copy the chart from `helm/mockserver-config/` in the source repo. For new deployments, use the inline `app.config` values in the main chart instead (see above).
 
-Its `Chart.yaml` is bumped automatically by the release scripts (`finalize.sh`'s find-and-replace pass) to keep it in lock-step with the main `mockserver` chart, but only the `mockserver` chart is packaged and pushed to S3 by `helm.sh`.
+Its `Chart.yaml` is bumped automatically by the release scripts (the version-reference rewrite in `update-version-references.sh`) to keep it in lock-step with the main `mockserver` chart, but only the `mockserver` chart is packaged and pushed to S3 by `helm.sh`.
 
 This chart provides a ConfigMap containing:
 
@@ -493,7 +493,7 @@ All MockServer components — Java modules, client libraries, Docker images, and
 The Helm chart `version` and `appVersion` in `Chart.yaml` **MUST always match the MockServer application version**. Both charts (`mockserver` and `mockserver-config`) follow this rule, but the enforcement path differs:
 
 - **`mockserver` (published)**: `scripts/release/components/helm.sh` sets both fields to `$RELEASE_VERSION` via an explicit `sed` pass before packaging, then publishes the `.tgz` to S3.
-- **`mockserver-config` (reference-only, NOT published)**: bumped passively by `finalize.sh`'s general find-and-replace across `*.yaml` files. Not packaged or pushed anywhere.
+- **`mockserver-config` (reference-only, NOT published)**: bumped passively by the version-reference rewrite in `update-version-references.sh`. Not packaged or pushed anywhere.
 
 Rules:
 
@@ -571,7 +571,7 @@ cosign verify --key https://www.mock-server.com/mockserver-cosign.pub ghcr.io/mo
 
 > **IAM note:** signing is gated by `aws secretsmanager describe-secret mockserver-release/cosign-key`,
 > so the release-queue role needs **`secretsmanager:DescribeSecret`** on that secret (not just
-> `GetSecretValue`) or the probe fails and signing is silently skipped — the cause of the 8.0.0 chart
+> `GetSecretValue`) or the probe fails and signing is silently skipped — the cause of the 8.0.0 chart <!-- version-ref:keep -->
 > publishing unsigned until the grant was added to `read_release_secrets`.
 
 To enable signing:

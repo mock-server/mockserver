@@ -1506,10 +1506,12 @@ set against that release on the same hardware. The run is labelled
 `config_profile=release-<version>`, which makes it `baseline_eligible: false`: compare records it
 green without persisting or comparing it, and it is never published.
 
+<!-- version-ref:keep-begin -->
 ```bash
 bk build create -p mockserver-performance-test -b master -m "[perf-run] release comparison 8.0.0" \
   -e PERF_RELEASE_COMPARISON=8.0.0
 ```
+<!-- version-ref:keep-end -->
 
 Only the checks that cannot apply to a release image change:
 
@@ -1529,7 +1531,7 @@ uses its own image, and it is off by default here. Everything else is unchanged,
 the path-coverage arms: an arm whose probe needs a feature
 the release lacks fails that probe and is listed under `.path_coverage.problems`, and a metric the
 release does not export is null. Compare a release run's `perf-result.json` artifact with a
-default run on the same instance type. The two images carry their own shipped defaults (8.0.0 runs
+default run on the same instance type. The two images carry their own shipped defaults (8.0.0 runs <!-- version-ref:keep -->
 JDK 17 at `MaxRAMPercentage=75` with the JVM's ergonomic collector, which is G1 in the 2 GB SUT
 and Serial below about 1.75 GB; the current snapshot runs JDK 25 with ZGC at 60), so the
 comparison is shipped default against shipped default, and `config` records both. The event-log

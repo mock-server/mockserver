@@ -14,7 +14,7 @@ Run the `/prepare-release` slash command from this repo. It inspects `changelog.
 - `next-version` (e.g. `7.6.1-SNAPSHOT`)
 - `old-version` (e.g. `7.5.0` — auto-derived, you don't need to type it on the form)
 - `release-type` (almost always `full`)
-- `create-versioned-site` — leave at the default **`auto`**. The release scripts derive the correct value from the release version vs the previous tag (`yes` for a major/minor release, `no` for a patch), so you no longer have to pick it. If you *do* set an explicit `yes`/`no`, it is treated only as a confirmation: the pipeline **fails closed** (before it tags or pushes) when your choice contradicts the version. This guard exists because a major/minor release with `no` silently overwrites the previous version's archived docs site — the 8.0.0 release destroyed `7-5.mock-server.com` this way.
+- `create-versioned-site` — leave at the default **`auto`**. The release scripts derive the correct value from the release version vs the previous tag (`yes` for a major/minor release, `no` for a patch), so you no longer have to pick it. If you *do* set an explicit `yes`/`no`, it is treated only as a confirmation: the pipeline **fails closed** (before it tags or pushes) when your choice contradicts the version. This guard exists because a major/minor release with `no` silently overwrites the previous version's archived docs site — the 8.0.0 release destroyed `7-5.mock-server.com` this way. <!-- version-ref:keep -->
 
 The skill applies SemVer rules:
 
@@ -448,12 +448,41 @@ The release pipeline writes every version-bearing file in the repo, so contribut
 | `mockserver-client-node/package.json` | `update-version-references.sh` | `version`, and `devDependencies["mockserver-node"]` |
 | `mockserver-client-python/pyproject.toml` | `update-version-references.sh` | `version = "…"` |
 | `mockserver-client-ruby/lib/mockserver/version.rb` | `update-version-references.sh` | `VERSION = '…'` |
-| `mockserver-client-ruby/README.md` | `update-version-references.sh` | All occurrences of the old version literal |
 | `helm/mockserver/Chart.yaml` | `components/helm.sh` | `version:` and `appVersion:` (must match app version per Helm policy) |
-| All `*.html`, `*.md`, `*.yaml`, `*.yml`, `*.json`, `*.txt` outside `target/`, `node_modules/`, `helm/charts/`, `.tmp/`, and the changelog | `update-version-references.sh` (general find-and-replace) | Old version literal → new version literal; old API version → new API version |
+| All `*.html`, `*.md`, `*.yaml`, `*.yml`, `*.json`, `*.txt` outside `target/`, `node_modules/`, `helm/charts/`, `.tmp/`, and the changelog | `update-version-references.sh` (`version_refs.py rewrite`) | Every reference to the old version (or old API version) → the new one, except lines marked as history. See [Version references](#version-references) |
 | `terraform/website/terraform.tfvars` | `components/versioned-site.sh` | Append `"<MINOR>.<PATCH>" = { bucket_name = "…" }` and update `latest_version = "<SUBDOMAIN>"` |
 
 **Sanity check before promoting a dry-run**: `git diff` should show every file in the table above changed exactly once. If `git diff --name-only | wc -l` is wildly larger than this table suggests, something is rewriting more than expected; if smaller, a version-bearing file may have been added without wiring it into `update-version-references.sh` (or `prepare.sh` for OpenAPI / pom files).
+
+## Version references
+
+**The release bumps every reference to the previous version, except lines explicitly marked as history.** `scripts/release/version_refs.py` rewrites each bounded occurrence of the old version (and the old `X.Y.x` line) in the files above. No phrase or pattern ever keeps one. A version stays as written only when a person has marked it, so "in X.Y.Z it ran on every read" survives only if it carries a marker. `scripts/release/preflight.sh` and `scripts/release/test-version-refs.sh` fail when an unmarked line reads as history.
+
+```mermaid
+flowchart TD
+    A["occurrence of the old version"] --> B{"version-ref:keep, keep block,\nKEEP_FILES or KEEP_LINES?"}
+    B -- yes --> K["kept as written"]
+    B -- no --> U["bumped"]
+    U --> C{"check: covered by a historical\nphrase, and no version-ref:bump?"}
+    C -- yes --> F["check fails: mark it\nor accept the bump"]
+    C -- no --> P["check passes"]
+```
+
+| Signal | Keeps | Use it for |
+|--------|-------|------------|
+| `version-ref:keep` anywhere on the line | the whole line | Markdown/HTML: `<!-- version-ref:keep -->` at the end of the line, or inside the last cell of a table row. YAML: `# version-ref:keep` |
+| `version-ref:keep-begin` ... `version-ref:keep-end` | every line between them | a code block or a table that records a past result. A begin with no end fails the check |
+| `KEEP_FILES` in `version_refs.py` | the whole file | a file that is wholly a historical pin, such as `scripts/perf/startup-variants.json` |
+| `KEEP_LINES` in `version_refs.py` | the occurrences inside the fragment; others on that line are still bumped | a file that cannot carry a marker (JSON, `llms-full.txt`), plan docs, and CI or agent control files whose edits need separate approval. The check fails unless each fragment is on exactly one line of its file (a deleted file is ignored) |
+| `version-ref:bump` | nothing | silences the check on a line that reads as history but should follow each release |
+
+**The check.** It lists an occurrence that a phrase in `HISTORICAL_PATTERNS` covers, when the line has no marker. It looks at the current release (`mockserver_version` in `_config.yml`) and at every later version up to the next major. Text about the coming release ("default `true` since X.Y.Z") is history once that release ships, and the release after it would otherwise bump it, so it is marked when it is written. The phrases are: `in`, `since`, `until`, `before`, `fixed/added/changed/removed ... in`, `from`, `than`, `after`, `require(s)`, `X.Y.Z and earlier`, `X.Y.Z's`, `pre-X.Y.Z`, `the X.Y.Z release` (or `changelog`, `behaviour`, `dashboard`, `default`), and a past-tense verb after the version. `version_refs.py` is the source of truth. A phrase on another version on the same line does not trigger it. These phrases only decide what the check reports; they never keep a version. Settle each report with `version-ref:keep` or `version-ref:bump`.
+
+```bash
+python3 scripts/release/version_refs.py check .          # unmarked history, open blocks, stale lists: exit 1
+python3 scripts/release/version_refs.py check . --list   # every occurrence with its verdict
+./scripts/release/test-version-refs.sh                   # fixture tests plus the repository check
+```
 
 ## Dry-run behaviour by component
 

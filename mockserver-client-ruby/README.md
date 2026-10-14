@@ -111,7 +111,7 @@ client.upsert(MockServer::Expectation.from_hash({
 }))
 ```
 
-Symbol keys need a client released after 8.0.0; 8.0.0 and earlier read only
+Symbol keys need a client released after 8.0.0; 8.0.0 and earlier read only <!-- version-ref:keep -->
 string keys and build an empty expectation from a symbol-keyed hash.
 
 Headers, query parameters, path parameters, trailers and cookies can be given
@@ -132,12 +132,12 @@ MockServer::HttpRequest.new(
 An `httpRequest` holding `specUrlOrPayload` is read as an `OpenAPIDefinition`
 matcher, and `HttpOverrideForwardedRequest` carries `request_override`,
 `response_override` and `response_template`. These need a client released
-after 8.0.0.
+after 8.0.0. <!-- version-ref:keep -->
 
 An `httpRequest` holding `if` is read as a `ConditionalRequestDefinition`: when
 `if_request` matches, `then_request` must match too, otherwise `else_request`
 must. A load scenario `LoadStep` takes `checks`, a list of `LoadCheck`
-assertions on each step's response. These need a client released after 8.0.0.
+assertions on each step's response. These need a client released after 8.0.0. <!-- version-ref:keep -->
 
 ```ruby
 client.when(

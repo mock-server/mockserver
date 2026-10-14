@@ -199,7 +199,7 @@ server change, not the server's absolute cost. On demand only; no CI step runs i
 
 The throughput harness above sweeps streams over **one** connection. This one adds the missing
 **connections axis** — *N connections × M concurrent in-flight streams* (shapes 1×1, 10×10, 100×10) —
-and records the **heap delta per established connection**, exactly what the 8.0.0 changelog warned the
+and records the **heap delta per established connection**, exactly what the 8.0.0 changelog warned the <!-- version-ref:keep -->
 multiplex migration changed. `Http2ConnectionMemoryBenchmark` boots a real `MockServer` in-process and,
 per shape:
 
@@ -245,6 +245,7 @@ uniformly for any published image, and it captures heap + Netty direct buffers).
 identical, the difference is attributable to the server-side change. It warms the h2 stream path before the
 idle baseline so one-time JVM warm-up is not mis-charged to the measured connections.
 
+<!-- version-ref:keep-begin -->
 ```bash
 H2_MEM_COMPARE_IMAGES="mockserver/mockserver:7.6.0 mockserver/mockserver:mockserver-8.0.0" \
   ./run-h2-connection-memory-compare.sh          # requires the module compiled + docker
@@ -257,6 +258,8 @@ H2_MEM_COMPARE_IMAGES="mockserver/mockserver:7.6.0 mockserver/mockserver:mockser
 | 1×1    | 209,715 B/conn        | 209,716 B/conn    | ~0 (below RSS 0.1 MiB granularity — one connection is unresolvable) |
 | 10×10  | 356,515 B/conn        | 346,030 B/conn    | within noise (spreads 29–39% overlap) |
 | 100×10 | 271,581 B/conn (spread 4.2%) | 338,690 B/conn (spread 6.2%) | **+24.7%** (~+67 KB/conn ≈ ~6.7 KB per concurrent stream child-channel) |
+
+<!-- version-ref:keep-end -->
 
 **Conclusion.** The changelog's warning is **confirmed and quantified**: the HTTP/2-multiplex migration did
 raise per-connection memory — by ~25% at the 100×10 shape RSS can resolve with low spread (the extra
@@ -271,7 +274,7 @@ h2-path warm-up fix, un-amortised first-traffic JVM warm-up inflated it to a spu
 > regardless of the measured shape, which pre-grows Netty's pooled arena, so the 100×10 figure is the
 > *marginal* cost beyond a ~100-stream-warm process. Likewise the in-process absolute figures are
 > whole-JVM (client + server) heap. Treat both absolutes as trend/order-of-magnitude signals; treat the
-> cross-version delta as the answer to "did per-connection memory change at 8.0.0?".
+> cross-version delta as the answer to "did per-connection memory change at 8.0.0?". <!-- version-ref:keep -->
 
 ## Connection-scaling ceiling (`run-connection-ceiling.sh`) — programme item 21
 
