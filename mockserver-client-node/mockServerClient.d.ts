@@ -8,7 +8,7 @@
  * Licensed under the Apache License, Version 2.0
  */
 
-import {BinaryResponse, ChaosExperiment, DnsResponse, Expectation, ExpectationId, GenerateLoadScenarioFromOpenAPIRequest, GenerateLoadScenarioFromRecordingRequest, GrpcStreamResponse, HttpChaosProfile, HttpClassCallback, HttpError, HttpForward, HttpOverrideForwardedRequest, HttpRequest, HttpRequestAndHttpResponse, HttpResponse, HttpSseResponse, HttpTemplate, HttpWebSocketResponse, KeyToMultiValue, LoadScenario, LoadScenarioGenerationResult, LoadScenarioReport, LoadScenarioStatus, LoadScenarioEntry, LoadScenarioList, LoadScenarioRegistration, LoadScenarioStartResult, LoadScenarioStopResult, OpenAPIExpectation, RequestDefinition, SloCriteria, SloVerdict, Times, TimeToLive,} from './mockServer';
+import {BinaryResponse, ChaosExperiment, DnsResponse, Expectation, ExpectationId, GenerateLoadScenarioFromOpenAPIRequest, GenerateLoadScenarioFromRecordingRequest, GrpcStreamResponse, HttpChaosProfile, HttpClassCallback, HttpError, HttpForward, HttpOverrideForwardedRequest, HttpRequest, HttpRequestAndHttpResponse, HttpResponse, HttpSseResponse, HttpTemplate, HttpWebSocketResponse, KeyToMultiValue, LoadScenario, LoadScenarioGenerationResult, LoadScenarioReport, LoadScenarioStatus, LoadScenarioEntry, LoadScenarioList, LoadScenarioRegistration, LoadScenarioStartResult, LoadScenarioStopResult, OpenAPIExpectation, RequestDefinition, SloCriteria, SloVerdict, Times, TimeToLive, RequestExplanation, DebugMismatchResult, ExplainUnmatchedResult, ExplainUnmatchedOptions,} from './mockServer';
 import {Llm, LlmConversationBuilder, LlmFailoverBuilder, LlmMockBuilder} from './llmTypes';
 import {McpMockBuilder} from './mcpMockBuilder';
 import {A2aMockBuilder} from './a2aMockBuilder';
@@ -664,6 +664,26 @@ export interface MockServerClient {
     retrieveRecordedExpectationsById(expectationId: string): Promise<Expectation[]>;
 
     retrieveLogMessagesById(expectationId: string): Promise<string[]>;
+
+    /**
+     * Explain how a recorded request would be served now (PUT /mockserver/explain): the expectation
+     * that would serve it, why each expectation ahead of it was passed over, and which it shadows.
+     * Read-only. Throws for a blank correlation id; rejects with the server's reason when no request
+     * is recorded with that id (never received, cleared or evicted).
+     */
+    explain(correlationId: string): Promise<RequestExplanation>;
+
+    /**
+     * Compare a request with every active expectation (PUT /mockserver/debugMismatch), with
+     * field-level differences and the closest match. Rejects for a non-HTTP request definition.
+     */
+    debugMismatch(requestDefinition: RequestDefinition): Promise<DebugMismatchResult>;
+
+    /**
+     * Explain why recent requests matched no expectation (PUT /mockserver/explainUnmatched): each
+     * unmatched request with its closest expectations, closest first.
+     */
+    explainUnmatched(options?: ExplainUnmatchedOptions): Promise<ExplainUnmatchedResult>;
 
     /**
      * Register a breakpoint matcher with per-phase handlers.

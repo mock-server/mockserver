@@ -1,6 +1,6 @@
 import {mockServerClient, ClockStatus, GrpcService, Har, MockServerClient, ScenarioHandle, ScenarioList, ScenarioState, llm as llmFactory, mcpMock, a2aMock} from '../index';
 import {RequestResponse} from '../mockServerClient';
-import {ChaosExperiment, CrossProtocolScenario, Expectation, ExpectationStep, GenerateLoadScenarioFromOpenAPIRequest, GenerateLoadScenarioFromRecordingRequest, HttpChaosProfile, HttpOverrideForwardedRequest, HttpRequest, HttpResponse, LoadScenario, LoadScenarioEntry, LoadScenarioGenerationResult, LoadScenarioList, LoadScenarioRegistration, LoadScenarioReport, LoadScenarioStartResult, LoadScenarioStopResult, RequestDefinition, SloCriteria, SloVerdict} from '../mockServer';
+import {ChaosExperiment, CrossProtocolScenario, Expectation, ExpectationStep, GenerateLoadScenarioFromOpenAPIRequest, GenerateLoadScenarioFromRecordingRequest, HttpChaosProfile, HttpOverrideForwardedRequest, HttpRequest, HttpResponse, LoadScenario, LoadScenarioEntry, LoadScenarioGenerationResult, LoadScenarioList, LoadScenarioRegistration, LoadScenarioReport, LoadScenarioStartResult, LoadScenarioStopResult, RequestDefinition, SloCriteria, SloVerdict, RequestExplanation, ExplainedExpectation, DebugMismatchResult, ExplainUnmatchedResult} from '../mockServer';
 
 const client: MockServerClient = mockServerClient('mockhttp', 1080);
 
@@ -331,6 +331,18 @@ async function test() {
         ]
     };
     const sloVerdict: SloVerdict = await client.verifySLO(sloCriteria);
+
+    // diagnostics
+    const explanation: RequestExplanation = await client.explain("abc-123-def-456");
+    const skipped: ExplainedExpectation[] = explanation.skippedExpectations || [];
+    const firstReason: string | undefined = skipped.length ? skipped[0].reason : undefined;
+    const arrivalOutcome: string | undefined = explanation.atArrival && explanation.atArrival.outcome;
+    const mismatch: DebugMismatchResult = await client.debugMismatch({method: "GET", path: "/api/users"});
+    const closestId: string | undefined = mismatch.closestMatch && mismatch.closestMatch.expectationId;
+    const unmatched: ExplainUnmatchedResult = await client.explainUnmatched({limit: 5, suggestFixes: true});
+    const unmatchedDefault: ExplainUnmatchedResult = await client.explainUnmatched();
+    const fixMatches: boolean | undefined = (((unmatched.unmatchedRequests || [])[0] || {}).closestExpectations || [])
+        .map(e => e.suggestedFix && e.suggestedFix.matchesAfterPatch)[0];
 
     // scheduled chaos experiment
     const chaosExperiment: ChaosExperiment = {

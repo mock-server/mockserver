@@ -242,6 +242,25 @@ $expectations = $client->retrieveActiveExpectations();
 $logs = $client->retrieveLogMessages();
 ```
 
+### Debugging Why a Request Did Not Match
+
+```php
+// Which expectation would serve a recorded request now, and why each one ahead of it lost
+$explanation = $client->explain($correlationId);
+foreach ($explanation->skippedExpectations as $skipped) {
+    echo "{$skipped->expectationId} {$skipped->reason}: {$skipped->explanation}\n";
+}
+
+// How a request compares, field by field, with every active expectation
+$result = $client->debugMismatch(HttpRequest::request()->method('GET')->path('/api/users'));
+
+// The closest expectations for recent unmatched requests, with suggested JSON patches
+$unmatched = $client->explainUnmatched(5, true);
+```
+
+The results are typed objects in `MockServer\Diagnostics` (`RequestExplanation`,
+`MismatchDebugResult`, `UnmatchedExplanation`).
+
 ### Control Operations
 
 ```php

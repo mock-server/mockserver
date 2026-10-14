@@ -268,6 +268,21 @@ client.startChaosExperiment({
 });
 ```
 
+### Diagnose Matching
+
+`explain(correlationId)` tells you which expectation would serve a recorded request now and why
+each expectation ahead of it was passed over; `debugMismatch(request)` compares a request with
+every active expectation; `explainUnmatched({limit, suggestFixes})` explains recent requests that
+matched nothing. Each resolves with a typed result (`RequestExplanation`, `DebugMismatchResult`,
+`ExplainUnmatchedResult`) and rejects with the server's reason on failure.
+
+```js
+const explanation = await client.explain("abc-123-def-456");
+for (const skipped of explanation.skippedExpectations || []) {
+    console.log(skipped.expectationId, skipped.reason, skipped.explanation);
+}
+```
+
 ## Verify Requests
 
 It is also possible to verify that request were made:

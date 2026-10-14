@@ -7,8 +7,10 @@ from typing import Callable
 from mockserver.async_client import AsyncMockServerClient
 from mockserver.models import (
     ConditionalRequestDefinition,
+    DebugMismatchResult,
     Delay,
     Expectation,
+    ExplainUnmatchedResult,
     HttpChaosProfile,
     HttpError,
     HttpForward,
@@ -19,6 +21,7 @@ from mockserver.models import (
     HttpTemplate,
     LoadScenario,
     OpenAPIExpectation,
+    RequestExplanation,
     TimeToLive,
     Times,
     VerificationTimes,
@@ -598,6 +601,29 @@ class MockServerClient:
         return self._run(
             self._async_client.retrieve_log_messages_by_id(expectation_id)
         )
+
+    def explain(self, correlation_id: str) -> RequestExplanation:
+        """Explain how the recorded request with this correlation id would be
+        served now (``PUT /mockserver/explain``): the expectation that would
+        serve it, why each expectation ahead of it was passed over, and which
+        it shadows. See :meth:`AsyncMockServerClient.explain`.
+        """
+        return self._run(self._async_client.explain(correlation_id))
+
+    def debug_mismatch(self, request: HttpRequest | dict) -> DebugMismatchResult:
+        """Compare a request with every active expectation
+        (``PUT /mockserver/debugMismatch``), with per-field differences and the
+        closest match.
+        """
+        return self._run(self._async_client.debug_mismatch(request))
+
+    def explain_unmatched(
+        self, limit: int | None = None, suggest_fixes: bool | None = None
+    ) -> ExplainUnmatchedResult:
+        """Explain why recent requests matched no expectation
+        (``PUT /mockserver/explainUnmatched``), closest expectations first.
+        """
+        return self._run(self._async_client.explain_unmatched(limit, suggest_fixes))
 
     def retrieve_expectations_as_code(
         self, fmt: str = "java", request: HttpRequest | None = None

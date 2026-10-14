@@ -675,6 +675,130 @@ public sealed class MockServerClient : IDisposable
         return new List<string>();
     }
 
+    // -------------------------------------------------------------------
+    // Match diagnostics
+    // -------------------------------------------------------------------
+
+    /// <summary>
+    /// Explain how a recorded request would be served now (PUT /mockserver/explain): re-checks it against the
+    /// current expectations, in the order MockServer evaluates them, and returns the expectation that would
+    /// serve it, why each expectation ahead of that one was passed over, and which lower-priority expectations
+    /// it shadows. Read-only: it consumes no Times and moves no scenario.
+    /// </summary>
+    /// <param name="correlationId">The correlation ID of the request's log entries.</param>
+    /// <exception cref="ArgumentException">If <paramref name="correlationId"/> is null or blank.</exception>
+    /// <exception cref="MockServerClientException">If no request is recorded with this correlation ID (never
+    /// received, cleared or evicted from the event log), the recorded request is not an HTTP request, or the
+    /// server fails.</exception>
+    public RequestExplanation Explain(string correlationId)
+        => ExplainAsync(correlationId).GetAwaiter().GetResult();
+
+    /// <summary>
+    /// Explain how a recorded request would be served now (async). See <see cref="Explain"/>.
+    /// </summary>
+    public async Task<RequestExplanation> ExplainAsync(string correlationId)
+    {
+        if (string.IsNullOrWhiteSpace(correlationId))
+            throw new ArgumentException("correlationId is required", nameof(correlationId));
+
+        var request = new HttpRequestMessage(HttpMethod.Put,
+            _baseUrl + "/mockserver/explain?correlationId=" + Uri.EscapeDataString(correlationId));
+        var (statusCode, body) = await SendAsync(request).ConfigureAwait(false);
+
+        if (statusCode >= 400)
+            throw new MockServerClientException(
+                $"Failed to explain request '{correlationId}' (HTTP {statusCode}): {ErrorMessage(body)}");
+        return DeserializeDiagnostic<RequestExplanation>(body, "explain");
+    }
+
+    /// <summary>
+    /// Compare a request with every active expectation (PUT /mockserver/debugMismatch) and return, for each,
+    /// whether it matches and which fields differ, plus the closest match. Nothing is recorded or consumed.
+    /// </summary>
+    /// <param name="request">The request to compare with the active expectations.</param>
+    /// <exception cref="ArgumentNullException">If <paramref name="request"/> is null.</exception>
+    /// <exception cref="MockServerClientException">If the server rejects the request or fails.</exception>
+    public MismatchDebugResult DebugMismatch(HttpRequest request)
+        => DebugMismatchAsync(request).GetAwaiter().GetResult();
+
+    /// <summary>
+    /// Compare a request with every active expectation (async). See <see cref="DebugMismatch"/>.
+    /// </summary>
+    public async Task<MismatchDebugResult> DebugMismatchAsync(HttpRequest request)
+    {
+        if (request == null) throw new ArgumentNullException(nameof(request));
+
+        var json = JsonSerializer.Serialize(request, JsonOptions);
+        var (statusCode, body) = await PutAsync("/mockserver/debugMismatch", json).ConfigureAwait(false);
+
+        if (statusCode >= 400)
+            throw new MockServerClientException($"Failed to debug mismatch (HTTP {statusCode}): {ErrorMessage(body)}");
+        return DeserializeDiagnostic<MismatchDebugResult>(body, "debugMismatch");
+    }
+
+    /// <summary>
+    /// Explain why recent requests matched no expectation (PUT /mockserver/explainUnmatched): for each recorded
+    /// unmatched request, the evaluated expectations ranked closest first, with their differences and
+    /// remediation hints.
+    /// </summary>
+    /// <param name="limit">How many recent unmatched requests to explain; the server default (10) when null.</param>
+    /// <param name="suggestFixes">Also suggest, for each of the five closest non-matching expectations, a JSON
+    /// patch that would make it match. Nothing is applied.</param>
+    /// <exception cref="ArgumentOutOfRangeException">If <paramref name="limit"/> is less than 1.</exception>
+    /// <exception cref="MockServerClientException">If the server fails.</exception>
+    public UnmatchedExplanation ExplainUnmatched(int? limit = null, bool suggestFixes = false)
+        => ExplainUnmatchedAsync(limit, suggestFixes).GetAwaiter().GetResult();
+
+    /// <summary>
+    /// Explain why recent requests matched no expectation (async). See <see cref="ExplainUnmatched"/>.
+    /// </summary>
+    public async Task<UnmatchedExplanation> ExplainUnmatchedAsync(int? limit = null, bool suggestFixes = false)
+    {
+        if (limit < 1)
+            throw new ArgumentOutOfRangeException(nameof(limit), limit, "limit must be at least 1");
+
+        var payload = new Dictionary<string, object>();
+        if (limit.HasValue) payload["limit"] = limit.Value;
+        if (suggestFixes) payload["suggestFixes"] = true;
+        var json = JsonSerializer.Serialize(payload, JsonOptions);
+        var (statusCode, body) = await PutAsync("/mockserver/explainUnmatched", json).ConfigureAwait(false);
+
+        if (statusCode >= 400)
+            throw new MockServerClientException($"Failed to explain unmatched requests (HTTP {statusCode}): {ErrorMessage(body)}");
+        return DeserializeDiagnostic<UnmatchedExplanation>(body, "explainUnmatched");
+    }
+
+    private static T DeserializeDiagnostic<T>(string body, string action) where T : new()
+    {
+        if (string.IsNullOrWhiteSpace(body)) return new T();
+        try
+        {
+            return JsonSerializer.Deserialize<T>(body, JsonOptions) ?? new T();
+        }
+        catch (JsonException e)
+        {
+            throw new MockServerClientException($"Unable to parse {action} response: {body}", e);
+        }
+    }
+
+    /// <summary>The <c>error</c> field of a JSON error body, or the body itself.</summary>
+    private static string ErrorMessage(string body)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            if (doc.RootElement.ValueKind == JsonValueKind.Object
+                && doc.RootElement.TryGetProperty("error", out var error)
+                && error.ValueKind == JsonValueKind.String)
+                return error.GetString() ?? body;
+        }
+        catch (JsonException)
+        {
+            // not JSON: report the body as sent
+        }
+        return body;
+    }
+
     /// <summary>
     /// Check MockServer status (returns bound ports).
     /// </summary>

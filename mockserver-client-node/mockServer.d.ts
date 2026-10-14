@@ -923,6 +923,128 @@ export interface ChaosExperiment {
   stages: ChaosExperimentStage[];
 }
 
+/** Why explain passed over an expectation, in the order the gates are applied. */
+export type ExplainedExpectationReason = 'NAMESPACE' | 'INACTIVE' | 'FIELDS_DIFFER' | 'NOT_OPERATOR' | 'CONVERSATION' | 'SCENARIO_STATE' | 'PERCENTAGE' | 'LOWER_PRIORITY';
+
+/** How a request was handled when it arrived. */
+export type ArrivalOutcome = 'MATCHED' | 'NO_MATCH' | 'FORWARDED_WITHOUT_EXPECTATION' | 'RESPONDED_WITHOUT_EXPECTATION' | 'UNKNOWN';
+
+/** A suggested JSON patch (RFC 6902) of an expectation that would make it match; nothing is applied. */
+export interface SuggestedFix {
+  patch?: { op: string; path: string; value?: any }[];
+  patchedFields?: string[];
+  unpatchedFields?: { field: string; reason: string }[];
+  matchesAfterPatch?: boolean;
+}
+
+/**
+ * One expectation as explain, debugMismatch or explainUnmatched evaluated it (OpenAPI schema
+ * ExplainedExpectation). The matched expectation has no reason; a skipped or shadowed one has a
+ * reason and an explanation.
+ */
+export interface ExplainedExpectation {
+  expectationId?: string;
+  expectationMethod?: string;
+  expectationPath?: string;
+  /** 1-based position in the order MockServer evaluates expectations */
+  position?: number;
+  priority?: number;
+  reason?: ExplainedExpectationReason;
+  explanation?: string;
+  /** whether the request matches the request matcher; absent when an earlier gate decided */
+  matches?: boolean;
+  matchedFieldCount?: number;
+  totalFieldCount?: number;
+  differingFieldCount?: number;
+  /** for each differing field, the differences found */
+  differences?: { [field: string]: string[] };
+  /** for each differing field, a hint on how to change the expectation */
+  remediation?: { [field: string]: string };
+  /** explainUnmatched with suggestFixes only */
+  suggestedFix?: SuggestedFix;
+}
+
+/** The recorded request explain re-checked. */
+export interface ExplainedRequest {
+  timestamp?: string;
+  method?: string;
+  path?: string;
+  /** true when the event log kept only the start of the body */
+  bodyTruncated?: boolean;
+  bodyTruncatedNote?: string;
+}
+
+/** How the request was handled when it arrived, read from the event log. */
+export interface Arrival {
+  outcome?: ArrivalOutcome;
+  /** outcome MATCHED only */
+  expectationId?: string;
+  /** outcome MATCHED only */
+  expectationStillStored?: boolean;
+}
+
+/** Which expectation would serve a recorded request now, and why (OpenAPI schema RequestExplanation). */
+export interface RequestExplanation {
+  correlationId?: string;
+  timestamp?: string;
+  recomputed?: boolean;
+  note?: string;
+  request?: ExplainedRequest;
+  atArrival?: Arrival;
+  /** absent when the outcome at arrival is RESPONDED_WITHOUT_EXPECTATION or UNKNOWN */
+  sameOutcomeAsAtArrival?: boolean;
+  expectationsChangedSince?: boolean;
+  expectationsLastChanged?: string;
+  matchedExpectation?: ExplainedExpectation;
+  closestExpectationId?: string;
+  skippedExpectations?: ExplainedExpectation[];
+  shadowedExpectations?: ExplainedExpectation[];
+  totalExpectations?: number;
+  evaluatedExpectations?: number;
+  truncated?: boolean;
+  /** present only when truncated is true */
+  maxExpectationsEvaluated?: number;
+}
+
+/** The result of debugMismatch: each active expectation compared with the request. */
+export interface DebugMismatchResult {
+  correlationId?: string;
+  timestamp?: string;
+  totalExpectations?: number;
+  evaluatedExpectations?: number;
+  truncated?: boolean;
+  maxExpectationsEvaluated?: number;
+  /** the expectation with the fewest differing fields; absent when every expectation matches */
+  closestMatch?: { expectationId: string; matchedFields: number; totalFields: number };
+  results?: ExplainedExpectation[];
+}
+
+/** One recent unmatched request and its closest expectations, closest first. */
+export interface UnmatchedRequest {
+  timestamp?: string;
+  method?: string;
+  path?: string;
+  closestExpectations?: ExplainedExpectation[];
+  totalExpectationsEvaluated?: number;
+}
+
+/** The result of explainUnmatched. */
+export interface ExplainUnmatchedResult {
+  correlationId?: string;
+  timestamp?: string;
+  unmatchedRequestCount?: number;
+  truncated?: boolean;
+  unmatchedRequests?: UnmatchedRequest[];
+}
+
+/** Options for explainUnmatched. */
+export interface ExplainUnmatchedOptions {
+  /** how many recent unmatched requests to analyse (server default 10) */
+  limit?: number;
+  /** add a suggestedFix to each of the five closest non-matching expectations */
+  suggestFixes?: boolean;
+}
+
 /**
  * The kind of a {@link LoadStage} in a {@link LoadProfile}.
  *

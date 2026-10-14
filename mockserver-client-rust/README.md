@@ -167,6 +167,7 @@ surfaces an invalid push-notification webhook URL instead of panicking).
 - **Retrieve** — recorded requests, active expectations, recorded expectations, logs
 - **Clear / Reset** — by request matcher, by expectation ID, or full reset
 - **Status / Bind** — query ports, bind additional ports
+- **Matching diagnostics** — `explain`, `debug_mismatch` and `explain_unmatched` return typed reports
 - **LLM, MCP, and A2A builders** — fluent `llm` / `mcp` / `a2a` mock builders, wire-identical to the other clients
 - **Blocking (synchronous)** — uses `reqwest` blocking client; no async runtime needed
 - **TLS support** — optional HTTPS with configurable certificate verification
@@ -339,13 +340,40 @@ client.close_breakpoint_websocket();
 
 **Stream frame decisions:** `StreamFrameDecision::continue_frame`, `::modify`, `::drop_frame`, `::inject`, `::close`.
 
+### Matching diagnostics
+
+Find out why a request was served by the wrong expectation, or by none. Each call is
+read-only on the server: it consumes no `Times` and moves no scenario.
+
+```rust
+// Which expectation would serve a recorded request now, and why each one ahead
+// of it was passed over (correlation id from its log entries)
+let explanation = client.explain("abc-123-def-456")?;
+for skipped in &explanation.skipped_expectations {
+    println!("{:?} {:?}: {:?}", skipped.expectation_id, skipped.reason, skipped.explanation);
+}
+
+// Compare a request with every active expectation, field by field
+let report = client.debug_mismatch(HttpRequest::new().method("GET").path("/api/users"))?;
+println!("{:?}", report.closest_match);
+
+// Recent requests that matched nothing, closest expectations first, each with a
+// suggested JSON patch that would make it match
+let unmatched = client.explain_unmatched(Some(
+    &ExplainUnmatchedOptions::new().limit(5).suggest_fixes(true),
+))?;
+```
+
+`explain` returns `Error::InvalidRequest` for a blank correlation id (without calling the
+server) and `Error::NotFound` for one that is no longer in the event log.
+
 ### Enums and newer MockServer versions
 
 Every public enum is `#[non_exhaustive]`, so a `match` on one needs a `_ =>` arm. New
 values can then be added in a minor release without breaking your code.
 
 Enums that travel over the wire (for example `ResponseMode`, `BinaryUpstream`,
-`CrossProtocolTrigger` and the `Load*` enums) also have an `Unknown` variant. A value
+`CrossProtocolTrigger`, `ExplainReason` and the `Load*` enums) also have an `Unknown` variant. A value
 this client version does not recognise, sent by a newer MockServer, reads as `Unknown`
 instead of failing the whole response. The original value is not kept, so `Unknown`
 cannot be sent back: serialising it, or sending an expectation or load scenario that

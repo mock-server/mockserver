@@ -27,8 +27,16 @@ export declare const llm: llmTypes.Llm & {
 export { mcpMock, McpMockBuilder, McpToolBuilder, McpResourceBuilder, McpPromptBuilder } from './mcpMockBuilder';
 export { a2aMock, A2aMockBuilder, A2aSkillBuilder, A2aTaskHandlerBuilder } from './a2aMockBuilder';
 export {
+  Arrival,
+  ArrivalOutcome,
   ChaosExperiment,
   ChaosExperimentStage,
+  DebugMismatchResult,
+  ExplainedExpectation,
+  ExplainedExpectationReason,
+  ExplainedRequest,
+  ExplainUnmatchedOptions,
+  ExplainUnmatchedResult,
   CrossProtocolScenario,
   Expectation,
   ExpectationId,
@@ -81,6 +89,7 @@ export {
   OpenAPIExpectation,
   RampCurve,
   RequestDefinition,
+  RequestExplanation,
   SloComparator,
   SloCriteria,
   SloIndicator,
@@ -90,7 +99,9 @@ export {
   SloVerdict,
   SloWindow,
   SseEvent,
+  SuggestedFix,
   Times,
   TimeToLive,
+  UnmatchedRequest,
   WebSocketMessage,
 } from  './mockServer';

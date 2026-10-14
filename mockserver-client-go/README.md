@@ -243,6 +243,38 @@ if client.IsRunning() { ... }
 ports, _ := client.Bind(1081, 1082)
 ```
 
+### Matching Diagnostics
+
+Find out why a request was served by the wrong expectation, or by none. Each call is read-only on the server: it consumes no `Times` and moves no scenario.
+
+```go
+// Which expectation would serve a recorded request now, and why each one
+// ahead of it was passed over (correlation ID from its log entries)
+explanation, err := client.Explain("abc-123-def-456")
+if err == nil {
+    for _, skipped := range explanation.SkippedExpectations {
+        fmt.Println(skipped.ExpectationID, skipped.Reason, skipped.Explanation)
+    }
+}
+
+// Compare a request with every active expectation, field by field
+report, err := client.DebugMismatch(mockserver.Request().Method("GET").Path("/api/users"))
+if err == nil && report.ClosestMatch != nil {
+    fmt.Println("closest:", report.ClosestMatch.ExpectationID)
+}
+
+// Recent requests that matched nothing, closest expectations first, each
+// with a suggested JSON patch that would make it match
+unmatched, err := client.ExplainUnmatched(&mockserver.ExplainUnmatchedOptions{Limit: 5, SuggestFixes: true})
+if err == nil {
+    for _, r := range unmatched.UnmatchedRequests {
+        fmt.Println(r.Method, r.Path, len(r.ClosestExpectations))
+    }
+}
+```
+
+`Explain` returns an error for an empty correlation ID (without calling the server) and for one that is no longer in the event log. A `Reason` or `Outcome` sent by a newer server is kept as sent.
+
 ### Interactive Breakpoints
 
 Register breakpoint matchers to pause forwarded/proxied traffic at REQUEST, RESPONSE, RESPONSE_STREAM, or INBOUND_STREAM phases. A callback WebSocket connection is opened automatically to receive paused items.

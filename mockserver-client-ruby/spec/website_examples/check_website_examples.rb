@@ -527,6 +527,7 @@ module WebsiteExamples
       when %r{/mockserver/status\z}, %r{/mockserver/bind\z} then { status: 200, body: '{"ports":[1080]}' }
       when %r{/mockserver/(clear|reset|stop)\z} then { status: 200, body: '' }
       when %r{/mockserver/scenario/}, %r{/mockserver/pact/verify\z} then { status: 200, body: '{}' }
+      when %r{/mockserver/(explain|explainUnmatched|debugMismatch)\z} then { status: 200, body: '{}' }
       when %r{/mockserver/contractTest\z} then { status: 200, body: '{"allPassed":true,"results":[]}' }
       when %r{/mockserver/pact\z} then { status: 200, body: '{"interactions":[]}' }
       when %r{/mockserver/breakpoint/matcher\z} then { status: 201, body: '{"id":"website-example-breakpoint-id"}' }

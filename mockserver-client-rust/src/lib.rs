@@ -28,6 +28,7 @@
 
 mod model;
 mod client;
+mod diagnostics;
 mod error;
 pub mod breakpoint;
 pub mod launcher;
@@ -38,6 +39,7 @@ pub mod a2a;
 pub use client::{ClientBuilder, MockServerClient, ForwardChainExpectation, Scenario};
 pub use error::{Error, Result};
 pub use model::*;
+pub use diagnostics::*;
 pub use breakpoint::{
     phase, BreakpointMatcherRegistration, BreakpointMatcherResponse,
     BreakpointMatcherEntry, BreakpointMatcherList, PausedStreamFrame,

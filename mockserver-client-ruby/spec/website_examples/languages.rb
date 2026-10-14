@@ -143,6 +143,11 @@ module WebsiteExamples
         when %r{/mockserver/loadScenario/([^/]+)\z}
           { status: 200, body: JSON.generate('name' => Regexp.last_match(1), 'state' => 'COMPLETED') }
         when %r{/mockserver/verifySLO\z} then { status: 200, body: '{"result":"PASS"}' }
+        when %r{/mockserver/explain\z}
+          { status: 200, body: '{"recomputed":true,"skippedExpectations":[],"shadowedExpectations":[]}' }
+        when %r{/mockserver/debugMismatch\z} then { status: 200, body: '{"totalExpectations":0,"results":[]}' }
+        when %r{/mockserver/explainUnmatched\z}
+          { status: 200, body: '{"unmatchedRequestCount":0,"truncated":false,"unmatchedRequests":[]}' }
         when %r{/mockserver/scenario\z} then { status: 200, body: '{"scenarios":[]}' }
         when %r{/mockserver/scenario/([^/]+)\z}
           { status: 200, body: JSON.generate('scenarioName' => Regexp.last_match(1), 'currentState' => 'Started') }

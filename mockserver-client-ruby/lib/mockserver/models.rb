@@ -3649,6 +3649,306 @@ module MockServer
     end
   end
 
+  # -------------------------------------------------------------------
+  # Diagnostics: explain, debug_mismatch and explain_unmatched results.
+  # They follow the RequestExplanation and ExplainedExpectation OpenAPI
+  # schemas; an enum value a newer server sends is kept as its String.
+  # -------------------------------------------------------------------
+
+  # A JSON patch (RFC 6902) of an expectation that would make it match the
+  # request; nothing is applied. +unpatched_fields+ lists each field that
+  # could not be patched, with a +reason+.
+  class SuggestedFix
+    attr_reader :patch, :patched_fields, :unpatched_fields, :matches_after_patch
+
+    def initialize(patch: [], patched_fields: [], unpatched_fields: [], matches_after_patch: false)
+      @patch = patch
+      @patched_fields = patched_fields
+      @unpatched_fields = unpatched_fields
+      @matches_after_patch = matches_after_patch
+    end
+
+    def self.from_hash(data)
+      return nil if data.nil?
+
+      new(
+        patch:               data['patch'] || [],
+        patched_fields:      data['patchedFields'] || [],
+        unpatched_fields:    data['unpatchedFields'] || [],
+        matches_after_patch: data['matchesAfterPatch'] == true
+      )
+    end
+  end
+
+  # One expectation as explain, debug_mismatch or explain_unmatched evaluated
+  # it. The matched expectation has no +reason+; a skipped or shadowed one has
+  # a +reason+ (NAMESPACE, INACTIVE, FIELDS_DIFFER, NOT_OPERATOR, CONVERSATION,
+  # SCENARIO_STATE, PERCENTAGE or LOWER_PRIORITY) and an +explanation+.
+  # +suggested_fix+ is set only by explain_unmatched with +suggest_fixes+.
+  class ExplainedExpectation
+    attr_reader :expectation_id, :expectation_method, :expectation_path, :position, :priority,
+                :reason, :explanation, :matches, :matched_field_count, :total_field_count,
+                :differing_field_count, :differences, :remediation, :suggested_fix
+
+    def initialize(expectation_id: nil, expectation_method: nil, expectation_path: nil, position: nil,
+                   priority: nil, reason: nil, explanation: nil, matches: nil, matched_field_count: nil,
+                   total_field_count: nil, differing_field_count: nil, differences: {}, remediation: {},
+                   suggested_fix: nil)
+      @expectation_id = expectation_id
+      @expectation_method = expectation_method
+      @expectation_path = expectation_path
+      @position = position
+      @priority = priority
+      @reason = reason
+      @explanation = explanation
+      @matches = matches
+      @matched_field_count = matched_field_count
+      @total_field_count = total_field_count
+      @differing_field_count = differing_field_count
+      @differences = differences
+      @remediation = remediation
+      @suggested_fix = suggested_fix
+    end
+
+    def self.from_hash(data)
+      return nil if data.nil?
+
+      new(
+        expectation_id:        data['expectationId'],
+        expectation_method:    data['expectationMethod'],
+        expectation_path:      data['expectationPath'],
+        position:              data['position'],
+        priority:              data['priority'],
+        reason:                data['reason'],
+        explanation:           data['explanation'],
+        matches:               data['matches'],
+        matched_field_count:   data['matchedFieldCount'],
+        total_field_count:     data['totalFieldCount'],
+        differing_field_count: data['differingFieldCount'],
+        differences:           data['differences'] || {},
+        remediation:           data['remediation'] || {},
+        suggested_fix:         SuggestedFix.from_hash(data['suggestedFix'])
+      )
+    end
+
+    # @api private
+    def self.list(items)
+      (items || []).map { |item| from_hash(item) }
+    end
+  end
+
+  # The recorded request that explain re-checked.
+  class ExplainedRequest
+    attr_reader :timestamp, :method, :path, :body_truncated, :body_truncated_note
+
+    def initialize(timestamp: nil, method: nil, path: nil, body_truncated: false, body_truncated_note: nil)
+      @timestamp = timestamp
+      @method = method
+      @path = path
+      @body_truncated = body_truncated
+      @body_truncated_note = body_truncated_note
+    end
+
+    def self.from_hash(data)
+      return nil if data.nil?
+
+      new(
+        timestamp:           data['timestamp'],
+        method:              data['method'],
+        path:                data['path'],
+        body_truncated:      data['bodyTruncated'] == true,
+        body_truncated_note: data['bodyTruncatedNote']
+      )
+    end
+  end
+
+  # How a request was handled when it arrived: +outcome+ is MATCHED, NO_MATCH,
+  # FORWARDED_WITHOUT_EXPECTATION, RESPONDED_WITHOUT_EXPECTATION or UNKNOWN;
+  # the expectation fields are set for MATCHED only.
+  class Arrival
+    attr_reader :outcome, :expectation_id, :expectation_still_stored
+
+    def initialize(outcome: nil, expectation_id: nil, expectation_still_stored: nil)
+      @outcome = outcome
+      @expectation_id = expectation_id
+      @expectation_still_stored = expectation_still_stored
+    end
+
+    def self.from_hash(data)
+      return nil if data.nil?
+
+      new(
+        outcome:                  data['outcome'],
+        expectation_id:           data['expectationId'],
+        expectation_still_stored: data['expectationStillStored']
+      )
+    end
+  end
+
+  # Which expectation would serve a recorded request now, why each one
+  # evaluated ahead of it was passed over, which lower-priority ones it
+  # shadows, and how the request was handled when it arrived. Recomputed when
+  # asked for, against the current expectations, scenario states and Times.
+  class RequestExplanation
+    attr_reader :correlation_id, :timestamp, :recomputed, :note, :request, :at_arrival,
+                :same_outcome_as_at_arrival, :expectations_changed_since, :expectations_last_changed,
+                :matched_expectation, :closest_expectation_id, :skipped_expectations,
+                :shadowed_expectations, :total_expectations, :evaluated_expectations, :truncated,
+                :max_expectations_evaluated
+
+    def initialize(correlation_id: nil, timestamp: nil, recomputed: nil, note: nil, request: nil,
+                   at_arrival: nil, same_outcome_as_at_arrival: nil, expectations_changed_since: false,
+                   expectations_last_changed: nil, matched_expectation: nil, closest_expectation_id: nil,
+                   skipped_expectations: [], shadowed_expectations: [], total_expectations: 0,
+                   evaluated_expectations: 0, truncated: false, max_expectations_evaluated: nil)
+      @correlation_id = correlation_id
+      @timestamp = timestamp
+      @recomputed = recomputed
+      @note = note
+      @request = request
+      @at_arrival = at_arrival
+      @same_outcome_as_at_arrival = same_outcome_as_at_arrival
+      @expectations_changed_since = expectations_changed_since
+      @expectations_last_changed = expectations_last_changed
+      @matched_expectation = matched_expectation
+      @closest_expectation_id = closest_expectation_id
+      @skipped_expectations = skipped_expectations
+      @shadowed_expectations = shadowed_expectations
+      @total_expectations = total_expectations
+      @evaluated_expectations = evaluated_expectations
+      @truncated = truncated
+      @max_expectations_evaluated = max_expectations_evaluated
+    end
+
+    def self.from_hash(data)
+      return nil if data.nil?
+
+      new(
+        correlation_id:             data['correlationId'],
+        timestamp:                  data['timestamp'],
+        recomputed:                 data['recomputed'],
+        note:                       data['note'],
+        request:                    ExplainedRequest.from_hash(data['request']),
+        at_arrival:                 Arrival.from_hash(data['atArrival']),
+        same_outcome_as_at_arrival: data['sameOutcomeAsAtArrival'],
+        expectations_changed_since: data['expectationsChangedSince'] == true,
+        expectations_last_changed:  data['expectationsLastChanged'],
+        matched_expectation:        ExplainedExpectation.from_hash(data['matchedExpectation']),
+        closest_expectation_id:     data['closestExpectationId'],
+        skipped_expectations:       ExplainedExpectation.list(data['skippedExpectations']),
+        shadowed_expectations:      ExplainedExpectation.list(data['shadowedExpectations']),
+        total_expectations:         data['totalExpectations'] || 0,
+        evaluated_expectations:     data['evaluatedExpectations'] || 0,
+        truncated:                  data['truncated'] == true,
+        max_expectations_evaluated: data['maxExpectationsEvaluated']
+      )
+    end
+  end
+
+  # The expectation debug_mismatch found with the fewest differing fields.
+  class ClosestMatch
+    attr_reader :expectation_id, :matched_fields, :total_fields
+
+    def initialize(expectation_id: nil, matched_fields: nil, total_fields: nil)
+      @expectation_id = expectation_id
+      @matched_fields = matched_fields
+      @total_fields = total_fields
+    end
+
+    def self.from_hash(data)
+      return nil if data.nil?
+
+      new(expectation_id: data['expectationId'], matched_fields: data['matchedFields'],
+          total_fields: data['totalFields'])
+    end
+  end
+
+  # The result of debug_mismatch: each active expectation compared with the
+  # request, and the closest match (nil when every expectation matches).
+  class DebugMismatchResult
+    attr_reader :correlation_id, :timestamp, :total_expectations, :evaluated_expectations,
+                :truncated, :max_expectations_evaluated, :closest_match, :results
+
+    def initialize(correlation_id: nil, timestamp: nil, total_expectations: 0, evaluated_expectations: 0,
+                   truncated: false, max_expectations_evaluated: nil, closest_match: nil, results: [])
+      @correlation_id = correlation_id
+      @timestamp = timestamp
+      @total_expectations = total_expectations
+      @evaluated_expectations = evaluated_expectations
+      @truncated = truncated
+      @max_expectations_evaluated = max_expectations_evaluated
+      @closest_match = closest_match
+      @results = results
+    end
+
+    def self.from_hash(data)
+      return nil if data.nil?
+
+      new(
+        correlation_id:             data['correlationId'],
+        timestamp:                  data['timestamp'],
+        total_expectations:         data['totalExpectations'] || 0,
+        evaluated_expectations:     data['evaluatedExpectations'] || 0,
+        truncated:                  data['truncated'] == true,
+        max_expectations_evaluated: data['maxExpectationsEvaluated'],
+        closest_match:              ClosestMatch.from_hash(data['closestMatch']),
+        results:                    ExplainedExpectation.list(data['results'])
+      )
+    end
+  end
+
+  # One recent unmatched request and its closest expectations, closest first.
+  class UnmatchedRequest
+    attr_reader :timestamp, :method, :path, :closest_expectations, :total_expectations_evaluated
+
+    def initialize(timestamp: nil, method: nil, path: nil, closest_expectations: [],
+                   total_expectations_evaluated: 0)
+      @timestamp = timestamp
+      @method = method
+      @path = path
+      @closest_expectations = closest_expectations
+      @total_expectations_evaluated = total_expectations_evaluated
+    end
+
+    def self.from_hash(data)
+      return nil if data.nil?
+
+      new(
+        timestamp:                    data['timestamp'],
+        method:                       data['method'],
+        path:                         data['path'],
+        closest_expectations:         ExplainedExpectation.list(data['closestExpectations']),
+        total_expectations_evaluated: data['totalExpectationsEvaluated'] || 0
+      )
+    end
+  end
+
+  # The result of explain_unmatched.
+  class ExplainUnmatchedResult
+    attr_reader :correlation_id, :timestamp, :unmatched_request_count, :truncated, :unmatched_requests
+
+    def initialize(correlation_id: nil, timestamp: nil, unmatched_request_count: 0, truncated: false,
+                   unmatched_requests: [])
+      @correlation_id = correlation_id
+      @timestamp = timestamp
+      @unmatched_request_count = unmatched_request_count
+      @truncated = truncated
+      @unmatched_requests = unmatched_requests
+    end
+
+    def self.from_hash(data)
+      return nil if data.nil?
+
+      new(
+        correlation_id:          data['correlationId'],
+        timestamp:               data['timestamp'],
+        unmatched_request_count: data['unmatchedRequestCount'] || 0,
+        truncated:               data['truncated'] == true,
+        unmatched_requests:      (data['unmatchedRequests'] || []).map { |r| UnmatchedRequest.from_hash(r) }
+      )
+    end
+  end
+
   # Alias matching the Python client
   RequestDefinition = HttpRequest
 

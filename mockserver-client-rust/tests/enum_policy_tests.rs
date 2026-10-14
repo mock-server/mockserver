@@ -245,6 +245,44 @@ fn load_step_selection() {
     );
 }
 
+#[test]
+fn explain_reason() {
+    assert_policy(
+        &[
+            (ExplainReason::Namespace, "NAMESPACE"),
+            (ExplainReason::Inactive, "INACTIVE"),
+            (ExplainReason::FieldsDiffer, "FIELDS_DIFFER"),
+            (ExplainReason::NotOperator, "NOT_OPERATOR"),
+            (ExplainReason::Conversation, "CONVERSATION"),
+            (ExplainReason::ScenarioState, "SCENARIO_STATE"),
+            (ExplainReason::Percentage, "PERCENTAGE"),
+            (ExplainReason::LowerPriority, "LOWER_PRIORITY"),
+        ],
+        ExplainReason::Unknown,
+    );
+}
+
+#[test]
+fn arrival_outcome() {
+    assert_policy(
+        &[
+            (ArrivalOutcome::Matched, "MATCHED"),
+            (ArrivalOutcome::NoMatch, "NO_MATCH"),
+            (
+                ArrivalOutcome::ForwardedWithoutExpectation,
+                "FORWARDED_WITHOUT_EXPECTATION",
+            ),
+            (
+                ArrivalOutcome::RespondedWithoutExpectation,
+                "RESPONDED_WITHOUT_EXPECTATION",
+            ),
+        ],
+        ArrivalOutcome::Unknown,
+    );
+    let read: ArrivalOutcome = serde_json::from_value(json!("UNKNOWN")).unwrap();
+    assert_eq!(read, ArrivalOutcome::Unknown);
+}
+
 // ---------------------------------------------------------------------------
 // Whole objects: an unknown value must not fail the object that carries it
 // ---------------------------------------------------------------------------

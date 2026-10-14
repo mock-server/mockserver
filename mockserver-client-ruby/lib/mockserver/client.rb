@@ -929,6 +929,85 @@ module MockServer
     end
 
     # -------------------------------------------------------------------
+    # Diagnostics (explain / debug_mismatch / explain_unmatched)
+    # -------------------------------------------------------------------
+
+    # Explain how a recorded request would be served now
+    # (PUT /mockserver/explain?correlationId=<id>): re-checks it against the
+    # current expectations, in the order MockServer evaluates them, and returns
+    # the expectation that would serve it, why each expectation ahead of that
+    # one was passed over, and which lower-priority expectations it shadows.
+    # Read-only: it consumes no Times and moves no scenario.
+    #
+    # @param correlation_id [String] the correlation id of the request's log entries
+    # @return [RequestExplanation]
+    # @raise [ArgumentError] if +correlation_id+ is nil or blank
+    # @raise [Error] with the server's reason when no request is recorded with
+    #   this id (never received, cleared or evicted) or it is not an HTTP request
+    def explain(correlation_id)
+      if correlation_id.nil? || correlation_id.to_s.strip.empty?
+        raise ArgumentError, 'explain requires a non blank correlation_id'
+      end
+
+      RequestExplanation.from_hash(
+        diagnostic_request('/mockserver/explain', nil, { 'correlationId' => correlation_id.to_s },
+                           "explain failed for correlationId \"#{correlation_id}\"")
+      )
+    end
+
+    # Compare a request with every active expectation
+    # (PUT /mockserver/debugMismatch): for each, whether it matches and the
+    # per-field differences, plus the closest match. Only an HTTP request is
+    # supported.
+    #
+    # @param request [HttpRequest, Hash] the request to check
+    # @return [DebugMismatchResult]
+    # @raise [Error] with the server's reason for a non-HTTP request definition
+    def debug_mismatch(request)
+      payload = request.respond_to?(:to_h) ? request.to_h : request
+      DebugMismatchResult.from_hash(
+        diagnostic_request('/mockserver/debugMismatch', JSON.generate(payload), nil, 'debugMismatch failed')
+      )
+    end
+
+    # Explain why recent requests matched no expectation
+    # (PUT /mockserver/explainUnmatched): each recent unmatched request with its
+    # closest expectations, closest first.
+    #
+    # @param limit [Integer, nil] how many recent unmatched requests to analyse (server default 10)
+    # @param suggest_fixes [Boolean, nil] add a suggested JSON patch to each of
+    #   the five closest non-matching expectations (nothing is applied)
+    # @return [ExplainUnmatchedResult]
+    def explain_unmatched(limit: nil, suggest_fixes: nil)
+      options = {}
+      options['limit'] = limit unless limit.nil?
+      options['suggestFixes'] = suggest_fixes unless suggest_fixes.nil?
+      ExplainUnmatchedResult.from_hash(
+        diagnostic_request('/mockserver/explainUnmatched', options.empty? ? nil : JSON.generate(options), nil,
+                           'explainUnmatched failed')
+      )
+    end
+
+    # @api private
+    # PUT a diagnostic request and return the parsed 200 body; any other status,
+    # or a body that is not a JSON object, raises {Error} with the server's
+    # +error+ or the body.
+    def diagnostic_request(path, body, query_params, failure)
+      status, response_body = do_request('PUT', path, body, query_params)
+      parsed = begin
+        response_body.nil? || response_body.empty? ? {} : JSON.parse(response_body)
+      rescue JSON::ParserError
+        nil
+      end
+      if status != 200 || !parsed.is_a?(Hash)
+        reason = parsed.is_a?(Hash) ? parsed['error'] : nil
+        raise Error, "#{failure} (status=#{status}): #{reason || response_body}"
+      end
+
+      parsed
+    end
+
+    # -------------------------------------------------------------------
     # Stateful scenarios (state machine control plane)
     # -------------------------------------------------------------------
 

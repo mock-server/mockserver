@@ -712,3 +712,114 @@ fn test_retrieve_by_expectation_id() {
 
     client.reset().expect("reset failed");
 }
+
+/// The correlation id of the received `GET <path>`, read from the server's log entries.
+fn correlation_id_of(path: &str) -> String {
+    let url = std::env::var("MOCKSERVER_URL").expect("MOCKSERVER_URL must be set");
+    let entries: serde_json::Value = reqwest::blocking::Client::new()
+        .put(format!(
+            "{}/mockserver/retrieve?type=LOGS&format=LOG_ENTRIES",
+            url.trim_end_matches('/')
+        ))
+        .send()
+        .expect("retrieve log entries")
+        .json()
+        .expect("log entries are JSON");
+    entries
+        .as_array()
+        .expect("log entries are an array")
+        .iter()
+        .find(|e| {
+            e["type"] == "RECEIVED_REQUEST"
+                && e["httpRequest"]["method"] == "GET"
+                && e["httpRequest"]["path"] == path
+        })
+        .and_then(|e| e["correlationId"].as_str())
+        .unwrap_or_else(|| panic!("no received GET {path} in the log"))
+        .to_string()
+}
+
+#[test]
+#[ignore]
+fn test_matching_diagnostics() {
+    let client = get_client();
+    client.reset().expect("reset failed");
+
+    client
+        .upsert(&[
+            Expectation::new(
+                HttpRequest::new()
+                    .method("GET")
+                    .path("/diag-orders")
+                    .header("X-Tenant", "gold"),
+            )
+            .id("diag-gold")
+            .priority(10)
+            .respond(HttpResponse::new().status_code(200)),
+            Expectation::new(HttpRequest::new().method("GET").path("/diag-orders"))
+                .id("diag-catch-all")
+                .respond(HttpResponse::new().status_code(200)),
+        ])
+        .expect("creating expectations failed");
+    assert_eq!(http_get("/diag-orders", &[("X-Tenant", "silver")]).0, 200);
+    assert_eq!(http_get("/diag-order", &[]).0, 404);
+
+    let explanation = client
+        .explain(&correlation_id_of("/diag-orders"))
+        .expect("explain failed");
+    assert_eq!(
+        explanation
+            .matched_expectation
+            .as_ref()
+            .and_then(|m| m.expectation_id.as_deref()),
+        Some("diag-catch-all")
+    );
+    assert_eq!(explanation.skipped_expectations.len(), 1);
+    let skipped = &explanation.skipped_expectations[0];
+    assert_eq!(skipped.expectation_id.as_deref(), Some("diag-gold"));
+    assert_eq!(skipped.reason, Some(ExplainReason::FieldsDiffer));
+    assert!(skipped.differences.contains_key("headers"));
+    assert_eq!(
+        explanation.at_arrival.and_then(|a| a.outcome),
+        Some(ArrivalOutcome::Matched)
+    );
+    assert!(matches!(
+        client.explain("no-such-correlation-id"),
+        Err(Error::NotFound(_))
+    ));
+
+    let report = client
+        .debug_mismatch(
+            HttpRequest::new()
+                .method("GET")
+                .path("/diag-orders")
+                .header("X-Tenant", "silver"),
+        )
+        .expect("debug_mismatch failed");
+    assert_eq!(report.total_expectations, 2);
+    assert_eq!(report.results.len(), 2);
+    assert_eq!(
+        report
+            .closest_match
+            .and_then(|c| c.expectation_id)
+            .as_deref(),
+        Some("diag-gold")
+    );
+
+    let unmatched = client
+        .explain_unmatched(Some(
+            &ExplainUnmatchedOptions::new().limit(5).suggest_fixes(true),
+        ))
+        .expect("explain_unmatched failed");
+    assert_eq!(unmatched.unmatched_requests.len(), 1);
+    let request = &unmatched.unmatched_requests[0];
+    assert_eq!(request.path.as_deref(), Some("/diag-order"));
+    assert_eq!(request.closest_expectations.len(), 2);
+    let fix = request.closest_expectations[0]
+        .suggested_fix
+        .as_ref()
+        .expect("the closest expectation has a suggested fix");
+    assert!(!fix.patch.is_empty());
+
+    client.reset().expect("reset failed");
+}

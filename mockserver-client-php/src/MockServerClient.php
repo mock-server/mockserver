@@ -8,6 +8,9 @@ use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
+use MockServer\Diagnostics\MismatchDebugResult;
+use MockServer\Diagnostics\RequestExplanation;
+use MockServer\Diagnostics\UnmatchedExplanation;
 use MockServer\Exception\ConnectionException;
 use MockServer\Exception\FeatureNotEnabledException;
 use MockServer\Exception\InvalidRequestException;
@@ -708,6 +711,89 @@ class MockServerClient
     public function retrieveLogMessagesById(string $expectationId): array
     {
         return $this->retrieveById($expectationId, 'LOGS', 'JSON');
+    }
+
+    // -----------------------------------------------------------------
+    // Match diagnostics
+    // -----------------------------------------------------------------
+
+    /**
+     * Explain how a recorded request would be served now.
+     *
+     * Re-checks the request against the current expectations, in the order
+     * MockServer evaluates them, and returns the expectation that would serve
+     * it, why each expectation ahead of that one was passed over, and which
+     * lower-priority expectations it shadows. Read-only: it consumes no Times
+     * and moves no scenario.
+     *
+     * @param string $correlationId The correlation ID of the request's log entries.
+     * @return RequestExplanation The explanation.
+     * @throws \InvalidArgumentException If the correlation ID is blank.
+     * @throws InvalidRequestException If no request is recorded with this correlation ID
+     *         (never received, cleared or evicted; HTTP 404) or it is not an HTTP request (HTTP 400).
+     * @throws MockServerException On other server errors or an unreadable response.
+     */
+    public function explain(string $correlationId): RequestExplanation
+    {
+        if (trim($correlationId) === '') {
+            throw new \InvalidArgumentException('correlationId is required');
+        }
+        $response = $this->put('/mockserver/explain?correlationId=' . rawurlencode($correlationId), '');
+
+        return RequestExplanation::fromArray(
+            $this->decodeDiagnosticResponse($response, "explain request '{$correlationId}'")
+        );
+    }
+
+    /**
+     * Compare a request with every active expectation and return, for each,
+     * whether it matches and which fields differ, plus the closest match.
+     * Nothing is recorded or consumed.
+     *
+     * @param HttpRequest $request The request to compare with the active expectations.
+     * @return MismatchDebugResult The per-expectation comparison.
+     * @throws InvalidRequestException If the server rejects the request (HTTP 400).
+     * @throws MockServerException On other server errors or an unreadable response.
+     */
+    public function debugMismatch(HttpRequest $request): MismatchDebugResult
+    {
+        $body = json_encode($request->toArray() ?: new \stdClass(), JSON_THROW_ON_ERROR);
+        $response = $this->put('/mockserver/debugMismatch', $body);
+
+        return MismatchDebugResult::fromArray($this->decodeDiagnosticResponse($response, 'debug mismatch'));
+    }
+
+    /**
+     * Explain why recent requests matched no expectation: for each recorded
+     * unmatched request, the evaluated expectations ranked closest first, with
+     * their differences and remediation hints.
+     *
+     * @param int|null $limit How many recent unmatched requests to explain; the
+     *        server default (10) when null.
+     * @param bool $suggestFixes Also suggest, for each of the five closest
+     *        non-matching expectations, a JSON patch that would make it match.
+     *        Nothing is applied.
+     * @return UnmatchedExplanation The unmatched requests and their closest expectations.
+     * @throws \InvalidArgumentException If the limit is less than 1.
+     * @throws MockServerException On a server error or an unreadable response.
+     */
+    public function explainUnmatched(?int $limit = null, bool $suggestFixes = false): UnmatchedExplanation
+    {
+        if ($limit !== null && $limit < 1) {
+            throw new \InvalidArgumentException('limit must be at least 1');
+        }
+        $payload = [];
+        if ($limit !== null) {
+            $payload['limit'] = $limit;
+        }
+        if ($suggestFixes) {
+            $payload['suggestFixes'] = true;
+        }
+        $response = $this->put('/mockserver/explainUnmatched', json_encode((object) $payload, JSON_THROW_ON_ERROR));
+
+        return UnmatchedExplanation::fromArray(
+            $this->decodeDiagnosticResponse($response, 'explain unmatched requests')
+        );
     }
 
     /**
@@ -2317,6 +2403,38 @@ class MockServerClient
         }
 
         return [];
+    }
+
+    /**
+     * Decode a match-diagnostic JSON response, reporting the server's
+     * {@code error} message on failure.
+     *
+     * @param \Psr\Http\Message\ResponseInterface $response
+     * @param string $action Human-readable action used in error messages.
+     * @return array<string, mixed>
+     * @throws InvalidRequestException On HTTP 400 or 404.
+     * @throws MockServerException On other errors, or a body that is not a JSON object.
+     */
+    private function decodeDiagnosticResponse(
+        \Psr\Http\Message\ResponseInterface $response,
+        string $action,
+    ): array {
+        $status = $response->getStatusCode();
+        $responseBody = (string) $response->getBody();
+        $parsed = $responseBody !== '' ? json_decode($responseBody, true) : [];
+
+        if ($status >= 400) {
+            $reason = is_array($parsed) && is_string($parsed['error'] ?? null) ? $parsed['error'] : $responseBody;
+            $message = "Failed to {$action} (HTTP {$status}): {$reason}";
+            throw $status === 400 || $status === 404
+                ? new InvalidRequestException($message)
+                : new MockServerException($message);
+        }
+        if (!is_array($parsed) || (array_is_list($parsed) && $parsed !== [])) {
+            throw new MockServerException("Unable to parse {$action} response: {$responseBody}");
+        }
+
+        return $parsed;
     }
 
     /**

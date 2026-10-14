@@ -334,97 +334,99 @@ cookies matched                       &larr; all expected cookies were found</co
 );
 System.out.println(result);</code></pre></div>
     <button class="accordion inner">JavaScript</button>
-    <div class="panel"><pre class="prettyprint lang-javascript code"><code class="code">// debugMismatch has no typed method in the Node client - call the REST endpoint
-const response = await fetch("http://localhost:1080/mockserver/debugMismatch", {
-  method: "PUT",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    "method": "GET",
-    "path": "/api/users",
-    "headers": { "Content-Type": ["application/json"] }
-  })
+    <div class="panel"><pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+
+const result = await mockServerClient("localhost", 1080).debugMismatch({
+  "method": "GET",
+  "path": "/api/users",
+  "headers": { "Content-Type": ["application/json"] }
 });
-console.log(await response.text());</code></pre></div>
+console.log(result.closestMatch, result.results);</code></pre></div>
     <button class="accordion inner">Python</button>
-    <div class="panel"><pre class="prettyprint lang-python code"><code class="code">import requests
+    <div class="panel"><pre class="prettyprint lang-python code"><code class="code">from mockserver import MockServerClient, HttpRequest
 
-# debugMismatch has no typed method - call the REST endpoint directly
-response = requests.put(
-    "http://localhost:1080/mockserver/debugMismatch",
-    json={
-        "method": "GET",
-        "path": "/api/users",
-        "headers": {"Content-Type": ["application/json"]},
-    },
+client = MockServerClient("localhost", 1080)
+result = client.debug_mismatch(
+    HttpRequest(method="GET", path="/api/users", headers={"Content-Type": ["application/json"]})
 )
-print(response.text)</code></pre></div>
+for expectation in result.results:
+    print(expectation.expectation_id, expectation.differences)</code></pre></div>
     <button class="accordion inner">Ruby</button>
-    <div class="panel"><pre class="prettyprint lang-ruby code"><code class="code">require 'net/http'
-require 'json'
+    <div class="panel"><pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
 
-# debugMismatch has no typed method - call the REST endpoint directly
-uri = URI('http://localhost:1080/mockserver/debugMismatch')
-req = Net::HTTP::Put.new(uri, 'Content-Type' =&gt; 'application/json')
-req.body = JSON.generate(
-  method: 'GET',
-  path: '/api/users',
-  headers: { 'Content-Type' =&gt; ['application/json'] }
+client = MockServer::Client.new('localhost', 1080)
+result = client.debug_mismatch(
+  MockServer::HttpRequest.new(method: 'GET', path: '/api/users',
+                              headers: { 'Content-Type' =&gt; ['application/json'] })
 )
-response = Net::HTTP.start(uri.host, uri.port) { |http| http.request(req) }
-puts response.body</code></pre></div>
+result.results.each { |expectation| puts "#{expectation.expectation_id} #{expectation.differences}" }</code></pre></div>
     <button class="accordion inner">Go</button>
     <div class="panel"><pre class="prettyprint lang-go code"><code class="code">import (
+    "fmt"
     "log"
-    "net/http"
-    "strings"
+
+    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
 )
 
-// debugMismatch has no typed method - call the REST endpoint directly
-body := `{"method":"GET","path":"/api/users","headers":{"Content-Type":["application/json"]}}`
-req, _ := http.NewRequest("PUT", "http://localhost:1080/mockserver/debugMismatch", strings.NewReader(body))
-req.Header.Set("Content-Type", "application/json")
-resp, err := http.DefaultClient.Do(req)
+client := mockserver.New("localhost", 1080)
+report, err := client.DebugMismatch(
+    mockserver.Request().
+        Method("GET").
+        Path("/api/users").
+        Header("Content-Type", "application/json"),
+)
 if err != nil {
     log.Fatal(err)
 }
-defer resp.Body.Close()</code></pre></div>
+for _, result := range report.Results {
+    fmt.Println(result.ExpectationID, result.Differences)
+}</code></pre></div>
     <button class="accordion inner">.NET</button>
-    <div class="panel"><pre class="prettyprint lang-csharp code"><code class="code">using System.Net.Http;
-using System.Text;
+    <div class="panel"><pre class="prettyprint lang-csharp code"><code class="code">using MockServer.Client;
+using MockServer.Client.Models;
 
-// debugMismatch has no typed method - call the REST endpoint directly
-using var http = new HttpClient();
-var body = new StringContent(
-    "{\"method\":\"GET\",\"path\":\"/api/users\",\"headers\":{\"Content-Type\":[\"application/json\"]}}",
-    Encoding.UTF8, "application/json");
-var response = await http.PutAsync("http://localhost:1080/mockserver/debugMismatch", body);
-Console.WriteLine(await response.Content.ReadAsStringAsync());</code></pre></div>
+using var client = new MockServerClient("localhost", 1080);
+MismatchDebugResult result = client.DebugMismatch(
+    HttpRequest.Request()
+        .WithMethod("GET")
+        .WithPath("/api/users")
+        .WithHeader("Content-Type", "application/json")
+);
+Console.WriteLine($"closest match: {result.ClosestMatch?.ExpectationId}");
+foreach (var expectation in result.Results)
+{
+    Console.WriteLine($"{expectation.ExpectationId} matches: {expectation.Matches}");
+}</code></pre></div>
     <button class="accordion inner">Rust</button>
-    <div class="panel"><pre class="prettyprint lang-rust code"><code class="code">use reqwest::blocking::Client;
+    <div class="panel"><pre class="prettyprint lang-rust code"><code class="code">use mockserver_client::{ClientBuilder, HttpRequest};
 
-// debugMismatch has no typed method - call the REST endpoint directly
-let analysis = Client::new()
-    .put("http://localhost:1080/mockserver/debugMismatch")
-    .header("Content-Type", "application/json")
-    .body(r#"{"method":"GET","path":"/api/users","headers":{"Content-Type":["application/json"]}}"#)
-    .send()
-    .unwrap()
-    .text()
+let client = ClientBuilder::new("localhost", 1080).build().unwrap();
+let report = client
+    .debug_mismatch(
+        HttpRequest::new()
+            .method("GET")
+            .path("/api/users")
+            .header("Content-Type", "application/json"),
+    )
     .unwrap();
-println!("{}", analysis);</code></pre></div>
+for result in &amp;report.results {
+    println!("{:?} {:?}", result.expectation_id, result.differences);
+}</code></pre></div>
     <button class="accordion inner">PHP</button>
-    <div class="panel"><pre class="prettyprint lang-php code"><code class="code">use GuzzleHttp\Client;
+    <div class="panel"><pre class="prettyprint lang-php code"><code class="code">use MockServer\MockServerClient;
+use MockServer\HttpRequest;
 
-// debugMismatch has no typed method - call the REST endpoint directly
-$http = new Client();
-$response = $http-&gt;put('http://localhost:1080/mockserver/debugMismatch', [
-    'json' =&gt; [
-        'method' =&gt; 'GET',
-        'path' =&gt; '/api/users',
-        'headers' =&gt; ['Content-Type' =&gt; ['application/json']],
-    ],
-]);
-echo (string) $response-&gt;getBody();</code></pre></div>
+$client = new MockServerClient('localhost', 1080);
+$result = $client-&gt;debugMismatch(
+    HttpRequest::request()
+        -&gt;method('GET')
+        -&gt;path('/api/users')
+        -&gt;header('Content-Type', 'application/json')
+);
+echo 'closest match: ' . $result-&gt;closestMatch?-&gt;expectationId . PHP_EOL;
+foreach ($result-&gt;results as $expectation) {
+    echo $expectation-&gt;expectationId . ' matches: ' . var_export($expectation-&gt;matches, true) . PHP_EOL;
+}</code></pre></div>
     <button class="accordion inner">REST API</button>
     <div class="panel"><pre class="prettyprint code"><code class="code">curl -X PUT "http://localhost:1080/mockserver/debugMismatch" \
   -H "Content-Type: application/json" \
@@ -450,8 +452,8 @@ echo (string) $response-&gt;getBody();</code></pre></div>
   "totalExpectations": 2,
   "closestMatch": {
     "expectationId": "abc-123",
-    "matchedFields": 14,
-    "totalFields": 16
+    "matchedFields": 17,
+    "totalFields": 18
   },
   "results": [
     {
@@ -459,8 +461,8 @@ echo (string) $response-&gt;getBody();</code></pre></div>
       "expectationPath": "/api/users",
       "expectationMethod": "POST",
       "matches": false,
-      "matchedFieldCount": 14,
-      "totalFieldCount": 16,
+      "matchedFieldCount": 17,
+      "totalFieldCount": 18,
       "differences": {
         "method": [
           "string or regex match failed expected: POST found: GET"
@@ -494,7 +496,7 @@ String analysis = mockServerClient.debugMismatch(
 
 // The response will show:
 // - method didn't match: expected POST, found GET
-// - matchedFieldCount: 15/16 (all fields matched except method)</code></pre></div>
+// - matchedFieldCount: 17/18 (all fields matched except method)</code></pre></div>
     <button class="accordion inner">JavaScript</button>
     <div class="panel"><pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 var client = mockServerClient("localhost", 1080);
@@ -510,20 +512,18 @@ await client.mockAnyResponse({
 });
 
 // 2. Your test sends a request that gets 404 - why?
-// 3. Debug the mismatch (no typed method - call the REST endpoint)
-const response = await fetch("http://localhost:1080/mockserver/debugMismatch", {
-  method: "PUT",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    "method": "GET",              // oops - wrong method!
-    "path": "/api/users",
-    "body": "{\"name\": \"foo\"}"
-  })
+// 3. Debug the mismatch
+const analysis = await client.debugMismatch({
+  "method": "GET",              // oops - wrong method!
+  "path": "/api/users",
+  "body": "{\"name\": \"foo\"}"
 });
-console.log(await response.text());</code></pre></div>
+// the expectation's differences show method: expected POST, found GET
+for (const expectation of analysis.results || []) {
+  console.log(expectation.expectationId, expectation.differences);
+}</code></pre></div>
     <button class="accordion inner">Python</button>
-    <div class="panel"><pre class="prettyprint lang-python code"><code class="code">import requests
-from mockserver import MockServerClient, HttpRequest, HttpResponse, Body
+    <div class="panel"><pre class="prettyprint lang-python code"><code class="code">from mockserver import MockServerClient, HttpRequest, HttpResponse, Body
 
 client = MockServerClient("localhost", 1080)
 
@@ -535,20 +535,15 @@ client.when(
 )
 
 # 2. Your test sends a request that gets 404 - why?
-# 3. Debug the mismatch (no typed method - call the REST endpoint)
-response = requests.put(
-    "http://localhost:1080/mockserver/debugMismatch",
-    json={
-        "method": "GET",            # oops - wrong method!
-        "path": "/api/users",
-        "body": '{"name": "foo"}',
-    },
+# 3. Debug the mismatch
+analysis = client.debug_mismatch(
+    HttpRequest(method="GET", path="/api/users", body='{"name": "foo"}')  # oops - wrong method!
 )
-print(response.text)</code></pre></div>
+# the expectation's differences show method: expected POST, found GET
+for expectation in analysis.results:
+    print(expectation.expectation_id, expectation.differences)</code></pre></div>
     <button class="accordion inner">Ruby</button>
     <div class="panel"><pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
-require 'net/http'
-require 'json'
 include MockServer
 
 client = MockServer::Client.new('localhost', 1080)
@@ -561,16 +556,16 @@ client.when(
 )
 
 # 2. Your test sends a request that gets 404 - why?
-# 3. Debug the mismatch (no typed method - call the REST endpoint)
-uri = URI('http://localhost:1080/mockserver/debugMismatch')
-req = Net::HTTP::Put.new(uri, 'Content-Type' =&gt; 'application/json')
-req.body = JSON.generate(method: 'GET', path: '/api/users', body: '{"name": "foo"}')
-response = Net::HTTP.start(uri.host, uri.port) { |http| http.request(req) }
-puts response.body</code></pre></div>
+# 3. Debug the mismatch
+analysis = client.debug_mismatch(
+  HttpRequest.new(method: 'GET', path: '/api/users', body: '{"name": "foo"}') # oops - wrong method!
+)
+# the expectation's differences show method: expected POST, found GET
+analysis.results.each { |expectation| puts "#{expectation.expectation_id} #{expectation.differences}" }</code></pre></div>
     <button class="accordion inner">Go</button>
     <div class="panel"><pre class="prettyprint lang-go code"><code class="code">import (
-    "net/http"
-    "strings"
+    "fmt"
+    "log"
 
     mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
 )
@@ -585,16 +580,24 @@ client.When(
 )
 
 // 2. Your test sends a request that gets 404 - why?
-// 3. Debug the mismatch (no typed method - call the REST endpoint)
-body := `{"method":"GET","path":"/api/users","body":"{\"name\": \"foo\"}"}`
-req, _ := http.NewRequest("PUT", "http://localhost:1080/mockserver/debugMismatch", strings.NewReader(body))
-req.Header.Set("Content-Type", "application/json")
-resp, _ := http.DefaultClient.Do(req)
-defer resp.Body.Close()</code></pre></div>
+// 3. Debug the mismatch
+report, err := client.DebugMismatch(
+    mockserver.Request().
+        Method("GET"). // oops - wrong method!
+        Path("/api/users").
+        Body(`{"name": "foo"}`),
+)
+if err != nil {
+    log.Fatal(err)
+}
+
+// The report will show:
+// - method didn't match: expected POST, found GET
+for _, result := range report.Results {
+    fmt.Println(result.ExpectationID, result.Differences["method"])
+}</code></pre></div>
     <button class="accordion inner">.NET</button>
-    <div class="panel"><pre class="prettyprint lang-csharp code"><code class="code">using System.Net.Http;
-using System.Text;
-using MockServer.Client;
+    <div class="panel"><pre class="prettyprint lang-csharp code"><code class="code">using MockServer.Client;
 using MockServer.Client.Models;
 
 using var client = new MockServerClient("localhost", 1080);
@@ -607,16 +610,19 @@ client.When(
 );
 
 // 2. Your test sends a request that gets 404 - why?
-// 3. Debug the mismatch (no typed method - call the REST endpoint)
-using var http = new HttpClient();
-var debugBody = new StringContent(
-    "{\"method\":\"GET\",\"path\":\"/api/users\",\"body\":\"{\\\"name\\\": \\\"foo\\\"}\"}",
-    Encoding.UTF8, "application/json");
-var response = await http.PutAsync("http://localhost:1080/mockserver/debugMismatch", debugBody);
-Console.WriteLine(await response.Content.ReadAsStringAsync());</code></pre></div>
+// 3. Debug the mismatch
+MismatchDebugResult analysis = client.DebugMismatch(
+    HttpRequest.Request()
+        .WithMethod("GET")           // oops - wrong method!
+        .WithPath("/api/users")
+        .WithBody("{\"name\": \"foo\"}")
+);
+
+// analysis.Results shows:
+// - method didn't match: expected POST, found GET
+// - MatchedFieldCount: 17/18 (all fields matched except method)</code></pre></div>
     <button class="accordion inner">Rust</button>
     <div class="panel"><pre class="prettyprint lang-rust code"><code class="code">use mockserver_client::{ClientBuilder, HttpRequest, HttpResponse};
-use reqwest::blocking::Client;
 
 let client = ClientBuilder::new("localhost", 1080).build().unwrap();
 
@@ -628,21 +634,23 @@ client.when(
 ).unwrap();
 
 // 2. Your test sends a request that gets 404 - why?
-// 3. Debug the mismatch (no typed method - call the REST endpoint)
-let analysis = Client::new()
-    .put("http://localhost:1080/mockserver/debugMismatch")
-    .header("Content-Type", "application/json")
-    .body(r#"{"method":"GET","path":"/api/users","body":"{\"name\": \"foo\"}"}"#)
-    .send()
-    .unwrap()
-    .text()
-    .unwrap();
-println!("{}", analysis);</code></pre></div>
+// 3. Debug the mismatch
+let report = client.debug_mismatch(
+    HttpRequest::new()
+        .method("GET") // oops - wrong method!
+        .path("/api/users")
+        .body(r#"{"name": "foo"}"#)
+).unwrap();
+
+// The report will show:
+// - method didn't match: expected POST, found GET
+for result in &amp;report.results {
+    println!("{:?}", result.differences.get("method"));
+}</code></pre></div>
     <button class="accordion inner">PHP</button>
     <div class="panel"><pre class="prettyprint lang-php code"><code class="code">use MockServer\MockServerClient;
 use MockServer\HttpRequest;
 use MockServer\HttpResponse;
-use GuzzleHttp\Client;
 
 $client = new MockServerClient('localhost', 1080);
 
@@ -654,12 +662,17 @@ $client-&gt;when(
 );
 
 // 2. Your test sends a request that gets 404 - why?
-// 3. Debug the mismatch (no typed method - call the REST endpoint)
-$http = new Client();
-$response = $http-&gt;put('http://localhost:1080/mockserver/debugMismatch', [
-    'json' =&gt; ['method' =&gt; 'GET', 'path' =&gt; '/api/users', 'body' =&gt; '{"name": "foo"}'],
-]);
-echo (string) $response-&gt;getBody();</code></pre></div>
+// 3. Debug the mismatch
+$analysis = $client-&gt;debugMismatch(
+    HttpRequest::request()
+        -&gt;method('GET')              // oops - wrong method!
+        -&gt;path('/api/users')
+        -&gt;body('{"name": "foo"}')
+);
+
+// $analysis-&gt;results shows:
+// - method didn't match: expected POST, found GET
+// - matchedFieldCount: 17/18 (all fields matched except method)</code></pre></div>
     <button class="accordion inner">REST API</button>
     <div class="panel"><pre class="prettyprint code"><code class="code"># 1. Set up your expectation
 curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
@@ -842,7 +855,7 @@ echo (string) $response-&gt;getBody();</code></pre></div>
 
 <p>The answer is <strong>worked out again when you ask</strong>, not recorded when the request arrived, so it costs nothing on normal requests. This also means it reflects the expectations, scenario states and remaining <code>Times</code> as they are <em>now</em>: an expectation limited to <code>once()</code> that served the request will usually show as gone (<code>atArrival.expectationStillStored</code> is <code>false</code>). If the request body was cut short in the log by <code>maxLoggedBodyBytes</code>, <code>request.bodyTruncated</code> is <code>true</code> and body matching is checked against the shortened copy. Request values in the output are redacted in the same way as the log. At most 500 expectations are checked; <code>truncated</code> says when that limit was reached. A correlation ID that is not in the log (never received, cleared, or dropped once <code>maxLogEntries</code> was reached) returns <code>404</code>.</p>
 
-<p>In the dashboard, each group of log messages for a request has an <strong>Explain</strong> button next to its correlation ID, which shows the same answer: the matched expectation, the skipped ones with their reasons and differences, and the shadowed ones. The Java client has a typed <code>explain(correlationId)</code> method; from the other clients, call the REST endpoint.</p>
+<p>In the dashboard, each group of log messages for a request has an <strong>Explain</strong> button next to its correlation ID, which shows the same answer: the matched expectation, the skipped ones with their reasons and differences, and the shadowed ones. Every client has a typed method for it: <code>explain</code> in Java, JavaScript, Python, Ruby, Rust and PHP, and <code>Explain</code> in Go and .NET.</p>
 
 <button id="button_troubleshoot_explain_request" class="accordion">explain one request by correlation ID</button>
 <div class="panel">
@@ -858,70 +871,98 @@ for (RequestExplanation.ExplainedExpectation skipped : explanation.skippedExpect
 }
 // an unknown or evicted correlation ID throws a ClientException</code></pre></div>
     <button class="accordion inner">JavaScript</button>
-    <div class="panel"><pre class="prettyprint lang-javascript code"><code class="code">// no typed method in the Node client - call the REST endpoint
-const response = await fetch(
-  "http://localhost:1080/mockserver/explain?correlationId=abc-123-def-456",
-  { method: "PUT" }
-);
-console.log(await response.json());</code></pre></div>
+    <div class="panel"><pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+
+const explanation = await mockServerClient("localhost", 1080).explain("abc-123-def-456");
+if (explanation.matchedExpectation) {
+  console.log("served now by " + explanation.matchedExpectation.expectationId);
+}
+for (const skipped of explanation.skippedExpectations || []) {
+  console.log(skipped.expectationId + " " + skipped.reason + ": " + skipped.explanation);
+}
+// an unknown or evicted correlation ID rejects with the server's reason</code></pre></div>
     <button class="accordion inner">Python</button>
-    <div class="panel"><pre class="prettyprint lang-python code"><code class="code">import requests
+    <div class="panel"><pre class="prettyprint lang-python code"><code class="code">from mockserver import MockServerClient
 
-# no typed method - call the REST endpoint
-response = requests.put(
-    "http://localhost:1080/mockserver/explain",
-    params={"correlationId": "abc-123-def-456"},
-)
-print(response.json())</code></pre></div>
+client = MockServerClient("localhost", 1080)
+explanation = client.explain("abc-123-def-456")
+if explanation.matched_expectation:
+    print("served now by", explanation.matched_expectation.expectation_id)
+for skipped in explanation.skipped_expectations:
+    print(skipped.expectation_id, skipped.reason, skipped.explanation)
+# an unknown or evicted correlation ID raises MockServerError</code></pre></div>
     <button class="accordion inner">Ruby</button>
-    <div class="panel"><pre class="prettyprint lang-ruby code"><code class="code">require 'net/http'
+    <div class="panel"><pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
 
-# no typed method - call the REST endpoint
-uri = URI('http://localhost:1080/mockserver/explain?correlationId=abc-123-def-456')
-response = Net::HTTP.start(uri.host, uri.port) { |http| http.request(Net::HTTP::Put.new(uri)) }
-puts response.body</code></pre></div>
+client = MockServer::Client.new('localhost', 1080)
+explanation = client.explain('abc-123-def-456')
+if explanation.matched_expectation
+  puts "served now by #{explanation.matched_expectation.expectation_id}"
+end
+explanation.skipped_expectations.each do |skipped|
+  puts "#{skipped.expectation_id} #{skipped.reason}: #{skipped.explanation}"
+end
+# an unknown or evicted correlation ID raises MockServer::Error</code></pre></div>
     <button class="accordion inner">Go</button>
     <div class="panel"><pre class="prettyprint lang-go code"><code class="code">import (
+    "fmt"
     "log"
-    "net/http"
+
+    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v7"
 )
 
-// no typed method - call the REST endpoint
-url := "http://localhost:1080/mockserver/explain?correlationId=abc-123-def-456"
-req, _ := http.NewRequest("PUT", url, nil)
-resp, err := http.DefaultClient.Do(req)
+client := mockserver.New("localhost", 1080)
+explanation, err := client.Explain("abc-123-def-456")
 if err != nil {
-    log.Fatal(err)
+    log.Fatal(err) // an unknown or evicted correlation ID returns an error
 }
-defer resp.Body.Close()</code></pre></div>
+if explanation.MatchedExpectation != nil {
+    fmt.Println("served now by", explanation.MatchedExpectation.ExpectationID)
+}
+for _, skipped := range explanation.SkippedExpectations {
+    fmt.Printf("%s %s: %s\n", skipped.ExpectationID, skipped.Reason, skipped.Explanation)
+}</code></pre></div>
     <button class="accordion inner">.NET</button>
-    <div class="panel"><pre class="prettyprint lang-csharp code"><code class="code">using System.Net.Http;
+    <div class="panel"><pre class="prettyprint lang-csharp code"><code class="code">using MockServer.Client;
+using MockServer.Client.Models;
 
-// no typed method - call the REST endpoint
-using var http = new HttpClient();
-var response = await http.PutAsync(
-    "http://localhost:1080/mockserver/explain?correlationId=abc-123-def-456", null);
-Console.WriteLine(await response.Content.ReadAsStringAsync());</code></pre></div>
+using var client = new MockServerClient("localhost", 1080);
+RequestExplanation explanation = client.Explain("abc-123-def-456");
+
+if (explanation.MatchedExpectation != null)
+{
+    Console.WriteLine($"served now by {explanation.MatchedExpectation.ExpectationId}");
+}
+foreach (var skipped in explanation.SkippedExpectations)
+{
+    Console.WriteLine($"{skipped.ExpectationId} {skipped.Reason}: {skipped.Explanation}");
+}
+// an unknown or evicted correlation ID throws a MockServerClientException</code></pre></div>
     <button class="accordion inner">Rust</button>
-    <div class="panel"><pre class="prettyprint lang-rust code"><code class="code">use reqwest::blocking::Client;
+    <div class="panel"><pre class="prettyprint lang-rust code"><code class="code">use mockserver_client::ClientBuilder;
 
-// no typed method - call the REST endpoint
-let explanation = Client::new()
-    .put("http://localhost:1080/mockserver/explain?correlationId=abc-123-def-456")
-    .send()
-    .unwrap()
-    .text()
-    .unwrap();
-println!("{}", explanation);</code></pre></div>
+let client = ClientBuilder::new("localhost", 1080).build().unwrap();
+// an unknown or evicted correlation ID returns Err(Error::NotFound(..))
+let explanation = client.explain("abc-123-def-456").unwrap();
+if let Some(matched) = &amp;explanation.matched_expectation {
+    println!("served now by {:?}", matched.expectation_id);
+}
+for skipped in &amp;explanation.skipped_expectations {
+    println!("{:?} {:?}: {:?}", skipped.expectation_id, skipped.reason, skipped.explanation);
+}</code></pre></div>
     <button class="accordion inner">PHP</button>
-    <div class="panel"><pre class="prettyprint lang-php code"><code class="code">use GuzzleHttp\Client;
+    <div class="panel"><pre class="prettyprint lang-php code"><code class="code">use MockServer\MockServerClient;
 
-// no typed method - call the REST endpoint
-$http = new Client();
-$response = $http-&gt;put('http://localhost:1080/mockserver/explain', [
-    'query' =&gt; ['correlationId' =&gt; 'abc-123-def-456'],
-]);
-echo (string) $response-&gt;getBody();</code></pre></div>
+$client = new MockServerClient('localhost', 1080);
+$explanation = $client-&gt;explain('abc-123-def-456');
+
+if ($explanation-&gt;matchedExpectation !== null) {
+    echo 'served now by ' . $explanation-&gt;matchedExpectation-&gt;expectationId . PHP_EOL;
+}
+foreach ($explanation-&gt;skippedExpectations as $skipped) {
+    echo "{$skipped-&gt;expectationId} {$skipped-&gt;reason}: {$skipped-&gt;explanation}" . PHP_EOL;
+}
+// an unknown or evicted correlation ID throws an InvalidRequestException</code></pre></div>
     <button class="accordion inner">REST API</button>
     <div class="panel"><pre class="prettyprint code"><code class="code">curl -X PUT "http://localhost:1080/mockserver/explain?correlationId=abc-123-def-456"</code></pre></div>
 </div>

@@ -19,7 +19,9 @@ from mockserver.exceptions import (
 from mockserver.fluent import ForwardChainExpectation
 from mockserver.models import (
     ConditionalRequestDefinition,
+    DebugMismatchResult,
     Expectation,
+    ExplainUnmatchedResult,
     HttpChaosProfile,
     HttpObjectCallback,
     HttpRequest,
@@ -28,6 +30,7 @@ from mockserver.models import (
     LoadScenario,
     OpenAPIExpectation,
     Ports,
+    RequestExplanation,
     TimeToLive,
     Times,
     Verification,
@@ -1317,6 +1320,77 @@ class AsyncMockServerClient:
             except json.JSONDecodeError:
                 return response_body.split("------------------------------------\n")
         return []
+
+    async def _diagnostic(
+        self, path: str, body: str | None, query_params: dict[str, str] | None, failure: str
+    ) -> dict:
+        status, response_body = await self._request("PUT", path, body, query_params)
+        try:
+            parsed = json.loads(response_body) if response_body else {}
+        except json.JSONDecodeError:
+            parsed = None
+        if status != 200 or not isinstance(parsed, dict):
+            reason = parsed.get("error") if isinstance(parsed, dict) else None
+            raise MockServerError(f"{failure} (status={status}): {reason or response_body}")
+        return parsed
+
+    async def explain(self, correlation_id: str) -> RequestExplanation:
+        """Explain how a recorded request would be served now.
+
+        Issues ``PUT /mockserver/explain?correlationId=<id>``, which re-checks the
+        request with that correlation id against the current expectations, in the
+        order MockServer evaluates them, and returns the expectation that would
+        serve it, why each expectation ahead of it was passed over, and which
+        lower-priority expectations it shadows. Read-only: it consumes no Times
+        and moves no scenario.
+
+        Raises :class:`ValueError` for a blank id, and :class:`MockServerError`
+        with the server's reason when no request is recorded with this id (never
+        received, cleared or evicted) or it is not an HTTP request.
+        """
+        if not correlation_id or not correlation_id.strip():
+            raise ValueError("explain requires a non blank correlation_id")
+        data = await self._diagnostic(
+            "/mockserver/explain", None, {"correlationId": correlation_id},
+            f'explain failed for correlationId "{correlation_id}"',
+        )
+        return RequestExplanation.from_dict(data)
+
+    async def debug_mismatch(self, request: HttpRequest | dict) -> DebugMismatchResult:
+        """Compare a request with every active expectation.
+
+        Issues ``PUT /mockserver/debugMismatch`` and returns, for each expectation,
+        whether it matches and the per-field differences, plus the closest match.
+        Only an HTTP request is supported; any other definition raises
+        :class:`MockServerError`.
+        """
+        payload = request.to_dict() if hasattr(request, "to_dict") else request
+        data = await self._diagnostic(
+            "/mockserver/debugMismatch", json.dumps(payload), None, "debugMismatch failed"
+        )
+        return DebugMismatchResult.from_dict(data)
+
+    async def explain_unmatched(
+        self, limit: int | None = None, suggest_fixes: bool | None = None
+    ) -> ExplainUnmatchedResult:
+        """Explain why recent requests matched no expectation.
+
+        Issues ``PUT /mockserver/explainUnmatched`` and returns each recent
+        unmatched request with its closest expectations, closest first. ``limit``
+        bounds how many requests are analysed (server default 10);
+        ``suggest_fixes`` adds a suggested JSON patch to each of the five closest
+        non-matching expectations (nothing is applied).
+        """
+        options: dict[str, Any] = {}
+        if limit is not None:
+            options["limit"] = limit
+        if suggest_fixes is not None:
+            options["suggestFixes"] = suggest_fixes
+        data = await self._diagnostic(
+            "/mockserver/explainUnmatched", json.dumps(options) if options else None, None,
+            "explainUnmatched failed",
+        )
+        return ExplainUnmatchedResult.from_dict(data)
 
     async def retrieve_expectations_as_code(
         self, fmt: str = "java", request: HttpRequest | None = None

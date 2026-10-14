@@ -83,6 +83,21 @@ var requests = client.RetrieveRecordedRequests(
 );
 ```
 
+### Debugging Why a Request Did Not Match
+
+```csharp
+// Which expectation would serve a recorded request now, and why each one ahead of it lost
+RequestExplanation explanation = client.Explain(correlationId);
+foreach (var skipped in explanation.SkippedExpectations)
+    Console.WriteLine($"{skipped.ExpectationId} {skipped.Reason}: {skipped.Explanation}");
+
+// How a request compares, field by field, with every active expectation
+MismatchDebugResult result = client.DebugMismatch(HttpRequest.Request().WithMethod("GET").WithPath("/api/users"));
+
+// The closest expectations for recent unmatched requests, with suggested JSON patches
+UnmatchedExplanation unmatched = client.ExplainUnmatched(limit: 5, suggestFixes: true);
+```
+
 ### JWT Request Matcher
 
 Match a bearer token's claims (exact or regex; a leading `!` negates), plus optional

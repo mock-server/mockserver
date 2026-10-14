@@ -329,6 +329,21 @@ client.start_chaos_experiment(
 SLO tracking must be enabled on the server (`sloTrackingEnabled=true`) or
 `verify_slo` raises `MockServer::Error` on HTTP 400.
 
+## Diagnose Matching
+
+`explain(correlation_id)` tells you which expectation would serve a recorded request now and why
+each expectation ahead of it was passed over; `debug_mismatch(request)` compares a request with
+every active expectation; `explain_unmatched(limit:, suggest_fixes:)` explains recent requests
+that matched nothing. Each returns a typed result (`RequestExplanation`, `DebugMismatchResult`,
+`ExplainUnmatchedResult`) and raises `MockServer::Error` with the server's reason on failure.
+
+```ruby
+explanation = client.explain('abc-123-def-456')
+explanation.skipped_expectations.each do |skipped|
+  puts "#{skipped.expectation_id} #{skipped.reason}: #{skipped.explanation}"
+end
+```
+
 ## Interactive Breakpoints
 
 The client supports matcher-driven interactive breakpoints over the callback WebSocket. Register a breakpoint matcher to pause forwarded/proxied exchanges at specific phases and inspect/modify/continue them via callback handlers.

@@ -399,6 +399,21 @@ client.start_chaos_experiment({
 Both methods are available on the async client too (`await client.verify_slo(...)`,
 `await client.start_chaos_experiment(...)`).
 
+## Diagnose Matching
+
+`explain(correlation_id)` tells you which expectation would serve a recorded request now and why
+each expectation ahead of it was passed over; `debug_mismatch(request)` compares a request with
+every active expectation; `explain_unmatched(limit=..., suggest_fixes=...)` explains recent
+requests that matched nothing. Each returns a typed dataclass (`RequestExplanation`,
+`DebugMismatchResult`, `ExplainUnmatchedResult`) and raises `MockServerError` with the server's
+reason on failure. The async client has the same methods.
+
+```python
+explanation = client.explain("abc-123-def-456")
+for skipped in explanation.skipped_expectations:
+    print(skipped.expectation_id, skipped.reason, skipped.explanation)
+```
+
 ## TLS Support
 
 ```python

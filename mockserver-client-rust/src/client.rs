@@ -41,6 +41,9 @@ use crate::breakpoint::{
     BreakpointRequestHandler, BreakpointResponseHandler, BreakpointStreamFrameHandler,
     BreakpointWebSocketClient,
 };
+use crate::diagnostics::{
+    ExplainUnmatchedOptions, MismatchReport, RequestExplanation, UnmatchedExplanation,
+};
 use crate::error::{Error, Result};
 use crate::model::*;
 
@@ -825,6 +828,90 @@ impl MockServerClient {
             }
         }
         false
+    }
+
+    // ------------------------------------------------------------------
+    // Matching diagnostics
+    // ------------------------------------------------------------------
+
+    /// Explain how a recorded request would be served now.
+    ///
+    /// Re-checks the request whose log entries carry `correlation_id` against
+    /// the current expectations, in the order MockServer evaluates them, and
+    /// returns the expectation that would serve it, why each one ahead of it
+    /// was passed over, and which lower-priority ones it shadows. Sends
+    /// `PUT /mockserver/explain?correlationId=<id>`; read-only on the server.
+    ///
+    /// A blank id is rejected with [`Error::InvalidRequest`] before anything
+    /// is sent. An id that is not in the event log (never received, cleared or
+    /// evicted) is [`Error::NotFound`]; a recorded request that is not an HTTP
+    /// request is [`Error::InvalidRequest`].
+    ///
+    /// ```no_run
+    /// # let client = mockserver_client::ClientBuilder::new("localhost", 1080).build().unwrap();
+    /// let explanation = client.explain("abc-123-def-456").unwrap();
+    /// for skipped in &explanation.skipped_expectations {
+    ///     println!("{:?} {:?}: {:?}", skipped.expectation_id, skipped.reason, skipped.explanation);
+    /// }
+    /// ```
+    pub fn explain(&self, correlation_id: &str) -> Result<RequestExplanation> {
+        if correlation_id.trim().is_empty() {
+            return Err(Error::InvalidRequest(
+                "explain requires a non-blank correlation id".into(),
+            ));
+        }
+        let resp = self
+            .http
+            .put(self.url("/mockserver/explain"))
+            .query(&[("correlationId", correlation_id)])
+            .send()?;
+        self.diagnostic_response(resp)
+    }
+
+    /// Evaluate a request against every active expectation and report, for
+    /// each, whether it matched and which fields differ, plus the closest
+    /// match. Sends `PUT /mockserver/debugMismatch` with the request as the
+    /// body.
+    pub fn debug_mismatch(&self, request: HttpRequest) -> Result<MismatchReport> {
+        let resp = self
+            .http
+            .put(self.url("/mockserver/debugMismatch"))
+            .json(&request)
+            .send()?;
+        self.diagnostic_response(resp)
+    }
+
+    /// Re-check recent requests that matched no expectation against the
+    /// current expectations and rank the closest ones, optionally with a
+    /// suggested JSON patch for each. Sends `PUT /mockserver/explainUnmatched`;
+    /// `None` sends no body (server defaults).
+    pub fn explain_unmatched(
+        &self,
+        options: Option<&ExplainUnmatchedOptions>,
+    ) -> Result<UnmatchedExplanation> {
+        let builder = self.http.put(self.url("/mockserver/explainUnmatched"));
+        let resp = match options {
+            Some(options) => builder.json(options),
+            None => builder,
+        }
+        .send()?;
+        self.diagnostic_response(resp)
+    }
+
+    fn diagnostic_response<T: serde::de::DeserializeOwned>(
+        &self,
+        resp: reqwest::blocking::Response,
+    ) -> Result<T> {
+        let status = resp.status().as_u16();
+        match status {
+            200 => Ok(serde_json::from_str(&resp.text()?)?),
+            400 => Err(Error::InvalidRequest(resp.text()?)),
+            404 => Err(Error::NotFound(resp.text()?)),
+            _ => Err(Error::UnexpectedStatus {
+                status,
+                body: resp.text().unwrap_or_default(),
+            }),
+        }
     }
 
     // ------------------------------------------------------------------

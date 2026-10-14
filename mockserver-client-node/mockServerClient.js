@@ -2045,6 +2045,99 @@ var mockServerClient;
             };
         };
 
+        // -------------------------------------------------------------------
+        // Diagnostics (explain / debugMismatch / explainUnmatched)
+        // -------------------------------------------------------------------
+        // Resolves with the parsed 200 body; any other status, or a body that is
+        // not JSON, rejects with failurePrefix + the server's {error} or the body.
+        var diagnosticRequest = function (path, body, failurePrefix) {
+            return {
+                then: function (sucess, error) {
+                    makeRawRequest(host, port, path, body)
+                        .then(function (result) {
+                            var parsed;
+                            try {
+                                parsed = result.body ? JSON.parse(result.body) : {};
+                            } catch (e) {
+                                parsed = null;
+                            }
+                            if (result.statusCode !== 200 || parsed === null) {
+                                if (error) {
+                                    error(failurePrefix + ((parsed && parsed.error) || result.body || ("status " + result.statusCode)));
+                                }
+                                return;
+                            }
+                            if (sucess) {
+                                sucess(parsed);
+                            }
+                        }, function (err) {
+                            if (error) {
+                                error(err);
+                            }
+                        });
+                }
+            };
+        };
+        /**
+         * Explain how a recorded request would be served now (PUT /mockserver/explain):
+         * re-checks it against the current expectations, in the order MockServer
+         * evaluates them, and resolves with the RequestExplanation: the expectation
+         * that would serve it, why each expectation ahead of that one was passed
+         * over, and which lower-priority expectations it shadows. Read-only: it
+         * consumes no Times and moves no scenario.
+         *
+         * Rejects with the server's reason when no request is recorded with this
+         * correlation id (never received, cleared or evicted) or the recorded
+         * request is not an HTTP request.
+         *
+         * @param correlationId the correlation id of the request's log entries
+         * @return promise resolving to the parsed RequestExplanation
+         */
+        var explain = function (correlationId) {
+            if (typeof correlationId !== "string" || !correlationId.trim()) {
+                throw new Error("explain(correlationId) requires a non blank correlationId");
+            }
+            return diagnosticRequest("/mockserver/explain?correlationId=" + encodeURIComponent(correlationId), "",
+                "explain failed for correlationId \"" + correlationId + "\": ");
+        };
+        /**
+         * Analyse why a request does or does not match each active expectation
+         * (PUT /mockserver/debugMismatch). Resolves with the per-expectation
+         * results (field-level differences) and the closest match. Only an
+         * HttpRequest definition is supported; an OpenAPI definition rejects.
+         *
+         * @param requestDefinition the request to check against the active expectations
+         * @return promise resolving to the parsed DebugMismatchResult
+         */
+        var debugMismatch = function (requestDefinition) {
+            if (requestDefinition === undefined || requestDefinition === null) {
+                throw new Error("debugMismatch(requestDefinition) requires a non null requestDefinition");
+            }
+            return diagnosticRequest("/mockserver/debugMismatch", requestDefinition, "debugMismatch failed: ");
+        };
+        /**
+         * Explain why recent requests matched no expectation
+         * (PUT /mockserver/explainUnmatched). Resolves with each unmatched request
+         * and its closest expectations, closest first, with per-field differences
+         * and remediation hints.
+         *
+         * @param options optional {limit, suggestFixes}: limit bounds how many recent
+         *        unmatched requests are analysed (server default 10); suggestFixes
+         *        adds a suggestedFix JSON patch to each of the five closest
+         *        non-matching expectations (nothing is applied)
+         * @return promise resolving to the parsed ExplainUnmatchedResult
+         */
+        var explainUnmatched = function (options) {
+            var body = {};
+            if (options && options.limit !== undefined && options.limit !== null) {
+                body.limit = options.limit;
+            }
+            if (options && options.suggestFixes !== undefined && options.suggestFixes !== null) {
+                body.suggestFixes = options.suggestFixes;
+            }
+            return diagnosticRequest("/mockserver/explainUnmatched", Object.keys(body).length ? body : "", "explainUnmatched failed: ");
+        };
+
         /**
          * Freeze the server clock at the given ISO-8601 instant.
          * If instant is omitted, the clock freezes at the current real time.
@@ -3478,6 +3571,9 @@ var mockServerClient;
             retrieveActiveExpectationsById: retrieveActiveExpectationsById,
             retrieveRecordedExpectationsById: retrieveRecordedExpectationsById,
             retrieveLogMessagesById: retrieveLogMessagesById,
+            explain: explain,
+            debugMismatch: debugMismatch,
+            explainUnmatched: explainUnmatched,
             addBreakpoint: addBreakpoint,
             addRequestBreakpoint: addRequestBreakpoint,
             addRequestAndResponseBreakpoint: addRequestAndResponseBreakpoint,

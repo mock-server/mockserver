@@ -3783,4 +3783,275 @@ class LoadScenario:
         )
 
 
+
+# ---------------------------------------------------------------------------
+# Diagnostics: explain, debug_mismatch and explain_unmatched results. These
+# follow the RequestExplanation and ExplainedExpectation OpenAPI schemas; an
+# enum value a newer server sends is kept as its string.
+# ---------------------------------------------------------------------------
+
+
+def _from_list(cls, items: list | None) -> list:
+    return [cls.from_dict(item) for item in items or []]
+
+
+@dataclass
+class SuggestedFix:
+    """A JSON patch (RFC 6902) of an expectation that would make it match the
+    request; nothing is applied. ``unpatched_fields`` lists each field that
+    could not be patched, with a ``reason``."""
+
+    patch: list[dict] = field(default_factory=list)
+    patched_fields: list[str] = field(default_factory=list)
+    unpatched_fields: list[dict] = field(default_factory=list)
+    matches_after_patch: bool = False
+
+    @classmethod
+    def from_dict(cls, data: dict | None) -> SuggestedFix | None:
+        if data is None:
+            return None
+        return cls(
+            patch=list(data.get("patch") or []),
+            patched_fields=list(data.get("patchedFields") or []),
+            unpatched_fields=list(data.get("unpatchedFields") or []),
+            matches_after_patch=bool(data.get("matchesAfterPatch", False)),
+        )
+
+
+@dataclass
+class ExplainedExpectation:
+    """One expectation as explain, debug_mismatch or explain_unmatched
+    evaluated it. The matched expectation has no ``reason``; a skipped or
+    shadowed one has a ``reason`` (``NAMESPACE``, ``INACTIVE``,
+    ``FIELDS_DIFFER``, ``NOT_OPERATOR``, ``CONVERSATION``, ``SCENARIO_STATE``,
+    ``PERCENTAGE`` or ``LOWER_PRIORITY``) and an ``explanation``.
+    ``suggested_fix`` is set only by explain_unmatched with ``suggest_fixes``."""
+
+    expectation_id: str | None = None
+    expectation_method: str | None = None
+    expectation_path: str | None = None
+    position: int | None = None
+    priority: int | None = None
+    reason: str | None = None
+    explanation: str | None = None
+    matches: bool | None = None
+    matched_field_count: int | None = None
+    total_field_count: int | None = None
+    differing_field_count: int | None = None
+    differences: dict[str, list[str]] = field(default_factory=dict)
+    remediation: dict[str, str] = field(default_factory=dict)
+    suggested_fix: SuggestedFix | None = None
+
+    @classmethod
+    def from_dict(cls, data: dict | None) -> ExplainedExpectation | None:
+        if data is None:
+            return None
+        return cls(
+            expectation_id=data.get("expectationId"),
+            expectation_method=data.get("expectationMethod"),
+            expectation_path=data.get("expectationPath"),
+            position=data.get("position"),
+            priority=data.get("priority"),
+            reason=data.get("reason"),
+            explanation=data.get("explanation"),
+            matches=data.get("matches"),
+            matched_field_count=data.get("matchedFieldCount"),
+            total_field_count=data.get("totalFieldCount"),
+            differing_field_count=data.get("differingFieldCount"),
+            differences={k: list(v) for k, v in (data.get("differences") or {}).items()},
+            remediation=dict(data.get("remediation") or {}),
+            suggested_fix=SuggestedFix.from_dict(data.get("suggestedFix")),
+        )
+
+
+@dataclass
+class ExplainedRequest:
+    """The recorded request that explain re-checked."""
+
+    timestamp: str | None = None
+    method: str | None = None
+    path: str | None = None
+    body_truncated: bool = False
+    body_truncated_note: str | None = None
+
+    @classmethod
+    def from_dict(cls, data: dict | None) -> ExplainedRequest | None:
+        if data is None:
+            return None
+        return cls(
+            timestamp=data.get("timestamp"),
+            method=data.get("method"),
+            path=data.get("path"),
+            body_truncated=bool(data.get("bodyTruncated", False)),
+            body_truncated_note=data.get("bodyTruncatedNote"),
+        )
+
+
+@dataclass
+class Arrival:
+    """How a request was handled when it arrived: ``outcome`` is ``MATCHED``,
+    ``NO_MATCH``, ``FORWARDED_WITHOUT_EXPECTATION``,
+    ``RESPONDED_WITHOUT_EXPECTATION`` or ``UNKNOWN``; the expectation fields
+    are set for ``MATCHED`` only."""
+
+    outcome: str | None = None
+    expectation_id: str | None = None
+    expectation_still_stored: bool | None = None
+
+    @classmethod
+    def from_dict(cls, data: dict | None) -> Arrival | None:
+        if data is None:
+            return None
+        return cls(
+            outcome=data.get("outcome"),
+            expectation_id=data.get("expectationId"),
+            expectation_still_stored=data.get("expectationStillStored"),
+        )
+
+
+@dataclass
+class RequestExplanation:
+    """Which expectation would serve a recorded request now, why each one
+    evaluated ahead of it was passed over, which lower-priority ones it
+    shadows, and how the request was handled when it arrived. Recomputed when
+    asked for, against the current expectations, scenario states and Times."""
+
+    correlation_id: str | None = None
+    timestamp: str | None = None
+    recomputed: bool | None = None
+    note: str | None = None
+    request: ExplainedRequest | None = None
+    at_arrival: Arrival | None = None
+    same_outcome_as_at_arrival: bool | None = None
+    expectations_changed_since: bool = False
+    expectations_last_changed: str | None = None
+    matched_expectation: ExplainedExpectation | None = None
+    closest_expectation_id: str | None = None
+    skipped_expectations: list[ExplainedExpectation] = field(default_factory=list)
+    shadowed_expectations: list[ExplainedExpectation] = field(default_factory=list)
+    total_expectations: int = 0
+    evaluated_expectations: int = 0
+    truncated: bool = False
+    max_expectations_evaluated: int | None = None
+
+    @classmethod
+    def from_dict(cls, data: dict | None) -> RequestExplanation | None:
+        if data is None:
+            return None
+        return cls(
+            correlation_id=data.get("correlationId"),
+            timestamp=data.get("timestamp"),
+            recomputed=data.get("recomputed"),
+            note=data.get("note"),
+            request=ExplainedRequest.from_dict(data.get("request")),
+            at_arrival=Arrival.from_dict(data.get("atArrival")),
+            same_outcome_as_at_arrival=data.get("sameOutcomeAsAtArrival"),
+            expectations_changed_since=bool(data.get("expectationsChangedSince", False)),
+            expectations_last_changed=data.get("expectationsLastChanged"),
+            matched_expectation=ExplainedExpectation.from_dict(data.get("matchedExpectation")),
+            closest_expectation_id=data.get("closestExpectationId"),
+            skipped_expectations=_from_list(ExplainedExpectation, data.get("skippedExpectations")),
+            shadowed_expectations=_from_list(ExplainedExpectation, data.get("shadowedExpectations")),
+            total_expectations=data.get("totalExpectations", 0),
+            evaluated_expectations=data.get("evaluatedExpectations", 0),
+            truncated=bool(data.get("truncated", False)),
+            max_expectations_evaluated=data.get("maxExpectationsEvaluated"),
+        )
+
+
+@dataclass
+class ClosestMatch:
+    """The expectation debug_mismatch found with the fewest differing fields."""
+
+    expectation_id: str | None = None
+    matched_fields: int | None = None
+    total_fields: int | None = None
+
+    @classmethod
+    def from_dict(cls, data: dict | None) -> ClosestMatch | None:
+        if data is None:
+            return None
+        return cls(
+            expectation_id=data.get("expectationId"),
+            matched_fields=data.get("matchedFields"),
+            total_fields=data.get("totalFields"),
+        )
+
+
+@dataclass
+class DebugMismatchResult:
+    """The result of debug_mismatch: each active expectation compared with the
+    request, and the closest match (``None`` when every expectation matches)."""
+
+    correlation_id: str | None = None
+    timestamp: str | None = None
+    total_expectations: int = 0
+    evaluated_expectations: int = 0
+    truncated: bool = False
+    max_expectations_evaluated: int | None = None
+    closest_match: ClosestMatch | None = None
+    results: list[ExplainedExpectation] = field(default_factory=list)
+
+    @classmethod
+    def from_dict(cls, data: dict | None) -> DebugMismatchResult | None:
+        if data is None:
+            return None
+        return cls(
+            correlation_id=data.get("correlationId"),
+            timestamp=data.get("timestamp"),
+            total_expectations=data.get("totalExpectations", 0),
+            evaluated_expectations=data.get("evaluatedExpectations", 0),
+            truncated=bool(data.get("truncated", False)),
+            max_expectations_evaluated=data.get("maxExpectationsEvaluated"),
+            closest_match=ClosestMatch.from_dict(data.get("closestMatch")),
+            results=_from_list(ExplainedExpectation, data.get("results")),
+        )
+
+
+@dataclass
+class UnmatchedRequest:
+    """One recent unmatched request and its closest expectations, closest first."""
+
+    timestamp: str | None = None
+    method: str | None = None
+    path: str | None = None
+    closest_expectations: list[ExplainedExpectation] = field(default_factory=list)
+    total_expectations_evaluated: int = 0
+
+    @classmethod
+    def from_dict(cls, data: dict | None) -> UnmatchedRequest | None:
+        if data is None:
+            return None
+        return cls(
+            timestamp=data.get("timestamp"),
+            method=data.get("method"),
+            path=data.get("path"),
+            closest_expectations=_from_list(ExplainedExpectation, data.get("closestExpectations")),
+            total_expectations_evaluated=data.get("totalExpectationsEvaluated", 0),
+        )
+
+
+@dataclass
+class ExplainUnmatchedResult:
+    """The result of explain_unmatched."""
+
+    correlation_id: str | None = None
+    timestamp: str | None = None
+    unmatched_request_count: int = 0
+    truncated: bool = False
+    unmatched_requests: list[UnmatchedRequest] = field(default_factory=list)
+
+    @classmethod
+    def from_dict(cls, data: dict | None) -> ExplainUnmatchedResult | None:
+        if data is None:
+            return None
+        return cls(
+            correlation_id=data.get("correlationId"),
+            timestamp=data.get("timestamp"),
+            unmatched_request_count=data.get("unmatchedRequestCount", 0),
+            truncated=bool(data.get("truncated", False)),
+            unmatched_requests=_from_list(UnmatchedRequest, data.get("unmatchedRequests")),
+        )
+
+
 RequestDefinition = HttpRequest
