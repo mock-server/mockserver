@@ -60,6 +60,10 @@ mock_server/mock_openid_connect_provider.html#button_create_oidc_provider:
   digest: 665743e62ea3
   reason: The REST API tab shows a defaults call and then a configured call; Rust
     shows the configured one.
+mock_server/upgrading_to_9.html#loose-3d77d111821e:
+  status: not_compared
+  digest: 3d77d111821e
+  reason: A migration fragment outside any accordion, so there is no REST API tab to compare with.
 mock_server/using_openapi.html#button_wsdl_inline:
   status: differs
   digest: b996b93a35f3

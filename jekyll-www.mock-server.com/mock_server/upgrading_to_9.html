@@ -1,0 +1,364 @@
+---
+title: Upgrading to MockServer 9.0.0
+description: Every breaking change in MockServer 9.0.0 — who is affected and what to change, grouped by configuration, Docker/Helm, binary proxying, initialisation files, verification, and each client library.
+shortTitle: Upgrading to 9.0.0
+layout: page
+pageOrder: 3
+section: 'Operations'
+subsection: true
+sitemap:
+  priority: 0.8
+  changefreq: 'monthly'
+  lastmod: 2026-10-14T08:00:00+01:00
+---
+
+<p style="background-color: #f8f9fa; border-left: 4px solid #9c0000; padding: 12px; margin-bottom: 16px;">
+    <strong>Most of these changes need an action only if you use the specific feature or client they name.</strong> But five of them can affect a plain HTTP mock with no special configuration: a <span class="inline_code">statusCode</span> outside 100&ndash;999 is now rejected (no opt-out), an unexpected control-plane failure now answers <span class="inline_code">500</span> instead of <span class="inline_code">400</span>, an over-count verification failure's message wording changed, a repeated <span class="inline_code">id</span> in an initialisation file now keeps the last entry instead of the first, and <span class="inline_code">maxLoggedMatchFailures</span> now caps did-not-match log entries at 50 by default. Check the table below against what you use.
+</p>
+
+<p>MockServer 9.0.0 is a major release. Most of its breaking changes are opt-out, feature-gated, or fix a matcher that used to be silently ignored, but not all &mdash; see the callout above for the ones that can affect a plain HTTP mock. This page lists every <span class="inline_code">BREAKING</span> entry from the <a href="https://github.com/mock-server/mockserver-monorepo/blob/master/changelog.md" target="_blank" rel="noopener noreferrer">changelog</a>, plus the Go client's module-path move (tracked separately, not yet a changelog entry at the time of writing), grouped by who it affects, with the exact property or code change to make.</p>
+
+<a id="who_needs_to_act" class="anchor" href="#who_needs_to_act">&nbsp;</a>
+
+<h2>Who needs to act</h2>
+
+<table class="table-scroll">
+    <thead>
+        <tr>
+            <th>Change</th>
+            <th>Who's affected</th>
+            <th>What to do</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td><a href="#templates_500">Failed template answers 500</a></td><td>Anyone using a response or forward template</td><td>Handle a <span class="inline_code">500</span> instead of a <span class="inline_code">404</span>/<span class="inline_code">502</span>, or set <span class="inline_code">templateFailureAsServerError=false</span></td></tr>
+        <tr><td><a href="#max_logged_match_failures">maxLoggedMatchFailures defaults to 50</a></td><td>Anyone with &gt;50 expectations who reads did-not-match log entries at <span class="inline_code">INFO</span></td><td>Set <span class="inline_code">maxLoggedMatchFailures=-1</span> to keep logging every comparison</td></tr>
+        <tr><td><a href="#init_duplicate_id">Init files: repeated id keeps the last entry</a></td><td>Anyone with a repeated <span class="inline_code">id</span> across expectations in an initialisation file</td><td>Remove the repeated ids, or reorder so the one you want is last</td></tr>
+        <tr><td><a href="#match_binary_expectations_when_proxying">Binary expectations now match while proxying</a></td><td>Anyone who proxies binary (non-HTTP) traffic <em>and</em> has binary expectations registered on the same MockServer</td><td>Set <span class="inline_code">matchBinaryExpectationsWhenProxying=false</span> to keep forwarding everything</td></tr>
+        <tr><td><a href="#binary_forwarder_removed">Binary forwarder removed; one upstream connection per client</a></td><td>Anyone who proxies a binary (non-HTTP) protocol</td><td>Remove <span class="inline_code">forwardBinaryRequestsWithoutWaitingForResponse</span>; verify your upstream proxy allows <span class="inline_code">CONNECT</span> to non-443 ports; drop any calls to the removed Java APIs</td></tr>
+        <tr><td><a href="#status_code_validation">Response statusCode must be 100&ndash;999</a></td><td>Anyone with an expectation or file whose <span class="inline_code">statusCode</span> is <span class="inline_code">0</span> or otherwise out of range</td><td>Fix the status code; invalid entries in files are skipped with a WARN, not fatal</td></tr>
+        <tr><td><a href="#http3_opt_in">HTTP/3 needs an opt-in jar/image and now refuses to start without it</a></td><td>Anyone who sets <span class="inline_code">http3Port</span></td><td>Use the <span class="inline_code">jar-with-dependencies-http3</span> jar or the <span class="inline_code">-http3</span> Docker tag / Helm <span class="inline_code">image.variant=http3</span></td></tr>
+        <tr><td><a href="#dns_refuses_to_start">DNS mocking refuses to start if its port can't be used</a></td><td>Anyone who sets <span class="inline_code">dnsEnabled=true</span> with a fixed <span class="inline_code">dnsPort</span></td><td>Free the port, or leave <span class="inline_code">dnsPort=0</span> (default) so the OS picks one</td></tr>
+        <tr><td><a href="#control_plane_500">Unexpected control-plane failures answer 500, not 400</a></td><td>Code that treats any control-plane <span class="inline_code">400</span> as "my input was wrong", or catches the Java client's bare <span class="inline_code">IllegalArgumentException</span></td><td>Treat <span class="inline_code">500</span> as an internal MockServer fault (correlation id in the body and log); <span class="inline_code">400</span> still means your request was rejected</td></tr>
+        <tr><td><a href="#control_plane_mtls">Control-plane mTLS trusts only the configured CA chain</a></td><td>Anyone using <span class="inline_code">controlPlaneTLSMutualAuthenticationCAChain</span> with certificates signed by MockServer's own CA; also anyone with control-plane mTLS required, no chain set, and the bundled default CA &mdash; the server now refuses to start</td><td>Add MockServer's CA certificate to the chain (server and Java client each need this separately), or set <span class="inline_code">certificateAuthorityCertificate</span>/<span class="inline_code">certificateAuthorityPrivateKey</span> to give MockServer its own CA</td></tr>
+        <tr><td><a href="#verification_wording">Over-count verification failures reword "not found" to "found"</a></td><td>Tests that assert the exact text of a <span class="inline_code">never()</span>/<span class="inline_code">atMost</span>/<span class="inline_code">exactly</span>/<span class="inline_code">between</span> failure message</td><td>Update the assertion to the new wording</td></tr>
+        <tr><td><a href="#response_body_verification">Response-body verification now applies the matcher</a></td><td>Response verifications using a regex/JSON path/JSON Schema/XPath/XML Schema/form/multipart/fuzzy/GraphQL/JSON-RPC/WASM/allOf matcher, or <span class="inline_code">matchType</span>/<span class="inline_code">not</span></td><td>Fix the matcher or the system under test &mdash; a verification that only passed because the matcher was ignored now fails</td></tr>
+        <tr><td><a href="#openapi_verification">OpenAPI request verification now counts only matching operations</a></td><td>Verifications using <span class="inline_code">verify(openAPI(...), ...)</span></td><td>Fix the matcher or the system under test if a verification now fails</td></tr>
+        <tr><td><a href="#asyncapi_verification">AsyncAPI verify rejects unknown/top-level count fields</a></td><td>Callers of <span class="inline_code">PUT /mockserver/asyncapi/verify</span> putting <span class="inline_code">atLeast</span>/<span class="inline_code">atMost</span>/<span class="inline_code">exactly</span> at the top level</td><td>Move them inside a <span class="inline_code">count</span> object</td></tr>
+        <tr><td><a href="#log_entries_format">LOG_ENTRIES bodies written once, not three times</a></td><td>Code reading a body from an entry's <span class="inline_code">message</span> or <span class="inline_code">arguments</span></td><td>Read the body from the entry's <span class="inline_code">httpRequest</span>/<span class="inline_code">httpResponse</span> instead</td></tr>
+        <tr><td><a href="#genai_span_names">GenAI trace spans renamed for Gemini and text completions</a></td><td>Traces, dashboards or alerts matching <span class="inline_code">gen_ai.operation.name == "chat"</span></td><td>Match <span class="inline_code">generate_content</span> (Gemini) or <span class="inline_code">text_completion</span> (legacy/FIM/Ollama/Bedrock prompt-string) too</td></tr>
+        <tr><td><a href="#node_llm_typings">Node client: <span class="inline_code">mockserver-client/llm</span> typings drop their default export</a></td><td>TypeScript users importing <span class="inline_code">mockserver-client/llm</span></td><td>Use the named export instead of the default</td></tr>
+        <tr><td><a href="#node_exports_map">Node client/launcher gain an <span class="inline_code">exports</span> map</a></td><td>Anyone deep-importing a path the map doesn't name (a <span class="inline_code">.d.ts</span> file, <span class="inline_code">test/</span>, <span class="inline_code">tasks/mockServer.js</span>)</td><td>Import the package itself or a listed path instead</td></tr>
+        <tr><td><a href="#node_retrieve_typing">Node client: recorded-request methods now typed as requests, not responses</a></td><td>TypeScript code typing results as <span class="inline_code">HttpResponse[]</span> or reading <span class="inline_code">.headers</span>/<span class="inline_code">.body</span>/<span class="inline_code">.cookies</span> directly</td><td>Narrow each result to <span class="inline_code">HttpRequest</span> first</td></tr>
+        <tr><td><a href="#rust_enums">Rust client enums are now <span class="inline_code">#[non_exhaustive]</span></a></td><td>Rust code with an exhaustive <span class="inline_code">match</span> on a client enum</td><td>Add a wildcard <span class="inline_code">_ =&gt;</span> arm</td></tr>
+        <tr><td><a href="#go_module_path">Go module path moves to <span class="inline_code">/v9</span></a></td><td>Go users of <span class="inline_code">mockserver-client-go</span> or <span class="inline_code">mockserver-testcontainers</span>'s Go module</td><td>Update the import path and run <span class="inline_code">go get .../v9</span></td></tr>
+    </tbody>
+</table>
+
+<a id="server_configuration" class="anchor" href="#server_configuration">&nbsp;</a>
+
+<h2>Server configuration</h2>
+
+<p>Three defaults change behaviour for an unmodified configuration, each with an opt-out property (<span class="inline_code">templateFailureAsServerError</span>, <span class="inline_code">maxLoggedMatchFailures</span>, <span class="inline_code">matchBinaryExpectationsWhenProxying</span>), plus stricter <span class="inline_code">statusCode</span> validation, which has no opt-out.</p>
+
+<a id="templates_500" class="anchor" href="#templates_500">&nbsp;</a>
+
+<h3>A response or forward template that fails now answers 500, not 404</h3>
+
+<p><span class="inline_code">templateFailureAsServerError</span> is now <span class="inline_code">true</span> by default. A response or forward template that throws, fails to parse, times out, or renders output that isn't a valid response or request now answers <span class="inline_code">500</span> with an <span class="inline_code">x-mockserver-template-error: true</span> header and the template error as the body, instead of the <span class="inline_code">404</span> (or <span class="inline_code">502</span> for a forward template) it answered in 8.0.0. The error is still logged as before.</p>
+
+<p><strong>To keep the 8.0.0 behaviour:</strong></p>
+
+<pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.templateFailureAsServerError=false</code></pre>
+<p>or</p>
+<pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_TEMPLATE_FAILURE_AS_SERVER_ERROR=false</code></pre>
+
+<p>See <a href="/mock_server/configuration_properties.html#button_configuration_template_failure_as_server_error">Configuration &ndash; Answer a failed template with a 500</a>.</p>
+
+<a id="max_logged_match_failures" class="anchor" href="#max_logged_match_failures">&nbsp;</a>
+
+<h3>maxLoggedMatchFailures now defaults to 50</h3>
+
+<p>At <span class="inline_code">INFO</span>, a request compared against more than 50 expectations now logs only the first 50 "request didn't match expectation" entries, with the closest-match entry saying how many were left out. Every expectation is still compared, so which expectation serves the request, the closest-match entry, the 404 hint and explain output are all unchanged &mdash; only how many of these log entries <span class="inline_code">retrieveLogMessages</span>, <span class="inline_code">LOG_ENTRIES</span> output and the dashboard log show.</p>
+
+<p><strong>If your tests or tooling count these entries, or expect one per expectation:</strong></p>
+
+<pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxLoggedMatchFailures=-1</code></pre>
+<p>or</p>
+<pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_MAX_LOGGED_MATCH_FAILURES=-1</code></pre>
+
+<p><span class="inline_code">-1</span> restores the 8.0.0 behaviour of logging every comparison. See <a href="/mock_server/configuration_properties.html#button_configuration_max_logged_match_failures">Configuration &ndash; Max Logged Match Failures</a>.</p>
+
+<a id="match_binary_expectations_when_proxying" class="anchor" href="#match_binary_expectations_when_proxying">&nbsp;</a>
+
+<h3>Binary expectations now match messages on a proxied connection by default</h3>
+
+<p>In 8.0.0, binary expectations were never consulted on a connection MockServer proxies to an upstream (port forwarding, a PROXY protocol header, transparent proxying). With <span class="inline_code">matchBinaryExpectationsWhenProxying</span> now <span class="inline_code">true</span> by default, a message on such a connection whose bytes match a binary expectation is answered by that expectation and is not forwarded; every other message is forwarded as before. This only affects you if you proxy binary (non-HTTP) traffic <strong>and</strong> have binary expectations registered on the same MockServer.</p>
+
+<p><strong>To keep the 8.0.0 behaviour and always forward:</strong></p>
+
+<pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.matchBinaryExpectationsWhenProxying(false)</code></pre>
+<p>or</p>
+<pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.matchBinaryExpectationsWhenProxying=false</code></pre>
+<p>or</p>
+<pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_MATCH_BINARY_EXPECTATIONS_WHEN_PROXYING=false</code></pre>
+<p>or at runtime:</p>
+<pre class="prettyprint lang-json code"><code class="code">PUT /mockserver/configuration
+{
+  "matchBinaryExpectationsWhenProxying": false
+}</code></pre>
+
+<a id="status_code_validation" class="anchor" href="#status_code_validation">&nbsp;</a>
+
+<h3>A response statusCode outside 100&ndash;999 is now rejected</h3>
+
+<p>A blank status code in the 8.0.0 dashboard became <span class="inline_code">0</span> and registered; the server then answered <span class="inline_code">HTTP/1.1 0</span>, which HTTP clients reject. <span class="inline_code">PUT /mockserver/expectation</span> (and every client library) now refuses an expectation whose <span class="inline_code">statusCode</span> is outside 100&ndash;999 with a <span class="inline_code">400</span> naming the field; any three-digit code, such as <span class="inline_code">999</span>, is still accepted.</p>
+
+<p>Expectation files are more forgiving: an invalid expectation in an <span class="inline_code">initializationJsonPath</span> file, or in persisted expectations restored from a cloud blob store, is skipped with a WARN naming it (position, id and path) while the rest of the file loads &mdash; before, one invalid expectation skipped the whole file. With <span class="inline_code">failOnInitializationError=true</span> a skipped expectation still fails startup. A <span class="inline_code">persistedExpectationsPath</span> file that held one is copied to <span class="inline_code">&lt;file&gt;.invalid-entries-&lt;timestamp&gt;.bak</span> before MockServer first saves over it.</p>
+
+<p><strong>To migrate:</strong> search your expectation files for <span class="inline_code">"statusCode" : 0</span> and other out-of-range values, and set the status you meant.</p>
+
+<a id="http3_opt_in" class="anchor" href="#http3_opt_in">&nbsp;</a>
+
+<h3>HTTP/3 needs an opt-in jar or image, and refuses to start without it</h3>
+
+<p>The QUIC native binaries moved to a <span class="inline_code">jar-with-dependencies-http3</span> classifier, shrinking the default standalone jar from 104 MB to 93 MB. If you set <span class="inline_code">http3Port</span> without the native library present, MockServer now refuses to start and prints the exact fix, instead of logging a warning and silently ignoring the port (which is what every published 8.0.0 Docker image did, since none of them could load the native library). It also now refuses to start when the HTTP/3 port itself can't be bound (for example another process already holds that UDP port), where 8.0.0 logged a warning and served only HTTP/1.1 and HTTP/2.</p>
+
+<p><strong>If you use HTTP/3:</strong></p>
+<ul>
+  <li>Standalone jar: run <span class="inline_code">mockserver-netty-&lt;version&gt;-jar-with-dependencies-http3.jar</span></li>
+  <li>Maven/Gradle: <span class="inline_code">org.mock-server:mockserver-netty</span> already brings the right native dependency; <span class="inline_code">mockserver-netty-no-dependencies</span> cannot load it</li>
+  <li>Docker, Docker Compose or Kubernetes: use the <span class="inline_code">mockserver/mockserver:&lt;version&gt;-http3</span> tag (Helm: <span class="inline_code">image.variant=http3</span>)</li>
+</ul>
+
+<p>If you don't set <span class="inline_code">http3Port</span> &mdash; the default &mdash; nothing changes except a smaller standalone jar.</p>
+
+<a id="dns_refuses_to_start" class="anchor" href="#dns_refuses_to_start">&nbsp;</a>
+
+<h3>DNS mocking refuses to start if its port can't be used</h3>
+
+<p>With <span class="inline_code">dnsEnabled=true</span>, MockServer now refuses to start when it cannot start its DNS server &mdash; nearly always a fixed <span class="inline_code">dnsPort</span> that's already in use &mdash; instead of logging a warning and running without DNS. With <span class="inline_code">dnsPort</span> left at its default of <span class="inline_code">0</span>, the operating system picks a free port, so a refusal is unlikely. A common way to hit this without noticing: running more than one MockServer with the same fixed <span class="inline_code">dnsPort</span> (parallel test forks sharing one properties file, for example) &mdash; in 8.0.0 the first instance served DNS and the rest silently didn't; now every instance but the first fails to start.</p>
+
+<p><strong>To fix:</strong> free the port, choose a different <span class="inline_code">dnsPort</span>, leave <span class="inline_code">dnsPort=0</span> (default), or set <span class="inline_code">dnsEnabled=false</span>. If you don't enable DNS mocking &mdash; the default &mdash; nothing changes.</p>
+
+<a id="control_plane_500" class="anchor" href="#control_plane_500">&nbsp;</a>
+
+<h3>An unexpected control-plane failure now answers 500, not 400</h3>
+
+<p>Before, a fault inside MockServer while it handled a control-plane request (for example <span class="inline_code">PUT /mockserver/expectation</span>) was answered <span class="inline_code">400 Bad Request</span> with the exception's bare message as the body &mdash; reading as a problem with your request. It now answers <span class="inline_code">500 Internal Server Error</span> with <span class="inline_code">unexpected error processing request, see the MockServer log for correlation id: &lt;id&gt;</span>, and the log holds the stack trace under that id. A request MockServer genuinely cannot accept &mdash; unreadable JSON, a request matcher that fails validation, an invalid parameter, an unsupported operation &mdash; is still answered <span class="inline_code">400</span> with a message saying what's wrong.</p>
+
+<p><strong>If your code treats any control-plane <span class="inline_code">400</span> as "my request was bad", or catches the Java client's <span class="inline_code">IllegalArgumentException</span> as a catch-all:</strong> distinguish a genuine <span class="inline_code">500</span> (an internal MockServer fault) from a <span class="inline_code">400</span> (your request was rejected).</p>
+
+<a id="control_plane_mtls" class="anchor" href="#control_plane_mtls">&nbsp;</a>
+
+<h3>Control-plane mTLS trusts only the configured CA chain</h3>
+
+<p>With control-plane mTLS and a <span class="inline_code">controlPlaneTLSMutualAuthenticationCAChain</span> set, both sides used to also trust MockServer's own CA certificate (<span class="inline_code">certificateAuthorityCertificate</span>, by default the bundled CA whose private key is published) alongside the configured chain. They now trust <strong>only</strong> the chain:</p>
+
+<ul>
+  <li><strong>Server:</strong> MockServer now accepts only client certificates signed by the chain. If your control-plane client certificates are signed by MockServer's own CA, add that CA to the chain (or, if it's the bundled default CA, sign your client certificates with your own CA instead). With <strong>no</strong> chain set and control-plane mTLS required, MockServer now refuses to start if it would fall back to the bundled default CA &mdash; set the chain, or give MockServer its own CA with <span class="inline_code">certificateAuthorityCertificate</span> and <span class="inline_code">certificateAuthorityPrivateKey</span>.</li>
+  <li><strong>Java client</strong> (<span class="inline_code">MockServerClient</span>, the JUnit 4 rule, JUnit 5 extension, Spring test listener): it now trusts only the chain for MockServer's certificate. If MockServer's certificate is signed by MockServer's own default CA, add that CA certificate to the chain the client uses, or the TLS handshake fails.</li>
+</ul>
+
+<p>Without control-plane mTLS, nothing changes. See <a href="/mock_server/control_plane_authorisation.html">Control Plane Authorisation</a> and <a href="/mock_server/HTTPS_TLS.html">HTTPS &amp; TLS</a>.</p>
+
+<a id="docker_helm" class="anchor" href="#docker_helm">&nbsp;</a>
+
+<h2>Docker &amp; Helm</h2>
+
+<p>The only Docker/Helm-specific change is the HTTP/3 opt-in image above: if you set <span class="inline_code">http3Port</span>, switch to the <span class="inline_code">mockserver/mockserver:&lt;version&gt;-http3</span> tag (Helm: <span class="inline_code">image.variant=http3</span>). No other Docker image or Helm chart behaviour in this list is breaking on its own &mdash; the config and binary-proxying changes below apply identically whether MockServer runs in a container or not.</p>
+
+<a id="binary_proxying" class="anchor" href="#binary_proxying">&nbsp;</a>
+
+<h2>Binary (non-HTTP) proxying</h2>
+
+<a id="binary_forwarder_removed" class="anchor" href="#binary_forwarder_removed">&nbsp;</a>
+
+<h3>One upstream connection per client connection; forwardBinaryRequestsWithoutWaitingForResponse removed</h3>
+
+<p>Proxying a binary (non-HTTP) protocol through MockServer used to open a new upstream connection for every message. A client's connection now gets <strong>one</strong> upstream connection for its whole life: every message the client sends is written to it, whatever the upstream sends back is relayed as it arrives, and when the client closes its connection the upstream connection is closed too. A client whose upstream never answers is no longer cut off after <span class="inline_code">maxFutureTimeout</span>.</p>
+
+<p>Through an upstream proxy, the one connection is now a tunnel: SOCKS5 through <span class="inline_code">forwardSocksProxy</span>, or <span class="inline_code">CONNECT</span> through <span class="inline_code">forwardHttpsProxy</span> or <span class="inline_code">forwardHttpProxy</span> (with <span class="inline_code">forwardProxyAuthenticationUsername</span>/<span class="inline_code">forwardProxyAuthenticationPassword</span> when set). 8.0.0 sent the raw bytes to <span class="inline_code">forwardHttpProxy</span> as if it were the server itself. <strong>Many proxies refuse <span class="inline_code">CONNECT</span> to ports other than 443</strong> &mdash; if yours does, list the server in <span class="inline_code">noProxyHosts</span>. A refused <span class="inline_code">CONNECT</span> closes the client's connection with one warning naming the proxy, the setting and the status it answered.</p>
+
+<p>A client that starts TLS part way through a session (such as PostgreSQL with <span class="inline_code">sslmode=require</span>) now has its upstream connection upgraded to TLS on the same connection, so a database like this can be proxied end-to-end (SCRAM channel binding needs <span class="inline_code">channelBinding=disable</span> in the client, or MockServer must be given the server's own certificate).</p>
+
+<p><strong>To migrate:</strong> remove <span class="inline_code">forwardBinaryRequestsWithoutWaitingForResponse</span> from your configuration &mdash; a value still set is ignored, with one warning at start-up, and nothing brings per-message forwarding back. In Java code, remove calls to the (now removed) <span class="inline_code">forwardBinaryRequestsWithoutWaitingForResponse</span> methods on <span class="inline_code">ConfigurationProperties</span> and <span class="inline_code">Configuration</span>, both <span class="inline_code">NettyHttpClient.sendRequest(BinaryMessage, ...)</span> overloads, and any reference to <span class="inline_code">MockServerBinaryClientCodec</span> or its encoder/decoder.</p>
+
+<p>If you don't proxy binary protocols, nothing changes. See <a href="#match_binary_expectations_when_proxying">Binary expectations now match messages on a proxied connection</a> above, which interacts with this change.</p>
+
+<a id="initialisation_files" class="anchor" href="#initialisation_files">&nbsp;</a>
+
+<h2>Expectation initialisation files</h2>
+
+<a id="init_duplicate_id" class="anchor" href="#init_duplicate_id">&nbsp;</a>
+
+<h3>A repeated id now keeps the last entry, matching PUT /mockserver/expectation</h3>
+
+<p>Loading an <span class="inline_code">initializationJsonPath</span> file &mdash; at start-up or on a <span class="inline_code">--watch</span> reload &mdash; used to keep the <strong>first</strong> expectation for each repeated <span class="inline_code">id</span> in a file and ignore later ones. <span class="inline_code">PUT /mockserver/expectation</span> has always kept the <strong>last</strong>, because it upserts each entry in turn. File loading now matches that: the kept expectation serves from the first entry's place (as an in-place update would), and a file loaded later still replaces an earlier file's expectation with the same id.</p>
+
+<p><span class="inline_code">mockserver lint</span> and the WARN logged when a file loads now report each replaced expectation as <span class="inline_code">DUPLICATE_ID</span>, naming whether a later entry in the same file or a later file replaced it.</p>
+
+<p><strong>To migrate:</strong> if a file relies on its <em>first</em> entry for a repeated id being served, remove the repeated ids or reorder so the entry you want served is last.</p>
+
+<p>See also <a href="#status_code_validation">statusCode validation</a> above, which changes how an invalid entry in the same files is handled (skipped with a WARN, not fatal for the whole file).</p>
+
+<a id="verification" class="anchor" href="#verification">&nbsp;</a>
+
+<h2>Verification &amp; log output</h2>
+
+<a id="verification_wording" class="anchor" href="#verification_wording">&nbsp;</a>
+
+<h3>Over-count verification failures now say "found ... but should have been found ..."</h3>
+
+<p>When a verification's upper bound is exceeded (<span class="inline_code">never()</span>, <span class="inline_code">exactly(n)</span>, <span class="inline_code">atMost(n)</span>, <span class="inline_code">between(m, n)</span>, or <span class="inline_code">verifyZeroInteractions()</span>), the failure message now reads, for example:</p>
+
+<pre class="code" style="padding: 2px;"><code class="code">Request found 1 time but should have been found exactly 0 times, expected:&lt;...&gt; but was:&lt;...&gt;</code></pre>
+
+<p>where it used to read:</p>
+
+<pre class="code" style="padding: 2px;"><code class="code">Request not found exactly 0 times, expected:&lt;...&gt; but was:&lt;...&gt;</code></pre>
+
+<p>("Response found ..." likewise for response verification.) Failures for too <em>few</em> matches are unchanged and still start with "Request not found" / "Response not found".</p>
+
+<p><strong>To migrate:</strong> update any test assertion on the exact text of an over-count failure to the new wording, or assert on "found" plus the times instead.</p>
+
+<a id="response_body_verification" class="anchor" href="#response_body_verification">&nbsp;</a>
+
+<h3>Response-body verification now applies the matcher instead of ignoring it</h3>
+
+<p>Verifying a response by body (<span class="inline_code">httpResponse</span> in <span class="inline_code">PUT /mockserver/verify</span>, <span class="inline_code">httpResponses</span> in <span class="inline_code">/mockserver/verifySequence</span>, or <span class="inline_code">verify(..., response()..., ...)</span>) with a regex, JSON path, JSON Schema, XPath, XML Schema, form, multipart, fuzzy, GraphQL, JSON-RPC, WASM or allOf matcher, or with <span class="inline_code">matchType</span> or <span class="inline_code">not</span>, is now actually applied. Before, it was ignored and the verification passed whenever any recorded response had a JSON object body &mdash; whatever it contained.</p>
+
+<p><strong>If a response verification starts failing after you upgrade:</strong> it passed only because the matcher was ignored. Fix the matcher or the system under test. In Java, use <span class="inline_code">response().withBodyMatching(...)</span> for these matcher types.</p>
+
+<a id="openapi_verification" class="anchor" href="#openapi_verification">&nbsp;</a>
+
+<h3>OpenAPI request verification now counts only matching operations</h3>
+
+<p><span class="inline_code">PUT /mockserver/verify</span> (or <span class="inline_code">verify(openAPI(...), ...)</span>) with a <span class="inline_code">specUrlOrPayload</span> and <span class="inline_code">operationId</span> used to ignore the spec entirely and count <em>every</em> recorded request, so such a verification could pass when it should have failed. It now counts only requests for that operation.</p>
+
+<p><strong>If a verification starts failing after you upgrade:</strong> fix the matcher or the system under test; <span class="inline_code">verifySequence</span> was not affected by this bug.</p>
+
+<a id="asyncapi_verification" class="anchor" href="#asyncapi_verification">&nbsp;</a>
+
+<h3>AsyncAPI verify rejects count constraints at the top level</h3>
+
+<p><span class="inline_code">PUT /mockserver/asyncapi/verify</span> (or the Java client's <span class="inline_code">verifyAsyncMessage</span>) now answers <span class="inline_code">400</span> if <span class="inline_code">atLeast</span>, <span class="inline_code">atMost</span> or <span class="inline_code">exactly</span> is sent at the top level, or if any field the endpoint doesn't know is sent &mdash; where it used to silently check "at least 1 message" instead.</p>
+
+<p><strong>To migrate:</strong> put count constraints inside <span class="inline_code">count</span>:</p>
+
+<pre class="prettyprint lang-json code"><code class="code">{ "channel": "orders", "count": { "atMost": 0 } }</code></pre>
+
+<p>instead of:</p>
+
+<pre class="prettyprint lang-json code"><code class="code">{ "channel": "orders", "atMost": 0 }</code></pre>
+
+<a id="log_entries_format" class="anchor" href="#log_entries_format">&nbsp;</a>
+
+<h3>LOG_ENTRIES writes each body once; message/arguments show a short form</h3>
+
+<p>A log entry retrieved with <span class="inline_code">format=LOG_ENTRIES</span> used to write its request three times: in <span class="inline_code">httpRequest</span>, again as an element of <span class="inline_code">arguments</span>, and again inside the rendered <span class="inline_code">message</span>. The full request and response are now written only in <span class="inline_code">httpRequest</span>/<span class="inline_code">httpRequests</span> and <span class="inline_code">httpResponse</span>; where <span class="inline_code">arguments</span> and <span class="inline_code">message</span> refer to that same request or response, they now show a short form &mdash; its method and path (for example <span class="inline_code">"POST /orders"</span>), or its status code (for example <span class="inline_code">"201"</span>) &mdash; the same way <span class="inline_code">compactLogFormat</span> already shows them on the console. This also applies to the MCP <span class="inline_code">retrieve_logs</span> and <span class="inline_code">raw_retrieve</span> tools. An argument that is a <em>different</em> request or response (for example the one a request was compared with) is still written in full.</p>
+
+<p><strong>To migrate:</strong> read a request or response body from the entry's <span class="inline_code">httpRequest</span> or <span class="inline_code">httpResponse</span> field instead of from <span class="inline_code">message</span> or <span class="inline_code">arguments</span>.</p>
+
+<a id="genai_span_names" class="anchor" href="#genai_span_names">&nbsp;</a>
+
+<h3>GenAI trace spans: Gemini and text completions renamed</h3>
+
+<p>Following the OpenTelemetry GenAI semantic conventions, spans for calls that aren't chat completions are no longer all named <span class="inline_code">chat</span>:</p>
+
+<ul>
+  <li>Gemini calls are now <span class="inline_code">generate_content</span></li>
+  <li>Legacy, fill-in-the-middle and Ollama <span class="inline_code">/api/generate</span> completions, and forwarded AWS Bedrock <span class="inline_code">InvokeModel</span> calls to prompt-string models, are now <span class="inline_code">text_completion</span></li>
+</ul>
+
+<p><strong>To migrate:</strong> if a trace query, dashboard or alert finds completions by <span class="inline_code">gen_ai.operation.name == "chat"</span> (or a <span class="inline_code">chat </span> span-name prefix), also match the new operation names. See <a href="/mock_server/ai_traffic_inspection.html">AI Traffic Inspection</a>.</p>
+
+<a id="java_client" class="anchor" href="#java_client">&nbsp;</a>
+
+<h2>Java client</h2>
+
+<p>The Java client (including the JUnit 4 rule, JUnit 5 extension and Spring test listener) is affected by several changes covered elsewhere on this page:</p>
+
+<ul>
+  <li><a href="#control_plane_mtls">Control-plane mTLS now trusts only the configured CA chain</a> &mdash; the client, not only the server.</li>
+  <li><a href="#binary_forwarder_removed">The removed binary-forwarding APIs</a>: <span class="inline_code">ConfigurationProperties</span>/<span class="inline_code">Configuration.forwardBinaryRequestsWithoutWaitingForResponse</span>, both <span class="inline_code">NettyHttpClient.sendRequest(BinaryMessage, ...)</span> overloads, and the <span class="inline_code">MockServerBinaryClientCodec</span> classes.</li>
+  <li><a href="#control_plane_500">An unexpected control-plane failure now answers <span class="inline_code">500</span>, not <span class="inline_code">400</span></a> &mdash; if your code catches the client's <span class="inline_code">IllegalArgumentException</span> as a catch-all for control-plane failures, it will no longer see that exception for an internal MockServer fault, only for a request MockServer genuinely rejects.</li>
+  <li><a href="#asyncapi_verification">AsyncAPI verify rejects unknown/top-level count fields</a> &mdash; <span class="inline_code">verifyAsyncMessage</span> now answers <span class="inline_code">400</span> for a top-level <span class="inline_code">atLeast</span>/<span class="inline_code">atMost</span>/<span class="inline_code">exactly</span> or an unknown field, instead of silently checking "at least 1 message".</li>
+  <li><a href="#verification_wording">The over-count verification wording change</a> &mdash; any test asserting the exact text of a <span class="inline_code">never()</span>/<span class="inline_code">atMost</span>/<span class="inline_code">exactly</span>/<span class="inline_code">between</span> failure needs updating.</li>
+</ul>
+
+<a id="node_client" class="anchor" href="#node_client">&nbsp;</a>
+
+<h2>Node / TypeScript client</h2>
+
+<a id="node_llm_typings" class="anchor" href="#node_llm_typings">&nbsp;</a>
+
+<h3>mockserver-client/llm typings drop their default export</h3>
+
+<p>For TypeScript users of the Node client's deep import <span class="inline_code">mockserver-client/llm</span>: its typings no longer declare a default export. Everything imported from <span class="inline_code">mockserver-client</span> itself type-checks exactly as it did in 8.0.0.</p>
+
+<a id="node_exports_map" class="anchor" href="#node_exports_map">&nbsp;</a>
+
+<h3>mockserver-client and mockserver-node now have an exports map</h3>
+
+<p>Both packages now declare an <span class="inline_code">exports</span> map. Importing or requiring a path it doesn't name &mdash; a <span class="inline_code">.d.ts</span> file, anything under <span class="inline_code">test/</span>, or the launcher's <span class="inline_code">tasks/mockServer.js</span> &mdash; now fails with <span class="inline_code">ERR_PACKAGE_PATH_NOT_EXPORTED</span>, where previously any file inside either package could be required. In exchange, an ES module can now import a deep path (for example <span class="inline_code">mockserver-client/llm</span>) without its <span class="inline_code">.js</span> extension, which failed with <span class="inline_code">ERR_MODULE_NOT_FOUND</span> in 8.0.0.</p>
+
+<p>The map names the package itself, and each client module with and without <span class="inline_code">.js</span>: <span class="inline_code">index</span>, <span class="inline_code">llm</span>, <span class="inline_code">setupMockServer</span>, <span class="inline_code">mockServerClient</span>, <span class="inline_code">mcpMockBuilder</span>, <span class="inline_code">a2aMockBuilder</span>, <span class="inline_code">sendRequest</span>, <span class="inline_code">webSocketClient</span>, plus the types-only <span class="inline_code">llmTypes</span> and <span class="inline_code">mockServer</span>; the launcher's map names <span class="inline_code">index</span>, <span class="inline_code">downloadJar</span>, <span class="inline_code">downloadBinary</span>; and both name <span class="inline_code">package.json</span>.</p>
+
+<p><strong>To migrate:</strong> import the package itself or one of the listed paths. If you need a file by its on-disk location, resolve <span class="inline_code">&lt;package&gt;/package.json</span> and work from there.</p>
+
+<a id="node_retrieve_typing" class="anchor" href="#node_retrieve_typing">&nbsp;</a>
+
+<h3>retrieveRecordedRequests / retrieveRecordedRequestsById now typed as requests</h3>
+
+<p>These methods were typed <span class="inline_code">Promise&lt;HttpResponse[]&gt;</span> in 8.0.0 although they return the <em>recorded requests</em>, so reading a result's <span class="inline_code">path</span> didn't compile without a cast. They're now typed <span class="inline_code">Promise&lt;RequestDefinition[]&gt;</span> (a DNS or binary filter can return DNS queries or binary messages, which have no HTTP fields).</p>
+
+<p><strong>To migrate:</strong> code that reads <span class="inline_code">.headers</span>, <span class="inline_code">.body</span> or <span class="inline_code">.cookies</span> on a result, or declares the results as <span class="inline_code">HttpResponse[]</span>, no longer compiles. Narrow each result to <span class="inline_code">HttpRequest</span> first:</p>
+
+<pre class="prettyprint lang-typescript code"><code class="code">if ('path' in request) {
+  console.log(request.headers);
+}</code></pre>
+
+<a id="other_clients" class="anchor" href="#other_clients">&nbsp;</a>
+
+<h2>Other clients</h2>
+
+<a id="rust_enums" class="anchor" href="#rust_enums">&nbsp;</a>
+
+<h3>Rust client: every public enum is now #[non_exhaustive]</h3>
+
+<p>A <span class="inline_code">match</span> on any public enum in the Rust crate that lists every variant no longer compiles. This includes <span class="inline_code">LoadThresholdMetric</span>, which also gains a <span class="inline_code">CheckFailureRate</span> variant (what MockServer sends for a <span class="inline_code">CHECK_FAILURE_RATE</span> threshold, which the enum couldn't represent before).</p>
+
+<p>The enums MockServer sends &mdash; <span class="inline_code">ResponseMode</span>, <span class="inline_code">BinaryUpstream</span>, <span class="inline_code">CrossProtocolTrigger</span> and the <span class="inline_code">Load*</span> enums &mdash; also gain an <span class="inline_code">Unknown</span> variant: a value this client version doesn't know, sent by a newer MockServer, now reads as <span class="inline_code">Unknown</span> instead of failing the whole response. <span class="inline_code">Unknown</span> cannot be sent back: serialising it, or sending an expectation or load scenario that holds it, returns an error and nothing reaches the server. To re-submit server JSON unchanged, use <span class="inline_code">upsert_raw</span>.</p>
+
+<p><strong>To migrate:</strong> add a wildcard arm to any exhaustive <span class="inline_code">match</span>:</p>
+
+<pre class="prettyprint lang-rust code"><code class="code">match metric {
+    LoadThresholdMetric::CheckFailureRate => ...,
+    _ => ...,
+}</code></pre>
+
+<p>If you don't use the Rust client, nothing changes.</p>
+
+<a id="go_module_path" class="anchor" href="#go_module_path">&nbsp;</a>
+
+<h3>Go module path moves to /v9</h3>
+
+<p>Following Go's module-versioning rules for a major version, the Go client's module path and the Testcontainers-Go module's path for 9.0.0 gain a <span class="inline_code">/v9</span> suffix.</p>
+
+<p><strong>To migrate:</strong> update the import path in your code and fetch the new major version:</p>
+
+<pre class="code" style="padding: 2px;"><code class="code">go get github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9</code></pre>
+
+<p>and update the corresponding import statements from the old (pre-9.0.0) path to the <span class="inline_code">/v9</span> path. Do the same for the Testcontainers-Go module if you use it.</p>
+
+<a id="see_also" class="anchor" href="#see_also">&nbsp;</a>
+
+<h2>See also</h2>
+
+<ul>
+  <li><a href="https://github.com/mock-server/mockserver-monorepo/blob/master/changelog.md" target="_blank" rel="noopener noreferrer">Full changelog</a> &mdash; every change in 9.0.0, not only the breaking ones</li>
+  <li><a href="/mock_server/configuration_properties.html">Configuration Properties</a></li>
+  <li><a href="/mock_server/getting_started.html">Getting Started</a></li>
+  <li><a href="/mock_server/debugging_issues.html">Logging &amp; Debugging</a></li>
+</ul>
