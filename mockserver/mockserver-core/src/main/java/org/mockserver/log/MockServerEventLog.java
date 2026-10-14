@@ -1349,6 +1349,14 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         );
     }
 
+    /**
+     * The matcher a log read filters by, or {@code null} (every entry) for no filter or the empty filter {@code {}}:
+     * an empty HTTP matcher would drop the entries that carry a DNS or binary request.
+     */
+    private HttpRequestMatcher filterMatcher(RequestDefinition requestDefinition) {
+        return RequestMatchers.isUnfiltered(requestDefinition) ? null : matcherBuilder.transformsToMatcher(requestDefinition);
+    }
+
     private void retrieveLogEntries(RequestDefinition requestDefinition, Predicate<LogEntry> logEntryPredicate, Consumer<Stream<LogEntry>> consumer) {
         querySnapshot(false, snapshot -> {
             // build the matcher (which can throw, e.g. for an invalid OpenAPI/schema filter)
@@ -1357,7 +1365,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             // CompletableFuture waiting on the consumer would never complete and the caller hangs
             Stream<LogEntry> logEntryStream;
             try {
-                HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(requestDefinition);
+                HttpRequestMatcher httpRequestMatcher = filterMatcher(requestDefinition);
                 logEntryStream = snapshot
                     .stream()
                     // cheap type/not-deleted predicate first so the expensive request matcher
@@ -1380,8 +1388,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             // stream rather than being swallowed and hanging a waiting verify future — see above
             Stream<T> resultStream;
             try {
-                RequestDefinition requestDefinitionMatcher = requestDefinition != null ? requestDefinition : request().withLogCorrelationId(UUIDService.getNonSecureUUID());
-                HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(requestDefinitionMatcher);
+                HttpRequestMatcher httpRequestMatcher = filterMatcher(requestDefinition);
                 resultStream = snapshot
                     .stream()
                     // cheap predicate before the expensive request matcher — see #2359
@@ -1485,7 +1492,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         // effectively immutable after cloneAndClear, so the scan reads stable state. It still runs off
         // the consumer thread so the per-entry match / mapping never blocks log ingestion.
         runOffConsumer(() -> {
-            HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(requestDefinition);
+            HttpRequestMatcher httpRequestMatcher = filterMatcher(requestDefinition);
             Stream<LogEntry> reverseStream = StreamSupport.stream(
                 Spliterators.spliteratorUnknownSize(eventLog.descendingIterator(), Spliterator.ORDERED),
                 false);

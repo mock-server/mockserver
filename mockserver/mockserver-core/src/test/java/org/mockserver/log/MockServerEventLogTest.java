@@ -1040,14 +1040,33 @@ public class MockServerEventLogTest {
         retrieveRequestLogEntries();
         matcherEvaluations.set(0);
 
-        // when - retrieving request log entries with a non-null match-everything filter
-        List<LogEntry> requestLogEntries = retrieveRequestLogEntries(request());
+        // when - retrieving request log entries with a filter that matches every entry (an empty filter
+        // skips the matcher altogether, so it would measure nothing)
+        List<LogEntry> requestLogEntries = retrieveRequestLogEntries(request().withPath("/.*"));
 
         // then - only the 3 RECEIVED_REQUEST entries are returned ...
         assertThat(requestLogEntries.size(), is(3));
         // ... and the expensive matcher was evaluated only for those 3, NOT for the 2 entries the
         // cheap type predicate discards (before the #2359 fix this would have been 5)
         assertThat(matcherEvaluations.get(), is(3));
+    }
+
+    @Test
+    public void shouldNotEvaluateAnyRequestMatcherForAnEmptyFilter() {
+        // given
+        configuration.logLevel(Level.INFO);
+        AtomicInteger matcherEvaluations = new AtomicInteger(0);
+        mockServerLogger.logEvent(new LogEntry().setLogLevel(INFO).setType(RECEIVED_REQUEST).setHttpRequest(countingRequest(matcherEvaluations, "/one")));
+        mockServerLogger.logEvent(new LogEntry().setLogLevel(INFO).setType(RECEIVED_REQUEST).setHttpRequest(countingRequest(matcherEvaluations, "/two")));
+
+        // when - no filter and the empty filter {} both mean every entry
+        List<LogEntry> unfiltered = retrieveRequestLogEntries(null);
+        List<LogEntry> emptyFilter = retrieveRequestLogEntries(request());
+
+        // then - every entry is returned without running a matcher
+        assertThat(unfiltered.size(), is(2));
+        assertThat(emptyFilter.size(), is(2));
+        assertThat(matcherEvaluations.get(), is(0));
     }
 
     @Test
@@ -1064,8 +1083,8 @@ public class MockServerEventLogTest {
         mockServerEventLog.clear(request("/delete"));
         matcherEvaluations.set(0);
 
-        // and - retrieving with a match-everything filter
-        List<LogEntry> requestLogEntries = retrieveRequestLogEntries(request());
+        // and - retrieving with a filter that matches every entry
+        List<LogEntry> requestLogEntries = retrieveRequestLogEntries(request().withPath("/.*"));
 
         // then - only the 2 live entries are returned ...
         assertThat(requestLogEntries.size(), is(2));
@@ -1119,7 +1138,7 @@ public class MockServerEventLogTest {
         // when - retrieving in reverse for the UI with a match-everything filter and a RECEIVED_REQUEST predicate
         CompletableFuture<List<LogEntry>> future = new CompletableFuture<>();
         mockServerEventLog.retrieveLogEntriesInReverseForUI(
-            request(),
+            request().withPath("/.*"),
             entry -> !entry.isDeleted() && entry.getType() == RECEIVED_REQUEST,
             entry -> entry,
             stream -> future.complete(stream.collect(Collectors.toList()))
