@@ -2721,7 +2721,11 @@ still counts physical cores, so the client-limited reading means what it means o
 two-node host that cannot fit 17 free cores on the chosen node fails the run and asks for
 `PERF_K6_CPUS`. On `perf-xl` today only the arm-only steps run, which never start this k6, so the
 default only keeps the placement guard coherent there and prepares for a full run on a two-node
-host; each arm's own block records the k6 placement it actually used.
+host; each arm's own block records the k6 placement it actually used. An arm-only result's
+`agent.k6_cpus` and `config.cpusets.k6` therefore state the arm's k6 cpusets, `;`-separated in
+process order (the multi-k6 arm's measuring processes as Docker reported them, the matrix's
+multi-k6 client as configured), with the physical-core count of their union and
+`config.k6_cpu_pin_pct` null. They are null when the arm did not record a cpuset for every process.
 
 Beside the physical-core proof, the run calls `numa_placement_check "$PERF_K6_NUMA_NODE"` on the
 SUT and k6 cpusets, and on a multi-node host `assert_cpuset_single_node` on the upstream. The

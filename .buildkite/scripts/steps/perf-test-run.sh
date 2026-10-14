@@ -4531,6 +4531,31 @@ else
   VALIDITY_JSON='{"valid":false,"checks":[]}'
 fi
 
+# The cpusets of an arm's measuring k6 processes, ";"-separated in process order: the multi-k6
+# arm's as Docker reported them, the matrix's as configured. Empty unless every process has one.
+arm_k6_cpusets() { # rw_multik6_json hw_matrix_json
+  case "$PERF_RUN_ARM" in
+    rw_multik6) jq -r '[(.placement.observed // [])[] | select((.role // "") | startswith("k6_main_")) | .cpuset_cpus] as $s
+      | if ($s | length) > 0 and ($s | length) == (.method.procs // -1) and all($s[]; type == "string" and . != "")
+        then $s | join(";") else "" end' <<<"$1" 2>/dev/null || true ;;
+    hw_matrix) jq -r '(.client_placement.k6_cpusets // []) as $s
+      | if ($s | length) > 0 and all($s[]; type == "string" and . != "") then $s | join(";") else "" end' <<<"$2" 2>/dev/null || true ;;
+  esac
+}
+
+# --- arm-only k6 placement: no process of an arm-only run used the single-k6 pin resolved above,
+# so .agent and .config state the arm's k6 cpusets instead, or null when the arm did not record them.
+AGENT_K6_CPUS_JSON="$(jq -nc --arg k "${K6_CPUS:-none}" '$k')"
+if arm_only; then
+  K6_CPUS="$(arm_k6_cpusets "$SERVING_RW_MULTIK6_JSON" "$SERVING_HW_MATRIX_JSON")"
+  K6_PHYS_CORES=null
+  if [ -n "$K6_CPUS" ]; then K6_PHYS_CORES="$(phys_core_count "${K6_CPUS//;/,}")"; fi
+  AGENT_K6_CPUS_JSON="$(jq -nc --arg k "$K6_CPUS" 'if $k == "" then null else $k end')"
+  CONFIG_JSON="$(jq -c --argjson k "$AGENT_K6_CPUS_JSON" --argjson p "$K6_PHYS_CORES" \
+    '.cpusets.k6 = $k | .cpusets.physical_cores.k6 = $p | .k6_cpu_pin_pct = null' <<<"$CONFIG_JSON")"
+  echo "--- arm-only run: k6 cpusets recorded from the arm: ${K6_CPUS:-none recorded} (physical cores $K6_PHYS_CORES)"
+fi
+
 # The sub-harness blocks go to jq as FILES: one of them alone can exceed the kernel's per-argument
 # limit (128 KiB on Linux), and an --argjson would then fail the whole result with E2BIG.
 RESULT_BLOCKS="$OUT_DIR/result-blocks"; mkdir -p "$RESULT_BLOCKS"
@@ -4542,7 +4567,7 @@ jq -n \
   --arg commit "$COMMIT" --arg harness_commit "$HARNESS_COMMIT" --arg branch "$BRANCH" --arg ts "$TS" \
   --arg build_number "${BUILDKITE_BUILD_NUMBER:-}" --arg build_url "${BUILDKITE_BUILD_URL:-}" \
   --arg instance_type "$INSTANCE_TYPE" --arg instance_type_src "$INSTANCE_TYPE_SRC" --arg image "$MOCKSERVER_IMAGE" \
-  --arg server_cpus "${SERVER_CPUS:-none}" --arg k6_cpus "${K6_CPUS:-none}" \
+  --arg server_cpus "${SERVER_CPUS:-none}" --argjson k6_cpus "$AGENT_K6_CPUS_JSON" \
   --arg network_mode "$PERF_NETWORK_MODE" --arg queue "${BUILDKITE_AGENT_META_DATA_QUEUE:-perf}" --arg run_arm "$PERF_RUN_ARM" \
   --argjson steady "$STEADY_JSON" \
   --argjson server_phys_cores "$SERVER_PHYS_CORES" --argjson k6_phys_cores "$K6_PHYS_CORES" \

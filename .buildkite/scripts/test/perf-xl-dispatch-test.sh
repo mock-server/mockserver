@@ -171,5 +171,45 @@ check "arm-only, validity false: the step fails" "1" "$(final hw_matrix false)"
 check "arm-only, validity true: the step passes" "0" "$(final hw_matrix true)"
 check "full run, validity false: the final block leaves it to compare" "0" "$(final "" false)"
 
+echo "--- 6. an arm-only result records the arm's k6 cpusets, not the unused single-k6 pin"
+K6FN="$(awk '/^arm_k6_cpusets\(\) \{/ {p=1} p {print} p && /^}/ {exit}' "$RUN")"
+K6BLK="$(awk '/^# --- arm-only k6 placement/ {p=1} p {print} p && /^fi$/ {exit}' "$RUN")"
+for b in K6FN K6BLK; do [ -n "${!b}" ] || bad "block $b not found in $RUN"; done
+line_of() { grep -nF -- "$1" "$RUN" | tail -1 | cut -d: -f1 || true; }
+L_BLK="$(line_of '# --- arm-only k6 placement')"
+L_RW="$(line_of 'SERVING_RW_MULTIK6_JSON="')"
+L_HW="$(line_of 'SERVING_HW_MATRIX_JSON="')"
+L_ASM="$(line_of '--argjson k6_cpus "$AGENT_K6_CPUS_JSON"')"
+check "the block runs after both arms and before the result is assembled" "yes" \
+  "$([ -n "$L_BLK" ] && [ -n "$L_ASM" ] && [ "$L_BLK" -gt "${L_RW:-0}" ] && [ "$L_BLK" -gt "${L_HW:-0}" ] && [ "$L_BLK" -lt "$L_ASM" ] && echo yes || echo no)"
+check "the result's .agent.k6_cpus is the block's value" "1" "$(grep -c '^ *server_cpus: \$server_cpus, k6_cpus: \$k6_cpus,' "$RUN" || true)"
+placement() { # PERF_RUN_ARM rw_json hw_json -> "agent k6_cpus|config [k6, physical k6, pin pct]|K6_PHYS_CORES"
+  env -i PATH="$PATH" PERF_RUN_ARM="$1" RW="$2" HW="$3" bash -c "set -euo pipefail
+phys_core_count() { tr ',' '\n' <<<\"\$1\" | wc -l | tr -d ' '; }
+$ARMFN
+$K6FN
+K6_CPUS=32-48; K6_PHYS_CORES=17; SERVING_RW_MULTIK6_JSON=\"\$RW\"; SERVING_HW_MATRIX_JSON=\"\$HW\"
+CONFIG_JSON='{\"cpusets\":{\"server\":\"0-5\",\"k6\":\"32-48\",\"physical_cores\":{\"server\":6,\"k6\":17}},\"k6_cpu_pin_pct\":1700}'
+$K6BLK
+echo \"\$AGENT_K6_CPUS_JSON|\$(jq -c '[.cpusets.k6, .cpusets.physical_cores.k6, .k6_cpu_pin_pct]' <<<\"\$CONFIG_JSON\")|\$K6_PHYS_CORES\"" 2>/dev/null | tail -1
+}
+obs() { # procs role=cpuset... -> a rw_multik6 block with that observed placement
+  local n="$1"; shift
+  printf '%s\n' "$@" | jq -Rsc --argjson n "$n" 'split("\n") | map(select(. != "") | split("=") | {role: .[0], container: "c", cpuset_cpus: .[1]})
+    | {method: {procs: $n}, placement: {observed: ([{role: "sut", cpuset_cpus: "0-5"}] + .)}}'
+}
+RW2="$(obs 2 k6_main_p0=32-39,96-103 k6_main_p1=40-47,104-111 k6_xcheck_p0=56-63 prometheus=7)"
+check "full run: the single-k6 pin, as before" '"32-48"|["32-48",17,1700]|17' "$(placement "" "$RW2" '{}')"
+check "rw_multik6: every measuring process's observed cpuset, in order" \
+  '"32-39,96-103;40-47,104-111"|["32-39,96-103;40-47,104-111",4,null]|4' "$(placement rw_multik6 "$RW2" '{}')"
+check "rw_multik6, a process ran unrestricted: null, not a partial list" 'null|[null,null,null]|null' \
+  "$(placement rw_multik6 "$(obs 2 k6_main_p0=32-39 k6_main_p1=)" '{}')"
+check "rw_multik6, fewer processes observed than ran: null" 'null|[null,null,null]|null' \
+  "$(placement rw_multik6 "$(obs 2 k6_main_p0=32-39)" '{}')"
+check "rw_multik6, the arm recorded no placement: null" 'null|[null,null,null]|null' "$(placement rw_multik6 '{}' '{}')"
+check "hw_matrix: the multi-k6 client's cpusets" '"32-39;40-47"|["32-39;40-47",2,null]|2' \
+  "$(placement hw_matrix "$RW2" '{"client_placement":{"k6_cpusets":["32-39","40-47"]}}')"
+check "hw_matrix, single-k6 client (no fixed client placement): null" 'null|[null,null,null]|null' "$(placement hw_matrix '{}' '{}')"
+
 if [ "$FAILS" -gt 0 ]; then echo "FAILED: $FAILS check(s)" >&2; exit 1; fi
 echo "all perf-xl dispatch checks passed"
