@@ -108,6 +108,60 @@ public class TemplateDryRunTest {
     }
 
     @Test
+    public void reportsEachMustacheVariableThatDidNotResolveWithItsLine() throws Exception {
+        JsonNode report = body(dryRun(new TemplateDryRun(configuration()),
+            input("MUSTACHE", "{\n  \"statusCode\": 200,\n  \"reasonPhrase\": \"{{reqest.method}}\",\n  \"body\": \"{{request.pth}}{{request.path}}{{missing}}\"\n}")));
+
+        assertThat(report.path("valid").asBoolean(), is(true));
+        assertThat(report.path("renderedResponse").path("body").asText(), is("/orders/42"));
+        JsonNode warnings = report.path("warnings");
+        assertThat(warnings.size(), is(3));
+        assertThat(warnings.get(0).path("message").asText(), is("{{reqest.method}} did not resolve against this request, so it rendered as empty text"));
+        assertThat(warnings.get(0).path("line").asInt(), is(3));
+        assertThat(warnings.get(0).has("column"), is(false));
+        assertThat(warnings.get(1).path("message").asText(), startsWith("{{request.pth}} did not resolve"));
+        assertThat(warnings.get(1).path("line").asInt(), is(4));
+        assertThat(warnings.get(2).path("message").asText(), startsWith("{{missing}} did not resolve"));
+        assertThat(warnings.get(2).path("line").asInt(), is(4));
+    }
+
+    @Test
+    public void reportsAMustacheVariableThatDidNotResolveInAForwardTemplate() throws Exception {
+        ObjectNode input = input("MUSTACHE", "{ \"method\": \"GET\", \"path\": \"/upstream{{ request.pth }}\" }").put("actionType", "FORWARD_TEMPLATE");
+
+        JsonNode report = body(dryRun(new TemplateDryRun(configuration()), input));
+
+        assertThat(report.path("valid").asBoolean(), is(true));
+        assertThat(report.path("renderedRequest").path("path").asText(), is("/upstream"));
+        assertThat(report.path("warnings").size(), is(1));
+        assertThat(report.path("warnings").get(0).path("message").asText(), startsWith("{{request.pth}} did not resolve"));
+        assertThat(report.path("warnings").get(0).path("line").asInt(), is(1));
+    }
+
+    @Test
+    public void doesNotWarnAboutMustacheVariablesThatResolveToAValueOrToNothing() throws Exception {
+        JsonNode report = body(dryRun(new TemplateDryRun(configuration()),
+            input("MUSTACHE", "{\n  \"statusCode\": 200,\n  \"body\": \"{{request.method}} {{ request.path }}{{request.secure}}{{#absent}}{{alsoAbsent}}{{/absent}}{{^absent}} none{{/absent}} {{#jsonPath}}$.name{{/jsonPath}}{{jsonPathResult}}\"\n}")));
+
+        assertThat(report.path("valid").asBoolean(), is(true));
+        assertThat(report.path("renderedResponse").path("body").asText(), is("POST /orders/42 none tea"));
+        assertThat(report.has("warnings"), is(false));
+    }
+
+    @Test
+    public void reportsAtMostAFixedNumberOfMustacheVariablesThatDidNotResolve() throws Exception {
+        StringBuilder template = new StringBuilder("{ \"statusCode\": 200, \"body\": \"");
+        for (int i = 0; i < 30; i++) {
+            template.append("{{missing").append(i).append("}}");
+        }
+        JsonNode report = body(dryRun(new TemplateDryRun(configuration()), input("MUSTACHE", template.append("\" }").toString())));
+
+        assertThat(report.path("valid").asBoolean(), is(true));
+        assertThat(report.path("warnings").size(), is(20));
+        assertThat(report.path("warnings").get(0).path("message").asText(), startsWith("{{missing0}} did not resolve"));
+    }
+
+    @Test
     public void reportsAJavaScriptErrorInTemplateCoordinatesWithAHint() throws Exception {
         requireGraalJs();
         JsonNode report = body(dryRun(new TemplateDryRun(configuration()),

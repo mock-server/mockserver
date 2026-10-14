@@ -277,8 +277,8 @@ public class TemplateDryRun {
                     : velocity().executeTemplate(input.template(), input.sampleRequest(), HttpResponseDTO.class, warnings);
             case MUSTACHE:
                 return input.forward()
-                    ? mustache().executeTemplate(input.template(), input.sampleRequest(), HttpRequestDTO.class)
-                    : mustache().executeTemplate(input.template(), input.sampleRequest(), HttpResponseDTO.class);
+                    ? mustache().executeTemplate(input.template(), input.sampleRequest(), HttpRequestDTO.class, warnings)
+                    : mustache().executeTemplate(input.template(), input.sampleRequest(), HttpResponseDTO.class, warnings);
             case JAVASCRIPT:
                 return input.forward()
                     ? javaScript().executeTemplate(input.template(), input.sampleRequest(), HttpRequestDTO.class)

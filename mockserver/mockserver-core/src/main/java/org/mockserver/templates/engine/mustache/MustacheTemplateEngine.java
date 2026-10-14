@@ -17,6 +17,7 @@ import org.mockserver.serialization.model.DTO;
 import org.mockserver.templates.engine.TemplateEngine;
 import org.mockserver.templates.engine.TemplateEvaluationException;
 import org.mockserver.templates.engine.TemplateFunctions;
+import org.mockserver.templates.engine.TemplateWarning;
 import org.mockserver.templates.engine.helpers.RequestBodyExtractionHelper;
 import org.mockserver.templates.engine.helpers.ScenarioTemplateHelper;
 import org.mockserver.templates.engine.model.HttpRequestTemplateObject;
@@ -30,9 +31,11 @@ import java.io.Writer;
 import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -52,6 +55,9 @@ public class MustacheTemplateEngine implements TemplateEngine {
     private final MockServerLogger mockServerLogger;
     private final Configuration configuration;
     private final Mustache.Compiler compiler;
+    // As compiler, but a variable that does not resolve throws instead of rendering as empty text;
+    // used only to find those variables for the template dry run, never to serve
+    private final Mustache.Compiler unresolvedVariableCompiler;
     private HttpTemplateOutputDeserializer httpTemplateOutputDeserializer;
     // Per-engine seeded faker when templateFakerSeed is non-zero, else null (the shared unseeded faker
     // from BUILT_IN_HELPERS is used). Resolved once so the seeded sequence is deterministic across renders.
@@ -108,6 +114,7 @@ public class MustacheTemplateEngine implements TemplateEngine {
             .strictSections(false)
             .defaultValue("")
             .withCollector(new ExtendedCollector());
+        unresolvedVariableCompiler = compiler.nullValue("");
         ScenarioTemplateHelper scenarioTemplateHelper = new ScenarioTemplateHelper();
         Map<String, Object> scenario = new LinkedHashMap<>();
         scenario.put("get", (Mustache.Lambda) (frag, out) -> {
@@ -156,6 +163,54 @@ public class MustacheTemplateEngine implements TemplateEngine {
     @Override
     public <T> T executeTemplate(String template, HttpRequest request, HttpResponse response, Class<? extends DTO<T>> dtoClass) {
         return executeTemplateInternal(template, request, response, dtoClass);
+    }
+
+    /**
+     * As {@link #executeTemplate(String, HttpRequest, Class)}, also reporting each variable that did not
+     * resolve (and so rendered as empty text) to {@code unresolvedVariables}, with the line of its first
+     * use. Used by the template dry run; it renders the template again for each such variable, up to
+     * {@link #MAX_UNRESOLVED_VARIABLE_PASSES} more times, and the result is the normal render's.
+     */
+    public <T> T executeTemplate(String template, HttpRequest request, Class<? extends DTO<T>> dtoClass, Consumer<TemplateWarning> unresolvedVariables) {
+        T result = executeTemplateInternal(template, request, null, dtoClass);
+        reportUnresolvedVariables(template, request, unresolvedVariables);
+        return result;
+    }
+
+    static final int MAX_UNRESOLVED_VARIABLE_PASSES = 20;
+
+    /**
+     * jmustache stops at the first variable that does not resolve, so each pass binds the names found so
+     * far to empty text at the top level and renders again. A first component found missing (reqest in
+     * reqest.path) is replaced by the full name when the next pass reports it on the same line.
+     */
+    private void reportUnresolvedVariables(String template, HttpRequest request, Consumer<TemplateWarning> unresolvedVariables) {
+        Map<String, Integer> unresolved = new LinkedHashMap<>();
+        try {
+            Template strictTemplate = unresolvedVariableCompiler.compile(template);
+            Set<String> boundToEmpty = new HashSet<>();
+            for (int pass = 0; pass < MAX_UNRESOLVED_VARIABLE_PASSES; pass++) {
+                Map<String, Object> data = renderData(request, null, null);
+                boundToEmpty.forEach(name -> data.put(name, ""));
+                try {
+                    strictTemplate.execute(data, Writer.nullWriter());
+                    break;
+                } catch (MustacheException.Context missing) {
+                    if (missing.getCause() != null || missing.key == null || !boundToEmpty.add(missing.key)) {
+                        break;
+                    }
+                    unresolved.entrySet().removeIf(found -> missing.key.startsWith(found.getKey() + ".") && found.getValue() == missing.lineNo);
+                    unresolved.put(missing.key, missing.lineNo);
+                }
+            }
+        } catch (RuntimeException otherFailure) {
+            // the normal render already reported or survived it; only missing variables are reported here
+        }
+        unresolved.forEach((name, line) -> unresolvedVariables.accept(new TemplateWarning(
+            "{{" + name + "}} did not resolve against this request, so it rendered as empty text",
+            line > 0 ? line : null,
+            null
+        )));
     }
 
     @Override
