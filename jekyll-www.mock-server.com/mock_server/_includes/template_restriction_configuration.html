@@ -90,7 +90,7 @@
 
 <button id="button_configuration_template_failure_as_server_error" class="accordion title"><strong>Answer a failed template with a 500</strong></button>
 <div class="panel title">
-    <p>If true, a response or forward template that fails (it throws an error, does not parse, or hits its execution timeout) answers the request with <code>500 Internal Server Error</code>, an <code>x-mockserver-template-error: true</code> header and the template error as a plain-text body. If false (the default) it answers <code>404 Not Found</code>, which looks the same as a request that matched no expectation; the template error is in the log either way.</p>
+    <p>If true, a response or forward template that fails (it throws an error, does not parse, or hits its execution timeout) answers the request with <code>500 Internal Server Error</code>, an <code>x-mockserver-template-error: true</code> header and the template error as a plain-text body, with the template line, column and a hint when the engine reports them. If false (the default) it answers <code>404 Not Found</code>, which looks the same as a request that matched no expectation; the template error is in the log either way.</p>
     <p>Turn it on while writing templates so a template bug is obvious. The body carries the template engine's error message, which can quote part of the template, so leave it off if the callers of your mock should not see template details.</p>
     <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
     <p>Java Code:</p>

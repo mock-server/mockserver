@@ -28,6 +28,8 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.fail;
 import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.HttpRequest.request;
@@ -134,6 +136,49 @@ public class VelocityTemplateExecutionTimeoutTest {
         Throwable failure = failureOf(() -> engineWithTimeout(250L).renderTemplate(template.toString(), request));
 
         assertThat(failure, instanceOf(VelocityTemplateTimeoutException.class));
+    }
+
+    @Test
+    public void shouldReportTimeoutOfDefinedBlockReachedThroughAMethodCall() {
+        // Velocity wraps an exception thrown inside a method call, here the block's toString(), in a MethodInvocationException
+        List<LogEntry> logged = new ArrayList<>();
+        VelocityTemplateEngine engine = new VelocityTemplateEngine(recordingLogger(logged), configuration().velocityTemplateExecutionTimeout(250L));
+        StringBuilder template = new StringBuilder("#define($a0)#end");
+        for (int level = 1; level <= 20; level++) {
+            template.append("#define($a").append(level).append(")").append(("$a" + (level - 1)).repeat(10)).append("#end");
+        }
+        template.append("$a20.toString() done");
+
+        Throwable failure = failureOf(() -> engine.renderTemplate(template.toString(), request));
+
+        assertThat(failure, instanceOf(VelocityTemplateTimeoutException.class));
+        assertThat(failure.getMessage(), startsWith("Velocity template execution exceeded the configured timeout of 250ms"));
+        assertThat(logged.stream().filter(entry -> entry.getLogLevel() == Level.WARN).map(LogEntry::getMessageFormat).toList(), hasItem(failure.getMessage()));
+    }
+
+    @Test
+    public void shouldStopDryRunTemplateWhenTimeoutDisabled() {
+        VelocityTemplateEngine engine = VelocityTemplateEngine.forDryRun(new MockServerLogger(), configuration().velocityTemplateExecutionTimeout(-1L), 250L);
+
+        Throwable failure = failureOf(() -> engine.executeTemplate(LOOPS_FOREVER + RESPONSE, request, HttpResponseDTO.class));
+
+        assertThat(failure, instanceOf(VelocityTemplateTimeoutException.class));
+        assertThat(failure.getMessage(), containsString("velocityTemplateExecutionTimeout is 0 or less"));
+        assertThat(failure.getMessage(), containsString("a dry run always stops a Velocity template after 250ms"));
+        assertThat(failure.getMessage(), not(containsString("set it to 0")));
+    }
+
+    @Test
+    public void shouldUseConfiguredTimeoutForDryRunWhenEnabled() {
+        VelocityTemplateEngine engine = VelocityTemplateEngine.forDryRun(new MockServerLogger(), configuration().velocityTemplateExecutionTimeout(250L), 60_000L);
+
+        Throwable failure = failureOf(() -> engine.renderTemplate(LOOPS_FOREVER, request));
+
+        assertThat(failure, instanceOf(VelocityTemplateTimeoutException.class));
+        assertThat(failure.getMessage(), containsString("exceeded the configured timeout of 250ms"));
+        assertThat(failure.getMessage(), containsString("increase mockserver.velocityTemplateExecutionTimeout"));
+        // 0 does not switch off a dry run's limit, so that advice would be wrong
+        assertThat(failure.getMessage(), not(containsString("set it to 0")));
     }
 
     @Test

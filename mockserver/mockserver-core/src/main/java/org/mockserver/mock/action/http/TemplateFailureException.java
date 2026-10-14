@@ -1,6 +1,7 @@
 package org.mockserver.mock.action.http;
 
 import org.mockserver.model.HttpTemplate;
+import org.mockserver.templates.engine.TemplateEvaluationException;
 import org.mockserver.templates.engine.javascript.JavaScriptTemplateTimeoutException;
 import org.mockserver.templates.engine.velocity.VelocityTemplateTimeoutException;
 
@@ -24,14 +25,27 @@ class TemplateFailureException extends RuntimeException {
     }
 
     /**
-     * The engine's own message, without the template text and request that the transform-failure wrapper adds.
+     * The engine's own message, without the template text and request that the transform-failure wrapper adds,
+     * followed by the template line, column and hint when the engine reports them.
      */
     private static String engineMessage(RuntimeException failure) {
         Throwable reported = failure;
         if (!(failure instanceof JavaScriptTemplateTimeoutException) && !(failure instanceof VelocityTemplateTimeoutException) && failure.getCause() != null) {
             reported = failure.getCause();
         }
-        return isNotBlank(reported.getMessage()) ? reported.getMessage() : reported.getClass().getSimpleName();
+        StringBuilder message = new StringBuilder(isNotBlank(reported.getMessage()) ? reported.getMessage() : reported.getClass().getSimpleName());
+        if (failure instanceof TemplateEvaluationException located) {
+            if (located.getLine() != null) {
+                message.append('\n').append("at template line ").append(located.getLine());
+                if (located.getColumn() != null) {
+                    message.append(", column ").append(located.getColumn());
+                }
+            }
+            if (isNotBlank(located.getHint())) {
+                message.append('\n').append("hint: ").append(located.getHint());
+            }
+        }
+        return message.toString();
     }
 
     /**

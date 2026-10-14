@@ -365,17 +365,21 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
     }
 
     /**
-     * The serving timeout message advises setting the timeout to 0 to disable it; when it already is 0 the
-     * cancellation came from the dry-run bound, so say that instead.
+     * The serving timeout message advises setting the timeout to 0 to disable it, which does not disable a
+     * dry run's limit, so a dry-run engine leaves that advice out.
      */
     private JavaScriptTemplateTimeoutException explainDryRunTimeout(JavaScriptTemplateTimeoutException timeout) {
+        if (timeoutWhenDisabledMillis <= 0) {
+            return timeout;
+        }
         Long configured = configuration.javascriptTemplateExecutionTimeout();
-        if (timeoutWhenDisabledMillis > 0 && (configured == null || configured <= 0)) {
+        if (configured == null || configured <= 0) {
             return new JavaScriptTemplateTimeoutException("JavaScript template execution exceeded " + timeoutWhenDisabledMillis
-                + "ms and was cancelled; mockserver.javascriptTemplateExecutionTimeout is 0, so serving does not time out, but a dry run always stops a JavaScript template after "
+                + "ms and was cancelled; mockserver.javascriptTemplateExecutionTimeout is 0 or less, so serving does not time out, but a dry run always stops a JavaScript template after "
                 + timeoutWhenDisabledMillis + "ms", timeout.getCause());
         }
-        return timeout;
+        return new JavaScriptTemplateTimeoutException("JavaScript template execution exceeded the configured timeout of " + configured
+            + "ms and was cancelled; increase mockserver.javascriptTemplateExecutionTimeout to give it longer", timeout.getCause());
     }
 
     private static final Pattern NOT_DEFINED = Pattern.compile("ReferenceError: ([\\p{L}\\p{N}_$]{1,200}) is not defined");

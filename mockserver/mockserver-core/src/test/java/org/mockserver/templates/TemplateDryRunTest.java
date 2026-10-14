@@ -30,6 +30,8 @@ import static org.mockserver.model.HttpRequest.request;
 public class TemplateDryRunTest {
 
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
+    // two nested loops over the largest range, so it never finishes on its own
+    private static final String VELOCITY_LOOPS_FOREVER = "#foreach($i in [1..2147483647])#foreach($j in [1..2147483647])#end#end{ \"statusCode\": 200 }";
 
     private static JsonNode body(HttpResponse response) throws Exception {
         return OBJECT_MAPPER.readTree(response.getBodyAsString());
@@ -150,6 +152,7 @@ public class TemplateDryRunTest {
         assertThat(report.path("valid").asBoolean(), is(false));
         assertThat(report.path("timedOut").asBoolean(), is(true));
         assertThat(report.path("error").path("message").asText(), containsString("exceeded the configured timeout of 300ms"));
+        assertThat(report.path("error").path("message").asText(), not(containsString("set it to 0")));
         assertThat(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start), lessThan(20_000L));
         // the thread was released: the next dry run renders
         assertThat(body(dryRun(dryRun, input("JAVASCRIPT", "return { statusCode: 204 };"))).path("valid").asBoolean(), is(true));
@@ -158,11 +161,12 @@ public class TemplateDryRunTest {
     @Test
     public void cutsOffAJavaScriptBusyLoopEvenWhenTheTimeoutIsDisabled() throws Exception {
         requireGraalJs();
-        TemplateDryRun dryRun = new TemplateDryRun(configuration().javascriptTemplateExecutionTimeout(0L), 300L, 20_000L);
+        TemplateDryRun dryRun = new TemplateDryRun(configuration().javascriptTemplateExecutionTimeout(-1L), 300L, 20_000L);
 
         JsonNode report = body(dryRun(dryRun, input("JAVASCRIPT", "while (true) {}")));
 
         assertThat(report.path("timedOut").asBoolean(), is(true));
+        assertThat(report.path("error").path("message").asText(), containsString("javascriptTemplateExecutionTimeout is 0 or less"));
         assertThat(report.path("error").path("message").asText(), containsString("a dry run always stops a JavaScript template after 300ms"));
         assertThat(report.path("error").path("message").asText(), not(containsString("set it to 0")));
     }
@@ -179,6 +183,46 @@ public class TemplateDryRunTest {
         assertThat(report.path("timedOut").asBoolean(), is(true));
         assertThat(report.path("error").path("message").asText(), startsWith("the template did not finish within 300ms"));
         assertThat(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start), lessThan(2_500L));
+    }
+
+    @Test
+    public void stopsAVelocityLoopAtTheVelocityTimeout() throws Exception {
+        TemplateDryRun dryRun = new TemplateDryRun(configuration().velocityTemplateExecutionTimeout(300L).javascriptTemplateExecutionTimeout(20_000L), 5_000L, 20_000L);
+        long start = System.nanoTime();
+
+        JsonNode report = body(dryRun(dryRun, input("VELOCITY", VELOCITY_LOOPS_FOREVER)));
+
+        assertThat(report.path("valid").asBoolean(), is(false));
+        assertThat(report.path("timedOut").asBoolean(), is(true));
+        assertThat(report.path("error").path("message").asText(), containsString("exceeded the configured timeout of 300ms"));
+        assertThat(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start), lessThan(20_000L));
+        // the thread was released: the next dry run renders
+        assertThat(body(dryRun(dryRun, input("VELOCITY", "{ \"statusCode\": 204 }"))).path("valid").asBoolean(), is(true));
+    }
+
+    @Test
+    public void stopsAVelocityLoopEvenWhenTheVelocityTimeoutIsDisabled() throws Exception {
+        TemplateDryRun dryRun = new TemplateDryRun(configuration().velocityTemplateExecutionTimeout(0L), 300L, 2_000L);
+
+        JsonNode report = body(dryRun(dryRun, input("VELOCITY", VELOCITY_LOOPS_FOREVER)));
+
+        assertThat(report.path("timedOut").asBoolean(), is(true));
+        assertThat(report.path("error").path("message").asText(), containsString("a dry run always stops a Velocity template after 300ms"));
+        assertThat(report.path("error").path("message").asText(), not(containsString("set it to 0")));
+        assertThat(body(dryRun(dryRun, input("VELOCITY", "{ \"statusCode\": 204 }"))).path("valid").asBoolean(), is(true));
+    }
+
+    @Test
+    public void answersAtTheVelocityDeadlineWhileAVelocityTemplateIsStillRunning() throws Exception {
+        // a negative grace puts the response deadline before the template's own timeout
+        TemplateDryRun dryRun = new TemplateDryRun(configuration().velocityTemplateExecutionTimeout(3_000L).javascriptTemplateExecutionTimeout(20_000L), 3_000L, -2_700L);
+
+        JsonNode report = body(dryRun(dryRun, input("VELOCITY", VELOCITY_LOOPS_FOREVER)));
+
+        assertThat(report.path("timedOut").asBoolean(), is(true));
+        assertThat(report.path("error").path("message").asText(), startsWith("the template did not finish within 300ms"));
+        assertThat(report.path("error").path("message").asText(), containsString("long Java call"));
+        assertThat(report.path("error").path("message").asText(), not(containsString("cannot be cancelled")));
     }
 
     @Test
@@ -246,6 +290,7 @@ public class TemplateDryRunTest {
 
         assertThat(refused.getStatusCode(), is(429));
         assertThat(body(refused).path("error").asText(), containsString("already running"));
+        assertThat(body(refused).path("error").asText(), containsString("a Velocity template inside one long Java call keeps it until that call returns"));
         CompletableFuture.allOf(running).get(30, TimeUnit.SECONDS);
         assertThat(dryRun(dryRun, input("VELOCITY", "{ \"statusCode\": 200 }")).getStatusCode(), is(200));
     }

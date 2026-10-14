@@ -10,4 +10,8 @@ public class VelocityTemplateTimeoutException extends RuntimeException {
         super("Velocity template execution exceeded the configured timeout of " + timeoutMillis + "ms and was stopped; "
             + "increase mockserver.velocityTemplateExecutionTimeout or set it to 0 to disable the timeout");
     }
+
+    VelocityTemplateTimeoutException(String message) {
+        super(message);
+    }
 }

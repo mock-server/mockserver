@@ -65,6 +65,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
     private static final ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private final MockServerLogger mockServerLogger;
     private final Configuration configuration;
+    private final long timeoutWhenDisabledMillis;
     private HttpTemplateOutputDeserializer httpTemplateOutputDeserializer;
 
     // ----- runtime-reconfigurable engine (see EngineHolder) -----
@@ -171,8 +172,13 @@ public class VelocityTemplateEngine implements TemplateEngine {
     }
 
     public VelocityTemplateEngine(MockServerLogger mockServerLogger, Configuration configuration) {
+        this(mockServerLogger, configuration, 0L);
+    }
+
+    private VelocityTemplateEngine(MockServerLogger mockServerLogger, Configuration configuration, long timeoutWhenDisabledMillis) {
         this.mockServerLogger = mockServerLogger;
         this.configuration = configuration;
+        this.timeoutWhenDisabledMillis = timeoutWhenDisabledMillis;
         this.httpTemplateOutputDeserializer = new HttpTemplateOutputDeserializer(mockServerLogger);
         this.engineHolder = buildEngineHolder(disallowClassLoadingConfigured());
         // Build the shared, request-independent function/helper map once. It is referenced (not copied)
@@ -189,6 +195,20 @@ public class VelocityTemplateEngine implements TemplateEngine {
             functionsAndHelpers.put("faker", TemplateFunctions.resolveFaker(configuration.templateFakerSeed()));
         }
         this.sharedFunctionsAndHelpers = Collections.unmodifiableMap(functionsAndHelpers);
+    }
+
+    /**
+     * An engine for the template dry run: identical to a serving engine, except that when
+     * {@code velocityTemplateExecutionTimeout} is 0 (disabled) it still stops a template after
+     * {@code timeoutWhenDisabledMillis}.
+     */
+    public static VelocityTemplateEngine forDryRun(MockServerLogger mockServerLogger, Configuration configuration, long timeoutWhenDisabledMillis) {
+        return new VelocityTemplateEngine(mockServerLogger, configuration, timeoutWhenDisabledMillis);
+    }
+
+    private long executionTimeoutMillis() {
+        Long configured = configuration.velocityTemplateExecutionTimeout();
+        return configured != null && configured > 0 ? configured : timeoutWhenDisabledMillis;
     }
 
     private boolean disallowClassLoadingConfigured() {
@@ -310,8 +330,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
      */
     private void renderTemplate(EngineHolder holder, String template, VelocityContext context, Writer writer) throws Exception {
         Template parsed = parsedTemplate(holder, template);
-        Long timeoutMillis = configuration.velocityTemplateExecutionTimeout();
-        try (RenderDeadline.Scope ignored = RenderDeadline.start(timeoutMillis != null ? timeoutMillis : 0L)) {
+        try (RenderDeadline.Scope ignored = RenderDeadline.start(executionTimeoutMillis())) {
             if (parsed != null) {
                 parsed.merge(context, writer);
             } else {
@@ -321,10 +340,39 @@ public class VelocityTemplateEngine implements TemplateEngine {
     }
 
     /**
-     * A render stopped by velocityTemplateExecutionTimeout is logged once at WARN and rethrown as is, like a
-     * JavaScript template timeout, so it is not reported as a generic transform failure. Velocity passes
-     * runtime exceptions through unwrapped, so the timeout arrives as itself.
+     * A render stopped by velocityTemplateExecutionTimeout is logged once at WARN and rethrown, like a
+     * JavaScript template timeout, so it is not reported as a generic transform failure. Velocity wraps an
+     * exception thrown inside a method call (such as a {@code #define} block's {@code toString()}) in a
+     * MethodInvocationException, so the timeout is looked for in the cause chain; otherwise it is a transform failure.
      */
+    private RuntimeException renderFailure(Exception failure, String template, HttpRequest request) {
+        Throwable cause = failure;
+        for (int depth = 0; cause != null && depth < 10; depth++, cause = cause.getCause()) {
+            if (cause instanceof VelocityTemplateTimeoutException timeout) {
+                return loggedTimeout(explainDryRunTimeout(timeout), request);
+            }
+        }
+        return transformFailure(failure, template, request);
+    }
+
+    /**
+     * The serving timeout message advises setting the timeout to 0 to disable it, which does not disable a
+     * dry run's limit, so a dry-run engine leaves that advice out.
+     */
+    private VelocityTemplateTimeoutException explainDryRunTimeout(VelocityTemplateTimeoutException timeout) {
+        if (timeoutWhenDisabledMillis <= 0) {
+            return timeout;
+        }
+        Long configured = configuration.velocityTemplateExecutionTimeout();
+        if (configured == null || configured <= 0) {
+            return new VelocityTemplateTimeoutException("Velocity template execution exceeded " + timeoutWhenDisabledMillis
+                + "ms and was stopped; mockserver.velocityTemplateExecutionTimeout is 0 or less, so serving does not time out, but a dry run always stops a Velocity template after "
+                + timeoutWhenDisabledMillis + "ms");
+        }
+        return new VelocityTemplateTimeoutException("Velocity template execution exceeded the configured timeout of " + configured
+            + "ms and was stopped; increase mockserver.velocityTemplateExecutionTimeout to give it longer");
+    }
+
     private VelocityTemplateTimeoutException loggedTimeout(VelocityTemplateTimeoutException exception, HttpRequest request) {
         if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(Level.WARN)) {
             mockServerLogger.logEvent(
@@ -485,10 +533,8 @@ public class VelocityTemplateEngine implements TemplateEngine {
             context.put("xPath", new RequestBodyExtractionHelper.XPathTool(bodyExtractionHelper));
             renderTemplate(holder, template, context, writer);
             return writer.toString();
-        } catch (VelocityTemplateTimeoutException e) {
-            throw loggedTimeout(e, request);
         } catch (Exception e) {
-            throw transformFailure(e, template, request);
+            throw renderFailure(e, template, request);
         }
     }
 
@@ -536,10 +582,8 @@ public class VelocityTemplateEngine implements TemplateEngine {
                 );
             }
             result = httpTemplateOutputDeserializer.deserializer(request, writer.toString(), dtoClass);
-        } catch (VelocityTemplateTimeoutException e) {
-            throw loggedTimeout(e, request);
         } catch (Exception e) {
-            throw transformFailure(e, template, request);
+            throw renderFailure(e, template, request);
         }
         return result;
     }

@@ -23,6 +23,7 @@ import org.mockserver.templates.engine.javascript.JavaScriptTemplateEngine;
 import org.mockserver.templates.engine.javascript.JavaScriptTemplateTimeoutException;
 import org.mockserver.templates.engine.mustache.MustacheTemplateEngine;
 import org.mockserver.templates.engine.velocity.VelocityTemplateEngine;
+import org.mockserver.templates.engine.velocity.VelocityTemplateTimeoutException;
 import org.slf4j.event.Level;
 
 import java.util.ArrayList;
@@ -47,11 +48,12 @@ import static org.mockserver.model.HttpResponse.response;
 
 /**
  * Renders a response or forward template against a sample request without an expectation, for
- * {@code PUT /mockserver/template/test}. It uses the same engines, sandbox settings and JavaScript
- * timeout as serving; nothing it does reaches the event log, and a {@code scenario.set(...)} is
- * reported rather than applied. At most {@link #MAX_CONCURRENT_DRY_RUNS} run at once on their own
- * threads, never on the caller's: Velocity and Mustache cannot be cancelled, so a runaway one keeps
- * its thread and later calls are refused with a 429 rather than queued.
+ * {@code PUT /mockserver/template/test}. It uses the same engines, sandbox settings and JavaScript and
+ * Velocity time limits as serving, each still applied when disabled; nothing it does reaches the event
+ * log, and a {@code scenario.set(...)} is reported rather than applied. At most
+ * {@link #MAX_CONCURRENT_DRY_RUNS} run at once on their own threads, never on the caller's: a Mustache
+ * template, or a Velocity template inside one long Java call, cannot be stopped, so it keeps its thread
+ * and later calls are refused with a 429 rather than queued.
  */
 public class TemplateDryRun {
 
@@ -101,7 +103,7 @@ public class TemplateDryRun {
         } catch (IllegalArgumentException invalidInput) {
             return CompletableFuture.completedFuture(jsonResponse(BAD_REQUEST.code(), putCapped(objectMapper.createObjectNode(), "error", invalidInput.getMessage(), MAX_REPORTED_MESSAGE_CHARS)));
         }
-        long deadlineMillis = timeoutMillis() + responseGraceMillis;
+        long deadlineMillis = timeoutMillis(input.templateType()) + responseGraceMillis;
         CompletableFuture<HttpResponse> result = new CompletableFuture<>();
         try {
             executor.execute(() -> {
@@ -113,16 +115,30 @@ public class TemplateDryRun {
             });
         } catch (RejectedExecutionException busy) {
             return CompletableFuture.completedFuture(jsonResponse(TOO_MANY_REQUESTS.code(), objectMapper.createObjectNode()
-                .put("error", MAX_CONCURRENT_DRY_RUNS + " template dry runs are already running; retry when one finishes (a Velocity or Mustache template that never finishes keeps its slot until MockServer restarts)")));
+                .put("error", MAX_CONCURRENT_DRY_RUNS + " template dry runs are already running; retry when one finishes (a Mustache template that never finishes keeps its slot until MockServer restarts, and a Velocity template inside one long Java call keeps it until that call returns)")));
         }
-        ObjectNode timedOut = failedReport(input, "the template did not finish within " + deadlineMillis + "ms; a Velocity or Mustache template cannot be cancelled, so it may still be running");
+        ObjectNode timedOut = failedReport(input, "the template did not finish within " + deadlineMillis + "ms; " + stillRunning(input.templateType()));
         timedOut.put("timedOut", true);
         return result.completeOnTimeout(jsonResponse(OK.code(), timedOut), deadlineMillis, TimeUnit.MILLISECONDS);
     }
 
-    long timeoutMillis() {
-        Long configured = configuration.javascriptTemplateExecutionTimeout();
+    /**
+     * The engine's own time limit; Mustache has none, so it shares the JavaScript one.
+     */
+    long timeoutMillis(HttpTemplate.TemplateType templateType) {
+        Long configured = templateType == HttpTemplate.TemplateType.VELOCITY ? configuration.velocityTemplateExecutionTimeout() : configuration.javascriptTemplateExecutionTimeout();
         return configured != null && configured > 0 ? configured : timeoutWhenDisabledMillis;
+    }
+
+    private static String stillRunning(HttpTemplate.TemplateType templateType) {
+        switch (templateType) {
+            case VELOCITY:
+                return "a Velocity template is stopped at its next loop iteration, macro call, #parse, #evaluate or #define block render, so one inside a long Java call may still be running";
+            case MUSTACHE:
+                return "a Mustache template cannot be stopped, so it may still be running";
+            default:
+                return "it may still be running until the JavaScript engine cancels it";
+        }
     }
 
     private DryRunInput parse(HttpRequest controlPlaneRequest) {
@@ -201,7 +217,7 @@ public class TemplateDryRun {
         if (failure != null) {
             report.put("valid", false);
             report.set("error", errorNode(failure));
-            if (failure instanceof JavaScriptTemplateTimeoutException) {
+            if (failure instanceof JavaScriptTemplateTimeoutException || failure instanceof VelocityTemplateTimeoutException) {
                 report.put("timedOut", true);
             }
         } else if (rendered == null) {
@@ -345,7 +361,7 @@ public class TemplateDryRun {
 
     private synchronized VelocityTemplateEngine velocity() {
         if (velocityTemplateEngine == null) {
-            velocityTemplateEngine = capturingLogger.withoutCapture(() -> new VelocityTemplateEngine(capturingLogger, configuration));
+            velocityTemplateEngine = capturingLogger.withoutCapture(() -> VelocityTemplateEngine.forDryRun(capturingLogger, configuration, timeoutWhenDisabledMillis));
         }
         return velocityTemplateEngine;
     }

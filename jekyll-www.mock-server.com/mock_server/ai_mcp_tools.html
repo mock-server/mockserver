@@ -1008,7 +1008,7 @@ keywords: "mcp tools, mockserver mcp tools, create_expectation, verify_request, 
 
 <h3>test_template</h3>
 
-<p>Renders a Velocity, Mustache or JavaScript response or forward template against a sample request without creating an expectation, using the same template engines, security settings and JavaScript timeout MockServer uses when serving. It returns the rendered response or request, or why the template failed with its line and column and a hint, plus warnings for Velocity references that did not resolve and for <code>scenario.set</code> calls, which a dry run reports instead of applying. Nothing reaches the event log.</p>
+<p>Renders a Velocity, Mustache or JavaScript response or forward template against a sample request without creating an expectation, using the same template engines, security settings and the JavaScript and Velocity time limits MockServer uses when serving. It returns the rendered response or request, or why the template failed with its line and column and a hint, plus warnings for Velocity references that did not resolve and for <code>scenario.set</code> calls, which a dry run reports instead of applying. Nothing reaches the event log.</p>
 
 <p><strong>Note:</strong> This is the same dry run as <code>PUT /mockserver/template/test</code>, described in <a href="/mock_server/response_templates.html#template_dry_run">Response Templates</a>. Because it runs the template code it is sent, it needs the same permission as creating an expectation: with control-plane authorisation enabled, a principal that may only read cannot call it.</p>
 
