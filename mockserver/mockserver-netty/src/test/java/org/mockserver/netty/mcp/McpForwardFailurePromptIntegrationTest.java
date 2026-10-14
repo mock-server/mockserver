@@ -22,6 +22,9 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockserver.configuration.Configuration.configuration;
+import static org.mockserver.model.HttpForward.forward;
+import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
 
 /**
  * Follows the why_forward_failed prompt's tool chain over MockServer's own MCP endpoint after a real forward to a port
@@ -127,6 +130,47 @@ public class McpForwardFailurePromptIntegrationTest {
 
         JsonNode byId = callTool("explain_forward_failure", objectMapper.createObjectNode().put("correlationId", failure.path("correlationId").asText()));
         assertThat(byId.path("forwardFailures").get(0).path("reason").asText(), is(failure.path("reason").asText()));
+    }
+
+    @Test
+    public void aRequestWhoseForwardFailedIsNotExplainedAsUnmatchedButAGenuineMissStillIs() throws Exception {
+        int closedPort = PortFactory.findFreePort();
+        mockServer.when(request().withMethod("GET").withPath("/stock"))
+            .forward(forward().withHost("127.0.0.1").withPort(closedPort));
+        mockServer.when(request().withMethod("GET").withPath("/stock").withHeader("X-Tenant", "blue"))
+            .respond(response().withBody("blue stock"));
+        assertThat(get("/orders").statusCode(), is(404));
+        assertThat(get("/stock").statusCode(), is(502));
+
+        JsonNode newest = callTool("explain_unmatched_requests", objectMapper.createObjectNode().put("limit", 1));
+        assertThat(newest.toString(), newest.path("unmatchedRequestCount").asInt(), is(1));
+        assertThat(newest.toString(), newest.path("unmatchedRequests").get(0).path("path").asText(), is("/orders"));
+
+        JsonNode fixes = callTool("suggest_expectation_fix", objectMapper.createObjectNode()).path("unmatchedRequests");
+        assertThat(fixes.toString(), fixes.size(), is(1));
+        assertThat(fixes.toString(), fixes.get(0).path("path").asText(), is("/orders"));
+
+        // the dashboard's Explain Unmatched dialog sends this request
+        HttpResponse<String> explained = httpClient.send(
+            HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + mockServer.getLocalPort() + "/mockserver/explainUnmatched"))
+                .timeout(Duration.ofSeconds(30))
+                .PUT(HttpRequest.BodyPublishers.ofString("{\"limit\":10,\"suggestFixes\":true}")).build(),
+            HttpResponse.BodyHandlers.ofString());
+        assertThat(explained.body(), explained.statusCode(), is(200));
+        JsonNode unmatched = objectMapper.readTree(explained.body()).path("unmatchedRequests");
+        assertThat(explained.body(), unmatched.size(), is(1));
+        assertThat(explained.body(), unmatched.get(0).path("path").asText(), is("/orders"));
+
+        JsonNode failures = callTool("explain_forward_failure", objectMapper.createObjectNode()).path("forwardFailures");
+        assertThat(failures.toString(), failures.size(), is(1));
+        assertThat(failures.get(0).path("path").asText(), is("/stock"));
+    }
+
+    private HttpResponse<String> get(String path) throws Exception {
+        return httpClient.send(
+            HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + mockServer.getLocalPort() + path))
+                .timeout(Duration.ofSeconds(60)).GET().build(),
+            HttpResponse.BodyHandlers.ofString());
     }
 
     private JsonNode callTool(String name, ObjectNode arguments) throws Exception {

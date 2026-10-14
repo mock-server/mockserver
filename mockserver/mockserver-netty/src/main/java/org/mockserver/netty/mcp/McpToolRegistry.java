@@ -1588,7 +1588,8 @@ public class McpToolRegistry {
 
         tools.put("explain_unmatched_requests", new ToolDefinition(
             "explain_unmatched_requests",
-            "Returns recent requests that hit MockServer and matched no expectation, with ranked closest-expectation diagnostics and actionable remediation hints for each mismatch. Use after a failed test run to understand why requests got 404s without needing to reconstruct the request.",
+            "Returns recent requests that hit MockServer and matched no expectation, with ranked closest-expectation diagnostics and actionable remediation hints for each mismatch. Use after a failed test run to understand why requests got 404s without needing to reconstruct the request. "
+                + "A request MockServer forwarded or proxied that failed with a 502 is not listed: explain_forward_failure explains it.",
             schema,
             this::handleExplainUnmatchedRequests
         ));

@@ -712,7 +712,7 @@ keywords: "mcp tools, mockserver mcp tools, create_expectation, verify_request, 
 
 <h3>explain_unmatched_requests</h3>
 
-<p>Returns recent requests that hit MockServer and matched no expectation, with ranked closest-expectation diagnostics and actionable remediation hints. Use this after a failed test run to understand why requests received 404 responses, without needing to reconstruct each failing request.</p>
+<p>Returns recent requests that hit MockServer and matched no expectation, with ranked closest-expectation diagnostics and actionable remediation hints. Use this after a failed test run to understand why requests received 404 responses, without needing to reconstruct each failing request. A request MockServer forwarded or proxied that failed with a <code>502</code> is not listed here, because it did not go unmatched: use <a href="#explain_forward_failure"><code>explain_forward_failure</code></a> for it.</p>
 
 <p><strong>Note:</strong> This functionality is also available as a REST API endpoint (<code>PUT /mockserver/explainUnmatched</code>) and as an MCP resource (<code>mockserver://unmatched</code>).</p>
 

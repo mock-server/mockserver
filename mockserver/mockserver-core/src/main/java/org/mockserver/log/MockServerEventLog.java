@@ -1430,7 +1430,8 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
 
     /**
      * Retrieves the most recent NO_MATCH_RESPONSE log entries (requests that hit the server
-     * and matched no expectation). Results are ordered most-recent-first and limited.
+     * and matched no expectation). Results are ordered most-recent-first and limited. A failed
+     * forward's {@code 502} is logged with the same type but is left out: see {@link #retrieveForwardFailures}.
      *
      * @param limit       maximum number of entries to return (capped at 100)
      * @param listConsumer callback receiving the list of matching log entries
@@ -1442,7 +1443,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             List<LogEntry> entries = snapshot
                 .stream()
                 .filter(notDeletedPredicate)
-                .filter(logItem -> logItem.getType() == NO_MATCH_RESPONSE)
+                .filter(logItem -> logItem.getType() == NO_MATCH_RESPONSE && !isForwardFailure(logItem))
                 .limit(effectiveLimit)
                 .collect(Collectors.toList());
             listConsumer.accept(entries);
@@ -1463,11 +1464,15 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         querySnapshot(true, snapshot -> listConsumer.accept(snapshot
             .stream()
             .filter(notDeletedPredicate)
-            .filter(logItem -> logItem.getType() == NO_MATCH_RESPONSE && LogEntryMessages.FORWARD_FAILURE_MESSAGE_FORMAT.equals(logItem.getMessageFormat()))
+            .filter(logItem -> logItem.getType() == NO_MATCH_RESPONSE && isForwardFailure(logItem))
             .filter(logItem -> correlationId == null || correlationId.equals(logItem.getCorrelationId()))
             .limit(effectiveLimit)
             .collect(Collectors.toList())
         ));
+    }
+
+    private static boolean isForwardFailure(LogEntry logItem) {
+        return LogEntryMessages.FORWARD_FAILURE_MESSAGE_FORMAT.equals(logItem.getMessageFormat());
     }
 
     public <T> void retrieveLogEntriesInReverseForUI(RequestDefinition requestDefinition, Predicate<LogEntry> logEntryPredicate, Function<LogEntry, T> logEntryMapper, Consumer<Stream<T>> consumer) {
