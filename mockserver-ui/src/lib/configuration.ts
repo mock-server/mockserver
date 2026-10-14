@@ -57,6 +57,11 @@ export interface EffectiveConfigProperty {
   value: string;
   /** Where the value came from. */
   source: ConfigSource | string;
+  /**
+   * For a property set away from its built-in default: that default, redacted
+   * server-side like the value. Absent at the default and when it is unknown.
+   */
+  default?: string;
   /** For an `unrecognised` key: the recognised keys it was most likely meant to be. */
   suggestions?: string[];
 }

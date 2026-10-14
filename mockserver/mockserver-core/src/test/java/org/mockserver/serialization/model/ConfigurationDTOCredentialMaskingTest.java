@@ -1243,6 +1243,11 @@ public class ConfigurationDTOCredentialMaskingTest {
                 problems.add(credential + " (value rendered as <" + resolved.getValue()
                     + "> not the mask)");
             }
+            if (resolved.getDefaultValue() != null && !MASK.equals(resolved.getDefaultValue())) {
+                // an overridden credential's built-in default is shown beside its value, and is the mask too
+                problems.add(credential + " (default rendered as <" + resolved.getDefaultValue()
+                    + "> not the mask)");
+            }
         }
 
         assertThat("credential-shaped properties that GET /mockserver/config, --print-config and the "

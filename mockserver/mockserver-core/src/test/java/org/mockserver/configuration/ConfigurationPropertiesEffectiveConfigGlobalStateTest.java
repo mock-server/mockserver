@@ -70,6 +70,7 @@ public class ConfigurationPropertiesEffectiveConfigGlobalStateTest {
             assertThat(sensitive.getValue(), is(REDACTED_VALUE));
             assertThat(sensitive.getValue(), not(containsString("super-secret-token-value")));
             assertThat(sensitive.getSource(), is(SOURCE_SYSTEM_PROPERTY));
+            assertThat(sensitive.getDefaultValue(), is(REDACTED_VALUE));
 
             // Unset key reports its built-in default value.
             ConfigurationProperties.ResolvedProperty unset = find(properties, DEFAULT_KEY)
@@ -422,6 +423,262 @@ public class ConfigurationPropertiesEffectiveConfigGlobalStateTest {
         }
         assertThat("properties whose built-in default the effective-configuration view cannot show: " + withoutGetter,
             withoutGetter, is(java.util.Collections.<String>emptyList()));
+    }
+
+    // maxLoggedBodyBytes defaults to 0 and is resolved through the property cache
+    private static final String OVERRIDDEN_KEY = "mockserver.maxLoggedBodyBytes";
+
+    @Test
+    public void anOverriddenPropertyReportsItsBuiltInDefaultBesideItsValueAndKeepsItsValue() throws Exception {
+        String previous = System.getProperty(OVERRIDDEN_KEY);
+        String previousCached = getCacheEntry(OVERRIDDEN_KEY);
+        boolean wasProgrammaticallySet = isProgrammaticallySet(OVERRIDDEN_KEY);
+        // another test's setter can leave mockserver.metricsEnabled set (setProperty writes the system property)
+        String previousDefaultKey = System.getProperty(DEFAULT_KEY);
+        String previousCachedDefaultKey = getCacheEntry(DEFAULT_KEY);
+        boolean wasDefaultKeyProgrammaticallySet = isProgrammaticallySet(DEFAULT_KEY);
+        try {
+            assertThat("MOCKSERVER_METRICS_ENABLED must not be set for this test", System.getenv("MOCKSERVER_METRICS_ENABLED"), org.hamcrest.Matchers.nullValue());
+            System.clearProperty(DEFAULT_KEY);
+            clearCacheEntry(DEFAULT_KEY);
+            removeProgrammaticallySet(DEFAULT_KEY);
+            assertThat("MOCKSERVER_MAX_LOGGED_BODY_BYTES must not be set for this test", System.getenv("MOCKSERVER_MAX_LOGGED_BODY_BYTES"), org.hamcrest.Matchers.nullValue());
+            removeProgrammaticallySet(OVERRIDDEN_KEY);
+            clearCacheEntry(OVERRIDDEN_KEY);
+            System.setProperty(OVERRIDDEN_KEY, "4096");
+            // a first read caches the effective value, which the view must neither report as the default nor replace
+            assertThat(ConfigurationProperties.maxLoggedBodyBytes(), is(4096));
+
+            List<ConfigurationProperties.ResolvedProperty> properties = ConfigurationProperties.effectiveConfiguration();
+
+            ConfigurationProperties.ResolvedProperty overridden = find(properties, OVERRIDDEN_KEY)
+                .orElseThrow(() -> new AssertionError("expected " + OVERRIDDEN_KEY + " in effective configuration"));
+            assertThat(overridden.getValue(), is("4096"));
+            assertThat(overridden.getSource(), is(SOURCE_SYSTEM_PROPERTY));
+            assertThat(overridden.getDefaultValue(), is("0"));
+            assertThat(getCacheEntry(OVERRIDDEN_KEY), is("4096"));
+            assertThat(ConfigurationProperties.maxLoggedBodyBytes(), is(4096));
+            java.lang.reflect.Field probe = ConfigurationProperties.class.getDeclaredField("defaultValueProbe");
+            probe.setAccessible(true);
+            assertThat("the view must not leave its thread reading defaults", probe.get(null), org.hamcrest.Matchers.nullValue());
+            ConfigurationProperties.ResolvedProperty atDefault = find(properties, DEFAULT_KEY)
+                .orElseThrow(() -> new AssertionError("expected " + DEFAULT_KEY + " in effective configuration"));
+            assertThat("a property at its default has no separate default", atDefault.getDefaultValue(), org.hamcrest.Matchers.nullValue());
+
+            assertThat(ConfigurationProperties.effectiveConfigurationAsJson(true),
+                containsString("{\"name\":\"" + OVERRIDDEN_KEY + "\",\"value\":\"4096\",\"source\":\"" + SOURCE_SYSTEM_PROPERTY + "\",\"default\":\"0\"}"));
+            assertThat(ConfigurationProperties.effectiveConfigurationAsText(),
+                containsString(OVERRIDDEN_KEY + " = 4096   [" + SOURCE_SYSTEM_PROPERTY + "]   (default: 0)"));
+        } finally {
+            restoreProgrammaticallySet(OVERRIDDEN_KEY, wasProgrammaticallySet);
+            restoreCacheEntry(OVERRIDDEN_KEY, previousCached);
+            restore(OVERRIDDEN_KEY, previous);
+            restoreProgrammaticallySet(DEFAULT_KEY, wasDefaultKeyProgrammaticallySet);
+            restoreCacheEntry(DEFAULT_KEY, previousCachedDefaultKey);
+            restore(DEFAULT_KEY, previousDefaultKey);
+        }
+    }
+
+    @Test
+    public void aPropertySetBySetterBeforeItsGetterEverRanReportsItsBuiltInDefault() throws Exception {
+        String previous = System.getProperty(OVERRIDDEN_KEY);
+        String previousCached = getCacheEntry(OVERRIDDEN_KEY);
+        boolean wasProgrammaticallySet = isProgrammaticallySet(OVERRIDDEN_KEY);
+        try {
+            System.clearProperty(OVERRIDDEN_KEY);
+            clearCacheEntry(OVERRIDDEN_KEY);
+            ConfigurationProperties.maxLoggedBodyBytes(2048);
+
+            ConfigurationProperties.ResolvedProperty overridden = find(ConfigurationProperties.effectiveConfiguration(), OVERRIDDEN_KEY)
+                .orElseThrow(() -> new AssertionError("expected " + OVERRIDDEN_KEY + " in effective configuration"));
+
+            assertThat(overridden.getValue(), is("2048"));
+            assertThat(overridden.getDefaultValue(), is("0"));
+            assertThat(ConfigurationProperties.maxLoggedBodyBytes(), is(2048));
+        } finally {
+            restoreProgrammaticallySet(OVERRIDDEN_KEY, wasProgrammaticallySet);
+            restoreCacheEntry(OVERRIDDEN_KEY, previousCached);
+            restore(OVERRIDDEN_KEY, previous);
+        }
+    }
+
+    @Test
+    public void anOverriddenPropertyWithAComputedDefaultReportsTheDefaultItsGetterComputes() throws Exception {
+        String previous = System.getProperty(NON_SENSITIVE_KEY);
+        String previousCached = getCacheEntry(NON_SENSITIVE_KEY);
+        boolean wasProgrammaticallySet = isProgrammaticallySet(NON_SENSITIVE_KEY);
+        try {
+            assertThat("MOCKSERVER_MAX_EXPECTATIONS must not be set for this test", System.getenv("MOCKSERVER_MAX_EXPECTATIONS"), org.hamcrest.Matchers.nullValue());
+            removeProgrammaticallySet(NON_SENSITIVE_KEY);
+            clearCacheEntry(NON_SENSITIVE_KEY);
+            System.clearProperty(NON_SENSITIVE_KEY);
+            String computedDefault = String.valueOf(ConfigurationProperties.maxExpectations());
+            System.setProperty(NON_SENSITIVE_KEY, "4243");
+
+            ConfigurationProperties.ResolvedProperty overridden = find(ConfigurationProperties.effectiveConfiguration(), NON_SENSITIVE_KEY)
+                .orElseThrow(() -> new AssertionError("expected " + NON_SENSITIVE_KEY + " in effective configuration"));
+
+            assertThat(overridden.getValue(), is("4243"));
+            assertThat(overridden.getDefaultValue(), is(computedDefault));
+            assertThat(ConfigurationProperties.maxExpectations(), is(4243));
+        } finally {
+            restoreProgrammaticallySet(NON_SENSITIVE_KEY, wasProgrammaticallySet);
+            restoreCacheEntry(NON_SENSITIVE_KEY, previousCached);
+            restore(NON_SENSITIVE_KEY, previous);
+        }
+    }
+
+    @Test
+    public void aGetterThatReadsItsTiersDirectlyReportsNoDefaultRatherThanItsValue() throws Exception {
+        // propertyFile() reads the system property itself, so the view cannot ask it for its default
+        String key = "mockserver.propertyFile";
+        String previous = System.getProperty(key);
+        try {
+            System.setProperty(key, "effective-config-test.properties");
+
+            ConfigurationProperties.ResolvedProperty overridden = find(ConfigurationProperties.effectiveConfiguration(), key)
+                .orElseThrow(() -> new AssertionError("expected " + key + " in effective configuration"));
+
+            assertThat(overridden.getValue(), is("effective-config-test.properties"));
+            assertThat(overridden.getDefaultValue(), org.hamcrest.Matchers.nullValue());
+        } finally {
+            restore(key, previous);
+        }
+    }
+
+    @Test
+    public void aGetterThatRejectsAnInvalidOverrideStillReportsItsDefault() throws Exception {
+        // the getter throws on a value it does not support, so its default is readable only if the probe answers it
+        String key = "mockserver.forwardProxyTLSX509CertificatesTrustManagerType";
+        String previous = System.getProperty(key);
+        String previousCached = getCacheEntry(key);
+        boolean wasProgrammaticallySet = isProgrammaticallySet(key);
+        try {
+            assertThat("MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER_TYPE must not be set for this test",
+                System.getenv("MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER_TYPE"), org.hamcrest.Matchers.nullValue());
+            removeProgrammaticallySet(key);
+            clearCacheEntry(key);
+            System.setProperty(key, "BOGUS");
+
+            ConfigurationProperties.ResolvedProperty overridden = find(ConfigurationProperties.effectiveConfiguration(), key)
+                .orElseThrow(() -> new AssertionError("expected " + key + " in effective configuration"));
+
+            assertThat(overridden.getValue(), is("BOGUS"));
+            assertThat(overridden.getDefaultValue(), is("ANY"));
+        } finally {
+            restoreProgrammaticallySet(key, wasProgrammaticallySet);
+            restoreCacheEntry(key, previousCached);
+            restore(key, previous);
+        }
+    }
+
+    @Test
+    public void readingTheDefaultOfAnInvalidOverrideLogsNoError() throws Exception {
+        String previous = System.getProperty(OVERRIDDEN_KEY);
+        String previousCached = getCacheEntry(OVERRIDDEN_KEY);
+        boolean wasProgrammaticallySet = isProgrammaticallySet(OVERRIDDEN_KEY);
+        java.util.List<org.mockserver.log.model.LogEntry> errors = new java.util.concurrent.CopyOnWriteArrayList<>();
+        try {
+            assertThat("MOCKSERVER_MAX_LOGGED_BODY_BYTES must not be set for this test", System.getenv("MOCKSERVER_MAX_LOGGED_BODY_BYTES"), org.hamcrest.Matchers.nullValue());
+            removeProgrammaticallySet(OVERRIDDEN_KEY);
+            clearCacheEntry(OVERRIDDEN_KEY);
+            System.setProperty(OVERRIDDEN_KEY, "not-a-number");
+            org.mockserver.logging.MockServerLogger.setGlobalLogEventListener(entry -> {
+                if (entry.getLogLevel() == org.slf4j.event.Level.ERROR && String.valueOf(entry.getMessageFormat()).contains(OVERRIDDEN_KEY)) {
+                    errors.add(entry);
+                }
+            });
+            // the getter itself reports the invalid value, so the capture is shown to work
+            assertThat(ConfigurationProperties.maxLoggedBodyBytes(), is(0));
+            assertThat(errors.isEmpty(), is(false));
+            errors.clear();
+
+            ConfigurationProperties.ResolvedProperty overridden = find(ConfigurationProperties.effectiveConfiguration(), OVERRIDDEN_KEY)
+                .orElseThrow(() -> new AssertionError("expected " + OVERRIDDEN_KEY + " in effective configuration"));
+
+            assertThat(overridden.getValue(), is("not-a-number"));
+            assertThat(overridden.getDefaultValue(), is("0"));
+            assertThat("the view must not run the getter on the invalid value", errors.size(), is(0));
+        } finally {
+            org.mockserver.logging.MockServerLogger.setGlobalLogEventListener(null);
+            restoreProgrammaticallySet(OVERRIDDEN_KEY, wasProgrammaticallySet);
+            restoreCacheEntry(OVERRIDDEN_KEY, previousCached);
+            restore(OVERRIDDEN_KEY, previous);
+        }
+    }
+
+    @Test
+    public void anotherThreadKeepsReadingTheEffectiveValueWhileTheViewReadsTheDefault() throws Exception {
+        String previous = System.getProperty(OVERRIDDEN_KEY);
+        String previousCached = getCacheEntry(OVERRIDDEN_KEY);
+        boolean wasProgrammaticallySet = isProgrammaticallySet(OVERRIDDEN_KEY);
+        java.util.concurrent.atomic.AtomicBoolean stop = new java.util.concurrent.atomic.AtomicBoolean();
+        java.util.concurrent.atomic.AtomicLong reads = new java.util.concurrent.atomic.AtomicLong();
+        java.util.concurrent.ConcurrentLinkedQueue<Integer> wrongValues = new java.util.concurrent.ConcurrentLinkedQueue<>();
+        Thread reader = new Thread(() -> {
+            while (!stop.get()) {
+                int value = ConfigurationProperties.maxLoggedBodyBytes();
+                if (value != 4096) {
+                    wrongValues.add(value);
+                }
+                reads.incrementAndGet();
+            }
+        }, "effective-config-concurrent-reader");
+        try {
+            removeProgrammaticallySet(OVERRIDDEN_KEY);
+            clearCacheEntry(OVERRIDDEN_KEY);
+            System.setProperty(OVERRIDDEN_KEY, "4096");
+            assertThat(ConfigurationProperties.maxLoggedBodyBytes(), is(4096));
+            reader.setDaemon(true);
+            reader.start();
+            long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(60);
+            while (reads.get() == 0 && System.nanoTime() < deadline) {
+                Thread.yield();
+            }
+
+            for (int i = 0; i < 200; i++) {
+                ConfigurationProperties.ResolvedProperty overridden = find(ConfigurationProperties.effectiveConfiguration(), OVERRIDDEN_KEY)
+                    .orElseThrow(() -> new AssertionError("expected " + OVERRIDDEN_KEY + " in effective configuration"));
+                assertThat(overridden.getDefaultValue(), is("0"));
+            }
+            stop.set(true);
+            reader.join(java.util.concurrent.TimeUnit.SECONDS.toMillis(60));
+
+            assertThat("the reader must have run alongside the view", reads.get(), org.hamcrest.Matchers.greaterThan(0L));
+            assertThat("another thread read the built-in default while the view read it", new java.util.ArrayList<>(wrongValues), is(java.util.Collections.<Integer>emptyList()));
+        } finally {
+            stop.set(true);
+            reader.join(java.util.concurrent.TimeUnit.SECONDS.toMillis(60));
+            restoreProgrammaticallySet(OVERRIDDEN_KEY, wasProgrammaticallySet);
+            restoreCacheEntry(OVERRIDDEN_KEY, previousCached);
+            restore(OVERRIDDEN_KEY, previous);
+        }
+    }
+
+    @Test
+    public void noCredentialDefaultIsEverDerivedAndEveryCredentialDefaultIsTheMask() {
+        java.util.List<String> credentials = new java.util.ArrayList<>();
+        for (ConfigurationProperties.ResolvedProperty property : ConfigurationProperties.effectiveConfiguration()) {
+            if (ConfigurationProperties.isSensitivePropertyName(property.getName())) {
+                credentials.add(property.getName());
+                if (property.getDefaultValue() != null) {
+                    assertThat(property.getName(), property.getDefaultValue(), is(REDACTED_VALUE));
+                }
+                assertThat(property.getName(), ConfigurationProperties.redactedOverriddenDefaultValue(property.getName(), "sk-built-in-default-must-not-appear"), is(REDACTED_VALUE));
+                assertThat(property.getName(), ConfigurationProperties.redactedOverriddenDefaultValue(property.getName(), null), is(REDACTED_VALUE));
+                assertThat(property.getName(), ConfigurationProperties.redactedDefaultValue(property.getName(), null), is(REDACTED_VALUE));
+            }
+        }
+        assertThat(credentials.size(), org.hamcrest.Matchers.greaterThan(10));
+
+        assertThat("no credential's getter may be run for its default",
+            ConfigurationProperties.builtInDefaultValues(credentials, java.util.Collections.emptyList()), is(java.util.Collections.<String, String>emptyMap()));
+        assertThat("no credential's getter may be run for its default",
+            ConfigurationProperties.builtInDefaultValues(java.util.Collections.emptyList(), credentials), is(java.util.Collections.<String, String>emptyMap()));
+        assertThat(ConfigurationProperties.redactedOverriddenDefaultValue(EMBEDDED_CREDENTIAL_KEY, "Authorization=Bearer built-in-must-not-appear,X-Scope-OrgID=t"),
+            is("Authorization=" + REDACTED_VALUE + ",X-Scope-OrgID=t"));
+        assertThat(ConfigurationProperties.redactedOverriddenDefaultValue(OVERRIDDEN_KEY, "0"), is("0"));
+        assertThat(ConfigurationProperties.redactedOverriddenDefaultValue(OVERRIDDEN_KEY, null), org.hamcrest.Matchers.nullValue());
     }
 
     @SuppressWarnings("unchecked")

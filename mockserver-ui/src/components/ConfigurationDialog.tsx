@@ -414,6 +414,11 @@ function ServerInfoPanel({
                     <TableCell sx={{ typography: 'subtitle2', fontWeight: 400, fontFamily: monospaceFontFamily, wordBreak: 'break-all' }}>
                       {p.value}
                       {p.suggestions && p.suggestions.length > 0 && ` did you mean ${p.suggestions.join(' or ')}?`}
+                      {p.default !== undefined && (
+                        <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1, fontFamily: monospaceFontFamily }}>
+                          (default: {p.default})
+                        </Typography>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

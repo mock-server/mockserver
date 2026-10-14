@@ -66,6 +66,28 @@ public class EffectiveConfigurationRenderingTest {
     }
 
     @Test
+    public void showsTheBuiltInDefaultOfAnOverriddenPropertyBesideItsValue() throws Exception {
+        List<ResolvedProperty> properties = List.of(
+            new ResolvedProperty("mockserver.llmApiKey", REDACTED_VALUE, SOURCE_ENVIRONMENT_VARIABLE, REDACTED_VALUE),
+            new ResolvedProperty("mockserver.maxExpectations", "4242", SOURCE_SYSTEM_PROPERTY, "5000"),
+            new ResolvedProperty("mockserver.maxLoggedBodyBytes", "10", SOURCE_RUNTIME_SET),
+            new ResolvedProperty("mockserver.metricsEnabled", "false", SOURCE_DEFAULT)
+        );
+
+        JsonNode json = parse(effectiveConfigurationAsJson(properties, emptyList(), false));
+        String text = effectiveConfigurationAsText(properties, emptyList());
+
+        assertThat(entry(json, "mockserver.maxExpectations").get("default").asText(), is("5000"));
+        assertThat(entry(json, "mockserver.llmApiKey").get("default").asText(), is(REDACTED_VALUE));
+        assertThat("an unknown default is left out, never guessed", entry(json, "mockserver.maxLoggedBodyBytes").has("default"), is(false));
+        assertThat(entry(json, "mockserver.metricsEnabled").has("default"), is(false));
+        assertThat(text, containsString("mockserver.maxExpectations = 4242   [" + SOURCE_SYSTEM_PROPERTY + "]   (default: 5000)"));
+        assertThat(text, containsString("mockserver.llmApiKey = " + REDACTED_VALUE + "   [" + SOURCE_ENVIRONMENT_VARIABLE + "]   (default: " + REDACTED_VALUE + ")"));
+        assertThat(text, containsString("mockserver.maxLoggedBodyBytes = 10   [" + SOURCE_RUNTIME_SET + "]" + System.lineSeparator()));
+        assertThat(text, containsString("mockserver.metricsEnabled = false   [" + SOURCE_DEFAULT + "]" + System.lineSeparator()));
+    }
+
+    @Test
     public void listsUnrecognisedKeysWithTheirSuggestionsEvenWhenOnlyNonDefaultsAreShown() throws Exception {
         JsonNode json = parse(effectiveConfigurationAsJson(PROPERTIES, unrecognisedWithSecretValues(), true));
 

@@ -4416,6 +4416,9 @@ paths:
                     source:
                       type: string
                       enum: [ "system-property", "properties-file", "environment-variable", "default", "runtime-set", "unrecognised" ]
+                    default:
+                      type: string
+                      description: for a property set away from its built-in default, that default, redacted like the value (always `***REDACTED***` for a credential); absent for a property at its default and when the default cannot be read
                     setAs:
                       type: string
                       description: for an unrecognised key, how it was set

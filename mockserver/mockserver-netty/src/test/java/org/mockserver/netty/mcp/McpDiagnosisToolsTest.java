@@ -138,6 +138,7 @@ public class McpDiagnosisToolsTest {
 
     @Test
     public void shouldReportOnlyThePropertiesSetAwayFromTheirDefaultWithCredentialsRedacted() throws Exception {
+        int defaultMaxExpectations = withoutSystemProperty("mockserver.maxExpectations", ConfigurationProperties::maxExpectations);
         withSystemProperties(() -> {
             McpToolRegistry registry = new McpToolRegistry(newHttpState(configuration()), server());
 
@@ -148,6 +149,9 @@ public class McpDiagnosisToolsTest {
             assertThat(propertyNode(result, "mockserver.maxExpectations").path("source").asText(), is(ConfigurationProperties.SOURCE_SYSTEM_PROPERTY));
             assertThat(propertyNode(result, "mockserver.llmApiKey").path("value").asText(), is("***REDACTED***"));
             assertThat(result.toString(), not(containsString(API_KEY_SECRET)));
+            // each overridden property shows its built-in default beside its value; a credential's is the mask
+            assertThat(propertyNode(result, "mockserver.maxExpectations").path("default").asText(), is(String.valueOf(defaultMaxExpectations)));
+            assertThat(propertyNode(result, "mockserver.llmApiKey").path("default").asText(), is("***REDACTED***"));
             for (JsonNode property : result.path("properties")) {
                 assertThat(property.toString(), property.path("source").asText(), not(is(ConfigurationProperties.SOURCE_DEFAULT)));
             }
@@ -179,6 +183,7 @@ public class McpDiagnosisToolsTest {
 
         assertThat(bodyBytes.path("source").asText(), is(ConfigurationProperties.SOURCE_DEFAULT));
         assertThat(bodyBytes.path("value").asText(), is(String.valueOf(ConfigurationProperties.maxLoggedBodyBytes())));
+        assertThat("a property at its default has no separate default", bodyBytes.has("default"), is(false));
         assertThat(apiKey.path("source").asText(), is(ConfigurationProperties.SOURCE_DEFAULT));
         assertThat(apiKey.path("value").asText(), is("***REDACTED***"));
     }
@@ -343,6 +348,28 @@ public class McpDiagnosisToolsTest {
                 } else {
                     System.clearProperty(keys[i]);
                 }
+            }
+        }
+    }
+
+    /** What {@code getter} returns with {@code key} unset and uncached, restoring both afterwards. */
+    private static int withoutSystemProperty(String key, java.util.function.IntSupplier getter) throws Exception {
+        // creates the property cache if no read has yet
+        ConfigurationProperties.effectiveConfiguration();
+        Map<String, String> cache = propertyCache();
+        String previousProperty = System.getProperty(key);
+        String previousCached = cache.remove(key);
+        try {
+            System.clearProperty(key);
+            return getter.getAsInt();
+        } finally {
+            if (previousCached != null) {
+                cache.put(key, previousCached);
+            } else {
+                cache.remove(key);
+            }
+            if (previousProperty != null) {
+                System.setProperty(key, previousProperty);
             }
         }
     }

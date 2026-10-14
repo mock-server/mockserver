@@ -372,6 +372,30 @@ describe('ConfigurationDialog', () => {
     expect(screen.getByText('1443')).toBeInTheDocument();
   });
 
+  it('shows the built-in default beside an overridden property, and none for one at its default', async () => {
+    const effective = [
+      { name: 'mockserver.maxExpectations', value: '4242', source: 'system-property', default: '5000' },
+      { name: 'mockserver.llmApiKey', value: '***REDACTED***', source: 'environment-variable', default: '***REDACTED***' },
+      { name: 'mockserver.metricsEnabled', value: 'false', source: 'default' },
+    ];
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      if (url.endsWith('/mockserver/config')) return { ok: true, json: async () => effective };
+      if (url.endsWith('/mockserver/status') && init?.method === 'PUT') return { ok: true, json: async () => ({ ports: [1080] }) };
+      return { ok: true, json: async () => fullConfig() };
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const user = userEvent.setup();
+    renderDialog();
+    await waitFor(() => { expect(screen.getByText('Log level')).toBeInTheDocument(); });
+    await user.click(screen.getByRole('tab', { name: 'Server Info' }));
+
+    await waitFor(() => { expect(screen.getByText('mockserver.maxExpectations')).toBeInTheDocument(); });
+    expect(screen.getByText('mockserver.maxExpectations').closest('tr')!.textContent).toContain('4242(default: 5000)');
+    expect(screen.getByText('mockserver.llmApiKey').closest('tr')!.textContent).toContain('***REDACTED***(default: ***REDACTED***)');
+    expect(screen.getByText('mockserver.metricsEnabled').closest('tr')!.textContent).not.toContain('default:');
+  });
+
   it('lists unrecognised configuration keys first, with the key each was probably meant to be', async () => {
     const effective = [
       { name: 'mockserver.logLevel', value: 'INFO', source: 'system-property' },

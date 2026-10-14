@@ -139,7 +139,6 @@ flowchart LR
 
 | # | Problem → proposal | Cost | Performance reasoning | Effort | Risks | Priority |
 |---|---|---|---|---|---|---|
-| A11b | An overridden property shows only its effective value → show its built-in default beside it in the effective-config view, `nonDefault` and `diagnose_config`. Today the default is read from the property's getter, which returns the effective value while a tier supplies one, so this needs a way to ask a getter for its default (for example a default table the getters read, or a read mode that ignores the tiers) | (iv) / (iii) | Startup / on demand only | M | Must not add work to the per-request property read (`readPropertyHierarchically` is on the hot path); the default must go through `redactSensitiveValue` | P3 |
 | A8e | The `x-mockserver-lint-warnings` badge (A8b) shows only after a composer register or an Expectation JSON import; Generate Stub (`lib/generateStub.ts`), Capture as Mock (`CaptureAsMockDialog`) and Apply Fix (`lib/expectationFix.ts`) also PUT `/mockserver/expectation` but ignore the header → read `lintWarningCount(res)` in each path and render `LintWarningsBadge` where it reports success | (iii) | UI only; reads a header the PUT already returns | S | None | P3 |
 | A8g | The on-load lint (`ExpectationLinter.adviseOnLoad`, A8c) receives every valid entry of the file, including later entries whose id repeats, which `RequestMatchers.update` drops, so the WARN can report an ignored entry as shadowed or as shadowing another → in `adviseOnLoad`, run `removeReplacedDuplicates(report, subjects, Collections.nCopies(loaded.length, 0))` before sorting, so it reports DUPLICATE_ID and lints only what is loaded; add a loader test with a repeated id | (iv) | Once per file load; one pass over the ids | S | Create the `Report` before the dedup; generated ids are already null in `Subject.reportedId`, so they are never treated as duplicates | P3 |
 | A8h | A file load keeps the FIRST entry for a repeated id (`RequestMatchers.update`) while `PUT /mockserver/expectation` keeps the LAST, and the initialisation page claimed "last" until A8f → owner decision: keep the difference (lint and docs now describe it) or make a file load keep the last entry like an upsert | (iv) | Load path only | S | BREAKING for users whose files repeat an id: the response served changes; needs a changelog `BREAKING:` entry and a major version | P3 |
@@ -173,7 +172,7 @@ flowchart LR
 2. **Wave 1 — explain engine:** done (A3, A10 and B1 landed).
 3. **Wave 2 — failure classes:** A5e, A5g, A5h and A5i, each with an MCP tool and a dashboard entry where it applies. (A4, A6 and A6b landed; B1c added the MCP tools for A4, A5, A8 and B3; A5 landed, with its dashboard entry in A5b; A5c and A5d landed; A5f waits for the 9.0.0 major release.)
 4. **Wave 3 — fixes:** A8e, A8g; A8h waits for an owner decision. (B2, B3, A9b, A8, including the CLI, A8b, initialisation-file lint (A8c), the authorisation page (A8d) and per-source `DUPLICATE_ID` (A8f) landed.)
-5. **Wave 4 — optional:** B5, A11b. (B6, B7, A11 and B1b landed.)
+5. **Wave 4 — optional:** B5. (B6, B7, A11, A11b and B1b landed.)
 
 ## Performance rules for every item
 

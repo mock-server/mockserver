@@ -2325,6 +2325,13 @@ public class ConfigurationProperties {
      */
     private static String explicitProperty(String systemPropertyKey, String environmentVariableKey) {
         String cached = getPropertyCache().get(systemPropertyKey);
+        if (cached != null && defaultValueProbe == null) {
+            return cached;
+        }
+        DefaultValueProbe probe = defaultValueProbe;
+        if (probe != null && probe.isFor(systemPropertyKey)) {
+            return probe.answer(null);
+        }
         if (cached != null) {
             return cached;
         }
@@ -7287,6 +7294,36 @@ public class ConfigurationProperties {
     // defaults). It never affects how any value resolves.
     private static Set<String> programmaticallySetKeys;
 
+    // Non-null only while builtInDefaultValues asks one getter for an overridden property's built-in default; only
+    // the probing thread acts on it. A plain field, so a cache hit pays one field read: another thread that sees a
+    // probe re-checks its final thread field and keeps its cached value.
+    private static DefaultValueProbe defaultValueProbe;
+
+    /** Makes the property reads on one thread answer one key as if no cache entry or tier held it, caching nothing. */
+    private static final class DefaultValueProbe {
+        private final Thread thread;
+        private final String systemPropertyKey;
+        private boolean consulted;
+        private String rawDefault;
+
+        private DefaultValueProbe(Thread thread, String systemPropertyKey) {
+            this.thread = thread;
+            this.systemPropertyKey = systemPropertyKey;
+        }
+
+        private boolean isFor(String key) {
+            return thread == Thread.currentThread() && systemPropertyKey.equals(key);
+        }
+
+        private String answer(String defaultValue) {
+            consulted = true;
+            if (defaultValue != null) {
+                rawDefault = defaultValue;
+            }
+            return defaultValue;
+        }
+    }
+
     // Monotonic counter bumped on every programmatic property mutation (setProperty / clearProperty).
     // Lets a caller that memoises a resolved value detect, with a single cheap volatile read, that the
     // global configuration has changed since it last resolved — WITHOUT re-reading the property (a
@@ -7348,7 +7385,7 @@ public class ConfigurationProperties {
     // value is cached after the first read, so the default string is only ever needed on a miss.
     private static String readPropertyHierarchically(Properties properties, String systemPropertyKey, String environmentVariableKey, int defaultValue) {
         String cachedPropertyValue = getPropertyCache().get(systemPropertyKey);
-        if (cachedPropertyValue != null) {
+        if (cachedPropertyValue != null && defaultValueProbe == null) {
             return cachedPropertyValue;
         }
         return readPropertyHierarchically(properties, systemPropertyKey, environmentVariableKey, Integer.toString(defaultValue));
@@ -7356,6 +7393,13 @@ public class ConfigurationProperties {
 
     private static String readPropertyHierarchically(Properties properties, String systemPropertyKey, String environmentVariableKey, String defaultValue) {
         String cachedPropertyValue = getPropertyCache().get(systemPropertyKey);
+        if (cachedPropertyValue != null && defaultValueProbe == null) {
+            return cachedPropertyValue;
+        }
+        DefaultValueProbe probe = defaultValueProbe;
+        if (probe != null && probe.isFor(systemPropertyKey)) {
+            return probe.answer(defaultValue);
+        }
         if (cachedPropertyValue != null) {
             return cachedPropertyValue;
         } else {
@@ -7755,18 +7799,25 @@ public class ConfigurationProperties {
 
     /**
      * A single resolved configuration property: its {@code mockserver.*} key, the value
-     * actually in effect (already redacted when sensitive), and the {@link #source} tier
-     * that supplied it (one of the {@code SOURCE_*} constants).
+     * actually in effect (already redacted when sensitive), the {@link #source} tier
+     * that supplied it (one of the {@code SOURCE_*} constants) and, for a property set away
+     * from its default, that built-in default (redacted the same way).
      */
     public static final class ResolvedProperty {
         private final String name;
         private final String value;
         private final String source;
+        private final String defaultValue;
 
         ResolvedProperty(String name, String value, String source) {
+            this(name, value, source, null);
+        }
+
+        ResolvedProperty(String name, String value, String source, String defaultValue) {
             this.name = name;
             this.value = value;
             this.source = source;
+            this.defaultValue = defaultValue;
         }
 
         public String getName() {
@@ -7779,6 +7830,14 @@ public class ConfigurationProperties {
 
         public String getSource() {
             return source;
+        }
+
+        /**
+         * The built-in default of a property set away from it, redacted like the value; {@code null} for a property at
+         * its default (whose value is the default) and when the default could not be read.
+         */
+        public String getDefaultValue() {
+            return defaultValue;
         }
     }
 
@@ -7824,7 +7883,7 @@ public class ConfigurationProperties {
      * Returns the value an explicitly-set property would resolve to, reading the SAME
      * tiers in the SAME order as {@link #readPropertyHierarchically} but without touching
      * the property cache. Returns {@code null} when the key is at its built-in default,
-     * which {@link #builtInDefaultValues(List)} reads from the property's getter instead.
+     * which {@link #builtInDefaultValues(List, List)} reads from the property's getter instead.
      */
     private static String resolveExplicitValue(String systemPropertyKey, String environmentVariableKey) {
         return resolveExplicitValue(
@@ -7904,7 +7963,8 @@ public class ConfigurationProperties {
      * The effective configuration: one {@link ResolvedProperty} per recognised
      * {@code mockserver.*} property, sorted by name, with sensitive values redacted.
      * Properties at their built-in default report that default's value (see
-     * {@link #builtInDefaultValues(List)}) and the {@link #SOURCE_DEFAULT} source.
+     * {@link #builtInDefaultValues(List, List)}) and the {@link #SOURCE_DEFAULT} source; any
+     * other property also reports its built-in default ({@link ResolvedProperty#getDefaultValue()}).
      *
      * <p>Cache-first, exactly like {@link #readPropertyHierarchically}: if the in-memory property
      * cache holds a value for a key (populated by a programmatic setter or by a first read), that
@@ -7920,6 +7980,7 @@ public class ConfigurationProperties {
         Set<String> programmaticKeys = getProgrammaticallySetKeys();
         List<String[]> rows = new ArrayList<>();
         List<String> keysAtDefault = new ArrayList<>();
+        List<String> overriddenKeys = new ArrayList<>();
         for (Map.Entry<String, String> entry : systemPropertyKeyToEnvKey.entrySet()) {
             String systemPropertyKey = entry.getKey();
             String environmentVariableKey = entry.getValue();
@@ -7954,27 +8015,41 @@ public class ConfigurationProperties {
 
             if (resolvedValue == null) {
                 keysAtDefault.add(systemPropertyKey);
+            } else {
+                overriddenKeys.add(systemPropertyKey);
             }
             rows.add(new String[]{systemPropertyKey, resolvedValue, source});
         }
-        Map<String, String> defaults = builtInDefaultValues(keysAtDefault);
+        Map<String, String> defaults = builtInDefaultValues(keysAtDefault, overriddenKeys);
         List<ResolvedProperty> resolved = new ArrayList<>(rows.size());
         for (String[] row : rows) {
-            String value = row[1] != null
+            if (row[1] == null) {
+                resolved.add(new ResolvedProperty(row[0], redactedDefaultValue(row[0], defaults.get(row[0])), row[2]));
+            } else {
                 // one rule for every disclosing surface: whole-value credentials masked whole, and
                 // credentials embedded in a structured value redacted per header / per JSON field
-                ? redactSensitiveValue(row[0], row[1])
-                : redactedDefaultValue(row[0], defaults.get(row[0]));
-            resolved.add(new ResolvedProperty(row[0], value, row[2]));
+                resolved.add(new ResolvedProperty(row[0], redactSensitiveValue(row[0], row[1]), row[2], redactedOverriddenDefaultValue(row[0], defaults.get(row[0]))));
+            }
         }
         return resolved;
     }
 
     /**
-     * A built-in default as the view shows it: through {@link #redactSensitiveValue(String, String)} like any other
-     * value, or {@code (default)} when the default could not be read.
+     * The built-in default shown beside an overridden property's value: a credential's is the mask, and any other goes
+     * through {@link #redactSensitiveValue(String, String)}; {@code null} when unknown.
+     */
+    static String redactedOverriddenDefaultValue(String systemPropertyKey, String defaultValue) {
+        return isSensitivePropertyName(systemPropertyKey) ? REDACTED_VALUE : redactSensitiveValue(systemPropertyKey, defaultValue);
+    }
+
+    /**
+     * A built-in default as the view shows it: a credential's is the mask, any other goes through
+     * {@link #redactSensitiveValue(String, String)} like any other value, or is {@code (default)} when it could not be read.
      */
     static String redactedDefaultValue(String systemPropertyKey, String defaultValue) {
+        if (isSensitivePropertyName(systemPropertyKey)) {
+            return REDACTED_VALUE;
+        }
         return defaultValue == null ? "(default)" : redactSensitiveValue(systemPropertyKey, defaultValue);
     }
 
@@ -7984,19 +8059,41 @@ public class ConfigurationProperties {
      * The built-in default of each property, read from the property's own getter so the view and the getter share
      * one default; a default derived from the heap size or another property is the value derived now. The raw
      * value the getter resolved is preferred to its typed result. Anything the getters memoise is removed again, so
-     * the view stays observational and a later system property is still honoured.
+     * the view stays observational and a later system property is still honoured. An overridden property's getter
+     * runs under a {@link DefaultValueProbe}, so only this thread sees that property as unset. A credential's getter is
+     * never run, so no credential default is ever derived.
      */
-    private static Map<String, String> builtInDefaultValues(List<String> systemPropertyKeys) {
+    static Map<String, String> builtInDefaultValues(List<String> keysAtDefault, List<String> overriddenKeys) {
         Map<String, String> defaults = new HashMap<>();
-        if (systemPropertyKeys.isEmpty()) {
+        if (keysAtDefault.isEmpty() && overriddenKeys.isEmpty()) {
             return defaults;
         }
         Map<String, String> cache = getPropertyCache();
         synchronized (BUILT_IN_DEFAULTS_LOCK) {
             Set<String> cachedBefore = new HashSet<>(cache.keySet());
             try {
-                for (String systemPropertyKey : systemPropertyKeys) {
-                    Method getter = defaultValueGetter(systemPropertyKey);
+                for (String systemPropertyKey : overriddenKeys) {
+                    Method getter = isSensitivePropertyName(systemPropertyKey) ? null : defaultValueGetter(systemPropertyKey);
+                    if (getter == null) {
+                        continue;
+                    }
+                    DefaultValueProbe probe = new DefaultValueProbe(Thread.currentThread(), systemPropertyKey);
+                    defaultValueProbe = probe;
+                    try {
+                        Object typed = getter.invoke(null);
+                        if (probe.rawDefault != null) {
+                            defaults.put(systemPropertyKey, probe.rawDefault);
+                        } else if (probe.consulted && getter.getName().equals(systemPropertyKey.substring("mockserver.".length()))) {
+                            defaults.put(systemPropertyKey, typed == null ? "" : String.valueOf(typed));
+                        }
+                    } catch (Throwable throwable) {
+                        // a getter that cannot run leaves this property's default unknown, never the whole view
+                    } finally {
+                        defaultValueProbe = null;
+                    }
+                }
+                for (String systemPropertyKey : keysAtDefault) {
+                    Method getter = isSensitivePropertyName(systemPropertyKey) ? null : defaultValueGetter(systemPropertyKey);
                     if (getter == null) {
                         continue;
                     }
@@ -8062,7 +8159,8 @@ public class ConfigurationProperties {
 
     /**
      * Renders the effective configuration as plain text — one
-     * {@code name = value   [source]} line per property, then any unrecognised keys
+     * {@code name = value   [source]} line per property (ending {@code (default: ...)} for one set
+     * away from its built-in default, when known), then any unrecognised keys
      * with the key each was probably meant to be — suitable for the
      * {@code --print-config} CLI flag.
      */
@@ -8080,8 +8178,11 @@ public class ConfigurationProperties {
                 .append(property.getValue())
                 .append("   [")
                 .append(property.getSource())
-                .append("]")
-                .append(NEW_LINE);
+                .append("]");
+            if (property.getDefaultValue() != null) {
+                builder.append("   (default: ").append(property.getDefaultValue()).append(")");
+            }
+            builder.append(NEW_LINE);
         }
         if (!unrecognised.isEmpty()) {
             builder.append("Unrecognised configuration, ignored (names only):").append(NEW_LINE);
@@ -8102,7 +8203,8 @@ public class ConfigurationProperties {
 
     /**
      * Renders the effective configuration as a JSON array of
-     * {@code {"name":..,"value":..,"source":..}} objects, suitable for the
+     * {@code {"name":..,"value":..,"source":..}} objects (plus {@code "default"} for a property set
+     * away from its built-in default, when known), suitable for the
      * {@code GET /mockserver/config} control-plane endpoint. The envelope is hand-built rather
      * than produced by the MockServer {@code ObjectMapperFactory}, so this diagnostic does not
      * depend on the MockServer serializer CONFIGURATION (its modules, DTO bindings and inclusion
@@ -8138,7 +8240,11 @@ public class ConfigurationProperties {
             builder.append("{\"name\":\"").append(jsonEscape(property.getName()))
                 .append("\",\"value\":\"").append(jsonEscape(property.getValue()))
                 .append("\",\"source\":\"").append(jsonEscape(property.getSource()))
-                .append("\"}");
+                .append("\"");
+            if (property.getDefaultValue() != null) {
+                builder.append(",\"default\":\"").append(jsonEscape(property.getDefaultValue())).append("\"");
+            }
+            builder.append("}");
         }
         for (UnrecognisedProperty property : unrecognised) {
             if (!first) {
