@@ -551,7 +551,13 @@ function isAzureOpenAiHost(host: string, path: string | null): boolean {
     || (host.endsWith('.services.ai.azure.com') && path !== null && path.toLowerCase().startsWith('/openai/'));
 }
 
+// Global, regional (<region>-aiplatform) or multi-region (aiplatform.<us|eu>.rep) host, matched
+// whole so an arbitrary host cannot be glued on (no label has a dot).
 const VERTEX_AI_HOST = /^(?:(?:[a-z0-9-]+-)?aiplatform\.googleapis\.com|aiplatform\.[a-z0-9-]+\.rep\.googleapis\.com)$/;
+
+// Vertex AI's OpenAI-compatible APIs: endpoints/openapi for Model Garden and partner models,
+// endpoints/{id} for a self-deployed model. Matched against the lower-cased path.
+const VERTEX_OPENAI_COMPATIBLE_PATH = /\/endpoints\/[^/]+\/(chat\/completions|responses)(?:[/?]|$)/;
 
 /**
  * Whether a captured request went to a Vertex AI host, as the server's
@@ -576,6 +582,9 @@ function isGeminiPath(path: string | null): boolean {
 // Claude on Vertex AI: .../publishers/anthropic/models/{model}:rawPredict or
 // :streamRawPredict, carrying the Anthropic Messages wire shape.
 const VERTEX_ANTHROPIC_PATH = /\/publishers\/anthropic\/models\/([^/:?]+):(?:rawPredict|streamRawPredict)/;
+
+// A Vertex AI partner model's path: .../publishers/{publisher}/models/{model}:{method}
+const VERTEX_PUBLISHER_MODEL_PATH = /\/publishers\/[^/]+\/models\/([^/:?]+):/;
 
 // Bedrock Runtime: /model/{modelId}/{operation} for every model family. The model
 // id may be an inference-profile id (us.anthropic...), or a URL-encoded ARN.
@@ -615,7 +624,8 @@ function isOllamaGeneratePath(path: string | null): boolean {
  * non-chat paths (e.g. /v1/models) to a known host. Returns the parser kind to
  * use, or null when the host is unknown (callers then fall back to path / body
  * shape). Maps to the parsers the dashboard implements: Azure -> openai (same
- * wire format) or openai_responses on a Responses path, Vertex -> gemini (or anthropic for Claude on Vertex), Bedrock ->
+ * wire format) or openai_responses on a Responses path, Vertex -> gemini, or the
+ * parser its OpenAI-compatible endpoint or partner-model path speaks, Bedrock ->
  * the Bedrock parser, which yields the anthropic shape.
  *
  * Note: embeddings-only hosts (api.cohere.com, api.voyageai.com) are recognised
@@ -642,12 +652,16 @@ function detectByHost(
     return isOpenAiResponsesPath(path) ? 'openai_responses' : null;
   }
   if (h === 'generativelanguage.googleapis.com') return 'gemini';
-  // Vertex AI: aiplatform.googleapis.com or <region>-aiplatform.googleapis.com.
-  // Fully anchored so an arbitrary host cannot be glued in front (e.g.
-  // evil.com-aiplatform.googleapis.com): the region label is [a-z0-9-]+ and
-  // contains no dot, so only genuine *.googleapis.com Vertex hosts match.
-  if (/^(?:[a-z0-9-]+-)?aiplatform\.googleapis\.com$/.test(h)) {
-    return path !== null && VERTEX_ANTHROPIC_PATH.test(path) ? 'anthropic' : 'gemini';
+  // Vertex AI: the parser is the wire API the path speaks, Gemini's unless the
+  // path says otherwise, as LlmProviderSniffer.sniffByHostAndPath decides it.
+  if (VERTEX_AI_HOST.test(h)) {
+    const p = (path ?? '').toLowerCase();
+    const openAiCompatible = p.match(VERTEX_OPENAI_COMPATIBLE_PATH);
+    if (openAiCompatible) return openAiCompatible[1] === 'responses' ? 'openai_responses' : 'openai';
+    if (p.includes('/publishers/anthropic/')) return 'anthropic';
+    // Mistral and AI21 Jamba chat replies carry OpenAI's choices and usage shape
+    if (p.includes('/publishers/mistralai/') || p.includes('/publishers/ai21/')) return 'openai';
+    return 'gemini';
   }
   // Bedrock: bedrock*.amazonaws.com (InvokeModel and Converse).
   if (h.endsWith('.amazonaws.com') && (h.startsWith('bedrock') || h.includes('.bedrock'))) return 'bedrock';
@@ -851,6 +865,7 @@ function parseOpenAiRequest(
   requestBody: unknown,
   responseBody: unknown,
   responseHeaders: unknown,
+  pathModel: string | null = null,
 ): OpenAiParsed {
   const req = safeParseJson(requestBody) as Record<string, unknown> | undefined;
   const { streamed, truncated } = hasStreamingHeaders(responseHeaders);
@@ -954,6 +969,8 @@ function parseOpenAiRequest(
       }
     }
   }
+  // AI21 Jamba on Vertex AI names its model only in the path
+  if (!result.model) result.model = pathModel;
 
   return result;
 }
@@ -1752,7 +1769,7 @@ export function parseTraffic(value: Record<string, unknown>): ParsedTraffic {
       case 'bedrock':
         return parseBedrockRequest(reqBodyContent, resBodyContent, responseHeaders, path, extractBinaryBodyBytes(responseBody));
       case 'openai':
-        return parseOpenAiRequest(reqBodyContent, resBodyContent, responseHeaders);
+        return parseOpenAiRequest(reqBodyContent, resBodyContent, responseHeaders, path?.match(VERTEX_PUBLISHER_MODEL_PATH)?.[1] ?? null);
       case 'openai_responses':
         return parseOpenAiResponsesRequest(reqBodyContent, resBodyContent, responseHeaders);
       case 'gemini':

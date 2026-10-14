@@ -1408,7 +1408,13 @@ geminiLive()
     The optimisation report, the <span class="inline_code">verify_cost_budget</span> MCP tool and the dashboard's
     cost estimates price captured calls the same way, by the host the captured request was sent to. A call sent
     through a <span class="inline_code">proxyPassMappings</span> mapping is captured with MockServer's own host, so
-    those three price it at the Gemini API's prices.
+    those three price it at the Gemini API's prices. A call sent by an <span class="inline_code">httpForward</span>
+    expectation is captured with the host it was forwarded to, so it is priced like a call through the proxy,
+    unless a request breakpoint changed the request before it was forwarded: that call is captured with the host
+    MockServer received it on.
+    The dashboard shows calls to Vertex AI's OpenAI-compatible endpoints, and to Mistral and AI21 Jamba models on
+    Vertex AI, with their token usage, and estimates the cost of the Gemini and Llama 3.3 70B models named above;
+    it has no Mistral prices, so a Mistral call shows its tokens but no cost.
     An OpenAI response created with <span class="inline_code">background: true</span> and an xAI deferred
     completion report their usage only when the finished result is fetched, so that fetch is counted, once however
     many times it is polled. Other requests to an LLM host, such as listing models, fetching an ordinary stored

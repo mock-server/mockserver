@@ -110,6 +110,18 @@ const VERTEX_GEMINI_PRICING: Array<[string, PricingEntry]> = [
   ['gemini-2.0-flash', { inputPerMillion: 0.15, outputPerMillion: 0.6 }],
 ];
 
+// Llama on Vertex AI's OpenAI-compatible endpoint. The -maas suffix is part of the key, so a
+// self-deployed meta/llama-3.3-70b-instruct is not billed at the managed rate. Mirrors VERTEX_LLAMA_PRICING.
+const VERTEX_LLAMA_PRICING: Array<[string, PricingEntry]> = [
+  ['llama-3.3-70b-instruct-maas', { inputPerMillion: 0.72, outputPerMillion: 0.72 }],
+];
+
+// The Vertex AI table for each publisher MockServer prices on the OpenAI-compatible endpoint.
+const VERTEX_PUBLISHER_PRICING = new Map<string, Array<[string, PricingEntry]>>([
+  ['google', VERTEX_GEMINI_PRICING],
+  ['meta', VERTEX_LLAMA_PRICING],
+]);
+
 // Ollama is always free (local models)
 const OLLAMA_PRICING: PricingEntry = { inputPerMillion: 0, outputPerMillion: 0 };
 
@@ -141,6 +153,13 @@ function getPricing(provider: string, model: string, vertexAi: boolean): Pricing
     // pricing keys match; a bare "claude-…" id is unaffected.
     const stripped = model.replace(/^.*anthropic\./, '');
     return findPricing(ANTHROPIC_PRICING, stripped);
+  }
+  const slash = model.indexOf('/');
+  if ((kind === 'openai' || kind === 'openai_responses') && slash > 0 && slash < model.length - 1) {
+    // No OpenAI model id has a slash: Vertex AI's OpenAI-compatible endpoint names a model
+    // <publisher>/<model> and bills it at Vertex AI's rates, as LlmPricing.vertexPublisherPricing does.
+    const table = VERTEX_PUBLISHER_PRICING.get(model.slice(0, slash).toLowerCase());
+    return table ? findPricing(table, model.slice(slash + 1)) : null;
   }
   if (kind === 'openai' || kind === 'azure_openai') {
     // Azure OpenAI traffic uses *deployment names* (user-defined, e.g.
@@ -208,4 +227,5 @@ export const PRICING_MODEL_PREFIXES: Record<string, string[]> = {
   openai: OPENAI_PRICING.map(([prefix]) => prefix),
   gemini: GEMINI_PRICING.map(([prefix]) => prefix),
   vertex_gemini: VERTEX_GEMINI_PRICING.map(([prefix]) => prefix),
+  vertex_llama: VERTEX_LLAMA_PRICING.map(([prefix]) => prefix),
 };

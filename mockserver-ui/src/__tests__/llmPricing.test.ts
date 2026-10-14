@@ -131,6 +131,21 @@ describe('estimateCostUsd', () => {
     expect(estimateCostUsd('anthropic', 'claude-sonnet-4@20250514', 1_000_000, 1_000_000, true)).toBeCloseTo(18.0, 6);
   });
 
+  it('prices a <publisher>/<model> id from Vertex AI\'s OpenAI-compatible endpoint at Vertex AI rates', () => {
+    // cloud.google.com/vertex-ai/generative-ai/pricing: Gemini 2.0 Flash 0.15 + 0.60, Llama 3.3 70B 0.72 + 0.72
+    expect(estimateCostUsd('openai', 'google/gemini-2.0-flash-001', 1_000_000, 1_000_000)).toBeCloseTo(0.75, 6);
+    expect(estimateCostUsd('openai', 'google/gemini-2.5-flash@001', 1_000_000, 1_000_000)).toBeCloseTo(2.8, 6);
+    expect(estimateCostUsd('openai_responses', 'google/gemini-2.5-pro', 1_000_000, 1_000_000)).toBeCloseTo(11.25, 6);
+    expect(estimateCostUsd('openai', 'meta/llama-3.3-70b-instruct-maas', 1_000_000, 1_000_000)).toBeCloseTo(1.44, 6);
+  });
+
+  it('leaves a publisher id with no Vertex AI price unpriced rather than using the OpenAI table', () => {
+    expect(estimateCostUsd('openai', 'meta/llama-3.3-70b-instruct', 1_000_000, 1_000_000)).toBeNull();
+    expect(estimateCostUsd('openai', 'deepseek-ai/deepseek-v3.1-maas', 1_000_000, 1_000_000)).toBeNull();
+    expect(estimateCostUsd('openai', 'openai/gpt-4o', 1_000_000, 1_000_000)).toBeNull();
+    expect(estimateCostUsd('openai', 'constructor/gpt-4o', 1_000_000, 1_000_000)).toBeNull();
+  });
+
   it('returns null on a Vertex AI host for a Gemini model with no Vertex AI price', () => {
     expect(estimateCostUsd('gemini', 'gemini-1.5-pro', 1_000_000, 1_000_000, true)).toBeNull();
   });
@@ -355,6 +370,7 @@ describe('LLM pricing drift guard (mirrors LlmPricing.java)', () => {
       'gemini-2.0-flash-lite',
       'gemini-2.0-flash',
     ],
+    vertex_llama: ['llama-3.3-70b-instruct-maas'],
   };
 
   it.each(Object.keys(CANONICAL_MODELS))(

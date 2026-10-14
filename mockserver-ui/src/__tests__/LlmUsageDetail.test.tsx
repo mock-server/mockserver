@@ -113,6 +113,34 @@ describe('LlmUsageDetail', () => {
     expect(screen.getByText('$0.50')).toBeInTheDocument();
   });
 
+  it('prices a Gemini call on the Vertex AI OpenAI-compatible endpoint from its usage at Vertex AI rates', () => {
+    // https://docs.cloud.google.com/vertex-ai/generative-ai/docs/maas/call-open-model-apis
+    renderCost(parseTraffic({
+      httpRequest: {
+        method: 'POST',
+        path: '/v1/projects/my-project/locations/global/endpoints/openapi/chat/completions',
+        headers: { Host: ['aiplatform.googleapis.com'] },
+        body: { type: 'JSON', json: '{"model":"google/gemini-2.0-flash-001","messages":[{"role":"user","content":"Hi"}]}' },
+      },
+      httpResponse: {
+        statusCode: 200,
+        body: {
+          type: 'JSON',
+          json: JSON.stringify({
+            id: 'chatcmpl-1',
+            object: 'chat.completion',
+            created: 1760400000,
+            model: 'google/gemini-2.0-flash-001',
+            choices: [{ index: 0, message: { role: 'assistant', content: 'Hello' }, finish_reason: 'stop' }],
+            usage: { prompt_tokens: 1_000_000, completion_tokens: 1_000_000, total_tokens: 2_000_000 },
+          }),
+        },
+      },
+    }));
+    expect(screen.getByText('1000000 in / 1000000 out')).toBeInTheDocument();
+    expect(screen.getByText('$0.75')).toBeInTheDocument();
+  });
+
   it('does not treat a host that only ends in a Vertex AI host name as Vertex AI', () => {
     renderCost(geminiFlashCall({ path: VERTEX_PATH, headers: { Host: ['evil.com-aiplatform.googleapis.com'] } }));
     expect(screen.getByText('$0.50')).toBeInTheDocument();

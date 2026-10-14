@@ -1003,3 +1003,174 @@ describe('parseTraffic — Ollama /api/generate', () => {
     expect(parsed.kind).toBe('generic');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Vertex AI hosts: the parser is the wire API the path speaks
+// ---------------------------------------------------------------------------
+
+// Shapes from the Vertex AI references:
+// - OpenAI-compatible chat completions (Model Garden MaaS):
+//   https://docs.cloud.google.com/vertex-ai/generative-ai/docs/maas/call-open-model-apis
+// - Grok through the Responses API: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/partner-models/grok/responses
+// - Mistral rawPredict / streamRawPredict: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/partner-models/mistral
+// - multi-region .rep hosts: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-partner-models
+describe('parseTraffic — Vertex AI OpenAI-compatible and partner-model calls', () => {
+  function vertexCall(host: string, path: string, request: unknown, response: unknown, streamed = false) {
+    return parseTraffic({
+      httpRequest: {
+        method: 'POST',
+        path,
+        headers: [{ name: 'host', values: [host] }],
+        body: { type: 'JSON', json: JSON.stringify(request) },
+      },
+      httpResponse: {
+        statusCode: 200,
+        headers: [{ name: 'content-type', values: [streamed ? 'text/event-stream' : 'application/json'] }],
+        body: streamed ? { type: 'STRING', string: response } : { type: 'JSON', json: JSON.stringify(response) },
+      },
+    });
+  }
+
+  const chatCompletion = (model: string, usage: Record<string, number>) => ({
+    id: 'chatcmpl-1',
+    object: 'chat.completion',
+    created: 1760400000,
+    model,
+    choices: [{ index: 0, message: { role: 'assistant', content: 'Once upon a time' }, finish_reason: 'stop' }],
+    usage,
+  });
+
+  it('reads an endpoints/openapi chat completion as OpenAI, with its usage', () => {
+    const parsed = vertexCall(
+      'us-central1-aiplatform.googleapis.com',
+      '/v1/projects/my-project/locations/us-central1/endpoints/openapi/chat/completions',
+      { model: 'deepseek-ai/deepseek-v3.1-maas', messages: [{ role: 'user', content: 'Write a story' }], max_tokens: 512, stream: false },
+      chatCompletion('deepseek-ai/deepseek-v3.1-maas', { completion_tokens: 367, prompt_tokens: 14, total_tokens: 381 }),
+    );
+    expect(parsed.kind).toBe('openai');
+    if (parsed.kind !== 'openai') return;
+    expect(parsed.model).toBe('deepseek-ai/deepseek-v3.1-maas');
+    expect(parsed.usage).toEqual({ completion_tokens: 367, prompt_tokens: 14, total_tokens: 381 });
+    expect(parsed.choices[0]?.message?.content).toBe('Once upon a time');
+    expect(getTokenSummary(parsed)).toBe('14 in / 367 out');
+  });
+
+  it('reads a streamed endpoints/openapi chat completion through a multi-region host as OpenAI', () => {
+    const chunk = (body: Record<string, unknown>) => `data: ${JSON.stringify({ id: 'c1', object: 'chat.completion.chunk', created: 1760400000, model: 'deepseek-ai/deepseek-v3.1-maas', ...body })}\n\n`;
+    const sse = chunk({ choices: [{ index: 0, delta: { role: 'assistant', content: 'Once' } }] })
+      + chunk({ choices: [{ index: 0, delta: { content: ' upon' }, finish_reason: 'stop' }], usage: { completion_tokens: 131, prompt_tokens: 14, total_tokens: 145 } })
+      + 'data: [DONE]\n\n';
+    const parsed = vertexCall(
+      'aiplatform.us.rep.googleapis.com',
+      '/v1/projects/my-project/locations/us/endpoints/openapi/chat/completions',
+      { model: 'deepseek-ai/deepseek-v3.1-maas', messages: [{ role: 'user', content: 'Write a story' }], stream: true },
+      sse,
+      true,
+    );
+    expect(parsed.kind).toBe('openai');
+    if (parsed.kind !== 'openai') return;
+    expect(parsed.choices[0]?.message?.content).toBe('Once upon');
+    expect(getTokenSummary(parsed)).toBe('14 in / 131 out');
+  });
+
+  it('reads an endpoints/openapi Responses call as an OpenAI Responses call', () => {
+    const parsed = vertexCall(
+      'aiplatform.googleapis.com',
+      '/v1/projects/my-project/locations/global/endpoints/openapi/responses',
+      { model: 'xai/grok-4.20-reasoning', input: 'Explain black holes in one short sentence.', max_output_tokens: 100, stream: false },
+      {
+        id: 'resp_1',
+        object: 'response',
+        model: 'xai/grok-4.20-reasoning',
+        status: 'completed',
+        output: [{ type: 'message', role: 'assistant', content: [{ type: 'output_text', text: 'A region where gravity traps light.' }] }],
+        usage: {
+          extra_properties: { google: { traffic_type: 'ON_DEMAND' } },
+          input_tokens: 335,
+          input_tokens_details: { cached_tokens: 320 },
+          num_server_side_tools_used: 0,
+          num_sources_used: 0,
+          output_tokens: 305,
+          output_tokens_details: { reasoning_tokens: 284 },
+          total_tokens: 640,
+        },
+      },
+    );
+    expect(parsed.kind).toBe('openai_responses');
+    if (parsed.kind !== 'openai_responses') return;
+    expect(parsed.model).toBe('xai/grok-4.20-reasoning');
+    expect(getTokenSummary(parsed)).toBe('335 in / 305 out');
+  });
+
+  it('reads a Mistral rawPredict call as an OpenAI-shaped chat completion', () => {
+    const parsed = vertexCall(
+      'us-central1-aiplatform.googleapis.com',
+      '/v1/projects/my-project/locations/us-central1/publishers/mistralai/models/mistral-medium-3:rawPredict',
+      { model: 'mistral-medium-3', messages: [{ role: 'user', content: 'Write a story' }], max_tokens: 512, stream: false },
+      chatCompletion('mistral-medium-3', { prompt_tokens: 17, total_tokens: 295, completion_tokens: 278 }),
+    );
+    expect(parsed.kind).toBe('openai');
+    if (parsed.kind !== 'openai') return;
+    expect(parsed.model).toBe('mistral-medium-3');
+    expect(getTokenSummary(parsed)).toBe('17 in / 278 out');
+  });
+
+  it('reads a Mistral streamRawPredict call through a multi-region host as an OpenAI-shaped stream', () => {
+    const chunk = (body: Record<string, unknown>) => `data: ${JSON.stringify({ id: 'm1', object: 'chat.completion.chunk', created: 1760400000, model: 'mistral-medium-3', ...body })}\n\n`;
+    const sse = chunk({ choices: [{ index: 0, delta: { role: 'assistant', content: 'Once' } }] })
+      + chunk({ choices: [{ index: 0, delta: { content: ' upon' }, finish_reason: 'stop' }], usage: { prompt_tokens: 17, total_tokens: 19, completion_tokens: 2 } })
+      + 'data: [DONE]\n\n';
+    const parsed = vertexCall(
+      'aiplatform.eu.rep.googleapis.com',
+      '/v1/projects/my-project/locations/eu/publishers/mistralai/models/mistral-medium-3:streamRawPredict',
+      { model: 'mistral-medium-3', messages: [{ role: 'user', content: 'Write a story' }], stream: true },
+      sse,
+      true,
+    );
+    expect(parsed.kind).toBe('openai');
+    if (parsed.kind !== 'openai') return;
+    expect(parsed.choices[0]?.message?.content).toBe('Once upon');
+    expect(getTokenSummary(parsed)).toBe('17 in / 2 out');
+  });
+
+  it('reads an AI21 Jamba call as OpenAI-shaped, named by the model in its path', () => {
+    // ai21 4.3.0 ai21/clients/vertex/ai21_vertex_client.py and ai21/models/usage_info.py
+    for (const [host, location] of [['us-central1-aiplatform.googleapis.com', 'us-central1'], ['aiplatform.us.rep.googleapis.com', 'us']] as const) {
+      const parsed = vertexCall(
+        host,
+        `/v1/projects/my-project/locations/${location}/publishers/ai21/models/jamba-1.5-large@001:rawPredict`,
+        { messages: [{ role: 'user', content: 'Hi' }], max_tokens: 64 },
+        { id: 'chat-1', choices: [{ index: 0, message: { role: 'assistant', content: 'Hello' }, finish_reason: 'stop' }], usage: { prompt_tokens: 5, completion_tokens: 2, total_tokens: 7 } },
+      );
+      expect(parsed.kind, host).toBe('openai');
+      if (parsed.kind !== 'openai') return;
+      expect(parsed.model, host).toBe('jamba-1.5-large@001');
+      expect(getTokenSummary(parsed), host).toBe('5 in / 2 out');
+    }
+  });
+
+  it('reads Claude through a multi-region host as Anthropic', () => {
+    const parsed = vertexCall(
+      'aiplatform.us.rep.googleapis.com',
+      '/v1/projects/my-project/locations/us/publishers/anthropic/models/claude-opus-4-7:rawPredict',
+      { anthropic_version: 'vertex-2023-10-16', max_tokens: 64, messages: [{ role: 'user', content: 'Hi' }] },
+      { type: 'message', content: [{ type: 'text', text: 'Hello' }], stop_reason: 'end_turn', usage: { input_tokens: 3, output_tokens: 1 } },
+    );
+    expect(parsed.kind).toBe('anthropic');
+    if (parsed.kind !== 'anthropic') return;
+    expect(parsed.model).toBe('claude-opus-4-7');
+    expect(getTokenSummary(parsed)).toBe('3 in / 1 out');
+  });
+
+  it('keeps a native Gemini call, and an endpoint path that only starts like chat/completions, on the Gemini parser', () => {
+    const geminiResponse = { candidates: [{ content: { role: 'model', parts: [{ text: 'Hi' }] }, finishReason: 'STOP' }], usageMetadata: { promptTokenCount: 2, candidatesTokenCount: 1, totalTokenCount: 3 } };
+    for (const path of [
+      '/v1/projects/my-project/locations/eu/publishers/google/models/gemini-2.5-flash:generateContent',
+      '/v1/projects/my-project/locations/eu/endpoints/openapi/chat/completions-archive',
+    ]) {
+      const parsed = vertexCall('aiplatform.eu.rep.googleapis.com', path, { contents: [{ role: 'user', parts: [{ text: 'Hi' }] }] }, geminiResponse);
+      expect(parsed.kind, path).toBe('gemini');
+      expect(getTokenSummary(parsed), path).toBe('2 in / 1 out');
+    }
+  });
+});

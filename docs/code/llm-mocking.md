@@ -786,7 +786,18 @@ serialised, and `OptimisationSignals` compares Vertex AI rates via `vertexAiBlen
 `GeminiParsed` as `vertexAi`, and `llmPricing.ts` mirrors `VERTEX_GEMINI_PRICING`). The report and
 `verify_cost_budget` read a native Gemini call's model from its `/models/{model}:` path when the
 body names none. A `proxyPassMappings` call is logged with the request MockServer received, whose
-host is MockServer's own, so these offline pricers cost it at the Gemini API rates.
+host is MockServer's own, so these offline pricers cost it at the Gemini API rates. An `httpForward`
+call is not: `HttpForwardActionHandler` sets the logged request's `Host` header to the forward's
+target, so it is priced by the host it was sent to, unless a REQUEST-phase breakpoint modified the
+request: the forward then rewrites the modified copy, and the logged request keeps the `Host` header
+MockServer received. The dashboard's `detectByHost` (`llmTraffic.ts`)
+applies the sniffer's Vertex AI rules to the `Host` header: the OpenAI-compatible endpoints to the
+OpenAI Chat Completions and Responses parsers, `/publishers/anthropic/` to the Anthropic parser,
+`/publishers/mistralai/` and `/publishers/ai21/` to the Chat Completions parser (an AI21 call is named
+by the model in its path), anything else to the Gemini parser. `llmPricing.ts` prices a
+`<publisher>/<model>` id on an OpenAI-shaped call from the same Vertex AI tables as
+`LlmPricing.vertexPublisherPricing`; the dashboard has no Mistral table, so a Mistral call shows its
+tokens but no cost, as one to `api.mistral.ai` does.
 
 **Bedrock model ids.** A Bedrock request names its model in the path and a Converse response has
 none, so the model is read from `/model/{modelId}/...` (URL-decoded). A foundation-model or
