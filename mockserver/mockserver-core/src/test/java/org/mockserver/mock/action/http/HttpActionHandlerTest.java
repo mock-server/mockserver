@@ -585,8 +585,9 @@ public class HttpActionHandlerTest {
     }
 
     @Test
-    public void shouldAnswerFailedResponseTemplateWithNotFoundByDefault() {
+    public void shouldAnswerFailedResponseTemplateWithNotFoundWhenDisabled() {
         // given
+        configuration.templateFailureAsServerError(false);
         HttpTemplate template = template(HttpTemplate.TemplateType.VELOCITY, "some_template");
         expectation = new Expectation(request).thenRespond(template);
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
@@ -610,9 +611,8 @@ public class HttpActionHandlerTest {
     }
 
     @Test
-    public void shouldAnswerFailedResponseTemplateWithServerErrorWhenConfigured() {
+    public void shouldAnswerFailedResponseTemplateWithServerErrorByDefault() {
         // given
-        configuration.templateFailureAsServerError(true);
         HttpTemplate template = template(HttpTemplate.TemplateType.VELOCITY, "some_template");
         expectation = new Expectation(request).thenRespond(template);
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
@@ -642,9 +642,8 @@ public class HttpActionHandlerTest {
     }
 
     @Test
-    public void shouldAnswerFailedForwardTemplateWithServerErrorWhenConfigured() {
+    public void shouldAnswerFailedForwardTemplateWithServerErrorByDefault() {
         // given
-        configuration.templateFailureAsServerError(true);
         HttpTemplate template = template(HttpTemplate.TemplateType.MUSTACHE, "some_template");
         expectation = new Expectation(request).thenForward(template);
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
@@ -666,9 +665,8 @@ public class HttpActionHandlerTest {
     }
 
     @Test
-    public void shouldKeepNotFoundForFailureThatIsNotATemplateWhenConfigured() {
-        // given - templateFailureAsServerError applies to template failures only
-        configuration.templateFailureAsServerError(true);
+    public void shouldKeepNotFoundForFailureThatIsNotATemplate() {
+        // given - templateFailureAsServerError, on by default, applies to template failures only
         HttpClassCallback callback = callback("some_class").withDelay(milliseconds(0));
         expectation = new Expectation(request).thenRespond(callback);
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);

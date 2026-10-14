@@ -76,7 +76,7 @@ keywords: "mockserver troubleshooting, mockserver 404, mockserver 502, mockserve
     <tr>
         <td><a href="#symptom_template">A response template errors or produces the wrong output</a></td>
         <td>Template syntax error, missing variable, wrong template engine selected</td>
-        <td>The log entry "Exception: ... transforming template" (the client gets a plain 404 with no body, see <a href="#symptom_404">404</a>); see <a href="/mock_server/response_templates.html">Response Templates</a></td>
+        <td>A 500 with an <code class="inline_code">x-mockserver-template-error: true</code> header and the template error as its body, and the log entry "Exception: ... transforming template"; see <a href="/mock_server/response_templates.html">Response Templates</a></td>
     </tr>
     <tr>
         <td><a href="#symptom_openapi">An OpenAPI specification fails to load</a></td>
@@ -102,7 +102,7 @@ keywords: "mockserver troubleshooting, mockserver 404, mockserver 502, mockserve
 
 <h3>The request matched, but you still got a 404</h3>
 
-<p>A 404 is not always a non-match: if the matched expectation's response action throws while building the response — for example a template that fails — MockServer answers with a plain 404 with no body, because the failure is handled by the same generic exception path a non-match uses. In this case <strong>no closest-match hint header appears</strong>, since one was matched. The only trace is in the log: an entry whose message contains <code class="inline_code">Exception:</code> and, for a template, <code class="inline_code">transforming template</code>. Retrieve the log and look for that text before assuming the expectation itself did not match:</p>
+<p>A 404 is not always a non-match: if the matched expectation's response action throws while building the response — for example a class callback that fails, or a template that fails when <code class="inline_code">templateFailureAsServerError</code> is false (a failed template answers 500 by default) — MockServer answers with a plain 404 with no body, because the failure is handled by the same generic exception path a non-match uses. In this case <strong>no closest-match hint header appears</strong>, since one was matched. The only trace is in the log: an entry whose message contains <code class="inline_code">Exception:</code> and, for a template, <code class="inline_code">transforming template</code>. Retrieve the log and look for that text before assuming the expectation itself did not match:</p>
 
 <pre class="prettyprint code"><code class="code">curl -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS"</code></pre>
 
@@ -197,7 +197,7 @@ curl -X PUT "http://localhost:1080/mockserver/retrieve?type=ACTIVE_EXPECTATIONS"
 
 <h2>A response template errors or produces the wrong output</h2>
 
-<p>A template failure is reported only in the log, as "Exception: ... transforming template"; the client gets a plain 404 with no body (see <a href="#symptom_404">My request returns 404</a>). Confirm which template engine the expectation uses (Velocity, Mustache or JavaScript) and check the syntax against that engine's own rules — see <a href="/mock_server/response_templates.html">Response Templates</a>.</p>
+<p>A template failure answers 500 with an <code class="inline_code">x-mockserver-template-error: true</code> header and the template error, with its line and column when the engine reports them, as a plain-text body; the log also records it as "Exception: ... transforming template". With <code class="inline_code">templateFailureAsServerError=false</code> the client gets a plain 404 with no body instead (see <a href="#symptom_404">My request returns 404</a>). Confirm which template engine the expectation uses (Velocity, Mustache or JavaScript) and check the syntax against that engine's own rules — see <a href="/mock_server/response_templates.html">Response Templates</a>.</p>
 
 <a id="symptom_openapi" class="anchor" href="#symptom_openapi">&nbsp;</a>
 

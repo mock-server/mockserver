@@ -17,7 +17,7 @@ import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
- * The text body of the 500 that answers a failed template when templateFailureAsServerError is set.
+ * The text body of the 500 that answers a failed template unless templateFailureAsServerError is false.
  */
 public class TemplateFailureExceptionTest {
 

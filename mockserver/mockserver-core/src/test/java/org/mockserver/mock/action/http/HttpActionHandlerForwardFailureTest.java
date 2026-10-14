@@ -470,12 +470,11 @@ public class HttpActionHandlerForwardFailureTest {
     }
 
     @Test
-    public void shouldAnswerAFailedForwardResponseTemplateAsATemplateFailureWhenConfigured() {
-        HttpActionHandler serverErrorHandler = new HttpActionHandler(configuration().templateFailureAsServerError(true), null, httpStateFor(mockServerLogger), null, null);
+    public void shouldAnswerAFailedForwardResponseTemplateAsATemplateFailureByDefault() {
         RuntimeException engineFailure = new RuntimeException("Exception: TEST_EXCEPTION transforming template", new IllegalStateException("TEST_EXCEPTION"));
         TemplateFailureException templateFailure = new TemplateFailureException(HttpTemplate.TemplateType.VELOCITY, "forward response", engineFailure);
 
-        serverErrorHandler.handleExceptionDuringForwardingRequest(ACTION, request, responseWriter, new ExecutionException(templateFailure));
+        actionHandler.handleExceptionDuringForwardingRequest(ACTION, request, responseWriter, new ExecutionException(templateFailure));
 
         assertThat(answer().getStatusCode(), is(500));
         assertThat(answer().getFirstHeader("x-mockserver-template-error"), is("true"));
@@ -486,11 +485,12 @@ public class HttpActionHandlerForwardFailureTest {
     }
 
     @Test
-    public void shouldAnswerATemplateFailureAsAnyForwardFailureByDefault() {
+    public void shouldAnswerATemplateFailureAsAnyForwardFailureWhenDisabled() {
+        HttpActionHandler optedOutHandler = new HttpActionHandler(configuration().templateFailureAsServerError(false), null, httpStateFor(mockServerLogger), null, null);
         RuntimeException engineFailure = new RuntimeException("Exception: TEST_EXCEPTION transforming template", new IllegalStateException("TEST_EXCEPTION"));
         TemplateFailureException templateFailure = new TemplateFailureException(HttpTemplate.TemplateType.VELOCITY, "forward response", engineFailure);
 
-        actionHandler.handleExceptionDuringForwardingRequest(ACTION, request, responseWriter, new ExecutionException(templateFailure));
+        optedOutHandler.handleExceptionDuringForwardingRequest(ACTION, request, responseWriter, new ExecutionException(templateFailure));
 
         assertThat(answer().getStatusCode(), is(502));
         assertThat(answer().getFirstHeader("x-mockserver-template-error"), is(""));

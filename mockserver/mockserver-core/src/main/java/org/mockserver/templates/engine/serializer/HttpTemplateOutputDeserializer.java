@@ -82,12 +82,9 @@ public class HttpTemplateOutputDeserializer {
                 }
                 // The template rendered output that is not a valid HttpResponse/HttpRequest. Classify this
                 // as TEMPLATE_GENERATION_FAILED (not a generic ERROR) and carry both the validation errors
-                // and the offending rendered output, correlated to the request. Returning null makes the
-                // action degrade to a 404 fallback; the 404 remains the correct client response (there is
-                // no valid response to return) and is intentionally NOT changed here — this is an
-                // observability fix only. Without this, the failure was invisible: the fallback 404 was
-                // logged as a success-looking EXPECTATION_RESPONSE and the real error as an undistinguished
-                // ERROR line.
+                // and the offending rendered output, correlated to the request. Returning null lets the
+                // caller choose the client answer: a 500 template failure by default, or the 404/502
+                // fallback when templateFailureAsServerError is false.
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(TEMPLATE_GENERATION_FAILED)

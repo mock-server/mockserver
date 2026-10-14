@@ -172,13 +172,13 @@ public class MockServerPropertyCustomizerConfigurationTest {
                 "mockserver.javascriptAllowedClasses=java.util.UUID,java.time.*",
                 "mockserver.javascriptDisallowedClasses=java.lang.Runtime",
                 "mockserver.velocityDisallowClassLoading=false",
-                "mockserver.templateFailureAsServerError=true"
+                "mockserver.templateFailureAsServerError=false"
             )
         );
         assertThat(config.javascriptAllowedClasses(), is("java.util.UUID,java.time.*"));
         assertThat(config.javascriptDisallowedClasses(), is("java.lang.Runtime"));
         assertThat(config.velocityDisallowClassLoading(), is(false));
-        assertThat(config.templateFailureAsServerError(), is(true));
+        assertThat(config.templateFailureAsServerError(), is(false));
     }
 
     @Test

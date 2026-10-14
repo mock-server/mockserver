@@ -1727,7 +1727,7 @@ public class HttpActionHandler {
             logFileBodyError(request, fileBodyException);
             writeResponseActionResponse(fileBodyErrorResponse(), responseWriter, request, action, synchronous, null, postProcessor);
         } catch (Throwable throwable) {
-            // a failed template keeps the 404 unless templateFailureAsServerError is set; it is logged as the engine's own failure
+            // a failed template answers 500, or 404 when templateFailureAsServerError is false; it is logged as the engine's own failure
             TemplateFailureException templateFailure = throwable instanceof TemplateFailureException failure ? failure : null;
             Throwable cause = templateFailure != null ? templateFailure.loggedFailure() : throwable;
             HttpResponse response = templateFailure != null && Boolean.TRUE.equals(configuration.templateFailureAsServerError()) ? templateFailureResponse(templateFailure) : notFoundResponse();
@@ -1747,7 +1747,7 @@ public class HttpActionHandler {
     }
 
     /**
-     * The answer to a failed template when templateFailureAsServerError is set: a 500 whose header tells it apart from a
+     * The answer to a failed template unless templateFailureAsServerError is false: a 500 whose header tells it apart from a
      * mocked 500 and whose text body is the engine's own error message, without the whole template and request.
      */
     private static HttpResponse templateFailureResponse(TemplateFailureException templateFailure) {
@@ -3248,8 +3248,8 @@ public class HttpActionHandler {
     }
 
     /**
-     * A forward's response template, which renders when the upstream response arrives, fails only as a template
-     * failure with templateFailureAsServerError set: it is logged as any forward failure and answered as in
+     * A forward's response template, which renders when the upstream response arrives, fails as a template
+     * failure unless templateFailureAsServerError is false: it is logged as any forward failure and answered as in
      * {@link #handleAnyException}.
      */
     private boolean returnedTemplateFailure(HttpRequest request, ResponseWriter responseWriter, Throwable exception) {

@@ -350,9 +350,9 @@ public class HttpOverrideForwardedRequestActionHandlerTest {
     }
 
     @Test
-    public void shouldKeepUpstreamResponseWhenResponseTemplateOutputIsInvalidByDefault() throws Exception {
+    public void shouldKeepUpstreamResponseWhenResponseTemplateOutputIsInvalidAndDisabled() throws Exception {
         // given - a response template whose output is not a valid response
-        HttpForwardActionResult result = forwardWithResponseTemplate(handler, "{ 'statusCode': 'two hundred' }");
+        HttpForwardActionResult result = forwardWithResponseTemplate(optedOutHandler(), "{ 'statusCode': 'two hundred' }");
 
         // when
         HttpResponse actualResponse = result.getHttpResponse().get();
@@ -363,9 +363,9 @@ public class HttpOverrideForwardedRequestActionHandlerTest {
     }
 
     @Test
-    public void shouldNotMarkThrowingResponseTemplateAsTemplateFailureByDefault() {
+    public void shouldNotMarkThrowingResponseTemplateAsTemplateFailureWhenDisabled() {
         // given - a response template whose parse fails
-        HttpForwardActionResult result = forwardWithResponseTemplate(handler, "#foreach(");
+        HttpForwardActionResult result = forwardWithResponseTemplate(optedOutHandler(), "#foreach(");
 
         // when
         ExecutionException failure = assertThrows(ExecutionException.class, () -> result.getHttpResponse().get());
@@ -401,6 +401,10 @@ public class HttpOverrideForwardedRequestActionHandlerTest {
         TemplateFailureException templateFailure = TemplateFailureException.in(failure);
         assertThat(templateFailure.getDetail(), startsWith("VELOCITY forward response template rendered output that is not a valid response: "));
         assertThat(templateFailure.getDetail(), containsString("statusCode"));
+    }
+
+    private HttpOverrideForwardedRequestActionHandler optedOutHandler() {
+        return new HttpOverrideForwardedRequestActionHandler(mock(MockServerLogger.class), new Configuration().templateFailureAsServerError(false), mockHttpClient);
     }
 
     private HttpOverrideForwardedRequestActionHandler serverErrorHandler() {

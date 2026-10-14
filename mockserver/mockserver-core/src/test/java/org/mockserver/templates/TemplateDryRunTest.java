@@ -179,20 +179,20 @@ public class TemplateDryRunTest {
             input("VELOCITY", "{ \"statusCode\": \"two hundred\" }")));
 
         assertThat(report.path("valid").asBoolean(), is(false));
-        assertThat(report.path("error").path("message").asText(), containsString("serving it would answer with a 404"));
+        assertThat(report.path("error").path("message").asText(), containsString("serving it would answer with a 500"));
         assertThat(report.path("error").path("validationErrors").asText(), containsString("statusCode"));
         assertThat(report.path("renderedOutput").asText(), containsString("two hundred"));
     }
 
     @Test
-    public void saysOutputThatIsNotValidWouldAnswerWithServerErrorWhenTemplateFailureIsAServerError() throws Exception {
-        TemplateDryRun dryRun = new TemplateDryRun(configuration().templateFailureAsServerError(true));
+    public void saysOutputThatIsNotValidWouldAnswerWithNotFoundOrBadGatewayWhenTemplateFailureIsNotAServerError() throws Exception {
+        TemplateDryRun dryRun = new TemplateDryRun(configuration().templateFailureAsServerError(false));
 
         JsonNode responseReport = body(dryRun(dryRun, input("VELOCITY", "{ \"statusCode\": \"two hundred\" }")));
         JsonNode forwardReport = body(dryRun(dryRun, input("VELOCITY", "this is not a request").put("actionType", "FORWARD_TEMPLATE")));
 
-        assertThat(responseReport.path("error").path("message").asText(), is("the template rendered output that is not a valid response, so serving it would answer with a 500"));
-        assertThat(forwardReport.path("error").path("message").asText(), is("the template rendered output that is not a valid request, so serving it would answer with a 500"));
+        assertThat(responseReport.path("error").path("message").asText(), is("the template rendered output that is not a valid response, so serving it would answer with a 404"));
+        assertThat(forwardReport.path("error").path("message").asText(), is("the template rendered output that is not a valid request, so serving it would answer with a 502"));
     }
 
     @Test
@@ -202,7 +202,7 @@ public class TemplateDryRunTest {
         JsonNode report = body(dryRun(new TemplateDryRun(configuration()), input));
 
         assertThat(report.path("valid").asBoolean(), is(false));
-        assertThat(report.path("error").path("message").asText(), containsString("serving it would answer with a 502"));
+        assertThat(report.path("error").path("message").asText(), containsString("serving it would answer with a 500"));
         assertThat(report.path("renderedOutput").asText(), is("this is not a request"));
     }
 

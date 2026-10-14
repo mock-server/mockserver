@@ -2656,22 +2656,24 @@ public class ConfigurationTest {
     public void shouldSetAndGetTemplateFailureAsServerError() {
         boolean original = ConfigurationProperties.templateFailureAsServerError();
         try {
-            // then - default value keeps the 404
-            assertThat(configuration.templateFailureAsServerError(), equalTo(false));
-
-            // when - system property setter
-            ConfigurationProperties.templateFailureAsServerError(true);
-
-            // then - system property getter
+            // then - default value answers a failed template with a 500
+            clearPropertyAndCache("mockserver.templateFailureAsServerError");
             assertThat(ConfigurationProperties.templateFailureAsServerError(), equalTo(true));
-            assertThat(System.getProperty("mockserver.templateFailureAsServerError"), equalTo("true"));
             assertThat(configuration.templateFailureAsServerError(), equalTo(true));
 
+            // when - system property setter
+            ConfigurationProperties.templateFailureAsServerError(false);
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.templateFailureAsServerError(), equalTo(false));
+            assertThat(System.getProperty("mockserver.templateFailureAsServerError"), equalTo("false"));
+            assertThat(configuration.templateFailureAsServerError(), equalTo(false));
+
             // when - setter
-            configuration.templateFailureAsServerError(false);
+            configuration.templateFailureAsServerError(true);
 
             // then - getter
-            assertThat(configuration.templateFailureAsServerError(), equalTo(false));
+            assertThat(configuration.templateFailureAsServerError(), equalTo(true));
         } finally {
             ConfigurationProperties.templateFailureAsServerError(original);
         }

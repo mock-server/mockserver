@@ -77,12 +77,13 @@ public class HttpForwardTemplateActionHandlerTest {
     }
 
     @Test
-    public void shouldAnswerInvalidRequestOutputWithBadGatewayByDefault() throws Exception {
-        // given - a template whose output is not a valid request ("statusCode" is a response field)
+    public void shouldAnswerInvalidRequestOutputWithBadGatewayWhenDisabled() throws Exception {
+        // given - templateFailureAsServerError off, and a template whose output is not a valid request ("statusCode" is a response field)
+        HttpForwardTemplateActionHandler handler = new HttpForwardTemplateActionHandler(mock(MockServerLogger.class), new Configuration().templateFailureAsServerError(false), mockHttpClient);
         HttpTemplate template = template(HttpTemplate.TemplateType.VELOCITY, "{ 'statusCode': 200 }");
 
         // when
-        HttpResponse response = httpForwardTemplateActionHandler.handle(template, request().withPath("/somePath")).getHttpResponse().get();
+        HttpResponse response = handler.handle(template, request().withPath("/somePath")).getHttpResponse().get();
 
         // then
         assertThat(response, is(badGatewayResponse()));

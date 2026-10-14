@@ -193,19 +193,20 @@ public class HttpResponseTemplateActionHandlerTest {
     }
 
     @Test
-    public void shouldFallBackToNotFoundWhenVelocityTemplateRendersInvalidResponse() {
+    public void shouldFallBackToNotFoundWhenVelocityTemplateRendersInvalidResponseAndTemplateFailureAsServerErrorIsOff() {
         // given - a template that renders valid JSON which is NOT a valid HttpResponse ("path" is a
         // request-only field), so response schema validation fails and no response can be produced
+        HttpResponseTemplateActionHandler handler = new HttpResponseTemplateActionHandler(mock(MockServerLogger.class), new Configuration().templateFailureAsServerError(false));
         HttpTemplate template = template(HttpTemplate.TemplateType.VELOCITY,
             "{ 'path': \"$!request.path\" }");
 
         // when
-        HttpResponse actualHttpResponse = httpResponseTemplateActionHandler.handle(template, request()
+        HttpResponse actualHttpResponse = handler.handle(template, request()
             .withPath("/api/orders/42")
             .withMethod("GET")
         );
 
-        // then - the client response semantics are unchanged: an invalid rendered template degrades to 404.
+        // then - with templateFailureAsServerError off, an invalid rendered template degrades to 404.
         // The failure itself is surfaced as a TEMPLATE_GENERATION_FAILED log event (asserted in
         // MustacheTemplateEngineTest at the shared HttpTemplateOutputDeserializer layer).
         assertThat(actualHttpResponse, is(notFoundResponse()));

@@ -2966,7 +2966,7 @@ paths:
                     type: string
                   valid:
                     type: boolean
-                    description: true when the template rendered a valid response (or request); serving an invalid response template answers 404, an invalid forward template 502
+                    description: true when the template rendered a valid response (or request); serving an invalid template answers 500, or with templateFailureAsServerError=false an invalid response template answers 404 and an invalid forward template 502
                   durationMillis:
                     type: integer
                   renderedResponse:

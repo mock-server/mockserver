@@ -4838,14 +4838,14 @@ public class ConfigurationProperties {
     }
 
     public static boolean templateFailureAsServerError() {
-        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_TEMPLATE_FAILURE_AS_SERVER_ERROR, "MOCKSERVER_TEMPLATE_FAILURE_AS_SERVER_ERROR", "" + false));
+        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_TEMPLATE_FAILURE_AS_SERVER_ERROR, "MOCKSERVER_TEMPLATE_FAILURE_AS_SERVER_ERROR", "" + true));
     }
 
     /**
      * If true, a response or forward template that fails (it throws, does not parse, or exceeds its
      * execution timeout) is answered with a 500 carrying an {@code x-mockserver-template-error} header
      * and the template error in a text body, instead of the 404 a request matching no expectation
-     * gets. Defaults to false, which keeps the 404.
+     * gets. Defaults to true; set it to false to answer a failed template with the 404.
      *
      * @param enable answer a failed template with a 500 instead of a 404
      */

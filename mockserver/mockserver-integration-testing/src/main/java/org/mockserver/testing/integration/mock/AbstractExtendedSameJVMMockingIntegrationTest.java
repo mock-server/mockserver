@@ -2,6 +2,7 @@ package org.mockserver.testing.integration.mock;
 
 import org.junit.Test;
 import org.mockserver.model.CaptureRule;
+import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.HttpTemplate;
 import org.mockserver.templates.engine.javascript.JavaScriptTemplateEngine;
@@ -9,6 +10,7 @@ import org.mockserver.testing.integration.callback.StaticTestExpectationResponse
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.mock.Expectation.when;
 import static org.mockserver.model.Header.header;
@@ -160,10 +162,9 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
 
         } else {
 
-            // then
+            // then - without the JavaScript engine on the classpath the template fails, which answers 500
             // - in http
-            assertEquals(
-                notFoundResponse(),
+            assertJavaScriptTemplateFailure(
                 makeRequest(
                     request()
                         .withPath(calculatePath("some_path"))
@@ -173,8 +174,7 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
                 )
             );
             // - in https
-            assertEquals(
-                notFoundResponse(),
+            assertJavaScriptTemplateFailure(
                 makeRequest(
                     request()
                         .withSecure(true)
@@ -234,10 +234,8 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
 
         } else {
 
-            // then - without the JavaScript engine on the classpath the template cannot run, so the
-            // expectation produces no response and the request is unmatched
-            assertEquals(
-                notFoundResponse(),
+            // then - without the JavaScript engine on the classpath the template fails, which answers 500
+            assertJavaScriptTemplateFailure(
                 makeRequest(
                     request()
                         .withMethod("POST")
@@ -247,6 +245,12 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
             );
 
         }
+    }
+
+    private static void assertJavaScriptTemplateFailure(HttpResponse response) {
+        assertEquals(Integer.valueOf(500), response.getStatusCode());
+        assertEquals("true", response.getFirstHeader("x-mockserver-template-error"));
+        assertTrue(response.getBodyAsString(), response.getBodyAsString().startsWith("JAVASCRIPT response template failed: JavaScript response templates require the GraalJS engine"));
     }
 
     @Test // same JVM due to issues detecting Nashorn is enabled via Maven plugin

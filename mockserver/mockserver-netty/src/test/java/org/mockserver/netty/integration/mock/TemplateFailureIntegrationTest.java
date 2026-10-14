@@ -33,9 +33,9 @@ import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
  * A response or forward template that fails, end to end: a Velocity loop that never ends is stopped and
- * its template thread serves the next request, a failed template answers 404 by default, and 500 with an
- * x-mockserver-template-error header and the error as its body when templateFailureAsServerError is set. The
- * flag also covers output that is not a valid response or request, and a forward's response template.
+ * its template thread serves the next request, and a failed template answers, by default, 500 with an
+ * x-mockserver-template-error header and the error as its body, or 404 when templateFailureAsServerError is
+ * false. The flag also covers output that is not a valid response or request, and a forward's response template.
  */
 public class TemplateFailureIntegrationTest {
 
@@ -47,8 +47,8 @@ public class TemplateFailureIntegrationTest {
 
     private static MockServer defaultServer;
     private static MockServerClient defaultServerClient;
-    private static MockServer serverErrorServer;
-    private static MockServerClient serverErrorServerClient;
+    private static MockServer optedOutServer;
+    private static MockServerClient optedOutServerClient;
     private static NettyHttpClient httpClient;
     private static EventLoopGroup clientEventLoopGroup;
 
@@ -61,8 +61,8 @@ public class TemplateFailureIntegrationTest {
         // one template thread, so a loop that was not stopped would leave nothing to serve the next request
         defaultServer = new MockServer(serverConfiguration());
         defaultServerClient = new MockServerClient("localhost", defaultServer.getLocalPort());
-        serverErrorServer = new MockServer(serverConfiguration().templateFailureAsServerError(true));
-        serverErrorServerClient = new MockServerClient("localhost", serverErrorServer.getLocalPort());
+        optedOutServer = new MockServer(serverConfiguration().templateFailureAsServerError(false));
+        optedOutServerClient = new MockServerClient("localhost", optedOutServer.getLocalPort());
     }
 
     private static Configuration serverConfiguration() {
@@ -72,9 +72,9 @@ public class TemplateFailureIntegrationTest {
     @AfterClass
     public static void stopServersAndClient() {
         stopQuietly(defaultServerClient);
-        stopQuietly(serverErrorServerClient);
+        stopQuietly(optedOutServerClient);
         stopQuietly(defaultServer);
-        stopQuietly(serverErrorServer);
+        stopQuietly(optedOutServer);
         if (clientEventLoopGroup != null) {
             clientEventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
         }
@@ -83,16 +83,16 @@ public class TemplateFailureIntegrationTest {
     @Test
     public void shouldStopVelocityLoopAndServeNextRequestOnSameTemplateThread() throws Exception {
         // given
-        defaultServerClient
+        optedOutServerClient
             .when(request().withPath("/loops-forever"))
             .respond(template(HttpTemplate.TemplateType.VELOCITY, LOOPS_FOREVER + "{ 'statusCode': 200 }"));
-        defaultServerClient
+        optedOutServerClient
             .when(request().withPath("/after-loop"))
             .respond(template(HttpTemplate.TemplateType.VELOCITY, "{ 'statusCode': 200, 'body': 'served' }"));
 
         // when
-        HttpResponse loopResponse = send(defaultServer, "/loops-forever");
-        HttpResponse nextResponse = send(defaultServer, "/after-loop");
+        HttpResponse loopResponse = send(optedOutServer, "/loops-forever");
+        HttpResponse nextResponse = send(optedOutServer, "/after-loop");
 
         // then
         assertThat(loopResponse.getStatusCode(), is(404));
@@ -101,7 +101,22 @@ public class TemplateFailureIntegrationTest {
     }
 
     @Test
-    public void shouldAnswerFailedTemplateWithNotFoundByDefault() throws Exception {
+    public void shouldAnswerFailedTemplateWithNotFoundWhenDisabled() throws Exception {
+        // given
+        optedOutServerClient
+            .when(request().withPath("/does-not-parse"))
+            .respond(template(HttpTemplate.TemplateType.VELOCITY, DOES_NOT_PARSE));
+
+        // when
+        HttpResponse response = send(optedOutServer, "/does-not-parse");
+
+        // then
+        assertThat(response.getStatusCode(), is(404));
+        assertThat(response.getFirstHeader(TEMPLATE_ERROR_HEADER), is(""));
+    }
+
+    @Test
+    public void shouldAnswerFailedResponseTemplateWithServerErrorByDefault() throws Exception {
         // given
         defaultServerClient
             .when(request().withPath("/does-not-parse"))
@@ -111,21 +126,6 @@ public class TemplateFailureIntegrationTest {
         HttpResponse response = send(defaultServer, "/does-not-parse");
 
         // then
-        assertThat(response.getStatusCode(), is(404));
-        assertThat(response.getFirstHeader(TEMPLATE_ERROR_HEADER), is(""));
-    }
-
-    @Test
-    public void shouldAnswerFailedResponseTemplateWithServerErrorWhenConfigured() throws Exception {
-        // given
-        serverErrorServerClient
-            .when(request().withPath("/does-not-parse"))
-            .respond(template(HttpTemplate.TemplateType.VELOCITY, DOES_NOT_PARSE));
-
-        // when
-        HttpResponse response = send(serverErrorServer, "/does-not-parse");
-
-        // then
         assertThat(response.getStatusCode(), is(500));
         assertThat(response.getFirstHeader(TEMPLATE_ERROR_HEADER), is("true"));
         assertThat(response.getBodyAsString(), startsWith("VELOCITY response template failed: "));
@@ -133,14 +133,14 @@ public class TemplateFailureIntegrationTest {
     }
 
     @Test
-    public void shouldAnswerTimedOutTemplateWithServerErrorWhenConfigured() throws Exception {
+    public void shouldAnswerTimedOutTemplateWithServerErrorByDefault() throws Exception {
         // given
-        serverErrorServerClient
+        defaultServerClient
             .when(request().withPath("/loops-forever"))
             .respond(template(HttpTemplate.TemplateType.VELOCITY, LOOPS_FOREVER + "{ 'statusCode': 200 }"));
 
         // when
-        HttpResponse response = send(serverErrorServer, "/loops-forever");
+        HttpResponse response = send(defaultServer, "/loops-forever");
 
         // then
         assertThat(response.getStatusCode(), is(500));
@@ -149,14 +149,14 @@ public class TemplateFailureIntegrationTest {
     }
 
     @Test
-    public void shouldAnswerFailedForwardTemplateWithServerErrorWhenConfigured() throws Exception {
+    public void shouldAnswerFailedForwardTemplateWithServerErrorByDefault() throws Exception {
         // given
-        serverErrorServerClient
+        defaultServerClient
             .when(request().withPath("/forward-does-not-parse"))
             .forward(template(HttpTemplate.TemplateType.VELOCITY, DOES_NOT_PARSE));
 
         // when
-        HttpResponse response = send(serverErrorServer, "/forward-does-not-parse");
+        HttpResponse response = send(defaultServer, "/forward-does-not-parse");
 
         // then
         assertThat(response.getStatusCode(), is(500));
@@ -165,18 +165,18 @@ public class TemplateFailureIntegrationTest {
     }
 
     @Test
-    public void shouldAnswerInvalidTemplateOutputAsBeforeByDefault() throws Exception {
+    public void shouldAnswerInvalidTemplateOutputWithNotFoundOrBadGatewayWhenDisabled() throws Exception {
         // given
-        defaultServerClient
+        optedOutServerClient
             .when(request().withPath("/invalid-response"))
             .respond(template(HttpTemplate.TemplateType.VELOCITY, NOT_A_VALID_RESPONSE));
-        defaultServerClient
+        optedOutServerClient
             .when(request().withPath("/invalid-request"))
             .forward(template(HttpTemplate.TemplateType.VELOCITY, NOT_A_VALID_REQUEST));
 
         // when
-        HttpResponse responseTemplateAnswer = send(defaultServer, "/invalid-response");
-        HttpResponse forwardTemplateAnswer = send(defaultServer, "/invalid-request");
+        HttpResponse responseTemplateAnswer = send(optedOutServer, "/invalid-response");
+        HttpResponse forwardTemplateAnswer = send(optedOutServer, "/invalid-request");
 
         // then
         assertThat(responseTemplateAnswer.getStatusCode(), is(404));
@@ -186,14 +186,14 @@ public class TemplateFailureIntegrationTest {
     }
 
     @Test
-    public void shouldAnswerInvalidResponseTemplateOutputWithServerErrorWhenConfigured() throws Exception {
+    public void shouldAnswerInvalidResponseTemplateOutputWithServerErrorByDefault() throws Exception {
         // given
-        serverErrorServerClient
+        defaultServerClient
             .when(request().withPath("/invalid-response"))
             .respond(template(HttpTemplate.TemplateType.VELOCITY, NOT_A_VALID_RESPONSE));
 
         // when
-        HttpResponse response = send(serverErrorServer, "/invalid-response");
+        HttpResponse response = send(defaultServer, "/invalid-response");
 
         // then
         assertThat(response.getStatusCode(), is(500));
@@ -203,14 +203,14 @@ public class TemplateFailureIntegrationTest {
     }
 
     @Test
-    public void shouldAnswerInvalidForwardTemplateOutputWithServerErrorWhenConfigured() throws Exception {
+    public void shouldAnswerInvalidForwardTemplateOutputWithServerErrorByDefault() throws Exception {
         // given
-        serverErrorServerClient
+        defaultServerClient
             .when(request().withPath("/invalid-request-velocity"))
             .forward(template(HttpTemplate.TemplateType.VELOCITY, NOT_A_VALID_REQUEST));
 
         // when
-        HttpResponse velocityResponse = send(serverErrorServer, "/invalid-request-velocity");
+        HttpResponse velocityResponse = send(defaultServer, "/invalid-request-velocity");
 
         // then
         assertThat(velocityResponse.getStatusCode(), is(500));
@@ -220,14 +220,14 @@ public class TemplateFailureIntegrationTest {
     }
 
     @Test
-    public void shouldAnswerForwardResponseTemplateFailuresAsBeforeByDefault() throws Exception {
+    public void shouldAnswerForwardResponseTemplateFailuresAsAnyForwardWhenDisabled() throws Exception {
         // given
-        forwardToUpstreamWithResponseTemplate(defaultServer, defaultServerClient, "/forward-response-does-not-parse", DOES_NOT_PARSE);
-        forwardToUpstreamWithResponseTemplate(defaultServer, defaultServerClient, "/forward-response-invalid", NOT_A_VALID_RESPONSE);
+        forwardToUpstreamWithResponseTemplate(optedOutServer, optedOutServerClient, "/forward-response-does-not-parse", DOES_NOT_PARSE);
+        forwardToUpstreamWithResponseTemplate(optedOutServer, optedOutServerClient, "/forward-response-invalid", NOT_A_VALID_RESPONSE);
 
         // when
-        HttpResponse throwingTemplateAnswer = send(defaultServer, "/forward-response-does-not-parse");
-        HttpResponse invalidOutputAnswer = send(defaultServer, "/forward-response-invalid");
+        HttpResponse throwingTemplateAnswer = send(optedOutServer, "/forward-response-does-not-parse");
+        HttpResponse invalidOutputAnswer = send(optedOutServer, "/forward-response-invalid");
 
         // then - a template that throws fails the forward, and output that is not valid leaves the upstream response
         assertThat(throwingTemplateAnswer.getStatusCode(), is(502));
@@ -237,14 +237,14 @@ public class TemplateFailureIntegrationTest {
     }
 
     @Test
-    public void shouldAnswerFailedForwardResponseTemplateWithServerErrorWhenConfigured() throws Exception {
+    public void shouldAnswerFailedForwardResponseTemplateWithServerErrorByDefault() throws Exception {
         // given
-        forwardToUpstreamWithResponseTemplate(serverErrorServer, serverErrorServerClient, "/forward-response-does-not-parse", DOES_NOT_PARSE);
-        forwardToUpstreamWithResponseTemplate(serverErrorServer, serverErrorServerClient, "/forward-response-invalid", NOT_A_VALID_RESPONSE);
+        forwardToUpstreamWithResponseTemplate(defaultServer, defaultServerClient, "/forward-response-does-not-parse", DOES_NOT_PARSE);
+        forwardToUpstreamWithResponseTemplate(defaultServer, defaultServerClient, "/forward-response-invalid", NOT_A_VALID_RESPONSE);
 
         // when
-        HttpResponse throwingTemplateAnswer = send(serverErrorServer, "/forward-response-does-not-parse");
-        HttpResponse invalidOutputAnswer = send(serverErrorServer, "/forward-response-invalid");
+        HttpResponse throwingTemplateAnswer = send(defaultServer, "/forward-response-does-not-parse");
+        HttpResponse invalidOutputAnswer = send(defaultServer, "/forward-response-invalid");
 
         // then
         assertThat(throwingTemplateAnswer.getStatusCode(), is(500));
