@@ -108,7 +108,7 @@ bash "$REPO_ROOT/.buildkite/scripts/test/perf-healthy-ceiling-test.sh"
 echo "--- INFO-arm live-heap reset probe checks (lib/perf-info-heap-probe.sh on stubbed docker and curl, its wiring)"
 bash "$REPO_ROOT/.buildkite/scripts/test/perf-info-heap-probe-test.sh"
 
-echo "--- SUT receive-queue sampler checks (item 44: lib/perf-sut-recvq.sh on a fake /proc, its wiring)"
+echo "--- SUT receive-queue sampler checks (item 44: lib/perf-sut-recvq.sh and its python engine on a fake /proc, its wiring)"
 bash "$REPO_ROOT/.buildkite/scripts/test/perf-sut-recvq-test.sh"
 
 echo "--- weekly soak checks (provenance, drift from the per-window series, event-log bound, the step on stubbed docker and curl)"
@@ -126,6 +126,8 @@ if command -v python3 >/dev/null 2>&1; then
   echo "python3 -m py_compile k6/tools/sse-fidelity-reader.py OK"
   python3 -m py_compile "$PERF_DIR/scripts/rw-tail-attribution.py"
   echo "python3 -m py_compile scripts/rw-tail-attribution.py OK"
+  python3 -m py_compile "$REPO_ROOT/.buildkite/scripts/steps/lib/perf-sut-recvq.py"
+  echo "python3 -m py_compile .buildkite/scripts/steps/lib/perf-sut-recvq.py OK"
 else
   echo "python3 absent — skipping reader byte-compile (run step guards on it)"
 fi

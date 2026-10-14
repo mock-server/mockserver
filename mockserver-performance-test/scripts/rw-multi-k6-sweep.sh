@@ -70,6 +70,9 @@ case "$K6_GCTRACE" in true|false) ;; *) echo ":x: PERF_RW_K6_GCTRACE must be tru
 # Report-only: the SUT's socket receive queues over the main ladder (lib/perf-sut-recvq.sh).
 SUT_RECVQ="${PERF_RW_SUT_RECVQ:-true}"
 case "$SUT_RECVQ" in true|false) ;; *) echo ":x: PERF_RW_SUT_RECVQ must be true or false" >&2; exit 2 ;; esac
+SUT_RECVQ_INTERVAL_S="${PERF_RW_SUT_RECVQ_INTERVAL_S:-0.1}"
+[[ "$SUT_RECVQ_INTERVAL_S" =~ ^[0-9]+(\.[0-9]+)?$ ]] && awk -v i="$SUT_RECVQ_INTERVAL_S" 'BEGIN { exit !(i >= 0.02 && i <= 10) }' \
+  || { echo ":x: PERF_RW_SUT_RECVQ_INTERVAL_S must be a number of seconds from 0.02 to 10" >&2; exit 2; }
 # Go GC knobs passed to every measured k6 process as GOGC / GOMEMLIMIT. Unset GOMEMLIMIT is derived
 # from the k6 processes' NUMA node memory, else the Docker host's, once N is known
 # (lib/perf-k6-runtime.sh); it bounds the heap that a high GOGC lets grow. Go's own defaults are
@@ -1047,9 +1050,11 @@ fi
 
 if [ "$SUT_RECVQ" = true ]; then
   _rq_max=$(( START_LEAD_S + $(tr ',' '\n' <<<"$RATES" | grep -c .) * (STEP_S + GAP_S) + QUIET_S + 120 ))
-  sut_recvq_sampler_start "$WORK" "$(docker inspect -f '{{.State.Pid}}' "${SUT_CONTAINER:-}" 2>/dev/null || true)" "$_rq_max" 1 16777216 "$PROM_CPUS"
+  _rq_max="$(awk -v s="$_rq_max" -v i="$SUT_RECVQ_INTERVAL_S" 'BEGIN { printf "%d", s / i + 1 }')"
+  sut_recvq_sampler_start "$WORK" "$(docker inspect -f '{{.State.Pid}}' "${SUT_CONTAINER:-}" 2>/dev/null || true)" "$_rq_max" \
+    "$SUT_RECVQ_INTERVAL_S" 16777216 "$PROM_CPUS"
   [ -z "$SUT_RECVQ_PID" ] || record_pid "$SUT_RECVQ_PID"
-  echo "--- SUT receive-queue sampler: $(jq -c '{running, source, reason, pinned_cpus}' "$WORK/main-sut-recvq-status.json" 2>/dev/null || echo "no status")" >&2
+  echo "--- SUT receive-queue sampler: $(jq -c '{running, source, engine, interval_s, reason, pinned_cpus}' "$WORK/main-sut-recvq-status.json" 2>/dev/null || echo "no status")" >&2
 fi
 run_phase main "$N" "$RATES" "$WINDOW_MODE" true "$(IFS=';'; echo "${K6_SETS[*]}")"
 if [ "$SUT_RECVQ" = true ]; then

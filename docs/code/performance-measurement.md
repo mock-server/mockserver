@@ -808,29 +808,41 @@ Through the harness itself (N=2, per-process rungs 4k–12k, every run `valid`),
 `gracefulStop` measured 140 µs on 962 VUs, adding `GOGC=400` measured 143 µs (GC at most 8%), and
 `GOGC=off` with `GOMEMLIMIT=2GiB` measured 131 µs.
 
-**SUT receive queues.** Over the main ladder the harness samples, about once a second, the Recv-Q
-of every TCP socket in the SUT container's network namespace (`lib/perf-sut-recvq.sh`, on by
-default, `PERF_RW_SUT_RECVQ=false` turns it off). Bytes in an established socket's Recv-Q have
+**SUT receive queues.** Over the main ladder the harness samples, ten times a second by default, the
+Recv-Q of every TCP socket in the SUT container's network namespace (`lib/perf-sut-recvq.sh`, on by
+default, `PERF_RW_SUT_RECVQ=false` turns it off; `PERF_RW_SUT_RECVQ_INTERVAL_S`, 0.02–10 s, default
+0.1, sets the interval). Bytes in an established socket's Recv-Q have
 reached the SUT's kernel but not yet been read by its event loop. A non-zero Recv-Q therefore shows
 requests waiting for the event loop to read them. An empty one does not separate a kernel or bridge
 delay before the socket from delay after the read or on the client. Read it as a Little's-law estimate: the
 mean count of sockets holding unread bytes divided by the arrival rate is roughly the mean wait to
-be read (`est_wait_to_read_ms` per rung, using the offered rate). At one sample a second it is a
-sampled mean: a queue that fills and drains between samples is missed, so it bounds a sustained
-delay, not a single stall.
+be read (`est_wait_to_read_ms` per rung, using the offered rate). Each sample's own count over the
+offered rate is its depth in ms of arrivals; `deep_5ms_sample_frac` is the share of a rung's samples
+at least 5 ms deep, the figure to set beside the client's share of requests over 5 ms. It is still a
+sampled view: a queue that fills and drains between two samples is missed.
 It reads `ss -tanH` in the namespace through `nsenter` where that works (root), else the
-container's `/proc/<pid>/net/tcp` and `tcp6` from the host, which need no privilege. It is
+container's `/proc/<pid>/net/tcp` and `tcp6` from the host, which need no privilege (perf-xl
+build 670 read `/proc`). It is
 report-only and fails soft: with no SUT container (an external target), or neither source readable
 (Docker Desktop, whose containers run in a VM), it starts nothing and the status says why. It runs
 on Prometheus's cpus where `taskset` exists, and stops at the end of the ladder, after a bound on
-samples, or at 16 MiB. Parsing a 13,000-socket table took about 50 ms locally, so at one sample a
-second it uses about 5% of one of those cpus.
+samples (the ladder's length over the interval), or at 16 MiB.
+
+Two engines read the same source to the same row. The python engine (`lib/perf-sut-recvq.py`, pure
+stdlib, Python 3.9+) is one long-lived process that samples at fixed-rate ticks; a read longer than
+the interval skips the ticks it overran and counts them, rather than sampling back to back. The
+shell loop is the fallback when `python3` is absent or cannot read the source; it forks `awk` for
+every sample, which took 46 ms at the median (36–77 ms) once perf-xl build 670 held over 10,000
+sockets, so it never samples faster than once a second whatever the interval. Parsing a
+12,804-socket table took about 6 ms in the python engine and about 55 ms in `awk` on a developer Mac. The kernel's own cost of producing the
+table on the rig is not separated from that: `engine_stats.read_ms` in the status is the whole read
+as the rig measured it, and `engine_stats.cpu_frac` the sampler's share of one cpu.
 
 | File (work bundle) | Holds |
 |---|---|
-| `main-sut-recvq.csv` | One row per sample: `ts`, `source` (`ss` or `proc`), `estab` (established sockets), `recvq_nonzero`, `recvq_sum_bytes`, `recvq_max_bytes`, `listen_recvq` (connections waiting in the accept queue), `read_ms` (how long the read took; empty without a sub-second clock) |
-| `main-sut-recvq-rungs.json` | Per rung, over its steady window: `samples`, `recvq_nonzero_mean`, `est_wait_to_read_ms`, `recvq_sum_bytes_mean` and `_max`, `recvq_max_bytes_max`, `nonzero_sample_frac`, `listen_recvq_max` |
-| `main-sut-recvq-status.json` | The source, or why none was readable; the interval, bounds, pinning and how the sampler stopped |
+| `main-sut-recvq.csv` | One row per sample: `ts`, `source` (`ss` or `proc`), `estab` (established sockets), `recvq_nonzero`, `recvq_sum_bytes`, `recvq_max_bytes`, `listen_recvq` (connections waiting in the accept queue), `read_ms` (how long the read took; empty from the shell engine without a sub-second clock) |
+| `main-sut-recvq-rungs.json` | Per rung, over its steady window: `samples`, `samples_per_s`, `recvq_nonzero_mean`, `est_wait_to_read_ms`, `depth_ms_max`, `deep_5ms_sample_frac`, `recvq_sum_bytes_mean` and `_max`, `recvq_max_bytes_max`, `nonzero_sample_frac`, `listen_recvq_max`, `read_ms_mean` and `_max` (null without read times) |
+| `main-sut-recvq-status.json` | The source and `engine`, or why none was readable; `interval_s` (used) and `requested_interval_s`, bounds, pinning and how the sampler stopped; `engine_stats` from the python engine: `rows`, `rows_per_s`, `overruns` (ticks skipped by a slow read), `failed_reads`, `read_ms` p50/p99/max, `cpu_s` and `cpu_frac` |
 
 MockServer exposes no event-loop lag or task-queue latency metric (`mock_server_scheduler_queued_tasks`
 counts the action scheduler's queue, not Netty's event loops), so the harness cannot read one. The
