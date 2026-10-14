@@ -24,6 +24,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private Boolean disableSystemOut;
     private Boolean disableLogging;
     private Boolean detailedMatchFailures;
+    private Integer maxLoggedMatchFailures;
     private Boolean launchUIForLogLevelDebug;
     private Boolean metricsEnabled;
     private Boolean dashboardAnalyticsEnabled;
@@ -387,6 +388,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
             this.disableSystemOut = configuration.disableSystemOut();
             this.disableLogging = configuration.disableLogging();
             this.detailedMatchFailures = configuration.detailedMatchFailures();
+            this.maxLoggedMatchFailures = configuration.maxLoggedMatchFailures();
             this.launchUIForLogLevelDebug = configuration.launchUIForLogLevelDebug();
             this.metricsEnabled = configuration.metricsEnabled();
             this.dashboardAnalyticsEnabled = configuration.dashboardAnalyticsEnabled();
@@ -854,6 +856,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
         configuration.disableSystemOut(disableSystemOut);
         configuration.disableLogging(disableLogging);
         configuration.detailedMatchFailures(detailedMatchFailures);
+        configuration.maxLoggedMatchFailures(maxLoggedMatchFailures);
         configuration.launchUIForLogLevelDebug(launchUIForLogLevelDebug);
         configuration.metricsEnabled(metricsEnabled);
         configuration.dashboardAnalyticsEnabled(dashboardAnalyticsEnabled);
@@ -1354,6 +1357,9 @@ public class ConfigurationDTO implements DTO<Configuration> {
         }
         if (detailedMatchFailures != null) {
             target.detailedMatchFailures(detailedMatchFailures);
+        }
+        if (maxLoggedMatchFailures != null) {
+            target.maxLoggedMatchFailures(maxLoggedMatchFailures);
         }
         if (launchUIForLogLevelDebug != null) {
             target.launchUIForLogLevelDebug(launchUIForLogLevelDebug);
@@ -2428,6 +2434,15 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setDetailedMatchFailures(Boolean detailedMatchFailures) {
         this.detailedMatchFailures = detailedMatchFailures;
+        return this;
+    }
+
+    public Integer getMaxLoggedMatchFailures() {
+        return maxLoggedMatchFailures;
+    }
+
+    public ConfigurationDTO setMaxLoggedMatchFailures(Integer maxLoggedMatchFailures) {
+        this.maxLoggedMatchFailures = maxLoggedMatchFailures;
         return this;
     }
 
