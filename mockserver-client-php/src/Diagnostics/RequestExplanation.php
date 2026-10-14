@@ -31,6 +31,7 @@ final class RequestExplanation
      * @param int $evaluatedExpectations How many were evaluated.
      * @param bool $truncated Whether the evaluation budget ran out before every expectation was evaluated.
      * @param int|null $maxExpectationsEvaluated The evaluation budget when truncated, otherwise null.
+     * @param ExplanationNarration|null $narration The AI-generated summary when narration was asked for, otherwise null.
      */
     public function __construct(
         public readonly ?string $correlationId,
@@ -50,6 +51,7 @@ final class RequestExplanation
         public readonly int $evaluatedExpectations,
         public readonly bool $truncated,
         public readonly ?int $maxExpectationsEvaluated,
+        public readonly ?ExplanationNarration $narration = null,
     ) {
     }
 
@@ -77,6 +79,7 @@ final class RequestExplanation
             Fields::int($data, 'evaluatedExpectations') ?? 0,
             Fields::bool($data, 'truncated') ?? false,
             Fields::int($data, 'maxExpectationsEvaluated'),
+            ExplanationNarration::fromResponse($data),
         );
     }
 }

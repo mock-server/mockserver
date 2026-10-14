@@ -337,6 +337,7 @@ async function test() {
     const skipped: ExplainedExpectation[] = explanation.skippedExpectations || [];
     const firstReason: string | undefined = skipped.length ? skipped[0].reason : undefined;
     const arrivalOutcome: string | undefined = explanation.atArrival && explanation.atArrival.outcome;
+    const narrationText: string | undefined = explanation.narration && explanation.narration.text;
     const mismatch: DebugMismatchResult = await client.debugMismatch({method: "GET", path: "/api/users"});
     const closestId: string | undefined = mismatch.closestMatch && mismatch.closestMatch.expectationId;
     const unmatched: ExplainUnmatchedResult = await client.explainUnmatched({limit: 5, suggestFixes: true});

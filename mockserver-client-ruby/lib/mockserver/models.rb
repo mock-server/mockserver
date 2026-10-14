@@ -3785,6 +3785,38 @@ module MockServer
     end
   end
 
+  # Set only when narration was asked for: a plain-language summary the
+  # configured LLM backend wrote, or why none is available (+reason+). It is
+  # AI-generated and can be wrong; the other fields are the facts.
+  class ExplanationNarration
+    attr_reader :available, :ai_generated, :label, :provider, :model, :text, :reason
+
+    def initialize(available: nil, ai_generated: nil, label: nil, provider: nil, model: nil, text: nil,
+                   reason: nil)
+      @available = available
+      @ai_generated = ai_generated
+      @label = label
+      @provider = provider
+      @model = model
+      @text = text
+      @reason = reason
+    end
+
+    def self.from_hash(data)
+      return nil if data.nil?
+
+      new(
+        available:    data['available'],
+        ai_generated: data['aiGenerated'],
+        label:        data['label'],
+        provider:     data['provider'],
+        model:        data['model'],
+        text:         data['text'],
+        reason:       data['reason']
+      )
+    end
+  end
+
   # Which expectation would serve a recorded request now, why each one
   # evaluated ahead of it was passed over, which lower-priority ones it
   # shadows, and how the request was handled when it arrived. Recomputed when
@@ -3794,13 +3826,14 @@ module MockServer
                 :same_outcome_as_at_arrival, :expectations_changed_since, :expectations_last_changed,
                 :matched_expectation, :closest_expectation_id, :skipped_expectations,
                 :shadowed_expectations, :total_expectations, :evaluated_expectations, :truncated,
-                :max_expectations_evaluated
+                :max_expectations_evaluated, :narration
 
     def initialize(correlation_id: nil, timestamp: nil, recomputed: nil, note: nil, request: nil,
                    at_arrival: nil, same_outcome_as_at_arrival: nil, expectations_changed_since: false,
                    expectations_last_changed: nil, matched_expectation: nil, closest_expectation_id: nil,
                    skipped_expectations: [], shadowed_expectations: [], total_expectations: 0,
-                   evaluated_expectations: 0, truncated: false, max_expectations_evaluated: nil)
+                   evaluated_expectations: 0, truncated: false, max_expectations_evaluated: nil,
+                   narration: nil)
       @correlation_id = correlation_id
       @timestamp = timestamp
       @recomputed = recomputed
@@ -3818,6 +3851,7 @@ module MockServer
       @evaluated_expectations = evaluated_expectations
       @truncated = truncated
       @max_expectations_evaluated = max_expectations_evaluated
+      @narration = narration
     end
 
     def self.from_hash(data)
@@ -3840,7 +3874,8 @@ module MockServer
         total_expectations:         data['totalExpectations'] || 0,
         evaluated_expectations:     data['evaluatedExpectations'] || 0,
         truncated:                  data['truncated'] == true,
-        max_expectations_evaluated: data['maxExpectationsEvaluated']
+        max_expectations_evaluated: data['maxExpectationsEvaluated'],
+        narration:                  ExplanationNarration.from_hash(data['narration'])
       )
     end
   end
@@ -3925,15 +3960,17 @@ module MockServer
 
   # The result of explain_unmatched.
   class ExplainUnmatchedResult
-    attr_reader :correlation_id, :timestamp, :unmatched_request_count, :truncated, :unmatched_requests
+    attr_reader :correlation_id, :timestamp, :unmatched_request_count, :truncated, :unmatched_requests,
+                :narration
 
     def initialize(correlation_id: nil, timestamp: nil, unmatched_request_count: 0, truncated: false,
-                   unmatched_requests: [])
+                   unmatched_requests: [], narration: nil)
       @correlation_id = correlation_id
       @timestamp = timestamp
       @unmatched_request_count = unmatched_request_count
       @truncated = truncated
       @unmatched_requests = unmatched_requests
+      @narration = narration
     end
 
     def self.from_hash(data)
@@ -3944,7 +3981,8 @@ module MockServer
         timestamp:               data['timestamp'],
         unmatched_request_count: data['unmatchedRequestCount'] || 0,
         truncated:               data['truncated'] == true,
-        unmatched_requests:      (data['unmatchedRequests'] || []).map { |r| UnmatchedRequest.from_hash(r) }
+        unmatched_requests:      (data['unmatchedRequests'] || []).map { |r| UnmatchedRequest.from_hash(r) },
+        narration:               ExplanationNarration.from_hash(data['narration'])
       )
     end
   end

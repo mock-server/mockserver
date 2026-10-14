@@ -130,6 +130,30 @@ pub struct ExplanationArrival {
     pub expectation_still_stored: Option<bool>,
 }
 
+/// Set only when narration was asked for (`ExplanationNarration`): a
+/// plain-language summary the configured LLM backend wrote, or, when
+/// `available` is false, the `reason` none is available. The text is
+/// AI-generated and can be wrong; the other fields are the facts.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct ExplanationNarration {
+    #[serde(default)]
+    pub available: bool,
+    #[serde(default)]
+    pub ai_generated: bool,
+    /// A label to show beside the text, saying it is AI-generated and can be wrong.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub provider: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub text: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reason: Option<String>,
+}
+
 /// Which expectation would serve a recorded request now, why each expectation
 /// evaluated ahead of it was passed over, and how the request was handled when
 /// it arrived (`RequestExplanation`). Recomputed when asked for, against the
@@ -177,6 +201,8 @@ pub struct RequestExplanation {
     /// The evaluation budget; set only when `truncated`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_expectations_evaluated: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub narration: Option<ExplanationNarration>,
 }
 
 /// The expectation with the fewest differing fields.
@@ -321,4 +347,6 @@ pub struct UnmatchedExplanation {
     pub truncated: bool,
     #[serde(default)]
     pub unmatched_requests: Vec<UnmatchedRequest>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub narration: Option<ExplanationNarration>,
 }

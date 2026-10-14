@@ -16,6 +16,7 @@ final class UnmatchedExplanation
      * @param int $unmatchedRequestCount How many unmatched requests are explained.
      * @param bool $truncated Whether the evaluation budget ran out before every request was explained.
      * @param list<UnmatchedRequest> $unmatchedRequests The unmatched requests.
+     * @param ExplanationNarration|null $narration The AI-generated summary when narration was asked for, otherwise null.
      */
     public function __construct(
         public readonly ?string $correlationId,
@@ -23,6 +24,7 @@ final class UnmatchedExplanation
         public readonly int $unmatchedRequestCount,
         public readonly bool $truncated,
         public readonly array $unmatchedRequests,
+        public readonly ?ExplanationNarration $narration = null,
     ) {
     }
 
@@ -40,6 +42,7 @@ final class UnmatchedExplanation
                 static fn(array $item): UnmatchedRequest => UnmatchedRequest::fromArray($item),
                 array_filter(Fields::list($data, 'unmatchedRequests'), 'is_array'),
             )),
+            ExplanationNarration::fromResponse($data),
         );
     }
 }

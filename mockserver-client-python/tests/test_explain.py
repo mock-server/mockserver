@@ -15,6 +15,7 @@ from mockserver import (
     DebugMismatchResult,
     ExplainedExpectation,
     ExplainUnmatchedResult,
+    ExplanationNarration,
     HttpRequest,
     MockServerClient,
     RequestExplanation,
@@ -47,6 +48,8 @@ EXPLANATION = {
     "evaluatedExpectations": 3,
     "truncated": True,
     "maxExpectationsEvaluated": 500,
+    "narration": {"available": True, "aiGenerated": True, "label": "AI-generated, can be wrong",
+                  "provider": "OPENAI", "model": "gpt-test", "text": "gold needs X-Tenant"},
 }
 
 MISMATCH = {
@@ -76,6 +79,7 @@ UNMATCHED = {
                              "matchesAfterPatch": True},
         }],
     }],
+    "narration": {"available": False, "reason": "llmExplainNarrationEnabled is false"},
 }
 
 
@@ -153,6 +157,10 @@ class TestExplain:
         assert (explanation.total_expectations, explanation.evaluated_expectations) == (3, 3)
         assert explanation.truncated is True
         assert explanation.max_expectations_evaluated == 500
+        assert explanation.narration == ExplanationNarration(
+            available=True, ai_generated=True, label="AI-generated, can be wrong",
+            provider="OPENAI", model="gpt-test", text="gold needs X-Tenant",
+        )
 
     def test_raises_the_server_error_for_an_unknown_correlation_id(self, stub):
         answer(404, {"error": "no request is recorded with correlationId unknown"})
@@ -223,6 +231,7 @@ class TestExplainUnmatched:
         assert fix.patched_fields == ["path"]
         assert fix.unpatched_fields == [{"field": "body", "reason": "redacted"}]
         assert fix.matches_after_patch is True
+        assert result.narration == ExplanationNarration(available=False, reason="llmExplainNarrationEnabled is false")
 
     def test_sends_no_body_without_options(self, stub):
         answer(200, UNMATCHED)
@@ -262,7 +271,8 @@ class TestModelsFollowTheSchema:
 
     @pytest.mark.parametrize(
         "model",
-        [ExplainedExpectation, SuggestedFix, DebugMismatchResult, ClosestMatch, ExplainUnmatchedResult, UnmatchedRequest],
+        [ExplainedExpectation, SuggestedFix, DebugMismatchResult, ClosestMatch, ExplainUnmatchedResult, UnmatchedRequest,
+         ExplanationNarration],
     )
     def test_diagnostic_model_models_every_schema_property(self, model):
         fields = {f.name for f in dataclasses.fields(model)}

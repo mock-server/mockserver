@@ -32,7 +32,9 @@ RSpec.describe MockServer::Client do
       'totalExpectations' => 3,
       'evaluatedExpectations' => 3,
       'truncated' => true,
-      'maxExpectationsEvaluated' => 500
+      'maxExpectationsEvaluated' => 500,
+      'narration' => { 'available' => true, 'aiGenerated' => true, 'label' => 'AI-generated, can be wrong',
+                       'provider' => 'OPENAI', 'model' => 'gpt-test', 'text' => 'gold needs X-Tenant' }
     }
   end
 
@@ -75,6 +77,11 @@ RSpec.describe MockServer::Client do
       expect([result.total_expectations, result.evaluated_expectations]).to eq([3, 3])
       expect(result.truncated).to be(true)
       expect(result.max_expectations_evaluated).to eq(500)
+      narration = result.narration
+      expect(narration).to be_a(MockServer::ExplanationNarration)
+      expect([narration.available, narration.ai_generated, narration.label]).to eq([true, true, 'AI-generated, can be wrong'])
+      expect([narration.provider, narration.model, narration.text]).to eq(['OPENAI', 'gpt-test', 'gold needs X-Tenant'])
+      expect(narration.reason).to be_nil
     end
 
     it 'raises Error with the server reason for an unknown correlation id' do
@@ -155,7 +162,8 @@ RSpec.describe MockServer::Client do
                                 'unpatchedFields' => [{ 'field' => 'body', 'reason' => 'redacted' }],
                                 'matchesAfterPatch' => true }
           }]
-        }]
+        }],
+        'narration' => { 'available' => false, 'reason' => 'llmExplainNarrationEnabled is false' }
       }
     end
 
@@ -175,6 +183,8 @@ RSpec.describe MockServer::Client do
       expect(fix.patched_fields).to eq(['path'])
       expect(fix.unpatched_fields).to eq([{ 'field' => 'body', 'reason' => 'redacted' }])
       expect(fix.matches_after_patch).to be(true)
+      expect([result.narration.available, result.narration.reason]).to eq([false, 'llmExplainNarrationEnabled is false'])
+      expect(result.narration.text).to be_nil
     end
 
     it 'sends no body without options' do
@@ -214,7 +224,8 @@ RSpec.describe MockServer::Client do
         .to eq(schemas['RequestExplanation']['properties'].keys.map { |k| snake(k) }.sort)
     end
 
-    %w[ExplainedExpectation SuggestedFix DebugMismatchResult ClosestMatch ExplainUnmatchedResult UnmatchedRequest].each do |name|
+    %w[ExplainedExpectation SuggestedFix DebugMismatchResult ClosestMatch ExplainUnmatchedResult UnmatchedRequest
+       ExplanationNarration].each do |name|
       it "#{name} reads every schema property" do
         expect(readers(MockServer.const_get(name)))
           .to eq(schemas[name]['properties'].keys.map { |k| snake(k) }.sort)

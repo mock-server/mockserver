@@ -207,7 +207,8 @@ describe('explain types follow the OpenAPI schemas', function () {
         assert.deepEqual(declaredMembers('RequestExplanation'), Object.keys(spec.components.schemas.RequestExplanation.properties).sort());
     });
 
-    ['ExplainedExpectation', 'SuggestedFix', 'DebugMismatchResult', 'ExplainUnmatchedResult', 'UnmatchedRequest'].forEach(function (name) {
+    ['ExplainedExpectation', 'SuggestedFix', 'DebugMismatchResult', 'ExplainUnmatchedResult', 'UnmatchedRequest',
+        'ExplanationNarration'].forEach(function (name) {
         it(name + ' declares every schema property', function () {
             assert.deepEqual(declaredMembers(name), Object.keys(spec.components.schemas[name].properties).sort());
         });

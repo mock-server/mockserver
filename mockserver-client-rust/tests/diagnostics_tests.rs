@@ -355,3 +355,44 @@ fn explain_unmatched_server_failure_is_an_unexpected_status() {
         other => panic!("expected UnexpectedStatus, got {other:?}"),
     }
 }
+
+#[test]
+fn explain_reads_the_narration() {
+    let (client, _rx) = stub(
+        200,
+        r#"{"correlationId":"c1","narration":{"available":true,"aiGenerated":true,"label":"AI-generated, can be wrong","provider":"OPENAI","model":"gpt-test","text":"gold needs X-Tenant"}}"#,
+    );
+
+    let explanation = client.explain("c1").expect("explain");
+
+    assert_eq!(
+        explanation.narration,
+        Some(ExplanationNarration {
+            available: true,
+            ai_generated: true,
+            label: Some("AI-generated, can be wrong".to_string()),
+            provider: Some("OPENAI".to_string()),
+            model: Some("gpt-test".to_string()),
+            text: Some("gold needs X-Tenant".to_string()),
+            reason: None,
+        })
+    );
+}
+
+#[test]
+fn explain_unmatched_reads_an_unavailable_narration() {
+    let (client, _rx) = stub(
+        200,
+        r#"{"unmatchedRequestCount":0,"unmatchedRequests":[],"narration":{"available":false,"reason":"llmExplainNarrationEnabled is false"}}"#,
+    );
+
+    let result = client.explain_unmatched(None).expect("explain_unmatched");
+
+    assert_eq!(
+        result.narration,
+        Some(ExplanationNarration {
+            reason: Some("llmExplainNarrationEnabled is false".to_string()),
+            ..ExplanationNarration::default()
+        })
+    );
+}

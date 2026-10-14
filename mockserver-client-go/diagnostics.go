@@ -89,6 +89,20 @@ type ExplanationArrival struct {
 	ExpectationStillStored *bool          `json:"expectationStillStored,omitempty"`
 }
 
+// ExplanationNarration is set only when narration was asked for (schema
+// ExplanationNarration): a plain-language summary the configured LLM backend
+// wrote, or, when Available is false, the Reason none is available. The text
+// is AI-generated and can be wrong; the other fields are the facts.
+type ExplanationNarration struct {
+	Available   bool   `json:"available,omitempty"`
+	AIGenerated bool   `json:"aiGenerated,omitempty"`
+	Label       string `json:"label,omitempty"`
+	Provider    string `json:"provider,omitempty"`
+	Model       string `json:"model,omitempty"`
+	Text        string `json:"text,omitempty"`
+	Reason      string `json:"reason,omitempty"`
+}
+
 // RequestExplanation is the result of Explain (schema RequestExplanation):
 // which expectation would serve a recorded request now, why each one
 // evaluated ahead of it was passed over, and how it was handled on arrival.
@@ -110,6 +124,7 @@ type RequestExplanation struct {
 	EvaluatedExpectations    int                    `json:"evaluatedExpectations,omitempty"`
 	Truncated                bool                   `json:"truncated,omitempty"`
 	MaxExpectationsEvaluated *int                   `json:"maxExpectationsEvaluated,omitempty"`
+	Narration                *ExplanationNarration  `json:"narration,omitempty"`
 }
 
 // Explain re-checks the recorded request with the given correlation ID (see
@@ -242,11 +257,12 @@ type UnmatchedRequest struct {
 // UnmatchedExplanation is the result of ExplainUnmatched. Truncated is true
 // when the server's evaluation budget ran out.
 type UnmatchedExplanation struct {
-	CorrelationID         string             `json:"correlationId,omitempty"`
-	Timestamp             string             `json:"timestamp,omitempty"`
-	UnmatchedRequestCount int                `json:"unmatchedRequestCount,omitempty"`
-	Truncated             bool               `json:"truncated,omitempty"`
-	UnmatchedRequests     []UnmatchedRequest `json:"unmatchedRequests,omitempty"`
+	CorrelationID         string                `json:"correlationId,omitempty"`
+	Timestamp             string                `json:"timestamp,omitempty"`
+	UnmatchedRequestCount int                   `json:"unmatchedRequestCount,omitempty"`
+	Truncated             bool                  `json:"truncated,omitempty"`
+	UnmatchedRequests     []UnmatchedRequest    `json:"unmatchedRequests,omitempty"`
+	Narration             *ExplanationNarration `json:"narration,omitempty"`
 }
 
 // ExplainUnmatched re-checks recent requests that matched no expectation

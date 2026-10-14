@@ -11,6 +11,7 @@ use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use MockServer\Diagnostics\ExplainArrival;
 use MockServer\Diagnostics\ExplainedExpectation;
+use MockServer\Diagnostics\ExplanationNarration;
 use MockServer\Exception\InvalidRequestException;
 use MockServer\Exception\MockServerException;
 use MockServer\HttpRequest;
@@ -215,6 +216,7 @@ class MockServerClientDiagnosticsTest extends TestCase
         $this->assertNull($explanation->sameOutcomeAsAtArrival);
         $this->assertNull($explanation->expectationsLastChanged);
         $this->assertNull($explanation->maxExpectationsEvaluated);
+        $this->assertNull($explanation->narration);
         $this->assertSame(ExplainArrival::NO_MATCH, $explanation->atArrival->outcome);
         $this->assertNull($explanation->atArrival->expectationId);
         $this->assertNull($explanation->atArrival->expectationStillStored);
@@ -417,6 +419,45 @@ class MockServerClientDiagnosticsTest extends TestCase
             $fix->unpatchedFields
         );
         $this->assertFalse($fix->matchesAfterPatch);
+        $this->assertNull($result->narration);
+    }
+
+    public function testExplainParsesTheNarration(): void
+    {
+        $client = $this->createClientWithMock([new Response(200, [], json_encode([
+            'correlationId' => 'abc-123',
+            'narration' => [
+                'available' => true,
+                'aiGenerated' => true,
+                'label' => 'AI-generated, can be wrong',
+                'provider' => 'OPENAI',
+                'model' => 'gpt-test',
+                'text' => 'gold needs X-Tenant',
+            ],
+        ]))]);
+
+        $narration = $client->explain('abc-123')->narration;
+
+        $this->assertEquals(
+            new ExplanationNarration(true, true, 'AI-generated, can be wrong', 'OPENAI', 'gpt-test', 'gold needs X-Tenant', null),
+            $narration
+        );
+    }
+
+    public function testExplainUnmatchedParsesAnUnavailableNarration(): void
+    {
+        $client = $this->createClientWithMock([new Response(200, [], json_encode([
+            'unmatchedRequestCount' => 0,
+            'unmatchedRequests' => [],
+            'narration' => ['available' => false, 'reason' => 'llmExplainNarrationEnabled is false'],
+        ]))]);
+
+        $narration = $client->explainUnmatched()->narration;
+
+        $this->assertEquals(
+            new ExplanationNarration(false, false, null, null, null, null, 'llmExplainNarrationEnabled is false'),
+            $narration
+        );
     }
 
     public function testDiagnosticCallsSendTheControlPlaneBearerToken(): void

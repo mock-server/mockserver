@@ -169,6 +169,7 @@ public class DiagnosticsTests
         explanation.SameOutcomeAsAtArrival.Should().BeNull();
         explanation.ExpectationsLastChanged.Should().BeNull();
         explanation.MaxExpectationsEvaluated.Should().BeNull();
+        explanation.Narration.Should().BeNull();
         explanation.AtArrival!.ExpectationId.Should().BeNull();
         explanation.AtArrival.ExpectationStillStored.Should().BeNull();
         explanation.SkippedExpectations.Should().BeEmpty();
@@ -399,6 +400,42 @@ public class DiagnosticsTests
         fix.UnpatchedFields.Should().ContainSingle().Which.Field.Should().Be("body");
         fix.UnpatchedFields[0].Reason.Should().Be("the event log kept only part of the body");
         fix.MatchesAfterPatch.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Explain_ParsesTheNarration()
+    {
+        var (client, _) = CreateClient("""
+            { "correlationId" : "abc-123",
+              "narration" : { "available" : true, "aiGenerated" : true, "label" : "AI-generated, can be wrong",
+                              "provider" : "OPENAI", "model" : "gpt-test", "text" : "gold needs X-Tenant" } }
+            """);
+
+        var narration = client.Explain("abc-123").Narration!;
+
+        narration.Available.Should().BeTrue();
+        narration.AiGenerated.Should().BeTrue();
+        narration.Label.Should().Be("AI-generated, can be wrong");
+        narration.Provider.Should().Be("OPENAI");
+        narration.Model.Should().Be("gpt-test");
+        narration.Text.Should().Be("gold needs X-Tenant");
+        narration.Reason.Should().BeNull();
+    }
+
+    [Fact]
+    public void ExplainUnmatched_ParsesAnUnavailableNarration()
+    {
+        var (client, _) = CreateClient("""
+            { "unmatchedRequestCount" : 0, "unmatchedRequests" : [ ],
+              "narration" : { "available" : false, "reason" : "llmExplainNarrationEnabled is false" } }
+            """);
+
+        var narration = client.ExplainUnmatched().Narration!;
+
+        narration.Available.Should().BeFalse();
+        narration.AiGenerated.Should().BeFalse();
+        narration.Text.Should().BeNull();
+        narration.Reason.Should().Be("llmExplainNarrationEnabled is false");
     }
 
     [Fact]

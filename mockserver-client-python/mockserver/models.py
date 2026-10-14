@@ -3910,6 +3910,35 @@ class Arrival:
 
 
 @dataclass
+class ExplanationNarration:
+    """Set only when the server was asked to narrate: a plain-language summary
+    the configured LLM backend wrote, or why none is available (``reason``).
+    It is AI-generated and can be wrong; the other fields are the facts."""
+
+    available: bool | None = None
+    ai_generated: bool | None = None
+    label: str | None = None
+    provider: str | None = None
+    model: str | None = None
+    text: str | None = None
+    reason: str | None = None
+
+    @classmethod
+    def from_dict(cls, data: dict | None) -> ExplanationNarration | None:
+        if data is None:
+            return None
+        return cls(
+            available=data.get("available"),
+            ai_generated=data.get("aiGenerated"),
+            label=data.get("label"),
+            provider=data.get("provider"),
+            model=data.get("model"),
+            text=data.get("text"),
+            reason=data.get("reason"),
+        )
+
+
+@dataclass
 class RequestExplanation:
     """Which expectation would serve a recorded request now, why each one
     evaluated ahead of it was passed over, which lower-priority ones it
@@ -3933,6 +3962,7 @@ class RequestExplanation:
     evaluated_expectations: int = 0
     truncated: bool = False
     max_expectations_evaluated: int | None = None
+    narration: ExplanationNarration | None = None
 
     @classmethod
     def from_dict(cls, data: dict | None) -> RequestExplanation | None:
@@ -3956,6 +3986,7 @@ class RequestExplanation:
             evaluated_expectations=data.get("evaluatedExpectations", 0),
             truncated=bool(data.get("truncated", False)),
             max_expectations_evaluated=data.get("maxExpectationsEvaluated"),
+            narration=ExplanationNarration.from_dict(data.get("narration")),
         )
 
 
@@ -4040,6 +4071,7 @@ class ExplainUnmatchedResult:
     unmatched_request_count: int = 0
     truncated: bool = False
     unmatched_requests: list[UnmatchedRequest] = field(default_factory=list)
+    narration: ExplanationNarration | None = None
 
     @classmethod
     def from_dict(cls, data: dict | None) -> ExplainUnmatchedResult | None:
@@ -4051,6 +4083,7 @@ class ExplainUnmatchedResult:
             unmatched_request_count=data.get("unmatchedRequestCount", 0),
             truncated=bool(data.get("truncated", False)),
             unmatched_requests=_from_list(UnmatchedRequest, data.get("unmatchedRequests")),
+            narration=ExplanationNarration.from_dict(data.get("narration")),
         )
 
 

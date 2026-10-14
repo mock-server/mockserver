@@ -97,6 +97,42 @@ func TestClient_Explain_SendsCorrelationIDAndParsesExplanation(t *testing.T) {
 		explanation.MaxExpectationsEvaluated != nil {
 		t.Errorf("counts = %+v", explanation)
 	}
+	if explanation.Narration != nil {
+		t.Errorf("narration without narrate = %+v", explanation.Narration)
+	}
+}
+
+func TestClient_Explain_ParsesNarration(t *testing.T) {
+	var cap captured
+	ts := cpStub(t, 200, `{"correlationId":"c1","narration":{"available":true,"aiGenerated":true,`+
+		`"label":"AI-generated, can be wrong","provider":"OPENAI","model":"gpt-test","text":"gold needs X-Tenant"}}`, &cap)
+	defer ts.Close()
+
+	explanation, err := NewFromURL(ts.URL).Explain("c1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := ExplanationNarration{Available: true, AIGenerated: true, Label: "AI-generated, can be wrong",
+		Provider: "OPENAI", Model: "gpt-test", Text: "gold needs X-Tenant"}
+	if explanation.Narration == nil || *explanation.Narration != want {
+		t.Errorf("narration = %+v", explanation.Narration)
+	}
+}
+
+func TestClient_ExplainUnmatched_ParsesUnavailableNarration(t *testing.T) {
+	var cap captured
+	ts := cpStub(t, 200, `{"unmatchedRequestCount":0,"unmatchedRequests":[],`+
+		`"narration":{"available":false,"reason":"llmExplainNarrationEnabled is false"}}`, &cap)
+	defer ts.Close()
+
+	result, err := NewFromURL(ts.URL).ExplainUnmatched(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := ExplanationNarration{Reason: "llmExplainNarrationEnabled is false"}
+	if result.Narration == nil || *result.Narration != want {
+		t.Errorf("narration = %+v", result.Narration)
+	}
 }
 
 func TestClient_Explain_KeepsAReasonThisClientDoesNotList(t *testing.T) {

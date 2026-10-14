@@ -983,6 +983,25 @@ export interface Arrival {
   expectationStillStored?: boolean;
 }
 
+/**
+ * Present only when narration was asked for: a plain-language summary written by the configured LLM
+ * backend, or why none is available. It is AI-generated and can be wrong; the other fields are the facts.
+ */
+export interface ExplanationNarration {
+  /** whether the LLM returned a summary */
+  available?: boolean;
+  /** always true when available; the text was written by an LLM, not by MockServer */
+  aiGenerated?: boolean;
+  /** a label to show beside the text, saying it is AI-generated and can be wrong */
+  label?: string;
+  provider?: string;
+  /** the model that wrote the text, when known */
+  model?: string;
+  text?: string;
+  /** when not available, why */
+  reason?: string;
+}
+
 /** Which expectation would serve a recorded request now, and why (OpenAPI schema RequestExplanation). */
 export interface RequestExplanation {
   correlationId?: string;
@@ -1004,6 +1023,7 @@ export interface RequestExplanation {
   truncated?: boolean;
   /** present only when truncated is true */
   maxExpectationsEvaluated?: number;
+  narration?: ExplanationNarration;
 }
 
 /** The result of debugMismatch: each active expectation compared with the request. */
@@ -1035,6 +1055,7 @@ export interface ExplainUnmatchedResult {
   unmatchedRequestCount?: number;
   truncated?: boolean;
   unmatchedRequests?: UnmatchedRequest[];
+  narration?: ExplanationNarration;
 }
 
 /** Options for explainUnmatched. */

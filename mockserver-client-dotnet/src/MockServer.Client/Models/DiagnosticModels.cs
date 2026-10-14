@@ -97,6 +97,31 @@ public sealed class RequestExplanation
     public bool Truncated { get; set; }
     /// <summary>The evaluation budget when <see cref="Truncated"/>, otherwise null.</summary>
     public int? MaxExpectationsEvaluated { get; set; }
+    /// <summary>The AI-generated summary when narration was asked for, otherwise null.</summary>
+    public ExplanationNarration? Narration { get; set; }
+}
+
+/// <summary>
+/// A plain-language summary of an explanation written by the configured LLM backend, or why none is
+/// available; set only when narration was asked for. It is AI-generated and can be wrong; the other
+/// fields of the result are the deterministic facts.
+/// </summary>
+public sealed class ExplanationNarration
+{
+    /// <summary>Whether the LLM returned a summary.</summary>
+    public bool Available { get; set; }
+    /// <summary>Always true when available: the text was written by an LLM, not by MockServer.</summary>
+    public bool AiGenerated { get; set; }
+    /// <summary>A label to show beside the text, saying it is AI-generated and can be wrong.</summary>
+    public string? Label { get; set; }
+    /// <summary>The configured LLM provider that wrote the text.</summary>
+    public string? Provider { get; set; }
+    /// <summary>The model that wrote the text, when known.</summary>
+    public string? Model { get; set; }
+    /// <summary>The summary, at most 4,000 characters.</summary>
+    public string? Text { get; set; }
+    /// <summary>When not available, why.</summary>
+    public string? Reason { get; set; }
 }
 
 /// <summary>The recorded request a <see cref="RequestExplanation"/> explains.</summary>
@@ -251,6 +276,8 @@ public sealed class UnmatchedExplanation
     public bool Truncated { get; set; }
     /// <summary>The unmatched requests, most recent first.</summary>
     public List<UnmatchedRequest> UnmatchedRequests { get; set; } = new();
+    /// <summary>The AI-generated summary when narration was asked for, otherwise null.</summary>
+    public ExplanationNarration? Narration { get; set; }
 }
 
 /// <summary>One unmatched request in an <see cref="UnmatchedExplanation"/>.</summary>

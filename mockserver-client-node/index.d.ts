@@ -37,6 +37,7 @@ export {
   ExplainedRequest,
   ExplainUnmatchedOptions,
   ExplainUnmatchedResult,
+  ExplanationNarration,
   CrossProtocolScenario,
   Expectation,
   ExpectationId,
