@@ -190,8 +190,8 @@ public final class ExpectationLinter {
 
     /**
      * As {@link #lintJsonEntries}, for entries read from initialization files, where {@code fileOfEntry} gives the file
-     * each entry came from, numbered in load order. Loading a file keeps the first entry for each id, and a later file
-     * replaces an earlier file's entry, so {@code DUPLICATE_ID} names the entry the load keeps.
+     * each entry came from, numbered in load order. As with an upsert, the last entry for an id is kept, within a file
+     * and across files; {@code DUPLICATE_ID} says which file's load replaces each earlier entry.
      */
     public static ObjectNode lintInitializationFileEntries(ObjectMapper objectMapper, ExpectationSerializer expectationSerializer, List<JsonNode> entries, List<Integer> fileOfEntry) {
         return lintEntries(objectMapper, expectationSerializer, entries, fileOfEntry);
@@ -284,8 +284,8 @@ public final class ExpectationLinter {
      * The per-expectation checks, at warning severity or above, and the budgeted shadowing check for the expectations
      * one initialization file has just loaded, compared in the order the file lists them at each priority. Logs one
      * WARN naming the file and never changes what was loaded. Ids in {@code generatedIds} were assigned by the loader,
-     * not written in the file, so messages name those expectations by method and path instead. A later entry that repeats
-     * an id is reported as {@code DUPLICATE_ID} and left out of the other checks, as the load keeps only the first.
+     * not written in the file, so messages name those expectations by method and path instead. An entry whose id a later
+     * entry repeats is reported as {@code DUPLICATE_ID} and left out of the other checks, as the load keeps only the last.
      * <p>
      * Returns a digest of the problems found, 0 when there are none. The WARN is skipped when the digest equals
      * {@code previousDigest}, so a reload that finds the same problems in the same file does not repeat them.
@@ -360,10 +360,9 @@ public final class ExpectationLinter {
     }
 
     /**
-     * Drops the entries a store would not keep. {@code fileOfEntry} null means an upsert of each entry in turn, which
-     * keeps the last entry for an id; otherwise a file load, which keeps the first entry for an id within a file while a
-     * later file's entry replaces an earlier file's. The kept entry is served from the first entry's place, as an update
-     * in place keeps the original's creation time.
+     * Drops the entries a store would not keep: an upsert of each entry in turn and a file load both keep the last entry
+     * for an id. {@code fileOfEntry} null means an upsert; otherwise it names each entry's file, for the message. The kept
+     * entry is served from the first entry's place, as an update in place keeps the original's creation time.
      */
     private static List<Subject> removeReplacedDuplicates(Report report, List<Subject> subjects, List<Integer> fileOfEntry) {
         Map<String, Subject> firstById = new HashMap<>();
@@ -371,21 +370,21 @@ public final class ExpectationLinter {
         for (Subject subject : subjects) {
             if (subject.reportedId != null) {
                 firstById.putIfAbsent(subject.reportedId, subject);
-                Subject kept = keptById.get(subject.reportedId);
-                if (kept == null || fileOfEntry == null || !sameFile(fileOfEntry, kept, subject)) {
-                    keptById.put(subject.reportedId, subject);
-                }
+                keptById.put(subject.reportedId, subject);
             }
         }
         List<Subject> result = new ArrayList<>();
         for (Subject subject : subjects) {
             Subject kept = subject.reportedId != null ? keptById.get(subject.reportedId) : subject;
             if (kept != subject) {
-                String message = fileOfEntry != null && sameFile(fileOfEntry, kept, subject)
-                    ? "is ignored because an earlier entry in the same file has the same id (" + kept.summary + "); loading a file keeps only the first entry for each id"
-                    : "is replaced by a later entry with the same id (" + kept.summary + "); " + (fileOfEntry != null
-                    ? "a file loaded later replaces an earlier file's entries with the same id"
-                    : "expectations are upserted by id, so only the last one is kept");
+                String message;
+                if (fileOfEntry == null) {
+                    message = "is replaced by a later entry with the same id (" + kept.summary + "); expectations are upserted by id, so only the last one is kept";
+                } else if (sameFile(fileOfEntry, kept, subject)) {
+                    message = "is replaced by a later entry in the same file with the same id (" + kept.summary + "); loading a file keeps only the last entry for each id";
+                } else {
+                    message = "is replaced by a later entry with the same id (" + kept.summary + "); a file loaded later replaces an earlier file's entries with the same id";
+                }
                 addIssue(report, new Issue(Rule.DUPLICATE_ID, "id", message, subject, kept));
             } else {
                 Subject first = subject.reportedId != null ? firstById.get(subject.reportedId) : subject;

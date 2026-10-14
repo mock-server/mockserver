@@ -534,15 +534,18 @@ public class RequestMatchers extends MockServerMatcherNotifier {
     public void update(Expectation[] expectations, Cause cause) {
         AtomicInteger numberOfChanges = new AtomicInteger(0);
         if (expectations != null) {
-            // Distinct expectations by id (first occurrence wins), validated up front — this
-            // reproduces the previous "skip duplicate ids in the input array" behaviour.
+            // Distinct expectations by id: as an upsert of each entry in turn, the last entry for an id
+            // is kept and served from the first entry's place (an update in place keeps its created time).
             LinkedHashMap<String, Expectation> distinct = new LinkedHashMap<>();
             for (Expectation expectation : expectations) {
-                if (expectation != null && !distinct.containsKey(expectation.getId())) {
-                    validateRespondBeforeBody(expectation);
-                    distinct.put(expectation.getId(), expectation);
+                if (expectation != null) {
+                    Expectation replaced = distinct.put(expectation.getId(), expectation);
+                    if (replaced != null) {
+                        expectation.withCreated(replaced.getCreated());
+                    }
                 }
             }
+            distinct.values().forEach(this::validateRespondBeforeBody);
             // CONCURRENCY (issue #2579): register every id in-flight BEFORE any node-local
             // mutation; deregister in the finally AFTER the backend writes return, so a
             // concurrent eviction trim treats them as protected (see trimEvictedFromBackend()).

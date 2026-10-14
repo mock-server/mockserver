@@ -104,7 +104,7 @@ public class MainLintCommandTest {
         Output output = lint(first.getAbsolutePath(), second.getAbsolutePath());
 
         assertThat(output.out, containsString(first.getAbsolutePath() + " [1] any method /b"));
-        assertThat(output.out, containsString("WARNING DUPLICATE_ID: is replaced by a later entry with the same id (any method /c)"));
+        assertThat(output.out, containsString("WARNING DUPLICATE_ID: is replaced by a later entry with the same id (any method /c); a file loaded later replaces an earlier file's entries with the same id"));
         assertThat(output.out, containsString("see " + second.getAbsolutePath() + " [0] any method /c"));
         assertThat("no index from the combined list leaks into the message", output.out, not(containsString("index 2")));
     }
@@ -134,14 +134,14 @@ public class MainLintCommandTest {
     }
 
     @Test
-    public void shouldNameTheFirstEntryForADuplicateIdInOneFileAsKeptAsLoadingTheFileDoes() throws Exception {
+    public void shouldNameTheLastEntryForADuplicateIdInOneFileAsKeptAsLoadingTheFileDoes() throws Exception {
         File expectations = file("dup-in-file.json", "[{\"id\":\"dup\",\"httpRequest\":{\"path\":\"/a\"},\"httpResponse\":{}},{\"id\":\"dup\",\"httpRequest\":{\"path\":\"/b\"},\"httpResponse\":{}}]");
 
         Output output = lint(expectations.getAbsolutePath());
 
-        assertThat(output.out, containsString(expectations.getAbsolutePath() + " [1] any method /b"));
-        assertThat(output.out, containsString("WARNING DUPLICATE_ID: is ignored because an earlier entry in the same file has the same id (any method /a)"));
-        assertThat(output.out, containsString("see " + expectations.getAbsolutePath() + " [0] any method /a"));
+        assertThat(output.out, containsString(expectations.getAbsolutePath() + " [0] any method /a"));
+        assertThat(output.out, containsString("WARNING DUPLICATE_ID: is replaced by a later entry in the same file with the same id (any method /b); loading a file keeps only the last entry for each id"));
+        assertThat(output.out, containsString("see " + expectations.getAbsolutePath() + " [1] any method /b"));
     }
 
     @Test

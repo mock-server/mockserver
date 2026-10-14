@@ -111,4 +111,54 @@ public class RequestMatchersBatchLoadOrderingTest {
         Expectation viaIncremental = incrementalMatchers.firstMatchingExpectation(request().withMethod("GET").withPath("/overlap"));
         assertThat(viaBatch.getId(), is(viaIncremental.getId()));
     }
+
+    @Test
+    public void repeatedIdKeepsTheLastEntryServedFromTheFirstEntrysPlaceAsIncrementalAddDoes() {
+        // given - 'dup' twice, with an equal-priority expectation for the same request between them
+        List<Expectation> batch = List.of(
+            overlapping("dup", 0).thenRespond(response().withBody("first")),
+            overlapping("between", 0),
+            overlapping("dup", 0).thenRespond(response().withBody("last"))
+        );
+
+        // when - registered as one batch, and as one upsert per entry
+        RequestMatchers batchMatchers = newMatchers();
+        batchMatchers.update(batch.stream().map(Expectation::clone).toArray(Expectation[]::new), API);
+        RequestMatchers incrementalMatchers = newMatchers();
+        for (Expectation expectation : batch) {
+            incrementalMatchers.add(expectation.clone(), API);
+        }
+
+        // then - both keep the last 'dup' and serve it ahead of 'between'
+        assertThat(servedBodies(batchMatchers), is(List.of("last", "between")));
+        assertThat(servedBodies(incrementalMatchers), is(List.of("last", "between")));
+    }
+
+    @Test
+    public void repeatedIdInABatchReplacingAStoredExpectationKeepsTheStoredExpectationsPlace() {
+        // given - 'dup' already stored ahead of 'between'
+        RequestMatchers matchers = newMatchers();
+        matchers.update(new Expectation[]{
+            overlapping("dup", 0).thenRespond(response().withBody("stored")),
+            overlapping("between", 0)
+        }, API);
+
+        // when - a later batch repeats 'dup'
+        matchers.update(new Expectation[]{
+            overlapping("dup", 0).thenRespond(response().withBody("first")),
+            overlapping("between", 0),
+            overlapping("dup", 0).thenRespond(response().withBody("last"))
+        }, API);
+
+        // then
+        assertThat(servedBodies(matchers), is(List.of("last", "between")));
+    }
+
+    private static List<String> servedBodies(RequestMatchers matchers) {
+        List<String> bodies = new ArrayList<>();
+        for (Expectation expectation : matchers.retrieveActiveExpectations(null)) {
+            bodies.add(((org.mockserver.model.HttpResponse) expectation.getAction()).getBodyAsString());
+        }
+        return bodies;
+    }
 }

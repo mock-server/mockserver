@@ -844,12 +844,12 @@ public class ExpectationInitializerLoaderTest {
     }
 
     @Test
-    public void shouldNotReportAnEntryTheLoadIgnoresForARepeatedIdAsShadowed() throws Exception {
-        // given - the second 'dup' would be shadowed by the catch-all, but the load keeps only the first 'dup'
+    public void shouldNotReportAnEntryTheLoadReplacesForARepeatedIdAsShadowed() throws Exception {
+        // given - the first 'dup' would be shadowed by the catch-all, but the load keeps only the last 'dup'
         File file = initializerFile("[" +
             " { \"id\" : \"catch-all\", \"httpRequest\" : { \"path\" : \"/orders/.*\" }, \"httpResponse\" : { \"statusCode\" : 200 } }," +
-            " { \"id\" : \"dup\", \"httpRequest\" : { \"path\" : \"/users\" }, \"httpResponse\" : { \"statusCode\" : 201 } }," +
-            " { \"id\" : \"dup\", \"httpRequest\" : { \"path\" : \"/orders/1\" }, \"httpResponse\" : { \"statusCode\" : 202 } }" +
+            " { \"id\" : \"dup\", \"httpRequest\" : { \"path\" : \"/orders/1\" }, \"httpResponse\" : { \"statusCode\" : 201 } }," +
+            " { \"id\" : \"dup\", \"httpRequest\" : { \"path\" : \"/users\" }, \"httpResponse\" : { \"statusCode\" : 202 } }" +
             " ]");
         java.util.List<org.mockserver.log.model.LogEntry> logged = new java.util.concurrent.CopyOnWriteArrayList<>();
         RequestMatchers requestMatchers = mock(RequestMatchers.class);
@@ -857,26 +857,26 @@ public class ExpectationInitializerLoaderTest {
         // when
         new ExpectationInitializerLoader(configuration().initializationJsonPath(file.getAbsolutePath()), capturingLogger(logged), requestMatchers);
 
-        // then - every entry still reaches the store unchanged, which drops the repeat
+        // then - every entry still reaches the store unchanged, which keeps the last for each id
         org.mockito.ArgumentCaptor<Expectation[]> loaded = org.mockito.ArgumentCaptor.forClass(Expectation[].class);
         org.mockito.Mockito.verify(requestMatchers).update(loaded.capture(), org.mockito.ArgumentMatchers.any());
         assertThat(loaded.getValue().length, is(3));
-        // and - the WARN names the ignored entry as a duplicate, not as shadowed
+        // and - the WARN names the replaced entry as a duplicate, not as shadowed
         java.util.List<String> warnings = lintWarnings(logged);
         assertThat(String.valueOf(warnings), warnings.size(), is(1));
         String warning = warnings.get(0);
         assertThat(warning, org.hamcrest.Matchers.containsString("expectation lint found 1 problem(s)"));
-        assertThat(warning, org.hamcrest.Matchers.containsString("DUPLICATE_ID expectation 'dup' (any method /orders/1): is ignored because an earlier entry in the same file has the same id (any method /users)"));
+        assertThat(warning, org.hamcrest.Matchers.containsString("DUPLICATE_ID expectation 'dup' (any method /orders/1): is replaced by a later entry in the same file with the same id (any method /users); loading a file keeps only the last entry for each id"));
         assertThat(warning, org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("SHADOWED")));
     }
 
     @Test
-    public void shouldNotReportAnEntryTheLoadIgnoresForARepeatedIdAsShadowingAnother() throws Exception {
-        // given - the second 'dup' has a higher priority and would shadow 'specific', but the load keeps only the first 'dup'
+    public void shouldNotReportAnEntryTheLoadReplacesForARepeatedIdAsShadowingAnother() throws Exception {
+        // given - the first 'dup' has a higher priority and would shadow 'specific', but the load keeps only the last 'dup'
         File file = initializerFile("[" +
             " { \"id\" : \"specific\", \"httpRequest\" : { \"path\" : \"/orders/1\" }, \"httpResponse\" : { \"statusCode\" : 200 } }," +
-            " { \"id\" : \"dup\", \"httpRequest\" : { \"path\" : \"/users\" }, \"httpResponse\" : { \"statusCode\" : 201 } }," +
-            " { \"id\" : \"dup\", \"priority\" : 10, \"httpRequest\" : { \"path\" : \"/orders/.*\" }, \"httpResponse\" : { \"statusCode\" : 202 } }" +
+            " { \"id\" : \"dup\", \"priority\" : 10, \"httpRequest\" : { \"path\" : \"/orders/.*\" }, \"httpResponse\" : { \"statusCode\" : 201 } }," +
+            " { \"id\" : \"dup\", \"httpRequest\" : { \"path\" : \"/users\" }, \"httpResponse\" : { \"statusCode\" : 202 } }" +
             " ]");
         java.util.List<org.mockserver.log.model.LogEntry> logged = new java.util.concurrent.CopyOnWriteArrayList<>();
 
@@ -888,8 +888,30 @@ public class ExpectationInitializerLoaderTest {
         assertThat(String.valueOf(warnings), warnings.size(), is(1));
         String warning = warnings.get(0);
         assertThat(warning, org.hamcrest.Matchers.containsString("expectation lint found 1 problem(s)"));
-        assertThat(warning, org.hamcrest.Matchers.containsString("DUPLICATE_ID expectation 'dup' (any method /orders/.*): is ignored because an earlier entry in the same file has the same id (any method /users)"));
+        assertThat(warning, org.hamcrest.Matchers.containsString("DUPLICATE_ID expectation 'dup' (any method /orders/.*): is replaced by a later entry in the same file with the same id (any method /users)"));
         assertThat(warning, org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("SHADOWED")));
+    }
+
+    @Test
+    public void shouldCheckTheEntryTheLoadKeepsForARepeatedIdForShadowingFromTheFirstEntrysPlace() throws Exception {
+        // given - the kept (last) 'dup' is served from the first 'dup's place, ahead of the catch-all, which it shadows
+        File file = initializerFile("[" +
+            " { \"id\" : \"dup\", \"httpRequest\" : { \"path\" : \"/users\" }, \"httpResponse\" : { \"statusCode\" : 200 } }," +
+            " { \"id\" : \"orders-1\", \"httpRequest\" : { \"path\" : \"/orders/1\" }, \"httpResponse\" : { \"statusCode\" : 201 } }," +
+            " { \"id\" : \"dup\", \"httpRequest\" : { \"path\" : \"/orders/.*\" }, \"httpResponse\" : { \"statusCode\" : 202 } }" +
+            " ]");
+        java.util.List<org.mockserver.log.model.LogEntry> logged = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+        // when
+        new ExpectationInitializerLoader(configuration().initializationJsonPath(file.getAbsolutePath()), capturingLogger(logged), mock(RequestMatchers.class));
+
+        // then
+        java.util.List<String> warnings = lintWarnings(logged);
+        assertThat(String.valueOf(warnings), warnings.size(), is(1));
+        String warning = warnings.get(0);
+        assertThat(warning, org.hamcrest.Matchers.containsString("expectation lint found 2 problem(s)"));
+        assertThat(warning, org.hamcrest.Matchers.containsString("DUPLICATE_ID expectation 'dup' (any method /users): is replaced by a later entry in the same file with the same id (any method /orders/.*)"));
+        assertThat(warning, org.hamcrest.Matchers.containsString("SHADOWED expectation 'orders-1' (any method /orders/1): never matches: 'dup' (any method /orders/.*) is evaluated first"));
     }
 
     @Test

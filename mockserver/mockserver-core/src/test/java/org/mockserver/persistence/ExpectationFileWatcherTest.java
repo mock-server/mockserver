@@ -865,6 +865,55 @@ public class ExpectationFileWatcherTest {
     }
 
     @Test
+    public void shouldKeepTheLastEntryForARepeatedIdOnLoadAndOnEveryReload() throws Exception {
+        ExpectationFileWatcher expectationFileWatcher = null;
+        try {
+            // given - a watched file that repeats the id 'dup', with another expectation for the same path between
+            File mockserverInitialization = new File(temporaryFolder.getRoot(), "mockserverInitialization" + UUIDService.getUUID() + ".json");
+            Files.write(mockserverInitialization.toPath(), repeatedIdFile("v1").getBytes(StandardCharsets.UTF_8));
+            Configuration configuration = configuration()
+                .initializationJsonPath(mockserverInitialization.getPath())
+                .watchInitializationJson(true)
+                .watchInitializationJsonPollPeriodMillis(POLL_PERIOD_MILLIS);
+            MockServerLogger logger = new MockServerLogger(configuration, ExpectationFileWatcherTest.class);
+            CompletableFuture<String> expectationsInitialised = new CompletableFuture<>();
+            requestMatchers.registerListener((requestMatchers, cause) -> expectationsInitialised.complete("updated"));
+            expectationFileWatcher = new ExpectationFileWatcher(configuration, logger, requestMatchers, new ExpectationInitializerLoader(configuration, logger, requestMatchers));
+            expectationsInitialised.get(30, SECONDS);
+
+            // then - the last 'dup' is kept and served from the first one's place
+            assertThat(servedBodies(), contains("last v1", "between v1"));
+
+            // when - the file is rewritten
+            CompletableFuture<String> expectationsUpdated = new CompletableFuture<>();
+            requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
+            Files.write(mockserverInitialization.toPath(), repeatedIdFile("v2").getBytes(StandardCharsets.UTF_8));
+            expectationsUpdated.get(30, SECONDS);
+
+            // then - the reload keeps the last 'dup' too, in the same place
+            assertThat(servedBodies(), contains("last v2", "between v2"));
+        } finally {
+            if (expectationFileWatcher != null) {
+                expectationFileWatcher.stop();
+            }
+        }
+    }
+
+    private static String repeatedIdFile(String version) {
+        return "[" +
+            " { \"id\" : \"dup\", \"httpRequest\" : { \"path\" : \"/dup\" }, \"httpResponse\" : { \"body\" : \"first " + version + "\" } }," +
+            " { \"id\" : \"between\", \"httpRequest\" : { \"path\" : \"/dup\" }, \"httpResponse\" : { \"body\" : \"between " + version + "\" } }," +
+            " { \"id\" : \"dup\", \"httpRequest\" : { \"path\" : \"/dup\" }, \"httpResponse\" : { \"body\" : \"last " + version + "\" } }" +
+            " ]";
+    }
+
+    private List<String> servedBodies() {
+        return requestMatchers.retrieveActiveExpectations(null).stream()
+            .map(expectation -> ((org.mockserver.model.HttpResponse) expectation.getAction()).getBodyAsString())
+            .collect(Collectors.toList());
+    }
+
+    @Test
     public void shouldLogLintWarningsForTheExpectationsAReloadLoads() throws Exception {
         ExpectationFileWatcher expectationFileWatcher = null;
         try {
