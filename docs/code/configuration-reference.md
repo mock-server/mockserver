@@ -50,7 +50,7 @@ The recognised-key set is derived **reflectively from the `MOCKSERVER_*` constan
 
 ## Warnings about upcoming default changes
 
-The next major release changes four groups of insecure defaults (`docs/plans/later/security-defaults.md`, DEF-5 to DEF-8). Until then `UpcomingDefaultChanges` gives a startup `WARN` for each one left in place:
+A future major release changes four groups of insecure defaults (`docs/plans/later/security-defaults.md`, DEF-5 to DEF-8). Until then `UpcomingDefaultChanges` gives a startup `WARN` for each one left in place:
 
 | Property | Warned while | Future default |
 |---|---|---|

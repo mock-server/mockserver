@@ -1,4 +1,4 @@
-# Security Defaults — Next Major Release
+# Security Defaults — A Future Major Release
 
 **Status:** Open. DEF-2 and DEF-3 (the Velocity/JavaScript template RCE defaults) shipped
 2026-07-27 in response to
@@ -11,14 +11,14 @@ template items, because leaving a reported RCE default in place until the next m
 defensible; the rest still travel together. Insecure-by-default configuration values to flip in a single major
 release.
 **Created:** 2026-05-26 (supersedes `security-remediation.md`)
-**Last verified against code:** 2026-10-13
+**Last verified against code:** 2026-10-14
 **Scope:** Configuration default changes only. All underlying mitigations (timeouts, validators, body limits, secure RNG, XXE blocks) have already shipped and are wired behind these properties; only the defaults remain.
 
 ## Goals
 
 1. Ship every insecure default flip in one release so users perform a single migration.
 2. Each flip is **fully reversible** by setting one property — no functionality is removed.
-3. DEF-1 already emits a WARN when set to its insecure value, so its users have had a deprecation window. DEF-5, DEF-6, DEF-7 and DEF-8 warn at startup since the release after 8.0.0 (`UpcomingDefaultChanges`, logged once per JVM from `LifeCycle.startedServer`, only while the property is not set), so their deprecation window has started and the flips may land in the next major release.
+3. DEF-1 already emits a WARN when set to its insecure value, so its users have had a deprecation window. DEF-5, DEF-6, DEF-7 and DEF-8 warn at startup since the release after 8.0.0 (`UpcomingDefaultChanges`, logged once per JVM from `LifeCycle.startedServer`, only while the property is not set), so their deprecation window has started and the flips may land in a future major release (not 9.0.0, owner decision 2026-10-14).
 4. One consolidated migration guide. One major version bump.
 
 ## Items
@@ -123,7 +123,7 @@ For the record so future contributors don't re-litigate:
 
 All flips are independent property changes; order does not matter functionally. Suggested PR sequencing for review clarity:
 
-0. **Done:** startup WARNs for DEF-5, DEF-6, DEF-7 and DEF-8 (`UpcomingDefaultChanges`, logged from `LifeCycle.startedServer`). When the flips land, delete the flipped entries from `UpcomingDefaultChanges`, their tests and the "Default changing in the next major release" notes in `configuration_properties.html`. The WAR deployments do not emit these warnings; decide whether they should before the flip (DEF-5 and DEF-7 apply to the WAR; DEF-6 and DEF-8 do not, as the servlet container binds and parses).
+0. **Done:** startup WARNs for DEF-5, DEF-6, DEF-7 and DEF-8 (`UpcomingDefaultChanges`, logged from `LifeCycle.startedServer`). When the flips land, delete the flipped entries from `UpcomingDefaultChanges`, their tests and the "Default changing in a future major release" notes in `configuration_properties.html`. The WAR deployments do not emit these warnings; decide whether they should before the flip (DEF-5 and DEF-7 apply to the WAR; DEF-6 and DEF-8 do not, as the servlet container binds and parses).
 1. DEF-1 — a single-value default change; trivial review.
 2. DEF-5, DEF-7 — boolean flips on existing well-tested validators.
 3. DEF-8 — three numeric defaults; verify all integration tests still pass.

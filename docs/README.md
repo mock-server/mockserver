@@ -86,7 +86,7 @@ Build process, releases, dependencies, security scanning, and the documentation 
 
 | Document | Description |
 |----------|-------------|
-| [Security Defaults](plans/later/security-defaults.md) | Insecure default flips planned for the next major release |
+| [Security Defaults](plans/later/security-defaults.md) | Insecure default flips planned for a future major release |
 
 ### Other
 

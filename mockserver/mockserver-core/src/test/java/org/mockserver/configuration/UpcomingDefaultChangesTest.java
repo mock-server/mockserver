@@ -10,7 +10,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 /**
- * The start-up warnings for the insecure defaults the next major release changes. Every value is set on the
+ * The start-up warnings for the insecure defaults a future major release changes. Every value is set on the
  * {@link Configuration} instance and explicitness is passed in, so no global state is read or written.
  */
 public class UpcomingDefaultChangesTest {
@@ -67,9 +67,18 @@ public class UpcomingDefaultChangesTest {
         assertThat(proxyUnmatched, containsString("or to true to keep"));
 
         String limits = warningsAbout(warnings, "HTTP parsing limits").get(0);
-        assertThat(limits, containsString("mockserver.maxInitialLineLength (65536 bytes now, 8192 next)"));
-        assertThat(limits, containsString("mockserver.maxHeaderSize (262144 bytes now, 16384 next)"));
-        assertThat(limits, containsString("mockserver.maxChunkSize (2147483647 bytes now, 16384 next)"));
+        assertThat(limits, containsString("mockserver.maxInitialLineLength (65536 bytes now, 8192 later)"));
+        assertThat(limits, containsString("mockserver.maxHeaderSize (262144 bytes now, 16384 later)"));
+        assertThat(limits, containsString("mockserver.maxChunkSize (2147483647 bytes now, 16384 later)"));
+    }
+
+    @Test
+    public void eachWarningSaysAFutureMajorReleaseWithoutNamingWhichOne() {
+        List<String> warnings = UpcomingDefaultChanges.warnings(currentDefaults(), NOTHING_SET);
+
+        assertThat(warnings, everyItem(containsString("a future major release")));
+        assertThat(warnings, everyItem(not(containsStringIgnoringCase("next"))));
+        assertThat(warnings, everyItem(not(matchesPattern("(?s).*(?<![\\d.])\\d+\\.\\d+\\.\\d+(?![\\d.]).*"))));
     }
 
     @Test

@@ -16,7 +16,7 @@ import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
- * A server warns at start-up about each insecure default left in place that the next major release changes, once per
+ * A server warns at start-up about each insecure default left in place that a future major release changes, once per
  * JVM, and not about a property set on its configuration.
  */
 public class UpcomingDefaultChangesWarningIntegrationTest {
@@ -25,7 +25,7 @@ public class UpcomingDefaultChangesWarningIntegrationTest {
         return logged.stream()
             .filter(entry -> entry.getLogLevel() == Level.WARN)
             .map(LogEntry::getMessageFormat)
-            .filter(message -> message.contains("the next major release"))
+            .filter(message -> message.contains("a future major release"))
             .collect(Collectors.toList());
     }
 
