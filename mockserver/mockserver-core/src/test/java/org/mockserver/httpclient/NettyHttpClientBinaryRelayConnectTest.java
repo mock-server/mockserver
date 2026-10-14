@@ -34,6 +34,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -49,6 +50,7 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.hamcrest.Matchers.startsWith;
@@ -138,40 +140,103 @@ public class NettyHttpClientBinaryRelayConnectTest {
     }
 
     @Test
-    public void shouldNotConnectAroundAForwardHttpProxy() throws Exception {
-        try (ServerSocket upstream = new ServerSocket(0, 1, LOOPBACK); ServerSocket proxy = new ServerSocket(0, 1, LOOPBACK)) {
-            upstream.setSoTimeout(200);
-            proxy.setSoTimeout(200);
-            NettyHttpClient client = client(configuration(), Collections.singletonList(proxyConfiguration(ProxyConfiguration.Type.HTTP, new InetSocketAddress(LOOPBACK, proxy.getLocalPort()))), null);
+    public void shouldTunnelThroughForwardHttpProxyWithConnectWhenItIsTheOnlyUpstreamProxy() throws Exception {
+        for (boolean secure : new boolean[]{false, true}) {
+            try (ServerSocket proxy = new ServerSocket(0, 1, LOOPBACK)) {
+                proxy.setSoTimeout(10_000);
+                NettyHttpClient client = client(configuration(), Collections.singletonList(proxyConfiguration(ProxyConfiguration.Type.HTTP, new InetSocketAddress(LOOPBACK, proxy.getLocalPort()))), null);
+                CompletableFuture<String> received = new CompletableFuture<>();
 
-            for (boolean secure : new boolean[]{false, true}) {
-                IllegalStateException refused = assertThrows(IllegalStateException.class,
-                    () -> client.connectBinaryRelay(clientConnections.next(), new InetSocketAddress(LOOPBACK, upstream.getLocalPort()), secure, NOTHING));
+                ChannelFuture connect = client.connectBinaryRelay(clientConnections.next(), InetSocketAddress.createUnresolved("db.example.com", 5432), secure, receiving(received));
+                Channel channel = connect.channel();
+                try (Socket accepted = proxy.accept()) {
+                    accepted.setSoTimeout(10_000);
+                    String head = readHead(accepted);
+                    assertThat("secure=" + secure + ", the name is left to the proxy", head, startsWith("CONNECT db.example.com:5432 HTTP/1.1\r\n"));
+                    assertThat("no credentials are set", head.toLowerCase(), not(containsString("proxy-authorization")));
+                    assertThat("not connected until the proxy has opened the tunnel", connect.await(200, TimeUnit.MILLISECONDS), is(false));
 
-                assertThat(refused.getMessage(), containsString("forwardHttpProxy, which does not tunnel a connection"));
+                    accepted.getOutputStream().write("HTTP/1.1 200 Connection established\r\n\r\n".getBytes(StandardCharsets.US_ASCII));
+                    assertThat(connect.await(10, TimeUnit.SECONDS), is(true));
+                    assertThat(connect.isSuccess(), is(true));
+                    assertThat("the tunnel's handler is first", channel.pipeline().first(), is(instanceOf(HttpConnectProxyHandler.class)));
+
+                    assertThroughTheTunnel(channel, accepted, received);
+                } finally {
+                    channel.close().sync();
+                }
             }
-            assertThrows("nothing connects to the upstream", java.net.SocketTimeoutException.class, upstream::accept);
-            assertThrows("nor to the proxy", java.net.SocketTimeoutException.class, proxy::accept);
         }
     }
 
     @Test
-    public void shouldSayWhichDestinationsCannotBeRelayed() {
-        InetSocketAddress target = InetSocketAddress.createUnresolved("db.example.com", 5432);
-        InetSocketAddress proxy = InetSocketAddress.createUnresolved("proxy.example.com", 3128);
-        ProxyConfiguration http = proxyConfiguration(ProxyConfiguration.Type.HTTP, proxy);
-        ProxyConfiguration https = proxyConfiguration(ProxyConfiguration.Type.HTTPS, proxy);
-        ProxyConfiguration socks = proxyConfiguration(ProxyConfiguration.Type.SOCKS5, proxy);
-        String httpOnly = "its upstream proxy is forwardHttpProxy, which does not tunnel a connection";
-        for (boolean secure : new boolean[]{false, true}) {
-            assertThat(client(configuration(), null, null).binaryRelayUnavailableBecause(target, secure), is(nullValue()));
-            assertThat(client(configuration(), Collections.singletonList(http), null).binaryRelayUnavailableBecause(target, secure), is(httpOnly));
-            assertThat(client(configuration(), Collections.singletonList(socks), null).binaryRelayUnavailableBecause(target, secure), is(nullValue()));
-            assertThat(client(configuration(), Collections.singletonList(https), null).binaryRelayUnavailableBecause(target, secure), is(nullValue()));
-            assertThat(client(configuration(), Arrays.asList(http, https), null).binaryRelayUnavailableBecause(target, secure), is(nullValue()));
-            assertThat(client(configuration(), Arrays.asList(http, socks), null).binaryRelayUnavailableBecause(target, secure), is(nullValue()));
-            assertThat("a destination on noProxyHosts goes through no proxy", client(configuration().noProxyHosts("*.example.com"), Collections.singletonList(http), null).binaryRelayUnavailableBecause(target, secure), is(nullValue()));
-            assertThat(client(configuration().noProxyHosts("other.example.org"), Collections.singletonList(http), null).binaryRelayUnavailableBecause(target, secure), is(httpOnly));
+    public void shouldSendTheForwardProxyCredentialsInTheConnectThroughForwardHttpProxy() throws Exception {
+        try (ServerSocket proxy = new ServerSocket(0, 1, LOOPBACK)) {
+            proxy.setSoTimeout(10_000);
+            NettyHttpClient client = client(configuration(), Collections.singletonList(proxyConfiguration(ProxyConfiguration.Type.HTTP, new InetSocketAddress(LOOPBACK, proxy.getLocalPort()), "proxyUser", "proxyPassword")), null);
+
+            ChannelFuture connect = client.connectBinaryRelay(clientConnections.next(), new InetSocketAddress(LOOPBACK_ADDRESS, 5432), false, NOTHING);
+            try (Socket accepted = proxy.accept()) {
+                accepted.setSoTimeout(10_000);
+                String head = readHead(accepted);
+                assertThat(head, startsWith("CONNECT 127.0.0.1:5432 HTTP/1.1\r\n"));
+                String credentials = Base64.getEncoder().encodeToString("proxyUser:proxyPassword".getBytes(StandardCharsets.UTF_8));
+                assertThat(head.toLowerCase(), containsString("proxy-authorization: basic " + credentials.toLowerCase() + "\r\n"));
+
+                accepted.getOutputStream().write("HTTP/1.1 200 Connection established\r\n\r\n".getBytes(StandardCharsets.US_ASCII));
+                assertThat(connect.await(10, TimeUnit.SECONDS), is(true));
+                assertThat(connect.isSuccess(), is(true));
+            } finally {
+                connect.channel().close().sync();
+            }
+        }
+    }
+
+    @Test
+    public void shouldTunnelThroughForwardHttpsProxyRatherThanForwardHttpProxyWhenBothAreSet() throws Exception {
+        try (ServerSocket httpProxy = new ServerSocket(0, 1, LOOPBACK); ServerSocket httpsProxy = new ServerSocket(0, 1, LOOPBACK)) {
+            httpProxy.setSoTimeout(200);
+            httpsProxy.setSoTimeout(10_000);
+            NettyHttpClient client = client(configuration(), Arrays.asList(
+                proxyConfiguration(ProxyConfiguration.Type.HTTP, new InetSocketAddress(LOOPBACK, httpProxy.getLocalPort())),
+                proxyConfiguration(ProxyConfiguration.Type.HTTPS, new InetSocketAddress(LOOPBACK, httpsProxy.getLocalPort()))
+            ), null);
+
+            ChannelFuture connect = client.connectBinaryRelay(clientConnections.next(), new InetSocketAddress(LOOPBACK_ADDRESS, 5432), false, NOTHING);
+            try (Socket accepted = httpsProxy.accept()) {
+                accepted.setSoTimeout(10_000);
+                assertThat(readHead(accepted), startsWith("CONNECT 127.0.0.1:5432 HTTP/1.1\r\n"));
+                assertThrows("nothing is asked of forwardHttpProxy", java.net.SocketTimeoutException.class, httpProxy::accept);
+            } finally {
+                connect.channel().close().sync();
+            }
+        }
+    }
+
+    @Test
+    public void shouldNameTheProxyItsSettingAndTheStatusWhenForwardHttpProxyRefusesTheTunnel() throws Exception {
+        for (boolean credentials : new boolean[]{false, true}) {
+            try (ServerSocket proxy = new ServerSocket(0, 1, LOOPBACK)) {
+                InetSocketAddress proxyAddress = new InetSocketAddress(LOOPBACK, proxy.getLocalPort());
+                proxy.setSoTimeout(10_000);
+                NettyHttpClient client = client(configuration(), Collections.singletonList(credentials
+                    ? proxyConfiguration(ProxyConfiguration.Type.HTTP, proxyAddress, "proxyUser", "wrong")
+                    : proxyConfiguration(ProxyConfiguration.Type.HTTP, proxyAddress)), null);
+
+                ChannelFuture connect = client.connectBinaryRelay(clientConnections.next(), new InetSocketAddress(LOOPBACK_ADDRESS, 5432), false, NOTHING);
+                try (Socket accepted = proxy.accept()) {
+                    accepted.setSoTimeout(10_000);
+                    readHead(accepted);
+                    accepted.getOutputStream().write("HTTP/1.1 407 Proxy Authentication Required\r\nProxy-Authenticate: Basic realm=\"proxy\"\r\nContent-Length: 0\r\n\r\n".getBytes(StandardCharsets.US_ASCII));
+
+                    assertThat(connect.await(10, TimeUnit.SECONDS), is(true));
+                    assertThat(connect.cause(), is(instanceOf(java.net.ConnectException.class)));
+                    assertThat(connect.cause().getMessage(), is("upstream proxy " + proxyAddress.getHostString() + ":" + proxy.getLocalPort() + " set by forwardHttpProxy refused to open a CONNECT tunnel to 127.0.0.1:5432 with status 407 Proxy Authentication Required, "
+                        + (credentials ? "check forwardProxyAuthenticationUsername and forwardProxyAuthenticationPassword" : "it asks for credentials: set forwardProxyAuthenticationUsername and forwardProxyAuthenticationPassword")));
+                    assertThat("the proxy's own answer is kept", connect.cause().getCause(), is(instanceOf(ProxyConnectException.class)));
+                    assertThat("the tunnel's connection is closed", connect.channel().closeFuture().await(10, TimeUnit.SECONDS), is(true));
+                }
+            }
         }
     }
 
@@ -285,6 +350,7 @@ public class NettyHttpClientBinaryRelayConnectTest {
     @Test
     public void shouldFailTheConnectWhenTheProxyRefusesTheTunnel() throws Exception {
         try (ServerSocket proxy = new ServerSocket(0, 1, LOOPBACK)) {
+            proxy.setSoTimeout(10_000);
             NettyHttpClient client = client(configuration(), Collections.singletonList(proxyConfiguration(ProxyConfiguration.Type.HTTPS, new InetSocketAddress(LOOPBACK, proxy.getLocalPort()))), null);
 
             ChannelFuture connect = client.connectBinaryRelay(clientConnections.next(), new InetSocketAddress(LOOPBACK, 5432), false, NOTHING);
@@ -294,8 +360,8 @@ public class NettyHttpClientBinaryRelayConnectTest {
                 accepted.getOutputStream().write("HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\n\r\n".getBytes(StandardCharsets.US_ASCII));
 
                 assertThat(connect.await(10, TimeUnit.SECONDS), is(true));
-                assertThat(connect.cause(), is(instanceOf(ProxyConnectException.class)));
-                assertThat(connect.cause().getMessage(), containsString("403"));
+                assertThat(connect.cause().getMessage(), is("upstream proxy " + LOOPBACK.getHostName() + ":" + proxy.getLocalPort() + " set by forwardHttpsProxy refused to open a CONNECT tunnel to " + LOOPBACK.getHostName() + ":5432 with status 403 Forbidden"));
+                assertThat(connect.cause().getCause(), is(instanceOf(ProxyConnectException.class)));
                 assertThat("the tunnel's connection is closed", connect.channel().closeFuture().await(10, TimeUnit.SECONDS), is(true));
             }
         }

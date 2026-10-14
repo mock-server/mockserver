@@ -11,7 +11,6 @@ import org.mockserver.configuration.Configuration;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.BinaryMessage;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.proxyconfiguration.ProxyConfiguration;
@@ -20,7 +19,6 @@ import org.mockserver.scheduler.Scheduler;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
@@ -212,31 +210,6 @@ public class NoProxyHostsBypassesUpstreamProxyIntegrationTest {
         assertTunnelled(send(client, false, named(NAME)), "domain " + NAME + ":" + destinationPort());
     }
 
-    // binary forwarding
-
-    @Test
-    public void shouldBypassForwardSocksProxyForBinaryDestinationOnTheList() throws Exception {
-        NettyHttpClient client = clientThrough(ProxyConfiguration.Type.SOCKS5, "*.internal.test");
-        try (EchoServer echoServer = new EchoServer()) {
-            assertThat(sendBinary(client, named(NAME, echoServer.port())), is("ping"));
-        }
-        assertThat(upstreamProxy.destinations(), is(empty()));
-    }
-
-    @Test
-    public void shouldBypassForwardHttpProxyForBinaryDestinationOnTheList() throws Exception {
-        NettyHttpClient client = clientThrough(ProxyConfiguration.Type.HTTP, NAME);
-        try (EchoServer echoServer = new EchoServer()) {
-            // shaped as a request, so the HTTP proxy would answer it rather than wait
-            String bytes = "PING /binary HTTP/1.1\r\n\r\n";
-            BinaryMessage response = client
-                .sendRequest(BinaryMessage.bytes(bytes.getBytes(StandardCharsets.UTF_8)), false, named(NAME, echoServer.port()), TimeUnit.SECONDS.toMillis(TIMEOUT_SECONDS))
-                .get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-            assertThat(new String(response.getBytes(), StandardCharsets.UTF_8), is(bytes));
-        }
-        assertThat(upstreamProxy.destinations(), is(empty()));
-    }
-
     // through MockServer: a forward with no socket address goes to its Host header
 
     @Test
@@ -318,13 +291,6 @@ public class NoProxyHostsBypassesUpstreamProxyIntegrationTest {
         return client
             .sendRequest(target(secure, destination.getHostString()), destination)
             .get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-    }
-
-    private static String sendBinary(NettyHttpClient client, InetSocketAddress destination) throws Exception {
-        BinaryMessage response = client
-            .sendRequest(BinaryMessage.bytes("ping".getBytes(StandardCharsets.UTF_8)), false, destination, TimeUnit.SECONDS.toMillis(TIMEOUT_SECONDS))
-            .get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        return new String(response.getBytes(), StandardCharsets.UTF_8);
     }
 
     private static InetSocketAddress named(String name) throws IOException {

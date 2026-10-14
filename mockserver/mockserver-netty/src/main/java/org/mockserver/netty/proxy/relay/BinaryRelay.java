@@ -19,7 +19,6 @@ import org.mockserver.log.model.SensitiveLogValue;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.BinaryMessage;
 import org.mockserver.model.BinaryProxyListener;
-import org.mockserver.netty.proxy.BinaryRequestProxyingHandler;
 import org.mockserver.netty.proxy.PostgresqlMessageFramer;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.socket.ChannelReadPause;
@@ -60,14 +59,12 @@ import static org.mockserver.netty.unification.PortUnificationHandler.isSslEnabl
  * connection, so what was sent before goes up in the clear and everything after over TLS. A client whose connection
  * was TLS from its first byte gets an upstream connection that is TLS from its first byte too.
  * <p>
- * The upstream connection is made directly or through a tunnel ({@code forwardSocksProxy}, {@code forwardHttpsProxy}).
- * A connection this cannot carry, one whose only upstream proxy is {@code forwardHttpProxy}, is left to the caller,
- * which forwards each of its messages on an upstream connection of its own: see {@link #decideOnce()}.
+ * The upstream connection is made directly or through a tunnel: SOCKS5 for {@code forwardSocksProxy}, {@code CONNECT}
+ * for {@code forwardHttpsProxy} or {@code forwardHttpProxy}.
  */
 public final class BinaryRelay {
 
     private static final AttributeKey<BinaryRelay> RELAY = AttributeKey.valueOf("mockserver.binaryRelay");
-    private static final String SETTING = "forwardBinaryRequestsUseSingleConnection";
     /**
      * The client connection is not read while more messages than this wait to be reported to the listener, and is
      * read again once no more than half as many do; the same bound applies to the upstream's reads.
@@ -110,14 +107,14 @@ public final class BinaryRelay {
     // the upstream closed while the client was open: its close then closes the client before a handshake reports it
     private boolean upstreamClosedFirst;
     private boolean finished;
-    private boolean decided;
-    private boolean perMessage;
     private boolean upstreamHeldForClient;
     private boolean upstreamHeldForListener;
     private Exchange latest;
     private String latestCorrelationId;
     private int pendingListenerCalls;
     private int pendingUpstreamMessageCalls;
+    // the listener is told of a connection's messages one at a time, in order
+    private CompletableFuture<Void> previousListenerCall;
     private ScheduledFuture<?> upstreamStallCheck;
     private long bytesWaitingAtLastStallCheck;
 
@@ -147,22 +144,13 @@ public final class BinaryRelay {
     }
 
     /**
-     * Relays a message read from the client to its upstream connection, opening that connection for the first one.
-     * Must be called on the client connection's event loop.
-     *
-     * @return false if the message was not taken: the caller is to forward it on an upstream connection of its own
-     */
-    public static boolean forward(ChannelHandlerContext ctx, BinaryMessage binaryRequest, String logCorrelationId, InetSocketAddress target, Configuration configuration, MockServerLogger mockServerLogger, Scheduler scheduler, NettyHttpClient httpClient, BinaryProxyListener listener) {
-        return forward(ctx, binaryRequest, logCorrelationId, UpstreamReply.RELAY, target, configuration, mockServerLogger, scheduler, httpClient, listener);
-    }
-
-    /**
-     * As {@link #forward(ChannelHandlerContext, BinaryMessage, String, InetSocketAddress, Configuration, MockServerLogger, Scheduler, NettyHttpClient, BinaryProxyListener)},
+     * Relays a message read from the client to its upstream connection, opening that connection for the first one,
      * with the upstream's reply to this message relayed, dropped or replaced. A reply is dropped or replaced only on a
-     * connection whose replies are tracked ({@link #tracksReplies(Channel)}); on any other it is relayed.
+     * connection whose replies are tracked ({@link #tracksReplies(Channel)}); on any other it is relayed. Must be
+     * called on the client connection's event loop.
      */
-    public static boolean forward(ChannelHandlerContext ctx, BinaryMessage binaryRequest, String logCorrelationId, UpstreamReply reply, InetSocketAddress target, Configuration configuration, MockServerLogger mockServerLogger, Scheduler scheduler, NettyHttpClient httpClient, BinaryProxyListener listener) {
-        return relayOf(ctx, target, configuration, mockServerLogger, scheduler, httpClient, listener).fromClient(binaryRequest, logCorrelationId, reply);
+    public static void forward(ChannelHandlerContext ctx, BinaryMessage binaryRequest, String logCorrelationId, UpstreamReply reply, InetSocketAddress target, Configuration configuration, MockServerLogger mockServerLogger, Scheduler scheduler, NettyHttpClient httpClient, BinaryProxyListener listener) {
+        relayOf(ctx, target, configuration, mockServerLogger, scheduler, httpClient, listener).fromClient(binaryRequest, logCorrelationId, reply);
     }
 
     /**
@@ -180,37 +168,28 @@ public final class BinaryRelay {
      */
     public static boolean tracksReplies(Channel client) {
         BinaryRelay relay = client.hasAttr(RELAY) ? client.attr(RELAY).get() : null;
-        return relay != null && !relay.perMessage && relay.replies != null && !relay.replies.lost();
+        return relay != null && relay.replies != null && !relay.replies.lost();
     }
 
     /**
-     * Whether this connection's messages are relayed on one upstream connection, so that MockServer may answer one
-     * itself instead (matchBinaryExpectationsWhenProxying). Opens no upstream connection. Must be called on the
-     * client connection's event loop.
+     * Makes this connection's relay, if it has none yet, without opening its upstream connection, so that a message
+     * MockServer answers itself (matchBinaryExpectationsWhenProxying) is ordered and held back by it. Must be
+     * called on the client connection's event loop.
      */
-    public static boolean relaysOnOneConnection(ChannelHandlerContext ctx, InetSocketAddress target, Configuration configuration, MockServerLogger mockServerLogger, Scheduler scheduler, NettyHttpClient httpClient, BinaryProxyListener listener) {
-        BinaryRelay relay = relayOf(ctx, target, configuration, mockServerLogger, scheduler, httpClient, listener);
-        relay.decideOnce();
-        return !relay.perMessage;
+    public static void prepare(ChannelHandlerContext ctx, InetSocketAddress target, Configuration configuration, MockServerLogger mockServerLogger, Scheduler scheduler, NettyHttpClient httpClient, BinaryProxyListener listener) {
+        relayOf(ctx, target, configuration, mockServerLogger, scheduler, httpClient, listener);
     }
 
     /**
      * Opens the upstream connection of a client that has sent nothing yet, so that a server that speaks first
      * (forwardBinaryServerFirstWaitMillis) is heard: what it sends is relayed to the client as any upstream read is.
      * Must be called on the client connection's event loop.
-     *
-     * @return false if the connection is not relayed on one upstream connection, so nothing was opened
      */
-    public static boolean openBeforeClientSpeaks(ChannelHandlerContext ctx, InetSocketAddress target, Configuration configuration, MockServerLogger mockServerLogger, Scheduler scheduler, NettyHttpClient httpClient, BinaryProxyListener listener) {
+    public static void openBeforeClientSpeaks(ChannelHandlerContext ctx, InetSocketAddress target, Configuration configuration, MockServerLogger mockServerLogger, Scheduler scheduler, NettyHttpClient httpClient, BinaryProxyListener listener) {
         BinaryRelay relay = relayOf(ctx, target, configuration, mockServerLogger, scheduler, httpClient, listener);
-        relay.decideOnce();
-        if (relay.perMessage) {
-            return false;
-        }
         if (!relay.finished && !relay.connectStarted) {
             relay.connect();
         }
-        return true;
     }
 
     /**
@@ -252,11 +231,11 @@ public final class BinaryRelay {
      * The client has started TLS part way through: its handshake with MockServer is under way, so the upstream
      * connection starts its own. Called when the client's server certificate has been chosen (Netty's
      * {@code SniCompletionEvent}), before anything the client sends over TLS is decrypted. A connection without a
-     * relay, or one that is not relayed, is left alone.
+     * relay is left alone.
      */
     public static void clientStartedTls(Channel client) {
         BinaryRelay relay = client.hasAttr(RELAY) ? client.attr(RELAY).get() : null;
-        if (relay != null && !relay.perMessage && !relay.clientStartedWithTls) {
+        if (relay != null && !relay.clientStartedWithTls) {
             relay.upgradeUpstreamToTls();
         }
     }
@@ -293,20 +272,16 @@ public final class BinaryRelay {
         }
     }
 
-    private boolean fromClient(BinaryMessage binaryRequest, String logCorrelationId, UpstreamReply reply) {
+    private void fromClient(BinaryMessage binaryRequest, String logCorrelationId, UpstreamReply reply) {
         latestCorrelationId = logCorrelationId;
-        decideOnce();
-        if (perMessage) {
-            return false;
-        }
         if (finished || !connectStarted && !connect()) {
-            return true;
+            return;
         }
         if (isSslEnabledUpstream(client)) {
             // a backstop for the event: anything the client sends over TLS goes upstream over TLS
             upgradeUpstreamToTls();
             if (finished) {
-                return true;
+                return;
             }
             if (upstreamTls == null || !upstreamTls.handshakeFuture().isSuccess()) {
                 hold(ClientHold.UPSTREAM_HANDSHAKING);
@@ -331,32 +306,6 @@ public final class BinaryRelay {
             writeToUpstream(exchange);
         } else {
             waitingForConnect.add(exchange);
-        }
-        return true;
-    }
-
-    /**
-     * Decides, at the connection's first message and once for its life, whether it is relayed on one upstream
-     * connection or each of its messages is forwarded on one of its own, as all are when the setting is off: the
-     * one it cannot be relayed through is an upstream proxy that does not tunnel.
-     */
-    private void decideOnce() {
-        if (decided) {
-            return;
-        }
-        decided = true;
-        String reason = httpClient.binaryRelayUnavailableBecause(target, clientStartedWithTls);
-        if (reason != null) {
-            perMessage = true;
-            if (mockServerLogger.isEnabledForInstance(Level.DEBUG)) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(Level.DEBUG)
-                        .setCorrelationId(latestCorrelationId)
-                        .setMessageFormat("forwarding each message of binary connection from:{}to:{}on an upstream connection of its own, as when " + SETTING + " is false, because:{}")
-                        .setArguments(client.remoteAddress(), target, reason)
-                );
-            }
         }
     }
 
@@ -782,8 +731,8 @@ public final class BinaryRelay {
 
     private void callListener(Runnable onListener, boolean upstreamMessage) {
         CompletableFuture<Void> called = new CompletableFuture<>();
-        // one chain with the per-message forwarder's, as the listener is told of a connection's messages in order
-        CompletableFuture<Void> previousCalled = client.attr(BinaryRequestProxyingHandler.PREVIOUS_LISTENER_CALL).getAndSet(called);
+        CompletableFuture<Void> previousCalled = previousListenerCall;
+        previousListenerCall = called;
         Runnable call = () -> scheduler.scheduleLocalCallback(() -> {
             Throwable thrown = null;
             try {
@@ -836,7 +785,7 @@ public final class BinaryRelay {
                 new LogEntry()
                     .setLogLevel(Level.WARN)
                     .setCorrelationId(latestCorrelationId)
-                    .setMessageFormat("closing binary connection from:{}which is not forwarded to:{}on one upstream connection (" + SETTING + ") because:{}")
+                    .setMessageFormat("closing binary connection from:{}which cannot be forwarded to:{}because:{}")
                     .setArguments(client.remoteAddress(), target, reason)
             );
         }

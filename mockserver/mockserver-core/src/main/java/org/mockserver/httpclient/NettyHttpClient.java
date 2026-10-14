@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -14,6 +13,7 @@ import io.netty.channel.ChannelPromise;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.WriteBufferWaterMark;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.proxy.ProxyHandler;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
@@ -23,7 +23,6 @@ import io.netty.util.NetUtil;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.log.model.LogEntry;
-import org.mockserver.log.model.SensitiveLogValue;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.metrics.Metrics;
 import org.mockserver.model.*;
@@ -55,13 +54,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.exception.ExceptionHandling.boundedFaultDescription;
-import static org.mockserver.formatting.StringFormatter.hexDumpForLog;
 import static org.mockserver.model.HttpResponse.response;
 
 public class NettyHttpClient {
@@ -645,136 +642,6 @@ public class NettyHttpClient {
     }
 
     /**
-     * A subclass that overrides only this overload is not called when binary requests are forwarded without
-     * waiting for a response ({@code forwardBinaryRequestsWithoutWaitingForResponse}):
-     * {@code BinaryRequestProxyingHandler} then calls
-     * {@link #sendRequest(BinaryMessage, boolean, InetSocketAddress, Long, Consumer)} directly, so override that
-     * overload, to which this one delegates, to intercept every binary send.
-     */
-    public CompletableFuture<BinaryMessage> sendRequest(final BinaryMessage binaryRequest, final boolean isSecure, InetSocketAddress remoteAddress, Long connectionTimeoutMillis) throws SocketConnectionException {
-        return sendRequest(binaryRequest, isSecure, remoteAddress, connectionTimeoutMillis, null);
-    }
-
-    /**
-     * @param onRequestSent called exactly once, with {@code null} once the request has been written to the upstream
-     *                      connection, or with the cause when it could not be connected or written; may be
-     *                      {@code null}
-     * @return the response; a caller that completes it first, to stop waiting, closes the upstream connection
-     */
-    @SuppressWarnings("deprecation")
-    public CompletableFuture<BinaryMessage> sendRequest(final BinaryMessage binaryRequest, final boolean isSecure, InetSocketAddress remoteAddress, Long connectionTimeoutMillis, final Consumer<Throwable> onRequestSent) throws SocketConnectionException {
-        final EventLoopGroup eventLoopGroup = eventLoopGroup();
-        if (!eventLoopGroup.isShuttingDown()) {
-            InetSocketAddress vetted;
-            try {
-                // a name is checked by a lookup here even when an upstream proxy will resolve it again
-                vetted = InetAddressValidator.validateForwardTarget(configuration, remoteAddress);
-            } catch (ForwardTargetBlockedException blocked) {
-                return refusedBinaryForward(blocked, onRequestSent);
-            }
-            final Map<ProxyConfiguration.Type, ProxyConfiguration> upstreamProxies = upstreamProxiesFor(remoteAddress != null ? remoteAddress.getHostString() : null);
-            if (!isSecure && upstreamProxies.containsKey(ProxyConfiguration.Type.HTTP)) {
-                remoteAddress = upstreamProxies.get(ProxyConfiguration.Type.HTTP).getProxyAddress();
-            } else if (remoteAddress == null) {
-                throw new IllegalArgumentException("Remote address cannot be null");
-            } else if (HttpClientInitializer.tunnelProxy(upstreamProxies, isSecure) != null) {
-                remoteAddress = unresolvedUnlessIpLiteral(remoteAddress);
-            } else {
-                // the address checked is the address connected to
-                remoteAddress = vetted;
-            }
-
-            final CompletableFuture<BinaryMessage> binaryResponseFuture = new CompletableFuture<>();
-            final CompletableFuture<Message> responseFuture = new CompletableFuture<>();
-            // as in connectFresh: the teardown of a channel that failed to connect is not the request's outcome
-            final CompletableFuture<Message> channelResponseFuture = new CompletableFuture<>();
-
-            Bootstrap binaryBootstrap = new Bootstrap()
-                .group(eventLoopGroup)
-                .channel(NettyTransport.socketChannelClassFor(eventLoopGroup))
-                .option(ChannelOption.AUTO_READ, true)
-                .option(ChannelOption.ALLOCATOR, NettyAllocator.ALLOCATOR)
-                .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectionTimeoutMillis != null ? (int) Math.min(connectionTimeoutMillis, Integer.MAX_VALUE) : null)
-                .attr(SECURE, isSecure)
-                .attr(REMOTE_SOCKET, remoteAddress)
-                .attr(RESPONSE_FUTURE, channelResponseFuture)
-                .attr(ERROR_IF_CHANNEL_CLOSED_WITHOUT_RESPONSE, !configuration.forwardBinaryRequestsWithoutWaitingForResponse())
-                .handler(new HttpClientInitializer(upstreamProxies, mockServerLogger, forwardProxyClient, nettySslContextFactory, null, configuration));
-            applyForwardSocketKeepAlive(binaryBootstrap);
-            resolveAtTunnelProxy(binaryBootstrap, upstreamProxies, isSecure);
-            ChannelFuture connected = binaryBootstrap.connect(remoteAddress);
-            // a caller that completes the future itself has stopped waiting, so the connection is not kept for it
-            binaryResponseFuture.whenComplete((response, failure) -> connected.channel().close());
-            connected
-                .addListener((ChannelFutureListener) future -> {
-                    if (future.isSuccess()) {
-                        relay(channelResponseFuture, responseFuture);
-                        try {
-                            if (mockServerLogger.isEnabledForInstance(Level.DEBUG)) {
-                                mockServerLogger.logEvent(
-                                    new LogEntry()
-                                        .setLogLevel(Level.DEBUG)
-                                        .setMessageFormat("sending bytes hex{}to{}")
-                                        .setArguments(SensitiveLogValue.of(hexDumpForLog(binaryRequest.getBytes(), configuration.maxLoggedBodyBytes())), future.channel().attr(REMOTE_SOCKET).get())
-                                );
-                            }
-                            // send the binary request
-                            future.channel().writeAndFlush(Unpooled.copiedBuffer(binaryRequest.getBytes())).addListener(written -> reportRequestSent(onRequestSent, written.cause()));
-                        } catch (Throwable notWritten) {
-                            // nothing was written, so no response can arrive and the caller must not wait for either
-                            binaryResponseFuture.completeExceptionally(notWritten);
-                            reportRequestSent(onRequestSent, notWritten);
-                            future.channel().close();
-                        }
-                    } else if (future.cause() instanceof ClosedChannelException && channelResponseFuture.isCompletedExceptionally()) {
-                        // the channel was closed first, its pipeline not built, so its outcome is the cause
-                        channelResponseFuture.whenComplete((notSet, setUpFailure) -> {
-                            binaryResponseFuture.completeExceptionally(setUpFailure);
-                            reportRequestSent(onRequestSent, setUpFailure);
-                        });
-                    } else {
-                        binaryResponseFuture.completeExceptionally(future.cause());
-                        reportRequestSent(onRequestSent, future.cause());
-                    }
-                });
-
-            responseFuture
-                .whenComplete((message, throwable) -> {
-                    if (throwable == null) {
-                        binaryResponseFuture.complete((BinaryMessage) message);
-                    } else {
-                        // not logged here: the caller has the failure, and the message's correlation id to log it with
-                        binaryResponseFuture.completeExceptionally(throwable);
-                    }
-                });
-
-            return binaryResponseFuture;
-        } else {
-            throw new IllegalStateException("Request sent after client has been stopped - the event loop has been shutdown so it is not possible to send a request");
-        }
-    }
-
-    /**
-     * Why a binary connection to this destination cannot keep one upstream connection opened by
-     * {@link #connectBinaryRelay}, or null when it can: one that goes through no upstream proxy (none is set, or the
-     * destination is on {@code noProxyHosts}), or one tunnelled through {@code forwardSocksProxy} or
-     * {@code forwardHttpsProxy}. The one that cannot is a destination whose only upstream proxy is
-     * {@code forwardHttpProxy}, which MockServer does not ask to tunnel: it is forwarded one message at a time, by
-     * {@link #sendRequest(BinaryMessage, boolean, InetSocketAddress, Long, Consumer)}.
-     *
-     * @param secure whether the client's connection is TLS from its first byte
-     */
-    @Nullable
-    public String binaryRelayUnavailableBecause(InetSocketAddress remoteAddress, boolean secure) {
-        Map<ProxyConfiguration.Type, ProxyConfiguration> upstreamProxies = upstreamProxiesFor(remoteAddress.getHostString());
-        if (!upstreamProxies.isEmpty() && binaryRelayTunnel(upstreamProxies, secure) == null) {
-            return "its upstream proxy is forwardHttpProxy, which does not tunnel a connection";
-        }
-        return null;
-    }
-
-    /**
      * Looks up the name of a binary relay's destination, which blocks, so it is called off the event loop for a
      * destination not yet resolved. The address returned is what {@link #connectBinaryRelay} is then given, and it
      * looks nothing up: a destination reached directly is resolved; one that {@code forwardProxyBlockPrivateNetworks}
@@ -800,35 +667,34 @@ public class NettyHttpClient {
     }
 
     /**
-     * The proxy a binary relay's upstream connection is tunnelled through: as for any connection (for a secure one
-     * {@code forwardHttpsProxy} first, otherwise {@code forwardSocksProxy}), and else {@code forwardHttpsProxy}, whose
-     * {@code CONNECT} carries any bytes.
+     * The proxy a binary relay's upstream connection is tunnelled through, or null for none: as for any connection
+     * (for a secure one {@code forwardHttpsProxy} first, otherwise {@code forwardSocksProxy}), else
+     * {@code forwardHttpsProxy}, else {@code forwardHttpProxy}. A binary connection is never sent to an HTTP proxy as
+     * if it were the target: both HTTP proxies are asked to open a {@code CONNECT} tunnel, which carries any bytes.
      */
     @Nullable
     private static ProxyConfiguration binaryRelayTunnel(Map<ProxyConfiguration.Type, ProxyConfiguration> upstreamProxies, boolean secure) {
         ProxyConfiguration tunnel = HttpClientInitializer.tunnelProxy(upstreamProxies, secure);
-        return tunnel != null ? tunnel : upstreamProxies.get(ProxyConfiguration.Type.HTTPS);
+        if (tunnel == null) {
+            tunnel = upstreamProxies.get(ProxyConfiguration.Type.HTTPS);
+        }
+        return tunnel != null ? tunnel : upstreamProxies.get(ProxyConfiguration.Type.HTTP);
     }
 
     /**
-     * Opens the upstream connection of a binary connection that keeps one for its life. It is registered on the
-     * given event loop, the client connection's, so both legs run on one thread. It is made directly, or through
-     * the tunnel {@link #binaryRelayUnavailableBecause} allows, whose handler is then first in the pipeline, named
+     * Opens the upstream connection of a binary connection, which keeps it for its life. It is registered on the
+     * given event loop, the client connection's, so both legs run on one thread. It is made directly, or through a
+     * tunnel when an upstream proxy applies ({@code forwardSocksProxy}, or {@code CONNECT} through
+     * {@code forwardHttpsProxy} or {@code forwardHttpProxy}), whose handler is then first in the pipeline, named
      * {@link #BINARY_RELAY_TUNNEL}, and the connect completes only once the tunnel is open.
      *
      * @param secure  whether the client's connection is TLS from its first byte
      * @param handler the upstream connection's only handler
      * @return the connect, whose channel is the upstream connection
-     * @throws IllegalStateException    if the destination's only upstream proxy is {@code forwardHttpProxy}: a direct
-     *                                  connection would go around it
      * @throws IllegalArgumentException if forwardProxyBlockPrivateNetworks blocks the target
      */
     public ChannelFuture connectBinaryRelay(EventLoop eventLoop, InetSocketAddress remoteAddress, boolean secure, ChannelHandler handler) {
-        Map<ProxyConfiguration.Type, ProxyConfiguration> upstreamProxies = upstreamProxiesFor(remoteAddress.getHostString());
-        ProxyConfiguration tunnel = binaryRelayTunnel(upstreamProxies, secure);
-        if (!upstreamProxies.isEmpty() && tunnel == null) {
-            throw new IllegalStateException("its upstream proxy is forwardHttpProxy, which does not tunnel a connection, and a binary connection that keeps one upstream connection is not made around it");
-        }
+        ProxyConfiguration tunnel = binaryRelayTunnel(upstreamProxiesFor(remoteAddress.getHostString()), secure);
         // checked through a tunnel too, which is then opened by name for the proxy to resolve, as an HTTP forward's is
         InetSocketAddress target = InetAddressValidator.validateForwardTarget(configuration, remoteAddress);
         Long connectionTimeoutMillis = configuration.socketConnectionTimeoutInMillis();
@@ -884,10 +750,31 @@ public class NettyHttpClient {
             if (opened.isSuccess()) {
                 tunnelled.trySuccess();
             } else {
-                tunnelled.tryFailure(opened.cause());
+                tunnelled.tryFailure(tunnelRefused(tunnel, tunnelHandler, destination, opened.cause()));
             }
         });
         return tunnelled;
+    }
+
+    /**
+     * A {@code CONNECT} the proxy answered with a status other than 200, as a failure that names the proxy, its
+     * setting and the status; any other failure as it is.
+     */
+    private static Throwable tunnelRefused(ProxyConfiguration tunnel, ProxyHandler tunnelHandler, InetSocketAddress destination, Throwable cause) {
+        HttpResponseStatus status = tunnelHandler instanceof HttpConnectProxyHandler ? ((HttpConnectProxyHandler) tunnelHandler).refusedWith() : null;
+        if (status == null) {
+            return cause;
+        }
+        String hint = "";
+        if (status.code() == HttpResponseStatus.PROXY_AUTHENTICATION_REQUIRED.code()) {
+            hint = isNotBlank(tunnel.getUsername()) && isNotBlank(tunnel.getPassword())
+                ? ", check forwardProxyAuthenticationUsername and forwardProxyAuthenticationPassword"
+                : ", it asks for credentials: set forwardProxyAuthenticationUsername and forwardProxyAuthenticationPassword";
+        }
+        ConnectException refused = new ConnectException("upstream proxy " + hostAndPort(tunnel.getProxyAddress()) + " set by " + propertyFor(tunnel.getType())
+            + " refused to open a CONNECT tunnel to " + hostAndPort(destination) + " with status " + status + hint);
+        refused.initCause(cause);
+        return refused;
     }
 
     /**
@@ -914,27 +801,6 @@ public class NettyHttpClient {
             sslHandler.setHandshakeTimeoutMillis(handshakeTimeoutMillis);
         }
         return sslHandler;
-    }
-
-    private CompletableFuture<BinaryMessage> refusedBinaryForward(ForwardTargetBlockedException blocked, Consumer<Throwable> onRequestSent) {
-        if (mockServerLogger.isEnabledForInstance(Level.WARN)) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(Level.WARN)
-                    .setMessageFormat("binary forward blocked by SSRF policy:{}")
-                    .setArguments(blocked.getMessage())
-            );
-        }
-        CompletableFuture<BinaryMessage> refused = new CompletableFuture<>();
-        refused.completeExceptionally(blocked);
-        reportRequestSent(onRequestSent, blocked);
-        return refused;
-    }
-
-    private static void reportRequestSent(Consumer<Throwable> onRequestSent, Throwable failure) {
-        if (onRequestSent != null) {
-            onRequestSent.accept(failure);
-        }
     }
 
     public HttpResponse sendRequest(HttpRequest httpRequest, long timeout, TimeUnit unit, boolean ignoreErrors) {

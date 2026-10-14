@@ -294,6 +294,30 @@ public class ConfigurationPropertiesUnknownKeyTest {
     }
 
     @Test
+    public void aRemovedPropertyIsReportedAsRemovedAndIgnoredInEachForm() {
+        List<ConfigurationProperties.UnrecognisedProperty> removed = findUnrecognisedConfigurationKeys(
+            Set.of("mockserver.forwardBinaryRequestsWithoutWaitingForResponse"),
+            Set.of("MOCKSERVER_FORWARD_BINARY_REQUESTS_USE_SINGLE_CONNECTION"),
+            props("mockserver.forwardBinaryRequestsUseSingleConnection"));
+
+        assertThat(removed, hasSize(3));
+        for (ConfigurationProperties.UnrecognisedProperty property : removed) {
+            assertThat(property.getName(), property.isRemoved(), is(true));
+            assertThat(property.getSuggestions(), is(empty()));
+            assertThat(property.getWarning(), containsString("[" + property.getName() + "] was removed in 9.0.0 and is ignored: a proxied binary connection is always relayed on one upstream connection"));
+            assertThat(property.getWarning(), not(containsString("typo")));
+            assertThat(property.getHint(), containsString("removed in 9.0.0"));
+        }
+    }
+
+    @Test
+    public void aTypoIsNotTakenForARemovedProperty() {
+        ConfigurationProperties.UnrecognisedProperty typo = only(findUnrecognisedConfigurationKeys(Set.of("mockserver.forwardBinaryRequestsWithoutWaitingForResponses"), emptySet(), props()));
+        assertThat(typo.isRemoved(), is(false));
+        assertThat(typo.getWarning(), containsString("it is not a known configuration property"));
+    }
+
+    @Test
     public void editDistanceCountsATranspositionAsOneEdit() {
         assertThat(editDistance("ab", "ba"), is(1));
         assertThat(editDistance("kitten", "sitting"), is(3));

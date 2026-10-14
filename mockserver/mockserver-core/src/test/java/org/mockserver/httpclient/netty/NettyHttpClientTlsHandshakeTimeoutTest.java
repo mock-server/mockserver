@@ -9,13 +9,11 @@ import org.mockserver.configuration.Configuration;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.BinaryMessage;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.socket.PortFactory;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -26,7 +24,6 @@ import java.util.concurrent.TimeUnit;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
@@ -139,31 +136,6 @@ public class NettyHttpClientTlsHandshakeTimeoutTest {
             assertThat("handshake failed no earlier than the configured connection timeout (proves the timeout drove it, not an instant connect error), cause: " + exception.getCause(),
                 elapsedMillis, greaterThanOrEqualTo(configuredConnectionTimeoutMillis - 200));
             assertThat("handshake was bounded by the configured connection timeout, not Netty's fixed 10,000ms default (elapsed " + elapsedMillis + "ms), cause: " + exception.getCause(),
-                elapsedMillis, lessThan(6000L));
-        }
-    }
-
-    @Test
-    public void shouldBoundABinaryForwardsTlsHandshakeByConfiguredConnectionTimeout() throws Exception {
-        // given - an upstream that accepts the TCP connection but never answers the TLS handshake
-        try (StalledTlsServer stalledUpstream = new StalledTlsServer()) {
-            long configuredConnectionTimeoutMillis = 1000L;
-            Configuration configuration = configuration().socketConnectionTimeoutInMillis(configuredConnectionTimeoutMillis);
-            NettyHttpClient httpClient = new NettyHttpClient(configuration, mockServerLogger, clientEventLoopGroup, null, false);
-
-            // when - a binary message forwarded on a TLS connection of its own
-            long startNanos = System.nanoTime();
-            ExecutionException exception = assertThrows(ExecutionException.class, () ->
-                httpClient
-                    .sendRequest(BinaryMessage.bytes(new byte[]{1, 2, 3}), true, new InetSocketAddress("127.0.0.1", stalledUpstream.getPort()), configuredConnectionTimeoutMillis, null)
-                    .get(30, TimeUnit.SECONDS));
-            long elapsedMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
-
-            // then - ended by the handshake timeout, at the configured bound and not Netty's fixed 10,000ms default
-            assertThat(exception.getCause().getMessage(), containsString("SslHandshakeTimeoutException: handshake timed out after " + configuredConnectionTimeoutMillis + "ms"));
-            assertThat("handshake failed no earlier than the configured connection timeout, cause: " + exception.getCause(),
-                elapsedMillis, greaterThanOrEqualTo(configuredConnectionTimeoutMillis - 200));
-            assertThat("handshake was bounded by the configured connection timeout (elapsed " + elapsedMillis + "ms), cause: " + exception.getCause(),
                 elapsedMillis, lessThan(6000L));
         }
     }

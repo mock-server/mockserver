@@ -14,26 +14,17 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.InetAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
@@ -42,7 +33,6 @@ import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.BinaryRequestDefinition.binaryRequest;
 import static org.mockserver.model.BinaryResponse.binaryResponse;
 import static org.mockserver.stop.Stop.stopQuietly;
-import static org.mockserver.test.Retries.tryWaitForSuccess;
 
 /**
  * A protocol that turns TLS on part way through a connection, as PostgreSQL does: the client opens in the clear
@@ -302,35 +292,6 @@ public class BinaryTlsUpgradeIntegrationTest {
         assertThat("started with TLS, with a protocol not configured: " + startedWithAnother, startedWithAnother.equals(answered), is(false));
     }
 
-    /**
-     * With {@code forwardBinaryRequestsUseSingleConnection=false}, proxying is as it was in 8.0.0: MockServer answers
-     * the handshake itself, and forwards each message it decrypts on a connection of its own that it opens to the
-     * upstream with TLS. What was sent in the clear went upstream in the clear. (A server that wants the request to
-     * upgrade on every connection is not served by this; the default, one upgraded connection, is in
-     * {@code BinaryInBandTlsUpgradeProxyIntegrationTest}.)
-     */
-    @Test
-    public void shouldForwardWhatFollowsAnUpgradeOverTlsToTheUpstreamWhenEachMessageHasAConnectionOfItsOwn() throws Exception {
-        try (ClearOrTlsUpstream upstream = new ClearOrTlsUpstream()) {
-            upstream.answers(SSL_REQUEST, new byte[]{'S'});
-            upstream.answers(STARTUP, AUTHENTICATION_OK_AND_READY);
-            upstream.answers(SYNC, READY);
-            mockServer = startClientAndServer(configuration().forwardBinaryRequestsUseSingleConnection(false), "127.0.0.1", upstream.port(), PortFactory.findFreePort());
-            Socket socket = connect();
-
-            exchange(socket, SSL_REQUEST, new byte[]{'S'});
-            SSLSocket tls = startTls(socket, "TLSv1.3", false);
-            exchange(tls, STARTUP, AUTHENTICATION_OK_AND_READY);
-            exchange(tls, SYNC, READY);
-
-            tryWaitForSuccess(() -> assertThat(upstream.received(), contains(
-                "clear " + ByteBufUtil.hexDump(SSL_REQUEST),
-                "TLS " + ByteBufUtil.hexDump(STARTUP),
-                "TLS " + ByteBufUtil.hexDump(SYNC)
-            )));
-        }
-    }
-
     /** The first record a TLS client sends, from a client that offers little so that it is a small message. */
     private static byte[] tlsClientHello() throws Exception {
         SSLEngine client = SSLContext.getDefault().createSSLEngine();
@@ -347,97 +308,5 @@ public class BinaryTlsUpgradeIntegrationTest {
         assertThat("that opens with a ClientHello", clientHello[5], is((byte) 1));
         assertThat((int) clientHello[2], lessThan(5));
         return clientHello;
-    }
-
-    /**
-     * An upstream that takes each connection as it comes: one that opens with a TLS handshake is answered as a
-     * TLS server, any other is read in the clear. It answers the messages it has been given answers for.
-     */
-    private static class ClearOrTlsUpstream implements AutoCloseable {
-
-        private final ServerSocket serverSocket = new ServerSocket(0, 50, InetAddress.getByAddress(new byte[]{127, 0, 0, 1}));
-        private final SSLSocketFactory tls = new KeyStoreFactory(configuration(), new MockServerLogger()).sslContext().getSocketFactory();
-        private final List<Socket> connections = new CopyOnWriteArrayList<>();
-        private final List<String> received = new CopyOnWriteArrayList<>();
-        private final List<byte[][]> answers = new CopyOnWriteArrayList<>();
-
-        ClearOrTlsUpstream() throws IOException {
-            Thread accept = new Thread(this::acceptConnections, "upstream-accept");
-            accept.setDaemon(true);
-            accept.start();
-        }
-
-        void answers(byte[] message, byte[] answer) {
-            answers.add(new byte[][]{message, answer});
-        }
-
-        private void acceptConnections() {
-            while (!serverSocket.isClosed()) {
-                try {
-                    Socket connection = serverSocket.accept();
-                    connections.add(connection);
-                    Thread serve = new Thread(() -> serve(connection), "upstream-serve");
-                    serve.setDaemon(true);
-                    serve.start();
-                } catch (IOException closed) {
-                    // close() ends the accept
-                }
-            }
-        }
-
-        private void serve(Socket connection) {
-            try {
-                int first = connection.getInputStream().read();
-                if (first == -1) {
-                    return;
-                }
-                boolean handshake = first == 22;
-                Socket socket = handshake ? tls.createSocket(connection, new ByteArrayInputStream(new byte[]{(byte) first}), true) : connection;
-                ByteArrayOutputStream message = new ByteArrayOutputStream();
-                if (!handshake) {
-                    message.write(first);
-                }
-                InputStream input = socket.getInputStream();
-                byte[] buffer = new byte[10000];
-                // MockServer sends one message on each connection and waits for its answer
-                byte[] answer = answerTo(message.toByteArray());
-                for (int read; answer == null && (read = input.read(buffer)) != -1; ) {
-                    message.write(buffer, 0, read);
-                    answer = answerTo(message.toByteArray());
-                }
-                received.add((handshake ? "TLS " : "clear ") + ByteBufUtil.hexDump(message.toByteArray()));
-                if (answer != null) {
-                    socket.getOutputStream().write(answer);
-                    socket.getOutputStream().flush();
-                }
-            } catch (IOException closed) {
-                // MockServer, or close(), ended the connection
-            }
-        }
-
-        private byte[] answerTo(byte[] message) {
-            for (byte[][] answer : answers) {
-                if (Arrays.equals(answer[0], message)) {
-                    return answer[1];
-                }
-            }
-            return null;
-        }
-
-        List<String> received() {
-            return received;
-        }
-
-        int port() {
-            return serverSocket.getLocalPort();
-        }
-
-        @Override
-        public void close() throws IOException {
-            serverSocket.close();
-            for (Socket connection : connections) {
-                connection.close();
-            }
-        }
     }
 }

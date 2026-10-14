@@ -126,7 +126,6 @@ public class BinaryRelayAnsweredLocallyTest {
 
         assertThat(relay.receivedByClient(), is(CANNED + CANNED));
         assertThat(relay.upstreamConnections, is(0));
-        assertThat(relay.forwardedPerMessage, is(empty()));
     }
 
     @Test
@@ -289,46 +288,6 @@ public class BinaryRelayAnsweredLocallyTest {
     }
 
     @Test
-    public void shouldWarnOncePerConnectionAndForwardWhenEachMessageHasAConnectionOfItsOwn() {
-        relay.configuration.forwardBinaryRequestsUseSingleConnection(false);
-        clientConnection();
-
-        relay.clientSends("mocked");
-        relay.clientSends("mocked");
-
-        assertThat(relay.forwardedPerMessage, contains("mocked waiting", "mocked waiting"));
-        assertThat(warnings(), hasSize(1));
-        assertThat(warnings().get(0), containsString("binary expectations are not matched on binary connection"));
-        verify(httpState, never()).firstMatchingExpectation(any());
-    }
-
-    @Test
-    public void shouldNotWarnOnAConnectionWhoseMessagesEachHaveAConnectionOfTheirOwnWhenNoExpectationCanMatchThem() {
-        when(httpState.mayMatchBinaryMessage(any(byte[].class))).thenReturn(false);
-        relay.configuration.forwardBinaryRequestsUseSingleConnection(false);
-        clientConnection();
-
-        relay.clientSends("mocked");
-        relay.clientSends("other");
-
-        assertThat(relay.forwardedPerMessage, contains("mocked waiting", "other waiting"));
-        assertThat(warnings(), is(empty()));
-        verify(httpState, never()).firstMatchingExpectation(any());
-    }
-
-    @Test
-    public void shouldNotMatchOnAConnectionHandedBackToPerMessageForwarding() {
-        when(relay.httpClient.binaryRelayUnavailableBecause(any(InetSocketAddress.class), anyBoolean())).thenReturn("its upstream proxy is forwardHttpProxy, which does not tunnel a connection");
-        clientConnection();
-
-        relay.clientSends("mocked");
-
-        assertThat(relay.forwardedPerMessage, contains("mocked waiting"));
-        assertThat(warnings(), hasSize(1));
-        verify(httpState, never()).firstMatchingExpectation(any());
-    }
-
-    @Test
     public void shouldAnswerAMatchedMessageOfAConnectionThatStartedWithTlsAndRelayTheRest() {
         when(relay.httpClient.newBinaryRelaySslHandler(any(ByteBufAllocator.class), any(InetSocketAddress.class), any())).thenAnswer(invocation ->
             SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).sslProvider(SslProvider.JDK).build().newHandler(invocation.getArgument(0)));
@@ -342,7 +301,6 @@ public class BinaryRelayAnsweredLocallyTest {
 
         assertThat(relay.upstreamConnections, is(1));
         assertThat("relayed, with TLS from the start", relay.upstream.pipeline().first(), instanceOf(SslHandler.class));
-        assertThat(relay.forwardedPerMessage, is(empty()));
         assertThat(warnings(), is(empty()));
         verify(httpState).postProcess(mocked);
     }

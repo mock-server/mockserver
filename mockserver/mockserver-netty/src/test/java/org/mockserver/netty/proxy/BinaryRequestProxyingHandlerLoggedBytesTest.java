@@ -11,16 +11,12 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpState;
-import org.mockserver.model.BinaryMessage;
 import org.mockserver.model.BinaryRequestDefinition;
 import org.mockserver.scheduler.Scheduler;
 import org.slf4j.event.Level;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -28,23 +24,18 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockserver.configuration.Configuration.configuration;
-import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
-import static org.mockserver.mock.action.http.HttpActionHandler.REMOTE_SOCKET;
 import static org.mockserver.model.BinaryRequestDefinition.binaryRequest;
 import static org.mockserver.model.BinaryResponse.binaryResponse;
 
 /**
- * Each log entry that shows a binary message, forwarded or mocked, shows at most its first maxLoggedBodyBytes bytes
- * and its whole length; and a forward that fails is logged once, in one entry after the message's own record.
+ * Each log entry that shows a mocked binary message shows at most its first maxLoggedBodyBytes bytes and its whole
+ * length. A relayed message's entries are covered by {@code BinaryRelayLoggedBytesTest}.
  */
 public class BinaryRequestProxyingHandlerLoggedBytesTest {
 
@@ -72,30 +63,16 @@ public class BinaryRequestProxyingHandlerLoggedBytesTest {
     }
 
     private Configuration bounded() {
-        return configuration().maxLoggedBodyBytes(LOGGED).forwardBinaryRequestsUseSingleConnection(false).maxSocketTimeoutInMillis(2_000L);
+        return configuration().maxLoggedBodyBytes(LOGGED);
     }
 
-    private void receive(Configuration configuration, boolean forwarded) {
+    private void receive(Configuration configuration) {
         when(mockServerLogger.isEnabledForInstance(any(Level.class))).thenReturn(true);
         channel = new EmbeddedChannel();
-        if (forwarded) {
-            channel.attr(REMOTE_SOCKET).set(new InetSocketAddress("127.0.0.1", 1234));
-        }
         // synchronous: what is scheduled runs on the calling thread
         channel.pipeline().addLast(new BinaryRequestProxyingHandler(configuration, mockServerLogger, new Scheduler(configuration, mockServerLogger, true), httpClient, httpState));
         channel.writeInbound(Unpooled.copiedBuffer(REQUEST));
         channel.runPendingTasks();
-    }
-
-    private void upstreamAnswers(CompletableFuture<BinaryMessage> response) {
-        when(httpClient.sendRequest(any(BinaryMessage.class), anyBoolean(), any(InetSocketAddress.class), any())).thenReturn(response);
-        when(httpClient.sendRequest(any(BinaryMessage.class), anyBoolean(), any(InetSocketAddress.class), any(), any())).thenReturn(response);
-    }
-
-    private static CompletableFuture<BinaryMessage> failedWith(Throwable failure) {
-        CompletableFuture<BinaryMessage> response = new CompletableFuture<>();
-        response.completeExceptionally(failure);
-        return response;
     }
 
     private List<LogEntry> logged() {
@@ -122,7 +99,7 @@ public class BinaryRequestProxyingHandlerLoggedBytesTest {
 
     @Test
     public void shouldBoundAMessageThatMatchesNoExpectationInEachEntry() {
-        receive(bounded(), false);
+        receive(bounded());
 
         assertBounded(loggedEntry("received binary request"), 1);
         assertBounded(loggedEntry("no matching binary expectation"), 1);
@@ -135,7 +112,7 @@ public class BinaryRequestProxyingHandlerLoggedBytesTest {
     public void shouldBoundAMockedMessageAndItsResponse() {
         when(httpState.firstMatchingExpectation(any(BinaryRequestDefinition.class))).thenReturn(new Expectation(binaryRequest(REQUEST)).thenRespondWithBinary(binaryResponse(RESPONSE)));
 
-        receive(bounded(), false);
+        receive(bounded());
 
         assertBounded(loggedEntry("returning binary mock response"), 2);
     }
@@ -144,79 +121,16 @@ public class BinaryRequestProxyingHandlerLoggedBytesTest {
     public void shouldBoundAMockedMessageThatHasNoReply() {
         when(httpState.firstMatchingExpectation(any(BinaryRequestDefinition.class))).thenReturn(new Expectation(binaryRequest(REQUEST)).thenRespondWithBinary(binaryResponse(new byte[0])));
 
-        receive(bounded(), false);
+        receive(bounded());
 
         assertBounded(loggedEntry("returning nothing"), 1);
     }
 
     @Test
-    public void shouldBoundAForwardedMessageAndItsResponseWhetherOrNotItWaits() {
-        for (boolean withoutWaiting : new boolean[]{false, true}) {
-            upstreamAnswers(CompletableFuture.completedFuture(BinaryMessage.bytes(RESPONSE)));
-
-            receive(bounded().forwardBinaryRequestsWithoutWaitingForResponse(withoutWaiting), true);
-
-            assertBounded(loggedEntry("received binary request"), 1);
-            assertBounded(loggedEntry("returning binary response"), 2);
-            channel.finishAndReleaseAll();
-            org.mockito.Mockito.clearInvocations(mockServerLogger);
-        }
-    }
-
-    @Test
     public void shouldLogEveryByteWithoutALimit() {
-        receive(bounded().maxLoggedBodyBytes(0), false);
+        receive(bounded().maxLoggedBodyBytes(0));
 
         assertThat(loggedEntry("received binary request").getMessage(configuration()), containsString("41".repeat(LENGTH)));
     }
 
-    /** The message's own record, then the failure, and nothing else. */
-    private LogEntry failedOnce() {
-        List<LogEntry> entries = logged();
-        assertThat(entries.get(0).getType(), is(RECEIVED_REQUEST));
-        assertThat(entries.toString(), entries, hasSize(2));
-        assertThat("the client is told by its connection closing", channel.isOpen(), is(false));
-        LogEntry failure = entries.get(1);
-        assertThat(failure.getLogLevel(), is(Level.WARN));
-        assertThat(failure.getMessageFormat(), containsString("closing connection"));
-        assertBounded(failure, 1);
-        return failure;
-    }
-
-    @Test
-    public void shouldLogAForwardThatFailsOnItsUpstreamConnectionOnceWithoutAStackTrace() {
-        for (boolean withoutWaiting : new boolean[]{false, true}) {
-            upstreamAnswers(failedWith(new IOException("Connection reset by peer")));
-
-            receive(bounded().forwardBinaryRequestsWithoutWaitingForResponse(withoutWaiting), true);
-
-            LogEntry failure = failedOnce();
-            assertThat(failure.getArguments()[0], is("java.io.IOException: Connection reset by peer"));
-            assertThat(failure.getThrowable(), is(nullValue()));
-            channel.finishAndReleaseAll();
-            org.mockito.Mockito.clearInvocations(mockServerLogger);
-        }
-    }
-
-    @Test
-    public void shouldLogAForwardThatHadNoResponseInTimeOnceWithoutAStackTrace() {
-        upstreamAnswers(new CompletableFuture<>());
-
-        receive(bounded().maxSocketTimeoutInMillis(50L), true);
-
-        LogEntry failure = failedOnce();
-        assertThat(String.valueOf(failure.getArguments()[0]), containsString("Response was not received after 50 milliseconds"));
-        assertThat(failure.getThrowable(), is(nullValue()));
-    }
-
-    @Test
-    public void shouldKeepTheStackTraceOfAFailureThatIsNotItsUpstreamConnections() {
-        upstreamAnswers(failedWith(new IllegalStateException("not expected")));
-
-        receive(bounded(), true);
-
-        LogEntry failure = failedOnce();
-        assertThat(failure.getArguments()[0], is("java.lang.IllegalStateException: not expected"));
-        assertThat(failure.getThrowable(), is(notNullValue()));
-    }
 }

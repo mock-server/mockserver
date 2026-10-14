@@ -1665,7 +1665,7 @@ public class McpToolRegistry {
             "diagnose_config",
             "Reports MockServer's effective configuration: each mockserver.* property set away from its default, its value, the source that supplied it "
                 + "(system-property, properties-file, environment-variable or runtime-set) and its built-in default ('default', when known). Pass 'name' to check whether a particular setting took effect. "
-                + "Also lists each unrecognised mockserver.* / MOCKSERVER_* key, which MockServer ignores, by name only with the property it was probably meant to be. "
+                + "Also lists each unrecognised mockserver.* / MOCKSERVER_* key, which MockServer ignores, by name only with the property it was probably meant to be, or marked removed for a property removed in 9.0.0. "
                 + "Credential values are always redacted. Reports the same values and sources as GET /mockserver/config, which lists every property.",
             schema,
             this::handleDiagnoseConfig
@@ -1709,10 +1709,11 @@ public class McpToolRegistry {
                 ArrayNode suggestions = unrecognisedNode.putArray("suggestions");
                 property.getSuggestions().forEach(suggestions::add);
                 unrecognisedNode.put("systemPropertyOnly", property.isSystemPropertyOnly());
+                unrecognisedNode.put("removed", property.isRemoved());
             }
             resultNode.put("note", "values come from system properties, the properties file, environment variables and runtime setters; "
                 + "a value set only on an embedded server's Configuration object or through PUT /mockserver/configuration is not shown; "
-                + "each key in 'unrecognised' is ignored, so set the suggested property instead");
+                + "each key in 'unrecognised' is ignored, so set the suggested property instead, or delete one marked removed");
             if (!filter.isEmpty() && matching.isEmpty()) {
                 List<String> suggestions = ConfigurationProperties.suggestRecognisedKeys(requestedName, ConfigurationProperties.FORM_SYSTEM_PROPERTY);
                 resultNode.put("hint", "no recognised configuration property name contains '" + requestedName + "'; "

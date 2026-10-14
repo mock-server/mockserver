@@ -53,15 +53,12 @@ final class BinaryRelayHarness {
     static final InetSocketAddress TARGET = new InetSocketAddress("127.0.0.1", 1234);
 
     final Configuration configuration = configuration()
-        .forwardBinaryRequestsUseSingleConnection(true)
         .responseWriteStallTimeoutMillis(STALL_TIMEOUT_MILLIS);
     final NettyHttpClient httpClient = mock(NettyHttpClient.class);
     final MockServerLogger mockServerLogger = mock(MockServerLogger.class);
     final Scheduler scheduler = mock(Scheduler.class);
     /** Listener calls handed to the scheduler and not yet run. */
     final List<Runnable> listenerCalls = new ArrayList<>();
-    /** Messages handed to the per-message forwarder instead of the relay, and how. */
-    final List<String> forwardedPerMessage = new ArrayList<>();
     final FlushGate upstreamFlushGate = new FlushGate();
     final FlushGate clientFlushGate = new FlushGate();
     EmbeddedChannel client;
@@ -90,15 +87,6 @@ final class BinaryRelayHarness {
         });
         doAnswer(invocation -> listenerCalls.add(invocation.getArgument(0)))
             .when(scheduler).scheduleLocalCallback(any(Runnable.class), anyBoolean());
-        // the forwarder used with the setting off: a connection for each message, waiting for its response or not
-        when(httpClient.sendRequest(any(BinaryMessage.class), anyBoolean(), any(InetSocketAddress.class), any())).thenAnswer(invocation -> {
-            forwardedPerMessage.add(perMessage(invocation.getArgument(0), "waiting", invocation.getArgument(1)));
-            return new CompletableFuture<BinaryMessage>();
-        });
-        when(httpClient.sendRequest(any(BinaryMessage.class), anyBoolean(), any(InetSocketAddress.class), any(), any())).thenAnswer(invocation -> {
-            forwardedPerMessage.add(perMessage(invocation.getArgument(0), "not waiting", invocation.getArgument(1)));
-            return new CompletableFuture<BinaryMessage>();
-        });
     }
 
     /**
@@ -117,10 +105,6 @@ final class BinaryRelayHarness {
             }
             return connect;
         });
-    }
-
-    private static String perMessage(BinaryMessage message, String mode, boolean overTls) {
-        return new String(message.getBytes(), StandardCharsets.UTF_8) + " " + mode + (overTls ? ", over TLS" : "");
     }
 
     /** Called once the configuration is as the test wants it: the handler reads the listener when it is built. */

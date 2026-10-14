@@ -81,8 +81,6 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private Boolean startupWarmup;
     private Boolean assumeAllRequestsAreHttp;
 
-    private Boolean forwardBinaryRequestsWithoutWaitingForResponse;
-    private Boolean forwardBinaryRequestsUseSingleConnection;
     private Boolean matchBinaryExpectationsWhenProxying;
     private Long forwardBinaryServerFirstWaitMillis;
     private String binaryMessageFraming;
@@ -448,8 +446,6 @@ public class ConfigurationDTO implements DTO<Configuration> {
             this.startupWarmup = configuration.startupWarmup();
             this.assumeAllRequestsAreHttp = configuration.assumeAllRequestsAreHttp();
 
-            this.forwardBinaryRequestsWithoutWaitingForResponse = configuration.forwardBinaryRequestsWithoutWaitingForResponse();
-            this.forwardBinaryRequestsUseSingleConnection = configuration.forwardBinaryRequestsUseSingleConnection();
             this.matchBinaryExpectationsWhenProxying = configuration.matchBinaryExpectationsWhenProxying();
             this.forwardBinaryServerFirstWaitMillis = configuration.forwardBinaryServerFirstWaitMillis();
             this.binaryMessageFraming = configuration.binaryMessageFraming().name();
@@ -915,8 +911,6 @@ public class ConfigurationDTO implements DTO<Configuration> {
         configuration.startupWarmup(startupWarmup);
         configuration.assumeAllRequestsAreHttp(assumeAllRequestsAreHttp);
 
-        configuration.forwardBinaryRequestsWithoutWaitingForResponse(forwardBinaryRequestsWithoutWaitingForResponse);
-        configuration.forwardBinaryRequestsUseSingleConnection(forwardBinaryRequestsUseSingleConnection);
         configuration.matchBinaryExpectationsWhenProxying(matchBinaryExpectationsWhenProxying);
         configuration.forwardBinaryServerFirstWaitMillis(forwardBinaryServerFirstWaitMillis);
         if (binaryMessageFraming != null) {
@@ -1513,12 +1507,6 @@ public class ConfigurationDTO implements DTO<Configuration> {
         }
         if (assumeAllRequestsAreHttp != null) {
             target.assumeAllRequestsAreHttp(assumeAllRequestsAreHttp);
-        }
-        if (forwardBinaryRequestsWithoutWaitingForResponse != null) {
-            target.forwardBinaryRequestsWithoutWaitingForResponse(forwardBinaryRequestsWithoutWaitingForResponse);
-        }
-        if (forwardBinaryRequestsUseSingleConnection != null) {
-            target.forwardBinaryRequestsUseSingleConnection(forwardBinaryRequestsUseSingleConnection);
         }
         if (matchBinaryExpectationsWhenProxying != null) {
             target.matchBinaryExpectationsWhenProxying(matchBinaryExpectationsWhenProxying);
@@ -2904,24 +2892,6 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setAssumeAllRequestsAreHttp(Boolean assumeAllRequestsAreHttp) {
         this.assumeAllRequestsAreHttp = assumeAllRequestsAreHttp;
-        return this;
-    }
-
-    public Boolean getForwardBinaryRequestsWithoutWaitingForResponse() {
-        return forwardBinaryRequestsWithoutWaitingForResponse;
-    }
-
-    public ConfigurationDTO setForwardBinaryRequestsWithoutWaitingForResponse(Boolean forwardBinaryRequestsWithoutWaitingForResponse) {
-        this.forwardBinaryRequestsWithoutWaitingForResponse = forwardBinaryRequestsWithoutWaitingForResponse;
-        return this;
-    }
-
-    public Boolean getForwardBinaryRequestsUseSingleConnection() {
-        return forwardBinaryRequestsUseSingleConnection;
-    }
-
-    public ConfigurationDTO setForwardBinaryRequestsUseSingleConnection(Boolean forwardBinaryRequestsUseSingleConnection) {
-        this.forwardBinaryRequestsUseSingleConnection = forwardBinaryRequestsUseSingleConnection;
         return this;
     }
 

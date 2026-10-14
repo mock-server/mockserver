@@ -6,7 +6,6 @@ import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.netty.MockServer;
-import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.socket.tls.KeyStoreFactory;
 import org.slf4j.event.Level;
 
@@ -24,7 +23,6 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -44,15 +42,12 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.log.model.LogEntry.LogMessageType.FORWARDED_REQUEST;
 import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
-import static org.mockserver.proxyconfiguration.ProxyConfiguration.proxyConfiguration;
 import static org.mockserver.stop.Stop.stopQuietly;
 import static org.mockserver.test.Retries.tryWaitForSuccess;
 
 /**
- * By default ({@code forwardBinaryRequestsUseSingleConnection}) a proxied binary connection has one upstream
- * connection for its life, over real sockets: a session's messages reach one upstream connection, whatever the
- * upstream sends comes back, and either end closing closes the other. A connection that mode cannot carry is
- * forwarded as it is with the setting off, each message on an upstream connection of its own.
+ * A proxied binary connection has one upstream connection for its life, over real sockets: a session's messages
+ * reach one upstream connection, whatever the upstream sends comes back, and either end closing closes the other.
  */
 public class BinaryPersistentRelayIntegrationTest {
 
@@ -67,7 +62,6 @@ public class BinaryPersistentRelayIntegrationTest {
         stopQuietly(mockServer);
     }
 
-    /** The setting is left at its default, which is on. */
     private static Configuration byDefault() {
         return configuration().logLevel("INFO");
     }
@@ -119,20 +113,6 @@ public class BinaryPersistentRelayIntegrationTest {
             }
 
             assertThat(upstream.connections(), is(1));
-        }
-    }
-
-    /** As in 8.0.0. */
-    @Test
-    public void shouldForwardEachMessageOnAConnectionOfItsOwnWhenTheSettingIsOff() throws Exception {
-        try (Upstream upstream = new Upstream(Upstream::numberEachLineOfTheConnection);
-             Socket client = clientOf(configuration().forwardBinaryRequestsUseSingleConnection(false), upstream.port())) {
-            for (int message = 1; message <= 3; message++) {
-                send(client, "message\n");
-                assertThat("each is the first message of its upstream connection", readLine(client.getInputStream()), is("1:message\n"));
-            }
-
-            assertThat(upstream.connections(), is(3));
         }
     }
 
@@ -373,45 +353,6 @@ public class BinaryPersistentRelayIntegrationTest {
         }
     }
 
-    /**
-     * One upstream connection is only made directly, so with an upstream proxy configured a connection is forwarded
-     * as it is with the setting off. For a connection in the clear and an HTTP proxy that is each message sent to
-     * the proxy's address on a connection of its own.
-     */
-    @Test
-    public void shouldForwardAsWithTheSettingOffWhenAnUpstreamProxyIsConfigured() throws Exception {
-        for (Configuration configuration : new Configuration[]{byDefault().logLevel("DEBUG"), byDefault().logLevel("DEBUG").forwardBinaryRequestsUseSingleConnection(false)}) {
-            logged.clear();
-            String setting = "forwardBinaryRequestsUseSingleConnection=" + configuration.forwardBinaryRequestsUseSingleConnection();
-            try (Upstream upstream = new Upstream(Upstream::numberEachLineOfTheConnection);
-                 Upstream proxy = new Upstream(Upstream::numberEachLineOfTheConnection)) {
-                MockServerLogger.setGlobalLogEventListener(logEntry -> logged.add(logEntry.clone()));
-                mockServer = new MockServer(configuration, Collections.singletonList(proxyConfiguration(ProxyConfiguration.Type.HTTP, "127.0.0.1:" + proxy.port())), "127.0.0.1", upstream.port(), 0);
-                try (Socket client = connect()) {
-                    for (int message = 1; message <= 3; message++) {
-                        send(client, "message\n");
-                        assertThat(setting + ": each is the first message of its connection", readLine(client.getInputStream()), is("1:message\n"));
-                    }
-
-                    assertThat(setting + ": nothing went to the upstream directly, around the proxy", upstream.connections(), is(0));
-                    assertThat(setting, proxy.connections(), is(3));
-                    assertThat(setting, warnings(), hasSize(0));
-                    List<LogEntry> fallBacks = logged.stream()
-                        .filter(entry -> entry.getLogLevel() == Level.DEBUG && String.valueOf(entry.getMessageFormat()).contains("on an upstream connection of its own"))
-                        .collect(Collectors.toList());
-                    if (configuration.forwardBinaryRequestsUseSingleConnection()) {
-                        assertThat("said once for the connection", fallBacks, hasSize(1));
-                        assertThat(fallBacks.get(0).getArguments()[2], is("its upstream proxy is forwardHttpProxy, which does not tunnel a connection"));
-                    } else {
-                        assertThat(fallBacks, hasSize(0));
-                    }
-                }
-            } finally {
-                stopMockServer();
-            }
-        }
-    }
-
     @Test
     public void shouldCloseTheConnectionWhenTheUpstreamIsAnAddressThatMayNotBeForwardedTo() throws Exception {
         try (Upstream upstream = new Upstream(Upstream::readUntilClosed);
@@ -513,39 +454,6 @@ public class BinaryPersistentRelayIntegrationTest {
                 tryWaitForSuccess(() -> assertThat("and the upstream's", upstream.endOfStreamSeen(), is(true)));
             }
         }
-    }
-
-    /**
-     * The setting that chooses whether to wait for each response belongs to forwarding a message at a time: it is
-     * said at start-up to have no effect when it is on while connections are given one upstream connection.
-     */
-    @Test
-    @SuppressWarnings("deprecation")
-    public void shouldSayAtStartUpThatNotWaitingForResponsesHasNoEffectOnASingleConnection() throws Exception {
-        String notice = "forwardBinaryRequestsWithoutWaitingForResponse is set but has no effect";
-        try (Upstream upstream = new Upstream(Upstream::readUntilClosed)) {
-            clientOf(byDefault().forwardBinaryRequestsWithoutWaitingForResponse(true), upstream.port()).close();
-            // the notice comes before this entry, so once this is seen the notice has been logged or never will be
-            tryWaitForSuccess(() -> assertThat(startUpNotices("started on port"), hasSize(1)));
-            assertThat(startUpNotices(notice), hasSize(1));
-            assertThat(startUpNotices(notice).get(0).getLogLevel(), is(Level.INFO));
-            stopMockServer();
-
-            logged.clear();
-            clientOf(byDefault(), upstream.port()).close();
-            tryWaitForSuccess(() -> assertThat(startUpNotices("started on port"), hasSize(1)));
-            assertThat("nothing to say when it is not set", startUpNotices(notice), hasSize(0));
-            stopMockServer();
-
-            logged.clear();
-            clientOf(byDefault().forwardBinaryRequestsWithoutWaitingForResponse(true).forwardBinaryRequestsUseSingleConnection(false), upstream.port()).close();
-            tryWaitForSuccess(() -> assertThat(startUpNotices("started on port"), hasSize(1)));
-            assertThat("nor when it has its effect", startUpNotices(notice), hasSize(0));
-        }
-    }
-
-    private List<LogEntry> startUpNotices(String notice) {
-        return logged.stream().filter(entry -> String.valueOf(entry.getMessageFormat()).contains(notice)).collect(Collectors.toList());
     }
 
     /** Starts TLS over a connection already in use, trusting MockServer's certificate authority. */

@@ -54,9 +54,6 @@ public class ProxyProtocolProtocolDetectionIntegrationTest {
     private static final String MOCKED_BODY = "mocked for ";
 
     private static ClientAndServer mockServer;
-    // binary forwarding message by message, waiting for each reply and not
-    private static ClientAndServer perMessageServer;
-    private static ClientAndServer perMessageNotWaitingServer;
     private static final String PROXY_USERNAME = "proxy-user";
     private static final String PROXY_PASSWORD = "proxy-password";
     private static ClientAndServer proxyAuthenticatingServer;
@@ -75,8 +72,6 @@ public class ProxyProtocolProtocolDetectionIntegrationTest {
         acceptor.setDaemon(true);
         acceptor.start();
         mockServer = startClientAndServer(transparentProxyConfiguration(), PortFactory.findFreePort());
-        perMessageServer = startClientAndServer(transparentProxyConfiguration().forwardBinaryRequestsUseSingleConnection(false), PortFactory.findFreePort());
-        perMessageNotWaitingServer = startClientAndServer(transparentProxyConfiguration().forwardBinaryRequestsUseSingleConnection(false).forwardBinaryRequestsWithoutWaitingForResponse(true), PortFactory.findFreePort());
         proxyAuthenticatingServer = startClientAndServer(transparentProxyConfiguration().proxyAuthenticationUsername(PROXY_USERNAME).proxyAuthenticationPassword(PROXY_PASSWORD), PortFactory.findFreePort());
         headerDestination = new CountingListener();
         connectTarget = startClientAndServer(PortFactory.findFreePort());
@@ -92,8 +87,6 @@ public class ProxyProtocolProtocolDetectionIntegrationTest {
     @AfterClass
     public static void stopServers() throws IOException {
         stopQuietly(mockServer);
-        stopQuietly(perMessageServer);
-        stopQuietly(perMessageNotWaitingServer);
         stopQuietly(proxyAuthenticatingServer);
         stopQuietly(connectTarget);
         binaryUpstream.close();
@@ -256,16 +249,6 @@ public class ProxyProtocolProtocolDetectionIntegrationTest {
     @Test
     public void shouldForwardBinaryAfterProxyV2Header() throws Exception {
         shouldForwardBinaryAfter(mockServer, proxyV2Header(binaryUpstream.getLocalPort()));
-    }
-
-    @Test
-    public void shouldForwardBinaryMessageByMessageAfterProxyV1Header() throws Exception {
-        shouldForwardBinaryAfter(perMessageServer, proxyV1Header(binaryUpstream.getLocalPort()));
-    }
-
-    @Test
-    public void shouldForwardBinaryMessageByMessageWithoutWaitingAfterProxyV2Header() throws Exception {
-        shouldForwardBinaryAfter(perMessageNotWaitingServer, proxyV2Header(binaryUpstream.getLocalPort()));
     }
 
     private void shouldForwardBinaryAfter(ClientAndServer server, byte[] proxyHeader) throws Exception {

@@ -126,8 +126,7 @@ public class BinaryRelayTlsEndOfConnectionIntegrationTest {
             configuration()
                 .logLevel("WARN")
                 .startupWarmup(false)
-                .proxySetup(false)
-                .forwardBinaryRequestsUseSingleConnection(true),
+                .proxySetup(false),
             upstream.getLocalPort(), "127.0.0.1", 0
         );
         CompletableFuture<SSLSocket> upstreamSession = new CompletableFuture<>();

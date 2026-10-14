@@ -32,8 +32,6 @@ import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.oneOf;
@@ -335,22 +333,6 @@ public class BinaryExpectationsOnProxiedConnectionIntegrationTest {
             send(client, "mocked\n");
 
             assertThat(readLine(client.getInputStream()), is("1:mocked\n"));
-            assertThat(warnings("binary expectations are not matched"), is(empty()));
-        }
-    }
-
-    @Test
-    public void shouldForwardEachMessageAndWarnOnceWhenEachHasAnUpstreamConnectionOfItsOwn() throws Exception {
-        try (Upstream upstream = new Upstream(Upstream::numberEachLineOfTheConnection);
-             Socket client = clientOf(matchingExpectations().forwardBinaryRequestsUseSingleConnection(false), upstream)) {
-            mock("mocked\n", "canned\n");
-
-            for (int message = 0; message < 2; message++) {
-                send(client, "mocked\n");
-                assertThat("forwarded as in 8.0.0", readLine(client.getInputStream()), is("1:mocked\n"));
-            }
-
-            tryWaitForSuccess(() -> assertThat(warnings("binary expectations are not matched"), hasSize(1)));
         }
     }
 

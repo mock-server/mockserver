@@ -126,7 +126,7 @@ public class BinaryRelayTargetLookUpTest {
         assertThat(relay.upstreamConnections, is(0));
         List<LogEntry> warnings = relay.logged(Level.WARN);
         assertThat(warnings, hasSize(1));
-        assertThat("a refusal, as when the target given was already resolved", warnings.get(0).getMessageFormat(), containsString("which is not forwarded to:"));
+        assertThat("a refusal, as when the target given was already resolved", warnings.get(0).getMessageFormat(), containsString("which cannot be forwarded to:"));
         assertThat(String.valueOf(warnings.get(0).getArguments()[2]), containsString("loopback address blocked"));
         relay.runNextListenerCall();
         assertThat("the message's response fails", responses.get(0).isCompletedExceptionally(), is(true));

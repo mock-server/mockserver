@@ -1,22 +1,16 @@
 package org.mockserver.netty.integration.proxy.http;
 
 import io.netty.buffer.ByteBufUtil;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
 import org.junit.Test;
-import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.integration.ClientAndServer;
-import org.mockserver.log.model.LogEntry;
-import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.BinaryMessage;
 import org.mockserver.scheduler.Scheduler;
-import org.mockserver.test.IsDebug;
 
 import javax.net.ssl.SSLServerSocket;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -24,30 +18,38 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
 
-import static java.util.concurrent.TimeUnit.*;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
-import static org.mockserver.model.BinaryMessage.bytes;
+import static org.mockserver.stop.Stop.stopQuietly;
 import static org.mockserver.testing.tls.SSLSocketFactory.sslSocketFactory;
-import static org.slf4j.event.Level.ERROR;
 
 /**
+ * A binary client's bytes are forwarded to the upstream MockServer was started for, and the upstream's answer comes
+ * back, in the clear and over TLS; with no upstream they are answered as an unknown message format.
+ *
  * @author jamesdbloom
  */
 public class BinaryProxyIntegrationTest {
 
-    private static EventLoopGroup clientEventLoopGroup;
+    private ClientAndServer mockServer;
 
-    @BeforeClass
-    public static void startEventLoopGroup() {
-        clientEventLoopGroup = new NioEventLoopGroup(2, new Scheduler.SchedulerThreadFactory(BinaryProxyIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    @After
+    public void stopMockServer() {
+        stopQuietly(mockServer);
     }
 
-    @AfterClass
-    public static void stopEventLoopGroup() {
-        clientEventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
+    private static CompletableFuture<Socket> acceptOne(ServerSocket serverSocket) {
+        CompletableFuture<Socket> socketFuture = new CompletableFuture<>();
+        new Scheduler.SchedulerThreadFactory("MockServer Test " + BinaryProxyIntegrationTest.class.getSimpleName()).newThread(() -> {
+            try {
+                socketFuture.complete(serverSocket.accept());
+            } catch (Throwable throwable) {
+                socketFuture.completeExceptionally(throwable);
+            }
+        }).start();
+        return socketFuture;
     }
 
     private static Socket upstreamConnection(CompletableFuture<Socket> socketFuture) throws Exception {
@@ -60,122 +62,49 @@ public class BinaryProxyIntegrationTest {
         }
     }
 
-    @Test
-    public void shouldForwardBinaryMessages() throws Exception {
-        // given
+    private Socket clientOfMockServer(boolean overTls) throws IOException {
+        Socket plain = new Socket("127.0.0.1", mockServer.getPort());
+        plain.setSoTimeout(10_000);
+        return overTls ? sslSocketFactory().wrapSocket(plain) : plain;
+    }
+
+    private void shouldForwardAndAnswer(ServerSocket upstream, boolean overTls) throws Exception {
         byte[] randomRequestBytes = UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8);
         byte[] randomResponseBytes = UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8);
-        ClientAndServer proxyClientAndServer = null;
-        try {
-            // 127.0.0.1 itself, where the proxy forwards: bound to the wildcard, the port can be one another
-            // process listens on at 127.0.0.1
-            try (ServerSocket serverSocket = new ServerSocket(0, 50, InetAddress.getByAddress(new byte[]{127, 0, 0, 1}))) {
-                // and
-                int serverSocketPort = serverSocket.getLocalPort();
-                proxyClientAndServer = startClientAndServer("127.0.0.1", serverSocketPort);
+        mockServer = startClientAndServer("127.0.0.1", upstream.getLocalPort());
+        CompletableFuture<Socket> socketFuture = acceptOne(upstream);
 
-                CompletableFuture<Socket> socketFuture = new CompletableFuture<>();
-                new Scheduler.SchedulerThreadFactory("MockServer Test " + this.getClass().getSimpleName()).newThread(() -> {
-                    try {
-                        socketFuture.complete(serverSocket.accept());
-                    } catch (Throwable throwable) {
-                        socketFuture.completeExceptionally(throwable);
-                    }
-                }).start();
+        try (Socket client = clientOfMockServer(overTls)) {
+            // when
+            client.getOutputStream().write(randomRequestBytes);
+            client.getOutputStream().flush();
 
-                // when
-                CompletableFuture<BinaryMessage> binaryResponseFuture = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false)
-                    .sendRequest(
-                        bytes(randomRequestBytes),
-                        false,
-                        new InetSocketAddress(proxyClientAndServer.getLocalPort()),
-                        IsDebug.timeoutUnits().toMillis(10)
-                    );
+            // then
+            Socket socket = upstreamConnection(socketFuture);
+            assertThat(ByteBufUtil.hexDump(socket.getInputStream().readNBytes(randomRequestBytes.length)), is(ByteBufUtil.hexDump(randomRequestBytes)));
 
-                // then
-                Socket socket = upstreamConnection(socketFuture);
-                byte[] receivedBytes = new byte[randomRequestBytes.length];
-                int bytesRead = socket.getInputStream().read(receivedBytes);
-                assertThat(bytesRead, is(randomRequestBytes.length));
-                assertThat(ByteBufUtil.hexDump(receivedBytes), is(ByteBufUtil.hexDump(randomRequestBytes)));
+            // when
+            socket.getOutputStream().write(randomResponseBytes);
+            socket.getOutputStream().flush();
 
-                // when
-                socket.getOutputStream().write(randomResponseBytes);
-                BinaryMessage binaryResponse = binaryResponseFuture.get(10, IsDebug.timeoutUnits());
+            // then
+            assertThat(ByteBufUtil.hexDump(client.getInputStream().readNBytes(randomResponseBytes.length)), is(ByteBufUtil.hexDump(randomResponseBytes)));
+        }
+    }
 
-                // then
-                assertThat(ByteBufUtil.hexDump(binaryResponse.getBytes()), is(ByteBufUtil.hexDump(randomResponseBytes)));
-            }
-        } catch (java.net.SocketException se) {
-            new MockServerLogger().logEvent(
-                new LogEntry()
-                    .setLogLevel(ERROR)
-                    .setMessageFormat("Exception sending bytes")
-                    .setThrowable(se)
-            );
-            throw se;
-        } finally {
-            if (proxyClientAndServer != null) {
-                proxyClientAndServer.stop();
-            }
+    @Test
+    public void shouldForwardBinaryMessages() throws Exception {
+        // 127.0.0.1 itself, where the proxy forwards: bound to the wildcard, the port can be one another process
+        // listens on at 127.0.0.1
+        try (ServerSocket serverSocket = new ServerSocket(0, 50, InetAddress.getByAddress(new byte[]{127, 0, 0, 1}))) {
+            shouldForwardAndAnswer(serverSocket, false);
         }
     }
 
     @Test
     public void shouldForwardBinaryMessagesOverTLS() throws Exception {
-        // given
-        byte[] randomRequestBytes = UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8);
-        byte[] randomResponseBytes = UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8);
-        ClientAndServer proxyClientAndServer = null;
-        try {
-            try (SSLServerSocket serverSocket = sslSocketFactory().wrapSocket()) {
-                // and
-                proxyClientAndServer = startClientAndServer("127.0.0.1", serverSocket.getLocalPort());
-
-                CompletableFuture<Socket> socketFuture = new CompletableFuture<>();
-                new Scheduler.SchedulerThreadFactory("MockServer Test " + this.getClass().getSimpleName()).newThread(() -> {
-                    try {
-                        socketFuture.complete(serverSocket.accept());
-                    } catch (Throwable throwable) {
-                        socketFuture.completeExceptionally(throwable);
-                    }
-                }).start();
-
-                // when
-                CompletableFuture<BinaryMessage> binaryResponseFuture = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false)
-                    .sendRequest(
-                        bytes(randomRequestBytes),
-                        true,
-                        new InetSocketAddress(proxyClientAndServer.getPort()),
-                        IsDebug.timeoutUnits().toMillis(10)
-                    );
-
-                // then
-                Socket socket = upstreamConnection(socketFuture);
-                byte[] receivedBytes = new byte[randomRequestBytes.length];
-                int bytesRead = socket.getInputStream().read(receivedBytes);
-                assertThat(bytesRead, is(randomRequestBytes.length));
-                assertThat(ByteBufUtil.hexDump(receivedBytes), is(ByteBufUtil.hexDump(randomRequestBytes)));
-
-                // when
-                socket.getOutputStream().write(randomResponseBytes);
-                BinaryMessage binaryResponse = binaryResponseFuture.get(10, IsDebug.timeoutUnits());
-
-                // then
-                assertThat(ByteBufUtil.hexDump(binaryResponse.getBytes()), is(ByteBufUtil.hexDump(randomResponseBytes)));
-            }
-        } catch (java.net.SocketException se) {
-            new MockServerLogger().logEvent(
-                new LogEntry()
-                    .setLogLevel(ERROR)
-                    .setMessageFormat("Exception sending bytes")
-                    .setThrowable(se)
-            );
-            throw se;
-        } finally {
-            if (proxyClientAndServer != null) {
-                proxyClientAndServer.stop();
-            }
+        try (SSLServerSocket serverSocket = sslSocketFactory().wrapSocket()) {
+            shouldForwardAndAnswer(serverSocket, true);
         }
     }
 
@@ -183,20 +112,27 @@ public class BinaryProxyIntegrationTest {
     public void shouldCloseConnectionForBinaryMessagesWithNoRemoteAddress() throws Exception {
         // given
         byte[] randomRequestBytes = UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8);
-        ClientAndServer clientAndServer = startClientAndServer();
+        mockServer = startClientAndServer();
 
-        // when
-        BinaryMessage binaryResponse = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false)
-            .sendRequest(
-                bytes(randomRequestBytes),
-                true,
-                new InetSocketAddress(clientAndServer.getPort()),
-                IsDebug.timeoutUnits().toMillis(10)
-            )
-            .get(10, IsDebug.timeoutUnits());
+        try (Socket client = clientOfMockServer(true)) {
+            // when
+            client.getOutputStream().write(randomRequestBytes);
+            client.getOutputStream().flush();
 
-        // then
-        assertThat(new String(binaryResponse.getBytes(), StandardCharsets.UTF_8), is("unknown message format, only HTTP requests are supported for mocking or HTTP & binary requests for proxying, but request is not being proxied and request is not valid HTTP"));
+            // then
+            assertThat(readUntilClosed(client.getInputStream()), is("unknown message format, only HTTP requests are supported for mocking or HTTP & binary requests for proxying, but request is not being proxied and request is not valid HTTP"));
+        }
     }
 
+    private static String readUntilClosed(InputStream input) {
+        ByteArrayOutputStream received = new ByteArrayOutputStream();
+        try {
+            for (int read = input.read(); read != -1; read = input.read()) {
+                received.write(read);
+            }
+        } catch (IOException closedWithoutCloseNotify) {
+            // closed all the same
+        }
+        return received.toString(StandardCharsets.UTF_8);
+    }
 }

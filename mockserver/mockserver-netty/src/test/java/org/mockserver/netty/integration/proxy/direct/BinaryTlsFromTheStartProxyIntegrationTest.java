@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
@@ -351,7 +350,6 @@ public class BinaryTlsFromTheStartProxyIntegrationTest {
                 "TLS " + ByteBufUtil.hexDump(STARTUP),
                 "TLS " + ByteBufUtil.hexDump(SYNC)
             ));
-            assertThat("matching applies to this connection", logged("binary expectations are not matched"), is(empty()));
         }
     }
 

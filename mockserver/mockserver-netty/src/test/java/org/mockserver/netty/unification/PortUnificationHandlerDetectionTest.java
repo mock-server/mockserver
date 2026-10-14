@@ -3,15 +3,12 @@ package org.mockserver.netty.unification;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.EventLoop;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http2.Http2FrameCodec;
 import io.netty.handler.ssl.SslHandler;
 import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.configuration.Configuration;
@@ -20,8 +17,8 @@ import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpState;
 import org.mockserver.mock.action.http.HttpActionHandler;
-import org.mockserver.model.BinaryMessage;
 import org.mockserver.netty.MockServerUnificationInitializer;
+import org.mockserver.netty.proxy.relay.RelayUpstreamStandIn;
 import org.mockserver.netty.proxy.BinaryRequestProxyingHandler;
 import org.mockserver.scheduler.Scheduler;
 
@@ -30,7 +27,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -42,7 +38,6 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockserver.configuration.Configuration.configuration;
@@ -65,8 +60,10 @@ public class PortUnificationHandlerDetectionTest {
     private static final byte[] CLIENT_HELLO_START = {22, 3, 1, 0, 100, 1, 0, 0, 96, 3, 3};
 
     // set on the instance, so that a test changing the shared defaults in parallel cannot change what is detected
-    private final Configuration configuration = configuration().http2Enabled(true).assumeAllRequestsAreHttp(false).forwardBinaryRequestsUseSingleConnection(false);
+    private final Configuration configuration = configuration().http2Enabled(true).assumeAllRequestsAreHttp(false);
     private final NettyHttpClient httpClient = mock(NettyHttpClient.class);
+    // what is binary is relayed to stand-ins
+    private final RelayUpstreamStandIn upstreams = new RelayUpstreamStandIn(httpClient);
     private final List<String> forwardedAsBinary = new ArrayList<>();
     private final List<EmbeddedChannel> channels = new ArrayList<>();
     // one for the class: each HttpState starts threads of its own, and one of them is not ended by stop()
@@ -89,18 +86,18 @@ public class PortUnificationHandlerDetectionTest {
         return text.getBytes(StandardCharsets.US_ASCII);
     }
 
-    @Before
-    public void recordWhatIsForwardedAsBinary() {
-        when(httpClient.sendRequest(any(BinaryMessage.class), anyBoolean(), any(InetSocketAddress.class), any()))
-            .thenAnswer(invocation -> {
-                forwardedAsBinary.add(ByteBufUtil.hexDump(invocation.<BinaryMessage>getArgument(0).getBytes()));
-                return new CompletableFuture<BinaryMessage>();
-            });
+    /** Each write the relay has made to an upstream connection so far, in order, as hex. */
+    private List<String> forwardedAsBinary() {
+        for (byte[] write : upstreams.writtenInTheClear()) {
+            forwardedAsBinary.add(ByteBufUtil.hexDump(write));
+        }
+        return forwardedAsBinary;
     }
 
     @After
     public void releaseChannels() {
         channels.forEach(EmbeddedChannel::finishAndReleaseAll);
+        upstreams.releaseAll();
         if (initializer != null) {
             initializer.getMcpSessionManager().shutdown();
         }
@@ -166,21 +163,21 @@ public class PortUnificationHandlerDetectionTest {
         assertThat("sent in one read", takenToBe(whole), is(protocol));
 
         for (int split = 1; split < firstBytes.length; split++) {
-            forwardedAsBinary.clear();
+            forwardedAsBinary().clear();
             EmbeddedChannel channel = connection();
             clientSends(channel, Arrays.copyOfRange(firstBytes, 0, split));
             clientSends(channel, Arrays.copyOfRange(firstBytes, split, firstBytes.length));
             assertThat("split after " + split + " byte(s)", takenToBe(channel), is(protocol));
-            assertThat("split after " + split + " byte(s), nothing is forwarded as binary", forwardedAsBinary, is(empty()));
+            assertThat("split after " + split + " byte(s), nothing is forwarded as binary", forwardedAsBinary(), is(empty()));
         }
 
-        forwardedAsBinary.clear();
+        forwardedAsBinary().clear();
         EmbeddedChannel byteAtATime = connection();
         for (byte b : firstBytes) {
             clientSends(byteAtATime, b);
         }
         assertThat("sent a byte at a time", takenToBe(byteAtATime), is(protocol));
-        assertThat("sent a byte at a time, nothing is forwarded as binary", forwardedAsBinary, is(empty()));
+        assertThat("sent a byte at a time, nothing is forwarded as binary", forwardedAsBinary(), is(empty()));
     }
 
     @Test
@@ -205,13 +202,13 @@ public class PortUnificationHandlerDetectionTest {
     @Test
     public void shouldNotTakeALongerWordThatStartsWithAMethodToBeHttp() {
         for (String method : Arrays.asList("GET", "POST", "PUT", "HEAD", "OPTIONS", "PATCH", "DELETE", "TRACE", "CONNECT")) {
-            forwardedAsBinary.clear();
+            forwardedAsBinary().clear();
             EmbeddedChannel channel = connection();
 
             clientSends(channel, ascii(method + "X /"));
 
             assertThat(method + "X", takenToBe(channel), is("binary"));
-            assertThat(method + "X is forwarded at once", forwardedAsBinary, contains(hex(method + "X /")));
+            assertThat(method + "X is forwarded at once", forwardedAsBinary(), contains(hex(method + "X /")));
         }
     }
 
@@ -240,21 +237,21 @@ public class PortUnificationHandlerDetectionTest {
     @Test
     public void shouldHoldAFirstByteOnlyWhenItIsATlsRecordType() {
         for (int firstByte : new int[]{19, 25}) {
-            forwardedAsBinary.clear();
+            forwardedAsBinary().clear();
             EmbeddedChannel channel = connection();
 
             clientSends(channel, (byte) firstByte);
 
-            assertThat(firstByte + " is next to the record types but not one, so it is binary at once", forwardedAsBinary, contains(ByteBufUtil.hexDump(new byte[]{(byte) firstByte})));
+            assertThat(firstByte + " is next to the record types but not one, so it is binary at once", forwardedAsBinary(), contains(ByteBufUtil.hexDump(new byte[]{(byte) firstByte})));
         }
         for (int firstByte : new int[]{20, 24}) {
-            forwardedAsBinary.clear();
+            forwardedAsBinary().clear();
             EmbeddedChannel channel = connection();
 
             clientSends(channel, (byte) firstByte);
 
             assertThat(firstByte + " is the first or last record type, so the rest of a header is waited for", takenToBe(channel), is("undecided"));
-            assertThat(forwardedAsBinary, is(empty()));
+            assertThat(forwardedAsBinary(), is(empty()));
         }
     }
 
@@ -262,7 +259,7 @@ public class PortUnificationHandlerDetectionTest {
     public void shouldNotTakeARecordHeaderOfNoLengthToBeTlsHoweverItIsSplit() {
         byte[] notTls = {22, 3, 1, 0, 0, 'x', 'y', 'z'};
         for (int split = 1; split < 5; split++) {
-            forwardedAsBinary.clear();
+            forwardedAsBinary().clear();
             EmbeddedChannel channel = connection();
 
             clientSends(channel, Arrays.copyOfRange(notTls, 0, split));
@@ -270,7 +267,7 @@ public class PortUnificationHandlerDetectionTest {
             clientSends(channel, Arrays.copyOfRange(notTls, split, notTls.length));
 
             assertThat("split after " + split + " byte(s)", takenToBe(channel), is("binary"));
-            assertThat("split after " + split + " byte(s)", forwardedAsBinary, contains(ByteBufUtil.hexDump(notTls)));
+            assertThat("split after " + split + " byte(s)", forwardedAsBinary(), contains(ByteBufUtil.hexDump(notTls)));
         }
     }
 
@@ -290,7 +287,7 @@ public class PortUnificationHandlerDetectionTest {
 
         clientSends(channel, ascii("hello\n"));
 
-        assertThat(forwardedAsBinary, contains(hex("hello\n")));
+        assertThat(forwardedAsBinary(), contains(hex("hello\n")));
     }
 
     @Test
@@ -299,7 +296,7 @@ public class PortUnificationHandlerDetectionTest {
 
         clientSends(channel, (byte) 0x01);
 
-        assertThat(forwardedAsBinary, contains("01"));
+        assertThat(forwardedAsBinary(), contains("01"));
     }
 
     @Test
@@ -310,20 +307,20 @@ public class PortUnificationHandlerDetectionTest {
         clientSends(channel, ascii("short\n"));
         clientSends(channel, (byte) 0x01);
 
-        assertThat(forwardedAsBinary, contains(hex("a first message\n"), hex("short\n"), "01"));
+        assertThat(forwardedAsBinary(), contains(hex("a first message\n"), hex("short\n"), "01"));
     }
 
     @Test
     public void shouldKeepABinaryConnectionBinaryWhenALaterMessageLooksLikeAnotherProtocol() {
         for (byte[] later : Arrays.asList(HTTP_GET, ascii("POST /some/path HTTP/1.1\r\n"), HTTP_CONNECT, H2C_PREFACE, SOCKS4_BIND, SOCKS5_GREETING, ascii("PROXIED_example.com:80"))) {
-            forwardedAsBinary.clear();
+            forwardedAsBinary().clear();
             EmbeddedChannel channel = connection();
 
             clientSends(channel, ascii("a first message\n"));
             clientSends(channel, later);
 
             String sent = new String(later, StandardCharsets.ISO_8859_1);
-            assertThat(sent, forwardedAsBinary, contains(hex("a first message\n"), ByteBufUtil.hexDump(later)));
+            assertThat(sent, forwardedAsBinary(), contains(hex("a first message\n"), ByteBufUtil.hexDump(later)));
             assertThat(sent, takenToBe(channel), is("binary"));
         }
     }
@@ -340,7 +337,7 @@ public class PortUnificationHandlerDetectionTest {
         clientSends(channel, CLIENT_HELLO_START);
 
         assertThat(takenToBe(channel), is("TLS"));
-        assertThat("the handshake is not a binary message", forwardedAsBinary, contains(hex("a first message\n")));
+        assertThat("the handshake is not a binary message", forwardedAsBinary(), contains(hex("a first message\n")));
         assertThat("the TLS handler is the first to see what the client sends", channel.pipeline().names().get(0), startsWith("SniHandler"));
         assertThat(tlsHandlers(channel), is(1L));
         assertThat("what is decrypted from now on is not looked at again", channel.pipeline().get(PortUnificationHandler.class), is(nullValue()));
@@ -349,7 +346,7 @@ public class PortUnificationHandlerDetectionTest {
     @Test
     public void shouldTurnOnTlsHoweverTheStartOfTheHandshakeIsSplit() {
         for (int split = 1; split < CLIENT_HELLO_START.length; split++) {
-            forwardedAsBinary.clear();
+            forwardedAsBinary().clear();
             EmbeddedChannel channel = connection();
             clientSends(channel, ascii("a first message\n"));
 
@@ -357,32 +354,32 @@ public class PortUnificationHandlerDetectionTest {
             clientSends(channel, Arrays.copyOfRange(CLIENT_HELLO_START, split, CLIENT_HELLO_START.length));
 
             assertThat("split after " + split + " byte(s)", takenToBe(channel), is("TLS"));
-            assertThat("split after " + split + " byte(s)", forwardedAsBinary, contains(hex("a first message\n")));
+            assertThat("split after " + split + " byte(s)", forwardedAsBinary(), contains(hex("a first message\n")));
             assertThat("split after " + split + " byte(s)", tlsHandlers(channel), is(1L));
         }
 
-        forwardedAsBinary.clear();
+        forwardedAsBinary().clear();
         EmbeddedChannel byteAtATime = connection();
         clientSends(byteAtATime, ascii("a first message\n"));
         for (byte b : CLIENT_HELLO_START) {
             clientSends(byteAtATime, b);
         }
         assertThat("sent a byte at a time", takenToBe(byteAtATime), is("TLS"));
-        assertThat("sent a byte at a time", forwardedAsBinary, contains(hex("a first message\n")));
+        assertThat("sent a byte at a time", forwardedAsBinary(), contains(hex("a first message\n")));
         assertThat("sent a byte at a time", tlsHandlers(byteAtATime), is(1L));
     }
 
     @Test
     public void shouldTurnOnTlsForTheSmallestAndLargestRecordAHandshakeCanOpenWith() {
         for (byte[] opening : Arrays.asList(new byte[]{22, 3, 0, 0, 1, 1}, new byte[]{22, 3, 4, 0x40, 0, 1})) {
-            forwardedAsBinary.clear();
+            forwardedAsBinary().clear();
             EmbeddedChannel channel = connection();
             clientSends(channel, ascii("a first message\n"));
 
             clientSends(channel, opening);
 
             assertThat(ByteBufUtil.hexDump(opening), takenToBe(channel), is("TLS"));
-            assertThat(ByteBufUtil.hexDump(opening), forwardedAsBinary, contains(hex("a first message\n")));
+            assertThat(ByteBufUtil.hexDump(opening), forwardedAsBinary(), contains(hex("a first message\n")));
         }
     }
 
@@ -399,14 +396,14 @@ public class PortUnificationHandlerDetectionTest {
             {22, 3, 1, 0, 100, 0, 0, 0, 96},
         };
         for (byte[] later : notAHandshake) {
-            forwardedAsBinary.clear();
+            forwardedAsBinary().clear();
             EmbeddedChannel channel = connection();
             clientSends(channel, ascii("a first message\n"));
 
             clientSends(channel, later);
 
             String sent = ByteBufUtil.hexDump(later);
-            assertThat(sent + " is forwarded at once, as it is", forwardedAsBinary, contains(hex("a first message\n"), sent));
+            assertThat(sent + " is forwarded at once, as it is", forwardedAsBinary(), contains(hex("a first message\n"), sent));
             assertThat(sent, takenToBe(channel), is("binary"));
             assertThat(sent, tlsHandlers(channel), is(0L));
         }
@@ -417,22 +414,22 @@ public class PortUnificationHandlerDetectionTest {
         for (int length = 1; length < 6; length++) {
             byte[] couldBecome = Arrays.copyOfRange(CLIENT_HELLO_START, 0, length);
             String sent = ByteBufUtil.hexDump(couldBecome);
-            forwardedAsBinary.clear();
+            forwardedAsBinary().clear();
             EmbeddedChannel channel = connection();
             clientSends(channel, ascii("a first message\n"));
 
             clientSends(channel, couldBecome);
             channel.advanceTimeBy(PortUnificationHandler.UNDECIDED_PROTOCOL_WAIT_MILLIS - 1, TimeUnit.MILLISECONDS);
             channel.runScheduledPendingTasks();
-            assertThat(sent + " is held while the rest of a handshake may still arrive", forwardedAsBinary, contains(hex("a first message\n")));
+            assertThat(sent + " is held while the rest of a handshake may still arrive", forwardedAsBinary(), contains(hex("a first message\n")));
 
             channel.advanceTimeBy(1, TimeUnit.MILLISECONDS);
             channel.runScheduledPendingTasks();
-            assertThat(sent + " is forwarded when nothing more arrives", forwardedAsBinary, contains(hex("a first message\n"), sent));
+            assertThat(sent + " is forwarded when nothing more arrives", forwardedAsBinary(), contains(hex("a first message\n"), sent));
             assertThat(sent, takenToBe(channel), is("binary"));
 
             clientSends(channel, ascii("the next message\n"));
-            assertThat("and the connection carries on as before", forwardedAsBinary, contains(hex("a first message\n"), sent, hex("the next message\n")));
+            assertThat("and the connection carries on as before", forwardedAsBinary(), contains(hex("a first message\n"), sent, hex("the next message\n")));
         }
     }
 
@@ -440,18 +437,18 @@ public class PortUnificationHandlerDetectionTest {
     public void shouldForwardAHeldLaterMessageOnItsOwnWhenWhatFollowsShowsItIsNotAHandshake() {
         for (int length = 1; length < 6; length++) {
             byte[] held = Arrays.copyOfRange(CLIENT_HELLO_START, 0, length);
-            forwardedAsBinary.clear();
+            forwardedAsBinary().clear();
             EmbeddedChannel channel = connection();
             clientSends(channel, ascii("a first message\n"));
 
             clientSends(channel, held);
             clientSends(channel, ascii("xyz"));
 
-            assertThat("the " + length + " byte(s) held were a message, and what settled it is the next", forwardedAsBinary, contains(hex("a first message\n"), ByteBufUtil.hexDump(held), hex("xyz")));
+            assertThat("the " + length + " byte(s) held were a message, and what settled it is the next", forwardedAsBinary(), contains(hex("a first message\n"), ByteBufUtil.hexDump(held), hex("xyz")));
             assertThat(takenToBe(channel), is("binary"));
 
             clientSends(channel, ascii("xyz"));
-            assertThat("nothing is split off a message that was never held", forwardedAsBinary, contains(hex("a first message\n"), ByteBufUtil.hexDump(held), hex("xyz"), hex("xyz")));
+            assertThat("nothing is split off a message that was never held", forwardedAsBinary(), contains(hex("a first message\n"), ByteBufUtil.hexDump(held), hex("xyz"), hex("xyz")));
         }
     }
 
@@ -464,7 +461,7 @@ public class PortUnificationHandlerDetectionTest {
         clientSends(channel, (byte) 3);
         clientSends(channel, ascii("xyz"));
 
-        assertThat("only where the held bytes end is remembered", forwardedAsBinary, contains(hex("a first message\n"), "1603", hex("xyz")));
+        assertThat("only where the held bytes end is remembered", forwardedAsBinary(), contains(hex("a first message\n"), "1603", hex("xyz")));
     }
 
     @Test
@@ -472,14 +469,14 @@ public class PortUnificationHandlerDetectionTest {
         // three held bytes are left out: followed by a handshake they read as the start of one themselves
         for (int length : new int[]{1, 2, 4, 5}) {
             byte[] held = Arrays.copyOfRange(CLIENT_HELLO_START, 0, length);
-            forwardedAsBinary.clear();
+            forwardedAsBinary().clear();
             EmbeddedChannel channel = connection();
             clientSends(channel, ascii("a first message\n"));
 
             clientSends(channel, held);
             clientSends(channel, CLIENT_HELLO_START);
 
-            assertThat("the " + length + " byte(s) held were a message, and the handshake is not one", forwardedAsBinary, contains(hex("a first message\n"), ByteBufUtil.hexDump(held)));
+            assertThat("the " + length + " byte(s) held were a message, and the handshake is not one", forwardedAsBinary(), contains(hex("a first message\n"), ByteBufUtil.hexDump(held)));
             assertThat("after " + length + " held byte(s)", takenToBe(channel), is("TLS"));
             assertThat("after " + length + " held byte(s)", tlsHandlers(channel), is(1L));
         }
@@ -492,15 +489,15 @@ public class PortUnificationHandlerDetectionTest {
 
         clientSends(channel, (byte) 22);
         clientSends(channel, (byte) 22, (byte) 3);
-        assertThat("the byte held is delivered, and the two that settled it are held in their turn", forwardedAsBinary, contains(hex("a first message\n"), "16"));
+        assertThat("the byte held is delivered, and the two that settled it are held in their turn", forwardedAsBinary(), contains(hex("a first message\n"), "16"));
 
         channel.advanceTimeBy(PortUnificationHandler.UNDECIDED_PROTOCOL_WAIT_MILLIS - 1, TimeUnit.MILLISECONDS);
         channel.runScheduledPendingTasks();
-        assertThat("for as long as any held bytes are", forwardedAsBinary, contains(hex("a first message\n"), "16"));
+        assertThat("for as long as any held bytes are", forwardedAsBinary(), contains(hex("a first message\n"), "16"));
 
         channel.advanceTimeBy(1, TimeUnit.MILLISECONDS);
         channel.runScheduledPendingTasks();
-        assertThat(forwardedAsBinary, contains(hex("a first message\n"), "16", "1603"));
+        assertThat(forwardedAsBinary(), contains(hex("a first message\n"), "16", "1603"));
         assertThat(takenToBe(channel), is("binary"));
     }
 
@@ -513,7 +510,7 @@ public class PortUnificationHandlerDetectionTest {
         clientSends(channel, (byte) 22, (byte) 3);
         clientSends(channel, Arrays.copyOfRange(CLIENT_HELLO_START, 2, CLIENT_HELLO_START.length));
 
-        assertThat(forwardedAsBinary, contains(hex("a first message\n"), "16"));
+        assertThat(forwardedAsBinary(), contains(hex("a first message\n"), "16"));
         assertThat(takenToBe(channel), is("TLS"));
         assertThat(tlsHandlers(channel), is(1L));
     }
@@ -525,10 +522,10 @@ public class PortUnificationHandlerDetectionTest {
 
         // 0x41 as the first length byte: longer than a record can be, whatever the second
         clientSends(channel, (byte) 22, (byte) 3, (byte) 1, (byte) 0x41);
-        assertThat(forwardedAsBinary, contains(hex("a first message\n"), "16030141"));
+        assertThat(forwardedAsBinary(), contains(hex("a first message\n"), "16030141"));
 
         clientSends(channel, (byte) 22, (byte) 3, (byte) 1, (byte) 0x40);
-        assertThat("0x40 can still be the longest record there is, so it is held", forwardedAsBinary, contains(hex("a first message\n"), "16030141"));
+        assertThat("0x40 can still be the longest record there is, so it is held", forwardedAsBinary(), contains(hex("a first message\n"), "16030141"));
     }
 
     @Test
@@ -539,35 +536,7 @@ public class PortUnificationHandlerDetectionTest {
         clientSends(channel, (byte) 22, (byte) 3, (byte) 1);
         channel.close();
 
-        assertThat(forwardedAsBinary, contains(hex("a first message\n"), "160301"));
-    }
-
-    /** As above, with the connection relayed on one upstream connection: that is ended only after the held bytes. */
-    @Test
-    public void shouldRelayAHeldLaterMessageBeforeEndingTheUpstreamConnectionWhenTheClientCloses() {
-        configuration.forwardBinaryRequestsUseSingleConnection(true);
-        List<EmbeddedChannel> upstreams = new ArrayList<>();
-        when(httpClient.connectBinaryRelay(any(EventLoop.class), any(InetSocketAddress.class), anyBoolean(), any(ChannelHandler.class))).thenAnswer(invocation -> {
-            EmbeddedChannel upstream = new EmbeddedChannel(invocation.<ChannelHandler>getArgument(3));
-            upstreams.add(upstream);
-            return upstream.newSucceededFuture();
-        });
-        EmbeddedChannel channel = connection();
-        clientSends(channel, ascii("a first message\n"));
-
-        clientSends(channel, (byte) 22, (byte) 3, (byte) 1);
-        channel.close();
-
-        assertThat("one upstream connection", upstreams.size(), is(1));
-        StringBuilder relayed = new StringBuilder();
-        for (ByteBuf write; (write = upstreams.get(0).readOutbound()) != null; ) {
-            relayed.append(ByteBufUtil.hexDump(write));
-            write.release();
-        }
-        assertThat(relayed.toString(), is(hex("a first message\n") + "160301"));
-        assertThat("and then it is ended", upstreams.get(0).isOpen(), is(false));
-        assertThat("nothing went the per-message way", forwardedAsBinary, is(empty()));
-        upstreams.get(0).finishAndReleaseAll();
+        assertThat(forwardedAsBinary(), contains(hex("a first message\n"), "160301"));
     }
 
     @Test
@@ -582,7 +551,7 @@ public class PortUnificationHandlerDetectionTest {
 
         assertThat(takenToBe(channel), is("HTTP/1.1"));
         assertThat(tlsHandlers(channel), is(0L));
-        assertThat(forwardedAsBinary, is(empty()));
+        assertThat(forwardedAsBinary(), is(empty()));
     }
 
     // read loops every connection below is put through: small messages, larger ones, and more than one buffer holds
@@ -628,7 +597,7 @@ public class PortUnificationHandlerDetectionTest {
         clientSends(tunnel, HTTP_GET);
         assertThat(takenToBe(tunnel), is("HTTP/1.1"));
         assertThat("HTTP inside a tunnel", readsFromNowOn(tunnel), is(asNettySizesThem));
-        assertThat(forwardedAsBinary, is(empty()));
+        assertThat(forwardedAsBinary(), is(empty()));
     }
 
     @Test
@@ -679,21 +648,21 @@ public class PortUnificationHandlerDetectionTest {
     @Test
     public void shouldHoldAFirstMessageThatCouldStillBecomeAKnownProtocolOnlyBriefly() {
         for (byte[] couldBecome : Arrays.asList(ascii("GET"), ascii("P"), ascii("PRI * HTTP"), new byte[]{22, 3, 1}, new byte[]{4, 1, 0}, new byte[]{5}, ascii("PROXIED"))) {
-            forwardedAsBinary.clear();
+            forwardedAsBinary().clear();
             EmbeddedChannel channel = connection();
             String sent = ByteBufUtil.hexDump(couldBecome);
 
             clientSends(channel, couldBecome);
-            assertThat(sent + " is held while the rest may still arrive", forwardedAsBinary, is(empty()));
+            assertThat(sent + " is held while the rest may still arrive", forwardedAsBinary(), is(empty()));
             assertThat(sent, takenToBe(channel), is("undecided"));
 
             channel.advanceTimeBy(PortUnificationHandler.UNDECIDED_PROTOCOL_WAIT_MILLIS - 1, TimeUnit.MILLISECONDS);
             channel.runScheduledPendingTasks();
-            assertThat(sent + " is still held just before the wait ends", forwardedAsBinary, is(empty()));
+            assertThat(sent + " is still held just before the wait ends", forwardedAsBinary(), is(empty()));
 
             channel.advanceTimeBy(1, TimeUnit.MILLISECONDS);
             channel.runScheduledPendingTasks();
-            assertThat(sent + " is forwarded when nothing more arrives", forwardedAsBinary, contains(sent));
+            assertThat(sent + " is forwarded when nothing more arrives", forwardedAsBinary(), contains(sent));
             assertThat(sent, takenToBe(channel), is("binary"));
         }
     }
@@ -713,7 +682,7 @@ public class PortUnificationHandlerDetectionTest {
         clientSends(channel, ascii("S * HTTP/1.1\r\n"));
 
         assertThat(takenToBe(channel), is("HTTP/1.1"));
-        assertThat(forwardedAsBinary, is(empty()));
+        assertThat(forwardedAsBinary(), is(empty()));
     }
 
     @Test
@@ -730,7 +699,7 @@ public class PortUnificationHandlerDetectionTest {
         clientSends(channel, ascii(" / HTTP/1.1\r\n"));
 
         assertThat(takenToBe(channel), is("HTTP/1.1"));
-        assertThat(forwardedAsBinary, is(empty()));
+        assertThat(forwardedAsBinary(), is(empty()));
     }
 
     @Test
@@ -747,7 +716,7 @@ public class PortUnificationHandlerDetectionTest {
         channel.advanceTimeBy(PortUnificationHandler.UNDECIDED_PROTOCOL_WAIT_MILLIS, TimeUnit.MILLISECONDS);
         channel.runScheduledPendingTasks();
 
-        assertThat("the pause only put the wait off", forwardedAsBinary, contains(hex("GET")));
+        assertThat("the pause only put the wait off", forwardedAsBinary(), contains(hex("GET")));
         assertThat(takenToBe(channel), is("binary"));
     }
 
@@ -758,7 +727,7 @@ public class PortUnificationHandlerDetectionTest {
         clientSends(channel, ascii("GET"));
         channel.close();
 
-        assertThat("a client that sends and closes has what it sent forwarded", forwardedAsBinary, contains(hex("GET")));
+        assertThat("a client that sends and closes has what it sent forwarded", forwardedAsBinary(), contains(hex("GET")));
     }
 
     @Test
@@ -777,7 +746,7 @@ public class PortUnificationHandlerDetectionTest {
             clientSends(channel, HTTP_GET);
 
             assertThat("split after " + split + " byte(s)", takenToBe(channel), is("HTTP/1.1"));
-            assertThat(forwardedAsBinary, is(empty()));
+            assertThat(forwardedAsBinary(), is(empty()));
         }
     }
 
@@ -815,7 +784,7 @@ public class PortUnificationHandlerDetectionTest {
         channel.runScheduledPendingTasks();
 
         assertThat(takenToBe(channel), is("HTTP/1.1"));
-        assertThat(forwardedAsBinary, is(empty()));
+        assertThat(forwardedAsBinary(), is(empty()));
     }
 
     @Test
@@ -826,6 +795,6 @@ public class PortUnificationHandlerDetectionTest {
         clientSends(channel, ascii("PROP"));
 
         assertThat(takenToBe(channel), is("HTTP/1.1"));
-        assertThat(forwardedAsBinary, is(empty()));
+        assertThat(forwardedAsBinary(), is(empty()));
     }
 }

@@ -15,10 +15,10 @@ import org.mockserver.netty.unification.BinaryAwareRecvByteBufAllocator;
 public class BinaryMessageGatherer extends ChannelInboundHandlerAdapter {
 
     /**
-     * The most one message holds; what a read loop delivers beyond it starts the next message. It is the forward
-     * queue's own limit, so that queue is never asked to take more than it may hold in one message.
+     * The most one message holds; what a read loop delivers beyond it starts the next message, so one message is at
+     * most this much in one write upstream and one listener call.
      */
-    static final int MAX_GATHERED_BYTES = BinaryRequestProxyingHandler.MAX_WAITING_BYTES;
+    static final int MAX_GATHERED_BYTES = 256 * 1024;
 
     // the message so far: its only piece, or its pieces joined once there are two
     private ByteBuf first;

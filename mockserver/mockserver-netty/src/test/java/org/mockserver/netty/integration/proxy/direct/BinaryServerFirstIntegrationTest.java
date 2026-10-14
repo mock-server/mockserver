@@ -4,12 +4,12 @@ import org.junit.After;
 import org.junit.Test;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.netty.MockServer;
+import org.mockserver.netty.integration.proxy.http.RecordingUpstreamProxy;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThrows;
@@ -86,20 +87,19 @@ public class BinaryServerFirstIntegrationTest {
     }
 
     @Test
-    public void shouldOpenNoUpstreamConnectionForASilentClientThatCannotBeRelayedOnOne() throws Exception {
+    public void shouldRelayTheGreetingThroughATunnelWhenTheOnlyUpstreamProxyIsForwardHttpProxy() throws Exception {
         try (GreetingUpstream upstream = new GreetingUpstream();
-             GreetingUpstream httpProxy = new GreetingUpstream()) {
+             RecordingUpstreamProxy httpProxy = new RecordingUpstreamProxy(RecordingUpstreamProxy.Protocol.CONNECT, 20)) {
             Configuration onlyAnHttpProxy = configuration()
                 .forwardBinaryServerFirstWaitMillis(WAIT_MILLIS)
-                .forwardHttpProxy(new InetSocketAddress(InetAddress.getLoopbackAddress(), httpProxy.port()));
+                .forwardHttpProxy(httpProxy.address());
             try (Socket client = clientOf(onlyAnHttpProxy, upstream.port())) {
-                client.setSoTimeout((int) (WAIT_MILLIS * 5));
+                assertThat("the client has sent nothing", readLine(client.getInputStream()), is("220 ready\n"));
 
-                assertThrows(SocketTimeoutException.class, () -> client.getInputStream().read());
-                assertThat(upstream.connections.get(), is(0));
-                assertStillServedAsHttp(client);
-                assertThat(upstream.connections.get(), is(0));
-                assertThat(httpProxy.connections.get(), is(0));
+                send(client, "HELO client\n");
+                assertThat(readLine(client.getInputStream()), is("250 HELO client\n"));
+                assertThat("one tunnel, through the proxy, to the target", httpProxy.destinations(), contains("127.0.0.1:" + upstream.port()));
+                assertThat(upstream.connections.get(), is(1));
             }
         }
     }

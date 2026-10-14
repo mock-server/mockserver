@@ -14,7 +14,6 @@ import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.mockserver.codec.BoundedZstdHttpContentDecompressor;
 import org.mockserver.codec.HttpLineEndSplitGuard;
-import org.mockserver.codec.MockServerBinaryClientCodec;
 import org.mockserver.codec.MockServerHttpClientCodec;
 import org.mockserver.codec.StreamingAwareHttpObjectAggregator;
 import org.mockserver.configuration.Configuration;
@@ -56,10 +55,6 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
     private final Map<ProxyConfiguration.Type, ProxyConfiguration> proxyConfigurations;
     private final NettySslContextFactory nettySslContextFactory;
 
-    /**
-     * @param httpProtocol null for a binary forward, which has no HTTP codecs: the one thing it reads as HTTP is an
-     *                     upstream proxy's answer to {@code CONNECT}
-     */
     HttpClientInitializer(Map<ProxyConfiguration.Type, ProxyConfiguration> proxyConfigurations, MockServerLogger mockServerLogger, boolean forwardProxyClient, NettySslContextFactory nettySslContextFactory, Protocol httpProtocol, Configuration configuration) {
         this.proxyConfigurations = proxyConfigurations;
         this.configuration = configuration;
@@ -93,11 +88,11 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
     }
 
     /**
-     * The handler that opens a tunnel through this upstream proxy: {@code CONNECT} for {@code forwardHttpsProxy},
-     * SOCKS5 for {@code forwardSocksProxy}.
+     * The handler that opens a tunnel through this upstream proxy: {@code CONNECT} for {@code forwardHttpsProxy}, and
+     * for {@code forwardHttpProxy} where a binary relay tunnels through it; SOCKS5 for {@code forwardSocksProxy}.
      */
     static ProxyHandler tunnelHandler(ProxyConfiguration tunnelProxy, MockServerLogger mockServerLogger, int maxHeaderSize) {
-        if (tunnelProxy.getType() == ProxyConfiguration.Type.HTTPS) {
+        if (tunnelProxy.getType() != ProxyConfiguration.Type.SOCKS5) {
             boolean credentials = isNotBlank(tunnelProxy.getUsername()) && isNotBlank(tunnelProxy.getPassword());
             return new HttpConnectProxyHandler(tunnelProxy.getProxyAddress(), credentials ? tunnelProxy.getUsername() : null, credentials ? tunnelProxy.getPassword() : null, mockServerLogger, maxHeaderSize);
         } else if (isNotBlank(tunnelProxy.getUsername()) && isNotBlank(tunnelProxy.getPassword())) {
@@ -165,9 +160,7 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
             pipeline.addLast(new LoggingHandler(HttpClientHandler.class.getName()));
         }
 
-        if (httpProtocol == null) {
-            configureBinaryPipeline(pipeline);
-        } else if (secure) {
+        if (secure) {
             // use ALPN to determine http1 or http2
             pipeline.addLast(new HttpOrHttp2Initializer(mockServerLogger, this::configureHttp1Pipeline, this::configureHttp2Pipeline));
         } else {
@@ -376,11 +369,5 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
                 super.write(ctx, msg, promise);
             }
         }
-    }
-
-    private void configureBinaryPipeline(ChannelPipeline pipeline) {
-        pipeline.addLast(new MockServerBinaryClientCodec());
-        pipeline.addLast(httpClientHandler);
-        protocolFuture.complete(null);
     }
 }

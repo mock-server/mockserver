@@ -145,7 +145,6 @@ public class NettyAssymetricBinaryForwardingIntegrationTest {
         AtomicInteger mostCallsInProgress = new AtomicInteger(0);
         try (FlexibleServer upstream = new FlexibleServer()) {
             Configuration configuration = Configuration.configuration()
-                .forwardBinaryRequestsWithoutWaitingForResponse(true)
                 .binaryProxyListener((binaryRequest, binaryResponse, serverAddress, clientAddress) -> {
                     mostCallsInProgress.accumulateAndGet(callsInProgress.incrementAndGet(), Math::max);
                     reported.add(new String(binaryRequest.getBytes(), StandardCharsets.UTF_8));
@@ -189,7 +188,6 @@ public class NettyAssymetricBinaryForwardingIntegrationTest {
     public void shouldCloseTheConnectionWhenTheListenerThrows() throws Exception {
         try (FlexibleServer upstream = new FlexibleServer()) {
             Configuration configuration = Configuration.configuration()
-                .forwardBinaryRequestsWithoutWaitingForResponse(true)
                 .binaryProxyListener((binaryRequest, binaryResponse, serverAddress, clientAddress) -> {
                     throw new IllegalStateException("the listener failed");
                 });
@@ -217,7 +215,6 @@ public class NettyAssymetricBinaryForwardingIntegrationTest {
             AtomicInteger proxyListenerCalledWithNonNullRequestCounter = new AtomicInteger(0);
             AtomicInteger proxyListenerCalledWithNonNullResponseCounter = new AtomicInteger(0);
             configuration
-                .forwardBinaryRequestsWithoutWaitingForResponse(true)
                 .binaryProxyListener((binaryRequest, binaryResponse, serverAddress, clientAddress) -> {
                     try {
                         if (binaryRequest != null) {
@@ -263,8 +260,8 @@ public class NettyAssymetricBinaryForwardingIntegrationTest {
     }
 
     /**
-     * An upstream that never answers. MockServer forwards each message on a connection of its own, so what the
-     * upstream has received is every connection's bytes, joined in the order the connections were accepted.
+     * An upstream that never answers. What it has received is every connection's bytes, joined in the order the
+     * connections were accepted.
      */
     private static class FlexibleServer implements AutoCloseable {
 

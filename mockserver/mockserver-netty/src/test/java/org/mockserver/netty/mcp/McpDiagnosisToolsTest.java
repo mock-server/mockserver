@@ -192,13 +192,16 @@ public class McpDiagnosisToolsTest {
     public void shouldListUnrecognisedKeysByNameWithSuggestionsAndNeverTheirValues() throws Exception {
         String typoKey = "mockserver.maxExpectatons";
         String fileOnlyKey = "mockserver.candidateIndexThreshold";
+        String removedKey = "mockserver.forwardBinaryRequestsWithoutWaitingForResponse";
         String typoSecret = "mcp-unrecognised-typo-secret";
         String fileSecret = "mcp-unrecognised-file-secret";
         String previousTypo = System.getProperty(typoKey);
         String previousFileOnly = System.getProperty(fileOnlyKey);
+        String previousRemoved = System.getProperty(removedKey);
         Object previousFileEntry = ConfigurationProperties.PROPERTIES.get(fileOnlyKey);
         try {
             System.setProperty(typoKey, typoSecret);
+            System.setProperty(removedKey, "true");
             // a system-property-only key in the properties file is ignored unless the system property is set
             System.clearProperty(fileOnlyKey);
             ConfigurationProperties.PROPERTIES.setProperty(fileOnlyKey, fileSecret);
@@ -211,6 +214,10 @@ public class McpDiagnosisToolsTest {
                 assertThat(typo.path("setAs").asText(), is("system property"));
                 assertThat(typo.path("suggestions").toString(), is("[\"mockserver.maxExpectations\"]"));
                 assertThat(typo.path("systemPropertyOnly").asBoolean(true), is(false));
+                assertThat(typo.path("removed").asBoolean(true), is(false));
+                JsonNode removed = unrecognisedNode(result, removedKey);
+                assertThat(removed.path("removed").asBoolean(false), is(true));
+                assertThat(removed.path("suggestions").size(), is(0));
                 assertThat(typo.has("value"), is(false));
                 JsonNode fileOnly = unrecognisedNode(result, fileOnlyKey);
                 assertThat(fileOnly.path("setAs").asText(), is("properties-file key"));
@@ -226,6 +233,11 @@ public class McpDiagnosisToolsTest {
             }
             if (previousFileOnly != null) {
                 System.setProperty(fileOnlyKey, previousFileOnly);
+            }
+            if (previousRemoved != null) {
+                System.setProperty(removedKey, previousRemoved);
+            } else {
+                System.clearProperty(removedKey);
             }
             if (previousFileEntry != null) {
                 ConfigurationProperties.PROPERTIES.put(fileOnlyKey, previousFileEntry);

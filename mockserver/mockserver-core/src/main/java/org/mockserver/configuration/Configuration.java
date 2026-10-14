@@ -228,8 +228,6 @@ public class Configuration {
     private volatile Integer streamIdleTimeoutSeconds;
 
     // non http proxying
-    private volatile Boolean forwardBinaryRequestsWithoutWaitingForResponse;
-    private volatile Boolean forwardBinaryRequestsUseSingleConnection;
     private volatile Boolean matchBinaryExpectationsWhenProxying;
     private volatile Long forwardBinaryServerFirstWaitMillis;
     private volatile BinaryMessageFraming binaryMessageFraming;
@@ -3363,64 +3361,6 @@ public class Configuration {
         return this;
     }
 
-    /**
-     * Applies only when forwardBinaryRequestsUseSingleConnection is false, or to a connection that falls back to
-     * forwarding each message on a connection of its own.
-     *
-     * @deprecated only the per-message binary forwarder reads this, and it is to be removed with that forwarder in
-     * the next major release; forwardBinaryRequestsUseSingleConnection, the default, waits for no response
-     */
-    @Deprecated
-    public Boolean forwardBinaryRequestsWithoutWaitingForResponse() {
-        if (forwardBinaryRequestsWithoutWaitingForResponse == null) {
-            return ConfigurationProperties.forwardBinaryRequestsWithoutWaitingForResponse();
-        }
-        return forwardBinaryRequestsWithoutWaitingForResponse;
-    }
-
-    /**
-     * Applies only when forwardBinaryRequestsUseSingleConnection is false, or to a connection that falls back to
-     * forwarding each message on a connection of its own. Then, if true, the BinaryProxyListener is called before
-     * a response is received from the remote host, which enables the proxying of messages without a response.
-     * <p>
-     * The default is false
-     *
-     * @param forwardBinaryRequestsWithoutWaitingForResponse target value
-     * @deprecated only the per-message binary forwarder reads this, and it is to be removed with that forwarder in
-     * the next major release; forwardBinaryRequestsUseSingleConnection, the default, waits for no response
-     */
-    @Deprecated
-    public Configuration forwardBinaryRequestsWithoutWaitingForResponse(Boolean forwardBinaryRequestsWithoutWaitingForResponse) {
-        this.forwardBinaryRequestsWithoutWaitingForResponse = forwardBinaryRequestsWithoutWaitingForResponse;
-        return this;
-    }
-
-    public Boolean forwardBinaryRequestsUseSingleConnection() {
-        if (forwardBinaryRequestsUseSingleConnection == null) {
-            return ConfigurationProperties.forwardBinaryRequestsUseSingleConnection();
-        }
-        return forwardBinaryRequestsUseSingleConnection;
-    }
-
-    /**
-     * If true (the default) a proxied binary (non-HTTP) connection is given one upstream connection for its life,
-     * and bytes are relayed both ways as they arrive. forwardBinaryRequestsWithoutWaitingForResponse then has no
-     * effect. If false each message is forwarded on an upstream connection of its own, as in 8.0.0. The upstream
-     * connection goes through forwardSocksProxy or forwardHttpsProxy (CONNECT) when one applies; a connection whose
-     * only upstream proxy is forwardHttpProxy is forwarded one message per connection whatever this setting. The
-     * setting is read once per connection, at its first message. A client that turns TLS on part way through
-     * has its upstream connection upgraded to TLS as well, and one that starts with TLS gets an upstream connection
-     * that starts with TLS.
-     * <p>
-     * The default is true
-     *
-     * @param forwardBinaryRequestsUseSingleConnection target value
-     */
-    public Configuration forwardBinaryRequestsUseSingleConnection(Boolean forwardBinaryRequestsUseSingleConnection) {
-        this.forwardBinaryRequestsUseSingleConnection = forwardBinaryRequestsUseSingleConnection;
-        return this;
-    }
-
     public Boolean matchBinaryExpectationsWhenProxying() {
         if (matchBinaryExpectationsWhenProxying == null) {
             return ConfigurationProperties.matchBinaryExpectationsWhenProxying();
@@ -3429,11 +3369,10 @@ public class Configuration {
     }
 
     /**
-     * If true (the default), a message on a proxied binary connection that forwardBinaryRequestsUseSingleConnection
-     * relays on one upstream connection is matched against binary expectations: one whose bytes match is answered by
-     * that expectation and is not forwarded, and every other message is forwarded. Has no effect on a connection
-     * whose messages are each forwarded on an upstream connection of their own. Set it to false to forward every
-     * message without consulting binary expectations.
+     * If true (the default), a message on a proxied binary connection, which is relayed on one upstream
+     * connection, is matched against binary expectations: one whose bytes match is answered by that expectation
+     * and is not forwarded, and every other message is forwarded. Set it to false to forward every message without
+     * consulting binary expectations.
      * <p>
      * The default is true
      *
@@ -3455,9 +3394,8 @@ public class Configuration {
      * How long, in milliseconds, a connection that has a forward target (port forwarding, the transparent proxy, a
      * PROXY protocol header) waits for its client's first byte before MockServer takes it as a binary connection and
      * opens its upstream connection, so that a protocol in which the server speaks first (MySQL, SMTP, FTP) can be
-     * proxied: the server's first bytes are relayed to the client. Applies only to a connection that
-     * forwardBinaryRequestsUseSingleConnection relays on one upstream connection. A client that sends HTTP only
-     * after this long is then relayed as binary, not mocked.
+     * proxied: the server's first bytes are relayed to the client. A client that sends HTTP only after this long is
+     * then relayed as binary, not mocked.
      * <p>
      * The default is 0, which never does: a connection waits for its client
      *

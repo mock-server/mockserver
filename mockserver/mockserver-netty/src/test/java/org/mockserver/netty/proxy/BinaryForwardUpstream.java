@@ -6,41 +6,33 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.util.AttributeKey;
 
-import java.io.InputStream;
 import java.net.InetSocketAddress;
-import java.net.SocketTimeoutException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BooleanSupplier;
 
 /**
- * The upstream of a per-message binary forward in an integration test: accepts every connection, reads everything sent
- * on it, and never closes it. A silent one never writes; an answering one writes {@code reply} once per connection,
- * when it first reads from it. Also the waits those tests share.
+ * The upstream of a binary forward in an integration test: accepts every connection, reads everything sent on it,
+ * answers each read with {@code reply}, and never closes it. Like a server that writes with blocking calls, it stops
+ * reading a connection while that connection cannot take more of its replies. Also the waits those tests share.
  */
 final class BinaryForwardUpstream {
 
-    private static final AttributeKey<Boolean> COUNTED = AttributeKey.valueOf("BINARY_FORWARD_UPSTREAM_COUNTED");
     private final EventLoopGroup group = new NioEventLoopGroup(1);
     final AtomicInteger accepted = new AtomicInteger();
-    final AtomicInteger open = new AtomicInteger();
-    final AtomicInteger mostOpen = new AtomicInteger();
     final AtomicLong bytesReceived = new AtomicLong();
+    final AtomicLong replyBytesWritten = new AtomicLong();
     private final Channel server;
 
-    static BinaryForwardUpstream silent() {
-        return new BinaryForwardUpstream(null);
-    }
-
-    static BinaryForwardUpstream answeringEachConnectionWith(byte[] reply) {
+    static BinaryForwardUpstream answeringEachReadWith(byte[] reply) {
         return new BinaryForwardUpstream(reply);
     }
 
@@ -49,33 +41,33 @@ final class BinaryForwardUpstream {
             server = new ServerBootstrap()
                 .group(group)
                 .channel(NioServerSocketChannel.class)
+                // so little of what MockServer does not read waits in this side's kernel buffers
+                .childOption(ChannelOption.SO_SNDBUF, 16 * 1024)
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel channel) {
                         channel.pipeline().addLast(new SimpleChannelInboundHandler<ByteBuf>() {
-                            private boolean answered;
-
                             @Override
                             public void channelActive(ChannelHandlerContext ctx) {
-                                ctx.channel().attr(COUNTED).set(Boolean.TRUE);
                                 accepted.incrementAndGet();
-                                mostOpen.accumulateAndGet(open.incrementAndGet(), Math::max);
                             }
 
                             @Override
                             protected void channelRead0(ChannelHandlerContext ctx, ByteBuf message) {
                                 bytesReceived.addAndGet(message.readableBytes());
-                                if (reply != null && !answered) {
-                                    answered = true;
-                                    ctx.writeAndFlush(Unpooled.wrappedBuffer(reply));
+                                replyBytesWritten.addAndGet(reply.length);
+                                ctx.writeAndFlush(Unpooled.wrappedBuffer(reply));
+                                if (!ctx.channel().isWritable()) {
+                                    ctx.channel().config().setAutoRead(false);
                                 }
                             }
 
                             @Override
-                            public void channelInactive(ChannelHandlerContext ctx) {
-                                if (ctx.channel().attr(COUNTED).getAndSet(null) != null) {
-                                    open.decrementAndGet();
+                            public void channelWritabilityChanged(ChannelHandlerContext ctx) {
+                                if (ctx.channel().isWritable()) {
+                                    ctx.channel().config().setAutoRead(true);
                                 }
+                                ctx.fireChannelWritabilityChanged();
                             }
 
                             @Override
@@ -99,16 +91,6 @@ final class BinaryForwardUpstream {
     void close() throws InterruptedException {
         server.close().sync();
         group.shutdownGracefully(0, 0, TimeUnit.MILLISECONDS).sync();
-    }
-
-    /** @return true when nothing arrives before the read times out: not a byte, and not the end of the stream */
-    static boolean readsNothing(InputStream input) throws Exception {
-        try {
-            input.read();
-            return false;
-        } catch (SocketTimeoutException nothingToRead) {
-            return true;
-        }
     }
 
     static void await(String what, BooleanSupplier condition) throws InterruptedException {

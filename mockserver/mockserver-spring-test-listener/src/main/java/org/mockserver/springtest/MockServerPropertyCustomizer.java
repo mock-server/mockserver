@@ -275,10 +275,8 @@ public class MockServerPropertyCustomizer implements ContextCustomizer {
                 config.assumeAllRequestsAreHttp(parseStrictBoolean(value, key));
                 break;
             case "forwardBinaryRequestsWithoutWaitingForResponse":
-                config.forwardBinaryRequestsWithoutWaitingForResponse(parseStrictBoolean(value, key));
-                break;
             case "forwardBinaryRequestsUseSingleConnection":
-                config.forwardBinaryRequestsUseSingleConnection(parseStrictBoolean(value, key));
+                logWarning("mockserver." + key + " was removed in 9.0.0 and is ignored: a proxied binary connection is always relayed on one upstream connection");
                 break;
             case "matchBinaryExpectationsWhenProxying":
                 config.matchBinaryExpectationsWhenProxying(parseStrictBoolean(value, key));

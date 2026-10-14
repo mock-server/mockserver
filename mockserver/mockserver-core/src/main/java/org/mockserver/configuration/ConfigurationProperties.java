@@ -280,8 +280,6 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_HTTP3_ADVERTISE_ALT_SVC = "mockserver.http3AdvertiseAltSvc";
 
     // non http proxying
-    private static final String MOCKSERVER_FORWARD_BINARY_REQUESTS_WITHOUT_WAITING_FOR_RESPONSE = "mockserver.forwardBinaryRequestsWithoutWaitingForResponse";
-    private static final String MOCKSERVER_FORWARD_BINARY_REQUESTS_USE_SINGLE_CONNECTION = "mockserver.forwardBinaryRequestsUseSingleConnection";
     private static final String MOCKSERVER_MATCH_BINARY_EXPECTATIONS_WHEN_PROXYING = "mockserver.matchBinaryExpectationsWhenProxying";
     private static final String MOCKSERVER_FORWARD_BINARY_SERVER_FIRST_WAIT_MILLIS = "mockserver.forwardBinaryServerFirstWaitMillis";
     private static final String MOCKSERVER_BINARY_MESSAGE_FRAMING = "mockserver.binaryMessageFraming";
@@ -658,6 +656,15 @@ public class ConfigurationProperties {
     private static final Set<String> SYSTEM_PROPERTY_ONLY_KEYS = Set.of(
         "mockserver.candidateIndexThreshold",
         "mockserver.jsonSchemaAllowRemoteRefs"
+    );
+
+    // Properties removed in 9.0.0, by system-property key, with what replaced them. A leftover one is ignored, and
+    // its warning says it was removed rather than suggesting a typo.
+    private static final Map<String, String> REMOVED_KEYS = Map.of(
+        "mockserver.forwardBinaryRequestsWithoutWaitingForResponse",
+        "a proxied binary connection is always relayed on one upstream connection, which waits for no response",
+        "mockserver.forwardBinaryRequestsUseSingleConnection",
+        "a proxied binary connection is always relayed on one upstream connection"
     );
 
     //   MOCKSERVER_SERVER_PORT - Arguments.serverPort.longEnvironmentVariableName(); the documented
@@ -4369,62 +4376,10 @@ public class ConfigurationProperties {
     }
 
     /**
-     * Applies only when forwardBinaryRequestsUseSingleConnection is false, or to a connection that falls back to
-     * forwarding each message on a connection of its own. Then, if true, the
-     * BinaryRequestProxyingHandler.binaryExchangeCallback is called before a response is received from the remote
-     * host, which enables the proxying of messages without a response.
-     * <p>
-     * The default is false
-     *
-     * @param forwardBinaryRequestsAsynchronously target value
-     * @deprecated only the per-message binary forwarder reads this, and it is to be removed with that forwarder in
-     * the next major release; forwardBinaryRequestsUseSingleConnection, the default, waits for no response
-     */
-    @Deprecated
-    public static void forwardBinaryRequestsWithoutWaitingForResponse(boolean forwardBinaryRequestsAsynchronously) {
-        setProperty(MOCKSERVER_FORWARD_BINARY_REQUESTS_WITHOUT_WAITING_FOR_RESPONSE, "" + forwardBinaryRequestsAsynchronously);
-    }
-
-    /**
-     * Applies only when forwardBinaryRequestsUseSingleConnection is false, or to a connection that falls back to
-     * forwarding each message on a connection of its own.
-     *
-     * @deprecated only the per-message binary forwarder reads this, and it is to be removed with that forwarder in
-     * the next major release; forwardBinaryRequestsUseSingleConnection, the default, waits for no response
-     */
-    @Deprecated
-    public static boolean forwardBinaryRequestsWithoutWaitingForResponse() {
-        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_FORWARD_BINARY_REQUESTS_WITHOUT_WAITING_FOR_RESPONSE, "MOCKSERVER_FORWARD_BINARY_REQUESTS_WITHOUT_WAITING_FOR_RESPONSE", "false"));
-    }
-
-    /**
-     * If true (the default) a proxied binary (non-HTTP) connection is given one upstream connection for its life,
-     * and bytes are relayed both ways as they arrive. forwardBinaryRequestsWithoutWaitingForResponse then has no
-     * effect. If false each message is forwarded on an upstream connection of its own, as in 8.0.0. The upstream
-     * connection goes through forwardSocksProxy or forwardHttpsProxy (CONNECT) when one applies; a connection whose
-     * only upstream proxy is forwardHttpProxy is forwarded one message per connection whatever this setting. The
-     * setting is read once per connection, at its first message. A client that turns TLS on part way through
-     * has its upstream connection upgraded to TLS as well, and one that starts with TLS gets an upstream connection
-     * that starts with TLS.
-     * <p>
-     * The default is true
-     *
-     * @param forwardBinaryRequestsUseSingleConnection target value
-     */
-    public static void forwardBinaryRequestsUseSingleConnection(boolean forwardBinaryRequestsUseSingleConnection) {
-        setProperty(MOCKSERVER_FORWARD_BINARY_REQUESTS_USE_SINGLE_CONNECTION, "" + forwardBinaryRequestsUseSingleConnection);
-    }
-
-    public static boolean forwardBinaryRequestsUseSingleConnection() {
-        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_FORWARD_BINARY_REQUESTS_USE_SINGLE_CONNECTION, "MOCKSERVER_FORWARD_BINARY_REQUESTS_USE_SINGLE_CONNECTION", "true"));
-    }
-
-    /**
-     * If true (the default), a message on a proxied binary connection that forwardBinaryRequestsUseSingleConnection
-     * relays on one upstream connection is matched against binary expectations: one whose bytes match is answered by
-     * that expectation and is not forwarded, and every other message is forwarded. Has no effect on a connection
-     * whose messages are each forwarded on an upstream connection of their own. Set it to false to forward every
-     * message without consulting binary expectations.
+     * If true (the default), a message on a proxied binary connection, which is relayed on one upstream
+     * connection, is matched against binary expectations: one whose bytes match is answered by that expectation
+     * and is not forwarded, and every other message is forwarded. Set it to false to forward every message without
+     * consulting binary expectations.
      * <p>
      * The default is true
      *
@@ -4442,9 +4397,8 @@ public class ConfigurationProperties {
      * How long, in milliseconds, a connection that has a forward target (port forwarding, the transparent proxy, a
      * PROXY protocol header) waits for its client's first byte before MockServer takes it as a binary connection and
      * opens its upstream connection, so that a protocol in which the server speaks first (MySQL, SMTP, FTP) can be
-     * proxied: the server's first bytes are relayed to the client. Applies only to a connection that
-     * forwardBinaryRequestsUseSingleConnection relays on one upstream connection. A client that sends HTTP only
-     * after this long is then relayed as binary, not mocked.
+     * proxied: the server's first bytes are relayed to the client. A client that sends HTTP only after this long is
+     * then relayed as binary, not mocked.
      * <p>
      * The default is 0, which never does: a connection waits for its client
      *
@@ -7531,16 +7485,36 @@ public class ConfigurationProperties {
         private final String setAs;
         private final List<String> suggestions;
         private final String systemPropertyOnlyKey;
+        private final String removedBecause;
 
         UnrecognisedProperty(String name, String setAs, List<String> suggestions) {
-            this(name, setAs, suggestions, null);
+            this(name, setAs, suggestions, null, null);
         }
 
-        private UnrecognisedProperty(String name, String setAs, List<String> suggestions, String systemPropertyOnlyKey) {
+        private UnrecognisedProperty(String name, String setAs, List<String> suggestions, String systemPropertyOnlyKey, String removedBecause) {
             this.name = name;
             this.setAs = setAs;
             this.suggestions = Collections.unmodifiableList(new ArrayList<>(suggestions));
             this.systemPropertyOnlyKey = systemPropertyOnlyKey;
+            this.removedBecause = removedBecause;
+        }
+
+        /**
+         * An unrecognised key with the recognised keys, in its form, it was most likely meant to be; or, for a
+         * property removed in 9.0.0, one that says so and suggests nothing.
+         */
+        static UnrecognisedProperty of(String name, String setAs, int form) {
+            String removedBecause = removedBecause(name);
+            return removedBecause != null
+                ? new UnrecognisedProperty(name, setAs, Collections.emptyList(), null, removedBecause)
+                : new UnrecognisedProperty(name, setAs, suggestRecognisedKeys(name, form));
+        }
+
+        /**
+         * True for a property MockServer had and has removed: it is ignored.
+         */
+        public boolean isRemoved() {
+            return removedBecause != null;
         }
 
         public String getName() {
@@ -7576,6 +7550,9 @@ public class ConfigurationProperties {
          * What to do about it: the suggested keys, or how to set a system-property-only key; null when nothing is known.
          */
         String getHint() {
+            if (removedBecause != null) {
+                return "removed in 9.0.0: " + removedBecause;
+            }
             if (systemPropertyOnlyKey != null) {
                 return "read only as a system property: set -D" + systemPropertyOnlyKey + " instead";
             }
@@ -7583,6 +7560,9 @@ public class ConfigurationProperties {
         }
 
         String getWarning() {
+            if (removedBecause != null) {
+                return "MockServer configuration " + getDescription() + " was removed in 9.0.0 and is ignored: " + removedBecause;
+            }
             if (systemPropertyOnlyKey != null) {
                 return "unrecognised MockServer configuration " + getDescription() + " - " + systemPropertyOnlyKey
                     + " is read only as a system property, so this will be ignored (set -D" + systemPropertyOnlyKey + " instead)";
@@ -7619,7 +7599,7 @@ public class ConfigurationProperties {
         if (systemPropertyNames != null) {
             for (String name : systemPropertyNames) {
                 if (name != null && name.startsWith("mockserver.") && !recognisedSystemPropertyKeys.contains(name)) {
-                    UnrecognisedProperty property = new UnrecognisedProperty(name, "system property", suggestRecognisedKeys(name, FORM_SYSTEM_PROPERTY));
+                    UnrecognisedProperty property = UnrecognisedProperty.of(name, "system property", FORM_SYSTEM_PROPERTY);
                     unrecognised.put(property.getDescription(), property);
                 }
             }
@@ -7630,8 +7610,8 @@ public class ConfigurationProperties {
                 if (name != null && name.startsWith("MOCKSERVER_") && !recognisedEnvironmentVariableKeys.contains(name)) {
                     String systemPropertyOnlyKey = systemPropertyOnlyKeyFor(name);
                     UnrecognisedProperty property = systemPropertyOnlyKey != null
-                        ? new UnrecognisedProperty(name, "environment variable", Collections.emptyList(), systemPropertyOnlyKey)
-                        : new UnrecognisedProperty(name, "environment variable", suggestRecognisedKeys(name, FORM_ENVIRONMENT_VARIABLE));
+                        ? new UnrecognisedProperty(name, "environment variable", Collections.emptyList(), systemPropertyOnlyKey, null)
+                        : UnrecognisedProperty.of(name, "environment variable", FORM_ENVIRONMENT_VARIABLE);
                     unrecognised.put(property.getDescription(), property);
                 }
             }
@@ -7649,14 +7629,27 @@ public class ConfigurationProperties {
                     // a key set both as a system property and in the file is reported once, as the system property
                     && !unrecognised.containsKey("system property [" + name + "]")) {
                     UnrecognisedProperty property = systemPropertyOnly
-                        ? new UnrecognisedProperty(name, "properties-file key", Collections.emptyList(), name)
-                        : new UnrecognisedProperty(name, "properties-file key", suggestRecognisedKeys(name, FORM_PROPERTIES_FILE));
+                        ? new UnrecognisedProperty(name, "properties-file key", Collections.emptyList(), name, null)
+                        : UnrecognisedProperty.of(name, "properties-file key", FORM_PROPERTIES_FILE);
                     unrecognised.put(property.getDescription(), property);
                 }
             }
         }
 
         return new ArrayList<>(unrecognised.values());
+    }
+
+    /**
+     * What replaced a property removed in 9.0.0, for its key in any form, or null.
+     */
+    private static String removedBecause(String key) {
+        String normalised = normaliseKeyForSuggestion(key);
+        for (Map.Entry<String, String> removed : REMOVED_KEYS.entrySet()) {
+            if (normaliseKeyForSuggestion(removed.getKey()).equals(normalised)) {
+                return removed.getValue();
+            }
+        }
+        return null;
     }
 
     private static String systemPropertyOnlyKeyFor(String environmentVariable) {

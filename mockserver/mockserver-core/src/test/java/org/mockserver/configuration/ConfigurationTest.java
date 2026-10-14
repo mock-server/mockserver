@@ -2139,66 +2139,6 @@ public class ConfigurationTest {
     }
 
     @Test
-    public void shouldSetAndGetForwardBinaryRequestsWithoutWaitingForResponse() {
-        boolean original = ConfigurationProperties.forwardBinaryRequestsWithoutWaitingForResponse();
-        try {
-            // then - default value
-            assertThat(configuration.forwardBinaryRequestsWithoutWaitingForResponse(), equalTo(false));
-
-            // when - system property setter
-            ConfigurationProperties.forwardBinaryRequestsWithoutWaitingForResponse(true);
-
-            // then - system property getter
-            assertThat(ConfigurationProperties.forwardBinaryRequestsWithoutWaitingForResponse(), equalTo(true));
-            assertThat(System.getProperty("mockserver.forwardBinaryRequestsWithoutWaitingForResponse"), equalTo("true"));
-            assertThat(configuration.forwardBinaryRequestsWithoutWaitingForResponse(), equalTo(true));
-            ConfigurationProperties.forwardBinaryRequestsWithoutWaitingForResponse(original);
-
-            // when - setter
-            configuration.forwardBinaryRequestsWithoutWaitingForResponse(true);
-
-            // then - getter
-            assertThat(configuration.forwardBinaryRequestsWithoutWaitingForResponse(), equalTo(true));
-        } finally {
-            ConfigurationProperties.forwardBinaryRequestsWithoutWaitingForResponse(original);
-        }
-    }
-
-    @Test
-    public void shouldSetAndGetForwardBinaryRequestsUseSingleConnection() {
-        boolean original = ConfigurationProperties.forwardBinaryRequestsUseSingleConnection();
-        try {
-            // then - default value
-            assertThat(configuration.forwardBinaryRequestsUseSingleConnection(), equalTo(true));
-
-            // when - system property setter
-            ConfigurationProperties.forwardBinaryRequestsUseSingleConnection(false);
-
-            // then - system property getter
-            assertThat(ConfigurationProperties.forwardBinaryRequestsUseSingleConnection(), equalTo(false));
-            assertThat(System.getProperty("mockserver.forwardBinaryRequestsUseSingleConnection"), equalTo("false"));
-            assertThat(configuration.forwardBinaryRequestsUseSingleConnection(), equalTo(false));
-            ConfigurationProperties.forwardBinaryRequestsUseSingleConnection(original);
-
-            // when - setter
-            configuration.forwardBinaryRequestsUseSingleConnection(false);
-
-            // then - getter
-            assertThat(configuration.forwardBinaryRequestsUseSingleConnection(), equalTo(false));
-
-            // then - carried by the configuration the REST API reads and writes, alone
-            Configuration roundTripped = new org.mockserver.serialization.model.ConfigurationDTO(configuration).buildObject();
-            assertThat(roundTripped.forwardBinaryRequestsUseSingleConnection(), equalTo(false));
-            Configuration updated = new Configuration().forwardBinaryRequestsWithoutWaitingForResponse(true);
-            new org.mockserver.serialization.model.ConfigurationDTO().setForwardBinaryRequestsUseSingleConnection(false).applyTo(updated);
-            assertThat(updated.forwardBinaryRequestsUseSingleConnection(), equalTo(false));
-            assertThat("the other binary setting is a separate one", updated.forwardBinaryRequestsWithoutWaitingForResponse(), equalTo(true));
-        } finally {
-            ConfigurationProperties.forwardBinaryRequestsUseSingleConnection(original);
-        }
-    }
-
-    @Test
     public void shouldSetAndGetMatchBinaryExpectationsWhenProxying() {
         clearPropertyAndCache("mockserver.matchBinaryExpectationsWhenProxying");
         try {
@@ -2224,10 +2164,10 @@ public class ConfigurationTest {
             // then - carried by the configuration the REST API reads and writes, alone
             Configuration roundTripped = new org.mockserver.serialization.model.ConfigurationDTO(configuration).buildObject();
             assertThat(roundTripped.matchBinaryExpectationsWhenProxying(), equalTo(false));
-            Configuration updated = new Configuration().forwardBinaryRequestsUseSingleConnection(false);
+            Configuration updated = new Configuration().forwardBinaryServerFirstWaitMillis(25L);
             new org.mockserver.serialization.model.ConfigurationDTO().setMatchBinaryExpectationsWhenProxying(false).applyTo(updated);
             assertThat(updated.matchBinaryExpectationsWhenProxying(), equalTo(false));
-            assertThat("the other binary setting is a separate one", updated.forwardBinaryRequestsUseSingleConnection(), equalTo(false));
+            assertThat("the other binary setting is a separate one", updated.forwardBinaryServerFirstWaitMillis(), equalTo(25L));
         } finally {
             clearPropertyAndCache("mockserver.matchBinaryExpectationsWhenProxying");
         }

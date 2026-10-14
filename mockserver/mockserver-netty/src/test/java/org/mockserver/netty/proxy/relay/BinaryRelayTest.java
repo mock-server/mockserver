@@ -45,7 +45,7 @@ import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
 import static org.mockserver.netty.proxy.relay.BinaryRelayHarness.TARGET;
 
 /**
- * With {@code forwardBinaryRequestsUseSingleConnection} a binary connection's messages all go to one upstream connection,
+ * A proxied binary connection's messages all go to one upstream connection,
  * what the upstream sends comes back as it arrives, and closing either connection closes the other.
  */
 public class BinaryRelayTest {
@@ -102,72 +102,6 @@ public class BinaryRelayTest {
 
         assertThat(relay.upstreamConnections, is(1));
         assertThat(relay.receivedByUpstream(), is("onetwothree"));
-        assertThat("nothing is forwarded on a connection of its own", relay.forwardedPerMessage, is(empty()));
-    }
-
-    @Test
-    public void shouldForwardEachMessageOnItsOwnConnectionWhenTheSettingIsOff() {
-        relay = new BinaryRelayHarness(true);
-        relay.configuration.forwardBinaryRequestsUseSingleConnection(false);
-        relay.clientConnection();
-
-        relay.clientSends("one");
-        relay.clientSends("two");
-
-        assertThat("no upstream connection is kept", relay.upstreamConnections, is(0));
-        assertThat(relay.forwardedPerMessage, contains("one waiting", "two waiting"));
-    }
-
-    @Test
-    @SuppressWarnings("deprecation")
-    public void shouldNotBeChangedByTheSettingThatChoosesWhetherToWaitForEachResponse() {
-        for (boolean withoutWaiting : new boolean[]{false, true}) {
-            reported.clear();
-            EmbeddedChannel client = relayWithListener(true);
-            relay.configuration.forwardBinaryRequestsWithoutWaitingForResponse(withoutWaiting);
-
-            relay.clientSends("one");
-            relay.clientSends("two");
-            runListenerCalls();
-
-            assertThat(relay.upstreamConnections, is(1));
-            assertThat(relay.receivedByUpstream(), is("onetwo"));
-            assertThat("nothing is forwarded on a connection of its own", relay.forwardedPerMessage, is(empty()));
-            assertThat("the listener is told at once, before any response", reported, hasSize(2));
-            assertThat(client.isOpen(), is(true));
-            relay.finish();
-        }
-    }
-
-    @Test
-    @SuppressWarnings("deprecation")
-    public void shouldStillChooseWhetherToWaitForEachResponseWhenTheSettingIsOff() {
-        relay = new BinaryRelayHarness(true);
-        relay.configuration.forwardBinaryRequestsUseSingleConnection(false).forwardBinaryRequestsWithoutWaitingForResponse(true);
-        relay.clientConnection();
-
-        relay.clientSends("one");
-
-        assertThat(relay.forwardedPerMessage, contains("one not waiting"));
-    }
-
-    @Test
-    public void shouldForwardEachMessageOnItsOwnConnectionWhenItsOnlyUpstreamProxyIsForwardHttpProxy() {
-        relay = new BinaryRelayHarness(true);
-        when(relay.httpClient.binaryRelayUnavailableBecause(any(InetSocketAddress.class), anyBoolean())).thenReturn("its upstream proxy is forwardHttpProxy, which does not tunnel a connection");
-        EmbeddedChannel client = relay.clientConnection();
-
-        relay.clientSends("one");
-        relay.clientSends("two");
-
-        assertThat("nothing is connected around the proxy", relay.upstreamConnections, is(0));
-        assertThat("each goes the way it does with the setting off", relay.forwardedPerMessage, contains("one waiting", "two waiting"));
-        assertThat(client.isOpen(), is(true));
-        List<LogEntry> said = relay.logged(Level.DEBUG);
-        assertThat("said once for the connection, not for each message", said, hasSize(1));
-        assertThat(said.get(0).getMessageFormat(), containsString("forwardBinaryRequestsUseSingleConnection is false"));
-        assertThat(said.get(0).getArguments()[2], is("its upstream proxy is forwardHttpProxy, which does not tunnel a connection"));
-        assertThat(relay.logged(Level.WARN), is(empty()));
     }
 
     @Test
@@ -316,7 +250,7 @@ public class BinaryRelayTest {
         assertThat(relay.upstreamConnections, is(0));
         List<LogEntry> warnings = relay.logged(Level.WARN);
         assertThat(warnings, hasSize(1));
-        assertThat(warnings.get(0).getMessageFormat(), containsString("forwardBinaryRequestsUseSingleConnection"));
+        assertThat(warnings.get(0).getMessageFormat(), containsString("which cannot be forwarded to:"));
         assertThat(warnings.get(0).getArguments()[2], is("Forward to loopback address blocked: 127.0.0.1"));
     }
 
@@ -333,57 +267,6 @@ public class BinaryRelayTest {
         assertThat(warnings, hasSize(1));
         assertThat(warnings.get(0).getArguments()[2], is("the forward client opened no upstream connection"));
         client.checkException();
-    }
-
-    @Test
-    public void shouldKeepRelayingAConnectionWhenTheSettingIsTurnedOffWhileItIsOpen() {
-        relay = new BinaryRelayHarness(true);
-        EmbeddedChannel client = relay.clientConnection();
-        relay.clientSends("one");
-
-        relay.configuration.forwardBinaryRequestsUseSingleConnection(false);
-        relay.clientSends("two");
-
-        assertThat("read once, at the connection's first message", relay.upstreamConnections, is(1));
-        assertThat(relay.receivedByUpstream(), is("onetwo"));
-        assertThat(relay.forwardedPerMessage, is(empty()));
-        assertThat(client.isOpen(), is(true));
-
-        relay.clientConnection();
-        relay.clientSends("three");
-        assertThat("a connection opened since has the new setting", relay.forwardedPerMessage, contains("three waiting"));
-        client.finishAndReleaseAll();
-    }
-
-    @Test
-    public void shouldKeepForwardingAConnectionPerMessageWhenTheSettingIsTurnedOnWhileItIsOpen() {
-        relay = new BinaryRelayHarness(true);
-        relay.configuration.forwardBinaryRequestsUseSingleConnection(false);
-        relay.clientConnection();
-        relay.clientSends("one");
-
-        relay.configuration.forwardBinaryRequestsUseSingleConnection(true);
-        relay.clientSends("two");
-
-        assertThat(relay.upstreamConnections, is(0));
-        assertThat(relay.forwardedPerMessage, contains("one waiting", "two waiting"));
-    }
-
-    @Test
-    public void shouldDecideOnceWhetherAConnectionCanBeRelayed() {
-        relay = new BinaryRelayHarness(true);
-        relay.clientConnection();
-        relay.clientSends("one");
-        // as noProxyHosts changed while the connection is open
-        when(relay.httpClient.binaryRelayUnavailableBecause(any(InetSocketAddress.class), anyBoolean())).thenReturn("its upstream proxy is forwardHttpProxy, which does not tunnel a connection");
-
-        relay.clientSends("two");
-
-        assertThat(relay.upstreamConnections, is(1));
-        assertThat(relay.receivedByUpstream(), is("onetwo"));
-        assertThat(relay.forwardedPerMessage, is(empty()));
-        verify(relay.httpClient, times(1)).binaryRelayUnavailableBecause(TARGET, false);
-        verify(relay.httpClient).connectBinaryRelay(any(EventLoop.class), eq(TARGET), eq(false), any());
     }
 
     @Test

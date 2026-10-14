@@ -22,7 +22,6 @@ import org.mockserver.configuration.Configuration;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.httpclient.SocketConnectionException;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.BinaryMessage;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager;
 
@@ -163,41 +162,10 @@ public class NettyHttpClientTlsFailureTest {
         assertThat(failure.getMessage(), is(failedHandshakeWith(closingUpstream.port()) + "SSLHandshakeException: upstream closed the connection during the TLS handshake"));
     }
 
-    @Test
-    public void shouldFailABinaryForwardWithAnUpstreamThatClosesTheConnectionDuringTheHandshake() {
-        Throwable failure = binaryFailureOf(configuration(), closingUpstream.port());
-
-        assertThat(failure.getCause(), instanceOf(SSLHandshakeException.class));
-        assertThat(failure.getMessage(), is(failedHandshakeWith(closingUpstream.port()) + "SSLHandshakeException: upstream closed the connection during the TLS handshake"));
-    }
-
-    @Test
-    public void shouldFailABinaryForwardWithAHandshakeThatTimesOutAfterTheConfiguredConnectionTimeout() {
-        Throwable failure = binaryFailureOf(configuration().socketConnectionTimeoutInMillis(500L), silentUpstream.port());
-
-        assertThat(failure.getCause(), instanceOf(SslHandshakeTimeoutException.class));
-        assertThat(failure.getMessage(), is(failedHandshakeWith(silentUpstream.port()) + "SslHandshakeTimeoutException: handshake timed out after 500ms"));
-    }
-
-    @Test
-    public void shouldFailABinaryForwardWithAnUntrustedCertificate() {
-        Throwable failure = binaryFailureOf(configuration().forwardProxyTLSX509CertificatesTrustManagerType(ForwardProxyTLSX509CertificatesTrustManager.JVM), port(tlsUpstream));
-
-        assertThat(failure.getCause(), instanceOf(SSLHandshakeException.class));
-        assertThat(failure.getMessage(), containsString("unable to find valid certification path to requested target"));
-    }
-
     private Throwable failureOf(Configuration configuration, int upstreamPort) {
         NettyHttpClient client = new NettyHttpClient(configuration, mockServerLogger, clientEventLoopGroup, null, true);
         return handshakeFailure(upstreamPort, () -> client
             .sendRequest(request().withSecure(true).withHeader(HOST.toString(), "127.0.0.1:" + upstreamPort))
-            .get(30, TimeUnit.SECONDS));
-    }
-
-    private Throwable binaryFailureOf(Configuration configuration, int upstreamPort) {
-        NettyHttpClient client = new NettyHttpClient(configuration, mockServerLogger, clientEventLoopGroup, null, true);
-        return handshakeFailure(upstreamPort, () -> client
-            .sendRequest(BinaryMessage.bytes(new byte[]{1, 2, 3}), true, new InetSocketAddress("127.0.0.1", upstreamPort), configuration.socketConnectionTimeoutInMillis(), null)
             .get(30, TimeUnit.SECONDS));
     }
 

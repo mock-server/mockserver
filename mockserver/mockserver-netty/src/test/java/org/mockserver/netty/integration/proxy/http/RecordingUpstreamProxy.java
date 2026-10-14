@@ -9,6 +9,7 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -16,21 +17,24 @@ import java.util.concurrent.TimeUnit;
 /**
  * A test upstream proxy that records each destination it is asked for. {@code CONNECT} and SOCKS5 (without
  * authentication) connect every destination to the same port on this machine, whatever its name; HTTP answers every
- * request itself, with {@code 200} and the body {@link #HTTP_PROXY_BODY}, and records its request target.
+ * request itself, with {@code 200} and the body {@link #HTTP_PROXY_BODY}, and records its request target. A
+ * {@code CONNECT} proxy given credentials refuses, with {@code 407}, a {@code CONNECT} that does not carry them.
  */
-final class RecordingUpstreamProxy implements AutoCloseable {
+public final class RecordingUpstreamProxy implements AutoCloseable {
 
     static final String HTTP_PROXY_BODY = "upstream proxy";
 
-    enum Protocol {HTTP, CONNECT, SOCKS5}
+    public enum Protocol {HTTP, CONNECT, SOCKS5}
 
     private final Protocol protocol;
     private final long timeoutSeconds;
     private final ServerSocket listener = new ServerSocket(0, 50, InetAddress.getByName("127.0.0.1"));
     private final List<Socket> sockets = new CopyOnWriteArrayList<>();
     private final List<String> destinations = new CopyOnWriteArrayList<>();
+    private final List<String> refused = new CopyOnWriteArrayList<>();
+    private volatile String requiredProxyAuthorization;
 
-    RecordingUpstreamProxy(Protocol protocol, long timeoutSeconds) throws IOException {
+    public RecordingUpstreamProxy(Protocol protocol, long timeoutSeconds) throws IOException {
         this.protocol = protocol;
         this.timeoutSeconds = timeoutSeconds;
         daemon(() -> {
@@ -42,16 +46,27 @@ final class RecordingUpstreamProxy implements AutoCloseable {
         });
     }
 
-    InetSocketAddress address() {
+    public InetSocketAddress address() {
         return new InetSocketAddress("127.0.0.1", listener.getLocalPort());
+    }
+
+    /** {@code CONNECT} only: from now on a tunnel is opened only for a request with these Basic credentials. */
+    public RecordingUpstreamProxy requiringCredentials(String username, String password) {
+        requiredProxyAuthorization = "Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes(StandardCharsets.UTF_8));
+        return this;
     }
 
     /**
      * {@code CONNECT}: the authority; SOCKS5: the address type ({@code domain}, {@code ipv4} or {@code ipv6}), the
      * address and the port; HTTP: the request target.
      */
-    List<String> destinations() {
+    public List<String> destinations() {
         return destinations;
+    }
+
+    /** {@code CONNECT} only: the authority of each request refused for its credentials. */
+    public List<String> refused() {
+        return refused;
     }
 
     private void serve(Socket client) throws IOException {
@@ -64,6 +79,11 @@ final class RecordingUpstreamProxy implements AutoCloseable {
             return;
         }
         int port = protocol == Protocol.CONNECT ? readConnect(client) : readSocks5(client);
+        if (port < 0) {
+            write(client, "HTTP/1.1 407 Proxy Authentication Required\r\nProxy-Authenticate: Basic realm=\"proxy\"\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1));
+            client.close();
+            return;
+        }
         Socket upstream = new Socket("127.0.0.1", port);
         sockets.add(upstream);
         if (protocol == Protocol.CONNECT) {
@@ -88,9 +108,15 @@ final class RecordingUpstreamProxy implements AutoCloseable {
         return head.toString();
     }
 
+    /** @return the port asked for, or -1 for a request refused for its credentials */
     private int readConnect(Socket client) throws IOException {
         String head = readHead(client);
         String authority = head.substring("CONNECT ".length(), head.indexOf(" HTTP/1.1"));
+        String required = requiredProxyAuthorization;
+        if (required != null && !head.contains("\r\nproxy-authorization: " + required + "\r\n") && !head.contains("\r\nProxy-Authorization: " + required + "\r\n")) {
+            refused.add(authority);
+            return -1;
+        }
         destinations.add(authority);
         return Integer.parseInt(authority.substring(authority.lastIndexOf(':') + 1));
     }

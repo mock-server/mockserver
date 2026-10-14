@@ -73,6 +73,13 @@ final class HttpConnectProxyHandler extends ProxyHandler {
         }
     }
 
+    /**
+     * The status the proxy answered the {@code CONNECT} with, when that was not 200; null otherwise.
+     */
+    HttpResponseStatus refusedWith() {
+        return status != null && status.code() != 200 ? status : null;
+    }
+
     @Override
     public String protocol() {
         return "http";

@@ -122,7 +122,6 @@ public class BinaryRelayEndOfConnectionIntegrationTest {
                 .logLevel("WARN")
                 .startupWarmup(false)
                 .proxySetup(false)
-                .forwardBinaryRequestsUseSingleConnection(true)
                 // far beyond the tests' deadlines, so that only the client leaving can close the upstream connection
                 .responseWriteStallTimeoutMillis(TimeUnit.MINUTES.toMillis(5)),
             upstream.getLocalPort(), "127.0.0.1", 0

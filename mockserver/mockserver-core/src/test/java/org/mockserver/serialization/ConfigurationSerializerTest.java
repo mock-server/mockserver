@@ -39,6 +39,17 @@ public class ConfigurationSerializerTest {
     }
 
     @Test
+    public void shouldIgnoreTheRemovedBinaryForwardingSettingsInConfigurationJson() {
+        String json = "{\"forwardBinaryRequestsWithoutWaitingForResponse\":true,\"forwardBinaryRequestsUseSingleConnection\":false,\"maxExpectations\":200}";
+
+        Configuration configuration = serializer.deserialize(json);
+
+        assertThat(configuration.maxExpectations(), is(200));
+        assertThat(serializer.serialize(configuration), not(containsString("forwardBinaryRequestsWithoutWaitingForResponse")));
+        assertThat(serializer.serialize(configuration), not(containsString("forwardBinaryRequestsUseSingleConnection")));
+    }
+
+    @Test
     public void shouldRoundTripConfiguration() {
         Configuration original = configuration()
             .logLevel(Level.ERROR)

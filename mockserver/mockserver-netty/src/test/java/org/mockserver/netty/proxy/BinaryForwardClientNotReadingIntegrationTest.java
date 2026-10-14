@@ -26,23 +26,22 @@ import static org.mockserver.netty.proxy.BinaryForwardUpstream.awaitNoLongerGrow
 import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
- * A client that sends binary messages, forwarded one per upstream connection, and never reads the replies. Each small
+ * A client that sends binary messages, relayed on one upstream connection, and never reads the replies. Each small
  * message brings a much larger reply, so without a bound the replies MockServer holds for the client grow with every
- * message. MockServer stops reading a client it cannot write to, so the replies it holds stay bounded, in both
- * forwarding modes, and none is lost once the client reads.
+ * message. MockServer stops reading the upstream while it cannot write to the client, and stops reading the client
+ * while it cannot write to the upstream, so what it holds stays bounded and none is lost once the client reads.
  */
 public class BinaryForwardClientNotReadingIntegrationTest {
 
-    /** Under the 2 KiB that the forward's first read takes, so each reply arrives whole. */
     private static final int REPLY_BYTES = 2000;
     private static final int MESSAGE_BYTES = 64;
-    private static final int MESSAGES = 6000;
+    private static final int MESSAGES = 12_000;
     /**
-     * Replies MockServer may have produced for a client that reads none: what the kernel buffers on the way (the most
-     * Linux gives a socket's send buffer by default is 4 MiB), the connection's write buffer, and the replies to the
-     * forwards already started when it stopped reading the client. Half of what every message's reply would come to.
+     * Replies produced for a client that reads none: what the kernel buffers on the way (on Linux by default up to
+     * 6 MiB for MockServer's receive buffer from the upstream and 4 MiB for its send buffer to the client) and each
+     * connection's write buffer. Under half of what every message's reply would come to.
      */
-    private static final long MOST_REPLY_BYTES_HELD = 6L * 1024 * 1024;
+    private static final long MOST_REPLY_BYTES_HELD = 11L * 1024 * 1024;
 
     private final AtomicLong bytesWritten = new AtomicLong();
     private final AtomicReference<Throwable> writeFailure = new AtomicReference<>();
@@ -60,22 +59,11 @@ public class BinaryForwardClientNotReadingIntegrationTest {
     }
 
     @Test
-    public void shouldNotReadAClientThatDoesNotReadItsRepliesWaitingForEachResponse() throws Exception {
-        shouldHoldBackAClientThatDoesNotReadItsReplies(false);
-    }
-
-    @Test
-    public void shouldNotReadAClientThatDoesNotReadItsRepliesWithoutWaitingForResponses() throws Exception {
-        shouldHoldBackAClientThatDoesNotReadItsReplies(true);
-    }
-
-    private void shouldHoldBackAClientThatDoesNotReadItsReplies(boolean withoutWaitingForResponse) throws Exception {
+    public void shouldNotReadAClientThatDoesNotReadItsReplies() throws Exception {
         byte[] reply = new byte[REPLY_BYTES];
         Arrays.fill(reply, (byte) 'r');
-        upstream = BinaryForwardUpstream.answeringEachConnectionWith(reply);
+        upstream = BinaryForwardUpstream.answeringEachReadWith(reply);
         mockServer = new MockServer(Configuration.configuration()
-            .forwardBinaryRequestsUseSingleConnection(false)
-            .forwardBinaryRequestsWithoutWaitingForResponse(withoutWaitingForResponse)
             // each message is logged as it is read; the bytes logged with it are not what is tested
             .maxLoggedBodyBytes(64), upstream.port(), "127.0.0.1", 0);
 
@@ -87,9 +75,8 @@ public class BinaryForwardClientNotReadingIntegrationTest {
             Thread writer = clientSendingOneMessageAtATime(client);
             try {
                 long forwardedWhileNotReading = awaitNoLongerGrowing(upstream.bytesReceived, (long) MESSAGES * MESSAGE_BYTES);
-                long replyBytesProduced = (long) upstream.accepted.get() * REPLY_BYTES;
                 assertThat("a client that reads none of its replies is not read either", forwardedWhileNotReading, lessThan((long) MESSAGES * MESSAGE_BYTES));
-                assertThat("so the replies held for it are bounded", replyBytesProduced, lessThanOrEqualTo(MOST_REPLY_BYTES_HELD));
+                assertThat("so the replies held for it are bounded", upstream.replyBytesWritten.get(), lessThanOrEqualTo(MOST_REPLY_BYTES_HELD));
 
                 stopWriting.set(true);
                 writer.join(TimeUnit.SECONDS.toMillis(60));
@@ -99,15 +86,16 @@ public class BinaryForwardClientNotReadingIntegrationTest {
                 AtomicLong repliesRead = new AtomicLong();
                 Thread reader = clientReading(client, repliesRead);
                 await("once the client reads, what it sent is forwarded", () -> upstream.bytesReceived.get() == bytesWritten.get());
-                await("and every forward's reply reaches it", () -> repliesRead.get() == (long) upstream.accepted.get() * REPLY_BYTES);
+                await("and every reply reaches it", () -> repliesRead.get() == upstream.replyBytesWritten.get());
                 assertThat("on a connection still open", reader.isAlive(), is(true));
+                assertThat("all on one upstream connection", upstream.accepted.get(), is(1));
             } finally {
                 stopWriting.set(true);
             }
         }
     }
 
-    /** Sends each message once the one before has reached the upstream, so each is forwarded with a reply of its own. */
+    /** Sends each message once the one before has reached the upstream, so each is answered with a reply of its own. */
     private Thread clientSendingOneMessageAtATime(Socket client) {
         Thread writer = new Thread(() -> {
             try {

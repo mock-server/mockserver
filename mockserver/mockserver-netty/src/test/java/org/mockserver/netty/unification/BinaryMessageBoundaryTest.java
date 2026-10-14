@@ -3,10 +3,9 @@ package org.mockserver.netty.unification;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.EventLoop;
 import io.netty.channel.RecvByteBufAllocator;
 import io.netty.channel.embedded.EmbeddedChannel;
+import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -22,10 +21,9 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpState;
 import org.mockserver.mock.action.http.HttpActionHandler;
-import org.mockserver.model.BinaryMessage;
 import org.mockserver.netty.MockServerUnificationInitializer;
+import org.mockserver.netty.proxy.relay.RelayUpstreamStandIn;
 import org.mockserver.scheduler.Scheduler;
-import org.mockserver.socket.ChannelReadPause;
 import org.mockserver.socket.tls.NettySslContextFactory;
 import org.slf4j.event.Level;
 
@@ -41,11 +39,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.mockito.ArgumentMatchers.any;
@@ -82,16 +80,14 @@ public class BinaryMessageBoundaryTest {
     private static NettySslContextFactory serverTls;
     private static SSLContext clientTls;
 
-    // each message on a connection of its own, which is what these cases record; the relay has its own cases below
-    private final Configuration configuration = configuration().assumeAllRequestsAreHttp(false).forwardBinaryRequestsUseSingleConnection(false);
+    // the expectations the mocking cases add stay in the shared state, so proxied messages are relayed, not matched,
+    // except in the case that turns matching on
+    private final Configuration configuration = configuration().assumeAllRequestsAreHttp(false).matchBinaryExpectationsWhenProxying(false);
     private final NettyHttpClient httpClient = mock(NettyHttpClient.class);
-    // what binary handling took as messages, in order
+    // what binary handling took as messages, in order, as the listener is told of them
     private final List<String> messages = new ArrayList<>();
-    private final List<Boolean> forwardedOverTls = new ArrayList<>();
     private final List<Connection> connections = new ArrayList<>();
-    private final List<EmbeddedChannel> relayUpstreams = new ArrayList<>();
-    private final List<Consumer<Throwable>> notYetAccepted = new ArrayList<>();
-    private boolean upstreamAccepts;
+    private RelayUpstreamStandIn upstreams;
     // what a client sends, in the clear, before turning TLS on part way through
     private byte[] tlsUpgradeRequest = SSL_REQUEST;
     private MockServerUnificationInitializer initializer;
@@ -114,26 +110,18 @@ public class BinaryMessageBoundaryTest {
         serverTls = null;
     }
 
+    /**
+     * Relays binary connections to stand-in upstream connections ({@link RelayUpstreamStandIn}), and records each
+     * message as the listener is told of it.
+     */
     @Before
-    public void forwardWhatIsBinaryToAnUpstreamThatNeverAnswers() {
-        when(httpClient.sendRequest(any(BinaryMessage.class), anyBoolean(), any(InetSocketAddress.class), any()))
-            .thenAnswer(invocation -> {
-                messages.add(describe(invocation.<BinaryMessage>getArgument(0).getBytes()));
-                forwardedOverTls.add(invocation.getArgument(1));
-                return new CompletableFuture<BinaryMessage>();
-            });
-        // as used when forwarding without waiting for a response: the upstream says when it has taken the message
-        when(httpClient.sendRequest(any(BinaryMessage.class), anyBoolean(), any(InetSocketAddress.class), any(), any()))
-            .thenAnswer(invocation -> {
-                messages.add(describe(invocation.<BinaryMessage>getArgument(0).getBytes()));
-                Consumer<Throwable> taken = invocation.getArgument(4);
-                if (upstreamAccepts) {
-                    taken.accept(null);
-                } else {
-                    notYetAccepted.add(taken);
-                }
-                return new CompletableFuture<BinaryMessage>();
-            });
+    public void relayWhatIsBinaryToAnUpstreamThatTakesEverything() {
+        configuration.binaryProxyListener((binaryRequest, binaryResponse, serverAddress, clientAddress) -> messages.add(describe(binaryRequest.getBytes())));
+        doAnswer(invocation -> {
+            invocation.<Runnable>getArgument(0).run();
+            return null;
+        }).when(scheduler).scheduleLocalCallback(any(Runnable.class), anyBoolean());
+        upstreams = new RelayUpstreamStandIn(httpClient);
         HttpActionHandler actionHandler = mock(HttpActionHandler.class);
         when(actionHandler.getHttpClient()).thenReturn(httpClient);
         initializer = new MockServerUnificationInitializer(configuration, mock(LifeCycle.class), httpState, actionHandler, serverTls);
@@ -142,7 +130,7 @@ public class BinaryMessageBoundaryTest {
     @After
     public void closeConnections() {
         connections.forEach(Connection::close);
-        relayUpstreams.forEach(EmbeddedChannel::finishAndReleaseAll);
+        upstreams.releaseAll();
         initializer.getMcpSessionManager().shutdown();
         reset(scheduler);
     }
@@ -203,6 +191,7 @@ public class BinaryMessageBoundaryTest {
         connection.clientWrites(message('a', 23));
         connection.serverReads();
         messages.clear();
+        relayedWrites();
         connection.readLoops = 0;
         return connection;
     }
@@ -496,79 +485,30 @@ public class BinaryMessageBoundaryTest {
         assertThat(messagesTaken(), is("[#22*1]"));
     }
 
-    @Test
-    public void shouldGiveTheListenerTheSameMessageAsIsForwarded() throws Exception {
-        List<String> heardByTheListener = new ArrayList<>();
-        configuration
-            .forwardBinaryRequestsWithoutWaitingForResponse(true)
-            .binaryProxyListener((binaryRequest, binaryResponse, serverAddress, clientAddress) -> heardByTheListener.add(describe(binaryRequest.getBytes())));
-        doAnswer(invocation -> {
-            invocation.<Runnable>getArgument(0).run();
-            return null;
-        }).when(scheduler).scheduleLocalCallback(any(Runnable.class), anyBoolean());
-        upstreamAccepts = true;
-        for (Transport transport : Transport.values()) {
-            Connection connection = connectAndOpenTheSession(transport);
-            heardByTheListener.clear();
-
-            connection.clientWrites(message('m', 100_000));
-            connection.serverReads();
-
-            assertThat(transport.name(), messagesTaken(), is("[m*100000]"));
-            assertThat(transport.name(), heardByTheListener, contains("m*100000"));
-            messages.clear();
-        }
-    }
-
-    /** Relays binary connections on one upstream connection each, an embedded channel that takes everything. */
-    private void relayToAnUpstreamThatTakesEverything() {
-        configuration.forwardBinaryRequestsUseSingleConnection(true);
-        when(httpClient.connectBinaryRelay(any(EventLoop.class), any(InetSocketAddress.class), anyBoolean(), any(ChannelHandler.class))).thenAnswer(invocation -> {
-            EmbeddedChannel upstream = new EmbeddedChannel(invocation.<ChannelHandler>getArgument(3));
-            relayUpstreams.add(upstream);
-            return upstream.newSucceededFuture();
-        });
-    }
-
-    /** What the relay's upstream connections have been sent since this was last called, one entry for each write. */
+    /** What the relay's upstream connections have been sent in the clear since this was last called, one entry for each write. */
     private List<String> relayedWrites() {
         List<String> written = new ArrayList<>();
-        for (EmbeddedChannel upstream : relayUpstreams) {
-            for (ByteBuf write; (write = upstream.readOutbound()) != null; ) {
-                written.add(describe(ByteBufUtil.getBytes(write)));
-                write.release();
-            }
+        for (byte[] write : upstreams.writtenInTheClear()) {
+            written.add(describe(write));
         }
         return written;
     }
 
     @Test
     public void shouldRelayWhatOneReadLoopBringsAsOneWriteAndOneListenerCall() throws Exception {
-        List<String> heardByTheListener = new ArrayList<>();
-        configuration.binaryProxyListener((binaryRequest, binaryResponse, serverAddress, clientAddress) -> heardByTheListener.add(describe(binaryRequest.getBytes())));
-        doAnswer(invocation -> {
-            invocation.<Runnable>getArgument(0).run();
-            return null;
-        }).when(scheduler).scheduleLocalCallback(any(Runnable.class), anyBoolean());
-        relayToAnUpstreamThatTakesEverything();
         Connection connection = connectAndOpenTheSession(Transport.IN_THE_CLEAR);
-        relayedWrites();
-        heardByTheListener.clear();
 
         connection.clientWrites(message('m', 200_000));
         connection.serverReads();
 
         assertThat("read in several reads of one loop", connection.readLoops, is(1));
         assertThat("written to the upstream at once, whole", relayedWrites(), contains("m*200000"));
-        assertThat(heardByTheListener, contains("m*200000"));
-        assertThat("nothing went the per-message way", messages, is(new ArrayList<String>()));
+        assertThat(messages, contains("m*200000"));
     }
 
     @Test
     public void shouldRelayWhatAReadLoopBringsBeyondTheLimitAsFurtherWrites() throws Exception {
-        relayToAnUpstreamThatTakesEverything();
         Connection connection = connectAndOpenTheSession(Transport.IN_THE_CLEAR);
-        relayedWrites();
 
         connection.clientWrites(message('m', 24 * BINARY_READ_SIZE));
         connection.serverReads();
@@ -667,7 +607,7 @@ public class BinaryMessageBoundaryTest {
 
         assertThat(connection.readLoops, is(1));
         assertThat("the handshake is not a message", messagesTaken(), is("[f*2048]"));
-        assertThat("and what was sent in the clear goes upstream in the clear", forwardedOverTls, contains(false));
+        assertThat("and what was sent in the clear goes upstream in the clear", relayedWrites(), contains("f*2048"));
     }
 
     @Test
@@ -684,35 +624,6 @@ public class BinaryMessageBoundaryTest {
         reply.release();
         assertThat("and nothing else", connection.channel.<ByteBuf>readOutbound(), is(nullValue()));
         assertThat(connection.channel.isOpen(), is(true));
-    }
-
-    @Test
-    public void shouldStopReadingAClientThatIsAheadOfTheUpstreamAndLoseNothing() throws Exception {
-        configuration.forwardBinaryRequestsWithoutWaitingForResponse(true);
-        Connection connection = connect(Transport.IN_THE_CLEAR);
-        int sent = 0;
-        for (char letter : new char[]{'a', 'b', 'c', 'd'}) {
-            connection.clientWrites(message(letter, MAX_GATHERED_BYTES));
-            sent += MAX_GATHERED_BYTES;
-        }
-
-        connection.serverReads();
-
-        // one message is being forwarded, one may wait, and the one that takes the wait past its limit stops the reads
-        assertThat("not read while too much waits", ChannelReadPause.holds(connection.channel), is(1));
-        int read = sent - connection.waiting.readableBytes();
-        assertThat("read: three messages and the rest of the read that completed the third", read, is(2048 + 12 * BINARY_READ_SIZE));
-        assertThat("only the first has gone to the upstream", messagesTaken(), is("[a*" + MAX_GATHERED_BYTES + "]"));
-
-        while (!notYetAccepted.isEmpty()) {
-            notYetAccepted.remove(0).accept(null);
-            connection.serverReads();
-        }
-
-        assertThat(ChannelReadPause.holds(connection.channel), is(0));
-        assertThat("everything sent was forwarded, in the order sent", messagesTaken(), is(
-            "[a*" + MAX_GATHERED_BYTES + "], [b*" + MAX_GATHERED_BYTES + "], [c*" + MAX_GATHERED_BYTES + "], [d*2048], [d*" + (MAX_GATHERED_BYTES - 2048) + "]"
-        ));
     }
 
     /** A PostgreSQL startup message: its length (itself included), protocol 3.0, then parameters, as letters. */
@@ -742,6 +653,7 @@ public class BinaryMessageBoundaryTest {
         connection.serverReads();
         assertThat(transport.name() + ": the startup message is one message", messagesTaken(), is("[" + describe(startup) + "]"));
         messages.clear();
+        relayedWrites();
         connection.readLoops = 0;
         return connection;
     }
@@ -835,7 +747,6 @@ public class BinaryMessageBoundaryTest {
     @Test
     public void shouldFramePostgresqlMessagesOnARelayedConnectionAndMatchOrForwardEachOnItsOwn() throws Exception {
         configuration.binaryMessageFraming(BinaryMessageFraming.POSTGRESQL).matchBinaryExpectationsWhenProxying(true);
-        relayToAnUpstreamThatTakesEverything();
         byte[] answered = postgresqlMessage('Q', 60);
         httpState.add(new Expectation(binaryRequest(answered)).thenRespondWithBinary(binaryResponse(message('c', 3))));
         Connection connection = connect(Transport.IN_THE_CLEAR);
@@ -859,7 +770,6 @@ public class BinaryMessageBoundaryTest {
         assertThat("the matched message is answered by its expectation", describe(ByteBufUtil.getBytes(reply)), is("c*3"));
         reply.release();
         assertThat("the others go upstream, each whole and alone", relayedWrites(), contains(describe(sync), describe(forwarded)));
-        assertThat("nothing went the per-message way", messages, is(new ArrayList<String>()));
     }
 
     private static final BinaryMessageFraming[] LENGTH_FRAMINGS = {BinaryMessageFraming.MYSQL, BinaryMessageFraming.REDIS, BinaryMessageFraming.LENGTH_PREFIX};
@@ -931,6 +841,7 @@ public class BinaryMessageBoundaryTest {
         connection.serverReads();
         assertThat(framing + " " + transport + ": the first message is one message", messagesTaken(), is("[" + describe(first) + "]"));
         messages.clear();
+        relayedWrites();
         connection.readLoops = 0;
         return connection;
     }
@@ -1045,7 +956,8 @@ public class BinaryMessageBoundaryTest {
             connection.serverReads();
 
             assertThat("first bytes " + firstBytesOfTheConnection, messagesTaken(), is("[" + describe(mysqlSslRequest()) + "], [" + describe(query) + "]"));
-            assertThat("the SSLRequest in the clear, the query over TLS", forwardedOverTls.subList(forwardedOverTls.size() - 2, forwardedOverTls.size()), contains(false, true));
+            assertThat("only the SSLRequest goes upstream in the clear, the query over TLS", relayedWrites(), contains(describe(mysqlSslRequest())));
+            assertThat(upstreams.upstreams().get(upstreams.upstreams().size() - 1).pipeline().get(SslHandler.class), is(notNullValue()));
             messages.clear();
         }
     }

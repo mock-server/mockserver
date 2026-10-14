@@ -10,7 +10,6 @@ import org.junit.Test;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.BinaryMessage;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -21,7 +20,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
@@ -171,28 +169,6 @@ public class UpstreamProxyResolvesDestinationIntegrationTest {
 
         assertReachedDestination(response);
         assertThat(upstreamProxy.destinations(), contains("ipv4 127.0.0.1:" + destinationPort()));
-    }
-
-    @Test
-    public void shouldLeaveBinaryDestinationNameToForwardSocksProxy() throws Exception {
-        upstreamProxy = new RecordingUpstreamProxy(RecordingUpstreamProxy.Protocol.SOCKS5, TIMEOUT_SECONDS);
-        try (EchoServer echoServer = new EchoServer()) {
-            NettyHttpClient client = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, Collections.singletonList(proxyConfiguration(ProxyConfiguration.Type.SOCKS5, upstreamProxy.address())), true);
-
-            BinaryMessage response = client
-                .sendRequest(BinaryMessage.bytes("ping".getBytes(StandardCharsets.UTF_8)), false, InetSocketAddress.createUnresolved(UNRESOLVABLE, echoServer.port()), TimeUnit.SECONDS.toMillis(TIMEOUT_SECONDS))
-                .get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-            assertThat(new String(response.getBytes(), StandardCharsets.UTF_8), is("ping"));
-
-            // a destination the caller resolved is sent by name too
-            response = client
-                .sendRequest(BinaryMessage.bytes("pong".getBytes(StandardCharsets.UTF_8)), false, new InetSocketAddress("localhost", echoServer.port()), TimeUnit.SECONDS.toMillis(TIMEOUT_SECONDS))
-                .get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-            assertThat(new String(response.getBytes(), StandardCharsets.UTF_8), is("pong"));
-            assertThat(upstreamProxy.destinations(), contains("domain " + UNRESOLVABLE + ":" + echoServer.port(), "domain localhost:" + echoServer.port()));
-        }
     }
 
     @Test

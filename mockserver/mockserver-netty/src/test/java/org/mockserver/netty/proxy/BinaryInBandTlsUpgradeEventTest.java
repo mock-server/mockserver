@@ -23,8 +23,9 @@ import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpState;
 import org.mockserver.mock.action.http.HttpActionHandler;
-import org.mockserver.model.BinaryMessage;
+
 import org.mockserver.netty.MockServerUnificationInitializer;
+import org.mockserver.netty.proxy.relay.RelayUpstreamStandIn;
 import org.mockserver.netty.integration.proxy.direct.StartTlsUpstream;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.socket.tls.NettySslContextFactory;
@@ -34,7 +35,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
@@ -43,8 +44,6 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockserver.configuration.Configuration.configuration;
@@ -57,7 +56,7 @@ import static org.mockserver.netty.unification.PortUnificationHandler.isSslEnabl
  * the {@link SniCompletionEvent} that Netty fires once the server certificate is chosen reaches the handler that
  * forwards binary messages, after the message sent in the clear and before the first one decrypted. A connection
  * that opens with TLS gets that event before the binary handler exists. The handlers are MockServer's; only the
- * forward client is a stand-in, which never answers.
+ * upstream connection is a stand-in, which never answers.
  */
 public class BinaryInBandTlsUpgradeEventTest {
 
@@ -65,8 +64,7 @@ public class BinaryInBandTlsUpgradeEventTest {
 
     private static HttpState httpState;
 
-    // the event's route is what is tested, so nothing acts on it: no relay, and the forwarder never answers
-    private final Configuration configuration = configuration().forwardBinaryRequestsUseSingleConnection(false);
+    private final Configuration configuration = configuration();
     private final List<String> seen = new CopyOnWriteArrayList<>();
     private final List<String> seenAfterBinaryHandler = new CopyOnWriteArrayList<>();
     private final List<String> order = new CopyOnWriteArrayList<>();
@@ -182,9 +180,9 @@ public class BinaryInBandTlsUpgradeEventTest {
      * handler and one, added once the binary handler is, watching what the binary handler passes on.
      */
     private void withMockServerPipeline(WithServer test) throws Exception {
+        // the event's route is what is tested, so the relay's upstream connections are stand-ins
         NettyHttpClient httpClient = mock(NettyHttpClient.class);
-        when(httpClient.sendRequest(any(BinaryMessage.class), anyBoolean(), any(InetSocketAddress.class), any()))
-            .thenReturn(new CompletableFuture<>());
+        RelayUpstreamStandIn upstreams = new RelayUpstreamStandIn(httpClient);
         HttpActionHandler actionHandler = mock(HttpActionHandler.class);
         when(actionHandler.getHttpClient()).thenReturn(httpClient);
         MockServerUnificationInitializer initializer = new MockServerUnificationInitializer(
@@ -227,6 +225,7 @@ public class BinaryInBandTlsUpgradeEventTest {
         } finally {
             initializer.getMcpSessionManager().shutdown();
             group.shutdownGracefully(0, 0, TimeUnit.MILLISECONDS).sync();
+            upstreams.releaseAll();
         }
     }
 

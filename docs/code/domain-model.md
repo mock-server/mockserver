@@ -840,7 +840,6 @@ graph LR
 |-------|-----------|------------|
 | `MockServerHttpServerCodec` | Server pipeline | Combines request decoder + response encoder |
 | `MockServerHttpClientCodec` | Client pipeline | Combines response decoder + request encoder |
-| `MockServerBinaryClientCodec` | Binary proxy | Binary message encode/decode |
 | `BodyDecoderEncoder` | Both | Body ↔ ByteBuf conversion |
 | `ExpandedParameterDecoder` | Inbound | Query/form parameter parsing (OpenAPI styles) |
 | `PathParametersDecoder` | Inbound | URL path parameter extraction |

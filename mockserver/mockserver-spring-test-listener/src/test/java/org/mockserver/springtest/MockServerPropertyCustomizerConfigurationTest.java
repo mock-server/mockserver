@@ -3,10 +3,15 @@ package org.mockserver.springtest;
 import org.junit.Test;
 import org.mockserver.configuration.BinaryMessageFraming;
 import org.mockserver.configuration.Configuration;
+import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager;
+import org.slf4j.event.Level;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -69,11 +74,26 @@ public class MockServerPropertyCustomizerConfigurationTest {
     }
 
     @Test
-    public void shouldApplyForwardBinaryRequestsUseSingleConnection() {
-        Configuration config = MockServerPropertyCustomizer.buildConfiguration(
-            Collections.singletonList("mockserver.forwardBinaryRequestsUseSingleConnection=false")
-        );
-        assertThat(config.forwardBinaryRequestsUseSingleConnection(), is(false));
+    public void shouldIgnoreTheRemovedBinaryForwardingPropertiesSayingTheyWereRemoved() {
+        List<String> logged = new CopyOnWriteArrayList<>();
+        // the warnings are logged only at WARN or finer, and the test JVM may run at ERROR
+        Level originalLogLevel = ConfigurationProperties.logLevel();
+        ConfigurationProperties.logLevel("INFO");
+        MockServerLogger.setGlobalLogEventListener(entry -> logged.add(entry.getMessage()));
+        Configuration config;
+        try {
+            config = MockServerPropertyCustomizer.buildConfiguration(
+                Arrays.asList("mockserver.forwardBinaryRequestsUseSingleConnection=maybe", "mockserver.forwardBinaryRequestsWithoutWaitingForResponse=true", "mockserver.matchBinaryExpectationsWhenProxying=false")
+            );
+        } finally {
+            MockServerLogger.setGlobalLogEventListener(null);
+            ConfigurationProperties.logLevel(originalLogLevel != null ? originalLogLevel.name() : "OFF");
+        }
+        assertThat("the properties after them still apply", config.matchBinaryExpectationsWhenProxying(), is(false));
+        for (String key : new String[]{"forwardBinaryRequestsUseSingleConnection", "forwardBinaryRequestsWithoutWaitingForResponse"}) {
+            assertThat(key, logged.stream().filter(message -> message.contains("mockserver." + key + " was removed in 9.0.0 and is ignored")).count(), is(1L));
+        }
+        assertThat("whatever its value, a removed property is not read", logged.stream().filter(message -> message.contains("failed to apply property")).count(), is(0L));
     }
 
     @Test

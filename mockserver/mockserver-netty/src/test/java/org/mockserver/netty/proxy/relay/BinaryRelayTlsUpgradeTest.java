@@ -186,7 +186,6 @@ public class BinaryRelayTlsUpgradeTest {
         assertThat(decryptedByUpstream.toString(), is("startupquery"));
 
         assertThat("all of it on one upstream connection", relay.upstreamConnections, is(1));
-        assertThat(relay.forwardedPerMessage, is(empty()));
         assertThat(relay.logged(Level.WARN), is(empty()));
     }
 
@@ -324,23 +323,6 @@ public class BinaryRelayTlsUpgradeTest {
         assertThat(relay.logged(Level.WARN), is(empty()));
     }
 
-    @Test
-    public void shouldLeaveAConnectionForwardedPerMessageAloneWhenItsClientTurnsTlsOn() {
-        relay = new BinaryRelayHarness(true);
-        when(relay.httpClient.binaryRelayUnavailableBecause(any(InetSocketAddress.class), anyBoolean())).thenReturn("its upstream proxy is forwardHttpProxy, which does not tunnel a connection");
-        EmbeddedChannel client = relay.clientConnection();
-        relay.clientSends("SSLRequest");
-
-        clientTurnsTlsOn(client, true);
-        relay.clientSends("startup");
-
-        assertThat(relay.upstreamConnections, is(0));
-        assertThat(relay.forwardedPerMessage, hasSize(2));
-        assertThat(relay.forwardedPerMessage.get(1), is("startup waiting, over TLS"));
-        assertThat(client.isOpen(), is(true));
-        client.checkException();
-    }
-
     /** A client whose connection is TLS from its first byte: its first decrypted message is what opens the relay. */
     private EmbeddedChannel clientStartedWithTls(boolean connectAtOnce) {
         EmbeddedChannel client = relay(connectAtOnce);
@@ -373,10 +355,7 @@ public class BinaryRelayTlsUpgradeTest {
         assertThat(decryptedByUpstream.toString(), is("startupquery"));
 
         assertThat(relay.upstreamConnections, is(1));
-        assertThat("nothing is forwarded on a connection of its own", relay.forwardedPerMessage, is(empty()));
-        assertThat("nor said to be", relay.logged(Level.DEBUG).stream().filter(entry -> entry.getMessageFormat().contains("on an upstream connection of its own")).count(), is(0L));
         assertThat(relay.logged(Level.WARN), is(empty()));
-        verify(relay.httpClient).binaryRelayUnavailableBecause(BinaryRelayHarness.TARGET, true);
         verify(relay.httpClient).connectBinaryRelay(any(EventLoop.class), eq(BinaryRelayHarness.TARGET), eq(true), any(ChannelHandler.class));
         client.checkException();
     }
@@ -401,7 +380,6 @@ public class BinaryRelayTlsUpgradeTest {
         assertThat("nothing is connected to send in the clear", relay.upstreamConnections, is(0));
         assertThat(client.isOpen(), is(false));
         assertThat(holds(client), is(0));
-        assertThat(relay.forwardedPerMessage, is(empty()));
         assertThat(relay.logged(Level.WARN), hasSize(1));
         assertThat(relay.logged(Level.WARN).get(0).getArguments()[2], is("no TLS context"));
     }

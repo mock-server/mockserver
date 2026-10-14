@@ -26,8 +26,8 @@ import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpState;
 import org.mockserver.mock.action.http.HttpActionHandler;
-import org.mockserver.model.BinaryMessage;
 import org.mockserver.netty.MockServerUnificationInitializer;
+import org.mockserver.netty.proxy.relay.RelayUpstreamStandIn;
 import org.mockserver.netty.proxy.BinaryRequestProxyingHandler;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.socket.tls.KeyStoreFactory;
@@ -44,7 +44,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -74,9 +73,10 @@ public class ReadBufferSizeByProtocolTest {
 
     private static HttpState httpState;
 
-    // each message on a connection of its own, to an upstream mocked here; the relay has its own case below
-    private final Configuration configuration = configuration().http2Enabled(true).assumeAllRequestsAreHttp(false).forwardBinaryRequestsUseSingleConnection(false);
+    private final Configuration configuration = configuration().http2Enabled(true).assumeAllRequestsAreHttp(false);
     private final NettyHttpClient httpClient = mock(NettyHttpClient.class);
+    // binary connections are relayed to stand-ins; one case below relays to a real upstream
+    private final RelayUpstreamStandIn upstreams = new RelayUpstreamStandIn(httpClient);
     private final AtomicReference<Channel> connection = new AtomicReference<>();
     private final List<Socket> sockets = new ArrayList<>();
     private MockServerUnificationInitializer initializer;
@@ -96,8 +96,6 @@ public class ReadBufferSizeByProtocolTest {
 
     @Before
     public void startServer() throws Exception {
-        when(httpClient.sendRequest(any(BinaryMessage.class), anyBoolean(), any(InetSocketAddress.class), any()))
-            .thenAnswer(invocation -> new CompletableFuture<BinaryMessage>());
         HttpActionHandler actionHandler = mock(HttpActionHandler.class);
         when(actionHandler.getHttpClient()).thenReturn(httpClient);
         initializer = new MockServerUnificationInitializer(configuration, mock(LifeCycle.class), httpState, actionHandler, new NettySslContextFactory(configuration, new MockServerLogger(), true));
@@ -105,7 +103,7 @@ public class ReadBufferSizeByProtocolTest {
         server = new ServerBootstrap()
             .group(group)
             .channel(NioServerSocketChannel.class)
-            // what is not HTTP is forwarded, to an upstream that never answers, so the connection stays open
+            // what is not HTTP is relayed, to an upstream that never answers, so the connection stays open
             .childAttr(REMOTE_SOCKET, new InetSocketAddress("127.0.0.1", 1234))
             .childHandler(new ChannelInitializer<SocketChannel>() {
                 @Override
@@ -129,6 +127,7 @@ public class ReadBufferSizeByProtocolTest {
         server.close().sync();
         initializer.getMcpSessionManager().shutdown();
         group.shutdownGracefully(0, 0, TimeUnit.MILLISECONDS).sync();
+        upstreams.releaseAll();
     }
 
     private Socket connect() throws IOException {
@@ -215,8 +214,7 @@ public class ReadBufferSizeByProtocolTest {
     }
 
     @Test
-    public void shouldGiveEveryReadOfABinaryConnection64KiBWhenItIsRelayedOnOneUpstreamConnection() throws Exception {
-        configuration.forwardBinaryRequestsUseSingleConnection(true);
+    public void shouldGiveEveryReadOfABinaryConnection64KiBWhenItIsRelayedToARealUpstream() throws Exception {
         try (ServerSocket upstream = new ServerSocket(0, 1, InetAddress.getByAddress(new byte[]{127, 0, 0, 1}))) {
             InetSocketAddress upstreamAddress = new InetSocketAddress(InetAddress.getByAddress(new byte[]{127, 0, 0, 1}), upstream.getLocalPort());
             NettyHttpClient direct = new NettyHttpClient(configuration, new MockServerLogger(), (EventLoopGroup) null, null, false);

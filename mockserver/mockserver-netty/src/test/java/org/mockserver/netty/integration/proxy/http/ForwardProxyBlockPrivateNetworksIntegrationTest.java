@@ -254,18 +254,16 @@ public class ForwardProxyBlockPrivateNetworksIntegrationTest {
     }
 
     @Test
-    public void shouldApplyTheSettingToABinaryMessageForwardedOnAConnectionOfItsOwn() throws Exception {
-        for (boolean withoutWaiting : new boolean[]{false, true}) {
-            for (boolean block : new boolean[]{true, false}) {
-                assertBinaryForward(withoutWaiting, block);
-            }
+    public void shouldApplyTheSettingToABinaryConnection() throws Exception {
+        for (boolean block : new boolean[]{true, false}) {
+            assertBinaryForward(block);
         }
     }
 
-    private void assertBinaryForward(boolean withoutWaiting, boolean block) throws Exception {
-        String mode = "forwardBinaryRequestsWithoutWaitingForResponse=" + withoutWaiting + ", block=" + block;
+    private void assertBinaryForward(boolean block) throws Exception {
+        String mode = "block=" + block;
         try (LineEcho upstream = new LineEcho()) {
-            binaryProxy = new MockServer(blockingPrivateNetworks(block).forwardBinaryRequestsUseSingleConnection(false).forwardBinaryRequestsWithoutWaitingForResponse(withoutWaiting), upstream.port(), "127.0.0.1", 0);
+            binaryProxy = new MockServer(blockingPrivateNetworks(block), upstream.port(), "127.0.0.1", 0);
             logged.clear();
             try (Socket client = new Socket("127.0.0.1", binaryProxy.getLocalPort())) {
                 client.setSoTimeout((int) TimeUnit.SECONDS.toMillis(TIMEOUT_SECONDS));
@@ -275,8 +273,10 @@ public class ForwardProxyBlockPrivateNetworksIntegrationTest {
                     assertThat(mode + ": the client's connection is closed", client.getInputStream().read(), is(-1));
                     assertThat(mode + ": nothing reached the upstream", upstream.connections(), is(0));
                     // the connection is closed only after the refusal is logged, so a second warning would be here
-                    assertThat(mode, blockedWarnings("binary forward blocked by SSRF policy"), hasSize(1));
-                    assertThat(mode + ": the refusal is the only warning", warningsSince(), hasSize(1));
+                    List<LogEntry> warnings = warningsSince();
+                    assertThat(mode + ": the refusal is the only warning", warnings, hasSize(1));
+                    assertThat(mode, String.valueOf(warnings.get(0).getMessageFormat()), containsString("which cannot be forwarded to"));
+                    assertThat(mode, String.valueOf(warnings.get(0).getArguments()[2]), containsString(BLOCKED));
                 } else {
                     assertThat(mode, readLine(client.getInputStream()), is("hello\n"));
                     assertThat(mode, upstream.connections(), is(1));

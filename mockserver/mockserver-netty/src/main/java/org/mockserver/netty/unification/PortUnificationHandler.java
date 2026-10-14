@@ -294,11 +294,8 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
 
     private void connectForServerThatSpeaksFirst(ChannelHandlerContext ctx, long waitMillis) {
         InetSocketAddress target = HttpActionHandler.getRemoteAddress(ctx);
-        if (target == null
-            || configuration.assumeAllRequestsAreHttp()
-            || !Boolean.TRUE.equals(configuration.forwardBinaryRequestsUseSingleConnection())
-            || actionHandler.getHttpClient().binaryRelayUnavailableBecause(target, false) != null) {
-            // nothing would be relayed: the connection waits for its client, as without the setting
+        if (target == null || configuration.assumeAllRequestsAreHttp()) {
+            // nothing would be relayed: the connection waits for its client
             return;
         }
         if (mockServerLogger.isEnabledForInstance(Level.DEBUG)) {

@@ -16,30 +16,24 @@ import org.mockserver.echo.http.EchoServer;
 import org.mockserver.httpclient.ClientConfigurationException;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.httpclient.SocketConnectionException;
-import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.BinaryMessage;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.MediaType;
 import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.socket.tls.NettySslContextFactory;
-import org.slf4j.event.Level;
 
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
@@ -47,16 +41,12 @@ import static io.netty.handler.codec.http.HttpHeaderValues.*;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.when;
 import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.Header.header;
@@ -199,157 +189,6 @@ public class NettyHttpClientErrorHandlingTest {
         // then
         assertThat(exception.getCause(), instanceOf(ClientConfigurationException.class));
         assertThat(exception.getCause().getCause(), instanceOf(NullPointerException.class));
-    }
-
-    @Test
-    public void shouldReportConnectFailureOfABinaryRequestWhenTheChannelIsTornDownBeforeTheClientListensForIt() throws Exception {
-        // given
-        ConnectResolvedBeforeCallerListensEventLoopGroup eventLoopGroup = new ConnectResolvedBeforeCallerListensEventLoopGroup();
-        MockServerLogger recordingLogger = recordingLogger();
-
-        try {
-            // when
-            CompletableFuture<BinaryMessage> response = new NettyHttpClient(configuration(), recordingLogger, eventLoopGroup, null, false, quietSslContextFactory())
-                .sendRequest(BINARY_MESSAGE, false, new InetSocketAddress("127.0.0.1", CLOSED_PORT), 10000L);
-            eventLoopGroup.callerReturned.countDown();
-            ExecutionException exception = assertThrows(ExecutionException.class, () -> response.get(10, TimeUnit.SECONDS));
-
-            // then
-            assertThat("the refused channel was torn down before the client listened for the connect outcome", eventLoopGroup.tornDownBeforeCallerListened.get(), is(true));
-            assertThat(exception.getCause(), instanceOf(ConnectException.class));
-            assertThat(exception.getCause().getMessage(), containsString("/127.0.0.1:" + CLOSED_PORT));
-            assertThat("the teardown is not logged as the failure", warnings(recordingLogger), is(empty()));
-        } finally {
-            eventLoopGroup.callerReturned.countDown();
-            eventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
-        }
-    }
-
-    @Test
-    public void shouldNotLogTheTeardownOfABinaryRequestsChannelThatFailedToConnect() throws Exception {
-        // given - the usual order: the client listens for the connect before the failed channel is torn down
-        EventLoopGroup singleEventLoop = new NioEventLoopGroup(1, new Scheduler.SchedulerThreadFactory(NettyHttpClientErrorHandlingTest.class.getSimpleName() + "-binaryConnectFails"));
-        MockServerLogger recordingLogger = recordingLogger();
-
-        try {
-            // when
-            CompletableFuture<BinaryMessage> response = new NettyHttpClient(configuration(), recordingLogger, singleEventLoop, null, false, quietSslContextFactory())
-                .sendRequest(BINARY_MESSAGE, false, new InetSocketAddress("127.0.0.1", CLOSED_PORT), 10000L);
-            ExecutionException exception = assertThrows(ExecutionException.class, () -> response.get(10, TimeUnit.SECONDS));
-            // the channel is deregistered, and its handlers removed, by tasks queued on its event loop behind the failure
-            for (int task = 0; task < 3; task++) {
-                assertThat(singleEventLoop.submit(() -> { }).await(10, TimeUnit.SECONDS), is(true));
-            }
-
-            // then - the caller logs the failure: the client logs nothing, and not the teardown as a second failure
-            assertThat(exception.getCause(), instanceOf(ConnectException.class));
-            assertThat(warnings(recordingLogger), is(empty()));
-        } finally {
-            singleEventLoop.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
-        }
-    }
-
-    @Test
-    public void shouldReportConnectFailureOfABinaryRequestNotWaitingForAResponseWhenTheChannelIsTornDownBeforeTheClientListensForIt() throws Exception {
-        // given - without waiting for a response a teardown completes the response empty, not failed
-        ConnectResolvedBeforeCallerListensEventLoopGroup eventLoopGroup = new ConnectResolvedBeforeCallerListensEventLoopGroup();
-        CompletableFuture<Throwable> sent = new CompletableFuture<>();
-
-        try {
-            // when
-            CompletableFuture<BinaryMessage> response = new NettyHttpClient(configuration().forwardBinaryRequestsWithoutWaitingForResponse(true), mockServerLogger, eventLoopGroup, null, false)
-                .sendRequest(BINARY_MESSAGE, false, new InetSocketAddress("127.0.0.1", CLOSED_PORT), 10000L, sent::complete);
-            eventLoopGroup.callerReturned.countDown();
-            ExecutionException exception = assertThrows("a request that was never sent has no response, not an empty one", ExecutionException.class, () -> response.get(10, TimeUnit.SECONDS));
-
-            // then
-            assertThat("the refused channel was torn down before the client listened for the connect outcome", eventLoopGroup.tornDownBeforeCallerListened.get(), is(true));
-            assertThat(exception.getCause(), instanceOf(ConnectException.class));
-            assertThat(sent.get(10, TimeUnit.SECONDS), is(sameInstance(exception.getCause())));
-        } finally {
-            eventLoopGroup.callerReturned.countDown();
-            eventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
-        }
-    }
-
-    @Test
-    public void shouldReportTheChannelFailureWhenAConnectedBinaryChannelFailsBeforeTheClientListensForTheConnect() throws Exception {
-        // given - an upstream that accepts each connection and closes it at once
-        ConnectResolvedBeforeCallerListensEventLoopGroup eventLoopGroup = new ConnectResolvedBeforeCallerListensEventLoopGroup();
-
-        try (ServerSocket closesEveryConnection = new ServerSocket(0, 50, InetAddress.getByName("127.0.0.1"))) {
-            Thread accepting = new Thread(() -> {
-                while (true) {
-                    try {
-                        closesEveryConnection.accept().close();
-                    } catch (IOException listenerClosed) {
-                        return;
-                    }
-                }
-            }, NettyHttpClientErrorHandlingTest.class.getSimpleName() + "-acceptAndCloseBinary");
-            accepting.setDaemon(true);
-            accepting.start();
-
-            // when
-            CompletableFuture<BinaryMessage> response = new NettyHttpClient(configuration(), mockServerLogger, eventLoopGroup, null, false)
-                .sendRequest(BINARY_MESSAGE, false, new InetSocketAddress("127.0.0.1", closesEveryConnection.getLocalPort()), 10000L);
-            eventLoopGroup.callerReturned.countDown();
-            ExecutionException exception = assertThrows(ExecutionException.class, () -> response.get(10, TimeUnit.SECONDS));
-
-            // then
-            assertThat("the connected channel was torn down before the client listened for the connect outcome", eventLoopGroup.tornDownBeforeCallerListened.get(), is(true));
-            assertThat(exception.getCause(), instanceOf(SocketConnectionException.class));
-            assertThat(exception.getCause().getMessage(), is("Channel handler removed before valid response has been received"));
-        } finally {
-            eventLoopGroup.callerReturned.countDown();
-            eventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
-        }
-    }
-
-    @Test
-    public void shouldReportAConfigurationErrorOfABinaryRequestWhenTheClientTlsContextCannotBeCreated() throws Exception {
-        // given
-        RuntimeException cannotCreate = new RuntimeException("Exception creating SSL context for client");
-        NettySslContextFactory unusableSslContextFactory = new NettySslContextFactory(configuration(), mockServerLogger, false) {
-            @Override
-            public SslContext createClientSslContext(boolean forwardProxyClient, boolean enableHttp2, String host) {
-                throw cannotCreate;
-            }
-        };
-        NettyHttpClient client = new NettyHttpClient(configuration().forwardBinaryRequestsWithoutWaitingForResponse(true), mockServerLogger, clientEventLoopGroup, null, false, unusableSslContextFactory);
-        CompletableFuture<Throwable> sent = new CompletableFuture<>();
-
-        // when
-        ExecutionException exception = assertThrows(ExecutionException.class, () -> client
-            .sendRequest(BINARY_MESSAGE, true, new InetSocketAddress("127.0.0.1", CLOSED_PORT), 10000L, sent::complete)
-            .get(10, TimeUnit.SECONDS));
-
-        // then - the reason, to the caller waiting for the response and to the one waiting for the request to be sent
-        assertThat(exception.getCause(), instanceOf(ClientConfigurationException.class));
-        assertThat(exception.getCause().getCause(), is(sameInstance(cannotCreate)));
-        assertThat(sent.get(10, TimeUnit.SECONDS), is(sameInstance(exception.getCause())));
-    }
-
-    private static final BinaryMessage BINARY_MESSAGE = BinaryMessage.bytes("a binary message".getBytes(StandardCharsets.UTF_8));
-
-    /** Built with a logger of its own: the start-up notice it logs is not the client's. */
-    private NettySslContextFactory quietSslContextFactory() {
-        return new NettySslContextFactory(configuration(), mockServerLogger, false);
-    }
-
-    private static MockServerLogger recordingLogger() {
-        MockServerLogger recordingLogger = mock(MockServerLogger.class);
-        when(recordingLogger.isEnabledForInstance(any(Level.class))).thenReturn(true);
-        return recordingLogger;
-    }
-
-    private static List<String> warnings(MockServerLogger recordingLogger) {
-        return mockingDetails(recordingLogger).getInvocations().stream()
-            .filter(invocation -> invocation.getMethod().getName().equals("logEvent"))
-            .map(invocation -> (LogEntry) invocation.getArgument(0))
-            .filter(entry -> entry.getLogLevel().toInt() >= Level.WARN.toInt())
-            .map(LogEntry::getMessageFormat)
-            .collect(Collectors.toList());
     }
 
     /**

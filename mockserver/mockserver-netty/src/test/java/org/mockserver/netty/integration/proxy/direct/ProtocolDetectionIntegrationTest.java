@@ -42,7 +42,7 @@ public class ProtocolDetectionIntegrationTest {
     }
 
     private Socket clientOfMockServerForwardingTo(Upstream upstream) throws IOException {
-        mockServer = new MockServer(Configuration.configuration().forwardBinaryRequestsUseSingleConnection(false).forwardBinaryRequestsWithoutWaitingForResponse(true), upstream.port(), "127.0.0.1", 0);
+        mockServer = new MockServer(Configuration.configuration(), upstream.port(), "127.0.0.1", 0);
         Socket client = new Socket("127.0.0.1", mockServer.getLocalPort());
         client.setTcpNoDelay(true);
         return client;
@@ -53,8 +53,9 @@ public class ProtocolDetectionIntegrationTest {
         socket.getOutputStream().flush();
     }
 
+    /** The messages, in order, on the client's one upstream connection. */
     private static void awaitReceived(Upstream upstream, String... messages) {
-        tryWaitForSuccess(() -> assertThat(upstream.received(), contains(messages)));
+        tryWaitForSuccess(() -> assertThat(upstream.received(), contains(String.join("", messages))));
     }
 
     @Test
@@ -174,8 +175,8 @@ public class ProtocolDetectionIntegrationTest {
     }
 
     /**
-     * An upstream that never answers. MockServer forwards each message on a connection of its own, so what each
-     * connection received is one message, in the order the connections were accepted.
+     * An upstream that never answers, and records what each connection received, in the order the connections were
+     * accepted.
      */
     private static class Upstream implements AutoCloseable {
 
