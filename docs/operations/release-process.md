@@ -245,7 +245,7 @@ Both Go modules (`mockserver-client-go`, `mockserver-testcontainers/go`) are pub
 by a git tag named after their directory (`mockserver-client-go/vX.Y.Z`,
 `mockserver-testcontainers/go/vX.Y.Z`). Go's semantic import versioning also requires
 the module path to end in `/vN` for the release major `N`, or `proxy.golang.org`
-rejects the tag; 8.0.0 shipped with `/v7` and no suffix and was never installable.
+rejects the tag; 8.0.0 shipped with `/v7` and no suffix and was never installable. <!-- version-ref:keep -->
 
 - `prepare.sh` runs `scripts/release/go_module_major.py --set <major>`, which rewrites
   every reference to either module (go.mod files, imports, examples, docs, website
