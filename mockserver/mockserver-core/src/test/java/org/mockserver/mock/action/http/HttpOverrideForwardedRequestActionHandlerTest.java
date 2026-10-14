@@ -10,9 +10,14 @@ import org.mockserver.model.HttpTemplate.TemplateType;
 import org.mockserver.templates.engine.javascript.JavaScriptTemplateEngine;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -342,5 +347,73 @@ public class HttpOverrideForwardedRequestActionHandlerTest {
         HttpResponse actualResponse = result.getHttpResponse().get();
         assertThat(actualResponse.getStatusCode(), is(230));
         assertThat(actualResponse.getBodyAsString(), is("body=overridden"));
+    }
+
+    @Test
+    public void shouldKeepUpstreamResponseWhenResponseTemplateOutputIsInvalidByDefault() throws Exception {
+        // given - a response template whose output is not a valid response
+        HttpForwardActionResult result = forwardWithResponseTemplate(handler, "{ 'statusCode': 'two hundred' }");
+
+        // when
+        HttpResponse actualResponse = result.getHttpResponse().get();
+
+        // then
+        assertThat(actualResponse.getStatusCode(), is(200));
+        assertThat(actualResponse.getBodyAsString(), is("upstream"));
+    }
+
+    @Test
+    public void shouldNotMarkThrowingResponseTemplateAsTemplateFailureByDefault() {
+        // given - a response template whose parse fails
+        HttpForwardActionResult result = forwardWithResponseTemplate(handler, "#foreach(");
+
+        // when
+        ExecutionException failure = assertThrows(ExecutionException.class, () -> result.getHttpResponse().get());
+
+        // then - the engine's failure, as before
+        assertThat(TemplateFailureException.in(failure), is(nullValue()));
+        assertThat(failure.getCause().getMessage(), containsString("transforming template"));
+    }
+
+    @Test
+    public void shouldReportThrowingResponseTemplateAsTemplateFailureWhenConfigured() {
+        // given
+        HttpForwardActionResult result = forwardWithResponseTemplate(serverErrorHandler(), "#foreach(");
+
+        // when
+        ExecutionException failure = assertThrows(ExecutionException.class, () -> result.getHttpResponse().get());
+
+        // then
+        TemplateFailureException templateFailure = TemplateFailureException.in(failure);
+        assertThat(templateFailure.getDetail(), startsWith("VELOCITY forward response template failed: "));
+        assertThat(templateFailure.loggedFailure().getMessage(), containsString("transforming template"));
+    }
+
+    @Test
+    public void shouldReportInvalidResponseTemplateOutputAsTemplateFailureWhenConfigured() {
+        // given
+        HttpForwardActionResult result = forwardWithResponseTemplate(serverErrorHandler(), "{ 'statusCode': 'two hundred' }");
+
+        // when
+        ExecutionException failure = assertThrows(ExecutionException.class, () -> result.getHttpResponse().get());
+
+        // then
+        TemplateFailureException templateFailure = TemplateFailureException.in(failure);
+        assertThat(templateFailure.getDetail(), startsWith("VELOCITY forward response template rendered output that is not a valid response: "));
+        assertThat(templateFailure.getDetail(), containsString("statusCode"));
+    }
+
+    private HttpOverrideForwardedRequestActionHandler serverErrorHandler() {
+        return new HttpOverrideForwardedRequestActionHandler(mock(MockServerLogger.class), new Configuration().templateFailureAsServerError(true), mockHttpClient);
+    }
+
+    private HttpForwardActionResult forwardWithResponseTemplate(HttpOverrideForwardedRequestActionHandler forwardHandler, String velocityTemplate) {
+        CompletableFuture<HttpResponse> responseFuture = new CompletableFuture<>();
+        responseFuture.complete(response().withStatusCode(200).withBody("upstream"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), any(), anyLong(), anyBoolean())).thenReturn(responseFuture);
+        return forwardHandler.handle(
+            forwardOverriddenRequest().withResponseTemplate(template(TemplateType.VELOCITY, velocityTemplate)),
+            request("/somePath")
+        );
     }
 }

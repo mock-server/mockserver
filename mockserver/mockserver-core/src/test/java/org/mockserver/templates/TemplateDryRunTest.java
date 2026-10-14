@@ -185,6 +185,17 @@ public class TemplateDryRunTest {
     }
 
     @Test
+    public void saysOutputThatIsNotValidWouldAnswerWithServerErrorWhenTemplateFailureIsAServerError() throws Exception {
+        TemplateDryRun dryRun = new TemplateDryRun(configuration().templateFailureAsServerError(true));
+
+        JsonNode responseReport = body(dryRun(dryRun, input("VELOCITY", "{ \"statusCode\": \"two hundred\" }")));
+        JsonNode forwardReport = body(dryRun(dryRun, input("VELOCITY", "this is not a request").put("actionType", "FORWARD_TEMPLATE")));
+
+        assertThat(responseReport.path("error").path("message").asText(), is("the template rendered output that is not a valid response, so serving it would answer with a 500"));
+        assertThat(forwardReport.path("error").path("message").asText(), is("the template rendered output that is not a valid request, so serving it would answer with a 500"));
+    }
+
+    @Test
     public void reportsAForwardTemplateWhoseOutputIsNotARequest() throws Exception {
         ObjectNode input = input("VELOCITY", "this is not a request").put("actionType", "FORWARD_TEMPLATE");
 

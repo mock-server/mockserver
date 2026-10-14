@@ -1729,7 +1729,7 @@ public class HttpActionHandler {
         } catch (Throwable throwable) {
             // a failed template keeps the 404 unless templateFailureAsServerError is set; it is logged as the engine's own failure
             TemplateFailureException templateFailure = throwable instanceof TemplateFailureException failure ? failure : null;
-            Throwable cause = templateFailure != null ? templateFailure.getCause() : throwable;
+            Throwable cause = templateFailure != null ? templateFailure.loggedFailure() : throwable;
             HttpResponse response = templateFailure != null && Boolean.TRUE.equals(configuration.templateFailureAsServerError()) ? templateFailureResponse(templateFailure) : notFoundResponse();
             writeResponseActionResponse(response, responseWriter, request, action, synchronous, null, postProcessor);
             if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
@@ -3203,6 +3203,9 @@ public class HttpActionHandler {
     }
 
     void handleExceptionDuringForwardingRequest(Action action, HttpRequest request, ResponseWriter responseWriter, Throwable exception) {
+        if (returnedTemplateFailure(request, responseWriter, exception)) {
+            return;
+        }
         Throwable failure = exception;
         exception = answeredAsItsCause(exception);
         if (returnedBlockedTarget(responseWriter, request, exception, "forward")
@@ -3240,6 +3243,30 @@ public class HttpActionHandler {
             );
             returnLoopHintOrBadGateway(responseWriter, request, exception != null ? exception.getMessage() : null, loopHint);
         }
+    }
+
+    /**
+     * A forward's response template, which renders when the upstream response arrives, fails only as a template
+     * failure with templateFailureAsServerError set: it is logged as any forward failure and answered as in
+     * {@link #handleAnyException}.
+     */
+    private boolean returnedTemplateFailure(HttpRequest request, ResponseWriter responseWriter, Throwable exception) {
+        TemplateFailureException templateFailure = TemplateFailureException.in(exception);
+        if (templateFailure == null || !Boolean.TRUE.equals(configuration.templateFailureAsServerError())) {
+            return false;
+        }
+        Throwable cause = templateFailure.loggedFailure();
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(EXCEPTION)
+                .setLogLevel(Level.ERROR)
+                .setCorrelationId(request.getLogCorrelationId())
+                .setHttpRequest(request)
+                .setMessageFormat(isNotBlank(cause.getMessage()) ? cause.getMessage() : cause.getClass().getSimpleName())
+                .setThrowable(cause)
+        );
+        responseWriter.writeResponse(request, templateFailureResponse(templateFailure), false);
+        return true;
     }
 
     /**

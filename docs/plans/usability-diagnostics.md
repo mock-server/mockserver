@@ -106,12 +106,15 @@ flowchart LR
   failing JavaScript template's log message now gives the template line and column too. The
   dashboard's Mocks view runs it from a Test Template button in the response and forward template
   steps (A5b).
-- **Template time limits and failure answer (A5c, A5d, A5g, A5i):** JavaScript templates stop after
+- **Template time limits and failure answer (A5c, A5d, A5e, A5g, A5i):** JavaScript templates stop after
   `javascriptTemplateExecutionTimeout`, and Velocity templates after `velocityTemplateExecutionTimeout`
   at the next loop iteration, macro call, `#parse`, `#evaluate` or `#define` block render (both default
   5000 ms; a single long Java call is not interrupted); a failed template answers 404, or with
   `templateFailureAsServerError` a 500 with an `x-mockserver-template-error` header and the engine's
-  error as the body. The dry run uses each engine's own limit, and the 500 body gives the template line,
+  error as the body. Under the same flag, output that is not a valid response or request (by default
+  404 or 502) answers the 500 with the validation errors as the body, and so does a failed or invalid
+  `responseTemplate` of a forward with overrides (by default 502, or the upstream response unchanged)
+  (A5e). The dry run uses each engine's own limit, and the 500 body gives the template line,
   column and hint when the engine reports them (A5g); a timeout reached inside a method call, such as
   `$block.toString()`, is reported as the timeout (A5i).
 - **Expectation lint (A8):** `PUT /mockserver/lint` lints the active expectations, or a body of
@@ -152,7 +155,6 @@ flowchart LR
 |---|---|---|---|---|---|---|
 | A8g | The on-load lint (`ExpectationLinter.adviseOnLoad`, A8c) receives every valid entry of the file, including later entries whose id repeats, which `RequestMatchers.update` drops, so the WARN can report an ignored entry as shadowed or as shadowing another → in `adviseOnLoad`, run `removeReplacedDuplicates(report, subjects, Collections.nCopies(loaded.length, 0))` before sorting, so it reports DUPLICATE_ID and lints only what is loaded; add a loader test with a repeated id | (iv) | Once per file load; one pass over the ids | S | Create the `Report` before the dedup; generated ids are already null in `Subject.reportedId`, so they are never treated as duplicates | P3 |
 | A8h | A file load keeps the FIRST entry for a repeated id (`RequestMatchers.update`) while `PUT /mockserver/expectation` keeps the LAST, and the initialisation page claimed "last" until A8f → owner decision: keep the difference (lint and docs now describe it) or make a file load keep the last entry like an upsert | (iv) | Load path only | S | BREAKING for users whose files repeat an id: the response served changes; needs a changelog `BREAKING:` entry and a major version | P3 |
-| A5e | Two template failures are outside `templateFailureAsServerError`: output that is not a valid response is not a thrown failure, so it still answers 404 (a response template) or 502 (a forward template); and a forward-with-override `responseTemplate` renders in the upstream response callback, not in the action handler → under that flag, answer both as template failures, with the validation errors in the body for the first | (ii) | Failure path only | S | Same opt-in; keep the TEMPLATE_GENERATION_FAILED log entry | P2 |
 | A5f | Owner decided 2026-10-14: keep `templateFailureAsServerError` opt-in now (a 404 to 500 change is BREAKING for clients and tests that expect the 404) and make the 500 the default in the next major release, 9.0.0 → in 9.0.0 flip the default to true and add a `BREAKING:` changelog bullet (optionally announced first by a start-up warning, as `UpcomingDefaultChanges` does for other defaults) | (ii) | Failure path only | S | Clients asserting the 404 | P2, next major (9.0.0) |
 | A5h | A single long Java call made by a Velocity template is not interrupted by `velocityTemplateExecutionTimeout`: a backtracking regex such as `$s.matches('(.*a){25}')` on a 48-character string ran past 15 s with a 500 ms limit, and `$r.contains(-1)` on `[1..2147483647]` took about 3 s against a 500 ms limit, because the deadline is only checked between loop iterations, macro calls, `#parse`, `#evaluate` and `#define` block renders; the limit also does not cap memory (`$l.addAll([1..2147483647])` ran out of heap in a 1 GB JVM) → wrap the String regex methods (`matches`, `replaceAll`, `replaceFirst`, `split`) through the uberspector so the pattern runs over a CharSequence whose `charAt` checks the render deadline, which stops the matcher part-way | (ii) | One counter check per `charAt` on the regex path only | M | Must keep `SecureUberspector` in the chain; other slow calls (huge `repeat`, deep JSON) stay unbounded | P2 |
 | A2d | At INFO an unmatched request writes one `EXPECTATION_NOT_MATCHED` entry (a rendered message and an expectation clone) per compared expectation, so a 404 flood still costs about 3.3 ms per miss with 1,000 expectations (4.4 ms with `detailedMatchFailures`; 0.08 us at WARN, `MatchingBenchmark` `EXACT`); A2b's cap applies only above 1,000 → decide between a lower cap for the logged entries only (closest match kept exact) and one summary entry per miss (counts plus the closest few) above some size, behind a flag | (ii) | Removes per-expectation rendering and cloning from the INFO miss path | S | Changes what the dashboard log and `troubleshooting_matching.html` show; both rely on one entry per compared expectation | P3 |
@@ -174,7 +176,7 @@ flowchart LR
 
 1. **Wave 0 — hygiene and performance:** A2d. (A2, A2b, A2c, C1 and C1b landed.)
 2. **Wave 1 — explain engine:** done (A3, A10 and B1 landed).
-3. **Wave 2 — failure classes:** A5e and A5h, each with an MCP tool and a dashboard entry where it applies. (A4, A6 and A6b landed; B1c added the MCP tools for A4, A5, A8 and B3; A5 landed, with its dashboard entry in A5b; A5c and A5d landed; A5g and A5i landed; A5f waits for the 9.0.0 major release.)
+3. **Wave 2 — failure classes:** A5h, with an MCP tool and a dashboard entry where it applies. (A4, A6 and A6b landed; B1c added the MCP tools for A4, A5, A8 and B3; A5 landed, with its dashboard entry in A5b; A5c, A5d, A5e, A5g and A5i landed; A5f waits for the 9.0.0 major release.)
 4. **Wave 3 — fixes:** A8g, B3d; A8h waits for an owner decision. (B2, B3, B3c, A9b, A8, including the CLI, A8b, initialisation-file lint (A8c), the authorisation page (A8d), per-source `DUPLICATE_ID` (A8f) and the badge on every create path (A8e) landed.)
 5. **Wave 4 — optional:** done (B5, B6, B7, A11, A11b and B1b landed).
 

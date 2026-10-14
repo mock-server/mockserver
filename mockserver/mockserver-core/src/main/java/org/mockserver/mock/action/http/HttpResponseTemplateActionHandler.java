@@ -47,12 +47,9 @@ public class HttpResponseTemplateActionHandler {
                 throw new RuntimeException("Unknown no template engine available for " + httpTemplate.getTemplateType());
         }
         if (templateEngine != null) {
-            HttpResponse templatedResponse;
-            try {
-                templatedResponse = templateEngine.executeTemplate(httpTemplate.getTemplateContent(), httpRequest, HttpResponseDTO.class);
-            } catch (RuntimeException failure) {
-                throw new TemplateFailureException(httpTemplate.getTemplateType(), "response", failure);
-            }
+            TemplateEngine engine = templateEngine;
+            HttpResponse templatedResponse = TemplateFailureException.render(httpTemplate, "response", "response", Boolean.TRUE.equals(configuration.templateFailureAsServerError()),
+                () -> engine.executeTemplate(httpTemplate.getTemplateContent(), httpRequest, HttpResponseDTO.class));
             if (templatedResponse != null) {
                 return templatedResponse;
             }

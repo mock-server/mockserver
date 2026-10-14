@@ -12,6 +12,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -208,6 +209,35 @@ public class HttpResponseTemplateActionHandlerTest {
         // The failure itself is surfaced as a TEMPLATE_GENERATION_FAILED log event (asserted in
         // MustacheTemplateEngineTest at the shared HttpTemplateOutputDeserializer layer).
         assertThat(actualHttpResponse, is(notFoundResponse()));
+    }
+
+    @Test
+    public void shouldReportInvalidResponseOutputAsTemplateFailureWhenConfigured() {
+        // given - templateFailureAsServerError set, and a template whose output is not a valid response
+        HttpResponseTemplateActionHandler handler = new HttpResponseTemplateActionHandler(mock(MockServerLogger.class), new Configuration().templateFailureAsServerError(true));
+        HttpTemplate template = template(HttpTemplate.TemplateType.VELOCITY, "{ 'statusCode': 'two hundred' }");
+
+        // when
+        TemplateFailureException failure = assertThrows(TemplateFailureException.class, () -> handler.handle(template, request().withPath("/somePath")));
+
+        // then - the detail carries the validation errors, and there is no engine failure behind it
+        assertThat(failure.getDetail(), startsWith("VELOCITY response template rendered output that is not a valid response: "));
+        assertThat(failure.getDetail(), containsString("statusCode"));
+        assertThat(failure.getCause(), is(nullValue()));
+        assertThat(failure.loggedFailure(), is(failure));
+    }
+
+    @Test
+    public void shouldReportUnreadableResponseOutputAsTemplateFailureWhenConfigured() {
+        // given - output that passes the schema (it is empty) but cannot be read as a response
+        HttpResponseTemplateActionHandler handler = new HttpResponseTemplateActionHandler(mock(MockServerLogger.class), new Configuration().templateFailureAsServerError(true));
+        HttpTemplate template = template(HttpTemplate.TemplateType.VELOCITY, "#if(false)never#end");
+
+        // when
+        TemplateFailureException failure = assertThrows(TemplateFailureException.class, () -> handler.handle(template, request().withPath("/somePath")));
+
+        // then
+        assertThat(failure.getDetail(), startsWith("VELOCITY response template rendered output that is not a valid response: the output could not be read: "));
     }
 
     @Test

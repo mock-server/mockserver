@@ -14,6 +14,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsSame.sameInstance;
@@ -73,6 +74,34 @@ public class HttpForwardTemplateActionHandlerTest {
         } else {
             assertThat(actualHttpResponse.get(), is(badGatewayResponse()));
         }
+    }
+
+    @Test
+    public void shouldAnswerInvalidRequestOutputWithBadGatewayByDefault() throws Exception {
+        // given - a template whose output is not a valid request ("statusCode" is a response field)
+        HttpTemplate template = template(HttpTemplate.TemplateType.VELOCITY, "{ 'statusCode': 200 }");
+
+        // when
+        HttpResponse response = httpForwardTemplateActionHandler.handle(template, request().withPath("/somePath")).getHttpResponse().get();
+
+        // then
+        assertThat(response, is(badGatewayResponse()));
+        verifyNoInteractions(mockHttpClient);
+    }
+
+    @Test
+    public void shouldReportInvalidRequestOutputAsTemplateFailureWhenConfigured() {
+        // given
+        HttpForwardTemplateActionHandler handler = new HttpForwardTemplateActionHandler(mock(MockServerLogger.class), new Configuration().templateFailureAsServerError(true), mockHttpClient);
+        HttpTemplate template = template(HttpTemplate.TemplateType.VELOCITY, "{ 'statusCode': 200 }");
+
+        // when
+        TemplateFailureException failure = assertThrows(TemplateFailureException.class, () -> handler.handle(template, request().withPath("/somePath")));
+
+        // then
+        assertThat(failure.getDetail(), startsWith("VELOCITY forward template rendered output that is not a valid request: "));
+        assertThat(failure.getDetail(), containsString("statusCode"));
+        verifyNoInteractions(mockHttpClient);
     }
 
     @Test

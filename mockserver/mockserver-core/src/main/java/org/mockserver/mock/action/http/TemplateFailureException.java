@@ -3,7 +3,11 @@ package org.mockserver.mock.action.http;
 import org.mockserver.model.HttpTemplate;
 import org.mockserver.templates.engine.TemplateEvaluationException;
 import org.mockserver.templates.engine.javascript.JavaScriptTemplateTimeoutException;
+import org.mockserver.templates.engine.serializer.HttpTemplateOutputDeserializer;
 import org.mockserver.templates.engine.velocity.VelocityTemplateTimeoutException;
+
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 import static org.apache.commons.lang3.StringUtils.abbreviate;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -22,6 +26,48 @@ class TemplateFailureException extends RuntimeException {
     TemplateFailureException(HttpTemplate.TemplateType templateType, String templateRole, RuntimeException failure) {
         super(failure.getMessage(), failure);
         this.detail = abbreviate(templateType + " " + templateRole + " template failed: " + engineMessage(failure), MAX_DETAIL_LENGTH);
+    }
+
+    /**
+     * A template that rendered, but whose output is not a valid request or response.
+     */
+    private TemplateFailureException(HttpTemplate.TemplateType templateType, String templateRole, String rendersA, String validationErrors) {
+        super(abbreviate(templateType + " " + templateRole + " template rendered output that is not a valid " + rendersA
+            + (isNotBlank(validationErrors) ? ": " + validationErrors : ""), MAX_DETAIL_LENGTH));
+        this.detail = getMessage();
+    }
+
+    /**
+     * Renders a template with {@code render}, failing with this exception if the engine throws or, when
+     * {@code invalidOutputIsFailure}, if the output is not a valid {@code rendersA} (otherwise rendered as null).
+     */
+    static <T> T render(HttpTemplate httpTemplate, String templateRole, String rendersA, boolean invalidOutputIsFailure, Supplier<T> render) {
+        AtomicReference<String> validationErrors = new AtomicReference<>();
+        T rendered;
+        try {
+            rendered = invalidOutputIsFailure
+                ? HttpTemplateOutputDeserializer.reportingInvalidOutput(reason -> validationErrors.compareAndSet(null, reason), render)
+                : render.get();
+        } catch (RuntimeException failure) {
+            throw new TemplateFailureException(httpTemplate.getTemplateType(), templateRole, failure);
+        }
+        if (rendered == null && invalidOutputIsFailure) {
+            throw new TemplateFailureException(httpTemplate.getTemplateType(), templateRole, rendersA, validationErrors.get());
+        }
+        return rendered;
+    }
+
+    /**
+     * @return the template failure in {@code failure}'s cause chain, or null
+     */
+    static TemplateFailureException in(Throwable failure) {
+        Throwable cause = failure;
+        for (int depth = 0; cause != null && depth < 10; depth++, cause = cause.getCause()) {
+            if (cause instanceof TemplateFailureException templateFailure) {
+                return templateFailure;
+            }
+        }
+        return null;
     }
 
     /**
@@ -53,5 +99,12 @@ class TemplateFailureException extends RuntimeException {
      */
     String getDetail() {
         return detail;
+    }
+
+    /**
+     * @return the engine's failure to log, or this exception when the template rendered output that is not valid
+     */
+    Throwable loggedFailure() {
+        return getCause() != null ? getCause() : this;
     }
 }

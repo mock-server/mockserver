@@ -55,6 +55,10 @@ public abstract class HttpForwardAction {
         this.forwardLoopGuard = forwardLoopGuard;
     }
 
+    boolean templateFailureAsServerError() {
+        return configuration != null && Boolean.TRUE.equals(configuration.templateFailureAsServerError());
+    }
+
     /**
      * How the action is named in the warning logged when forwardProxyBlockPrivateNetworks refuses its target.
      */

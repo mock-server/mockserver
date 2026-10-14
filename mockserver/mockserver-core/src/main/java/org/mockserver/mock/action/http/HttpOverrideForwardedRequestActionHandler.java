@@ -58,9 +58,12 @@ public class HttpOverrideForwardedRequestActionHandler extends HttpForwardAction
                 if (responseTemplate != null && result != null) {
                     TemplateEngine templateEngine = resolveTemplateEngine(responseTemplate);
                     if (templateEngine != null) {
-                        HttpResponse templatedResponse = templateEngine.executeTemplate(
-                            responseTemplate.getTemplateContent(), request, result, HttpResponseDTO.class
-                        );
+                        HttpResponse responseToTemplate = result;
+                        // only with templateFailureAsServerError, so a failure is otherwise answered and logged as before
+                        HttpResponse templatedResponse = templateFailureAsServerError()
+                            ? TemplateFailureException.render(responseTemplate, "forward response", "response", true,
+                                () -> templateEngine.executeTemplate(responseTemplate.getTemplateContent(), request, responseToTemplate, HttpResponseDTO.class))
+                            : templateEngine.executeTemplate(responseTemplate.getTemplateContent(), request, result, HttpResponseDTO.class);
                         if (templatedResponse != null) {
                             result = templatedResponse;
                         }

@@ -223,9 +223,9 @@ public class TemplateDryRun {
         } else if (rendered == null) {
             report.put("valid", false);
             ObjectNode error = report.putObject("error");
-            error.put("message", input.forward()
-                ? "the template rendered output that is not a valid request, so serving it would answer with a 502"
-                : "the template rendered output that is not a valid response, so serving it would answer with a 404");
+            String servedStatus = Boolean.TRUE.equals(configuration.templateFailureAsServerError()) ? "500" : input.forward() ? "502" : "404";
+            error.put("message", "the template rendered output that is not a valid " + (input.forward() ? "request" : "response")
+                + ", so serving it would answer with a " + servedStatus);
             if (generationFailure != null && generationFailure.getArguments() != null && generationFailure.getArguments().length > 1) {
                 putCapped(error, "validationErrors", String.valueOf(generationFailure.getArguments()[0]), MAX_REPORTED_MESSAGE_CHARS);
                 renderedOutput = String.valueOf(generationFailure.getArguments()[1]);

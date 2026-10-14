@@ -24,6 +24,7 @@ import org.mockserver.mock.crud.CrudDispatcher;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.HttpTemplate;
 import org.mockserver.model.ProxyPassMapping;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
@@ -42,6 +43,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -93,12 +95,16 @@ public class HttpActionHandlerForwardFailureTest {
 
     @Before
     public void createActionHandler() {
+        actionHandler = new HttpActionHandler(configuration(), null, httpStateFor(mockServerLogger), null, null);
+        responseWriter = mock(ResponseWriter.class);
+    }
+
+    private static HttpState httpStateFor(MockServerLogger mockServerLogger) {
         HttpState httpState = mock(HttpState.class);
         when(httpState.getMockServerLogger()).thenReturn(mockServerLogger);
         when(httpState.getUniqueLoopPreventionHeaderName()).thenReturn("x-forwarded-by");
         when(httpState.getUniqueLoopPreventionHeaderValue()).thenReturn("MockServer_" + UUIDService.getUUID());
-        actionHandler = new HttpActionHandler(configuration(), null, httpState, null, null);
-        responseWriter = mock(ResponseWriter.class);
+        return httpState;
     }
 
     @Test
@@ -461,6 +467,33 @@ public class HttpActionHandlerForwardFailureTest {
         channel.writeInbound(Unpooled.copiedBuffer(plainText, StandardCharsets.US_ASCII));
         channel.finishAndReleaseAll();
         return caught.get();
+    }
+
+    @Test
+    public void shouldAnswerAFailedForwardResponseTemplateAsATemplateFailureWhenConfigured() {
+        HttpActionHandler serverErrorHandler = new HttpActionHandler(configuration().templateFailureAsServerError(true), null, httpStateFor(mockServerLogger), null, null);
+        RuntimeException engineFailure = new RuntimeException("Exception: TEST_EXCEPTION transforming template", new IllegalStateException("TEST_EXCEPTION"));
+        TemplateFailureException templateFailure = new TemplateFailureException(HttpTemplate.TemplateType.VELOCITY, "forward response", engineFailure);
+
+        serverErrorHandler.handleExceptionDuringForwardingRequest(ACTION, request, responseWriter, new ExecutionException(templateFailure));
+
+        assertThat(answer().getStatusCode(), is(500));
+        assertThat(answer().getFirstHeader("x-mockserver-template-error"), is("true"));
+        assertThat(answer().getBodyAsString(), is("VELOCITY forward response template failed: TEST_EXCEPTION"));
+        List<LogEntry> errors = errors();
+        assertThat(errors, hasSize(1));
+        assertThat("the engine's own failure is logged", errors.get(0).getThrowable(), is(engineFailure));
+    }
+
+    @Test
+    public void shouldAnswerATemplateFailureAsAnyForwardFailureByDefault() {
+        RuntimeException engineFailure = new RuntimeException("Exception: TEST_EXCEPTION transforming template", new IllegalStateException("TEST_EXCEPTION"));
+        TemplateFailureException templateFailure = new TemplateFailureException(HttpTemplate.TemplateType.VELOCITY, "forward response", engineFailure);
+
+        actionHandler.handleExceptionDuringForwardingRequest(ACTION, request, responseWriter, new ExecutionException(templateFailure));
+
+        assertThat(answer().getStatusCode(), is(502));
+        assertThat(answer().getFirstHeader("x-mockserver-template-error"), is(""));
     }
 
     private HttpResponse answer() {
