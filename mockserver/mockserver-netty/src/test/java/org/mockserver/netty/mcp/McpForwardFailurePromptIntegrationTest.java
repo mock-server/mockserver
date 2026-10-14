@@ -28,8 +28,9 @@ import static org.mockserver.model.HttpResponse.response;
 
 /**
  * Follows the why_forward_failed prompt's tool chain over MockServer's own MCP endpoint after a real forward to a port
- * nothing listens on, and checks that each tool returns the fact the prompt says it does: the 502, the
- * "failed to forward request" log entry with its correlationId, and the forward expectation's target.
+ * nothing listens on, and checks that each tool returns the fact the prompt says it does: the failed forward with its
+ * 502 reason and correlationId, that request's lifecycle, and the forward expectation's target; and, when nothing
+ * failed to forward, the response MockServer sent instead.
  */
 public class McpForwardFailurePromptIntegrationTest {
 
@@ -62,38 +63,33 @@ public class McpForwardFailurePromptIntegrationTest {
             .put("path", "/inventory").put("host", "127.0.0.1").put("port", closedPort).put("scheme", "HTTP"));
         assertThat(created.toString(), created.path("status").asText(), is("created"));
 
-        HttpResponse<String> forwarded = httpClient.send(
-            HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + mockServer.getLocalPort() + "/inventory"))
-                .timeout(Duration.ofSeconds(60)).GET().build(),
-            HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> forwarded = send("/inventory");
         assertThat(forwarded.statusCode(), is(502));
 
-        JsonNode failedPair = null;
-        JsonNode forwardFailure = null;
+        JsonNode failure = null;
         long deadline = System.currentTimeMillis() + 20_000;
-        while ((failedPair == null || forwardFailure == null) && System.currentTimeMillis() < deadline) {
-            JsonNode pairs = callTool("retrieve_request_responses", objectMapper.createObjectNode()
-                .put("method", "GET").put("path", "/inventory")).path("requestResponses");
-            for (JsonNode pair : pairs) {
-                if (pair.path("httpResponse").path("statusCode").asInt() == 502) {
-                    failedPair = pair;
+        while (failure == null && System.currentTimeMillis() < deadline) {
+            for (JsonNode candidate : callTool("explain_forward_failure", objectMapper.createObjectNode().put("limit", 20)).path("forwardFailures")) {
+                if (candidate.path("method").asText().equals("GET") && candidate.path("path").asText().equals("/inventory")) {
+                    failure = candidate;
+                    break;
                 }
             }
-            for (JsonNode entry : callTool("retrieve_logs", objectMapper.createObjectNode().put("limit", 500)).path("logEntries")) {
-                if (entry.path("messageFormat").asText().contains("failed to forward request")) {
-                    forwardFailure = entry;
-                }
-            }
-            if (failedPair == null || forwardFailure == null) {
+            if (failure == null) {
                 Thread.sleep(100);
             }
         }
-        assertThat("a 502 for the request from retrieve_request_responses", failedPair, notNullValue());
-        assertThat("a 'failed to forward request' entry from retrieve_logs", forwardFailure, notNullValue());
-        assertThat(forwardFailure.toString(), forwardFailure.path("message").toString(), containsString("upstream refused the connection"));
+        assertThat("a failed forward of GET /inventory from explain_forward_failure", failure, notNullValue());
+        assertThat(failure.toString(), failure.path("statusCode").asInt(), is(502));
+        assertThat(failure.path("reason").asText(), containsString("upstream refused the connection"));
+        assertThat(failure.path("reason").asText(), is(forwarded.body()));
+        assertThat(failure.path("causeNamed").asBoolean(), is(true));
+        assertThat(failure.path("forwardLoopSuspected").asBoolean(), is(false));
 
-        String correlationId = forwardFailure.path("correlationId").asText();
-        assertThat(forwardFailure.toString(), correlationId.isEmpty(), is(false));
+        String correlationId = failure.path("correlationId").asText();
+        assertThat(failure.toString(), correlationId.isEmpty(), is(false));
+        JsonNode byId = callTool("explain_forward_failure", objectMapper.createObjectNode().put("correlationId", correlationId));
+        assertThat(byId.path("forwardFailures").get(0).path("reason").asText(), is(failure.path("reason").asText()));
         JsonNode lifecycle = callTool("retrieve_logs", objectMapper.createObjectNode().put("correlationId", correlationId)).path("logEntries");
         assertThat(lifecycle.toString(), lifecycle.size() >= 1, is(true));
         for (JsonNode entry : lifecycle) {
@@ -109,27 +105,34 @@ public class McpForwardFailurePromptIntegrationTest {
     }
 
     @Test
-    public void explainForwardFailureNamesTheCauseOfARealFailedForwardInOneCall() throws Exception {
-        int closedPort = PortFactory.findFreePort();
-        callTool("create_forward_expectation", objectMapper.createObjectNode()
-            .put("path", "/stock").put("host", "127.0.0.1").put("port", closedPort).put("scheme", "HTTP"));
-        HttpResponse<String> forwarded = httpClient.send(
-            HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + mockServer.getLocalPort() + "/stock"))
+    public void whenNoForwardFailedTheFallbackShowsTheResponseMockServerSent() throws Exception {
+        callTool("create_expectation", objectMapper.createObjectNode().put("method", "GET").put("path", "/stock").put("statusCode", 200));
+        assertThat(send("/stock").statusCode(), is(200));
+
+        JsonNode pair = null;
+        long deadline = System.currentTimeMillis() + 20_000;
+        while (pair == null && System.currentTimeMillis() < deadline) {
+            JsonNode pairs = callTool("retrieve_request_responses", objectMapper.createObjectNode()
+                .put("method", "GET").put("path", "/stock")).path("requestResponses");
+            if (pairs.size() > 0) {
+                pair = pairs.get(0);
+            } else {
+                Thread.sleep(100);
+            }
+        }
+        assertThat("the response for GET /stock from retrieve_request_responses", pair, notNullValue());
+        assertThat(pair.toString(), pair.path("httpResponse").path("statusCode").asInt(), is(200));
+
+        JsonNode failures = callTool("explain_forward_failure", objectMapper.createObjectNode().put("limit", 20));
+        assertThat(failures.toString(), failures.path("forwardFailureCount").asInt(), is(0));
+        assertThat(failures.path("note").asText(), containsString("no failed forward is recorded"));
+    }
+
+    private HttpResponse<String> send(String path) throws Exception {
+        return httpClient.send(
+            HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + mockServer.getLocalPort() + path))
                 .timeout(Duration.ofSeconds(60)).GET().build(),
             HttpResponse.BodyHandlers.ofString());
-        assertThat(forwarded.statusCode(), is(502));
-
-        JsonNode failures = callTool("explain_forward_failure", objectMapper.createObjectNode()).path("forwardFailures");
-        assertThat(failures.toString(), failures.size(), is(1));
-        JsonNode failure = failures.get(0);
-        assertThat(failure.path("path").asText(), is("/stock"));
-        assertThat(failure.path("statusCode").asInt(), is(502));
-        assertThat(failure.path("reason").asText(), containsString("upstream refused the connection"));
-        assertThat(failure.path("causeNamed").asBoolean(), is(true));
-        assertThat(failure.path("reason").asText(), is(forwarded.body()));
-
-        JsonNode byId = callTool("explain_forward_failure", objectMapper.createObjectNode().put("correlationId", failure.path("correlationId").asText()));
-        assertThat(byId.path("forwardFailures").get(0).path("reason").asText(), is(failure.path("reason").asText()));
     }
 
     @Test

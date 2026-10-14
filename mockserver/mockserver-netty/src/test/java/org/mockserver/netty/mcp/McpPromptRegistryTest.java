@@ -269,9 +269,24 @@ public class McpPromptRegistryTest {
         assertThat(quotedIdentifiers(template("why_did_verify_fail")),
             is(Set.of("verify_request", "raw_verify", "retrieve_recorded_requests", "get_status", "retrieve_logs")));
         assertThat(quotedIdentifiers(template("fix_my_expectation")),
-            is(Set.of("debug_request_mismatch", "explain_unmatched_requests", "list_expectations", "raw_expectation")));
+            contains("suggest_expectation_fix", "list_expectations", "debug_request_mismatch", "raw_expectation"));
         assertThat(quotedIdentifiers(template("why_forward_failed")),
-            is(Set.of("retrieve_request_responses", "retrieve_logs", "list_expectations")));
+            contains("explain_forward_failure", "retrieve_logs", "list_expectations", "retrieve_request_responses"));
+    }
+
+    @Test
+    public void shouldFallBackToTheOlderToolsOnlyWhenTheDiagnosisToolHasNothing() {
+        String fix = template("fix_my_expectation");
+        assertThat(fix, containsString("\"suggestedFixCount\" of 0"));
+        assertThat(fix, containsString("\"matchesAfterPatch\" is false"));
+        assertThat(fix, containsString("\"unpatchedFields\""));
+        assertThat(fix.indexOf("\"suggestedFixCount\" of 0") < fix.indexOf("call 'debug_request_mismatch'"), is(true));
+
+        String forward = template("why_forward_failed");
+        assertThat(forward, containsString("\"causeNamed\" is false"));
+        assertThat(forward.indexOf("\"causeNamed\" is false") < forward.indexOf("call 'retrieve_logs'"), is(true));
+        assertThat(forward, containsString("\"forwardFailureCount\" is 0"));
+        assertThat(forward.indexOf("\"forwardFailureCount\" is 0") < forward.indexOf("call 'retrieve_request_responses'"), is(true));
     }
 
     @Test

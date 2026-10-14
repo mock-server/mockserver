@@ -91,7 +91,7 @@ public class McpPromptRegistry {
 
         prompts.put("fix_my_expectation", new PromptDefinition(
             "fix_my_expectation",
-            "Finds the smallest change that makes an existing MockServer expectation match a request, and applies it only once the user agrees",
+            "Finds the smallest change that makes an existing MockServer expectation match a request, starting from the fix MockServer suggests, and applies it only once the user agrees",
             List.of(
                 new PromptArgument("method", "HTTP method of the request the expectation should match", true),
                 new PromptArgument("path", "Path of the request the expectation should match", true)
@@ -99,24 +99,36 @@ public class McpPromptRegistry {
             "user",
             "A {{method}} request to {{path}} is not getting the response the user expects from MockServer. Work through " +
                 "these steps in order.\n" +
-                "1. Call 'debug_request_mismatch' with method \"{{method}}\" and path \"{{path}}\", adding the request's " +
-                "headers and body if the user gave them. It returns one result per active expectation, closest first, each " +
-                "with its \"expectationId\", whether it \"matches\", the \"differences\" per field and a \"remediation\" hint. " +
-                "If an expectation the user did not mean also matches, it may be the one answering the request: say so.\n" +
-                "2. If the request has already been sent to MockServer and matched nothing, call 'explain_unmatched_requests' " +
-                "to see it exactly as it arrived, because its real headers, query parameters or body may differ from the user's description.\n" +
-                "3. Call 'list_expectations' and take the full JSON of the expectation the user meant (normally the closest " +
-                "one) by its id.\n" +
-                "Propose the smallest change to that expectation's JSON that would make it match, showing each changed field " +
-                "with its old and new value. Do not apply it until the user agrees. Then call 'raw_expectation' with the " +
-                "corrected expectation, keeping its \"id\" so it replaces the original rather than adding a second one, and " +
-                "call 'debug_request_mismatch' again to confirm that it now matches." +
+                "1. Call 'suggest_expectation_fix' with limit 20, adding \"expectationId\" if the user named the expectation they " +
+                "meant. " +
+                "It covers only requests that reached MockServer and matched nothing. Use only the entries in " +
+                "\"unmatchedRequests\" whose \"method\" and \"path\" are {{method}} and {{path}}; each lists close " +
+                "expectations by \"expectationId\", each with a \"suggestedFix\": a \"patch\" (an RFC 6902 JSON patch of " +
+                "the expectation as 'list_expectations' returns it, each change preceded by a \"test\" of the current " +
+                "value), the \"unpatchedFields\" it could not patch with the reason for each, and \"matchesAfterPatch\". " +
+                "Nothing is applied.\n" +
+                "2. Call 'list_expectations' and take the full JSON of the expectation the user meant (normally the first " +
+                "one with a suggested fix) by its id.\n" +
+                "3. If there is no suggested fix for that expectation (a \"suggestedFixCount\" of 0 with a \"note\" means " +
+                "the request may not have been sent or may have matched another expectation; a fix is suggested only for the " +
+                "five closest expectations), or its " +
+                "\"matchesAfterPatch\" is false, or \"unpatchedFields\" lists fields, call 'debug_request_mismatch' with " +
+                "method \"{{method}}\" and path \"{{path}}\", adding the request's headers and body if the user gave them. " +
+                "It returns one result per active expectation, closest first, each with its \"expectationId\", whether it " +
+                "\"matches\", the \"differences\" per field and a \"remediation\" hint. If an expectation the user did not " +
+                "mean also matches, it may be the one answering the request: say so.\n" +
+                "Propose the change: the suggested patch applied to the expectation's JSON when there is one, plus the " +
+                "smallest hand-made change to any field it left unpatched, or only a hand-made change when no fix was " +
+                "suggested. Show each changed field with its old and new value and say which changes MockServer " +
+                "suggested. Do not apply it until the user agrees. Then call 'raw_expectation' with the corrected " +
+                "expectation, keeping its \"id\" so it replaces the original rather than adding a second one, and call " +
+                "'debug_request_mismatch' again to confirm that it now matches." +
                 FACTS_THEN_INTERPRETATION
         ));
 
         prompts.put("why_forward_failed", new PromptDefinition(
             "why_forward_failed",
-            "Explains why MockServer could not forward or proxy a request, from the recorded 502 response, the logs and the forward expectation",
+            "Explains why MockServer could not forward or proxy a request, from the failed forwards MockServer recorded and the forward expectation",
             List.of(
                 new PromptArgument("method", "HTTP method of the request that failed to forward", true),
                 new PromptArgument("path", "Path of the request that failed to forward", true)
@@ -124,20 +136,23 @@ public class McpPromptRegistry {
             "user",
             "A {{method}} request to {{path}} that MockServer should have forwarded or proxied failed. Work through these " +
                 "steps in order.\n" +
-                "1. Call 'retrieve_request_responses' with method \"{{method}}\" and path \"{{path}}\". A failed forward is " +
-                "recorded with status code 502. When MockServer could name the cause (for example a TLS failure, an HTTP/2 " +
-                "error, a connection it could not set up from its configuration, or an upstream response it could not " +
-                "decode), the 502 body states it.\n" +
-                "2. Call 'retrieve_logs' and find the entries for that request containing \"failed to forward request\". " +
-                "Their error text names the failure even when the 502 body is empty, for example \"failed to connect to " +
-                "remote socket while forwarding request\" when the host or port is wrong, nothing is listening there, or the " +
-                "connection timed out. Pass the entry's \"correlationId\" back to 'retrieve_logs' to see that request's " +
-                "whole lifecycle.\n" +
-                "3. Call 'list_expectations' with path \"{{path}}\" to find the expectation that forwarded it and note its " +
+                "1. Call 'explain_forward_failure' with limit 20. It returns \"forwardFailures\", most recent first, each " +
+                "with its \"correlationId\", \"method\", \"path\", \"statusCode\" (502) and \"reason\"; use the ones whose " +
+                "method and path are {{method}} and {{path}}. When \"causeNamed\" is true, the reason is the cause " +
+                "MockServer named and what to change (for example a TLS failure, an HTTP/2 error, a connection it could not " +
+                "set up, an upstream response it could not decode, an unresolvable host, or a refused or timed-out " +
+                "connection), and it is also the 502 body. When \"forwardLoopSuspected\" is true, the forward went back to " +
+                "MockServer itself. When \"causeNamed\" is false, the reason is the raw error: call 'retrieve_logs' with " +
+                "that \"correlationId\" to see the request's whole lifecycle, including any exception logged for it.\n" +
+                "2. Call 'list_expectations' with path \"{{path}}\" to find the expectation that forwarded it and note its " +
                 "target host, port and scheme. If none matches, MockServer was acting as a proxy and sent the request to " +
                 "the host the request itself named.\n" +
-                "MockServer records forward failures only when its logLevel is INFO or more detailed (the default is " +
-                "INFO), so if steps 1 and 2 return nothing for the request, report that instead of guessing a cause.\n" +
+                "3. If \"forwardFailureCount\" is 0, or no failure has this method and path, call " +
+                "'retrieve_request_responses' with method \"{{method}}\" and path \"{{path}}\" to see what MockServer " +
+                "sent back: a response other than a 502 means the forward did not fail inside MockServer. MockServer " +
+                "records failed forwards only when its logLevel is INFO or more detailed (the default is INFO), and drops " +
+                "the oldest log entries beyond maxLogEntries, so if neither tool shows the request, report that instead " +
+                "of guessing a cause.\n" +
                 "Then name the most likely cause and the change to make: to the forward target, the upstream service, " +
                 "MockServer's TLS or proxy settings, or the network between them." +
                 FACTS_THEN_INTERPRETATION
