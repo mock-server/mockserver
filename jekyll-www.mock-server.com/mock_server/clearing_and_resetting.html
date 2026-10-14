@@ -61,7 +61,7 @@ sitemap:
     </tbody>
 </table>
 
-<p><strong>Note:</strong> a request matcher or expectation id narrows clearing to matching items; <span class="inline_code">reset</span> always clears everything and ignores any matcher.</p>
+<p><strong>Note:</strong> a request matcher or expectation id narrows clearing to matching items; <span class="inline_code">reset</span> always clears everything and ignores any matcher. An empty request matcher (<span class="inline_code">request()</span> or <span class="inline_code">{}</span>) narrows nothing: it clears everything of the chosen type, including DNS, binary and <span class="inline_code">not(...)</span> expectations, just like an empty body.</p>
 
 <p><strong>How clearing works:</strong> when <a href="/mock_server/debugging_issues.html#logging-levels">logLevel</a> is <span class="string_literal">INFO</span> or lower (the default), cleared log entries are <em>soft-deleted</em> rather than physically removed. This means:</p>
 <ul>

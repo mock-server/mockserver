@@ -174,6 +174,13 @@ The retrieve and clear endpoints accept type parameters:
 
 Clear also supports clearing by `ExpectationId` (not just `RequestDefinition`).
 
+**An empty filter means "all".** An empty body, `{}` and a client's `clear(request())` all clear every expectation
+(including `not(...)`, DNS and binary ones, which reverse matching an empty HTTP filter would skip) and every log entry
+that carries a request. `RequestMatchers.isUnfiltered` decides this for `clear`, `retrieveActiveExpectations` and
+`retrieveRequestMatchers`, and `MockServerEventLog.clear` uses it too. An empty body still goes through
+`RequestMatchers.reset()`, while `{}` removes each expectation in turn and logs a `CLEARED` entry, as any filtered clear
+does. `HttpStateClearUnfilteredTest` pins each clear type and that a real filter still narrows.
+
 **Retrieve by `ExpectationId`.** `PUT /mockserver/retrieve` accepts an `ExpectationId` body (`{"id": "..."}`) in
 place of a `RequestDefinition`, the same as clear and verify. `HttpState.retrieve()` and `HttpState.clear()` share
 `parseExpectationId(body)`, which attempts `ExpectationIdSerializer.deserialize` and returns null when the body is not

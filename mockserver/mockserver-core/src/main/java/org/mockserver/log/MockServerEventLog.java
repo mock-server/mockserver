@@ -17,6 +17,7 @@ import org.mockserver.matchers.MatchDifferenceFormatter;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.metrics.Metrics;
 import org.mockserver.mock.Expectation;
+import org.mockserver.mock.RequestMatchers;
 import org.mockserver.mock.listeners.MockServerEventLogNotifier;
 import org.mockserver.mock.listeners.MockServerLogListener;
 import org.mockserver.model.ExpectationId;
@@ -1046,7 +1047,8 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                 // the perf win. When a real filter is supplied the matcher is built once (cached by
                 // the filter) and matched fail-fast (single-arg matches => context == null => no
                 // MatchDifference allocation) exactly as before.
-                final boolean clearEverything = requestDefinition == null;
+                // an empty HTTP filter too: a request one would not match, such as a DNS query, must be cleared
+                final boolean clearEverything = RequestMatchers.isUnfiltered(requestDefinition);
                 HttpRequestMatcher requestMatcher = clearEverything ? null : matcherBuilder.transformsToMatcher(requestDefinition);
                 // Only the single Disruptor handler thread mutates eventLog (add via processLogEntry,
                 // removeItem/eviction here), and this consumer runs on that same thread, so there is no

@@ -1459,7 +1459,9 @@ public class RequestMatchers extends MockServerMatcherNotifier {
 
     public void clear(RequestDefinition requestDefinition) {
         if (requestDefinition != null) {
-            HttpRequestMatcher clearHttpRequestMatcher = matcherBuilder.transformsToMatcher(requestDefinition);
+            // an empty HTTP filter clears everything: reverse matching it skips not(...), DNS and binary expectations
+            boolean unfiltered = isUnfiltered(requestDefinition);
+            HttpRequestMatcher clearHttpRequestMatcher = unfiltered ? null : matcherBuilder.transformsToMatcher(requestDefinition);
             // Narrow the O(n) clear scan to the candidate index when possible. The index buckets
             // an expectation on its literal path (and, for the tighter (method,path) bucket, its
             // literal method); a clear carrying a literal path can therefore consult one bucket
@@ -1482,6 +1484,10 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                 ? clearScanList.stream()
                 : getHttpRequestMatchersCopy();
             clearScan.forEach(httpRequestMatcher -> {
+                if (unfiltered) {
+                    removeHttpRequestMatcher(httpRequestMatcher, requestDefinition.getLogCorrelationId());
+                    return;
+                }
                 RequestDefinition request = httpRequestMatcher
                     .getExpectation()
                     .getHttpRequest();
@@ -2034,11 +2040,11 @@ public class RequestMatchers extends MockServerMatcherNotifier {
     }
 
     /**
-     * True for no filter and for an empty HTTP filter, which the retrieve endpoint (empty body) and the
-     * dashboard send for "show all". An empty filter must list every active expectation, but reverse
-     * matching it fails against a {@code not(...)} definition.
+     * True for no filter and for an empty HTTP filter, which the retrieve endpoint (empty body), the
+     * dashboard and a client's {@code clear(request())} send for "all". An empty filter must select every
+     * expectation, but reverse matching it fails against {@code not(...)}, DNS and binary definitions.
      */
-    private static boolean isUnfiltered(RequestDefinition filter) {
+    public static boolean isUnfiltered(RequestDefinition filter) {
         return filter == null || (filter instanceof HttpRequest && new HttpRequest().equals(filter));
     }
 
