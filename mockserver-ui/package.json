@@ -29,14 +29,14 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@monaco-editor/react": "^4.7.0",
-    "@mui/icons-material": "^9.4.0",
+    "@mui/icons-material": "^9.5.0",
     "@mui/material": "^9.1.2",
     "@mui/x-charts": "^9.15.0",
-    "@tanstack/react-virtual": "^3.14.13",
+    "@tanstack/react-virtual": "^3.14.14",
     "@uiw/react-json-view": "^2.0.0-alpha.44",
     "mermaid": "^12.1.0",
     "monaco-editor": "^0.57.0",
-    "posthog-js": "^1.438.2",
+    "posthog-js": "^1.438.7",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "zustand": "^5.0.15"
@@ -58,7 +58,7 @@
     "playwright": "^1.61.1",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.71.1",
-    "vite": "^8.3.3",
+    "vite": "^8.3.4",
     "vitest": "^5.0.0"
   },
   "browserslist": [
