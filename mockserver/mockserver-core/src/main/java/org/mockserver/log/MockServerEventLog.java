@@ -124,8 +124,8 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     // matches only responses the configured mocks actually produced (a matched expectation
     // response or a forwarded/proxied response), NOT MockServer's own auto-generated no-match
     // responses (NO_MATCH_RESPONSE, e.g. the default 404 for an unmatched request). Used both for
-    // "matching expectations only" request retrieval AND for response VERIFICATION
-    // (responseVerificationLogPredicate is an alias for that second use) — deliberately narrower
+    // "matching expectations only" request retrieval (through answeredRequestLogPredicate) AND for response
+    // VERIFICATION (responseVerificationLogPredicate is an alias for that second use) — deliberately narrower
     // than requestResponseLogPredicate, which is shared with /retrieve and must keep NO_MATCH_RESPONSE.
     private static final Predicate<LogEntry> expectationLogPredicate = input
         -> !input.isDeleted() && (
@@ -144,6 +144,11 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     );
     private static final Predicate<LogEntry> notDnsOrBinaryRequest = input
         -> !(input.getHttpRequest() instanceof DnsRequestDefinition || input.getHttpRequest() instanceof BinaryRequestDefinition);
+    // A DNS query or binary message has no response entry: its received-request entry carries the id of the
+    // expectation that answered it, so reads of the requests expectations answered count it as well.
+    private static final Predicate<LogEntry> answeredDnsOrBinaryRequest = input
+        -> !input.isDeleted() && input.getType() == RECEIVED_REQUEST && isNotBlank(input.getExpectationId()) && notDnsOrBinaryRequest.negate().test(input);
+    private static final Predicate<LogEntry> answeredRequestLogPredicate = expectationLogPredicate.or(answeredDnsOrBinaryRequest);
     private static final Predicate<LogEntry> recordedExpectationLogPredicate = input
         -> !input.isDeleted() && input.getType() == FORWARDED_REQUEST;
     // Disposition predicates for verify-by-disposition (Verification.withDisposition). A MOCKED
@@ -1164,7 +1169,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         if (verification.getExpectationId() != null) {
             retrieveLogEntries(
                 Collections.singletonList(verification.getExpectationId().getId()),
-                expectationLogPredicate,
+                answeredRequestLogPredicate,
                 logEntryToRequest,
                 logEventStream -> listConsumer.accept(
                     logEventStream
@@ -1200,7 +1205,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         if (matchingExpectationsOnly) {
             retrieveLogEntries(
                 (List<String>) null,
-                expectationLogPredicate,
+                answeredRequestLogPredicate,
                 logEntryToRequest,
                 logEventStream -> listConsumer.accept(
                     logEventStream
@@ -1244,7 +1249,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                 .collect(Collectors.toList())
         );
         if (matchingExpectationsOnly) {
-            retrieveLogEntries((List<String>) null, expectationLogPredicate, toRecordedRequests, collector);
+            retrieveLogEntries((List<String>) null, answeredRequestLogPredicate, toRecordedRequests, collector);
         } else {
             retrieveLogEntries((RequestDefinition) null, requestLogPredicate, toRecordedRequests, collector);
         }
@@ -1283,7 +1288,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     public void retrieveAllRequests(List<String> expectationIds, Consumer<List<RequestAndExpectationId>> listConsumer) {
         retrieveLogEntries(
             expectationIds,
-            expectationLogPredicate,
+            answeredRequestLogPredicate,
             logEntry -> new RequestAndExpectationId(logEntry.getHttpRequest(), logEntry.getExpectationId()),
             logEventStream -> listConsumer.accept(
                 logEventStream
@@ -1310,7 +1315,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     public void retrieveRequests(ExpectationId expectationId, Consumer<List<RequestDefinition>> listConsumer) {
         retrieveLogEntries(
             expectationId != null ? Collections.singletonList(expectationId.getId()) : Collections.emptyList(),
-            expectationLogPredicate,
+            answeredRequestLogPredicate,
             logEntryToRequest,
             logEventStream -> listConsumer.accept(
                 logEventStream
@@ -1324,7 +1329,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     public void retrieveRequests(List<String> expectationIds, Consumer<List<RequestDefinition>> listConsumer) {
         retrieveLogEntries(
             expectationIds,
-            expectationLogPredicate,
+            answeredRequestLogPredicate,
             logEntryToRequest,
             logEventStream -> listConsumer.accept(
                 logEventStream

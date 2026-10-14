@@ -32,9 +32,11 @@ import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.BinaryRequestDefinition.binaryRequest;
 import static org.mockserver.model.BinaryResponse.binaryResponse;
 import static org.mockserver.model.DnsRequestDefinition.dnsRequest;
+import static org.mockserver.model.ExpectationId.expectationId;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.stop.Stop.stopQuietly;
+import static org.mockserver.verify.Verification.verification;
 import static org.mockserver.testing.socket.DnsQuery.addressAnsweredFor;
 import static org.mockserver.verify.VerificationTimes.atLeast;
 import static org.mockserver.verify.VerificationTimes.exactly;
@@ -43,8 +45,8 @@ import static org.mockserver.verify.VerificationTimes.once;
 
 /**
  * A DNS query or binary message MockServer received is recorded with its request definition, so the Java client can
- * verify, verify in a sequence and retrieve it by a DNS or binary request matcher. The server logs at WARN, as a DNS
- * query must be recorded at every log level to be counted.
+ * verify, verify in a sequence and retrieve it by a DNS or binary request matcher, or by the id of the expectation that
+ * answered it. The server logs at WARN, as a DNS query must be recorded at every log level to be counted.
  */
 public class ClientNonHttpRequestVerificationTest {
 
@@ -165,13 +167,41 @@ public class ClientNonHttpRequestVerificationTest {
     }
 
     @Test
-    public void verifyingADnsExpectationByIdFailsWithTheReason() throws Exception {
+    public void verifiesADnsAndABinaryExpectationByTheIdOfTheExpectationThatAnsweredIt() throws Exception {
+        queryFirstName();
+        queryFirstName();
+        clientAndServer.when(dnsRequest("third.example.")).withId("dns-without-dns-response").respond(response());
+        assertThat("a query matched by an expectation with no DNS response", addressAnsweredFor("third.example.", clientAndServer.getDnsPort()), is("answers 0 with response code 3"));
+        sendFirstBinaryMessage();
+
+        clientAndServer.verify("dns-first", exactly(2));
+        clientAndServer.verify("dns-second", never());
+        clientAndServer.verify("dns-without-dns-response", never());
+        clientAndServer.verify(dnsRequest("third.example."), once());
+        clientAndServer.verify("binary-first", once());
+        clientAndServer.verify("http", never());
+        AssertionError failure = assertThrows(AssertionError.class, () -> clientAndServer.verify("dns-first", once()));
+        assertThat(failure.getMessage(), containsString("Request found 2 times but should have been found exactly once"));
+    }
+
+    @Test
+    public void verifyNeverByIdFailsForADnsExpectationThatAnsweredAQuery() throws Exception {
         queryFirstName();
 
-        AssertionError failure = assertThrows(AssertionError.class, () -> clientAndServer.verify("dns-first", once()));
+        AssertionError failure = assertThrows(AssertionError.class, () -> clientAndServer.verifyNever(verification().withExpectationId(expectationId("dns-first")).withTimes(atLeast(1)), Duration.ofMillis(200)));
 
-        assertThat(failure.getMessage(), containsString("DNS and binary requests cannot be verified by expectation id"));
-        assertThat(failure.getMessage(), containsString("first.example."));
+        assertThat(failure.getMessage(), containsString("Found request matching verification"));
+    }
+
+    @Test
+    public void verifiesASequenceOfHttpDnsAndBinaryExpectationIds() throws Exception {
+        assertThat(send("/http"), is(200));
+        queryFirstName();
+        sendFirstBinaryMessage();
+
+        clientAndServer.verify("http", "dns-first", "binary-first");
+        AssertionError failure = assertThrows(AssertionError.class, () -> clientAndServer.verify("binary-first", "dns-first"));
+        assertThat(failure.getMessage(), containsString("Request sequence not found"));
     }
 
     private static void queryFirstName() throws Exception {

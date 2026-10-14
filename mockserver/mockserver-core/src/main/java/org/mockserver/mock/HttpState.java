@@ -2514,7 +2514,6 @@ public class HttpState {
         if (verification.getExpectationId() != null) {
             // check valid expectation id and populate for error message
             verification.withRequest(resolveExpectationId(verification.getExpectationId()));
-            rejectUnverifiable(Collections.singletonList(verification.getHttpRequest()), BY_EXPECTATION_ID);
         }
         if (verification.getHttpResponse() != null) {
             rejectUnverifiable(Collections.singletonList(verification.getHttpRequest()), WITH_A_RESPONSE);
@@ -2552,7 +2551,6 @@ public class HttpState {
     public void verify(VerificationSequence verificationSequence, Consumer<String> resultConsumer) {
         if (verificationSequence.getExpectationIds() != null && !verificationSequence.getExpectationIds().isEmpty()) {
             verificationSequence.withRequests(resolveExpectationIds(verificationSequence.getExpectationIds()));
-            rejectUnverifiable(verificationSequence.getHttpRequests(), BY_EXPECTATION_ID);
         }
         if (verificationSequence.getHttpResponses() != null && !verificationSequence.getHttpResponses().isEmpty()) {
             rejectUnverifiable(verificationSequence.getHttpRequests(), WITH_A_RESPONSE);
@@ -2560,14 +2558,14 @@ public class HttpState {
         mockServerLog.verify(verificationSequence, resultConsumer);
     }
 
-    private static final String BY_EXPECTATION_ID = "by expectation id, because MockServer does not record which expectation answered one; verify the DNS or binary request itself instead";
     private static final String WITH_A_RESPONSE = "with a response, because they have no HTTP response";
     private static final String BY_DISPOSITION = "by disposition, which counts only mocked or forwarded HTTP requests";
 
     /**
-     * A DNS query or binary message is counted from its received-request entry, which is all that is recorded of it.
-     * A verification that counts other entries would count zero and never() would pass, so it is rejected as invalid
-     * input (400), not as a failed verification (406), which a client polling for "never matched" reads as success.
+     * A DNS query or binary message is counted from its received-request entry, which is all that is recorded of it,
+     * with the id of the expectation that answered it. A verification that counts other entries would count zero and
+     * never() would pass, so it is rejected as invalid input (400), not as a failed verification (406), which a client
+     * polling for "never matched" reads as success.
      */
     private static void rejectUnverifiable(List<RequestDefinition> requestDefinitions, String how) {
         if (requestDefinitions != null) {

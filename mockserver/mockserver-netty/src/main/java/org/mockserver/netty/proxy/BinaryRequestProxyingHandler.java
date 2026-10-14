@@ -40,6 +40,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.function.LongConsumer;
+import java.util.function.Supplier;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mockserver.exception.ExceptionHandling.boundedFault;
@@ -115,22 +116,22 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
         }
         BinaryMessage binaryRequest = bytes(ByteBufUtil.getBytes(byteBuf));
         String logCorrelationId = UUIDService.getNonSecureUUID();
-        mockServerLogger.logEvent(
-            new LogEntry()
-                .setType(RECEIVED_REQUEST)
-                .setLogLevel(Level.INFO)
-                .setCorrelationId(logCorrelationId)
-                .setHttpRequest(binaryRequestDefinition(binaryRequest, logCorrelationId))
-                .setMessageFormat("received binary request:{}")
-                .setArguments(SensitiveLogValue.of(hexDumpForLog(binaryRequest.getBytes(), configuration.maxLoggedBodyBytes())))
-        );
+        // logged once matched, so it names the expectation that answered it for verification by expectation id
+        LogEntry receivedRequest = new LogEntry()
+            .setType(RECEIVED_REQUEST)
+            .setLogLevel(Level.INFO)
+            .setCorrelationId(logCorrelationId)
+            .setHttpRequest(binaryRequestDefinition(binaryRequest, logCorrelationId))
+            .setMessageFormat("received binary request:{}")
+            .setArguments(SensitiveLogValue.of(hexDumpForLog(binaryRequest.getBytes(), configuration.maxLoggedBodyBytes())));
         final InetSocketAddress remoteAddress = getRemoteAddress(ctx);
         if (remoteAddress != null) {
-            if (!answeredByExpectation(ctx, binaryRequest, logCorrelationId, remoteAddress)) {
+            Expectation matchedExpectation = matchThenLogReceived(receivedRequest, () -> relayedMessageExpectation(ctx, binaryRequest, logCorrelationId, remoteAddress));
+            if (matchedExpectation == null || !answeredByExpectation(ctx, matchedExpectation, binaryRequest, logCorrelationId, remoteAddress)) {
                 sendMessage(ctx, binaryRequest, logCorrelationId, remoteAddress);
             }
         } else if (httpState != null) {
-            Expectation matchedExpectation = firstMatchingBinaryExpectation(binaryRequest, logCorrelationId);
+            Expectation matchedExpectation = matchThenLogReceived(receivedRequest, () -> firstMatchingBinaryExpectation(binaryRequest, logCorrelationId));
             if (matchedExpectation != null && matchedExpectation.getBinaryResponse() != null) {
                 replyFromExpectation(ctx, matchedExpectation, binaryRequest, logCorrelationId, null);
             } else {
@@ -149,7 +150,24 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
                 writeUnknownFormatMessage(ctx, binaryRequest, logCorrelationId);
             }
         } else {
+            mockServerLogger.logEvent(receivedRequest);
             writeUnknownFormatMessage(ctx, binaryRequest, logCorrelationId);
+        }
+    }
+
+    /**
+     * Logs the received-request entry at every level, as an HTTP request is, so verify and retrieve can find it, with
+     * the id of the expectation that answers it: one whose binary response is written or replaces the upstream's. It
+     * is logged even if matching fails.
+     */
+    private Expectation matchThenLogReceived(LogEntry receivedRequest, Supplier<Expectation> match) {
+        Expectation matchedExpectation = null;
+        try {
+            matchedExpectation = match.get();
+            return matchedExpectation;
+        } finally {
+            boolean answered = matchedExpectation != null && matchedExpectation.getBinaryResponse() != null;
+            mockServerLogger.logEvent(receivedRequest.setExpectationId(answered ? matchedExpectation.getId() : null));
         }
     }
 
@@ -210,24 +228,29 @@ public class BinaryRequestProxyingHandler extends SimpleChannelInboundHandler<By
      * can match is forwarded without a matcher pass, so it adds no match entries to the log. Any other connection is
      * forwarded as without the setting, and says so once.
      *
-     * @return whether the message was handled here, so is not to be forwarded by the caller
+     * @return the expectation the message matched, or null for none or a connection whose messages are not matched
      */
-    private boolean answeredByExpectation(ChannelHandlerContext ctx, BinaryMessage binaryRequest, String logCorrelationId, InetSocketAddress remoteAddress) {
+    private Expectation relayedMessageExpectation(ChannelHandlerContext ctx, BinaryMessage binaryRequest, String logCorrelationId, InetSocketAddress remoteAddress) {
         if (httpState == null || !configuration.forwardBinaryRequestsMatchExpectations()) {
-            return false;
+            return null;
         }
         if (!usesSingleConnection(ctx)
             || !BinaryRelay.relaysOnOneConnection(ctx, remoteAddress, configuration, mockServerLogger, scheduler, httpClient, binaryExchangeCallback)) {
             warnOnceThatExpectationsAreNotMatched(ctx, remoteAddress, logCorrelationId);
-            return false;
+            return null;
         }
         if (!httpState.mayMatchBinaryMessage(binaryRequest.getBytes())) {
-            return false;
+            return null;
         }
-        Expectation matchedExpectation = firstMatchingBinaryExpectation(binaryRequest, logCorrelationId);
-        if (matchedExpectation == null) {
-            return false;
-        }
+        return firstMatchingBinaryExpectation(binaryRequest, logCorrelationId);
+    }
+
+    /**
+     * Answers a relayed message that matched an expectation, as {@link #relayedMessageExpectation} describes.
+     *
+     * @return whether the message was handled here, so is not to be forwarded by the caller
+     */
+    private boolean answeredByExpectation(ChannelHandlerContext ctx, Expectation matchedExpectation, BinaryMessage binaryRequest, String logCorrelationId, InetSocketAddress remoteAddress) {
         if (matchedExpectation.getBinaryResponse() == null) {
             httpState.postProcess(matchedExpectation);
             if (mockServerLogger.isEnabledForInstance(Level.WARN)) {

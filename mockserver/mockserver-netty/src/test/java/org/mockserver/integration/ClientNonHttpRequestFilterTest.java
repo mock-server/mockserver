@@ -31,7 +31,6 @@ import static org.mockserver.model.DnsRequestDefinition.dnsRequest;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.stop.Stop.stopQuietly;
-import static org.mockserver.verify.VerificationTimes.never;
 
 /**
  * The Java client sends a DNS or binary request definition to the server as that definition, so clearing and
@@ -100,14 +99,6 @@ public class ClientNonHttpRequestFilterTest {
     @Test
     public void retrievingByBinaryFilterReturnsOnlyThatBinaryExpectation() {
         assertThat(activeIds(binaryRequest(SECOND_BYTES)), containsInAnyOrder("binary-second"));
-    }
-
-    @Test
-    public void verifyingADnsExpectationByIdFailsWithTheReason() {
-        AssertionError failure = assertThrows(AssertionError.class, () -> clientAndServer.verify("dns-first", never()));
-
-        assertThat(failure.getMessage(), containsString("DNS and binary requests cannot be verified by expectation id"));
-        assertThat(failure.getMessage(), containsString("first.example."));
     }
 
     @Test

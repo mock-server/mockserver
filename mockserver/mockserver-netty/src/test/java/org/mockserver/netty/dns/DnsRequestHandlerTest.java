@@ -9,7 +9,9 @@ import io.netty.handler.codec.dns.DnsSection;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockserver.configuration.Configuration;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpState;
@@ -25,7 +27,13 @@ import java.net.InetSocketAddress;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockserver.configuration.Configuration.configuration;
+import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
 
 public class DnsRequestHandlerTest {
 
@@ -191,5 +199,27 @@ public class DnsRequestHandlerTest {
         assertThat(DnsIntentRegistry.getInstance().recover(ip1), is("multi.example.com"));
         assertThat(DnsIntentRegistry.getInstance().recover(ip2), is("multi.example.com"));
         assertThat(DnsIntentRegistry.getInstance().size(), is(2));
+    }
+
+    @Test
+    public void logsTheQueryWhenMatchingItFails() {
+        MockServerLogger logger = mock(MockServerLogger.class);
+        HttpState failingState = mock(HttpState.class);
+        when(failingState.firstMatchingExpectation(any(DnsRequestDefinition.class))).thenThrow(new IllegalStateException("matcher failed"));
+        EmbeddedChannel failing = new EmbeddedChannel(new DatagramDnsResponseEncoder(), new DnsRequestHandler(logger, failingState));
+        DatagramDnsQuery query = new DatagramDnsQuery(new InetSocketAddress("127.0.0.1", 12345), new InetSocketAddress("127.0.0.1", 53), 1);
+        query.addRecord(DnsSection.QUESTION, new DefaultDnsQuestion("api.example.com.", DnsRecordType.A));
+        try {
+            failing.writeInbound(query);
+
+            ArgumentCaptor<LogEntry> logged = ArgumentCaptor.forClass(LogEntry.class);
+            verify(logger, atLeastOnce()).logEvent(logged.capture());
+            assertThat("matching failed", logged.getAllValues().stream().anyMatch(entry -> entry.getThrowable() instanceof IllegalStateException), is(true));
+            assertThat(logged.getAllValues().stream().anyMatch(entry -> entry.getType() == RECEIVED_REQUEST
+                && entry.getHttpRequest() instanceof DnsRequestDefinition
+                && "api.example.com.".equals(((DnsRequestDefinition) entry.getHttpRequest()).getDnsName())), is(true));
+        } finally {
+            failing.finishAndReleaseAll();
+        }
     }
 }

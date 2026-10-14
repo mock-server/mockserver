@@ -5,8 +5,12 @@ import org.junit.Test;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.log.MockServerEventLog;
 import org.mockserver.model.BinaryRequestDefinition;
 import org.mockserver.model.DnsRecordType;
+import org.mockserver.model.DnsRequestDefinition;
+import org.mockserver.model.ExpectationId;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.verify.Disposition;
 import org.mockserver.model.RequestDefinition;
 import org.mockserver.scheduler.Scheduler;
@@ -21,18 +25,23 @@ import java.util.concurrent.CompletableFuture;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThrows;
 import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_MATCHED;
+import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_RESPONSE;
 import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
 import static org.mockserver.model.BinaryRequestDefinition.binaryRequest;
+import static org.mockserver.model.BinaryResponse.binaryResponse;
 import static org.mockserver.model.DnsRequestDefinition.dnsRequest;
 import static org.mockserver.model.DnsResponse.dnsResponse;
+import static org.mockserver.model.ExpectationId.expectationId;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.verify.Verification.verification;
@@ -46,7 +55,8 @@ import static org.slf4j.event.Level.WARN;
 /**
  * A DNS query or binary message is logged as a received request carrying its definition, so a verification by a DNS
  * or binary request counts it, a sequence finds it, and a DNS or binary filter retrieves it. Reads with no filter
- * still return and count only HTTP requests. The logged bytes follow maxLoggedBodyBytes and redactSecretsInLog.
+ * still return and count only HTTP requests. The logged bytes follow maxLoggedBodyBytes and redactSecretsInLog. The
+ * received entry of one an expectation answered carries the expectation's id, so a verification by id counts it.
  */
 public class HttpStateNonHttpVerificationTest {
 
@@ -214,15 +224,123 @@ public class HttpStateNonHttpVerificationTest {
     }
 
     @Test
-    public void rejectsVerifyingADnsOrBinaryRequestWithAResponseByDispositionOrByExpectationId() {
+    public void rejectsVerifyingADnsOrBinaryRequestWithAResponseOrByDisposition() {
         start(redactionOff());
-        httpState.add(new Expectation(dnsRequest("api.example.com")).withId("dns-mock").thenRespondWithDns(dnsResponse()));
 
         assertRejected(() -> httpState.verify(verification().withRequest(dnsRequest("api.example.com")).withResponse(response())), "with a response");
         assertRejected(() -> httpState.verify(verification().withRequest(binaryRequest(PING)).withDisposition(Disposition.MOCKED)), "by disposition");
-        assertRejected(() -> httpState.verify(verification().withExpectationId(new org.mockserver.model.ExpectationId().withId("dns-mock")).withTimes(never())), "by expectation id");
         assertRejected(() -> httpState.verify(verificationSequence().withRequests(dnsRequest("api.example.com")).withResponses(response())), "with a response");
-        assertRejected(() -> httpState.verify(verificationSequence().withExpectationIds(new org.mockserver.model.ExpectationId().withId("dns-mock"))), "by expectation id");
+    }
+
+    /**
+     * As DnsRequestHandler and BinaryRequestProxyingHandler log a DNS query or binary message an expectation answered.
+     */
+    private void answered(RequestDefinition request, String expectationId) {
+        httpState.getMockServerLogger().logEvent(new LogEntry().setType(RECEIVED_REQUEST).setLogLevel(INFO).setHttpRequest(request).setExpectationId(expectationId).setMessageFormat("received"));
+    }
+
+    private void answeredHttp(String path, String expectationId) {
+        received(request(path));
+        httpState.getMockServerLogger().logEvent(new LogEntry().setType(EXPECTATION_RESPONSE).setLogLevel(INFO).setHttpRequest(request(path)).setHttpResponse(response()).setExpectationId(expectationId).setMessageFormat("returning response"));
+    }
+
+    private void addOneExpectationOfEachKind() {
+        httpState.add(new Expectation(request("/http")).withId("http-mock").thenRespond(response()));
+        httpState.add(new Expectation(dnsRequest("api.example.com")).withId("dns-mock").thenRespondWithDns(dnsResponse()));
+        httpState.add(new Expectation(binaryRequest(PING)).withId("binary-mock").thenRespondWithBinary(binaryResponse(PING)));
+    }
+
+    private static Verification byId(String expectationId, VerificationTimes times) {
+        return verification().withExpectationId(expectationId(expectationId)).withTimes(times);
+    }
+
+    private String sequenceOfIds(String... expectationIds) throws Exception {
+        return httpState.verify(verificationSequence().withExpectationIds(Arrays.stream(expectationIds).map(ExpectationId::expectationId).toArray(ExpectationId[]::new))).get(10, SECONDS);
+    }
+
+    @Test
+    public void verifiesADnsAndABinaryExpectationByIdCountingOnlyTheRequestsItAnswered() throws Exception {
+        start(redactionOff().logLevel(WARN));
+        addOneExpectationOfEachKind();
+        answered(dnsRequest("api.example.com", DnsRecordType.A), "dns-mock");
+        received(dnsRequest("api.example.com", DnsRecordType.AAAA));
+        answered(binaryRequest(PING), "binary-mock");
+        received(binaryRequest(PING));
+
+        assertThat(verify(byId("dns-mock", once())), is(""));
+        assertThat(verify(byId("binary-mock", once())), is(""));
+        assertThat(verify(byId("dns-mock", never())), containsString("Request found 1 time but should have been found exactly 0 times"));
+        assertThat(verify(byId("http-mock", never())), is(""));
+    }
+
+    @Test
+    public void verifiesASequenceOfHttpDnsAndBinaryExpectationIds() throws Exception {
+        start(redactionOff());
+        addOneExpectationOfEachKind();
+        answeredHttp("/http", "http-mock");
+        answered(dnsRequest("api.example.com", DnsRecordType.A), "dns-mock");
+        answered(binaryRequest(PING), "binary-mock");
+
+        assertThat(sequenceOfIds("http-mock", "dns-mock", "binary-mock"), is(""));
+        assertThat(sequenceOfIds("dns-mock", "binary-mock"), is(""));
+        assertThat(sequenceOfIds("binary-mock", "dns-mock"), containsString("Request sequence not found"));
+        assertThat(sequenceOfIds("dns-mock", "http-mock"), containsString("Request sequence not found"));
+    }
+
+    @Test
+    public void listsTheAnsweredDnsQueryWhenAVerificationByIdFails() throws Exception {
+        start(redactionOff());
+        addOneExpectationOfEachKind();
+        answered(dnsRequest("api.example.com", DnsRecordType.A), "dns-mock");
+
+        String failure = verify(byId("dns-mock", exactly(2)));
+
+        assertThat(failure, containsString("Request not found exactly 2 times"));
+        assertThat(failure.substring(failure.indexOf("but was")), containsString("api.example.com"));
+    }
+
+    @Test
+    public void showsARedactedCopyOfAnAnsweredBinaryMessageWhenAVerificationByIdFails() throws Exception {
+        start(configuration().redactSecretsInLog(true));
+        addOneExpectationOfEachKind();
+        answered(binaryRequest(PING), "binary-mock");
+
+        assertThat(verify(byId("binary-mock", once())), is(""));
+        String failure = verify(byId("binary-mock", exactly(2)));
+        String received = failure.substring(failure.indexOf("but was"));
+        assertThat(received, not(containsString(Base64.getEncoder().encodeToString(PING))));
+        assertThat(received, containsString(Base64.getEncoder().encodeToString("***REDACTED***".getBytes(StandardCharsets.UTF_8))));
+    }
+
+    @Test
+    public void countsAnHttpRequestByIdOnlyFromItsResponseEntry() throws Exception {
+        start(redactionOff());
+        addOneExpectationOfEachKind();
+        answeredHttp("/http", "http-mock");
+        httpState.getMockServerLogger().logEvent(new LogEntry().setType(RECEIVED_REQUEST).setLogLevel(INFO).setHttpRequest(request("/http")).setExpectationId("http-mock").setMessageFormat("received"));
+
+        assertThat(verify(byId("http-mock", once())), is(""));
+    }
+
+    @Test
+    public void readsTheRequestsExpectationsAnsweredIncludingDnsAndBinary() throws Exception {
+        start(redactionOff());
+        addOneExpectationOfEachKind();
+        answeredHttp("/http", "http-mock");
+        answered(dnsRequest("api.example.com", DnsRecordType.A), "dns-mock");
+        received(binaryRequest(PING));
+
+        MockServerEventLog log = httpState.getMockServerLog();
+        CompletableFuture<List<RequestDefinition>> byOneId = new CompletableFuture<>();
+        log.retrieveRequests(expectationId("dns-mock"), byOneId::complete);
+        CompletableFuture<List<RequestDefinition>> byIds = new CompletableFuture<>();
+        log.retrieveRequests(Arrays.asList("http-mock", "dns-mock", "binary-mock"), byIds::complete);
+        CompletableFuture<List<RequestDefinition>> answeredOnly = new CompletableFuture<>();
+        log.retrieveAllRequests(true, answeredOnly::complete);
+
+        assertThat(byOneId.get(10, SECONDS), contains(instanceOf(DnsRequestDefinition.class)));
+        assertThat(byIds.get(10, SECONDS), contains(instanceOf(HttpRequest.class), instanceOf(DnsRequestDefinition.class)));
+        assertThat(answeredOnly.get(10, SECONDS), contains(instanceOf(HttpRequest.class), instanceOf(DnsRequestDefinition.class)));
     }
 
     private static void assertRejected(org.junit.function.ThrowingRunnable verification, String how) {

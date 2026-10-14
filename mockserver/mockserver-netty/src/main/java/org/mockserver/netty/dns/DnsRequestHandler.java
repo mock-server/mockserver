@@ -83,18 +83,23 @@ public class DnsRequestHandler extends SimpleChannelInboundHandler<DatagramDnsQu
             .withDnsClass(qClass);
         dnsRequestDefinition.withLogCorrelationId(logCorrelationId);
 
-        // logged at every level with its definition, as an HTTP request is, so verify and retrieve can find it
-        mockServerLogger.logEvent(
-            new LogEntry()
-                .setType(RECEIVED_REQUEST)
-                .setLogLevel(Level.INFO)
-                .setCorrelationId(logCorrelationId)
-                .setHttpRequest(dnsRequestDefinition)
-                .setMessageFormat("received DNS query for name:{} type:{} class:{}")
-                .setArguments(qName, qType, qClass)
-        );
+        // logged at every level with its definition, as an HTTP request is, so verify and retrieve can find it;
+        // logged once matched, so it names the expectation that answered it for verification by expectation id
+        LogEntry receivedRequest = new LogEntry()
+            .setType(RECEIVED_REQUEST)
+            .setLogLevel(Level.INFO)
+            .setCorrelationId(logCorrelationId)
+            .setHttpRequest(dnsRequestDefinition)
+            .setMessageFormat("received DNS query for name:{} type:{} class:{}")
+            .setArguments(qName, qType, qClass);
 
-        Expectation matchedExpectation = httpState.firstMatchingExpectation(dnsRequestDefinition);
+        Expectation matchedExpectation = null;
+        try {
+            matchedExpectation = httpState.firstMatchingExpectation(dnsRequestDefinition);
+        } finally {
+            boolean answered = matchedExpectation != null && matchedExpectation.getDnsResponse() != null;
+            mockServerLogger.logEvent(receivedRequest.setExpectationId(answered ? matchedExpectation.getId() : null));
+        }
         if (matchedExpectation != null && matchedExpectation.getDnsResponse() != null) {
             DnsResponse dnsResponse = matchedExpectation.getDnsResponse();
             sendDnsResponse(ctx, query, dnsResponse, logCorrelationId);
