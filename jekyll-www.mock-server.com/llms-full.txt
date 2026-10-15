@@ -1229,7 +1229,7 @@ Maven dependency:
     <dependency>
       <groupId>org.mock-server</groupId>
       <artifactId>mockserver-client-java</artifactId>
-      <version>8.0.0</version>
+      <version>9.0.0</version>
     </dependency>
 
 Basic usage:
@@ -1566,7 +1566,7 @@ Usage:
 Install (Cargo.toml):
 
     [dependencies]
-    mockserver-client = "8.0.0"
+    mockserver-client = "9.0.0"
 
 Usage:
 
@@ -1722,7 +1722,7 @@ Basic:
 
     services:
       mockserver:
-        image: mockserver/mockserver:8.0.0
+        image: mockserver/mockserver:9.0.0
         ports:
           - "1080:1080"
         environment:
@@ -1732,7 +1732,7 @@ With configuration and initialization:
 
     services:
       mockserver:
-        image: mockserver/mockserver:8.0.0
+        image: mockserver/mockserver:9.0.0
         ports:
           - "1080:1080"
         environment:
@@ -1747,7 +1747,7 @@ With OpenAPI initialization and file watching:
 
     services:
       mockserver:
-        image: mockserver/mockserver:8.0.0
+        image: mockserver/mockserver:9.0.0
         ports:
           - "1080:1080"
         environment:
@@ -1762,7 +1762,7 @@ Using command line arguments:
 
     services:
       mockserver:
-        image: mockserver/mockserver:8.0.0
+        image: mockserver/mockserver:9.0.0
         command: -logLevel DEBUG -serverPort 1090
         ports:
           - "1080:1090"
@@ -2254,7 +2254,7 @@ Mock Kafka and MQTT brokers using AsyncAPI 2.x/3.x specs — publish examples, s
     <plugin>
       <groupId>org.mock-server</groupId>
       <artifactId>mockserver-maven-plugin</artifactId>
-      <version>8.0.0</version>
+      <version>9.0.0</version>
       <configuration>
         <serverPort>1080</serverPort>
         <logLevel>WARN</logLevel>
@@ -2275,7 +2275,7 @@ Mock Kafka and MQTT brokers using AsyncAPI 2.x/3.x specs — publish examples, s
 
 ### Standalone JAR
 
-    java -jar mockserver-netty-no-dependencies-8.0.0.jar -serverPort 1080 -logLevel INFO
+    java -jar mockserver-netty-no-dependencies-9.0.0.jar -serverPort 1080 -logLevel INFO
 
 ### npm Module
 

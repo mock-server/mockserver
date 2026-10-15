@@ -17,7 +17,7 @@ Add the plugin to your `pom.xml`:
 <plugin>
     <groupId>org.mock-server</groupId>
     <artifactId>mockserver-maven-plugin</artifactId>
-    <version>8.0.0</version>
+    <version>9.0.0</version>
     <configuration>
         <serverPort>1080</serverPort>
     </configuration>

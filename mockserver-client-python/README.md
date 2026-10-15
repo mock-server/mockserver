@@ -538,7 +538,7 @@ launcher_path = ensure_binary()  # returns Path to the launcher executable
 ```python
 from mockserver.launcher import start
 
-server = start(port=1080, version="8.0.0")
+server = start(port=1080, version="9.0.0")
 # ...
 server.stop()
 ```

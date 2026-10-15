@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+### Changed
+
+### Fixed
+
+## [9.0.0] - 2026-10-15
+
 This release delivers a sustained performance and memory programme alongside data-integrity fixes under load, plus a large set of LLM-provider correctness fixes, dashboard improvements, and client-library parity work. Headline numbers from the single-load-generator benchmark on the same six-core rig (builds 420 and 464): the healthy ceiling rises from 39,033 to 57,149 req/s and the peak from 43,671 to 59,905 req/s, with p95 at 32,000 req/s falling from 56.6 ms to 0.44 ms on the new ZGC default in the Docker images; event-log retained heap at 20,000 entries falls from 429 MB to 61 MB; Docker image download shrinks ~23%; and instance shutdown drops from ~107 ms to near zero. 22 BREAKING changes affect HTTP/3, DNS mocking, binary (non-HTTP) proxying and binary expectation matching while proxying, template-failure response codes, `maxLoggedMatchFailures`'s default, initialisation-file `id` conflicts, the Node client's TypeScript typings and `exports` map, `LOG_ENTRIES` log output, control-plane error handling and mTLS, the Rust client's enums, verification-failure wording, response `statusCode` validation, AsyncAPI and response/OpenAPI verification, GenAI trace span names, the Node client's recorded-request typings, and the Go client/Testcontainers module's `/v9` module paths — see *Upgrading from 8.0.0* and the `BREAKING` entries under *Changed*. For a per-change migration list, see the upgrade guide at https://www.mock-server.com/mock_server/upgrading_to_9.html.
 
 | Metric | Before | After |
