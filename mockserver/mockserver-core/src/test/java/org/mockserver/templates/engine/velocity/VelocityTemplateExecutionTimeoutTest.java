@@ -287,7 +287,7 @@ public class VelocityTemplateExecutionTimeoutTest {
     }
 
     private static MockServerLogger recordingLogger(List<LogEntry> logged) {
-        return new MockServerLogger() {
+        return new MockServerLogger(configuration().logLevel(Level.WARN), VelocityTemplateExecutionTimeoutTest.class) {
             @Override
             public void logEvent(LogEntry logEntry) {
                 synchronized (logged) {

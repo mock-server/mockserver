@@ -923,7 +923,8 @@ public class ExpectationFileWatcherTest {
             Configuration configuration = configuration()
                 .initializationJsonPath(mockserverInitialization.getPath())
                 .watchInitializationJson(true)
-                .watchInitializationJsonPollPeriodMillis(POLL_PERIOD_MILLIS);
+                .watchInitializationJsonPollPeriodMillis(POLL_PERIOD_MILLIS)
+                .logLevel(Level.WARN);
             List<LogEntry> logged = new CopyOnWriteArrayList<>();
             MockServerLogger logger = new MockServerLogger(configuration, ExpectationFileWatcherTest.class) {
                 @Override
