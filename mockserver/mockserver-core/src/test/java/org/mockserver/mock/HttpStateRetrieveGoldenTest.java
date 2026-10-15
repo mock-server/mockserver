@@ -62,7 +62,8 @@ import static org.mockserver.model.JsonBody.json;
  * String. The fixture mixes multi-byte, supplementary and unpaired surrogate characters with bodies
  * long enough to cross every internal buffer boundary. The fixed log timestamp, formatted in the
  * JVM's zone, and the MockServer version are replaced by placeholders before hashing, as are the
- * random ids in OpenAPI documents and the time each Bruno zip entry was written.
+ * random ids in OpenAPI documents, the time each Bruno zip entry was written and the Go module
+ * path's major suffix, which each major release rewrites.
  * <p>
  * To re-record (only when an output change is intended), run with
  * {@code -Dmockserver.recordRetrieveGolden=<path of retrieve-golden.txt in src/test/resources>}.
@@ -268,7 +269,8 @@ public class HttpStateRetrieveGoldenTest {
     static byte[] normalise(byte[] bytes) {
         // ISO-8859-1 maps each byte to one char and back, so only the ASCII placeholders' bytes change
         String text = new String(bytes, StandardCharsets.ISO_8859_1)
-            .replace(LogEntry.LOG_DATE_FORMAT.format(EPOCH), "<timestamp>");
+            .replace(LogEntry.LOG_DATE_FORMAT.format(EPOCH), "<timestamp>")
+            .replaceAll("mockserver-client-go/v[0-9]+", "mockserver-client-go/vN");
         String version = Version.getVersion();
         if (version != null && !version.isEmpty()) {
             text = text.replace("\"" + version + "\"", "\"<version>\"");

@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -52,6 +53,8 @@ import static org.mockserver.model.XmlBody.xml;
  * fixture holds what each generator escapes or scans for: quotes, backslashes, a backtick (Go's escaped
  * literal), a quote followed by hashes (Rust's raw literal), multi-byte, supplementary and unpaired
  * surrogate characters, every byte value in a binary body and bodies long enough to cross buffers.
+ * The Go module path's major suffix is replaced by a placeholder before hashing: each major release
+ * rewrites it, and the tests that assert on the import line pin it instead.
  * <p>
  * To re-record (only when an output change is intended), run with
  * {@code -Dmockserver.recordCodeGolden=<path of generated-code-golden.txt in src/test/resources>}.
@@ -61,6 +64,7 @@ public class GeneratedCodeGoldenTest {
     private static final String GOLDEN = "/org/mockserver/serialization/code/generated-code-golden.txt";
     private static final String MIXED = "ascii é ñ 中文 😀 quote \" backslash \\ tab \t newline \n crlf \r\n backtick ` hashes \"## end";
     private static final String UNPAIRED = "high \uD83D low \uDE00 end \uD83D";
+    private static final Pattern GO_MODULE_MAJOR = Pattern.compile("mockserver-client-go/v[0-9]+");
 
     private static String longText(int characters) {
         StringBuilder text = new StringBuilder(characters + MIXED.length());
@@ -192,7 +196,7 @@ public class GeneratedCodeGoldenTest {
 
     private static String describe(String code) {
         try {
-            byte[] bytes = code.getBytes(StandardCharsets.UTF_8);
+            byte[] bytes = GO_MODULE_MAJOR.matcher(code).replaceAll("mockserver-client-go/vN").getBytes(StandardCharsets.UTF_8);
             StringBuilder hex = new StringBuilder();
             for (byte b : MessageDigest.getInstance("SHA-256").digest(bytes)) {
                 hex.append(String.format("%02x", b));
