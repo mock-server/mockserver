@@ -49,7 +49,7 @@ sync_to_origin_master
 # minutes and may be flaky in a one-off container. Real release runs them.
 SKIP_TESTS_FLAG=""
 if is_dry_run; then
-  SKIP_TESTS_FLAG="-DskipTests"
+  SKIP_TESTS_FLAG="-DskipTests -DskipITs"
   log_info "Build $RELEASE_VERSION (Maven in Docker, tests skipped in dry-run)"
 else
   log_info "Build + test $RELEASE_VERSION (Maven in Docker)"
@@ -130,7 +130,7 @@ else
   </servers>
 </settings>
 SETTINGS
-      mvn deploy -P release -DskipTests \
+      mvn deploy -P release -DskipTests -DskipITs \
         -Dgpg.passphraseServerId=gpg.passphrase \
         -Dgpg.useagent=false \
         --settings /tmp/settings.xml

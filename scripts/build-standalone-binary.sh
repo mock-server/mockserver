@@ -103,7 +103,7 @@ if [[ -z "$JAR" ]]; then
     #   2. re-shade no-dependencies on its own (no -am) so the shade reads the just-installed jars.
     # jacoco.skip: `install` runs jacoco:check, which fails with skipped tests (no coverage data).
     log "Refreshing ~/.m2 (mvn install mockserver-netty-no-dependencies -am) ..."
-    ( cd mockserver && mvn -q -DskipTests -Djacoco.skip=true -pl mockserver-netty-no-dependencies -am install )
+    ( cd mockserver && mvn -q -DskipTests -DskipITs -Djacoco.skip=true -pl mockserver-netty-no-dependencies -am install )
     log "Re-shading no-dependencies jar against refreshed ~/.m2 ..."
     ( cd mockserver && mvn -q -DskipTests -Djacoco.skip=true -pl mockserver-netty-no-dependencies clean package )
     JAR="$(find_shaded)"

@@ -31,7 +31,7 @@ public class FailOnLeakResourceLeakDetectorTest {
 
     @Test(timeout = 120_000)
     public void shouldWriteALeakedBufferWithItsAllocationSiteToTheFileTheGateFailsOn() throws Exception {
-        File reportDir = runChildJvm("leak");
+        File reportDir = runChildJvmWithDetector(LeakOneBuffer.class, "leak");
 
         List<File> leakFiles = nonEmptyLeakFiles(reportDir);
         assertThat("non-empty leak-*.txt files in " + reportDir, leakFiles, hasSize(1));
@@ -43,28 +43,52 @@ public class FailOnLeakResourceLeakDetectorTest {
 
     @Test(timeout = 120_000)
     public void shouldWriteNothingTheGateFailsOnWhenEveryBufferIsReleased() throws Exception {
-        File reportDir = runChildJvm("release");
+        File reportDir = runChildJvmWithDetector(LeakOneBuffer.class, "release");
 
         assertThat("non-empty leak-*.txt files in " + reportDir, nonEmptyLeakFiles(reportDir), is(empty()));
     }
 
-    private File runChildJvm(String mode) throws IOException, InterruptedException {
+    /**
+     * The gate also fails when tests ran and no fork wrote an installed marker. A fork whose tests never allocate a
+     * buffer must still write one, or a build that runs only such tests (a -DskipTests build still runs failsafe)
+     * fails although its detector was installed.
+     */
+    @Test(timeout = 120_000)
+    public void shouldInstallTheDetectorAtForkStartWhenTheForkAllocatesNoBuffer() throws Exception {
+        runChildJvmWithDetector(StartForkWithoutBuffers.class, "start");
+    }
+
+    @Test(timeout = 120_000)
+    public void shouldWriteNoMarkerAtForkStartWhenTheForkIsNotGivenTheDetector() throws Exception {
+        ChildJvm child = runChildJvm(StartForkWithoutBuffers.class, "start-without-detector", NettyLeakDetectorForkStart.CUSTOM_DETECTOR_PROPERTY);
+
+        assertThat("the child JVM wrote no installed marker, output:\n" + child.output, installedMarkers(child.reportDir), is(emptyArray()));
+    }
+
+    private File runChildJvmWithDetector(Class<?> mainClass, String mode) throws IOException, InterruptedException {
+        ChildJvm child = runChildJvm(mainClass, mode, null);
+        assertThat("the child JVM installed the detector, output:\n" + child.output, installedMarkers(child.reportDir), is(arrayWithSize(1)));
+        return child.reportDir;
+    }
+
+    private ChildJvm runChildJvm(Class<?> mainClass, String mode, String omittedProperty) throws IOException, InterruptedException {
         String buildArgLine = System.getProperty(BUILD_ARG_LINE_PROPERTY, "").trim();
         if (buildArgLine.isEmpty()) {
             fail("system property " + BUILD_ARG_LINE_PROPERTY + " is not set: run this class through Maven, whose surefire configuration in mockserver-testing/pom.xml passes it");
         }
-        File reportDir = temporaryFolder.newFolder("netty-leaks");
+        File reportDir = temporaryFolder.newFolder("netty-leaks-" + mode);
         List<String> command = new ArrayList<>();
         command.add(new File(System.getProperty("java.home"), "bin/java").getPath());
         for (String argument : buildArgLine.split("\\s+")) {
-            if (!argument.startsWith("-D" + FailOnLeakResourceLeakDetector.LEAK_REPORT_DIR_PROPERTY + "=")) {
+            boolean omitted = omittedProperty != null && argument.startsWith("-D" + omittedProperty + "=");
+            if (!omitted && !argument.startsWith("-D" + FailOnLeakResourceLeakDetector.LEAK_REPORT_DIR_PROPERTY + "=")) {
                 command.add(argument);
             }
         }
         command.add("-D" + FailOnLeakResourceLeakDetector.LEAK_REPORT_DIR_PROPERTY + "=" + reportDir.getPath());
         command.add("-cp");
         command.add(System.getProperty("surefire.test.class.path", System.getProperty("java.class.path")));
-        command.add(LeakOneBuffer.class.getName());
+        command.add(mainClass.getName());
         command.add(mode);
         File output = temporaryFolder.newFile("child-" + mode + ".log");
         Process child = new ProcessBuilder(command).redirectErrorStream(true).redirectOutput(output).start();
@@ -74,9 +98,21 @@ public class FailOnLeakResourceLeakDetectorTest {
         }
         String childOutput = new String(Files.readAllBytes(output.toPath()), StandardCharsets.UTF_8);
         assertThat("child JVM exit code, output:\n" + childOutput, child.exitValue(), is(0));
-        String[] markers = reportDir.list((dir, name) -> name.startsWith(FailOnLeakResourceLeakDetector.INSTALLED_MARKER_PREFIX));
-        assertThat("the child JVM installed the detector, output:\n" + childOutput, markers, is(arrayWithSize(1)));
-        return reportDir;
+        return new ChildJvm(reportDir, childOutput);
+    }
+
+    private static String[] installedMarkers(File reportDir) {
+        return reportDir.list((dir, name) -> name.startsWith(FailOnLeakResourceLeakDetector.INSTALLED_MARKER_PREFIX));
+    }
+
+    private static final class ChildJvm {
+        private final File reportDir;
+        private final String output;
+
+        private ChildJvm(File reportDir, String output) {
+            this.reportDir = reportDir;
+            this.output = output;
+        }
     }
 
     private static List<File> nonEmptyLeakFiles(File reportDir) {

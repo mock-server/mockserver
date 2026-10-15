@@ -117,8 +117,8 @@ else
         GHCR_USERNAME=$(head -1 /build/.tmp/ghcr-creds.'$$')
         GHCR_TOKEN=$(tail -1 /build/.tmp/ghcr-creds.'$$')
         export COSIGN_PASSWORD=$(cat /build/.tmp/cosign-pw.'$$')
-        wget -qO /usr/local/bin/cosign "https://github.com/sigstore/cosign/releases/download/v2.4.3/cosign-linux-amd64"
-        echo "caaad125acef1cb81d58dcdc454a1e429d09a750d1e9e2b3ed1aed8964454708  /usr/local/bin/cosign" | sha256sum -c -
+        wget -qO /usr/local/bin/cosign "'"$(cosign_url linux-amd64)"'"
+        echo "'"$(cosign_sha256 linux-amd64)"'  /usr/local/bin/cosign" | sha256sum -c -
         chmod +x /usr/local/bin/cosign
         printf "%s" "$GHCR_TOKEN" | cosign login ghcr.io --username "$GHCR_USERNAME" --password-stdin
         cosign sign --yes --key /build/.tmp/cosign-key.'$$' "ghcr.io/mock-server/charts/mockserver:'"$RELEASE_VERSION"'"

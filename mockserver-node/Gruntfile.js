@@ -56,7 +56,9 @@ module.exports = function (grunt) {
         var done = this.async();
         var artifactoryHost = 'repo1.maven.org';
         var artifactoryPath = '/maven2/org/mock-server/mockserver-netty/';
-        require('./downloadJar').downloadJar(require('./package.json').version, artifactoryHost, artifactoryPath).then(function () {
+        // the release dry-run sets this: a version not yet on Maven Central cannot be downloaded
+        var version = process.env.MOCKSERVER_DOWNLOAD_JAR_VERSION || require('./package.json').version;
+        require('./downloadJar').downloadJar(version, artifactoryHost, artifactoryPath).then(function () {
             done(true);
         }, function () {
             done(false);

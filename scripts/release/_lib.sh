@@ -328,6 +328,66 @@ retry() {
   done
 }
 
+# -----------------------------------------------------------------------------
+# Pinned cosign: the one copy of the version and checksums that docker.sh,
+# helm.sh, test-cosign-signing.sh and the credential probe all use.
+# -----------------------------------------------------------------------------
+COSIGN_VERSION="v2.4.3"
+
+# Official sha256 of cosign-<os>-<arch> for COSIGN_VERSION (cosign_checksums.txt).
+cosign_sha256() {
+  case "$1" in
+    linux-amd64)  echo "caaad125acef1cb81d58dcdc454a1e429d09a750d1e9e2b3ed1aed8964454708" ;;
+    linux-arm64)  echo "bd0f9763bca54de88699c3656ade2f39c9a1c7a2916ff35601caf23a79be0629" ;;
+    darwin-amd64) echo "98a3bfd691f42c6a5b721880116f89210d8fdff61cc0224cd3ef2f8e55a466fb" ;;
+    darwin-arm64) echo "edfc761b27ced77f0f9ca288ff4fac7caa898e1e9db38f4dfdf72160cdf8e638" ;;
+    *) return 1 ;;
+  esac
+}
+
+cosign_url() { echo "https://github.com/sigstore/cosign/releases/download/$COSIGN_VERSION/cosign-$1"; }
+
+# This host's <os>-<arch> in cosign's asset names; non-zero when unsupported.
+cosign_host_platform() {
+  local os arch
+  case "$(uname -s)" in Linux) os=linux ;; Darwin) os=darwin ;; *) return 1 ;; esac
+  case "$(uname -m)" in x86_64|amd64) arch=amd64 ;; aarch64|arm64) arch=arm64 ;; *) return 1 ;; esac
+  echo "$os-$arch"
+}
+
+sha256_of() {
+  if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1"; else shasum -a 256 "$1"; fi | awk '{print $1}'
+}
+
+# Usage: download_pinned_cosign TARGET
+# Puts the pinned cosign for this host at TARGET, executable, keeping one that is
+# already there only if its checksum matches. Non-zero on any download or
+# checksum failure, with TARGET removed. Logs to stderr only.
+download_pinned_cosign() {
+  local target="$1" platform want
+  platform="$(cosign_host_platform)" && want="$(cosign_sha256 "$platform")" \
+    || { log_error "no pinned cosign for $(uname -s)/$(uname -m)"; return 1; }
+  if [[ -f "$target" && "$(sha256_of "$target")" == "$want" ]]; then
+    chmod +x "$target"; return 0
+  fi
+  rm -f "$target"
+  if ! retry 3 5 -- curl -fsSL --max-time 120 -o "$target" "$(cosign_url "$platform")" >&2; then
+    rm -f "$target"; log_error "failed to download cosign $COSIGN_VERSION ($platform)"; return 1
+  fi
+  if [[ "$(sha256_of "$target")" != "$want" ]]; then
+    rm -f "$target"; log_error "cosign $COSIGN_VERSION ($platform) checksum mismatch: refusing to use it"; return 1
+  fi
+  chmod +x "$target"
+}
+
+# Usage: bin="$(resolve_cosign TARGET)"
+# Prints a usable cosign: the one on PATH, else the pinned download at TARGET.
+resolve_cosign() {
+  if command -v cosign >/dev/null 2>&1; then echo cosign; return 0; fi
+  download_pinned_cosign "$1" || return 1
+  echo "$1"
+}
+
 # Run a publish command that may legitimately fail because this exact VERSION is
 # already published (re-running a release after a partial failure, or a prior
 # build already shipped this component). An "already published" outcome is a

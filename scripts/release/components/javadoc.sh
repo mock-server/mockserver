@@ -50,9 +50,9 @@ log_info "Generate aggregate Javadoc"
 # is installed. The release profile is still applied to the aggregate pass,
 # where it is needed for the javadoc artifact configuration.
 in_maven -w /build/mockserver \
-  -- mvn install -DskipTests
+  -- mvn install -DskipTests -DskipITs
 in_maven -w /build/mockserver \
-  -- mvn javadoc:aggregate -P release -DskipTests
+  -- mvn javadoc:aggregate -P release -DskipTests -DskipITs
 
 # maven-javadoc-plugin writes the aggregate HTML to target/reports/apidocs.
 APIDOCS="$REPO_ROOT/mockserver/target/reports/apidocs"

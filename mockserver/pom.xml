@@ -1810,8 +1810,8 @@
                 </executions>
             </plugin>
             <!-- Netty ByteBuf leak gate, active in modules that set mockserver.leakArgLine. The detector
-                 (org.mockserver.test.FailOnLeakResourceLeakDetector) writes an empty installed-<pid>.marker
-                 per fork and one leak-<pid>.txt per leaking fork to ${mockserver.leakReportDir}. A file is
+                 (org.mockserver.test.FailOnLeakResourceLeakDetector, loaded at fork start by the run listener) writes
+                 an empty installed-<pid>.marker per fork and one leak-<pid>.txt per leaking fork to ${mockserver.leakReportDir}. A file is
                  used because throwing from a JUnit RunListener does not fail surefire, and a leak is
                  logged on an arbitrary thread long after the test that caused it. -->
             <plugin>
@@ -1910,7 +1910,7 @@
                                 <resourcecount property="netty.leak.marker.count">
                                     <fileset dir="${mockserver.leakReportDir}" includes="installed-*.marker" erroronmissingdir="false"/>
                                 </resourcecount>
-                                <fail message="Netty leak gate checked nothing: tests ran in ${project.artifactId} but no test fork installed the leak detector (no installed-*.marker in ${mockserver.leakReportDir}). Check that the surefire/failsafe argLine still carries the mockserver.leakArgLine property, or, for a narrowed run whose tests never allocate a Netty buffer, pass -Dmockserver.leakArgLine= to turn the detector and this gate off.">
+                                <fail message="Netty leak gate checked nothing: tests ran in ${project.artifactId} but no test fork installed the leak detector (no installed-*.marker in ${mockserver.leakReportDir}). Check that the surefire/failsafe argLine still carries the mockserver.leakArgLine property and that the forks still register org.mockserver.test.PrintOutCurrentTestRunListener, which loads the detector at fork start.">
                                     <condition>
                                         <and>
                                             <isset property="netty.leak.gate.on"/>

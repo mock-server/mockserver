@@ -33,6 +33,7 @@ public class PrintOutCurrentTestRunListener extends RunListener {
         if (!alreadyRegistered) {
             rootLogger.addHandler(handler);
         }
+        NettyLeakDetectorForkStart.installIfConfigured();
     }
 
     private static final String MODE = System.getProperty("mockserver.testOutput", "verbose");

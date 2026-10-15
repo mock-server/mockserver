@@ -127,10 +127,11 @@ mkdir -p docker/clustered/libs
 # coverage floor of 0.65. With tests skipped no coverage data is produced, so
 # without -Djacoco.skip=true the install aborts with "Coverage checks have not
 # been met" before any artifact reaches .m2. We only need the artifacts
-# installed for dependency resolution, not the coverage gate.
+# installed for dependency resolution, not the coverage gate. -DskipITs too:
+# -DskipTests skips surefire only, and failsafe would still run core's ITs.
 log_info "Installing reactor artifacts to .m2 so infinispan deps resolve (post-maven safe)"
 in_maven -w /build/mockserver \
-  -- mvn -DskipTests -Djacoco.skip=true -pl mockserver-state-infinispan -am install
+  -- mvn -DskipTests -DskipITs -Djacoco.skip=true -pl mockserver-state-infinispan -am install
 
 # Choose the module JAR to copy INTO the image. Prefer the RELEASE_VERSION
 # artifact from Maven Central over the locally-installed SNAPSHOT the step above
@@ -527,34 +528,14 @@ else
   # — the describe-secret guard skips this entirely otherwise.
   # Signing is additive and STRICTLY non-fatal: a failure here never aborts
   # the release — the images are already pushed.
-  # Resolve a usable cosign binary into $_cosign_bin. Prefer one already on PATH;
-  # otherwise download the pinned release into .tmp/ (writable, no sudo needed —
-  # docker.sh signs on the HOST, unlike helm.sh which installs inside a root
-  # container). Pinned version + sha256 match helm.sh so both signers use the
-  # same cosign. Returns non-zero if cosign cannot be made available.
+  # Resolve a usable cosign binary into $_cosign_bin: the one on PATH, else the
+  # pinned release downloaded into .tmp/ (resolve_cosign in _lib.sh; no sudo
+  # needed — docker.sh signs on the HOST). Non-zero if none can be had.
   ensure_cosign() {
-    if command -v cosign >/dev/null 2>&1; then
-      _cosign_bin="cosign"
-      return 0
-    fi
-    mkdir -p "$REPO_ROOT/.tmp"
-    local target="$REPO_ROOT/.tmp/cosign"
-    log_info "  cosign not on PATH — downloading pinned cosign v2.4.3 to .tmp/"
-    # curl (not wget) — docker.sh runs on the bare agent host and only curl is
-    # a guaranteed-present tool here (require_cmd curl); helm.sh uses wget only
-    # because it runs inside a container image that bundles it.
-    if ! retry 3 5 -- curl -fsSL --max-time 120 -o "$target" "https://github.com/sigstore/cosign/releases/download/v2.4.3/cosign-linux-amd64"; then
-      log_error "failed to download cosign after retries — cannot sign images"
+    _cosign_bin="$(resolve_cosign "$REPO_ROOT/.tmp/cosign")" || {
+      log_error "cosign unavailable — cannot sign images"
       return 1
-    fi
-    if ! echo "caaad125acef1cb81d58dcdc454a1e429d09a750d1e9e2b3ed1aed8964454708  $target" | sha256sum -c - >/dev/null 2>&1; then
-      log_info "WARNING: cosign checksum mismatch — refusing to use downloaded binary"
-      rm -f "$target"
-      return 1
-    fi
-    chmod +x "$target"
-    _cosign_bin="$target"
-    return 0
+    }
   }
 
   cosign_sign_docker_image() {

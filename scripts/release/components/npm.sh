@@ -41,18 +41,27 @@ publish_one() {
   # In dry-run, update-version-references (which bumps these manifests) is
   # skipped, and its bump would never reach this step's fresh checkout anyway.
   # Bump package.json in-place to RELEASE_VERSION so the dry-run validates the
-  # real release version, and back up the lockfile (npm i churns it). Restore
-  # both on return so the working tree stays clean (dry-run never commits).
+  # real release version, and back up the lockfile (npm i churns it). The EXIT
+  # trap restores both, on failure too, so the working tree stays clean.
+  local jar_version=""
   if is_dry_run; then
     mkdir -p "$REPO_ROOT/.tmp"
     cp "$REPO_ROOT/$pkg/package.json"      "$REPO_ROOT/.tmp/$pkg.package.json.bak"
     cp "$REPO_ROOT/$pkg/package-lock.json" "$REPO_ROOT/.tmp/$pkg.package-lock.json.bak"
-    # shellcheck disable=SC2064  # expand $pkg now, not at trap-fire time
-    trap "cp '$REPO_ROOT/.tmp/$pkg.package.json.bak' '$REPO_ROOT/$pkg/package.json' 2>/dev/null || true; cp '$REPO_ROOT/.tmp/$pkg.package-lock.json.bak' '$REPO_ROOT/$pkg/package-lock.json' 2>/dev/null || true" RETURN
+    DRY_RUN_BUMPED_PKGS+=("$pkg")
+    # download_jar fetches the jar named by package.json, which is a 404 until
+    # this release reaches Central: fall back to the last released version.
+    if [[ "$pkg" == "mockserver-node" ]] && ! curl -fsI --connect-timeout 10 --max-time 15 -o /dev/null \
+        "https://repo1.maven.org/maven2/org/mock-server/mockserver-netty/$RELEASE_VERSION/mockserver-netty-$RELEASE_VERSION-jar-with-dependencies.jar"; then
+      jar_version="$pkg_version"
+      log_dry "[$pkg] mockserver-netty $RELEASE_VERSION is not on Maven Central; download_jar uses $jar_version"
+    fi
     if [[ "$pkg_version" != "$RELEASE_VERSION" ]]; then
       _newpkg="$REPO_ROOT/.tmp/$pkg.package.json.new"
+      # write in place, not mv: a replaced inode may not be visible yet to the
+      # next Docker Desktop bind-mount container
       jq --arg v "$RELEASE_VERSION" '.version = $v' "$REPO_ROOT/$pkg/package.json" > "$_newpkg" \
-        && mv "$_newpkg" "$REPO_ROOT/$pkg/package.json"
+        && cat "$_newpkg" > "$REPO_ROOT/$pkg/package.json" && rm -f "$_newpkg"
       pkg_version="$RELEASE_VERSION"
       log_info "[$pkg] dry-run: bumped package.json version to $RELEASE_VERSION in-place (not committed)"
     fi
@@ -72,6 +81,7 @@ publish_one() {
   in_docker "$NODE_IMAGE" \
     -w "/build/$pkg" \
     -e "PKG_DIR=$pkg" \
+    -e "MOCKSERVER_DOWNLOAD_JAR_VERSION=$jar_version" \
     -- bash -ec '
       rm -rf package-lock.json node_modules
       attempts=0
@@ -166,8 +176,18 @@ NPMRC
 
 # The in-container `npm i` in publish_one writes a root-owned node_modules into
 # each package's bind-mounted workspace dir that the next job's git checkout
-# cannot clean (see clean_workspace_node_modules). Remove both on every exit path.
-trap 'clean_workspace_node_modules mockserver-node mockserver-client-node' EXIT
+# cannot clean (see clean_workspace_node_modules). Remove both on every exit path,
+# and restore the manifests a dry-run bumped. A RETURN trap would not do: it does
+# not fire when `set -e` exits the shell from inside publish_one.
+DRY_RUN_BUMPED_PKGS=()
+restore_dry_run_manifests() {
+  local pkg
+  for pkg in ${DRY_RUN_BUMPED_PKGS[@]+"${DRY_RUN_BUMPED_PKGS[@]}"}; do
+    cp "$REPO_ROOT/.tmp/$pkg.package.json.bak" "$REPO_ROOT/$pkg/package.json" 2>/dev/null || true
+    cp "$REPO_ROOT/.tmp/$pkg.package-lock.json.bak" "$REPO_ROOT/$pkg/package-lock.json" 2>/dev/null || true
+  done
+}
+trap 'restore_dry_run_manifests; clean_workspace_node_modules mockserver-node mockserver-client-node' EXIT
 
 publish_one mockserver-node
 publish_one mockserver-client-node

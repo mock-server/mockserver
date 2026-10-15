@@ -148,7 +148,7 @@ if [ "$REBUILD" = true ] || ! ms_jar_present; then
   fi
 
   cd "$REPO_ROOT/mockserver"
-  ./mvnw clean install -DskipTests -pl mockserver-netty-no-dependencies -am
+  ./mvnw clean install -DskipTests -DskipITs -pl mockserver-netty-no-dependencies -am
   cd "$REPO_ROOT"
   
   if ! ms_jar_present; then

@@ -84,7 +84,7 @@ else
   in_maven -w /build/mockserver \
     --secret-env "SONATYPE_USERNAME=$SONATYPE_USERNAME" \
     --secret-env "SONATYPE_PASSWORD=$SONATYPE_PASSWORD" \
-    -- mvn -T 1C clean deploy -DskipTests \
+    -- mvn -T 1C clean deploy -DskipTests -DskipITs \
          -Djava.security.egd=file:/dev/./urandom \
          --settings .buildkite-settings.xml
 fi

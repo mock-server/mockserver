@@ -102,23 +102,21 @@ mkdir -p "$REPO_ROOT/.tmp"
 trap 'rm -f "$KEY_FILE"' EXIT
 ( umask 077; printf "%s" "$COSIGN_KEY" > "$KEY_FILE" )
 
-#    POSIX sh (alpine). cosign arch is auto-detected so this runs NATIVELY on
-#    arm64 and amd64 hosts; the release pins linux-amd64 for its amd64 agents.
-#    The binary is SHA256-pinned (cosign v2.4.3 official checksums).
+#    POSIX sh (alpine). The container runs the linux cosign for the host's arch,
+#    so this runs NATIVELY on arm64 and amd64 hosts; the release pins
+#    linux-amd64 for its amd64 agents. Version and checksums come from _lib.sh.
+COSPLATFORM="$(cosign_host_platform)" || { log_error "no pinned cosign for this host's architecture"; exit 1; }
+COSPLATFORM="linux-${COSPLATFORM#*-}"
 in_docker "$HELM_IMAGE" --entrypoint sh -w /build \
+  -e "COSURL=$(cosign_url "$COSPLATFORM")" -e "COSSHA=$(cosign_sha256 "$COSPLATFORM")" \
   -e "GHCR_USERNAME=$GHCR_USERNAME" --secret-env "GHCR_TOKEN=$GHCR_TOKEN" \
   --secret-env "COSIGN_PASSWORD=$COSIGN_PASSWORD" \
   -e "COSIGN_KEY_FILE=/build/.tmp/cosign-key-test.$$" \
   -e "DO_SIGN=$DO_SIGN" -e "TAGS=$TAGS" -e "CHART_REPO=$CHART_REPO" \
   -- -ec '
     set +x
-    case "$(uname -m)" in
-      x86_64)        COSARCH=amd64; COSSHA=caaad125acef1cb81d58dcdc454a1e429d09a750d1e9e2b3ed1aed8964454708 ;;
-      aarch64|arm64) COSARCH=arm64; COSSHA=bd0f9763bca54de88699c3656ade2f39c9a1c7a2916ff35601caf23a79be0629 ;;
-      *)             COSARCH=amd64; COSSHA=caaad125acef1cb81d58dcdc454a1e429d09a750d1e9e2b3ed1aed8964454708 ;;
-    esac
-    echo "--- [container] fetching cosign v2.4.3 (linux-$COSARCH)"
-    wget -qO /usr/local/bin/cosign "https://github.com/sigstore/cosign/releases/download/v2.4.3/cosign-linux-$COSARCH"
+    echo "--- [container] fetching cosign $COSURL"
+    wget -qO /usr/local/bin/cosign "$COSURL"
     echo "$COSSHA  /usr/local/bin/cosign" | sha256sum -c -
     chmod +x /usr/local/bin/cosign
     cosign version

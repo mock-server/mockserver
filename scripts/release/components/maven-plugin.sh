@@ -43,11 +43,11 @@ fi
 
 log_info "Build core MockServer (in Docker)"
 in_maven -w /build/mockserver \
-  -- mvn clean install -DskipTests
+  -- mvn clean install -DskipTests -DskipITs
 
 if is_dry_run; then
   log_info "Verify maven-plugin (in Docker, tests skipped in dry-run)"
-  in_maven -w /build/mockserver/mockserver-maven-plugin -- mvn clean install -DskipTests
+  in_maven -w /build/mockserver/mockserver-maven-plugin -- mvn clean install -DskipTests -DskipITs
 else
   log_info "Verify maven-plugin (in Docker)"
   in_maven -w /build/mockserver/mockserver-maven-plugin -- mvn clean verify
@@ -130,7 +130,7 @@ SETTINGS
     # cannot be flipped from the command line. `mvn deploy` therefore only
     # uploads and validates the deployment and prints its deploymentId; the
     # promote-to-published step is done via the Central Portal API below.
-    mvn deploy -P release -DskipTests \
+    mvn deploy -P release -DskipTests -DskipITs \
       -Dgpg.passphraseServerId=gpg.passphrase \
       -Dgpg.useagent=false \
       --settings /tmp/settings.xml

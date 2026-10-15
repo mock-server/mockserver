@@ -406,15 +406,17 @@ probe_gpg() {
 }
 
 # cosign image-signing key — encrypted private key. Derive its public key to
-# prove the password decrypts it. No signing, no network.
+# prove the password decrypts it. No signing. Without cosign on PATH it fetches
+# the release's pinned, checksummed cosign (resolve_cosign, _lib.sh) into WORKDIR.
 probe_cosign() {
-  local json="$1" pw keyfile
-  command -v cosign >/dev/null 2>&1 || { printf 'INDETERMINATE\tcosign not installed on this host\n'; return; }
+  local json="$1" pw keyfile cosign_bin
   [[ -z "$(secret_field "$json" key)" ]] && { printf 'MALFORMED\tmissing key field\n'; return; }
+  cosign_bin="$(resolve_cosign "$WORKDIR/cosign")" \
+    || { printf 'INDETERMINATE\tcould not obtain the pinned cosign %s (download or checksum failed)\n' "$COSIGN_VERSION"; return; }
   pw="$(secret_field "$json" password)"
   keyfile="$(new_tmp)"
   secret_field "$json" key > "$keyfile"
-  if COSIGN_PASSWORD="$pw" cosign public-key --key "$keyfile" >/dev/null 2>&1; then
+  if COSIGN_PASSWORD="$pw" "$cosign_bin" public-key --key "$keyfile" >/dev/null 2>&1; then
     rm -f "$keyfile"; printf 'VALID\tpassword decrypted the key (public key derived)\n'
   else
     rm -f "$keyfile"; printf 'REJECTED\tkey present but password did not decrypt it\n'
@@ -628,6 +630,49 @@ run_self_test() {
   else
     echo "  ✗ GHCR scopes without write:packages -> $st (expected REJECTED)"; fails=$((fails+1))
   fi
+
+  # 5) cosign: a host without cosign fetches the pinned binary; a tampered
+  #    download is refused; and the probe tells a key its password decrypts
+  #    (VALID) from a wrong password (REJECTED) and an unobtainable cosign
+  #    (INDETERMINATE). Network to github.com only.
+  local cosdir
+  cosdir="$(new_tmpdir)"
+  # curl stubbed to deliver a file that is not the pinned binary, so no download
+  if ( curl() { local o=""; while [[ $# -gt 0 ]]; do [[ "$1" == "-o" ]] && { o="$2"; shift; }; shift; done; printf 'tampered' > "$o"; }
+       download_pinned_cosign "$cosdir/tampered" ) 2>/dev/null || [[ -e "$cosdir/tampered" ]]; then
+    echo "  ✗ cosign download with a wrong checksum was accepted"; fails=$((fails+1))
+  else
+    echo "  ✓ cosign download with a wrong checksum -> refused and removed"
+  fi
+  out="$( resolve_cosign() { return 1; }; probe_cosign '{"key":"x","password":"y"}' )"; st="${out%%$'\t'*}"
+  if [[ "$st" == "INDETERMINATE" ]]; then
+    echo "  ✓ cosign unobtainable -> INDETERMINATE"
+  else
+    echo "  ✗ cosign unobtainable -> $st (expected INDETERMINATE)"; fails=$((fails+1))
+  fi
+  if download_pinned_cosign "$WORKDIR/cosign" 2>/dev/null \
+     && ( cd "$cosdir" && COSIGN_PASSWORD=self-test-pw "$WORKDIR/cosign" generate-key-pair >/dev/null 2>&1 ) \
+     && [[ -s "$cosdir/cosign.key" ]]; then
+    echo "  ✓ pinned cosign $COSIGN_VERSION downloaded, checksum verified, and runs"
+    local key_json
+    key_json="$(jq -n --rawfile key "$cosdir/cosign.key" --arg password self-test-pw '{key: $key, password: $password}')"
+    out="$( resolve_cosign() { echo "$WORKDIR/cosign"; }; probe_cosign "$key_json" )"; st="${out%%$'\t'*}"
+    if [[ "$st" == "VALID" ]]; then
+      echo "  ✓ cosign key with its password -> VALID"
+    else
+      echo "  ✗ cosign key with its password -> $st (expected VALID)"; fails=$((fails+1))
+    fi
+    key_json="$(jq -n --rawfile key "$cosdir/cosign.key" --arg password wrong-pw '{key: $key, password: $password}')"
+    out="$( resolve_cosign() { echo "$WORKDIR/cosign"; }; probe_cosign "$key_json" )"; st="${out%%$'\t'*}"
+    if [[ "$st" == "REJECTED" ]]; then
+      echo "  ✓ cosign key with a wrong password -> REJECTED"
+    else
+      echo "  ✗ cosign key with a wrong password -> $st (expected REJECTED)"; fails=$((fails+1))
+    fi
+  else
+    echo "  ✗ could not download, verify and run the pinned cosign $COSIGN_VERSION"; fails=$((fails+1))
+  fi
+  rm -rf "$cosdir"
 
   if [[ $fails -eq 0 ]]; then
     log_info "Self-test PASSED — the probe distinguishes good, bad, and unrunnable"

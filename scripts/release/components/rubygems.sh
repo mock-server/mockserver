@@ -45,7 +45,10 @@ if is_dry_run && [[ "$VERSION" != "$RELEASE_VERSION" ]]; then
   # shellcheck disable=SC2064  # expand the path now, not at trap-fire time
   trap "cp '$REPO_ROOT/.tmp/version.rb.bak' '$VERSION_RB_FILE' 2>/dev/null || true" EXIT
   _newrb="$REPO_ROOT/.tmp/version.rb.new"
-  sed "s/VERSION = '.*'/VERSION = '$RELEASE_VERSION'/" "$VERSION_RB_FILE" > "$_newrb" && mv "$_newrb" "$VERSION_RB_FILE"
+  # write in place, not mv: a replaced inode may not be visible yet to the next
+  # Docker Desktop bind-mount container, whose gem build then cannot load it
+  sed "s/VERSION = '.*'/VERSION = '$RELEASE_VERSION'/" "$VERSION_RB_FILE" > "$_newrb" \
+    && cat "$_newrb" > "$VERSION_RB_FILE" && rm -f "$_newrb"
   grep -qE "VERSION = '$RELEASE_VERSION'" "$VERSION_RB_FILE" \
     || { log_error "dry-run: failed to bump version.rb (format changed?)"; exit 1; }
   VERSION="$RELEASE_VERSION"
