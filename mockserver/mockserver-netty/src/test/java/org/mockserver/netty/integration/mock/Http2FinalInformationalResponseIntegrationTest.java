@@ -45,6 +45,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assume.assumeTrue;
 import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.Delay.delay;
@@ -242,6 +243,9 @@ public class Http2FinalInformationalResponseIntegrationTest {
      */
     @Test
     public void shouldFailAJdkClientsRequestAtOnceInsteadOfLeavingItWaiting() throws Exception {
+        // before 17.0.17 (JDK-8307648) the JDK client queues an RST_STREAM that follows a 1xx and never acts on it
+        Runtime.Version jdk = Runtime.version();
+        assumeTrue("JDK " + jdk + " ignores a reset after a 1xx", jdk.feature() >= 21 || (jdk.feature() == 17 && jdk.update() >= 17));
         for (boolean throughConnectTunnel : new boolean[]{false, true}) {
             String where = throughConnectTunnel ? "through a CONNECT tunnel" : "direct";
             HttpClient.Builder builder = HttpClient.newBuilder()
