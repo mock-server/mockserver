@@ -32,7 +32,7 @@
     "@mui/icons-material": "^9.5.0",
     "@mui/material": "^9.1.2",
     "@mui/x-charts": "^9.15.0",
-    "@tanstack/react-virtual": "^3.14.14",
+    "@tanstack/react-virtual": "^3.14.15",
     "@uiw/react-json-view": "^2.0.0-alpha.44",
     "mermaid": "^12.1.0",
     "monaco-editor": "^0.57.0",
