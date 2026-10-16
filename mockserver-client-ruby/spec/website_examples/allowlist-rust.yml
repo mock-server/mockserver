@@ -238,10 +238,6 @@ mock_server/mockserver_clients.html#loose-99f1a4213f08:
   status: not_compared
   digest: 99f1a4213f08
   reason: Outside any accordion, so there is no REST API tab to compare with.
-mock_server/mockserver_testcontainers.html#loose-f322ad8b14fe:
-  status: not_compared
-  digest: f322ad8b14fe
-  reason: Outside any accordion, so there is no REST API tab to compare with.
 mock_server/mockserver_testcontainers.html#loose-9ab3fba72c39:
   status: not_compared
   digest: 9ab3fba72c39
@@ -249,6 +245,10 @@ mock_server/mockserver_testcontainers.html#loose-9ab3fba72c39:
 mock_server/mockserver_testcontainers.html#loose-ba5d0afde5fb:
   status: not_compared
   digest: ba5d0afde5fb
+  reason: Outside any accordion, so there is no REST API tab to compare with.
+mock_server/mockserver_testcontainers.html#loose-dc7d1e95e28c:
+  status: not_compared
+  digest: dc7d1e95e28c
   reason: Outside any accordion, so there is no REST API tab to compare with.
 mock_server/wasm_rules.html#loose-09213240214b:
   status: not_compared

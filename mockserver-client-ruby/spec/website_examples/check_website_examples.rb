@@ -568,7 +568,29 @@ module WebsiteExamples
     end
 
     def digest(value)
-      Digest::SHA256.hexdigest(JSON.generate(value))[0, 12]
+      Digest::SHA256.hexdigest(release_neutral(JSON.generate(value)))[0, 12]
+    end
+
+    GO_MODULE_MAJOR = %r{(github\.com/mock-server/mockserver-monorepo/(?:mockserver-client-go|mockserver-testcontainers/go))/v\d+(?![\d.])}.freeze
+
+    # Replaces what a release rewrites on the site, so keys and digests survive
+    # it: the release and API versions (each bounded occurrence, as
+    # scripts/release/version_refs.py bumps them) and the Go module major
+    # (scripts/release/go_module_major.py).
+    def release_neutral(text, versions = release_versions)
+      versions.each_with_index do |version, i|
+        text = text.gsub(/(?<![0-9.])#{Regexp.escape(version)}(?![0-9]|\.[0-9])/, "<release-version-#{i}>")
+      end
+      text.gsub(GO_MODULE_MAJOR, '\1/vN')
+    end
+
+    def release_versions
+      @release_versions ||= begin
+        config = File.read(File.join(SITE_ROOT, '_config.yml'), encoding: 'UTF-8')
+        %w[mockserver_version mockserver_api_version].map do |name|
+          config[/^#{name}:[ \t]*(\S+)/, 1] or raise "#{name} not found in the site's _config.yml"
+        end
+      end
     end
 
     def load_allowlist(path = ALLOWLIST)

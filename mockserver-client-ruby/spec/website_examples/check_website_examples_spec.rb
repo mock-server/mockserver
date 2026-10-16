@@ -295,6 +295,34 @@ RSpec.describe 'website example check' do
       expect([code, output]).to match([1, /UNKNOWN_KEY/])
     end
 
+    describe 'what a release rewrites' do
+      # Split so scripts/release/go_module_major.py does not rewrite it.
+      go = %w[github.com mock-server mockserver-monorepo mockserver-client-go].join('/')
+
+      it 'hashes the release version, the API version and the Go module major as placeholders' do
+        text = lambda do |version, api, major|
+          %(MockServer::new("mockserver-#{version}") image:#{version} docs/#{api} "#{go}/v#{major}" #{go}/v#{major}/internal)
+        end
+        expect(described_class.release_neutral(text.call('9.0.0', '9.0.x', 9), %w[9.0.0 9.0.x]))
+          .to eq(described_class.release_neutral(text.call('10.0.0', '10.0.x', 10), %w[10.0.0 10.0.x]))
+      end
+
+      it 'leaves other numbers alone' do
+        text = "19.0.0 9.0.01 9.0.0.1 1.0.0 9.0.1 #{go}/v8.1.0 example.com/mockserver-client-go/v9"
+        expect(described_class.release_neutral(text, %w[9.0.0 9.0.x])).to eq(text)
+      end
+
+      it 'keeps a loose block key when a release bumps the version in its code' do
+        key = lambda do |version|
+          allow(described_class).to receive(:release_versions).and_return([version, '9.0.x'])
+          path = File.join(Dir.mktmpdir, 'page.html')
+          File.write(path, %(<pre class="prettyprint lang-ruby code"><code class="code">puts 'mockserver-#{version}'</code></pre>\n))
+          run_check(path, {}).last[/NOT_COMPARED\s+\S+#(loose-\h+)/, 1]
+        end
+        expect(key.call('9.0.0')).to eq(key.call('9.0.1'))
+      end
+    end
+
     it 'rejects an allowlist entry without a reason or a digest' do
       path = File.join(Dir.mktmpdir, 'allow.yml')
       File.write(path, "k:\n  status: differs\n  digest: 0123456789ab\n")
