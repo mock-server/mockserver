@@ -9,8 +9,8 @@
 #   5. Publish (promote staging to release).
 #   6. Wait for the artifacts to be searchable on Maven Central.
 #
-# Dry-run mode: builds and (locally) signs, but skips the Sonatype upload,
-# publish, and sync wait. Good enough to validate the build + sign work.
+# Dry-run mode: runs the same build + tests, but skips the signed deploy,
+# Sonatype upload, publish, and sync wait.
 
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -45,17 +45,13 @@ log_info "  - Search Maven Central:     https://central.sonatype.com/search?name
 sync_to_origin_master
 
 # ---- Build & test ----------------------------------------------------------
-# Build (and run unit tests). In dry-run we skip tests — they take 5-10
-# minutes and may be flaky in a one-off container. Real release runs them.
-SKIP_TESTS_FLAG=""
-if is_dry_run; then
-  SKIP_TESTS_FLAG="-DskipTests -DskipITs"
-  log_info "Build $RELEASE_VERSION (Maven in Docker, tests skipped in dry-run)"
-else
-  log_info "Build + test $RELEASE_VERSION (Maven in Docker)"
-fi
+# Identical in dry-run and release, so a test that would fail the release fails
+# the dry run first. Test output is redirected to files, so on failure copy the
+# failing classes' reports and output into mockserver/target/failed-tests/.
+log_info "Build + test $RELEASE_VERSION (Maven in Docker)"
 in_maven -w /build/mockserver \
-  -- mvn -T 1C clean install $SKIP_TESTS_FLAG -Djava.security.egd=file:/dev/./urandom
+  -- mvn -T 1C clean install "${RELEASE_MAVEN_TEST_FLAGS[@]}" -Djava.security.egd=file:/dev/./urandom \
+  || { build_rc=$?; collect_failed_tests; exit "$build_rc"; }
 
 # ---- Deploy + sign ---------------------------------------------------------
 # The passphrase is delivered to Maven via the `central-portal` server's

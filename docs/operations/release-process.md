@@ -33,7 +33,7 @@ If you want to override the recommendation, fine — but be deliberate about it.
 ./scripts/release/test-all.sh --quick
 ```
 
-Runs every component in dry-run mode locally. Takes ~5 min (Maven Central / maven-plugin / javadoc are skipped under `--quick`). The full run (~25 min) is `./scripts/release/test-all.sh`. Working tree must be clean afterwards — if you see modifications, that's a bug in a dry-run, fix it before triggering CI.
+Runs every component in dry-run mode locally. Takes ~5 min (Maven Central / maven-plugin / javadoc are skipped under `--quick`). The full run is `./scripts/release/test-all.sh`; it runs the whole Maven test suite, as the release does, so allow an hour or more. Working tree must be clean afterwards — if you see modifications, that's a bug in a dry-run, fix it before triggering CI.
 
 ### 3. Trigger a dry-run on Buildkite (recommended for major releases)
 
@@ -49,7 +49,7 @@ Open https://buildkite.com/mockserver/mockserver-release → "New Build" and fil
 | Create Versioned Site? | `Yes` for major/minor, `No` for patch |
 | **Dry Run?** | **`Yes — build/validate only, skip publish`** |
 
-The dry-run exercises every step inside the actual Buildkite container images. Treat it as the final gate before publishing. It still requires the TOTP block step (there is no longer a downstream-approval gate — see step 7).
+The dry-run exercises every step inside the actual Buildkite container images. Its `Maven Central` and `Maven Plugin` steps run the same Maven build and tests as the release, with the same settings (see [Release Maven tests run with CI's settings](#release-maven-tests-run-with-cis-settings)), so a test that would fail the release fails here first, before anything is tagged or pushed. Expect the `Maven Central` step to take ~45 min. Treat the dry-run as the final gate before publishing. It still requires the TOTP block step (there is no longer a downstream-approval gate — see step 7).
 
 ### 4. Trigger the real release
 
@@ -61,7 +61,7 @@ After the form, Buildkite immediately hits a `block` step asking for a 6-digit T
 
 The TOTP seed lives in Secrets Manager under `mockserver-release/totp-seed`. Use the same authenticator app you set up for previous releases. If you've lost the seed, rotate it: generate a new seed (e.g. `python3 -c "import secrets, base64; print(base64.b32encode(secrets.token_bytes(20)).decode())"`), update the secret in AWS Secrets Manager, and re-enroll it in your authenticator (issuer `MockServer Release`).
 
-After this gate the pipeline runs `Prepare` (pom bump + tag + push) and then `Maven Central` (mvn deploy + Sonatype publish + sync wait). Maven Central typically takes 15–25 min.
+After this gate the pipeline runs `Prepare` (pom bump + tag + push) and then `Maven Central` (mvn deploy + Sonatype publish + sync wait). The build and tests alone take ~45 min on the release agent; the step then waits for Sonatype validation and the Central sync (step timeout 300 min). If the tests fail, the step's `failed-tests` artifact holds the failing classes' reports and output.
 
 ### 6. Watch Maven Central
 
@@ -480,10 +480,10 @@ python3 scripts/release/version_refs.py check . --list   # every occurrence with
 | Component | Dry-run does | Dry-run skips |
 |---|---|---|
 | `prepare` | Validate inputs, show pom diff | pom write, git commit, tag, push |
-| `maven-central` | `mvn clean install` (build + test) | Sonatype upload, publish, sync wait |
-| `maven-plugin` | Build core + verify plugin | tag, deploy, push |
+| `maven-central` | `mvn clean install` (build + test), the same command the release runs | Signed deploy, Sonatype upload, publish, sync wait |
+| `maven-plugin` | Build core + `mvn clean verify` of the plugin (with tests), as the release does | tag, deploy, push |
 | `docker` | `docker buildx build` (local `--load`, amd64 only) | `--push` to Docker Hub + ECR, cosign signing by digest |
-| `npm` | `npm install`, grunt build | `git push tag`, `npm publish` (uses `--dry-run`) |
+| `npm` | `npm install`, grunt build | `git push tag`, `npm publish` (uses `--dry-run`), the wait for the version to become installable |
 | `pypi` | `python -m build`, `twine check` | `twine upload` |
 | `rubygems` | `gem build` | `gem push` |
 | `tc-ruby` | `gem build` (self-bumps `version.rb`) | `gem push` (skips if `mockserver-build/rubygems` secret absent) |
@@ -507,7 +507,7 @@ python3 scripts/release/version_refs.py check . --list   # every occurrence with
 All toolchain calls run inside these images. Defined in `scripts/release/_lib.sh`:
 
 ```bash
-MAVEN_IMAGE=maven:3.9.9-eclipse-temurin-17
+MAVEN_IMAGE=maven:3.9.16-eclipse-temurin-17@sha256:1a35…  # Temurin JDK 17.0.20.1
 NODE_IMAGE=node:20-bookworm
 RUBY_IMAGE=ruby:3.2-bookworm
 HELM_IMAGE=alpine/helm:3.16.2
@@ -518,9 +518,29 @@ TERRAFORM_IMAGE=hashicorp/terraform:1.15
 
 Override any of them by exporting the corresponding env var. Change them in `_lib.sh` to update for everyone.
 
+**`MAVEN_IMAGE` is pinned by digest, not just by tag.** An official `maven:<version>-eclipse-temurin-17` tag is re-pushed with each new Temurin JDK until the next Maven version replaces it, and then it stops moving. `3.9.9-eclipse-temurin-17` froze at JDK 17.0.15 while CI moved on to 17.0.19, so the 9.0.0 release hit a JDK 17.0.15 `HttpClient` bug (JDK-8307648) that CI never saw. <!-- version-ref:keep --> The digest fixes the exact JDK. When you bump it, choose an image at least two weeks old, read its JDK version from the image (`mvn -version`, or `JAVA_VERSION` in the image config), and keep it at or above the JDK 17 that CI runs (`docker_build/maven/Dockerfile`).
+
+### Release Maven tests run with CI's settings
+
+`RELEASE_MAVEN_TEST_FLAGS` in `_lib.sh` is passed to the `maven-central` build, so the release runs its tests with the settings of CI's reactor build and netty IT shards (`scripts/buildkite_quick_build.sh`, `scripts/buildkite_netty_it.sh`). CI is what proves the tests green; the pom defaults are a configuration CI never runs. In 9.0.0, two tests that assert on WARN log output failed only in the release, because it used the pom default log level `ERROR`. <!-- version-ref:keep -->
+
+| Flag | Why the release passes it |
+|---|---|
+| `-Dmockserver.testLogLevel=INFO` | Tests that assert on logged events need those events logged. The pom default is `ERROR` |
+| `-Dmockserver.testArgLine=-Dmockserver.maxLogEntries=10000 -Dmockserver.maxExpectations=5000` | The event-log and expectation caps CI runs with (the pom's own argLine caps the log at 1,000 entries) |
+| `-Dmockserver.testOutput=quiet -DredirectTestOutputToFile=true` | Keep the `INFO`-level server output out of the release step log. It goes to `*-output.txt` files in the surefire/failsafe report directories instead. When the tests fail, `collect_failed_tests` (`_lib.sh`, which runs CI's `java-collect-failures.sh`) copies the failing classes' reports and output into `mockserver/target/failed-tests/` and prints a pass/fail summary, and the step uploads that directory as a Buildkite artifact. Release agents are ephemeral, so the artifact is the only copy |
+
+Deliberately not copied from CI: `-P clustered-libs` and `-Dmockserver.shadeSourcesJar=false` (CI packaging shortcuts; the release needs the shaded sources jars), `-P netty-it-skip` (CI runs those ITs in separate shard steps with the same flags; the release runs them in the reactor), and `-B --no-transfer-progress` (log formatting only). The `maven-plugin` step keeps the pom defaults, because CI's maven-plugin build (`.buildkite/scripts/steps/maven-plugin-build.sh`) uses them.
+
+The dry run runs these same commands, which is why it takes as long as the release's build.
+
+### npm waits up to 45 minutes for a package to become installable
+
+After `npm publish`, `npm.sh` polls the npm install packument every 30 s for up to 45 minutes before it publishes the next package. npm processes a large package before it lists the new version: `mockserver-node` bundles the jar (~87 MB), and for 9.0.0 that took ~20 minutes, past the old 5-minute ceiling. <!-- version-ref:keep --> A re-run of the step skips the publish and resumes the wait. The step's timeout (110 min) covers both packages' waits.
+
 ### Maven runs install `unzip` first
 
-**Every container that runs `mvn` in a release script starts with `${maven_packaging_prelude}` from `_lib.sh`, which installs `unzip` and fails the step if it cannot.** The `src/packaging/assert-*.sh` assertions bound to `package`/`verify` run `unzip` over the built jars, and `maven:3.9.9-eclipse-temurin-17` does not include it. Without the prelude, `mvn install` and both deploys fail in the release. A dry-run skips the raw deploy payloads entirely, so it can pass while they would fail: those payloads must carry the prelude themselves.
+**Every container that runs `mvn` in a release script starts with `${maven_packaging_prelude}` from `_lib.sh`, which installs `unzip` and fails the step if it cannot.** The `src/packaging/assert-*.sh` assertions bound to `package`/`verify` run `unzip` over the built jars, and the `maven:*-eclipse-temurin-17` image does not include it. Without the prelude, `mvn install` and both deploys fail in the release. A dry-run skips the raw deploy payloads entirely, so it can pass while they would fail: those payloads must carry the prelude themselves.
 
 | Call | How it gets the prelude |
 |---|---|

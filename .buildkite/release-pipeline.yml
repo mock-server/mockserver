@@ -70,7 +70,12 @@ steps:
 
   - label: ":maven: Maven Central"
     command: ".buildkite/scripts/release-runner.sh maven-central"
-    timeout_in_minutes: 180
+    # Build + tests (~45 min, dry run too) + signed deploy rebuild + up to 30 min
+    # validation + a 2h sync wait whose curls add to its sleeps (maven-central.sh).
+    timeout_in_minutes: 300
+    # Failing test classes' reports and output, collected only when tests fail.
+    artifact_paths:
+      - "mockserver/target/failed-tests/**/*"
     agents: { queue: "release" }
 
   - wait
@@ -115,6 +120,8 @@ steps:
       - label: ":java: Maven Plugin"
         command: ".buildkite/scripts/release-runner.sh maven-plugin"
         timeout_in_minutes: 60
+        artifact_paths:
+          - "mockserver/target/failed-tests/**/*"
         agents: { queue: "release" }
 
       - label: ":docker: Docker Image"
@@ -127,7 +134,8 @@ steps:
 
       - label: ":package: npm"
         command: ".buildkite/scripts/release-runner.sh npm"
-        timeout_in_minutes: 30
+        # Two builds + two installability waits of up to 45 min each (npm.sh).
+        timeout_in_minutes: 110
         agents: { queue: "release" }
 
       - label: ":helm: Helm Chart"

@@ -88,8 +88,8 @@ If any of those steps requires understanding CI-specific magic, we've violated t
 Every non-core publish step must be written to survive network flaps, partial-publish retries, and re-runs after a failed release:
 
 - **Hard-fail on error** — all scripts open with `set -euo pipefail`. Any unhandled non-zero exit aborts the step immediately; there is no soft-skip or silent `exit 0` path past a real publish failure.
-- **Pinned toolchain containers** — every language toolchain (Maven, Node, Ruby, Helm, Python, Go, Rust, .NET, Terraform, `gh`) runs inside a pinned Docker image defined in `scripts/release/_lib.sh` (e.g. `MAVEN_IMAGE=maven:3.9.9-eclipse-temurin-17`). The same image runs locally and in CI.
-- **`retry()` helper for network operations** — transient network calls (Sonatype upload, npm publish poll, PyPI upload, etc.) are wrapped in the `retry()` function from `_lib.sh`, which retries up to N times with exponential backoff. See `_lib.sh:268`.
+- **Pinned toolchain containers** — every language toolchain (Maven, Node, Ruby, Helm, Python, Go, Rust, .NET, Terraform, `gh`) runs inside a pinned Docker image defined in `scripts/release/_lib.sh` (e.g. `MAVEN_IMAGE=maven:3.9.16-eclipse-temurin-17@sha256:…`, pinned by digest so its JDK cannot drift). The same image runs locally and in CI.
+- **`retry()` helper for network operations** — transient network calls (Sonatype upload, npm publish poll, PyPI upload, etc.) are wrapped in the `retry()` function from `_lib.sh`, which retries up to N times with exponential backoff.
 - **Idempotency via `run_idempotent()`** — publish steps that may encounter "already published" responses (SwaggerHub `409 Conflict`, npm `403 You cannot publish over the previously published version`, etc.) use `run_idempotent()` from `_lib.sh` to treat that specific error as success and continue. Re-running a component after a partial failure is therefore always safe.
 
 Together these four properties mean: if a publish step fails, the release manager can retry the step (or re-trigger the whole pipeline with `RELEASE_TYPE=post-maven`) without risking duplicate or corrupt publishes.

@@ -19,7 +19,9 @@ export REPO_ROOT
 # Override via env var if needed for a specific run.
 # -----------------------------------------------------------------------------
 
-MAVEN_IMAGE="${MAVEN_IMAGE:-maven:3.9.9-eclipse-temurin-17}"
+# Pinned by digest so the JDK cannot drift (this one is Temurin 17.0.20.1). Keep
+# it at or above CI's JDK 17; see release-process.md "Pinned Docker images".
+MAVEN_IMAGE="${MAVEN_IMAGE:-maven:3.9.16-eclipse-temurin-17@sha256:1a352420f7aba21f5ad08df31bab55f74c013fb491f1ae8ab1dd7ff9ed698584}"
 NODE_IMAGE="${NODE_IMAGE:-node:20-bookworm}"
 RUBY_IMAGE="${RUBY_IMAGE:-ruby:3.2-bookworm}"
 HELM_IMAGE="${HELM_IMAGE:-alpine/helm:3.16.2}"
@@ -38,6 +40,26 @@ GO_IMAGE="${GO_IMAGE:-golang:1.25-bookworm}"
 RUST_IMAGE="${RUST_IMAGE:-rust:1-bookworm}"
 DOTNET_IMAGE="${DOTNET_IMAGE:-mcr.microsoft.com/dotnet/sdk:8.0}"
 export MAVEN_IMAGE NODE_IMAGE RUBY_IMAGE HELM_IMAGE GH_IMAGE PYTHON_IMAGE TERRAFORM_IMAGE
+
+# Test settings for release Maven builds that run the reactor's tests. They match
+# the CI reactor build and netty IT shards (scripts/buildkite_quick_build.sh,
+# scripts/buildkite_netty_it.sh), which are what proves the tests green; the pom
+# defaults (log level ERROR, 1000 log entries) are a configuration CI never runs.
+# testOutput/redirect keep INFO-level server logs out of the release step log.
+# shellcheck disable=SC2034  # read by the components that source this file
+RELEASE_MAVEN_TEST_FLAGS=(
+  -Dmockserver.testLogLevel=INFO
+  "-Dmockserver.testArgLine=-Dmockserver.maxLogEntries=10000 -Dmockserver.maxExpectations=5000"
+  -Dmockserver.testOutput=quiet
+  -DredirectTestOutputToFile=true
+)
+
+# After a failed test run: copies the failing classes' reports and redirected
+# output into mockserver/target/failed-tests/ (release-pipeline.yml uploads it)
+# and prints a pass/fail summary. Runs on the host, like CI; never fails.
+collect_failed_tests() {
+  "$REPO_ROOT/.buildkite/scripts/steps/java-collect-failures.sh" || true
+}
 
 REGION="${AWS_REGION:-eu-west-2}"
 

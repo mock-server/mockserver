@@ -26,6 +26,53 @@ skip_unless_release_type "npm" full,post-maven
 log_step "Publish npm packages $RELEASE_VERSION (dry-run=$DRY_RUN)"
 sync_to_origin_master
 
+# npm is eventually consistent — block until the just-published version is
+# actually resolvable from the registry before returning. mockserver-client-node
+# is published second and depends on mockserver-node, so its `npm install`
+# must not run until mockserver-node's new version is downloadable.
+#
+# We MUST probe the same document `npm install` reads to resolve dependency
+# versions: the abbreviated "install" packument at the package root, requested
+# with the `application/vnd.npm.install-v1+json` Accept header. The per-version
+# document (registry.npmjs.org/<pkg>/<version>) goes live almost immediately
+# after publish, but the packument that `npm i` resolves against is served
+# through a more heavily CDN-cached path and propagates with a longer lag — so
+# probing the per-version URL passed while `npm i` of the dependent package
+# still got ETARGET (No matching version found). Asserting the version key is
+# present in the install packument is the honest precondition.
+#
+# The ceiling is long because npm processes a large package before listing it,
+# and mockserver-node bundles the jar (~87 MB): that can take tens of minutes.
+# The release-pipeline.yml npm step timeout must stay above twice this ceiling.
+NPM_INSTALLABLE_TIMEOUT_S=2700
+NPM_INSTALLABLE_POLL_S=30
+wait_until_installable() {
+  local pkg="$1" npm_name="$2" packument="" elapsed=0
+  local start=$SECONDS
+  log_info "[$pkg] waiting up to $((NPM_INSTALLABLE_TIMEOUT_S / 60))m for $npm_name@$RELEASE_VERSION to be installable from npm"
+  # Match the version only as a `versions{}` JSON key ("<version>":) using a
+  # fixed-string grep, so the `.` in the version is a literal (not a regex
+  # wildcard) and we cannot false-match the version appearing as a dist-tag
+  # value, a `version` field, or a tarball URL.
+  # Capture the packument then grep a here-string: a direct `curl | grep -q` can
+  # SIGPIPE curl under pipefail when grep short-circuits, misreading a successful
+  # match as "not resolvable" (same class as the prepare.sh changelog bug).
+  until packument=$(curl -fsS --connect-timeout 10 --max-time 15 \
+      -H 'Accept: application/vnd.npm.install-v1+json' \
+      "https://registry.npmjs.org/$npm_name" 2>/dev/null) \
+      && grep -qF -- "\"$RELEASE_VERSION\":" <<<"$packument"; do
+    elapsed=$((SECONDS - start))
+    if [[ "$elapsed" -ge "$NPM_INSTALLABLE_TIMEOUT_S" ]]; then
+      log_error "[$pkg] $npm_name@$RELEASE_VERSION still not resolvable from npm install metadata after $((elapsed / 60))m$((elapsed % 60))s; it is published, so re-running this step resumes the wait"
+      return 1
+    fi
+    log_info "[$pkg] not yet resolvable from npm install metadata ($((elapsed / 60))m$((elapsed % 60))s of $((NPM_INSTALLABLE_TIMEOUT_S / 60))m elapsed), next check in ${NPM_INSTALLABLE_POLL_S}s"
+    sleep "$NPM_INSTALLABLE_POLL_S"
+  done
+  elapsed=$((SECONDS - start))
+  log_info "[$pkg] $npm_name@$RELEASE_VERSION is live on npm (after $((elapsed / 60))m$((elapsed % 60))s)"
+}
+
 publish_one() {
   local pkg="$1"
   # The npm package name can differ from the directory name (mockserver-client-node
@@ -74,8 +121,11 @@ publish_one() {
   # published it.
   if ! is_dry_run && curl -fsI --connect-timeout 10 --max-time 15 -o /dev/null \
       "https://registry.npmjs.org/$npm_name/$RELEASE_VERSION" 2>/dev/null; then
-    log_info "[$pkg] $npm_name@$RELEASE_VERSION already on npm - skipping"
-    return 0
+    log_info "[$pkg] $npm_name@$RELEASE_VERSION already on npm - skipping publish"
+    # A re-run after a timed-out wait must keep waiting: the per-version
+    # document above goes live long before the install packument does.
+    wait_until_installable "$pkg" "$npm_name"
+    return
   fi
   log_info "[$pkg] build"
   in_docker "$NODE_IMAGE" \
@@ -135,43 +185,7 @@ NPMRC
       npm publish --access=public
     '
 
-  # npm is eventually consistent — block until the just-published version is
-  # actually resolvable from the registry before returning. mockserver-client-node
-  # is published second and depends on mockserver-node, so its `npm install`
-  # must not run until mockserver-node's new version is downloadable.
-  #
-  # We MUST probe the same document `npm install` reads to resolve dependency
-  # versions: the abbreviated "install" packument at the package root, requested
-  # with the `application/vnd.npm.install-v1+json` Accept header. The per-version
-  # document (registry.npmjs.org/<pkg>/<version>) goes live almost immediately
-  # after publish, but the packument that `npm i` resolves against is served
-  # through a more heavily CDN-cached path and propagates with a longer lag — so
-  # probing the per-version URL passed while `npm i` of the dependent package
-  # still got ETARGET (No matching version found). Asserting the version key is
-  # present in the install packument is the honest precondition.
-  log_info "[$pkg] waiting for $npm_name@$RELEASE_VERSION to be installable from npm"
-  local waited=0
-  # 300s ceiling — npm global propagation is typically well under a minute.
-  # Match the version only as a `versions{}` JSON key ("<version>":) using a
-  # fixed-string grep, so the `.` in the version is a literal (not a regex
-  # wildcard) and we cannot false-match the version appearing as a dist-tag
-  # value, a `version` field, or a tarball URL.
-  # Capture the packument then grep a here-string: a direct `curl | grep -q` can
-  # SIGPIPE curl under pipefail when grep short-circuits, misreading a successful
-  # match as "not resolvable" (same class as the prepare.sh changelog bug).
-  until packument=$(curl -fsS --connect-timeout 10 --max-time 15 \
-      -H 'Accept: application/vnd.npm.install-v1+json' \
-      "https://registry.npmjs.org/$npm_name" 2>/dev/null) \
-      && grep -qF -- "\"$RELEASE_VERSION\":" <<<"$packument"; do
-    if [[ "$waited" -ge 300 ]]; then
-      log_error "[$pkg] $npm_name@$RELEASE_VERSION still not resolvable from npm install metadata after ${waited}s"
-      return 1
-    fi
-    log_info "[$pkg] not yet resolvable from npm install metadata (${waited}s elapsed), waiting..."
-    sleep 10
-    waited=$((waited + 10))
-  done
-  log_info "[$pkg] $npm_name@$RELEASE_VERSION is live on npm"
+  wait_until_installable "$pkg" "$npm_name"
 }
 
 # The in-container `npm i` in publish_one writes a root-owned node_modules into

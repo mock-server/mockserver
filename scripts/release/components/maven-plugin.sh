@@ -7,7 +7,7 @@
 # script just builds the core mockserver (so the plugin can resolve it), then
 # tags, deploys and publishes the plugin to Maven Central.
 #
-# Dry-run: build + verify only; skip tag + deploy.
+# Dry-run: build + verify (with tests) only; skip tag + deploy.
 
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -45,13 +45,11 @@ log_info "Build core MockServer (in Docker)"
 in_maven -w /build/mockserver \
   -- mvn clean install -DskipTests -DskipITs
 
-if is_dry_run; then
-  log_info "Verify maven-plugin (in Docker, tests skipped in dry-run)"
-  in_maven -w /build/mockserver/mockserver-maven-plugin -- mvn clean install -DskipTests -DskipITs
-else
-  log_info "Verify maven-plugin (in Docker)"
-  in_maven -w /build/mockserver/mockserver-maven-plugin -- mvn clean verify
-fi
+# Same command in dry-run, so the dry run runs the plugin tests the release runs.
+# Pom-default test settings, as CI's maven-plugin build (maven-plugin-build.sh) uses.
+log_info "Verify maven-plugin (in Docker)"
+in_maven -w /build/mockserver/mockserver-maven-plugin -- mvn clean verify \
+  || { build_rc=$?; collect_failed_tests; exit "$build_rc"; }
 
 if is_dry_run; then
   log_dry "skip: tag, deploy"
